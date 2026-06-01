@@ -1,173 +1,173 @@
-export type Provincia = {
+export type Province = {
   id: string;
   name: string;
-  cantones: Canton[];
+  cantons: Canton[];
 };
 
 export type Canton = {
   id: string;
   name: string;
-  provinciaId: string;
+  provinceId: string;
 };
 
-export const PROVINCIAS: Provincia[] = [
+export const PROVINCES: Province[] = [
   {
     id: "sj",
     name: "San José",
-    cantones: [
-      { id: "sj-sj", name: "San José", provinciaId: "sj" },
-      { id: "sj-es", name: "Escazú", provinciaId: "sj" },
-      { id: "sj-de", name: "Desamparados", provinciaId: "sj" },
-      { id: "sj-pu", name: "Puriscal", provinciaId: "sj" },
-      { id: "sj-ta", name: "Tarrazú", provinciaId: "sj" },
-      { id: "sj-as", name: "Aserrí", provinciaId: "sj" },
-      { id: "sj-mo", name: "Mora", provinciaId: "sj" },
-      { id: "sj-go", name: "Goicoechea", provinciaId: "sj" },
-      { id: "sj-sa", name: "Santa Ana", provinciaId: "sj" },
-      { id: "sj-al", name: "Alajuelita", provinciaId: "sj" },
-      { id: "sj-vb", name: "Vásquez de Coronado", provinciaId: "sj" },
-      { id: "sj-ac", name: "Acosta", provinciaId: "sj" },
-      { id: "sj-ti", name: "Tibás", provinciaId: "sj" },
-      { id: "sj-mo2", name: "Moravia", provinciaId: "sj" },
-      { id: "sj-mu", name: "Montes de Oca", provinciaId: "sj" },
-      { id: "sj-tu", name: "Turrubares", provinciaId: "sj" },
-      { id: "sj-da", name: "Dota", provinciaId: "sj" },
-      { id: "sj-cu", name: "Curridabat", provinciaId: "sj" },
-      { id: "sj-pm", name: "Pérez Zeledón", provinciaId: "sj" },
-      { id: "sj-le", name: "León Cortés Castro", provinciaId: "sj" },
+    cantons: [
+      { id: "sj-sj", name: "San José", provinceId: "sj" },
+      { id: "sj-es", name: "Escazú", provinceId: "sj" },
+      { id: "sj-de", name: "Desamparados", provinceId: "sj" },
+      { id: "sj-pu", name: "Puriscal", provinceId: "sj" },
+      { id: "sj-ta", name: "Tarrazú", provinceId: "sj" },
+      { id: "sj-as", name: "Aserrí", provinceId: "sj" },
+      { id: "sj-mo", name: "Mora", provinceId: "sj" },
+      { id: "sj-go", name: "Goicoechea", provinceId: "sj" },
+      { id: "sj-sa", name: "Santa Ana", provinceId: "sj" },
+      { id: "sj-al", name: "Alajuelita", provinceId: "sj" },
+      { id: "sj-vb", name: "Vásquez de Coronado", provinceId: "sj" },
+      { id: "sj-ac", name: "Acosta", provinceId: "sj" },
+      { id: "sj-ti", name: "Tibás", provinceId: "sj" },
+      { id: "sj-mo2", name: "Moravia", provinceId: "sj" },
+      { id: "sj-mu", name: "Montes de Oca", provinceId: "sj" },
+      { id: "sj-tu", name: "Turrubares", provinceId: "sj" },
+      { id: "sj-da", name: "Dota", provinceId: "sj" },
+      { id: "sj-cu", name: "Curridabat", provinceId: "sj" },
+      { id: "sj-pm", name: "Pérez Zeledón", provinceId: "sj" },
+      { id: "sj-le", name: "León Cortés Castro", provinceId: "sj" },
     ],
   },
   {
     id: "al",
     name: "Alajuela",
-    cantones: [
-      { id: "al-al", name: "Alajuela", provinciaId: "al" },
-      { id: "al-sa", name: "San Ramón", provinciaId: "al" },
-      { id: "al-gr", name: "Grecia", provinciaId: "al" },
-      { id: "al-sm", name: "San Mateo", provinciaId: "al" },
-      { id: "al-at", name: "Atenas", provinciaId: "al" },
-      { id: "al-na", name: "Naranjo", provinciaId: "al" },
-      { id: "al-pa", name: "Palmares", provinciaId: "al" },
-      { id: "al-po", name: "Poás", provinciaId: "al" },
-      { id: "al-oc", name: "Orotina", provinciaId: "al" },
-      { id: "al-sc", name: "San Carlos", provinciaId: "al" },
-      { id: "al-za", name: "Zarcero", provinciaId: "al" },
-      { id: "al-va", name: "Valverde Vega", provinciaId: "al" },
-      { id: "al-up", name: "Upala", provinciaId: "al" },
-      { id: "al-lo", name: "Los Chiles", provinciaId: "al" },
-      { id: "al-gu", name: "Guatuso", provinciaId: "al" },
+    cantons: [
+      { id: "al-al", name: "Alajuela", provinceId: "al" },
+      { id: "al-sa", name: "San Ramón", provinceId: "al" },
+      { id: "al-gr", name: "Grecia", provinceId: "al" },
+      { id: "al-sm", name: "San Mateo", provinceId: "al" },
+      { id: "al-at", name: "Atenas", provinceId: "al" },
+      { id: "al-na", name: "Naranjo", provinceId: "al" },
+      { id: "al-pa", name: "Palmares", provinceId: "al" },
+      { id: "al-po", name: "Poás", provinceId: "al" },
+      { id: "al-oc", name: "Orotina", provinceId: "al" },
+      { id: "al-sc", name: "San Carlos", provinceId: "al" },
+      { id: "al-za", name: "Zarcero", provinceId: "al" },
+      { id: "al-va", name: "Valverde Vega", provinceId: "al" },
+      { id: "al-up", name: "Upala", provinceId: "al" },
+      { id: "al-lo", name: "Los Chiles", provinceId: "al" },
+      { id: "al-gu", name: "Guatuso", provinceId: "al" },
     ],
   },
   {
     id: "ca",
     name: "Cartago",
-    cantones: [
-      { id: "ca-ca", name: "Cartago", provinciaId: "ca" },
-      { id: "ca-pa", name: "Paraíso", provinciaId: "ca" },
-      { id: "ca-lu", name: "La Unión", provinciaId: "ca" },
-      { id: "ca-ji", name: "Jiménez", provinciaId: "ca" },
-      { id: "ca-tu", name: "Turrialba", provinciaId: "ca" },
-      { id: "ca-al", name: "Alvarado", provinciaId: "ca" },
-      { id: "ca-oa", name: "Oreamuno", provinciaId: "ca" },
-      { id: "ca-el", name: "El Guarco", provinciaId: "ca" },
+    cantons: [
+      { id: "ca-ca", name: "Cartago", provinceId: "ca" },
+      { id: "ca-pa", name: "Paraíso", provinceId: "ca" },
+      { id: "ca-lu", name: "La Unión", provinceId: "ca" },
+      { id: "ca-ji", name: "Jiménez", provinceId: "ca" },
+      { id: "ca-tu", name: "Turrialba", provinceId: "ca" },
+      { id: "ca-al", name: "Alvarado", provinceId: "ca" },
+      { id: "ca-oa", name: "Oreamuno", provinceId: "ca" },
+      { id: "ca-el", name: "El Guarco", provinceId: "ca" },
     ],
   },
   {
     id: "he",
     name: "Heredia",
-    cantones: [
-      { id: "he-he", name: "Heredia", provinciaId: "he" },
-      { id: "he-ba", name: "Barva", provinciaId: "he" },
-      { id: "he-sd", name: "Santo Domingo", provinciaId: "he" },
-      { id: "he-sa", name: "Santa Bárbara", provinciaId: "he" },
-      { id: "he-sr", name: "San Rafael", provinciaId: "he" },
-      { id: "he-si", name: "San Isidro", provinciaId: "he" },
-      { id: "he-be", name: "Belén", provinciaId: "he" },
-      { id: "he-fl", name: "Flores", provinciaId: "he" },
-      { id: "he-sp", name: "San Pablo", provinciaId: "he" },
-      { id: "he-sa2", name: "Sarapiquí", provinciaId: "he" },
+    cantons: [
+      { id: "he-he", name: "Heredia", provinceId: "he" },
+      { id: "he-ba", name: "Barva", provinceId: "he" },
+      { id: "he-sd", name: "Santo Domingo", provinceId: "he" },
+      { id: "he-sa", name: "Santa Bárbara", provinceId: "he" },
+      { id: "he-sr", name: "San Rafael", provinceId: "he" },
+      { id: "he-si", name: "San Isidro", provinceId: "he" },
+      { id: "he-be", name: "Belén", provinceId: "he" },
+      { id: "he-fl", name: "Flores", provinceId: "he" },
+      { id: "he-sp", name: "San Pablo", provinceId: "he" },
+      { id: "he-sa2", name: "Sarapiquí", provinceId: "he" },
     ],
   },
   {
     id: "gu",
     name: "Guanacaste",
-    cantones: [
-      { id: "gu-li", name: "Liberia", provinciaId: "gu" },
-      { id: "gu-ni", name: "Nicoya", provinciaId: "gu" },
-      { id: "gu-sc", name: "Santa Cruz", provinciaId: "gu" },
-      { id: "gu-ba", name: "Bagaces", provinciaId: "gu" },
-      { id: "gu-ca", name: "Carrillo", provinciaId: "gu" },
-      { id: "gu-ca2", name: "Cañas", provinciaId: "gu" },
-      { id: "gu-ab", name: "Abangares", provinciaId: "gu" },
-      { id: "gu-ti", name: "Tilarán", provinciaId: "gu" },
-      { id: "gu-na", name: "Nandayure", provinciaId: "gu" },
-      { id: "gu-lc", name: "La Cruz", provinciaId: "gu" },
-      { id: "gu-ho", name: "Hojancha", provinciaId: "gu" },
+    cantons: [
+      { id: "gu-li", name: "Liberia", provinceId: "gu" },
+      { id: "gu-ni", name: "Nicoya", provinceId: "gu" },
+      { id: "gu-sc", name: "Santa Cruz", provinceId: "gu" },
+      { id: "gu-ba", name: "Bagaces", provinceId: "gu" },
+      { id: "gu-ca", name: "Carrillo", provinceId: "gu" },
+      { id: "gu-ca2", name: "Cañas", provinceId: "gu" },
+      { id: "gu-ab", name: "Abangares", provinceId: "gu" },
+      { id: "gu-ti", name: "Tilarán", provinceId: "gu" },
+      { id: "gu-na", name: "Nandayure", provinceId: "gu" },
+      { id: "gu-lc", name: "La Cruz", provinceId: "gu" },
+      { id: "gu-ho", name: "Hojancha", provinceId: "gu" },
     ],
   },
   {
     id: "pu",
     name: "Puntarenas",
-    cantones: [
-      { id: "pu-pu", name: "Puntarenas", provinciaId: "pu" },
-      { id: "pu-es", name: "Esparza", provinciaId: "pu" },
-      { id: "pu-bv", name: "Buenos Aires", provinciaId: "pu" },
-      { id: "pu-mo", name: "Montes de Oro", provinciaId: "pu" },
-      { id: "pu-os", name: "Osa", provinciaId: "pu" },
-      { id: "pu-ag", name: "Aguirre", provinciaId: "pu" },
-      { id: "pu-ga", name: "Golfito", provinciaId: "pu" },
-      { id: "pu-cc", name: "Coto Brus", provinciaId: "pu" },
-      { id: "pu-pa", name: "Parrita", provinciaId: "pu" },
-      { id: "pu-co", name: "Corredores", provinciaId: "pu" },
-      { id: "pu-ga2", name: "Garabito", provinciaId: "pu" },
+    cantons: [
+      { id: "pu-pu", name: "Puntarenas", provinceId: "pu" },
+      { id: "pu-es", name: "Esparza", provinceId: "pu" },
+      { id: "pu-bv", name: "Buenos Aires", provinceId: "pu" },
+      { id: "pu-mo", name: "Montes de Oro", provinceId: "pu" },
+      { id: "pu-os", name: "Osa", provinceId: "pu" },
+      { id: "pu-ag", name: "Aguirre", provinceId: "pu" },
+      { id: "pu-ga", name: "Golfito", provinceId: "pu" },
+      { id: "pu-cc", name: "Coto Brus", provinceId: "pu" },
+      { id: "pu-pa", name: "Parrita", provinceId: "pu" },
+      { id: "pu-co", name: "Corredores", provinceId: "pu" },
+      { id: "pu-ga2", name: "Garabito", provinceId: "pu" },
     ],
   },
   {
     id: "li",
     name: "Limón",
-    cantones: [
-      { id: "li-li", name: "Limón", provinciaId: "li" },
-      { id: "li-po", name: "Pococí", provinciaId: "li" },
-      { id: "li-si", name: "Siquirres", provinciaId: "li" },
-      { id: "li-ta", name: "Talamanca", provinciaId: "li" },
-      { id: "li-ma", name: "Matina", provinciaId: "li" },
-      { id: "li-gu", name: "Guácimo", provinciaId: "li" },
+    cantons: [
+      { id: "li-li", name: "Limón", provinceId: "li" },
+      { id: "li-po", name: "Pococí", provinceId: "li" },
+      { id: "li-si", name: "Siquirres", provinceId: "li" },
+      { id: "li-ta", name: "Talamanca", provinceId: "li" },
+      { id: "li-ma", name: "Matina", provinceId: "li" },
+      { id: "li-gu", name: "Guácimo", provinceId: "li" },
     ],
   },
 ];
 
 export const CATEGORIES = [
-  { id: "plomeria", name: "Plomería", icon: "🔧", color: "blue" },
-  { id: "electricidad", name: "Electricidad", icon: "⚡", color: "yellow" },
-  { id: "construccion", name: "Construcción", icon: "🏗️", color: "orange" },
-  { id: "pintura", name: "Pintura", icon: "🖌️", color: "purple" },
-  { id: "jardineria", name: "Jardinería", icon: "🌿", color: "green" },
-  { id: "limpieza", name: "Limpieza", icon: "🧹", color: "teal" },
-  { id: "carpinteria", name: "Carpintería", icon: "🪵", color: "amber" },
-  { id: "tecnologia", name: "Tecnología / TI", icon: "💻", color: "indigo" },
-  { id: "ensenanza", name: "Enseñanza / Tutorías", icon: "📚", color: "rose" },
-  { id: "belleza", name: "Belleza / Estética", icon: "💅", color: "pink" },
-  { id: "mascotas", name: "Veterinaria / Mascotas", icon: "🐾", color: "emerald" },
-  { id: "mecanica", name: "Mecánica", icon: "🔩", color: "slate" },
-  { id: "mudanzas", name: "Mudanzas", icon: "📦", color: "cyan" },
-  { id: "seguridad", name: "Seguridad", icon: "🔐", color: "red" },
-  { id: "contabilidad", name: "Contabilidad / Legal", icon: "📊", color: "violet" },
-  { id: "diseno", name: "Diseño / Arte", icon: "🎨", color: "fuchsia" },
+  { id: "plomeria", icon: "🔧" },
+  { id: "electricidad", icon: "⚡" },
+  { id: "construccion", icon: "🏗️" },
+  { id: "pintura", icon: "🖌️" },
+  { id: "jardineria", icon: "🌿" },
+  { id: "limpieza", icon: "🧹" },
+  { id: "carpinteria", icon: "🪵" },
+  { id: "tecnologia", icon: "💻" },
+  { id: "ensenanza", icon: "📚" },
+  { id: "belleza", icon: "💅" },
+  { id: "mascotas", icon: "🐾" },
+  { id: "mecanica", icon: "🔩" },
+  { id: "mudanzas", icon: "📦" },
+  { id: "seguridad", icon: "🔐" },
+  { id: "contabilidad", icon: "📊" },
+  { id: "diseno", icon: "🎨" },
 ] as const;
 
 export type CategoryId = (typeof CATEGORIES)[number]["id"];
 
-export function getCantonsByProvincia(provinciaId: string): Canton[] {
-  return PROVINCIAS.find((p) => p.id === provinciaId)?.cantones ?? [];
+export function getCantonsByProvince(provinceId: string): Canton[] {
+  return PROVINCES.find((p) => p.id === provinceId)?.cantons ?? [];
 }
 
-export function getProvinciaById(id: string): Provincia | undefined {
-  return PROVINCIAS.find((p) => p.id === id);
+export function getProvinceById(id: string): Province | undefined {
+  return PROVINCES.find((p) => p.id === id);
 }
 
 export function getCantonById(id: string): Canton | undefined {
-  for (const provincia of PROVINCIAS) {
-    const canton = provincia.cantones.find((c) => c.id === id);
+  for (const province of PROVINCES) {
+    const canton = province.cantons.find((c) => c.id === id);
     if (canton) return canton;
   }
   return undefined;

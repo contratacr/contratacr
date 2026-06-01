@@ -1,0 +1,300 @@
+{
+  "nav": {
+    "search": "Search",
+    "categories": "Categories",
+    "howItWorks": "How it works",
+    "login": "Log in",
+    "register": "Sign up free",
+    "searchProfessionals": "Search professionals",
+    "langToggle": "ES"
+  },
+  "home": {
+    "hero": {
+      "badge": "+500 verified professionals in Costa Rica",
+      "title": "Find the professional",
+      "titleHighlight": "you need",
+      "titleSuffix": "in Costa Rica",
+      "subtitle": "We connect clients with verified professionals near you. No middlemen, no in-app payments. Simple and reliable."
+    },
+    "stats": {
+      "professionals": "Professionals",
+      "provinces": "Provinces",
+      "rating": "Average rating",
+      "jobs": "Completed jobs"
+    },
+    "categories": {
+      "title": "What service do you need?",
+      "subtitle": "Browse all available categories"
+    },
+    "featured": {
+      "title": "Featured professionals",
+      "subtitle": "Top rated in their category",
+      "viewAll": "View all"
+    },
+    "howItWorks": {
+      "title": "How does it work?",
+      "subtitle": "Simple, fast, and hassle-free",
+      "step1": {
+        "title": "Search for a service",
+        "desc": "Filter by category and canton to find the closest professional to you."
+      },
+      "step2": {
+        "title": "Review profiles",
+        "desc": "Read verified reviews, browse portfolios, and compare professionals."
+      },
+      "step3": {
+        "title": "Contact via WhatsApp",
+        "desc": "One tap and you're talking directly with the professional. Agree on price and date with no middlemen."
+      }
+    },
+    "trust": {
+      "cedula": {
+        "title": "Verified ID",
+        "desc": "We verify all professionals' identity against Costa Rica's Civil Registry."
+      },
+      "reviews": {
+        "title": "Genuine reviews",
+        "desc": "Only clients who hired the service can leave reviews. 100% authentic."
+      },
+      "community": {
+        "title": "Costa Rican community",
+        "desc": "Built by and for Ticos. We understand how the local market works."
+      }
+    },
+    "cta": {
+      "title": "Are you a service professional?",
+      "subtitle": "Create your free profile and start receiving clients today. No commissions. No payments until you decide.",
+      "button": "Create my free profile",
+      "learnMore": "Learn more",
+      "feature1": "✓ 3-step registration",
+      "feature2": "✓ Verified profile",
+      "feature3": "✓ No commissions",
+      "feature4": "✓ Direct clients via WhatsApp"
+    }
+  },
+  "search": {
+    "title": {
+      "default": "All professionals",
+      "withCategory": "{category}"
+    },
+    "resultsIn": "{count} professionals in {location}",
+    "resultsInCR": "{count} professionals in Costa Rica",
+    "noResults": {
+      "title": "No results found",
+      "desc": "Try a different category or expand your search area."
+    },
+    "filters": {
+      "title": "Filters",
+      "clear": "Clear",
+      "category": "Category",
+      "allCategories": "All categories",
+      "province": "Province",
+      "allProvinces": "All",
+      "canton": "Canton",
+      "allCantons": "All cantons",
+      "selectProvince": "Select province first",
+      "sortBy": "Sort by"
+    },
+    "sort": {
+      "rating": "Best rated",
+      "reviews": "Most reviews",
+      "priceAsc": "Price: low to high",
+      "priceDesc": "Price: high to low",
+      "newest": "Newest"
+    }
+  },
+  "hero": {
+    "categoryPlaceholder": "What service do you need?",
+    "provincePlaceholder": "Province",
+    "searchButton": "Search"
+  },
+  "card": {
+    "exp": "yr exp.",
+    "expPlural": "yrs exp.",
+    "from": "From",
+    "perHour": "/hr",
+    "priceOnRequest": "Price on request",
+    "viewProfile": "View profile",
+    "whatsapp": "WhatsApp",
+    "featured": "FEATURED",
+    "available": "Available"
+  },
+  "profile": {
+    "back": "Back to results",
+    "featuredBadge": "FEATURED PROFILE",
+    "verified": "Verified",
+    "available": "Available",
+    "notAvailable": "Not available",
+    "experience": "{years} year of experience",
+    "experiencePlural": "{years} years of experience",
+    "perHour": "/hr",
+    "contact": {
+      "title": "Contact now",
+      "responseTime": "Usually responds in under 2 hours",
+      "whatsapp": "Contact via WhatsApp",
+      "call": "Call",
+      "identityVerified": "Identity verified",
+      "directPayment": "Direct payment (SINPE / cash)",
+      "noFees": "No middlemen"
+    },
+    "about": "About me",
+    "reviews": "Reviews",
+    "stats": {
+      "reviews": "Reviews",
+      "rating": "Rating",
+      "experience": "Experience",
+      "rate": "Rate"
+    },
+    "rateUnit": "k/hr",
+    "priceOnRequest": "On request",
+    "yearsUnit": "yrs"
+  },
+  "auth": {
+    "login": {
+      "title": "Welcome back",
+      "subtitle": "Sign in to your account",
+      "email": "Email",
+      "password": "Password",
+      "forgotPassword": "Forgot your password?",
+      "submit": "Sign in",
+      "submitting": "Signing in...",
+      "noAccount": "Don't have an account?",
+      "signUp": "Sign up free",
+      "or": "or"
+    },
+    "register": {
+      "title": "Create account",
+      "subtitle": "How do you want to use ContrataCR?",
+      "client": "I'm a client",
+      "clientDesc": "I want to hire professional services",
+      "professional": "I'm a professional",
+      "professionalDesc": "I want to offer my services",
+      "register": "Sign up",
+      "alreadyHaveAccount": "Already have an account?",
+      "signIn": "Sign in"
+    }
+  },
+  "registration": {
+    "pro": {
+      "title": "Create my professional profile",
+      "subtitle": "Free. 3 steps. No credit card.",
+      "steps": {
+        "identity": "Identity",
+        "service": "Service",
+        "profile": "Profile"
+      },
+      "verifyNote": "We verify your identity with Costa Rica's Civil Registry",
+      "cedula": "ID number (cédula)",
+      "cedulaPlaceholder": "101230456",
+      "cedulaHint": "Enter your ID to verify your identity automatically",
+      "verifiedName": "Verified name",
+      "email": "Email",
+      "emailPlaceholder": "you@email.com",
+      "password": "Password",
+      "passwordPlaceholder": "Minimum 8 characters",
+      "passwordHint": "Use a combination of letters and numbers",
+      "terms": "By registering you accept our",
+      "termsLink": "Terms of use",
+      "category": "Service category",
+      "categoryPlaceholder": "Select your specialty",
+      "province": "Province",
+      "provincePlaceholder": "Select your province",
+      "canton": "Canton",
+      "cantonPlaceholder": "Select your canton",
+      "cantonDisabled": "Select a province first",
+      "whatsapp": "WhatsApp",
+      "whatsappHint": "8-digit number. Clients will contact you here.",
+      "bio": "Service description",
+      "bioMin": "minimum 30 characters",
+      "bioPlaceholder": "Describe your services, experience, and what sets you apart from other professionals...",
+      "yearsExp": "Years of experience",
+      "yearsExpPlaceholder": "e.g. 5",
+      "hourlyRate": "Hourly rate (₡)",
+      "hourlyRatePlaceholder": "e.g. 10000",
+      "optional": "Optional",
+      "addLater": "You can add later:",
+      "photos": "📸 Work photos",
+      "coverage": "🗺️ Coverage area",
+      "availability": "📅 Availability",
+      "continue": "Continue",
+      "back": "Back",
+      "create": "Create my free profile",
+      "creating": "Creating profile...",
+      "success": {
+        "title": "Profile created!",
+        "desc": "Your profile is ready. It will appear in search results shortly.",
+        "viewProfile": "View my public profile"
+      },
+      "alreadyHaveAccount": "Already have an account?",
+      "signIn": "Sign in"
+    },
+    "client": {
+      "title": "Create client account",
+      "subtitle": "One step. Free.",
+      "verifyNote": "We verify your identity with the Civil Registry",
+      "cedula": "ID number (cédula)",
+      "cedulaHint": "To verify your identity",
+      "verifiedName": "Verified name",
+      "email": "Email",
+      "password": "Password",
+      "terms": "By registering you accept our",
+      "termsLink": "Terms of use",
+      "submit": "Create account",
+      "submitting": "Creating account...",
+      "success": {
+        "title": "Account created!",
+        "desc": "You can now search and hire professionals in your area.",
+        "button": "Search professionals"
+      },
+      "alreadyHaveAccount": "Already have an account?",
+      "signIn": "Sign in"
+    }
+  },
+  "footer": {
+    "tagline": "The professional services marketplace for Costa Rica.",
+    "clients": {
+      "title": "For clients",
+      "search": "Search professionals",
+      "howItWorks": "How it works",
+      "categories": "Categories"
+    },
+    "pros": {
+      "title": "For professionals",
+      "register": "Register profile",
+      "howItWorks": "How it works",
+      "plans": "Plans"
+    },
+    "company": {
+      "title": "Company",
+      "about": "About us",
+      "contact": "Contact",
+      "terms": "Terms of use",
+      "privacy": "Privacy"
+    },
+    "rights": "© 2026 ContrataCR. All rights reserved.",
+    "madeIn": "Made with ❤️ in Costa Rica 🇨🇷"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "desc": "The page you're looking for doesn't exist or was moved.",
+    "home": "Back to home"
+  },
+  "categories": {
+    "plomeria": "Plumbing",
+    "electricidad": "Electrical",
+    "construccion": "Construction",
+    "pintura": "Painting",
+    "jardineria": "Gardening",
+    "limpieza": "Cleaning",
+    "carpinteria": "Carpentry",
+    "tecnologia": "Technology / IT",
+    "ensenanza": "Teaching / Tutoring",
+    "belleza": "Beauty / Aesthetics",
+    "mascotas": "Veterinary / Pets",
+    "mecanica": "Mechanics",
+    "mudanzas": "Moving",
+    "seguridad": "Security",
+    "contabilidad": "Accounting / Legal",
+    "diseno": "Design / Art"
+  }
+}

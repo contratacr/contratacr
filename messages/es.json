@@ -1,0 +1,300 @@
+{
+  "nav": {
+    "search": "Buscar",
+    "categories": "Categorías",
+    "howItWorks": "¿Cómo funciona?",
+    "login": "Iniciar sesión",
+    "register": "Registrarse gratis",
+    "searchProfessionals": "Buscar profesionales",
+    "langToggle": "EN"
+  },
+  "home": {
+    "hero": {
+      "badge": "+500 profesionales verificados en Costa Rica",
+      "title": "Encuentra el profesional",
+      "titleHighlight": "que necesitas",
+      "titleSuffix": "en Costa Rica",
+      "subtitle": "Conectamos clientes con profesionales verificados cerca de vos. Sin intermediarios, sin pagos en la app. Simple y confiable."
+    },
+    "stats": {
+      "professionals": "Profesionales",
+      "provinces": "Provincias",
+      "rating": "Calificación promedio",
+      "jobs": "Trabajos completados"
+    },
+    "categories": {
+      "title": "¿Qué servicio necesitas?",
+      "subtitle": "Explorá todas las categorías disponibles"
+    },
+    "featured": {
+      "title": "Profesionales destacados",
+      "subtitle": "Los mejor calificados en su categoría",
+      "viewAll": "Ver todos"
+    },
+    "howItWorks": {
+      "title": "¿Cómo funciona?",
+      "subtitle": "Simple, rápido y sin complicaciones",
+      "step1": {
+        "title": "Buscá el servicio",
+        "desc": "Filtrá por categoría y cantón para encontrar al profesional más cercano a vos."
+      },
+      "step2": {
+        "title": "Revisá perfiles",
+        "desc": "Leé reseñas verificadas, mirá el portafolio y comparálos."
+      },
+      "step3": {
+        "title": "Contactalo por WhatsApp",
+        "desc": "Un tap y hablás directo con el profesional. Acordáis precio y fecha sin intermediarios."
+      }
+    },
+    "trust": {
+      "cedula": {
+        "title": "Cédula verificada",
+        "desc": "Todos los profesionales verificamos su identidad contra el Registro Civil de Costa Rica."
+      },
+      "reviews": {
+        "title": "Reseñas reales",
+        "desc": "Solo clientes que contrataron el servicio pueden dejar reseñas. 100% auténticas."
+      },
+      "community": {
+        "title": "Comunidad costarricense",
+        "desc": "Hecho por y para ticos. Entendemos cómo funciona el mercado local."
+      }
+    },
+    "cta": {
+      "title": "¿Sos profesional de servicios?",
+      "subtitle": "Registrá tu perfil gratis y empezá a recibir clientes hoy mismo. Sin comisiones. Sin pagos hasta que vos decidás.",
+      "button": "Registrar mi perfil gratis",
+      "learnMore": "Saber más",
+      "feature1": "✓ Registro en 3 pasos",
+      "feature2": "✓ Perfil verificado",
+      "feature3": "✓ Sin comisiones",
+      "feature4": "✓ Clientes directos por WhatsApp"
+    }
+  },
+  "search": {
+    "title": {
+      "default": "Todos los profesionales",
+      "withCategory": "{category}"
+    },
+    "resultsIn": "{count} profesionales en {location}",
+    "resultsInCR": "{count} profesionales en Costa Rica",
+    "noResults": {
+      "title": "No encontramos resultados",
+      "desc": "Intentá con otra categoría o expandí la zona de búsqueda."
+    },
+    "filters": {
+      "title": "Filtros",
+      "clear": "Limpiar",
+      "category": "Categoría",
+      "allCategories": "Todas las categorías",
+      "province": "Provincia",
+      "allProvinces": "Todas",
+      "canton": "Cantón",
+      "allCantons": "Todos los cantones",
+      "selectProvince": "Seleccioná provincia",
+      "sortBy": "Ordenar por"
+    },
+    "sort": {
+      "rating": "Mejor calificados",
+      "reviews": "Más reseñas",
+      "priceAsc": "Precio: menor a mayor",
+      "priceDesc": "Precio: mayor a menor",
+      "newest": "Más recientes"
+    }
+  },
+  "hero": {
+    "categoryPlaceholder": "¿Qué servicio necesitas?",
+    "provincePlaceholder": "Provincia",
+    "searchButton": "Buscar"
+  },
+  "card": {
+    "exp": "año de exp.",
+    "expPlural": "años de exp.",
+    "from": "Desde",
+    "perHour": "/hora",
+    "priceOnRequest": "Precio a consultar",
+    "viewProfile": "Ver perfil",
+    "whatsapp": "WhatsApp",
+    "featured": "DESTACADO",
+    "available": "Disponible"
+  },
+  "profile": {
+    "back": "Volver a resultados",
+    "featuredBadge": "PERFIL DESTACADO",
+    "verified": "Verificado",
+    "available": "Disponible",
+    "notAvailable": "No disponible",
+    "experience": "{years} año de experiencia",
+    "experiencePlural": "{years} años de experiencia",
+    "perHour": "/hora",
+    "contact": {
+      "title": "Contactar ahora",
+      "responseTime": "Responde normalmente en menos de 2 horas",
+      "whatsapp": "Contactar por WhatsApp",
+      "call": "Llamar",
+      "identityVerified": "Identidad verificada",
+      "directPayment": "Pago directo (SINPE / efectivo)",
+      "noFees": "Sin intermediarios"
+    },
+    "about": "Sobre mí",
+    "reviews": "Reseñas",
+    "stats": {
+      "reviews": "Reseñas",
+      "rating": "Calificación",
+      "experience": "Experiencia",
+      "rate": "Tarifa"
+    },
+    "rateUnit": "k/h",
+    "priceOnRequest": "A consultar",
+    "yearsUnit": "años"
+  },
+  "auth": {
+    "login": {
+      "title": "Bienvenido de vuelta",
+      "subtitle": "Ingresá a tu cuenta",
+      "email": "Correo electrónico",
+      "password": "Contraseña",
+      "forgotPassword": "¿Olvidaste tu contraseña?",
+      "submit": "Ingresar",
+      "submitting": "Ingresando...",
+      "noAccount": "¿No tenés cuenta?",
+      "signUp": "Registrate gratis",
+      "or": "o"
+    },
+    "register": {
+      "title": "Crear cuenta",
+      "subtitle": "¿Cómo querés usar ContrataCR?",
+      "client": "Soy cliente",
+      "clientDesc": "Quiero contratar servicios profesionales",
+      "professional": "Soy profesional",
+      "professionalDesc": "Quiero ofrecer mis servicios",
+      "register": "Registrarme",
+      "alreadyHaveAccount": "¿Ya tenés cuenta?",
+      "signIn": "Iniciá sesión"
+    }
+  },
+  "registration": {
+    "pro": {
+      "title": "Registrar mi perfil profesional",
+      "subtitle": "Gratis. En 3 pasos. Sin tarjeta de crédito.",
+      "steps": {
+        "identity": "Identidad",
+        "service": "Servicio",
+        "profile": "Perfil"
+      },
+      "verifyNote": "Verificamos tu identidad con el Registro Civil de Costa Rica",
+      "cedula": "Número de cédula",
+      "cedulaPlaceholder": "101230456",
+      "cedulaHint": "Ingresá tu cédula para verificar tu identidad automáticamente",
+      "verifiedName": "Nombre verificado",
+      "email": "Correo electrónico",
+      "emailPlaceholder": "tu@email.com",
+      "password": "Contraseña",
+      "passwordPlaceholder": "Mínimo 8 caracteres",
+      "passwordHint": "Usá una combinación de letras y números",
+      "terms": "Al registrarte aceptás nuestros",
+      "termsLink": "Términos de uso",
+      "category": "Categoría de servicio",
+      "categoryPlaceholder": "Seleccioná tu especialidad",
+      "province": "Provincia",
+      "provincePlaceholder": "Seleccioná tu provincia",
+      "canton": "Cantón",
+      "cantonPlaceholder": "Seleccioná tu cantón",
+      "cantonDisabled": "Primero seleccioná provincia",
+      "whatsapp": "WhatsApp",
+      "whatsappHint": "Número de 8 dígitos. Los clientes te contactarán aquí.",
+      "bio": "Descripción de tus servicios",
+      "bioMin": "mínimo 30 caracteres",
+      "bioPlaceholder": "Describí tus servicios, experiencia y lo que te diferencia de otros profesionales...",
+      "yearsExp": "Años de experiencia",
+      "yearsExpPlaceholder": "Ej: 5",
+      "hourlyRate": "Tarifa por hora (₡)",
+      "hourlyRatePlaceholder": "Ej: 10000",
+      "optional": "Opcional",
+      "addLater": "Podés agregar después:",
+      "photos": "📸 Fotos de trabajos",
+      "coverage": "🗺️ Zona de cobertura",
+      "availability": "📅 Disponibilidad",
+      "continue": "Continuar",
+      "back": "Atrás",
+      "create": "Crear mi perfil gratis",
+      "creating": "Creando perfil...",
+      "success": {
+        "title": "¡Perfil creado!",
+        "desc": "Tu perfil está listo. En breve aparecerá en los resultados de búsqueda.",
+        "viewProfile": "Ver mi perfil público"
+      },
+      "alreadyHaveAccount": "¿Ya tenés cuenta?",
+      "signIn": "Iniciá sesión"
+    },
+    "client": {
+      "title": "Crear cuenta de cliente",
+      "subtitle": "Un solo paso. Gratis.",
+      "verifyNote": "Verificamos tu identidad con el Registro Civil",
+      "cedula": "Número de cédula",
+      "cedulaHint": "Para verificar tu identidad",
+      "verifiedName": "Nombre verificado",
+      "email": "Correo electrónico",
+      "password": "Contraseña",
+      "terms": "Al registrarte aceptás nuestros",
+      "termsLink": "Términos de uso",
+      "submit": "Crear cuenta",
+      "submitting": "Creando cuenta...",
+      "success": {
+        "title": "¡Cuenta creada!",
+        "desc": "Ya podés buscar y contratar profesionales en tu zona.",
+        "button": "Buscar profesionales"
+      },
+      "alreadyHaveAccount": "¿Ya tenés cuenta?",
+      "signIn": "Iniciá sesión"
+    }
+  },
+  "footer": {
+    "tagline": "El marketplace de servicios profesionales para Costa Rica.",
+    "clients": {
+      "title": "Para clientes",
+      "search": "Buscar profesionales",
+      "howItWorks": "Cómo funciona",
+      "categories": "Categorías"
+    },
+    "pros": {
+      "title": "Para profesionales",
+      "register": "Registrar perfil",
+      "howItWorks": "Cómo funciona",
+      "plans": "Planes"
+    },
+    "company": {
+      "title": "Empresa",
+      "about": "Sobre nosotros",
+      "contact": "Contacto",
+      "terms": "Términos de uso",
+      "privacy": "Privacidad"
+    },
+    "rights": "© 2026 ContrataCR. Todos los derechos reservados.",
+    "madeIn": "Hecho con ❤️ en Costa Rica 🇨🇷"
+  },
+  "notFound": {
+    "title": "Página no encontrada",
+    "desc": "La página que buscás no existe o fue movida.",
+    "home": "Volver al inicio"
+  },
+  "categories": {
+    "plomeria": "Plomería",
+    "electricidad": "Electricidad",
+    "construccion": "Construcción",
+    "pintura": "Pintura",
+    "jardineria": "Jardinería",
+    "limpieza": "Limpieza",
+    "carpinteria": "Carpintería",
+    "tecnologia": "Tecnología / TI",
+    "ensenanza": "Enseñanza / Tutorías",
+    "belleza": "Belleza / Estética",
+    "mascotas": "Veterinaria / Mascotas",
+    "mecanica": "Mecánica",
+    "mudanzas": "Mudanzas",
+    "seguridad": "Seguridad",
+    "contabilidad": "Contabilidad / Legal",
+    "diseno": "Diseño / Arte"
+  }
+}
