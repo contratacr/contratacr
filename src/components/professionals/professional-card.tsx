@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { MapPin, CheckCircle2, MessageCircle } from "lucide-react";
+import { BookingButton } from "@/components/booking/booking-button";
 import { Link } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -108,12 +109,12 @@ export async function ProfessionalCard({ professional, className }: Professional
             <Button variant="outline" size="sm" asChild>
               <Link href={`/profesionales/${professional.slug}`}>{t("viewProfile")}</Link>
             </Button>
-            <Button variant="whatsapp" size="sm" asChild>
-              <a href={waLink} target="_blank" rel="noopener noreferrer">
-                <MessageCircle className="h-3.5 w-3.5" />
-                {t("whatsapp")}
-              </a>
-            </Button>
+            <BookingButton
+              professional={professional}
+              categoryName={tCat(professional.categoryId)}
+              variant="default"
+              size="sm"
+            />
           </div>
         </div>
       </CardContent>

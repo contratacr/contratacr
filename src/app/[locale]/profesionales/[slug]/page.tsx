@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { MapPin, CheckCircle2, MessageCircle, Star, Clock, Phone, ArrowLeft, Briefcase } from "lucide-react";
+import { BookingButton } from "@/components/booking/booking-button";
 import { Link } from "@/i18n/navigation";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
@@ -120,12 +121,12 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                   </div>
 
                   <div className="flex flex-col sm:flex-row gap-3 mt-5">
-                    <Button variant="whatsapp" size="lg" className="flex-1 sm:flex-none" asChild>
-                      <a href={waLink} target="_blank" rel="noopener noreferrer">
-                        <MessageCircle className="h-5 w-5" />
-                        {t("contact.whatsapp")}
-                      </a>
-                    </Button>
+                    <BookingButton
+                      professional={professional}
+                      categoryName={tCat(professional.categoryId)}
+                      size="lg"
+                      className="flex-1 sm:flex-none"
+                    />
                     <Button variant="outline" size="lg" asChild>
                       <a href={`tel:${professional.whatsapp}`}>
                         <Phone className="h-4 w-4" />
@@ -185,12 +186,12 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                 <CardContent className="p-5">
                   <h3 className="font-semibold text-[#111827] mb-1">{t("contact.title")}</h3>
                   <p className="text-xs text-[#6b7280] mb-4">{t("contact.responseTime")}</p>
-                  <Button variant="whatsapp" size="lg" className="w-full" asChild>
-                    <a href={waLink} target="_blank" rel="noopener noreferrer">
-                      <MessageCircle className="h-5 w-5" />
-                      {t("contact.whatsapp")}
-                    </a>
-                  </Button>
+                  <BookingButton
+                    professional={professional}
+                    categoryName={tCat(professional.categoryId)}
+                    size="lg"
+                    className="w-full"
+                  />
                   <div className="border-t border-[#f3f4f6] mt-4 pt-4 flex flex-col gap-2 text-xs text-[#6b7280]">
                     {[t("contact.identityVerified"), t("contact.directPayment"), t("contact.noFees")].map((item) => (
                       <div key={item} className="flex items-center gap-2">

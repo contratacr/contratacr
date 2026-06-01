@@ -5,6 +5,7 @@ import { Menu, X, Search } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 import { cn } from "@/lib/utils";
 
 function LanguageToggle() {
@@ -63,6 +64,7 @@ export function Navbar() {
 
           <div className="hidden md:flex items-center gap-3">
             <LanguageToggle />
+            <NotificationBell />
             <Button variant="ghost" size="sm" asChild>
               <Link href="/login">{t("login")}</Link>
             </Button>

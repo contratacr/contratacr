@@ -279,6 +279,151 @@
     "desc": "La página que buscás no existe o fue movida.",
     "home": "Volver al inicio"
   },
+  "booking": {
+    "title": "Solicitar servicio",
+    "step1": {
+      "title": "¿Para quién es el servicio?",
+      "forMe": "Para mí",
+      "forOther": "Para otra persona"
+    },
+    "step2": {
+      "title": "Verificá tu identidad",
+      "cedula": "Número de cédula",
+      "cedulaPlaceholder": "101230456",
+      "cedulaHint": "Tu nombre se auto-completa del Registro Civil",
+      "verify": "Verificar",
+      "verifying": "Verificando...",
+      "notFound": "Cédula no encontrada. Verificá el número."
+    },
+    "step3": {
+      "title": "Confirmá tu información",
+      "source": "Información obtenida del Registro Civil de Costa Rica",
+      "name": "Nombre completo",
+      "correct": "¿Es correcta tu información?",
+      "yes": "Sí, continuar",
+      "no": "Ingresar otra cédula"
+    },
+    "step4": {
+      "title": "¿Qué necesitás?",
+      "description": "Describí el servicio",
+      "descPlaceholder": "Contale brevemente al profesional qué necesitás...",
+      "date": "¿Cuándo te viene bien?",
+      "datePlaceholder": "Ej: Este fin de semana, Próximo lunes por la tarde...",
+      "email": "Tu email (opcional)",
+      "emailHint": "Para recibir actualizaciones de tu solicitud",
+      "submit": "Contactar por WhatsApp",
+      "note": "Serás redirigido a WhatsApp para coordinar directamente con el profesional"
+    },
+    "success": {
+      "title": "¡Solicitud enviada!",
+      "desc": "Tu solicitud fue registrada. Ahora podés contactar al profesional por WhatsApp.",
+      "whatsapp": "Abrir WhatsApp",
+      "close": "Listo"
+    },
+    "back": "Atrás",
+    "continue": "Continuar",
+    "close": "Cerrar",
+    "requestService": "Solicitar servicio"
+  },
+  "dashboard": {
+    "pro": {
+      "title": "Panel del profesional",
+      "notPro": "Tu cuenta no tiene un perfil profesional.",
+      "nav": {
+        "profile": "Mi perfil",
+        "photos": "Fotos",
+        "availability": "Disponibilidad",
+        "bookings": "Solicitudes"
+      },
+      "profile": {
+        "title": "Información del perfil",
+        "bio": "Descripción",
+        "bioPlaceholder": "Describí tus servicios...",
+        "whatsapp": "WhatsApp",
+        "rate": "Tarifa por hora (₡)",
+        "yearsExp": "Años de experiencia",
+        "save": "Guardar cambios",
+        "saving": "Guardando...",
+        "saved": "¡Cambios guardados!"
+      },
+      "photos": {
+        "title": "Fotos del portafolio",
+        "hint": "Mostrá tu trabajo. Máx. 10 fotos.",
+        "upload": "Subir foto",
+        "uploading": "Subiendo...",
+        "delete": "Eliminar",
+        "configure": "Configurá CLOUDINARY_CLOUD_NAME para subir fotos"
+      },
+      "availability": {
+        "title": "Mi disponibilidad semanal",
+        "hint": "Indicá cuándo estás disponible para trabajar",
+        "save": "Guardar disponibilidad",
+        "saving": "Guardando...",
+        "saved": "¡Disponibilidad actualizada!",
+        "days": {
+          "monday": "Lunes",
+          "tuesday": "Martes",
+          "wednesday": "Miércoles",
+          "thursday": "Jueves",
+          "friday": "Viernes",
+          "saturday": "Sábado",
+          "sunday": "Domingo"
+        },
+        "periods": {
+          "morning": "Mañana",
+          "afternoon": "Tarde",
+          "evening": "Noche"
+        }
+      },
+      "bookings": {
+        "title": "Solicitudes recibidas",
+        "empty": "No tenés solicitudes todavía",
+        "emptyHint": "Cuando los clientes te contacten, aparecerán aquí.",
+        "from": "De",
+        "needs": "Necesita",
+        "when": "Cuándo",
+        "contact": "Contactar por WhatsApp",
+        "status": {
+          "pending": "Pendiente",
+          "confirmed": "Confirmada",
+          "cancelled": "Cancelada",
+          "completed": "Completada"
+        },
+        "confirm": "Confirmar",
+        "markComplete": "Completar",
+        "cancel": "Cancelar"
+      }
+    },
+    "client": {
+      "title": "Mis solicitudes",
+      "nav": {
+        "bookings": "Historial",
+        "saved": "Guardados"
+      },
+      "bookings": {
+        "title": "Historial de solicitudes",
+        "empty": "No tenés solicitudes todavía",
+        "emptyHint": "Cuando solicites un servicio, aparecerá aquí.",
+        "leaveReview": "Dejar reseña",
+        "status": {
+          "pending": "Pendiente",
+          "confirmed": "Confirmada",
+          "cancelled": "Cancelada",
+          "completed": "Completada"
+        }
+      },
+      "saved": {
+        "title": "Profesionales guardados",
+        "empty": "No guardaste ningún profesional todavía",
+        "emptyHint": "Guardá tus profesionales favoritos para encontrarlos fácil."
+      }
+    }
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "empty": "No tenés notificaciones",
+    "markAllRead": "Marcar todo leído"
+  },
   "categories": {
     "plomeria": "Plomería",
     "electricidad": "Electricidad",
