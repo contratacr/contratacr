@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { CheckCircle2, ArrowRight, ArrowLeft, Loader2 } from "lucide-react";
+import { CheckCircle2, ArrowRight, ArrowLeft, Loader2, AlertCircle } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CATEGORIES, PROVINCES, getCantonsByProvince } from "@/lib/data/cr-geography";
+import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
 const step1Schema = z.object({
@@ -45,17 +46,17 @@ function StepIndicator({ current, labels }: { current: number; labels: string[] 
         <div key={label} className="flex items-center gap-2">
           <div className={cn(
             "flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold transition-all",
-            i < current ? "bg-[#319278] text-white"
-              : i === current ? "bg-[#319278] text-white ring-4 ring-[#319278]/20"
+            i < current ? "bg-[#2563EB] text-white"
+              : i === current ? "bg-[#2563EB] text-white ring-4 ring-[#2563EB]/20"
               : "bg-[#e5e7eb] text-[#9ca3af]"
           )}>
             {i < current ? <CheckCircle2 className="h-4 w-4" /> : i + 1}
           </div>
-          <span className={cn("text-sm font-medium hidden sm:block", i === current ? "text-[#319278]" : "text-[#9ca3af]")}>
+          <span className={cn("text-sm font-medium hidden sm:block", i === current ? "text-[#2563EB]" : "text-[#9ca3af]")}>
             {label}
           </span>
           {i < labels.length - 1 && (
-            <div className={cn("h-px w-8 sm:w-12 transition-all", i < current ? "bg-[#319278]" : "bg-[#e5e7eb]")} />
+            <div className={cn("h-px w-8 sm:w-12 transition-all", i < current ? "bg-[#2563EB]" : "bg-[#e5e7eb]")} />
           )}
         </div>
       ))}
@@ -72,6 +73,11 @@ export default function RegisterProfessionalPage() {
   const [selectedProvince, setSelectedProvince] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Persist step data for final submission
+  const [step1Data, setStep1Data] = useState<Step1Data | null>(null);
+  const [step2Data, setStep2Data] = useState<Step2Data | null>(null);
 
   const cantons = getCantonsByProvince(selectedProvince);
 
@@ -95,13 +101,52 @@ export default function RegisterProfessionalPage() {
     }
   }
 
-  function onStep1(_data: Step1Data) { setStep(1); }
-  function onStep2(_data: Step2Data) { setStep(2); }
-  async function onStep3(_data: Step3Data) {
+  function onStep1(data: Step1Data) {
+    setStep1Data(data);
+    setStep(1);
+  }
+
+  function onStep2(data: Step2Data) {
+    setStep2Data(data);
+    setStep(2);
+  }
+
+  async function onStep3(data: Step3Data) {
+    if (!step1Data || !step2Data) return;
     setSubmitting(true);
-    await new Promise((r) => setTimeout(r, 1200));
-    setSubmitting(false);
-    setDone(true);
+    setError(null);
+    try {
+      const supabase = createClient();
+      const { error: signUpError } = await supabase.auth.signUp({
+        email: step1Data.email,
+        password: step1Data.password,
+        options: {
+          data: {
+            full_name: fullName || step1Data.email.split("@")[0],
+            cedula: step1Data.cedula,
+            role: "professional",
+            category: step2Data.category,
+            province: step2Data.province,
+            canton: step2Data.canton,
+            whatsapp: step2Data.whatsapp,
+            bio: data.bio,
+            years_experience: data.yearsExperience ?? "",
+            hourly_rate: data.hourlyRate ?? "",
+          },
+        },
+      });
+      if (signUpError) throw signUpError;
+      setDone(true);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Error al registrarse";
+      if (msg.includes("already registered") || msg.includes("already been registered")) {
+        setError("Este email ya está registrado. ¿Querés iniciar sesión?");
+      } else {
+        setError(msg);
+      }
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   if (done) {
@@ -110,8 +155,8 @@ export default function RegisterProfessionalPage() {
         <Navbar />
         <main className="flex-1 flex items-center justify-center py-12 px-4">
           <div className="w-full max-w-md text-center">
-            <div className="flex h-20 w-20 mx-auto items-center justify-center rounded-full bg-[#f0f9f6] mb-5">
-              <CheckCircle2 className="h-10 w-10 text-[#319278]" />
+            <div className="flex h-20 w-20 mx-auto items-center justify-center rounded-full bg-[#EBF5FB] mb-5">
+              <CheckCircle2 className="h-10 w-10 text-[#2563EB]" />
             </div>
             <h1 className="text-2xl font-bold text-[#111827] mb-2">{t("success.title")}</h1>
             <p className="text-[#6b7280] mb-6">{t("success.desc")}</p>
@@ -137,11 +182,18 @@ export default function RegisterProfessionalPage() {
           </div>
           <StepIndicator current={step} labels={stepLabels} />
 
+          {error && (
+            <div className="flex items-start gap-3 rounded-xl bg-red-50 border border-red-200 px-4 py-3 mb-4">
+              <AlertCircle className="h-4 w-4 text-red-500 mt-0.5 shrink-0" />
+              <p className="text-sm text-red-700">{error}</p>
+            </div>
+          )}
+
           {/* Step 1 */}
           {step === 0 && (
             <form onSubmit={form1.handleSubmit(onStep1)} className="flex flex-col gap-4">
-              <div className="bg-[#f0f9f6] rounded-2xl p-4 border border-[#bbe2d5]">
-                <p className="text-sm text-[#237561] font-medium">🔐 {t("verifyNote")}</p>
+              <div className="bg-[#EBF5FB] rounded-2xl p-4 border border-[#bfdbfe]">
+                <p className="text-sm text-[#1d4ed8] font-medium">🔐 {t("verifyNote")}</p>
               </div>
               <Input
                 label={t("cedula")}
@@ -153,8 +205,8 @@ export default function RegisterProfessionalPage() {
                 rightIcon={loadingCedula ? <Loader2 className="h-4 w-4 animate-spin" /> : undefined}
               />
               {fullName && (
-                <div className="flex items-center gap-3 p-3 rounded-xl bg-[#f0f9f6] border border-[#bbe2d5]">
-                  <CheckCircle2 className="h-5 w-5 text-[#319278] shrink-0" />
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-[#EBF5FB] border border-[#bfdbfe]">
+                  <CheckCircle2 className="h-5 w-5 text-[#2563EB] shrink-0" />
                   <div>
                     <p className="text-xs text-[#6b7280]">{t("verifiedName")}</p>
                     <p className="text-sm font-semibold text-[#111827]">{fullName}</p>
@@ -166,7 +218,7 @@ export default function RegisterProfessionalPage() {
               <Button type="submit" size="lg" className="mt-2">{t("continue")} <ArrowRight className="h-4 w-4" /></Button>
               <p className="text-center text-xs text-[#9ca3af]">
                 {t("terms")}{" "}
-                <Link href="/terminos" className="text-[#319278] hover:underline">{t("termsLink")}</Link>
+                <Link href="/terminos" className="text-[#2563EB] hover:underline">{t("termsLink")}</Link>
               </p>
             </form>
           )}
@@ -228,7 +280,7 @@ export default function RegisterProfessionalPage() {
                 <textarea
                   className={cn(
                     "w-full rounded-xl border bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] min-h-[120px] resize-none",
-                    "border-[#e5e7eb] focus:outline-none focus:ring-2 focus:ring-[#319278] focus:border-transparent transition-all",
+                    "border-[#e5e7eb] focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-transparent transition-all",
                     form3.formState.errors.bio && "border-red-400"
                   )}
                   placeholder={t("bioPlaceholder")}
@@ -261,7 +313,7 @@ export default function RegisterProfessionalPage() {
 
           <p className="text-center text-sm text-[#6b7280] mt-6">
             {t("alreadyHaveAccount")}{" "}
-            <Link href="/login" className="text-[#319278] font-medium hover:underline">{t("signIn")}</Link>
+            <Link href="/login" className="text-[#2563EB] font-medium hover:underline">{t("signIn")}</Link>
           </p>
         </div>
       </main>
