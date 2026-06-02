@@ -119,8 +119,6 @@ export function MarqueeStrip() {
     <section
       style={{
         background: "#ffffff",
-        borderTop: "1px solid #f0f1f3",
-        borderBottom: "1px solid #f0f1f3",
         padding: "40px 0",
         overflow: "hidden",
       }}
