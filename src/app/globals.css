@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 @theme inline {
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-sans), "Inter", system-ui, sans-serif;
+  --font-mono: "Geist Mono", "Menlo", monospace;
 
   /* ContrataCR Design Tokens */
   --color-primary-50: #f0f9f6;
@@ -221,6 +221,35 @@ body {
 .animate-trust-pop {
   animation: trust-pop 0.5s ease 0.4s both;
 }
+
+/* ─── Decorative blob / arc shapes (Thumbtack style) ─── */
+.blob-right {
+  position: absolute;
+  right: -120px;
+  top: -80px;
+  width: 580px;
+  height: 680px;
+  background: #EBF5FB;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.arc-bg {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 52%;
+  background: #EBF5FB;
+  border-radius: 50% 0 0 50%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* hide scrollbar for tab rows */
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
 /* ─── App section phone drift ─── */
 @keyframes phone-drift {

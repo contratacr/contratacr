@@ -1,27 +1,102 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { ChevronDown, X, Menu, Mail, Lock, Eye, EyeOff, AlertCircle } from "lucide-react";
+import { X, Menu, Mail, Lock, Eye, EyeOff, AlertCircle, ChevronDown } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 
-const EXPLORE_SECTIONS = [
+/* ─── Logo ─── */
+export function ContrataCRLogo({ className }: { className?: string }) {
+  return (
+    <div className={cn("flex items-center gap-2.5 select-none", className)}>
+      {/* Location-pin mark */}
+      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden>
+        <circle cx="16" cy="16" r="16" fill="#2563EB" />
+        {/* White location pin */}
+        <path
+          d="M16 7.5C12.41 7.5 9.5 10.41 9.5 14c0 5.81 6.5 10.5 6.5 10.5s6.5-4.69 6.5-10.5c0-3.59-2.91-6.5-6.5-6.5z"
+          fill="white"
+        />
+        {/* Blue hole (brand color showing through) */}
+        <circle cx="16" cy="13.5" r="2.6" fill="#2563EB" />
+      </svg>
+      {/* Wordmark */}
+      <span className="text-[17px] font-extrabold tracking-tight leading-none">
+        <span className="text-[#1a2744]">Contrata</span>
+        <span className="text-[#2563EB]">CR</span>
+      </span>
+    </div>
+  );
+}
+
+/* ─── Dropdown data ─── */
+const NAV_MENUS = [
   {
-    title: "Hogar",
-    items: ["Limpieza del hogar", "Plomería", "Electricidad", "Pintura interior", "Carpintería", "Remodelación"],
+    id: "interior",
+    label: "Interior",
+    columns: [
+      {
+        heading: "Hogar",
+        links: [
+          "Limpieza del hogar",
+          "Plomería",
+          "Electricidad",
+          "Pintura interior",
+          "Carpintería",
+          "Remodelación",
+        ],
+      },
+    ],
   },
   {
-    title: "Exterior",
-    items: ["Jardinería", "Construcción", "Lavado a presión", "Mudanzas", "Impermeabilización"],
+    id: "exterior",
+    label: "Exterior",
+    columns: [
+      {
+        heading: "Al aire libre",
+        links: [
+          "Jardinería",
+          "Construcción",
+          "Lavado a presión",
+          "Impermeabilización",
+          "Mudanzas",
+          "Piscinas",
+        ],
+      },
+    ],
   },
   {
-    title: "Tecnología",
-    items: ["Soporte técnico", "Redes y WiFi", "Seguridad CCTV", "Diseño web", "Recuperación de datos"],
+    id: "mas",
+    label: "Más servicios",
+    columns: [
+      {
+        heading: "Tecnología",
+        links: ["Soporte técnico", "Redes y WiFi", "Seguridad CCTV", "Diseño web"],
+      },
+      {
+        heading: "Bienestar",
+        links: ["Belleza y estética", "Entrenamiento personal", "Masajes", "Nutrición"],
+      },
+      {
+        heading: "Vehículos",
+        links: ["Mecánica automotriz", "Lavado de autos", "Cerrajería"],
+      },
+    ],
   },
   {
-    title: "Bienestar",
-    items: ["Belleza y estética", "Entrenamiento personal", "Masajes", "Nutrición", "Yoga"],
+    id: "recursos",
+    label: "Recursos",
+    columns: [
+      {
+        heading: "Aprendé",
+        links: ["Guías de precios", "Cómo funciona", "Centro de ayuda"],
+      },
+      {
+        heading: "Profesionales",
+        links: ["Registrá tu perfil", "Para profesionales", "Verificación de cédula"],
+      },
+    ],
   },
 ];
 
@@ -46,33 +121,23 @@ function LoginModal({ onClose }: { onClose: () => void }) {
     : "/auth/callback";
 
   async function handleOAuth(provider: "google" | "facebook" | "apple") {
-    setLoading(true);
-    setError(null);
+    setLoading(true); setError(null);
     const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider,
-      options: { redirectTo: callbackUrl },
-    });
+    const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: callbackUrl } });
     if (error) { setError(error.message); setLoading(false); }
   }
 
   async function handleEmailAuth(e: React.FormEvent) {
     e.preventDefault();
     if (!email || !password) { setError("Completá todos los campos."); return; }
-    setLoading(true);
-    setError(null);
+    setLoading(true); setError(null);
     const supabase = createClient();
-
     if (mode === "login") {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) { setError("Correo o contraseña incorrectos."); setLoading(false); return; }
       onClose();
     } else {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { emailRedirectTo: callbackUrl },
-      });
+      const { error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: callbackUrl } });
       if (error) { setError(error.message); setLoading(false); return; }
       setSuccess("¡Revisá tu correo para confirmar tu cuenta!");
       setLoading(false);
@@ -86,39 +151,18 @@ function LoginModal({ onClose }: { onClose: () => void }) {
         className="relative bg-white rounded-2xl shadow-2xl w-full max-w-[420px] p-8 z-10"
         style={{ animation: "modalIn 0.22s cubic-bezier(0.16,1,0.3,1) both" }}
       >
-        <style>{`
-          @keyframes modalIn {
-            from { opacity:0; transform:scale(0.95) translateY(12px); }
-            to   { opacity:1; transform:scale(1) translateY(0); }
-          }
-        `}</style>
-
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-gray-100 transition-colors text-gray-400 hover:text-gray-600"
-          aria-label="Cerrar"
-        >
+        <style>{`@keyframes modalIn{from{opacity:0;transform:scale(0.95) translateY(12px)}to{opacity:1;transform:scale(1) translateY(0)}}`}</style>
+        <button onClick={onClose} className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-gray-100 transition-colors text-gray-400">
           <X className="h-4 w-4" />
         </button>
-
-        {/* Header */}
         <div className="mb-6">
-          <div className="flex items-center gap-2 mb-4">
-            <svg width="18" height="18" viewBox="0 0 22 22" fill="none">
-              <path d="M11 1L21 11L11 21L1 11L11 1Z" fill="#2563EB" />
-              <path d="M7.5 11L10 13.5L14.5 8.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            <span className="text-sm font-bold text-[#1a2744]">Contrata<span className="text-[#2563EB]">CR</span></span>
-          </div>
+          <ContrataCRLogo className="mb-4" />
           <h2 className="text-2xl font-bold text-[#1a2744]">
             {mode === "login" ? "Bienvenido de vuelta" : "Crear cuenta gratis"}
           </h2>
-          <p className="text-sm text-gray-400 mt-1">
-            {mode === "login" ? "Iniciá sesión para continuar" : "Registrate en segundos"}
-          </p>
+          <p className="text-sm text-gray-400 mt-1">{mode === "login" ? "Iniciá sesión para continuar" : "Registrate en segundos"}</p>
         </div>
 
-        {/* Success state */}
         {success ? (
           <div className="text-center py-6">
             <div className="text-4xl mb-3">📧</div>
@@ -128,13 +172,9 @@ function LoginModal({ onClose }: { onClose: () => void }) {
           </div>
         ) : (
           <>
-            {/* Social auth */}
             <div className="space-y-3 mb-5">
-              <button
-                onClick={() => handleOAuth("google")}
-                disabled={loading}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-200 hover:border-gray-300 hover:bg-gray-50/80 transition-all text-sm font-medium text-gray-700 active:scale-[0.98] disabled:opacity-60"
-              >
+              <button onClick={() => handleOAuth("google")} disabled={loading}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-200 hover:bg-gray-50 transition-all text-sm font-medium text-gray-700 active:scale-[0.98] disabled:opacity-60">
                 <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24">
                   <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
                   <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -143,76 +183,40 @@ function LoginModal({ onClose }: { onClose: () => void }) {
                 </svg>
                 Continuar con Google
               </button>
-
-              <button
-                onClick={() => handleOAuth("facebook")}
-                disabled={loading}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-200 hover:border-gray-300 hover:bg-gray-50/80 transition-all text-sm font-medium text-gray-700 active:scale-[0.98] disabled:opacity-60"
-              >
+              <button onClick={() => handleOAuth("facebook")} disabled={loading}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-200 hover:bg-gray-50 transition-all text-sm font-medium text-gray-700 active:scale-[0.98] disabled:opacity-60">
                 <svg className="h-5 w-5 shrink-0 text-[#1877F2]" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                 </svg>
                 Continuar con Facebook
               </button>
-
-              <button
-                onClick={() => handleOAuth("apple")}
-                disabled={loading}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-black hover:bg-gray-900 transition-all text-sm font-medium text-white active:scale-[0.98] disabled:opacity-60"
-              >
-                <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/>
-                </svg>
-                Continuar con Apple
-              </button>
             </div>
 
             <div className="flex items-center gap-3 mb-5">
-              <div className="flex-1 h-px bg-gray-100" />
-              <span className="text-xs text-gray-400 font-medium">o</span>
-              <div className="flex-1 h-px bg-gray-100" />
+              <div className="flex-1 h-px bg-gray-100" /><span className="text-xs text-gray-400 font-medium">o</span><div className="flex-1 h-px bg-gray-100" />
             </div>
 
-            {/* Email + Password form */}
             <form onSubmit={handleEmailAuth} className="space-y-3 mb-4">
               {error && (
                 <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-100 rounded-xl text-xs text-red-600">
-                  <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-                  {error}
+                  <AlertCircle className="h-3.5 w-3.5 shrink-0" />{error}
                 </div>
               )}
               <div className="relative">
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Correo electrónico"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 focus:border-[#2563EB] transition-all bg-gray-50/50 hover:bg-white placeholder:text-gray-400"
-                />
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Correo electrónico"
+                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 focus:border-[#2563EB] transition-all bg-gray-50/50 placeholder:text-gray-400" />
               </div>
               <div className="relative">
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
-                <input
-                  type={showPw ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Contraseña"
-                  className="w-full pl-10 pr-10 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 focus:border-[#2563EB] transition-all bg-gray-50/50 hover:bg-white placeholder:text-gray-400"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPw(!showPw)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500 transition-colors"
-                >
+                <input type={showPw ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Contraseña"
+                  className="w-full pl-10 pr-10 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 focus:border-[#2563EB] transition-all bg-gray-50/50 placeholder:text-gray-400" />
+                <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500">
                   {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-3 rounded-xl bg-[#2563EB] hover:bg-[#1d4ed8] text-white font-semibold text-sm transition-all active:scale-[0.98] shadow-sm hover:shadow-md disabled:opacity-60 flex items-center justify-center gap-2"
-              >
+              <button type="submit" disabled={loading}
+                className="w-full py-3 rounded-xl bg-[#2563EB] hover:bg-[#1d4ed8] text-white font-bold text-sm transition-all active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2">
                 {loading && <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />}
                 {mode === "login" ? "Iniciar sesión" : "Crear cuenta"}
               </button>
@@ -221,15 +225,11 @@ function LoginModal({ onClose }: { onClose: () => void }) {
             <p className="text-center text-sm text-gray-400">
               {mode === "login" ? (
                 <>¿No tenés cuenta?{" "}
-                  <button onClick={() => { setMode("register"); setError(null); }} className="text-[#2563EB] font-semibold hover:underline">
-                    Registrate gratis
-                  </button>
+                  <button onClick={() => { setMode("register"); setError(null); }} className="text-[#2563EB] font-semibold hover:underline">Registrate gratis</button>
                 </>
               ) : (
                 <>¿Ya tenés cuenta?{" "}
-                  <button onClick={() => { setMode("login"); setError(null); }} className="text-[#2563EB] font-semibold hover:underline">
-                    Iniciá sesión
-                  </button>
+                  <button onClick={() => { setMode("login"); setError(null); }} className="text-[#2563EB] font-semibold hover:underline">Iniciá sesión</button>
                 </>
               )}
             </p>
@@ -244,22 +244,22 @@ function LoginModal({ onClose }: { onClose: () => void }) {
 export function LandingNavbar() {
   const [scrolled, setScrolled] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
-  const [explorarOpen, setExplorarOpen] = useState(false);
+  const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const explorarTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    const handler = () => setScrolled(window.scrollY > 80);
+    const handler = () => setScrolled(window.scrollY > 60);
     window.addEventListener("scroll", handler, { passive: true });
     return () => window.removeEventListener("scroll", handler);
   }, []);
 
-  function openExplorar() {
-    if (explorarTimeout.current) clearTimeout(explorarTimeout.current);
-    setExplorarOpen(true);
+  function openDropdown(id: string) {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    setOpenMenu(id);
   }
-  function closeExplorar() {
-    explorarTimeout.current = setTimeout(() => setExplorarOpen(false), 150);
+  function closeDropdown() {
+    closeTimer.current = setTimeout(() => setOpenMenu(null), 120);
   }
 
   return (
@@ -269,73 +269,96 @@ export function LandingNavbar() {
           "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
           scrolled
             ? "bg-white/96 backdrop-blur-md shadow-sm border-b border-gray-100/80"
-            : "bg-transparent"
+            : "bg-white border-b border-gray-100/60"
         )}
       >
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between gap-6">
+          <div className="flex h-16 items-center justify-between gap-4">
 
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-2 shrink-0">
-              <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-                <path d="M11 1L21 11L11 21L1 11L11 1Z" fill="#2563EB"/>
-                <path d="M7.5 11L10 13.5L14.5 8.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              <span className="text-lg font-extrabold tracking-tight text-[#1a2744]">
-                Contrata<span className="text-[#2563EB]">CR</span>
-              </span>
+            <Link href="/" aria-label="ContrataCR inicio">
+              <ContrataCRLogo />
             </Link>
 
-            {/* Center — Explorar */}
-            <nav className="hidden md:flex items-center flex-1 justify-center">
-              <div className="relative" onMouseEnter={openExplorar} onMouseLeave={closeExplorar}>
-                <button className="flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-medium text-[#1a2744] hover:bg-black/5 transition-colors">
-                  Explorar
-                  <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", explorarOpen && "rotate-180")} />
-                </button>
+            {/* Center nav — 4 dropdowns */}
+            <nav className="hidden lg:flex items-center gap-0.5 flex-1 justify-center">
+              {NAV_MENUS.map((menu) => (
+                <div
+                  key={menu.id}
+                  className="relative"
+                  onMouseEnter={() => openDropdown(menu.id)}
+                  onMouseLeave={closeDropdown}
+                >
+                  <button
+                    className={cn(
+                      "flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-medium transition-colors",
+                      openMenu === menu.id ? "text-[#1a2744] bg-gray-50" : "text-[#374151] hover:text-[#1a2744] hover:bg-gray-50"
+                    )}
+                  >
+                    {menu.label}
+                    <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", openMenu === menu.id && "rotate-180")} />
+                  </button>
 
-                {explorarOpen && (
-                  <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 p-6 w-[660px] grid grid-cols-4 gap-6 z-50">
-                    <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white border-l border-t border-gray-100 rotate-45" />
-                    {EXPLORE_SECTIONS.map((sec) => (
-                      <div key={sec.title}>
-                        <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">{sec.title}</h4>
-                        <ul className="space-y-2.5">
-                          {sec.items.map((item) => (
-                            <li key={item}>
-                              <Link href="/buscar" className="text-sm text-gray-600 hover:text-[#2563EB] transition-colors leading-tight">
-                                {item}
-                              </Link>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+                  {/* Dropdown panel */}
+                  {openMenu === menu.id && (
+                    <div
+                      className={cn(
+                        "absolute top-full left-1/2 -translate-x-1/2 mt-1.5 bg-white rounded-2xl shadow-2xl border border-gray-100 p-6 z-50 min-w-[220px]",
+                        menu.columns.length > 1 && "grid gap-8"
+                      )}
+                      style={{
+                        gridTemplateColumns: `repeat(${menu.columns.length}, minmax(160px, 1fr))`,
+                        animation: "tab-cards-in 0.15s ease both",
+                      }}
+                    >
+                      {/* Arrow pip */}
+                      <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white border-l border-t border-gray-100 rotate-45" />
+                      {menu.columns.map((col) => (
+                        <div key={col.heading}>
+                          <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">{col.heading}</h4>
+                          <ul className="space-y-2.5">
+                            {col.links.map((link) => (
+                              <li key={link}>
+                                <Link href="/buscar" className="text-sm text-gray-600 hover:text-[#2563EB] transition-colors leading-tight block">
+                                  {link}
+                                </Link>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
             </nav>
 
             {/* Right actions */}
-            <div className="hidden md:flex items-center gap-2 shrink-0">
+            <div className="hidden lg:flex items-center gap-1 shrink-0">
+              <Link
+                href="/registro/profesional"
+                className="text-sm font-medium px-3 py-2 text-[#374151] hover:text-[#1a2744] transition-colors whitespace-nowrap"
+              >
+                Unirse como profesional
+              </Link>
               <button
                 onClick={() => setShowLogin(true)}
-                className="text-sm font-medium px-3 py-2 rounded-xl text-[#374151] hover:bg-black/5 transition-colors"
+                className="text-sm font-medium px-3 py-2 rounded-xl text-[#374151] hover:bg-gray-50 transition-colors"
               >
                 Iniciar sesión
               </button>
               <Link
-                href="/registro/profesional"
-                className="inline-flex items-center bg-[#2563EB] hover:bg-[#1d4ed8] text-white text-sm font-semibold px-5 py-2.5 rounded-full transition-all duration-150 active:scale-[0.97] shadow-sm hover:shadow-[0_4px_20px_rgba(37,99,235,0.35)] hover:scale-[1.02]"
+                href="/registro"
+                className="ml-1 inline-flex items-center bg-[#2563EB] hover:bg-[#1d4ed8] text-white text-sm font-bold px-5 py-2.5 rounded-full transition-all duration-150 active:scale-[0.97] shadow-sm hover:shadow-[0_4px_20px_rgba(37,99,235,0.35)] whitespace-nowrap"
               >
-                Únete como profesional
+                Registrarse
               </Link>
             </div>
 
             {/* Mobile toggle */}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="md:hidden p-2 rounded-xl text-[#1a2744] hover:bg-black/5 transition-colors"
+              className="lg:hidden p-2 rounded-xl text-[#1a2744] hover:bg-gray-50 transition-colors"
               aria-label="Menú"
             >
               {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -345,31 +368,29 @@ export function LandingNavbar() {
 
         {/* Mobile drawer */}
         <div className={cn(
-          "md:hidden bg-white border-t border-gray-100 overflow-hidden transition-all duration-300 ease-in-out",
+          "lg:hidden bg-white border-t border-gray-100 overflow-hidden transition-all duration-300 ease-in-out",
           mobileOpen ? "max-h-[80vh] opacity-100" : "max-h-0 opacity-0"
         )}>
           <div className="px-4 py-4 overflow-y-auto max-h-[70vh]">
-            {EXPLORE_SECTIONS.map((sec) => (
-              <div key={sec.title} className="mb-4">
-                <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{sec.title}</p>
-                {sec.items.slice(0, 4).map((item) => (
-                  <Link key={item} href="/buscar" onClick={() => setMobileOpen(false)}
+            {NAV_MENUS.map((menu) => (
+              <div key={menu.id} className="mb-4">
+                <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{menu.label}</p>
+                {menu.columns.flatMap((col) => col.links).slice(0, 5).map((link) => (
+                  <Link key={link} href="/buscar" onClick={() => setMobileOpen(false)}
                     className="block px-2 py-2 text-sm text-gray-600 hover:text-[#2563EB] transition-colors">
-                    {item}
+                    {link}
                   </Link>
                 ))}
               </div>
             ))}
             <div className="border-t border-gray-100 pt-4 flex flex-col gap-2">
-              <button
-                onClick={() => { setShowLogin(true); setMobileOpen(false); }}
-                className="w-full px-4 py-3 rounded-xl text-sm font-medium text-[#374151] border border-gray-200 hover:bg-gray-50 transition-colors text-left"
-              >
+              <button onClick={() => { setShowLogin(true); setMobileOpen(false); }}
+                className="w-full px-4 py-3 rounded-xl text-sm font-medium text-[#374151] border border-gray-200 hover:bg-gray-50 text-left">
                 Iniciar sesión
               </button>
-              <Link href="/registro/profesional" onClick={() => setMobileOpen(false)}
-                className="w-full block px-4 py-3 rounded-full bg-[#2563EB] text-white text-sm font-semibold text-center hover:bg-[#1d4ed8] transition-colors">
-                Únete como profesional
+              <Link href="/registro" onClick={() => setMobileOpen(false)}
+                className="w-full block px-4 py-3 rounded-full bg-[#2563EB] text-white text-sm font-bold text-center hover:bg-[#1d4ed8] transition-colors">
+                Registrarse
               </Link>
             </div>
           </div>
