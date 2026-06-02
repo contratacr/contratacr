@@ -9,28 +9,35 @@ import { NotificationBell } from "@/components/notifications/notification-bell";
 import { ContrataCRLogo } from "@/components/landing/landing-navbar";
 import { cn } from "@/lib/utils";
 
-function LanguageToggle() {
+/* Same pill design as LandingNavbar */
+function LanguagePill() {
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
-  const t = useTranslations("nav");
 
-  function toggle() {
-    const next = locale === "es" ? "en" : "es";
+  function switchLang(lang: string) {
     if (typeof window !== "undefined") {
-      localStorage.setItem("preferred-locale", next);
+      localStorage.setItem("contratacr_lang", lang);
     }
-    router.replace(pathname, { locale: next });
+    router.replace(pathname, { locale: lang });
   }
 
   return (
-    <button
-      onClick={toggle}
-      className="px-2.5 py-1 rounded-lg border border-[#e5e7eb] text-xs font-semibold text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] transition-colors"
-      aria-label="Switch language"
-    >
-      {t("langToggle")}
-    </button>
+    <div className="inline-flex border border-gray-200 rounded-full overflow-hidden text-[13px] font-medium shrink-0">
+      {["es", "en"].map((lang) => (
+        <button
+          key={lang}
+          onClick={() => switchLang(lang)}
+          className="px-2.5 py-1 transition-colors"
+          style={{
+            background: locale === lang ? "#009FD9" : "transparent",
+            color: locale === lang ? "#fff" : "#6b7280",
+          }}
+        >
+          {lang.toUpperCase()}
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -39,40 +46,68 @@ export function Navbar() {
   const t = useTranslations("nav");
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-[#e5e7eb] bg-white/95 backdrop-blur-sm">
+    <header className="sticky top-0 z-50 w-full bg-white/96 backdrop-blur-md shadow-sm border-b border-gray-100/80">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center justify-between">
+        <div className="flex h-16 items-center gap-4">
 
-          <Link href="/" aria-label="ContrataCR inicio">
+          {/* Logo */}
+          <Link href="/" aria-label="ContrataCR inicio" className="shrink-0">
             <ContrataCRLogo />
           </Link>
 
-          <nav className="hidden md:flex items-center gap-6">
-            <Link href="/buscar" className="text-sm text-[#6b7280] hover:text-[#009FD9] transition-colors font-medium">
+          {/* Nav links — directly after logo, same as LandingNavbar */}
+          <nav className="hidden lg:flex items-center gap-0.5">
+            <Link
+              href="/buscar"
+              className="px-4 py-2 rounded-xl text-sm font-medium text-[#374151] hover:text-[#1a2744] hover:bg-gray-50 transition-colors"
+            >
               {t("search")}
             </Link>
-            <Link href="/categorias" className="text-sm text-[#6b7280] hover:text-[#009FD9] transition-colors font-medium">
+            <Link
+              href="/categorias"
+              className="px-4 py-2 rounded-xl text-sm font-medium text-[#374151] hover:text-[#1a2744] hover:bg-gray-50 transition-colors"
+            >
               {t("categories")}
             </Link>
-            <Link href="/como-funciona" className="text-sm text-[#6b7280] hover:text-[#009FD9] transition-colors font-medium">
+            <Link
+              href="/como-funciona"
+              className="px-4 py-2 rounded-xl text-sm font-medium text-[#374151] hover:text-[#1a2744] hover:bg-gray-50 transition-colors"
+            >
               {t("howItWorks")}
             </Link>
           </nav>
 
-          <div className="hidden md:flex items-center gap-3">
-            <LanguageToggle />
+          {/* Spacer */}
+          <div className="flex-1" />
+
+          {/* Right actions — same order as LandingNavbar */}
+          <div className="hidden lg:flex items-center gap-1 shrink-0">
+            <Link
+              href="/registro/profesional"
+              className="text-sm font-medium px-3 py-2 text-[#374151] hover:text-[#1a2744] transition-colors whitespace-nowrap"
+            >
+              Unirse como profesional
+            </Link>
+            <Link
+              href="/registro"
+              className="ml-1 inline-flex items-center bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 rounded-full transition-all duration-150 active:scale-[0.97] shadow-sm hover:shadow-[0_4px_20px_rgba(0,159,217,0.35)] whitespace-nowrap"
+            >
+              {t("register")}
+            </Link>
+            <Link
+              href="/login"
+              className="text-sm font-medium px-3 py-2 rounded-xl text-[#374151] hover:bg-gray-50 transition-colors"
+            >
+              {t("login")}
+            </Link>
             <NotificationBell />
-            <Button variant="ghost" size="sm" asChild>
-              <Link href="/login">{t("login")}</Link>
-            </Button>
-            <Button size="sm" asChild>
-              <Link href="/registro">{t("register")}</Link>
-            </Button>
+            <LanguagePill />
           </div>
 
+          {/* Mobile hamburger */}
           <button
             onClick={() => setOpen(!open)}
-            className="md:hidden p-2 rounded-xl text-[#6b7280] hover:bg-[#f3f4f6] transition-colors"
+            className="lg:hidden p-2 rounded-xl text-[#1a2744] hover:bg-gray-50 transition-colors"
             aria-label="Menú"
           >
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -80,32 +115,46 @@ export function Navbar() {
         </div>
       </div>
 
-      <div className={cn("md:hidden border-t border-[#e5e7eb] bg-white overflow-hidden transition-all duration-200", open ? "max-h-80" : "max-h-0")}>
+      {/* Mobile drawer — same structure as LandingNavbar */}
+      <div className={cn(
+        "lg:hidden bg-white border-t border-gray-100 overflow-hidden transition-all duration-300 ease-in-out",
+        open ? "max-h-[80vh] opacity-100" : "max-h-0 opacity-0"
+      )}>
         <nav className="px-4 py-4 flex flex-col gap-1">
-          <Link href="/buscar" onClick={() => setOpen(false)}
-            className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium text-[#374151] hover:bg-[#EBF5FB] hover:text-[#009FD9] transition-colors">
+          <Link
+            href="/buscar"
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium text-[#374151] hover:bg-[#EBF5FB] hover:text-[#009FD9] transition-colors"
+          >
             <Search className="h-4 w-4" />
             {t("searchProfessionals")}
           </Link>
-          <Link href="/categorias" onClick={() => setOpen(false)}
-            className="px-3 py-2.5 rounded-xl text-sm font-medium text-[#374151] hover:bg-[#EBF5FB] hover:text-[#009FD9] transition-colors">
+          <Link
+            href="/categorias"
+            onClick={() => setOpen(false)}
+            className="px-3 py-2.5 rounded-xl text-sm font-medium text-[#374151] hover:bg-[#EBF5FB] hover:text-[#009FD9] transition-colors"
+          >
             {t("categories")}
           </Link>
-          <Link href="/como-funciona" onClick={() => setOpen(false)}
-            className="px-3 py-2.5 rounded-xl text-sm font-medium text-[#374151] hover:bg-[#EBF5FB] hover:text-[#009FD9] transition-colors">
+          <Link
+            href="/como-funciona"
+            onClick={() => setOpen(false)}
+            className="px-3 py-2.5 rounded-xl text-sm font-medium text-[#374151] hover:bg-[#EBF5FB] hover:text-[#009FD9] transition-colors"
+          >
             {t("howItWorks")}
           </Link>
-          <div className="border-t border-[#e5e7eb] my-2" />
-          <div className="flex items-center justify-between px-3 py-1">
-            <span className="text-xs text-[#6b7280]">Idioma / Language</span>
-            <LanguageToggle />
+          <div className="border-t border-gray-100 pt-4 flex flex-col gap-2">
+            <div className="flex items-center justify-between px-1 pb-1">
+              <span className="text-xs text-gray-400 font-medium">Idioma / Language</span>
+              <LanguagePill />
+            </div>
+            <Link href="/login" onClick={() => setOpen(false)}>
+              <Button variant="outline" size="md" className="w-full">{t("login")}</Button>
+            </Link>
+            <Link href="/registro" onClick={() => setOpen(false)}>
+              <Button size="md" className="w-full">{t("register")}</Button>
+            </Link>
           </div>
-          <Link href="/login" onClick={() => setOpen(false)}>
-            <Button variant="outline" size="md" className="w-full">{t("login")}</Button>
-          </Link>
-          <Link href="/registro" onClick={() => setOpen(false)}>
-            <Button size="md" className="w-full">{t("register")}</Button>
-          </Link>
         </nav>
       </div>
     </header>
