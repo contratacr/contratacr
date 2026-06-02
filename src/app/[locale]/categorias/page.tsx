@@ -1,72 +1,123 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { FadeInUp } from "@/components/landing/fade-in-up";
 import { Link } from "@/i18n/navigation";
+import {
+  Home,
+  Leaf,
+  Sparkles,
+  Laptop,
+  Briefcase,
+  Heart,
+  Star,
+  BookOpen,
+  Truck,
+  CalendarDays,
+  Shield,
+  Car,
+} from "lucide-react";
 
-const CATEGORIES = [
+const GROUPS = [
   {
-    id: "electricidad",
-    icon: "⚡",
-    name: "Electricidad",
-    description: "Instalaciones, reparaciones y tableros eléctricos",
+    key: "hogar",
+    Icon: Home,
+    ids: [
+      "plomeria","electricidad","construccion","pintura","carpinteria",
+      "remodelacion","techos","pisos","impermeabilizacion","fumigacion",
+      "cerrajeria","aire_acondicionado","calentadores","ventanas_puertas",
+      "soldadura","gypsum",
+    ],
   },
   {
-    id: "plomeria",
-    icon: "🔧",
-    name: "Plomería",
-    description: "Tuberías, baños y sistemas de agua",
+    key: "jardin",
+    Icon: Leaf,
+    ids: [
+      "jardineria","poda_arboles","paisajismo","limpieza_piscinas",
+      "riego_automatizado","control_plagas",
+    ],
   },
   {
-    id: "jardineria",
-    icon: "🌿",
-    name: "Jardinería",
-    description: "Poda, mantenimiento y paisajismo",
+    key: "limpieza",
+    Icon: Sparkles,
+    ids: [
+      "limpieza","limpieza_oficinas","desinfeccion","lavado_alfombras",
+      "limpieza_post_construccion","lavado_vehiculos",
+    ],
   },
   {
-    id: "mudanzas",
-    icon: "📦",
-    name: "Mudanzas",
-    description: "Transporte de muebles y embalaje",
+    key: "tecnologia",
+    Icon: Laptop,
+    ids: [
+      "reparacion_computadoras","redes_internet","camaras_seguridad","domotica",
+      "desarrollo_web","diseno_grafico","diseno_apps","soporte_tecnico",
+      "impresion_3d","audio_video",
+    ],
   },
   {
-    id: "pintura",
-    icon: "🖌️",
-    name: "Pintura",
-    description: "Interior, exterior e impermeabilización",
+    key: "profesional",
+    Icon: Briefcase,
+    ids: [
+      "contabilidad","legal","ingenieria_civil","arquitectura","topografia",
+      "consultoria","traduccion","recursos_humanos","marketing_digital",
+      "fotografia","produccion_video","bienes_raices",
+    ],
   },
   {
-    id: "carpinteria",
-    icon: "🪵",
-    name: "Carpintería",
-    description: "Muebles a medida, puertas y pisos",
+    key: "salud",
+    Icon: Heart,
+    ids: [
+      "entrenamiento_personal","nutricion","masajes","psicologia","fisioterapia",
+      "enfermeria","cuidado_adultos","cuidado_infantil","veterinaria","peluqueria_canina",
+    ],
   },
   {
-    id: "limpieza",
-    icon: "🧹",
-    name: "Limpieza",
-    description: "Hogar, oficinas y desinfección",
+    key: "belleza",
+    Icon: Star,
+    ids: [
+      "peluqueria","maquillaje","unhas","pestanas","depilacion",
+      "estetica_facial","bronceado",
+    ],
   },
   {
-    id: "tecnologia",
-    icon: "💻",
-    name: "Tecnología",
-    description: "Soporte técnico, redes y CCTV",
+    key: "educacion",
+    Icon: BookOpen,
+    ids: [
+      "tutorias","idiomas","musica","matematicas","preparacion_universitaria",
+      "clases_manejo","clases_cocina",
+    ],
   },
   {
-    id: "mecanica",
-    icon: "🔩",
-    name: "Mecánica",
-    description: "Revisión, frenos y sistema eléctrico",
+    key: "mudanzas",
+    Icon: Truck,
+    ids: ["mudanzas","fletes","mensajeria","transporte_mascotas"],
   },
   {
-    id: "seguridad",
-    icon: "🔐",
-    name: "Seguridad",
-    description: "Cámaras, alarmas y cerrajería",
+    key: "eventos",
+    Icon: CalendarDays,
+    ids: [
+      "fotografia_eventos","videografia","dj_sonido","catering",
+      "decoracion","animacion_infantil","bartending",
+    ],
   },
-];
+  {
+    key: "seguridad",
+    Icon: Shield,
+    ids: ["guardas_seguridad","alarmas","cctv","control_acceso"],
+  },
+  {
+    key: "automotriz",
+    Icon: Car,
+    ids: ["mecanica","hojalateria","electricidad_automotriz","tapiceria","detailing","cambio_llantas"],
+  },
+] as const;
 
 export default function CategoriasPage() {
+  const t = useTranslations("categories");
+  const tg = useTranslations("categoryGroups");
+
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <LandingNavbar />
@@ -81,35 +132,43 @@ export default function CategoriasPage() {
             Todos los servicios en ContrataCR.
           </h1>
           <p className="text-lg text-gray-500 max-w-xl mx-auto">
-            Encontrá profesionales para cualquier proyecto.
+            Encontrá profesionales para cualquier proyecto, organizados por categoría.
           </p>
         </FadeInUp>
       </section>
 
-      {/* Categories Grid */}
-      <section className="pb-24 px-4" style={{ background: "#f4f7fa" }}>
-        <div className="mx-auto max-w-6xl">
-          <FadeInUp>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-5 pt-10">
-              {CATEGORIES.map((cat, i) => (
-                <FadeInUp key={cat.id} delay={i * 40}>
-                  <div className="group bg-white border border-gray-100 rounded-2xl p-6 flex flex-col items-center text-center hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer">
-                    <div className="w-20 h-20 rounded-2xl bg-[#EBF5FB] flex items-center justify-center text-4xl mb-4 group-hover:bg-[#009FD9]/10 transition-colors">
-                      {cat.icon}
-                    </div>
-                    <h3 className="text-base font-bold text-[#1a2744] mb-1">{cat.name}</h3>
-                    <p className="text-xs text-gray-400 leading-relaxed mb-4">{cat.description}</p>
-                    <Link
-                      href={`/buscar?categoria=${cat.id}`}
-                      className="text-xs font-semibold text-[#009FD9] hover:underline"
-                    >
-                      Ver profesionales →
-                    </Link>
+      {/* Categories by group */}
+      <section className="pb-24 px-4 bg-[#f4f7fa]">
+        <div className="mx-auto max-w-6xl pt-8 flex flex-col gap-10">
+          {GROUPS.map((group, gi) => (
+            <FadeInUp key={group.key} delay={gi * 30}>
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                {/* Group header */}
+                <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100 bg-[#f8fafc]">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#EBF5FB]">
+                    <group.Icon className="h-5 w-5 text-[#009FD9]" />
                   </div>
-                </FadeInUp>
-              ))}
-            </div>
-          </FadeInUp>
+                  <h2 className="text-base font-bold text-[#1a2744]">
+                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                    {tg(group.key as any)}
+                  </h2>
+                </div>
+                {/* Category links grid */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-0 divide-x divide-y divide-gray-50">
+                  {group.ids.map((id) => (
+                    <Link
+                      key={id}
+                      href={`/buscar?categoria=${id}`}
+                      className="px-4 py-3 text-sm text-[#374151] hover:bg-[#EBF5FB] hover:text-[#009FD9] font-medium transition-colors leading-snug"
+                    >
+                      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                      {t(id as any)}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </FadeInUp>
+          ))}
         </div>
       </section>
 
@@ -118,7 +177,7 @@ export default function CategoriasPage() {
         <FadeInUp>
           <h2 className="text-3xl font-extrabold mb-3">¿No encontrás tu categoría?</h2>
           <p className="text-gray-300 mb-8 max-w-md mx-auto">
-            Tenemos más de 50 especialidades disponibles. Escribinos y te ayudamos a encontrar el profesional que necesitás.
+            Tenemos más de 90 especialidades disponibles. Escribinos y te ayudamos a encontrar el profesional que necesitás.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
