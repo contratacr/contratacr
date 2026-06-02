@@ -276,9 +276,19 @@ export function LandingNavbar() {
   const router = useRouter();
 
   useEffect(() => {
-    const handler = () => setCompact(window.scrollY > 500);
-    window.addEventListener("scroll", handler, { passive: true });
-    return () => window.removeEventListener("scroll", handler);
+    const sentinel = document.getElementById("hero-search-sentinel");
+    if (!sentinel) {
+      // Non-landing pages: fallback to scrollY
+      const handler = () => setCompact(window.scrollY > 300);
+      window.addEventListener("scroll", handler, { passive: true });
+      return () => window.removeEventListener("scroll", handler);
+    }
+    const observer = new IntersectionObserver(
+      ([entry]) => setCompact(!entry.isIntersecting),
+      { threshold: 0, rootMargin: "-64px 0px 0px 0px" }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
   }, []);
 
   function openDropdown(id: string) {
@@ -417,8 +427,8 @@ export function LandingNavbar() {
                 <ContrataCRLogo />
               </Link>
 
-              {/* Mini search */}
-              <form onSubmit={handleCompactSearch} className="flex-1 flex items-center gap-2 bg-white border border-gray-200 rounded-[6px] px-3 py-1.5 shadow-sm">
+              {/* Mini search — 44px height */}
+              <form onSubmit={handleCompactSearch} className="flex-1 flex items-center h-11 gap-2 bg-white border border-gray-200 rounded-[6px] px-3 shadow-sm">
                 <Search className="h-4 w-4 text-gray-300 shrink-0" />
                 <input
                   type="text"
@@ -468,6 +478,11 @@ export function LandingNavbar() {
               </div>
             ))}
             <div className="border-t border-gray-100 pt-4 flex flex-col gap-2">
+              {/* Language toggle visible on mobile */}
+              <div className="flex items-center justify-between px-1 pb-1">
+                <span className="text-xs text-gray-400 font-medium">Idioma / Language</span>
+                <LanguageTogglePill />
+              </div>
               <button onClick={() => { setShowLogin(true); setMobileOpen(false); }}
                 className="w-full px-4 py-3 rounded-xl text-sm font-medium text-[#374151] border border-gray-200 hover:bg-gray-50 text-left">
                 Iniciar sesión

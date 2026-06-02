@@ -16,19 +16,19 @@ interface TextEntry {
 type Entry = LogoEntry | TextEntry;
 
 const CLEARBIT: LogoEntry[] = [
-  { type: "img", url: "https://logo.clearbit.com/nacion.com",        name: "La Nación" },
+  { type: "img", url: "https://logo.clearbit.com/nacion.com",        name: "La Nacion" },
   { type: "img", url: "https://logo.clearbit.com/crhoy.com",         name: "CRHoy" },
   { type: "img", url: "https://logo.clearbit.com/ticotimes.net",     name: "Tico Times" },
   { type: "img", url: "https://logo.clearbit.com/elfinancierocr.com",name: "El Financiero" },
   { type: "img", url: "https://logo.clearbit.com/teletica.com",      name: "Teletica" },
   { type: "img", url: "https://logo.clearbit.com/repretel.com",      name: "Repretel" },
-  { type: "img", url: "https://logo.clearbit.com/larepublica.net",   name: "La República" },
+  { type: "img", url: "https://logo.clearbit.com/larepublica.net",   name: "La Republica" },
   { type: "img", url: "https://logo.clearbit.com/ameliarueda.com",   name: "Amelia Rueda" },
   { type: "img", url: "https://logo.clearbit.com/monumental.cr",     name: "Monumental" },
   { type: "img", url: "https://logo.clearbit.com/cinde.org",         name: "CINDE" },
   { type: "img", url: "https://logo.clearbit.com/procomer.com",      name: "PROCOMER" },
   { type: "img", url: "https://logo.clearbit.com/cfia.or.cr",        name: "CFIA" },
-  { type: "img", url: "https://logo.clearbit.com/camara.cr",         name: "Cámara CR" },
+  { type: "img", url: "https://logo.clearbit.com/camara.cr",         name: "Camara CR" },
   { type: "img", url: "https://logo.clearbit.com/encuentra24.com",   name: "Encuentra24" },
   { type: "img", url: "https://logo.clearbit.com/olx.co.cr",         name: "OLX" },
 ];
@@ -36,7 +36,7 @@ const CLEARBIT: LogoEntry[] = [
 const TEXT_ONLY: TextEntry[] = [
   { type: "text", name: "Delfino CR" },
   { type: "text", name: "Semanario Universidad" },
-  { type: "text", name: "El País CR" },
+  { type: "text", name: "El Pais CR" },
   { type: "text", name: "Canal 6" },
   { type: "text", name: "Multimedios" },
   { type: "text", name: "Radio Columbia" },

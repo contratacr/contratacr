@@ -77,10 +77,9 @@ export function LandingHero() {
 
   return (
     <section className="relative bg-white overflow-hidden">
-      {/* Content area */}
       <div className="relative mx-auto max-w-3xl px-4 sm:px-6 text-center pt-20 sm:pt-28 pb-8 sm:pb-10">
 
-        {/* Headline — rotating line in brand color + static second line */}
+        {/* Headline */}
         <h1
           className="font-extrabold text-[#1a2744] tracking-tight mb-4"
           style={{ fontSize: "clamp(2rem, 5.5vw, 3.6rem)", lineHeight: 1.1 }}
@@ -93,45 +92,71 @@ export function LandingHero() {
           {t("subtitle")}
         </p>
 
-        {/* Search bar — square corners (rounded-[6px]) */}
+        {/* ── Search bar — prominent, 56px desktop / 48px mobile ── */}
         <form
           onSubmit={handleSearch}
-          className="flex flex-col sm:flex-row items-stretch max-w-2xl mx-auto bg-white border border-gray-200 rounded-[6px] shadow-[0_4px_40px_rgba(0,0,0,0.10)] hover:shadow-[0_6px_48px_rgba(0,159,217,0.14)] transition-shadow duration-300 overflow-hidden pl-5 pr-2 py-2"
+          className="max-w-2xl mx-auto"
         >
-          <div className="flex items-center gap-3 flex-1 min-w-0">
-            <Search className="h-4 w-4 text-gray-300 shrink-0" />
-            <input
-              type="text"
-              value={service}
-              onChange={(e) => setService(e.target.value)}
-              placeholder={t("searchPlaceholder")}
-              className="flex-1 text-sm text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-none min-w-0 py-1"
-            />
-          </div>
-
-          <div className="hidden sm:block w-px bg-gray-200 my-1 mx-3" />
-
-          <div className="hidden sm:flex items-center gap-2 min-w-[130px]">
-            <MapPin className="h-4 w-4 text-gray-300 shrink-0" />
-            <select
-              value={province}
-              onChange={(e) => setProvince(e.target.value)}
-              className="flex-1 text-sm text-gray-500 bg-transparent focus:outline-none appearance-none cursor-pointer"
-            >
-              <option value="">{t("location")}</option>
-              {PROVINCES.map((p) => (
-                <option key={p} value={p}>{p}</option>
-              ))}
-            </select>
-          </div>
-
-          <button
-            type="submit"
-            className="mt-2 sm:mt-0 ml-0 sm:ml-2 px-7 py-2.5 bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold rounded-[4px] transition-all duration-150 active:scale-[0.97] shadow-sm whitespace-nowrap shrink-0"
+          {/* Desktop row: single line h-14 */}
+          <div
+            className="hidden sm:flex items-center h-14 bg-white border border-gray-200 rounded-[6px] overflow-hidden pl-5 pr-2 shadow-[0_8px_48px_rgba(0,0,0,0.12)] hover:shadow-[0_12px_60px_rgba(0,159,217,0.20)] transition-shadow duration-300"
           >
-            {t("search")}
-          </button>
+            {/* Text input */}
+            <div className="flex items-center gap-3 flex-1 min-w-0 h-full">
+              <Search className="h-5 w-5 text-gray-300 shrink-0" />
+              <input
+                type="text"
+                value={service}
+                onChange={(e) => setService(e.target.value)}
+                placeholder={t("searchPlaceholder")}
+                className="flex-1 text-base text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-none min-w-0"
+              />
+            </div>
+            {/* Divider + province */}
+            <div className="w-px bg-gray-200 self-stretch my-3 mx-2 shrink-0" />
+            <div className="flex items-center gap-2 min-w-[140px] shrink-0 h-full">
+              <MapPin className="h-5 w-5 text-gray-300 shrink-0" />
+              <select
+                value={province}
+                onChange={(e) => setProvince(e.target.value)}
+                className="flex-1 text-base text-gray-500 bg-transparent focus:outline-none appearance-none cursor-pointer"
+              >
+                <option value="">{t("location")}</option>
+                {PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
+              </select>
+            </div>
+            {/* Buscar button */}
+            <button
+              type="submit"
+              className="ml-2 h-10 px-8 bg-[#009FD9] hover:bg-[#0089bb] text-white text-base font-bold rounded-[4px] transition-all duration-150 active:scale-[0.97] shadow-sm whitespace-nowrap shrink-0"
+            >
+              {t("search")}
+            </button>
+          </div>
+
+          {/* Mobile stacked layout */}
+          <div className="sm:hidden flex flex-col gap-2">
+            <div className="flex items-center h-12 bg-white border border-gray-200 rounded-[6px] overflow-hidden pl-4 pr-3 shadow-[0_4px_24px_rgba(0,0,0,0.10)]">
+              <Search className="h-5 w-5 text-gray-300 shrink-0 mr-3" />
+              <input
+                type="text"
+                value={service}
+                onChange={(e) => setService(e.target.value)}
+                placeholder={t("searchPlaceholder")}
+                className="flex-1 text-base text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-none min-w-0"
+              />
+            </div>
+            <button
+              type="submit"
+              className="w-full h-12 bg-[#009FD9] hover:bg-[#0089bb] text-white text-base font-bold rounded-[6px] transition-all duration-150 active:scale-[0.97]"
+            >
+              {t("search")}
+            </button>
+          </div>
         </form>
+
+        {/* Sentinel — IntersectionObserver in navbar watches this */}
+        <div id="hero-search-sentinel" aria-hidden className="h-0" />
 
         {/* Popular tags */}
         <div className="flex flex-wrap justify-center gap-x-3 gap-y-1.5 mt-4">
@@ -148,14 +173,11 @@ export function LandingHero() {
         </div>
       </div>
 
-      {/* Arch / dome image — responsive height per breakpoint */}
+      {/* Arch / dome image — responsive height */}
       <div className="flex justify-center px-4 pb-0">
         <div
           className="relative overflow-hidden w-full h-[180px] sm:h-[280px] md:h-[360px] lg:h-[420px]"
-          style={{
-            maxWidth: 800,
-            borderRadius: "50% 50% 0 0 / 100% 100% 0 0",
-          }}
+          style={{ maxWidth: 800, borderRadius: "50% 50% 0 0 / 100% 100% 0 0" }}
         >
           <Image
             src="https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=1400&q=85"
