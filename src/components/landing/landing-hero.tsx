@@ -77,9 +77,8 @@ export function LandingHero() {
 
   return (
     <section className="relative bg-white overflow-hidden">
-      <div className="relative mx-auto max-w-3xl px-4 sm:px-6 text-center pt-20 sm:pt-28 pb-8 sm:pb-10">
-
-        {/* Headline */}
+      {/* Headline + subtitle — narrower container for readability */}
+      <div className="relative mx-auto max-w-3xl px-4 sm:px-6 text-center pt-20 sm:pt-28 pb-6">
         <h1
           className="font-extrabold text-[#1a2744] tracking-tight mb-4"
           style={{ fontSize: "clamp(2rem, 5.5vw, 3.6rem)", lineHeight: 1.1 }}
@@ -87,15 +86,16 @@ export function LandingHero() {
           <RotatingLine lines={lines} />
           <span className="block">{t("headline2")}</span>
         </h1>
-
-        <p className="text-base sm:text-xl text-gray-400 max-w-lg mx-auto mb-6 sm:mb-8 leading-relaxed">
+        <p className="text-base sm:text-xl text-gray-400 max-w-lg mx-auto leading-relaxed">
           {t("subtitle")}
         </p>
+      </div>
 
-        {/* ── Search bar — prominent, 56px desktop / 48px mobile ── */}
+      {/* ── Search bar — full-width in wider container ── */}
+      <div className="mx-auto max-w-5xl px-4 sm:px-8 pb-6">
         <form
           onSubmit={handleSearch}
-          className="max-w-2xl mx-auto"
+          className="w-full"
         >
           {/* Desktop row: single line h-14 */}
           <div
@@ -159,7 +159,7 @@ export function LandingHero() {
         <div id="hero-search-sentinel" aria-hidden className="h-0" />
 
         {/* Popular tags */}
-        <div className="flex flex-wrap justify-center gap-x-3 gap-y-1.5 mt-4">
+        <div className="flex flex-wrap justify-center gap-x-3 gap-y-1.5 mt-4 text-center">
           <span className="text-sm text-gray-400 self-center">{t("popular")}</span>
           {tags.map((tag) => (
             <button
