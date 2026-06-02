@@ -1,11 +1,16 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { X, Menu, Mail, Lock, Eye, EyeOff, AlertCircle, ChevronDown, Search } from "lucide-react";
+import { X, Menu, Mail, Lock, Eye, EyeOff, AlertCircle, ChevronDown, Search, MapPin } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { useLocale } from "next-intl";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+
+const PROVINCES = [
+  "San José", "Alajuela", "Cartago", "Heredia",
+  "Guanacaste", "Puntarenas", "Limón",
+];
 
 /* ─── Logo ─── */
 export function ContrataCRLogo({ className }: { className?: string }) {
@@ -272,6 +277,7 @@ export function LandingNavbar() {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [provinceQuery, setProvinceQuery] = useState("");
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const router = useRouter();
 
@@ -301,9 +307,10 @@ export function LandingNavbar() {
 
   function handleCompactSearch(e: React.FormEvent) {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/buscar?q=${encodeURIComponent(searchQuery.trim())}`);
-    }
+    const params = new URLSearchParams();
+    if (searchQuery.trim()) params.set("q", searchQuery.trim());
+    if (provinceQuery) params.set("provincia", provinceQuery);
+    router.push(`/buscar?${params.toString()}`);
   }
 
   return (
@@ -427,22 +434,43 @@ export function LandingNavbar() {
                 <ContrataCRLogo />
               </Link>
 
-              {/* Mini search — 44px height */}
-              <form onSubmit={handleCompactSearch} className="flex-1 flex items-center h-11 gap-2 bg-white border border-gray-200 rounded-[6px] px-3 shadow-sm">
-                <Search className="h-4 w-4 text-gray-300 shrink-0" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Buscar servicios…"
-                  className="flex-1 text-sm text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-none min-w-0"
-                />
-                <button
-                  type="submit"
-                  className="px-4 py-1 bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold rounded-[4px] transition-colors shrink-0"
-                >
-                  Buscar
-                </button>
+              {/* Search bar — same layout as hero */}
+              <form onSubmit={handleCompactSearch} className="flex-1 min-w-0">
+                <div className="flex items-center h-11 sm:h-12 bg-white border border-gray-200 rounded-[6px] overflow-hidden pl-4 pr-2 shadow-[0_4px_20px_rgba(0,0,0,0.10)]">
+                  {/* Text input */}
+                  <div className="flex items-center gap-2 flex-1 min-w-0 h-full">
+                    <Search className="h-4 w-4 sm:h-5 sm:w-5 text-gray-300 shrink-0" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Describí tu proyecto o problema…"
+                      className="flex-1 text-sm sm:text-base text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-none min-w-0"
+                    />
+                  </div>
+                  {/* Divider + province select — visible from md up */}
+                  <div className="hidden md:flex items-center h-full">
+                    <div className="w-px bg-gray-200 self-stretch my-2 mx-2 shrink-0" />
+                    <div className="flex items-center gap-1.5 min-w-[120px] shrink-0">
+                      <MapPin className="h-4 w-4 text-gray-300 shrink-0" />
+                      <select
+                        value={provinceQuery}
+                        onChange={(e) => setProvinceQuery(e.target.value)}
+                        className="flex-1 text-sm text-gray-500 bg-transparent focus:outline-none appearance-none cursor-pointer"
+                      >
+                        <option value="">Ubicación</option>
+                        {PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  {/* Buscar button */}
+                  <button
+                    type="submit"
+                    className="ml-2 h-8 sm:h-9 px-5 sm:px-7 bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold rounded-[4px] transition-all duration-150 active:scale-[0.97] whitespace-nowrap shrink-0"
+                  >
+                    Buscar
+                  </button>
+                </div>
               </form>
 
               {/* Right: Registrarse + lang toggle */}
