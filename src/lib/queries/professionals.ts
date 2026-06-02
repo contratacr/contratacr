@@ -58,6 +58,10 @@ export async function searchProfessionals(
       if (filters.cantonId && filters.cantonId !== "todos") {
         query = query.eq("canton_id", filters.cantonId);
       }
+      if (filters.query) {
+        const q = filters.query.trim();
+        query = query.or(`bio.ilike.%${q}%,profiles.full_name.ilike.%${q}%`);
+      }
 
       switch (filters.sortBy) {
         case "reviews":
@@ -198,6 +202,15 @@ function applyMockFilters(
     const { getCantonById } = require("@/lib/data/cr-geography");
     const canton = getCantonById(filters.cantonId);
     if (canton) results = results.filter((p) => p.cantonName === canton.name);
+  }
+  if (filters.query) {
+    const q = filters.query.toLowerCase().trim();
+    results = results.filter(
+      (p) =>
+        p.fullName.toLowerCase().includes(q) ||
+        (p.bio ?? "").toLowerCase().includes(q) ||
+        p.categoryId.toLowerCase().includes(q)
+    );
   }
 
   switch (filters.sortBy) {

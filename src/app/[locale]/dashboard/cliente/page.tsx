@@ -13,11 +13,14 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
+import { LeaveReviewModal } from "@/components/professionals/leave-review-modal";
+import { SavedProfessionalsTab } from "@/components/professionals/saved-professionals-tab";
 
 type Tab = "bookings" | "saved";
 
 type Booking = {
   id: string;
+  professional_id: string;
   service_description: string;
   preferred_date_text?: string;
   status: "pending" | "confirmed" | "cancelled" | "completed";
@@ -46,6 +49,7 @@ export default function ClientDashboardPage() {
 
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reviewModal, setReviewModal] = useState<{ professionalId: string; professionalName: string } | null>(null);
 
   useEffect(() => {
     if (!authLoading && !user) router.push("/login");
@@ -73,7 +77,7 @@ export default function ClientDashboardPage() {
   if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#319278] border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#2563EB] border-t-transparent" />
       </div>
     );
   }
@@ -106,7 +110,7 @@ export default function ClientDashboardPage() {
                 className={cn(
                   "flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all",
                   activeTab === tab
-                    ? "bg-white text-[#319278] shadow-sm"
+                    ? "bg-white text-[#2563EB] shadow-sm"
                     : "text-[#6b7280] hover:text-[#374151]"
                 )}
               >
@@ -154,11 +158,19 @@ export default function ClientDashboardPage() {
                             </p>
                           </div>
                           {booking.status === "completed" && (
-                            <Button variant="outline" size="sm" asChild>
-                              <a href={booking.professionals?.slug ? `/profesionales/${booking.professionals.slug}` : "#"}>
-                                <Star className="h-3.5 w-3.5" />
-                                {t("bookings.leaveReview")}
-                              </a>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                setReviewModal({
+                                  professionalId: booking.professional_id,
+                                  professionalName:
+                                    booking.professionals?.profiles?.full_name ?? "Profesional",
+                                })
+                              }
+                            >
+                              <Star className="h-3.5 w-3.5" />
+                              {t("bookings.leaveReview")}
                             </Button>
                           )}
                         </div>
@@ -174,15 +186,18 @@ export default function ClientDashboardPage() {
           {activeTab === "saved" && (
             <div>
               <h2 className="text-lg font-semibold text-[#111827] mb-4">{t("saved.title")}</h2>
-              <div className="text-center py-16">
-                <Bookmark className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
-                <p className="font-medium text-[#374151]">{t("saved.empty")}</p>
-                <p className="text-sm text-[#9ca3af] mt-1">{t("saved.emptyHint")}</p>
-              </div>
+              <SavedProfessionalsTab />
             </div>
           )}
         </div>
       </main>
+
+      {reviewModal && (
+        <LeaveReviewModal
+          {...reviewModal}
+          onClose={() => setReviewModal(null)}
+        />
+      )}
     </div>
   );
 }

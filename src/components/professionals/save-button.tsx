@@ -1,0 +1,111 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { Bookmark } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+const STORAGE_KEY = "contratacr_saved_pros";
+
+export type SavedPro = {
+  id: string;
+  slug: string;
+  fullName: string;
+  avatarUrl?: string;
+  categoryIcon: string;
+  categoryId: string;
+  provinceName: string;
+  cantonName: string;
+  ratingAvg: number;
+  reviewCount: number;
+  hourlyRate?: number;
+  isVerified: boolean;
+};
+
+export function getSavedPros(): SavedPro[] {
+  if (typeof window === "undefined") return [];
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "[]");
+  } catch {
+    return [];
+  }
+}
+
+export function savePro(pro: SavedPro) {
+  const saved = getSavedPros();
+  if (!saved.find((p) => p.id === pro.id)) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([...saved, pro]));
+  }
+}
+
+export function unsavePro(id: string) {
+  const saved = getSavedPros().filter((p) => p.id !== id);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+}
+
+export function isSaved(id: string): boolean {
+  return getSavedPros().some((p) => p.id === id);
+}
+
+/* ─── Save button component ─── */
+interface SaveButtonProps {
+  pro: SavedPro;
+  className?: string;
+}
+
+export function SaveButton({ pro, className }: SaveButtonProps) {
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    setSaved(isSaved(pro.id));
+  }, [pro.id]);
+
+  function toggle(e: React.MouseEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (saved) {
+      unsavePro(pro.id);
+      setSaved(false);
+    } else {
+      savePro(pro);
+      setSaved(true);
+    }
+    /* dispatch custom event so saved-tab can refresh if open */
+    window.dispatchEvent(new CustomEvent("savedProsChanged"));
+  }
+
+  return (
+    <button
+      onClick={toggle}
+      aria-label={saved ? "Quitar de guardados" : "Guardar profesional"}
+      className={cn(
+        "group flex items-center justify-center w-9 h-9 rounded-full border transition-all duration-200",
+        saved
+          ? "bg-[#2563EB] border-[#2563EB] text-white shadow-md"
+          : "bg-white/90 border-gray-200 text-gray-400 hover:border-[#2563EB] hover:text-[#2563EB] hover:bg-white shadow-sm",
+        className
+      )}
+    >
+      <Bookmark
+        className="h-4 w-4 transition-transform duration-200 group-hover:scale-110"
+        fill={saved ? "currentColor" : "none"}
+      />
+    </button>
+  );
+}
+
+/* ─── Card wrapper: adds save button on top of any card ─── */
+interface CardWrapperProps {
+  pro: SavedPro;
+  children: React.ReactNode;
+}
+
+export function SaveableCard({ pro, children }: CardWrapperProps) {
+  return (
+    <div className="relative group/card">
+      {children}
+      <div className="absolute top-3 right-3 z-10 opacity-0 group-hover/card:opacity-100 transition-opacity duration-200">
+        <SaveButton pro={pro} />
+      </div>
+    </div>
+  );
+}

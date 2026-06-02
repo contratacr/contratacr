@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { MapPin, CheckCircle2, MessageCircle, Star, Clock, Phone, ArrowLeft, Briefcase } from "lucide-react";
+import { MapPin, CheckCircle2, Clock, Phone, ArrowLeft, Briefcase } from "lucide-react";
 import { BookingButton } from "@/components/booking/booking-button";
 import { Link } from "@/i18n/navigation";
 import { Navbar } from "@/components/layout/navbar";
@@ -13,21 +13,13 @@ import { StarRating } from "@/components/ui/star-rating";
 import { getProfessionalBySlug } from "@/lib/queries/professionals";
 import { MOCK_PROFESSIONALS } from "@/lib/data/mock-professionals";
 import { getInitials, getWhatsAppLink } from "@/lib/utils";
+import { ReviewSection } from "@/components/professionals/review-section";
+import { createClient } from "@/lib/supabase/server";
 
 interface ProfilePageProps {
   params: Promise<{ slug: string }>;
 }
 
-function timeAgo(isoDate: string): string {
-  const diff = Date.now() - new Date(isoDate).getTime();
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  if (days === 0) return "hoy";
-  if (days === 1) return "hace 1 día";
-  if (days < 7) return `hace ${days} días`;
-  if (days < 14) return "hace 1 semana";
-  if (days < 30) return `hace ${Math.floor(days / 7)} semanas`;
-  return `hace ${Math.floor(days / 30)} mes(es)`;
-}
 
 export default async function ProfilePage({ params }: ProfilePageProps) {
   const { slug } = await params;
@@ -36,6 +28,10 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
 
   const professional = await getProfessionalBySlug(slug);
   if (!professional) notFound();
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const isAuthenticated = !!user;
 
   const waLink = getWhatsAppLink(
     professional.whatsapp,
@@ -150,33 +146,14 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
 
               <Card>
                 <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-5">
-                    <h2 className="text-lg font-semibold text-[#111827]">
-                      {t("reviews")} ({professional.reviewCount})
-                    </h2>
-                    <div className="flex items-center gap-1">
-                      <Star className="h-5 w-5 text-[#ff9b32] fill-[#ff9b32]" />
-                      <span className="font-bold text-[#111827]">{professional.ratingAvg.toFixed(1)}</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-5">
-                    {professional.reviews.map((review) => (
-                      <div key={review.id} className="flex gap-3">
-                        <Avatar className="h-9 w-9 shrink-0">
-                          <AvatarImage src={review.clientAvatarUrl} />
-                          <AvatarFallback>{getInitials(review.clientName)}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="text-sm font-medium text-[#111827]">{review.clientName}</span>
-                            <span className="text-xs text-[#9ca3af]">{timeAgo(review.createdAt)}</span>
-                          </div>
-                          <StarRating rating={review.rating} size="sm" className="my-1" />
-                          <p className="text-sm text-[#374151] leading-relaxed">{review.comment}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                  <ReviewSection
+                    professionalId={professional.id}
+                    professionalName={professional.fullName}
+                    reviewCount={professional.reviewCount}
+                    ratingAvg={professional.ratingAvg}
+                    reviews={professional.reviews}
+                    isAuthenticated={isAuthenticated}
+                  />
                 </CardContent>
               </Card>
             </div>

@@ -2,8 +2,8 @@
 
 import { useRouter, usePathname } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
-import { useCallback, useState } from "react";
-import { SlidersHorizontal, X } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Search, SlidersHorizontal, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
@@ -16,37 +16,71 @@ export function SearchFilters() {
   const t = useTranslations("search");
   const tCat = useTranslations("categories");
 
+  const [query, setQuery] = useState(params.get("q") ?? "");
   const [category, setCategory] = useState(params.get("categoria") ?? "");
   const [province, setProvince] = useState(params.get("provincia") ?? "");
   const [canton, setCanton] = useState(params.get("canton") ?? "");
   const [sortBy, setSortBy] = useState(params.get("sortBy") ?? "rating");
+
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const cantons = getCantonsByProvince(province);
 
   const applyFilters = useCallback(
     (overrides: Record<string, string> = {}) => {
       const next = new URLSearchParams();
-      const vals = { categoria: category, provincia: province, canton, sortBy, ...overrides };
+      const vals = { q: query, categoria: category, provincia: province, canton, sortBy, ...overrides };
+      if (vals.q) next.set("q", vals.q);
       if (vals.categoria && vals.categoria !== "todas") next.set("categoria", vals.categoria);
       if (vals.provincia && vals.provincia !== "todas") next.set("provincia", vals.provincia);
       if (vals.canton && vals.canton !== "todos" && vals.provincia) next.set("canton", vals.canton);
       if (vals.sortBy && vals.sortBy !== "rating") next.set("sortBy", vals.sortBy);
       router.push(`${pathname}?${next.toString()}`);
     },
-    [category, province, canton, sortBy, router, pathname]
+    [query, category, province, canton, sortBy, router, pathname]
   );
 
+  function handleQueryChange(value: string) {
+    setQuery(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      applyFilters({ q: value });
+    }, 400);
+  }
+
+  function handleQueryKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter") {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      applyFilters({ q: query });
+    }
+  }
+
+  function clearQuery() {
+    setQuery("");
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    applyFilters({ q: "" });
+  }
+
+  // Clean up debounce on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
+
   function clearAll() {
+    setQuery("");
     setCategory("");
     setProvince("");
     setCanton("");
     setSortBy("rating");
+    if (debounceRef.current) clearTimeout(debounceRef.current);
     router.push(pathname);
   }
 
-  const activeCount = [category, province, canton].filter(
-    (v) => v && v !== "todas" && v !== "todos"
-  ).length;
+  const activeCount =
+    (query ? 1 : 0) +
+    [category, province, canton].filter((v) => v && v !== "todas" && v !== "todos").length;
 
   return (
     <div className="bg-white rounded-2xl border border-[#e5e7eb] p-4">
@@ -65,6 +99,30 @@ export function SearchFilters() {
             {t("filters.clear")}
           </button>
         )}
+      </div>
+
+      {/* Text search */}
+      <div className="mb-3">
+        <div className="relative flex items-center">
+          <Search className="absolute left-3 h-4 w-4 text-[#9ca3af] pointer-events-none" />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => handleQueryChange(e.target.value)}
+            onKeyDown={handleQueryKeyDown}
+            placeholder="Buscar profesionales... ej. plomero Escazú"
+            className="w-full rounded-xl border border-[#e5e7eb] bg-white py-2 pl-9 pr-9 text-sm text-[#111827] placeholder-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#2563eb] focus:border-transparent transition"
+          />
+          {query && (
+            <button
+              onClick={clearQuery}
+              className="absolute right-3 text-[#9ca3af] hover:text-[#374151] transition-colors"
+              aria-label="Limpiar búsqueda"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3">
