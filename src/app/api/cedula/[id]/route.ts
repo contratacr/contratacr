@@ -1,19 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const DIGITAL_API_URL = "https://apis.digital.go.cr/sl/personas";
+const DIGITAL_API_URL = "https://api.digital.go.cr/v1/en/registry";
 const CLIENT_ID = process.env.CR_DIGITAL_API_CLIENT_ID;
 const CLIENT_SECRET = process.env.CR_DIGITAL_API_CLIENT_SECRET;
 
-type DigitalApiResponse = {
-  nombre: string;
-  primerApellido: string;
-  segundoApellido: string;
+// v1 API response shape
+type DigitalApiV1Response = {
+  name?: string;
+  firstname?: string;
+  surname?: string;
+  // Fallback: old shape from legacy endpoint
+  nombre?: string;
+  primerApellido?: string;
+  segundoApellido?: string;
 };
 
-function buildFullName(data: DigitalApiResponse): string {
+function buildFullName(data: DigitalApiV1Response): string {
+  // Handle v1 response shape
+  if (data.name || data.firstname || data.surname) {
+    return [data.name, data.firstname, data.surname]
+      .filter(Boolean)
+      .join(" ");
+  }
+  // Fallback: legacy shape
   return [data.nombre, data.primerApellido, data.segundoApellido]
     .filter(Boolean)
-    .map((s) => s.charAt(0) + s.slice(1).toLowerCase())
+    .map((s) => (s as string).charAt(0) + (s as string).slice(1).toLowerCase())
     .join(" ");
 }
 
@@ -45,7 +57,7 @@ export async function GET(
         throw new Error(`Upstream error ${res.status}`);
       }
 
-      const data: DigitalApiResponse = await res.json();
+      const data: DigitalApiV1Response = await res.json();
       return NextResponse.json({ fullName: buildFullName(data) });
     } catch (err) {
       console.error("[cedula API] Upstream failed:", err);

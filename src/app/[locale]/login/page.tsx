@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { ContrataCRLogo } from "@/components/landing/landing-navbar";
+import { LandingFooter } from "@/components/landing/landing-footer";
 
 const schema = z.object({
   email: z.string().email("Email inválido"),
@@ -64,6 +65,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       <main className="flex-1 flex items-center justify-center py-10 px-4">
+
         <div className="w-full max-w-sm">
           <div className="text-center mb-8">
             <ContrataCRLogo className="justify-center mb-4" />
@@ -119,6 +121,7 @@ export default function LoginPage() {
           </p>
         </div>
       </main>
+      <LandingFooter />
     </div>
   );
 }

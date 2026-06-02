@@ -19,6 +19,9 @@ export default function HomePage() {
       {/* Hero — arch image, rotating headline */}
       <LandingHero />
 
+      {/* Partner / media logo marquee */}
+      <MarqueeStrip />
+
       {/* "Profesionales para cada proyecto en Tu Zona" — icon tabs + photo cards */}
       <FadeInUp>
         <ProsSection />
@@ -33,9 +36,6 @@ export default function HomePage() {
       <FadeInUp delay={60}>
         <ExploreTabs />
       </FadeInUp>
-
-      {/* Partner / media logo marquee */}
-      <MarqueeStrip />
 
       {/* "Recursos para tu hogar" — 3 photo cards */}
       <FadeInUp delay={40}>

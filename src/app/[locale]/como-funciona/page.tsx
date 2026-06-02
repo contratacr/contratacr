@@ -5,7 +5,7 @@ import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { FadeInUp } from "@/components/landing/fade-in-up";
 import { Link } from "@/i18n/navigation";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Search, CheckCircle2, MessageCircle, Banknote, BadgeCheck, Users, CalendarClock, type LucideIcon } from "lucide-react";
 
 /* ── FAQ Accordion (Client Component) ── */
 const FAQ_ITEMS = [
@@ -61,19 +61,19 @@ function FaqAccordion() {
 /* ── Step Card ── */
 function StepCard({
   number,
-  icon,
+  Icon,
   title,
   description,
 }: {
   number: number;
-  icon: string;
+  Icon: LucideIcon;
   title: string;
   description: string;
 }) {
   return (
     <div className="flex flex-col items-center text-center px-6 py-8 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-      <div className="w-14 h-14 rounded-full bg-[#EBF5FB] flex items-center justify-center text-2xl mb-4">
-        {icon}
+      <div className="w-14 h-14 rounded-full bg-[#EBF5FB] flex items-center justify-center mb-4">
+        <Icon className="h-6 w-6 text-[#009FD9]" />
       </div>
       <div className="w-7 h-7 rounded-full bg-[#009FD9] text-white text-xs font-bold flex items-center justify-center mb-3">
         {number}
@@ -112,19 +112,19 @@ export default function ComoFuncionaPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <StepCard
                 number={1}
-                icon="🔍"
+                Icon={Search}
                 title="Describí lo que necesitás"
                 description="Contanos tu proyecto en detalle — plomero para baño, pintura de sala de 4x4m, etc."
               />
               <StepCard
                 number={2}
-                icon="✅"
+                Icon={BadgeCheck}
                 title="Conectamos con profesionales verificados"
                 description="Revisás perfiles con cédula verificada, fotos de trabajos anteriores y reseñas reales."
               />
               <StepCard
                 number={3}
-                icon="💬"
+                Icon={MessageCircle}
                 title="Coordinás directo por WhatsApp"
                 description="Sin intermediarios, sin comisiones. Hablás directo con el profesional y acordás precio."
               />
@@ -147,13 +147,13 @@ export default function ComoFuncionaPage() {
                 </h2>
                 <ul className="space-y-3 mb-8">
                   {[
-                    { icon: "💸", text: "Sin comisiones — cobrás el 100% del trabajo" },
-                    { icon: "🪪", text: "Cédula verificada — más confianza con clientes" },
-                    { icon: "👥", text: "Clientes directos — sin intermediarios" },
-                    { icon: "📅", text: "Control de agenda — vos manejás tu disponibilidad" },
-                  ].map(({ icon, text }) => (
+                    { Icon: Banknote, text: "Sin comisiones — cobrás el 100% del trabajo" },
+                    { Icon: BadgeCheck, text: "Cédula verificada — más confianza con clientes" },
+                    { Icon: Users, text: "Clientes directos — sin intermediarios" },
+                    { Icon: CalendarClock, text: "Control de agenda — vos manejás tu disponibilidad" },
+                  ].map(({ Icon: ItemIcon, text }) => (
                     <li key={text} className="flex items-center gap-3 text-sm text-gray-700">
-                      <span className="text-lg">{icon}</span>
+                      <ItemIcon className="h-5 w-5 text-[#009FD9] shrink-0" />
                       <span>{text}</span>
                     </li>
                   ))}

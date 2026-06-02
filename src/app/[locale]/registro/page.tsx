@@ -5,6 +5,7 @@ import { Link } from "@/i18n/navigation";
 import { ArrowRight, User, Briefcase } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Card, CardContent } from "@/components/ui/card";
+import { LandingFooter } from "@/components/landing/landing-footer";
 
 export default function RegisterPage() {
   const t = useTranslations("auth.register");
@@ -57,6 +58,7 @@ export default function RegisterPage() {
           </p>
         </div>
       </main>
+      <LandingFooter />
     </div>
   );
 }

@@ -7,11 +7,11 @@ import { useTranslations } from "next-intl";
 /* ─── Inline phone mockup (no client state needed) ─── */
 function AppPhoneMock() {
   const items = [
-    { icon: "🏠", label: "Limpieza del hogar",      price: "₡18,000 – ₡45,000 prom." },
-    { icon: "🔧", label: "Plomería y tuberías",     price: "₡25,000 – ₡80,000 prom." },
-    { icon: "⚡", label: "Electricidad residencial", price: "₡30,000 – ₡100,000 prom." },
-    { icon: "🎨", label: "Pintura interior",        price: "₡20,000 – ₡60,000 prom." },
-    { icon: "🌿", label: "Jardinería y poda",       price: "₡15,000 – ₡40,000 prom." },
+    { color: "#009FD9", label: "Limpieza del hogar",      price: "₡18,000 – ₡45,000 prom." },
+    { color: "#22c55e", label: "Plomería y tuberías",     price: "₡25,000 – ₡80,000 prom." },
+    { color: "#f59e0b", label: "Electricidad residencial", price: "₡30,000 – ₡100,000 prom." },
+    { color: "#6366f1", label: "Pintura interior",        price: "₡20,000 – ₡60,000 prom." },
+    { color: "#10b981", label: "Jardinería y poda",       price: "₡15,000 – ₡40,000 prom." },
   ];
 
   return (
@@ -76,7 +76,7 @@ function AppPhoneMock() {
               {items.slice(0, 3).map((item) => (
                 <div key={item.label} className="flex items-center justify-between py-1.5 border-b border-blue-100 last:border-0">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-sm">{item.icon}</span>
+                    <span className="inline-block h-2 w-2 rounded-full shrink-0" style={{ background: item.color }} />
                     <span className="text-[10px] font-semibold text-gray-700">{item.label}</span>
                   </div>
                   <div className="flex items-center gap-1">
@@ -94,7 +94,7 @@ function AppPhoneMock() {
             {items.slice(3).map((item) => (
               <div key={item.label} className="flex items-center justify-between py-1.5 border-b border-gray-50 last:border-0">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-sm">{item.icon}</span>
+                  <span className="inline-block h-2 w-2 rounded-full shrink-0" style={{ background: item.color }} />
                   <span className="text-[10px] text-gray-600">{item.label}</span>
                 </div>
                 <CheckCircle2 className="h-3.5 w-3.5 text-[#009FD9]/40" />

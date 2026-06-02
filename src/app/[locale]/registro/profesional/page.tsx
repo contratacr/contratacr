@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
-import { CheckCircle2, ArrowRight, ArrowLeft, Loader2, AlertCircle } from "lucide-react";
+import { CheckCircle2, ArrowRight, ArrowLeft, Loader2, AlertCircle, Shield, Eye, EyeOff, Circle } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -11,6 +11,7 @@ import { Navbar } from "@/components/layout/navbar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { LandingFooter } from "@/components/landing/landing-footer";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CATEGORIES, PROVINCES, getCantonsByProvince } from "@/lib/data/cr-geography";
 import { createClient } from "@/lib/supabase/client";
@@ -19,8 +20,41 @@ import { cn } from "@/lib/utils";
 const step1Schema = z.object({
   cedula: z.string().min(9, "Cédula inválida").max(12, "Cédula inválida"),
   email: z.string().email("Email inválido"),
-  password: z.string().min(8, "Mínimo 8 caracteres"),
+  password: z.string()
+    .min(8, "Mínimo 8 caracteres")
+    .regex(/[A-Z]/, "Al menos una mayúscula")
+    .regex(/[a-z]/, "Al menos una minúscula")
+    .regex(/[0-9]/, "Al menos un número")
+    .regex(/[!@#$%^&*]/, "Al menos un carácter especial (!@#$%^&*)"),
+  confirmPassword: z.string(),
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Las contraseñas no coinciden",
+  path: ["confirmPassword"],
 });
+
+function PasswordChecklist({ password }: { password: string }) {
+  const rules = [
+    { label: "Mínimo 8 caracteres", ok: password.length >= 8 },
+    { label: "Una letra mayúscula", ok: /[A-Z]/.test(password) },
+    { label: "Una letra minúscula", ok: /[a-z]/.test(password) },
+    { label: "Un número", ok: /[0-9]/.test(password) },
+    { label: "Un carácter especial (!@#$%^&*)", ok: /[!@#$%^&*]/.test(password) },
+  ];
+  if (!password) return null;
+  return (
+    <div className="flex flex-col gap-1 mt-1">
+      {rules.map(r => (
+        <div key={r.label} className="flex items-center gap-2">
+          {r.ok
+            ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+            : <Circle className="h-3.5 w-3.5 text-gray-300 shrink-0" />
+          }
+          <span className={`text-xs ${r.ok ? "text-emerald-600" : "text-gray-400"}`}>{r.label}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 const step2Schema = z.object({
   category: z.string().min(1, "Seleccioná una categoría"),
@@ -74,6 +108,10 @@ export default function RegisterProfessionalPage() {
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [whatsappValue, setWhatsappValue] = useState("");
+  const [whatsappFormatted, setWhatsappFormatted] = useState("");
 
   // Persist step data for final submission
   const [step1Data, setStep1Data] = useState<Step1Data | null>(null);
@@ -84,6 +122,19 @@ export default function RegisterProfessionalPage() {
   const form1 = useForm<Step1Data>({ resolver: zodResolver(step1Schema) });
   const form2 = useForm<Step2Data>({ resolver: zodResolver(step2Schema) });
   const form3 = useForm<Step3Data>({ resolver: zodResolver(step3Schema) });
+
+  const watchedPassword = form1.watch("password") ?? "";
+
+  function handleWhatsappChange(raw: string) {
+    const digits = raw.replace(/\D/g, "");
+    setWhatsappValue(digits);
+    if (digits.length === 8 && /^[678]/.test(digits)) {
+      setWhatsappFormatted(`+506 ${digits.slice(0, 4)}-${digits.slice(4)}`);
+    } else {
+      setWhatsappFormatted(digits);
+    }
+    form2.setValue("whatsapp", digits);
+  }
 
   async function lookupCedula(cedula: string) {
     if (cedula.length < 9) return;
@@ -187,6 +238,7 @@ export default function RegisterProfessionalPage() {
             </Button>
           </div>
         </main>
+        <LandingFooter />
       </div>
     );
   }
@@ -215,7 +267,10 @@ export default function RegisterProfessionalPage() {
           {step === 0 && (
             <form onSubmit={form1.handleSubmit(onStep1)} className="flex flex-col gap-4">
               <div className="bg-[#EBF5FB] rounded-2xl p-4 border border-[#bfdbfe]">
-                <p className="text-sm text-[#0089bb] font-medium">🔐 {t("verifyNote")}</p>
+                <div className="flex items-start gap-2">
+                  <Shield className="h-4 w-4 text-[#009FD9] shrink-0 mt-0.5" />
+                  <p className="text-sm text-[#0089bb] font-medium">{t("verifyNote")}</p>
+                </div>
               </div>
               <Input
                 label={t("cedula")}
@@ -228,7 +283,7 @@ export default function RegisterProfessionalPage() {
               />
               {fullName && (
                 <div className="flex items-center gap-3 p-3 rounded-xl bg-[#EBF5FB] border border-[#bfdbfe]">
-                  <CheckCircle2 className="h-5 w-5 text-[#009FD9] shrink-0" />
+                  <Shield className="h-5 w-5 text-[#009FD9] shrink-0" />
                   <div>
                     <p className="text-xs text-[#6b7280]">{t("verifiedName")}</p>
                     <p className="text-sm font-semibold text-[#111827]">{fullName}</p>
@@ -236,7 +291,33 @@ export default function RegisterProfessionalPage() {
                 </div>
               )}
               <Input label={t("email")} type="email" placeholder={t("emailPlaceholder")} error={form1.formState.errors.email?.message} {...form1.register("email")} />
-              <Input label={t("password")} type="password" placeholder={t("passwordPlaceholder")} hint={t("passwordHint")} error={form1.formState.errors.password?.message} {...form1.register("password")} />
+              <div>
+                <Input
+                  label={t("password")}
+                  type={showPassword ? "text" : "password"}
+                  placeholder={t("passwordPlaceholder")}
+                  error={form1.formState.errors.password?.message}
+                  {...form1.register("password")}
+                  rightIcon={
+                    <button type="button" onClick={() => setShowPassword(v => !v)} className="text-gray-400 hover:text-gray-600">
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  }
+                />
+                <PasswordChecklist password={watchedPassword} />
+              </div>
+              <Input
+                label="Confirmar contraseña"
+                type={showConfirm ? "text" : "password"}
+                placeholder="••••••••"
+                error={form1.formState.errors.confirmPassword?.message}
+                {...form1.register("confirmPassword")}
+                rightIcon={
+                  <button type="button" onClick={() => setShowConfirm(v => !v)} className="text-gray-400 hover:text-gray-600">
+                    {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                }
+              />
               <Button type="submit" size="lg" className="mt-2">{t("continue")} <ArrowRight className="h-4 w-4" /></Button>
               <p className="text-center text-xs text-[#9ca3af]">
                 {t("terms")}{" "}
@@ -284,7 +365,26 @@ export default function RegisterProfessionalPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <Input label={t("whatsapp")} placeholder="88001122" hint={t("whatsappHint")} error={form2.formState.errors.whatsapp?.message} {...form2.register("whatsapp")} />
+              <div>
+                <label className="text-sm font-medium text-[#374151] block mb-1.5">{t("whatsapp")}</label>
+                <div className="flex items-center gap-0">
+                  <span className="inline-flex items-center h-10 px-3 rounded-l-xl border border-r-0 border-[#e5e7eb] bg-[#f3f4f6] text-sm font-medium text-[#374151] shrink-0">+506</span>
+                  <input
+                    type="tel"
+                    placeholder="8888-8888"
+                    value={whatsappValue}
+                    onChange={e => handleWhatsappChange(e.target.value)}
+                    maxLength={8}
+                    className="flex-1 h-10 px-3 rounded-r-xl border border-[#e5e7eb] text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+                  />
+                </div>
+                {whatsappValue.length === 8 && /^[678]/.test(whatsappValue) && (
+                  <p className="text-xs text-emerald-600 mt-1">Se mostrará como: {whatsappFormatted}</p>
+                )}
+                {form2.formState.errors.whatsapp && (
+                  <p className="text-xs text-red-500 mt-1">{form2.formState.errors.whatsapp.message}</p>
+                )}
+              </div>
               <div className="flex gap-3 mt-2">
                 <Button variant="outline" size="lg" type="button" onClick={() => setStep(0)}><ArrowLeft className="h-4 w-4" /> {t("back")}</Button>
                 <Button type="submit" size="lg" className="flex-1">{t("continue")} <ArrowRight className="h-4 w-4" /></Button>
@@ -339,6 +439,7 @@ export default function RegisterProfessionalPage() {
           </p>
         </div>
       </main>
+      <LandingFooter />
     </div>
   );
 }

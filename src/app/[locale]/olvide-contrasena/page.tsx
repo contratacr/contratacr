@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { ContrataCRLogo } from "@/components/landing/landing-navbar";
+import { LandingFooter } from "@/components/landing/landing-footer";
 
 const schema = z.object({
   email: z.string().email("Email inválido"),
@@ -89,6 +90,7 @@ export default function OlvideContrasenaPage() {
           </p>
         </div>
       </main>
+      <LandingFooter />
     </div>
   );
 }

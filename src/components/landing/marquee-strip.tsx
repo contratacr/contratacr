@@ -119,7 +119,7 @@ export function MarqueeStrip() {
     <section
       style={{
         background: "#ffffff",
-        padding: "40px 0",
+        padding: "48px 0",
         overflow: "hidden",
       }}
     >
@@ -132,7 +132,7 @@ export function MarqueeStrip() {
       `}</style>
 
       {/* Title */}
-      <p className="text-center mb-8 font-extrabold text-[#1a2744] text-xl sm:text-2xl tracking-tight px-4">
+      <p className="text-center mb-8 font-extrabold text-[#1a2744] text-xl sm:text-2xl tracking-tight px-4 py-12">
         Impulsando proyectos en toda Costa Rica.
       </p>
 
@@ -156,11 +156,12 @@ export function MarqueeStrip() {
           {ITEMS.map((entry, i) => (
             <div
               key={i}
+              data-slot={i}
               style={{
                 display: "flex",
                 alignItems: "center",
-                padding: "0 40px",
-                height: 32,
+                padding: "0 48px",
+                height: 64,
                 flexShrink: 0,
               }}
             >

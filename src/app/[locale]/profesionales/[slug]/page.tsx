@@ -61,7 +61,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
           <Card className="mb-6 overflow-hidden">
             {professional.isFeatured && (
               <div className="bg-gradient-to-r from-[#ff7c0a] to-[#ff9b32] px-5 py-2">
-                <span className="text-xs font-semibold text-white tracking-wide">⭐ {t("featuredBadge")}</span>
+                <span className="text-xs font-semibold text-white tracking-wide">{t("featuredBadge")}</span>
               </div>
             )}
             <CardContent className="p-6">

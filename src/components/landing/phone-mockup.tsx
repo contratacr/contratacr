@@ -22,14 +22,14 @@ function SearchScreen() {
       </div>
       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Servicios populares</p>
       {[
-        { icon: "🏠", label: "Limpieza del hogar" },
-        { icon: "🔧", label: "Plomería y tuberías" },
-        { icon: "🎨", label: "Pintura interior" },
-        { icon: "🌿", label: "Jardinería y poda" },
-        { icon: "📦", label: "Mudanzas" },
+        { color: "#009FD9", label: "Limpieza del hogar" },
+        { color: "#22c55e", label: "Plomería y tuberías" },
+        { color: "#f59e0b", label: "Pintura interior" },
+        { color: "#10b981", label: "Jardinería y poda" },
+        { color: "#6366f1", label: "Mudanzas" },
       ].map((item) => (
         <div key={item.label} className="flex items-center gap-2.5 py-2 border-b border-gray-50 last:border-0">
-          <span className="text-sm">{item.icon}</span>
+          <span className="inline-block h-2 w-2 rounded-full shrink-0" style={{ background: item.color }} />
           <span className="text-xs text-gray-600 font-medium">{item.label}</span>
         </div>
       ))}
