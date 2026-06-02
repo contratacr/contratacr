@@ -67,7 +67,6 @@ function LoginModal({ onClose }: { onClose: () => void }) {
           <div className="flex items-center gap-2 mb-4">
             <svg width="18" height="18" viewBox="0 0 22 22" fill="none">
               <path d="M11 1L21 11L11 21L1 11L11 1Z" fill="#2563EB" />
-              <path d="M7.5 11L10 13.5L14.5 8.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
             <span className="text-sm font-bold text-[#1a2744]">Contrata<span className="text-[#2563EB]">CR</span></span>
           </div>
@@ -202,7 +201,6 @@ export function LandingNavbar() {
             <Link href="/" className="flex items-center gap-2 shrink-0">
               <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
                 <path d="M11 1L21 11L11 21L1 11L11 1Z" fill="#2563EB"/>
-                <path d="M7.5 11L10 13.5L14.5 8.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
               <span className="text-lg font-extrabold tracking-tight text-[#1a2744]">
                 Contrata<span className="text-[#2563EB]">CR</span>

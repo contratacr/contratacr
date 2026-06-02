@@ -11,7 +11,6 @@ export function LandingFooter() {
             <div className="flex items-center gap-2 mb-4">
               <svg width="20" height="20" viewBox="0 0 22 22" fill="none">
                 <path d="M11 1L21 11L11 21L1 11L11 1Z" fill="#2563EB"/>
-                <path d="M7.5 11L10 13.5L14.5 8.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
               <span className="text-base font-extrabold text-[#1a2744] tracking-tight">
                 Contrata<span className="text-[#2563EB]">CR</span>
