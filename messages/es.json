@@ -440,6 +440,59 @@
     "mudanzas": "Mudanzas",
     "seguridad": "Seguridad",
     "contabilidad": "Contabilidad / Legal",
-    "diseno": "Diseño / Arte"
+    "diseno": "Diseño / Arte",
+    "pisos": "Pisos",
+    "techos": "Techos",
+    "herreria": "Herrería",
+    "impermeabilizacion": "Impermeabilización",
+    "aire_acondicionado": "Aire acondicionado",
+    "chapisteria": "Chapistería",
+    "fumigacion": "Fumigación",
+    "diseno_interiores": "Diseño de interiores",
+    "fotografia": "Fotografía",
+    "eventos": "Eventos"
+  },
+  "landing": {
+    "hero": {
+      "headline2": "sin complicaciones.",
+      "subtitle": "Describí tu proyecto y te conectamos con el profesional perfecto.",
+      "searchPlaceholder": "Describí tu proyecto o problema — sé tan detallado como quieras!",
+      "location": "Ubicación",
+      "search": "Buscar",
+      "popular": "Popular:"
+    },
+    "pros": {
+      "headingPre": "Profesionales para cada proyecto en",
+      "headingHighlight": "Tu Zona."
+    },
+    "why": {
+      "heading": "Por qué los clientes eligen ContrataCR.",
+      "subtitle": "Cada día, miles de ticos confían en ContrataCR para encontrar el profesional que necesitan — y los respaldamos en cada proyecto.",
+      "feature0Title": "Llegá a una contratación más rápido.",
+      "feature0Desc": "Describí tu proyecto con tus palabras y encontramos el profesional perfecto para el trabajo en tu zona.",
+      "feature1Title": "Solo ves profesionales locales y verificados.",
+      "feature1Desc": "Solo mostramos profesionales con cédula verificada que podés contratar en tu cantón.",
+      "feature2Title": "Un trabajo bien hecho — respaldado.",
+      "feature2Desc": "Si el trabajo no sale como acordado, te tenemos cubierto. Así de simple."
+    },
+    "explore": {
+      "heading": "Explorá más proyectos.",
+      "subtitle": "Profesionales en cada categoría, en tu cantón.",
+      "tab0": "Mantenimiento del hogar",
+      "tab1": "Remodelación",
+      "tab2": "Exterior y jardín",
+      "tab3": "Servicios esenciales"
+    },
+    "marquee": {
+      "heading": "Construido con tecnología de clase mundial"
+    },
+    "app": {
+      "badge": "Muy pronto",
+      "heading": "La app que necesitás para todo.",
+      "subtitle": "Desde guías personalizadas hasta planificación sin esfuerzo — todo en una app gratuita.",
+      "feature0": "Guías de proyectos personalizadas",
+      "feature1": "Presupuestos en tiempo real",
+      "feature2": "Historial de contrataciones"
+    }
   }
 }

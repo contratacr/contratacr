@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import { ArrowRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface SmallCard { label: string; href: string; src: string; }
 
@@ -111,6 +112,7 @@ function SmallCard({ card }: { card: SmallCard }) {
 export function ExploreTabs() {
   const [activeTab, setActiveTab] = useState("hogar");
   const tab = TABS.find((t) => t.id === activeTab) ?? TABS[0];
+  const t = useTranslations("landing.explore");
 
   return (
     <section className="relative py-20 sm:py-28 overflow-hidden bg-white">
@@ -125,25 +127,25 @@ export function ExploreTabs() {
         {/* Header */}
         <div className="text-center mb-10">
           <h2 className="text-3xl sm:text-4xl font-extrabold text-[#1a2744] mb-2">
-            Explorá más proyectos.
+            {t("heading")}
           </h2>
           <p className="text-gray-400 text-base">
-            Profesionales en cada categoría, en tu cantón.
+            {t("subtitle")}
           </p>
         </div>
 
         {/* Underline tabs */}
         <div className="flex justify-center mb-8 border-b border-gray-200 overflow-x-auto hide-scrollbar">
-          {TABS.map((t) => {
-            const active = t.id === activeTab;
+          {TABS.map((tab, i) => {
+            const active = tab.id === activeTab;
             return (
               <button
-                key={t.id}
-                onClick={() => setActiveTab(t.id)}
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
                 className="relative px-5 py-3 text-sm font-semibold whitespace-nowrap transition-all duration-200 shrink-0"
                 style={{ color: active ? "#1a2744" : "#9ca3af" }}
               >
-                {t.title}
+                {t(`tab${i}` as "tab0" | "tab1" | "tab2" | "tab3")}
                 <span
                   className="absolute bottom-0 left-0 h-0.5 bg-[#1a2744] transition-all duration-300 rounded-t-full"
                   style={{ width: active ? "100%" : "0%" }}

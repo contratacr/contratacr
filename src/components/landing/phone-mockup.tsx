@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { CheckCircle2, Star, MessageCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 /* ─── Three phone screens ─── */
 function SearchScreen() {
@@ -141,65 +142,44 @@ function PhoneMock({ screenIdx }: { screenIdx: number }) {
   );
 }
 
-/* ─── Accordion feature list ─── */
-const FEATURES = [
-  {
-    id: "fast",
-    screenIdx: 0,
-    title: "Llegá a una contratación más rápido.",
-    desc: "Describí tu proyecto con tus palabras y encontramos el profesional perfecto para el trabajo en tu zona.",
-  },
-  {
-    id: "local",
-    screenIdx: 1,
-    title: "Solo ves profesionales locales y verificados.",
-    desc: "Solo mostramos profesionales con cédula verificada que podés contratar en tu cantón.",
-  },
-  {
-    id: "done",
-    screenIdx: 2,
-    title: "Un trabajo bien hecho — respaldado.",
-    desc: "Si el trabajo no sale como acordado, te tenemos cubierto. Así de simple.",
-  },
-];
+const FEATURE_SCREEN_IDX = [0, 1, 2];
 
 export function PhoneMockupSection() {
-  const [activeId, setActiveId] = useState("fast");
-  const activeFeature = FEATURES.find((f) => f.id === activeId) ?? FEATURES[0];
+  const [activeIdx, setActiveIdx] = useState(0);
+  const t = useTranslations("landing.why");
+
+  const features = [
+    { title: t("feature0Title"), desc: t("feature0Desc") },
+    { title: t("feature1Title"), desc: t("feature1Desc") },
+    { title: t("feature2Title"), desc: t("feature2Desc") },
+  ];
 
   return (
     <section className="relative py-20 sm:py-28 overflow-hidden bg-[#EBF5FB]">
-      {/* Decorative arc blob — right side, like Thumbtack */}
       <div
         aria-hidden
         className="pointer-events-none absolute right-0 top-0 bottom-0 w-[48%]"
-        style={{
-          background: "rgba(255,255,255,0.55)",
-          borderRadius: "50% 0 0 50%",
-          zIndex: 0,
-        }}
+        style={{ background: "rgba(255,255,255,0.55)", borderRadius: "50% 0 0 50%", zIndex: 0 }}
       />
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        {/* Section header — centered */}
         <div className="text-center mb-14">
           <h2 className="text-3xl sm:text-4xl font-extrabold text-[#1a2744] mb-3">
-            Por qué los clientes eligen ContrataCR.
+            {t("heading")}
           </h2>
           <p className="text-gray-500 text-base sm:text-lg max-w-xl mx-auto leading-relaxed">
-            Cada día, miles de ticos confían en ContrataCR para encontrar el profesional que necesitan — y los respaldamos en cada proyecto.
+            {t("subtitle")}
           </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-          {/* Left — accordion */}
           <div className="space-y-1">
-            {FEATURES.map((feat) => {
-              const active = feat.id === activeId;
+            {features.map((feat, i) => {
+              const active = i === activeIdx;
               return (
                 <button
-                  key={feat.id}
-                  onClick={() => setActiveId(feat.id)}
+                  key={i}
+                  onClick={() => setActiveIdx(i)}
                   className="w-full text-left p-6 rounded-2xl transition-all duration-300 border"
                   style={{
                     background: active ? "white" : "transparent",
@@ -207,25 +187,19 @@ export function PhoneMockupSection() {
                     boxShadow: active ? "0 4px 24px rgba(0,0,0,0.07)" : "none",
                   }}
                 >
-                  <p
-                    className="font-bold text-lg leading-snug transition-colors duration-200"
-                    style={{ color: active ? "#1a2744" : "#9ca3af" }}
-                  >
+                  <p className="font-bold text-lg leading-snug transition-colors duration-200" style={{ color: active ? "#1a2744" : "#9ca3af" }}>
                     {feat.title}
                   </p>
                   {active && (
-                    <p className="text-gray-500 text-sm mt-2.5 leading-relaxed">
-                      {feat.desc}
-                    </p>
+                    <p className="text-gray-500 text-sm mt-2.5 leading-relaxed">{feat.desc}</p>
                   )}
                 </button>
               );
             })}
           </div>
 
-          {/* Right — phone mockup */}
           <div className="flex justify-center lg:justify-end">
-            <PhoneMock screenIdx={activeFeature.screenIdx} />
+            <PhoneMock screenIdx={FEATURE_SCREEN_IDX[activeIdx]} />
           </div>
         </div>
       </div>

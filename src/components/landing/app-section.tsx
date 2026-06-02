@@ -1,5 +1,8 @@
+"use client";
+
 import Image from "next/image";
 import { CheckCircle2, Star, MessageCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 /* ─── Inline phone mockup (no client state needed) ─── */
 function AppPhoneMock() {
@@ -123,9 +126,10 @@ function GooglePlayIcon() {
 
 /* ─── Main export ─── */
 export function AppSection() {
+  const t = useTranslations("landing.app");
+
   return (
     <section className="relative overflow-hidden" style={{ minHeight: 520 }}>
-      {/* Background photo with dark overlay */}
       <Image
         src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=1800&q=80"
         alt="App ContrataCR"
@@ -135,49 +139,40 @@ export function AppSection() {
       />
       <div className="absolute inset-0 bg-[#1a2744]/78" />
 
-      {/* Content */}
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-
-          {/* Left — text */}
           <div>
             <p className="text-[#93C5FD] text-xs font-bold uppercase tracking-widest mb-4">
-              Muy pronto
+              {t("badge")}
             </p>
             <h2 className="text-3xl sm:text-5xl font-extrabold text-white mb-4 leading-tight">
-              La app que necesitás para todo.
+              {t("heading")}
             </h2>
             <p className="text-white/60 text-base sm:text-lg mb-8 leading-relaxed max-w-sm">
-              Desde guías personalizadas hasta planificación sin esfuerzo — todo en una app gratuita.
+              {t("subtitle")}
             </p>
 
-            {/* App store buttons */}
             <div className="flex flex-col sm:flex-row gap-3 mb-8">
               {[
-                { store: "App Store",    Icon: AppleIcon },
-                { store: "Google Play",  Icon: GooglePlayIcon },
+                { store: "App Store",   Icon: AppleIcon },
+                { store: "Google Play", Icon: GooglePlayIcon },
               ].map(({ store, Icon }) => (
                 <button
                   key={store}
                   disabled
-                  className="flex items-center gap-3 px-6 py-3.5 rounded-2xl bg-white/10 border border-white/20 text-white cursor-not-allowed opacity-70 backdrop-blur-sm hover:bg-white/15 transition-colors"
+                  className="flex items-center gap-3 px-6 py-3.5 rounded-2xl bg-white/10 border border-white/20 text-white cursor-not-allowed opacity-70 backdrop-blur-sm"
                 >
                   <Icon />
                   <div className="text-left">
-                    <p className="text-[10px] text-white/60 leading-none">Próximamente</p>
+                    <p className="text-[10px] text-white/60 leading-none">{t("badge")}</p>
                     <p className="text-sm font-semibold leading-tight">{store}</p>
                   </div>
                 </button>
               ))}
             </div>
 
-            {/* Feature bullets */}
             <div className="space-y-3">
-              {[
-                "Guías de proyectos personalizadas",
-                "Presupuestos en tiempo real",
-                "Historial de contrataciones",
-              ].map((feat) => (
+              {([t("feature0"), t("feature1"), t("feature2")] as string[]).map((feat) => (
                 <div key={feat} className="flex items-center gap-2.5">
                   <CheckCircle2 className="h-4 w-4 text-[#93C5FD] shrink-0" />
                   <span className="text-sm text-white/75">{feat}</span>
@@ -186,7 +181,6 @@ export function AppSection() {
             </div>
           </div>
 
-          {/* Right — phone mockup */}
           <div className="flex justify-center lg:justify-end">
             <AppPhoneMock />
           </div>

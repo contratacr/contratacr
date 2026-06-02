@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 /* ─── Category icon SVGs (thin stroke, Thumbtack style) ─── */
 const Icons = {
@@ -304,6 +305,8 @@ function ServiceCard({ card }: { card: Card }) {
 export function ProsSection() {
   const [activeId, setActiveId] = useState<CategoryId>("limpieza");
   const tabsRef = useRef<HTMLDivElement>(null);
+  const t = useTranslations("landing.pros");
+  const tCat = useTranslations("categories");
 
   const cards = CATEGORY_CARDS[activeId];
 
@@ -320,8 +323,8 @@ export function ProsSection() {
         {/* Headline */}
         <div className="text-center mb-10">
           <h2 className="text-3xl sm:text-4xl font-extrabold text-[#1a2744] leading-tight">
-            Profesionales para cada proyecto en{" "}
-            <span className="text-[#009FD9]">Tu Zona.</span>
+            {t("headingPre")}{" "}
+            <span className="text-[#009FD9]">{t("headingHighlight")}</span>
           </h2>
         </div>
 
@@ -361,7 +364,8 @@ export function ProsSection() {
                     className="text-xs font-semibold whitespace-nowrap transition-colors duration-200"
                     style={{ color: active ? "#1a2744" : "#9ca3af" }}
                   >
-                    {tab.label}
+                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                    {tCat(tab.id as any)}
                   </span>
                   {/* Brand underline */}
                   <span

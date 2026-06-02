@@ -440,6 +440,59 @@
     "mudanzas": "Moving",
     "seguridad": "Security",
     "contabilidad": "Accounting / Legal",
-    "diseno": "Design / Art"
+    "diseno": "Design / Art",
+    "pisos": "Flooring",
+    "techos": "Roofing",
+    "herreria": "Ironwork",
+    "impermeabilizacion": "Waterproofing",
+    "aire_acondicionado": "Air conditioning",
+    "chapisteria": "Auto body",
+    "fumigacion": "Pest control",
+    "diseno_interiores": "Interior design",
+    "fotografia": "Photography",
+    "eventos": "Events"
+  },
+  "landing": {
+    "hero": {
+      "headline2": "without the hassle.",
+      "subtitle": "Describe your project and we'll connect you with the perfect professional.",
+      "searchPlaceholder": "Describe your project or problem — be as detailed as you'd like!",
+      "location": "Location",
+      "search": "Search",
+      "popular": "Popular:"
+    },
+    "pros": {
+      "headingPre": "Pros for every project in",
+      "headingHighlight": "Your Area."
+    },
+    "why": {
+      "heading": "Why customers choose ContrataCR.",
+      "subtitle": "Every day, thousands of Costa Ricans trust ContrataCR to find the professional they need — and we back them on every project.",
+      "feature0Title": "Get to a hire faster.",
+      "feature0Desc": "Share details about your project in your own words and we'll find the perfect professional for the job in your area.",
+      "feature1Title": "Only local, verified pros.",
+      "feature1Desc": "We only show professionals with verified ID that you can hire in your canton.",
+      "feature2Title": "A job done right — guaranteed.",
+      "feature2Desc": "If the work doesn't go as agreed, we've got you covered. Simple as that."
+    },
+    "explore": {
+      "heading": "Explore more projects.",
+      "subtitle": "Pros in every category, in your area.",
+      "tab0": "Home Maintenance",
+      "tab1": "Home Remodeling",
+      "tab2": "Outdoor Upkeep",
+      "tab3": "Essential Services"
+    },
+    "marquee": {
+      "heading": "Built with world-class technology"
+    },
+    "app": {
+      "badge": "Coming soon",
+      "heading": "The app you need for everything.",
+      "subtitle": "From personalized guides to effortless planning — all in one free app.",
+      "feature0": "Personalized project guides",
+      "feature1": "Real-time estimates",
+      "feature2": "Hiring history"
+    }
   }
 }
