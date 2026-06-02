@@ -1,31 +1,56 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { X, Menu, Mail, Lock, Eye, EyeOff, AlertCircle, ChevronDown } from "lucide-react";
-import { Link } from "@/i18n/navigation";
+import { X, Menu, Mail, Lock, Eye, EyeOff, AlertCircle, ChevronDown, Search } from "lucide-react";
+import { Link, useRouter, usePathname } from "@/i18n/navigation";
+import { useLocale } from "next-intl";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 
 /* ─── Logo ─── */
 export function ContrataCRLogo({ className }: { className?: string }) {
   return (
-    <div className={cn("flex items-center gap-2.5 select-none", className)}>
-      {/* Location-pin mark */}
-      <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden>
-        <circle cx="16" cy="16" r="16" fill="#2563EB" />
-        {/* White location pin */}
-        <path
-          d="M16 7.5C12.41 7.5 9.5 10.41 9.5 14c0 5.81 6.5 10.5 6.5 10.5s6.5-4.69 6.5-10.5c0-3.59-2.91-6.5-6.5-6.5z"
-          fill="white"
-        />
-        {/* Blue hole (brand color showing through) */}
-        <circle cx="16" cy="13.5" r="2.6" fill="#2563EB" />
-      </svg>
-      {/* Wordmark */}
+    <div className={cn("flex items-center select-none", className)}>
+      {/* TODO: AI DESIGN TEAM — ContrataCR wordmark SVG goes here */}
       <span className="text-[17px] font-extrabold tracking-tight leading-none">
         <span className="text-[#1a2744]">Contrata</span>
-        <span className="text-[#2563EB]">CR</span>
+        <span className="text-[#009FD9]">CR</span>
       </span>
+    </div>
+  );
+}
+
+/* ─── Language Toggle Pill ─── */
+function LanguageTogglePill() {
+  const locale = useLocale();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  function switchLang(lang: string) {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("contratacr_lang", lang);
+    }
+    router.replace(pathname, { locale: lang });
+  }
+
+  return (
+    <div className="inline-flex border border-gray-200 rounded-full overflow-hidden text-[13px] font-medium shrink-0">
+      {["es", "en"].map((lang) => {
+        const active = locale === lang;
+        return (
+          <button
+            key={lang}
+            onClick={() => switchLang(lang)}
+            className="px-2.5 py-1 transition-colors"
+            style={{
+              background: active ? "#009FD9" : "transparent",
+              color: active ? "#fff" : "#6b7280",
+            }}
+          >
+            {lang.toUpperCase()}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -168,7 +193,7 @@ function LoginModal({ onClose }: { onClose: () => void }) {
             <div className="text-4xl mb-3">📧</div>
             <p className="font-semibold text-[#1a2744] mb-2">¡Revisá tu correo!</p>
             <p className="text-sm text-gray-400">{success}</p>
-            <button onClick={onClose} className="mt-6 text-sm text-[#2563EB] hover:underline">Cerrar</button>
+            <button onClick={onClose} className="mt-6 text-sm text-[#009FD9] hover:underline">Cerrar</button>
           </div>
         ) : (
           <>
@@ -205,18 +230,18 @@ function LoginModal({ onClose }: { onClose: () => void }) {
               <div className="relative">
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
                 <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Correo electrónico"
-                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 focus:border-[#2563EB] transition-all bg-gray-50/50 placeholder:text-gray-400" />
+                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30 focus:border-[#009FD9] transition-all bg-gray-50/50 placeholder:text-gray-400" />
               </div>
               <div className="relative">
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
                 <input type={showPw ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Contraseña"
-                  className="w-full pl-10 pr-10 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 focus:border-[#2563EB] transition-all bg-gray-50/50 placeholder:text-gray-400" />
+                  className="w-full pl-10 pr-10 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30 focus:border-[#009FD9] transition-all bg-gray-50/50 placeholder:text-gray-400" />
                 <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500">
                   {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
               <button type="submit" disabled={loading}
-                className="w-full py-3 rounded-xl bg-[#2563EB] hover:bg-[#1d4ed8] text-white font-bold text-sm transition-all active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2">
+                className="w-full py-3 rounded-xl bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold text-sm transition-all active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2">
                 {loading && <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />}
                 {mode === "login" ? "Iniciar sesión" : "Crear cuenta"}
               </button>
@@ -225,11 +250,11 @@ function LoginModal({ onClose }: { onClose: () => void }) {
             <p className="text-center text-sm text-gray-400">
               {mode === "login" ? (
                 <>¿No tenés cuenta?{" "}
-                  <button onClick={() => { setMode("register"); setError(null); }} className="text-[#2563EB] font-semibold hover:underline">Registrate gratis</button>
+                  <button onClick={() => { setMode("register"); setError(null); }} className="text-[#009FD9] font-semibold hover:underline">Registrate gratis</button>
                 </>
               ) : (
                 <>¿Ya tenés cuenta?{" "}
-                  <button onClick={() => { setMode("login"); setError(null); }} className="text-[#2563EB] font-semibold hover:underline">Iniciá sesión</button>
+                  <button onClick={() => { setMode("login"); setError(null); }} className="text-[#009FD9] font-semibold hover:underline">Iniciá sesión</button>
                 </>
               )}
             </p>
@@ -242,14 +267,16 @@ function LoginModal({ onClose }: { onClose: () => void }) {
 
 /* ─── Navbar ─── */
 export function LandingNavbar() {
-  const [scrolled, setScrolled] = useState(false);
+  const [compact, setCompact] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
-    const handler = () => setScrolled(window.scrollY > 60);
+    const handler = () => setCompact(window.scrollY > 500);
     window.addEventListener("scroll", handler, { passive: true });
     return () => window.removeEventListener("scroll", handler);
   }, []);
@@ -262,107 +289,164 @@ export function LandingNavbar() {
     closeTimer.current = setTimeout(() => setOpenMenu(null), 120);
   }
 
+  function handleCompactSearch(e: React.FormEvent) {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/buscar?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  }
+
   return (
     <>
       <header
         className={cn(
           "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
-          scrolled
-            ? "bg-white/96 backdrop-blur-md shadow-sm border-b border-gray-100/80"
-            : "bg-white border-b border-gray-100/60"
+          "bg-white/96 backdrop-blur-md shadow-sm border-b border-gray-100/80"
         )}
       >
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between gap-4">
+          {/* Relative container for absolute-positioned rows */}
+          <div className="relative h-16">
 
-            {/* Logo */}
-            <Link href="/" aria-label="ContrataCR inicio">
-              <ContrataCRLogo />
-            </Link>
+            {/* ── Default row ── */}
+            <div
+              className="absolute inset-0 flex items-center gap-4 transition-opacity duration-300"
+              style={{ opacity: compact ? 0 : 1, pointerEvents: compact ? "none" : "auto" }}
+            >
+              {/* Logo */}
+              <Link href="/" aria-label="ContrataCR inicio" className="shrink-0">
+                <ContrataCRLogo />
+              </Link>
 
-            {/* Center nav — 4 dropdowns */}
-            <nav className="hidden lg:flex items-center gap-0.5 flex-1 justify-center">
-              {NAV_MENUS.map((menu) => (
-                <div
-                  key={menu.id}
-                  className="relative"
-                  onMouseEnter={() => openDropdown(menu.id)}
-                  onMouseLeave={closeDropdown}
-                >
-                  <button
-                    className={cn(
-                      "flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-medium transition-colors",
-                      openMenu === menu.id ? "text-[#1a2744] bg-gray-50" : "text-[#374151] hover:text-[#1a2744] hover:bg-gray-50"
-                    )}
+              {/* Nav links directly after logo */}
+              <nav className="hidden lg:flex items-center gap-0.5">
+                {NAV_MENUS.map((menu) => (
+                  <div
+                    key={menu.id}
+                    className="relative"
+                    onMouseEnter={() => openDropdown(menu.id)}
+                    onMouseLeave={closeDropdown}
                   >
-                    {menu.label}
-                    <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", openMenu === menu.id && "rotate-180")} />
-                  </button>
-
-                  {/* Dropdown panel */}
-                  {openMenu === menu.id && (
-                    <div
+                    <button
                       className={cn(
-                        "absolute top-full left-1/2 -translate-x-1/2 mt-1.5 bg-white rounded-2xl shadow-2xl border border-gray-100 p-6 z-50 min-w-[220px]",
-                        menu.columns.length > 1 && "grid gap-8"
+                        "flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-medium transition-colors",
+                        openMenu === menu.id ? "text-[#1a2744] bg-gray-50" : "text-[#374151] hover:text-[#1a2744] hover:bg-gray-50"
                       )}
-                      style={{
-                        gridTemplateColumns: `repeat(${menu.columns.length}, minmax(160px, 1fr))`,
-                        animation: "tab-cards-in 0.15s ease both",
-                      }}
                     >
-                      {/* Arrow pip */}
-                      <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white border-l border-t border-gray-100 rotate-45" />
-                      {menu.columns.map((col) => (
-                        <div key={col.heading}>
-                          <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">{col.heading}</h4>
-                          <ul className="space-y-2.5">
-                            {col.links.map((link) => (
-                              <li key={link}>
-                                <Link href="/buscar" className="text-sm text-gray-600 hover:text-[#2563EB] transition-colors leading-tight block">
-                                  {link}
-                                </Link>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </nav>
+                      {menu.label}
+                      <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", openMenu === menu.id && "rotate-180")} />
+                    </button>
 
-            {/* Right actions */}
-            <div className="hidden lg:flex items-center gap-1 shrink-0">
-              <Link
-                href="/registro/profesional"
-                className="text-sm font-medium px-3 py-2 text-[#374151] hover:text-[#1a2744] transition-colors whitespace-nowrap"
-              >
-                Unirse como profesional
-              </Link>
+                    {/* Dropdown panel */}
+                    {openMenu === menu.id && (
+                      <div
+                        className={cn(
+                          "absolute top-full left-1/2 -translate-x-1/2 mt-1.5 bg-white rounded-2xl shadow-2xl border border-gray-100 p-6 z-50 min-w-[220px]",
+                          menu.columns.length > 1 && "grid gap-8"
+                        )}
+                        style={{
+                          gridTemplateColumns: `repeat(${menu.columns.length}, minmax(160px, 1fr))`,
+                          animation: "tab-cards-in 0.15s ease both",
+                        }}
+                      >
+                        {/* Arrow pip */}
+                        <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white border-l border-t border-gray-100 rotate-45" />
+                        {menu.columns.map((col) => (
+                          <div key={col.heading}>
+                            <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">{col.heading}</h4>
+                            <ul className="space-y-2.5">
+                              {col.links.map((link) => (
+                                <li key={link}>
+                                  <Link href="/buscar" className="text-sm text-gray-600 hover:text-[#009FD9] transition-colors leading-tight block">
+                                    {link}
+                                  </Link>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </nav>
+
+              {/* Spacer */}
+              <div className="flex-1" />
+
+              {/* Right actions: Unirse → Registrarse → Iniciar sesión → ES/EN */}
+              <div className="hidden lg:flex items-center gap-1 shrink-0">
+                <Link
+                  href="/registro/profesional"
+                  className="text-sm font-medium px-3 py-2 text-[#374151] hover:text-[#1a2744] transition-colors whitespace-nowrap"
+                >
+                  Unirse como profesional
+                </Link>
+                <Link
+                  href="/registro"
+                  className="ml-1 inline-flex items-center bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 rounded-full transition-all duration-150 active:scale-[0.97] shadow-sm hover:shadow-[0_4px_20px_rgba(0,159,217,0.35)] whitespace-nowrap"
+                >
+                  Registrarse
+                </Link>
+                <button
+                  onClick={() => setShowLogin(true)}
+                  className="text-sm font-medium px-3 py-2 rounded-xl text-[#374151] hover:bg-gray-50 transition-colors"
+                >
+                  Iniciar sesión
+                </button>
+                <LanguageTogglePill />
+              </div>
+
+              {/* Mobile toggle */}
               <button
-                onClick={() => setShowLogin(true)}
-                className="text-sm font-medium px-3 py-2 rounded-xl text-[#374151] hover:bg-gray-50 transition-colors"
+                onClick={() => setMobileOpen(!mobileOpen)}
+                className="lg:hidden p-2 rounded-xl text-[#1a2744] hover:bg-gray-50 transition-colors"
+                aria-label="Menú"
               >
-                Iniciar sesión
+                {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>
-              <Link
-                href="/registro"
-                className="ml-1 inline-flex items-center bg-[#2563EB] hover:bg-[#1d4ed8] text-white text-sm font-bold px-5 py-2.5 rounded-full transition-all duration-150 active:scale-[0.97] shadow-sm hover:shadow-[0_4px_20px_rgba(37,99,235,0.35)] whitespace-nowrap"
-              >
-                Registrarse
-              </Link>
             </div>
 
-            {/* Mobile toggle */}
-            <button
-              onClick={() => setMobileOpen(!mobileOpen)}
-              className="lg:hidden p-2 rounded-xl text-[#1a2744] hover:bg-gray-50 transition-colors"
-              aria-label="Menú"
+            {/* ── Compact row (shown when scrollY > 500) ── */}
+            <div
+              className="absolute inset-0 flex items-center gap-3 transition-opacity duration-300"
+              style={{ opacity: compact ? 1 : 0, pointerEvents: compact ? "auto" : "none" }}
             >
-              {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </button>
+              {/* Small logo */}
+              <Link href="/" aria-label="ContrataCR inicio" className="shrink-0">
+                <ContrataCRLogo />
+              </Link>
+
+              {/* Mini search */}
+              <form onSubmit={handleCompactSearch} className="flex-1 flex items-center gap-2 bg-white border border-gray-200 rounded-[6px] px-3 py-1.5 shadow-sm">
+                <Search className="h-4 w-4 text-gray-300 shrink-0" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Buscar servicios…"
+                  className="flex-1 text-sm text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-none min-w-0"
+                />
+                <button
+                  type="submit"
+                  className="px-4 py-1 bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold rounded-[4px] transition-colors shrink-0"
+                >
+                  Buscar
+                </button>
+              </form>
+
+              {/* Right: Registrarse + lang toggle */}
+              <div className="hidden sm:flex items-center gap-2 shrink-0">
+                <Link
+                  href="/registro"
+                  className="inline-flex items-center bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-4 py-2 rounded-full transition-all duration-150 active:scale-[0.97] whitespace-nowrap"
+                >
+                  Registrarse
+                </Link>
+                <LanguageTogglePill />
+              </div>
+            </div>
+
           </div>
         </div>
 
@@ -377,7 +461,7 @@ export function LandingNavbar() {
                 <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{menu.label}</p>
                 {menu.columns.flatMap((col) => col.links).slice(0, 5).map((link) => (
                   <Link key={link} href="/buscar" onClick={() => setMobileOpen(false)}
-                    className="block px-2 py-2 text-sm text-gray-600 hover:text-[#2563EB] transition-colors">
+                    className="block px-2 py-2 text-sm text-gray-600 hover:text-[#009FD9] transition-colors">
                     {link}
                   </Link>
                 ))}
@@ -389,7 +473,7 @@ export function LandingNavbar() {
                 Iniciar sesión
               </button>
               <Link href="/registro" onClick={() => setMobileOpen(false)}
-                className="w-full block px-4 py-3 rounded-full bg-[#2563EB] text-white text-sm font-bold text-center hover:bg-[#1d4ed8] transition-colors">
+                className="w-full block px-4 py-3 rounded-full bg-[#009FD9] text-white text-sm font-bold text-center hover:bg-[#0089bb] transition-colors">
                 Registrarse
               </Link>
             </div>

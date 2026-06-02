@@ -55,7 +55,7 @@ export function ReviewSection({
             <button
               type="button"
               onClick={() => setModalOpen(true)}
-              className="rounded-lg border border-[#2563EB] px-3 py-1.5 text-sm font-medium text-[#2563EB] hover:bg-[#2563EB] hover:text-white transition-colors"
+              className="rounded-lg border border-[#009FD9] px-3 py-1.5 text-sm font-medium text-[#009FD9] hover:bg-[#009FD9] hover:text-white transition-colors"
             >
               Dejar una reseña
             </button>

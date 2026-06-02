@@ -9,6 +9,7 @@ import { TrustedProvinces }   from "@/components/landing/trusted-provinces";
 import { AppSection }         from "@/components/landing/app-section";
 import { LandingFooter }      from "@/components/landing/landing-footer";
 import { FadeInUp }           from "@/components/landing/fade-in-up";
+import { BackToTop }          from "@/components/landing/back-to-top";
 
 export default function HomePage() {
   return (
@@ -51,6 +52,7 @@ export default function HomePage() {
         <AppSection />
       </FadeInUp>
 
+      <BackToTop />
       <LandingFooter />
     </div>
   );

@@ -1,15 +1,17 @@
-/* Thumbtack-style partner / media logo marquee */
+/* Tech stack logo marquee */
 
 const LOGOS = [
-  { name: "La Nación",   style: { fontSize: 15, fontWeight: 800, letterSpacing: "-0.01em" } },
-  { name: "CRHoy",        style: { fontSize: 16, fontWeight: 900, letterSpacing: "0.02em" } },
-  { name: "Tico Times",   style: { fontSize: 14, fontWeight: 700, letterSpacing: "0.04em" } },
-  { name: "El Financiero",style: { fontSize: 13, fontWeight: 800, letterSpacing: "-0.01em" } },
-  { name: "CINDE",        style: { fontSize: 18, fontWeight: 900, letterSpacing: "0.06em" } },
-  { name: "PROCOMER",     style: { fontSize: 14, fontWeight: 900, letterSpacing: "0.05em" } },
-  { name: "CámaCR",       style: { fontSize: 15, fontWeight: 800, letterSpacing: "0.02em" } },
-  { name: "Hacienda CR",  style: { fontSize: 13, fontWeight: 700, letterSpacing: "0.01em" } },
+  { name: "Next.js",       style: { fontSize: 15, fontWeight: 800, letterSpacing: "-0.01em" } },
+  { name: "Supabase",      style: { fontSize: 16, fontWeight: 900, letterSpacing: "0.02em" } },
+  { name: "Vercel",        style: { fontSize: 15, fontWeight: 800, letterSpacing: "0.01em" } },
+  { name: "Google Maps",   style: { fontSize: 14, fontWeight: 700, letterSpacing: "0.03em" } },
+  { name: "Cloudinary",    style: { fontSize: 15, fontWeight: 800, letterSpacing: "0.02em" } },
+  { name: "Tailwind CSS",  style: { fontSize: 14, fontWeight: 800, letterSpacing: "0.02em" } },
+  { name: "TypeScript",    style: { fontSize: 15, fontWeight: 900, letterSpacing: "0.01em" } },
+  { name: "PostgreSQL",    style: { fontSize: 14, fontWeight: 800, letterSpacing: "0.02em" } },
 ];
+
+{/* TODO: Confirm real partner/media logos with the business team before going live */}
 
 const DOUBLED = [...LOGOS, ...LOGOS];
 
@@ -28,7 +30,7 @@ export function MarqueeStrip() {
       <p
         className="text-center mb-6 font-extrabold text-[#1a2744] text-xl sm:text-2xl tracking-tight"
       >
-        Impulsando proyectos en toda Costa Rica.
+        Construido con tecnología de clase mundial
       </p>
 
       {/* Scrolling logo strip */}
@@ -54,7 +56,6 @@ export function MarqueeStrip() {
             >
               {logo.name}
             </span>
-            <span style={{ color: "#e5e7eb", margin: "0 0 0 40px", fontSize: 20, lineHeight: 1 }}>·</span>
           </div>
         ))}
       </div>

@@ -157,7 +157,7 @@ export function LeaveReviewModal({
                 maxLength={300}
                 rows={4}
                 placeholder="Cuéntanos sobre tu experiencia con este profesional..."
-                className="w-full resize-none rounded-xl border border-[#e5e7eb] bg-[#fafafa] px-3.5 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:border-[#2563EB] focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 transition"
+                className="w-full resize-none rounded-xl border border-[#e5e7eb] bg-[#fafafa] px-3.5 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:border-[#009FD9] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20 transition"
               />
               <p className="text-xs text-[#9ca3af] mt-1">Mínimo 20 caracteres</p>
             </div>
@@ -174,7 +174,7 @@ export function LeaveReviewModal({
             <button
               type="submit"
               disabled={loading}
-              className="w-full rounded-xl bg-[#2563EB] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#1d4ed8] disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#2563EB]/40"
+              className="w-full rounded-xl bg-[#009FD9] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#0089bb] disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#009FD9]/40"
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">

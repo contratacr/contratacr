@@ -77,7 +77,7 @@ export default function ClientDashboardPage() {
   if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#2563EB] border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
       </div>
     );
   }
@@ -110,7 +110,7 @@ export default function ClientDashboardPage() {
                 className={cn(
                   "flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all",
                   activeTab === tab
-                    ? "bg-white text-[#2563EB] shadow-sm"
+                    ? "bg-white text-[#009FD9] shadow-sm"
                     : "text-[#6b7280] hover:text-[#374151]"
                 )}
               >

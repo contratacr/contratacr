@@ -28,7 +28,7 @@ export function TrustedProvinces() {
             <Link
               key={province}
               href={`/buscar?provincia=${encodeURIComponent(province)}`}
-              className="px-5 py-2 rounded-full border border-gray-300 bg-white text-sm font-semibold text-[#374151] hover:border-[#2563EB] hover:text-[#2563EB] hover:bg-white transition-all duration-150 shadow-sm"
+              className="px-5 py-2 rounded-full border border-gray-300 bg-white text-sm font-semibold text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] hover:bg-white transition-all duration-150 shadow-sm"
             >
               {province}
             </Link>
@@ -41,7 +41,7 @@ export function TrustedProvinces() {
             <Link
               key={canton}
               href={`/buscar?canton=${encodeURIComponent(canton)}`}
-              className="px-3 py-1.5 rounded-full text-xs font-medium text-gray-400 hover:text-[#2563EB] transition-colors"
+              className="px-3 py-1.5 rounded-full text-xs font-medium text-gray-400 hover:text-[#009FD9] transition-colors"
             >
               {canton}
             </Link>
@@ -50,7 +50,7 @@ export function TrustedProvinces() {
 
         <Link
           href="/buscar"
-          className="inline-flex items-center gap-1.5 text-sm font-bold text-[#2563EB] hover:underline"
+          className="inline-flex items-center gap-1.5 text-sm font-bold text-[#009FD9] hover:underline"
         >
           Encontrá profesionales en tu zona <ArrowRight className="h-4 w-4" />
         </Link>

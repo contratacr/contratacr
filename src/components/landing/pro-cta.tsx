@@ -31,7 +31,7 @@ export function ProCTASection() {
 
           {/* Left — Text */}
           <div className="relative">
-            <span className="inline-block text-xs font-bold uppercase tracking-widest text-[#2563EB] bg-[#2563EB]/10 px-3 py-1.5 rounded-full mb-4">
+            <span className="inline-block text-xs font-bold uppercase tracking-widest text-[#009FD9] bg-[#009FD9]/10 px-3 py-1.5 rounded-full mb-4">
               Para profesionales
             </span>
             <h2 className="text-3xl sm:text-4xl lg:text-[2.6rem] font-extrabold text-[#1a2744] leading-tight mb-4">
@@ -57,7 +57,7 @@ export function ProCTASection() {
             {/* CTA */}
             <Link
               href="/registro/profesional"
-              className="inline-flex items-center gap-2 bg-[#2563EB] hover:bg-[#1d4ed8] text-white font-bold text-base px-8 py-4 rounded-2xl transition-all duration-150 active:scale-[0.97] shadow-[0_4px_24px_rgba(37,99,235,0.3)] hover:shadow-[0_8px_32px_rgba(37,99,235,0.45)]"
+              className="inline-flex items-center gap-2 bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold text-base px-8 py-4 rounded-2xl transition-all duration-150 active:scale-[0.97] shadow-[0_4px_24px_rgba(37,99,235,0.3)] hover:shadow-[0_8px_32px_rgba(37,99,235,0.45)]"
             >
               Registrá tu perfil gratis
               <ArrowRight className="h-5 w-5" />
@@ -82,7 +82,7 @@ export function ProCTASection() {
 
             {/* Floating badge */}
             <div className="absolute -bottom-4 -left-6 bg-white rounded-2xl shadow-xl p-4 flex items-center gap-3 border border-gray-100">
-              <div className="w-10 h-10 rounded-xl bg-[#2563EB]/10 flex items-center justify-center text-xl">
+              <div className="w-10 h-10 rounded-xl bg-[#009FD9]/10 flex items-center justify-center text-xl">
                 ✅
               </div>
               <div>

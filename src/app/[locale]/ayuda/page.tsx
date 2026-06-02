@@ -40,11 +40,11 @@ function PopularAccordion() {
             onClick={() => setOpen(open === i ? null : i)}
             className="w-full flex items-center justify-between py-5 text-left gap-4 group"
           >
-            <span className="text-base font-semibold text-[#1a2744] group-hover:text-[#2563EB] transition-colors">
+            <span className="text-base font-semibold text-[#1a2744] group-hover:text-[#009FD9] transition-colors">
               {item.q}
             </span>
             <ChevronDown
-              className={`h-5 w-5 text-gray-400 shrink-0 transition-transform duration-200 ${open === i ? "rotate-180 text-[#2563EB]" : ""}`}
+              className={`h-5 w-5 text-gray-400 shrink-0 transition-transform duration-200 ${open === i ? "rotate-180 text-[#009FD9]" : ""}`}
             />
           </button>
           {open === i && (
@@ -99,7 +99,7 @@ export default function AyudaPage() {
       {/* Hero */}
       <section className="pt-32 pb-12 bg-white text-center px-4">
         <FadeInUp>
-          <span className="inline-block text-xs font-bold uppercase tracking-widest text-[#2563EB] bg-[#EBF5FB] px-4 py-1.5 rounded-full mb-4">
+          <span className="inline-block text-xs font-bold uppercase tracking-widest text-[#009FD9] bg-[#EBF5FB] px-4 py-1.5 rounded-full mb-4">
             Soporte
           </span>
           <h1 className="text-4xl sm:text-5xl font-extrabold text-[#1a2744] mb-4 leading-tight">

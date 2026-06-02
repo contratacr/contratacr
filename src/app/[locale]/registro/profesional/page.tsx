@@ -46,17 +46,17 @@ function StepIndicator({ current, labels }: { current: number; labels: string[] 
         <div key={label} className="flex items-center gap-2">
           <div className={cn(
             "flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold transition-all",
-            i < current ? "bg-[#2563EB] text-white"
-              : i === current ? "bg-[#2563EB] text-white ring-4 ring-[#2563EB]/20"
+            i < current ? "bg-[#009FD9] text-white"
+              : i === current ? "bg-[#009FD9] text-white ring-4 ring-[#009FD9]/20"
               : "bg-[#e5e7eb] text-[#9ca3af]"
           )}>
             {i < current ? <CheckCircle2 className="h-4 w-4" /> : i + 1}
           </div>
-          <span className={cn("text-sm font-medium hidden sm:block", i === current ? "text-[#2563EB]" : "text-[#9ca3af]")}>
+          <span className={cn("text-sm font-medium hidden sm:block", i === current ? "text-[#009FD9]" : "text-[#9ca3af]")}>
             {label}
           </span>
           {i < labels.length - 1 && (
-            <div className={cn("h-px w-8 sm:w-12 transition-all", i < current ? "bg-[#2563EB]" : "bg-[#e5e7eb]")} />
+            <div className={cn("h-px w-8 sm:w-12 transition-all", i < current ? "bg-[#009FD9]" : "bg-[#e5e7eb]")} />
           )}
         </div>
       ))}
@@ -178,7 +178,7 @@ export default function RegisterProfessionalPage() {
         <main className="flex-1 flex items-center justify-center py-12 px-4">
           <div className="w-full max-w-md text-center">
             <div className="flex h-20 w-20 mx-auto items-center justify-center rounded-full bg-[#EBF5FB] mb-5">
-              <CheckCircle2 className="h-10 w-10 text-[#2563EB]" />
+              <CheckCircle2 className="h-10 w-10 text-[#009FD9]" />
             </div>
             <h1 className="text-2xl font-bold text-[#111827] mb-2">{t("success.title")}</h1>
             <p className="text-[#6b7280] mb-6">{t("success.desc")}</p>
@@ -215,7 +215,7 @@ export default function RegisterProfessionalPage() {
           {step === 0 && (
             <form onSubmit={form1.handleSubmit(onStep1)} className="flex flex-col gap-4">
               <div className="bg-[#EBF5FB] rounded-2xl p-4 border border-[#bfdbfe]">
-                <p className="text-sm text-[#1d4ed8] font-medium">🔐 {t("verifyNote")}</p>
+                <p className="text-sm text-[#0089bb] font-medium">🔐 {t("verifyNote")}</p>
               </div>
               <Input
                 label={t("cedula")}
@@ -228,7 +228,7 @@ export default function RegisterProfessionalPage() {
               />
               {fullName && (
                 <div className="flex items-center gap-3 p-3 rounded-xl bg-[#EBF5FB] border border-[#bfdbfe]">
-                  <CheckCircle2 className="h-5 w-5 text-[#2563EB] shrink-0" />
+                  <CheckCircle2 className="h-5 w-5 text-[#009FD9] shrink-0" />
                   <div>
                     <p className="text-xs text-[#6b7280]">{t("verifiedName")}</p>
                     <p className="text-sm font-semibold text-[#111827]">{fullName}</p>
@@ -240,7 +240,7 @@ export default function RegisterProfessionalPage() {
               <Button type="submit" size="lg" className="mt-2">{t("continue")} <ArrowRight className="h-4 w-4" /></Button>
               <p className="text-center text-xs text-[#9ca3af]">
                 {t("terms")}{" "}
-                <Link href="/terminos" className="text-[#2563EB] hover:underline">{t("termsLink")}</Link>
+                <Link href="/terminos" className="text-[#009FD9] hover:underline">{t("termsLink")}</Link>
               </p>
             </form>
           )}
@@ -302,7 +302,7 @@ export default function RegisterProfessionalPage() {
                 <textarea
                   className={cn(
                     "w-full rounded-xl border bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] min-h-[120px] resize-none",
-                    "border-[#e5e7eb] focus:outline-none focus:ring-2 focus:ring-[#2563EB] focus:border-transparent transition-all",
+                    "border-[#e5e7eb] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all",
                     form3.formState.errors.bio && "border-red-400"
                   )}
                   placeholder={t("bioPlaceholder")}
@@ -335,7 +335,7 @@ export default function RegisterProfessionalPage() {
 
           <p className="text-center text-sm text-[#6b7280] mt-6">
             {t("alreadyHaveAccount")}{" "}
-            <Link href="/login" className="text-[#2563EB] font-medium hover:underline">{t("signIn")}</Link>
+            <Link href="/login" className="text-[#009FD9] font-medium hover:underline">{t("signIn")}</Link>
           </p>
         </div>
       </main>

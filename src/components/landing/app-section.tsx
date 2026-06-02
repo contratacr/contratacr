@@ -63,7 +63,7 @@ function AppPhoneMock() {
                 <p className="text-xs font-bold text-gray-800">Escazú, San José →</p>
               </div>
               <div className="flex gap-1">
-                <span className="text-[10px] font-semibold text-[#2563EB] border-b-2 border-[#2563EB] pb-0.5">Mis metas</span>
+                <span className="text-[10px] font-semibold text-[#009FD9] border-b-2 border-[#009FD9] pb-0.5">Mis metas</span>
                 <span className="text-[10px] text-gray-400 ml-3">Upkeep</span>
               </div>
             </div>
@@ -94,7 +94,7 @@ function AppPhoneMock() {
                   <span className="text-sm">{item.icon}</span>
                   <span className="text-[10px] text-gray-600">{item.label}</span>
                 </div>
-                <CheckCircle2 className="h-3.5 w-3.5 text-[#2563EB]/40" />
+                <CheckCircle2 className="h-3.5 w-3.5 text-[#009FD9]/40" />
               </div>
             ))}
           </div>

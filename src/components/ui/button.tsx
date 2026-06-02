@@ -11,17 +11,17 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-[#2563EB] text-white shadow-sm hover:bg-[#1d4ed8] hover:shadow-[0_4px_16px_rgba(37,99,235,0.35)] focus-visible:ring-[#2563EB]",
+          "bg-[#009FD9] text-white shadow-sm hover:bg-[#0089bb] hover:shadow-[0_4px_16px_rgba(0,159,217,0.35)] focus-visible:ring-[#009FD9]",
         secondary:
-          "bg-white text-[#2563EB] border-2 border-[#2563EB] hover:bg-[#EBF5FB] focus-visible:ring-[#2563EB]",
+          "bg-white text-[#009FD9] border-2 border-[#009FD9] hover:bg-[#EBF5FB] focus-visible:ring-[#009FD9]",
         accent:
           "bg-[#ff7c0a] text-white shadow-sm hover:bg-[#f05f00] focus-visible:ring-[#ff7c0a]",
         ghost:
-          "text-[#374151] hover:bg-[#f3f4f6] focus-visible:ring-[#2563EB]",
+          "text-[#374151] hover:bg-[#f3f4f6] focus-visible:ring-[#009FD9]",
         destructive:
           "bg-red-500 text-white hover:bg-red-600 focus-visible:ring-red-500",
         outline:
-          "border border-[#e5e7eb] bg-white hover:bg-[#f3f4f6] text-[#111827] focus-visible:ring-[#2563EB]",
+          "border border-[#e5e7eb] bg-white hover:bg-[#f3f4f6] text-[#111827] focus-visible:ring-[#009FD9]",
         whatsapp:
           "bg-[#25d366] text-white hover:bg-[#1da851] focus-visible:ring-[#25d366]",
       },

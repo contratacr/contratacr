@@ -105,7 +105,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                     {safePage > 1 ? (
                       <Link
                         href={buildPageUrl(safePage - 1)}
-                        className="text-sm font-medium text-[#374151] hover:text-[#2563eb] transition-colors"
+                        className="text-sm font-medium text-[#374151] hover:text-[#009FD9] transition-colors"
                       >
                         ← Anterior
                       </Link>
@@ -122,7 +122,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                     {safePage < totalPages ? (
                       <Link
                         href={buildPageUrl(safePage + 1)}
-                        className="text-sm font-medium text-[#374151] hover:text-[#2563eb] transition-colors"
+                        className="text-sm font-medium text-[#374151] hover:text-[#009FD9] transition-colors"
                       >
                         Siguiente →
                       </Link>

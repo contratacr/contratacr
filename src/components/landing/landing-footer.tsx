@@ -96,7 +96,7 @@ export function LandingFooter() {
                   aria-label={label}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-gray-100 text-gray-400 hover:text-[#2563EB] hover:border-[#2563EB]/20 hover:bg-[#EBF5FB] transition-all"
+                  className="w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-gray-100 text-gray-400 hover:text-[#009FD9] hover:border-[#009FD9]/20 hover:bg-[#EBF5FB] transition-all"
                 >
                   <Icon />
                 </a>
@@ -110,7 +110,7 @@ export function LandingFooter() {
               <ul className="space-y-3">
                 {col.links.map(({ label, href }) => (
                   <li key={label}>
-                    <Link href={href} className="text-sm text-gray-400 hover:text-[#2563EB] transition-colors">
+                    <Link href={href} className="text-sm text-gray-400 hover:text-[#009FD9] transition-colors">
                       {label}
                     </Link>
                   </li>
@@ -124,9 +124,9 @@ export function LandingFooter() {
         <div className="border-t border-gray-100 mt-12 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2.5">
             <svg width="16" height="16" viewBox="0 0 32 32" fill="none" aria-hidden>
-              <circle cx="16" cy="16" r="16" fill="#2563EB" />
+              <circle cx="16" cy="16" r="16" fill="#009FD9" />
               <path d="M16 7.5C12.41 7.5 9.5 10.41 9.5 14c0 5.81 6.5 10.5 6.5 10.5s6.5-4.69 6.5-10.5c0-3.59-2.91-6.5-6.5-6.5z" fill="white" />
-              <circle cx="16" cy="13.5" r="2.6" fill="#2563EB" />
+              <circle cx="16" cy="13.5" r="2.6" fill="#009FD9" />
             </svg>
             <p className="text-xs text-gray-300">© {new Date().getFullYear()} ContrataCR, S.A. Todos los derechos reservados.</p>
           </div>

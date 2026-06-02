@@ -74,7 +74,7 @@ export default function CategoriasPage() {
       {/* Hero */}
       <section className="pt-32 pb-12 bg-white text-center px-4">
         <FadeInUp>
-          <span className="inline-block text-xs font-bold uppercase tracking-widest text-[#2563EB] bg-[#EBF5FB] px-4 py-1.5 rounded-full mb-4">
+          <span className="inline-block text-xs font-bold uppercase tracking-widest text-[#009FD9] bg-[#EBF5FB] px-4 py-1.5 rounded-full mb-4">
             Servicios
           </span>
           <h1 className="text-4xl sm:text-5xl font-extrabold text-[#1a2744] mb-4 leading-tight">
@@ -94,14 +94,14 @@ export default function CategoriasPage() {
               {CATEGORIES.map((cat, i) => (
                 <FadeInUp key={cat.id} delay={i * 40}>
                   <div className="group bg-white border border-gray-100 rounded-2xl p-6 flex flex-col items-center text-center hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer">
-                    <div className="w-20 h-20 rounded-2xl bg-[#EBF5FB] flex items-center justify-center text-4xl mb-4 group-hover:bg-[#2563EB]/10 transition-colors">
+                    <div className="w-20 h-20 rounded-2xl bg-[#EBF5FB] flex items-center justify-center text-4xl mb-4 group-hover:bg-[#009FD9]/10 transition-colors">
                       {cat.icon}
                     </div>
                     <h3 className="text-base font-bold text-[#1a2744] mb-1">{cat.name}</h3>
                     <p className="text-xs text-gray-400 leading-relaxed mb-4">{cat.description}</p>
                     <Link
                       href={`/buscar?categoria=${cat.id}`}
-                      className="text-xs font-semibold text-[#2563EB] hover:underline"
+                      className="text-xs font-semibold text-[#009FD9] hover:underline"
                     >
                       Ver profesionales →
                     </Link>
@@ -123,7 +123,7 @@ export default function CategoriasPage() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/buscar"
-              className="inline-flex items-center justify-center bg-[#2563EB] hover:bg-[#1d4ed8] text-white font-bold px-7 py-3 rounded-full transition-all"
+              className="inline-flex items-center justify-center bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold px-7 py-3 rounded-full transition-all"
             >
               Buscar profesionales
             </Link>

@@ -19,7 +19,7 @@ function SavedProCard({ pro, onUnsave }: { pro: SavedPro; onUnsave: (id: string)
           style={{
             background: pro.avatarUrl
               ? undefined
-              : "linear-gradient(135deg, #2563EB, #1d4ed8)",
+              : "linear-gradient(135deg, #009FD9, #0089bb)",
           }}
         >
           {pro.avatarUrl ? (
@@ -34,7 +34,7 @@ function SavedProCard({ pro, onUnsave }: { pro: SavedPro; onUnsave: (id: string)
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 flex-wrap">
           <span className="font-semibold text-[#111827] text-sm">{pro.fullName}</span>
-          {pro.isVerified && <CheckCircle2 className="h-3.5 w-3.5 text-[#2563EB] shrink-0" />}
+          {pro.isVerified && <CheckCircle2 className="h-3.5 w-3.5 text-[#009FD9] shrink-0" />}
         </div>
         <div className="flex items-center gap-3 mt-0.5 flex-wrap">
           <span className="text-xs text-[#6b7280]">
@@ -100,7 +100,7 @@ export function SavedProfessionalsTab() {
   if (!mounted) {
     return (
       <div className="flex justify-center py-16">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#2563EB] border-t-transparent" />
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
       </div>
     );
   }

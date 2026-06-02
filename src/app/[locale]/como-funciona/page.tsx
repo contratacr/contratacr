@@ -42,11 +42,11 @@ function FaqAccordion() {
             onClick={() => setOpen(open === i ? null : i)}
             className="w-full flex items-center justify-between py-5 text-left gap-4 group"
           >
-            <span className="text-base font-semibold text-[#1a2744] group-hover:text-[#2563EB] transition-colors">
+            <span className="text-base font-semibold text-[#1a2744] group-hover:text-[#009FD9] transition-colors">
               {item.q}
             </span>
             <ChevronDown
-              className={`h-5 w-5 text-gray-400 shrink-0 transition-transform duration-200 ${open === i ? "rotate-180 text-[#2563EB]" : ""}`}
+              className={`h-5 w-5 text-gray-400 shrink-0 transition-transform duration-200 ${open === i ? "rotate-180 text-[#009FD9]" : ""}`}
             />
           </button>
           {open === i && (
@@ -75,7 +75,7 @@ function StepCard({
       <div className="w-14 h-14 rounded-full bg-[#EBF5FB] flex items-center justify-center text-2xl mb-4">
         {icon}
       </div>
-      <div className="w-7 h-7 rounded-full bg-[#2563EB] text-white text-xs font-bold flex items-center justify-center mb-3">
+      <div className="w-7 h-7 rounded-full bg-[#009FD9] text-white text-xs font-bold flex items-center justify-center mb-3">
         {number}
       </div>
       <h3 className="text-lg font-bold text-[#1a2744] mb-2">{title}</h3>
@@ -93,7 +93,7 @@ export default function ComoFuncionaPage() {
       {/* Hero */}
       <section className="pt-32 pb-16 bg-white text-center px-4">
         <FadeInUp>
-          <span className="inline-block text-xs font-bold uppercase tracking-widest text-[#2563EB] bg-[#EBF5FB] px-4 py-1.5 rounded-full mb-4">
+          <span className="inline-block text-xs font-bold uppercase tracking-widest text-[#009FD9] bg-[#EBF5FB] px-4 py-1.5 rounded-full mb-4">
             Cómo funciona
           </span>
           <h1 className="text-4xl sm:text-5xl font-extrabold text-[#1a2744] mb-4 leading-tight">
@@ -139,7 +139,7 @@ export default function ComoFuncionaPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <FadeInUp>
               <div>
-                <span className="inline-block text-xs font-bold uppercase tracking-widest text-[#2563EB] bg-white px-4 py-1.5 rounded-full mb-4">
+                <span className="inline-block text-xs font-bold uppercase tracking-widest text-[#009FD9] bg-white px-4 py-1.5 rounded-full mb-4">
                   Para profesionales
                 </span>
                 <h2 className="text-3xl font-extrabold text-[#1a2744] mb-4">
@@ -160,7 +160,7 @@ export default function ComoFuncionaPage() {
                 </ul>
                 <Link
                   href="/registro/profesional"
-                  className="inline-flex items-center gap-2 bg-[#2563EB] hover:bg-[#1d4ed8] text-white font-bold px-7 py-3 rounded-full transition-all shadow-sm hover:shadow-[0_4px_20px_rgba(37,99,235,0.35)]"
+                  className="inline-flex items-center gap-2 bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold px-7 py-3 rounded-full transition-all shadow-sm hover:shadow-[0_4px_20px_rgba(37,99,235,0.35)]"
                 >
                   Registrarte gratis →
                 </Link>
@@ -190,7 +190,7 @@ export default function ComoFuncionaPage() {
                 { stat: "100%", label: "verificados con cédula" },
               ].map(({ stat, label }) => (
                 <div key={label} className="py-6">
-                  <div className="text-4xl font-extrabold text-[#2563EB] mb-1">{stat}</div>
+                  <div className="text-4xl font-extrabold text-[#009FD9] mb-1">{stat}</div>
                   <div className="text-sm text-gray-500 font-medium">{label}</div>
                 </div>
               ))}

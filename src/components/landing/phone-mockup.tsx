@@ -46,7 +46,7 @@ function ProfileScreen() {
         <div className="min-w-0">
           <div className="flex items-center gap-1.5 flex-wrap">
             <p className="text-xs font-bold text-gray-800">Carlos Ramírez</p>
-            <span className="text-[9px] font-bold bg-[#2563EB]/10 text-[#2563EB] px-1.5 py-0.5 rounded-full">Verificado ✓</span>
+            <span className="text-[9px] font-bold bg-[#009FD9]/10 text-[#009FD9] px-1.5 py-0.5 rounded-full">Verificado ✓</span>
           </div>
           <p className="text-[10px] text-gray-400">Plomero · San José</p>
           <div className="flex items-center gap-0.5 mt-0.5">
@@ -58,7 +58,7 @@ function ProfileScreen() {
       <div className="space-y-2 mb-3">
         {["Cédula verificada ✓", "10 años de experiencia", "Disponible hoy", "Presupuesto gratis"].map((t) => (
           <div key={t} className="flex items-center gap-2">
-            <CheckCircle2 className="h-3.5 w-3.5 text-[#2563EB] shrink-0" />
+            <CheckCircle2 className="h-3.5 w-3.5 text-[#009FD9] shrink-0" />
             <span className="text-[11px] text-gray-600">{t}</span>
           </div>
         ))}
@@ -93,7 +93,7 @@ function ResultsScreen() {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
               <span className="text-xs font-bold text-gray-800">{p.name}</span>
-              {p.label && <span className="text-[9px] font-bold bg-[#2563EB]/10 text-[#2563EB] px-1.5 py-0.5 rounded-full">{p.label}</span>}
+              {p.label && <span className="text-[9px] font-bold bg-[#009FD9]/10 text-[#009FD9] px-1.5 py-0.5 rounded-full">{p.label}</span>}
             </div>
             <p className="text-[10px] text-gray-400">{p.spec}</p>
             <div className="flex items-center gap-0.5 mt-0.5">
@@ -106,7 +106,7 @@ function ResultsScreen() {
           </button>
         </div>
       ))}
-      <button className="mt-3 w-full text-center text-xs font-semibold text-[#2563EB] py-2 border border-[#2563EB]/20 rounded-xl bg-[#EBF5FB]">Ver todos →</button>
+      <button className="mt-3 w-full text-center text-xs font-semibold text-[#009FD9] py-2 border border-[#009FD9]/20 rounded-xl bg-[#EBF5FB]">Ver todos →</button>
     </div>
   );
 }

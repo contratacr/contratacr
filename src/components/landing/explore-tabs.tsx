@@ -87,7 +87,7 @@ function SmallCard({ card }: { card: SmallCard }) {
     <Link
       href={card.href}
       className="group relative block rounded-2xl overflow-hidden card-lift"
-      style={{ height: 140 }}
+      style={{ height: 180 }}
     >
       <Image
         src={card.src}
@@ -153,20 +153,20 @@ export function ExploreTabs() {
           })}
         </div>
 
-        {/* Grid */}
-        <div key={activeTab} className="grid grid-cols-1 lg:grid-cols-2 gap-4 animate-tab-cards">
-          {/* Featured card with editorial copy (Thumbtack style) */}
+        {/* Grid — featured full width on top, 3 equal below */}
+        <div key={activeTab} className="grid grid-cols-3 gap-3 animate-tab-cards">
+          {/* Featured card — spans full width */}
           <Link
             href={tab.featured.href}
-            className="group relative block rounded-2xl overflow-hidden card-lift"
-            style={{ height: 360 }}
+            className="col-span-3 group relative block rounded-2xl overflow-hidden card-lift"
+            style={{ height: 380 }}
           >
             <Image
               src={tab.featured.src}
               alt={tab.featured.label}
               fill
               className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-              sizes="(min-width:1024px) 50vw, 100vw"
+              sizes="100vw"
             />
             {/* Strong dark gradient so text is always readable */}
             <div
@@ -178,21 +178,16 @@ export function ExploreTabs() {
               <p className="text-white font-extrabold text-xl leading-snug mb-2 drop-shadow-md">
                 {tab.featured.editorial}
               </p>
-              <Link
-                href={tab.featured.href}
-                className="inline-flex items-center gap-1 text-white/80 text-sm font-semibold hover:text-white transition-colors"
-              >
+              <span className="inline-flex items-center gap-1 text-white/80 text-sm font-semibold hover:text-white transition-colors">
                 Ver todos los proyectos de {tab.title.toLowerCase()}. <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
+              </span>
             </div>
           </Link>
 
-          {/* 3 small cards stacked */}
-          <div className="grid grid-rows-3 gap-4">
-            {tab.small.map((card) => (
-              <SmallCard key={card.label} card={card} />
-            ))}
-          </div>
+          {/* 3 small cards — equal width */}
+          {tab.small.map((card) => (
+            <SmallCard key={card.label} card={card} />
+          ))}
         </div>
       </div>
     </section>

@@ -77,15 +77,6 @@ export function LandingHero() {
       {/* Content area */}
       <div className="relative mx-auto max-w-3xl px-4 sm:px-6 text-center pt-28 pb-10">
 
-        {/* Logo mark — small centered icon like Thumbtack */}
-        <div className="flex justify-center mb-5">
-          <svg width="50" height="50" viewBox="0 0 32 32" fill="none" aria-hidden>
-            <circle cx="16" cy="16" r="16" fill="#2563EB" />
-            <path d="M16 7.5C12.41 7.5 9.5 10.41 9.5 14c0 5.81 6.5 10.5 6.5 10.5s6.5-4.69 6.5-10.5c0-3.59-2.91-6.5-6.5-6.5z" fill="white" />
-            <circle cx="16" cy="13.5" r="2.6" fill="#2563EB" />
-          </svg>
-        </div>
-
         {/* Headline — rotating line 1 + static line 2, exactly like Thumbtack */}
         <h1
           className="font-extrabold text-[#1a2744] tracking-tight mb-4"
@@ -99,10 +90,10 @@ export function LandingHero() {
           Describí tu proyecto y te conectamos con el profesional perfecto.
         </p>
 
-        {/* Search bar — pill-shaped, wide, prominent like Thumbtack */}
+        {/* Search bar — rounded-[6px] border */}
         <form
           onSubmit={handleSearch}
-          className="flex flex-col sm:flex-row items-stretch max-w-2xl mx-auto bg-white border border-gray-200 rounded-full shadow-[0_4px_40px_rgba(0,0,0,0.10)] hover:shadow-[0_6px_48px_rgba(37,99,235,0.14)] transition-shadow duration-300 overflow-hidden pl-5 pr-2 py-2 gap-0"
+          className="flex flex-col sm:flex-row items-stretch max-w-2xl mx-auto bg-white border border-gray-200 rounded-[6px] shadow-[0_4px_40px_rgba(0,0,0,0.10)] hover:shadow-[0_6px_48px_rgba(0,159,217,0.14)] transition-shadow duration-300 overflow-hidden pl-5 pr-2 py-2 gap-0"
         >
           {/* Service input */}
           <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -137,7 +128,7 @@ export function LandingHero() {
           {/* Submit */}
           <button
             type="submit"
-            className="ml-2 px-7 py-2.5 bg-[#2563EB] hover:bg-[#1d4ed8] text-white text-sm font-bold rounded-full transition-all duration-150 active:scale-[0.97] shadow-sm hover:shadow-[0_4px_16px_rgba(37,99,235,0.40)] whitespace-nowrap shrink-0"
+            className="ml-2 px-7 py-2.5 bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold rounded-[4px] transition-all duration-150 active:scale-[0.97] shadow-sm hover:shadow-[0_4px_16px_rgba(0,159,217,0.40)] whitespace-nowrap shrink-0"
           >
             Buscar
           </button>
@@ -150,7 +141,7 @@ export function LandingHero() {
             <button
               key={tag}
               onClick={() => setService(tag)}
-              className="text-sm text-gray-500 hover:text-[#2563EB] transition-colors"
+              className="text-sm text-gray-500 hover:text-[#009FD9] transition-colors"
             >
               {tag}
             </button>

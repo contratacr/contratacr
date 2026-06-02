@@ -68,7 +68,7 @@ export function ResourcesSection() {
               {/* Blue tint on hover */}
               <div
                 className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                style={{ background: "rgba(37,99,235,0.14)" }}
+                style={{ background: "rgba(0,159,217,0.14)" }}
               />
               {/* Text */}
               <div className="absolute bottom-0 left-0 right-0 p-5">

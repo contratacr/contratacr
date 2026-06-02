@@ -80,8 +80,8 @@ export function SaveButton({ pro, className }: SaveButtonProps) {
       className={cn(
         "group flex items-center justify-center w-9 h-9 rounded-full border transition-all duration-200",
         saved
-          ? "bg-[#2563EB] border-[#2563EB] text-white shadow-md"
-          : "bg-white/90 border-gray-200 text-gray-400 hover:border-[#2563EB] hover:text-[#2563EB] hover:bg-white shadow-sm",
+          ? "bg-[#009FD9] border-[#009FD9] text-white shadow-md"
+          : "bg-white/90 border-gray-200 text-gray-400 hover:border-[#009FD9] hover:text-[#009FD9] hover:bg-white shadow-sm",
         className
       )}
     >

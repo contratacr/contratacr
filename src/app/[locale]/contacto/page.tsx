@@ -70,7 +70,7 @@ function ContactForm() {
           {...register("name", { required: "El nombre es obligatorio." })}
           type="text"
           placeholder="Tu nombre completo"
-          className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 focus:border-[#2563EB] transition-all bg-gray-50/50 placeholder:text-gray-400"
+          className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30 focus:border-[#009FD9] transition-all bg-gray-50/50 placeholder:text-gray-400"
         />
         {errors.name && (
           <p className="text-xs text-red-500 mt-1">{errors.name.message}</p>
@@ -92,7 +92,7 @@ function ContactForm() {
           })}
           type="email"
           placeholder="tucorreo@ejemplo.com"
-          className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 focus:border-[#2563EB] transition-all bg-gray-50/50 placeholder:text-gray-400"
+          className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30 focus:border-[#009FD9] transition-all bg-gray-50/50 placeholder:text-gray-400"
         />
         {errors.email && (
           <p className="text-xs text-red-500 mt-1">{errors.email.message}</p>
@@ -106,7 +106,7 @@ function ContactForm() {
         </label>
         <select
           {...register("subject", { required: "Seleccioná un asunto." })}
-          className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 focus:border-[#2563EB] transition-all bg-gray-50/50 text-gray-700"
+          className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30 focus:border-[#009FD9] transition-all bg-gray-50/50 text-gray-700"
         >
           <option value="">Seleccioná una opción</option>
           <option value="problema">Tengo un problema</option>
@@ -134,7 +134,7 @@ function ContactForm() {
           })}
           rows={5}
           placeholder="Describí tu consulta con el mayor detalle posible..."
-          className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#2563EB]/30 focus:border-[#2563EB] transition-all bg-gray-50/50 placeholder:text-gray-400 resize-none"
+          className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30 focus:border-[#009FD9] transition-all bg-gray-50/50 placeholder:text-gray-400 resize-none"
         />
         {errors.message && (
           <p className="text-xs text-red-500 mt-1">{errors.message.message}</p>
@@ -144,7 +144,7 @@ function ContactForm() {
       <button
         type="submit"
         disabled={loading}
-        className="w-full py-3 rounded-xl bg-[#2563EB] hover:bg-[#1d4ed8] text-white font-bold text-sm transition-all active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2"
+        className="w-full py-3 rounded-xl bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold text-sm transition-all active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2"
       >
         {loading && (
           <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
@@ -163,7 +163,7 @@ export default function ContactoPage() {
       {/* Hero */}
       <section className="pt-32 pb-12 bg-white text-center px-4">
         <FadeInUp>
-          <span className="inline-block text-xs font-bold uppercase tracking-widest text-[#2563EB] bg-[#EBF5FB] px-4 py-1.5 rounded-full mb-4">
+          <span className="inline-block text-xs font-bold uppercase tracking-widest text-[#009FD9] bg-[#EBF5FB] px-4 py-1.5 rounded-full mb-4">
             Contacto
           </span>
           <h1 className="text-4xl sm:text-5xl font-extrabold text-[#1a2744] mb-4 leading-tight">
@@ -221,7 +221,7 @@ export default function ContactoPage() {
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
                   <div className="flex items-start gap-4">
                     <div className="w-12 h-12 rounded-xl bg-[#EBF5FB] flex items-center justify-center shrink-0">
-                      <svg className="h-6 w-6 text-[#2563EB]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                      <svg className="h-6 w-6 text-[#009FD9]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                         <rect x="2" y="4" width="20" height="16" rx="2" />
                         <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
                       </svg>
@@ -231,7 +231,7 @@ export default function ContactoPage() {
                       <p className="text-xs text-gray-400 mb-3">Respondemos en menos de 24 horas</p>
                       <a
                         href="mailto:soporte@contratacr.com"
-                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#2563EB] hover:underline"
+                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#009FD9] hover:underline"
                       >
                         soporte@contratacr.com →
                       </a>
@@ -260,7 +260,7 @@ export default function ContactoPage() {
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
                   <div className="flex items-start gap-4">
                     <div className="w-12 h-12 rounded-xl bg-[#EBF5FB] flex items-center justify-center shrink-0">
-                      <svg className="h-6 w-6 text-[#2563EB]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                      <svg className="h-6 w-6 text-[#009FD9]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                         <circle cx="12" cy="10" r="3" />
                       </svg>

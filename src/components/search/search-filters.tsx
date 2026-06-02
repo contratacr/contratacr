@@ -111,7 +111,7 @@ export function SearchFilters() {
             onChange={(e) => handleQueryChange(e.target.value)}
             onKeyDown={handleQueryKeyDown}
             placeholder="Buscar profesionales... ej. plomero Escazú"
-            className="w-full rounded-xl border border-[#e5e7eb] bg-white py-2 pl-9 pr-9 text-sm text-[#111827] placeholder-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#2563eb] focus:border-transparent transition"
+            className="w-full rounded-xl border border-[#e5e7eb] bg-white py-2 pl-9 pr-9 text-sm text-[#111827] placeholder-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition"
           />
           {query && (
             <button
