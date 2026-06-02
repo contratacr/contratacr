@@ -117,25 +117,47 @@ export default function RegisterProfessionalPage() {
     setError(null);
     try {
       const supabase = createClient();
-      const { error: signUpError } = await supabase.auth.signUp({
+      const resolvedName = fullName || step1Data.email.split("@")[0];
+
+      // 1. Create auth user + trigger auto-creates the profile row
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: step1Data.email,
         password: step1Data.password,
         options: {
           data: {
-            full_name: fullName || step1Data.email.split("@")[0],
+            full_name: resolvedName,
             cedula: step1Data.cedula,
             role: "professional",
-            category: step2Data.category,
-            province: step2Data.province,
-            canton: step2Data.canton,
-            whatsapp: step2Data.whatsapp,
-            bio: data.bio,
-            years_experience: data.yearsExperience ?? "",
-            hourly_rate: data.hourlyRate ?? "",
           },
         },
       });
       if (signUpError) throw signUpError;
+
+      const userId = signUpData.user?.id;
+      if (!userId) throw new Error("No se pudo crear la cuenta. Intentá de nuevo.");
+
+      // 2. Create professionals record via server route (uses service_role, bypasses RLS)
+      const proRes = await fetch("/api/register/professional", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
+          fullName: resolvedName,
+          category: step2Data.category,
+          province: step2Data.province,
+          canton: step2Data.canton,
+          whatsapp: step2Data.whatsapp,
+          bio: data.bio,
+          yearsExperience: data.yearsExperience,
+          hourlyRate: data.hourlyRate,
+        }),
+      });
+
+      if (!proRes.ok) {
+        const { error: proErr } = await proRes.json();
+        throw new Error(proErr ?? "Error al crear tu perfil de profesional.");
+      }
+
       setDone(true);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Error al registrarse";
