@@ -22,7 +22,7 @@ interface TabData {
 const TABS: TabData[] = [
   {
     id: "hogar",
-    title: "Hogar",
+    title: "Mantenimiento del hogar",
     description: "Mantené tu hogar en perfectas condiciones.",
     featured: {
       label: "Limpieza del hogar",
@@ -38,7 +38,7 @@ const TABS: TabData[] = [
       {
         label: "Plomería",
         href: "/buscar?categoria=plomeria",
-        src: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&w=480&q=80",
+        src: "https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?auto=format&fit=crop&w=480&q=80",
       },
       {
         label: "Electricidad",
@@ -48,8 +48,35 @@ const TABS: TabData[] = [
     ],
   },
   {
+    id: "remodelacion",
+    title: "Remodelación",
+    description: "Remodelá tu espacio con los mejores profesionales.",
+    featured: {
+      label: "Remodelación de cocinas",
+      href: "/buscar?categoria=remodelacion",
+      src: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?auto=format&fit=crop&w=900&q=80",
+    },
+    small: [
+      {
+        label: "Carpintería a medida",
+        href: "/buscar?categoria=carpinteria",
+        src: "https://images.unsplash.com/photo-1588854337115-1c67d9247e4d?auto=format&fit=crop&w=480&q=80",
+      },
+      {
+        label: "Pisos y revestimientos",
+        href: "/buscar?categoria=pisos",
+        src: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=480&q=80",
+      },
+      {
+        label: "Instalación de baños",
+        href: "/buscar?categoria=plomeria",
+        src: "https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?auto=format&fit=crop&w=480&q=80",
+      },
+    ],
+  },
+  {
     id: "exterior",
-    title: "Exterior",
+    title: "Exterior y jardín",
     description: "Tu espacio exterior al mejor nivel.",
     featured: {
       label: "Jardinería y paisajismo",
@@ -75,77 +102,42 @@ const TABS: TabData[] = [
     ],
   },
   {
-    id: "tecnologia",
-    title: "Tecnología",
-    description: "Soporte técnico y soluciones digitales.",
+    id: "esencial",
+    title: "Servicios esenciales",
+    description: "Los servicios que todo hogar necesita.",
     featured: {
-      label: "Redes y soporte técnico",
+      label: "Soporte técnico y tecnología",
       href: "/buscar?categoria=tecnologia",
       src: "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=900&q=80",
     },
     small: [
       {
-        label: "Seguridad CCTV",
+        label: "Seguridad y CCTV",
         href: "/buscar?categoria=seguridad",
-        src: "https://images.unsplash.com/photo-1557597774-9d475d4b1037?auto=format&fit=crop&w=480&q=80",
+        src: "https://images.unsplash.com/photo-1557597774-9d273605dfa9?auto=format&fit=crop&w=480&q=80",
       },
       {
-        label: "Reparación de equipos",
-        href: "/buscar?categoria=reparacion",
-        src: "https://images.unsplash.com/photo-1588508065123-287b28e013da?auto=format&fit=crop&w=480&q=80",
+        label: "Belleza y estética",
+        href: "/buscar?categoria=belleza",
+        src: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=480&q=80",
       },
       {
-        label: "Diseño web",
-        href: "/buscar?categoria=diseno-web",
-        src: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=480&q=80",
-      },
-    ],
-  },
-  {
-    id: "bienestar",
-    title: "Bienestar",
-    description: "Cuidá tu salud y bienestar personal.",
-    featured: {
-      label: "Belleza y estética",
-      href: "/buscar?categoria=belleza",
-      src: "https://images.unsplash.com/photo-1562322140-8baeececf3df?auto=format&fit=crop&w=900&q=80",
-    },
-    small: [
-      {
-        label: "Entrenamiento personal",
-        href: "/buscar?categoria=fitness",
-        src: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=480&q=80",
-      },
-      {
-        label: "Masajes",
-        href: "/buscar?categoria=masajes",
-        src: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=480&q=80",
-      },
-      {
-        label: "Nutrición",
-        href: "/buscar?categoria=nutricion",
-        src: "https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=480&q=80",
+        label: "Mecánica automotriz",
+        href: "/buscar?categoria=mecanica",
+        src: "https://images.unsplash.com/photo-1625047509248-ec889cbff17f?auto=format&fit=crop&w=480&q=80",
       },
     ],
   },
 ];
 
-function PhotoCard({
-  card,
-  size,
-}: {
-  card: TabCard;
-  size: "featured" | "small";
-}) {
+function PhotoCard({ card, size }: { card: TabCard; size: "featured" | "small" }) {
   const [hovered, setHovered] = useState(false);
 
   return (
     <Link
       href={card.href}
-      className="block relative rounded-2xl overflow-hidden"
-      style={{
-        height: size === "featured" ? 320 : 148,
-      }}
+      className="block relative rounded-2xl overflow-hidden group"
+      style={{ height: size === "featured" ? 340 : 152 }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
@@ -153,29 +145,29 @@ function PhotoCard({
         src={card.src}
         alt={card.label}
         fill
-        className="object-cover"
+        className="object-cover img-zoom"
         style={{
-          transition: "transform 0.5s cubic-bezier(0.25,0.46,0.45,0.94)",
           transform: hovered ? "scale(1.07)" : "scale(1)",
+          transition: "transform 0.5s cubic-bezier(0.25,0.46,0.45,0.94)",
         }}
         sizes={size === "featured" ? "(min-width:1024px) 50vw, 100vw" : "240px"}
       />
       <div
-        className="absolute inset-0"
+        className="absolute inset-0 transition-all duration-300"
         style={{
           background: hovered
-            ? "linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.1) 60%, transparent 100%)"
+            ? "linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.08) 55%, transparent 100%)"
             : "linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 60%)",
-          transition: "background 0.3s ease",
         }}
       />
       <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between">
-        <span className="text-white font-semibold text-sm drop-shadow">{card.label}</span>
-        {hovered && (
-          <span className="flex items-center gap-0.5 text-white/80 text-xs font-medium">
-            Ver <ArrowRight className="h-3.5 w-3.5" />
-          </span>
-        )}
+        <span className="text-white font-bold text-sm drop-shadow leading-tight">{card.label}</span>
+        <span
+          className="flex items-center gap-0.5 text-white/80 text-xs font-semibold transition-all duration-200"
+          style={{ opacity: hovered ? 1 : 0, transform: hovered ? "translateX(0)" : "translateX(6px)" }}
+        >
+          Ver <ArrowRight className="h-3.5 w-3.5" />
+        </span>
       </div>
     </Link>
   );
@@ -192,44 +184,42 @@ export function ExploreTabs() {
         {/* Header */}
         <div className="text-center mb-10">
           <h2 className="text-3xl sm:text-4xl font-extrabold text-[#1a2744] mb-2">
-            Explorá más servicios.
+            Explorá más proyectos.
           </h2>
           <p className="text-gray-400 text-base">
             Profesionales en cada categoría, en tu cantón.
           </p>
         </div>
 
-        {/* Tabs */}
-        <div className="flex justify-center gap-1 mb-8 bg-gray-50 p-1.5 rounded-2xl max-w-md mx-auto border border-gray-100">
-          {TABS.map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setActiveTab(t.id)}
-              className="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200"
-              style={{
-                background: activeTab === t.id ? "white" : "transparent",
-                color: activeTab === t.id ? "#1a2744" : "#9CA3AF",
-                boxShadow: activeTab === t.id ? "0 2px 8px rgba(0,0,0,0.08)" : "none",
-              }}
-            >
-              {t.title}
-            </button>
-          ))}
+        {/* Underline tabs */}
+        <div className="flex justify-center mb-8 border-b border-gray-200 overflow-x-auto hide-scrollbar">
+          {TABS.map((t) => {
+            const active = t.id === activeTab;
+            return (
+              <button
+                key={t.id}
+                onClick={() => setActiveTab(t.id)}
+                className="relative px-5 py-3 text-sm font-semibold whitespace-nowrap transition-all duration-200 shrink-0"
+                style={{
+                  color: active ? "#1a2744" : "#9ca3af",
+                }}
+              >
+                {t.title}
+                {/* Underline indicator */}
+                <span
+                  className="absolute bottom-0 left-0 h-0.5 bg-[#1a2744] transition-all duration-300 rounded-t-full"
+                  style={{ width: active ? "100%" : "0%", left: active ? "0%" : "50%" }}
+                />
+              </button>
+            );
+          })}
         </div>
 
         {/* Grid */}
         <div
           key={activeTab}
-          className="grid grid-cols-1 lg:grid-cols-2 gap-4"
-          style={{ animation: "fadeTabIn 0.3s ease both" }}
+          className="grid grid-cols-1 lg:grid-cols-2 gap-4 animate-tab-cards"
         >
-          <style>{`
-            @keyframes fadeTabIn {
-              from { opacity: 0; transform: translateY(10px); }
-              to   { opacity: 1; transform: translateY(0); }
-            }
-          `}</style>
-
           {/* Featured card */}
           <PhotoCard card={tab.featured} size="featured" />
 
@@ -245,9 +235,9 @@ export function ExploreTabs() {
         <div className="text-center mt-8">
           <Link
             href="/buscar"
-            className="inline-flex items-center gap-2 text-sm font-semibold text-[#2563EB] hover:underline"
+            className="inline-flex items-center gap-2 text-sm font-bold text-[#2563EB] hover:underline"
           >
-            Ver todos los servicios de {tab.title.toLowerCase()} <ArrowRight className="h-4 w-4" />
+            Ver todos los servicios <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
       </div>

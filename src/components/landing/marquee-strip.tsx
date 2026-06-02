@@ -1,61 +1,63 @@
-const ITEMS = [
-  "Cédula verificada",
-  "Contacto por WhatsApp",
-  "Sin intermediarios",
-  "Solo en Costa Rica",
-  "Profesionales reales",
-  "100% gratis buscar",
-  "Disponibles en tu cantón",
-  "Perfiles con reseñas",
+/* Thumbtack-style partner / media logo marquee */
+
+const LOGOS = [
+  { name: "La Nación",   style: { fontSize: 15, fontWeight: 800, letterSpacing: "-0.01em" } },
+  { name: "CRHoy",        style: { fontSize: 16, fontWeight: 900, letterSpacing: "0.02em" } },
+  { name: "Tico Times",   style: { fontSize: 14, fontWeight: 700, letterSpacing: "0.04em" } },
+  { name: "El Financiero",style: { fontSize: 13, fontWeight: 800, letterSpacing: "-0.01em" } },
+  { name: "CINDE",        style: { fontSize: 18, fontWeight: 900, letterSpacing: "0.06em" } },
+  { name: "PROCOMER",     style: { fontSize: 14, fontWeight: 900, letterSpacing: "0.05em" } },
+  { name: "CámaCR",       style: { fontSize: 15, fontWeight: 800, letterSpacing: "0.02em" } },
+  { name: "Hacienda CR",  style: { fontSize: 13, fontWeight: 700, letterSpacing: "0.01em" } },
 ];
 
-const DOUBLED = [...ITEMS, ...ITEMS];
+const DOUBLED = [...LOGOS, ...LOGOS];
 
 export function MarqueeStrip() {
   return (
-    <div
+    <section
       className="overflow-hidden"
       style={{
-        background: "#f8f9fa",
-        borderTop: "1px solid #f0f1f2",
-        borderBottom: "1px solid #f0f1f2",
-        padding: "16px 0",
+        background: "#ffffff",
+        borderTop: "1px solid #f0f1f3",
+        borderBottom: "1px solid #f0f1f3",
+        padding: "32px 0",
       }}
     >
+      {/* Label */}
+      <p
+        className="text-center mb-6 font-extrabold text-[#1a2744] text-xl sm:text-2xl tracking-tight"
+      >
+        Impulsando proyectos en toda Costa Rica.
+      </p>
+
+      {/* Scrolling logo strip */}
       <div
-        className="flex animate-marquee-infinite"
+        className="flex animate-logo-scroll"
         style={{ width: "max-content", gap: 0 }}
       >
-        {DOUBLED.map((item, i) => (
+        {DOUBLED.map((logo, i) => (
           <div
             key={i}
             className="flex items-center shrink-0"
-            style={{ padding: "0 28px" }}
+            style={{ padding: "0 40px" }}
           >
             <span
               style={{
-                color: "#9ca3af",
-                fontSize: 15,
-                fontWeight: 500,
-                letterSpacing: "0.02em",
+                ...logo.style,
+                color: "#c0c7d0",
                 whiteSpace: "nowrap",
+                userSelect: "none",
+                transition: "color 0.2s",
               }}
+              className="hover:!text-[#9ca3af] cursor-default"
             >
-              {item}
+              {logo.name}
             </span>
-            <span
-              style={{
-                color: "#d1d5db",
-                margin: "0 0 0 28px",
-                fontSize: 18,
-                lineHeight: 1,
-              }}
-            >
-              ·
-            </span>
+            <span style={{ color: "#e5e7eb", margin: "0 0 0 40px", fontSize: 20, lineHeight: 1 }}>·</span>
           </div>
         ))}
       </div>
-    </div>
+    </section>
   );
 }

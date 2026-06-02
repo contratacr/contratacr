@@ -143,3 +143,98 @@ body {
   opacity: 1;
   transform: translateY(0);
 }
+
+/* ─── Category icon tabs ─── */
+@keyframes tab-cards-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-tab-cards { animation: tab-cards-in 0.3s ease both; }
+
+/* ─── Accordion feature slide ─── */
+@keyframes accordion-open {
+  from { max-height: 0; opacity: 0; }
+  to   { max-height: 120px; opacity: 1; }
+}
+.accordion-open {
+  animation: accordion-open 0.3s cubic-bezier(0.4,0,0.2,1) forwards;
+  overflow: hidden;
+}
+
+/* ─── Card lift on hover ─── */
+.card-lift {
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+.card-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.14);
+}
+
+/* ─── Underline tab indicator ─── */
+.tab-underline {
+  position: relative;
+}
+.tab-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: #1a2744;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.22s ease;
+}
+.tab-underline.active::after {
+  transform: scaleX(1);
+}
+
+/* ─── Photo card image zoom ─── */
+.img-zoom {
+  transition: transform 0.5s cubic-bezier(0.25,0.46,0.45,0.94);
+}
+.group:hover .img-zoom {
+  transform: scale(1.07);
+}
+
+/* ─── Partner logo strip ─── */
+@keyframes logo-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.animate-logo-scroll {
+  animation: logo-scroll 28s linear infinite;
+}
+
+/* ─── Number counter pulse ─── */
+@keyframes count-pulse {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.06); }
+}
+
+/* ─── Hero trust badge pop ─── */
+@keyframes trust-pop {
+  0%   { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.animate-trust-pop {
+  animation: trust-pop 0.5s ease 0.4s both;
+}
+
+/* ─── App section phone drift ─── */
+@keyframes phone-drift {
+  0%, 100% { transform: translateY(0) rotate(2deg); }
+  50%       { transform: translateY(-14px) rotate(2deg); }
+}
+.animate-phone-drift {
+  animation: phone-drift 6s ease-in-out infinite;
+}
+
+/* ─── Resource card overlay slide ─── */
+.resource-overlay {
+  transition: opacity 0.3s ease;
+}
+.resource-card:hover .resource-overlay {
+  opacity: 1 !important;
+}
