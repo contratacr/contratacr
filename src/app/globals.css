@@ -111,6 +111,27 @@ body {
   animation: float-phone 5s ease-in-out infinite;
 }
 
+/* Hover scale for CTA buttons */
+.btn-hover-lift {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.btn-hover-lift:hover {
+  transform: scale(1.02);
+  box-shadow: 0 6px 24px rgba(37, 99, 235, 0.35);
+}
+
+/* Section baseline padding */
+.section-pad {
+  padding-top: 80px;
+  padding-bottom: 80px;
+}
+@media (max-width: 640px) {
+  .section-pad {
+    padding-top: 48px;
+    padding-bottom: 48px;
+  }
+}
+
 /* Fade-in-up for scroll-triggered sections */
 .fade-in-up {
   opacity: 0;
