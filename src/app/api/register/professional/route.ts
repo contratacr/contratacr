@@ -26,23 +26,49 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Faltan campos requeridos" }, { status: 400 });
     }
 
-    // ── 1. Validate the session via cookies — never trust userId from body alone ──
+    // ── 1. Identify the user ──────────────────────────────────────────────────
+    //    Two cases:
+    //    A) Authenticated (OAuth / already-logged-in): read from session cookies.
+    //    B) New email/password signup: signUp() creates auth.users but the
+    //       session only starts AFTER email confirmation, so there are no cookies
+    //       yet. Validate the userId from the POST body via admin.getUserById().
     const sessionClient = await createServerClient();
-    const { data: { user }, error: sessionError } = await sessionClient.auth.getUser();
-
-    if (sessionError || !user) {
-      return NextResponse.json(
-        { error: "Sesión inválida. Volvé a iniciar sesión." },
-        { status: 401 }
-      );
-    }
-
-    const userId = user.id;
-    const email = bodyEmail ?? user.email ?? "";
-    const fullName = bodyFullName ?? (user.user_metadata?.full_name as string) ?? "";
-    const cedula = bodyCedula ?? null;
+    const { data: { user: sessionUser } } = await sessionClient.auth.getUser();
 
     const supabase = createAdminClient();
+
+    let userId: string;
+    let email: string;
+    let fullName: string;
+
+    if (sessionUser) {
+      // Case A — authenticated user
+      userId = sessionUser.id;
+      email = bodyEmail ?? sessionUser.email ?? "";
+      fullName = bodyFullName ?? (sessionUser.user_metadata?.full_name as string) ?? "";
+    } else {
+      // Case B — new signup without a session yet; validate via admin API
+      const bodyUserId: string | undefined = body.userId;
+      if (!bodyUserId) {
+        return NextResponse.json(
+          { error: "Usuario inválido. Intentá de nuevo." },
+          { status: 401 }
+        );
+      }
+      const { data: adminLookup, error: adminError } =
+        await supabase.auth.admin.getUserById(bodyUserId);
+      if (adminError || !adminLookup.user) {
+        return NextResponse.json(
+          { error: "No se encontró el usuario. Intentá de nuevo." },
+          { status: 401 }
+        );
+      }
+      userId = adminLookup.user.id;
+      email = bodyEmail ?? adminLookup.user.email ?? "";
+      fullName = bodyFullName ?? (adminLookup.user.user_metadata?.full_name as string) ?? "";
+    }
+
+    const cedula = bodyCedula ?? null;
 
     // ── 2. Check cedula duplicate ─────────────────────────────────────────────
     if (cedula) {
