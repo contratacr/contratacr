@@ -253,10 +253,39 @@ mecanica, hojalateria, electricidad_automotriz, tapiceria, detailing, cambio_lla
 - Email already registered → "Este correo ya está registrado. ¿Querés iniciar sesión?"
 - Cédula already registered → "Esta cédula ya está registrada en ContrataCR."
 
+## Sprint 5 Hotfixes (2026-06-03)
+
+### Cloudinary
+- PhotoGallery was POSTing to `/api/upload` (404) — fixed to `/api/upload/photo`
+- Upload route now returns explicit 503 if `CLOUDINARY_CLOUD_NAME/API_KEY/API_SECRET` are not set
+
+### RLS (migration 008 — run in Supabase SQL Editor)
+```
+supabase/migrations/008_professionals_rls_update.sql
+```
+Adds `FOR UPDATE` policy on `professionals` so client-side saves
+(availability, profile edits, portfolio photos) are no longer silently discarded.
+
+### Registration API
+- API route now validates the caller via session cookies (`auth.getUser()`) before upserting profile.
+  Falls back to `admin.getUserById(userId)` for new signups that have no session yet (pre-OTP).
+
+### Profile page (`/profesionales/[slug]`)
+- `notFound()` inside `useEffect` (client component) replaced with state-driven 404 UI
+- Query uses LEFT joins instead of `!inner` — a missing `categories` table row no longer
+  causes the entire query to fail silently and fall back to mock data
+- `category_id` is now read as a plain text column; no `categories` table join needed
+- Guard around `tCat(categoryId)` prevents broken translation key when id is null/empty
+
+### Dashboard
+- Removed `categories(*)` join — was rendering `[object Object]` / strange format under name
+- Now uses `tCat(pro.category_id)` directly (i18n translation for the category ID)
+
 ## Next Priorities
 
-1. Run migration 007 in Supabase SQL Editor
-2. Google Maps integration on /buscar (split view list + map)
-3. OTP email verification — configure Supabase SMTP (Resend) and enable email confirmation
-4. Payment/subscription system (freemium model)
-5. Native mobile app
+1. Run migration 007 in Supabase SQL Editor (avatar_url column + email/cedula unique indices)
+2. Run migration 008 in Supabase SQL Editor (professionals UPDATE RLS policy)
+3. Set CLOUDINARY_CLOUD_NAME / CLOUDINARY_API_KEY / CLOUDINARY_API_SECRET in Vercel env vars
+4. Google Maps integration on /buscar (split view list + map)
+5. OTP email verification — configure Supabase SMTP via Resend + enable email confirmation
+6. Payment/subscription system (freemium model)
