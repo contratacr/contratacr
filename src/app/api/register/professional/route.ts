@@ -1,15 +1,11 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient as createServerClient } from "@/lib/supabase/server";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
     const {
-      userId,
-      email,
-      fullName,
-      cedula,
-      photoUrl,
       category,
       serviceType,
       province,
@@ -19,18 +15,36 @@ export async function POST(req: Request) {
       bio,
       yearsExperience,
       hourlyRate,
+      // email/fullName/cedula/photoUrl come from the body but we verify userId from session
+      email: bodyEmail,
+      fullName: bodyFullName,
+      cedula: bodyCedula,
+      photoUrl,
     } = body;
 
-    if (!userId || !category || !province || !canton || !whatsapp || !bio) {
+    if (!category || !province || !canton || !whatsapp || !bio) {
+      return NextResponse.json({ error: "Faltan campos requeridos" }, { status: 400 });
+    }
+
+    // ── 1. Validate the session via cookies — never trust userId from body alone ──
+    const sessionClient = await createServerClient();
+    const { data: { user }, error: sessionError } = await sessionClient.auth.getUser();
+
+    if (sessionError || !user) {
       return NextResponse.json(
-        { error: "Faltan campos requeridos" },
-        { status: 400 }
+        { error: "Sesión inválida. Volvé a iniciar sesión." },
+        { status: 401 }
       );
     }
 
+    const userId = user.id;
+    const email = bodyEmail ?? user.email ?? "";
+    const fullName = bodyFullName ?? (user.user_metadata?.full_name as string) ?? "";
+    const cedula = bodyCedula ?? null;
+
     const supabase = createAdminClient();
 
-    // ── 1. Check cedula duplicate before doing anything ──────────────────────
+    // ── 2. Check cedula duplicate ─────────────────────────────────────────────
     if (cedula) {
       const { data: existingCedula } = await supabase
         .from("profiles")
@@ -47,15 +61,17 @@ export async function POST(req: Request) {
       }
     }
 
-    // ── 2. Upsert profile (resilient: works even if trigger didn't fire) ─────
+    // ── 3. Upsert profile ─────────────────────────────────────────────────────
+    //    Uses service_role so it bypasses RLS; FK is satisfied because userId
+    //    was just confirmed valid by auth.getUser() above.
     const { error: profileError } = await supabase
       .from("profiles")
       .upsert(
         {
           id: userId,
-          email: email ?? "",
-          full_name: fullName ?? "",
-          cedula: cedula ?? null,
+          email,
+          full_name: fullName,
+          cedula: cedula || null,
           role: "professional",
           onboarding_completed: true,
           ...(photoUrl ? { avatar_url: photoUrl } : {}),
@@ -70,7 +86,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // ── 3. Check if professional record already exists (avoid duplicates) ────
+    // ── 4. Check if professional already exists ───────────────────────────────
     const { data: existingPro } = await supabase
       .from("professionals")
       .select("id, slug")
@@ -78,7 +94,6 @@ export async function POST(req: Request) {
       .maybeSingle();
 
     if (existingPro) {
-      // Already exists — update it instead of inserting again
       await supabase
         .from("professionals")
         .update({
@@ -97,7 +112,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ ok: true, slug: existingPro.slug });
     }
 
-    // ── 4. Build slug ─────────────────────────────────────────────────────────
+    // ── 5. Build slug ─────────────────────────────────────────────────────────
     const baseName = (fullName || "profesional")
       .toLowerCase()
       .normalize("NFD")
@@ -106,7 +121,7 @@ export async function POST(req: Request) {
       .replace(/^-|-$/g, "");
     const slug = `${baseName}-${Math.random().toString(36).slice(2, 10)}`;
 
-    // ── 5. Insert professional record ─────────────────────────────────────────
+    // ── 6. Insert professional ────────────────────────────────────────────────
     const { error: proError } = await supabase.from("professionals").insert({
       profile_id: userId,
       category_id: category,
