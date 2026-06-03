@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME;
-const API_KEY = process.env.CLOUDINARY_API_KEY;
-const API_SECRET = process.env.CLOUDINARY_API_SECRET;
-
 export async function POST(req: NextRequest) {
-  if (!CLOUD_NAME || !API_KEY || !API_SECRET) {
+  const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+  const apiKey = process.env.CLOUDINARY_API_KEY;
+  const apiSecret = process.env.CLOUDINARY_API_SECRET;
+
+  if (!cloudName || !apiKey || !apiSecret) {
     return NextResponse.json(
-      { error: "Cloudinary not configured. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET." },
+      { error: "Cloudinary no está configurado. Revisá las variables de entorno en Vercel." },
       { status: 503 }
     );
   }
@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
     if (!file) return NextResponse.json({ error: "No file provided" }, { status: 400 });
 
     const { v2: cloudinary } = await import("cloudinary");
-    cloudinary.config({ cloud_name: CLOUD_NAME, api_key: API_KEY, api_secret: API_SECRET });
+    cloudinary.config({ cloud_name: cloudName, api_key: apiKey, api_secret: apiSecret });
 
     const buffer = Buffer.from(await file.arrayBuffer());
 
@@ -26,7 +26,11 @@ export async function POST(req: NextRequest) {
       (resolve, reject) => {
         cloudinary.uploader
           .upload_stream(
-            { folder: "contratacr/portfolios", resource_type: "image", transformation: [{ width: 1200, crop: "limit" }] },
+            {
+              folder: "contratacr/portfolios",
+              resource_type: "image",
+              transformation: [{ width: 1200, crop: "limit" }],
+            },
             (err, res) => (err ? reject(err) : resolve(res as { secure_url: string; public_id: string }))
           )
           .end(buffer);
