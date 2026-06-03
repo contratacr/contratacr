@@ -82,8 +82,8 @@ export function AvailabilityEditor({ professionalId, initialAvailability }: Avai
                         className={cn(
                           "w-10 h-10 rounded-xl border-2 transition-all duration-150 mx-auto flex items-center justify-center",
                           active
-                            ? "bg-[#319278] border-[#319278] text-white"
-                            : "border-[#e5e7eb] text-[#d1d5db] hover:border-[#319278]/40"
+                            ? "bg-[#009FD9] border-[#009FD9] text-white"
+                            : "border-[#e5e7eb] text-[#d1d5db] hover:border-[#009FD9]/40"
                         )}
                         aria-label={`${t(`days.${day}`)} ${t(`periods.${period}`)}`}
                       >

@@ -50,7 +50,7 @@ export async function ProfessionalCard({ professional, className }: Professional
     <Card className={`group hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 ${className ?? ""}`}>
       {professional.isFeatured && (
         <div className="rounded-t-2xl bg-gradient-to-r from-[#ff7c0a] to-[#ff9b32] px-4 py-1.5">
-          <span className="text-xs font-semibold text-white tracking-wide">⭐ {t("featured")}</span>
+          <span className="text-xs font-semibold text-white tracking-wide">{t("featured")}</span>
         </div>
       )}
 
@@ -69,7 +69,7 @@ export async function ProfessionalCard({ professional, className }: Professional
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">
               <h3 className="font-semibold text-[#111827] text-base truncate">{professional.fullName}</h3>
-              {professional.isVerified && <CheckCircle2 className="h-4 w-4 text-[#319278] shrink-0" />}
+              {professional.isVerified && <CheckCircle2 className="h-4 w-4 text-[#009FD9] shrink-0" />}
             </div>
             <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
               <Badge variant="default" className="text-xs">

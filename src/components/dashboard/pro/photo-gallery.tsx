@@ -81,12 +81,12 @@ export function PhotoGallery({ professionalId, initialUrls = [] }: PhotoGalleryP
             disabled={uploading}
             className={cn(
               "aspect-square rounded-2xl border-2 border-dashed border-[#d1d5db] flex flex-col items-center justify-center gap-2",
-              "hover:border-[#319278] hover:bg-[#f0f9f6] transition-all cursor-pointer",
+              "hover:border-[#009FD9] hover:bg-[#EBF5FB] transition-all cursor-pointer",
               uploading && "opacity-50 cursor-not-allowed"
             )}
           >
             {uploading ? (
-              <Loader2 className="h-6 w-6 text-[#319278] animate-spin" />
+              <Loader2 className="h-6 w-6 text-[#009FD9] animate-spin" />
             ) : (
               <>
                 <Upload className="h-6 w-6 text-[#9ca3af]" />

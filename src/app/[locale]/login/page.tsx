@@ -85,7 +85,7 @@ export default function LoginPage() {
             <div>
               <Input label={t("password")} type="password" placeholder="••••••••" error={errors.password?.message} {...register("password")} />
               <div className="flex justify-end mt-1">
-                <Link href="/olvide-contrasena" className="text-xs text-[#319278] hover:underline">
+                <Link href="/olvide-contrasena" className="text-xs text-[#009FD9] hover:underline">
                   {t("forgotPassword")}
                 </Link>
               </div>
@@ -117,7 +117,7 @@ export default function LoginPage() {
 
           <p className="text-center text-sm text-[#6b7280] mt-6">
             {t("noAccount")}{" "}
-            <Link href="/registro" className="text-[#319278] font-medium hover:underline">{t("signUp")}</Link>
+            <Link href="/registro" className="text-[#009FD9] font-medium hover:underline">{t("signUp")}</Link>
           </p>
         </div>
       </main>

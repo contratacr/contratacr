@@ -208,7 +208,7 @@ export function BookingModal({ professional, categoryName, open, onClose }: Book
                         key={n}
                         className={cn(
                           "h-1.5 rounded-full transition-all duration-300",
-                          n <= currentStepIndex ? "bg-[#319278] w-6" : "bg-[#e5e7eb] w-3"
+                          n <= currentStepIndex ? "bg-[#009FD9] w-6" : "bg-[#e5e7eb] w-3"
                         )}
                       />
                     ))}
@@ -242,15 +242,15 @@ export function BookingModal({ professional, categoryName, open, onClose }: Book
                         <label className={cn(
                           "flex items-center gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all",
                           forWhom === option
-                            ? "border-[#319278] bg-[#f0f9f6]"
-                            : "border-[#e5e7eb] hover:border-[#bbe2d5]"
+                            ? "border-[#009FD9] bg-[#EBF5FB]"
+                            : "border-[#e5e7eb] hover:border-[#bfdbfe]"
                         )}>
                           <div className={cn(
                             "flex h-5 w-5 items-center justify-center rounded-full border-2 shrink-0 transition-all",
-                            forWhom === option ? "border-[#319278]" : "border-[#d1d5db]"
+                            forWhom === option ? "border-[#009FD9]" : "border-[#d1d5db]"
                           )}>
                             {forWhom === option && (
-                              <div className="h-2.5 w-2.5 rounded-full bg-[#319278]" />
+                              <div className="h-2.5 w-2.5 rounded-full bg-[#009FD9]" />
                             )}
                           </div>
                           <div>
@@ -269,7 +269,7 @@ export function BookingModal({ professional, categoryName, open, onClose }: Book
               {step === "identity" && (
                 <div className="flex flex-col gap-5">
                   <h3 className="text-lg font-semibold text-[#111827]">{t("step2.title")}</h3>
-                  <div className="bg-[#f0f9f6] rounded-2xl p-4 border border-[#bbe2d5]">
+                  <div className="bg-[#EBF5FB] rounded-2xl p-4 border border-[#bfdbfe]">
                     <p className="text-sm text-[#237561] font-medium">
                       🏛️ {t("step3.source")}
                     </p>
@@ -284,8 +284,8 @@ export function BookingModal({ professional, categoryName, open, onClose }: Book
                     inputMode="numeric"
                   />
                   {fullName && (
-                    <div className="flex items-center gap-3 p-3 rounded-xl bg-[#f0f9f6] border border-[#bbe2d5]">
-                      <CheckCircle2 className="h-5 w-5 text-[#319278] shrink-0" />
+                    <div className="flex items-center gap-3 p-3 rounded-xl bg-[#EBF5FB] border border-[#bfdbfe]">
+                      <CheckCircle2 className="h-5 w-5 text-[#009FD9] shrink-0" />
                       <div>
                         <p className="text-xs text-[#6b7280]">Nombre verificado</p>
                         <p className="text-sm font-semibold text-[#111827]">{fullName}</p>
@@ -300,10 +300,10 @@ export function BookingModal({ professional, categoryName, open, onClose }: Book
                 <div className="flex flex-col gap-5">
                   <h3 className="text-lg font-semibold text-[#111827]">{t("step3.title")}</h3>
 
-                  <div className="rounded-2xl border-2 border-[#319278] bg-[#f0f9f6] p-5">
+                  <div className="rounded-2xl border-2 border-[#009FD9] bg-[#EBF5FB] p-5">
                     <div className="flex items-center gap-2 mb-3">
                       <span className="text-lg">🏛️</span>
-                      <p className="text-xs font-semibold text-[#319278] uppercase tracking-wide">
+                      <p className="text-xs font-semibold text-[#009FD9] uppercase tracking-wide">
                         {t("step3.source")}
                       </p>
                     </div>
@@ -326,7 +326,7 @@ export function BookingModal({ professional, categoryName, open, onClose }: Book
                       {t("step4.description")}
                     </label>
                     <textarea
-                      className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] min-h-[100px] resize-none focus:outline-none focus:ring-2 focus:ring-[#319278] focus:border-transparent transition-all"
+                      className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] min-h-[100px] resize-none focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
                       placeholder={t("step4.descPlaceholder")}
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
@@ -359,8 +359,8 @@ export function BookingModal({ professional, categoryName, open, onClose }: Book
               {/* SUCCESS */}
               {step === "success" && (
                 <div className="flex flex-col items-center text-center gap-5 py-4">
-                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#f0f9f6]">
-                    <CheckCircle2 className="h-10 w-10 text-[#319278]" />
+                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#EBF5FB]">
+                    <CheckCircle2 className="h-10 w-10 text-[#009FD9]" />
                   </div>
                   <div>
                     <h3 className="text-xl font-bold text-[#111827] mb-2">{t("success.title")}</h3>

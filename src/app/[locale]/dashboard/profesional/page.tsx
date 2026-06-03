@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
-import { User, Image as ImageIcon, CalendarDays, Inbox, LogOut } from "lucide-react";
+import { User, Image as ImageIcon, CalendarDays, Inbox, LogOut, ExternalLink } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
+import { LandingFooter } from "@/components/landing/landing-footer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -70,7 +71,7 @@ export default function ProDashboardPage() {
   if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#319278] border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
       </div>
     );
   }
@@ -108,10 +109,20 @@ export default function ProDashboardPage() {
                 </div>
               </div>
             </div>
-            <Button variant="ghost" size="sm" onClick={handleSignOut}>
-              <LogOut className="h-4 w-4" />
-              Salir
-            </Button>
+            <div className="flex items-center gap-2">
+              {pro.slug && (
+                <Button variant="outline" size="sm" asChild>
+                  <a href={`/profesionales/${pro.slug}`} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="h-4 w-4" />
+                    Ver mi perfil
+                  </a>
+                </Button>
+              )}
+              <Button variant="ghost" size="sm" onClick={handleSignOut}>
+                <LogOut className="h-4 w-4" />
+                Salir
+              </Button>
+            </div>
           </div>
 
           <div className="flex flex-col lg:flex-row gap-6">
@@ -126,7 +137,7 @@ export default function ProDashboardPage() {
                       className={cn(
                         "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors text-left",
                         activeTab === tab
-                          ? "bg-[#f0f9f6] text-[#319278]"
+                          ? "bg-[#EBF5FB] text-[#009FD9]"
                           : "text-[#374151] hover:bg-[#f3f4f6]"
                       )}
                     >
@@ -175,6 +186,7 @@ export default function ProDashboardPage() {
           </div>
         </div>
       </main>
+      <LandingFooter />
     </div>
   );
 }

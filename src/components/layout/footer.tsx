@@ -10,11 +10,11 @@ export async function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="md:col-span-1">
             <div className="flex items-center gap-2 mb-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#319278]">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#009FD9]">
                 <span className="text-white font-bold text-sm">C</span>
               </div>
               <span className="font-bold text-[#111827] text-lg">
-                Contrata<span className="text-[#319278]">CR</span>
+                Contrata<span className="text-[#009FD9]">CR</span>
               </span>
             </div>
             <p className="text-sm text-[#6b7280] leading-relaxed">{t("tagline")}</p>
@@ -23,28 +23,28 @@ export async function Footer() {
           <div>
             <h3 className="text-sm font-semibold text-[#111827] mb-3">{t("clients.title")}</h3>
             <ul className="space-y-2">
-              <li><Link href="/buscar" className="text-sm text-[#6b7280] hover:text-[#319278] transition-colors">{t("clients.search")}</Link></li>
-              <li><Link href="/como-funciona" className="text-sm text-[#6b7280] hover:text-[#319278] transition-colors">{t("clients.howItWorks")}</Link></li>
-              <li><Link href="/categorias" className="text-sm text-[#6b7280] hover:text-[#319278] transition-colors">{t("clients.categories")}</Link></li>
+              <li><Link href="/buscar" className="text-sm text-[#6b7280] hover:text-[#009FD9] transition-colors">{t("clients.search")}</Link></li>
+              <li><Link href="/como-funciona" className="text-sm text-[#6b7280] hover:text-[#009FD9] transition-colors">{t("clients.howItWorks")}</Link></li>
+              <li><Link href="/categorias" className="text-sm text-[#6b7280] hover:text-[#009FD9] transition-colors">{t("clients.categories")}</Link></li>
             </ul>
           </div>
 
           <div>
             <h3 className="text-sm font-semibold text-[#111827] mb-3">{t("pros.title")}</h3>
             <ul className="space-y-2">
-              <li><Link href="/registro/profesional" className="text-sm text-[#6b7280] hover:text-[#319278] transition-colors">{t("pros.register")}</Link></li>
-              <li><Link href="/como-funciona" className="text-sm text-[#6b7280] hover:text-[#319278] transition-colors">{t("pros.howItWorks")}</Link></li>
-              <li><Link href="/planes" className="text-sm text-[#6b7280] hover:text-[#319278] transition-colors">{t("pros.plans")}</Link></li>
+              <li><Link href="/registro/profesional" className="text-sm text-[#6b7280] hover:text-[#009FD9] transition-colors">{t("pros.register")}</Link></li>
+              <li><Link href="/como-funciona" className="text-sm text-[#6b7280] hover:text-[#009FD9] transition-colors">{t("pros.howItWorks")}</Link></li>
+              <li><Link href="/planes" className="text-sm text-[#6b7280] hover:text-[#009FD9] transition-colors">{t("pros.plans")}</Link></li>
             </ul>
           </div>
 
           <div>
             <h3 className="text-sm font-semibold text-[#111827] mb-3">{t("company.title")}</h3>
             <ul className="space-y-2">
-              <li><Link href="/nosotros" className="text-sm text-[#6b7280] hover:text-[#319278] transition-colors">{t("company.about")}</Link></li>
-              <li><Link href="/contacto" className="text-sm text-[#6b7280] hover:text-[#319278] transition-colors">{t("company.contact")}</Link></li>
-              <li><Link href="/terminos" className="text-sm text-[#6b7280] hover:text-[#319278] transition-colors">{t("company.terms")}</Link></li>
-              <li><Link href="/privacidad" className="text-sm text-[#6b7280] hover:text-[#319278] transition-colors">{t("company.privacy")}</Link></li>
+              <li><Link href="/nosotros" className="text-sm text-[#6b7280] hover:text-[#009FD9] transition-colors">{t("company.about")}</Link></li>
+              <li><Link href="/contacto" className="text-sm text-[#6b7280] hover:text-[#009FD9] transition-colors">{t("company.contact")}</Link></li>
+              <li><Link href="/terminos" className="text-sm text-[#6b7280] hover:text-[#009FD9] transition-colors">{t("company.terms")}</Link></li>
+              <li><Link href="/privacidad" className="text-sm text-[#6b7280] hover:text-[#009FD9] transition-colors">{t("company.privacy")}</Link></li>
             </ul>
           </div>
         </div>

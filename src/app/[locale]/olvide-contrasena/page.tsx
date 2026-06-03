@@ -84,7 +84,7 @@ export default function OlvideContrasenaPage() {
           )}
 
           <p className="text-center text-sm text-[#6b7280] mt-6">
-            <Link href="/login" className="text-[#319278] font-medium hover:underline">
+            <Link href="/login" className="text-[#009FD9] font-medium hover:underline">
               Volver al inicio de sesión
             </Link>
           </p>

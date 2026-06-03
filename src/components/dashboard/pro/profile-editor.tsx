@@ -47,7 +47,7 @@ export function ProfileEditor({ professionalId, initial }: ProfileEditorProps) {
       <div>
         <label className="text-sm font-medium text-[#374151] block mb-1.5">{t("bio")}</label>
         <textarea
-          className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] min-h-[120px] resize-none focus:outline-none focus:ring-2 focus:ring-[#319278] focus:border-transparent transition-all"
+          className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] min-h-[120px] resize-none focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
           placeholder={t("bioPlaceholder")}
           value={bio}
           onChange={(e) => { setBio(e.target.value); setSaved(false); }}

@@ -1,8 +1,9 @@
 import { Suspense } from "react";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
+import { Search, SlidersHorizontal, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
-import { Footer } from "@/components/layout/footer";
+import { LandingFooter } from "@/components/landing/landing-footer";
 import { SearchFilters } from "@/components/search/search-filters";
 import { ProfessionalCard } from "@/components/professionals/professional-card";
 import { SaveableCard } from "@/components/professionals/save-button";
@@ -47,14 +48,13 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     : undefined;
 
   const pageTitle = activeCategoryId
-    ? t("title.withCategory", { category: tCat(activeCategoryId) })
+    ? tCat(activeCategoryId as Parameters<typeof tCat>[0])
     : t("title.default");
 
   const subtitle = activeProvince
     ? t("resultsIn", { count: allResults.length, location: activeProvince.name })
     : t("resultsInCR", { count: allResults.length });
 
-  // Build a URL with updated page param while keeping other params
   function buildPageUrl(page: number) {
     const next = new URLSearchParams();
     if (params.q) next.set("q", params.q);
@@ -68,77 +68,122 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-[#f4f7fa]">
       <Navbar />
-      <main className="flex-1">
-        <div className="bg-white border-b border-[#e5e7eb]">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
-            <h1 className="text-2xl font-bold text-[#111827]">{pageTitle}</h1>
-            <p className="text-[#6b7280] text-sm mt-1">{subtitle}</p>
+
+      {/* Top bar — title + subtitle */}
+      <div className="bg-white border-b border-[#e5e7eb]">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div>
+              <h1 className="text-xl font-bold text-[#111827]">{pageTitle}</h1>
+              <p className="text-[#6b7280] text-sm mt-0.5">{subtitle}</p>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-[#6b7280]">
+              <SlidersHorizontal className="h-4 w-4" />
+              <span>{t("filters.title")}</span>
+            </div>
           </div>
         </div>
+      </div>
 
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
+      {/* Filters */}
+      <div className="bg-white border-b border-[#e5e7eb]">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3">
           <Suspense fallback={null}>
             <SearchFilters />
           </Suspense>
+        </div>
+      </div>
 
-          <div className="mt-6">
-            {allResults.length === 0 ? (
-              <div className="text-center py-20">
-                <div className="text-5xl mb-4">🔍</div>
-                <h2 className="text-xl font-semibold text-[#111827] mb-2">{t("noResults.title")}</h2>
-                <p className="text-[#6b7280] text-sm max-w-sm mx-auto">{t("noResults.desc")}</p>
-              </div>
-            ) : (
-              <>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {await Promise.all(results.map((pro) => (
-                    <SaveableCard key={pro.id} pro={pro}>
-                      <ProfessionalCard professional={pro} />
-                    </SaveableCard>
-                  )))}
-                </div>
+      {/* Main content */}
+      <main className="flex-1">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex gap-6">
 
-                {totalPages > 1 && (
-                  <div className="mt-8 flex items-center justify-center gap-4">
-                    {safePage > 1 ? (
-                      <Link
-                        href={buildPageUrl(safePage - 1)}
-                        className="text-sm font-medium text-[#374151] hover:text-[#009FD9] transition-colors"
-                      >
-                        ← Anterior
-                      </Link>
-                    ) : (
-                      <span className="text-sm font-medium text-[#d1d5db] cursor-not-allowed">
-                        ← Anterior
-                      </span>
-                    )}
-
-                    <span className="text-sm text-[#6b7280]">
-                      Página {safePage} de {totalPages}
-                    </span>
-
-                    {safePage < totalPages ? (
-                      <Link
-                        href={buildPageUrl(safePage + 1)}
-                        className="text-sm font-medium text-[#374151] hover:text-[#009FD9] transition-colors"
-                      >
-                        Siguiente →
-                      </Link>
-                    ) : (
-                      <span className="text-sm font-medium text-[#d1d5db] cursor-not-allowed">
-                        Siguiente →
-                      </span>
-                    )}
+            {/* ── Results list ── */}
+            <div className="flex-1 min-w-0">
+              {allResults.length === 0 ? (
+                <div className="text-center py-20 bg-white rounded-2xl border border-[#e5e7eb]">
+                  <div className="flex justify-center mb-4">
+                    <div className="w-16 h-16 rounded-full bg-[#f3f4f6] flex items-center justify-center">
+                      <Search className="h-8 w-8 text-[#9ca3af]" />
+                    </div>
                   </div>
-                )}
-              </>
-            )}
+                  <h2 className="text-xl font-semibold text-[#111827] mb-2">{t("noResults.title")}</h2>
+                  <p className="text-[#6b7280] text-sm max-w-sm mx-auto">{t("noResults.desc")}</p>
+                </div>
+              ) : (
+                <>
+                  <div className="flex flex-col gap-4">
+                    {await Promise.all(results.map((pro) => (
+                      <SaveableCard key={pro.id} pro={pro}>
+                        <ProfessionalCard professional={pro} />
+                      </SaveableCard>
+                    )))}
+                  </div>
+
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="mt-8 flex items-center justify-center gap-3">
+                      {safePage > 1 ? (
+                        <Link
+                          href={buildPageUrl(safePage - 1)}
+                          className="flex items-center gap-1 px-4 py-2 rounded-xl border border-[#e5e7eb] bg-white text-sm font-medium text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] transition-colors"
+                        >
+                          <ChevronLeft className="h-4 w-4" /> Anterior
+                        </Link>
+                      ) : (
+                        <span className="flex items-center gap-1 px-4 py-2 rounded-xl border border-[#e5e7eb] bg-[#f9fafb] text-sm font-medium text-[#d1d5db] cursor-not-allowed">
+                          <ChevronLeft className="h-4 w-4" /> Anterior
+                        </span>
+                      )}
+
+                      <span className="text-sm text-[#6b7280] px-2">
+                        Página <strong className="text-[#111827]">{safePage}</strong> de <strong className="text-[#111827]">{totalPages}</strong>
+                      </span>
+
+                      {safePage < totalPages ? (
+                        <Link
+                          href={buildPageUrl(safePage + 1)}
+                          className="flex items-center gap-1 px-4 py-2 rounded-xl border border-[#e5e7eb] bg-white text-sm font-medium text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] transition-colors"
+                        >
+                          Siguiente <ChevronRight className="h-4 w-4" />
+                        </Link>
+                      ) : (
+                        <span className="flex items-center gap-1 px-4 py-2 rounded-xl border border-[#e5e7eb] bg-[#f9fafb] text-sm font-medium text-[#d1d5db] cursor-not-allowed">
+                          Siguiente <ChevronRight className="h-4 w-4" />
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* ── Map panel (desktop) ── */}
+            <aside className="hidden xl:flex w-[420px] shrink-0">
+              <div className="sticky top-20 w-full h-[calc(100vh-88px)] rounded-2xl overflow-hidden border border-[#e5e7eb] bg-white flex flex-col items-center justify-center gap-4 text-center">
+                <div className="w-14 h-14 rounded-full bg-[#EBF5FB] flex items-center justify-center">
+                  <MapPin className="h-7 w-7 text-[#009FD9]" />
+                </div>
+                <div>
+                  <p className="font-semibold text-[#1a2744] mb-1">Mapa interactivo</p>
+                  <p className="text-sm text-[#9ca3af] max-w-[220px]">
+                    Próximamente — los profesionales se mostrarán con pines en el mapa.
+                  </p>
+                </div>
+                <span className="text-xs font-medium px-3 py-1 rounded-full bg-[#EBF5FB] text-[#009FD9]">
+                  Google Maps — en desarrollo
+                </span>
+              </div>
+            </aside>
+
           </div>
         </div>
       </main>
-      <Footer />
+
+      <LandingFooter />
     </div>
   );
 }
