@@ -8,6 +8,17 @@ cloudinary.config({
 });
 
 export async function POST(req: Request) {
+  if (
+    !process.env.CLOUDINARY_CLOUD_NAME ||
+    !process.env.CLOUDINARY_API_KEY ||
+    !process.env.CLOUDINARY_API_SECRET
+  ) {
+    return NextResponse.json(
+      { error: "Cloudinary no está configurado. Revisá las variables de entorno en Vercel." },
+      { status: 503 }
+    );
+  }
+
   try {
     const formData = await req.formData();
     const file = formData.get("file") as File | null;

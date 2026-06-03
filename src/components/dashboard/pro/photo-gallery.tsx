@@ -25,7 +25,7 @@ export function PhotoGallery({ professionalId, initialUrls = [] }: PhotoGalleryP
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const res = await fetch("/api/upload/photo", { method: "POST", body: formData });
       const data = await res.json();
 
       if (data.url) {
