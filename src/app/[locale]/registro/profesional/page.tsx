@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { CheckCircle2, ArrowRight, ArrowLeft, Loader2, AlertCircle, Shield, Eye, EyeOff, Circle } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,21 +16,25 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { CATEGORIES, PROVINCES, getCantonsByProvince } from "@/lib/data/cr-geography";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
+import { OtpVerification } from "@/components/auth/otp-verification";
 
-const step1Schema = z.object({
-  cedula: z.string().min(9, "Cédula inválida").max(12, "Cédula inválida"),
-  email: z.string().email("Email inválido"),
-  password: z.string()
-    .min(8, "Mínimo 8 caracteres")
-    .regex(/[A-Z]/, "Al menos una mayúscula")
-    .regex(/[a-z]/, "Al menos una minúscula")
-    .regex(/[0-9]/, "Al menos un número")
-    .regex(/[!@#$%^&*]/, "Al menos un carácter especial (!@#$%^&*)"),
-  confirmPassword: z.string(),
-}).refine(data => data.password === data.confirmPassword, {
-  message: "Las contraseñas no coinciden",
-  path: ["confirmPassword"],
-});
+const step1Schema = z
+  .object({
+    cedula: z.string().min(9, "Cédula inválida").max(12, "Cédula inválida"),
+    email: z.string().email("Email inválido"),
+    password: z
+      .string()
+      .min(8, "Mínimo 8 caracteres")
+      .regex(/[A-Z]/, "Al menos una mayúscula")
+      .regex(/[a-z]/, "Al menos una minúscula")
+      .regex(/[0-9]/, "Al menos un número")
+      .regex(/[!@#$%^&*]/, "Al menos un carácter especial (!@#$%^&*)"),
+    confirmPassword: z.string(),
+  })
+  .refine((d) => d.password === d.confirmPassword, {
+    message: "Las contraseñas no coinciden",
+    path: ["confirmPassword"],
+  });
 
 function PasswordChecklist({ password }: { password: string }) {
   const rules = [
@@ -43,17 +47,28 @@ function PasswordChecklist({ password }: { password: string }) {
   if (!password) return null;
   return (
     <div className="flex flex-col gap-1 mt-1">
-      {rules.map(r => (
+      {rules.map((r) => (
         <div key={r.label} className="flex items-center gap-2">
-          {r.ok
-            ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
-            : <Circle className="h-3.5 w-3.5 text-gray-300 shrink-0" />
-          }
-          <span className={`text-xs ${r.ok ? "text-emerald-600" : "text-gray-400"}`}>{r.label}</span>
+          {r.ok ? (
+            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+          ) : (
+            <Circle className="h-3.5 w-3.5 text-gray-300 shrink-0" />
+          )}
+          <span className={`text-xs ${r.ok ? "text-emerald-600" : "text-gray-400"}`}>
+            {r.label}
+          </span>
         </div>
       ))}
     </div>
   );
+}
+
+function validateCedulaFormat(cedula: string): string | null {
+  const digits = cedula.replace(/\D/g, "");
+  if (/^[1-9]\d{8}$/.test(digits)) return null;
+  if (/^\d{11,12}$/.test(digits)) return null;
+  if (/^\d{10}$/.test(digits)) return null;
+  return "Formato inválido. Cédula CR: 9 dígitos. DIMEX: 11-12 dígitos. NITE: 10 dígitos.";
 }
 
 const step2Schema = z.object({
@@ -78,19 +93,33 @@ function StepIndicator({ current, labels }: { current: number; labels: string[] 
     <div className="flex items-center justify-center gap-2 mb-8">
       {labels.map((label, i) => (
         <div key={label} className="flex items-center gap-2">
-          <div className={cn(
-            "flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold transition-all",
-            i < current ? "bg-[#009FD9] text-white"
-              : i === current ? "bg-[#009FD9] text-white ring-4 ring-[#009FD9]/20"
-              : "bg-[#e5e7eb] text-[#9ca3af]"
-          )}>
+          <div
+            className={cn(
+              "flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold transition-all",
+              i < current
+                ? "bg-[#009FD9] text-white"
+                : i === current
+                ? "bg-[#009FD9] text-white ring-4 ring-[#009FD9]/20"
+                : "bg-[#e5e7eb] text-[#9ca3af]"
+            )}
+          >
             {i < current ? <CheckCircle2 className="h-4 w-4" /> : i + 1}
           </div>
-          <span className={cn("text-sm font-medium hidden sm:block", i === current ? "text-[#009FD9]" : "text-[#9ca3af]")}>
+          <span
+            className={cn(
+              "text-sm font-medium hidden sm:block",
+              i === current ? "text-[#009FD9]" : "text-[#9ca3af]"
+            )}
+          >
             {label}
           </span>
           {i < labels.length - 1 && (
-            <div className={cn("h-px w-8 sm:w-12 transition-all", i < current ? "bg-[#009FD9]" : "bg-[#e5e7eb]")} />
+            <div
+              className={cn(
+                "h-px w-8 sm:w-12 transition-all",
+                i < current ? "bg-[#009FD9]" : "bg-[#e5e7eb]"
+              )}
+            />
           )}
         </div>
       ))}
@@ -101,19 +130,22 @@ function StepIndicator({ current, labels }: { current: number; labels: string[] 
 export default function RegisterProfessionalPage() {
   const t = useTranslations("registration.pro");
   const tCat = useTranslations("categories");
+  const router = useRouter();
   const [step, setStep] = useState(0);
   const [fullName, setFullName] = useState("");
+  const [manualName, setManualName] = useState(false);
+  const [manualNameValue, setManualNameValue] = useState("");
   const [loadingCedula, setLoadingCedula] = useState(false);
+  const [cedulaFormatError, setCedulaFormatError] = useState<string | null>(null);
   const [selectedProvince, setSelectedProvince] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [whatsappValue, setWhatsappValue] = useState("");
   const [whatsappFormatted, setWhatsappFormatted] = useState("");
+  const [otpEmail, setOtpEmail] = useState<string | null>(null);
 
-  // Persist step data for final submission
   const [step1Data, setStep1Data] = useState<Step1Data | null>(null);
   const [step2Data, setStep2Data] = useState<Step2Data | null>(null);
 
@@ -136,7 +168,14 @@ export default function RegisterProfessionalPage() {
     form2.setValue("whatsapp", digits);
   }
 
-  async function lookupCedula(cedula: string) {
+  async function lookupCedula(value: string) {
+    const formatErr = validateCedulaFormat(value);
+    if (formatErr) {
+      setCedulaFormatError(formatErr);
+      return;
+    }
+    setCedulaFormatError(null);
+    const cedula = value.replace(/\D/g, "");
     if (cedula.length < 9) return;
     setLoadingCedula(true);
     try {
@@ -144,9 +183,12 @@ export default function RegisterProfessionalPage() {
       if (res.ok) {
         const data = await res.json();
         setFullName(data.fullName);
+        setManualName(false);
+      } else if (res.status === 503 || res.status === 404) {
+        setManualName(true);
       }
     } catch {
-      // non-critical
+      setManualName(true);
     } finally {
       setLoadingCedula(false);
     }
@@ -167,17 +209,16 @@ export default function RegisterProfessionalPage() {
     setSubmitting(true);
     setError(null);
     try {
+      const resolvedName = manualName ? manualNameValue : fullName || step1Data.email.split("@")[0];
       const supabase = createClient();
-      const resolvedName = fullName || step1Data.email.split("@")[0];
 
-      // 1. Create auth user + trigger auto-creates the profile row
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: step1Data.email,
         password: step1Data.password,
         options: {
           data: {
             full_name: resolvedName,
-            cedula: step1Data.cedula,
+            cedula: step1Data.cedula.replace(/\D/g, ""),
             role: "professional",
           },
         },
@@ -187,7 +228,6 @@ export default function RegisterProfessionalPage() {
       const userId = signUpData.user?.id;
       if (!userId) throw new Error("No se pudo crear la cuenta. Intentá de nuevo.");
 
-      // 2. Create professionals record via server route (uses service_role, bypasses RLS)
       const proRes = await fetch("/api/register/professional", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -209,7 +249,7 @@ export default function RegisterProfessionalPage() {
         throw new Error(proErr ?? "Error al crear tu perfil de profesional.");
       }
 
-      setDone(true);
+      setOtpEmail(step1Data.email);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Error al registrarse";
       if (msg.includes("already registered") || msg.includes("already been registered")) {
@@ -222,20 +262,17 @@ export default function RegisterProfessionalPage() {
     }
   }
 
-  if (done) {
+  // OTP verification screen
+  if (otpEmail) {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
         <main className="flex-1 flex items-center justify-center py-12 px-4">
-          <div className="w-full max-w-md text-center">
-            <div className="flex h-20 w-20 mx-auto items-center justify-center rounded-full bg-[#EBF5FB] mb-5">
-              <CheckCircle2 className="h-10 w-10 text-[#009FD9]" />
-            </div>
-            <h1 className="text-2xl font-bold text-[#111827] mb-2">{t("success.title")}</h1>
-            <p className="text-[#6b7280] mb-6">{t("success.desc")}</p>
-            <Button size="lg" asChild>
-              <Link href="/buscar">{t("success.viewProfile")}</Link>
-            </Button>
+          <div className="w-full max-w-sm">
+            <OtpVerification
+              email={otpEmail}
+              onVerified={() => router.push("/dashboard/profesional")}
+            />
           </div>
         </main>
         <LandingFooter />
@@ -263,7 +300,7 @@ export default function RegisterProfessionalPage() {
             </div>
           )}
 
-          {/* Step 1 */}
+          {/* Step 1 — Identity */}
           {step === 0 && (
             <form onSubmit={form1.handleSubmit(onStep1)} className="flex flex-col gap-4">
               <div className="bg-[#EBF5FB] rounded-2xl p-4 border border-[#bfdbfe]">
@@ -272,16 +309,19 @@ export default function RegisterProfessionalPage() {
                   <p className="text-sm text-[#0089bb] font-medium">{t("verifyNote")}</p>
                 </div>
               </div>
-              <Input
-                label={t("cedula")}
-                placeholder={t("cedulaPlaceholder")}
-                hint={t("cedulaHint")}
-                error={form1.formState.errors.cedula?.message}
-                {...form1.register("cedula")}
-                onBlur={(e) => lookupCedula(e.target.value)}
-                rightIcon={loadingCedula ? <Loader2 className="h-4 w-4 animate-spin" /> : undefined}
-              />
-              {fullName && (
+              <div>
+                <Input
+                  label={t("cedula")}
+                  placeholder={t("cedulaPlaceholder")}
+                  hint={t("cedulaHint")}
+                  error={cedulaFormatError ?? form1.formState.errors.cedula?.message}
+                  {...form1.register("cedula")}
+                  onBlur={(e) => lookupCedula(e.target.value)}
+                  rightIcon={loadingCedula ? <Loader2 className="h-4 w-4 animate-spin" /> : undefined}
+                />
+              </div>
+
+              {fullName && !manualName && (
                 <div className="flex items-center gap-3 p-3 rounded-xl bg-[#EBF5FB] border border-[#bfdbfe]">
                   <Shield className="h-5 w-5 text-[#009FD9] shrink-0" />
                   <div>
@@ -290,7 +330,30 @@ export default function RegisterProfessionalPage() {
                   </div>
                 </div>
               )}
-              <Input label={t("email")} type="email" placeholder={t("emailPlaceholder")} error={form1.formState.errors.email?.message} {...form1.register("email")} />
+
+              {manualName && (
+                <div>
+                  <label className="text-sm font-medium text-[#374151] block mb-1.5">
+                    Tu nombre completo
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Juan Carlos Pérez González"
+                    value={manualNameValue}
+                    onChange={(e) => setManualNameValue(e.target.value)}
+                    className="w-full h-10 px-3 rounded-xl border border-[#e5e7eb] text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+                  />
+                  <p className="text-xs text-[#9ca3af] mt-1">Ingresá tu nombre manualmente</p>
+                </div>
+              )}
+
+              <Input
+                label={t("email")}
+                type="email"
+                placeholder={t("emailPlaceholder")}
+                error={form1.formState.errors.email?.message}
+                {...form1.register("email")}
+              />
               <div>
                 <Input
                   label={t("password")}
@@ -299,7 +362,11 @@ export default function RegisterProfessionalPage() {
                   error={form1.formState.errors.password?.message}
                   {...form1.register("password")}
                   rightIcon={
-                    <button type="button" onClick={() => setShowPassword(v => !v)} className="text-gray-400 hover:text-gray-600">
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   }
@@ -313,20 +380,28 @@ export default function RegisterProfessionalPage() {
                 error={form1.formState.errors.confirmPassword?.message}
                 {...form1.register("confirmPassword")}
                 rightIcon={
-                  <button type="button" onClick={() => setShowConfirm(v => !v)} className="text-gray-400 hover:text-gray-600">
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirm((v) => !v)}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
                     {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 }
               />
-              <Button type="submit" size="lg" className="mt-2">{t("continue")} <ArrowRight className="h-4 w-4" /></Button>
+              <Button type="submit" size="lg" className="mt-2">
+                {t("continue")} <ArrowRight className="h-4 w-4" />
+              </Button>
               <p className="text-center text-xs text-[#9ca3af]">
                 {t("terms")}{" "}
-                <Link href="/terminos" className="text-[#009FD9] hover:underline">{t("termsLink")}</Link>
+                <Link href="/terminos" className="text-[#009FD9] hover:underline">
+                  {t("termsLink")}
+                </Link>
               </p>
             </form>
           )}
 
-          {/* Step 2 */}
+          {/* Step 2 — Service info */}
           {step === 1 && (
             <form onSubmit={form2.handleSubmit(onStep2)} className="flex flex-col gap-4">
               <div>
@@ -337,7 +412,9 @@ export default function RegisterProfessionalPage() {
                   </SelectTrigger>
                   <SelectContent>
                     {CATEGORIES.map((cat) => (
-                      <SelectItem key={cat.id} value={cat.id}>{cat.icon} {tCat(cat.id)}</SelectItem>
+                      <SelectItem key={cat.id} value={cat.id}>
+                        {cat.icon} {tCat(cat.id)}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -347,10 +424,20 @@ export default function RegisterProfessionalPage() {
               </div>
               <div>
                 <label className="text-sm font-medium text-[#374151] block mb-1.5">{t("province")}</label>
-                <Select onValueChange={(v) => { setSelectedProvince(v); form2.setValue("province", v); form2.setValue("canton", ""); }}>
-                  <SelectTrigger><SelectValue placeholder={t("provincePlaceholder")} /></SelectTrigger>
+                <Select
+                  onValueChange={(v) => {
+                    setSelectedProvince(v);
+                    form2.setValue("province", v);
+                    form2.setValue("canton", "");
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={t("provincePlaceholder")} />
+                  </SelectTrigger>
                   <SelectContent>
-                    {PROVINCES.map((p) => (<SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>))}
+                    {PROVINCES.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -361,19 +448,23 @@ export default function RegisterProfessionalPage() {
                     <SelectValue placeholder={selectedProvince ? t("cantonPlaceholder") : t("cantonDisabled")} />
                   </SelectTrigger>
                   <SelectContent>
-                    {cantons.map((c) => (<SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>))}
+                    {cantons.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
                 <label className="text-sm font-medium text-[#374151] block mb-1.5">{t("whatsapp")}</label>
                 <div className="flex items-center gap-0">
-                  <span className="inline-flex items-center h-10 px-3 rounded-l-xl border border-r-0 border-[#e5e7eb] bg-[#f3f4f6] text-sm font-medium text-[#374151] shrink-0">+506</span>
+                  <span className="inline-flex items-center h-10 px-3 rounded-l-xl border border-r-0 border-[#e5e7eb] bg-[#f3f4f6] text-sm font-medium text-[#374151] shrink-0">
+                    +506
+                  </span>
                   <input
                     type="tel"
                     placeholder="8888-8888"
                     value={whatsappValue}
-                    onChange={e => handleWhatsappChange(e.target.value)}
+                    onChange={(e) => handleWhatsappChange(e.target.value)}
                     maxLength={8}
                     className="flex-1 h-10 px-3 rounded-r-xl border border-[#e5e7eb] text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
                   />
@@ -386,18 +477,23 @@ export default function RegisterProfessionalPage() {
                 )}
               </div>
               <div className="flex gap-3 mt-2">
-                <Button variant="outline" size="lg" type="button" onClick={() => setStep(0)}><ArrowLeft className="h-4 w-4" /> {t("back")}</Button>
-                <Button type="submit" size="lg" className="flex-1">{t("continue")} <ArrowRight className="h-4 w-4" /></Button>
+                <Button variant="outline" size="lg" type="button" onClick={() => setStep(0)}>
+                  <ArrowLeft className="h-4 w-4" /> {t("back")}
+                </Button>
+                <Button type="submit" size="lg" className="flex-1">
+                  {t("continue")} <ArrowRight className="h-4 w-4" />
+                </Button>
               </div>
             </form>
           )}
 
-          {/* Step 3 */}
+          {/* Step 3 — Profile */}
           {step === 2 && (
             <form onSubmit={form3.handleSubmit(onStep3)} className="flex flex-col gap-4">
               <div>
                 <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                  {t("bio")} <span className="text-[#9ca3af] font-normal ml-1">({t("bioMin")})</span>
+                  {t("bio")}{" "}
+                  <span className="text-[#9ca3af] font-normal ml-1">({t("bioMin")})</span>
                 </label>
                 <textarea
                   className={cn(
@@ -413,8 +509,19 @@ export default function RegisterProfessionalPage() {
                 )}
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <Input label={t("yearsExp")} type="number" placeholder={t("yearsExpPlaceholder")} {...form3.register("yearsExperience")} />
-                <Input label={t("hourlyRate")} type="number" placeholder={t("hourlyRatePlaceholder")} hint={t("optional")} {...form3.register("hourlyRate")} />
+                <Input
+                  label={t("yearsExp")}
+                  type="number"
+                  placeholder={t("yearsExpPlaceholder")}
+                  {...form3.register("yearsExperience")}
+                />
+                <Input
+                  label={t("hourlyRate")}
+                  type="number"
+                  placeholder={t("hourlyRatePlaceholder")}
+                  hint={t("optional")}
+                  {...form3.register("hourlyRate")}
+                />
               </div>
               <div className="bg-[#f3f4f6] rounded-2xl p-4">
                 <p className="text-xs text-[#6b7280] font-medium mb-2">{t("addLater")}</p>
@@ -425,7 +532,9 @@ export default function RegisterProfessionalPage() {
                 </div>
               </div>
               <div className="flex gap-3 mt-2">
-                <Button variant="outline" size="lg" type="button" onClick={() => setStep(1)}><ArrowLeft className="h-4 w-4" /> {t("back")}</Button>
+                <Button variant="outline" size="lg" type="button" onClick={() => setStep(1)}>
+                  <ArrowLeft className="h-4 w-4" /> {t("back")}
+                </Button>
                 <Button type="submit" size="lg" className="flex-1" loading={submitting}>
                   {submitting ? t("creating") : t("create")}
                 </Button>
@@ -435,7 +544,9 @@ export default function RegisterProfessionalPage() {
 
           <p className="text-center text-sm text-[#6b7280] mt-6">
             {t("alreadyHaveAccount")}{" "}
-            <Link href="/login" className="text-[#009FD9] font-medium hover:underline">{t("signIn")}</Link>
+            <Link href="/login" className="text-[#009FD9] font-medium hover:underline">
+              {t("signIn")}
+            </Link>
           </p>
         </div>
       </main>

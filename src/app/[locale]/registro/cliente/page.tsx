@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { CheckCircle2, ArrowRight, Loader2, AlertCircle, User, Shield, Eye, EyeOff, Circle } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,21 +12,25 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { LandingFooter } from "@/components/landing/landing-footer";
+import { OtpVerification } from "@/components/auth/otp-verification";
 
-const schema = z.object({
-  cedula: z.string().min(9, "Cédula inválida").max(12, "Cédula inválida"),
-  email: z.string().email("Email inválido"),
-  password: z.string()
-    .min(8, "Mínimo 8 caracteres")
-    .regex(/[A-Z]/, "Al menos una mayúscula")
-    .regex(/[a-z]/, "Al menos una minúscula")
-    .regex(/[0-9]/, "Al menos un número")
-    .regex(/[!@#$%^&*]/, "Al menos un carácter especial (!@#$%^&*)"),
-  confirmPassword: z.string(),
-}).refine(data => data.password === data.confirmPassword, {
-  message: "Las contraseñas no coinciden",
-  path: ["confirmPassword"],
-});
+const schema = z
+  .object({
+    cedula: z.string().min(9, "Cédula inválida").max(12, "Cédula inválida"),
+    email: z.string().email("Email inválido"),
+    password: z
+      .string()
+      .min(8, "Mínimo 8 caracteres")
+      .regex(/[A-Z]/, "Al menos una mayúscula")
+      .regex(/[a-z]/, "Al menos una minúscula")
+      .regex(/[0-9]/, "Al menos un número")
+      .regex(/[!@#$%^&*]/, "Al menos un carácter especial (!@#$%^&*)"),
+    confirmPassword: z.string(),
+  })
+  .refine((d) => d.password === d.confirmPassword, {
+    message: "Las contraseñas no coinciden",
+    path: ["confirmPassword"],
+  });
 
 type FormData = z.infer<typeof schema>;
 
@@ -41,36 +45,61 @@ function PasswordChecklist({ password }: { password: string }) {
   if (!password) return null;
   return (
     <div className="flex flex-col gap-1 mt-1">
-      {rules.map(r => (
+      {rules.map((r) => (
         <div key={r.label} className="flex items-center gap-2">
-          {r.ok
-            ? <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
-            : <Circle className="h-3.5 w-3.5 text-gray-300 shrink-0" />
-          }
-          <span className={`text-xs ${r.ok ? "text-emerald-600" : "text-gray-400"}`}>{r.label}</span>
+          {r.ok ? (
+            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+          ) : (
+            <Circle className="h-3.5 w-3.5 text-gray-300 shrink-0" />
+          )}
+          <span className={`text-xs ${r.ok ? "text-emerald-600" : "text-gray-400"}`}>
+            {r.label}
+          </span>
         </div>
       ))}
     </div>
   );
 }
 
+function validateCedulaFormat(cedula: string): string | null {
+  const digits = cedula.replace(/\D/g, "");
+  if (/^[1-9]\d{8}$/.test(digits)) return null; // CR ID
+  if (/^\d{11,12}$/.test(digits)) return null; // DIMEX
+  if (/^\d{10}$/.test(digits)) return null; // NITE
+  return "Formato inválido. Cédula CR: 9 dígitos. DIMEX: 11-12 dígitos. NITE: 10 dígitos.";
+}
+
 export default function RegisterClientPage() {
   const t = useTranslations("registration.client");
+  const router = useRouter();
   const [fullName, setFullName] = useState("");
+  const [manualName, setManualName] = useState(false);
+  const [manualNameValue, setManualNameValue] = useState("");
   const [loadingCedula, setLoadingCedula] = useState(false);
+  const [cedulaFormatError, setCedulaFormatError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [otpEmail, setOtpEmail] = useState<string | null>(null);
 
-  const { register, handleSubmit, formState: { errors }, watch } = useForm<FormData>({
-    resolver: zodResolver(schema),
-  });
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    watch,
+  } = useForm<FormData>({ resolver: zodResolver(schema) });
 
   const watchedPassword = watch("password") ?? "";
 
-  async function lookupCedula(cedula: string) {
+  async function lookupCedula(value: string) {
+    const formatErr = validateCedulaFormat(value);
+    if (formatErr) {
+      setCedulaFormatError(formatErr);
+      return;
+    }
+    setCedulaFormatError(null);
+    const cedula = value.replace(/\D/g, "");
     if (cedula.length < 9) return;
     setLoadingCedula(true);
     try {
@@ -78,9 +107,12 @@ export default function RegisterClientPage() {
       if (res.ok) {
         const data = await res.json();
         setFullName(data.fullName);
+        setManualName(false);
+      } else if (res.status === 503 || res.status === 404) {
+        setManualName(true);
       }
     } catch {
-      // non-critical — continue without name
+      setManualName(true);
     } finally {
       setLoadingCedula(false);
     }
@@ -90,23 +122,23 @@ export default function RegisterClientPage() {
     setSubmitting(true);
     setError(null);
     try {
+      const resolvedName = manualName ? manualNameValue : fullName || data.email.split("@")[0];
       const supabase = createClient();
       const { error: signUpError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
           data: {
-            full_name: fullName || data.email.split("@")[0],
-            cedula: data.cedula,
+            full_name: resolvedName,
+            cedula: data.cedula.replace(/\D/g, ""),
             role: "client",
           },
         },
       });
       if (signUpError) throw signUpError;
-      setDone(true);
+      setOtpEmail(data.email);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Error al registrarse";
-      // Translate common Supabase error messages
       if (msg.includes("already registered") || msg.includes("already been registered")) {
         setError("Este email ya está registrado. ¿Querés iniciar sesión?");
       } else {
@@ -117,20 +149,17 @@ export default function RegisterClientPage() {
     }
   }
 
-  if (done) {
+  // OTP verification screen
+  if (otpEmail) {
     return (
       <div className="min-h-screen flex flex-col">
         <Navbar />
         <main className="flex-1 flex items-center justify-center py-12 px-4">
-          <div className="w-full max-w-md text-center">
-            <div className="flex h-20 w-20 mx-auto items-center justify-center rounded-full bg-[#EBF5FB] mb-5">
-              <CheckCircle2 className="h-10 w-10 text-[#009FD9]" />
-            </div>
-            <h1 className="text-2xl font-bold text-[#111827] mb-2">{t("success.title")}</h1>
-            <p className="text-[#6b7280] mb-6">{t("success.desc")}</p>
-            <Button size="lg" asChild>
-              <Link href="/buscar">{t("success.button")}</Link>
-            </Button>
+          <div className="w-full max-w-sm">
+            <OtpVerification
+              email={otpEmail}
+              onVerified={() => router.push("/dashboard/cliente")}
+            />
           </div>
         </main>
         <LandingFooter />
@@ -166,17 +195,19 @@ export default function RegisterClientPage() {
               </div>
             </div>
 
-            <Input
-              label={t("cedula")}
-              placeholder="101230456"
-              hint={t("cedulaHint")}
-              error={errors.cedula?.message}
-              {...register("cedula")}
-              onBlur={(e) => lookupCedula(e.target.value)}
-              rightIcon={loadingCedula ? <Loader2 className="h-4 w-4 animate-spin" /> : undefined}
-            />
+            <div>
+              <Input
+                label={t("cedula")}
+                placeholder="101230456"
+                hint={t("cedulaHint")}
+                error={cedulaFormatError ?? errors.cedula?.message}
+                {...register("cedula")}
+                onBlur={(e) => lookupCedula(e.target.value)}
+                rightIcon={loadingCedula ? <Loader2 className="h-4 w-4 animate-spin" /> : undefined}
+              />
+            </div>
 
-            {fullName && (
+            {fullName && !manualName && (
               <div className="flex items-center gap-3 p-3 rounded-xl bg-[#EBF5FB] border border-[#bfdbfe]">
                 <Shield className="h-5 w-5 text-[#009FD9] shrink-0" />
                 <div>
@@ -186,7 +217,29 @@ export default function RegisterClientPage() {
               </div>
             )}
 
-            <Input label={t("email")} type="email" placeholder="tu@email.com" error={errors.email?.message} {...register("email")} />
+            {manualName && (
+              <div>
+                <label className="text-sm font-medium text-[#374151] block mb-1.5">
+                  Tu nombre completo
+                </label>
+                <input
+                  type="text"
+                  placeholder="Juan Carlos Pérez González"
+                  value={manualNameValue}
+                  onChange={(e) => setManualNameValue(e.target.value)}
+                  className="w-full h-10 px-3 rounded-xl border border-[#e5e7eb] text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+                />
+                <p className="text-xs text-[#9ca3af] mt-1">Ingresá tu nombre manualmente</p>
+              </div>
+            )}
+
+            <Input
+              label={t("email")}
+              type="email"
+              placeholder="tu@email.com"
+              error={errors.email?.message}
+              {...register("email")}
+            />
 
             <div>
               <Input
@@ -196,7 +249,11 @@ export default function RegisterClientPage() {
                 error={errors.password?.message}
                 {...register("password")}
                 rightIcon={
-                  <button type="button" onClick={() => setShowPassword(v => !v)} className="text-gray-400 hover:text-gray-600">
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 }
@@ -211,25 +268,37 @@ export default function RegisterClientPage() {
               error={errors.confirmPassword?.message}
               {...register("confirmPassword")}
               rightIcon={
-                <button type="button" onClick={() => setShowConfirm(v => !v)} className="text-gray-400 hover:text-gray-600">
+                <button
+                  type="button"
+                  onClick={() => setShowConfirm((v) => !v)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
                   {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               }
             />
 
             <Button type="submit" size="lg" className="mt-2" loading={submitting}>
-              {submitting ? t("submitting") : <>{t("submit")} <ArrowRight className="h-4 w-4" /></>}
+              {submitting ? t("submitting") : (
+                <>
+                  {t("submit")} <ArrowRight className="h-4 w-4" />
+                </>
+              )}
             </Button>
 
             <p className="text-center text-xs text-[#9ca3af]">
               {t("terms")}{" "}
-              <Link href="/terminos" className="text-[#009FD9] hover:underline">{t("termsLink")}</Link>
+              <Link href="/terminos" className="text-[#009FD9] hover:underline">
+                {t("termsLink")}
+              </Link>
             </p>
           </form>
 
           <p className="text-center text-sm text-[#6b7280] mt-6">
             {t("alreadyHaveAccount")}{" "}
-            <Link href="/login" className="text-[#009FD9] font-medium hover:underline">{t("signIn")}</Link>
+            <Link href="/login" className="text-[#009FD9] font-medium hover:underline">
+              {t("signIn")}
+            </Link>
           </p>
         </div>
       </main>

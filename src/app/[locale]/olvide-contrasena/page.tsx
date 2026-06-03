@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,20 +21,23 @@ const schema = z.object({
 type FormData = z.infer<typeof schema>;
 
 export default function OlvideContrasenaPage() {
+  const locale = useLocale();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
-    resolver: zodResolver(schema),
-  });
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormData>({ resolver: zodResolver(schema) });
 
   async function onSubmit(data: FormData) {
     setSubmitting(true);
     setError(null);
     const supabase = createClient();
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(data.email, {
-      redirectTo: window.location.origin + "/auth/callback",
+      redirectTo: `${window.location.origin}/auth/callback?next=/${locale}/reset-password`,
     });
     setSubmitting(false);
     if (resetError) {
@@ -64,9 +68,14 @@ export default function OlvideContrasenaPage() {
           )}
 
           {success ? (
-            <div className="flex items-center gap-2 p-4 bg-green-50 border border-green-100 rounded-xl text-sm text-green-700">
-              <CheckCircle2 className="h-5 w-5 shrink-0" />
-              <span>Te enviamos un correo para restablecer tu contraseña.</span>
+            <div className="flex items-start gap-3 p-4 bg-[#EBF5FB] border border-[#bfdbfe] rounded-xl text-sm text-[#0089bb]">
+              <CheckCircle2 className="h-5 w-5 shrink-0 mt-0.5 text-[#009FD9]" />
+              <div>
+                <p className="font-semibold text-[#1a2744]">Correo enviado</p>
+                <p className="mt-0.5 text-[#374151]">
+                  Revisá tu bandeja de entrada y seguí el enlace para crear una nueva contraseña. Revisá también la carpeta de spam.
+                </p>
+              </div>
             </div>
           ) : (
             <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
@@ -78,7 +87,11 @@ export default function OlvideContrasenaPage() {
                 {...register("email")}
               />
               <Button type="submit" size="lg" loading={submitting} className="mt-2">
-                {submitting ? "Enviando…" : <>Enviar enlace <ArrowRight className="h-4 w-4" /></>}
+                {submitting ? "Enviando…" : (
+                  <>
+                    Enviar enlace <ArrowRight className="h-4 w-4" />
+                  </>
+                )}
               </Button>
             </form>
           )}

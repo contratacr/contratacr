@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/";
+  const next = searchParams.get("next");
 
   if (code) {
     const cookieStore = await cookies();
@@ -14,7 +14,9 @@ export async function GET(request: NextRequest) {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
         cookies: {
-          getAll() { return cookieStore.getAll(); },
+          getAll() {
+            return cookieStore.getAll();
+          },
           setAll(cookiesToSet) {
             cookiesToSet.forEach(({ name, value, options }) =>
               cookieStore.set(name, value, options)
@@ -23,9 +25,22 @@ export async function GET(request: NextRequest) {
         },
       }
     );
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) {
-      return NextResponse.redirect(`${origin}${next}`);
+
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+
+    if (!error && data.user) {
+      // Explicit next param takes priority (e.g. password reset → /es/reset-password)
+      if (next) {
+        return NextResponse.redirect(`${origin}${next}`);
+      }
+      // Role-based redirect for OAuth logins
+      const role = data.user.user_metadata?.role as string | undefined;
+      const locale = "es";
+      const dashboardPath =
+        role === "professional"
+          ? `/${locale}/dashboard/profesional`
+          : `/${locale}/dashboard/cliente`;
+      return NextResponse.redirect(`${origin}${dashboardPath}`);
     }
   }
 

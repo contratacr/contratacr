@@ -14,7 +14,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { StarRating } from "@/components/ui/star-rating";
-import { getProfessionalBySlug } from "@/lib/queries/professionals";
 import { MOCK_PROFESSIONALS } from "@/lib/data/mock-professionals";
 import { getInitials, getWhatsAppLink } from "@/lib/utils";
 import { ReviewSection } from "@/components/professionals/review-section";
@@ -96,7 +95,8 @@ export default function ProfilePage({ params }: ProfilePageProps) {
   useEffect(() => {
     async function load() {
       const { slug } = await params;
-      const pro = await getProfessionalBySlug(slug);
+      const res = await fetch(`/api/professionals/${slug}`);
+      const pro: ProfessionalDetail | null = res.ok ? await res.json() : null;
       if (!pro) {
         notFound();
         return;
@@ -449,8 +449,4 @@ export default function ProfilePage({ params }: ProfilePageProps) {
       <LandingFooter />
     </div>
   );
-}
-
-export async function generateStaticParams() {
-  return MOCK_PROFESSIONALS.map((p) => ({ slug: p.slug }));
 }
