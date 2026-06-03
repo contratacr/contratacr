@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { CheckCircle2, ArrowRight, ArrowLeft, Loader2, AlertCircle, Shield, Eye, EyeOff, Circle } from "lucide-react";
@@ -17,6 +17,9 @@ import { CATEGORIES, PROVINCES, getCantonsByProvince } from "@/lib/data/cr-geogr
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { OtpVerification } from "@/components/auth/otp-verification";
+import { useAuth } from "@/hooks/use-auth";
+
+// ─── Schemas ─────────────────────────────────────────────────────────────────
 
 const step1Schema = z
   .object({
@@ -35,6 +38,25 @@ const step1Schema = z
     message: "Las contraseñas no coinciden",
     path: ["confirmPassword"],
   });
+
+const step2Schema = z.object({
+  category: z.string().min(1, "Seleccioná una categoría"),
+  province: z.string().min(1, "Seleccioná una provincia"),
+  canton: z.string().min(1, "Seleccioná un cantón"),
+  whatsapp: z.string().min(8, "Número inválido").max(12),
+});
+
+const step3Schema = z.object({
+  bio: z.string().min(30, "Mínimo 30 caracteres").max(500),
+  yearsExperience: z.string().optional(),
+  hourlyRate: z.string().optional(),
+});
+
+type Step1Data = z.infer<typeof step1Schema>;
+type Step2Data = z.infer<typeof step2Schema>;
+type Step3Data = z.infer<typeof step3Schema>;
+
+// ─── Helper components ────────────────────────────────────────────────────────
 
 function PasswordChecklist({ password }: { password: string }) {
   const rules = [
@@ -71,24 +93,13 @@ function validateCedulaFormat(cedula: string): string | null {
   return "Formato inválido. Cédula CR: 9 dígitos. DIMEX: 11-12 dígitos. NITE: 10 dígitos.";
 }
 
-const step2Schema = z.object({
-  category: z.string().min(1, "Seleccioná una categoría"),
-  province: z.string().min(1, "Seleccioná una provincia"),
-  canton: z.string().min(1, "Seleccioná un cantón"),
-  whatsapp: z.string().min(8, "Número inválido").max(12),
-});
-
-const step3Schema = z.object({
-  bio: z.string().min(30, "Mínimo 30 caracteres").max(500),
-  yearsExperience: z.string().optional(),
-  hourlyRate: z.string().optional(),
-});
-
-type Step1Data = z.infer<typeof step1Schema>;
-type Step2Data = z.infer<typeof step2Schema>;
-type Step3Data = z.infer<typeof step3Schema>;
-
-function StepIndicator({ current, labels }: { current: number; labels: string[] }) {
+function StepIndicator({
+  current,
+  labels,
+}: {
+  current: number;
+  labels: string[];
+}) {
   return (
     <div className="flex items-center justify-center gap-2 mb-8">
       {labels.map((label, i) => (
@@ -127,11 +138,18 @@ function StepIndicator({ current, labels }: { current: number; labels: string[] 
   );
 }
 
+// ─── Main page ────────────────────────────────────────────────────────────────
+
 export default function RegisterProfessionalPage() {
   const t = useTranslations("registration.pro");
   const tCat = useTranslations("categories");
   const router = useRouter();
-  const [step, setStep] = useState(0);
+
+  // Auth state: detect if already logged in (OAuth → onboarding flow)
+  const { user: currentUser, loading: authLoading } = useAuth();
+
+  // Step: -1 = loading, 0 = identity, 1 = service, 2 = profile
+  const [step, setStep] = useState(-1);
   const [fullName, setFullName] = useState("");
   const [manualName, setManualName] = useState(false);
   const [manualNameValue, setManualNameValue] = useState("");
@@ -156,6 +174,22 @@ export default function RegisterProfessionalPage() {
   const form3 = useForm<Step3Data>({ resolver: zodResolver(step3Schema) });
 
   const watchedPassword = form1.watch("password") ?? "";
+
+  // Initialize step after auth loads
+  useEffect(() => {
+    if (!authLoading) {
+      if (currentUser) {
+        // Already logged in (OAuth onboarding flow) → skip identity
+        setStep(1);
+        const name = (currentUser.user_metadata?.full_name ??
+          currentUser.user_metadata?.name ??
+          "") as string;
+        if (name) setFullName(name);
+      } else {
+        setStep(0);
+      }
+    }
+  }, [authLoading, currentUser]);
 
   function handleWhatsappChange(raw: string) {
     const digits = raw.replace(/\D/g, "");
@@ -205,28 +239,44 @@ export default function RegisterProfessionalPage() {
   }
 
   async function onStep3(data: Step3Data) {
-    if (!step1Data || !step2Data) return;
+    if (!step2Data) return;
     setSubmitting(true);
     setError(null);
     try {
-      const resolvedName = manualName ? manualNameValue : fullName || step1Data.email.split("@")[0];
       const supabase = createClient();
+      let userId: string;
 
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-        email: step1Data.email,
-        password: step1Data.password,
-        options: {
-          data: {
-            full_name: resolvedName,
-            cedula: step1Data.cedula.replace(/\D/g, ""),
-            role: "professional",
+      if (currentUser) {
+        // ── OAuth / already-logged-in path ─────────────────────────────────
+        userId = currentUser.id;
+      } else {
+        // ── Email/password path ────────────────────────────────────────────
+        if (!step1Data) return;
+        const resolvedName =
+          manualName ? manualNameValue : fullName || step1Data.email.split("@")[0];
+
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email: step1Data.email,
+          password: step1Data.password,
+          options: {
+            data: {
+              full_name: resolvedName,
+              cedula: step1Data.cedula.replace(/\D/g, ""),
+              role: "professional",
+            },
           },
-        },
-      });
-      if (signUpError) throw signUpError;
+        });
+        if (signUpError) throw signUpError;
+        if (!signUpData.user?.id) throw new Error("No se pudo crear la cuenta.");
+        userId = signUpData.user.id;
+      }
 
-      const userId = signUpData.user?.id;
-      if (!userId) throw new Error("No se pudo crear la cuenta. Intentá de nuevo.");
+      // Create professional record (uses service_role, bypasses RLS)
+      const resolvedName = currentUser
+        ? fullName || (currentUser.user_metadata?.full_name as string) || (currentUser.email?.split("@")[0] ?? "profesional")
+        : manualName
+        ? manualNameValue
+        : fullName || step1Data!.email.split("@")[0];
 
       const proRes = await fetch("/api/register/professional", {
         method: "POST",
@@ -249,7 +299,13 @@ export default function RegisterProfessionalPage() {
         throw new Error(proErr ?? "Error al crear tu perfil de profesional.");
       }
 
-      setOtpEmail(step1Data.email);
+      if (currentUser) {
+        // OAuth user: onboarding already marked done by /onboarding page → go to dashboard
+        router.push("/dashboard/profesional");
+      } else {
+        // Email/password user: show OTP screen
+        setOtpEmail(step1Data!.email);
+      }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Error al registrarse";
       if (msg.includes("already registered") || msg.includes("already been registered")) {
@@ -262,7 +318,7 @@ export default function RegisterProfessionalPage() {
     }
   }
 
-  // OTP verification screen
+  // ── OTP screen ──────────────────────────────────────────────────────────────
   if (otpEmail) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -280,7 +336,22 @@ export default function RegisterProfessionalPage() {
     );
   }
 
-  const stepLabels = [t("steps.identity"), t("steps.service"), t("steps.profile")];
+  // ── Auth loading ─────────────────────────────────────────────────────────────
+  if (step === -1) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
+      </div>
+    );
+  }
+
+  // Steps for indicator: identity-step only shown to non-logged-in users
+  const stepLabels = currentUser
+    ? [t("steps.service"), t("steps.profile")]
+    : [t("steps.identity"), t("steps.service"), t("steps.profile")];
+
+  // Current indicator index (0-based within the visible steps)
+  const indicatorStep = currentUser ? step - 1 : step;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -288,10 +359,16 @@ export default function RegisterProfessionalPage() {
       <main className="flex-1 py-10 px-4">
         <div className="mx-auto max-w-lg">
           <div className="text-center mb-2">
-            <h1 className="text-2xl font-bold text-[#111827]">{t("title")}</h1>
-            <p className="text-[#6b7280] text-sm mt-1">{t("subtitle")}</p>
+            <h1 className="text-2xl font-bold text-[#111827]">
+              {currentUser ? "Completá tu perfil profesional" : t("title")}
+            </h1>
+            <p className="text-[#6b7280] text-sm mt-1">
+              {currentUser
+                ? "Contanos sobre tu servicio para que los clientes te encuentren."
+                : t("subtitle")}
+            </p>
           </div>
-          <StepIndicator current={step} labels={stepLabels} />
+          <StepIndicator current={indicatorStep} labels={stepLabels} />
 
           {error && (
             <div className="flex items-start gap-3 rounded-xl bg-red-50 border border-red-200 px-4 py-3 mb-4">
@@ -300,8 +377,8 @@ export default function RegisterProfessionalPage() {
             </div>
           )}
 
-          {/* Step 1 — Identity */}
-          {step === 0 && (
+          {/* ── Step 0: Identity (email/password users only) ── */}
+          {step === 0 && !currentUser && (
             <form onSubmit={form1.handleSubmit(onStep1)} className="flex flex-col gap-4">
               <div className="bg-[#EBF5FB] rounded-2xl p-4 border border-[#bfdbfe]">
                 <div className="flex items-start gap-2">
@@ -317,7 +394,9 @@ export default function RegisterProfessionalPage() {
                   error={cedulaFormatError ?? form1.formState.errors.cedula?.message}
                   {...form1.register("cedula")}
                   onBlur={(e) => lookupCedula(e.target.value)}
-                  rightIcon={loadingCedula ? <Loader2 className="h-4 w-4 animate-spin" /> : undefined}
+                  rightIcon={
+                    loadingCedula ? <Loader2 className="h-4 w-4 animate-spin" /> : undefined
+                  }
                 />
               </div>
 
@@ -401,13 +480,17 @@ export default function RegisterProfessionalPage() {
             </form>
           )}
 
-          {/* Step 2 — Service info */}
+          {/* ── Step 1: Service info ── */}
           {step === 1 && (
             <form onSubmit={form2.handleSubmit(onStep2)} className="flex flex-col gap-4">
               <div>
-                <label className="text-sm font-medium text-[#374151] block mb-1.5">{t("category")}</label>
+                <label className="text-sm font-medium text-[#374151] block mb-1.5">
+                  {t("category")}
+                </label>
                 <Select onValueChange={(v) => form2.setValue("category", v)}>
-                  <SelectTrigger className={form2.formState.errors.category ? "border-red-400" : ""}>
+                  <SelectTrigger
+                    className={form2.formState.errors.category ? "border-red-400" : ""}
+                  >
                     <SelectValue placeholder={t("categoryPlaceholder")} />
                   </SelectTrigger>
                   <SelectContent>
@@ -419,11 +502,15 @@ export default function RegisterProfessionalPage() {
                   </SelectContent>
                 </Select>
                 {form2.formState.errors.category && (
-                  <p className="text-xs text-red-500 mt-1">{form2.formState.errors.category.message}</p>
+                  <p className="text-xs text-red-500 mt-1">
+                    {form2.formState.errors.category.message}
+                  </p>
                 )}
               </div>
               <div>
-                <label className="text-sm font-medium text-[#374151] block mb-1.5">{t("province")}</label>
+                <label className="text-sm font-medium text-[#374151] block mb-1.5">
+                  {t("province")}
+                </label>
                 <Select
                   onValueChange={(v) => {
                     setSelectedProvince(v);
@@ -436,26 +523,41 @@ export default function RegisterProfessionalPage() {
                   </SelectTrigger>
                   <SelectContent>
                     {PROVINCES.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.name}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <label className="text-sm font-medium text-[#374151] block mb-1.5">{t("canton")}</label>
-                <Select disabled={!selectedProvince} onValueChange={(v) => form2.setValue("canton", v)}>
+                <label className="text-sm font-medium text-[#374151] block mb-1.5">
+                  {t("canton")}
+                </label>
+                <Select
+                  disabled={!selectedProvince}
+                  onValueChange={(v) => form2.setValue("canton", v)}
+                >
                   <SelectTrigger>
-                    <SelectValue placeholder={selectedProvince ? t("cantonPlaceholder") : t("cantonDisabled")} />
+                    <SelectValue
+                      placeholder={
+                        selectedProvince ? t("cantonPlaceholder") : t("cantonDisabled")
+                      }
+                    />
                   </SelectTrigger>
                   <SelectContent>
                     {cantons.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <label className="text-sm font-medium text-[#374151] block mb-1.5">{t("whatsapp")}</label>
+                <label className="text-sm font-medium text-[#374151] block mb-1.5">
+                  {t("whatsapp")}
+                </label>
                 <div className="flex items-center gap-0">
                   <span className="inline-flex items-center h-10 px-3 rounded-l-xl border border-r-0 border-[#e5e7eb] bg-[#f3f4f6] text-sm font-medium text-[#374151] shrink-0">
                     +506
@@ -470,16 +572,27 @@ export default function RegisterProfessionalPage() {
                   />
                 </div>
                 {whatsappValue.length === 8 && /^[678]/.test(whatsappValue) && (
-                  <p className="text-xs text-emerald-600 mt-1">Se mostrará como: {whatsappFormatted}</p>
+                  <p className="text-xs text-emerald-600 mt-1">
+                    Se mostrará como: {whatsappFormatted}
+                  </p>
                 )}
                 {form2.formState.errors.whatsapp && (
-                  <p className="text-xs text-red-500 mt-1">{form2.formState.errors.whatsapp.message}</p>
+                  <p className="text-xs text-red-500 mt-1">
+                    {form2.formState.errors.whatsapp.message}
+                  </p>
                 )}
               </div>
               <div className="flex gap-3 mt-2">
-                <Button variant="outline" size="lg" type="button" onClick={() => setStep(0)}>
-                  <ArrowLeft className="h-4 w-4" /> {t("back")}
-                </Button>
+                {!currentUser && (
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    type="button"
+                    onClick={() => setStep(0)}
+                  >
+                    <ArrowLeft className="h-4 w-4" /> {t("back")}
+                  </Button>
+                )}
                 <Button type="submit" size="lg" className="flex-1">
                   {t("continue")} <ArrowRight className="h-4 w-4" />
                 </Button>
@@ -487,7 +600,7 @@ export default function RegisterProfessionalPage() {
             </form>
           )}
 
-          {/* Step 3 — Profile */}
+          {/* ── Step 2: Profile ── */}
           {step === 2 && (
             <form onSubmit={form3.handleSubmit(onStep3)} className="flex flex-col gap-4">
               <div>
@@ -505,7 +618,9 @@ export default function RegisterProfessionalPage() {
                   {...form3.register("bio")}
                 />
                 {form3.formState.errors.bio && (
-                  <p className="text-xs text-red-500 mt-1">{form3.formState.errors.bio.message}</p>
+                  <p className="text-xs text-red-500 mt-1">
+                    {form3.formState.errors.bio.message}
+                  </p>
                 )}
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -527,12 +642,19 @@ export default function RegisterProfessionalPage() {
                 <p className="text-xs text-[#6b7280] font-medium mb-2">{t("addLater")}</p>
                 <div className="flex flex-wrap gap-2">
                   {[t("photos"), t("coverage"), t("availability")].map((item) => (
-                    <Badge key={item} variant="muted">{item}</Badge>
+                    <Badge key={item} variant="muted">
+                      {item}
+                    </Badge>
                   ))}
                 </div>
               </div>
               <div className="flex gap-3 mt-2">
-                <Button variant="outline" size="lg" type="button" onClick={() => setStep(1)}>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  type="button"
+                  onClick={() => setStep(1)}
+                >
                   <ArrowLeft className="h-4 w-4" /> {t("back")}
                 </Button>
                 <Button type="submit" size="lg" className="flex-1" loading={submitting}>
@@ -542,12 +664,14 @@ export default function RegisterProfessionalPage() {
             </form>
           )}
 
-          <p className="text-center text-sm text-[#6b7280] mt-6">
-            {t("alreadyHaveAccount")}{" "}
-            <Link href="/login" className="text-[#009FD9] font-medium hover:underline">
-              {t("signIn")}
-            </Link>
-          </p>
+          {!currentUser && (
+            <p className="text-center text-sm text-[#6b7280] mt-6">
+              {t("alreadyHaveAccount")}{" "}
+              <Link href="/login" className="text-[#009FD9] font-medium hover:underline">
+                {t("signIn")}
+              </Link>
+            </p>
+          )}
         </div>
       </main>
       <LandingFooter />

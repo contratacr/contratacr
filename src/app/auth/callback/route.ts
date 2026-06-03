@@ -29,17 +29,28 @@ export async function GET(request: NextRequest) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error && data.user) {
-      // Explicit next param takes priority (e.g. password reset → /es/reset-password)
+      // Password reset flow → explicit next param (e.g. /es/reset-password)
       if (next) {
         return NextResponse.redirect(`${origin}${next}`);
       }
-      // Role-based redirect for OAuth logins
-      const role = data.user.user_metadata?.role as string | undefined;
-      const locale = "es";
+
+      // ── Scenario A & B: check profiles table for role + onboarding status ──
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role, onboarding_completed")
+        .eq("id", data.user.id)
+        .single();
+
+      if (!profile || !profile.onboarding_completed) {
+        // Scenario B — new OAuth user, no role chosen yet → onboarding
+        return NextResponse.redirect(`${origin}/es/onboarding`);
+      }
+
+      // Scenario A — returning user, role known → go to dashboard
       const dashboardPath =
-        role === "professional"
-          ? `/${locale}/dashboard/profesional`
-          : `/${locale}/dashboard/cliente`;
+        profile.role === "professional"
+          ? "/es/dashboard/profesional"
+          : "/es/dashboard/cliente";
       return NextResponse.redirect(`${origin}${dashboardPath}`);
     }
   }
