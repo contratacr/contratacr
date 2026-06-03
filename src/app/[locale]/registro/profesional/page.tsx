@@ -384,7 +384,16 @@ export default function RegisterProfessionalPage() {
   useEffect(() => {
     if (!authLoading) {
       setStep(currentUser ? 1 : 0);
+      // Pre-fill photo preview from OAuth provider if available
+      if (currentUser && !photoPreview) {
+        const oauthPhoto =
+          (currentUser.user_metadata?.avatar_url as string) ||
+          (currentUser.user_metadata?.picture as string) ||
+          null;
+        if (oauthPhoto) setPhotoPreview(oauthPhoto);
+      }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, currentUser]);
 
   function handlePhotoSelect(file: File) {
@@ -599,6 +608,24 @@ export default function RegisterProfessionalPage() {
             <div className="flex items-start gap-3 rounded-xl bg-red-50 border border-red-200 px-4 py-3 mb-4">
               <AlertCircle className="h-4 w-4 text-red-500 mt-0.5 shrink-0" />
               <p className="text-sm text-red-700">{error}</p>
+            </div>
+          )}
+
+          {/* ── OAuth identity confirmation ───────────────────────────────── */}
+          {currentUser && (
+            <div className="flex items-center gap-3 bg-[#EBF5FB] border border-[#bfdbfe] rounded-xl px-4 py-3 mb-4">
+              {photoPreview && (
+                <img src={photoPreview} alt="" className="h-10 w-10 rounded-full object-cover shrink-0" />
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-[#009FD9] font-semibold">Identidad confirmada por Google / Facebook</p>
+                <p className="text-sm font-bold text-[#111827] truncate">
+                  {(currentUser.user_metadata?.full_name as string) ||
+                   (currentUser.user_metadata?.name as string) ||
+                   currentUser.email}
+                </p>
+              </div>
+              <CheckCircle2 className="h-5 w-5 text-[#009FD9] shrink-0" />
             </div>
           )}
 

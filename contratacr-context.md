@@ -1,6 +1,6 @@
 # ContrataCR.com — Project Context
 
-_Last updated: 2026-06-02 (sprint 5 — registration overhaul, weekly availability, profile editor)_
+_Last updated: 2026-06-03 (sprint 6 — services feature, booking redesign, dashboard auto-refresh, UI polish)_
 
 ---
 
@@ -307,11 +307,68 @@ Adds `FOR UPDATE` policy on `professionals` so client-side saves
 - `searchProfessionals` removed `categories!inner` join — was silently dropping all professionals when the categories table has no row for a given `category_id`
 - Now uses `category_id` text column directly; LEFT joins for profiles/provincias/cantones
 
+## Sprint 6 Changes (2026-06-03)
+
+### Professional Services feature
+- New `services` JSONB column on `professionals` table (migration 009 — run in Supabase SQL Editor)
+- Each service: `{ id, name, description?, price? }`
+- New `ServicesEditor` dashboard component: add/edit/delete services inline
+- New "Servicios" tab in pro dashboard sidebar
+- Profile page now shows **actual services from DB** instead of hardcoded mock data
+- Profile page `searchProfessionals` also searches inside `services::text` for smart matching
+
+### Booking modal redesign
+- Removed all cédula verification steps and "Información del Registro Civil" references entirely
+- For **logged-in users**: skip directly to "what do you need?" form — name pre-filled from profile
+- For **guests**: show service description first, then ask name + email on next step
+- Removed "who is it for?" step (always assumed for the requester)
+- Professional avatar in modal panel has no border/ring
+
+### Dashboard auto-refresh
+- Pro data re-fetched from Supabase whenever `activeTab` changes or `refreshKey` increments
+- `ProfileEditor`, `PhotoGallery`, `AvailabilityEditor`, `ServicesEditor` all accept `onSaved` callback
+- Switching between tabs always shows latest saved data — no manual page refresh needed
+
+### Profile page
+- Profile photo appears exactly once (left card only, no ring, clean `h-24 w-24`)
+- WhatsApp button now uses proper WhatsApp SVG icon
+- Location row hidden when both canton and province are empty (no trailing comma)
+- Dropdown "Más opciones" closes on outside click (via `useRef` + `useEffect`)
+- Services tab shows real data from DB; shows "no services yet" message if empty
+- `disponibilidad` tab simplified to "contact via WhatsApp to confirm availability"
+
+### Professional card (search results)
+- Removed green online indicator dot
+- Avatar enlarged to `h-20 w-20`, no ring, brand-colored fallback
+
+### Header avatar (Navbar UserMenu)
+- Slightly larger circular avatar (`h-8 w-8`), no chevron arrow
+- Hover shows subtle brand-color ring
+- Dropdown shows user's display name above email
+- Dropdown is `rounded-2xl` with shadow-xl
+
+### OAuth registration flow
+- On registration page, authenticated (OAuth) users now see a "Identidad confirmada por Google / Facebook" banner showing their name and photo
+- Profile photo preview pre-loaded from OAuth provider's avatar_url/picture
+- Step 0 (identity/password) already skipped for OAuth users (unchanged)
+
+### Duplicate email error
+- When email already exists on signup, modal switches to login view and shows amber banner: "Ya existe una cuenta con este correo — ingresá tu contraseña"
+- `duplicateEmailDetected` state tracks this distinct from generic errors
+
+### DB (migration 009 — run in Supabase SQL Editor)
+```sql
+-- File: supabase/migrations/009_professional_services.sql
+ALTER TABLE professionals ADD COLUMN IF NOT EXISTS services JSONB DEFAULT '[]'::jsonb;
+```
+
 ## Next Priorities
 
-1. Run migration 007 in Supabase SQL Editor (avatar_url column + email/cedula unique indices)
-2. Run migration 008 in Supabase SQL Editor (professionals UPDATE RLS policy)
-3. Set CLOUDINARY_CLOUD_NAME / CLOUDINARY_API_KEY / CLOUDINARY_API_SECRET in Vercel env vars
-4. Google Maps integration on /buscar (split view list + map)
-5. OTP email verification — configure Supabase SMTP via Resend + enable email confirmation
-6. Payment/subscription system (freemium model)
+1. **Run migration 007** in Supabase SQL Editor (avatar_url + email/cedula unique indices)
+2. **Run migration 008** in Supabase SQL Editor (professionals UPDATE RLS policy)
+3. **Run migration 009** in Supabase SQL Editor (professionals.services JSONB column)
+4. Set `CLOUDINARY_CLOUD_NAME / CLOUDINARY_API_KEY / CLOUDINARY_API_SECRET` in Vercel env vars
+5. Enable "Allow automatic identity linking" in Supabase Auth settings (OAuth + email/password same email)
+6. Google Maps integration on /buscar (split view list + map)
+7. OTP email verification — configure Supabase SMTP via Resend
+8. Payment/subscription system (freemium model)

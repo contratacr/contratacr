@@ -209,6 +209,7 @@ export function ClientRegistrationModal({
   const [cedulaError, setCedulaError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [duplicateEmailDetected, setDuplicateEmailDetected] = useState(false);
 
   function reset() {
     setView("register");
@@ -223,6 +224,7 @@ export function ClientRegistrationModal({
     setLoginPassword("");
     setError(null);
     setCedulaError(null);
+    setDuplicateEmailDetected(false);
   }
 
   function handleClose() {
@@ -273,7 +275,8 @@ export function ClientRegistrationModal({
     setSubmitting(false);
     if (e) {
       if (e.message.includes("already registered") || e.message.includes("already been registered")) {
-        setError("Este correo ya está registrado.");
+        setDuplicateEmailDetected(true);
+        setError(null);
         setView("login");
       } else {
         setError(e.message);
@@ -375,7 +378,18 @@ export function ClientRegistrationModal({
                     Usá tu correo y contraseña de ContrataCR.
                   </p>
                 </div>
-                {error && (
+
+                {duplicateEmailDetected && (
+                  <div className="flex items-start gap-3 p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-sm">
+                    <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-semibold text-amber-800">Ya existe una cuenta con este correo</p>
+                      <p className="text-amber-700 mt-0.5">Ingresá tu contraseña para continuar.</p>
+                    </div>
+                  </div>
+                )}
+
+                {error && !duplicateEmailDetected && (
                   <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600">
                     <AlertCircle className="h-4 w-4 shrink-0" /> {error}
                   </div>
@@ -568,7 +582,7 @@ export function ClientRegistrationModal({
                     ¿Ya tenés cuenta?{" "}
                     <button
                       type="button"
-                      onClick={() => { setView("login"); setError(null); }}
+                      onClick={() => { setView("login"); setError(null); setDuplicateEmailDetected(false); }}
                       className="text-[#009FD9] font-semibold hover:underline"
                     >
                       Iniciá sesión

@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
-import { User, Image as ImageIcon, CalendarDays, Inbox, LogOut, ExternalLink } from "lucide-react";
+import { User, Image as ImageIcon, CalendarDays, Inbox, LogOut, ExternalLink, Wrench } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { ProfileEditor } from "@/components/dashboard/pro/profile-editor";
 import { PhotoGallery } from "@/components/dashboard/pro/photo-gallery";
 import { AvailabilityEditor } from "@/components/dashboard/pro/availability-editor";
+import { ServicesEditor } from "@/components/dashboard/pro/services-editor";
 import { BookingRequests } from "@/components/dashboard/pro/booking-requests";
 import { createClient } from "@/lib/supabase/client";
 import { getInitials } from "@/lib/utils";
@@ -20,16 +21,25 @@ import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 
-type Tab = "profile" | "photos" | "availability" | "bookings";
+type Tab = "profile" | "services" | "photos" | "availability" | "bookings";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ProData = Record<string, any>;
 
 const TAB_ICONS: Record<Tab, React.ReactNode> = {
   profile: <User className="h-4 w-4" />,
+  services: <Wrench className="h-4 w-4" />,
   photos: <ImageIcon className="h-4 w-4" />,
   availability: <CalendarDays className="h-4 w-4" />,
   bookings: <Inbox className="h-4 w-4" />,
+};
+
+const TAB_LABELS: Record<Tab, string> = {
+  profile: "Mi perfil",
+  services: "Servicios",
+  photos: "Fotos",
+  availability: "Disponibilidad",
+  bookings: "Solicitudes",
 };
 
 export default function ProDashboardPage() {
@@ -42,25 +52,38 @@ export default function ProDashboardPage() {
 
   const [pro, setPro] = useState<ProData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     if (!authLoading && !user) router.push("/login");
   }, [user, authLoading, router]);
 
-  useEffect(() => {
+  const fetchPro = useCallback(async () => {
     if (!user) return;
     const supabase = createClient();
-    supabase
+    const { data } = await supabase
       .from("professionals")
-      .select("*, profiles(*), provincia_id, canton_id, address, service_type, category_id")
+      .select("*, profiles(*), provincia_id, canton_id, address, service_type, category_id, services")
       .eq("profile_id", user.id)
-      .single()
-      .then(({ data }) => { setPro(data); setLoading(false); });
+      .single();
+    setPro(data);
+    setLoading(false);
   }, [user]);
+
+  // Re-fetch pro data whenever the tab changes OR refreshKey increments.
+  // This ensures navigating back to any tab always shows the latest saved data.
+  useEffect(() => {
+    if (!user) return;
+    fetchPro();
+  }, [user, activeTab, refreshKey, fetchPro]);
 
   function setTab(tab: Tab) {
     const params = new URLSearchParams({ tab });
     router.push(`/dashboard/profesional?${params}`);
+  }
+
+  function handleSaved() {
+    setRefreshKey((k) => k + 1);
   }
 
   async function handleSignOut() {
@@ -88,7 +111,7 @@ export default function ProDashboardPage() {
     );
   }
 
-  const TABS: Tab[] = ["profile", "photos", "availability", "bookings"];
+  const TABS: Tab[] = ["profile", "services", "photos", "availability", "bookings"];
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
@@ -98,9 +121,11 @@ export default function ProDashboardPage() {
           {/* Header */}
           <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
             <div className="flex items-center gap-4">
-              <Avatar className="h-14 w-14 ring-2 ring-offset-1 ring-[#bbe2d5]">
+              <Avatar className="h-14 w-14">
                 <AvatarImage src={pro.profiles?.avatar_url} />
-                <AvatarFallback>{getInitials(pro.profiles?.full_name ?? "?")}</AvatarFallback>
+                <AvatarFallback className="bg-[#EBF5FB] text-[#009FD9] font-bold">
+                  {getInitials(pro.profiles?.full_name ?? "?")}
+                </AvatarFallback>
               </Avatar>
               <div>
                 <h1 className="text-xl font-bold text-[#111827]">{pro.profiles?.full_name}</h1>
@@ -148,7 +173,7 @@ export default function ProDashboardPage() {
                       )}
                     >
                       {TAB_ICONS[tab]}
-                      {t(`nav.${tab}`)}
+                      {TAB_LABELS[tab]}
                     </button>
                   ))}
                 </CardContent>
@@ -159,7 +184,7 @@ export default function ProDashboardPage() {
             <div className="flex-1">
               <Card>
                 <CardHeader className="px-6 pt-6 pb-4">
-                  <h2 className="text-lg font-semibold text-[#111827]">{t(`nav.${activeTab}`)}</h2>
+                  <h2 className="text-lg font-semibold text-[#111827]">{TAB_LABELS[activeTab]}</h2>
                 </CardHeader>
                 <CardContent className="px-6 pb-6">
                   {activeTab === "profile" && (
@@ -167,18 +192,28 @@ export default function ProDashboardPage() {
                       professionalId={pro.id}
                       profileId={user!.id}
                       initial={pro}
+                      onSaved={handleSaved}
+                    />
+                  )}
+                  {activeTab === "services" && (
+                    <ServicesEditor
+                      professionalId={pro.id}
+                      initialServices={pro.services ?? []}
+                      onSaved={handleSaved}
                     />
                   )}
                   {activeTab === "photos" && (
                     <PhotoGallery
                       professionalId={pro.id}
                       initialUrls={pro.portfolio_urls ?? []}
+                      onSaved={handleSaved}
                     />
                   )}
                   {activeTab === "availability" && (
                     <AvailabilityEditor
                       professionalId={pro.id}
                       initialAvailability={pro.availability}
+                      onSaved={handleSaved}
                     />
                   )}
                   {activeTab === "bookings" && <BookingRequests />}

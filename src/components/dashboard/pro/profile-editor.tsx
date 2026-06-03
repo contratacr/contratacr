@@ -95,9 +95,10 @@ interface ProfileEditorProps {
   professionalId: string;
   profileId: string;
   initial: ProData;
+  onSaved?: () => void;
 }
 
-export function ProfileEditor({ professionalId, profileId, initial }: ProfileEditorProps) {
+export function ProfileEditor({ professionalId, profileId, initial, onSaved }: ProfileEditorProps) {
   const photoInputRef = useRef<HTMLInputElement>(null);
 
   const [bio, setBio] = useState<string>(initial.bio ?? "");
@@ -179,6 +180,7 @@ export function ProfileEditor({ professionalId, profileId, initial }: ProfileEdi
 
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
+      onSaved?.();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Error al guardar");
     } finally {

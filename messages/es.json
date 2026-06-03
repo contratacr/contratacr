@@ -309,10 +309,15 @@
       "descPlaceholder": "Contale brevemente al profesional qué necesitás...",
       "date": "¿Cuándo te viene bien?",
       "datePlaceholder": "Ej: Este fin de semana, Próximo lunes por la tarde...",
-      "email": "Tu email (opcional)",
+      "email": "Tu email",
       "emailHint": "Para recibir actualizaciones de tu solicitud",
       "submit": "Contactar por WhatsApp",
       "note": "Serás redirigido a WhatsApp para coordinar directamente con el profesional"
+    },
+    "contact": {
+      "title": "Tu información de contacto",
+      "name": "Nombre completo",
+      "namePlaceholder": "Tu nombre"
     },
     "success": {
       "title": "¡Solicitud enviada!",
@@ -374,6 +379,27 @@
           "afternoon": "Tarde",
           "evening": "Noche"
         }
+      },
+      "services": {
+        "title": "Servicios ofrecidos",
+        "hint": "Agregá los servicios específicos que ofrecés con nombre, descripción y precio.",
+        "empty": "Todavía no agregaste ningún servicio.",
+        "emptyHint": "Agregá servicios para que los clientes sepan exactamente qué ofrecés.",
+        "add": "Agregar servicio",
+        "edit": "Editar",
+        "delete": "Eliminar",
+        "name": "Nombre del servicio",
+        "namePlaceholder": "Ej: Instalación eléctrica residencial",
+        "description": "Descripción",
+        "descPlaceholder": "Describí brevemente en qué consiste...",
+        "price": "Precio",
+        "pricePlaceholder": "Ej: ₡15,000/hora o Desde ₡25,000",
+        "save": "Guardar servicio",
+        "saving": "Guardando...",
+        "saved": "¡Servicios actualizados!",
+        "cancel": "Cancelar",
+        "consult": "Consultar precio",
+        "noServices": "Este profesional no ha agregado servicios todavía."
       },
       "bookings": {
         "title": "Solicitudes recibidas",

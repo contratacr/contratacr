@@ -10,11 +10,12 @@ import { cn } from "@/lib/utils";
 interface PhotoGalleryProps {
   professionalId: string;
   initialUrls?: string[];
+  onSaved?: () => void;
 }
 
 const CLOUDINARY_CONFIGURED = !!process.env.NEXT_PUBLIC_SUPABASE_URL; // reuse env check; actual Cloudinary check is server-side
 
-export function PhotoGallery({ professionalId, initialUrls = [] }: PhotoGalleryProps) {
+export function PhotoGallery({ professionalId, initialUrls = [], onSaved }: PhotoGalleryProps) {
   const t = useTranslations("dashboard.pro.photos");
   const [urls, setUrls] = useState<string[]>(initialUrls);
   const [uploading, setUploading] = useState(false);
@@ -36,6 +37,7 @@ export function PhotoGallery({ professionalId, initialUrls = [] }: PhotoGalleryP
           .from("professionals")
           .update({ portfolio_urls: newUrls })
           .eq("id", professionalId);
+        onSaved?.();
       } else {
         alert(data.error ?? t("configure"));
       }
@@ -54,6 +56,7 @@ export function PhotoGallery({ professionalId, initialUrls = [] }: PhotoGalleryP
       .from("professionals")
       .update({ portfolio_urls: newUrls })
       .eq("id", professionalId);
+    onSaved?.();
   }
 
   return (

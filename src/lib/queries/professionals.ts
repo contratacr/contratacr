@@ -12,9 +12,17 @@ export type SearchFilters = {
   query?: string;
 };
 
+export type ProService = {
+  id: string;
+  name: string;
+  description?: string;
+  price?: string;
+};
+
 export type ProfessionalDetail = ProfessionalCardData & {
   portfolioUrls: string[];
   reviews: Review[];
+  services: ProService[];
 };
 
 export type Review = {
@@ -60,7 +68,7 @@ export async function searchProfessionals(
       }
       if (filters.query) {
         const q = filters.query.trim();
-        query = query.or(`bio.ilike.%${q}%,profiles.full_name.ilike.%${q}%`);
+        query = query.or(`bio.ilike.%${q}%,profiles.full_name.ilike.%${q}%,services::text.ilike.%${q}%`);
       }
 
       switch (filters.sortBy) {
@@ -130,7 +138,7 @@ export async function getProfessionalBySlug(
         .select(
           `id, slug, hourly_rate, is_verified, is_featured, is_available,
            rating_avg, review_count, bio, whatsapp, years_experience, portfolio_urls,
-           category_id,
+           category_id, services,
            profiles(full_name, avatar_url),
            provincias(id, name),
            cantones(id, name),
@@ -172,6 +180,7 @@ export async function getProfessionalBySlug(
         isAvailable: pro.is_available ?? true,
         portfolioUrls: pro.portfolio_urls ?? [],
         reviews,
+        services: ((pro as any).services as ProService[]) ?? [],
       };
     } catch (err) {
       console.error("[getProfessionalBySlug] Supabase error, using mock data:", err);
@@ -180,7 +189,7 @@ export async function getProfessionalBySlug(
 
   const mock = MOCK_PROFESSIONALS.find((p) => p.slug === slug);
   if (!mock) return null;
-  return { ...mock, portfolioUrls: [], reviews: MOCK_REVIEWS };
+  return { ...mock, portfolioUrls: [], reviews: MOCK_REVIEWS, services: [] };
 }
 
 // ---------------------------------------------------------------------------

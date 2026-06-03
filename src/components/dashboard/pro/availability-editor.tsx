@@ -42,9 +42,10 @@ function migrateOldFormat(raw: unknown): WeeklySchedule {
 interface AvailabilityEditorProps {
   professionalId: string;
   initialAvailability?: unknown;
+  onSaved?: () => void;
 }
 
-export function AvailabilityEditor({ professionalId, initialAvailability }: AvailabilityEditorProps) {
+export function AvailabilityEditor({ professionalId, initialAvailability, onSaved }: AvailabilityEditorProps) {
   const [schedule, setSchedule] = useState<WeeklySchedule>(
     migrateOldFormat(initialAvailability)
   );
@@ -100,6 +101,7 @@ export function AvailabilityEditor({ professionalId, initialAvailability }: Avai
     setSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
+    onSaved?.();
   }
 
   return (

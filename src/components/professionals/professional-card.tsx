@@ -56,14 +56,11 @@ export async function ProfessionalCard({ professional, className }: Professional
 
       <CardContent className="p-5">
         <div className="flex gap-4">
-          <div className="relative shrink-0">
-            <Avatar className="h-16 w-16 ring-2 ring-offset-1 ring-[#e5e7eb]">
+          <div className="shrink-0">
+            <Avatar className="h-20 w-20">
               <AvatarImage src={professional.avatarUrl} alt={professional.fullName} />
-              <AvatarFallback className="text-lg">{getInitials(professional.fullName)}</AvatarFallback>
+              <AvatarFallback className="text-xl bg-[#EBF5FB] text-[#009FD9] font-semibold">{getInitials(professional.fullName)}</AvatarFallback>
             </Avatar>
-            {professional.isAvailable && (
-              <span className="absolute bottom-0 right-0 h-4 w-4 rounded-full bg-emerald-400 border-2 border-white" />
-            )}
           </div>
 
           <div className="flex-1 min-w-0">

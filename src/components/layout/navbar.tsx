@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Menu, X, Search, LogOut, LayoutDashboard, ChevronDown } from "lucide-react";
+import { Menu, X, Search, LogOut, LayoutDashboard } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
@@ -69,26 +69,29 @@ function UserMenu() {
     router.push("/");
   }
 
+  const displayName = (user.user_metadata?.full_name ?? user.user_metadata?.name ?? "") as string;
+
   return (
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-1.5 px-2 py-1.5 rounded-xl hover:bg-gray-50 transition-colors"
+        className="flex items-center gap-1 p-0.5 rounded-full ring-2 ring-transparent hover:ring-[#009FD9]/30 transition-all"
+        title={displayName || user.email}
       >
-        <Avatar className="h-7 w-7">
+        <Avatar className="h-8 w-8">
           <AvatarImage src={avatarUrl ?? undefined} />
-          <AvatarFallback className="text-[11px] bg-[#009FD9] text-white font-semibold">
+          <AvatarFallback className="text-[12px] bg-[#009FD9] text-white font-bold">
             {initials}
           </AvatarFallback>
         </Avatar>
-        <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full mt-1.5 w-52 bg-white border border-gray-100 rounded-xl shadow-lg z-50 py-1.5 overflow-hidden">
-          <p className="px-3 py-1.5 text-xs text-[#9ca3af] truncate border-b border-gray-50 mb-1">
-            {user.email}
-          </p>
+        <div className="absolute right-0 top-full mt-2 w-56 bg-white border border-gray-100 rounded-2xl shadow-xl z-50 py-1.5 overflow-hidden">
+          <div className="px-3 py-2 border-b border-gray-50 mb-1">
+            {displayName && <p className="text-sm font-semibold text-[#111827] truncate">{displayName}</p>}
+            <p className="text-xs text-[#9ca3af] truncate">{user.email}</p>
+          </div>
           <Link
             href={dashboardHref}
             onClick={() => setOpen(false)}
