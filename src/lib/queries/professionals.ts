@@ -43,10 +43,10 @@ export async function searchProfessionals(
         .select(
           `id, slug, hourly_rate, is_verified, is_featured, is_available,
            rating_avg, review_count, bio, whatsapp, years_experience, portfolio_urls,
-           profiles!inner(full_name, avatar_url),
-           categories!inner(id, icon),
-           provincias!inner(id, name),
-           cantones!inner(id, name)`
+           category_id,
+           profiles(full_name, avatar_url),
+           provincias(id, name),
+           cantones(id, name)`
         );
 
       if (filters.categoryId && filters.categoryId !== "todas") {
@@ -87,21 +87,21 @@ export async function searchProfessionals(
       return (data ?? []).map((row: any) => ({
         id: row.id,
         slug: row.slug,
-        fullName: row.profiles.full_name,
-        avatarUrl: row.profiles.avatar_url,
-        categoryId: row.categories.id,
-        categoryIcon: row.categories.icon,
+        fullName: row.profiles?.full_name ?? "Profesional",
+        avatarUrl: row.profiles?.avatar_url ?? null,
+        categoryId: row.category_id ?? "",
+        categoryIcon: "",
         bio: row.bio,
         whatsapp: row.whatsapp,
-        provinceName: row.provincias.name,
-        cantonName: row.cantones.name,
-        ratingAvg: Number(row.rating_avg),
-        reviewCount: row.review_count,
+        provinceName: row.provincias?.name ?? "",
+        cantonName: row.cantones?.name ?? "",
+        ratingAvg: Number(row.rating_avg ?? 0),
+        reviewCount: row.review_count ?? 0,
         yearsExperience: row.years_experience,
         hourlyRate: row.hourly_rate,
-        isVerified: row.is_verified,
-        isFeatured: row.is_featured,
-        isAvailable: row.is_available,
+        isVerified: row.is_verified ?? false,
+        isFeatured: row.is_featured ?? false,
+        isAvailable: row.is_available ?? true,
       }));
     } catch (err) {
       console.error("[searchProfessionals] Supabase error, using mock data:", err);

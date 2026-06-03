@@ -170,6 +170,13 @@ export function ProfileEditor({ professionalId, profileId, initial }: ProfileEdi
         await supabase.from("profiles").update(profileUpdate).eq("id", profileId);
       }
 
+      // Sync avatar_url into user metadata so onAuthStateChange fires and
+      // the navbar avatar updates immediately without a page refresh.
+      if (avatarUrl) {
+        await supabase.auth.updateUser({ data: { avatar_url: avatarUrl } });
+        setPhotoFile(null);
+      }
+
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
     } catch (err: unknown) {

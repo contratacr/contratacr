@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { X, Menu, Mail, Lock, Eye, EyeOff, AlertCircle, ChevronDown, Search, MapPin } from "lucide-react";
+import { X, Menu, Mail, Lock, Eye, EyeOff, AlertCircle, ChevronDown, Search, MapPin, LayoutDashboard, LogOut } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { useLocale } from "next-intl";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
+import { getInitials } from "@/lib/utils";
 
 const PROVINCES = [
   "San José", "Alajuela", "Cartago", "Heredia",
@@ -278,8 +280,32 @@ export function LandingNavbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [provinceQuery, setProvinceQuery] = useState("");
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const router = useRouter();
+  const { user, avatarUrl } = useAuth();
+
+  const role = user?.user_metadata?.role as string | undefined;
+  const dashboardHref = role === "professional" ? "/es/dashboard/profesional" : "/es/dashboard/cliente";
+  const initials = getInitials(user?.user_metadata?.full_name ?? user?.email ?? "?");
+
+  useEffect(() => {
+    function onClickOutside(e: MouseEvent) {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, []);
+
+  async function handleSignOut() {
+    setUserMenuOpen(false);
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    window.location.href = "/es";
+  }
 
   useEffect(() => {
     const sentinel = document.getElementById("hero-search-sentinel");
@@ -391,20 +417,68 @@ export function LandingNavbar() {
               {/* Spacer */}
               <div className="flex-1" />
 
-              {/* Right actions: Registrarse como profesional → Iniciar sesión → ES/EN */}
+              {/* Right actions */}
               <div className="hidden lg:flex items-center gap-1 shrink-0">
-                <Link
-                  href="/registro/profesional"
-                  className="ml-1 inline-flex items-center bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 rounded-full transition-all duration-150 active:scale-[0.97] shadow-sm hover:shadow-[0_4px_20px_rgba(0,159,217,0.35)] whitespace-nowrap"
-                >
-                  Registrarse como profesional
-                </Link>
-                <button
-                  onClick={() => setShowLogin(true)}
-                  className="text-sm font-medium px-3 py-2 rounded-xl text-[#374151] hover:bg-gray-50 transition-colors"
-                >
-                  Iniciar sesión
-                </button>
+                {user ? (
+                  <>
+                    <a
+                      href={dashboardHref}
+                      className="text-sm font-medium px-3 py-2 rounded-xl text-[#374151] hover:bg-gray-50 transition-colors whitespace-nowrap"
+                    >
+                      Mi panel
+                    </a>
+                    {/* Avatar dropdown */}
+                    <div ref={userMenuRef} className="relative">
+                      <button
+                        onClick={() => setUserMenuOpen((o) => !o)}
+                        className="flex items-center gap-1.5 px-2 py-1.5 rounded-xl hover:bg-gray-50 transition-colors"
+                      >
+                        <div className="h-8 w-8 rounded-full overflow-hidden bg-[#009FD9] flex items-center justify-center text-white text-xs font-bold shrink-0">
+                          {avatarUrl ? (
+                            <img src={avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
+                          ) : initials}
+                        </div>
+                        <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
+                      </button>
+                      {userMenuOpen && (
+                        <div className="absolute right-0 top-full mt-1.5 w-52 bg-white border border-gray-100 rounded-xl shadow-lg z-50 py-1.5 overflow-hidden">
+                          <p className="px-3 py-1.5 text-xs text-[#9ca3af] truncate border-b border-gray-50 mb-1">
+                            {user.email}
+                          </p>
+                          <a
+                            href={dashboardHref}
+                            className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
+                          >
+                            <LayoutDashboard className="h-4 w-4 text-[#009FD9]" />
+                            Mi panel
+                          </a>
+                          <button
+                            onClick={handleSignOut}
+                            className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                          >
+                            <LogOut className="h-4 w-4" />
+                            Cerrar sesión
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href="/registro/profesional"
+                      className="ml-1 inline-flex items-center bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 rounded-full transition-all duration-150 active:scale-[0.97] shadow-sm hover:shadow-[0_4px_20px_rgba(0,159,217,0.35)] whitespace-nowrap"
+                    >
+                      Registrarse como profesional
+                    </Link>
+                    <button
+                      onClick={() => setShowLogin(true)}
+                      className="text-sm font-medium px-3 py-2 rounded-xl text-[#374151] hover:bg-gray-50 transition-colors"
+                    >
+                      Iniciar sesión
+                    </button>
+                  </>
+                )}
                 <LanguageTogglePill />
               </div>
 
@@ -467,14 +541,23 @@ export function LandingNavbar() {
                 </div>
               </form>
 
-              {/* Right: Registrarse como profesional + lang toggle */}
+              {/* Right: auth-aware + lang toggle */}
               <div className="hidden sm:flex items-center gap-2 shrink-0">
-                <Link
-                  href="/registro/profesional"
-                  className="inline-flex items-center bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-4 py-2 rounded-full transition-all duration-150 active:scale-[0.97] whitespace-nowrap"
-                >
-                  Registrarse
-                </Link>
+                {user ? (
+                  <a
+                    href={dashboardHref}
+                    className="inline-flex items-center bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-4 py-2 rounded-full transition-all duration-150 active:scale-[0.97] whitespace-nowrap"
+                  >
+                    Mi panel
+                  </a>
+                ) : (
+                  <Link
+                    href="/registro/profesional"
+                    className="inline-flex items-center bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-4 py-2 rounded-full transition-all duration-150 active:scale-[0.97] whitespace-nowrap"
+                  >
+                    Registrarse
+                  </Link>
+                )}
                 <LanguageTogglePill />
               </div>
             </div>
@@ -500,19 +583,33 @@ export function LandingNavbar() {
               </div>
             ))}
             <div className="border-t border-gray-100 pt-4 flex flex-col gap-2">
-              {/* Language toggle visible on mobile */}
               <div className="flex items-center justify-between px-1 pb-1">
                 <span className="text-xs text-gray-400 font-medium">Idioma / Language</span>
                 <LanguageTogglePill />
               </div>
-              <button onClick={() => { setShowLogin(true); setMobileOpen(false); }}
-                className="w-full px-4 py-3 rounded-xl text-sm font-medium text-[#374151] border border-gray-200 hover:bg-gray-50 text-left">
-                Iniciar sesión
-              </button>
-              <Link href="/registro/profesional" onClick={() => setMobileOpen(false)}
-                className="w-full block px-4 py-3 rounded-full bg-[#009FD9] text-white text-sm font-bold text-center hover:bg-[#0089bb] transition-colors">
-                Registrarse como profesional
-              </Link>
+              {user ? (
+                <>
+                  <a href={dashboardHref} onClick={() => setMobileOpen(false)}
+                    className="w-full block px-4 py-3 rounded-xl text-sm font-medium text-[#374151] border border-gray-200 hover:bg-gray-50 text-center">
+                    Mi panel
+                  </a>
+                  <button onClick={handleSignOut}
+                    className="w-full px-4 py-3 rounded-xl text-sm font-medium text-red-600 border border-red-100 hover:bg-red-50 text-center">
+                    Cerrar sesión
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button onClick={() => { setShowLogin(true); setMobileOpen(false); }}
+                    className="w-full px-4 py-3 rounded-xl text-sm font-medium text-[#374151] border border-gray-200 hover:bg-gray-50 text-left">
+                    Iniciar sesión
+                  </button>
+                  <Link href="/registro/profesional" onClick={() => setMobileOpen(false)}
+                    className="w-full block px-4 py-3 rounded-full bg-[#009FD9] text-white text-sm font-bold text-center hover:bg-[#0089bb] transition-colors">
+                    Registrarse como profesional
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         </div>

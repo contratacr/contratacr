@@ -44,8 +44,8 @@ export function LeaveReviewModal({
       setError("Por favor selecciona una calificación.");
       return;
     }
-    if (comment.trim().length < 20) {
-      setError("El comentario debe tener al menos 20 caracteres.");
+    if (!comment.trim()) {
+      setError("Por favor escribí un comentario.");
       return;
     }
     setError(null);
@@ -159,7 +159,6 @@ export function LeaveReviewModal({
                 placeholder="Cuéntanos sobre tu experiencia con este profesional..."
                 className="w-full resize-none rounded-xl border border-[#e5e7eb] bg-[#fafafa] px-3.5 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:border-[#009FD9] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20 transition"
               />
-              <p className="text-xs text-[#9ca3af] mt-1">Mínimo 20 caracteres</p>
             </div>
 
             {/* Error */}

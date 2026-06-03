@@ -49,7 +49,11 @@ export default function LoginPage() {
       return;
     }
     const role = authData.user?.user_metadata?.role;
-    router.push(role === "professional" ? "/dashboard/profesional" : "/dashboard/cliente");
+    // Hard redirect so the new page loads with the session already in cookies,
+    // preventing the navbar from flashing logged-out state.
+    window.location.href = role === "professional"
+      ? "/es/dashboard/profesional"
+      : "/es/dashboard/cliente";
   }
 
   async function handleGoogle() {

@@ -3,8 +3,8 @@
 import { useState, useRef, useEffect } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
-  X, Shield, Eye, EyeOff, CheckCircle2, Circle,
-  ArrowRight, ArrowLeft, AlertCircle, Loader2, Building2, RotateCcw,
+  X, Eye, EyeOff, CheckCircle2, Circle,
+  ArrowRight, ArrowLeft, AlertCircle, Loader2, RotateCcw,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
@@ -14,11 +14,11 @@ import { ContrataCRLogo } from "@/components/landing/landing-navbar";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type RegisterStep = "email" | "cedula" | "verify" | "password" | "otp";
+type RegisterStep = "email" | "cedula" | "password" | "otp";
 type ModalView = "register" | "login";
 
 const STEP_NUM: Record<RegisterStep, number> = {
-  email: 1, cedula: 2, verify: 3, password: 4, otp: 5,
+  email: 1, cedula: 2, password: 3, otp: 4,
 };
 
 export interface ClientRegistrationModalProps {
@@ -230,33 +230,9 @@ export function ClientRegistrationModal({
     onClose();
   }
 
-  // ── Cedula lookup ──────────────────────────────────────────────────────────
-
-  async function lookupCedula() {
-    const digits = cedula.replace(/\D/g, "");
-    if (digits.length < 9) return;
-    setLoadingCedula(true);
-    setCedulaError(null);
-    setFullName("");
-    try {
-      const res = await fetch(`/api/cedula/${digits}`);
-      if (res.ok) {
-        const data = await res.json();
-        setFullName(data.fullName);
-        setUseManualName(false);
-        setStep("verify");
-      } else if (res.status === 400) {
-        setCedulaError("Formato de cédula inválido. Verificá e intentá de nuevo.");
-      } else {
-        // 404 or 503 → manual name
-        setUseManualName(true);
-      }
-    } catch {
-      setUseManualName(true);
-    } finally {
-      setLoadingCedula(false);
-    }
-  }
+  // Cedula lookup removed — form uses manual name fields only.
+  // Re-activate when api.digital.go.cr credentials are available:
+  // async function lookupCedula() { ... }
 
   // ── Password validate ──────────────────────────────────────────────────────
 
@@ -280,7 +256,7 @@ export function ClientRegistrationModal({
     }
     setSubmitting(true);
     setError(null);
-    const resolved = useManualName ? manualName : fullName;
+    const resolved = manualName.trim() || fullName;
     const supabase = createClient();
     const { error: e } = await supabase.auth.signUp({
       email,
@@ -331,7 +307,6 @@ export function ClientRegistrationModal({
   const stepLabels: Record<RegisterStep, string> = {
     email:    "Correo",
     cedula:   "Identidad",
-    verify:   "Confirmar",
     password: "Contraseña",
     otp:      "Verificar",
   };
@@ -358,7 +333,7 @@ export function ClientRegistrationModal({
               <ContrataCRLogo />
               {view === "register" && step !== "otp" && (
                 <div className="flex items-center gap-1 ml-2">
-                  {[1, 2, 3, 4, 5].map((n) => (
+                  {[1, 2, 3, 4].map((n) => (
                     <span
                       key={n}
                       className={cn(
@@ -368,7 +343,7 @@ export function ClientRegistrationModal({
                     />
                   ))}
                   <span className="text-xs text-[#9ca3af] ml-1.5">
-                    {currentStepNum}/5
+                    {currentStepNum}/4
                   </span>
                 </div>
               )}
@@ -438,15 +413,13 @@ export function ClientRegistrationModal({
                 <div>
                   <h2 className="text-xl font-bold text-[#111827]">
                     {step === "email" && "Tu correo electrónico"}
-                    {step === "cedula" && "Tu cédula de identidad"}
-                    {step === "verify" && "Confirmá tu identidad"}
+                    {step === "cedula" && "Tu información personal"}
                     {step === "password" && "Creá tu contraseña"}
                     {step === "otp" && "Código de verificación"}
                   </h2>
                   <p className="text-sm text-[#6b7280] mt-1">
                     {step === "email" && "Ingresá el correo que usarás para tu cuenta."}
-                    {step === "cedula" && "Consultamos el Registro Civil para verificar tu identidad."}
-                    {step === "verify" && "Verificá que la información sea correcta."}
+                    {step === "cedula" && "Ingresá tu nombre completo y número de cédula."}
                     {step === "password" && "Elegí una contraseña segura para tu cuenta."}
                     {step === "otp" && "Ingresá el código de 6 dígitos enviado a tu correo."}
                   </p>
@@ -470,58 +443,25 @@ export function ClientRegistrationModal({
                   />
                 )}
 
-                {/* STEP: cedula */}
+                {/* STEP: cedula — manual name + cedula number only */}
                 {step === "cedula" && (
                   <div className="flex flex-col gap-4">
-                    <div className="bg-[#EBF5FB] rounded-xl p-3 border border-[#bfdbfe] flex items-start gap-2">
-                      <Shield className="h-4 w-4 text-[#009FD9] shrink-0 mt-0.5" />
-                      <p className="text-sm text-[#0089bb] font-medium">
-                        Información obtenida del Registro Civil de Costa Rica
-                      </p>
-                    </div>
                     <Input
-                      label="Número de cédula"
+                      label="Nombre completo *"
+                      placeholder="Juan Carlos Pérez González"
+                      value={manualName}
+                      onChange={(e) => setManualName(e.target.value)}
+                      autoFocus
+                    />
+                    <Input
+                      label="Número de cédula *"
                       placeholder="101234567"
-                      hint="Cédula CR (9 dígitos), DIMEX (11-12) o NITE (10)"
+                      hint="Cédula CR (9 dígitos) · DIMEX (11-12) · NITE (10)"
                       value={cedula}
-                      onChange={(e) => { setCedula(e.target.value); setCedulaError(null); setUseManualName(false); setFullName(""); }}
+                      onChange={(e) => { setCedula(e.target.value); setCedulaError(null); }}
                       error={cedulaError ?? undefined}
                       inputMode="numeric"
-                      rightIcon={loadingCedula ? <Loader2 className="h-4 w-4 animate-spin" /> : undefined}
                     />
-                    {useManualName && !loadingCedula && (
-                      <div className="flex flex-col gap-2">
-                        <p className="text-xs text-[#9ca3af]">
-                          No encontramos tu cédula. Ingresá tu nombre manualmente.
-                        </p>
-                        <Input
-                          label="Tu nombre completo"
-                          placeholder="Juan Carlos Pérez González"
-                          value={manualName}
-                          onChange={(e) => setManualName(e.target.value)}
-                        />
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* STEP: verify */}
-                {step === "verify" && (
-                  <div className="flex flex-col gap-4">
-                    <div className="rounded-2xl border-2 border-[#009FD9] bg-[#EBF5FB] p-5">
-                      <div className="flex items-center gap-2 mb-3">
-                        <Building2 className="h-4 w-4 text-[#009FD9]" />
-                        <p className="text-xs font-semibold text-[#009FD9] uppercase tracking-wide">
-                          Registro Civil de Costa Rica
-                        </p>
-                      </div>
-                      <p className="text-xs text-[#6b7280] mb-1">Nombre completo</p>
-                      <p className="text-xl font-bold text-[#111827]">{fullName}</p>
-                      <p className="text-xs text-[#9ca3af] mt-2">Cédula: {cedula}</p>
-                    </div>
-                    <p className="text-sm font-medium text-[#374151]">
-                      ¿Esta información es correcta?
-                    </p>
                   </div>
                 )}
 
@@ -581,8 +521,7 @@ export function ClientRegistrationModal({
                       onClick={() => {
                         setError(null);
                         if (step === "cedula") setStep("email");
-                        else if (step === "verify") { setStep("cedula"); setFullName(""); }
-                        else if (step === "password") setStep(fullName ? "verify" : "cedula");
+                        else if (step === "password") setStep("cedula");
                       }}
                     >
                       <ArrowLeft className="h-4 w-4" />
@@ -594,15 +533,13 @@ export function ClientRegistrationModal({
                     loading={submitting || loadingCedula}
                     disabled={
                       (step === "email" && !email.includes("@")) ||
-                      (step === "cedula" && cedula.replace(/\D/g, "").length < 9 && !useManualName) ||
-                      (step === "cedula" && useManualName && !manualName.trim()) ||
+                      (step === "cedula" && (!manualName.trim() || cedula.replace(/\D/g, "").length < 9)) ||
                       (step === "password" && (!isPasswordValid() || !confirmPassword))
                     }
                     onClick={() => {
                       setError(null);
                       if (step === "email") setStep("cedula");
-                      else if (step === "cedula") lookupCedula();
-                      else if (step === "verify") setStep("password");
+                      else if (step === "cedula") setStep("password");
                       else if (step === "password") handleSignUp();
                     }}
                   >

@@ -43,7 +43,7 @@ function LanguagePill() {
 }
 
 function UserMenu() {
-  const { user } = useAuth();
+  const { user, avatarUrl } = useAuth();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -61,7 +61,6 @@ function UserMenu() {
   const role = user.user_metadata?.role as string | undefined;
   const dashboardHref = role === "professional" ? "/dashboard/profesional" : "/dashboard/cliente";
   const initials = getInitials(user.user_metadata?.full_name ?? user.email ?? "?");
-  const avatarUrl = user.user_metadata?.avatar_url as string | undefined;
 
   async function handleSignOut() {
     setOpen(false);
@@ -77,7 +76,7 @@ function UserMenu() {
         className="flex items-center gap-1.5 px-2 py-1.5 rounded-xl hover:bg-gray-50 transition-colors"
       >
         <Avatar className="h-7 w-7">
-          <AvatarImage src={avatarUrl} />
+          <AvatarImage src={avatarUrl ?? undefined} />
           <AvatarFallback className="text-[11px] bg-[#009FD9] text-white font-semibold">
             {initials}
           </AvatarFallback>
