@@ -1,41 +1,92 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { Plus, X } from "lucide-react";
 
-type Period = "morning" | "afternoon" | "evening";
-type Day = "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday" | "sunday";
+type TimeRange = { start: string; end: string };
+type DaySchedule = { enabled: boolean; ranges: TimeRange[] };
+type WeeklySchedule = Record<string, DaySchedule>;
 
-type AvailabilityMap = Record<Day, Record<Period, boolean>>;
+const DAYS = [
+  { key: "lun", label: "Lunes" },
+  { key: "mar", label: "Martes" },
+  { key: "mie", label: "Miércoles" },
+  { key: "jue", label: "Jueves" },
+  { key: "vie", label: "Viernes" },
+  { key: "sab", label: "Sábado" },
+  { key: "dom", label: "Domingo" },
+];
 
-const DAYS: Day[] = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
-const PERIODS: Period[] = ["morning", "afternoon", "evening"];
+const DEFAULT_RANGE: TimeRange = { start: "08:00", end: "17:00" };
 
-const DEFAULT_AVAILABILITY: AvailabilityMap = Object.fromEntries(
-  DAYS.map((d) => [d, { morning: false, afternoon: false, evening: false }])
-) as AvailabilityMap;
+function buildDefaultSchedule(): WeeklySchedule {
+  return Object.fromEntries(
+    DAYS.map((d) => [d.key, { enabled: false, ranges: [{ ...DEFAULT_RANGE }] }])
+  );
+}
+
+function migrateOldFormat(raw: unknown): WeeklySchedule {
+  if (!raw || typeof raw !== "object") return buildDefaultSchedule();
+  const obj = raw as Record<string, unknown>;
+  // Already in new format (has 'enabled' key)
+  if ("lun" in obj && typeof (obj["lun"] as Record<string, unknown>)?.enabled === "boolean") {
+    return obj as unknown as WeeklySchedule;
+  }
+  // Old format (morning/afternoon/evening) → migrate to new format
+  return buildDefaultSchedule();
+}
 
 interface AvailabilityEditorProps {
   professionalId: string;
-  initialAvailability?: AvailabilityMap;
+  initialAvailability?: unknown;
 }
 
 export function AvailabilityEditor({ professionalId, initialAvailability }: AvailabilityEditorProps) {
-  const t = useTranslations("dashboard.pro.availability");
-  const [availability, setAvailability] = useState<AvailabilityMap>(
-    initialAvailability ?? DEFAULT_AVAILABILITY
+  const [schedule, setSchedule] = useState<WeeklySchedule>(
+    migrateOldFormat(initialAvailability)
   );
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  function toggle(day: Day, period: Period) {
-    setAvailability((prev) => ({
+  function toggleDay(key: string) {
+    setSchedule((prev) => ({
       ...prev,
-      [day]: { ...prev[day], [period]: !prev[day][period] },
+      [key]: { ...prev[key], enabled: !prev[key].enabled },
     }));
+    setSaved(false);
+  }
+
+  function updateRange(dayKey: string, index: number, field: "start" | "end", value: string) {
+    setSchedule((prev) => {
+      const ranges = [...prev[dayKey].ranges];
+      ranges[index] = { ...ranges[index], [field]: value };
+      return { ...prev, [dayKey]: { ...prev[dayKey], ranges } };
+    });
+    setSaved(false);
+  }
+
+  function addRange(dayKey: string) {
+    setSchedule((prev) => ({
+      ...prev,
+      [dayKey]: {
+        ...prev[dayKey],
+        ranges: [...prev[dayKey].ranges, { ...DEFAULT_RANGE }],
+      },
+    }));
+    setSaved(false);
+  }
+
+  function removeRange(dayKey: string, index: number) {
+    setSchedule((prev) => {
+      const ranges = prev[dayKey].ranges.filter((_, i) => i !== index);
+      return {
+        ...prev,
+        [dayKey]: { ...prev[dayKey], ranges: ranges.length ? ranges : [{ ...DEFAULT_RANGE }] },
+      };
+    });
     setSaved(false);
   }
 
@@ -44,7 +95,7 @@ export function AvailabilityEditor({ professionalId, initialAvailability }: Avai
     const supabase = createClient();
     await supabase
       .from("professionals")
-      .update({ availability })
+      .update({ availability: schedule })
       .eq("id", professionalId);
     setSaving(false);
     setSaved(true);
@@ -53,61 +104,102 @@ export function AvailabilityEditor({ professionalId, initialAvailability }: Avai
 
   return (
     <div>
-      <p className="text-sm text-[#6b7280] mb-5">{t("hint")}</p>
+      <p className="text-sm text-[#6b7280] mb-5">
+        Activá los días que trabajás y configurá tus horarios.
+      </p>
 
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[480px]">
-          <thead>
-            <tr>
-              <th className="text-left text-xs font-medium text-[#9ca3af] pb-3 pr-4 w-28" />
-              {PERIODS.map((period) => (
-                <th key={period} className="text-center text-xs font-semibold text-[#374151] pb-3 px-2">
-                  {t(`periods.${period}`)}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[#f3f4f6]">
-            {DAYS.map((day) => (
-              <tr key={day}>
-                <td className="py-3 pr-4 text-sm font-medium text-[#374151]">
-                  {t(`days.${day}`)}
-                </td>
-                {PERIODS.map((period) => {
-                  const active = availability[day][period];
-                  return (
-                    <td key={period} className="py-3 px-2 text-center">
-                      <button
-                        onClick={() => toggle(day, period)}
-                        className={cn(
-                          "w-10 h-10 rounded-xl border-2 transition-all duration-150 mx-auto flex items-center justify-center",
-                          active
-                            ? "bg-[#009FD9] border-[#009FD9] text-white"
-                            : "border-[#e5e7eb] text-[#d1d5db] hover:border-[#009FD9]/40"
-                        )}
-                        aria-label={`${t(`days.${day}`)} ${t(`periods.${period}`)}`}
-                      >
-                        {active ? (
-                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                          </svg>
-                        ) : null}
-                      </button>
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="flex flex-col gap-3">
+        {DAYS.map(({ key, label }) => {
+          const day = schedule[key];
+          return (
+            <div
+              key={key}
+              className={cn(
+                "rounded-xl border-2 transition-all",
+                day.enabled ? "border-[#009FD9] bg-[#EBF5FB]/40" : "border-[#e5e7eb] bg-white"
+              )}
+            >
+              {/* Day header */}
+              <div className="flex items-center gap-3 px-4 py-3">
+                <button
+                  type="button"
+                  onClick={() => toggleDay(key)}
+                  className={cn(
+                    "relative h-6 w-11 rounded-full transition-all duration-200 shrink-0",
+                    day.enabled ? "bg-[#009FD9]" : "bg-[#d1d5db]"
+                  )}
+                  aria-label={`${day.enabled ? "Desactivar" : "Activar"} ${label}`}
+                >
+                  <span
+                    className={cn(
+                      "absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all duration-200",
+                      day.enabled ? "left-5" : "left-0.5"
+                    )}
+                  />
+                </button>
+                <span
+                  className={cn(
+                    "text-sm font-semibold w-24",
+                    day.enabled ? "text-[#111827]" : "text-[#9ca3af]"
+                  )}
+                >
+                  {label}
+                </span>
+                {!day.enabled && (
+                  <span className="text-xs text-[#9ca3af]">No disponible</span>
+                )}
+              </div>
+
+              {/* Time ranges */}
+              {day.enabled && (
+                <div className="px-4 pb-3 flex flex-col gap-2">
+                  {day.ranges.map((range, i) => (
+                    <div key={i} className="flex items-center gap-2 flex-wrap">
+                      <input
+                        type="time"
+                        value={range.start}
+                        onChange={(e) => updateRange(key, i, "start", e.target.value)}
+                        className="h-9 px-3 rounded-xl border border-[#e5e7eb] bg-white text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+                      />
+                      <span className="text-[#9ca3af] text-sm">→</span>
+                      <input
+                        type="time"
+                        value={range.end}
+                        onChange={(e) => updateRange(key, i, "end", e.target.value)}
+                        className="h-9 px-3 rounded-xl border border-[#e5e7eb] bg-white text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+                      />
+                      {day.ranges.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeRange(key, i)}
+                          className="h-8 w-8 rounded-lg flex items-center justify-center text-[#9ca3af] hover:text-red-500 hover:bg-red-50 transition-colors"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => addRange(key)}
+                    className="flex items-center gap-1.5 text-xs font-medium text-[#009FD9] hover:underline mt-1 w-fit"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    Agregar horario
+                  </button>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       <div className="flex items-center gap-3 mt-6">
         <Button onClick={handleSave} loading={saving} disabled={saving}>
-          {saving ? t("saving") : saved ? t("saved") : t("save")}
+          {saving ? "Guardando…" : "Guardar horario"}
         </Button>
         {saved && (
-          <span className="text-sm text-emerald-600 font-medium">✓ {t("saved")}</span>
+          <span className="text-sm text-emerald-600 font-medium">✓ Horario guardado</span>
         )}
       </div>
     </div>

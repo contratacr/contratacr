@@ -51,7 +51,7 @@ export default function ProDashboardPage() {
     const supabase = createClient();
     supabase
       .from("professionals")
-      .select("*, profiles(*), categories(*)")
+      .select("*, profiles(*), categories(*), provincia_id, canton_id, address, service_type, category_id")
       .eq("profile_id", user.id)
       .single()
       .then(({ data }) => { setPro(data); setLoading(false); });
@@ -112,7 +112,7 @@ export default function ProDashboardPage() {
             <div className="flex items-center gap-2">
               {pro.slug && (
                 <Button variant="outline" size="sm" asChild>
-                  <a href={`/profesionales/${pro.slug}`} target="_blank" rel="noopener noreferrer">
+                  <a href={`/es/profesionales/${pro.slug}`} target="_blank" rel="noopener noreferrer">
                     <ExternalLink className="h-4 w-4" />
                     Ver mi perfil
                   </a>
@@ -159,12 +159,8 @@ export default function ProDashboardPage() {
                   {activeTab === "profile" && (
                     <ProfileEditor
                       professionalId={pro.id}
-                      initial={{
-                        bio: pro.bio ?? "",
-                        whatsapp: pro.whatsapp ?? "",
-                        hourlyRate: pro.hourly_rate,
-                        yearsExperience: pro.years_experience,
-                      }}
+                      profileId={user!.id}
+                      initial={pro}
                     />
                   )}
                   {activeTab === "photos" && (
