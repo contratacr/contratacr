@@ -80,7 +80,7 @@ function OtpStep({ email, onVerified }: { email: string; onVerified: () => void 
     const { error: e } = await supabase.auth.verifyOtp({ email, token, type: "signup" });
     setVerifying(false);
     if (e) {
-      setError("Código incorrecto o expirado.");
+      setError("Código incorrecto o expirado. Solicitá uno nuevo.");
       setDigits(["", "", "", "", "", ""]);
       setTimeout(() => refs.current[0]?.focus(), 50);
     } else {
@@ -140,12 +140,14 @@ function OtpStep({ email, onVerified }: { email: string; onVerified: () => void 
             ref={(el) => { refs.current[i] = el; }}
             type="text"
             inputMode="numeric"
+            pattern="[0-9]*"
             maxLength={6}
             value={d}
             onChange={(e) => handleChange(i, e.target.value)}
             onKeyDown={(e) => handleKeyDown(i, e)}
             disabled={verifying}
-            className="w-10 h-12 text-center text-lg font-bold border-2 rounded-xl border-[#e5e7eb] bg-white text-[#111827] focus:outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/20 transition-all disabled:opacity-60"
+            autoComplete={i === 0 ? "one-time-code" : "off"}
+            className="w-10 h-12 text-center text-lg font-bold border-2 rounded-xl border-[#e5e7eb] bg-white text-[#111827] focus:outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/20 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
           />
         ))}
       </div>

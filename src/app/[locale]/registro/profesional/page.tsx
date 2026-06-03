@@ -325,10 +325,7 @@ export default function RegisterProfessionalPage() {
         <Navbar />
         <main className="flex-1 flex items-center justify-center py-12 px-4">
           <div className="w-full max-w-sm">
-            <OtpVerification
-              email={otpEmail}
-              onVerified={() => router.push("/dashboard/profesional")}
-            />
+            <OtpVerification email={otpEmail} />
           </div>
         </main>
         <LandingFooter />
