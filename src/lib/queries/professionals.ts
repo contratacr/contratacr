@@ -123,16 +123,18 @@ export async function getProfessionalBySlug(
       const { createClient } = await import("@/lib/supabase/server");
       const supabase = await createClient();
 
+      // Use LEFT joins (not !inner) so missing categories/provincias/cantones
+      // rows don't silently drop the professional from results.
       const { data: pro, error } = await supabase
         .from("professionals")
         .select(
           `id, slug, hourly_rate, is_verified, is_featured, is_available,
            rating_avg, review_count, bio, whatsapp, years_experience, portfolio_urls,
-           profiles!inner(full_name, avatar_url),
-           categories!inner(id, icon),
-           provincias!inner(id, name),
-           cantones!inner(id, name),
-           reviews(id, rating, comment, created_at, profiles!inner(full_name, avatar_url))`
+           category_id,
+           profiles(full_name, avatar_url),
+           provincias(id, name),
+           cantones(id, name),
+           reviews(id, rating, comment, created_at, profiles(full_name, avatar_url))`
         )
         .eq("slug", slug)
         .single();
@@ -140,10 +142,10 @@ export async function getProfessionalBySlug(
       if (error || !pro) throw error ?? new Error("Not found");
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const reviews: Review[] = (pro.reviews as any[]).map((r: any) => ({
+      const reviews: Review[] = ((pro.reviews as any[]) ?? []).map((r: any) => ({
         id: r.id,
-        clientName: r.profiles.full_name,
-        clientAvatarUrl: r.profiles.avatar_url,
+        clientName: r.profiles?.full_name ?? "Cliente",
+        clientAvatarUrl: r.profiles?.avatar_url,
         rating: r.rating,
         comment: r.comment,
         createdAt: r.created_at,
@@ -152,21 +154,22 @@ export async function getProfessionalBySlug(
       return {
         id: pro.id,
         slug: pro.slug,
-        fullName: (pro.profiles as any).full_name,
-        avatarUrl: (pro.profiles as any).avatar_url,
-        categoryId: (pro.categories as any).id,
-        categoryIcon: (pro.categories as any).icon,
+        fullName: (pro.profiles as any)?.full_name ?? "Profesional",
+        avatarUrl: (pro.profiles as any)?.avatar_url ?? null,
+        // category_id is a plain text column — no join needed
+        categoryId: (pro as any).category_id ?? "",
+        categoryIcon: "",
         bio: pro.bio,
         whatsapp: pro.whatsapp,
-        provinceName: (pro.provincias as any).name,
-        cantonName: (pro.cantones as any).name,
-        ratingAvg: Number(pro.rating_avg),
-        reviewCount: pro.review_count,
+        provinceName: (pro.provincias as any)?.name ?? "",
+        cantonName: (pro.cantones as any)?.name ?? "",
+        ratingAvg: Number(pro.rating_avg ?? 0),
+        reviewCount: pro.review_count ?? 0,
         yearsExperience: pro.years_experience,
         hourlyRate: pro.hourly_rate,
-        isVerified: pro.is_verified,
-        isFeatured: pro.is_featured,
-        isAvailable: pro.is_available,
+        isVerified: pro.is_verified ?? false,
+        isFeatured: pro.is_featured ?? false,
+        isAvailable: pro.is_available ?? true,
         portfolioUrls: pro.portfolio_urls ?? [],
         reviews,
       };

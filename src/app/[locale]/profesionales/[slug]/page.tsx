@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { notFound } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
   MapPin, Shield, MessageCircle, ArrowLeft,
@@ -89,6 +88,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
   const tCat = useTranslations("categories");
   const [professional, setProfessional] = useState<ProfessionalDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [proNotFound, setProNotFound] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("servicios");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -99,9 +99,15 @@ export default function ProfilePage({ params }: ProfilePageProps) {
     async function load() {
       const { slug } = await params;
       const res = await fetch(`/api/professionals/${slug}`);
-      const pro: ProfessionalDetail | null = res.ok ? await res.json() : null;
+      if (!res.ok) {
+        setProNotFound(true);
+        setLoading(false);
+        return;
+      }
+      const pro: ProfessionalDetail | null = await res.json();
       if (!pro) {
-        notFound();
+        setProNotFound(true);
+        setLoading(false);
         return;
       }
       setProfessional(pro);
@@ -125,7 +131,29 @@ export default function ProfilePage({ params }: ProfilePageProps) {
     );
   }
 
-  if (!professional) return null;
+  if (proNotFound || !professional) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-1 flex flex-col items-center justify-center gap-4 px-4 text-center">
+          <div className="h-16 w-16 rounded-full bg-[#EBF5FB] flex items-center justify-center">
+            <span className="text-3xl">🔍</span>
+          </div>
+          <h1 className="text-2xl font-bold text-[#111827]">Profesional no encontrado</h1>
+          <p className="text-[#6b7280] text-sm max-w-sm">
+            El perfil que buscás no existe o fue eliminado. Podés buscar otros profesionales disponibles.
+          </p>
+          <Link
+            href="/buscar"
+            className="mt-2 inline-flex items-center gap-2 bg-[#009FD9] hover:bg-[#0089bb] text-white font-semibold px-6 py-3 rounded-full transition-colors text-sm"
+          >
+            Buscar profesionales
+          </Link>
+        </main>
+        <LandingFooter />
+      </div>
+    );
+  }
 
   const expYears = professional.yearsExperience ?? 0;
   const waLink = getWhatsAppLink(
@@ -186,10 +214,12 @@ export default function ProfilePage({ params }: ProfilePageProps) {
 
                   <div>
                     <h1 className="text-xl font-bold text-[#111827]">{professional.fullName}</h1>
-                    <Badge variant="default" className="mt-1 text-xs">
-                      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                      {tCat(professional.categoryId as any)}
-                    </Badge>
+                    {professional.categoryId && (
+                      <Badge variant="default" className="mt-1 text-xs">
+                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                        {tCat(professional.categoryId as any)}
+                      </Badge>
+                    )}
                   </div>
 
                   {professional.isVerified && (
@@ -260,7 +290,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                 {/* Agendar CTA */}
                 <BookingButton
                   professional={professional}
-                  categoryName={tCat(professional.categoryId as Parameters<typeof tCat>[0])}
+                  categoryName={professional.categoryId ? tCat(professional.categoryId as Parameters<typeof tCat>[0]) : ""}
                   variant="outline"
                   size="md"
                   className="w-full"

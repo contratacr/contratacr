@@ -34,6 +34,7 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
 
 export default function ProDashboardPage() {
   const t = useTranslations("dashboard.pro");
+  const tCat = useTranslations("categories");
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -51,7 +52,7 @@ export default function ProDashboardPage() {
     const supabase = createClient();
     supabase
       .from("professionals")
-      .select("*, profiles(*), categories(*), provincia_id, canton_id, address, service_type, category_id")
+      .select("*, profiles(*), provincia_id, canton_id, address, service_type, category_id")
       .eq("profile_id", user.id)
       .single()
       .then(({ data }) => { setPro(data); setLoading(false); });
@@ -104,7 +105,12 @@ export default function ProDashboardPage() {
               <div>
                 <h1 className="text-xl font-bold text-[#111827]">{pro.profiles?.full_name}</h1>
                 <div className="flex items-center gap-2 mt-1">
-                  <Badge variant="default">{pro.categories?.icon} {pro.categories?.name}</Badge>
+                  {pro.category_id && (
+                    <Badge variant="default">
+                      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                      {tCat(pro.category_id as any)}
+                    </Badge>
+                  )}
                   {pro.is_verified && <Badge variant="verified">Verificado</Badge>}
                 </div>
               </div>
