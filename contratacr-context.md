@@ -281,6 +281,32 @@ Adds `FOR UPDATE` policy on `professionals` so client-side saves
 - Removed `categories(*)` join — was rendering `[object Object]` / strange format under name
 - Now uses `tCat(pro.category_id)` directly (i18n translation for the category ID)
 
+## Sprint 5 Hotfix 2 (2026-06-03)
+
+### Auth / Session
+- Login page: `window.location.href` hard redirect after `signInWithPassword` — eliminates navbar flash of logged-out state on navigation
+- `useAuth` hook now fetches `profiles.avatar_url` after every auth state change (covers Cloudinary-uploaded photos; OAuth users fall back to `user_metadata.avatar_url`)
+- ProfileEditor: after photo upload, calls `supabase.auth.updateUser({ data: { avatar_url } })` so `onAuthStateChange` fires and the header avatar updates live without refresh
+- **OAuth identity linking**: enable "Allow automatic identity linking" in Supabase Dashboard → Authentication → Settings — this allows users who created an email/password account to sign in with Google/Facebook using the same email
+
+### LandingNavbar (home page header)
+- Now auth-aware via `useAuth()` — shows avatar dropdown + "Mi panel" when logged in
+- Mobile drawer also switches to "Mi panel" + "Cerrar sesión" when logged in
+- No more logged-out flash when clicking the ContrataCR logo
+
+### Identity verification form (ClientRegistrationModal)
+- Removed "Información obtenida del Registro Civil de Costa Rica" banner
+- Removed separate "verify" step (Registro Civil card branding)
+- Flow is now 4 steps: email → name + cédula (manual) → password → OTP
+- Cédula API lookup code preserved as comments for future activation
+
+### Review modal
+- Removed 20-character minimum on comment — only requires non-empty text
+
+### Category search
+- `searchProfessionals` removed `categories!inner` join — was silently dropping all professionals when the categories table has no row for a given `category_id`
+- Now uses `category_id` text column directly; LEFT joins for profiles/provincias/cantones
+
 ## Next Priorities
 
 1. Run migration 007 in Supabase SQL Editor (avatar_url column + email/cedula unique indices)
