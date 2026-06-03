@@ -391,19 +391,13 @@ export function LandingNavbar() {
               {/* Spacer */}
               <div className="flex-1" />
 
-              {/* Right actions: Unirse → Registrarse → Iniciar sesión → ES/EN */}
+              {/* Right actions: Registrarse como profesional → Iniciar sesión → ES/EN */}
               <div className="hidden lg:flex items-center gap-1 shrink-0">
                 <Link
                   href="/registro/profesional"
-                  className="text-sm font-medium px-3 py-2 text-[#374151] hover:text-[#1a2744] transition-colors whitespace-nowrap"
-                >
-                  Unirse como profesional
-                </Link>
-                <Link
-                  href="/registro"
                   className="ml-1 inline-flex items-center bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 rounded-full transition-all duration-150 active:scale-[0.97] shadow-sm hover:shadow-[0_4px_20px_rgba(0,159,217,0.35)] whitespace-nowrap"
                 >
-                  Registrarse
+                  Registrarse como profesional
                 </Link>
                 <button
                   onClick={() => setShowLogin(true)}
@@ -473,10 +467,10 @@ export function LandingNavbar() {
                 </div>
               </form>
 
-              {/* Right: Registrarse + lang toggle */}
+              {/* Right: Registrarse como profesional + lang toggle */}
               <div className="hidden sm:flex items-center gap-2 shrink-0">
                 <Link
-                  href="/registro"
+                  href="/registro/profesional"
                   className="inline-flex items-center bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-4 py-2 rounded-full transition-all duration-150 active:scale-[0.97] whitespace-nowrap"
                 >
                   Registrarse
@@ -515,9 +509,9 @@ export function LandingNavbar() {
                 className="w-full px-4 py-3 rounded-xl text-sm font-medium text-[#374151] border border-gray-200 hover:bg-gray-50 text-left">
                 Iniciar sesión
               </button>
-              <Link href="/registro" onClick={() => setMobileOpen(false)}
+              <Link href="/registro/profesional" onClick={() => setMobileOpen(false)}
                 className="w-full block px-4 py-3 rounded-full bg-[#009FD9] text-white text-sm font-bold text-center hover:bg-[#0089bb] transition-colors">
-                Registrarse
+                Registrarse como profesional
               </Link>
             </div>
           </div>

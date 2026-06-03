@@ -1,6 +1,6 @@
 # ContrataCR.com — Project Context
 
-_Last updated: 2026-06-02_
+_Last updated: 2026-06-02 (sprint 4 — auth, onboarding, inline client registration)_
 
 ---
 
@@ -66,9 +66,11 @@ contratacr/
 │   │   │   ├── page.tsx            # Landing page
 │   │   │   ├── buscar/page.tsx     # Search (Supabase / mock fallback)
 │   │   │   ├── profesionales/[slug]/page.tsx
-│   │   │   ├── registro/{page, profesional, cliente}/page.tsx
+│   │   │   ├── registro/{page→redirect, profesional}/page.tsx  # cliente→redirect, no standalone client reg
+│   │   │   ├── onboarding/page.tsx   # OAuth role selection (Busco profesionales / Soy profesional)
 │   │   │   └── login/page.tsx
-│   │   ├── api/cedula/[id]/route.ts  # Cédula lookup proxy
+│   │   ├── api/cedula/[id]/route.ts  # Cédula: Layer1=Ministerio Digital, Layer2=TSE scrape, Layer3=manual
+│   │   ├── api/professionals/[slug]/route.ts  # Client-side proxy for professional detail
 │   │   ├── layout.tsx              # Minimal root layout
 │   │   └── page.tsx                # Redirect → /es
 │   ├── i18n/
@@ -84,14 +86,16 @@ contratacr/
 │   │   └── utils.ts
 │   ├── components/
 │   │   ├── ui/                     # Button, Input, Badge, Card, Avatar, Select, StarRating
-│   │   ├── layout/                 # Navbar (+ language toggle), Footer
+│   │   ├── layout/                 # Navbar (session-aware: avatar+dashboard when logged in)
+│   │   ├── auth/                   # OtpVerification, ClientRegistrationModal (inline 5-step)
+│   │   ├── booking/                # BookingButton (auth-gated→ClientRegistrationModal), BookingModal
 │   │   ├── search/                 # HeroSearch, SearchFilters
-│   │   └── professionals/          # ProfessionalCard
+│   │   └── professionals/          # ProfessionalCard, ReviewSection, SaveableCard
 │   └── types/index.ts
 ├── messages/
 │   ├── es.json
 │   └── en.json
-├── middleware.ts                   # next-intl locale routing
+├── middleware.ts                   # next-intl i18n + Supabase session guard for /dashboard/*
 └── supabase/migrations/001_initial_schema.sql
 ```
 

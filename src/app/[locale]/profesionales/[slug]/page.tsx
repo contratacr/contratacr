@@ -18,6 +18,8 @@ import { MOCK_PROFESSIONALS } from "@/lib/data/mock-professionals";
 import { getInitials, getWhatsAppLink } from "@/lib/utils";
 import { ReviewSection } from "@/components/professionals/review-section";
 import { createClient } from "@/lib/supabase/client";
+import { BookingButton } from "@/components/booking/booking-button";
+import { ClientRegistrationModal } from "@/components/auth/client-registration-modal";
 import type { ProfessionalDetail } from "@/lib/queries/professionals";
 
 interface ProfilePageProps {
@@ -91,6 +93,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showAllServices, setShowAllServices] = useState(false);
+  const [showRegistration, setShowRegistration] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -233,16 +236,46 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                   </div>
                 )}
 
-                {/* WhatsApp CTA */}
-                <a
-                  href={waLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 w-full bg-[#25D366] hover:bg-[#1ebe5d] text-white font-bold py-3 rounded-xl transition-colors text-sm"
-                >
-                  <MessageCircle className="h-4 w-4" />
-                  Contactar por WhatsApp
-                </a>
+                {/* WhatsApp CTA — auth-gated */}
+                {isAuthenticated ? (
+                  <a
+                    href={waLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 w-full bg-[#25D366] hover:bg-[#1ebe5d] text-white font-bold py-3 rounded-xl transition-colors text-sm"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    Contactar por WhatsApp
+                  </a>
+                ) : (
+                  <button
+                    onClick={() => setShowRegistration(true)}
+                    className="flex items-center justify-center gap-2 w-full bg-[#25D366] hover:bg-[#1ebe5d] text-white font-bold py-3 rounded-xl transition-colors text-sm"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    Contactar por WhatsApp
+                  </button>
+                )}
+
+                {/* Agendar CTA */}
+                <BookingButton
+                  professional={professional}
+                  categoryName={tCat(professional.categoryId as Parameters<typeof tCat>[0])}
+                  variant="outline"
+                  size="md"
+                  className="w-full"
+                />
+
+                {/* Registration modal for non-logged-in WhatsApp click */}
+                <ClientRegistrationModal
+                  open={showRegistration}
+                  onClose={() => setShowRegistration(false)}
+                  onSuccess={() => {
+                    setShowRegistration(false);
+                    window.open(waLink, "_blank");
+                  }}
+                  professionalName={professional.fullName}
+                />
 
                 {/* Separator + dropdown */}
                 <div className="border-t border-[#f3f4f6] pt-3 relative">

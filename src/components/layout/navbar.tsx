@@ -171,15 +171,9 @@ export function Navbar() {
               <>
                 <Link
                   href="/registro/profesional"
-                  className="text-sm font-medium px-3 py-2 text-[#374151] hover:text-[#1a2744] transition-colors whitespace-nowrap"
-                >
-                  Unirse como profesional
-                </Link>
-                <Link
-                  href="/registro"
                   className="ml-1 inline-flex items-center bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 rounded-full transition-all duration-150 active:scale-[0.97] shadow-sm hover:shadow-[0_4px_20px_rgba(0,159,217,0.35)] whitespace-nowrap"
                 >
-                  {t("register")}
+                  Registrarse como profesional
                 </Link>
                 <Link
                   href="/login"
@@ -248,8 +242,8 @@ export function Navbar() {
                 <Link href="/login" onClick={() => setOpen(false)}>
                   <Button variant="outline" size="md" className="w-full">{t("login")}</Button>
                 </Link>
-                <Link href="/registro" onClick={() => setOpen(false)}>
-                  <Button size="md" className="w-full">{t("register")}</Button>
+                <Link href="/registro/profesional" onClick={() => setOpen(false)}>
+                  <Button size="md" className="w-full">Registrarse como profesional</Button>
                 </Link>
               </>
             )}

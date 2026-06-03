@@ -5,6 +5,8 @@ import { useTranslations } from "next-intl";
 import { CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BookingModal } from "./booking-modal";
+import { ClientRegistrationModal } from "@/components/auth/client-registration-modal";
+import { useAuth } from "@/hooks/use-auth";
 import type { ProfessionalCardData } from "@/lib/data/mock-professionals";
 
 interface BookingButtonProps {
@@ -22,26 +24,43 @@ export function BookingButton({
   size = "md",
   className,
 }: BookingButtonProps) {
-  const [open, setOpen] = useState(false);
+  const { user } = useAuth();
+  const [showRegistration, setShowRegistration] = useState(false);
+  const [showBooking, setShowBooking] = useState(false);
   const t = useTranslations("booking");
+
+  function handleClick() {
+    if (user) {
+      setShowBooking(true);
+    } else {
+      setShowRegistration(true);
+    }
+  }
 
   return (
     <>
-      <Button
-        variant={variant}
-        size={size}
-        className={className}
-        onClick={() => setOpen(true)}
-      >
+      <Button variant={variant} size={size} className={className} onClick={handleClick}>
         <CalendarDays className="h-4 w-4" />
         {t("requestService")}
       </Button>
 
+      {/* Step 1: inline registration for non-logged-in users */}
+      <ClientRegistrationModal
+        open={showRegistration}
+        onClose={() => setShowRegistration(false)}
+        onSuccess={() => {
+          setShowRegistration(false);
+          setShowBooking(true);
+        }}
+        professionalName={professional.fullName}
+      />
+
+      {/* Step 2: actual booking (for logged-in or post-registration) */}
       <BookingModal
         professional={professional}
         categoryName={categoryName}
-        open={open}
-        onClose={() => setOpen(false)}
+        open={showBooking}
+        onClose={() => setShowBooking(false)}
       />
     </>
   );
