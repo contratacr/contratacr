@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
-import { User, Image as ImageIcon, CalendarDays, Inbox, LogOut, ExternalLink, Wrench } from "lucide-react";
+import { User, Image as ImageIcon, CalendarDays, Inbox, LogOut, ExternalLink, Wrench, FolderOpen } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -15,13 +15,14 @@ import { PhotoGallery } from "@/components/dashboard/pro/photo-gallery";
 import { AvailabilityEditor } from "@/components/dashboard/pro/availability-editor";
 import { ServicesEditor } from "@/components/dashboard/pro/services-editor";
 import { BookingRequests } from "@/components/dashboard/pro/booking-requests";
+import { ProposalsTab } from "@/components/dashboard/pro/proposals-tab";
 import { createClient } from "@/lib/supabase/client";
 import { getInitials } from "@/lib/utils";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 
-type Tab = "profile" | "services" | "photos" | "availability" | "bookings";
+type Tab = "profile" | "services" | "photos" | "availability" | "bookings" | "proposals";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ProData = Record<string, any>;
@@ -32,6 +33,7 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
   photos: <ImageIcon className="h-4 w-4" />,
   availability: <CalendarDays className="h-4 w-4" />,
   bookings: <Inbox className="h-4 w-4" />,
+  proposals: <FolderOpen className="h-4 w-4" />,
 };
 
 const TAB_LABELS: Record<Tab, string> = {
@@ -40,6 +42,7 @@ const TAB_LABELS: Record<Tab, string> = {
   photos: "Fotos",
   availability: "Disponibilidad",
   bookings: "Solicitudes",
+  proposals: "Proyectos",
 };
 
 export default function ProDashboardPage() {
@@ -111,7 +114,7 @@ export default function ProDashboardPage() {
     );
   }
 
-  const TABS: Tab[] = ["profile", "services", "photos", "availability", "bookings"];
+  const TABS: Tab[] = ["profile", "services", "photos", "availability", "bookings", "proposals"];
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
@@ -217,6 +220,9 @@ export default function ProDashboardPage() {
                     />
                   )}
                   {activeTab === "bookings" && <BookingRequests />}
+                  {activeTab === "proposals" && (
+                    <ProposalsTab categoryId={pro.category_id} />
+                  )}
                 </CardContent>
               </Card>
             </div>

@@ -6,7 +6,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { professionalId, clientCedula, clientName, clientEmail, serviceDescription, preferredDateText } = body;
 
-    if (!professionalId || !clientCedula || !clientName || !serviceDescription) {
+    if (!professionalId || !serviceDescription) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
@@ -15,14 +15,19 @@ export async function POST(req: NextRequest) {
     // Check if an authenticated user session exists to link the booking
     const { data: { session } } = await supabase.auth.getSession();
 
+    const { scheduledDate, scheduledTime, clientPhone } = body;
+
     const { data, error } = await supabase.from("bookings").insert({
       professional_id: professionalId,
       client_id: session?.user?.id ?? null,
-      client_cedula: clientCedula,
+      client_cedula: clientCedula ?? null,
       client_name: clientName,
       client_email: clientEmail ?? null,
+      client_phone: clientPhone ?? null,
       service_description: serviceDescription,
       preferred_date_text: preferredDateText ?? null,
+      scheduled_date: scheduledDate ?? null,
+      scheduled_time: scheduledTime ?? null,
       status: "pending",
     }).select("id").single();
 

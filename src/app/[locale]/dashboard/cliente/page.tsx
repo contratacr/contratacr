@@ -1,71 +1,185 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { CalendarDays, Bookmark, LogOut, MessageCircle, Star } from "lucide-react";
+import {
+  CalendarDays, Bookmark, LogOut, Star, Bell, User, FolderOpen,
+  CheckCircle2, Clock, XCircle, MessageCircle, ChevronDown, ChevronUp,
+  Coins, MapPin, Send, Plus,
+} from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { createClient } from "@/lib/supabase/client";
-import { useRouter } from "@/i18n/navigation";
+import { useRouter, Link } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
+import { getInitials, getWhatsAppLink } from "@/lib/utils";
 import { LeaveReviewModal } from "@/components/professionals/leave-review-modal";
 import { SavedProfessionalsTab } from "@/components/professionals/saved-professionals-tab";
+import type { BookingStatus } from "@/types";
 
-type Tab = "bookings" | "saved";
+type Tab = "bookings" | "projects" | "saved" | "notifications" | "profile";
 
 type Booking = {
   id: string;
   professional_id: string;
   service_description: string;
   preferred_date_text?: string;
-  status: "pending" | "confirmed" | "cancelled" | "completed";
+  scheduled_date?: string;
+  scheduled_time?: string;
+  status: BookingStatus;
   created_at: string;
   professionals?: {
     slug: string;
-    profiles: { full_name: string };
-    categories: { id: string; icon: string };
+    whatsapp?: string;
+    profiles: { full_name: string; avatar_url?: string };
+    categories: { id: string; icon: string; name: string };
   };
 };
 
-const STATUS_VARIANT: Record<string, "warning" | "success" | "error" | "default"> = {
+type Project = {
+  id: string;
+  title: string;
+  description: string;
+  status: string;
+  created_at: string;
+  categories?: { name: string; icon: string };
+  provincias?: { name: string };
+  cantones?: { name: string };
+  proposals?: { id: string; status: string }[];
+};
+
+type Proposal = {
+  id: string;
+  price?: number;
+  message: string;
+  status: string;
+  created_at: string;
+  professionals?: {
+    id: string;
+    slug: string;
+    whatsapp?: string;
+    profiles: { full_name: string; avatar_url?: string };
+    categories: { name: string; icon: string };
+  };
+};
+
+type Notification = {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  read: boolean;
+  created_at: string;
+};
+
+const STATUS_ICON: Record<BookingStatus, React.ReactNode> = {
+  pending: <Clock className="h-3.5 w-3.5" />,
+  confirmed: <CheckCircle2 className="h-3.5 w-3.5" />,
+  in_progress: <Clock className="h-3.5 w-3.5" />,
+  completed: <CheckCircle2 className="h-3.5 w-3.5" />,
+  cancelled: <XCircle className="h-3.5 w-3.5" />,
+  rescheduled: <Clock className="h-3.5 w-3.5" />,
+};
+
+const STATUS_VARIANT: Record<BookingStatus, "warning" | "success" | "error" | "default"> = {
   pending: "warning",
   confirmed: "success",
-  cancelled: "error",
+  in_progress: "success",
   completed: "default",
+  cancelled: "error",
+  rescheduled: "warning",
+};
+
+const STATUS_LABEL: Record<BookingStatus, string> = {
+  pending: "Pendiente",
+  confirmed: "Confirmada",
+  in_progress: "En progreso",
+  completed: "Completada",
+  cancelled: "Cancelada",
+  rescheduled: "Reprogramada",
 };
 
 export default function ClientDashboardPage() {
-  const t = useTranslations("dashboard.client");
-  const tStatus = useTranslations("dashboard.client.bookings.status");
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const activeTab = (searchParams.get("tab") as Tab) ?? "bookings";
 
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [profileData, setProfileData] = useState<{ full_name: string; phone?: string; avatar_url?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [reviewModal, setReviewModal] = useState<{ professionalId: string; professionalName: string } | null>(null);
+  const [expandedProject, setExpandedProject] = useState<string | null>(null);
+  const [projectProposals, setProjectProposals] = useState<Record<string, Proposal[]>>({});
+  const [profileForm, setProfileForm] = useState({ full_name: "", phone: "" });
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileSaved, setProfileSaved] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     if (!authLoading && !user) router.push("/login");
   }, [user, authLoading, router]);
 
+  const fetchTab = useCallback(async () => {
+    if (!user) return;
+    setLoading(true);
+
+    if (activeTab === "bookings") {
+      const res = await fetch("/api/bookings?role=client");
+      const { bookings } = await res.json();
+      setBookings(bookings ?? []);
+    } else if (activeTab === "projects") {
+      const res = await fetch("/api/projects?role=client");
+      const { projects } = await res.json();
+      setProjects(projects ?? []);
+    } else if (activeTab === "notifications") {
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(30);
+      setNotifications(data ?? []);
+      setUnreadCount((data ?? []).filter((n) => !n.read).length);
+    } else if (activeTab === "profile") {
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("profiles")
+        .select("full_name, phone, avatar_url")
+        .eq("id", user.id)
+        .single();
+      setProfileData(data);
+      setProfileForm({ full_name: data?.full_name ?? "", phone: data?.phone ?? "" });
+    }
+
+    setLoading(false);
+  }, [user, activeTab]);
+
+  useEffect(() => {
+    fetchTab();
+  }, [fetchTab]);
+
+  // Unread count for notification badge
   useEffect(() => {
     if (!user) return;
-    fetch("/api/bookings?role=client")
-      .then((r) => r.json())
-      .then(({ bookings }) => setBookings(bookings ?? []))
-      .finally(() => setLoading(false));
+    const supabase = createClient();
+    supabase
+      .from("notifications")
+      .select("id", { count: "exact" })
+      .eq("user_id", user.id)
+      .eq("read", false)
+      .then(({ count }) => setUnreadCount(count ?? 0));
   }, [user]);
 
   function setTab(tab: Tab) {
-    const params = new URLSearchParams({ tab });
-    router.push(`/dashboard/cliente?${params}`);
+    router.push(`/dashboard/cliente?tab=${tab}`);
   }
 
   async function handleSignOut() {
@@ -74,7 +188,72 @@ export default function ClientDashboardPage() {
     router.push("/");
   }
 
-  if (authLoading || loading) {
+  async function cancelBooking(id: string) {
+    await fetch("/api/bookings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, status: "cancelled" }),
+    });
+    setBookings((prev) => prev.map((b) => (b.id === id ? { ...b, status: "cancelled" } : b)));
+  }
+
+  async function loadProposals(projectId: string) {
+    if (projectProposals[projectId]) return;
+    const res = await fetch(`/api/proposals?project=${projectId}`);
+    const { proposals } = await res.json();
+    setProjectProposals((prev) => ({ ...prev, [projectId]: proposals ?? [] }));
+  }
+
+  async function acceptProposal(proposalId: string, projectId: string) {
+    await fetch("/api/proposals", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: proposalId, status: "accepted" }),
+    });
+    setProjectProposals((prev) => ({
+      ...prev,
+      [projectId]: (prev[projectId] ?? []).map((p) =>
+        p.id === proposalId ? { ...p, status: "accepted" } : p
+      ),
+    }));
+  }
+
+  async function declineProposal(proposalId: string, projectId: string) {
+    await fetch("/api/proposals", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: proposalId, status: "declined" }),
+    });
+    setProjectProposals((prev) => ({
+      ...prev,
+      [projectId]: (prev[projectId] ?? []).map((p) =>
+        p.id === proposalId ? { ...p, status: "declined" } : p
+      ),
+    }));
+  }
+
+  async function markAllNotificationsRead() {
+    if (!user) return;
+    const supabase = createClient();
+    await supabase.from("notifications").update({ read: true }).eq("user_id", user.id).eq("read", false);
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    setUnreadCount(0);
+  }
+
+  async function saveProfile() {
+    if (!user) return;
+    setProfileSaving(true);
+    const supabase = createClient();
+    await supabase.from("profiles").update({
+      full_name: profileForm.full_name,
+      phone: profileForm.phone || null,
+    }).eq("id", user.id);
+    setProfileSaving(false);
+    setProfileSaved(true);
+    setTimeout(() => setProfileSaved(false), 3000);
+  }
+
+  if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
@@ -82,112 +261,466 @@ export default function ClientDashboardPage() {
     );
   }
 
-  const TABS: Tab[] = ["bookings", "saved"];
-  const TAB_ICONS: Record<Tab, React.ReactNode> = {
-    bookings: <CalendarDays className="h-4 w-4" />,
-    saved: <Bookmark className="h-4 w-4" />,
-  };
+  const displayName = user
+    ? (user.user_metadata?.full_name as string) || (user.user_metadata?.name as string) || user.email?.split("@")[0] || "Cliente"
+    : "";
+
+  const TABS: { key: Tab; icon: React.ReactNode; label: string }[] = [
+    { key: "bookings", icon: <CalendarDays className="h-4 w-4" />, label: "Solicitudes" },
+    { key: "projects", icon: <FolderOpen className="h-4 w-4" />, label: "Proyectos" },
+    { key: "saved", icon: <Bookmark className="h-4 w-4" />, label: "Guardados" },
+    {
+      key: "notifications",
+      icon: (
+        <div className="relative">
+          <Bell className="h-4 w-4" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-red-500 text-[8px] font-bold text-white">
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
+          )}
+        </div>
+      ),
+      label: "Notificaciones",
+    },
+    { key: "profile", icon: <User className="h-4 w-4" />, label: "Mi perfil" },
+  ];
+
+  const inputClass =
+    "w-full h-10 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
+
+  function formatBookingDate(b: Booking) {
+    if (b.scheduled_date) {
+      const [y, m, d] = b.scheduled_date.split("-").map(Number);
+      const label = new Date(y, m - 1, d).toLocaleDateString("es-CR", {
+        weekday: "short", day: "numeric", month: "short",
+      });
+      return b.scheduled_time ? `${label} · ${b.scheduled_time}` : label;
+    }
+    return b.preferred_date_text ?? null;
+  }
+
+  const upcomingBookings = bookings.filter((b) => ["pending", "confirmed", "in_progress"].includes(b.status));
+  const pastBookings = bookings.filter((b) => ["completed", "cancelled", "rescheduled"].includes(b.status));
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
       <Navbar />
       <main className="flex-1">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex items-center justify-between mb-8">
-            <h1 className="text-2xl font-bold text-[#111827]">{t("title")}</h1>
+
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <Avatar className="h-10 w-10">
+                <AvatarImage src={user?.user_metadata?.avatar_url as string} />
+                <AvatarFallback className="bg-[#EBF5FB] text-[#009FD9] font-semibold text-sm">
+                  {getInitials(displayName)}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <h1 className="text-lg font-bold text-[#111827]">Hola, {displayName.split(" ")[0]}</h1>
+                <p className="text-xs text-[#9ca3af]">Panel del cliente</p>
+              </div>
+            </div>
             <Button variant="ghost" size="sm" onClick={handleSignOut}>
               <LogOut className="h-4 w-4" />
               Salir
             </Button>
           </div>
 
-          {/* Tab nav */}
-          <div className="flex gap-1 bg-[#f3f4f6] rounded-xl p-1 mb-6">
-            {TABS.map((tab) => (
+          {/* Tab nav — scrollable on mobile */}
+          <div className="flex gap-1 bg-[#f3f4f6] rounded-xl p-1 mb-6 overflow-x-auto">
+            {TABS.map(({ key, icon, label }) => (
               <button
-                key={tab}
-                onClick={() => setTab(tab)}
+                key={key}
+                onClick={() => setTab(key)}
                 className={cn(
-                  "flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all",
-                  activeTab === tab
+                  "flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap shrink-0",
+                  activeTab === key
                     ? "bg-white text-[#009FD9] shadow-sm"
                     : "text-[#6b7280] hover:text-[#374151]"
                 )}
               >
-                {TAB_ICONS[tab]}
-                {t(`nav.${tab}`)}
+                {icon}
+                {label}
               </button>
             ))}
           </div>
 
-          {/* Bookings tab */}
-          {activeTab === "bookings" && (
-            <div>
-              <h2 className="text-lg font-semibold text-[#111827] mb-4">{t("bookings.title")}</h2>
-              {bookings.length === 0 ? (
-                <div className="text-center py-16">
-                  <CalendarDays className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
-                  <p className="font-medium text-[#374151]">{t("bookings.empty")}</p>
-                  <p className="text-sm text-[#9ca3af] mt-1">{t("bookings.emptyHint")}</p>
-                  <Button className="mt-5" asChild>
-                    <a href="/buscar">Buscar profesionales</a>
-                  </Button>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-4">
-                  {bookings.map((booking) => (
-                    <Card key={booking.id}>
-                      <CardContent className="p-5">
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2 flex-wrap">
-                              <span className="text-sm font-semibold text-[#111827]">
-                                {booking.professionals?.categories?.icon}{" "}
-                                {booking.professionals?.profiles?.full_name ?? "Profesional"}
-                              </span>
-                              <Badge variant={STATUS_VARIANT[booking.status]}>
-                                {tStatus(booking.status)}
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-[#374151] mb-1">{booking.service_description}</p>
-                            {booking.preferred_date_text && (
-                              <p className="text-xs text-[#6b7280]">📅 {booking.preferred_date_text}</p>
-                            )}
-                            <p className="text-xs text-[#9ca3af] mt-2">
-                              {new Date(booking.created_at).toLocaleDateString("es-CR")}
-                            </p>
+          {loading ? (
+            <div className="flex justify-center py-16">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
+            </div>
+          ) : (
+            <>
+              {/* BOOKINGS TAB */}
+              {activeTab === "bookings" && (
+                <div className="space-y-6">
+                  {bookings.length === 0 ? (
+                    <div className="text-center py-16">
+                      <CalendarDays className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
+                      <p className="font-medium text-[#374151]">No tenés solicitudes todavía</p>
+                      <p className="text-sm text-[#9ca3af] mt-1">Cuando solicités un servicio, aparecerá aquí.</p>
+                      <Button className="mt-5" asChild>
+                        <a href="/buscar">Buscar profesionales</a>
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      {upcomingBookings.length > 0 && (
+                        <div>
+                          <h2 className="text-sm font-semibold text-[#374151] mb-3">Próximas</h2>
+                          <div className="flex flex-col gap-3">
+                            {upcomingBookings.map((b) => (
+                              <Card key={b.id}>
+                                <CardContent className="p-5">
+                                  <div className="flex items-start justify-between gap-4">
+                                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                                      <Avatar className="h-10 w-10 shrink-0">
+                                        <AvatarImage src={b.professionals?.profiles?.avatar_url} />
+                                        <AvatarFallback className="bg-[#EBF5FB] text-[#009FD9] text-xs font-semibold">
+                                          {getInitials(b.professionals?.profiles?.full_name ?? "?")}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                                          <span className="text-sm font-semibold text-[#111827]">
+                                            {b.professionals?.categories?.icon} {b.professionals?.profiles?.full_name ?? "Profesional"}
+                                          </span>
+                                          <Badge variant={STATUS_VARIANT[b.status]}>
+                                            <span className="flex items-center gap-1">
+                                              {STATUS_ICON[b.status]}
+                                              {STATUS_LABEL[b.status]}
+                                            </span>
+                                          </Badge>
+                                        </div>
+                                        <p className="text-sm text-[#374151] line-clamp-2 mb-1">{b.service_description}</p>
+                                        {formatBookingDate(b) && (
+                                          <p className="text-xs text-[#6b7280]">📅 {formatBookingDate(b)}</p>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <div className="flex flex-col gap-2 shrink-0">
+                                      {b.status === "pending" && (
+                                        <Button size="sm" variant="outline" onClick={() => cancelBooking(b.id)}>
+                                          Cancelar
+                                        </Button>
+                                      )}
+                                      {b.professionals?.whatsapp && (
+                                        <Button size="sm" variant="whatsapp" asChild>
+                                          <a
+                                            href={getWhatsAppLink(b.professionals.whatsapp, `Hola, te contacto por mi solicitud en ContrataCR.`)}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                          >
+                                            <MessageCircle className="h-3.5 w-3.5" />
+                                            WA
+                                          </a>
+                                        </Button>
+                                      )}
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))}
                           </div>
-                          {booking.status === "completed" && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                setReviewModal({
-                                  professionalId: booking.professional_id,
-                                  professionalName:
-                                    booking.professionals?.profiles?.full_name ?? "Profesional",
-                                })
-                              }
-                            >
-                              <Star className="h-3.5 w-3.5" />
-                              {t("bookings.leaveReview")}
-                            </Button>
-                          )}
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                      )}
+
+                      {pastBookings.length > 0 && (
+                        <div>
+                          <h2 className="text-sm font-semibold text-[#374151] mb-3">Historial</h2>
+                          <div className="flex flex-col gap-3">
+                            {pastBookings.map((b) => (
+                              <Card key={b.id}>
+                                <CardContent className="p-5">
+                                  <div className="flex items-start justify-between gap-4">
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                                        <span className="text-sm font-semibold text-[#111827]">
+                                          {b.professionals?.categories?.icon} {b.professionals?.profiles?.full_name ?? "Profesional"}
+                                        </span>
+                                        <Badge variant={STATUS_VARIANT[b.status]}>
+                                          {STATUS_LABEL[b.status]}
+                                        </Badge>
+                                      </div>
+                                      <p className="text-sm text-[#374151] line-clamp-2">{b.service_description}</p>
+                                      <p className="text-xs text-[#9ca3af] mt-1">
+                                        {new Date(b.created_at).toLocaleDateString("es-CR")}
+                                      </p>
+                                    </div>
+                                    {b.status === "completed" && (
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() =>
+                                          setReviewModal({
+                                            professionalId: b.professional_id,
+                                            professionalName: b.professionals?.profiles?.full_name ?? "Profesional",
+                                          })
+                                        }
+                                      >
+                                        <Star className="h-3.5 w-3.5" />
+                                        Reseña
+                                      </Button>
+                                    )}
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
               )}
-            </div>
-          )}
 
-          {/* Saved tab */}
-          {activeTab === "saved" && (
-            <div>
-              <h2 className="text-lg font-semibold text-[#111827] mb-4">{t("saved.title")}</h2>
-              <SavedProfessionalsTab />
-            </div>
+              {/* PROJECTS TAB */}
+              {activeTab === "projects" && (
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-semibold text-[#111827]">Mis proyectos</h2>
+                    <Button size="sm" asChild>
+                      <a href="/publicar-proyecto">
+                        <Plus className="h-4 w-4" />
+                        Publicar proyecto
+                      </a>
+                    </Button>
+                  </div>
+
+                  {projects.length === 0 ? (
+                    <div className="text-center py-16">
+                      <FolderOpen className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
+                      <p className="font-medium text-[#374151]">No publicaste ningún proyecto todavía</p>
+                      <p className="text-sm text-[#9ca3af] mt-1">
+                        Publicá un proyecto para recibir propuestas de profesionales.
+                      </p>
+                      <Button className="mt-5" asChild>
+                        <a href="/publicar-proyecto">Publicar proyecto</a>
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-4">
+                      {projects.map((project) => {
+                        const isExpanded = expandedProject === project.id;
+                        const proposalList = projectProposals[project.id];
+                        const proposalCount = project.proposals?.length ?? 0;
+
+                        return (
+                          <Card key={project.id}>
+                            <CardContent className="p-5">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 flex-wrap mb-1">
+                                    {project.categories && <span>{project.categories.icon}</span>}
+                                    <span className="font-semibold text-sm text-[#111827]">{project.title}</span>
+                                    <Badge
+                                      variant={
+                                        project.status === "open" ? "success"
+                                          : project.status === "in_progress" ? "warning"
+                                          : "default"
+                                      }
+                                    >
+                                      {project.status === "open" ? "Abierto" : project.status === "in_progress" ? "En progreso" : project.status === "completed" ? "Completado" : "Cancelado"}
+                                    </Badge>
+                                  </div>
+                                  <p className="text-sm text-[#6b7280] line-clamp-2 mb-2">{project.description}</p>
+                                  <div className="flex items-center gap-3 text-xs text-[#9ca3af]">
+                                    {(project.provincias?.name || project.cantones?.name) && (
+                                      <span className="flex items-center gap-1">
+                                        <MapPin className="h-3 w-3" />
+                                        {[project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ")}
+                                      </span>
+                                    )}
+                                    <span>{proposalCount} propuesta{proposalCount !== 1 ? "s" : ""}</span>
+                                  </div>
+                                </div>
+                                {proposalCount > 0 && (
+                                  <button
+                                    onClick={async () => {
+                                      if (!isExpanded) await loadProposals(project.id);
+                                      setExpandedProject(isExpanded ? null : project.id);
+                                    }}
+                                    className="flex items-center gap-1 text-sm font-medium text-[#009FD9] hover:underline shrink-0"
+                                  >
+                                    {isExpanded ? (
+                                      <>Ver menos <ChevronUp className="h-4 w-4" /></>
+                                    ) : (
+                                      <>Ver propuestas <ChevronDown className="h-4 w-4" /></>
+                                    )}
+                                  </button>
+                                )}
+                              </div>
+
+                              {isExpanded && proposalList && (
+                                <div className="mt-4 pt-4 border-t border-[#f3f4f6] flex flex-col gap-3">
+                                  {proposalList.length === 0 ? (
+                                    <p className="text-sm text-[#9ca3af] text-center py-2">Sin propuestas todavía.</p>
+                                  ) : (
+                                    proposalList.map((proposal) => (
+                                      <div key={proposal.id} className="flex items-start justify-between gap-3 p-3 rounded-xl bg-[#f9fafb] border border-[#e5e7eb]">
+                                        <div className="flex items-start gap-2 flex-1 min-w-0">
+                                          <Avatar className="h-8 w-8 shrink-0">
+                                            <AvatarImage src={proposal.professionals?.profiles?.avatar_url} />
+                                            <AvatarFallback className="bg-[#EBF5FB] text-[#009FD9] text-xs font-semibold">
+                                              {getInitials(proposal.professionals?.profiles?.full_name ?? "?")}
+                                            </AvatarFallback>
+                                          </Avatar>
+                                          <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-semibold text-[#111827]">
+                                              {proposal.professionals?.profiles?.full_name}
+                                            </p>
+                                            {proposal.price && (
+                                              <p className="text-xs text-[#009FD9] font-medium">
+                                                ₡{proposal.price.toLocaleString("es-CR")}
+                                              </p>
+                                            )}
+                                            <p className="text-xs text-[#6b7280] mt-0.5 line-clamp-2">{proposal.message}</p>
+                                          </div>
+                                        </div>
+                                        <div className="flex flex-col gap-1.5 shrink-0">
+                                          {proposal.status === "pending" && (
+                                            <>
+                                              <Button size="sm" onClick={() => acceptProposal(proposal.id, project.id)}>
+                                                Aceptar
+                                              </Button>
+                                              <Button size="sm" variant="outline" onClick={() => declineProposal(proposal.id, project.id)}>
+                                                Rechazar
+                                              </Button>
+                                            </>
+                                          )}
+                                          {proposal.status === "accepted" && (
+                                            <Badge variant="success">Aceptada</Badge>
+                                          )}
+                                          {proposal.status === "declined" && (
+                                            <Badge variant="error">Rechazada</Badge>
+                                          )}
+                                          {proposal.professionals?.whatsapp && proposal.status === "accepted" && (
+                                            <Button size="sm" variant="whatsapp" asChild>
+                                              <a
+                                                href={getWhatsAppLink(proposal.professionals.whatsapp, `Hola, acepté tu propuesta en ContrataCR para el proyecto "${project.title}".`)}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                              >
+                                                <MessageCircle className="h-3.5 w-3.5" />
+                                                WA
+                                              </a>
+                                            </Button>
+                                          )}
+                                        </div>
+                                      </div>
+                                    ))
+                                  )}
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* SAVED TAB */}
+              {activeTab === "saved" && (
+                <div>
+                  <h2 className="text-lg font-semibold text-[#111827] mb-4">Profesionales guardados</h2>
+                  <SavedProfessionalsTab />
+                </div>
+              )}
+
+              {/* NOTIFICATIONS TAB */}
+              {activeTab === "notifications" && (
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-lg font-semibold text-[#111827]">Notificaciones</h2>
+                    {unreadCount > 0 && (
+                      <button
+                        onClick={markAllNotificationsRead}
+                        className="text-sm text-[#009FD9] hover:underline"
+                      >
+                        Marcar todo leído
+                      </button>
+                    )}
+                  </div>
+
+                  {notifications.length === 0 ? (
+                    <div className="text-center py-16">
+                      <Bell className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
+                      <p className="font-medium text-[#374151]">No tenés notificaciones</p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-2">
+                      {notifications.map((n) => (
+                        <div
+                          key={n.id}
+                          className={cn(
+                            "p-4 rounded-2xl border transition-colors",
+                            n.read ? "bg-white border-[#e5e7eb]" : "bg-[#EBF5FB] border-[#bfdbfe]"
+                          )}
+                        >
+                          <div className="flex items-start gap-3">
+                            {!n.read && <span className="mt-1.5 h-2 w-2 rounded-full bg-[#009FD9] shrink-0" />}
+                            <div className={cn("flex-1", n.read && "ml-5")}>
+                              <p className="text-sm font-semibold text-[#111827]">{n.title}</p>
+                              <p className="text-sm text-[#6b7280] mt-0.5">{n.message}</p>
+                              <p className="text-xs text-[#9ca3af] mt-1">
+                                {new Date(n.created_at).toLocaleDateString("es-CR", {
+                                  day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
+                                })}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* PROFILE TAB */}
+              {activeTab === "profile" && (
+                <div>
+                  <h2 className="text-lg font-semibold text-[#111827] mb-5">Mi información</h2>
+                  <div className="bg-white rounded-2xl border border-[#e5e7eb] p-6 flex flex-col gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-[#374151] block mb-1.5">Nombre completo</label>
+                      <input
+                        type="text"
+                        className={inputClass}
+                        value={profileForm.full_name}
+                        onChange={(e) => setProfileForm((f) => ({ ...f, full_name: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-[#374151] block mb-1.5">
+                        Teléfono <span className="text-[#9ca3af] font-normal">(opcional)</span>
+                      </label>
+                      <input
+                        type="tel"
+                        className={inputClass}
+                        placeholder="Ej: 8888-8888"
+                        value={profileForm.phone}
+                        onChange={(e) => setProfileForm((f) => ({ ...f, phone: e.target.value }))}
+                      />
+                    </div>
+                    <div className="flex items-center gap-3 mt-2">
+                      <Button onClick={saveProfile} loading={profileSaving} disabled={profileSaving}>
+                        Guardar cambios
+                      </Button>
+                      {profileSaved && <span className="text-sm text-emerald-600 font-medium">✓ ¡Cambios guardados!</span>}
+                    </div>
+                  </div>
+
+                  <div className="mt-4 bg-[#f9fafb] rounded-2xl border border-[#e5e7eb] p-4">
+                    <p className="text-xs text-[#9ca3af]">Correo: <span className="text-[#374151] font-medium">{user?.email}</span></p>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </div>
       </main>

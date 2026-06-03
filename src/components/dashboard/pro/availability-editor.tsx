@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { Plus, X } from "lucide-react";
+import { BlockedDatesEditor } from "./blocked-dates-editor";
 
 type TimeRange = { start: string; end: string };
 type DaySchedule = { enabled: boolean; ranges: TimeRange[] };
@@ -204,6 +205,8 @@ export function AvailabilityEditor({ professionalId, initialAvailability, onSave
           <span className="text-sm text-emerald-600 font-medium">✓ Horario guardado</span>
         )}
       </div>
+
+      <BlockedDatesEditor professionalId={professionalId} />
     </div>
   );
 }

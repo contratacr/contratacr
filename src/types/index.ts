@@ -42,13 +42,50 @@ export type Review = {
   client?: Profile;
 };
 
+export type BookingStatus = "pending" | "confirmed" | "in_progress" | "completed" | "cancelled" | "rescheduled";
+
 export type Booking = {
   id: string;
   professional_id: string;
   client_id: string;
   service_description: string;
   preferred_date?: string;
-  status: "pending" | "confirmed" | "cancelled" | "completed";
+  scheduled_date?: string;
+  scheduled_time?: string;
+  client_phone?: string;
+  notes?: string;
+  cancellation_reason?: string;
+  status: BookingStatus;
+  created_at: string;
+};
+
+export type ProjectStatus = "open" | "in_progress" | "completed" | "cancelled";
+
+export type Project = {
+  id: string;
+  client_id: string;
+  category_id?: string;
+  title: string;
+  description: string;
+  provincia_id?: string;
+  canton_id?: string;
+  budget_min?: number;
+  budget_max?: number;
+  timeline?: string;
+  photo_urls: string[];
+  status: ProjectStatus;
+  created_at: string;
+};
+
+export type ProposalStatus = "pending" | "accepted" | "declined";
+
+export type Proposal = {
+  id: string;
+  project_id: string;
+  professional_id: string;
+  price?: number;
+  message: string;
+  status: ProposalStatus;
   created_at: string;
 };
 

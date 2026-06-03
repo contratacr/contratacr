@@ -230,21 +230,29 @@
     },
     "client": {
       "title": "Create client account",
-      "subtitle": "One step. Free.",
-      "verifyNote": "We verify your identity with the Civil Registry",
-      "cedula": "ID number (cédula)",
-      "cedulaHint": "To verify your identity",
-      "verifiedName": "Verified name",
+      "subtitle": "Find professionals near you. Free.",
+      "oauthBanner": "Identity confirmed",
+      "fullName": "Full name",
+      "fullNamePlaceholder": "Your full name",
       "email": "Email",
+      "emailPlaceholder": "you@email.com",
       "password": "Password",
+      "passwordPlaceholder": "Minimum 8 characters",
+      "phone": "Phone",
+      "phonePlaceholder": "e.g. 8888-8888",
+      "optional": "(optional)",
+      "province": "Province",
+      "provincePlaceholder": "Select your province",
+      "canton": "Canton",
+      "cantonPlaceholder": "Select your canton",
       "terms": "By registering you accept our",
       "termsLink": "Terms of use",
-      "submit": "Create account",
+      "submit": "Create free account",
       "submitting": "Creating account...",
       "success": {
-        "title": "Account created!",
-        "desc": "You can now search and hire professionals in your area.",
-        "button": "Search professionals"
+        "title": "Welcome to ContrataCR!",
+        "desc": "Your account is ready. You can now search and hire professionals near you.",
+        "button": "Go to my dashboard"
       },
       "alreadyHaveAccount": "Already have an account?",
       "signIn": "Sign in"
@@ -338,7 +346,8 @@
         "profile": "My profile",
         "photos": "Photos",
         "availability": "Availability",
-        "bookings": "Requests"
+        "bookings": "Requests",
+        "proposals": "Projects"
       },
       "profile": {
         "title": "Profile information",
@@ -412,43 +421,144 @@
         "status": {
           "pending": "Pending",
           "confirmed": "Confirmed",
+          "in_progress": "In progress",
           "cancelled": "Cancelled",
-          "completed": "Completed"
+          "completed": "Completed",
+          "rescheduled": "Rescheduled"
         },
         "confirm": "Confirm",
         "markComplete": "Mark complete",
+        "markInProgress": "In progress",
         "cancel": "Cancel"
+      },
+      "proposals": {
+        "title": "Available projects",
+        "empty": "No projects available in your area",
+        "emptyHint": "Client projects in your category will appear here.",
+        "myProposals": "My proposals",
+        "browse": "Available projects",
+        "send": "Send proposal",
+        "price": "Your price (₡)",
+        "pricePlaceholder": "e.g. 50000",
+        "message": "Your message",
+        "messagePlaceholder": "Describe how you can help, your experience, and why they should choose you...",
+        "submit": "Send",
+        "submitting": "Sending...",
+        "sent": "Proposal sent",
+        "status": {
+          "pending": "Pending",
+          "accepted": "Accepted",
+          "declined": "Declined"
+        }
       }
     },
     "client": {
-      "title": "My requests",
+      "title": "Client dashboard",
       "nav": {
-        "bookings": "History",
-        "saved": "Saved"
+        "bookings": "Requests",
+        "projects": "Projects",
+        "saved": "Saved",
+        "notifications": "Notifications",
+        "profile": "My profile"
       },
       "bookings": {
-        "title": "Booking history",
+        "title": "My requests",
+        "upcoming": "Upcoming",
+        "past": "History",
         "empty": "No requests yet",
         "emptyHint": "When you request a service, it'll appear here.",
         "leaveReview": "Leave a review",
+        "cancel": "Cancel request",
         "status": {
           "pending": "Pending",
           "confirmed": "Confirmed",
+          "in_progress": "In progress",
+          "completed": "Completed",
           "cancelled": "Cancelled",
-          "completed": "Completed"
+          "rescheduled": "Rescheduled"
+        }
+      },
+      "projects": {
+        "title": "My projects",
+        "publish": "Post project",
+        "empty": "No projects posted yet",
+        "emptyHint": "Post a project to receive proposals from professionals.",
+        "proposals": "proposal(s)",
+        "noProposals": "No proposals yet",
+        "accept": "Accept proposal",
+        "decline": "Decline",
+        "status": {
+          "open": "Open",
+          "in_progress": "In progress",
+          "completed": "Completed",
+          "cancelled": "Cancelled"
         }
       },
       "saved": {
         "title": "Saved professionals",
         "empty": "No saved professionals yet",
         "emptyHint": "Save your favorite professionals to find them easily."
+      },
+      "notifications": {
+        "title": "Notifications",
+        "empty": "No notifications",
+        "markAllRead": "Mark all read"
+      },
+      "profile": {
+        "title": "My information",
+        "fullName": "Full name",
+        "phone": "Phone",
+        "phonePlaceholder": "e.g. 8888-8888",
+        "save": "Save changes",
+        "saving": "Saving...",
+        "saved": "Changes saved!"
       }
     }
   },
   "notifications": {
     "title": "Notifications",
     "empty": "No notifications",
-    "markAllRead": "Mark all read"
+    "markAllRead": "Mark all read",
+    "types": {
+      "booking_received": "New request",
+      "booking_confirmed": "Request confirmed",
+      "booking_completed": "Service completed",
+      "booking_cancelled": "Request cancelled",
+      "review_request": "Leave your review",
+      "proposal_received": "New proposal",
+      "proposal_accepted": "Proposal accepted!"
+    }
+  },
+  "projects": {
+    "title": "Post a project",
+    "subtitle": "Describe your project and receive proposals from professionals.",
+    "category": "Category",
+    "categoryPlaceholder": "Select a category",
+    "projectTitle": "Project title",
+    "titlePlaceholder": "e.g. Paint living and dining room, 50m²",
+    "description": "Detailed description",
+    "descPlaceholder": "Describe the work you need, materials, dimensions, special conditions, etc.",
+    "province": "Province",
+    "canton": "Canton",
+    "budget": "Estimated budget (₡)",
+    "budgetMin": "Minimum",
+    "budgetMax": "Maximum",
+    "budgetOptional": "Optional",
+    "timeline": "When do you need it?",
+    "timelines": {
+      "urgent": "Urgent (this week)",
+      "soon": "Soon (this month)",
+      "flexible": "I'm flexible",
+      "planning": "I'm planning ahead"
+    },
+    "submit": "Post project",
+    "submitting": "Posting...",
+    "cancel": "Cancel",
+    "success": {
+      "title": "Project posted!",
+      "desc": "Professionals in your area will see your project and can send you proposals.",
+      "dashboard": "View my projects"
+    }
   },
   "categories": {
     "plomeria": "Plumbing",

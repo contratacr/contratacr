@@ -1,6 +1,6 @@
 # ContrataCR.com — Project Context
 
-_Last updated: 2026-06-03 (sprint 6 — services feature, booking redesign, dashboard auto-refresh, UI polish)_
+_Last updated: 2026-06-03 (sprint 7 — complete client experience: registration, dashboard, calendar booking, projects, proposals)_
 
 ---
 
@@ -130,7 +130,7 @@ RESEND_API_KEY=
 |-------------|--------|-------|
 | Cédula / Registro Civil | Wired | Endpoint: api.digital.go.cr/v1/en/registry/{id}. Set CR_DIGITAL_API_CLIENT_ID + CR_DIGITAL_API_CLIENT_SECRET in .env.local |
 | Supabase Auth | Active | signUp, signInWithPassword, OAuth (Google, Facebook) |
-| Supabase DB | Active | profiles, professionals, reviews, bookings, notifications, saved_professionals |
+| Supabase DB | Active | profiles, professionals, reviews, bookings, notifications, saved_professionals, projects, proposals, blocked_dates |
 | Google Maps | Pending | NEXT_PUBLIC_GOOGLE_MAPS_API_KEY in .env — map UI not yet implemented |
 | Cloudinary | Pending | Keys in .env — upload UI not yet implemented |
 | Resend Email | Pending | RESEND_API_KEY in .env — contact form is console.log placeholder |
@@ -145,12 +145,13 @@ RESEND_API_KEY=
 | /buscar | Navbar | Footer | Search + filters + pagination |
 | /profesionales/[slug] | Navbar | LandingFooter | Profile — HuliHealth layout (sticky card + tabs) |
 | /registro | Navbar | LandingFooter | Client/Pro selector |
-| /registro/cliente | Navbar | LandingFooter | Client signup with cédula, password checklist |
+| /registro/cliente | Navbar | LandingFooter | Full client registration: name, email, password, phone, province, canton. OAuth pre-fill. |
 | /registro/profesional | Navbar | LandingFooter | 3-step pro wizard, WhatsApp smart field |
 | /login | Navbar | LandingFooter | Email + OAuth |
 | /olvide-contrasena | Navbar | LandingFooter | Password reset |
-| /dashboard/cliente | Navbar | — | Bookings + saved pros |
-| /dashboard/profesional | Navbar | — | Profile editor + bookings |
+| /dashboard/cliente | Navbar | — | 5 tabs: Solicitudes (upcoming/past), Proyectos (with proposals), Guardados, Notificaciones, Mi perfil |
+| /dashboard/profesional | Navbar | — | 6 tabs: Mi perfil, Servicios, Fotos, Disponibilidad+fechas bloqueadas, Solicitudes, Proyectos (proposals) |
+| /publicar-proyecto | Navbar | — | Client project publishing form → creates project in DB |
 | /como-funciona | LandingNavbar | LandingFooter | How it works |
 | /categorias | LandingNavbar | LandingFooter | All service categories (grouped) |
 | /ayuda | LandingNavbar | LandingFooter | Help center |
@@ -362,13 +363,97 @@ Adds `FOR UPDATE` policy on `professionals` so client-side saves
 ALTER TABLE professionals ADD COLUMN IF NOT EXISTS services JSONB DEFAULT '[]'::jsonb;
 ```
 
+## Sprint 7 Changes (2026-06-03)
+
+### Client Registration (`/registro/cliente`)
+- Complete registration form: full name, email, password, phone (optional), province/canton (optional)
+- OAuth pre-fill: authenticated users see identity confirmed banner with their name/photo
+- Saves to profiles table via `/api/register/client` (upsert with role='client')
+- Redirects to `/dashboard/cliente` on success
+
+### Client Dashboard (complete overhaul — 5 tabs)
+- **Solicitudes**: Upcoming (pending/confirmed/in_progress) + History (completed/cancelled/rescheduled)
+  - WhatsApp button to contact professional directly
+  - Cancel button for pending bookings
+  - Leave review button for completed bookings
+- **Proyectos**: Client's published projects with proposal management
+  - Expand project → see all proposals with price, message, professional info
+  - Accept/Decline proposals inline
+  - WhatsApp contact button for accepted proposals
+  - "Publicar proyecto" button links to /publicar-proyecto
+- **Guardados**: Existing saved professionals (unchanged)
+- **Notificaciones**: Full notification list with mark-all-read
+  - Unread badge on tab icon
+- **Mi perfil**: Edit full_name and phone, saved directly to profiles table
+
+### Project Publishing (`/publicar-proyecto`)
+- Form: category (optional), title, description, province/canton (optional), budget range (optional), timeline chips
+- Creates record in `projects` table via POST `/api/projects`
+- Success screen redirects to dashboard projects tab
+
+### Professional Dashboard — new "Proyectos" tab
+- Browse open projects from clients (filtered by professional's category)
+- "Proyectos disponibles" sub-view: see project details, budget, location, timeline, proposal count
+  - Expand to show inline proposal form (price + message)
+  - Submit proposal via POST `/api/proposals`
+- "Mis propuestas" sub-view: see status of all sent proposals (pending/accepted/declined)
+
+### Booking Modal — Calendar step added
+- New first step: interactive month calendar shows professional's available weekdays
+  - Days where `availability[dayKey].enabled = true` are clickable (blue on hover)
+  - Past days and blocked dates are grayed out/disabled
+  - Month navigation (prev/next, bounded to today → +3 months)
+  - Time slots appear below calendar when date selected (60-min slots from availability ranges)
+- Remaining flow unchanged: details → contact (guests) → success
+- Fetches `professionals.availability` and `blocked_dates` from Supabase on modal open
+- Booking now sends `scheduled_date` + `scheduled_time` in addition to `preferredDateText`
+
+### Availability Editor — Blocked Dates section added
+- New `BlockedDatesEditor` component shown below weekly schedule in the Disponibilidad tab
+- Add date picker → insert into `blocked_dates` table
+- List of blocked dates with delete button per entry
+- Public read access so booking calendar can query them
+
+### Booking states expanded
+- Added: `in_progress`, `rescheduled` to `bookings.status` enum
+- Professional dashboard: "En progreso" button after confirming, then "Completar"
+- Client dashboard shows all 6 states with appropriate icons and colors
+
+### Notifications
+- New types added to constraint: `booking_cancelled`, `booking_rescheduled`, `proposal_received`, `proposal_accepted`
+- Triggers: booking confirmed → notify client; proposal created → notify project owner; proposal accepted → notify professional
+- Client notifications tab shows real-time notification list from DB
+
+### DB (migration 010 — run in Supabase SQL Editor)
+```sql
+-- File: supabase/migrations/010_client_experience.sql
+-- 1. bookings: + scheduled_date, scheduled_time, client_phone, notes, cancellation_reason
+--             status expanded to include 'in_progress', 'rescheduled'
+-- 2. projects table: client_id, category_id, title, description, location, budget, timeline, status
+-- 3. proposals table: project_id, professional_id, price, message, status (pending/accepted/declined)
+-- 4. blocked_dates table: professional_id, blocked_date (unique per pro)
+-- 5. notifications CHECK constraint expanded with new types
+-- 6. Triggers: on_booking_confirmed, on_proposal_created, on_proposal_accepted
+```
+
+### API Routes added
+- `POST /api/register/client` — upsert client profile
+- `GET/POST /api/projects` — browse/create projects
+- `GET/POST/PATCH /api/proposals` — manage proposals (mine=true for pro's own)
+- `PATCH /api/bookings` — updated to support new statuses
+
+### i18n
+- `es.json` + `en.json`: new keys for `dashboard.client.*`, `dashboard.pro.proposals.*`, `projects.*`, `notifications.types.*`, updated `registration.client.*`, updated `dashboard.pro.bookings.status.*`
+
 ## Next Priorities
 
 1. **Run migration 007** in Supabase SQL Editor (avatar_url + email/cedula unique indices)
 2. **Run migration 008** in Supabase SQL Editor (professionals UPDATE RLS policy)
 3. **Run migration 009** in Supabase SQL Editor (professionals.services JSONB column)
-4. Set `CLOUDINARY_CLOUD_NAME / CLOUDINARY_API_KEY / CLOUDINARY_API_SECRET` in Vercel env vars
-5. Enable "Allow automatic identity linking" in Supabase Auth settings (OAuth + email/password same email)
-6. Google Maps integration on /buscar (split view list + map)
-7. OTP email verification — configure Supabase SMTP via Resend
-8. Payment/subscription system (freemium model)
+4. **Run migration 010** in Supabase SQL Editor (client experience — projects, proposals, blocked_dates, booking upgrades)
+5. Set `CLOUDINARY_CLOUD_NAME / CLOUDINARY_API_KEY / CLOUDINARY_API_SECRET` in Vercel env vars
+6. Enable "Allow automatic identity linking" in Supabase Auth settings (OAuth + email/password same email)
+7. Add "Publicar proyecto" link to navbar for logged-in clients
+8. Email notifications via Resend (booking confirmed, proposal received)
+9. Google Maps integration on /buscar
+10. Payment/subscription system (freemium model)

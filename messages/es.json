@@ -230,21 +230,29 @@
     },
     "client": {
       "title": "Crear cuenta de cliente",
-      "subtitle": "Un solo paso. Gratis.",
-      "verifyNote": "Verificamos tu identidad con el Registro Civil",
-      "cedula": "Número de cédula",
-      "cedulaHint": "Para verificar tu identidad",
-      "verifiedName": "Nombre verificado",
+      "subtitle": "Encontrá profesionales cerca de vos. Gratis.",
+      "oauthBanner": "Identidad confirmada",
+      "fullName": "Nombre completo",
+      "fullNamePlaceholder": "Tu nombre completo",
       "email": "Correo electrónico",
+      "emailPlaceholder": "tu@email.com",
       "password": "Contraseña",
+      "passwordPlaceholder": "Mínimo 8 caracteres",
+      "phone": "Teléfono",
+      "phonePlaceholder": "Ej: 8888-8888",
+      "optional": "(opcional)",
+      "province": "Provincia",
+      "provincePlaceholder": "Seleccioná tu provincia",
+      "canton": "Cantón",
+      "cantonPlaceholder": "Seleccioná tu cantón",
       "terms": "Al registrarte aceptás nuestros",
       "termsLink": "Términos de uso",
-      "submit": "Crear cuenta",
+      "submit": "Crear cuenta gratis",
       "submitting": "Creando cuenta...",
       "success": {
-        "title": "¡Cuenta creada!",
-        "desc": "Ya podés buscar y contratar profesionales en tu zona.",
-        "button": "Buscar profesionales"
+        "title": "¡Bienvenido a ContrataCR!",
+        "desc": "Tu cuenta está lista. Ahora podés buscar y contratar profesionales cerca de vos.",
+        "button": "Ir a mi panel"
       },
       "alreadyHaveAccount": "¿Ya tenés cuenta?",
       "signIn": "Iniciá sesión"
@@ -338,7 +346,8 @@
         "profile": "Mi perfil",
         "photos": "Fotos",
         "availability": "Disponibilidad",
-        "bookings": "Solicitudes"
+        "bookings": "Solicitudes",
+        "proposals": "Proyectos"
       },
       "profile": {
         "title": "Información del perfil",
@@ -412,43 +421,144 @@
         "status": {
           "pending": "Pendiente",
           "confirmed": "Confirmada",
+          "in_progress": "En progreso",
           "cancelled": "Cancelada",
-          "completed": "Completada"
+          "completed": "Completada",
+          "rescheduled": "Reprogramada"
         },
         "confirm": "Confirmar",
         "markComplete": "Completar",
+        "markInProgress": "En progreso",
         "cancel": "Cancelar"
+      },
+      "proposals": {
+        "title": "Proyectos disponibles",
+        "empty": "No hay proyectos disponibles en tu zona",
+        "emptyHint": "Los proyectos de clientes en tu categoría aparecerán aquí.",
+        "myProposals": "Mis propuestas",
+        "browse": "Proyectos disponibles",
+        "send": "Enviar propuesta",
+        "price": "Tu precio (₡)",
+        "pricePlaceholder": "Ej: 50000",
+        "message": "Tu mensaje",
+        "messagePlaceholder": "Describí cómo podés ayudar, tu experiencia, y por qué elegirte...",
+        "submit": "Enviar",
+        "submitting": "Enviando...",
+        "sent": "Propuesta enviada",
+        "status": {
+          "pending": "Pendiente",
+          "accepted": "Aceptada",
+          "declined": "Rechazada"
+        }
       }
     },
     "client": {
-      "title": "Mis solicitudes",
+      "title": "Panel del cliente",
       "nav": {
-        "bookings": "Historial",
-        "saved": "Guardados"
+        "bookings": "Solicitudes",
+        "projects": "Proyectos",
+        "saved": "Guardados",
+        "notifications": "Notificaciones",
+        "profile": "Mi perfil"
       },
       "bookings": {
-        "title": "Historial de solicitudes",
+        "title": "Mis solicitudes",
+        "upcoming": "Próximas",
+        "past": "Historial",
         "empty": "No tenés solicitudes todavía",
-        "emptyHint": "Cuando solicites un servicio, aparecerá aquí.",
+        "emptyHint": "Cuando solicités un servicio, aparecerá aquí.",
         "leaveReview": "Dejar reseña",
+        "cancel": "Cancelar solicitud",
         "status": {
           "pending": "Pendiente",
           "confirmed": "Confirmada",
+          "in_progress": "En progreso",
+          "completed": "Completada",
           "cancelled": "Cancelada",
-          "completed": "Completada"
+          "rescheduled": "Reprogramada"
+        }
+      },
+      "projects": {
+        "title": "Mis proyectos",
+        "publish": "Publicar proyecto",
+        "empty": "No publicaste ningún proyecto todavía",
+        "emptyHint": "Publicá un proyecto para recibir propuestas de profesionales.",
+        "proposals": "propuesta(s)",
+        "noProposals": "Sin propuestas todavía",
+        "accept": "Aceptar propuesta",
+        "decline": "Rechazar",
+        "status": {
+          "open": "Abierto",
+          "in_progress": "En progreso",
+          "completed": "Completado",
+          "cancelled": "Cancelado"
         }
       },
       "saved": {
         "title": "Profesionales guardados",
         "empty": "No guardaste ningún profesional todavía",
         "emptyHint": "Guardá tus profesionales favoritos para encontrarlos fácil."
+      },
+      "notifications": {
+        "title": "Notificaciones",
+        "empty": "No tenés notificaciones",
+        "markAllRead": "Marcar todo leído"
+      },
+      "profile": {
+        "title": "Mi información",
+        "fullName": "Nombre completo",
+        "phone": "Teléfono",
+        "phonePlaceholder": "Ej: 8888-8888",
+        "save": "Guardar cambios",
+        "saving": "Guardando...",
+        "saved": "¡Cambios guardados!"
       }
     }
   },
   "notifications": {
     "title": "Notificaciones",
     "empty": "No tenés notificaciones",
-    "markAllRead": "Marcar todo leído"
+    "markAllRead": "Marcar todo leído",
+    "types": {
+      "booking_received": "Nueva solicitud",
+      "booking_confirmed": "Solicitud confirmada",
+      "booking_completed": "Servicio completado",
+      "booking_cancelled": "Solicitud cancelada",
+      "review_request": "Dejá tu reseña",
+      "proposal_received": "Nueva propuesta",
+      "proposal_accepted": "¡Propuesta aceptada!"
+    }
+  },
+  "projects": {
+    "title": "Publicar proyecto",
+    "subtitle": "Describí tu proyecto y recibí propuestas de profesionales.",
+    "category": "Categoría",
+    "categoryPlaceholder": "Seleccioná una categoría",
+    "projectTitle": "Título del proyecto",
+    "titlePlaceholder": "Ej: Pintura de sala y comedor, 50m²",
+    "description": "Descripción detallada",
+    "descPlaceholder": "Describí el trabajo que necesitás, materiales, dimensiones, condiciones especiales, etc.",
+    "province": "Provincia",
+    "canton": "Cantón",
+    "budget": "Presupuesto estimado (₡)",
+    "budgetMin": "Mínimo",
+    "budgetMax": "Máximo",
+    "budgetOptional": "Opcional",
+    "timeline": "¿Cuándo lo necesitás?",
+    "timelines": {
+      "urgent": "Urgente (esta semana)",
+      "soon": "Pronto (este mes)",
+      "flexible": "Soy flexible",
+      "planning": "Estoy planificando"
+    },
+    "submit": "Publicar proyecto",
+    "submitting": "Publicando...",
+    "cancel": "Cancelar",
+    "success": {
+      "title": "¡Proyecto publicado!",
+      "desc": "Los profesionales de tu zona verán tu proyecto y podrán enviarte propuestas.",
+      "dashboard": "Ver mis proyectos"
+    }
   },
   "categories": {
     "plomeria": "Plomería",
