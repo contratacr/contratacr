@@ -1,6 +1,6 @@
 # ContrataCR.com — Project Context
 
-_Last updated: 2026-06-02 (sprint 4 — auth, onboarding, inline client registration)_
+_Last updated: 2026-06-02 (sprint 5 — registration overhaul, weekly availability, profile editor)_
 
 ---
 
@@ -216,11 +216,47 @@ mecanica, hojalateria, electricidad_automotriz, tapiceria, detailing, cambio_lla
 
 ---
 
+## Sprint 5 Changes (2026-06-02)
+
+### Registration overhaul (`/registro/profesional`)
+- Step 0: Manual name fields (Nombre, Primer apellido, Segundo apellido, Cédula) — no API lookup
+  Cédula API code preserved as comments, ready to activate when api.digital.go.cr credentials arrive
+- Step 1: 12 grouped service categories (SelectGroup/SelectLabel), mobile/fixed service type
+  checkboxes, address field for fixed-location services, province + canton
+- Step 2: Optional profile photo upload (Cloudinary), bio, years experience, hourly rate
+- No role selection screen — email/password users always register as professionals here
+
+### API routes
+- `/api/register/professional` now **upserts** the profile (resilient if DB trigger fails),
+  checks cedula duplicates, handles existing professional records, stores serviceType + address
+- `/api/upload/photo` new route: validates file type/size, uploads to Cloudinary, returns URL
+
+### Dashboard
+- `ProfileEditor` expanded: name, photo, category, province/canton, address, bio, whatsapp, rates
+  Updates both professionals + profiles tables. Photo upload via Cloudinary.
+- `AvailabilityEditor` replaced with weekly schedule: 7-day toggle + time range pickers (HH:MM → HH:MM),
+  multiple ranges per day ("+ Agregar horario"), migrates old morning/afternoon/evening format
+- "Ver mi perfil público" button now opens `/es/profesionales/[slug]` (locale-prefixed)
+
+### DB (migration 007 — run in Supabase SQL Editor)
+```sql
+-- File: supabase/migrations/007_unique_constraints_and_new_columns.sql
+-- profiles.avatar_url (text)
+-- professionals.service_type (text, default 'mobile')
+-- professionals.address (text)
+-- UNIQUE index on profiles.email (partial)
+-- UNIQUE index on profiles.cedula (partial)
+-- RLS UPDATE policy on profiles
+```
+
+### Duplicate error messages
+- Email already registered → "Este correo ya está registrado. ¿Querés iniciar sesión?"
+- Cédula already registered → "Esta cédula ya está registrada en ContrataCR."
+
 ## Next Priorities
 
-1. Google Maps integration on /buscar (split view list + map)
-2. OTP email verification on registration
-3. Professional dashboard fully functional
-4. Booking flow with inline cédula verification
-5. Payment/subscription system (freemium model)
-6. Native mobile app
+1. Run migration 007 in Supabase SQL Editor
+2. Google Maps integration on /buscar (split view list + map)
+3. OTP email verification — configure Supabase SMTP (Resend) and enable email confirmation
+4. Payment/subscription system (freemium model)
+5. Native mobile app
