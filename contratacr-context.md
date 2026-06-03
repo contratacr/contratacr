@@ -1,6 +1,6 @@
 # ContrataCR.com — Project Context
 
-_Last updated: 2026-05-31_
+_Last updated: 2026-06-02_
 
 ---
 
@@ -120,51 +120,103 @@ RESEND_API_KEY=
 
 ---
 
-## Cédula Lookup
+## API Integrations Status
 
-**Endpoint:** `GET https://apis.digital.go.cr/sl/personas/{cedula}`
-**Auth:** `client_id` + `client_secret` headers (register at api.digital.go.cr — free for nonprofits/startups)
-**Our route:** `/api/cedula/[id]` — server-side proxy; falls back to mock if env vars not set
-**Status:** Route created; activate by setting `CR_DIGITAL_API_CLIENT_ID` + `CR_DIGITAL_API_CLIENT_SECRET`
-
----
-
-## Feature Roadmap
-
-### Phase 1a — MVP ✅
-- [x] Next.js scaffold + design system (Button, Input, Badge, Card, Avatar, Select, StarRating)
-- [x] Landing page + search + professional profiles + registration + login
-- [x] CR geography data (7 provincias, 82 cantones)
-- [x] Supabase schema + migrations + RLS
-
-### Phase 1b — Current Sprint ✅
-- [x] next-intl i18n (ES default / EN toggle)
-- [x] Language toggle in navbar (cookie + localStorage)
-- [x] All UI copy in messages/es.json + messages/en.json
-- [x] Supabase client/server wired; /buscar + profiles use real data (mock fallback)
-- [x] Cédula API route (proxies api.digital.go.cr)
-- [x] English identifiers throughout codebase
-
-### Phase 2
-- [ ] Professional dashboard (stats, availability calendar)
-- [ ] Boosted listings / featured slots (monetization)
-- [ ] Email notifications (Resend)
-- [ ] Google Maps service coverage
-- [ ] Native mobile (iOS + Android)
+| Integration | Status | Notes |
+|-------------|--------|-------|
+| Cédula / Registro Civil | Wired | Endpoint: api.digital.go.cr/v1/en/registry/{id}. Set CR_DIGITAL_API_CLIENT_ID + CR_DIGITAL_API_CLIENT_SECRET in .env.local |
+| Supabase Auth | Active | signUp, signInWithPassword, OAuth (Google, Facebook) |
+| Supabase DB | Active | profiles, professionals, reviews, bookings, notifications, saved_professionals |
+| Google Maps | Pending | NEXT_PUBLIC_GOOGLE_MAPS_API_KEY in .env — map UI not yet implemented |
+| Cloudinary | Pending | Keys in .env — upload UI not yet implemented |
+| Resend Email | Pending | RESEND_API_KEY in .env — contact form is console.log placeholder |
 
 ---
 
-## Key Constraints
-- No in-app chat or payments — WhatsApp contact, SINPE Móvil externally
-- Cédula required on registration (both roles) → name auto-filled from Registro Civil
-- Search filtered by provincia + cantón (not generic location)
-- UX: ≤3 onboarding steps, thumb-friendly, mobile-first
-- Monetization: free launch, freemium — no hard paywalls until PMF
+## Pages Built
+
+| Route | Navbar | Footer | Notes |
+|-------|--------|--------|-------|
+| / | LandingNavbar | LandingFooter | Full landing page |
+| /buscar | Navbar | Footer | Search + filters + pagination |
+| /profesionales/[slug] | Navbar | LandingFooter | Profile — HuliHealth layout (sticky card + tabs) |
+| /registro | Navbar | LandingFooter | Client/Pro selector |
+| /registro/cliente | Navbar | LandingFooter | Client signup with cédula, password checklist |
+| /registro/profesional | Navbar | LandingFooter | 3-step pro wizard, WhatsApp smart field |
+| /login | Navbar | LandingFooter | Email + OAuth |
+| /olvide-contrasena | Navbar | LandingFooter | Password reset |
+| /dashboard/cliente | Navbar | — | Bookings + saved pros |
+| /dashboard/profesional | Navbar | — | Profile editor + bookings |
+| /como-funciona | LandingNavbar | LandingFooter | How it works |
+| /categorias | LandingNavbar | LandingFooter | All service categories (grouped) |
+| /ayuda | LandingNavbar | LandingFooter | Help center |
+| /contacto | LandingNavbar | LandingFooter | Contact form |
+| /not-found | Navbar | LandingFooter | 404 page |
 
 ---
 
-## Monetization
-1. **Free:** Basic profile, searchable
-2. **Pro ₡9,900/month:** Highlighted profile, portfolio, priority ranking
-3. **Featured slots:** Top-of-results paid placement
-4. **Future:** Volume subscription tiers
+## Complete Services Categories (12 groups, 90+ categories)
+
+### Hogar y construcción
+plomeria, electricidad, construccion, pintura, carpinteria, remodelacion, techos, pisos, impermeabilizacion, fumigacion, cerrajeria, aire_acondicionado, calentadores, ventanas_puertas, soldadura, gypsum
+
+### Jardín y exterior
+jardineria, poda_arboles, paisajismo, limpieza_piscinas, riego_automatizado, control_plagas
+
+### Limpieza
+limpieza, limpieza_oficinas, desinfeccion, lavado_alfombras, limpieza_post_construccion, lavado_vehiculos
+
+### Tecnología
+reparacion_computadoras, redes_internet, camaras_seguridad, domotica, desarrollo_web, diseno_grafico, diseno_apps, soporte_tecnico, impresion_3d, audio_video
+
+### Servicios profesionales
+contabilidad, legal, ingenieria_civil, arquitectura, topografia, consultoria, traduccion, recursos_humanos, marketing_digital, fotografia, produccion_video, bienes_raices
+
+### Salud y bienestar
+entrenamiento_personal, nutricion, masajes, psicologia, fisioterapia, enfermeria, cuidado_adultos, cuidado_infantil, veterinaria, peluqueria_canina
+
+### Belleza y estética
+peluqueria, maquillaje, unhas, pestanas, depilacion, estetica_facial, bronceado
+
+### Educación
+tutorias, idiomas, musica, matematicas, preparacion_universitaria, clases_manejo, clases_cocina
+
+### Mudanzas y transporte
+mudanzas, fletes, mensajeria, transporte_mascotas
+
+### Eventos
+fotografia_eventos, videografia, dj_sonido, catering, decoracion, animacion_infantil, bartending
+
+### Seguridad
+guardas_seguridad, alarmas, cctv, control_acceso
+
+### Automotriz
+mecanica, hojalateria, electricidad_automotriz, tapiceria, detailing, cambio_llantas
+
+---
+
+## Design Decisions
+
+- Brand color: #009FD9 (was #2563EB until Sprint 3)
+- Font: Inter (all weights 400-900)
+- Logo: Text-only wordmark "ContrataCR" — TODO: AI design team
+- No informal emojis — Lucide icons only
+- Landing navbar: fixed + IntersectionObserver compact mode
+- Inner pages navbar: sticky, same visual design as landing
+- Both navbars: lg: breakpoint (1024px)
+- Footer: LandingFooter on all pages (including login, registro, olvide-contrasena, not-found)
+- Marquee: between hero and categories (repositioned Sprint 3)
+- Password fields: live PasswordChecklist + show/hide toggle (Eye/EyeOff)
+- WhatsApp field: +506 prefix badge + 8-digit validation + formatted preview
+- Profile page: HuliHealth layout — sticky left card + right tabbed content
+
+---
+
+## Next Priorities
+
+1. Google Maps integration on /buscar (split view list + map)
+2. OTP email verification on registration
+3. Professional dashboard fully functional
+4. Booking flow with inline cédula verification
+5. Payment/subscription system (freemium model)
+6. Native mobile app
