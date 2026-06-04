@@ -98,7 +98,7 @@ export default function ComoFuncionaPage() {
 
       {/* Two paths */}
       <section className="pb-20 px-4">
-        <div className="mx-auto max-w-5xl">
+        <div className="mx-auto max-w-4xl">
           <FadeInUp>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
@@ -187,16 +187,16 @@ export default function ComoFuncionaPage() {
 
       {/* Para profesionales */}
       <section className="py-20 px-4" style={{ background: "#EBF5FB" }}>
-        <div className="mx-auto max-w-5xl">
+        <div className="mx-auto max-w-4xl">
           <FadeInUp>
-            <div className="max-w-2xl mx-auto text-center">
+            <div className="text-center">
               <span className="inline-block text-xs font-bold uppercase tracking-widest text-[#009FD9] bg-white px-4 py-1.5 rounded-full mb-4">
                 Para profesionales
               </span>
               <h2 className="text-3xl font-extrabold text-[#1a2744] mb-4">
                 ¿Sos profesional? Registrá tu perfil gratis.
               </h2>
-              <p className="text-gray-500 mb-8 text-sm leading-relaxed">
+              <p className="text-gray-500 mb-8 text-sm leading-relaxed max-w-xl mx-auto">
                 Creá tu perfil en minutos y empezá a recibir clientes directos en Costa Rica.
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
@@ -248,7 +248,7 @@ export default function ComoFuncionaPage() {
 
       {/* FAQ */}
       <section className="py-20 px-4 bg-white">
-        <div className="mx-auto max-w-2xl">
+        <div className="mx-auto max-w-4xl">
           <FadeInUp>
             <h2 className="text-3xl font-extrabold text-[#1a2744] mb-2 text-center">
               Preguntas frecuentes

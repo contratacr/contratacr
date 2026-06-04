@@ -140,15 +140,16 @@ const NAV_MENUS: NavMenu[] = [
       {
         heading: "Aprendé",
         links: [
-          { label: "Cómo funciona",   href: "/como-funciona" },
-          { label: "Soporte",         href: "/soporte" },
+          { label: "Cómo funciona",    href: "/como-funciona" },
+          { label: "Centro de ayuda",  href: "/ayuda" },
+          { label: "Soporte",          href: "/soporte" },
         ],
       },
       {
         heading: "Profesionales",
         links: [
-          { label: "Registrá tu perfil",   href: "/registro/profesional" },
-          { label: "Cómo atraer clientes", href: "/como-funciona" },
+          { label: "Registrá tu perfil",    href: "/registro/profesional" },
+          { label: "Cómo atraer clientes",  href: "/atraer-clientes" },
         ],
       },
     ],

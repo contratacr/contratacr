@@ -1,6 +1,6 @@
 # ContrataCR.com — Project Context
 
-_Last updated: 2026-06-04 (sprint 9 — in-app support form, category system rethink with keyword search, searchable CategorySearch combobox, Google Maps LocationPicker for fixed-location pros, smart keyword matching in search, migration 012)_
+_Last updated: 2026-06-04 (sprint 10 — footer redesign (dark, clean), help center real content, removed all commission/subscription mentions, como-funciona containers unified to max-w-4xl, new /atraer-clientes page, navbar Recursos links all real)_
 
 ---
 

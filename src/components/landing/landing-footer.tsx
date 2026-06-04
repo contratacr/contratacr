@@ -34,7 +34,7 @@ function LinkedInIcon() {
 
 const SOCIAL_LINKS = [
   { label: "Instagram", href: "#", Icon: InstagramIcon },
-  { label: "X / Twitter", href: "#", Icon: XIcon },
+  { label: "X", href: "#", Icon: XIcon },
   { label: "Facebook", href: "#", Icon: FacebookIcon },
   { label: "LinkedIn", href: "#", Icon: LinkedInIcon },
 ];
@@ -44,49 +44,45 @@ const COLUMNS = [
     heading: "Para clientes",
     links: [
       { label: "Buscar profesionales", href: "/buscar" },
-      { label: "Cómo funciona",       href: "/como-funciona" },
-      { label: "Registrate gratis",   href: "/registro" },
-      { label: "Obtener la app",      href: "#app" },
-      { label: "Estimá costos",       href: "/guias/precios" },
-      { label: "Centro de recursos",  href: "/guias" },
+      { label: "Publicar un proyecto",  href: "/publicar-proyecto" },
+      { label: "Cómo funciona",         href: "/como-funciona" },
+      { label: "Centro de ayuda",       href: "/ayuda" },
     ],
   },
   {
     heading: "Para profesionales",
     links: [
-      { label: "Registrá tu perfil",   href: "/registro/profesional" },
-      { label: "Cómo funciona",        href: "/como-funciona" },
-      { label: "Comunidad de pros",    href: "/comunidad" },
-      { label: "Recursos para pros",   href: "/recursos" },
-      { label: "Reseñas de pros",      href: "/reseñas" },
-      { label: "App para profesionales", href: "#app" },
+      { label: "Registrá tu perfil",    href: "/registro/profesional" },
+      { label: "Cómo atraer clientes",  href: "/atraer-clientes" },
+      { label: "Cómo funciona",         href: "/como-funciona" },
     ],
   },
   {
-    heading: "Soporte",
+    heading: "ContrataCR",
     links: [
-      { label: "Contactar soporte",   href: "/soporte" },
-      { label: "Cómo funciona",       href: "/como-funciona" },
-      { label: "Términos de uso",     href: "/terminos" },
-      { label: "Privacidad",          href: "/privacidad" },
+      { label: "Soporte",         href: "/soporte" },
+      { label: "Términos de uso", href: "/terminos" },
+      { label: "Privacidad",      href: "/privacidad" },
     ],
   },
 ];
 
 export function LandingFooter() {
   return (
-    <footer className="bg-[#f8f9fa] border-t border-gray-100">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
+    <footer className="bg-[#111827] text-white">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-14 pb-8">
 
-          {/* Brand column */}
-          <div className="sm:col-span-2 lg:col-span-1">
-            <ContrataCRLogo className="mb-4" />
-            <p className="text-sm font-semibold text-gray-500 mb-1">ContrataCR — Consideralo hecho.</p>
-            <p className="text-xs text-gray-400 leading-relaxed mb-5 max-w-[220px]">
-              El mercado de servicios profesionales exclusivo para Costa Rica. Verificados con cédula, sin intermediarios.
+        {/* Main grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-10 pb-10 border-b border-white/10">
+
+          {/* Brand column — spans 2 cols on lg */}
+          <div className="lg:col-span-2">
+            <ContrataCRLogo className="mb-4 [&_span]:text-white [&_.text-\[\#009FD9\]]:text-[#38bdf8]" />
+            <p className="text-sm text-white/50 leading-relaxed mb-6 max-w-[260px]">
+              El mercado de servicios profesionales exclusivo para Costa Rica. Gratuito para clientes y profesionales, sin comisiones ni cargos de ningún tipo.
             </p>
-            <div className="flex items-center gap-2.5">
+            {/* Social */}
+            <div className="flex items-center gap-2">
               {SOCIAL_LINKS.map(({ label, href, Icon }) => (
                 <a
                   key={label}
@@ -94,7 +90,7 @@ export function LandingFooter() {
                   aria-label={label}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-9 h-9 flex items-center justify-center rounded-xl bg-white border border-gray-100 text-gray-400 hover:text-[#009FD9] hover:border-[#009FD9]/20 hover:bg-[#EBF5FB] transition-all"
+                  className="w-9 h-9 flex items-center justify-center rounded-xl bg-white/10 text-white/50 hover:bg-[#009FD9]/20 hover:text-[#38bdf8] transition-all"
                 >
                   <Icon />
                 </a>
@@ -102,13 +98,19 @@ export function LandingFooter() {
             </div>
           </div>
 
+          {/* Link columns */}
           {COLUMNS.map((col) => (
             <div key={col.heading}>
-              <h3 className="text-xs font-bold uppercase tracking-widest text-[#1a2744] mb-4">{col.heading}</h3>
+              <h3 className="text-xs font-bold uppercase tracking-widest text-white/40 mb-4">
+                {col.heading}
+              </h3>
               <ul className="space-y-3">
                 {col.links.map(({ label, href }) => (
                   <li key={label}>
-                    <Link href={href} className="text-sm text-gray-400 hover:text-[#009FD9] transition-colors">
+                    <Link
+                      href={href}
+                      className="text-sm text-white/60 hover:text-white transition-colors"
+                    >
                       {label}
                     </Link>
                   </li>
@@ -119,9 +121,19 @@ export function LandingFooter() {
         </div>
 
         {/* Bottom bar */}
-        <div className="border-t border-gray-100 mt-12 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-gray-300">© {new Date().getFullYear()} ContrataCR, S.A. Todos los derechos reservados.</p>
-          <p className="text-xs text-gray-300">Diseñado y desarrollado en Costa Rica</p>
+        <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p className="text-xs text-white/25">
+            © {new Date().getFullYear()} ContrataCR. Todos los derechos reservados.
+          </p>
+          <div className="flex items-center gap-4">
+            <span className="text-xs text-white/25">Diseñado y desarrollado en Costa Rica 🇨🇷</span>
+            <a
+              href="mailto:soportecontratacr@hotmail.com"
+              className="text-xs text-white/40 hover:text-white/70 transition-colors"
+            >
+              soportecontratacr@hotmail.com
+            </a>
+          </div>
         </div>
       </div>
     </footer>
