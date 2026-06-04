@@ -1,6 +1,6 @@
 # ContrataCR.com — Project Context
 
-_Last updated: 2026-06-04 (sprint 7 hotfix 2 — OAuth PKCE callback fixed, onboarding race fixed, avatar pre-fill, brand marquee)_
+_Last updated: 2026-06-04 (sprint 8 — navbar fixes, como-funciona redesign, client photo/email settings, pro dashboard redirect, publicar-proyecto static categories, Google Maps wired, migration 011)_
 
 ---
 
