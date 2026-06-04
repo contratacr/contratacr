@@ -16,23 +16,30 @@ interface LocationPickerProps {
   apiKey?: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type GMaps = any;
+
 const COSTA_RICA_CENTER = { lat: 9.7489, lng: -83.7534 };
 
 export function LocationPicker({ value, onChange, apiKey }: LocationPickerProps) {
   const mapRef = useRef<HTMLDivElement>(null);
-  const markerRef = useRef<google.maps.Marker | null>(null);
-  const mapInstanceRef = useRef<google.maps.Map | null>(null);
-  const geocoderRef = useRef<google.maps.Geocoder | null>(null);
-  const [scriptLoaded, setScriptLoaded] = useState(false);
+  const markerRef = useRef<GMaps>(null);
+  const mapInstanceRef = useRef<GMaps>(null);
+  const geocoderRef = useRef<GMaps>(null);
   const [locating, setLocating] = useState(false);
   const [addressInput, setAddressInput] = useState(value?.formattedAddress ?? "");
   const [geocoding, setGeocoding] = useState(false);
   const effectiveKey = apiKey ?? process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function getMaps(): any {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (window as any).google?.maps;
+  }
+
   function initMap() {
     if (!mapRef.current || mapInstanceRef.current) return;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const maps = (window as any).google?.maps;
+    const maps = getMaps();
     if (!maps) return;
 
     const center = value ? { lat: value.lat, lng: value.lng } : COSTA_RICA_CENTER;
@@ -47,54 +54,51 @@ export function LocationPicker({ value, onChange, apiKey }: LocationPickerProps)
       styles: [{ featureType: "poi.business", stylers: [{ visibility: "off" }] }],
     });
     mapInstanceRef.current = map;
-
     geocoderRef.current = new maps.Geocoder();
 
-    // Drop initial marker if value exists
     if (value) {
-      placeMarker(new maps.LatLng(value.lat, value.lng), maps);
+      placeMarker(new maps.LatLng(value.lat, value.lng));
     }
 
-    // Click on map to pick location
-    map.addListener("click", (e: google.maps.MapMouseEvent) => {
+    map.addListener("click", (e: { latLng: GMaps }) => {
       if (!e.latLng) return;
-      placeMarker(e.latLng, maps);
+      placeMarker(e.latLng);
       reverseGeocode(e.latLng);
     });
-
-    setScriptLoaded(true);
   }
 
-  function placeMarker(latLng: google.maps.LatLng, maps?: typeof google.maps) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const M = maps ?? (window as any).google?.maps;
-    if (!M || !mapInstanceRef.current) return;
+  function placeMarker(latLng: GMaps) {
+    const maps = getMaps();
+    if (!maps || !mapInstanceRef.current) return;
 
-    if (markerRef.current) {
-      markerRef.current.setMap(null);
-    }
-    const marker = new M.Marker({
+    if (markerRef.current) markerRef.current.setMap(null);
+
+    const marker = new maps.Marker({
       position: latLng,
       map: mapInstanceRef.current,
       draggable: true,
-      animation: M.Animation.DROP,
+      animation: maps.Animation.DROP,
     });
-    marker.addListener("dragend", (e: google.maps.MapMouseEvent) => {
+    marker.addListener("dragend", (e: { latLng: GMaps }) => {
       if (e.latLng) reverseGeocode(e.latLng);
     });
     markerRef.current = marker;
     mapInstanceRef.current.panTo(latLng);
   }
 
-  function reverseGeocode(latLng: google.maps.LatLng) {
+  function reverseGeocode(latLng: GMaps) {
     if (!geocoderRef.current) return;
-    geocoderRef.current.geocode({ location: latLng }, (results, status) => {
-      const address = status === "OK" && results?.[0]
-        ? results[0].formatted_address
-        : `${latLng.lat().toFixed(6)}, ${latLng.lng().toFixed(6)}`;
-      setAddressInput(address);
-      onChange({ lat: latLng.lat(), lng: latLng.lng(), formattedAddress: address });
-    });
+    geocoderRef.current.geocode(
+      { location: latLng },
+      (results: GMaps, status: string) => {
+        const address =
+          status === "OK" && results?.[0]
+            ? results[0].formatted_address
+            : `${latLng.lat().toFixed(6)}, ${latLng.lng().toFixed(6)}`;
+        setAddressInput(address);
+        onChange({ lat: latLng.lat(), lng: latLng.lng(), formattedAddress: address });
+      }
+    );
   }
 
   function geocodeAddress() {
@@ -102,12 +106,11 @@ export function LocationPicker({ value, onChange, apiKey }: LocationPickerProps)
     setGeocoding(true);
     geocoderRef.current.geocode(
       { address: addressInput + ", Costa Rica" },
-      (results, status) => {
+      (results: GMaps, status: string) => {
         setGeocoding(false);
         if (status === "OK" && results?.[0]) {
           const loc = results[0].geometry.location;
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          placeMarker(loc, (window as any).google?.maps);
+          placeMarker(loc);
           mapInstanceRef.current?.setZoom(15);
           const address = results[0].formatted_address;
           setAddressInput(address);
@@ -123,11 +126,10 @@ export function LocationPicker({ value, onChange, apiKey }: LocationPickerProps)
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setLocating(false);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const maps = (window as any).google?.maps;
+        const maps = getMaps();
         if (!maps || !mapInstanceRef.current) return;
         const latLng = new maps.LatLng(pos.coords.latitude, pos.coords.longitude);
-        placeMarker(latLng, maps);
+        placeMarker(latLng);
         mapInstanceRef.current.setZoom(16);
         reverseGeocode(latLng);
       },
@@ -147,9 +149,8 @@ export function LocationPicker({ value, onChange, apiKey }: LocationPickerProps)
   }
 
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if ((window as any).google?.maps) initMap();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (getMaps()) initMap();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (!effectiveKey) {
@@ -170,7 +171,6 @@ export function LocationPicker({ value, onChange, apiKey }: LocationPickerProps)
       />
 
       <div className="flex flex-col gap-2">
-        {/* Address search */}
         <div className="flex gap-2">
           <input
             type="text"
@@ -190,10 +190,8 @@ export function LocationPicker({ value, onChange, apiKey }: LocationPickerProps)
           </button>
         </div>
 
-        {/* Map */}
         <div className="relative rounded-xl overflow-hidden border border-[#e5e7eb]" style={{ height: 260 }}>
           <div ref={mapRef} className="w-full h-full" />
-          {/* Instructions overlay (only when no marker) */}
           {!value && (
             <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm rounded-xl px-3 py-1.5 text-xs text-[#374151] shadow border border-[#e5e7eb] whitespace-nowrap pointer-events-none">
               Hacé clic en el mapa para marcar tu ubicación
@@ -201,7 +199,6 @@ export function LocationPicker({ value, onChange, apiKey }: LocationPickerProps)
           )}
         </div>
 
-        {/* Controls */}
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -224,7 +221,6 @@ export function LocationPicker({ value, onChange, apiKey }: LocationPickerProps)
           )}
         </div>
 
-        {/* Coordinates display */}
         {value && (
           <div className="flex items-center gap-2 bg-[#EBF5FB] rounded-xl px-3 py-2">
             <MapPin className="h-4 w-4 text-[#009FD9] shrink-0" />
