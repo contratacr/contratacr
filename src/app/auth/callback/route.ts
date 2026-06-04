@@ -46,12 +46,12 @@ export async function GET(request: NextRequest) {
         return NextResponse.redirect(`${origin}/es/onboarding`);
       }
 
-      // Scenario A — returning user, role known → go to dashboard
-      const dashboardPath =
+      // Scenario A — returning user, role known
+      const destPath =
         profile.role === "professional"
           ? "/es/dashboard/profesional"
-          : "/es/dashboard/cliente";
-      return NextResponse.redirect(`${origin}${dashboardPath}`);
+          : "/es"; // clients go home
+      return NextResponse.redirect(`${origin}${destPath}`);
     }
   }
 

@@ -36,13 +36,23 @@ export default function OnboardingPage() {
     setSelecting(role);
     const supabase = createClient();
 
-    // Update profiles table
-    await supabase
-      .from("profiles")
-      .update({ role, onboarding_completed: true })
-      .eq("id", user.id);
+    // Upsert so this works whether or not a trigger pre-created the row
+    await supabase.from("profiles").upsert(
+      {
+        id: user.id,
+        email: user.email ?? "",
+        full_name:
+          (user.user_metadata?.full_name as string) ??
+          (user.user_metadata?.name as string) ??
+          user.email?.split("@")[0] ??
+          "",
+        role,
+        onboarding_completed: true,
+      },
+      { onConflict: "id" }
+    );
 
-    // Update user metadata so middleware + auth checks see it immediately
+    // Sync metadata so navbar + middleware see role immediately
     await supabase.auth.updateUser({
       data: { role, onboarding_completed: true },
     });
@@ -50,7 +60,8 @@ export default function OnboardingPage() {
     if (role === "professional") {
       router.push("/registro/profesional");
     } else {
-      router.push("/dashboard/cliente");
+      // Clients go home — ready to search
+      router.push("/");
     }
   }
 
