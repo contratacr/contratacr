@@ -120,6 +120,12 @@ export default function ClientDashboardPage() {
   const [profileForm, setProfileForm] = useState({ full_name: "", phone: "" });
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileSaved, setProfileSaved] = useState(false);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
+  const [emailChangeMode, setEmailChangeMode] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [emailChangeSent, setEmailChangeSent] = useState(false);
+  const [emailChangeError, setEmailChangeError] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
@@ -157,6 +163,7 @@ export default function ClientDashboardPage() {
         .single();
       setProfileData(data);
       setProfileForm({ full_name: data?.full_name ?? "", phone: data?.phone ?? "" });
+      setProfileAvatar(data?.avatar_url ?? null);
     }
 
     setLoading(false);
@@ -251,6 +258,32 @@ export default function ClientDashboardPage() {
     setProfileSaving(false);
     setProfileSaved(true);
     setTimeout(() => setProfileSaved(false), 3000);
+  }
+
+  async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    setPhotoUploading(true);
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch("/api/upload/photo", { method: "POST", body: fd });
+    if (res.ok) {
+      const { url } = await res.json();
+      const supabase = createClient();
+      await supabase.from("profiles").update({ avatar_url: url }).eq("id", user.id);
+      setProfileAvatar(url);
+    }
+    setPhotoUploading(false);
+  }
+
+  async function sendEmailChange() {
+    if (!newEmail.trim() || !user) return;
+    setEmailChangeError(null);
+    const supabase = createClient();
+    const { error } = await supabase.auth.updateUser({ email: newEmail.trim() });
+    if (error) { setEmailChangeError(error.message); return; }
+    setEmailChangeSent(true);
+    setEmailChangeMode(false);
   }
 
   if (authLoading) {
@@ -685,7 +718,34 @@ export default function ClientDashboardPage() {
               {activeTab === "profile" && (
                 <div>
                   <h2 className="text-lg font-semibold text-[#111827] mb-5">Mi información</h2>
-                  <div className="bg-white rounded-2xl border border-[#e5e7eb] p-6 flex flex-col gap-4">
+
+                  {/* Photo */}
+                  <div className="bg-white rounded-2xl border border-[#e5e7eb] p-6 mb-4">
+                    <label className="text-sm font-medium text-[#374151] block mb-3">Foto de perfil</label>
+                    <div className="flex items-center gap-4">
+                      <div className="relative">
+                        <div className="h-16 w-16 rounded-full overflow-hidden bg-[#EBF5FB] flex items-center justify-center shrink-0">
+                          {profileAvatar ? (
+                            <img src={profileAvatar} alt="Foto" className="h-full w-full object-cover" />
+                          ) : (
+                            <span className="text-[#009FD9] font-bold text-xl">{getInitials(displayName)}</span>
+                          )}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="cursor-pointer inline-flex items-center gap-2 text-sm font-medium text-[#009FD9] border border-[#009FD9] rounded-xl px-4 py-2 hover:bg-[#EBF5FB] transition-colors">
+                          {photoUploading ? (
+                            <><span className="h-4 w-4 rounded-full border-2 border-[#009FD9] border-t-transparent animate-spin" />Subiendo...</>
+                          ) : "Cambiar foto"}
+                          <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={photoUploading} />
+                        </label>
+                        <p className="text-xs text-[#9ca3af] mt-1">JPG, PNG o WebP — máx 5MB</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Name + phone */}
+                  <div className="bg-white rounded-2xl border border-[#e5e7eb] p-6 flex flex-col gap-4 mb-4">
                     <div>
                       <label className="text-sm font-medium text-[#374151] block mb-1.5">Nombre completo</label>
                       <input
@@ -715,8 +775,42 @@ export default function ClientDashboardPage() {
                     </div>
                   </div>
 
-                  <div className="mt-4 bg-[#f9fafb] rounded-2xl border border-[#e5e7eb] p-4">
-                    <p className="text-xs text-[#9ca3af]">Correo: <span className="text-[#374151] font-medium">{user?.email}</span></p>
+                  {/* Email */}
+                  <div className="bg-white rounded-2xl border border-[#e5e7eb] p-6">
+                    <label className="text-sm font-medium text-[#374151] block mb-1.5">Correo electrónico</label>
+                    {emailChangeSent ? (
+                      <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-700">
+                        ✓ Revisá tu bandeja — enviamos un correo de confirmación al nuevo email.
+                      </div>
+                    ) : emailChangeMode ? (
+                      <div className="flex flex-col gap-3">
+                        <input
+                          type="email"
+                          className={inputClass}
+                          placeholder="nuevo@correo.com"
+                          value={newEmail}
+                          onChange={(e) => setNewEmail(e.target.value)}
+                        />
+                        {emailChangeError && (
+                          <p className="text-xs text-red-500">{emailChangeError}</p>
+                        )}
+                        <div className="flex gap-2">
+                          <Button size="sm" onClick={sendEmailChange} disabled={!newEmail.trim()}>Confirmar cambio</Button>
+                          <Button size="sm" variant="outline" onClick={() => { setEmailChangeMode(false); setNewEmail(""); setEmailChangeError(null); }}>Cancelar</Button>
+                        </div>
+                        <p className="text-xs text-[#9ca3af]">Te enviaremos un correo de confirmación al nuevo email.</p>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-sm text-[#374151] font-medium">{user?.email}</span>
+                        <button
+                          onClick={() => setEmailChangeMode(true)}
+                          className="text-sm text-[#009FD9] hover:underline whitespace-nowrap"
+                        >
+                          Cambiar email
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

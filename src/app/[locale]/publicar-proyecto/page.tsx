@@ -8,9 +8,83 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2 } from "lucide-react";
 import { PROVINCES } from "@/lib/data/cr-geography";
 import { cn } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
 
-type Category = { id: string; name: string; icon: string };
+/* ─── Static category groups — same source as professional registration ─── */
+const CATEGORY_GROUPS = [
+  { label: "Hogar y construcción", items: [
+    { id: "plomeria", label: "Plomería" }, { id: "electricidad", label: "Electricidad" },
+    { id: "construccion", label: "Construcción" }, { id: "pintura", label: "Pintura" },
+    { id: "carpinteria", label: "Carpintería" }, { id: "remodelacion", label: "Remodelación" },
+    { id: "techos", label: "Techos y cubiertas" }, { id: "pisos", label: "Pisos y revestimientos" },
+    { id: "impermeabilizacion", label: "Impermeabilización" }, { id: "fumigacion", label: "Fumigación" },
+    { id: "cerrajeria", label: "Cerrajería" }, { id: "aire_acondicionado", label: "Aire acondicionado" },
+    { id: "calentadores", label: "Calentadores de agua" }, { id: "ventanas_puertas", label: "Ventanas y puertas" },
+    { id: "soldadura", label: "Soldadura" }, { id: "gypsum", label: "Gypsum" },
+  ]},
+  { label: "Jardín y exterior", items: [
+    { id: "jardineria", label: "Jardinería" }, { id: "poda_arboles", label: "Poda de árboles" },
+    { id: "paisajismo", label: "Paisajismo" }, { id: "limpieza_piscinas", label: "Limpieza de piscinas" },
+    { id: "riego_automatizado", label: "Riego automatizado" }, { id: "control_plagas", label: "Control de plagas" },
+  ]},
+  { label: "Limpieza", items: [
+    { id: "limpieza", label: "Limpieza del hogar" }, { id: "limpieza_oficinas", label: "Limpieza de oficinas" },
+    { id: "desinfeccion", label: "Desinfección" }, { id: "lavado_alfombras", label: "Lavado de alfombras" },
+    { id: "limpieza_post_construccion", label: "Limpieza post-construcción" }, { id: "lavado_vehiculos", label: "Lavado de vehículos" },
+  ]},
+  { label: "Tecnología", items: [
+    { id: "reparacion_computadoras", label: "Reparación de computadoras" }, { id: "redes_internet", label: "Redes e internet" },
+    { id: "camaras_seguridad", label: "Cámaras de seguridad" }, { id: "domotica", label: "Domótica" },
+    { id: "desarrollo_web", label: "Desarrollo web" }, { id: "diseno_grafico", label: "Diseño gráfico" },
+    { id: "diseno_apps", label: "Diseño de apps" }, { id: "soporte_tecnico", label: "Soporte técnico" },
+    { id: "impresion_3d", label: "Impresión 3D" }, { id: "audio_video", label: "Audio y video" },
+  ]},
+  { label: "Servicios profesionales", items: [
+    { id: "contabilidad", label: "Contabilidad y finanzas" }, { id: "legal", label: "Abogados y legal" },
+    { id: "ingenieria_civil", label: "Ingeniería civil" }, { id: "arquitectura", label: "Arquitectura" },
+    { id: "topografia", label: "Topografía" }, { id: "consultoria", label: "Consultoría empresarial" },
+    { id: "traduccion", label: "Traducción" }, { id: "recursos_humanos", label: "Recursos humanos" },
+    { id: "marketing_digital", label: "Marketing digital" }, { id: "fotografia", label: "Fotografía profesional" },
+    { id: "produccion_video", label: "Producción de video" }, { id: "bienes_raices", label: "Bienes raíces" },
+  ]},
+  { label: "Salud y bienestar", items: [
+    { id: "entrenamiento_personal", label: "Entrenamiento personal" }, { id: "nutricion", label: "Nutrición y dietética" },
+    { id: "masajes", label: "Masajes terapéuticos" }, { id: "psicologia", label: "Psicología" },
+    { id: "fisioterapia", label: "Fisioterapia" }, { id: "enfermeria", label: "Enfermería a domicilio" },
+    { id: "cuidado_adultos", label: "Cuidado de adultos mayores" }, { id: "cuidado_infantil", label: "Cuidado infantil" },
+    { id: "veterinaria", label: "Veterinaria" }, { id: "peluqueria_canina", label: "Peluquería canina" },
+  ]},
+  { label: "Belleza y estética", items: [
+    { id: "peluqueria", label: "Peluquería" }, { id: "maquillaje", label: "Maquillaje" },
+    { id: "unhas", label: "Uñas" }, { id: "pestanas", label: "Pestañas" },
+    { id: "depilacion", label: "Depilación" }, { id: "estetica_facial", label: "Estética facial" },
+    { id: "bronceado", label: "Bronceado" },
+  ]},
+  { label: "Educación", items: [
+    { id: "tutorias", label: "Tutorías académicas" }, { id: "idiomas", label: "Idiomas" },
+    { id: "musica", label: "Música e instrumentos" }, { id: "matematicas", label: "Matemáticas y ciencias" },
+    { id: "preparacion_universitaria", label: "Preparación universitaria" }, { id: "clases_manejo", label: "Clases de manejo" },
+    { id: "clases_cocina", label: "Clases de cocina" },
+  ]},
+  { label: "Mudanzas y transporte", items: [
+    { id: "mudanzas", label: "Mudanzas" }, { id: "fletes", label: "Fletes" },
+    { id: "mensajeria", label: "Mensajería" }, { id: "transporte_mascotas", label: "Transporte de mascotas" },
+  ]},
+  { label: "Eventos", items: [
+    { id: "fotografia_eventos", label: "Fotografía de eventos" }, { id: "videografia", label: "Videografía" },
+    { id: "dj_sonido", label: "DJ y sonido" }, { id: "catering", label: "Catering" },
+    { id: "decoracion", label: "Decoración" }, { id: "animacion_infantil", label: "Animación infantil" },
+    { id: "bartending", label: "Bartending" },
+  ]},
+  { label: "Seguridad", items: [
+    { id: "guardas_seguridad", label: "Guardas de seguridad" }, { id: "alarmas", label: "Instalación de alarmas" },
+    { id: "cctv", label: "Circuito cerrado CCTV" }, { id: "control_acceso", label: "Control de acceso" },
+  ]},
+  { label: "Automotriz", items: [
+    { id: "mecanica", label: "Mecánica general" }, { id: "hojalateria", label: "Hojalatería y pintura" },
+    { id: "electricidad_automotriz", label: "Electricidad automotriz" }, { id: "tapiceria", label: "Tapicería" },
+    { id: "detailing", label: "Detailing" }, { id: "cambio_llantas", label: "Cambio de llantas a domicilio" },
+  ]},
+];
 
 const TIMELINES = [
   { value: "Urgente (esta semana)", label: "Urgente — esta semana" },
@@ -23,7 +97,6 @@ export default function PublicarProyectoPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
 
-  const [categories, setCategories] = useState<Category[]>([]);
   const [form, setForm] = useState({
     categoryId: "",
     title: "",
@@ -41,13 +114,6 @@ export default function PublicarProyectoPage() {
   useEffect(() => {
     if (!authLoading && !user) router.push("/login");
   }, [user, authLoading, router]);
-
-  useEffect(() => {
-    const supabase = createClient();
-    supabase.from("categories").select("id, name, icon").order("name").then(({ data }) => {
-      setCategories(data ?? []);
-    });
-  }, []);
 
   const selectedProvincia = PROVINCES.find((p) => p.id === form.provinciaId);
   const cantons = selectedProvincia?.cantons ?? [];
@@ -144,8 +210,12 @@ export default function PublicarProyectoPage() {
                   onChange={(e) => update("categoryId", e.target.value)}
                 >
                   <option value="">Seleccioná una categoría</option>
-                  {categories.map((c) => (
-                    <option key={c.id} value={c.id}>{c.icon} {c.name}</option>
+                  {CATEGORY_GROUPS.map((group) => (
+                    <optgroup key={group.label} label={group.label}>
+                      {group.items.map((item) => (
+                        <option key={item.id} value={item.id}>{item.label}</option>
+                      ))}
+                    </optgroup>
                   ))}
                 </select>
               </div>

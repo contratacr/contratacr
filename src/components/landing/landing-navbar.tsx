@@ -18,7 +18,6 @@ const PROVINCES = [
 export function ContrataCRLogo({ className }: { className?: string }) {
   return (
     <div className={cn("flex items-center select-none", className)}>
-      {/* TODO: AI DESIGN TEAM — ContrataCR wordmark SVG goes here */}
       <span className="text-[17px] font-extrabold tracking-tight leading-none">
         <span className="text-[#1a2744]">Contrata</span>
         <span className="text-[#009FD9]">CR</span>
@@ -63,7 +62,11 @@ function LanguageTogglePill() {
 }
 
 /* ─── Dropdown data ─── */
-const NAV_MENUS = [
+type NavLink = { label: string; href: string };
+type NavColumn = { heading: string; links: NavLink[] };
+type NavMenu = { id: string; label: string; columns: NavColumn[] };
+
+const NAV_MENUS: NavMenu[] = [
   {
     id: "interior",
     label: "Interior",
@@ -71,12 +74,12 @@ const NAV_MENUS = [
       {
         heading: "Hogar",
         links: [
-          "Limpieza del hogar",
-          "Plomería",
-          "Electricidad",
-          "Pintura interior",
-          "Carpintería",
-          "Remodelación",
+          { label: "Limpieza del hogar",  href: "/buscar?categoria=limpieza" },
+          { label: "Plomería",            href: "/buscar?categoria=plomeria" },
+          { label: "Electricidad",        href: "/buscar?categoria=electricidad" },
+          { label: "Pintura interior",    href: "/buscar?categoria=pintura" },
+          { label: "Carpintería",         href: "/buscar?categoria=carpinteria" },
+          { label: "Remodelación",        href: "/buscar?categoria=remodelacion" },
         ],
       },
     ],
@@ -88,12 +91,12 @@ const NAV_MENUS = [
       {
         heading: "Al aire libre",
         links: [
-          "Jardinería",
-          "Construcción",
-          "Lavado a presión",
-          "Impermeabilización",
-          "Mudanzas",
-          "Piscinas",
+          { label: "Jardinería",          href: "/buscar?categoria=jardineria" },
+          { label: "Construcción",        href: "/buscar?categoria=construccion" },
+          { label: "Lavado a presión",    href: "/buscar?categoria=impermeabilizacion" },
+          { label: "Impermeabilización",  href: "/buscar?categoria=impermeabilizacion" },
+          { label: "Mudanzas",            href: "/buscar?categoria=mudanzas" },
+          { label: "Piscinas",            href: "/buscar?categoria=limpieza_piscinas" },
         ],
       },
     ],
@@ -104,15 +107,29 @@ const NAV_MENUS = [
     columns: [
       {
         heading: "Tecnología",
-        links: ["Soporte técnico", "Redes y WiFi", "Seguridad CCTV", "Diseño web"],
+        links: [
+          { label: "Soporte técnico",     href: "/buscar?categoria=soporte_tecnico" },
+          { label: "Redes y WiFi",        href: "/buscar?categoria=redes_internet" },
+          { label: "Seguridad CCTV",      href: "/buscar?categoria=camaras_seguridad" },
+          { label: "Diseño web",          href: "/buscar?categoria=desarrollo_web" },
+        ],
       },
       {
         heading: "Bienestar",
-        links: ["Belleza y estética", "Entrenamiento personal", "Masajes", "Nutrición"],
+        links: [
+          { label: "Belleza y estética",       href: "/buscar?categoria=peluqueria" },
+          { label: "Entrenamiento personal",   href: "/buscar?categoria=entrenamiento_personal" },
+          { label: "Masajes",                  href: "/buscar?categoria=masajes" },
+          { label: "Nutrición",                href: "/buscar?categoria=nutricion" },
+        ],
       },
       {
         heading: "Vehículos",
-        links: ["Mecánica automotriz", "Lavado de autos", "Cerrajería"],
+        links: [
+          { label: "Mecánica automotriz",  href: "/buscar?categoria=mecanica" },
+          { label: "Lavado de autos",      href: "/buscar?categoria=lavado_vehiculos" },
+          { label: "Cerrajería",           href: "/buscar?categoria=cerrajeria" },
+        ],
       },
     ],
   },
@@ -122,11 +139,17 @@ const NAV_MENUS = [
     columns: [
       {
         heading: "Aprendé",
-        links: ["Guías de precios", "Cómo funciona", "Centro de ayuda"],
+        links: [
+          { label: "Cómo funciona",   href: "/como-funciona" },
+          { label: "Centro de ayuda", href: "mailto:soportecontratacr@hotmail.com" },
+        ],
       },
       {
         heading: "Profesionales",
-        links: ["Registrá tu perfil", "Para profesionales", "Verificación de cédula"],
+        links: [
+          { label: "Registrá tu perfil",   href: "/registro/profesional" },
+          { label: "Cómo atraer clientes", href: "/como-funciona" },
+        ],
       },
     ],
   },
@@ -289,6 +312,7 @@ export function LandingNavbar() {
   const role = user?.user_metadata?.role as string | undefined;
   const dashboardHref = role === "professional" ? "/es/dashboard/profesional" : "/es/dashboard/cliente";
   const initials = getInitials(user?.user_metadata?.full_name ?? user?.email ?? "?");
+  const displayName = (user?.user_metadata?.full_name as string) || (user?.user_metadata?.name as string) || user?.email?.split("@")[0] || "";
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
@@ -310,7 +334,6 @@ export function LandingNavbar() {
   useEffect(() => {
     const sentinel = document.getElementById("hero-search-sentinel");
     if (!sentinel) {
-      // Non-landing pages: fallback to scrollY
       const handler = () => setCompact(window.scrollY > 300);
       window.addEventListener("scroll", handler, { passive: true });
       return () => window.removeEventListener("scroll", handler);
@@ -339,16 +362,24 @@ export function LandingNavbar() {
     router.push(`/buscar?${params.toString()}`);
   }
 
+  function renderLink(link: NavLink, onClick?: () => void) {
+    const cls = "text-sm text-gray-600 hover:text-[#009FD9] transition-colors leading-tight block";
+    if (link.href.startsWith("mailto:")) {
+      return <a key={link.label} href={link.href} className={cls} onClick={onClick}>{link.label}</a>;
+    }
+    return (
+      <Link key={link.label} href={link.href} className={cls} onClick={onClick}>
+        {link.label}
+      </Link>
+    );
+  }
+
   return (
     <>
       <header
-        className={cn(
-          "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
-          "bg-white/96 backdrop-blur-md shadow-sm border-b border-gray-100/80"
-        )}
+        className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-white/96 backdrop-blur-md shadow-sm border-b border-gray-100/80"
       >
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          {/* Relative container for absolute-positioned rows */}
           <div className="relative h-16">
 
             {/* ── Default row ── */}
@@ -356,12 +387,10 @@ export function LandingNavbar() {
               className="absolute inset-0 flex items-center gap-4 transition-opacity duration-300"
               style={{ opacity: compact ? 0 : 1, pointerEvents: compact ? "none" : "auto" }}
             >
-              {/* Logo */}
               <Link href="/" aria-label="ContrataCR inicio" className="shrink-0">
                 <ContrataCRLogo />
               </Link>
 
-              {/* Nav links directly after logo */}
               <nav className="hidden lg:flex items-center gap-0.5">
                 {NAV_MENUS.map((menu) => (
                   <div
@@ -380,7 +409,6 @@ export function LandingNavbar() {
                       <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", openMenu === menu.id && "rotate-180")} />
                     </button>
 
-                    {/* Dropdown panel */}
                     {openMenu === menu.id && (
                       <div
                         className={cn(
@@ -392,18 +420,13 @@ export function LandingNavbar() {
                           animation: "tab-cards-in 0.15s ease both",
                         }}
                       >
-                        {/* Arrow pip */}
                         <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white border-l border-t border-gray-100 rotate-45" />
                         {menu.columns.map((col) => (
                           <div key={col.heading}>
                             <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">{col.heading}</h4>
                             <ul className="space-y-2.5">
                               {col.links.map((link) => (
-                                <li key={link}>
-                                  <Link href="/buscar" className="text-sm text-gray-600 hover:text-[#009FD9] transition-colors leading-tight block">
-                                    {link}
-                                  </Link>
-                                </li>
+                                <li key={link.label}>{renderLink(link)}</li>
                               ))}
                             </ul>
                           </div>
@@ -414,55 +437,46 @@ export function LandingNavbar() {
                 ))}
               </nav>
 
-              {/* Spacer */}
               <div className="flex-1" />
 
               {/* Right actions */}
-              <div className="hidden lg:flex items-center gap-1 shrink-0">
+              <div className="hidden lg:flex items-center gap-2 shrink-0">
                 {user ? (
-                  <>
-                    <a
-                      href={dashboardHref}
-                      className="text-sm font-medium px-3 py-2 rounded-xl text-[#374151] hover:bg-gray-50 transition-colors whitespace-nowrap"
+                  <div ref={userMenuRef} className="relative">
+                    <button
+                      onClick={() => setUserMenuOpen((o) => !o)}
+                      className="flex items-center gap-1.5 pl-1 pr-2 py-1 rounded-xl hover:bg-gray-50 transition-colors"
                     >
-                      Mi panel
-                    </a>
-                    {/* Avatar dropdown */}
-                    <div ref={userMenuRef} className="relative">
-                      <button
-                        onClick={() => setUserMenuOpen((o) => !o)}
-                        className="flex items-center gap-1.5 px-2 py-1.5 rounded-xl hover:bg-gray-50 transition-colors"
-                      >
-                        <div className="h-8 w-8 rounded-full overflow-hidden bg-[#009FD9] flex items-center justify-center text-white text-xs font-bold shrink-0">
-                          {avatarUrl ? (
-                            <img src={avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
-                          ) : initials}
+                      <div className="h-8 w-8 rounded-full overflow-hidden bg-[#009FD9] flex items-center justify-center text-white text-xs font-bold shrink-0 border-2 border-white shadow-sm">
+                        {avatarUrl ? (
+                          <img src={avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
+                        ) : initials}
+                      </div>
+                      <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
+                    </button>
+                    {userMenuOpen && (
+                      <div className="absolute right-0 top-full mt-1.5 w-56 bg-white border border-gray-100 rounded-xl shadow-xl z-50 py-1.5 overflow-hidden">
+                        <div className="px-3 py-2.5 border-b border-gray-100 mb-1">
+                          <p className="text-sm font-semibold text-[#111827] truncate">{displayName}</p>
+                          <p className="text-xs text-[#9ca3af] truncate mt-0.5">{user.email}</p>
                         </div>
-                        <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
-                      </button>
-                      {userMenuOpen && (
-                        <div className="absolute right-0 top-full mt-1.5 w-52 bg-white border border-gray-100 rounded-xl shadow-lg z-50 py-1.5 overflow-hidden">
-                          <p className="px-3 py-1.5 text-xs text-[#9ca3af] truncate border-b border-gray-50 mb-1">
-                            {user.email}
-                          </p>
-                          <a
-                            href={dashboardHref}
-                            className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
-                          >
-                            <LayoutDashboard className="h-4 w-4 text-[#009FD9]" />
-                            Mi panel
-                          </a>
-                          <button
-                            onClick={handleSignOut}
-                            className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                          >
-                            <LogOut className="h-4 w-4" />
-                            Cerrar sesión
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </>
+                        <a
+                          href={dashboardHref}
+                          className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
+                        >
+                          <LayoutDashboard className="h-4 w-4 text-[#009FD9]" />
+                          Mi panel
+                        </a>
+                        <button
+                          onClick={handleSignOut}
+                          className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors"
+                        >
+                          <LogOut className="h-4 w-4" />
+                          Cerrar sesión
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   <>
                     <Link
@@ -492,20 +506,17 @@ export function LandingNavbar() {
               </button>
             </div>
 
-            {/* ── Compact row (shown when scrollY > 500) ── */}
+            {/* ── Compact row ── */}
             <div
               className="absolute inset-0 flex items-center gap-3 transition-opacity duration-300"
               style={{ opacity: compact ? 1 : 0, pointerEvents: compact ? "auto" : "none" }}
             >
-              {/* Small logo */}
               <Link href="/" aria-label="ContrataCR inicio" className="shrink-0">
                 <ContrataCRLogo />
               </Link>
 
-              {/* Search bar — same layout as hero */}
               <form onSubmit={handleCompactSearch} className="flex-1 min-w-0">
                 <div className="flex items-center h-11 sm:h-12 bg-white border border-gray-200 rounded-[6px] overflow-hidden pl-4 pr-2 shadow-[0_4px_20px_rgba(0,0,0,0.10)]">
-                  {/* Text input */}
                   <div className="flex items-center gap-2 flex-1 min-w-0 h-full">
                     <Search className="h-4 w-4 sm:h-5 sm:w-5 text-gray-300 shrink-0" />
                     <input
@@ -516,7 +527,6 @@ export function LandingNavbar() {
                       className="flex-1 text-sm sm:text-base text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-none min-w-0"
                     />
                   </div>
-                  {/* Divider + province select — visible from md up */}
                   <div className="hidden md:flex items-center h-full">
                     <div className="w-px bg-gray-200 self-stretch my-2 mx-2 shrink-0" />
                     <div className="flex items-center gap-1.5 min-w-[120px] shrink-0">
@@ -531,7 +541,6 @@ export function LandingNavbar() {
                       </select>
                     </div>
                   </div>
-                  {/* Buscar button */}
                   <button
                     type="submit"
                     className="ml-2 h-8 sm:h-9 px-5 sm:px-7 bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold rounded-[4px] transition-all duration-150 active:scale-[0.97] whitespace-nowrap shrink-0"
@@ -541,7 +550,6 @@ export function LandingNavbar() {
                 </div>
               </form>
 
-              {/* Right: auth-aware + lang toggle */}
               <div className="hidden sm:flex items-center gap-2 shrink-0">
                 {user ? (
                   <a
@@ -574,12 +582,9 @@ export function LandingNavbar() {
             {NAV_MENUS.map((menu) => (
               <div key={menu.id} className="mb-4">
                 <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{menu.label}</p>
-                {menu.columns.flatMap((col) => col.links).slice(0, 5).map((link) => (
-                  <Link key={link} href="/buscar" onClick={() => setMobileOpen(false)}
-                    className="block px-2 py-2 text-sm text-gray-600 hover:text-[#009FD9] transition-colors">
-                    {link}
-                  </Link>
-                ))}
+                {menu.columns.flatMap((col) => col.links).slice(0, 5).map((link) =>
+                  renderLink(link, () => setMobileOpen(false))
+                )}
               </div>
             ))}
             <div className="border-t border-gray-100 pt-4 flex flex-col gap-2">

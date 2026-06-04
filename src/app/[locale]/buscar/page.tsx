@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
-import { Search, SlidersHorizontal, MapPin, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, SlidersHorizontal, ChevronLeft, ChevronRight } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { SearchFilters } from "@/components/search/search-filters";
@@ -9,6 +9,7 @@ import { ProfessionalCard } from "@/components/professionals/professional-card";
 import { SaveableCard } from "@/components/professionals/save-button";
 import { searchProfessionals } from "@/lib/queries/professionals";
 import { PROVINCES } from "@/lib/data/cr-geography";
+import { GoogleMapPanel } from "@/components/maps/google-map-panel";
 
 const PAGE_SIZE = 9;
 
@@ -22,6 +23,8 @@ interface SearchPageProps {
     page?: string;
   }>;
 }
+
+const MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   const params = await searchParams;
@@ -163,19 +166,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
             {/* ── Map panel (desktop) ── */}
             <aside className="hidden xl:flex w-[420px] shrink-0">
-              <div className="sticky top-20 w-full h-[calc(100vh-88px)] rounded-2xl overflow-hidden border border-[#e5e7eb] bg-white flex flex-col items-center justify-center gap-4 text-center">
-                <div className="w-14 h-14 rounded-full bg-[#EBF5FB] flex items-center justify-center">
-                  <MapPin className="h-7 w-7 text-[#009FD9]" />
-                </div>
-                <div>
-                  <p className="font-semibold text-[#1a2744] mb-1">Mapa interactivo</p>
-                  <p className="text-sm text-[#9ca3af] max-w-[220px]">
-                    Próximamente — los profesionales se mostrarán con pines en el mapa.
-                  </p>
-                </div>
-                <span className="text-xs font-medium px-3 py-1 rounded-full bg-[#EBF5FB] text-[#009FD9]">
-                  Google Maps — en desarrollo
-                </span>
+              <div className="sticky top-20 w-full h-[calc(100vh-88px)] rounded-2xl overflow-hidden border border-[#e5e7eb] bg-white">
+                <GoogleMapPanel apiKey={MAPS_API_KEY} />
               </div>
             </aside>
 

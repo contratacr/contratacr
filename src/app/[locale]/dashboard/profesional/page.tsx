@@ -103,13 +103,17 @@ export default function ProDashboardPage() {
     );
   }
 
+  // No professional record — redirect to complete registration
+  useEffect(() => {
+    if (!loading && !pro && user) {
+      router.replace("/registro/profesional");
+    }
+  }, [loading, pro, user, router]);
+
   if (!pro) {
     return (
-      <div className="min-h-screen flex flex-col">
-        <Navbar />
-        <main className="flex-1 flex items-center justify-center">
-          <p className="text-[#6b7280]">{t("notPro")}</p>
-        </main>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
       </div>
     );
   }
