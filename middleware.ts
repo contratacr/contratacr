@@ -87,6 +87,8 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  // Skip API routes, Next internals, and static files
-  matcher: ["/((?!api|_next|_vercel|.*\\..*).*)"],
+  // Skip API routes, Next internals, static files, and /auth/* (OAuth callbacks must
+  // reach the route handler directly — the i18n middleware would redirect /auth/callback
+  // to /es/auth/callback, losing the PKCE code before it can be exchanged).
+  matcher: ["/((?!api|_next|_vercel|auth|.*\\..*).*)"],
 };

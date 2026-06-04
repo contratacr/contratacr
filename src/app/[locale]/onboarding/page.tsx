@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Search, Briefcase, ArrowRight } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
@@ -9,34 +9,39 @@ import { ContrataCRLogo } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 
 export default function OnboardingPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, avatarUrl, loading: authLoading } = useAuth();
   const router = useRouter();
   const [selecting, setSelecting] = useState<"client" | "professional" | null>(null);
+  // Prevents the "already done" useEffect from competing with selectRole's navigation
+  const completing = useRef(false);
 
-  // Redirect if not logged in
+  // Not logged in → login
   useEffect(() => {
     if (!authLoading && !user) {
       router.push("/login");
     }
   }, [user, authLoading, router]);
 
-  // If already completed onboarding, skip to dashboard
+  // Returning user who already finished onboarding → jump straight to dashboard.
+  // Skipped while selectRole is in progress (completing.current = true) to avoid
+  // a double-navigation race after updateUser() triggers onAuthStateChange.
   useEffect(() => {
-    if (!authLoading && user) {
-      const done = user.user_metadata?.onboarding_completed === true;
-      if (done) {
+    if (!authLoading && user && !completing.current) {
+      if (user.user_metadata?.onboarding_completed === true) {
         const role = user.user_metadata?.role as string | undefined;
-        router.push(role === "professional" ? "/dashboard/profesional" : "/dashboard/cliente");
+        router.push(
+          role === "professional" ? "/dashboard/profesional" : "/dashboard/cliente"
+        );
       }
     }
   }, [user, authLoading, router]);
 
   async function selectRole(role: "client" | "professional") {
     if (!user || selecting) return;
+    completing.current = true; // freeze the useEffect redirect above
     setSelecting(role);
     const supabase = createClient();
 
-    // Upsert so this works whether or not a trigger pre-created the row
     await supabase.from("profiles").upsert(
       {
         id: user.id,
@@ -46,13 +51,16 @@ export default function OnboardingPage() {
           (user.user_metadata?.name as string) ??
           user.email?.split("@")[0] ??
           "",
+        avatar_url:
+          (user.user_metadata?.avatar_url as string) ??
+          (user.user_metadata?.picture as string) ??
+          null,
         role,
         onboarding_completed: true,
       },
       { onConflict: "id" }
     );
 
-    // Sync metadata so navbar + middleware see role immediately
     await supabase.auth.updateUser({
       data: { role, onboarding_completed: true },
     });
@@ -60,8 +68,7 @@ export default function OnboardingPage() {
     if (role === "professional") {
       router.push("/registro/profesional");
     } else {
-      // Clients go home — ready to search
-      router.push("/");
+      router.push("/dashboard/cliente");
     }
   }
 
@@ -73,14 +80,21 @@ export default function OnboardingPage() {
     );
   }
 
-  const displayName = (user.user_metadata?.full_name ??
-    user.user_metadata?.name ??
+  const displayName = (
+    (user.user_metadata?.full_name as string) ??
+    (user.user_metadata?.name as string) ??
     user.email?.split("@")[0] ??
-    "") as string;
+    ""
+  );
+
+  const photoUrl =
+    avatarUrl ??
+    (user.user_metadata?.avatar_url as string | undefined) ??
+    (user.user_metadata?.picture as string | undefined) ??
+    null;
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f4f7fa]">
-      {/* Minimal header */}
       <header className="bg-white border-b border-gray-100 px-4 py-4 flex justify-center">
         <Link href="/">
           <ContrataCRLogo />
@@ -89,16 +103,32 @@ export default function OnboardingPage() {
 
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-12">
         <div className="w-full max-w-xl">
-          <div className="text-center mb-10">
+
+          {/* OAuth user info card */}
+          <div className="flex flex-col items-center mb-10">
+            {photoUrl ? (
+              <img
+                src={photoUrl}
+                alt={displayName}
+                className="h-20 w-20 rounded-full object-cover border-4 border-white shadow-md mb-4"
+              />
+            ) : (
+              <div className="h-20 w-20 rounded-full bg-[#009FD9] flex items-center justify-center text-white text-2xl font-bold shadow-md mb-4">
+                {displayName.charAt(0).toUpperCase() || "?"}
+              </div>
+            )}
+
             {displayName && (
-              <p className="text-sm text-[#009FD9] font-semibold mb-2 uppercase tracking-wide">
+              <p className="text-sm text-[#009FD9] font-semibold mb-1 uppercase tracking-wide">
                 Hola, {displayName.split(" ")[0]}
               </p>
             )}
-            <h1 className="text-3xl font-bold text-[#111827] mb-3">
+            <p className="text-xs text-gray-400">{user.email}</p>
+
+            <h1 className="text-3xl font-bold text-[#111827] mt-6 mb-2 text-center">
               ¿Para qué usarás ContrataCR?
             </h1>
-            <p className="text-[#6b7280] text-base">
+            <p className="text-[#6b7280] text-base text-center">
               Elegí cómo querés usar la plataforma. Podés cambiar esto más adelante.
             </p>
           </div>
@@ -113,15 +143,13 @@ export default function OnboardingPage() {
             >
               <div className="h-16 w-16 rounded-full bg-[#EBF5FB] flex items-center justify-center group-hover:bg-[#009FD9] transition-colors duration-200 shrink-0">
                 {selecting === "client" ? (
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent group-hover:border-white" />
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
                 ) : (
                   <Search className="h-8 w-8 text-[#009FD9] group-hover:text-white transition-colors duration-200" />
                 )}
               </div>
               <div>
-                <h2 className="text-xl font-bold text-[#111827] mb-2">
-                  Busco profesionales
-                </h2>
+                <h2 className="text-xl font-bold text-[#111827] mb-2">Busco profesionales</h2>
                 <p className="text-sm text-[#6b7280] leading-relaxed">
                   Necesito contratar servicios: plomería, electricidad, limpieza, diseño y más.
                 </p>
@@ -139,15 +167,13 @@ export default function OnboardingPage() {
             >
               <div className="h-16 w-16 rounded-full bg-[#EBF5FB] flex items-center justify-center group-hover:bg-[#009FD9] transition-colors duration-200 shrink-0">
                 {selecting === "professional" ? (
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent group-hover:border-white" />
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
                 ) : (
                   <Briefcase className="h-8 w-8 text-[#009FD9] group-hover:text-white transition-colors duration-200" />
                 )}
               </div>
               <div>
-                <h2 className="text-xl font-bold text-[#111827] mb-2">
-                  Soy profesional
-                </h2>
+                <h2 className="text-xl font-bold text-[#111827] mb-2">Soy profesional</h2>
                 <p className="text-sm text-[#6b7280] leading-relaxed">
                   Ofrezco mis servicios y quiero conectar con clientes en Costa Rica.
                 </p>
