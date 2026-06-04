@@ -1,6 +1,6 @@
 # ContrataCR.com — Project Context
 
-_Last updated: 2026-06-04 (sprint 7 hotfix — marquee ASCII fix, OAuth onboarding upsert, client redirect to home)_
+_Last updated: 2026-06-04 (sprint 7 hotfix 2 — OAuth PKCE callback fixed, onboarding race fixed, avatar pre-fill, brand marquee)_
 
 ---
 
