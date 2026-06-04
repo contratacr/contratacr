@@ -1,6 +1,6 @@
 # ContrataCR.com — Project Context
 
-_Last updated: 2026-06-04 (sprint 8 — navbar fixes, como-funciona redesign, client photo/email settings, pro dashboard redirect, publicar-proyecto static categories, Google Maps wired, migration 011)_
+_Last updated: 2026-06-04 (sprint 9 — in-app support form, category system rethink with keyword search, searchable CategorySearch combobox, Google Maps LocationPicker for fixed-location pros, smart keyword matching in search, migration 012)_
 
 ---
 

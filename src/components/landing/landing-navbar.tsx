@@ -141,7 +141,7 @@ const NAV_MENUS: NavMenu[] = [
         heading: "Aprendé",
         links: [
           { label: "Cómo funciona",   href: "/como-funciona" },
-          { label: "Centro de ayuda", href: "mailto:soportecontratacr@hotmail.com" },
+          { label: "Soporte",         href: "/soporte" },
         ],
       },
       {

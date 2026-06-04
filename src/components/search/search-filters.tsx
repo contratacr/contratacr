@@ -7,14 +7,14 @@ import { Search, SlidersHorizontal, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { CATEGORIES, PROVINCES, getCantonsByProvince } from "@/lib/data/cr-geography";
+import { PROVINCES, getCantonsByProvince } from "@/lib/data/cr-geography";
+import { CATEGORY_GROUPS, getCategoryLabel } from "@/lib/data/categories";
 
 export function SearchFilters() {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
   const t = useTranslations("search");
-  const tCat = useTranslations("categories");
 
   const [query, setQuery] = useState(params.get("q") ?? "");
   const [category, setCategory] = useState(params.get("categoria") ?? "");
@@ -23,7 +23,6 @@ export function SearchFilters() {
   const [sortBy, setSortBy] = useState(params.get("sortBy") ?? "rating");
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
   const cantons = getCantonsByProvince(province);
 
   const applyFilters = useCallback(
@@ -43,9 +42,7 @@ export function SearchFilters() {
   function handleQueryChange(value: string) {
     setQuery(value);
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      applyFilters({ q: value });
-    }, 400);
+    debounceRef.current = setTimeout(() => applyFilters({ q: value }), 400);
   }
 
   function handleQueryKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -61,19 +58,12 @@ export function SearchFilters() {
     applyFilters({ q: "" });
   }
 
-  // Clean up debounce on unmount
   useEffect(() => {
-    return () => {
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-    };
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, []);
 
   function clearAll() {
-    setQuery("");
-    setCategory("");
-    setProvince("");
-    setCanton("");
-    setSortBy("rating");
+    setQuery(""); setCategory(""); setProvince(""); setCanton(""); setSortBy("rating");
     if (debounceRef.current) clearTimeout(debounceRef.current);
     router.push(pathname);
   }
@@ -91,12 +81,8 @@ export function SearchFilters() {
           {activeCount > 0 && <Badge variant="default" className="text-xs">{activeCount}</Badge>}
         </div>
         {activeCount > 0 && (
-          <button
-            onClick={clearAll}
-            className="flex items-center gap-1 text-xs text-[#6b7280] hover:text-red-500 transition-colors"
-          >
-            <X className="h-3 w-3" />
-            {t("filters.clear")}
+          <button onClick={clearAll} className="flex items-center gap-1 text-xs text-[#6b7280] hover:text-red-500 transition-colors">
+            <X className="h-3 w-3" />{t("filters.clear")}
           </button>
         )}
       </div>
@@ -110,34 +96,45 @@ export function SearchFilters() {
             value={query}
             onChange={(e) => handleQueryChange(e.target.value)}
             onKeyDown={handleQueryKeyDown}
-            placeholder="Buscar profesionales... ej. plomero Escazú"
+            placeholder="Buscá cualquier servicio… ej. niñera Escazú, contador, fotógrafo"
             className="w-full rounded-xl border border-[#e5e7eb] bg-white py-2 pl-9 pr-9 text-sm text-[#111827] placeholder-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition"
           />
           {query && (
-            <button
-              onClick={clearQuery}
-              className="absolute right-3 text-[#9ca3af] hover:text-[#374151] transition-colors"
-              aria-label="Limpiar búsqueda"
-            >
+            <button onClick={clearQuery} className="absolute right-3 text-[#9ca3af] hover:text-[#374151] transition-colors" aria-label="Limpiar búsqueda">
               <X className="h-4 w-4" />
             </button>
           )}
         </div>
+        {query && (
+          <p className="text-xs text-[#9ca3af] mt-1 pl-1">
+            Buscando profesionales relacionados con <strong className="text-[#374151]">"{query}"</strong>
+          </p>
+        )}
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3">
+        {/* Category — grouped select */}
         <div className="flex-1">
           <label className="text-xs font-medium text-[#6b7280] mb-1.5 block">{t("filters.category")}</label>
           <Select value={category} onValueChange={(v) => { setCategory(v); applyFilters({ categoria: v }); }}>
             <SelectTrigger className="text-sm">
-              <SelectValue placeholder={t("filters.allCategories")} />
+              <SelectValue placeholder={t("filters.allCategories")}>
+                {category && category !== "todas" ? getCategoryLabel(category) : t("filters.allCategories")}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="todas">{t("filters.allCategories")}</SelectItem>
-              {CATEGORIES.map((cat) => (
-                <SelectItem key={cat.id} value={cat.id}>
-                  {cat.icon} {tCat(cat.id)}
-                </SelectItem>
+              {CATEGORY_GROUPS.map((group) => (
+                <div key={group.id}>
+                  <div className="px-2 py-1 text-[10px] font-bold text-[#9ca3af] uppercase tracking-widest sticky top-0 bg-white">
+                    {group.emoji} {group.label}
+                  </div>
+                  {group.items.map((item) => (
+                    <SelectItem key={item.id} value={item.id} className="pl-4">
+                      {item.label}
+                    </SelectItem>
+                  ))}
+                </div>
               ))}
             </SelectContent>
           </Select>
@@ -145,41 +142,26 @@ export function SearchFilters() {
 
         <div className="sm:w-44">
           <label className="text-xs font-medium text-[#6b7280] mb-1.5 block">{t("filters.province")}</label>
-          <Select
-            value={province}
-            onValueChange={(v) => {
-              setProvince(v);
-              setCanton("");
-              applyFilters({ provincia: v, canton: "" });
-            }}
-          >
+          <Select value={province} onValueChange={(v) => { setProvince(v); setCanton(""); applyFilters({ provincia: v, canton: "" }); }}>
             <SelectTrigger className="text-sm">
               <SelectValue placeholder={t("filters.allProvinces")} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="todas">{t("filters.allProvinces")}</SelectItem>
-              {PROVINCES.map((p) => (
-                <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-              ))}
+              {PROVINCES.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
 
         <div className="sm:w-44">
           <label className="text-xs font-medium text-[#6b7280] mb-1.5 block">{t("filters.canton")}</label>
-          <Select
-            value={canton}
-            onValueChange={(v) => { setCanton(v); applyFilters({ canton: v }); }}
-            disabled={!province || cantons.length === 0}
-          >
+          <Select value={canton} onValueChange={(v) => { setCanton(v); applyFilters({ canton: v }); }} disabled={!province || cantons.length === 0}>
             <SelectTrigger className="text-sm">
               <SelectValue placeholder={province ? t("filters.allCantons") : t("filters.selectProvince")} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="todos">{t("filters.allCantons")}</SelectItem>
-              {cantons.map((c) => (
-                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-              ))}
+              {cantons.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
@@ -187,9 +169,7 @@ export function SearchFilters() {
         <div className="sm:w-44">
           <label className="text-xs font-medium text-[#6b7280] mb-1.5 block">{t("filters.sortBy")}</label>
           <Select value={sortBy} onValueChange={(v) => { setSortBy(v); applyFilters({ sortBy: v }); }}>
-            <SelectTrigger className="text-sm">
-              <SelectValue />
-            </SelectTrigger>
+            <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="rating">{t("sort.rating")}</SelectItem>
               <SelectItem value="reviews">{t("sort.reviews")}</SelectItem>

@@ -1,5 +1,6 @@
 import type { ProfessionalCardData } from "@/components/professionals/professional-card";
 import { MOCK_PROFESSIONALS } from "@/lib/data/mock-professionals";
+import { getMatchingCategoryIds } from "@/lib/data/categories";
 
 const SUPABASE_CONFIGURED =
   !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -68,7 +69,16 @@ export async function searchProfessionals(
       }
       if (filters.query) {
         const q = filters.query.trim();
-        query = query.or(`bio.ilike.%${q}%,profiles.full_name.ilike.%${q}%,services::text.ilike.%${q}%`);
+        // Match text against bio/name AND expand keyword synonyms to category IDs
+        const keywordCategoryIds = getMatchingCategoryIds(q);
+        const textFilter = `bio.ilike.%${q}%,profiles.full_name.ilike.%${q}%,services::text.ilike.%${q}%`;
+        if (keywordCategoryIds.length > 0 && !filters.categoryId) {
+          // Include professionals whose category matches the keyword query
+          const catFilter = keywordCategoryIds.map((id) => `category_id.eq.${id}`).join(",");
+          query = query.or(`${textFilter},${catFilter}`);
+        } else {
+          query = query.or(textFilter);
+        }
       }
 
       switch (filters.sortBy) {
@@ -217,11 +227,13 @@ function applyMockFilters(
   }
   if (filters.query) {
     const q = filters.query.toLowerCase().trim();
+    const keywordCatIds = getMatchingCategoryIds(q);
     results = results.filter(
       (p) =>
         p.fullName.toLowerCase().includes(q) ||
         (p.bio ?? "").toLowerCase().includes(q) ||
-        p.categoryId.toLowerCase().includes(q)
+        p.categoryId.toLowerCase().includes(q) ||
+        keywordCatIds.includes(p.categoryId)
     );
   }
 

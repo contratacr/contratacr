@@ -15,6 +15,8 @@ export async function POST(req: Request) {
       bio,
       yearsExperience,
       hourlyRate,
+      lat,
+      lng,
       // email/fullName/cedula/photoUrl come from the body but we verify userId from session
       email: bodyEmail,
       fullName: bodyFullName,
@@ -132,6 +134,8 @@ export async function POST(req: Request) {
           hourly_rate: hourlyRate ? parseInt(hourlyRate, 10) : null,
           service_type: serviceType ?? "mobile",
           address: address ?? null,
+          ...(lat != null ? { lat: Number(lat) } : {}),
+          ...(lng != null ? { lng: Number(lng) } : {}),
         })
         .eq("id", existingPro.id);
 
@@ -160,6 +164,8 @@ export async function POST(req: Request) {
       service_type: serviceType ?? "mobile",
       address: address ?? null,
       slug,
+      ...(lat != null ? { lat: Number(lat) } : {}),
+      ...(lng != null ? { lng: Number(lng) } : {}),
     });
 
     if (proError) {

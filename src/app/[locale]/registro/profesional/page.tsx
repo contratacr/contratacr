@@ -15,20 +15,22 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import {
-  Select, SelectContent, SelectGroup, SelectItem,
-  SelectLabel, SelectTrigger, SelectValue,
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { PROVINCES, getCantonsByProvince } from "@/lib/data/cr-geography";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { OtpVerification } from "@/components/auth/otp-verification";
 import { useAuth } from "@/hooks/use-auth";
+import { CategorySearch } from "@/components/ui/category-search";
+import { LocationPicker, type PickedLocation } from "@/components/maps/location-picker";
 
-// ─── Services (grouped) ───────────────────────────────────────────────────────
+// ─── Category data now lives in src/lib/data/categories.ts ───────────────────
+// CategorySearch component handles display + fuzzy search.
 
-const CATEGORY_GROUPS = [
+const CATEGORY_GROUPS_STUB = [
   {
-    label: "Hogar y construcción",
+    label: "REMOVED",
     items: [
       { id: "plomeria", label: "Plomería" },
       { id: "electricidad", label: "Electricidad" },
@@ -183,6 +185,8 @@ const CATEGORY_GROUPS = [
     ],
   },
 ];
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const _unused = CATEGORY_GROUPS_STUB;
 
 // ─── Schemas ──────────────────────────────────────────────────────────────────
 
@@ -368,6 +372,7 @@ export default function RegisterProfessionalPage() {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [pickedLocation, setPickedLocation] = useState<PickedLocation | null>(null);
   const [otpEmail, setOtpEmail] = useState<string | null>(null);
 
   const [step1Data, setStep1Data] = useState<Step1Data | null>(null);
@@ -525,7 +530,9 @@ export default function RegisterProfessionalPage() {
           serviceType,
           province: step2Data.province,
           canton: step2Data.canton,
-          address: step2Data.address || null,
+          address: pickedLocation?.formattedAddress || step2Data.address || null,
+          lat: pickedLocation?.lat ?? null,
+          lng: pickedLocation?.lng ?? null,
           whatsapp: step2Data.whatsapp,
           bio: data.bio,
           yearsExperience: data.yearsExperience,
@@ -729,33 +736,17 @@ export default function RegisterProfessionalPage() {
           {step === 1 && (
             <form onSubmit={form2.handleSubmit(onStep2)} className="flex flex-col gap-4">
 
-              {/* Category */}
+              {/* Category — searchable combobox */}
               <div>
                 <label className="text-sm font-medium text-[#374151] block mb-1.5">
                   {t("category")}
                 </label>
-                <Select onValueChange={(v) => form2.setValue("category", v)}>
-                  <SelectTrigger className={form2.formState.errors.category ? "border-red-400" : ""}>
-                    <SelectValue placeholder={t("categoryPlaceholder")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {CATEGORY_GROUPS.map((group) => (
-                      <SelectGroup key={group.label}>
-                        <SelectLabel>{group.label}</SelectLabel>
-                        {group.items.map((item) => (
-                          <SelectItem key={item.id} value={item.id}>
-                            {item.label}
-                          </SelectItem>
-                        ))}
-                      </SelectGroup>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {form2.formState.errors.category && (
-                  <p className="text-xs text-red-500 mt-1">
-                    {form2.formState.errors.category.message}
-                  </p>
-                )}
+                <CategorySearch
+                  value={form2.watch("category") ?? ""}
+                  onChange={(v) => form2.setValue("category", v, { shouldValidate: true })}
+                  placeholder="Buscá tu especialidad… ej. psicólogo, plomero, niñera"
+                  error={form2.formState.errors.category?.message}
+                />
               </div>
 
               {/* Service type */}
@@ -829,14 +820,18 @@ export default function RegisterProfessionalPage() {
                 )}
               </div>
 
-              {/* Fixed location address */}
+              {/* Fixed location — map picker */}
               {serviceFixed && (
-                <div className="pl-1">
-                  <Input
-                    label="Dirección de tu lugar de trabajo"
-                    placeholder="Ej: Barrio Escalante, San José"
-                    hint="Dirección aproximada visible en tu perfil"
-                    {...form2.register("address")}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-medium text-[#374151]">
+                    Ubicación de tu local / estudio / oficina
+                  </label>
+                  <p className="text-xs text-[#9ca3af]">
+                    Marcá tu dirección exacta. Los clientes la verán en el mapa.
+                  </p>
+                  <LocationPicker
+                    value={pickedLocation}
+                    onChange={setPickedLocation}
                   />
                 </div>
               )}

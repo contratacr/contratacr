@@ -65,12 +65,10 @@ const COLUMNS = [
   {
     heading: "Soporte",
     links: [
-      { label: "Centro de ayuda",     href: "/ayuda" },
-      { label: "Seguridad",           href: "/seguridad" },
-      { label: "Comunidad",           href: "/comunidad" },
+      { label: "Contactar soporte",   href: "/soporte" },
+      { label: "Cómo funciona",       href: "/como-funciona" },
       { label: "Términos de uso",     href: "/terminos" },
       { label: "Privacidad",          href: "/privacidad" },
-      { label: "No vender mis datos", href: "/privacidad" },
     ],
   },
 ];
