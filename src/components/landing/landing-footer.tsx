@@ -44,25 +44,24 @@ const COLUMNS = [
     heading: "Para clientes",
     links: [
       { label: "Buscar profesionales", href: "/buscar" },
-      { label: "Publicar un proyecto",  href: "/publicar-proyecto" },
-      { label: "Cómo funciona",         href: "/como-funciona" },
-      { label: "Centro de ayuda",       href: "/ayuda" },
+      { label: "Publicar un proyecto", href: "/publicar-proyecto" },
+      { label: "Cómo funciona",        href: "/como-funciona" },
+      { label: "Centro de ayuda",      href: "/ayuda" },
     ],
   },
   {
     heading: "Para profesionales",
     links: [
-      { label: "Registrá tu perfil",    href: "/registro/profesional" },
-      { label: "Cómo atraer clientes",  href: "/atraer-clientes" },
-      { label: "Cómo funciona",         href: "/como-funciona" },
+      { label: "Registrá tu perfil",   href: "/registro/profesional" },
+      { label: "Cómo atraer clientes", href: "/atraer-clientes" },
+      { label: "Cómo funciona",        href: "/como-funciona" },
     ],
   },
   {
-    heading: "ContrataCR",
+    heading: "Soporte",
     links: [
-      { label: "Soporte",         href: "/soporte" },
-      { label: "Términos de uso", href: "/terminos" },
-      { label: "Privacidad",      href: "/privacidad" },
+      { label: "Contactar soporte", href: "/soporte" },
+      { label: "Centro de ayuda",   href: "/ayuda" },
     ],
   },
 ];
