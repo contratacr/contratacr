@@ -1,6 +1,6 @@
 # ContrataCR.com — Project Context
 
-_Last updated: 2026-06-03 (sprint 7 — complete client experience: registration, dashboard, calendar booking, projects, proposals)_
+_Last updated: 2026-06-04 (sprint 7 hotfix — marquee ASCII fix, OAuth onboarding upsert, client redirect to home)_
 
 ---
 
