@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getLocale } from "next-intl/server";
 import Link from "next/link";
 import { Search, SlidersHorizontal, ChevronLeft, ChevronRight } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
@@ -30,6 +30,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const params = await searchParams;
   const t = await getTranslations("search");
   const tCat = await getTranslations("categories");
+  const locale = await getLocale();
 
   const currentPage = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
 
@@ -44,6 +45,22 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const totalPages = Math.max(1, Math.ceil(allResults.length / PAGE_SIZE));
   const safePage = Math.min(currentPage, totalPages);
   const results = allResults.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
+  // Map pins for every matching professional (fixed-location → exact coords;
+  // mobile pros → province centroid).
+  const mapData = allResults.map((pro) => ({
+    id: pro.id,
+    slug: pro.slug,
+    fullName: pro.fullName,
+    avatarUrl: pro.avatarUrl ?? null,
+    ratingAvg: pro.ratingAvg,
+    reviewCount: pro.reviewCount,
+    categoryLabel: pro.categoryId ? tCat(pro.categoryId as Parameters<typeof tCat>[0]) : undefined,
+    hourlyRate: pro.hourlyRate ?? null,
+    provinceName: pro.provinceName,
+    lat: pro.lat ?? null,
+    lng: pro.lng ?? null,
+  }));
 
   const activeCategoryId = params.categoria && params.categoria !== "todas" ? params.categoria : undefined;
   const activeProvince = params.provincia && params.provincia !== "todas"
@@ -164,10 +181,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
               )}
             </div>
 
-            {/* ── Map panel (desktop) ── */}
-            <aside className="hidden xl:flex w-[420px] shrink-0">
+            {/* ── Map panel (desktop) — split layout, full-height ── */}
+            <aside className="hidden lg:flex w-[460px] xl:w-[560px] shrink-0">
               <div className="sticky top-20 w-full h-[calc(100vh-88px)] rounded-2xl overflow-hidden border border-[#e5e7eb] bg-white">
-                <GoogleMapPanel apiKey={MAPS_API_KEY} />
+                <GoogleMapPanel apiKey={MAPS_API_KEY} professionals={mapData} locale={locale} />
               </div>
             </aside>
 

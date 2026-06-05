@@ -4,24 +4,79 @@ import { useEffect, useRef } from "react";
 import Script from "next/script";
 import { MapPin } from "lucide-react";
 
-interface GoogleMapPanelProps {
-  apiKey: string;
+export interface MapProfessional {
+  id: string;
+  slug: string;
+  fullName: string;
+  avatarUrl?: string | null;
+  ratingAvg: number;
+  reviewCount: number;
+  categoryLabel?: string;
+  hourlyRate?: number | null;
+  provinceName?: string;
+  lat?: number | null;
+  lng?: number | null;
 }
 
-export function GoogleMapPanel({ apiKey }: GoogleMapPanelProps) {
+interface GoogleMapPanelProps {
+  apiKey: string;
+  professionals: MapProfessional[];
+  locale?: string;
+}
+
+// Approximate province centroids — fallback for professionals who travel to
+// the client (no fixed coordinates), pinned to the province they serve.
+const PROVINCE_CENTROIDS: Record<string, { lat: number; lng: number }> = {
+  "San José": { lat: 9.9281, lng: -84.0907 },
+  Alajuela: { lat: 10.0162, lng: -84.2116 },
+  Cartago: { lat: 9.8644, lng: -83.9194 },
+  Heredia: { lat: 9.9985, lng: -84.1165 },
+  Guanacaste: { lat: 10.6267, lng: -85.4437 },
+  Puntarenas: { lat: 9.9762, lng: -84.8384 },
+  Limón: { lat: 9.9907, lng: -83.0359 },
+};
+
+const CR_CENTER = { lat: 9.9281, lng: -84.0907 };
+
+// Deterministic small offset so multiple pins in the same canton don't overlap.
+function jitter(seed: string): { dlat: number; dlng: number } {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+  const a = ((h % 1000) / 1000 - 0.5) * 0.04;
+  const b = (((h >> 10) % 1000) / 1000 - 0.5) * 0.04;
+  return { dlat: a, dlng: b };
+}
+
+function positionFor(pro: MapProfessional): { lat: number; lng: number } | null {
+  if (typeof pro.lat === "number" && typeof pro.lng === "number") {
+    return { lat: pro.lat, lng: pro.lng };
+  }
+  const centroid = pro.provinceName ? PROVINCE_CENTROIDS[pro.provinceName] : null;
+  if (!centroid) return null;
+  const { dlat, dlng } = jitter(pro.id);
+  return { lat: centroid.lat + dlat, lng: centroid.lng + dlng };
+}
+
+function starsHtml(rating: number): string {
+  return `<span style="color:#ff9b32;font-weight:700;">★ ${rating.toFixed(1)}</span>`;
+}
+
+export function GoogleMapPanel({ apiKey, professionals, locale = "es" }: GoogleMapPanelProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const initialized = useRef(false);
 
   function initMap() {
     if (initialized.current || !mapRef.current) return;
-    initialized.current = true;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const maps = (window as any).google?.maps;
-    if (!maps) return;
+    const g = (window as any).google?.maps;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const clusterer = (window as any).markerClusterer;
+    if (!g || !clusterer) return; // wait for both scripts
+    initialized.current = true;
 
-    new maps.Map(mapRef.current, {
-      center: { lat: 9.7489, lng: -83.7534 },
-      zoom: 8,
+    const map = new g.Map(mapRef.current, {
+      center: CR_CENTER,
+      zoom: 9,
       mapTypeControl: false,
       streetViewControl: false,
       fullscreenControl: false,
@@ -31,16 +86,85 @@ export function GoogleMapPanel({ apiKey }: GoogleMapPanelProps) {
         { featureType: "transit", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
       ],
     });
+
+    const info = new g.InfoWindow();
+    const bounds = new g.LatLngBounds();
+
+    const pinIcon = {
+      path: "M12 0C7.03 0 3 4.03 3 9c0 6.75 9 15 9 15s9-8.25 9-15c0-4.97-4.03-9-9-9z",
+      fillColor: "#009FD9",
+      fillOpacity: 1,
+      strokeColor: "#ffffff",
+      strokeWeight: 2,
+      scale: 1.6,
+      anchor: new g.Point(12, 24),
+      labelOrigin: new g.Point(12, 9),
+    };
+
+    const markers = professionals
+      .map((pro) => {
+        const pos = positionFor(pro);
+        if (!pos) return null;
+        bounds.extend(pos);
+        const marker = new g.Marker({ position: pos, icon: pinIcon });
+        marker.addListener("click", () => {
+          const href = `/${locale}/profesionales/${pro.slug}`;
+          const avatar = pro.avatarUrl
+            ? `<img src="${pro.avatarUrl}" alt="" style="width:48px;height:48px;border-radius:9999px;object-fit:cover;flex-shrink:0;" />`
+            : `<div style="width:48px;height:48px;border-radius:9999px;background:#EBF5FB;color:#009FD9;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">${pro.fullName.charAt(0)}</div>`;
+          info.setContent(`
+            <div style="font-family:Inter,Arial,sans-serif;max-width:240px;padding:4px;">
+              <div style="display:flex;gap:10px;align-items:center;">
+                ${avatar}
+                <div style="min-width:0;">
+                  <div style="font-weight:700;color:#111827;font-size:14px;line-height:1.2;">${pro.fullName}</div>
+                  ${pro.categoryLabel ? `<div style="color:#6b7280;font-size:12px;margin-top:2px;">${pro.categoryLabel}</div>` : ""}
+                  <div style="font-size:12px;margin-top:3px;">${starsHtml(pro.ratingAvg)} <span style="color:#9ca3af;">(${pro.reviewCount})</span></div>
+                </div>
+              </div>
+              <a href="${href}" style="display:block;text-align:center;margin-top:10px;background:#009FD9;color:#fff;text-decoration:none;font-weight:600;font-size:13px;padding:7px 0;border-radius:8px;">Ver perfil</a>
+            </div>`);
+          info.open({ map, anchor: marker });
+        });
+        return marker;
+      })
+      .filter(Boolean);
+
+    // Brand-colored numbered cluster bubbles
+    const renderer = {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      render: ({ count, position }: any) =>
+        new g.Marker({
+          position,
+          icon: {
+            path: g.SymbolPath.CIRCLE,
+            fillColor: "#009FD9",
+            fillOpacity: 1,
+            strokeColor: "#ffffff",
+            strokeWeight: 2,
+            scale: 16 + Math.min(count, 30) * 0.4,
+          },
+          label: { text: String(count), color: "#ffffff", fontSize: "12px", fontWeight: "700" },
+          zIndex: 1000 + count,
+        }),
+    };
+
+    new clusterer.MarkerClusterer({ map, markers, renderer });
+
+    if (markers.length > 0) {
+      map.fitBounds(bounds);
+      const listener = g.event.addListenerOnce(map, "idle", () => {
+        if (map.getZoom() > 14) map.setZoom(14);
+      });
+      void listener;
+    }
   }
 
   useEffect(() => {
-    // If the script was already loaded (e.g. hot reload), initialize immediately
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if ((window as any).google?.maps) {
-      initMap();
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if ((window as any).google?.maps && (window as any).markerClusterer) initMap();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [professionals]);
 
   if (!apiKey) {
     return (
@@ -61,8 +185,13 @@ export function GoogleMapPanel({ apiKey }: GoogleMapPanelProps) {
   return (
     <>
       <Script
+        src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"
+        strategy="afterInteractive"
+        onLoad={initMap}
+      />
+      <Script
         src={`https://maps.googleapis.com/maps/api/js?key=${apiKey}`}
-        strategy="lazyOnload"
+        strategy="afterInteractive"
         onLoad={initMap}
       />
       <div ref={mapRef} className="w-full h-full" />
