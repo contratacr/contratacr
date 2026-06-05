@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 
 const FROM_ADDRESS = "ContrataCR <soporte@contratacr.com>";
-const SUPPORT_TO   = "soportecontratacr@hotmail.com";
+const SUPPORT_TO   = "soporte@contratacr.com";
 
 /* ─── Parse FormData from request ─── */
 async function parseRequest(req: NextRequest) {
@@ -150,7 +150,7 @@ export async function POST(req: NextRequest) {
     if (!sent) {
       return NextResponse.json({
         ok: false,
-        error: "El sistema de correo no está configurado. Escribinos directamente a soportecontratacr@hotmail.com",
+        error: "El sistema de correo no está configurado. Escribinos directamente a soporte@contratacr.com",
       }, { status: 503 });
     }
 
@@ -159,7 +159,7 @@ export async function POST(req: NextRequest) {
     console.error("[contact] error:", err);
     return NextResponse.json({
       ok: false,
-      error: "Error al enviar el mensaje. Escribinos a soportecontratacr@hotmail.com",
+      error: "Error al enviar el mensaje. Escribinos a soporte@contratacr.com",
     }, { status: 500 });
   }
 }

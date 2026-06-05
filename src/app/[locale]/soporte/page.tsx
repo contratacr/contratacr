@@ -103,7 +103,7 @@ export default function SoportePage() {
       }
       setSuccess(true);
     } catch {
-      setError("Error inesperado. Por favor escribinos a soportecontratacr@hotmail.com");
+      setError("Error inesperado. Por favor escribinos a soporte@contratacr.com");
     } finally {
       setSubmitting(false);
     }
@@ -127,8 +127,8 @@ export default function SoportePage() {
             </p>
             <p className="text-sm text-[#9ca3af]">
               También podés escribirnos directamente a{" "}
-              <a href="mailto:soportecontratacr@hotmail.com" className="text-[#009FD9] hover:underline">
-                soportecontratacr@hotmail.com
+              <a href="mailto:soporte@contratacr.com" className="text-[#009FD9] hover:underline">
+                soporte@contratacr.com
               </a>
             </p>
           </div>
@@ -267,9 +267,9 @@ export default function SoportePage() {
                   <Mail className="h-5 w-5 text-[#009FD9]" />
                   <p className="text-sm font-semibold text-[#111827]">Email directo</p>
                 </div>
-                <a href="mailto:soportecontratacr@hotmail.com"
+                <a href="mailto:soporte@contratacr.com"
                   className="text-sm text-[#009FD9] hover:underline break-all">
-                  soportecontratacr@hotmail.com
+                  soporte@contratacr.com
                 </a>
                 <p className="text-xs text-[#9ca3af] mt-2">Respondemos en menos de 24 horas hábiles.</p>
               </div>

@@ -197,7 +197,7 @@ export default function AyudaPage() {
                   Abrir ticket de soporte
                 </Link>
                 <a
-                  href="mailto:soportecontratacr@hotmail.com"
+                  href="mailto:soporte@contratacr.com"
                   className="inline-flex items-center justify-center gap-2 bg-white hover:bg-gray-50 text-[#1a2744] font-bold px-6 py-3 rounded-full transition-all border border-gray-200 text-sm whitespace-nowrap"
                 >
                   Enviar correo
