@@ -209,8 +209,9 @@ export default function ClientDashboardPage() {
 
   async function handleSignOut() {
     const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push("/");
+    await supabase.auth.signOut({ scope: "local" });
+    // Full page reload so auth state and navbar reset cleanly
+    window.location.href = "/es";
   }
 
   async function cancelBooking(id: string) {
