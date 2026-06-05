@@ -27,6 +27,9 @@ export type ProfessionalCardData = {
   isVerified: boolean;
   isFeatured: boolean;
   isAvailable: boolean;
+  lat?: number | null;
+  lng?: number | null;
+  serviceType?: string | null;
 };
 
 interface ProfessionalCardProps {

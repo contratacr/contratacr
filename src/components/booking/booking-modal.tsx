@@ -82,6 +82,7 @@ export function BookingModal({ professional, categoryName, open, onClose }: Book
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
   const [availability, setAvailability] = useState<WeeklyAvailability>({});
+  const [dateSlots, setDateSlots] = useState<Record<string, string[]>>({});
   const [blockedDates, setBlockedDates] = useState<string[]>([]);
   const [takenSlots, setTakenSlots] = useState<Set<string>>(new Set());
   const [availabilityLoaded, setAvailabilityLoaded] = useState(false);
@@ -104,10 +105,19 @@ export function BookingModal({ professional, categoryName, open, onClose }: Book
     Promise.all([
       supabase.from("professionals").select("availability").eq("id", professional.id).single(),
       supabase.from("blocked_dates").select("blocked_date").eq("professional_id", professional.id),
+      supabase.from("availability_slots").select("slot_date, slot_time").eq("professional_id", professional.id).gte("slot_date", formatDateISO(today)),
       supabase.auth.getUser(),
       fetch(`/api/bookings?takenFor=${professional.id}`).then((r) => r.json()).catch(() => ({ taken: [] })),
-    ]).then(([{ data: proData }, { data: bdData }, { data: { user } }, takenRes]) => {
+    ]).then(([{ data: proData }, { data: bdData }, { data: slotData }, { data: { user } }, takenRes]) => {
       if (proData?.availability) setAvailability(proData.availability as WeeklyAvailability);
+      // Build explicit date → times map (new scheduling model)
+      const map: Record<string, string[]> = {};
+      for (const s of slotData ?? []) {
+        const time = String(s.slot_time).slice(0, 5);
+        (map[s.slot_date] ??= []).push(time);
+      }
+      for (const k of Object.keys(map)) map[k].sort();
+      setDateSlots(map);
       setBlockedDates((bdData ?? []).map((r) => r.blocked_date));
       setTakenSlots(new Set<string>((takenRes?.taken as string[]) ?? []));
       setAvailabilityLoaded(true);
@@ -122,25 +132,33 @@ export function BookingModal({ professional, categoryName, open, onClose }: Book
     });
   }, [open, professional.id]);
 
+  // Professionals using the new date-based model have explicit slots.
+  const usesExplicitSlots = Object.keys(dateSlots).length > 0;
+
   function isDayAvailable(date: Date): boolean {
     if (date < today) return false;
+    const dateStr = formatDateISO(date);
+    if (blockedDates.includes(dateStr)) return false;
+    if (usesExplicitSlots) {
+      return getSlotsForDate(dateStr).length > 0;
+    }
     const dayKey = DAY_KEYS[date.getDay()];
-    const daySchedule = availability[dayKey];
-    if (!daySchedule?.enabled) return false;
-    if (blockedDates.includes(formatDateISO(date))) return false;
-    return true;
+    return !!availability[dayKey]?.enabled;
   }
 
   function getSlotsForDate(dateStr: string): string[] {
-    const [y, m, d] = dateStr.split("-").map(Number);
-    const date = new Date(y, m - 1, d);
-    const dayKey = DAY_KEYS[date.getDay()];
-    const daySchedule = availability[dayKey];
-    if (!daySchedule?.enabled) return [];
+    let baseSlots: string[];
+    if (usesExplicitSlots) {
+      baseSlots = dateSlots[dateStr] ?? [];
+    } else {
+      const [y, m, d] = dateStr.split("-").map(Number);
+      const date = new Date(y, m - 1, d);
+      const daySchedule = availability[DAY_KEYS[date.getDay()]];
+      if (!daySchedule?.enabled) return [];
+      baseSlots = generateSlots(daySchedule.ranges ?? []);
+    }
     // Exclude slots already booked by other clients on this date.
-    return generateSlots(daySchedule.ranges ?? []).filter(
-      (slot) => !takenSlots.has(`${dateStr} ${slot}`)
-    );
+    return baseSlots.filter((slot) => !takenSlots.has(`${dateStr} ${slot}`));
   }
 
   function prevMonth() {
@@ -211,7 +229,7 @@ export function BookingModal({ professional, categoryName, open, onClose }: Book
 
   const calendarDays = getCalendarDays(currentYear, currentMonth);
   const slots = selectedDate ? getSlotsForDate(selectedDate) : [];
-  const hasAnyAvailability = Object.values(availability).some((d) => d.enabled);
+  const hasAnyAvailability = usesExplicitSlots || Object.values(availability).some((d) => d.enabled);
 
   const totalSteps = isLoggedIn ? 2 : 3;
   const stepIndex = { calendar: 0, details: 1, contact: 2, success: 3 };

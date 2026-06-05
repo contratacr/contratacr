@@ -223,7 +223,7 @@ export default function ProDashboardPage() {
                   {activeTab === "availability" && (
                     <AvailabilityEditor
                       professionalId={pro.id}
-                      initialAvailability={pro.availability}
+                      initialPublic={pro.availability_public ?? true}
                       onSaved={handleSaved}
                     />
                   )}

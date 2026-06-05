@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import {
   MapPin, Shield, ArrowLeft,
-  Share2, Flag, ChevronDown, MessageCircle,
+  Share2, Flag, ChevronDown, MessageCircle, Phone,
 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Navbar } from "@/components/layout/navbar";
@@ -249,14 +249,24 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                   </button>
                 )}
 
-                {/* Solicitar servicio CTA */}
-                <BookingButton
-                  professional={professional}
-                  categoryName={professional.categoryId ? tCat(professional.categoryId as Parameters<typeof tCat>[0]) : ""}
-                  variant="outline"
-                  size="md"
-                  className="w-full"
-                />
+                {/* Solicitar servicio CTA — only when schedule is public */}
+                {professional.availabilityPublic ? (
+                  <BookingButton
+                    professional={professional}
+                    categoryName={professional.categoryId ? tCat(professional.categoryId as Parameters<typeof tCat>[0]) : ""}
+                    variant="outline"
+                    size="md"
+                    className="w-full"
+                  />
+                ) : (
+                  <a
+                    href={`tel:+506${professional.whatsapp.replace(/\D/g, "")}`}
+                    className="flex items-center justify-center gap-2 w-full border border-[#009FD9] text-[#009FD9] hover:bg-[#EBF5FB] font-semibold py-3 rounded-xl transition-colors text-sm"
+                  >
+                    <Phone className="h-4 w-4" />
+                    Llamar
+                  </a>
+                )}
 
                 <ClientRegistrationModal
                   open={showRegistration}
@@ -363,10 +373,63 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                   {/* ── TAB: Disponibilidad ── */}
                   {activeTab === "disponibilidad" && (
                     <div>
-                      <h2 className="text-lg font-semibold text-[#111827] mb-5">Horario semanal</h2>
-                      <p className="text-sm text-[#9ca3af] py-4 text-center">
-                        Contactá al profesional por WhatsApp para confirmar su disponibilidad.
-                      </p>
+                      <h2 className="text-lg font-semibold text-[#111827] mb-5">Disponibilidad</h2>
+                      {professional.availabilityPublic ? (
+                        <div className="flex flex-col items-center text-center gap-4 py-6">
+                          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#EBF5FB]">
+                            <MapPin className="h-6 w-6 text-[#009FD9]" />
+                          </div>
+                          <p className="text-sm text-[#374151] max-w-sm">
+                            Este profesional tiene horarios disponibles. Usá <strong>Solicitar servicio</strong> para
+                            elegir una fecha y hora y reservar directamente.
+                          </p>
+                          <BookingButton
+                            professional={professional}
+                            categoryName={professional.categoryId ? tCat(professional.categoryId as Parameters<typeof tCat>[0]) : ""}
+                            size="md"
+                          />
+                        </div>
+                      ) : (
+                        <div className="flex flex-col items-center text-center gap-4 py-6">
+                          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#f4f7fa]">
+                            <MessageCircle className="h-6 w-6 text-[#6b7280]" />
+                          </div>
+                          <p className="text-sm font-medium text-[#374151] max-w-sm">
+                            La disponibilidad de este profesional no es pública.
+                          </p>
+                          <p className="text-xs text-[#9ca3af] max-w-sm -mt-2">
+                            Contactalo directamente y conocé sus horarios.
+                          </p>
+                          <div className="flex flex-col sm:flex-row gap-2.5 w-full max-w-xs">
+                            {isAuthenticated ? (
+                              <a
+                                href={waLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex-1 flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1ebe5d] text-white font-semibold py-2.5 rounded-xl transition-colors text-sm"
+                              >
+                                <WhatsAppIcon className="h-4 w-4" />
+                                WhatsApp
+                              </a>
+                            ) : (
+                              <button
+                                onClick={() => setShowRegistration(true)}
+                                className="flex-1 flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1ebe5d] text-white font-semibold py-2.5 rounded-xl transition-colors text-sm"
+                              >
+                                <WhatsAppIcon className="h-4 w-4" />
+                                WhatsApp
+                              </button>
+                            )}
+                            <a
+                              href={`tel:+506${professional.whatsapp.replace(/\D/g, "")}`}
+                              className="flex-1 flex items-center justify-center gap-2 border border-[#009FD9] text-[#009FD9] hover:bg-[#EBF5FB] font-semibold py-2.5 rounded-xl transition-colors text-sm"
+                            >
+                              <Phone className="h-4 w-4" />
+                              Llamar
+                            </a>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
 

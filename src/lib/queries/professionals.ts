@@ -24,6 +24,7 @@ export type ProfessionalDetail = ProfessionalCardData & {
   portfolioUrls: string[];
   reviews: Review[];
   services: ProService[];
+  availabilityPublic: boolean;
 };
 
 export type Review = {
@@ -52,7 +53,7 @@ export async function searchProfessionals(
         .select(
           `id, slug, hourly_rate, is_verified, is_featured, is_available,
            rating_avg, review_count, bio, whatsapp, years_experience, portfolio_urls,
-           category_id,
+           category_id, lat, lng, service_type,
            profiles(full_name, avatar_url),
            provincias(id, name),
            cantones(id, name)`
@@ -120,6 +121,9 @@ export async function searchProfessionals(
         isVerified: row.is_verified ?? false,
         isFeatured: row.is_featured ?? false,
         isAvailable: row.is_available ?? true,
+        lat: row.lat ?? null,
+        lng: row.lng ?? null,
+        serviceType: row.service_type ?? null,
       }));
     } catch (err) {
       console.error("[searchProfessionals] Supabase error, using mock data:", err);
@@ -148,7 +152,7 @@ export async function getProfessionalBySlug(
         .select(
           `id, slug, hourly_rate, is_verified, is_featured, is_available,
            rating_avg, review_count, bio, whatsapp, years_experience, portfolio_urls,
-           category_id, services,
+           category_id, services, availability_public, lat, lng, service_type,
            profiles(full_name, avatar_url),
            provincias(id, name),
            cantones(id, name),
@@ -188,9 +192,13 @@ export async function getProfessionalBySlug(
         isVerified: pro.is_verified ?? false,
         isFeatured: pro.is_featured ?? false,
         isAvailable: pro.is_available ?? true,
+        lat: (pro as any).lat ?? null,
+        lng: (pro as any).lng ?? null,
+        serviceType: (pro as any).service_type ?? null,
         portfolioUrls: pro.portfolio_urls ?? [],
         reviews,
         services: ((pro as any).services as ProService[]) ?? [],
+        availabilityPublic: (pro as any).availability_public ?? true,
       };
     } catch (err) {
       console.error("[getProfessionalBySlug] Supabase error, using mock data:", err);
@@ -199,7 +207,7 @@ export async function getProfessionalBySlug(
 
   const mock = MOCK_PROFESSIONALS.find((p) => p.slug === slug);
   if (!mock) return null;
-  return { ...mock, portfolioUrls: [], reviews: MOCK_REVIEWS, services: [] };
+  return { ...mock, portfolioUrls: [], reviews: MOCK_REVIEWS, services: [], availabilityPublic: true };
 }
 
 // ---------------------------------------------------------------------------
