@@ -9,7 +9,7 @@ import { ProfessionalCard } from "@/components/professionals/professional-card";
 import { SaveableCard } from "@/components/professionals/save-button";
 import { searchProfessionals } from "@/lib/queries/professionals";
 import { PROVINCES } from "@/lib/data/cr-geography";
-import { GoogleMapPanel } from "@/components/maps/google-map-panel";
+import { SearchResultsLayout } from "@/components/search/search-results-layout";
 
 const PAGE_SIZE = 9;
 
@@ -119,10 +119,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       {/* Main content */}
       <main className="flex-1">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex gap-6">
+          <SearchResultsLayout mapData={mapData} apiKey={MAPS_API_KEY} locale={locale}>
 
             {/* ── Results list ── */}
-            <div className="flex-1 min-w-0">
+            <div className="min-w-0">
               {allResults.length === 0 ? (
                 <div className="text-center py-20 bg-white rounded-2xl border border-[#e5e7eb]">
                   <div className="flex justify-center mb-4">
@@ -181,14 +181,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
               )}
             </div>
 
-            {/* ── Map panel (desktop) — split layout, full-height ── */}
-            <aside className="hidden lg:flex w-[460px] xl:w-[560px] shrink-0">
-              <div className="sticky top-20 w-full h-[calc(100vh-88px)] rounded-2xl overflow-hidden border border-[#e5e7eb] bg-white">
-                <GoogleMapPanel apiKey={MAPS_API_KEY} professionals={mapData} locale={locale} />
-              </div>
-            </aside>
-
-          </div>
+          </SearchResultsLayout>
         </div>
       </main>
 

@@ -16,7 +16,8 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter, Link } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
-import { getInitials, getWhatsAppLink } from "@/lib/utils";
+import { getInitials, getWhatsAppLink, formatRelativeTime } from "@/lib/utils";
+import { notificationHref } from "@/lib/notification-link";
 import { LeaveReviewModal } from "@/components/professionals/leave-review-modal";
 import { SavedProfessionalsTab } from "@/components/professionals/saved-professionals-tab";
 import type { BookingStatus } from "@/types";
@@ -74,6 +75,7 @@ type Notification = {
   message: string;
   read: boolean;
   created_at: string;
+  data?: { link?: string } | null;
 };
 
 const STATUS_ICON: Record<BookingStatus, React.ReactNode> = {
@@ -256,6 +258,16 @@ export default function ClientDashboardPage() {
         p.id === proposalId ? { ...p, status: "declined" } : p
       ),
     }));
+  }
+
+  function openNotification(n: Notification) {
+    if (!n.read) {
+      const supabase = createClient();
+      supabase.from("notifications").update({ read: true }).eq("id", n.id).then(() => {});
+      setNotifications((prev) => prev.map((x) => (x.id === n.id ? { ...x, read: true } : x)));
+      setUnreadCount((c) => Math.max(0, c - 1));
+    }
+    window.location.assign(notificationHref(n));
   }
 
   async function markAllNotificationsRead() {
@@ -738,10 +750,11 @@ export default function ClientDashboardPage() {
                   ) : (
                     <div className="flex flex-col gap-2">
                       {notifications.map((n) => (
-                        <div
+                        <button
                           key={n.id}
+                          onClick={() => openNotification(n)}
                           className={cn(
-                            "p-4 rounded-2xl border transition-colors",
+                            "w-full text-left p-4 rounded-2xl border transition-colors hover:border-[#009FD9]",
                             n.read ? "bg-white border-[#e5e7eb]" : "bg-[#EBF5FB] border-[#bfdbfe]"
                           )}
                         >
@@ -750,14 +763,10 @@ export default function ClientDashboardPage() {
                             <div className={cn("flex-1", n.read && "ml-5")}>
                               <p className="text-sm font-semibold text-[#111827]">{n.title}</p>
                               <p className="text-sm text-[#6b7280] mt-0.5">{n.message}</p>
-                              <p className="text-xs text-[#9ca3af] mt-1">
-                                {new Date(n.created_at).toLocaleDateString("es-CR", {
-                                  day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
-                                })}
-                              </p>
+                              <p className="text-xs text-[#9ca3af] mt-1">{formatRelativeTime(n.created_at)}</p>
                             </div>
                           </div>
-                        </div>
+                        </button>
                       ))}
                     </div>
                   )}

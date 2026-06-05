@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
@@ -17,6 +17,14 @@ export const metadata: Metadata = {
   title: "ContrataCR — Profesionales de servicios en Costa Rica",
   description:
     "Encontrá electricistas, plomeros, pintores, tutores y más profesionales verificados en tu cantón.",
+};
+
+// viewport-fit=cover exposes the env(safe-area-inset-*) values used by the
+// search map on notched / home-bar devices.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default async function LocaleLayout({

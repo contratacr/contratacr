@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, MapPin } from "lucide-react";
+import { Search, MapPin, User } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import Image from "next/image";
+import { cn } from "@/lib/utils";
+import type { SearchSuggestion } from "@/app/api/search/suggestions/route";
 
 const PROVINCES = [
   "San José", "Alajuela", "Cartago", "Heredia",
@@ -57,15 +59,121 @@ function RotatingLine({ lines }: { lines: string[] }) {
   );
 }
 
+/* ─── Autocomplete dropdown ─── */
+function SuggestionsDropdown({
+  suggestions,
+  activeIdx,
+  onPick,
+}: {
+  suggestions: SearchSuggestion[];
+  activeIdx: number;
+  onPick: (s: SearchSuggestion) => void;
+}) {
+  if (suggestions.length === 0) return null;
+  return (
+    <div
+      className="absolute left-0 right-0 top-full mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden py-1 text-left"
+      role="listbox"
+    >
+      {suggestions.map((s, i) => (
+        <button
+          key={s.type === "category" ? `c-${s.id}` : `p-${s.slug}`}
+          type="button"
+          role="option"
+          aria-selected={i === activeIdx}
+          // Prevent the input's blur from firing before the click is handled
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => onPick(s)}
+          className={cn(
+            "w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors",
+            i === activeIdx ? "bg-[#EBF5FB]" : "hover:bg-gray-50"
+          )}
+        >
+          {s.type === "category" ? (
+            <Search className="h-4 w-4 text-[#009FD9] shrink-0" />
+          ) : (
+            <User className="h-4 w-4 text-[#009FD9] shrink-0" />
+          )}
+          <span className="flex-1 min-w-0">
+            <span className="block text-sm text-[#111827] truncate">{s.label}</span>
+            {s.type === "professional" && s.sublabel && (
+              <span className="block text-xs text-gray-400 truncate">{s.sublabel}</span>
+            )}
+          </span>
+          <span className="text-[10px] uppercase tracking-wide text-gray-300 shrink-0">
+            {s.type === "category" ? "Servicio" : "Profesional"}
+          </span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export function LandingHero() {
   const [service, setService] = useState("");
   const [province, setProvince] = useState("");
+  const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
+  const [openSug, setOpenSug] = useState(false);
+  const [activeIdx, setActiveIdx] = useState(-1);
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations("landing.hero");
 
   const lines = ROTATING_LINES[locale] ?? ROTATING_LINES.es;
   const tags = POPULAR_TAGS[locale] ?? POPULAR_TAGS.es;
+
+  // Debounced suggestion fetch as the user types
+  useEffect(() => {
+    const q = service.trim();
+    const id = setTimeout(async () => {
+      if (q.length < 2) {
+        setSuggestions([]);
+        setOpenSug(false);
+        return;
+      }
+      try {
+        const res = await fetch(`/api/search/suggestions?q=${encodeURIComponent(q)}`);
+        const { suggestions } = await res.json();
+        setSuggestions(suggestions ?? []);
+        setActiveIdx(-1);
+        setOpenSug(true);
+      } catch {
+        /* ignore — search still works without suggestions */
+      }
+    }, q.length < 2 ? 0 : 250);
+    return () => clearTimeout(id);
+  }, [service]);
+
+  function selectSuggestion(s: SearchSuggestion) {
+    const params = new URLSearchParams();
+    if (s.type === "category") {
+      params.set("categoria", s.id);
+      setService(s.label);
+    } else {
+      params.set("q", s.label);
+    }
+    if (province) params.set("provincia", province);
+    setOpenSug(false);
+    router.push(`/buscar?${params.toString()}`);
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (!openSug || suggestions.length === 0) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveIdx((i) => Math.min(i + 1, suggestions.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveIdx((i) => Math.max(i - 1, 0));
+    } else if (e.key === "Enter") {
+      if (activeIdx >= 0) {
+        e.preventDefault();
+        selectSuggestion(suggestions[activeIdx]);
+      }
+    } else if (e.key === "Escape") {
+      setOpenSug(false);
+    }
+  }
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -98,53 +206,73 @@ export function LandingHero() {
           className="w-full"
         >
           {/* Desktop row: single line h-14 */}
-          <div
-            className="hidden sm:flex items-center h-14 bg-white border border-gray-200 rounded-[6px] overflow-hidden pl-5 pr-2 shadow-[0_8px_48px_rgba(0,0,0,0.12)] hover:shadow-[0_12px_60px_rgba(0,159,217,0.20)] transition-shadow duration-300"
-          >
-            {/* Text input */}
-            <div className="flex items-center gap-3 flex-1 min-w-0 h-full">
-              <Search className="h-5 w-5 text-gray-300 shrink-0" />
-              <input
-                type="text"
-                value={service}
-                onChange={(e) => setService(e.target.value)}
-                placeholder={t("searchPlaceholder")}
-                className="flex-1 text-base text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-none min-w-0"
-              />
-            </div>
-            {/* Divider + province */}
-            <div className="w-px bg-gray-200 self-stretch my-3 mx-2 shrink-0" />
-            <div className="flex items-center gap-2 min-w-[140px] shrink-0 h-full">
-              <MapPin className="h-5 w-5 text-gray-300 shrink-0" />
-              <select
-                value={province}
-                onChange={(e) => setProvince(e.target.value)}
-                className="flex-1 text-base text-gray-500 bg-transparent focus:outline-none appearance-none cursor-pointer"
+          <div className="hidden sm:block relative">
+            <div className="flex items-center h-14 bg-white border border-gray-200 rounded-[6px] overflow-hidden pl-5 pr-2 shadow-[0_8px_48px_rgba(0,0,0,0.12)] hover:shadow-[0_12px_60px_rgba(0,159,217,0.20)] transition-shadow duration-300">
+              {/* Text input */}
+              <div className="flex items-center gap-3 flex-1 min-w-0 h-full">
+                <Search className="h-5 w-5 text-gray-300 shrink-0" />
+                <input
+                  type="text"
+                  value={service}
+                  onChange={(e) => setService(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  onFocus={() => { if (suggestions.length > 0) setOpenSug(true); }}
+                  onBlur={() => setTimeout(() => setOpenSug(false), 120)}
+                  placeholder={t("searchPlaceholder")}
+                  className="flex-1 text-base text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-none min-w-0"
+                  role="combobox"
+                  aria-expanded={openSug}
+                  aria-autocomplete="list"
+                />
+              </div>
+              {/* Divider + province */}
+              <div className="w-px bg-gray-200 self-stretch my-3 mx-2 shrink-0" />
+              <div className="flex items-center gap-2 min-w-[140px] shrink-0 h-full">
+                <MapPin className="h-5 w-5 text-gray-300 shrink-0" />
+                <select
+                  value={province}
+                  onChange={(e) => setProvince(e.target.value)}
+                  className="flex-1 text-base text-gray-500 bg-transparent focus:outline-none appearance-none cursor-pointer"
+                >
+                  <option value="">{t("location")}</option>
+                  {PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
+                </select>
+              </div>
+              {/* Buscar button */}
+              <button
+                type="submit"
+                className="ml-2 h-10 px-8 bg-[#009FD9] hover:bg-[#0089bb] text-white text-base font-bold rounded-[4px] transition-all duration-150 active:scale-[0.97] shadow-sm whitespace-nowrap shrink-0"
               >
-                <option value="">{t("location")}</option>
-                {PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
-              </select>
+                {t("search")}
+              </button>
             </div>
-            {/* Buscar button */}
-            <button
-              type="submit"
-              className="ml-2 h-10 px-8 bg-[#009FD9] hover:bg-[#0089bb] text-white text-base font-bold rounded-[4px] transition-all duration-150 active:scale-[0.97] shadow-sm whitespace-nowrap shrink-0"
-            >
-              {t("search")}
-            </button>
+            {openSug && (
+              <SuggestionsDropdown suggestions={suggestions} activeIdx={activeIdx} onPick={selectSuggestion} />
+            )}
           </div>
 
           {/* Mobile stacked layout */}
           <div className="sm:hidden flex flex-col gap-2">
-            <div className="flex items-center h-12 bg-white border border-gray-200 rounded-[6px] overflow-hidden pl-4 pr-3 shadow-[0_4px_24px_rgba(0,0,0,0.10)]">
-              <Search className="h-5 w-5 text-gray-300 shrink-0 mr-3" />
-              <input
-                type="text"
-                value={service}
-                onChange={(e) => setService(e.target.value)}
-                placeholder={t("searchPlaceholder")}
-                className="flex-1 text-base text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-none min-w-0"
-              />
+            <div className="relative">
+              <div className="flex items-center h-12 bg-white border border-gray-200 rounded-[6px] overflow-hidden pl-4 pr-3 shadow-[0_4px_24px_rgba(0,0,0,0.10)]">
+                <Search className="h-5 w-5 text-gray-300 shrink-0 mr-3" />
+                <input
+                  type="text"
+                  value={service}
+                  onChange={(e) => setService(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  onFocus={() => { if (suggestions.length > 0) setOpenSug(true); }}
+                  onBlur={() => setTimeout(() => setOpenSug(false), 120)}
+                  placeholder={t("searchPlaceholder")}
+                  className="flex-1 text-base text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-none min-w-0"
+                  role="combobox"
+                  aria-expanded={openSug}
+                  aria-autocomplete="list"
+                />
+              </div>
+              {openSug && (
+                <SuggestionsDropdown suggestions={suggestions} activeIdx={activeIdx} onPick={selectSuggestion} />
+              )}
             </div>
             <button
               type="submit"

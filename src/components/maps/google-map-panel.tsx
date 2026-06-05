@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import Script from "next/script";
 import { MapPin } from "lucide-react";
+import { BRAND_MAP_STYLE } from "@/lib/maps/map-style";
 
 export interface MapProfessional {
   id: string;
@@ -64,6 +65,11 @@ function starsHtml(rating: number): string {
 export function GoogleMapPanel({ apiKey, professionals, locale = "es" }: GoogleMapPanelProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const initialized = useRef(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mapInstanceRef = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const boundsRef = useRef<any>(null);
+  const hasMarkersRef = useRef(false);
 
   function initMap() {
     if (initialized.current || !mapRef.current) return;
@@ -81,11 +87,12 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es" }: GoogleM
       streetViewControl: false,
       fullscreenControl: false,
       zoomControl: true,
-      styles: [
-        { featureType: "poi.business", stylers: [{ visibility: "off" }] },
-        { featureType: "transit", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
-      ],
+      // Cooperative gestures: one-finger drag scrolls the page (no scroll-trap),
+      // two fingers pan/zoom the map — so page scrolling never zooms the map.
+      gestureHandling: "cooperative",
+      styles: BRAND_MAP_STYLE,
     });
+    mapInstanceRef.current = map;
 
     const info = new g.InfoWindow();
     const bounds = new g.LatLngBounds();
@@ -122,7 +129,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es" }: GoogleM
                   <div style="font-size:12px;margin-top:3px;">${starsHtml(pro.ratingAvg)} <span style="color:#9ca3af;">(${pro.reviewCount})</span></div>
                 </div>
               </div>
-              <a href="${href}" style="display:block;text-align:center;margin-top:10px;background:#009FD9;color:#fff;text-decoration:none;font-weight:600;font-size:13px;padding:7px 0;border-radius:8px;">Ver perfil</a>
+              <a href="${href}" style="display:block;text-align:center;margin-top:12px;background:#009FD9;color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:11px 0;border-radius:8px;min-height:44px;box-sizing:border-box;line-height:22px;">Ver perfil</a>
             </div>`);
           info.open({ map, anchor: marker });
         });
@@ -151,6 +158,9 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es" }: GoogleM
 
     new clusterer.MarkerClusterer({ map, markers, renderer });
 
+    boundsRef.current = bounds;
+    hasMarkersRef.current = markers.length > 0;
+
     if (markers.length > 0) {
       map.fitBounds(bounds);
       const listener = g.event.addListenerOnce(map, "idle", () => {
@@ -165,6 +175,26 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es" }: GoogleM
     if ((window as any).google?.maps && (window as any).markerClusterer) initMap();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [professionals]);
+
+  // When the container becomes visible (e.g. mobile list→map toggle) or resizes,
+  // tell Google Maps to relayout and re-fit the pins — otherwise a map first
+  // rendered inside a hidden panel paints blank/grey.
+  useEffect(() => {
+    const el = mapRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const g = (window as any).google?.maps;
+      const map = mapInstanceRef.current;
+      if (!g || !map || el.offsetWidth === 0) return;
+      g.event.trigger(map, "resize");
+      if (hasMarkersRef.current && boundsRef.current) {
+        map.fitBounds(boundsRef.current);
+      }
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   if (!apiKey) {
     return (

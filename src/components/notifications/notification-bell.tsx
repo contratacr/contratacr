@@ -4,8 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { Bell, CheckCheck } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
-import { cn } from "@/lib/utils";
+import { cn, formatRelativeTime } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
+import { notificationHref } from "@/lib/notification-link";
 
 type Notification = {
   id: string;
@@ -14,6 +15,7 @@ type Notification = {
   message: string;
   read: boolean;
   created_at: string;
+  data?: { link?: string } | null;
 };
 
 export function NotificationBell() {
@@ -73,6 +75,15 @@ export function NotificationBell() {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
   }
 
+  function openNotification(n: Notification) {
+    setOpen(false);
+    if (!n.read) {
+      const supabase = createClient();
+      supabase.from("notifications").update({ read: true }).eq("id", n.id).then(() => {});
+    }
+    window.location.assign(notificationHref(n));
+  }
+
   if (!user) return null;
 
   return (
@@ -117,22 +128,27 @@ export function NotificationBell() {
                   <li
                     key={n.id}
                     className={cn(
-                      "px-4 py-3 border-b border-[#f3f4f6] last:border-0",
+                      "border-b border-[#f3f4f6] last:border-0",
                       !n.read && "bg-[#f0f9f6]"
                     )}
                   >
-                    <div className="flex items-start gap-2">
-                      {!n.read && (
-                        <span className="mt-1.5 h-2 w-2 rounded-full bg-[#319278] shrink-0" />
-                      )}
-                      <div className={cn(!n.read ? "" : "ml-4")}>
-                        <p className="text-sm font-medium text-[#111827]">{n.title}</p>
-                        <p className="text-xs text-[#6b7280] mt-0.5">{n.message}</p>
-                        <p className="text-xs text-[#9ca3af] mt-1">
-                          {new Date(n.created_at).toLocaleDateString("es-CR")}
-                        </p>
+                    <button
+                      onClick={() => openNotification(n)}
+                      className="w-full text-left px-4 py-3 hover:bg-[#f3f4f6] transition-colors"
+                    >
+                      <div className="flex items-start gap-2">
+                        {!n.read && (
+                          <span className="mt-1.5 h-2 w-2 rounded-full bg-[#319278] shrink-0" />
+                        )}
+                        <div className={cn(!n.read ? "" : "ml-4")}>
+                          <p className="text-sm font-medium text-[#111827]">{n.title}</p>
+                          <p className="text-xs text-[#6b7280] mt-0.5">{n.message}</p>
+                          <p className="text-xs text-[#9ca3af] mt-1">
+                            {formatRelativeTime(n.created_at)}
+                          </p>
+                        </div>
                       </div>
-                    </div>
+                    </button>
                   </li>
                 ))}
               </ul>

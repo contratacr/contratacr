@@ -9,6 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { getInitials } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 
 const PROVINCES = [
   "San José", "Alajuela", "Cartago", "Heredia",
@@ -444,6 +445,8 @@ export function LandingNavbar() {
               {/* Right actions */}
               <div className="hidden lg:flex items-center gap-2 shrink-0">
                 {user ? (
+                  <div className="flex items-center gap-1">
+                  <NotificationBell />
                   <div ref={userMenuRef} className="relative">
                     <button
                       onClick={() => setUserMenuOpen((o) => !o)}
@@ -480,6 +483,7 @@ export function LandingNavbar() {
                         </button>
                       </div>
                     )}
+                  </div>
                   </div>
                 ) : (
                   <>

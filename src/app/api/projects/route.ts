@@ -1,6 +1,40 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getCategoryLabel } from "@/lib/data/categories";
+import { getProvinceById, getCantonById } from "@/lib/data/cr-geography";
+
+/**
+ * Resolve category / provincia / cantón display data WITHOUT relying on
+ * PostgREST embedded joins — the projects table has no FK to `categories`
+ * (dropped in migration 013) and its provincia/canton columns are plain text,
+ * so `categories(name, icon)` style embeds error out and return zero rows.
+ * We look up the icon/name from the real `categories` table + static geography.
+ */
+async function enrichProjects(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  rows: any[]
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): Promise<any[]> {
+  if (rows.length === 0) return rows;
+  const admin = createAdminClient();
+
+  const catIds = [...new Set(rows.map((r) => r.category_id).filter(Boolean))];
+  const catMap: Record<string, { name: string; icon: string }> = {};
+  if (catIds.length > 0) {
+    const { data: cats } = await admin.from("categories").select("id, name, icon").in("id", catIds);
+    for (const c of cats ?? []) catMap[c.id] = { name: c.name, icon: c.icon };
+  }
+
+  return rows.map((r) => ({
+    ...r,
+    categories: r.category_id
+      ? catMap[r.category_id] ?? { name: getCategoryLabel(r.category_id), icon: "" }
+      : null,
+    provincias: r.provincia_id ? { name: getProvinceById(r.provincia_id)?.name ?? "" } : null,
+    cantones: r.canton_id ? { name: getCantonById(r.canton_id)?.name ?? "" } : null,
+  }));
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -69,13 +103,7 @@ export async function GET(req: NextRequest) {
     const admin = createAdminClient();
     const { data, error } = await admin
       .from("projects")
-      .select(`
-        *,
-        categories(name, icon),
-        provincias(name),
-        cantones(name),
-        proposals(id, status)
-      `)
+      .select(`*, proposals(id, status)`)
       .eq("client_id", session.user.id)
       .order("created_at", { ascending: false });
 
@@ -83,20 +111,13 @@ export async function GET(req: NextRequest) {
       console.error("[GET /api/projects] client error:", error.message);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
-    return NextResponse.json({ projects: data ?? [] });
+    return NextResponse.json({ projects: await enrichProjects(data ?? []) });
   }
 
   // Professional: browse open projects in their category
   let query = supabase
     .from("projects")
-    .select(`
-      *,
-      categories(name, icon),
-      provincias(name),
-      cantones(name),
-      profiles:client_id(full_name),
-      proposals(id)
-    `)
+    .select(`*, profiles:client_id(full_name), proposals(id)`)
     .eq("status", "open")
     .order("created_at", { ascending: false })
     .limit(30);
@@ -110,5 +131,5 @@ export async function GET(req: NextRequest) {
     console.error("[GET /api/projects] pro error:", error.message);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-  return NextResponse.json({ projects: data ?? [] });
+  return NextResponse.json({ projects: await enrichProjects(data ?? []) });
 }

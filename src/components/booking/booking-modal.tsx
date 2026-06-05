@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import type { ProfessionalCardData } from "@/lib/data/mock-professionals";
 
-type BookingStep = "calendar" | "details" | "contact" | "success";
+type BookingStep = "calendar" | "details" | "contact" | "complete" | "success";
 
 type DaySchedule = { enabled: boolean; ranges: { start: string; end: string }[] };
 type WeeklyAvailability = Record<string, DaySchedule>;
@@ -92,6 +92,12 @@ export function BookingModal({ professional, categoryName, open, onClose }: Book
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [waLink, setWaLink] = useState("");
+  // OAuth users with no cédula on file must complete their profile before booking.
+  const [needsProfile, setNeedsProfile] = useState(false);
+  const [profileCedula, setProfileCedula] = useState("");
+  const [profilePhone, setProfilePhone] = useState("");
+  const [profileError, setProfileError] = useState<string | null>(null);
+  const [savingProfile, setSavingProfile] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -100,6 +106,8 @@ export function BookingModal({ professional, categoryName, open, onClose }: Book
     setSelectedTime("");
     setDescription("");
     setWaLink("");
+    setNeedsProfile(false);
+    setProfileError(null);
 
     const supabase = createClient();
     Promise.all([
@@ -126,6 +134,22 @@ export function BookingModal({ professional, categoryName, open, onClose }: Book
         setIsLoggedIn(true);
         setClientName((user.user_metadata?.full_name as string) || (user.user_metadata?.name as string) || "");
         setClientEmail(user.email ?? "");
+
+        // Determine whether this OAuth user still needs to supply a cédula.
+        const provider = user.app_metadata?.provider;
+        const isOAuth = !!provider && provider !== "email";
+        supabase
+          .from("profiles")
+          .select("cedula, phone, full_name")
+          .eq("id", user.id)
+          .single()
+          .then(({ data }) => {
+            const hasCedula = !!data?.cedula && String(data.cedula).trim() !== "";
+            if (data?.cedula) setProfileCedula(String(data.cedula));
+            if (data?.phone) setProfilePhone(String(data.phone));
+            if (data?.full_name) setClientName((prev) => prev || String(data.full_name));
+            setNeedsProfile(isOAuth && !hasCedula);
+          });
       } else {
         setIsLoggedIn(false);
       }
@@ -184,7 +208,7 @@ export function BookingModal({ professional, categoryName, open, onClose }: Book
     onClose();
   }
 
-  async function handleSubmit() {
+  async function handleSubmit(overrideCedula?: string, overridePhone?: string) {
     setSubmitting(true);
     try {
       await fetch("/api/bookings", {
@@ -194,6 +218,8 @@ export function BookingModal({ professional, categoryName, open, onClose }: Book
           professionalId: professional.id,
           clientName: clientName || "Cliente",
           clientEmail: clientEmail || null,
+          clientCedula: (overrideCedula ?? profileCedula) || null,
+          clientPhone: (overridePhone ?? profilePhone) || null,
           serviceDescription: description,
           scheduledDate: selectedDate || null,
           scheduledTime: selectedTime || null,
@@ -210,12 +236,13 @@ export function BookingModal({ professional, categoryName, open, onClose }: Book
         : null;
 
       const message = [
-        `Hola ${firstName}, soy ${senderName}. Te contacto desde ContrataCR 🔗`,
+        `Hola ${firstName}, soy ${senderName}.`,
+        `Te contacto por medio de ContrataCR.`,
         ``,
-        description ? `📋 Necesito: ${description}` : null,
-        dateStr ? `📅 Cuándo: ${dateStr}` : null,
+        description ? `Servicio: ${description}` : null,
+        dateStr ? `Fecha y hora: ${dateStr}` : null,
         ``,
-        `¿Podés ayudarme?`,
+        `¿Me podés confirmar disponibilidad?`,
       ]
         .filter((l) => l !== null)
         .join("\n");
@@ -227,12 +254,47 @@ export function BookingModal({ professional, categoryName, open, onClose }: Book
     }
   }
 
+  // Save the cédula/phone an OAuth user is missing, then continue to the booking.
+  async function saveProfileAndSubmit() {
+    setProfileError(null);
+    const cleanCedula = profileCedula.replace(/\D/g, "");
+    const cleanPhone = profilePhone.replace(/\D/g, "");
+    if (!clientName.trim()) { setProfileError("Ingresá tu nombre legal completo."); return; }
+    if (cleanPhone.length < 8) { setProfileError("Ingresá un teléfono válido (8 dígitos)."); return; }
+    if (cleanCedula.length < 9) { setProfileError("Ingresá una cédula válida (9 dígitos)."); return; }
+
+    setSavingProfile(true);
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ full_name: clientName.trim(), phone: cleanPhone, cedula: cleanCedula })
+        .eq("id", user.id);
+      if (error) {
+        setSavingProfile(false);
+        setProfileError(
+          error.code === "23505"
+            ? "Esa cédula ya está registrada en otra cuenta."
+            : "No se pudo guardar. Intentá de nuevo."
+        );
+        return;
+      }
+      await supabase.auth.updateUser({ data: { full_name: clientName.trim(), profile_completed: true } });
+    }
+    setProfileCedula(cleanCedula);
+    setProfilePhone(cleanPhone);
+    setNeedsProfile(false);
+    setSavingProfile(false);
+    await handleSubmit(cleanCedula, cleanPhone);
+  }
+
   const calendarDays = getCalendarDays(currentYear, currentMonth);
   const slots = selectedDate ? getSlotsForDate(selectedDate) : [];
   const hasAnyAvailability = usesExplicitSlots || Object.values(availability).some((d) => d.enabled);
 
-  const totalSteps = isLoggedIn ? 2 : 3;
-  const stepIndex = { calendar: 0, details: 1, contact: 2, success: 3 };
+  const totalSteps = isLoggedIn ? (needsProfile ? 3 : 2) : 3;
+  const stepIndex = { calendar: 0, details: 1, contact: 2, complete: 2, success: 3 };
 
   return (
     <Dialog.Root open={open} onOpenChange={(v) => !v && resetAndClose()}>
@@ -520,6 +582,57 @@ export function BookingModal({ professional, categoryName, open, onClose }: Book
                 </div>
               )}
 
+              {/* STEP: complete profile (OAuth users missing a cédula) */}
+              {step === "complete" && (
+                <div className="flex flex-col gap-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-[#111827]">Completá tu perfil</h3>
+                    <p className="text-sm text-[#6b7280] mt-1">
+                      Necesitamos estos datos para confirmar tu reserva.
+                    </p>
+                  </div>
+
+                  {profileError && (
+                    <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-100 rounded-xl text-xs text-red-600">
+                      <Shield className="h-3.5 w-3.5 shrink-0" />
+                      {profileError}
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="text-sm font-medium text-[#374151] block mb-1.5">Nombre legal completo</label>
+                    <input
+                      type="text"
+                      className="w-full h-10 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+                      placeholder="Tu nombre como aparece en tu cédula"
+                      value={clientName}
+                      onChange={(e) => setClientName(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-[#374151] block mb-1.5">Teléfono</label>
+                    <input
+                      type="tel"
+                      className="w-full h-10 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+                      placeholder="8888-8888"
+                      value={profilePhone}
+                      onChange={(e) => setProfilePhone(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-[#374151] block mb-1.5">Cédula</label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      className="w-full h-10 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+                      placeholder="1-2345-6789"
+                      value={profileCedula}
+                      onChange={(e) => setProfileCedula(e.target.value)}
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* SUCCESS */}
               {step === "success" && (
                 <div className="flex flex-col items-center text-center gap-5 py-4">
@@ -543,11 +656,11 @@ export function BookingModal({ professional, categoryName, open, onClose }: Book
             {/* Footer actions */}
             {step !== "success" && (
               <div className="px-6 py-4 border-t border-[#f3f4f6] shrink-0 flex gap-3">
-                {(step === "contact" || step === "details") && (
+                {(step === "contact" || step === "details" || step === "complete") && (
                   <Button
                     variant="outline"
                     size="md"
-                    onClick={() => setStep(step === "contact" ? "details" : "calendar")}
+                    onClick={() => setStep(step === "details" ? "calendar" : "details")}
                   >
                     <ArrowLeft className="h-4 w-4" />
                     {t("back")}
@@ -558,10 +671,14 @@ export function BookingModal({ professional, categoryName, open, onClose }: Book
                   <Button
                     size="md"
                     className="flex-1"
-                    disabled={!selectedDate}
+                    disabled={!selectedDate || slots.length === 0 || !selectedTime}
                     onClick={() => setStep("details")}
                   >
-                    {t("continue")}
+                    {!selectedDate
+                      ? "Elegí una fecha"
+                      : !selectedTime
+                        ? "Elegí una hora"
+                        : t("continue")}
                   </Button>
                 )}
 
@@ -574,13 +691,18 @@ export function BookingModal({ professional, categoryName, open, onClose }: Book
                     onClick={async () => {
                       if (!description.trim()) return;
                       if (isLoggedIn) {
-                        await handleSubmit();
+                        if (needsProfile) setStep("complete");
+                        else await handleSubmit();
                       } else {
                         setStep("contact");
                       }
                     }}
                   >
-                    {submitting ? "Enviando…" : isLoggedIn ? t("step4.submit") : t("continue")}
+                    {submitting
+                      ? "Enviando…"
+                      : isLoggedIn && !needsProfile
+                        ? t("step4.submit")
+                        : t("continue")}
                   </Button>
                 )}
 
@@ -589,9 +711,20 @@ export function BookingModal({ professional, categoryName, open, onClose }: Book
                     size="md"
                     className="flex-1"
                     loading={submitting}
-                    onClick={handleSubmit}
+                    onClick={() => handleSubmit()}
                   >
                     {submitting ? "Enviando…" : t("step4.submit")}
+                  </Button>
+                )}
+
+                {step === "complete" && (
+                  <Button
+                    size="md"
+                    className="flex-1"
+                    loading={savingProfile || submitting}
+                    onClick={saveProfileAndSubmit}
+                  >
+                    {savingProfile || submitting ? "Enviando…" : t("step4.submit")}
                   </Button>
                 )}
               </div>

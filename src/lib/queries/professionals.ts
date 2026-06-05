@@ -1,5 +1,4 @@
 import type { ProfessionalCardData } from "@/components/professionals/professional-card";
-import { MOCK_PROFESSIONALS } from "@/lib/data/mock-professionals";
 import { getMatchingCategoryIds } from "@/lib/data/categories";
 
 const SUPABASE_CONFIGURED =
@@ -82,6 +81,11 @@ export async function searchProfessionals(
         }
       }
 
+      // Featured ("destacado") professionals surface first — but only within the
+      // already-filtered set, so they never bypass the active category/location/
+      // search filters. Applied as the primary sort key ahead of the chosen order.
+      query = query.order("is_featured", { ascending: false });
+
       switch (filters.sortBy) {
         case "reviews":
           query = query.order("review_count", { ascending: false });
@@ -96,7 +100,10 @@ export async function searchProfessionals(
           query = query.order("created_at", { ascending: false });
           break;
         default:
-          query = query.order("rating_avg", { ascending: false });
+          // Default: highest average rating, total review count as tiebreaker.
+          query = query
+            .order("rating_avg", { ascending: false })
+            .order("review_count", { ascending: false });
       }
 
       const { data, error } = await query.limit(50);
@@ -126,11 +133,12 @@ export async function searchProfessionals(
         serviceType: row.service_type ?? null,
       }));
     } catch (err) {
-      console.error("[searchProfessionals] Supabase error, using mock data:", err);
+      console.error("[searchProfessionals] Supabase error:", err);
     }
   }
 
-  return applyMockFilters(MOCK_PROFESSIONALS, filters);
+  // No fake/seed fallback — only real professionals are ever listed.
+  return [];
 }
 
 // ---------------------------------------------------------------------------
@@ -201,90 +209,10 @@ export async function getProfessionalBySlug(
         availabilityPublic: (pro as any).availability_public ?? true,
       };
     } catch (err) {
-      console.error("[getProfessionalBySlug] Supabase error, using mock data:", err);
+      console.error("[getProfessionalBySlug] Supabase error:", err);
     }
   }
 
-  const mock = MOCK_PROFESSIONALS.find((p) => p.slug === slug);
-  if (!mock) return null;
-  return { ...mock, portfolioUrls: [], reviews: MOCK_REVIEWS, services: [], availabilityPublic: true };
+  // No fake/seed fallback.
+  return null;
 }
-
-// ---------------------------------------------------------------------------
-// Mock helpers
-// ---------------------------------------------------------------------------
-
-function applyMockFilters(
-  data: ProfessionalCardData[],
-  filters: SearchFilters
-): ProfessionalCardData[] {
-  let results = [...data];
-
-  if (filters.categoryId && filters.categoryId !== "todas") {
-    results = results.filter((p) => p.categoryId === filters.categoryId);
-  }
-  if (filters.provinceId && filters.provinceId !== "todas") {
-    const { PROVINCES } = require("@/lib/data/cr-geography");
-    const province = PROVINCES.find((p: { id: string }) => p.id === filters.provinceId);
-    if (province) results = results.filter((p) => p.provinceName === province.name);
-  }
-  if (filters.cantonId && filters.cantonId !== "todos") {
-    const { getCantonById } = require("@/lib/data/cr-geography");
-    const canton = getCantonById(filters.cantonId);
-    if (canton) results = results.filter((p) => p.cantonName === canton.name);
-  }
-  if (filters.query) {
-    const q = filters.query.toLowerCase().trim();
-    const keywordCatIds = getMatchingCategoryIds(q);
-    results = results.filter(
-      (p) =>
-        p.fullName.toLowerCase().includes(q) ||
-        (p.bio ?? "").toLowerCase().includes(q) ||
-        p.categoryId.toLowerCase().includes(q) ||
-        keywordCatIds.includes(p.categoryId)
-    );
-  }
-
-  switch (filters.sortBy) {
-    case "reviews":
-      results.sort((a, b) => b.reviewCount - a.reviewCount);
-      break;
-    case "priceAsc":
-      results.sort((a, b) => (a.hourlyRate ?? 0) - (b.hourlyRate ?? 0));
-      break;
-    case "priceDesc":
-      results.sort((a, b) => (b.hourlyRate ?? 0) - (a.hourlyRate ?? 0));
-      break;
-    default:
-      results.sort((a, b) => b.ratingAvg - a.ratingAvg);
-  }
-
-  return results;
-}
-
-const MOCK_REVIEWS: Review[] = [
-  {
-    id: "r1",
-    clientName: "Laura Fernández",
-    clientAvatarUrl: "https://randomuser.me/api/portraits/women/12.jpg",
-    rating: 5,
-    comment: "Excelente trabajo. Muy puntual, limpio y profesional. El precio fue justo y el resultado quedó perfecto.",
-    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: "r2",
-    clientName: "José Arias",
-    clientAvatarUrl: "https://randomuser.me/api/portraits/men/23.jpg",
-    rating: 5,
-    comment: "Muy buen profesional. Resolvió el problema rápidamente y explicó todo el proceso. Lo volvería a contratar.",
-    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-  {
-    id: "r3",
-    clientName: "Patricia Solís",
-    clientAvatarUrl: "https://randomuser.me/api/portraits/women/34.jpg",
-    rating: 4,
-    comment: "Buen servicio en general. Llegó un poco tarde pero el trabajo quedó bien hecho.",
-    createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
-  },
-];

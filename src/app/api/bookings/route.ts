@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { notifyNewBooking } from "@/lib/notifications";
+import { notifyNewBooking, notifyBookingStatusChange } from "@/lib/notifications";
 
 export async function POST(req: NextRequest) {
   try {
@@ -41,6 +41,7 @@ export async function POST(req: NextRequest) {
     // Notify the professional (in-app + email + optional WhatsApp). Best-effort.
     await notifyNewBooking({
       professionalId,
+      bookingId: data.id,
       clientName: clientName || "Un cliente",
       serviceDescription,
       whenText: preferredDateText ?? null,
@@ -127,12 +128,26 @@ export async function PATCH(req: NextRequest) {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+  // Identify who is updating: only the professional accepting/cancelling should
+  // trigger an automated client notification (not the client cancelling their own).
+  const { data: actorPro } = await supabase
+    .from("professionals")
+    .select("id")
+    .eq("profile_id", session.user.id)
+    .maybeSingle();
+
   const { error } = await supabase
     .from("bookings")
     .update({ status, updated_at: new Date().toISOString() })
     .eq("id", id);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Professional accepted (confirmed) or cancelled → notify the client via
+  // ContrataCR's own WhatsApp + email (fallback). Best-effort, never blocks.
+  if (actorPro && (status === "confirmed" || status === "cancelled")) {
+    await notifyBookingStatusChange(id, status);
+  }
 
   // When a booking is marked completed, prompt the client to leave a review.
   if (status === "completed") {

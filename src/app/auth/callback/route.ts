@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
       // ── Scenario A & B: check profiles table for role + onboarding status ──
       const { data: profile } = await supabase
         .from("profiles")
-        .select("role, onboarding_completed")
+        .select("role, onboarding_completed, cedula")
         .eq("id", data.user.id)
         .single();
 
@@ -46,11 +46,23 @@ export async function GET(request: NextRequest) {
         return NextResponse.redirect(`${origin}/es/onboarding`);
       }
 
-      // Scenario A — returning user with completed onboarding → go to their dashboard
       const destPath =
         profile.role === "professional"
           ? "/es/dashboard/profesional"
           : "/es/dashboard/cliente";
+
+      // OAuth users never provide a cédula at sign-up. Clients must complete it
+      // before they can book — send them to the mandatory completion screen.
+      const provider = data.user.app_metadata?.provider;
+      const isOAuth = !!provider && provider !== "email";
+      const missingCedula = !profile.cedula || String(profile.cedula).trim() === "";
+      if (isOAuth && profile.role !== "professional" && missingCedula) {
+        return NextResponse.redirect(
+          `${origin}/es/completar-perfil?next=${encodeURIComponent(destPath)}`
+        );
+      }
+
+      // Scenario A — returning user with completed onboarding → go to their dashboard
       return NextResponse.redirect(`${origin}${destPath}`);
     }
   }

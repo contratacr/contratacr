@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Script from "next/script";
 import { MapPin, Navigation, RotateCcw, Search } from "lucide-react";
+import { BRAND_MAP_STYLE } from "@/lib/maps/map-style";
 
 export type PickedLocation = {
   lat: number;
@@ -52,7 +53,7 @@ export function LocationPicker({ value, onChange, apiKey }: LocationPickerProps)
       mapTypeControl: false,
       streetViewControl: false,
       fullscreenControl: false,
-      styles: [{ featureType: "poi.business", stylers: [{ visibility: "off" }] }],
+      styles: BRAND_MAP_STYLE,
     });
     mapInstanceRef.current = map;
     geocoderRef.current = new maps.Geocoder();
