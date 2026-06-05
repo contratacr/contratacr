@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { title, description, categoryId, provinciaId, cantonId, budgetMin, budgetMax, timeline } = body;
 
-    if (!title || !description) {
+    if (!title?.trim() || !description?.trim()) {
       return NextResponse.json({ error: "Título y descripción son requeridos" }, { status: 400 });
     }
 
@@ -14,11 +15,25 @@ export async function POST(req: NextRequest) {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
+    const uid = session.user.id;
+    const admin = createAdminClient();
+
+    // Ensure the profiles row exists before inserting (client_id FK requires it)
+    await admin.from("profiles").upsert({
+      id: uid,
+      email: session.user.email ?? "",
+      full_name: (session.user.user_metadata?.full_name as string) ||
+                 (session.user.user_metadata?.name as string) ||
+                 session.user.email?.split("@")[0] || "",
+      role: (session.user.user_metadata?.role as string) || "client",
+      onboarding_completed: true,
+    }, { onConflict: "id", ignoreDuplicates: false });
+
     const { data, error } = await supabase.from("projects").insert({
-      client_id: session.user.id,
+      client_id: uid,
       category_id: categoryId ?? null,
-      title,
-      description,
+      title: title.trim(),
+      description: description.trim(),
       provincia_id: provinciaId ?? null,
       canton_id: cantonId ?? null,
       budget_min: budgetMin ? parseInt(budgetMin, 10) : null,
@@ -28,13 +43,14 @@ export async function POST(req: NextRequest) {
     }).select("id").single();
 
     if (error) {
+      console.error("[POST /api/projects] Supabase error:", error.message, error.details);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     return NextResponse.json({ id: data.id, success: true });
   } catch (err) {
-    console.error("[POST /api/projects]", err);
-    return NextResponse.json({ error: "Error interno" }, { status: 500 });
+    console.error("[POST /api/projects] Unexpected error:", err);
+    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
   }
 }
 
@@ -60,7 +76,10 @@ export async function GET(req: NextRequest) {
       .eq("client_id", session.user.id)
       .order("created_at", { ascending: false });
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) {
+      console.error("[GET /api/projects] client error:", error.message);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
     return NextResponse.json({ projects: data ?? [] });
   }
 
@@ -84,6 +103,9 @@ export async function GET(req: NextRequest) {
   }
 
   const { data, error } = await query;
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error("[GET /api/projects] pro error:", error.message);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
   return NextResponse.json({ projects: data ?? [] });
 }

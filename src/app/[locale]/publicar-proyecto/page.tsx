@@ -148,7 +148,8 @@ export default function PublicarProyectoPage() {
 
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "Error al publicar el proyecto.");
+        console.error("[publicar-proyecto] error:", data.error);
+        setError(data.error ?? "Error al publicar el proyecto. Intentá de nuevo.");
         return;
       }
 
