@@ -552,10 +552,8 @@ export default function RegisterProfessionalPage() {
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Error al registrarse";
-      if (msg.includes("already registered") || msg.includes("already been registered")) {
-        setError("Este email ya está registrado. ¿Querés iniciar sesión?");
-      } else if (msg.includes("cédula")) {
-        setError(msg);
+      if (msg.includes("already registered") || msg.includes("already been registered") || msg.includes("already exists")) {
+        setError("Ya existe una cuenta con este correo. ¿Querés iniciar sesión en su lugar?");
       } else {
         setError(msg);
       }
@@ -612,9 +610,19 @@ export default function RegisterProfessionalPage() {
           <StepIndicator current={indicatorStep} labels={stepLabels} />
 
           {error && (
-            <div className="flex items-start gap-3 rounded-xl bg-red-50 border border-red-200 px-4 py-3 mb-4">
-              <AlertCircle className="h-4 w-4 text-red-500 mt-0.5 shrink-0" />
-              <p className="text-sm text-red-700">{error}</p>
+            <div className="flex flex-col gap-2 rounded-xl bg-red-50 border border-red-200 px-4 py-3 mb-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-4 w-4 text-red-500 mt-0.5 shrink-0" />
+                <p className="text-sm text-red-700">{error}</p>
+              </div>
+              {(error.includes("sesión") || error.includes("cuenta con este correo")) && (
+                <Link
+                  href="/login"
+                  className="self-start ml-7 text-sm font-semibold text-[#009FD9] hover:underline"
+                >
+                  Ir a iniciar sesión →
+                </Link>
+              )}
             </div>
           )}
 
@@ -639,14 +647,16 @@ export default function RegisterProfessionalPage() {
           {/* ── Step 0: Identity (email/password users only) ─────────────── */}
           {step === 0 && !currentUser && (
             <div className="flex flex-col gap-4">
-              {/* OAuth fast-track */}
+              {/* OAuth fast-track — redirect back to this page after auth */}
               <div className="flex flex-col gap-2">
                 <button
                   type="button"
                   onClick={async () => {
                     const supabase = createClient();
-                    const callbackUrl = `${window.location.origin}/auth/callback`;
-                    await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: callbackUrl } });
+                    // next param brings them back here after OAuth to complete pro registration
+                    const callbackUrl = `${window.location.origin}/auth/callback?next=${encodeURIComponent("/es/registro/profesional")}`;
+                    const { error: oauthErr } = await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: callbackUrl } });
+                    if (oauthErr) setError(oauthErr.message);
                   }}
                   className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-[#e5e7eb] hover:bg-gray-50 transition-all text-sm font-medium text-[#374151] active:scale-[0.98]"
                 >
@@ -662,8 +672,9 @@ export default function RegisterProfessionalPage() {
                   type="button"
                   onClick={async () => {
                     const supabase = createClient();
-                    const callbackUrl = `${window.location.origin}/auth/callback`;
-                    await supabase.auth.signInWithOAuth({ provider: "facebook", options: { redirectTo: callbackUrl } });
+                    const callbackUrl = `${window.location.origin}/auth/callback?next=${encodeURIComponent("/es/registro/profesional")}`;
+                    const { error: oauthErr } = await supabase.auth.signInWithOAuth({ provider: "facebook", options: { redirectTo: callbackUrl } });
+                    if (oauthErr) setError(oauthErr.message);
                   }}
                   className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-[#e5e7eb] hover:bg-gray-50 transition-all text-sm font-medium text-[#374151] active:scale-[0.98]"
                 >
