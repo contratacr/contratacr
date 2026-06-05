@@ -443,41 +443,20 @@ export function LandingNavbar() {
               {/* Right actions */}
               <div className="hidden lg:flex items-center gap-2 shrink-0">
                 {user ? (
-                  <div ref={userMenuRef} className="relative">
-                    <button
-                      onClick={() => setUserMenuOpen((o) => !o)}
-                      className="flex items-center gap-1.5 pl-1 pr-2 py-1 rounded-xl hover:bg-gray-50 transition-colors"
+                  <>
+                    <a
+                      href={dashboardHref}
+                      className="text-sm font-medium px-3 py-2 rounded-xl text-[#374151] hover:bg-gray-50 transition-colors"
                     >
-                      <div className="h-8 w-8 rounded-full overflow-hidden bg-[#009FD9] flex items-center justify-center text-white text-xs font-bold shrink-0 border-2 border-white shadow-sm">
-                        {avatarUrl ? (
-                          <img src={avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
-                        ) : initials}
-                      </div>
-                      <ChevronDown className="h-3.5 w-3.5 text-gray-400" />
+                      Mi panel
+                    </a>
+                    <button
+                      onClick={handleSignOut}
+                      className="text-sm font-medium px-3 py-2 rounded-xl text-[#6b7280] hover:text-red-500 hover:bg-gray-50 transition-colors"
+                    >
+                      Salir
                     </button>
-                    {userMenuOpen && (
-                      <div className="absolute right-0 top-full mt-1.5 w-56 bg-white border border-gray-100 rounded-xl shadow-xl z-50 py-1.5 overflow-hidden">
-                        <div className="px-3 py-2.5 border-b border-gray-100 mb-1">
-                          <p className="text-sm font-semibold text-[#111827] truncate">{displayName}</p>
-                          <p className="text-xs text-[#9ca3af] truncate mt-0.5">{user.email}</p>
-                        </div>
-                        <a
-                          href={dashboardHref}
-                          className="flex items-center gap-2.5 px-3 py-2.5 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
-                        >
-                          <LayoutDashboard className="h-4 w-4 text-[#009FD9]" />
-                          Mi panel
-                        </a>
-                        <button
-                          onClick={handleSignOut}
-                          className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors"
-                        >
-                          <LogOut className="h-4 w-4" />
-                          Cerrar sesión
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                  </>
                 ) : (
                   <>
                     <Link

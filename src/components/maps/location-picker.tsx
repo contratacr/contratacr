@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Script from "next/script";
-import { MapPin, Navigation, RotateCcw } from "lucide-react";
+import { MapPin, Navigation, RotateCcw, Search } from "lucide-react";
 
 export type PickedLocation = {
   lat: number;
@@ -23,12 +23,13 @@ const COSTA_RICA_CENTER = { lat: 9.7489, lng: -83.7534 };
 
 export function LocationPicker({ value, onChange, apiKey }: LocationPickerProps) {
   const mapRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const markerRef = useRef<GMaps>(null);
   const mapInstanceRef = useRef<GMaps>(null);
   const geocoderRef = useRef<GMaps>(null);
+  const autocompleteRef = useRef<GMaps>(null);
   const [locating, setLocating] = useState(false);
   const [addressInput, setAddressInput] = useState(value?.formattedAddress ?? "");
-  const [geocoding, setGeocoding] = useState(false);
   const effectiveKey = apiKey ?? process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -56,10 +57,32 @@ export function LocationPicker({ value, onChange, apiKey }: LocationPickerProps)
     mapInstanceRef.current = map;
     geocoderRef.current = new maps.Geocoder();
 
+    // Initialize Places Autocomplete on the address input
+    if (inputRef.current && maps.places?.Autocomplete) {
+      const autocomplete = new maps.places.Autocomplete(inputRef.current, {
+        componentRestrictions: { country: "cr" },
+        fields: ["geometry", "formatted_address"],
+      });
+      autocomplete.addListener("place_changed", () => {
+        const place = autocomplete.getPlace();
+        if (place.geometry?.location) {
+          const loc = place.geometry.location;
+          placeMarker(loc);
+          map.setCenter(loc);
+          map.setZoom(16);
+          const address = place.formatted_address ?? "";
+          setAddressInput(address);
+          onChange({ lat: loc.lat(), lng: loc.lng(), formattedAddress: address });
+        }
+      });
+      autocompleteRef.current = autocomplete;
+    }
+
     if (value) {
       placeMarker(new maps.LatLng(value.lat, value.lng));
     }
 
+    // Click on map to pick location
     map.addListener("click", (e: { latLng: GMaps }) => {
       if (!e.latLng) return;
       placeMarker(e.latLng);
@@ -101,16 +124,15 @@ export function LocationPicker({ value, onChange, apiKey }: LocationPickerProps)
     );
   }
 
-  function geocodeAddress() {
+  function geocodeManual() {
     if (!addressInput.trim() || !geocoderRef.current) return;
-    setGeocoding(true);
     geocoderRef.current.geocode(
       { address: addressInput + ", Costa Rica" },
       (results: GMaps, status: string) => {
-        setGeocoding(false);
         if (status === "OK" && results?.[0]) {
           const loc = results[0].geometry.location;
           placeMarker(loc);
+          mapInstanceRef.current?.setCenter(loc);
           mapInstanceRef.current?.setZoom(15);
           const address = results[0].formatted_address;
           setAddressInput(address);
@@ -130,6 +152,7 @@ export function LocationPicker({ value, onChange, apiKey }: LocationPickerProps)
         if (!maps || !mapInstanceRef.current) return;
         const latLng = new maps.LatLng(pos.coords.latitude, pos.coords.longitude);
         placeMarker(latLng);
+        mapInstanceRef.current.setCenter(latLng);
         mapInstanceRef.current.setZoom(16);
         reverseGeocode(latLng);
       },
@@ -164,41 +187,39 @@ export function LocationPicker({ value, onChange, apiKey }: LocationPickerProps)
 
   return (
     <>
+      {/* Load Maps JS API with Places library for address autocomplete */}
       <Script
-        src={`https://maps.googleapis.com/maps/api/js?key=${effectiveKey}`}
+        src={`https://maps.googleapis.com/maps/api/js?key=${effectiveKey}&libraries=places`}
         strategy="lazyOnload"
         onLoad={initMap}
       />
 
       <div className="flex flex-col gap-2">
-        <div className="flex gap-2">
+        {/* Address input with autocomplete */}
+        <div className="relative flex items-center">
+          <Search className="absolute left-3 h-4 w-4 text-[#9ca3af] pointer-events-none" />
           <input
+            ref={inputRef}
             type="text"
             value={addressInput}
             onChange={(e) => setAddressInput(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); geocodeAddress(); } }}
-            placeholder="Escribí la dirección de tu local, estudio u oficina…"
-            className="flex-1 h-10 rounded-xl border border-[#e5e7eb] px-3 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); geocodeManual(); } }}
+            placeholder="Buscá la dirección de tu local… ej. Escazú Centro"
+            className="w-full pl-9 pr-4 h-10 rounded-xl border border-[#e5e7eb] text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
           />
-          <button
-            type="button"
-            onClick={geocodeAddress}
-            disabled={geocoding || !addressInput.trim()}
-            className="h-10 px-4 rounded-xl bg-[#009FD9] text-white text-sm font-semibold hover:bg-[#0089bb] transition-colors disabled:opacity-50"
-          >
-            {geocoding ? "…" : "Buscar"}
-          </button>
         </div>
 
+        {/* Map */}
         <div className="relative rounded-xl overflow-hidden border border-[#e5e7eb]" style={{ height: 260 }}>
           <div ref={mapRef} className="w-full h-full" />
           {!value && (
             <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm rounded-xl px-3 py-1.5 text-xs text-[#374151] shadow border border-[#e5e7eb] whitespace-nowrap pointer-events-none">
-              Hacé clic en el mapa para marcar tu ubicación
+              Buscá una dirección arriba o hacé clic en el mapa
             </div>
           )}
         </div>
 
+        {/* Controls */}
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -216,11 +237,12 @@ export function LocationPicker({ value, onChange, apiKey }: LocationPickerProps)
               className="flex items-center gap-1.5 text-xs font-medium text-[#9ca3af] hover:text-red-500 ml-auto"
             >
               <RotateCcw className="h-3.5 w-3.5" />
-              Borrar ubicación
+              Borrar
             </button>
           )}
         </div>
 
+        {/* Coordinates display */}
         {value && (
           <div className="flex items-center gap-2 bg-[#EBF5FB] rounded-xl px-3 py-2">
             <MapPin className="h-4 w-4 text-[#009FD9] shrink-0" />

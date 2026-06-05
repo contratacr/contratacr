@@ -132,6 +132,24 @@ export default function ClientDashboardPage() {
     if (!authLoading && !user) router.push("/login");
   }, [user, authLoading, router]);
 
+  // Always load profile on mount for header name/avatar
+  useEffect(() => {
+    if (!user) return;
+    const supabase = createClient();
+    supabase
+      .from("profiles")
+      .select("full_name, phone, avatar_url")
+      .eq("id", user.id)
+      .single()
+      .then(({ data }) => {
+        if (data) {
+          setProfileData(data);
+          setProfileAvatar(data.avatar_url ?? null);
+          setProfileForm({ full_name: data.full_name ?? "", phone: data.phone ?? "" });
+        }
+      });
+  }, [user]);
+
   const fetchTab = useCallback(async () => {
     if (!user) return;
     setLoading(true);
@@ -270,7 +288,10 @@ export default function ClientDashboardPage() {
     if (res.ok) {
       const { url } = await res.json();
       const supabase = createClient();
+      // Update DB profile
       await supabase.from("profiles").update({ avatar_url: url }).eq("id", user.id);
+      // Sync to auth metadata so navbar avatar refreshes immediately
+      await supabase.auth.updateUser({ data: { avatar_url: url } });
       setProfileAvatar(url);
     }
     setPhotoUploading(false);
@@ -288,15 +309,28 @@ export default function ClientDashboardPage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
+      <div className="min-h-screen flex flex-col bg-[#fafafa]">
+        <Navbar />
+        <div className="flex-1 flex items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
+        </div>
       </div>
     );
   }
 
-  const displayName = user
-    ? (user.user_metadata?.full_name as string) || (user.user_metadata?.name as string) || user.email?.split("@")[0] || "Cliente"
-    : "";
+  // Name: DB profile takes priority over auth metadata, then email prefix
+  const displayName =
+    profileData?.full_name ||
+    (user?.user_metadata?.full_name as string) ||
+    (user?.user_metadata?.name as string) ||
+    user?.email?.split("@")[0] ||
+    "Cliente";
+
+  // Avatar: profileAvatar (DB) → auth metadata → null
+  const headerAvatar =
+    profileAvatar ||
+    (user?.user_metadata?.avatar_url as string) ||
+    null;
 
   const TABS: { key: Tab; icon: React.ReactNode; label: string }[] = [
     { key: "bookings", icon: <CalendarDays className="h-4 w-4" />, label: "Solicitudes" },
@@ -345,18 +379,27 @@ export default function ClientDashboardPage() {
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
-              <Avatar className="h-10 w-10">
-                <AvatarImage src={user?.user_metadata?.avatar_url as string} />
-                <AvatarFallback className="bg-[#EBF5FB] text-[#009FD9] font-semibold text-sm">
-                  {getInitials(displayName)}
-                </AvatarFallback>
-              </Avatar>
+              <div className="relative h-11 w-11 shrink-0">
+                {headerAvatar ? (
+                  <img
+                    src={headerAvatar}
+                    alt="Foto de perfil"
+                    className="h-11 w-11 rounded-full object-cover border-2 border-white shadow-sm"
+                  />
+                ) : (
+                  <div className="h-11 w-11 rounded-full bg-gradient-to-br from-[#009FD9] to-[#0077a8] flex items-center justify-center shadow-sm">
+                    <span className="text-white font-bold text-sm">{getInitials(displayName)}</span>
+                  </div>
+                )}
+              </div>
               <div>
-                <h1 className="text-lg font-bold text-[#111827]">Hola, {displayName.split(" ")[0]}</h1>
+                <h1 className="text-lg font-bold text-[#111827]">
+                  Hola, {displayName.split(" ")[0]} 👋
+                </h1>
                 <p className="text-xs text-[#9ca3af]">Panel del cliente</p>
               </div>
             </div>
-            <Button variant="ghost" size="sm" onClick={handleSignOut}>
+            <Button variant="ghost" size="sm" onClick={handleSignOut} className="text-[#6b7280] hover:text-red-500">
               <LogOut className="h-4 w-4" />
               Salir
             </Button>
