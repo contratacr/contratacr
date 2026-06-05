@@ -80,6 +80,16 @@ export default function ProDashboardPage() {
     fetchPro();
   }, [user, activeTab, refreshKey, fetchPro]);
 
+  // No professional record yet (e.g. just signed up) — send them to finish
+  // registration. Declared here, BEFORE any early return, so the hook order
+  // stays stable across renders (a hook after a conditional return crashes the
+  // page with "Rendered more hooks than during the previous render").
+  useEffect(() => {
+    if (!authLoading && !loading && !pro && user) {
+      router.replace("/registro/profesional");
+    }
+  }, [authLoading, loading, pro, user, router]);
+
   function setTab(tab: Tab) {
     const params = new URLSearchParams({ tab });
     router.push(`/dashboard/profesional?${params}`);
@@ -103,13 +113,7 @@ export default function ProDashboardPage() {
     );
   }
 
-  // No professional record — redirect to complete registration
-  useEffect(() => {
-    if (!loading && !pro && user) {
-      router.replace("/registro/profesional");
-    }
-  }, [loading, pro, user, router]);
-
+  // No professional record — redirect handled by the effect above.
   if (!pro) {
     return (
       <div className="min-h-screen flex items-center justify-center">

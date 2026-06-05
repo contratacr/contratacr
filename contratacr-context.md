@@ -1,6 +1,6 @@
 # ContrataCR.com — Project Context
 
-_Last updated: 2026-06-04 (sprint 12 — OAuth on pro registration, category FK fixed migration 013, bio minimum removed, client dashboard header/name/avatar fixed, navbar profile simplified, photo auto-refresh, Places API autocomplete, support page redesigned)_
+_Last updated: 2026-06-04 (sprint 12 — OAuth on pro registration, category FK fixed migration 013, bio minimum removed, client dashboard header/name/avatar fixed, navbar profile simplified, photo auto-refresh, Places API autocomplete, support page redesigned; fixes 5-6 — quick-register cédula persisted, pro dashboard hooks-order crash fixed)_
 
 ---
 
@@ -444,6 +444,26 @@ ALTER TABLE professionals ADD COLUMN IF NOT EXISTS services JSONB DEFAULT '[]'::
 
 ### i18n
 - `es.json` + `en.json`: new keys for `dashboard.client.*`, `dashboard.pro.proposals.*`, `projects.*`, `notifications.types.*`, updated `registration.client.*`, updated `dashboard.pro.bookings.status.*`
+
+## Sprint 12 Fixes 5-6 (2026-06-04)
+
+### Quick login/register modal — cédula now persisted (`ClientRegistrationModal`)
+- Inline flow already collects nombre completo + cédula (step "cedula") and runs the
+  same cédula-uniqueness check before signup as the full registration page.
+- **Bug fixed**: `POST /api/register/client` destructured `cedula` from the body but
+  never wrote it to the `profiles` upsert, so the value was silently dropped. The
+  upsert now includes `cedula` (digits-only) when present.
+
+### Professional registration "This page couldn't load" crash
+- Root cause was **not** in the registration flow itself (already wrapped in try/catch
+  with friendly error messages). It was the **redirect target**: the pro dashboard
+  (`/dashboard/profesional`) declared a `useEffect` *after* an early `return` for the
+  loading state. When `loading` flipped false the hook count changed between renders,
+  triggering React's "Rendered more hooks than during the previous render" → the
+  generic "This page couldn't load" screen right after `router.push("/dashboard/profesional")`.
+- Fix: moved the "no professional record → redirect to /registro/profesional" effect
+  above all early returns (now guarded by `!authLoading && !loading && !pro && user`)
+  so hook order is stable.
 
 ## Next Priorities
 

@@ -259,14 +259,30 @@ export function ClientRegistrationModal({
     setSubmitting(true);
     setError(null);
     const resolved = manualName.trim() || fullName;
+    const cedulaClean = cedula.replace(/\D/g, "");
     const supabase = createClient();
-    const { error: e } = await supabase.auth.signUp({
+
+    // Check cédula uniqueness before creating account
+    if (cedulaClean) {
+      const { data: existingCedula } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("cedula", cedulaClean)
+        .maybeSingle();
+      if (existingCedula) {
+        setError("Esta cédula ya está registrada en ContrataCR.");
+        setSubmitting(false);
+        return;
+      }
+    }
+
+    const { data: signUpData, error: e } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
           full_name: resolved,
-          cedula: cedula.replace(/\D/g, ""),
+          cedula: cedulaClean,
           role: "client",
           onboarding_completed: true,
         },
@@ -283,6 +299,24 @@ export function ClientRegistrationModal({
       }
       return;
     }
+
+    // Save cédula + fullName to profiles via API (also handles profiles trigger gap)
+    if (signUpData?.user?.id) {
+      try {
+        await fetch("/api/register/client", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: signUpData.user.id,
+            fullName: resolved,
+            cedula: cedulaClean,
+          }),
+        });
+      } catch {
+        // Non-fatal — cedula will be saved when session is established
+      }
+    }
+
     setStep("otp");
   }
 

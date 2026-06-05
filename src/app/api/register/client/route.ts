@@ -5,7 +5,7 @@ import { createClient as createServerClient } from "@/lib/supabase/server";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { fullName, phone, provinciaId, cantonId, userId: bodyUserId } = body;
+    const { fullName, phone, provinciaId, cantonId, cedula, userId: bodyUserId } = body;
 
     const sessionClient = await createServerClient();
     const { data: { user: sessionUser } } = await sessionClient.auth.getUser();
@@ -41,6 +41,7 @@ export async function POST(req: Request) {
           full_name: name,
           role: "client",
           onboarding_completed: true,
+          ...(cedula ? { cedula: String(cedula).replace(/\D/g, "") } : {}),
           ...(phone ? { phone } : {}),
           ...(provinciaId ? { provincia_id: provinciaId } : {}),
           ...(cantonId ? { canton_id: cantonId } : {}),
