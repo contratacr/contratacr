@@ -319,6 +319,12 @@ export default function ClientDashboardPage() {
     );
   }
 
+  // Detect OAuth accounts — email change is not allowed for them
+  const oauthProvider = user?.app_metadata?.provider as string | undefined;
+  const isOAuthAccount = oauthProvider === "google" || oauthProvider === "facebook" ||
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (user?.identities ?? []).some((id: any) => id.provider !== "email");
+
   // Name: DB profile takes priority over auth metadata, then email prefix
   const displayName =
     profileData?.full_name ||
@@ -822,7 +828,14 @@ export default function ClientDashboardPage() {
                   {/* Email */}
                   <div className="bg-white rounded-2xl border border-[#e5e7eb] p-6">
                     <label className="text-sm font-medium text-[#374151] block mb-1.5">Correo electrónico</label>
-                    {emailChangeSent ? (
+                    {isOAuthAccount ? (
+                      <div className="flex flex-col gap-2">
+                        <span className="text-sm text-[#374151] font-medium">{user?.email}</span>
+                        <p className="text-xs text-[#9ca3af]">
+                          Tu correo está vinculado a tu cuenta de {oauthProvider === "google" ? "Google" : "Facebook"} y no puede modificarse aquí.
+                        </p>
+                      </div>
+                    ) : emailChangeSent ? (
                       <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-700">
                         ✓ Revisá tu bandeja — enviamos un correo de confirmación al nuevo email.
                       </div>
