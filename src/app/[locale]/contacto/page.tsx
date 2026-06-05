@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { FadeInUp } from "@/components/landing/fade-in-up";
+import { SUPPORT_WHATSAPP_URL } from "@/lib/constants";
 
 type FormData = {
   name: string;
@@ -206,34 +207,33 @@ export default function ContactoPage() {
                       <h3 className="text-sm font-bold text-[#1a2744] mb-0.5">WhatsApp</h3>
                       <p className="text-xs text-gray-400 mb-3">Respuesta inmediata en horario laboral</p>
                       <a
-                        href="https://wa.me/50600000000"
+                        href={SUPPORT_WHATSAPP_URL}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#25D366] hover:underline"
                       >
-                        +506 xxxx-xxxx →
+                        Escribinos por WhatsApp →
                       </a>
                     </div>
                   </div>
                 </div>
 
-                {/* Email */}
+                {/* Ticket */}
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
                   <div className="flex items-start gap-4">
                     <div className="w-12 h-12 rounded-xl bg-[#EBF5FB] flex items-center justify-center shrink-0">
                       <svg className="h-6 w-6 text-[#009FD9]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                        <rect x="2" y="4" width="20" height="16" rx="2" />
-                        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                       </svg>
                     </div>
                     <div>
-                      <h3 className="text-sm font-bold text-[#1a2744] mb-0.5">Correo electrónico</h3>
+                      <h3 className="text-sm font-bold text-[#1a2744] mb-0.5">Ticket de soporte</h3>
                       <p className="text-xs text-gray-400 mb-3">Respondemos en menos de 24 horas</p>
                       <a
-                        href="mailto:soporte@contratacr.com"
+                        href="/soporte"
                         className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#009FD9] hover:underline"
                       >
-                        soporte@contratacr.com →
+                        Abrir ticket →
                       </a>
                     </div>
                   </div>
