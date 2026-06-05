@@ -64,7 +64,10 @@ export async function GET(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
   if (role === "client") {
-    const { data, error } = await supabase
+    // Use the admin client (scoped to this client's id) so a freshly created
+    // project always shows up immediately, regardless of RLS read timing.
+    const admin = createAdminClient();
+    const { data, error } = await admin
       .from("projects")
       .select(`
         *,

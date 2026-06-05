@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { getInitials } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const PROVINCES = [
   "San José", "Alajuela", "Cartago", "Heredia",
@@ -443,20 +444,43 @@ export function LandingNavbar() {
               {/* Right actions */}
               <div className="hidden lg:flex items-center gap-2 shrink-0">
                 {user ? (
-                  <>
-                    <a
-                      href={dashboardHref}
-                      className="text-sm font-medium px-3 py-2 rounded-xl text-[#374151] hover:bg-gray-50 transition-colors"
-                    >
-                      Mi panel
-                    </a>
+                  <div ref={userMenuRef} className="relative">
                     <button
-                      onClick={handleSignOut}
-                      className="text-sm font-medium px-3 py-2 rounded-xl text-[#6b7280] hover:text-red-500 hover:bg-gray-50 transition-colors"
+                      onClick={() => setUserMenuOpen((o) => !o)}
+                      className="flex items-center gap-1 p-0.5 rounded-full ring-2 ring-transparent hover:ring-[#009FD9]/30 transition-all"
+                      title={displayName || user.email || ""}
                     >
-                      Salir
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src={avatarUrl ?? undefined} />
+                        <AvatarFallback className="text-[12px] bg-[#009FD9] text-white font-bold">
+                          {initials}
+                        </AvatarFallback>
+                      </Avatar>
                     </button>
-                  </>
+                    {userMenuOpen && (
+                      <div className="absolute right-0 top-full mt-2 w-56 bg-white border border-gray-100 rounded-2xl shadow-xl z-50 py-1.5 overflow-hidden">
+                        <div className="px-3 py-2 border-b border-gray-50 mb-1">
+                          {displayName && <p className="text-sm font-semibold text-[#111827] truncate">{displayName}</p>}
+                          <p className="text-xs text-[#9ca3af] truncate">{user.email}</p>
+                        </div>
+                        <a
+                          href={dashboardHref}
+                          onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
+                        >
+                          <LayoutDashboard className="h-4 w-4 text-[#009FD9]" />
+                          Mi panel
+                        </a>
+                        <button
+                          onClick={handleSignOut}
+                          className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                        >
+                          <LogOut className="h-4 w-4" />
+                          Cerrar sesión
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   <>
                     <Link

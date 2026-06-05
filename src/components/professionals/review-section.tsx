@@ -1,11 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { Star } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { StarRating } from "@/components/ui/star-rating";
-import { LeaveReviewModal } from "@/components/professionals/leave-review-modal";
 import { getInitials } from "@/lib/utils";
 import type { Review } from "@/lib/queries/professionals";
 
@@ -30,36 +27,19 @@ function timeAgo(isoDate: string): string {
 }
 
 export function ReviewSection({
-  professionalId,
-  professionalName,
   reviewCount,
   ratingAvg,
   reviews,
-  isAuthenticated,
 }: ReviewSectionProps) {
-  const router = useRouter();
-  const [modalOpen, setModalOpen] = useState(false);
-
   return (
     <>
       <div className="flex items-center justify-between mb-5">
         <h2 className="text-lg font-semibold text-[#111827]">
           Reseñas ({reviewCount})
         </h2>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1">
-            <Star className="h-5 w-5 text-[#ff9b32] fill-[#ff9b32]" />
-            <span className="font-bold text-[#111827]">{ratingAvg.toFixed(1)}</span>
-          </div>
-          {isAuthenticated && (
-            <button
-              type="button"
-              onClick={() => setModalOpen(true)}
-              className="rounded-lg border border-[#009FD9] px-3 py-1.5 text-sm font-medium text-[#009FD9] hover:bg-[#009FD9] hover:text-white transition-colors"
-            >
-              Dejar una reseña
-            </button>
-          )}
+        <div className="flex items-center gap-1">
+          <Star className="h-5 w-5 text-[#ff9b32] fill-[#ff9b32]" />
+          <span className="font-bold text-[#111827]">{ratingAvg.toFixed(1)}</span>
         </div>
       </div>
 
@@ -83,19 +63,10 @@ export function ReviewSection({
 
         {reviews.length === 0 && (
           <p className="text-sm text-[#9ca3af] text-center py-6">
-            Aún no hay reseñas. ¡Sé el primero en dejar una!
+            Aún no hay reseñas. Solo los clientes que completaron un servicio pueden dejar una.
           </p>
         )}
       </div>
-
-      {modalOpen && (
-        <LeaveReviewModal
-          professionalId={professionalId}
-          professionalName={professionalName}
-          onClose={() => setModalOpen(false)}
-          onSuccess={() => router.refresh()}
-        />
-      )}
     </>
   );
 }

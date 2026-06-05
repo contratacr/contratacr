@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { StarRating } from "@/components/ui/star-rating";
 import { getInitials, getWhatsAppLink } from "@/lib/utils";
 import { ReviewSection } from "@/components/professionals/review-section";
+import { ReportProfileModal } from "@/components/professionals/report-profile-modal";
 import { createClient } from "@/lib/supabase/client";
 import { BookingButton } from "@/components/booking/booking-button";
 import { ClientRegistrationModal } from "@/components/auth/client-registration-modal";
@@ -63,11 +64,14 @@ export default function ProfilePage({ params }: ProfilePageProps) {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showAllServices, setShowAllServices] = useState(false);
   const [showRegistration, setShowRegistration] = useState(false);
+  const [slug, setSlug] = useState("");
+  const [reportOpen, setReportOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     async function load() {
       const { slug } = await params;
+      setSlug(slug);
       const res = await fetch(`/api/professionals/${slug}`);
       if (!res.ok) { setProNotFound(true); setLoading(false); return; }
       const pro: ProfessionalDetail | null = await res.json();
@@ -280,7 +284,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                       </button>
                       <button
                         className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors"
-                        onClick={() => setDropdownOpen(false)}
+                        onClick={() => { setDropdownOpen(false); setReportOpen(true); }}
                       >
                         <Flag className="h-4 w-4" />
                         Reportar perfil
@@ -453,6 +457,14 @@ export default function ProfilePage({ params }: ProfilePageProps) {
           </div>
         </div>
       </main>
+
+      {reportOpen && (
+        <ReportProfileModal
+          professionalName={professional.fullName}
+          professionalSlug={slug}
+          onClose={() => setReportOpen(false)}
+        />
+      )}
 
       <LandingFooter />
     </div>

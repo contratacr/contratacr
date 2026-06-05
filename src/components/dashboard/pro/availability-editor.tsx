@@ -128,7 +128,7 @@ export function AvailabilityEditor({ professionalId, initialAvailability, onSave
                   type="button"
                   onClick={() => toggleDay(key)}
                   className={cn(
-                    "relative h-6 w-11 rounded-full transition-all duration-200 shrink-0",
+                    "relative h-6 w-11 rounded-full transition-all duration-200 shrink-0 cursor-pointer",
                     day.enabled ? "bg-[#009FD9]" : "bg-[#d1d5db]"
                   )}
                   aria-label={`${day.enabled ? "Desactivar" : "Activar"} ${label}`}

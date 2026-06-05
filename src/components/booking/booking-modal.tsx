@@ -83,6 +83,7 @@ export function BookingModal({ professional, categoryName, open, onClose }: Book
   const [selectedTime, setSelectedTime] = useState("");
   const [availability, setAvailability] = useState<WeeklyAvailability>({});
   const [blockedDates, setBlockedDates] = useState<string[]>([]);
+  const [takenSlots, setTakenSlots] = useState<Set<string>>(new Set());
   const [availabilityLoaded, setAvailabilityLoaded] = useState(false);
   const [description, setDescription] = useState("");
   const [clientName, setClientName] = useState("");
@@ -104,9 +105,11 @@ export function BookingModal({ professional, categoryName, open, onClose }: Book
       supabase.from("professionals").select("availability").eq("id", professional.id).single(),
       supabase.from("blocked_dates").select("blocked_date").eq("professional_id", professional.id),
       supabase.auth.getUser(),
-    ]).then(([{ data: proData }, { data: bdData }, { data: { user } }]) => {
+      fetch(`/api/bookings?takenFor=${professional.id}`).then((r) => r.json()).catch(() => ({ taken: [] })),
+    ]).then(([{ data: proData }, { data: bdData }, { data: { user } }, takenRes]) => {
       if (proData?.availability) setAvailability(proData.availability as WeeklyAvailability);
       setBlockedDates((bdData ?? []).map((r) => r.blocked_date));
+      setTakenSlots(new Set<string>((takenRes?.taken as string[]) ?? []));
       setAvailabilityLoaded(true);
 
       if (user) {
@@ -134,7 +137,10 @@ export function BookingModal({ professional, categoryName, open, onClose }: Book
     const dayKey = DAY_KEYS[date.getDay()];
     const daySchedule = availability[dayKey];
     if (!daySchedule?.enabled) return [];
-    return generateSlots(daySchedule.ranges ?? []);
+    // Exclude slots already booked by other clients on this date.
+    return generateSlots(daySchedule.ranges ?? []).filter(
+      (slot) => !takenSlots.has(`${dateStr} ${slot}`)
+    );
   }
 
   function prevMonth() {
@@ -227,7 +233,7 @@ export function BookingModal({ professional, categoryName, open, onClose }: Book
           )}
         >
           {/* LEFT PANEL */}
-          <div className="bg-gradient-to-br from-[#0c2420] via-[#183f36] to-[#237561] md:w-[260px] shrink-0 flex flex-col p-6 text-white">
+          <div className="bg-gradient-to-br from-[#1a2744] via-[#13294a] to-[#009FD9] md:w-[260px] shrink-0 flex flex-col p-6 text-white">
             <div className="flex items-center gap-3 md:flex-col md:items-start md:gap-0">
               <Avatar className="h-14 w-14 md:h-20 md:w-20 md:self-center shrink-0">
                 <AvatarImage src={professional.avatarUrl} alt={professional.fullName} />
@@ -362,7 +368,6 @@ export function BookingModal({ professional, categoryName, open, onClose }: Book
                           const dateStr = formatDateISO(date);
                           const available = isDayAvailable(date);
                           const isSelected = selectedDate === dateStr;
-                          const isPast = date < today;
                           const isBlocked = blockedDates.includes(dateStr);
                           const isToday = formatDateISO(date) === formatDateISO(today);
 
@@ -375,18 +380,20 @@ export function BookingModal({ professional, categoryName, open, onClose }: Book
                                 setSelectedTime("");
                               }}
                               className={cn(
-                                "aspect-square flex items-center justify-center rounded-xl text-sm font-medium transition-all",
+                                "relative aspect-square flex items-center justify-center rounded-xl text-sm font-medium transition-all",
                                 isSelected && "bg-[#009FD9] text-white shadow-sm",
                                 !isSelected && available && "hover:bg-[#EBF5FB] text-[#111827] cursor-pointer",
-                                !isSelected && !available && (isPast || isBlocked) && "text-[#d1d5db] cursor-not-allowed",
-                                !isSelected && !available && !isPast && !isBlocked && "text-[#d1d5db] cursor-not-allowed",
-                                isToday && !isSelected && "ring-2 ring-[#009FD9] ring-offset-1 text-[#009FD9] font-bold"
+                                !isSelected && available && isToday && "text-[#009FD9] font-bold",
+                                !isSelected && !available && "text-[#d1d5db] cursor-not-allowed"
                               )}
                             >
                               {isBlocked ? (
                                 <span className="line-through opacity-50">{date.getDate()}</span>
                               ) : (
                                 date.getDate()
+                              )}
+                              {isToday && !isSelected && (
+                                <span className="absolute bottom-1 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-[#009FD9]" />
                               )}
                             </button>
                           );
@@ -533,7 +540,7 @@ export function BookingModal({ professional, categoryName, open, onClose }: Book
                   <Button
                     size="md"
                     className="flex-1"
-                    disabled={!selectedDate || (slots.length > 0 && !selectedTime)}
+                    disabled={!selectedDate}
                     onClick={() => setStep("details")}
                   >
                     {t("continue")}

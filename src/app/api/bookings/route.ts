@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { notifyNewBooking } from "@/lib/notifications";
 
 export async function POST(req: NextRequest) {
   try {
@@ -36,6 +38,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Failed to create booking" }, { status: 500 });
     }
 
+    // Notify the professional (in-app + email + optional WhatsApp). Best-effort.
+    await notifyNewBooking({
+      professionalId,
+      clientName: clientName || "Un cliente",
+      serviceDescription,
+      whenText: preferredDateText ?? null,
+    });
+
     // If email provided and no session, send magic link to create / sign in account
     if (clientEmail && !session?.user) {
       await supabase.auth.signInWithOtp({
@@ -56,6 +66,25 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const role = searchParams.get("role");
+
+  // Public: taken slots for a professional (date + time only, no PII).
+  // Lets the booking calendar hide slots already booked by other clients.
+  const takenForPro = searchParams.get("takenFor");
+  if (takenForPro) {
+    const admin = createAdminClient();
+    const { data } = await admin
+      .from("bookings")
+      .select("scheduled_date, scheduled_time")
+      .eq("professional_id", takenForPro)
+      .in("status", ["pending", "confirmed", "in_progress"])
+      .not("scheduled_date", "is", null)
+      .not("scheduled_time", "is", null);
+    return NextResponse.json({
+      // Normalize time to HH:MM (Postgres `time` may return HH:MM:SS).
+      taken: (data ?? []).map((b) => `${b.scheduled_date} ${String(b.scheduled_time).slice(0, 5)}`),
+    });
+  }
+
   const supabase = await createClient();
 
   const { data: { session } } = await supabase.auth.getSession();
@@ -104,5 +133,32 @@ export async function PATCH(req: NextRequest) {
     .eq("id", id);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // When a booking is marked completed, prompt the client to leave a review.
+  if (status === "completed") {
+    try {
+      const admin = createAdminClient();
+      const { data: booking } = await admin
+        .from("bookings")
+        .select("client_id, professional_id, professionals(slug, profiles(full_name))")
+        .eq("id", id)
+        .maybeSingle();
+
+      if (booking?.client_id) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const pro = booking.professionals as any;
+        const proName = pro?.profiles?.full_name ?? "el profesional";
+        await admin.from("notifications").insert({
+          user_id: booking.client_id,
+          type: "review_request",
+          title: "¿Cómo te fue?",
+          message: `Tu servicio con ${proName} se marcó como completado. Dejá una reseña para ayudar a otros clientes.`,
+        });
+      }
+    } catch (err) {
+      console.error("[PATCH /api/bookings] review prompt failed:", err);
+    }
+  }
+
   return NextResponse.json({ success: true });
 }
