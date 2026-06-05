@@ -1,6 +1,6 @@
 # ContrataCR.com — Project Context
 
-_Last updated: 2026-06-04 (sprint 11 — support form fixed: Resend primary + SMTP fallback, from address ContrataCR <soporte@contratacr.com>, file attachments (JPG/PNG/PDF), TS build errors fixed, dead footer links removed)_
+_Last updated: 2026-06-04 (sprint 12 — OAuth on pro registration, category FK fixed migration 013, bio minimum removed, client dashboard header/name/avatar fixed, navbar profile simplified, photo auto-refresh, Places API autocomplete, support page redesigned)_
 
 ---
 
