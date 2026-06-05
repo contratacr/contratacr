@@ -1,6 +1,6 @@
 # ContrataCR.com — Project Context
 
-_Last updated: 2026-06-04 (sprint 12 — OAuth on pro registration, category FK fixed migration 013, bio minimum removed, client dashboard header/name/avatar fixed, navbar profile simplified, photo auto-refresh, Places API autocomplete, support page redesigned; fixes 5-6 — quick-register cédula persisted, pro dashboard hooks-order crash fixed)_
+_Last updated: 2026-06-05 (sprint 13 — date-based availability + public/private toggle, search map with clustered pins, verified-only reviews, booking notifications + slot consumption, report-profile flow, homepage avatar dropdown, booking-modal brand redesign, projects-tab fix; sprint 12 — OAuth on pro registration, category FK migration 013, bio minimum removed, client dashboard fixes, photo auto-refresh, Places API autocomplete; fixes 5-6 — quick-register cédula persisted, pro dashboard hooks-order crash fixed)_
 
 ---
 
@@ -464,6 +464,79 @@ ALTER TABLE professionals ADD COLUMN IF NOT EXISTS services JSONB DEFAULT '[]'::
 - Fix: moved the "no professional record → redirect to /registro/profesional" effect
   above all early returns (now guarded by `!authLoading && !loading && !pro && user`)
   so hook order is stable.
+
+## Sprint 13 Changes (2026-06-05)
+
+### Availability — date-based scheduling + public/private (migration 014)
+- New `availability_slots` table: explicit `(professional_id, slot_date, slot_time)` rows.
+  Replaces the weekly toggle as the primary model. RLS: public read, owner write.
+- New `professionals.availability_public` boolean (default true).
+- `AvailabilityEditor` rewritten into a real scheduling tool:
+  - Public/private toggle (pointer cursor) — saves `availability_public`.
+  - Slot generator: pick a date + time range + interval (30 min / 1 h / 2 h / custom
+    minutes) → bulk-creates slots; plus a single-time adder. Slots listed per day with
+    per-slot and per-day removal.
+- `BookingModal` reads explicit slots first (falls back to the legacy weekly
+  `availability` JSON for pros who haven't migrated), hides already-booked slots, and
+  only enables calendar days that have open slots.
+- Profile page respects `availability_public`:
+  - Public → "Solicitar servicio" booking button + bookable slots.
+  - Private → "La disponibilidad de este profesional no es pública" with WhatsApp +
+    Llamar (`tel:`) buttons (HuliHealth-style). The left-card CTA also switches to Llamar.
+
+### Booking — slot consumption + notifications
+- Booked `(date, time)` slots are removed from the calendar for other clients via a
+  public taken-slots endpoint: `GET /api/bookings?takenFor=<professionalId>` (returns
+  date+time only, no PII, normalized to HH:MM).
+- New `src/lib/notifications.ts` → `notifyNewBooking()`: on a new booking, sends an
+  in-app notification (type `booking_received`) + email (Resend) to the professional,
+  and an optional WhatsApp message if `WHATSAPP_CLOUD_TOKEN` + `WHATSAPP_PHONE_NUMBER_ID`
+  are configured (no-op otherwise). Best-effort — never breaks the booking.
+
+### Reviews — verified clients only
+- `POST /api/reviews` now requires a `completed` booking between the client and the
+  professional, and blocks duplicate reviews (409).
+- The open "Dejar una reseña" button was removed from public profiles — the only entry
+  point is the client dashboard's completed-booking card.
+- Completing a booking (`PATCH /api/bookings` → `completed`) inserts a `review_request`
+  notification prompting the client to review.
+
+### Report profile → support email
+- `POST /api/report`: sends a confidential report to **soporte@contratacr.com** via
+  Resend (not WhatsApp). New `ReportProfileModal` with reason picker + optional detail
+  and a confirmation screen. Wired into the profile "Reportar perfil" menu item.
+
+### Search map — pins + clustering
+- `GoogleMapPanel` rebuilt: one pin per matching professional, clustered into numbered
+  brand-blue bubbles (official `@googlemaps/markerclusterer` loaded via CDN). Clicking a
+  pin opens a popup card (photo, name, category, rating, "Ver perfil").
+- Fixed-location pros pin at their exact `lat`/`lng`; mobile pros pin at their province
+  centroid with deterministic jitter. Split layout: list left, full-height sticky map
+  right (lg+). Uses `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`.
+
+### Other fixes
+- **Homepage header** (`LandingNavbar`): logged-in users now see the avatar dropdown
+  (Mi panel / Cerrar sesión) instead of a plain "Salir" link — consistent with inner pages.
+- **Booking modal** restyled to brand colors (navy→blue panel, was off-brand green);
+  today's date is a subtle dot (was a distracting ring); "Continuar" enables on date select.
+- **Client dashboard projects**: `GET /api/projects?role=client` now uses the admin
+  client (scoped to the client's id) so newly created projects appear immediately.
+- **OAuth fast sign-up** confirmed cédula-free: pro registration skips the identity step
+  for Google/Facebook users and the onboarding flow has no cédula field.
+
+### DB (migration 014 — run in Supabase SQL Editor)
+```sql
+-- File: supabase/migrations/014_availability_slots.sql
+-- professionals.availability_public (boolean, default true)
+-- availability_slots table (professional_id, slot_date, slot_time) + RLS + index
+```
+
+### i18n note
+New UI strings follow the app's Spanish-first convention (default locale, same as the
+surrounding booking/dashboard/profile components, which are hardcoded ES). The
+search/profile pages that already use next-intl keys are unchanged. Wiring the new
+Spanish strings through `messages/{es,en}.json` is a follow-up consistent with the rest
+of the app's partial i18n.
 
 ## Next Priorities
 
