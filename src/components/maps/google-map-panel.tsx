@@ -70,6 +70,24 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es" }: GoogleM
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const boundsRef = useRef<any>(null);
   const hasMarkersRef = useRef(false);
+  const markerCountRef = useRef(0);
+
+  // Single location → center + zoom in on it. Multiple → fit all markers so every
+  // result is visible at once.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function fitToMarkers(map: any, g: any, bounds: any, count: number) {
+    if (count === 0) return;
+    if (count === 1) {
+      map.setCenter(bounds.getCenter());
+      map.setZoom(14);
+      return;
+    }
+    map.fitBounds(bounds, 48);
+    const listener = g.event.addListenerOnce(map, "idle", () => {
+      if (map.getZoom() > 15) map.setZoom(15);
+    });
+    void listener;
+  }
 
   function initMap() {
     if (initialized.current || !mapRef.current) return;
@@ -85,11 +103,12 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es" }: GoogleM
       zoom: 9,
       mapTypeControl: false,
       streetViewControl: false,
-      fullscreenControl: false,
+      // Expand / fullscreen control for a bigger map view.
+      fullscreenControl: true,
       zoomControl: true,
-      // Cooperative gestures: one-finger drag scrolls the page (no scroll-trap),
-      // two fingers pan/zoom the map — so page scrolling never zooms the map.
-      gestureHandling: "cooperative",
+      // Greedy: the mouse wheel zooms whenever the cursor is over the map (no Ctrl
+      // needed), and a single finger pans on touch.
+      gestureHandling: "greedy",
       styles: BRAND_MAP_STYLE,
     });
     mapInstanceRef.current = map;
@@ -160,14 +179,8 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es" }: GoogleM
 
     boundsRef.current = bounds;
     hasMarkersRef.current = markers.length > 0;
-
-    if (markers.length > 0) {
-      map.fitBounds(bounds);
-      const listener = g.event.addListenerOnce(map, "idle", () => {
-        if (map.getZoom() > 14) map.setZoom(14);
-      });
-      void listener;
-    }
+    markerCountRef.current = markers.length;
+    fitToMarkers(map, g, bounds, markers.length);
   }
 
   useEffect(() => {
@@ -189,7 +202,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es" }: GoogleM
       if (!g || !map || el.offsetWidth === 0) return;
       g.event.trigger(map, "resize");
       if (hasMarkersRef.current && boundsRef.current) {
-        map.fitBounds(boundsRef.current);
+        fitToMarkers(map, g, boundsRef.current, markerCountRef.current);
       }
     });
     ro.observe(el);

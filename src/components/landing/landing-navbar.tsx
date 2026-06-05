@@ -446,6 +446,12 @@ export function LandingNavbar() {
               <div className="hidden lg:flex items-center gap-2 shrink-0">
                 {user ? (
                   <div className="flex items-center gap-1">
+                  <a
+                    href={dashboardHref}
+                    className="text-sm font-medium px-3 py-2 text-[#374151] hover:text-[#1a2744] transition-colors whitespace-nowrap"
+                  >
+                    Mi panel
+                  </a>
                   <NotificationBell />
                   <div ref={userMenuRef} className="relative">
                     <button

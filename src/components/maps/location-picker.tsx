@@ -52,7 +52,9 @@ export function LocationPicker({ value, onChange, apiKey }: LocationPickerProps)
       zoom,
       mapTypeControl: false,
       streetViewControl: false,
-      fullscreenControl: false,
+      // Expand control + natural wheel zoom (no Ctrl), matching the search map.
+      fullscreenControl: true,
+      gestureHandling: "greedy",
       styles: BRAND_MAP_STYLE,
     });
     mapInstanceRef.current = map;

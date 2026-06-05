@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { FolderOpen, Send, ChevronDown, ChevronUp, MapPin, Clock, Coins } from "lucide-react";
+import { FolderOpen, Send, ChevronDown, ChevronUp, MapPin, Clock, Coins, User, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import { cn, getWhatsAppLink } from "@/lib/utils";
 
 type ProposalStatus = "pending" | "accepted" | "declined";
 
@@ -19,7 +19,7 @@ type MyProposal = {
   projects?: {
     title: string;
     status: string;
-    profiles: { full_name: string };
+    profiles: { full_name: string; phone?: string };
   };
 };
 
@@ -177,6 +177,12 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                           </div>
                           <p className="text-sm text-[#6b7280] line-clamp-2 mb-2">{project.description}</p>
                           <div className="flex flex-wrap gap-3 text-xs text-[#9ca3af]">
+                            {project.profiles?.full_name && (
+                              <span className="flex items-center gap-1">
+                                <User className="h-3 w-3" />
+                                {project.profiles.full_name.split(" ")[0]}
+                              </span>
+                            )}
                             {(project.provincias?.name || project.cantones?.name) && (
                               <span className="flex items-center gap-1">
                                 <MapPin className="h-3 w-3" />
@@ -284,6 +290,12 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                         <p className="font-medium text-sm text-[#111827] mb-1">
                           {p.projects?.title ?? "Proyecto"}
                         </p>
+                        {p.projects?.profiles?.full_name && (
+                          <p className="flex items-center gap-1 text-xs text-[#6b7280] mb-1">
+                            <User className="h-3 w-3" />
+                            {p.projects.profiles.full_name.split(" ")[0]}
+                          </p>
+                        )}
                         <p className="text-xs text-[#6b7280] line-clamp-2 mb-2">{p.message}</p>
                         {p.price && (
                           <p className="text-xs text-[#374151]">
@@ -294,9 +306,26 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                           {new Date(p.created_at).toLocaleDateString("es-CR")}
                         </p>
                       </div>
-                      <Badge variant={STATUS_VARIANT[p.status]}>
-                        {STATUS_LABEL[p.status]}
-                      </Badge>
+                      <div className="flex flex-col items-end gap-2 shrink-0">
+                        <Badge variant={STATUS_VARIANT[p.status]}>
+                          {STATUS_LABEL[p.status]}
+                        </Badge>
+                        {p.status === "accepted" && p.projects?.profiles?.phone && (
+                          <Button size="sm" variant="whatsapp" asChild>
+                            <a
+                              href={getWhatsAppLink(
+                                p.projects.profiles.phone,
+                                `Hola ${p.projects.profiles.full_name.split(" ")[0]}, soy el profesional cuya propuesta aceptaste en ContrataCR para "${p.projects.title}".`
+                              )}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <MessageCircle className="h-3.5 w-3.5" />
+                              WhatsApp
+                            </a>
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

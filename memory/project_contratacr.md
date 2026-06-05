@@ -29,4 +29,13 @@ Professional services marketplace for Costa Rica. See `contratacr-context.md` fo
 - Notifications carry `data.link`; UI is click-through via `src/lib/notification-link.ts` + `formatRelativeTime`. New-booking msg format: "[Client] solicitó '[Service]' para el [weekday], [day] de [month] a las [time]."
 - Booking confirm/cancel by a pro → `notifyBookingStatusChange()` messages the client from ContrataCR's own WhatsApp (Cloud API), email fallback; delivery logged in `notification_deliveries` (migration 015).
 
+**Sprint 15 (2026-06-05) — key facts:**
+- **PostgREST FK-embed rule (recurring bug class):** `professionals`/`projects` ↔ `categories` and `projects` ↔ `provincias`/`cantones` have NO foreign keys → any embedded `categories(...)`/`provincias(...)` select 500s and silently hides rows. Already bit `/api/projects` and `/api/proposals` (the "Ver propuestas" bug). Resolve such names in app code, never via embeds.
+- Maps reverted to near-default Google style (`map-style.ts` only hides POI business icons). `gestureHandling:"greedy"` (wheel zoom, no Ctrl), `fullscreenControl:true`. Auto-fit: 1 marker → center+zoom 14; many → `fitBounds` (clamp ≤15). Same on registration `location-picker`.
+- Geography (`cr-geography.ts`) now 84 cantons: added Río Cuarto (AL), Monteverde + Puerto Jiménez (PU); renamed Valverde Vega→Sarchí, Aguirre→Quepos. Districts are NOT modeled (no UI consumer; registration uses province+canton+free-text address).
+- Photo UX: pro `profile-editor` + client dashboard + `completar-perfil` all AUTO-upload on select (no Save needed). Portfolio `photo-gallery` supports `multiple` file select.
+- Client privacy in proposals: pros see client FIRST name in available projects; client phone/WhatsApp exposed only on ACCEPTED proposals; cédula never exposed.
+- Cancellation rule: bookings are TERMINAL once cancelled (audit). Projects (client's own listing) are reopenable via `PATCH /api/projects` (status open↔cancelled).
+- "Mi panel" is now a visible nav link in both navbars (was dropdown-only on landing).
+
 **How to apply:** When resuming, read `contratacr-context.md` first. Supabase is the single source of truth for professionals.

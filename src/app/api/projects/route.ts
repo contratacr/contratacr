@@ -133,3 +133,28 @@ export async function GET(req: NextRequest) {
   }
   return NextResponse.json({ projects: await enrichProjects(data ?? []) });
 }
+
+// Project owner can change their project's status. A cancelled project can be
+// reopened (status → open) — a project is the client's own reusable listing, so
+// reversal is expected and low-risk (unlike a booking, which is a commitment
+// between two parties and stays terminal for auditability).
+export async function PATCH(req: NextRequest) {
+  const { id, status } = await req.json();
+  const allowed = ["open", "cancelled", "completed"];
+  if (!id || !allowed.includes(status)) {
+    return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
+  }
+
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+
+  const { error } = await supabase
+    .from("projects")
+    .update({ status, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .eq("client_id", session.user.id);
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ success: true });
+}

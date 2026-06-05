@@ -36,7 +36,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
   const [avatarPreview, setAvatarPreview] = useState<string | null>(
     initial.profiles?.avatar_url ?? null
   );
-  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoUploading, setPhotoUploading] = useState(false);
 
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -44,10 +44,28 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
 
   const cantons = getCantonsByProvince(provinceId);
 
-  function handlePhotoSelect(file: File) {
-    setPhotoFile(file);
+  // Auto-upload the photo as soon as it's picked — no "Guardar cambios" needed.
+  // Shows an instant local preview, then swaps in the hosted URL on success.
+  async function handlePhotoSelect(file: File) {
+    setError(null);
     setAvatarPreview(URL.createObjectURL(file));
-    setSaved(false);
+    setPhotoUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload/photo", { method: "POST", body: fd });
+      if (!res.ok) throw new Error();
+      const { url } = await res.json();
+      const supabase = createClient();
+      await supabase.from("profiles").update({ avatar_url: url }).eq("id", profileId);
+      await supabase.auth.updateUser({ data: { avatar_url: url } });
+      setAvatarPreview(url);
+      onSaved?.();
+    } catch {
+      setError("No se pudo subir la foto. Intentá de nuevo.");
+    } finally {
+      setPhotoUploading(false);
+    }
   }
 
   async function handleSave() {
@@ -56,17 +74,6 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
     const supabase = createClient();
 
     try {
-      let avatarUrl: string | undefined;
-      if (photoFile) {
-        const fd = new FormData();
-        fd.append("file", photoFile);
-        const res = await fetch("/api/upload/photo", { method: "POST", body: fd });
-        if (res.ok) {
-          const { url } = await res.json();
-          avatarUrl = url;
-        }
-      }
-
       const { error: proError } = await supabase
         .from("professionals")
         .update({
@@ -83,17 +90,9 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
 
       if (proError) throw proError;
 
-      const profileUpdate: Record<string, string> = {};
-      if (fullName) profileUpdate.full_name = fullName;
-      if (avatarUrl) profileUpdate.avatar_url = avatarUrl;
-
-      if (Object.keys(profileUpdate).length) {
-        await supabase.from("profiles").update(profileUpdate).eq("id", profileId);
-      }
-
-      if (avatarUrl) {
-        await supabase.auth.updateUser({ data: { avatar_url: avatarUrl } });
-        setPhotoFile(null);
+      // Photo is auto-saved on selection; here we only persist the name.
+      if (fullName) {
+        await supabase.from("profiles").update({ full_name: fullName }).eq("id", profileId);
       }
 
       setSaved(true);
@@ -134,10 +133,17 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
           <div className="absolute inset-0 rounded-full bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
             <Camera className="h-4 w-4 text-white" />
           </div>
+          {photoUploading && (
+            <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center">
+              <span className="h-5 w-5 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+            </div>
+          )}
         </div>
         <div>
           <p className="text-sm font-medium text-[#374151]">Foto de perfil</p>
-          <p className="text-xs text-[#9ca3af]">JPG, PNG o WebP · máx 5 MB</p>
+          <p className="text-xs text-[#9ca3af]">
+            {photoUploading ? "Subiendo foto…" : "Se guarda al instante · JPG, PNG o WebP · máx 5 MB"}
+          </p>
         </div>
         <input
           ref={photoInputRef}

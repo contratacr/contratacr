@@ -21,16 +21,25 @@ export function PhotoGallery({ professionalId, initialUrls = [], onSaved }: Phot
   const [uploading, setUploading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  async function handleUpload(file: File) {
+  async function handleUpload(files: FileList) {
+    const remaining = 10 - urls.length;
+    const toUpload = Array.from(files).slice(0, Math.max(0, remaining));
+    if (toUpload.length === 0) return;
+
     setUploading(true);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await fetch("/api/upload/photo", { method: "POST", body: formData });
-      const data = await res.json();
+      const uploaded: string[] = [];
+      for (const file of toUpload) {
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await fetch("/api/upload/photo", { method: "POST", body: formData });
+        const data = await res.json();
+        if (data.url) uploaded.push(data.url);
+        else alert(data.error ?? t("configure"));
+      }
 
-      if (data.url) {
-        const newUrls = [...urls, data.url];
+      if (uploaded.length > 0) {
+        const newUrls = [...urls, ...uploaded];
         setUrls(newUrls);
         const supabase = createClient();
         await supabase
@@ -38,8 +47,6 @@ export function PhotoGallery({ professionalId, initialUrls = [], onSaved }: Phot
           .update({ portfolio_urls: newUrls })
           .eq("id", professionalId);
         onSaved?.();
-      } else {
-        alert(data.error ?? t("configure"));
       }
     } catch {
       alert(t("configure"));
@@ -104,10 +111,10 @@ export function PhotoGallery({ professionalId, initialUrls = [], onSaved }: Phot
         ref={inputRef}
         type="file"
         accept="image/*"
+        multiple
         className="hidden"
         onChange={(e) => {
-          const file = e.target.files?.[0];
-          if (file) handleUpload(file);
+          if (e.target.files && e.target.files.length > 0) handleUpload(e.target.files);
           e.target.value = "";
         }}
       />

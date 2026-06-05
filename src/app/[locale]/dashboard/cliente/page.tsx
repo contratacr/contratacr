@@ -225,6 +225,15 @@ export default function ClientDashboardPage() {
     setBookings((prev) => prev.map((b) => (b.id === id ? { ...b, status: "cancelled" } : b)));
   }
 
+  async function updateProjectStatus(projectId: string, status: string) {
+    await fetch("/api/projects", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: projectId, status }),
+    });
+    setProjects((prev) => prev.map((p) => (p.id === projectId ? { ...p, status } : p)));
+  }
+
   async function loadProposals(projectId: string) {
     if (projectProposals[projectId]) return;
     const res = await fetch(`/api/proposals?project=${projectId}`);
@@ -648,6 +657,20 @@ export default function ClientDashboardPage() {
                                   </button>
                                 )}
                               </div>
+
+                              {(project.status === "open" || project.status === "cancelled") && (
+                                <div className="mt-3">
+                                  {project.status === "open" ? (
+                                    <Button size="sm" variant="outline" onClick={() => updateProjectStatus(project.id, "cancelled")}>
+                                      Cancelar proyecto
+                                    </Button>
+                                  ) : (
+                                    <Button size="sm" variant="outline" onClick={() => updateProjectStatus(project.id, "open")}>
+                                      Reabrir proyecto
+                                    </Button>
+                                  )}
+                                </div>
+                              )}
 
                               {isExpanded && proposalList && (
                                 <div className="mt-4 pt-4 border-t border-[#f3f4f6] flex flex-col gap-3">

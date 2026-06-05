@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { IdCard, Phone, User as UserIcon, AlertCircle } from "lucide-react";
+import { IdCard, Phone, User as UserIcon, AlertCircle, Camera } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
@@ -24,6 +24,9 @@ export default function CompleteProfilePage() {
   const [checking, setChecking] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!authLoading && !user) router.push("/login");
@@ -35,7 +38,7 @@ export default function CompleteProfilePage() {
     const supabase = createClient();
     supabase
       .from("profiles")
-      .select("full_name, phone, cedula")
+      .select("full_name, phone, cedula, avatar_url")
       .eq("id", user.id)
       .single()
       .then(({ data }) => {
@@ -51,9 +54,38 @@ export default function CompleteProfilePage() {
         setFullName(oauthName);
         setNameFromOAuth(!!oauthName);
         setPhone(data?.phone ?? "");
+        setAvatarUrl(
+          data?.avatar_url ||
+            (user.user_metadata?.avatar_url as string) ||
+            (user.user_metadata?.picture as string) ||
+            null
+        );
         setChecking(false);
       });
   }, [user, router, next]);
+
+  // Optional profile photo — auto-uploads immediately on selection.
+  async function handlePhotoSelect(file: File) {
+    if (!user) return;
+    setError(null);
+    setAvatarUrl(URL.createObjectURL(file));
+    setPhotoUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload/photo", { method: "POST", body: fd });
+      if (!res.ok) throw new Error();
+      const { url } = await res.json();
+      const supabase = createClient();
+      await supabase.from("profiles").update({ avatar_url: url }).eq("id", user.id);
+      await supabase.auth.updateUser({ data: { avatar_url: url } });
+      setAvatarUrl(url);
+    } catch {
+      setError("No se pudo subir la foto. Podés continuar sin ella.");
+    } finally {
+      setPhotoUploading(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -123,6 +155,39 @@ export default function CompleteProfilePage() {
           )}
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            {/* Optional profile photo */}
+            <div className="flex items-center gap-4">
+              <div
+                className="relative h-16 w-16 rounded-full cursor-pointer group shrink-0"
+                onClick={() => photoInputRef.current?.click()}
+              >
+                {avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={avatarUrl} alt="Foto de perfil" className="h-16 w-16 rounded-full object-cover border-2 border-[#e5e7eb]" />
+                ) : (
+                  <div className="h-16 w-16 rounded-full bg-[#EBF5FB] border-2 border-dashed border-[#bfdbfe] flex items-center justify-center">
+                    <Camera className="h-6 w-6 text-[#009FD9]" />
+                  </div>
+                )}
+                {photoUploading && (
+                  <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center">
+                    <span className="h-4 w-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+                  </div>
+                )}
+              </div>
+              <div>
+                <p className="text-sm font-medium text-[#374151]">Foto de perfil <span className="text-[#9ca3af] font-normal">(opcional)</span></p>
+                <p className="text-xs text-[#9ca3af]">Genera más confianza con los profesionales.</p>
+              </div>
+              <input
+                ref={photoInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) handlePhotoSelect(f); e.target.value = ""; }}
+              />
+            </div>
+
             <div>
               <label className="text-sm font-medium text-[#374151] block mb-1.5">Nombre legal completo</label>
               <div className="relative">
