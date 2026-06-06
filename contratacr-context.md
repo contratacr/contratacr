@@ -1,6 +1,6 @@
 # ContrataCR.com — Project Context
 
-_Last updated: 2026-06-05 (sprint 13 — date-based availability + public/private toggle, search map with clustered pins, verified-only reviews, booking notifications + slot consumption, report-profile flow, homepage avatar dropdown, booking-modal brand redesign, projects-tab fix; sprint 12 — OAuth on pro registration, category FK migration 013, bio minimum removed, client dashboard fixes, photo auto-refresh, Places API autocomplete; fixes 5-6 — quick-register cédula persisted, pro dashboard hooks-order crash fixed)_
+_Last updated: 2026-06-06 (sprint 14/15/16 — see "Sprint 14-16" section below: multi-profession + multi-category, pricing tiers, HuliHealth /buscar split + inline schedules, real-time email/cédula checks, availability auto public/private, project→pro notifications, .ics export, emoji blocking, brands marquee, footer/social/support, OAuth pro cédula+name, sign-out fix). Earlier: sprint 13 — date-based availability + public/private toggle, search map clustered pins, verified-only reviews, booking notifications; sprint 12 — OAuth pro registration, category FK migration 013)_
 
 ---
 
@@ -537,6 +537,45 @@ surrounding booking/dashboard/profile components, which are hardcoded ES). The
 search/profile pages that already use next-intl keys are unchanged. Wiring the new
 Spanish strings through `messages/{es,en}.json` is a follow-up consistent with the rest
 of the app's partial i18n.
+
+## Sprint 14-16 (2026-06-06) — 20-fix batch
+
+**Run these migrations in Supabase SQL Editor (in order):**
+```
+015_booking_notification_deliveries.sql   -- notification_deliveries table (delivery log)
+016_professional_professions.sql          -- professionals.professions text[] (multi-category) + GIN index
+017_professional_pricing.sql              -- professionals.pricing jsonb (pricing tiers)
+018_notifications_delete_policy.sql        -- RLS DELETE policy so users can dismiss notifications
+```
+
+**Auth / registration**
+- OAuth ("quick login") professional registration now collects **legal name + cédula** (required) in the service step — clients are NEVER asked for cédula at signup (collected later in the booking flow). `auth/callback` + onboarding no longer force clients to a cédula screen.
+- Real-time duplicate detection: `GET /api/check-availability?email=|cédula=` + `useAvailabilityCheck` hook. Email/cédula show an inline error the moment they're typed — in pro registration AND the booking guest email field.
+- `/registro` is now a real **role-selection** page (cliente / profesional). The login modal's "Registrate gratis" routes there.
+- Sign-out everywhere does a hard `window.location.assign("/es")` (fixes the post-logout crash).
+
+**Multi-category + pricing**
+- `professionals.professions text[]` — a pro can have multiple categories. Primary = `professions[0]` = `category_id`. Editable in registration (extra categories) + ProfileEditor (chips). `/buscar` matches if ANY profession matches (`category_id.eq OR professions.cs`). Cards + profile show ALL category badges.
+- `professionals.pricing jsonb` — tiers `{ id, type, amount?, label? }`, type ∈ por_hora|por_consulta|por_proyecto|por_dia|paquete|a_convenir. Editor in ProfileEditor; helpers in `src/lib/pricing.ts`. Displayed on cards (`primaryPricingLabel`) + profile (full list). Legacy `hourly_rate` kept in sync with a por_hora tier.
+
+**/buscar (HuliHealth layout)**
+- `SearchResultsLayout`: 55% results / 45% sticky map on desktop; mobile List/Map toggle.
+- Cards: photo, name, multiple category badges, price-by-type, **next available slot chips** (open booking pre-selected) or **"Solo por WhatsApp"** when private, "Ver horario completo" link, location, verification badge.
+- Map **re-renders markers on every filter/category change** (clusterer `clearMarkers`/`addMarkers`) — no full reload; greedy wheel-zoom + fullscreen control.
+
+**Availability**
+- New pros start **private** (no schedules). Adding a schedule auto-sets `availability_public=true`. Turning private shows a confirm modal ("¿Estás seguro? Tus horarios serán eliminados.") → deletes all `availability_slots`, sets private, reloads.
+
+**Notifications**
+- Creating a project notifies every professional whose `professions` include the project category (`type=new_project`, links to the proposals tab). Bell shows unread badge; each notification has an individual **dismiss (X)** button (needs migration 018).
+
+**Misc**
+- `.ics` calendar export after booking ("Agregar a mi calendario") — `buildBookingIcs` in utils; includes pro name, service, date/time, WhatsApp link.
+- Global emoji blocking on all inputs (`EmojiBlocker` mounted in `[locale]/layout`, beforeinput + paste).
+- Footer on EVERY page (added to client dashboard + publicar-proyecto). Brands strip → text marquee of CR brands ("Impulsando proyectos en toda Costa Rica."). Footer socials = Facebook/Instagram/TikTok only + "Soporte ContrataCR" WhatsApp (+506 8745-4360, in `lib/constants.ts`, also on /soporte + /ayuda).
+- OTP window shows only the logo + code input. Homepage province/cantón pills link to `/buscar?provincia=<id>[&canton=<id>]` and auto-populate filters. All WhatsApp actions use the official WhatsApp SVG (`components/icons/whatsapp-icon.tsx`).
+
+**Known partial:** map pin → card highlight sync (task 8) not implemented; pin click opens the InfoWindow popup instead.
 
 ## Next Priorities
 
