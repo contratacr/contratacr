@@ -38,4 +38,16 @@ Professional services marketplace for Costa Rica. See `contratacr-context.md` fo
 - Cancellation rule: bookings are TERMINAL once cancelled (audit). Projects (client's own listing) are reopenable via `PATCH /api/projects` (status open↔cancelled).
 - "Mi panel" is now a visible nav link in both navbars (was dropdown-only on landing).
 
-**How to apply:** When resuming, read `contratacr-context.md` first. Supabase is the single source of truth for professionals.
+**Sprint 16 (2026-06-05) — fixes & decisions:**
+- **WhatsApp icon:** single source `src/components/icons/whatsapp-icon.tsx` (official glyph). Every WhatsApp action uses it (booking modal, booking-requests, proposals-tab, client dashboard, landing phone/app mockups, atraer-clientes, search card). Generic `MessageCircle` is no longer used for WhatsApp.
+- **Cédula flow (DECISION):** Professionals = cédula REQUIRED at signup, incl. OAuth quick-login (new required field in the pro registration "Servicio" step, since OAuth skips the email/identity step). Clients = NOT asked at signup; cédula is collected lazily at booking time (booking modal "complete profile" step). Removed the mandatory client cédula redirect from `auth/callback` and `onboarding`.
+- **Multi-profession (DATA MODEL):** new `professionals.professions text[]` (migration 016, GIN-indexed). `category_id` stays the PRIMARY profession and is always `professions[0]`. Services (`services` jsonb) gained an optional `category` tag = which profession they belong to. `ServicesEditor` now manages multiple professions + services grouped under each. Registration seeds `professions:[category]`.
+- **Project visibility (SECURITY):** `GET /api/projects?role=professional` now filters SERVER-SIDE: only projects whose `category_id ∈ the pro's professions` (or uncategorized) are returned. Never trusts a client-supplied category. Fixes electricians seeing personal-trainer projects.
+- **My Proposals:** pro now sees the client's avatar + full name; client phone/WhatsApp still gated to ACCEPTED proposals; cédula never exposed.
+- **Footer:** added `LandingFooter` to the client dashboard (pro dashboard already had it).
+- **Search availability strip (Hulihealth-style):** `professional-schedule.tsx` renders the next ~2 days of tappable slot chips (open booking pre-selected via new `BookingModal` `initialDate`/`initialTime` props). `searchProfessionals` now returns `availabilityPublic`; `/buscar` fetches upcoming `availability_slots` for the page's PUBLIC pros only.
+- **Header avatar flicker:** `useAuth` sets the metadata avatar optimistically (no initials→photo gap); header `AvatarFallback` uses `delayMs` so initials never flash while the image loads.
+- **Duplicate proposals:** browse seeds the "already submitted" set from the pro's existing proposals; submit treats HTTP 409 as submitted. Backed by the `proposals` UNIQUE(project_id, professional_id) constraint.
+- **Private availability:** when `availability_public=false`, slots are hidden immediately in the booking modal AND on `/buscar` (the card shows a polished "Disponibilidad privada → WhatsApp" state, footer CTA becomes WhatsApp). Profile page already gated its availability tab.
+
+**How to apply:** When resuming, read `contratacr-context.md` first. Supabase is the single source of truth for professionals. Watch the recurring PostgREST FK-embed pitfall (resolve category/geography names in app code, not embeds).

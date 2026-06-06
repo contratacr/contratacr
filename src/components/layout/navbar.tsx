@@ -80,7 +80,7 @@ function UserMenu() {
       >
         <Avatar className="h-8 w-8">
           <AvatarImage src={avatarUrl ?? undefined} />
-          <AvatarFallback className="text-[12px] bg-[#009FD9] text-white font-bold">
+          <AvatarFallback delayMs={avatarUrl ? 600 : 0} className="text-[12px] bg-[#009FD9] text-white font-bold">
             {initials}
           </AvatarFallback>
         </Avatar>

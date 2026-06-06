@@ -1,6 +1,8 @@
 import { getTranslations } from "next-intl/server";
-import { MapPin, CheckCircle2, MessageCircle } from "lucide-react";
+import { MapPin, CheckCircle2 } from "lucide-react";
 import { BookingButton } from "@/components/booking/booking-button";
+import { ProfessionalSchedule, type ScheduleSlot } from "@/components/professionals/professional-schedule";
+import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Link } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +29,7 @@ export type ProfessionalCardData = {
   isVerified: boolean;
   isFeatured: boolean;
   isAvailable: boolean;
+  availabilityPublic?: boolean;
   lat?: number | null;
   lng?: number | null;
   serviceType?: string | null;
@@ -35,11 +38,14 @@ export type ProfessionalCardData = {
 interface ProfessionalCardProps {
   professional: ProfessionalCardData;
   className?: string;
+  slots?: ScheduleSlot[];
 }
 
-export async function ProfessionalCard({ professional, className }: ProfessionalCardProps) {
+export async function ProfessionalCard({ professional, className, slots = [] }: ProfessionalCardProps) {
   const t = await getTranslations("card");
   const tCat = await getTranslations("categories");
+  const isPrivate = professional.availabilityPublic === false;
+  const categoryName = tCat(professional.categoryId);
 
   const waLink = getWhatsAppLink(
     professional.whatsapp,
@@ -91,6 +97,14 @@ export async function ProfessionalCard({ professional, className }: Professional
           </div>
         </div>
 
+        {/* Inline availability (Hulihealth-style) — chips or private state */}
+        <ProfessionalSchedule
+          professional={professional}
+          categoryName={categoryName}
+          availabilityPublic={!isPrivate}
+          slots={slots}
+        />
+
         <div className="flex items-center justify-between mt-4 pt-4 border-t border-[#f3f4f6]">
           <div>
             {professional.hourlyRate ? (
@@ -109,12 +123,21 @@ export async function ProfessionalCard({ professional, className }: Professional
             <Button variant="outline" size="sm" asChild>
               <Link href={`/profesionales/${professional.slug}`}>{t("viewProfile")}</Link>
             </Button>
-            <BookingButton
-              professional={professional}
-              categoryName={tCat(professional.categoryId)}
-              variant="default"
-              size="sm"
-            />
+            {isPrivate ? (
+              <Button variant="whatsapp" size="sm" asChild>
+                <a href={waLink} target="_blank" rel="noopener noreferrer">
+                  <WhatsAppIcon className="h-4 w-4" />
+                  WhatsApp
+                </a>
+              </Button>
+            ) : (
+              <BookingButton
+                professional={professional}
+                categoryName={categoryName}
+                variant="default"
+                size="sm"
+              />
+            )}
           </div>
         </div>
       </CardContent>

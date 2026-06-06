@@ -5,9 +5,10 @@ import { LandingFooter } from "@/components/landing/landing-footer";
 import { FadeInUp } from "@/components/landing/fade-in-up";
 import { Link } from "@/i18n/navigation";
 import {
-  Camera, MessageCircle, Star, MapPin, ArrowRight,
+  Camera, Star, MapPin, ArrowRight,
   CheckCircle2, UserCheck, Clock, Image as ImageIcon,
 } from "lucide-react";
+import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 
 /* ─── Tip data ─── */
 type Tip = {
@@ -37,7 +38,7 @@ const TIPS: Tip[] = [
     highlight: "Mínimo 3 fotos de trabajos anteriores para empezar.",
   },
   {
-    icon: <MessageCircle className="h-6 w-6 text-[#009FD9]" />,
+    icon: <WhatsAppIcon className="h-6 w-6 text-[#009FD9]" />,
     title: "Respondé rápido por WhatsApp",
     body: "Costa Rica tiene una cultura de respuesta inmediata por WhatsApp. Si un cliente te escribe y tardás más de 2 horas en responder, es muy probable que ya contactó a otro profesional. Activá notificaciones y respondé de inmediato.",
     highlight: "La rapidez de respuesta es tu mayor diferenciador.",

@@ -51,18 +51,10 @@ export async function GET(request: NextRequest) {
           ? "/es/dashboard/profesional"
           : "/es/dashboard/cliente";
 
-      // OAuth users never provide a cédula at sign-up. Clients must complete it
-      // before they can book — send them to the mandatory completion screen.
-      const provider = data.user.app_metadata?.provider;
-      const isOAuth = !!provider && provider !== "email";
-      const missingCedula = !profile.cedula || String(profile.cedula).trim() === "";
-      if (isOAuth && profile.role !== "professional" && missingCedula) {
-        return NextResponse.redirect(
-          `${origin}/es/completar-perfil?next=${encodeURIComponent(destPath)}`
-        );
-      }
-
-      // Scenario A — returning user with completed onboarding → go to their dashboard
+      // Cédula is NOT required up-front for clients — it is requested later, at
+      // the moment they book/request a service (see the booking flow). So we no
+      // longer force clients to a profile-completion screen here. Professionals
+      // provide their cédula during professional registration.
       return NextResponse.redirect(`${origin}${destPath}`);
     }
   }

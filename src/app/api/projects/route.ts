@@ -114,7 +114,23 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ projects: await enrichProjects(data ?? []) });
   }
 
-  // Professional: browse open projects in their category
+  // Professional: browse open projects that match ANY of their professions.
+  // Filtering is enforced SERVER-SIDE from the pro's own record (never trusting a
+  // client-supplied category) so a project is only ever visible to professionals
+  // in that profession. Uncategorized projects stay visible to everyone.
+  const { data: proRow } = await supabase
+    .from("professionals")
+    .select("category_id, professions")
+    .eq("profile_id", session.user.id)
+    .maybeSingle();
+
+  const professions: string[] =
+    proRow?.professions && proRow.professions.length > 0
+      ? proRow.professions
+      : proRow?.category_id
+        ? [proRow.category_id]
+        : [];
+
   let query = supabase
     .from("projects")
     .select(`*, profiles:client_id(full_name), proposals(id)`)
@@ -122,7 +138,12 @@ export async function GET(req: NextRequest) {
     .order("created_at", { ascending: false })
     .limit(30);
 
-  if (categoryId) {
+  if (professions.length > 0) {
+    const inList = professions.map((p) => `"${p}"`).join(",");
+    // category in the pro's professions OR the project has no category set
+    query = query.or(`category_id.in.(${inList}),category_id.is.null`);
+  } else if (categoryId) {
+    // Fallback when the pro record is missing professions for some reason.
     query = query.eq("category_id", categoryId);
   }
 

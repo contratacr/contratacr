@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import {
   MapPin, Shield, ArrowLeft,
-  Share2, Flag, ChevronDown, MessageCircle, Phone,
+  Share2, Flag, ChevronDown, Lock, Phone,
 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Navbar } from "@/components/layout/navbar";
@@ -392,7 +392,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                       ) : (
                         <div className="flex flex-col items-center text-center gap-4 py-6">
                           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#f4f7fa]">
-                            <MessageCircle className="h-6 w-6 text-[#6b7280]" />
+                            <Lock className="h-6 w-6 text-[#6b7280]" />
                           </div>
                           <p className="text-sm font-medium text-[#374151] max-w-sm">
                             La disponibilidad de este profesional no es pública.

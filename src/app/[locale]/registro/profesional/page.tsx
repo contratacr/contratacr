@@ -377,6 +377,10 @@ export default function RegisterProfessionalPage() {
 
   const [step1Data, setStep1Data] = useState<Step1Data | null>(null);
   const [step2Data, setStep2Data] = useState<Step2Data | null>(null);
+  // OAuth (quick-login) professionals never pass through the email/password
+  // identity step, so we collect their (required) cédula in the service step.
+  const [oauthCedula, setOauthCedula] = useState("");
+  const [oauthCedulaError, setOauthCedulaError] = useState<string | null>(null);
 
   const cantons = getCantonsByProvince(selectedProvince);
 
@@ -440,6 +444,12 @@ export default function RegisterProfessionalPage() {
       setServiceTypeError("Seleccioná al menos un tipo de servicio");
       return;
     }
+    // OAuth professionals must provide a cédula (clients don't — they're asked at booking).
+    if (currentUser && !validateCedulaFormat(oauthCedula)) {
+      setOauthCedulaError("Cédula requerida. CR: 9 dígitos · DIMEX: 11-12 · NITE: 10.");
+      return;
+    }
+    setOauthCedulaError(null);
     setServiceTypeError(null);
     setStep2Data(data);
     setStep(2);
@@ -524,7 +534,7 @@ export default function RegisterProfessionalPage() {
           userId,
           email: userEmail,
           fullName,
-          cedula: step1Data?.cedula?.replace(/\D/g, "") ?? null,
+          cedula: step1Data?.cedula?.replace(/\D/g, "") ?? (oauthCedula ? oauthCedula.replace(/\D/g, "") : null),
           photoUrl,
           category: step2Data.category,
           serviceType,
@@ -786,6 +796,18 @@ export default function RegisterProfessionalPage() {
           {/* ── Step 1: Service + Location ───────────────────────────────── */}
           {step === 1 && (
             <form onSubmit={form2.handleSubmit(onStep2)} className="flex flex-col gap-4">
+
+              {/* Cédula — required for OAuth professionals (no identity step) */}
+              {currentUser && (
+                <Input
+                  label="Número de cédula *"
+                  placeholder="1-0000-0000"
+                  hint="Requerido para profesionales · CR: 9 dígitos · DIMEX: 11-12 · NITE: 10"
+                  value={oauthCedula}
+                  onChange={(e) => { setOauthCedula(e.target.value); setOauthCedulaError(null); }}
+                  error={oauthCedulaError ?? undefined}
+                />
+              )}
 
               {/* Category — searchable combobox */}
               <div>

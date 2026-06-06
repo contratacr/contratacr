@@ -209,6 +209,8 @@ export default function ProDashboardPage() {
                   {activeTab === "services" && (
                     <ServicesEditor
                       professionalId={pro.id}
+                      primaryCategory={pro.category_id}
+                      initialProfessions={pro.professions ?? []}
                       initialServices={pro.services ?? []}
                       onSaved={handleSaved}
                     />

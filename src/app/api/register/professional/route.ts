@@ -155,6 +155,7 @@ export async function POST(req: Request) {
     const { error: proError } = await supabase.from("professionals").insert({
       profile_id: userId,
       category_id: category,
+      professions: [category],
       bio,
       whatsapp,
       provincia_id: province,

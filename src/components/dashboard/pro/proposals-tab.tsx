@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { FolderOpen, Send, ChevronDown, ChevronUp, MapPin, Clock, Coins, User, MessageCircle } from "lucide-react";
+import { FolderOpen, Send, ChevronDown, ChevronUp, MapPin, Clock, Coins, User } from "lucide-react";
+import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { cn, getWhatsAppLink } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { cn, getWhatsAppLink, getInitials } from "@/lib/utils";
 
 type ProposalStatus = "pending" | "accepted" | "declined";
 
@@ -19,7 +21,7 @@ type MyProposal = {
   projects?: {
     title: string;
     status: string;
-    profiles: { full_name: string; phone?: string };
+    profiles: { full_name: string; phone?: string; avatar_url?: string };
   };
 };
 
@@ -64,20 +66,19 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
   const [submitting, setSubmitting] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    if (view === "browse") {
-      fetchOpenProjects();
-    } else {
-      fetchMyProposals();
-    }
-  }, [view]);
-
   async function fetchOpenProjects() {
     setLoading(true);
     const url = `/api/projects?role=professional${categoryId ? `&category=${categoryId}` : ""}`;
-    const res = await fetch(url);
-    const { projects } = await res.json();
+    // Fetch open projects + this pro's existing proposals so we can flag the
+    // projects they already proposed to (no duplicate proposals allowed).
+    const [projRes, mineRes] = await Promise.all([
+      fetch(url),
+      fetch("/api/proposals?mine=true"),
+    ]);
+    const { projects } = await projRes.json();
+    const { proposals } = await mineRes.json().catch(() => ({ proposals: [] }));
     setOpenProjects(projects ?? []);
+    setSubmitted(new Set<string>((proposals ?? []).map((p: { project_id: string }) => p.project_id)));
     setLoading(false);
   }
 
@@ -88,6 +89,12 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
     setMyProposals(proposals ?? []);
     setLoading(false);
   }
+
+  useEffect(() => {
+    if (view === "browse") fetchOpenProjects();
+    else fetchMyProposals();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view]);
 
   async function submitProposal(projectId: string) {
     const form = proposalForms[projectId];
@@ -104,7 +111,8 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
       }),
     });
 
-    if (res.ok) {
+    // 409 = a proposal already exists for this project → treat as submitted.
+    if (res.ok || res.status === 409) {
       setSubmitted((prev) => new Set([...prev, projectId]));
       setExpandedProject(null);
     }
@@ -291,10 +299,15 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                           {p.projects?.title ?? "Proyecto"}
                         </p>
                         {p.projects?.profiles?.full_name && (
-                          <p className="flex items-center gap-1 text-xs text-[#6b7280] mb-1">
-                            <User className="h-3 w-3" />
-                            {p.projects.profiles.full_name.split(" ")[0]}
-                          </p>
+                          <div className="flex items-center gap-2 mb-2">
+                            <Avatar className="h-6 w-6">
+                              <AvatarImage src={p.projects.profiles.avatar_url} />
+                              <AvatarFallback className="text-[10px] bg-[#EBF5FB] text-[#009FD9] font-semibold">
+                                {getInitials(p.projects.profiles.full_name)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="text-xs font-medium text-[#374151]">{p.projects.profiles.full_name}</span>
+                          </div>
                         )}
                         <p className="text-xs text-[#6b7280] line-clamp-2 mb-2">{p.message}</p>
                         {p.price && (
@@ -320,7 +333,7 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                               target="_blank"
                               rel="noopener noreferrer"
                             >
-                              <MessageCircle className="h-3.5 w-3.5" />
+                              <WhatsAppIcon className="h-3.5 w-3.5" />
                               WhatsApp
                             </a>
                           </Button>

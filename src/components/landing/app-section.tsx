@@ -1,7 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { CheckCircle2, Star, MessageCircle } from "lucide-react";
+import { CheckCircle2, Star } from "lucide-react";
+import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { useTranslations } from "next-intl";
 
 /* ─── Inline phone mockup (no client state needed) ─── */
@@ -83,7 +84,7 @@ function AppPhoneMock() {
                     <Star className="h-2.5 w-2.5 fill-yellow-400 text-yellow-400" />
                     <span className="text-[9px] text-gray-400 mr-1">4.9</span>
                     <button className="bg-[#25D366]/10 rounded-lg p-1">
-                      <MessageCircle className="h-3 w-3 text-[#25D366]" />
+                      <WhatsAppIcon className="h-3 w-3 text-[#25D366]" />
                     </button>
                   </div>
                 </div>

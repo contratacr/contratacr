@@ -62,11 +62,12 @@ export async function GET(req: NextRequest) {
       .single();
     if (!pro) return NextResponse.json({ proposals: [] });
 
-    // Expose the client's phone only on accepted proposals (privacy: the pro
-    // earns contact details once the client picks them).
+    // Client name + photo are always shown (transparency). The client's PHONE
+    // is exposed only on accepted proposals (privacy: the pro earns contact
+    // details once the client picks them). Cédula is never exposed.
     const { data, error } = await supabase
       .from("proposals")
-      .select("*, projects:project_id(title, status, profiles:client_id(full_name, phone))")
+      .select("*, projects:project_id(title, status, profiles:client_id(full_name, avatar_url, phone))")
       .eq("professional_id", pro.id)
       .order("created_at", { ascending: false });
 
@@ -74,7 +75,8 @@ export async function GET(req: NextRequest) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const safe = (data ?? []).map((p: any) => {
       if (p.status !== "accepted" && p.projects?.profiles) {
-        p.projects.profiles = { full_name: p.projects.profiles.full_name };
+        const { full_name, avatar_url } = p.projects.profiles;
+        p.projects.profiles = { full_name, avatar_url };
       }
       return p;
     });

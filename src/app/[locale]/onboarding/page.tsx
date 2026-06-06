@@ -68,9 +68,9 @@ export default function OnboardingPage() {
     if (role === "professional") {
       router.push("/registro/profesional");
     } else {
-      // Clients must supply a cédula before booking. The completion screen
-      // auto-skips to the dashboard if one is already on file.
-      router.push("/completar-perfil?next=/dashboard/cliente");
+      // Clients go straight to their dashboard — the cédula is collected later,
+      // at booking time, to keep onboarding fast and low-friction.
+      router.push("/dashboard/cliente");
     }
   }
 

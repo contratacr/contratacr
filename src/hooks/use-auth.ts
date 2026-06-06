@@ -10,19 +10,23 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   async function syncAvatar(u: User) {
-    // Prefer profile DB record (covers Cloudinary-uploaded photos).
-    // Falls back to OAuth provider avatar_url from user metadata.
+    // Optimistic: show the metadata avatar synchronously (before the DB round
+    // trip) so the header never flashes initials → photo. We mirror the
+    // uploaded avatar into user_metadata on upload, so this is usually populated.
+    const metaAvatar =
+      (u.user_metadata?.avatar_url as string | undefined) ||
+      (u.user_metadata?.picture as string | undefined) ||
+      null;
+    if (metaAvatar) setAvatarUrl((prev) => prev ?? metaAvatar);
+
+    // Then reconcile with the canonical profile record (Cloudinary uploads).
     const supabase = createClient();
     const { data } = await supabase
       .from("profiles")
       .select("avatar_url")
       .eq("id", u.id)
       .single();
-    setAvatarUrl(
-      data?.avatar_url ||
-        (u.user_metadata?.avatar_url as string | undefined) ||
-        null
-    );
+    setAvatarUrl(data?.avatar_url || metaAvatar || null);
   }
 
   useEffect(() => {

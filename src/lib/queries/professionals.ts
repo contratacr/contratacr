@@ -52,7 +52,7 @@ export async function searchProfessionals(
         .select(
           `id, slug, hourly_rate, is_verified, is_featured, is_available,
            rating_avg, review_count, bio, whatsapp, years_experience, portfolio_urls,
-           category_id, lat, lng, service_type,
+           category_id, lat, lng, service_type, availability_public,
            profiles(full_name, avatar_url),
            provincias(id, name),
            cantones(id, name)`
@@ -128,6 +128,7 @@ export async function searchProfessionals(
         isVerified: row.is_verified ?? false,
         isFeatured: row.is_featured ?? false,
         isAvailable: row.is_available ?? true,
+        availabilityPublic: row.availability_public ?? true,
         lat: row.lat ?? null,
         lng: row.lng ?? null,
         serviceType: row.service_type ?? null,

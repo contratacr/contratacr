@@ -4,10 +4,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   CalendarDays, Bookmark, LogOut, Star, Bell, User, FolderOpen,
-  CheckCircle2, Clock, XCircle, MessageCircle, ChevronDown, ChevronUp,
+  CheckCircle2, Clock, XCircle, ChevronDown, ChevronUp,
   Coins, MapPin, Send, Plus,
 } from "lucide-react";
+import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Navbar } from "@/components/layout/navbar";
+import { LandingFooter } from "@/components/landing/landing-footer";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -518,7 +520,7 @@ export default function ClientDashboardPage() {
                                             target="_blank"
                                             rel="noopener noreferrer"
                                           >
-                                            <MessageCircle className="h-3.5 w-3.5" />
+                                            <WhatsAppIcon className="h-3.5 w-3.5" />
                                             WA
                                           </a>
                                         </Button>
@@ -722,7 +724,7 @@ export default function ClientDashboardPage() {
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                               >
-                                                <MessageCircle className="h-3.5 w-3.5" />
+                                                <WhatsAppIcon className="h-3.5 w-3.5" />
                                                 WA
                                               </a>
                                             </Button>
@@ -907,6 +909,8 @@ export default function ClientDashboardPage() {
           )}
         </div>
       </main>
+
+      <LandingFooter />
 
       {reviewModal && (
         <LeaveReviewModal

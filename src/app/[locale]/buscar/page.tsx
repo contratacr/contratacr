@@ -10,6 +10,8 @@ import { SaveableCard } from "@/components/professionals/save-button";
 import { searchProfessionals } from "@/lib/queries/professionals";
 import { PROVINCES } from "@/lib/data/cr-geography";
 import { SearchResultsLayout } from "@/components/search/search-results-layout";
+import { createClient } from "@/lib/supabase/server";
+import type { ScheduleSlot } from "@/components/professionals/professional-schedule";
 
 const PAGE_SIZE = 9;
 
@@ -45,6 +47,34 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const totalPages = Math.max(1, Math.ceil(allResults.length / PAGE_SIZE));
   const safePage = Math.min(currentPage, totalPages);
   const results = allResults.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
+  // Fetch upcoming published slots for the professionals on THIS page so each
+  // card can show inline availability (Hulihealth-style). Private pros are
+  // skipped — their slots must not appear.
+  const slotsByPro: Record<string, ScheduleSlot[]> = {};
+  const publicIds = results.filter((p) => p.availabilityPublic !== false).map((p) => p.id);
+  if (publicIds.length > 0) {
+    try {
+      const supabase = await createClient();
+      const todayISO = new Date().toISOString().slice(0, 10);
+      const { data: slotRows } = await supabase
+        .from("availability_slots")
+        .select("professional_id, slot_date, slot_time")
+        .in("professional_id", publicIds)
+        .gte("slot_date", todayISO)
+        .order("slot_date")
+        .order("slot_time")
+        .limit(300);
+      for (const r of slotRows ?? []) {
+        (slotsByPro[r.professional_id] ??= []).push({
+          date: r.slot_date as string,
+          time: String(r.slot_time).slice(0, 5),
+        });
+      }
+    } catch {
+      /* best-effort — cards just render without the strip */
+    }
+  }
 
   // Map pins for every matching professional (fixed-location → exact coords;
   // mobile pros → province centroid).
@@ -138,7 +168,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                   <div className="flex flex-col gap-4">
                     {await Promise.all(results.map((pro) => (
                       <SaveableCard key={pro.id} pro={pro}>
-                        <ProfessionalCard professional={pro} />
+                        <ProfessionalCard professional={pro} slots={slotsByPro[pro.id] ?? []} />
                       </SaveableCard>
                     )))}
                   </div>

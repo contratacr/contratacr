@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { MessageCircle, CalendarDays, User, FileText } from "lucide-react";
+import { CalendarDays, User, FileText } from "lucide-react";
+import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -166,7 +167,7 @@ export function BookingRequests() {
                     target="_blank"
                     rel="noopener noreferrer"
                   >
-                    <MessageCircle className="h-3.5 w-3.5" />
+                    <WhatsAppIcon className="h-3.5 w-3.5" />
                     WhatsApp
                   </a>
                 </Button>

@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
-  X, CheckCircle2, MapPin, MessageCircle, Shield, ArrowLeft, ChevronLeft, ChevronRight,
+  X, CheckCircle2, MapPin, Shield, ArrowLeft, ChevronLeft, ChevronRight, Lock,
 } from "lucide-react";
+import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { useTranslations } from "next-intl";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -68,9 +69,12 @@ interface BookingModalProps {
   categoryName: string;
   open: boolean;
   onClose: () => void;
+  // Optional preselection when opened from a slot chip in search results.
+  initialDate?: string;
+  initialTime?: string;
 }
 
-export function BookingModal({ professional, categoryName, open, onClose }: BookingModalProps) {
+export function BookingModal({ professional, categoryName, open, onClose, initialDate, initialTime }: BookingModalProps) {
   const t = useTranslations("booking");
 
   const today = new Date();
@@ -98,33 +102,47 @@ export function BookingModal({ professional, categoryName, open, onClose }: Book
   const [profilePhone, setProfilePhone] = useState("");
   const [profileError, setProfileError] = useState<string | null>(null);
   const [savingProfile, setSavingProfile] = useState(false);
+  // Pro hid their availability → slots are not shown; we offer WhatsApp instead.
+  const [availabilityPrivate, setAvailabilityPrivate] = useState(false);
 
   useEffect(() => {
     if (!open) return;
     setStep("calendar");
-    setSelectedDate("");
-    setSelectedTime("");
+    setSelectedDate(initialDate ?? "");
+    setSelectedTime(initialTime ?? "");
+    if (initialDate) {
+      const [iy, im] = initialDate.split("-").map(Number);
+      setCurrentYear(iy);
+      setCurrentMonth(im - 1);
+    }
     setDescription("");
     setWaLink("");
     setNeedsProfile(false);
     setProfileError(null);
+    setAvailabilityPrivate(false);
 
     const supabase = createClient();
     Promise.all([
-      supabase.from("professionals").select("availability").eq("id", professional.id).single(),
+      supabase.from("professionals").select("availability, availability_public").eq("id", professional.id).single(),
       supabase.from("blocked_dates").select("blocked_date").eq("professional_id", professional.id),
       supabase.from("availability_slots").select("slot_date, slot_time").eq("professional_id", professional.id).gte("slot_date", formatDateISO(today)),
       supabase.auth.getUser(),
       fetch(`/api/bookings?takenFor=${professional.id}`).then((r) => r.json()).catch(() => ({ taken: [] })),
     ]).then(([{ data: proData }, { data: bdData }, { data: slotData }, { data: { user } }, takenRes]) => {
-      if (proData?.availability) setAvailability(proData.availability as WeeklyAvailability);
+      // When availability is private, do NOT surface any slots — hidden immediately.
+      const isPrivate = proData?.availability_public === false;
+      setAvailabilityPrivate(isPrivate);
+
+      if (!isPrivate && proData?.availability) setAvailability(proData.availability as WeeklyAvailability);
       // Build explicit date → times map (new scheduling model)
       const map: Record<string, string[]> = {};
-      for (const s of slotData ?? []) {
-        const time = String(s.slot_time).slice(0, 5);
-        (map[s.slot_date] ??= []).push(time);
+      if (!isPrivate) {
+        for (const s of slotData ?? []) {
+          const time = String(s.slot_time).slice(0, 5);
+          (map[s.slot_date] ??= []).push(time);
+        }
+        for (const k of Object.keys(map)) map[k].sort();
       }
-      for (const k of Object.keys(map)) map[k].sort();
       setDateSlots(map);
       setBlockedDates((bdData ?? []).map((r) => r.blocked_date));
       setTakenSlots(new Set<string>((takenRes?.taken as string[]) ?? []));
@@ -154,7 +172,7 @@ export function BookingModal({ professional, categoryName, open, onClose }: Book
         setIsLoggedIn(false);
       }
     });
-  }, [open, professional.id]);
+  }, [open, professional.id, initialDate, initialTime]);
 
   // Professionals using the new date-based model have explicit slots.
   const usesExplicitSlots = Object.keys(dateSlots).length > 0;
@@ -353,7 +371,7 @@ export function BookingModal({ professional, categoryName, open, onClose }: Book
               {[
                 { icon: <Shield className="h-3 w-3" />, text: "Sin comisiones" },
                 { icon: <CheckCircle2 className="h-3 w-3" />, text: "Contacto directo" },
-                { icon: <MessageCircle className="h-3 w-3" />, text: "Respuesta por WhatsApp" },
+                { icon: <WhatsAppIcon className="h-3 w-3" />, text: "Respuesta por WhatsApp" },
               ].map(({ icon, text }) => (
                 <div key={text} className="flex items-center gap-1.5 text-white/60 text-xs">
                   {icon} {text}
@@ -405,6 +423,27 @@ export function BookingModal({ professional, categoryName, open, onClose }: Book
                   {!availabilityLoaded ? (
                     <div className="flex justify-center py-8">
                       <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
+                    </div>
+                  ) : availabilityPrivate ? (
+                    <div className="flex flex-col items-center text-center gap-3 py-8 rounded-2xl bg-[#f9fafb] border border-[#e5e7eb]">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#EBF5FB]">
+                        <Lock className="h-5 w-5 text-[#009FD9]" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-[#111827]">Disponibilidad privada</p>
+                        <p className="text-xs text-[#9ca3af] mt-1 max-w-xs">
+                          Este profesional coordina sus horarios directamente. Escribile por WhatsApp para agendar.
+                        </p>
+                      </div>
+                      <a
+                        href={getWhatsAppLink(professional.whatsapp, `Hola ${professional.fullName.split(" ")[0]}, me gustaría coordinar un servicio por ContrataCR.`)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#1ebe5d] text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
+                      >
+                        <WhatsAppIcon className="h-4 w-4" />
+                        Coordinar por WhatsApp
+                      </a>
                     </div>
                   ) : !hasAnyAvailability ? (
                     <div className="text-center py-8 rounded-2xl bg-[#f9fafb] border border-[#e5e7eb]">
@@ -546,7 +585,7 @@ export function BookingModal({ professional, categoryName, open, onClose }: Book
                   </div>
 
                   <div className="flex items-start gap-2 p-3 rounded-xl bg-[#f3f4f6]">
-                    <MessageCircle className="h-4 w-4 text-[#25d366] mt-0.5 shrink-0" />
+                    <WhatsAppIcon className="h-4 w-4 text-[#25d366] mt-0.5 shrink-0" />
                     <p className="text-xs text-[#6b7280]">{t("step4.note")}</p>
                   </div>
                 </div>
@@ -645,7 +684,7 @@ export function BookingModal({ professional, categoryName, open, onClose }: Book
                   </div>
                   <Button variant="whatsapp" size="lg" asChild className="w-full max-w-xs">
                     <a href={waLink} target="_blank" rel="noopener noreferrer">
-                      <MessageCircle className="h-5 w-5" />
+                      <WhatsAppIcon className="h-5 w-5" />
                       {t("success.whatsapp")}
                     </a>
                   </Button>
