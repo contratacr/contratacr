@@ -52,14 +52,15 @@ export async function searchProfessionals(
         .select(
           `id, slug, hourly_rate, is_verified, is_featured, is_available,
            rating_avg, review_count, bio, whatsapp, years_experience, portfolio_urls,
-           category_id, lat, lng, service_type, availability_public,
+           category_id, professions, pricing, lat, lng, service_type, availability_public,
            profiles(full_name, avatar_url),
            provincias(id, name),
            cantones(id, name)`
         );
 
       if (filters.categoryId && filters.categoryId !== "todas") {
-        query = query.eq("category_id", filters.categoryId);
+        // Match the professional if ANY of their professions matches (multi-category).
+        query = query.or(`category_id.eq.${filters.categoryId},professions.cs.{${filters.categoryId}}`);
       }
       if (filters.provinceId && filters.provinceId !== "todas") {
         query = query.eq("provincia_id", filters.provinceId);
@@ -117,6 +118,8 @@ export async function searchProfessionals(
         avatarUrl: row.profiles?.avatar_url ?? null,
         categoryId: row.category_id ?? "",
         categoryIcon: "",
+        professions: (row.professions as string[]) ?? (row.category_id ? [row.category_id] : []),
+        pricing: (row.pricing as ProfessionalCardData["pricing"]) ?? [],
         bio: row.bio,
         whatsapp: row.whatsapp,
         provinceName: row.provincias?.name ?? "",
@@ -161,7 +164,7 @@ export async function getProfessionalBySlug(
         .select(
           `id, slug, hourly_rate, is_verified, is_featured, is_available,
            rating_avg, review_count, bio, whatsapp, years_experience, portfolio_urls,
-           category_id, services, availability_public, lat, lng, service_type,
+           category_id, professions, pricing, services, availability_public, lat, lng, service_type,
            profiles(full_name, avatar_url),
            provincias(id, name),
            cantones(id, name),
@@ -190,6 +193,10 @@ export async function getProfessionalBySlug(
         // category_id is a plain text column — no join needed
         categoryId: (pro as any).category_id ?? "",
         categoryIcon: "",
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        professions: ((pro as any).professions as string[]) ?? ((pro as any).category_id ? [(pro as any).category_id] : []),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        pricing: ((pro as any).pricing as ProfessionalCardData["pricing"]) ?? [],
         bio: pro.bio,
         whatsapp: pro.whatsapp,
         provinceName: (pro.provincias as any)?.name ?? "",

@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { StarRating } from "@/components/ui/star-rating";
 import { getInitials, getWhatsAppLink } from "@/lib/utils";
+import { formatPricingTier } from "@/lib/pricing";
 import { ReviewSection } from "@/components/professionals/review-section";
 import { ReportProfileModal } from "@/components/professionals/report-profile-modal";
 import { createClient } from "@/lib/supabase/client";
@@ -182,12 +183,17 @@ export default function ProfilePage({ params }: ProfilePageProps) {
 
                   <div>
                     <h1 className="text-xl font-bold text-[#111827]">{professional.fullName}</h1>
-                    {professional.categoryId && (
-                      <Badge variant="default" className="mt-1 text-xs">
-                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                        {tCat(professional.categoryId as any)}
-                      </Badge>
-                    )}
+                    <div className="flex flex-wrap gap-1 justify-center mt-1">
+                      {(professional.professions && professional.professions.length > 0
+                        ? professional.professions
+                        : [professional.categoryId]
+                      ).filter(Boolean).map((cat) => (
+                        <Badge key={cat} variant="default" className="text-xs">
+                          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                          {tCat(cat as any)}
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
 
                   {professional.isVerified && (
@@ -503,12 +509,21 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                             </div>
                           </div>
                         )}
-                        {professional.hourlyRate && (
+                        {professional.pricing && professional.pricing.length > 0 ? (
+                          <div className="bg-[#f3f4f6] rounded-xl p-4 sm:col-span-2">
+                            <p className="text-xs text-[#9ca3af] font-medium mb-2">Precios</p>
+                            <div className="flex flex-col gap-1">
+                              {professional.pricing.map((tier) => (
+                                <p key={tier.id} className="text-sm font-semibold text-[#111827]">{formatPricingTier(tier)}</p>
+                              ))}
+                            </div>
+                          </div>
+                        ) : professional.hourlyRate ? (
                           <div className="bg-[#f3f4f6] rounded-xl p-4">
                             <p className="text-xs text-[#9ca3af] font-medium mb-1">Tarifa base</p>
                             <p className="text-base font-bold text-[#111827]">₡{professional.hourlyRate.toLocaleString("es-CR")}/hora</p>
                           </div>
-                        )}
+                        ) : null}
                       </div>
                     </div>
                   )}

@@ -4,12 +4,14 @@ import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createClient } from "@/lib/supabase/client";
-import { Camera, Check } from "lucide-react";
+import { Camera, Check, X, Plus } from "lucide-react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { PROVINCES, getCantonsByProvince } from "@/lib/data/cr-geography";
 import { CategorySearch } from "@/components/ui/category-search";
+import { getCategoryLabel } from "@/lib/data/categories";
+import { PRICING_TYPES, type PricingTier, type PricingType } from "@/lib/pricing";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ProData = Record<string, any>;
@@ -26,10 +28,17 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
 
   const [bio, setBio] = useState<string>(initial.bio ?? "");
   const [whatsapp, setWhatsapp] = useState<string>(initial.whatsapp ?? "");
-  const [hourlyRate, setHourlyRate] = useState(String(initial.hourly_rate ?? ""));
   const [yearsExp, setYearsExp] = useState(String(initial.years_experience ?? ""));
   const [fullName, setFullName] = useState<string>(initial.profiles?.full_name ?? "");
-  const [categoryId, setCategoryId] = useState<string>(initial.category_id ?? "");
+  const seedProfessions: string[] =
+    Array.isArray(initial.professions) && initial.professions.length > 0
+      ? initial.professions
+      : initial.category_id ? [initial.category_id] : [];
+  const [professions, setProfessions] = useState<string[]>(seedProfessions);
+  const [addCat, setAddCat] = useState("");
+  const [pricing, setPricing] = useState<PricingTier[]>(
+    Array.isArray(initial.pricing) ? initial.pricing : []
+  );
   const [provinceId, setProvinceId] = useState<string>(initial.provincia_id ?? "");
   const [cantonId, setCantonId] = useState<string>(initial.canton_id ?? "");
   const [address, setAddress] = useState<string>(initial.address ?? "");
@@ -43,6 +52,29 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
   const [error, setError] = useState<string | null>(null);
 
   const cantons = getCantonsByProvince(provinceId);
+
+  function addProfession(id: string) {
+    if (!id || professions.includes(id)) { setAddCat(""); return; }
+    setProfessions((prev) => [...prev, id]);
+    setAddCat("");
+    setSaved(false);
+  }
+  function removeProfession(id: string) {
+    setProfessions((prev) => (prev.length > 1 ? prev.filter((p) => p !== id) : prev));
+    setSaved(false);
+  }
+  function addTier() {
+    setPricing((prev) => [...prev, { id: `pr_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, type: "por_hora", amount: undefined }]);
+    setSaved(false);
+  }
+  function updateTier(id: string, patch: Partial<PricingTier>) {
+    setPricing((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)));
+    setSaved(false);
+  }
+  function removeTier(id: string) {
+    setPricing((prev) => prev.filter((p) => p.id !== id));
+    setSaved(false);
+  }
 
   // Auto-upload the photo as soon as it's picked — no "Guardar cambios" needed.
   // Shows an instant local preview, then swaps in the hosted URL on success.
@@ -74,14 +106,22 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
     const supabase = createClient();
 
     try {
+      // Keep legacy hourly_rate in sync with a "por_hora" tier for back-compat.
+      const hourTier = pricing.find((p) => p.type === "por_hora" && p.amount);
+      const cleanPricing = pricing
+        .filter((p) => p.type === "a_convenir" || p.amount != null)
+        .map((p) => ({ ...p, amount: p.type === "a_convenir" ? undefined : p.amount }));
+
       const { error: proError } = await supabase
         .from("professionals")
         .update({
           bio,
           whatsapp,
-          hourly_rate: hourlyRate ? Number(hourlyRate) : null,
+          hourly_rate: hourTier?.amount ?? null,
+          pricing: cleanPricing,
+          professions,
           years_experience: yearsExp ? Number(yearsExp) : null,
-          ...(categoryId ? { category_id: categoryId } : {}),
+          ...(professions[0] ? { category_id: professions[0] } : {}),
           ...(provinceId ? { provincia_id: provinceId } : {}),
           ...(cantonId ? { canton_id: cantonId } : {}),
           address: address || null,
@@ -173,13 +213,28 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         />
       </div>
 
-      {/* Service — searchable combobox */}
+      {/* Categories — multi-select (first is the primary/principal) */}
       <div>
-        <label className="text-sm font-medium text-[#374151] block mb-1.5">Servicio principal</label>
+        <label className="text-sm font-medium text-[#374151] block mb-1.5">Categorías / servicios</label>
+        {professions.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-2">
+            {professions.map((p, i) => (
+              <span key={p} className="inline-flex items-center gap-1.5 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium pl-3 pr-1.5 py-1.5">
+                {getCategoryLabel(p)}
+                {i === 0 && <span className="text-[10px] font-bold uppercase tracking-wide text-[#009FD9]/70">Principal</span>}
+                {professions.length > 1 && (
+                  <button type="button" onClick={() => removeProfession(p)} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors" aria-label="Quitar">
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                )}
+              </span>
+            ))}
+          </div>
+        )}
         <CategorySearch
-          value={categoryId}
-          onChange={(v) => { setCategoryId(v); setSaved(false); }}
-          placeholder="Buscá tu especialidad…"
+          value={addCat}
+          onChange={(v) => addProfession(v)}
+          placeholder="Agregá una categoría… ej. plomero, fotógrafo"
         />
       </div>
 
@@ -232,23 +287,53 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         onChange={(e) => { setAddress(e.target.value); setSaved(false); }}
       />
 
-      {/* Rates */}
-      <div className="grid grid-cols-2 gap-4">
-        <Input
-          label="Tarifa por hora (₡)"
-          type="number"
-          placeholder="10000"
-          value={hourlyRate}
-          onChange={(e) => { setHourlyRate(e.target.value); setSaved(false); }}
-        />
-        <Input
-          label="Años de experiencia"
-          type="number"
-          placeholder="5"
-          value={yearsExp}
-          onChange={(e) => { setYearsExp(e.target.value); setSaved(false); }}
-        />
+      {/* Pricing tiers */}
+      <div>
+        <label className="text-sm font-medium text-[#374151] block mb-1.5">Precios</label>
+        <div className="flex flex-col gap-2">
+          {pricing.map((tier) => (
+            <div key={tier.id} className="flex items-center gap-2">
+              <select
+                value={tier.type}
+                onChange={(e) => updateTier(tier.id, { type: e.target.value as PricingType })}
+                className="h-10 px-3 rounded-xl border border-[#e5e7eb] bg-white text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+              >
+                {PRICING_TYPES.map((pt) => (
+                  <option key={pt.value} value={pt.value}>{pt.label}</option>
+                ))}
+              </select>
+              {tier.type !== "a_convenir" && (
+                <div className="relative flex-1">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[#9ca3af]">₡</span>
+                  <input
+                    type="number"
+                    placeholder="10000"
+                    value={tier.amount ?? ""}
+                    onChange={(e) => updateTier(tier.id, { amount: e.target.value ? Number(e.target.value) : undefined })}
+                    className="w-full h-10 pl-7 pr-3 rounded-xl border border-[#e5e7eb] bg-white text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+                  />
+                </div>
+              )}
+              <button type="button" onClick={() => removeTier(tier.id)} className="h-9 w-9 rounded-lg flex items-center justify-center text-[#9ca3af] hover:text-red-500 hover:bg-red-50 transition-colors shrink-0" aria-label="Quitar tarifa">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          ))}
+          <button type="button" onClick={addTier} className="inline-flex items-center gap-1.5 text-sm font-medium text-[#009FD9] hover:underline self-start">
+            <Plus className="h-4 w-4" /> Agregar tarifa
+          </button>
+        </div>
       </div>
+
+      {/* Experience */}
+      <Input
+        label="Años de experiencia"
+        type="number"
+        placeholder="5"
+        value={yearsExp}
+        onChange={(e) => { setYearsExp(e.target.value); setSaved(false); }}
+        className="max-w-[200px]"
+      />
 
       <div className="flex items-center gap-3">
         <Button onClick={handleSave} loading={saving}>

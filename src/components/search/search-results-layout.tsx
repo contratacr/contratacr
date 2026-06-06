@@ -52,15 +52,15 @@ export function SearchResultsLayout({ children, mapData, apiKey, locale }: Searc
       </div>
 
       <div className="flex gap-6">
-        {/* List column */}
-        <div className={cn("flex-1 min-w-0", mobileView === "map" && "hidden md:block")}>
+        {/* List column — 55% on desktop */}
+        <div className={cn("min-w-0 md:basis-[55%] md:grow-0 md:shrink-0", mobileView === "map" ? "hidden md:block" : "flex-1")}>
           {children}
         </div>
 
-        {/* Map column */}
+        {/* Map column — 45% on desktop */}
         <aside
           className={cn(
-            "shrink-0 md:block md:w-[360px] lg:w-[460px] xl:w-[560px]",
+            "shrink-0 md:block md:basis-[45%] md:grow",
             mobileView === "map" ? "block w-full" : "hidden"
           )}
         >

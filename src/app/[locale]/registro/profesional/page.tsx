@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 import { OtpVerification } from "@/components/auth/otp-verification";
 import { useAuth } from "@/hooks/use-auth";
 import { CategorySearch } from "@/components/ui/category-search";
+import { getCategoryLabel } from "@/lib/data/categories";
 import { LocationPicker, type PickedLocation } from "@/components/maps/location-picker";
 import { useAvailabilityCheck } from "@/hooks/use-availability-check";
 
@@ -384,6 +385,9 @@ export default function RegisterProfessionalPage() {
   const [oauthCedulaError, setOauthCedulaError] = useState<string | null>(null);
   const [oauthFullName, setOauthFullName] = useState("");
   const [oauthNameError, setOauthNameError] = useState<string | null>(null);
+  // Additional categories (multi-category support). Primary = step2 `category`.
+  const [extraCategories, setExtraCategories] = useState<string[]>([]);
+  const [extraCatInput, setExtraCatInput] = useState("");
 
   const cantons = getCantonsByProvince(selectedProvince);
 
@@ -574,6 +578,7 @@ export default function RegisterProfessionalPage() {
           cedula: step1Data?.cedula?.replace(/\D/g, "") ?? (oauthCedula ? oauthCedula.replace(/\D/g, "") : null),
           photoUrl,
           category: step2Data.category,
+          professions: [step2Data.category, ...extraCategories],
           serviceType,
           province: step2Data.province,
           canton: step2Data.canton,
@@ -866,6 +871,33 @@ export default function RegisterProfessionalPage() {
                   placeholder="Buscá tu especialidad… ej. psicólogo, plomero, niñera"
                   error={form2.formState.errors.category?.message}
                 />
+
+                {/* Additional categories (optional, multi-category) */}
+                <div className="mt-2">
+                  {extraCategories.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {extraCategories.map((c) => (
+                        <span key={c} className="inline-flex items-center gap-1.5 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium pl-3 pr-1.5 py-1.5">
+                          {getCategoryLabel(c)}
+                          <button type="button" onClick={() => setExtraCategories((prev) => prev.filter((x) => x !== c))} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors" aria-label="Quitar">
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <CategorySearch
+                    value={extraCatInput}
+                    onChange={(v) => {
+                      const primary = form2.watch("category");
+                      if (v && v !== primary && !extraCategories.includes(v)) {
+                        setExtraCategories((prev) => [...prev, v]);
+                      }
+                      setExtraCatInput("");
+                    }}
+                    placeholder="Agregá otra categoría (opcional)"
+                  />
+                </div>
               </div>
 
               {/* Service type */}

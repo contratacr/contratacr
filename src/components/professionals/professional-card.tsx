@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { StarRating } from "@/components/ui/star-rating";
 import { getInitials, getWhatsAppLink } from "@/lib/utils";
+import { primaryPricingLabel, type PricingTier } from "@/lib/pricing";
 
 export type ProfessionalCardData = {
   id: string;
@@ -18,6 +19,8 @@ export type ProfessionalCardData = {
   avatarUrl?: string;
   categoryId: string;
   categoryIcon: string;
+  professions?: string[];
+  pricing?: PricingTier[];
   bio: string;
   whatsapp: string;
   provinceName: string;
@@ -46,6 +49,11 @@ export async function ProfessionalCard({ professional, className, slots = [] }: 
   const tCat = await getTranslations("categories");
   const isPrivate = professional.availabilityPublic === false;
   const categoryName = tCat(professional.categoryId);
+  const professionList = (professional.professions && professional.professions.length > 0
+    ? professional.professions
+    : [professional.categoryId]
+  ).filter(Boolean).slice(0, 3);
+  const priceLabel = primaryPricingLabel(professional.pricing, professional.hourlyRate);
 
   const waLink = getWhatsAppLink(
     professional.whatsapp,
@@ -78,9 +86,12 @@ export async function ProfessionalCard({ professional, className, slots = [] }: 
               {professional.isVerified && <CheckCircle2 className="h-4 w-4 text-[#009FD9] shrink-0" />}
             </div>
             <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-              <Badge variant="default" className="text-xs">
-                {professional.categoryIcon} {tCat(professional.categoryId)}
-              </Badge>
+              {professionList.map((cat) => (
+                <Badge key={cat} variant="default" className="text-xs">
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                  {tCat(cat as any)}
+                </Badge>
+              ))}
               {professional.yearsExperience && (
                 <span className="text-xs text-[#6b7280]">
                   {professional.yearsExperience} {expLabel}
@@ -105,19 +116,16 @@ export async function ProfessionalCard({ professional, className, slots = [] }: 
           slots={slots}
         />
 
+        {/* "Ver horario completo" → full profile */}
+        {!isPrivate && (
+          <Link href={`/profesionales/${professional.slug}`} className="block mt-2 text-xs font-medium text-[#009FD9] hover:underline">
+            Ver horario completo
+          </Link>
+        )}
+
         <div className="flex items-center justify-between mt-4 pt-4 border-t border-[#f3f4f6]">
           <div>
-            {professional.hourlyRate ? (
-              <div>
-                <span className="text-xs text-[#9ca3af]">{t("from")}</span>
-                <p className="font-bold text-[#111827]">
-                  ₡{professional.hourlyRate.toLocaleString("es-CR")}
-                  <span className="text-xs font-normal text-[#6b7280]">{t("perHour")}</span>
-                </p>
-              </div>
-            ) : (
-              <span className="text-xs text-[#6b7280]">{t("priceOnRequest")}</span>
-            )}
+            <p className="font-bold text-[#111827]">{priceLabel}</p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" asChild>

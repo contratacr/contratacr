@@ -7,6 +7,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const {
       category,
+      professions: bodyProfessions,
       serviceType,
       province,
       canton,
@@ -152,10 +153,14 @@ export async function POST(req: Request) {
     const slug = `${baseName}-${Math.random().toString(36).slice(2, 10)}`;
 
     // ── 6. Insert professional ────────────────────────────────────────────────
+    const professions: string[] = Array.isArray(bodyProfessions) && bodyProfessions.length > 0
+      ? [...new Set([category, ...bodyProfessions].filter(Boolean))]
+      : [category];
+
     const { error: proError } = await supabase.from("professionals").insert({
       profile_id: userId,
       category_id: category,
-      professions: [category],
+      professions,
       // Private until the pro publishes a schedule (then it auto-flips public).
       availability_public: false,
       bio,
