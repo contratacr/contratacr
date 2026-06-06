@@ -6,6 +6,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
 import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
+import { PhoneInput } from "@/components/ui/phone-input";
+import { OtpVerification } from "@/components/auth/otp-verification";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CheckCircle2, Eye, EyeOff, User } from "lucide-react";
 import { PROVINCES } from "@/lib/data/cr-geography";
@@ -26,6 +28,7 @@ export default function RegisterClientPage() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [otpEmail, setOtpEmail] = useState<string | null>(null);
   const [oauthPhoto, setOauthPhoto] = useState<string | null>(null);
 
   const selectedProvincia = PROVINCES.find((p) => p.id === provinciaId);
@@ -102,12 +105,37 @@ export default function RegisterClientPage() {
         return;
       }
 
-      setSuccess(true);
+      // New email/password accounts must verify their email via OTP before the
+      // account is considered complete. OAuth users are already verified.
+      if (!user) {
+        setOtpEmail(email);
+      } else {
+        setSuccess(true);
+      }
     } catch {
       setError("Error inesperado. Intentá de nuevo.");
     } finally {
       setSubmitting(false);
     }
+  }
+
+  if (otpEmail) {
+    return (
+      <div className="min-h-screen flex flex-col bg-[#fafafa]">
+        <Navbar />
+        <main className="flex-1 flex items-center justify-center px-4 py-12">
+          <div className="w-full max-w-sm">
+            <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-8">
+              <h1 className="text-xl font-bold text-[#111827] text-center mb-1">Verificá tu correo</h1>
+              <p className="text-sm text-[#6b7280] text-center mb-6">
+                Ingresá el código de 6 dígitos que enviamos a <strong>{otpEmail}</strong>.
+              </p>
+              <OtpVerification email={otpEmail} onVerified={() => { setOtpEmail(null); setSuccess(true); }} />
+            </div>
+          </div>
+        </main>
+      </div>
+    );
   }
 
   if (success) {
@@ -223,18 +251,12 @@ export default function RegisterClientPage() {
                 </>
               )}
 
-              <div>
-                <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                  Teléfono <span className="text-[#9ca3af] font-normal">(opcional)</span>
-                </label>
-                <input
-                  type="tel"
-                  className={inputClass}
-                  placeholder="Ej: 8888-8888"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                />
-              </div>
+              <PhoneInput
+                label="Teléfono"
+                optional
+                value={phone}
+                onChange={setPhone}
+              />
 
               <div className="grid grid-cols-2 gap-3">
                 <div>

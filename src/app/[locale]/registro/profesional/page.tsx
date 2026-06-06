@@ -13,6 +13,7 @@ import { z } from "zod";
 import { Navbar } from "@/components/layout/navbar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -223,14 +224,14 @@ const step1Schema = z
 
 const step2Schema = z.object({
   category: z.string().min(1, "Seleccioná una categoría"),
-  province: z.string().min(1, "Seleccioná una provincia"),
-  canton: z.string().min(1, "Seleccioná un cantón"),
+  // Province and canton are optional, independently. Canton enables after province.
+  province: z.string().optional(),
+  canton: z.string().optional(),
   whatsapp: z.string().min(8, "Número inválido").max(12),
   address: z.string().optional(),
 });
 
 const step3Schema = z.object({
-  bio: z.string().max(500).optional(),
   yearsExperience: z.string().optional(),
   hourlyRate: z.string().optional(),
 });
@@ -309,35 +310,42 @@ function StepIndicator({ current, labels }: { current: number; labels: string[] 
 function PhotoPicker({
   preview,
   onFile,
+  onRemove,
 }: {
   preview: string | null;
   onFile: (f: File) => void;
+  onRemove: () => void;
 }) {
   const ref = useRef<HTMLInputElement>(null);
   return (
-    <div className="flex flex-col items-center gap-2 mb-4">
-      <div
-        onClick={() => ref.current?.click()}
-        className="relative h-24 w-24 rounded-full cursor-pointer group"
-      >
-        {preview ? (
-          <img
-            src={preview}
-            alt="Foto de perfil"
-            className="h-24 w-24 rounded-full object-cover border-2 border-[#e5e7eb]"
-          />
-        ) : (
-          <div className="h-24 w-24 rounded-full bg-[#EBF5FB] border-2 border-dashed border-[#bfdbfe] flex items-center justify-center">
-            <Camera className="h-8 w-8 text-[#009FD9]" />
-          </div>
-        )}
-        <div className="absolute inset-0 rounded-full bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-          <Camera className="h-5 w-5 text-white" />
+    <div className="flex flex-col items-center gap-3 mb-4">
+      {preview ? (
+        <img
+          src={preview}
+          alt="Foto de perfil"
+          className="h-24 w-24 rounded-full object-cover border-2 border-[#e5e7eb]"
+        />
+      ) : (
+        <div className="h-24 w-24 rounded-full bg-[#EBF5FB] border-2 border-dashed border-[#bfdbfe] flex items-center justify-center">
+          <Camera className="h-8 w-8 text-[#009FD9]" />
         </div>
-      </div>
-      <p className="text-xs text-[#9ca3af]">
-        {preview ? "Cambiá tu foto" : "Foto de perfil (opcional)"}
-      </p>
+      )}
+
+      {preview ? (
+        <div className="flex items-center gap-2">
+          <Button type="button" variant="outline" size="sm" onClick={() => ref.current?.click()}>
+            <Camera className="h-4 w-4" /> Cambiar foto
+          </Button>
+          <Button type="button" variant="ghost" size="sm" onClick={onRemove} className="text-red-500 hover:text-red-600">
+            <X className="h-4 w-4" /> Eliminar
+          </Button>
+        </div>
+      ) : (
+        <Button type="button" variant="outline" size="sm" onClick={() => ref.current?.click()}>
+          <Camera className="h-4 w-4" /> Agregar foto
+        </Button>
+      )}
+
       <input
         ref={ref}
         type="file"
@@ -366,7 +374,6 @@ export default function RegisterProfessionalPage() {
   const [serviceFixed, setServiceFixed] = useState(false);
   const [serviceTypeError, setServiceTypeError] = useState<string | null>(null);
   const [whatsappValue, setWhatsappValue] = useState("");
-  const [whatsappFormatted, setWhatsappFormatted] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -432,17 +439,6 @@ export default function RegisterProfessionalPage() {
     setPhotoFile(file);
     const url = URL.createObjectURL(file);
     setPhotoPreview(url);
-  }
-
-  function handleWhatsappChange(raw: string) {
-    const digits = raw.replace(/\D/g, "");
-    setWhatsappValue(digits);
-    if (digits.length === 8 && /^[678]/.test(digits)) {
-      setWhatsappFormatted(`+506 ${digits.slice(0, 4)}-${digits.slice(4)}`);
-    } else {
-      setWhatsappFormatted(digits);
-    }
-    form2.setValue("whatsapp", digits);
   }
 
   // ── Cédula API lookup — commented out, activate when credentials arrive ──
@@ -586,7 +582,6 @@ export default function RegisterProfessionalPage() {
           lat: pickedLocation?.lat ?? null,
           lng: pickedLocation?.lng ?? null,
           whatsapp: step2Data.whatsapp,
-          bio: data.bio,
           yearsExperience: data.yearsExperience,
           hourlyRate: data.hourlyRate,
         }),
@@ -990,7 +985,7 @@ export default function RegisterProfessionalPage() {
               {/* Province */}
               <div>
                 <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                  {t("province")}
+                  {t("province")} <span className="text-[#9ca3af] font-normal">(opcional)</span>
                 </label>
                 <Select
                   onValueChange={(v) => {
@@ -1020,7 +1015,7 @@ export default function RegisterProfessionalPage() {
               {/* Canton */}
               <div>
                 <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                  {t("canton")}
+                  {t("canton")} <span className="text-[#9ca3af] font-normal">(opcional)</span>
                 </label>
                 <Select
                   disabled={!selectedProvince}
@@ -1047,34 +1042,12 @@ export default function RegisterProfessionalPage() {
               </div>
 
               {/* WhatsApp */}
-              <div>
-                <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                  {t("whatsapp")}
-                </label>
-                <div className="flex items-center gap-0">
-                  <span className="inline-flex items-center h-10 px-3 rounded-l-xl border border-r-0 border-[#e5e7eb] bg-[#f3f4f6] text-sm font-medium text-[#374151] shrink-0">
-                    +506
-                  </span>
-                  <input
-                    type="tel"
-                    placeholder="8888-8888"
-                    value={whatsappValue}
-                    onChange={(e) => handleWhatsappChange(e.target.value)}
-                    maxLength={8}
-                    className="flex-1 h-10 px-3 rounded-r-xl border border-[#e5e7eb] text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
-                  />
-                </div>
-                {whatsappValue.length === 8 && /^[678]/.test(whatsappValue) && (
-                  <p className="text-xs text-emerald-600 mt-1">
-                    Se mostrará como: {whatsappFormatted}
-                  </p>
-                )}
-                {form2.formState.errors.whatsapp && (
-                  <p className="text-xs text-red-500 mt-1">
-                    {form2.formState.errors.whatsapp.message}
-                  </p>
-                )}
-              </div>
+              <PhoneInput
+                label={t("whatsapp")}
+                value={whatsappValue}
+                onChange={(digits) => { setWhatsappValue(digits); form2.setValue("whatsapp", digits); }}
+                error={form2.formState.errors.whatsapp?.message}
+              />
 
               <div className="flex gap-3 mt-2">
                 {!currentUser && (
@@ -1093,29 +1066,7 @@ export default function RegisterProfessionalPage() {
           {step === 2 && (
             <form onSubmit={form3.handleSubmit(onStep3)} className="flex flex-col gap-4">
               {/* Photo upload */}
-              <PhotoPicker preview={photoPreview} onFile={handlePhotoSelect} />
-
-              {/* Bio */}
-              <div>
-                <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                  {t("bio")}{" "}
-                  <span className="text-[#9ca3af] font-normal ml-1">({t("bioMin")})</span>
-                </label>
-                <textarea
-                  className={cn(
-                    "w-full rounded-xl border bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] min-h-[120px] resize-none",
-                    "border-[#e5e7eb] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all",
-                    form3.formState.errors.bio && "border-red-400"
-                  )}
-                  placeholder={t("bioPlaceholder")}
-                  {...form3.register("bio")}
-                />
-                {form3.formState.errors.bio && (
-                  <p className="text-xs text-red-500 mt-1">
-                    {form3.formState.errors.bio.message}
-                  </p>
-                )}
-              </div>
+              <PhotoPicker preview={photoPreview} onFile={handlePhotoSelect} onRemove={() => { setPhotoFile(null); setPhotoPreview(null); }} />
 
               <div className="grid grid-cols-2 gap-3">
                 <Input

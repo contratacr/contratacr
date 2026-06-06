@@ -9,6 +9,7 @@ import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { useTranslations } from "next-intl";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { StarRating } from "@/components/ui/star-rating";
 import { getInitials, getWhatsAppLink, buildBookingIcs } from "@/lib/utils";
 import { cn } from "@/lib/utils";
@@ -280,17 +281,20 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     setProfileError(null);
     const cleanCedula = profileCedula.replace(/\D/g, "");
     const cleanPhone = profilePhone.replace(/\D/g, "");
-    if (!clientName.trim()) { setProfileError("Ingresá tu nombre legal completo."); return; }
     if (cleanPhone.length < 8) { setProfileError("Ingresá un teléfono válido (8 dígitos)."); return; }
-    if (cleanCedula.length < 9) { setProfileError("Ingresá una cédula válida (9 dígitos)."); return; }
+    if (needsProfile && !clientName.trim()) { setProfileError("Ingresá tu nombre legal completo."); return; }
+    if (needsProfile && cleanCedula.length < 9) { setProfileError("Ingresá una cédula válida (9 dígitos)."); return; }
 
     setSavingProfile(true);
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
+      // Only write the fields we actually collected on this step.
+      const updates: Record<string, string> = { phone: cleanPhone };
+      if (needsProfile) { updates.full_name = clientName.trim(); updates.cedula = cleanCedula; }
       const { error } = await supabase
         .from("profiles")
-        .update({ full_name: clientName.trim(), phone: cleanPhone, cedula: cleanCedula })
+        .update(updates)
         .eq("id", user.id);
       if (error) {
         setSavingProfile(false);
@@ -335,7 +339,10 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   const slots = selectedDate ? getSlotsForDate(selectedDate) : [];
   const hasAnyAvailability = usesExplicitSlots || Object.values(availability).some((d) => d.enabled);
 
-  const totalSteps = isLoggedIn ? (needsProfile ? 3 : 2) : 3;
+  // Logged-in clients who have a cédula but no phone on file still need to give
+  // us a WhatsApp number once — we collect it on the "complete" step (phone-only).
+  const needsPhone = isLoggedIn && !needsProfile && !profilePhone;
+  const totalSteps = isLoggedIn ? (needsProfile || needsPhone ? 3 : 2) : 3;
   const stepIndex = { calendar: 0, details: 1, contact: 2, complete: 2, success: 3 };
 
   return (
@@ -607,11 +614,6 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                       autoFocus
                     />
                   </div>
-
-                  <div className="flex items-start gap-2 p-3 rounded-xl bg-[#f3f4f6]">
-                    <WhatsAppIcon className="h-4 w-4 text-[#25d366] mt-0.5 shrink-0" />
-                    <p className="text-xs text-[#6b7280]">{t("step4.note")}</p>
-                  </div>
                 </div>
               )}
 
@@ -650,16 +652,28 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                       </p>
                     )}
                   </div>
+                  <PhoneInput
+                    label="Teléfono (WhatsApp)"
+                    value={profilePhone}
+                    onChange={setProfilePhone}
+                  />
+                  <p className="text-xs text-[#9ca3af] -mt-2">
+                    Para coordinar tu cita necesitamos tu número de WhatsApp.
+                  </p>
                 </div>
               )}
 
-              {/* STEP: complete profile (OAuth users missing a cédula) */}
+              {/* STEP: complete profile — phone (always) + cédula/name when missing */}
               {step === "complete" && (
                 <div className="flex flex-col gap-4">
                   <div>
-                    <h3 className="text-lg font-semibold text-[#111827]">Completá tu perfil</h3>
+                    <h3 className="text-lg font-semibold text-[#111827]">
+                      {needsProfile ? "Completá tu perfil" : "Tu número de WhatsApp"}
+                    </h3>
                     <p className="text-sm text-[#6b7280] mt-1">
-                      Necesitamos estos datos para confirmar tu reserva.
+                      {needsProfile
+                        ? "Necesitamos estos datos para confirmar tu reserva."
+                        : "Para coordinar tu cita necesitamos tu número de WhatsApp. Lo guardamos en tu perfil para no volver a pedirlo."}
                     </p>
                   </div>
 
@@ -670,37 +684,36 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     </div>
                   )}
 
-                  <div>
-                    <label className="text-sm font-medium text-[#374151] block mb-1.5">Nombre legal completo</label>
-                    <input
-                      type="text"
-                      className="w-full h-10 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
-                      placeholder="Tu nombre como aparece en tu cédula"
-                      value={clientName}
-                      onChange={(e) => setClientName(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-[#374151] block mb-1.5">Teléfono</label>
-                    <input
-                      type="tel"
-                      className="w-full h-10 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
-                      placeholder="8888-8888"
-                      value={profilePhone}
-                      onChange={(e) => setProfilePhone(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-[#374151] block mb-1.5">Cédula</label>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      className="w-full h-10 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
-                      placeholder="1-2345-6789"
-                      value={profileCedula}
-                      onChange={(e) => setProfileCedula(e.target.value)}
-                    />
-                  </div>
+                  {needsProfile && (
+                    <div>
+                      <label className="text-sm font-medium text-[#374151] block mb-1.5">Nombre legal completo</label>
+                      <input
+                        type="text"
+                        className="w-full h-10 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+                        placeholder="Tu nombre como aparece en tu cédula"
+                        value={clientName}
+                        onChange={(e) => setClientName(e.target.value)}
+                      />
+                    </div>
+                  )}
+                  <PhoneInput
+                    label="Teléfono (WhatsApp)"
+                    value={profilePhone}
+                    onChange={setProfilePhone}
+                  />
+                  {needsProfile && (
+                    <div>
+                      <label className="text-sm font-medium text-[#374151] block mb-1.5">Cédula</label>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        className="w-full h-10 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+                        placeholder="1-2345-6789"
+                        value={profileCedula}
+                        onChange={(e) => setProfileCedula(e.target.value)}
+                      />
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -771,7 +784,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     onClick={async () => {
                       if (!description.trim()) return;
                       if (isLoggedIn) {
-                        if (needsProfile) setStep("complete");
+                        if (needsProfile || needsPhone) setStep("complete");
                         else await handleSubmit();
                       } else {
                         setStep("contact");
@@ -791,6 +804,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     size="md"
                     className="flex-1"
                     loading={submitting}
+                    disabled={profilePhone.replace(/\D/g, "").length < 8 || guestEmailCheck.taken}
                     onClick={() => handleSubmit()}
                   >
                     {submitting ? "Enviando…" : t("step4.submit")}

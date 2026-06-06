@@ -56,7 +56,10 @@ export function formatPrice(amount: number) {
 
 export function formatWhatsApp(phone: string) {
   const clean = phone.replace(/\D/g, "");
-  return clean.startsWith("506") ? clean : `506${clean}`;
+  if (clean.startsWith("506")) return clean;
+  // International numbers already carry their country code (CR national = 8 digits).
+  if (clean.length > 8) return clean;
+  return `506${clean}`;
 }
 
 export function getWhatsAppLink(phone: string, message?: string) {

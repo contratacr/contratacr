@@ -1,6 +1,5 @@
 import { Link } from "@/i18n/navigation";
 import { ContrataCRLogo } from "./landing-navbar";
-import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 
 function InstagramIcon() {
   return (
@@ -30,8 +29,6 @@ const SOCIAL_LINKS = [
   { label: "Instagram", href: "https://www.instagram.com/contratacr/", Icon: InstagramIcon },
   { label: "TikTok", href: "https://www.tiktok.com/@contratacr", Icon: TikTokIcon },
 ];
-
-const SUPPORT_WHATSAPP = "https://wa.me/50687454360";
 
 const COLUMNS = [
   {
@@ -75,7 +72,7 @@ export function LandingFooter() {
               El mercado de servicios profesionales exclusivo para Costa Rica. Gratuito para clientes y profesionales, sin comisiones ni cargos de ningún tipo.
             </p>
             {/* Social */}
-            <div className="flex items-center gap-2 mb-5">
+            <div className="flex items-center gap-2">
               {SOCIAL_LINKS.map(({ label, href, Icon }) => (
                 <a
                   key={label}
@@ -89,16 +86,6 @@ export function LandingFooter() {
                 </a>
               ))}
             </div>
-            {/* Support WhatsApp */}
-            <a
-              href={SUPPORT_WHATSAPP}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#1ebe5d] text-white text-sm font-semibold px-4 py-2.5 rounded-xl transition-colors"
-            >
-              <WhatsAppIcon className="h-4 w-4" />
-              Soporte ContrataCR
-            </a>
           </div>
 
           {/* Link columns */}
@@ -130,12 +117,6 @@ export function LandingFooter() {
           </p>
           <div className="flex items-center gap-4">
             <span className="text-xs text-white/25">Diseñado y desarrollado en Costa Rica</span>
-            <a
-              href="mailto:soporte@contratacr.com"
-              className="text-xs text-white/40 hover:text-white/70 transition-colors"
-            >
-              soporte@contratacr.com
-            </a>
           </div>
         </div>
       </div>
