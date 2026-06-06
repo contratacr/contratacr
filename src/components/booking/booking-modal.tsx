@@ -13,6 +13,7 @@ import { StarRating } from "@/components/ui/star-rating";
 import { getInitials, getWhatsAppLink, buildBookingIcs } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { useAvailabilityCheck } from "@/hooks/use-availability-check";
 import type { ProfessionalCardData } from "@/lib/data/mock-professionals";
 
 type BookingStep = "calendar" | "details" | "contact" | "complete" | "success";
@@ -104,6 +105,8 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   const [savingProfile, setSavingProfile] = useState(false);
   // Pro hid their availability → slots are not shown; we offer WhatsApp instead.
   const [availabilityPrivate, setAvailabilityPrivate] = useState(false);
+  // Guest email duplicate detection (inline, real-time).
+  const guestEmailCheck = useAvailabilityCheck(clientEmail, "email", !isLoggedIn);
 
   useEffect(() => {
     if (!open) return;
@@ -633,11 +636,19 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     </label>
                     <input
                       type="email"
-                      className="w-full h-10 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+                      className={cn(
+                        "w-full h-10 rounded-xl border bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all",
+                        guestEmailCheck.taken ? "border-red-400" : "border-[#e5e7eb]"
+                      )}
                       placeholder="tu@email.com"
                       value={clientEmail}
                       onChange={(e) => setClientEmail(e.target.value)}
                     />
+                    {guestEmailCheck.taken && (
+                      <p className="text-xs text-red-500 mt-1">
+                        Este correo ya tiene una cuenta. Iniciá sesión para continuar.
+                      </p>
+                    )}
                   </div>
                 </div>
               )}

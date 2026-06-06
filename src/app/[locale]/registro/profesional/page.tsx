@@ -24,6 +24,7 @@ import { OtpVerification } from "@/components/auth/otp-verification";
 import { useAuth } from "@/hooks/use-auth";
 import { CategorySearch } from "@/components/ui/category-search";
 import { LocationPicker, type PickedLocation } from "@/components/maps/location-picker";
+import { useAvailabilityCheck } from "@/hooks/use-availability-check";
 
 // ─── Category data now lives in src/lib/data/categories.ts ───────────────────
 // CategorySearch component handles display + fuzzy search.
@@ -381,6 +382,8 @@ export default function RegisterProfessionalPage() {
   // identity step, so we collect their (required) cédula in the service step.
   const [oauthCedula, setOauthCedula] = useState("");
   const [oauthCedulaError, setOauthCedulaError] = useState<string | null>(null);
+  const [oauthFullName, setOauthFullName] = useState("");
+  const [oauthNameError, setOauthNameError] = useState<string | null>(null);
 
   const cantons = getCantonsByProvince(selectedProvince);
 
@@ -389,17 +392,33 @@ export default function RegisterProfessionalPage() {
   const form3 = useForm<Step3Data>({ resolver: zodResolver(step3Schema) });
 
   const watchedPassword = form1.watch("password") ?? "";
+  const watchedEmail = form1.watch("email") ?? "";
+  const watchedCedula = form1.watch("cedula") ?? "";
+
+  // Real-time duplicate detection (email/password identity step)
+  const emailCheck = useAvailabilityCheck(watchedEmail, "email", !currentUser);
+  const cedulaCheck = useAvailabilityCheck(watchedCedula, "cedula", !currentUser);
+  // Real-time cédula check for OAuth professionals
+  const oauthCedulaCheck = useAvailabilityCheck(oauthCedula, "cedula", !!currentUser);
 
   useEffect(() => {
     if (!authLoading) {
       setStep(currentUser ? 1 : 0);
-      // Pre-fill photo preview from OAuth provider if available
-      if (currentUser && !photoPreview) {
-        const oauthPhoto =
-          (currentUser.user_metadata?.avatar_url as string) ||
-          (currentUser.user_metadata?.picture as string) ||
-          null;
-        if (oauthPhoto) setPhotoPreview(oauthPhoto);
+      // Pre-fill photo preview + legal name from OAuth provider if available
+      if (currentUser) {
+        if (!photoPreview) {
+          const oauthPhoto =
+            (currentUser.user_metadata?.avatar_url as string) ||
+            (currentUser.user_metadata?.picture as string) ||
+            null;
+          if (oauthPhoto) setPhotoPreview(oauthPhoto);
+        }
+        setOauthFullName((prev) =>
+          prev ||
+          (currentUser.user_metadata?.full_name as string) ||
+          (currentUser.user_metadata?.name as string) ||
+          ""
+        );
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -435,6 +454,14 @@ export default function RegisterProfessionalPage() {
   // }
 
   function onStep1(data: Step1Data) {
+    if (emailCheck.taken) {
+      form1.setError("email", { message: "Este correo ya está registrado. Iniciá sesión." });
+      return;
+    }
+    if (cedulaCheck.taken) {
+      form1.setError("cedula", { message: "Esta cédula ya está registrada en ContrataCR." });
+      return;
+    }
     setStep1Data(data);
     setStep(1);
   }
@@ -449,6 +476,15 @@ export default function RegisterProfessionalPage() {
       setOauthCedulaError("Cédula requerida. CR: 9 dígitos · DIMEX: 11-12 · NITE: 10.");
       return;
     }
+    if (currentUser && oauthCedulaCheck.taken) {
+      setOauthCedulaError("Esta cédula ya está registrada en ContrataCR.");
+      return;
+    }
+    if (currentUser && oauthFullName.trim().length < 3) {
+      setOauthNameError("Ingresá tu nombre legal completo.");
+      return;
+    }
+    setOauthNameError(null);
     setOauthCedulaError(null);
     setServiceTypeError(null);
     setStep2Data(data);
@@ -511,9 +547,10 @@ export default function RegisterProfessionalPage() {
 
       // ── 3. Build names for the profile upsert ─────────────────────────────
       const fullName = currentUser
-        ? (currentUser.user_metadata?.full_name as string) ||
+        ? (oauthFullName.trim() ||
+          (currentUser.user_metadata?.full_name as string) ||
           (currentUser.user_metadata?.name as string) ||
-          (currentUser.email?.split("@")[0] ?? "profesional")
+          (currentUser.email?.split("@")[0] ?? "profesional"))
         : [step1Data!.firstName, step1Data!.firstLastName, step1Data!.secondLastName]
             .filter(Boolean)
             .join(" ")
@@ -727,7 +764,7 @@ export default function RegisterProfessionalPage() {
                   label="Número de cédula *"
                   placeholder="1-0000-0000"
                   hint="CR: 9 dígitos · DIMEX: 11-12 · NITE: 10"
-                  error={form1.formState.errors.cedula?.message}
+                  error={form1.formState.errors.cedula?.message ?? (cedulaCheck.taken ? "Esta cédula ya está registrada en ContrataCR." : undefined)}
                   {...form1.register("cedula")}
                   // onBlur={(e) => lookupCedula(e.target.value)}  // ← activate when API credentials arrive
                 />
@@ -738,7 +775,7 @@ export default function RegisterProfessionalPage() {
                   label={t("email")}
                   type="email"
                   placeholder={t("emailPlaceholder")}
-                  error={form1.formState.errors.email?.message}
+                  error={form1.formState.errors.email?.message ?? (emailCheck.taken ? "Este correo ya está registrado. Iniciá sesión." : undefined)}
                   {...form1.register("email")}
                 />
               </div>
@@ -797,7 +834,16 @@ export default function RegisterProfessionalPage() {
           {step === 1 && (
             <form onSubmit={form2.handleSubmit(onStep2)} className="flex flex-col gap-4">
 
-              {/* Cédula — required for OAuth professionals (no identity step) */}
+              {/* Name + cédula — required for OAuth professionals (no identity step) */}
+              {currentUser && (
+                <Input
+                  label="Nombre legal completo *"
+                  placeholder="Juan Pérez González"
+                  value={oauthFullName}
+                  onChange={(e) => { setOauthFullName(e.target.value); setOauthNameError(null); }}
+                  error={oauthNameError ?? undefined}
+                />
+              )}
               {currentUser && (
                 <Input
                   label="Número de cédula *"
@@ -805,7 +851,7 @@ export default function RegisterProfessionalPage() {
                   hint="Requerido para profesionales · CR: 9 dígitos · DIMEX: 11-12 · NITE: 10"
                   value={oauthCedula}
                   onChange={(e) => { setOauthCedula(e.target.value); setOauthCedulaError(null); }}
-                  error={oauthCedulaError ?? undefined}
+                  error={oauthCedulaError ?? (oauthCedulaCheck.taken ? "Esta cédula ya está registrada en ContrataCR." : undefined)}
                 />
               )}
 
