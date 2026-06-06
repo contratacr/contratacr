@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Bell, CheckCheck } from "lucide-react";
+import { Bell, CheckCheck, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { cn, formatRelativeTime } from "@/lib/utils";
@@ -84,6 +84,13 @@ export function NotificationBell() {
     window.location.assign(notificationHref(n));
   }
 
+  async function dismiss(e: React.MouseEvent, id: string) {
+    e.stopPropagation();
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    const supabase = createClient();
+    await supabase.from("notifications").delete().eq("id", id);
+  }
+
   if (!user) return null;
 
   return (
@@ -128,13 +135,13 @@ export function NotificationBell() {
                   <li
                     key={n.id}
                     className={cn(
-                      "border-b border-[#f3f4f6] last:border-0",
+                      "relative group border-b border-[#f3f4f6] last:border-0",
                       !n.read && "bg-[#f0f9f6]"
                     )}
                   >
                     <button
                       onClick={() => openNotification(n)}
-                      className="w-full text-left px-4 py-3 hover:bg-[#f3f4f6] transition-colors"
+                      className="w-full text-left px-4 py-3 pr-9 hover:bg-[#f3f4f6] transition-colors"
                     >
                       <div className="flex items-start gap-2">
                         {!n.read && (
@@ -148,6 +155,13 @@ export function NotificationBell() {
                           </p>
                         </div>
                       </div>
+                    </button>
+                    <button
+                      onClick={(e) => dismiss(e, n.id)}
+                      className="absolute top-2 right-2 p-1 rounded-md text-[#9ca3af] hover:bg-[#e5e7eb] hover:text-[#374151] transition-colors"
+                      aria-label="Descartar"
+                    >
+                      <X className="h-3.5 w-3.5" />
                     </button>
                   </li>
                 ))}

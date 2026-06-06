@@ -156,6 +156,8 @@ export async function POST(req: Request) {
       profile_id: userId,
       category_id: category,
       professions: [category],
+      // Private until the pro publishes a schedule (then it auto-flips public).
+      availability_public: false,
       bio,
       whatsapp,
       provincia_id: province,

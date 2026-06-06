@@ -81,6 +81,34 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    // Notify every professional whose profession matches the project category.
+    if (categoryId) {
+      try {
+        const { data: pros } = await admin
+          .from("professionals")
+          .select("profile_id")
+          .or(`category_id.eq.${categoryId},professions.cs.{${categoryId}}`);
+
+        const recipients = [...new Set(
+          (pros ?? []).map((p) => p.profile_id).filter((id): id is string => !!id && id !== uid)
+        )];
+
+        if (recipients.length > 0) {
+          const label = getCategoryLabel(categoryId);
+          const rows = recipients.map((profileId) => ({
+            user_id: profileId,
+            type: "new_project",
+            title: "Nuevo proyecto en tu categoría",
+            message: `Un cliente publicó "${title.trim()}" en ${label}.`,
+            data: { link: "/es/dashboard/profesional?tab=proposals", project_id: data.id },
+          }));
+          await admin.from("notifications").insert(rows);
+        }
+      } catch (notifyErr) {
+        console.error("[POST /api/projects] notify pros failed:", notifyErr);
+      }
+    }
+
     return NextResponse.json({ id: data.id, success: true });
   } catch (err) {
     console.error("[POST /api/projects] Unexpected error:", err);

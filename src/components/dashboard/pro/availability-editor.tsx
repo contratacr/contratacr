@@ -49,6 +49,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, onSav
   const [slots, setSlots] = useState<Slot[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingVisibility, setSavingVisibility] = useState(false);
+  const [showPrivateConfirm, setShowPrivateConfirm] = useState(false);
 
   // Generator form
   const [genDate, setGenDate] = useState(todayISO());
@@ -88,14 +89,28 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, onSav
       .map(([date, list]) => [date, list.sort((x, y) => x.slot_time.localeCompare(y.slot_time))] as const);
   }, [slots]);
 
-  async function toggleVisibility() {
-    const next = !isPublic;
-    setIsPublic(next);
+  function toggleVisibility() {
+    // Turning OFF requires confirmation (it deletes all schedules).
+    if (isPublic) { setShowPrivateConfirm(true); return; }
+    makePublic();
+  }
+
+  async function makePublic() {
+    setIsPublic(true);
     setSavingVisibility(true);
     const supabase = createClient();
-    await supabase.from("professionals").update({ availability_public: next }).eq("id", professionalId);
+    await supabase.from("professionals").update({ availability_public: true }).eq("id", professionalId);
     setSavingVisibility(false);
     onSaved?.();
+  }
+
+  async function confirmMakePrivate() {
+    setSavingVisibility(true);
+    const supabase = createClient();
+    // Delete all schedules, then mark availability private, then refresh.
+    await supabase.from("availability_slots").delete().eq("professional_id", professionalId);
+    await supabase.from("professionals").update({ availability_public: false }).eq("id", professionalId);
+    window.location.reload();
   }
 
   async function insertSlots(times: string[]) {
@@ -118,6 +133,11 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, onSav
       ...prev,
       ...((data ?? []).map((s) => ({ id: s.id, slot_date: s.slot_date, slot_time: String(s.slot_time).slice(0, 5) }))),
     ]);
+    // Adding a schedule automatically makes availability public.
+    if (!isPublic) {
+      setIsPublic(true);
+      await supabase.from("professionals").update({ availability_public: true }).eq("id", professionalId);
+    }
     onSaved?.();
   }
 
@@ -276,6 +296,33 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, onSav
           </div>
         )}
       </div>
+
+      {/* Confirmation modal — making availability private deletes all schedules */}
+      {showPrivateConfirm && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowPrivateConfirm(false)} />
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 z-10">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-50 mb-4">
+              <Lock className="h-5 w-5 text-red-500" />
+            </div>
+            <h3 className="text-lg font-bold text-[#111827] mb-1">¿Estás seguro?</h3>
+            <p className="text-sm text-[#6b7280] mb-5">Tus horarios serán eliminados.</p>
+            <div className="flex gap-3">
+              <Button variant="outline" size="md" className="flex-1" onClick={() => setShowPrivateConfirm(false)} disabled={savingVisibility}>
+                Cancelar
+              </Button>
+              <Button
+                size="md"
+                className="flex-1 bg-red-500 hover:bg-red-600"
+                onClick={confirmMakePrivate}
+                loading={savingVisibility}
+              >
+                Sí, hacer privada
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
