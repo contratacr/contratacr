@@ -71,6 +71,10 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es" }: GoogleM
   const boundsRef = useRef<any>(null);
   const hasMarkersRef = useRef(false);
   const markerCountRef = useRef(0);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const clustererRef = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const infoRef = useRef<any>(null);
 
   // Single location → center + zoom in on it. Multiple → fit all markers so every
   // result is visible at once.
@@ -89,31 +93,42 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es" }: GoogleM
     void listener;
   }
 
-  function initMap() {
-    if (initialized.current || !mapRef.current) return;
+  // Create the map exactly once.
+  function ensureMap() {
+    if (mapInstanceRef.current || !mapRef.current) return null;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const g = (window as any).google?.maps;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const clusterer = (window as any).markerClusterer;
-    if (!g || !clusterer) return; // wait for both scripts
+    if (!g || !clusterer) return null;
     initialized.current = true;
-
     const map = new g.Map(mapRef.current, {
       center: CR_CENTER,
       zoom: 9,
       mapTypeControl: false,
       streetViewControl: false,
-      // Expand / fullscreen control for a bigger map view.
       fullscreenControl: true,
       zoomControl: true,
-      // Greedy: the mouse wheel zooms whenever the cursor is over the map (no Ctrl
-      // needed), and a single finger pans on touch.
       gestureHandling: "greedy",
       styles: BRAND_MAP_STYLE,
     });
     mapInstanceRef.current = map;
+    infoRef.current = new g.InfoWindow();
+    return map;
+  }
 
-    const info = new g.InfoWindow();
+  // (Re)build markers from the current `professionals` — called on every change
+  // so the map refreshes in sync with the filtered results (no full reload).
+  function renderMarkers() {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const g = (window as any).google?.maps;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const clusterer = (window as any).markerClusterer;
+    if (!g || !clusterer) return; // wait for both scripts
+    const map = mapInstanceRef.current ?? ensureMap();
+    if (!map) return;
+
+    const info = infoRef.current;
     const bounds = new g.LatLngBounds();
 
     const pinIcon = {
@@ -175,7 +190,12 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es" }: GoogleM
         }),
     };
 
-    new clusterer.MarkerClusterer({ map, markers, renderer });
+    if (clustererRef.current) {
+      clustererRef.current.clearMarkers();
+      clustererRef.current.addMarkers(markers);
+    } else {
+      clustererRef.current = new clusterer.MarkerClusterer({ map, markers, renderer });
+    }
 
     boundsRef.current = bounds;
     hasMarkersRef.current = markers.length > 0;
@@ -185,7 +205,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es" }: GoogleM
 
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if ((window as any).google?.maps && (window as any).markerClusterer) initMap();
+    if ((window as any).google?.maps && (window as any).markerClusterer) renderMarkers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [professionals]);
 
@@ -230,12 +250,12 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es" }: GoogleM
       <Script
         src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"
         strategy="afterInteractive"
-        onLoad={initMap}
+        onLoad={renderMarkers}
       />
       <Script
         src={`https://maps.googleapis.com/maps/api/js?key=${apiKey}`}
         strategy="afterInteractive"
-        onLoad={initMap}
+        onLoad={renderMarkers}
       />
       <div ref={mapRef} className="w-full h-full" />
     </>
