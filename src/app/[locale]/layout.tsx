@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
+import { EmojiBlocker } from "@/components/util/emoji-blocker";
 import "../globals.css";
 
 const inter = Inter({
@@ -46,6 +47,7 @@ export default async function LocaleLayout({
     <html lang={locale} className={`${inter.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-white">
         <NextIntlClientProvider messages={messages}>
+          <EmojiBlocker />
           {children}
         </NextIntlClientProvider>
       </body>

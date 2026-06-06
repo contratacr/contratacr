@@ -3,14 +3,14 @@
 import { useState, useEffect } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
-  X, CheckCircle2, MapPin, Shield, ArrowLeft, ChevronLeft, ChevronRight, Lock,
+  X, CheckCircle2, MapPin, Shield, ArrowLeft, ChevronLeft, ChevronRight, Lock, CalendarPlus,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { useTranslations } from "next-intl";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { StarRating } from "@/components/ui/star-rating";
-import { getInitials, getWhatsAppLink } from "@/lib/utils";
+import { getInitials, getWhatsAppLink, buildBookingIcs } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import type { ProfessionalCardData } from "@/lib/data/mock-professionals";
@@ -305,6 +305,27 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     setNeedsProfile(false);
     setSavingProfile(false);
     await handleSubmit(cleanCedula, cleanPhone);
+  }
+
+  // Universal calendar export (.ics) — works with Google/Apple/Outlook.
+  function downloadCalendar() {
+    if (!selectedDate || !selectedTime) return;
+    const ics = buildBookingIcs({
+      proName: professional.fullName,
+      service: description,
+      date: selectedDate,
+      time: selectedTime,
+      whatsappLink: getWhatsAppLink(professional.whatsapp),
+    });
+    const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `contratacr-${selectedDate}.ics`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 
   const calendarDays = getCalendarDays(currentYear, currentMonth);
@@ -688,6 +709,15 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                       {t("success.whatsapp")}
                     </a>
                   </Button>
+                  {selectedDate && selectedTime && (
+                    <button
+                      onClick={downloadCalendar}
+                      className="inline-flex items-center justify-center gap-2 w-full max-w-xs border border-[#e5e7eb] text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] font-semibold py-2.5 rounded-xl transition-colors text-sm"
+                    >
+                      <CalendarPlus className="h-4 w-4" />
+                      Agregar a mi calendario
+                    </button>
+                  )}
                 </div>
               )}
             </div>

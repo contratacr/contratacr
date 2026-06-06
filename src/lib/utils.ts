@@ -9,6 +9,42 @@ export function formatRating(rating: number) {
   return rating.toFixed(1);
 }
 
+/** Build a universal .ics calendar event (Google/Apple/Outlook compatible). */
+export function buildBookingIcs(opts: {
+  proName: string;
+  service: string;
+  date: string; // YYYY-MM-DD
+  time: string; // HH:MM
+  whatsappLink: string;
+}): string {
+  const { proName, service, date, time, whatsappLink } = opts;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const [y, m, d] = date.split("-").map(Number);
+  const [hh, mm] = time.split(":").map(Number);
+  const start = `${y}${pad(m)}${pad(d)}T${pad(hh)}${pad(mm)}00`;
+  const end = `${y}${pad(m)}${pad(d)}T${pad((hh + 1) % 24)}${pad(mm)}00`;
+  const now = new Date();
+  const stamp = `${now.getUTCFullYear()}${pad(now.getUTCMonth() + 1)}${pad(now.getUTCDate())}T${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}${pad(now.getUTCSeconds())}Z`;
+  const esc = (s: string) => s.replace(/([,;\\])/g, "\\$1").replace(/\n/g, "\\n");
+  const uid = `${Date.now()}-${Math.random().toString(36).slice(2)}@contratacr.com`;
+  return [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//ContrataCR//Booking//ES",
+    "CALSCALE:GREGORIAN",
+    "METHOD:PUBLISH",
+    "BEGIN:VEVENT",
+    `UID:${uid}`,
+    `DTSTAMP:${stamp}`,
+    `DTSTART:${start}`,
+    `DTEND:${end}`,
+    `SUMMARY:${esc(`${service || "Servicio"} con ${proName}`)}`,
+    `DESCRIPTION:${esc(`Servicio: ${service || "-"}\nProfesional: ${proName}\nWhatsApp: ${whatsappLink}`)}`,
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ].join("\r\n");
+}
+
 export function formatPrice(amount: number) {
   return new Intl.NumberFormat("es-CR", {
     style: "currency",

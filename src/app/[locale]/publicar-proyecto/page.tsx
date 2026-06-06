@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { Navbar } from "@/components/layout/navbar";
+import { LandingFooter } from "@/components/landing/landing-footer";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2 } from "lucide-react";
 import { PROVINCES } from "@/lib/data/cr-geography";
@@ -179,6 +180,7 @@ export default function PublicarProyectoPage() {
             </Button>
           </div>
         </main>
+        <LandingFooter />
       </div>
     );
   }
@@ -348,6 +350,7 @@ export default function PublicarProyectoPage() {
           </div>
         </div>
       </main>
+      <LandingFooter />
     </div>
   );
 }
