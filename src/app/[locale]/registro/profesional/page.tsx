@@ -395,6 +395,10 @@ export default function RegisterProfessionalPage() {
   // Additional categories (multi-category support). Primary = step2 `category`.
   const [extraCategories, setExtraCategories] = useState<string[]>([]);
   const [extraCatInput, setExtraCatInput] = useState("");
+  // Account type — persona física or empresa/negocio.
+  const [accountType, setAccountType] = useState<"individual" | "empresa">("individual");
+  const [businessName, setBusinessName] = useState("");
+  const [businessNameError, setBusinessNameError] = useState<string | null>(null);
 
   const cantons = getCantonsByProvince(selectedProvince);
 
@@ -471,6 +475,11 @@ export default function RegisterProfessionalPage() {
       setServiceTypeError("Seleccioná al menos un tipo de servicio");
       return;
     }
+    if (accountType === "empresa" && businessName.trim().length < 2) {
+      setBusinessNameError("Ingresá el nombre comercial.");
+      return;
+    }
+    setBusinessNameError(null);
     // OAuth professionals must provide a cédula (clients don't — they're asked at booking).
     if (currentUser && !validateCedulaFormat(oauthCedula)) {
       setOauthCedulaError("Cédula requerida. CR: 9 dígitos · DIMEX: 11-12 · NITE: 10.");
@@ -556,6 +565,9 @@ export default function RegisterProfessionalPage() {
             .join(" ")
             .trim();
 
+      // Businesses display their commercial name everywhere.
+      const displayName = accountType === "empresa" ? businessName.trim() : fullName;
+
       const serviceType = [
         serviceMobile ? "mobile" : null,
         serviceFixed ? "fixed" : null,
@@ -570,7 +582,9 @@ export default function RegisterProfessionalPage() {
         body: JSON.stringify({
           userId,
           email: userEmail,
-          fullName,
+          fullName: displayName,
+          accountType,
+          businessName: accountType === "empresa" ? businessName.trim() : null,
           cedula: step1Data?.cedula?.replace(/\D/g, "") ?? (oauthCedula ? oauthCedula.replace(/\D/g, "") : null),
           photoUrl,
           category: step2Data.category,
@@ -833,6 +847,40 @@ export default function RegisterProfessionalPage() {
           {/* ── Step 1: Service + Location ───────────────────────────────── */}
           {step === 1 && (
             <form onSubmit={form2.handleSubmit(onStep2)} className="flex flex-col gap-4">
+
+              {/* Account type */}
+              <div>
+                <label className="text-sm font-medium text-[#374151] block mb-2">¿Te registrás como?</label>
+                <div className="grid grid-cols-2 gap-2">
+                  {([
+                    { v: "individual", label: "Persona física", desc: "Profesional independiente" },
+                    { v: "empresa", label: "Empresa o negocio", desc: "Comercio o compañía" },
+                  ] as const).map((opt) => (
+                    <button
+                      key={opt.v}
+                      type="button"
+                      onClick={() => { setAccountType(opt.v); setBusinessNameError(null); }}
+                      className={cn(
+                        "p-3 rounded-xl border-2 text-left transition-all",
+                        accountType === opt.v ? "border-[#009FD9] bg-[#EBF5FB]" : "border-[#e5e7eb] hover:border-[#009FD9]/40"
+                      )}
+                    >
+                      <p className="text-sm font-semibold text-[#111827]">{opt.label}</p>
+                      <p className="text-xs text-[#9ca3af]">{opt.desc}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {accountType === "empresa" && (
+                <Input
+                  label="Nombre comercial *"
+                  placeholder="Ej: Servicios Eléctricos GAM"
+                  value={businessName}
+                  onChange={(e) => { setBusinessName(e.target.value); setBusinessNameError(null); }}
+                  error={businessNameError ?? undefined}
+                />
+              )}
 
               {/* Name + cédula — required for OAuth professionals (no identity step) */}
               {currentUser && (

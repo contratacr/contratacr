@@ -39,6 +39,12 @@ export function formatPricingTier(tier: PricingTier): string {
   return tier.amount != null ? `${formatColones(tier.amount)}${suffix}` : "Precio a convenir";
 }
 
+/** Format a single service's price from its amount + type, e.g. "₡15,000/hora". */
+export function formatServicePrice(amount?: number | null, type?: PricingType | null): string | null {
+  if (amount == null && !type) return null;
+  return formatPricingTier({ id: "", type: type ?? "a_convenir", amount: amount ?? undefined });
+}
+
 /** Compact "from" price for cards. Falls back to legacy hourlyRate. */
 export function primaryPricingLabel(
   pricing: PricingTier[] | undefined | null,

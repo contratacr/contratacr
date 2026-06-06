@@ -23,11 +23,17 @@ export async function POST(req: Request) {
       fullName: bodyFullName,
       cedula: bodyCedula,
       photoUrl,
+      accountType: bodyAccountType,
+      businessName: bodyBusinessName,
     } = body;
 
-    if (!category || !province || !canton || !whatsapp || !bio) {
+    // Bio and location are now optional; only a category + WhatsApp are required.
+    if (!category || !whatsapp) {
       return NextResponse.json({ error: "Faltan campos requeridos" }, { status: 400 });
     }
+    const safeBio = typeof bio === "string" ? bio : "";
+    const accountType = bodyAccountType === "empresa" ? "empresa" : "individual";
+    const businessName = bodyBusinessName || null;
 
     // ── 1. Identify the user ──────────────────────────────────────────────────
     //    Two cases:
@@ -127,14 +133,16 @@ export async function POST(req: Request) {
         .from("professionals")
         .update({
           category_id: category,
-          bio,
+          bio: safeBio,
           whatsapp,
-          provincia_id: province,
-          canton_id: canton,
+          account_type: accountType,
+          business_name: businessName,
           years_experience: yearsExperience ? parseInt(yearsExperience, 10) : null,
           hourly_rate: hourlyRate ? parseInt(hourlyRate, 10) : null,
           service_type: serviceType ?? "mobile",
           address: address ?? null,
+          ...(province ? { provincia_id: province } : {}),
+          ...(canton ? { canton_id: canton } : {}),
           ...(lat != null ? { lat: Number(lat) } : {}),
           ...(lng != null ? { lng: Number(lng) } : {}),
         })
@@ -163,15 +171,17 @@ export async function POST(req: Request) {
       professions,
       // Private until the pro publishes a schedule (then it auto-flips public).
       availability_public: false,
-      bio,
+      bio: safeBio,
       whatsapp,
-      provincia_id: province,
-      canton_id: canton,
+      account_type: accountType,
+      business_name: businessName,
       years_experience: yearsExperience ? parseInt(yearsExperience, 10) : null,
       hourly_rate: hourlyRate ? parseInt(hourlyRate, 10) : null,
       service_type: serviceType ?? "mobile",
       address: address ?? null,
       slug,
+      ...(province ? { provincia_id: province } : {}),
+      ...(canton ? { canton_id: canton } : {}),
       ...(lat != null ? { lat: Number(lat) } : {}),
       ...(lng != null ? { lng: Number(lng) } : {}),
     });

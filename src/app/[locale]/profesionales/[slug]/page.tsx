@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { StarRating } from "@/components/ui/star-rating";
 import { getInitials, getWhatsAppLink } from "@/lib/utils";
 import { formatPricingTier } from "@/lib/pricing";
+import { languageLabel } from "@/lib/data/languages";
 import { ReviewSection } from "@/components/professionals/review-section";
 import { ReportProfileModal } from "@/components/professionals/report-profile-modal";
 import { createClient } from "@/lib/supabase/client";
@@ -525,6 +526,19 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                           </div>
                         ) : null}
                       </div>
+
+                      {professional.languages && professional.languages.length > 0 && (
+                        <div>
+                          <h2 className="text-lg font-semibold text-[#111827] mb-3">Idiomas</h2>
+                          <div className="flex flex-wrap gap-2">
+                            {professional.languages.map((l) => (
+                              <span key={l} className="inline-flex items-center rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium px-3 py-1.5">
+                                {languageLabel(l)}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
 

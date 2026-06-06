@@ -3,14 +3,17 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { createClient } from "@/lib/supabase/client";
-import { Camera, Check, X, Plus } from "lucide-react";
+import { Camera, Check, X, Plus, User, Building2 } from "lucide-react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { PROVINCES, getCantonsByProvince } from "@/lib/data/cr-geography";
 import { CategorySearch } from "@/components/ui/category-search";
 import { getCategoryLabel } from "@/lib/data/categories";
+import { LANGUAGES } from "@/lib/data/languages";
+import { CONTACT_PREFERENCES } from "@/lib/constants";
 import { PRICING_TYPES, type PricingTier, type PricingType } from "@/lib/pricing";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -42,6 +45,9 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
   const [provinceId, setProvinceId] = useState<string>(initial.provincia_id ?? "");
   const [cantonId, setCantonId] = useState<string>(initial.canton_id ?? "");
   const [address, setAddress] = useState<string>(initial.address ?? "");
+  const [accountType, setAccountType] = useState<"individual" | "empresa">(initial.account_type === "empresa" ? "empresa" : "individual");
+  const [languages, setLanguages] = useState<string[]>(Array.isArray(initial.languages) ? initial.languages : []);
+  const [contactPreference, setContactPreference] = useState<string>(initial.contact_preference ?? "ambas");
   const [avatarPreview, setAvatarPreview] = useState<string | null>(
     initial.profiles?.avatar_url ?? null
   );
@@ -100,6 +106,15 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
     }
   }
 
+  async function handlePhotoRemove() {
+    setError(null);
+    setAvatarPreview(null);
+    const supabase = createClient();
+    await supabase.from("profiles").update({ avatar_url: null }).eq("id", profileId);
+    await supabase.auth.updateUser({ data: { avatar_url: null } });
+    onSaved?.();
+  }
+
   async function handleSave() {
     setSaving(true);
     setError(null);
@@ -121,6 +136,10 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
           pricing: cleanPricing,
           professions,
           years_experience: yearsExp ? Number(yearsExp) : null,
+          account_type: accountType,
+          business_name: accountType === "empresa" ? (fullName || null) : null,
+          languages,
+          contact_preference: contactPreference,
           ...(professions[0] ? { category_id: professions[0] } : {}),
           ...(provinceId ? { provincia_id: provinceId } : {}),
           ...(cantonId ? { canton_id: cantonId } : {}),
@@ -130,7 +149,8 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
 
       if (proError) throw proError;
 
-      // Photo is auto-saved on selection; here we only persist the name.
+      // Photo is auto-saved on selection; here we persist the display name.
+      // For businesses the displayed name IS the business name.
       if (fullName) {
         await supabase.from("profiles").update({ full_name: fullName }).eq("id", profileId);
       }
@@ -153,12 +173,9 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         </div>
       )}
 
-      {/* Photo */}
+      {/* Photo — explicit buttons, no hover-to-change */}
       <div className="flex items-center gap-4">
-        <div
-          className="relative h-20 w-20 rounded-full cursor-pointer group shrink-0"
-          onClick={() => photoInputRef.current?.click()}
-        >
+        <div className="relative h-20 w-20 rounded-full shrink-0">
           {avatarPreview ? (
             <img
               src={avatarPreview}
@@ -170,20 +187,28 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
               <Camera className="h-7 w-7 text-[#009FD9]" />
             </div>
           )}
-          <div className="absolute inset-0 rounded-full bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-            <Camera className="h-4 w-4 text-white" />
-          </div>
           {photoUploading && (
             <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center">
               <span className="h-5 w-5 rounded-full border-2 border-white/40 border-t-white animate-spin" />
             </div>
           )}
         </div>
-        <div>
+        <div className="flex flex-col gap-2">
           <p className="text-sm font-medium text-[#374151]">Foto de perfil</p>
-          <p className="text-xs text-[#9ca3af]">
-            {photoUploading ? "Subiendo foto…" : "Se guarda al instante · JPG, PNG o WebP · máx 5 MB"}
-          </p>
+          {avatarPreview ? (
+            <div className="flex items-center gap-2">
+              <Button type="button" variant="outline" size="sm" onClick={() => photoInputRef.current?.click()}>
+                <Camera className="h-4 w-4" /> Cambiar foto
+              </Button>
+              <Button type="button" variant="ghost" size="sm" onClick={handlePhotoRemove} className="text-red-500 hover:text-red-600">
+                <X className="h-4 w-4" /> Eliminar
+              </Button>
+            </div>
+          ) : (
+            <Button type="button" variant="outline" size="sm" onClick={() => photoInputRef.current?.click()}>
+              <Camera className="h-4 w-4" /> Agregar foto
+            </Button>
+          )}
         </div>
         <input
           ref={photoInputRef}
@@ -194,12 +219,32 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         />
       </div>
 
-      {/* Name */}
+      {/* Account type — persona física or empresa */}
+      <div>
+        <label className="text-sm font-medium text-[#374151] block mb-1.5">¿Te registrás como?</label>
+        <div className="grid grid-cols-2 gap-2">
+          {([
+            { v: "individual", icon: <User className="h-4 w-4" />, label: "Persona física" },
+            { v: "empresa", icon: <Building2 className="h-4 w-4" />, label: "Empresa o negocio" },
+          ] as const).map((opt) => (
+            <button
+              key={opt.v}
+              type="button"
+              onClick={() => { setAccountType(opt.v); setSaved(false); }}
+              className={`flex items-center gap-2 p-3 rounded-xl border-2 text-sm font-medium transition-all ${accountType === opt.v ? "border-[#009FD9] bg-[#EBF5FB] text-[#0089bb]" : "border-[#e5e7eb] text-[#374151] hover:border-[#009FD9]/40"}`}
+            >
+              {opt.icon} {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Name (or business name) */}
       <Input
-        label="Nombre completo"
+        label={accountType === "empresa" ? "Nombre comercial" : "Nombre completo"}
         value={fullName}
         onChange={(e) => { setFullName(e.target.value); setSaved(false); }}
-        placeholder="Juan Pérez González"
+        placeholder={accountType === "empresa" ? "Ej: Servicios Eléctricos GAM" : "Juan Pérez González"}
       />
 
       {/* Description */}
@@ -239,11 +284,10 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
       </div>
 
       {/* WhatsApp */}
-      <Input
-        label="WhatsApp (sin +506)"
-        placeholder="88001122"
+      <PhoneInput
+        label="WhatsApp"
         value={whatsapp}
-        onChange={(e) => { setWhatsapp(e.target.value); setSaved(false); }}
+        onChange={(digits) => { setWhatsapp(digits); setSaved(false); }}
       />
 
       {/* Location */}
@@ -334,6 +378,50 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         onChange={(e) => { setYearsExp(e.target.value); setSaved(false); }}
         className="max-w-[200px]"
       />
+
+      {/* Languages */}
+      <div>
+        <label className="text-sm font-medium text-[#374151] block mb-1.5">Idiomas que hablás</label>
+        <div className="flex flex-wrap gap-2">
+          {LANGUAGES.map((lang) => {
+            const active = languages.includes(lang.id);
+            return (
+              <button
+                key={lang.id}
+                type="button"
+                onClick={() => {
+                  setLanguages((prev) => (active ? prev.filter((l) => l !== lang.id) : [...prev, lang.id]));
+                  setSaved(false);
+                }}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${active ? "border-[#009FD9] bg-[#EBF5FB] text-[#0089bb]" : "border-[#e5e7eb] text-[#374151] hover:border-[#009FD9]/40"}`}
+              >
+                {lang.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Contact preference */}
+      <div>
+        <label className="text-sm font-medium text-[#374151] block mb-1.5">¿Cómo querés que te contacten?</label>
+        <div className="flex flex-col gap-2">
+          {CONTACT_PREFERENCES.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => { setContactPreference(opt.value); setSaved(false); }}
+              className={`flex items-center justify-between gap-2 p-3 rounded-xl border-2 text-left transition-all ${contactPreference === opt.value ? "border-[#009FD9] bg-[#EBF5FB]" : "border-[#e5e7eb] hover:border-[#009FD9]/40"}`}
+            >
+              <div>
+                <p className="text-sm font-medium text-[#111827]">{opt.label}</p>
+                <p className="text-xs text-[#9ca3af]">{opt.hint}</p>
+              </div>
+              <span className={`h-4 w-4 rounded-full border-2 shrink-0 ${contactPreference === opt.value ? "border-[#009FD9] bg-[#009FD9]" : "border-[#d1d5db]"}`} />
+            </button>
+          ))}
+        </div>
+      </div>
 
       <div className="flex items-center gap-3">
         <Button onClick={handleSave} loading={saving}>

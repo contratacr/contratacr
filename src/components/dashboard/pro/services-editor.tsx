@@ -7,12 +7,15 @@ import { Input } from "@/components/ui/input";
 import { CategorySearch } from "@/components/ui/category-search";
 import { createClient } from "@/lib/supabase/client";
 import { getCategoryLabel } from "@/lib/data/categories";
+import { PRICING_TYPES, formatServicePrice, type PricingType } from "@/lib/pricing";
 
 export type ProService = {
   id: string;
   name: string;
   description?: string;
-  price?: string;
+  price?: string;          // display string (kept in sync from amount+type)
+  priceAmount?: number;    // colones (optional)
+  priceType?: PricingType; // por_hora | por_proyecto | …
   // Which profession this service belongs to (a category id). Defaults to the
   // primary profession for legacy services created before multi-profession.
   category?: string;
@@ -33,10 +36,11 @@ function genId() {
 interface ServiceFormState {
   name: string;
   description: string;
-  price: string;
+  priceType: PricingType;
+  priceAmount: string;
 }
 
-const EMPTY_FORM: ServiceFormState = { name: "", description: "", price: "" };
+const EMPTY_FORM: ServiceFormState = { name: "", description: "", priceType: "por_hora", priceAmount: "" };
 
 export function ServicesEditor({
   professionalId,
@@ -131,7 +135,12 @@ export function ServicesEditor({
   function openEdit(svc: ProService) {
     setEditingId(svc.id);
     setFormCategory(effectiveCategory(svc));
-    setForm({ name: svc.name, description: svc.description ?? "", price: svc.price ?? "" });
+    setForm({
+      name: svc.name,
+      description: svc.description ?? "",
+      priceType: svc.priceType ?? "por_hora",
+      priceAmount: svc.priceAmount != null ? String(svc.priceAmount) : "",
+    });
     setFormError(null);
   }
 
@@ -151,6 +160,10 @@ export function ServicesEditor({
     }
     setFormError(null);
 
+    const amount = form.priceAmount.trim() ? Number(form.priceAmount.replace(/\D/g, "")) : undefined;
+    const priceType = form.priceType;
+    const priceDisplay = formatServicePrice(amount, priceType) ?? undefined;
+
     let next: ProService[];
     if (editingId) {
       next = services.map((s) =>
@@ -159,7 +172,9 @@ export function ServicesEditor({
               ...s,
               name: form.name.trim(),
               description: form.description.trim() || undefined,
-              price: form.price.trim() || undefined,
+              priceAmount: amount,
+              priceType,
+              price: priceDisplay,
               category: formCategory || s.category,
             }
           : s
@@ -171,7 +186,9 @@ export function ServicesEditor({
           id: genId(),
           name: form.name.trim(),
           description: form.description.trim() || undefined,
-          price: form.price.trim() || undefined,
+          priceAmount: amount,
+          priceType,
+          price: priceDisplay,
           category: formCategory || primary,
         },
       ];
@@ -326,12 +343,38 @@ export function ServicesEditor({
                     onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                   />
                 </div>
-                <Input
-                  label={<>Precio <span className="text-[#9ca3af] font-normal">(opcional)</span></>}
-                  placeholder="Ej: ₡15,000/hora  o  Desde ₡25,000"
-                  value={form.price}
-                  onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
-                />
+                <div>
+                  <label className="text-sm font-medium text-[#374151] block mb-1.5">
+                    Precio <span className="text-[#9ca3af] font-normal">(opcional)</span>
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={form.priceType}
+                      onChange={(e) => setForm((f) => ({ ...f, priceType: e.target.value as PricingType }))}
+                      className="h-10 px-3 rounded-xl border border-[#e5e7eb] bg-white text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+                    >
+                      {PRICING_TYPES.map((pt) => (
+                        <option key={pt.value} value={pt.value}>{pt.label}</option>
+                      ))}
+                    </select>
+                    {form.priceType !== "a_convenir" && (
+                      <div className="relative flex-1">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[#9ca3af]">₡</span>
+                        <input
+                          type="number"
+                          inputMode="numeric"
+                          placeholder="15000"
+                          value={form.priceAmount}
+                          onChange={(e) => setForm((f) => ({ ...f, priceAmount: e.target.value }))}
+                          className="w-full h-10 pl-7 pr-3 rounded-xl border border-[#e5e7eb] bg-white text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+                        />
+                      </div>
+                    )}
+                  </div>
+                  {form.priceType !== "a_convenir" && form.priceAmount && (
+                    <p className="text-xs text-emerald-600 mt-1">Se mostrará como: {formatServicePrice(Number(form.priceAmount.replace(/\D/g, "")), form.priceType)}</p>
+                  )}
+                </div>
                 <div className="flex gap-2 pt-1">
                   <Button onClick={handleFormSave} loading={saving} size="sm">
                     {saving ? "Guardando…" : editingId ? "Guardar cambios" : "Agregar servicio"}
