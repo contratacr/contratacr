@@ -101,9 +101,10 @@ interface CardWrapperProps {
 
 export function SaveableCard({ pro, children }: CardWrapperProps) {
   return (
-    <div className="relative group/card">
+    <div className="relative">
       {children}
-      <div className="absolute top-3 right-3 z-10 opacity-0 group-hover/card:opacity-100 transition-opacity duration-200">
+      {/* Always-visible favorites button, pinned to the card's top-right corner. */}
+      <div className="absolute top-3 right-3 z-20">
         <SaveButton pro={pro} />
       </div>
     </div>

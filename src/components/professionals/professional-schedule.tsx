@@ -16,6 +16,7 @@ interface ProfessionalScheduleProps {
   professional: ProfessionalCardData;
   categoryName: string;
   availabilityPublic: boolean;
+  contactPreference?: "solo_whatsapp" | "solo_citas" | "ambas";
   slots: ScheduleSlot[];
 }
 
@@ -49,12 +50,18 @@ function telHref(whatsapp: string): string {
  *    "Ver horario completo" link to the full profile.
  *  - Private: lock state with "Contáctanos por Whatsapp" + "por llamada".
  */
-export function ProfessionalSchedule({ professional, categoryName, availabilityPublic, slots }: ProfessionalScheduleProps) {
+export function ProfessionalSchedule({ professional, categoryName, availabilityPublic, contactPreference = "ambas", slots }: ProfessionalScheduleProps) {
   const { user } = useAuth();
   const [showRegistration, setShowRegistration] = useState(false);
   const [showBooking, setShowBooking] = useState(false);
   const [preset, setPreset] = useState<ScheduleSlot | null>(null);
   const [offset, setOffset] = useState(0);
+
+  // What the professional accepts. Booking needs public availability AND a
+  // preference that isn't WhatsApp-only; WhatsApp shows unless they chose
+  // appointments-only.
+  const canBook = availabilityPublic && contactPreference !== "solo_whatsapp";
+  const canWhatsApp = contactPreference !== "solo_citas";
 
   // Rolling window of upcoming days, with each day's published time slots.
   const days = useMemo(() => {
@@ -80,8 +87,34 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     else setShowRegistration(true);
   }
 
-  // ── Private availability ──────────────────────────────────────────────
-  if (!availabilityPublic) {
+  function openBooking() {
+    setPreset(null);
+    if (user) setShowBooking(true);
+    else setShowRegistration(true);
+  }
+
+  // Shared booking modals — rendered in every branch that can book.
+  const bookingModals = (
+    <>
+      <ClientRegistrationModal
+        open={showRegistration}
+        onClose={() => setShowRegistration(false)}
+        onSuccess={() => { setShowRegistration(false); setShowBooking(true); }}
+        professionalName={professional.fullName}
+      />
+      <BookingModal
+        professional={professional}
+        categoryName={categoryName}
+        open={showBooking}
+        onClose={() => setShowBooking(false)}
+        initialDate={preset?.date}
+        initialTime={preset?.time}
+      />
+    </>
+  );
+
+  // ── Contact-only (private availability OR WhatsApp-only preference) ────
+  if (!canBook) {
     return (
       <div className="flex flex-col gap-2.5">
         <div className="flex items-start gap-2 text-[#6b7280]">
@@ -89,7 +122,9 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
             <Lock className="h-3 w-3 text-[#dc2626]" />
           </span>
           <p className="text-xs leading-snug">
-            La disponibilidad de este profesional no es pública. Contáctanos y conoce sus horarios.
+            {availabilityPublic
+              ? "Este profesional atiende directamente por WhatsApp. Contáctalo para coordinar."
+              : "La disponibilidad de este profesional no es pública. Contáctanos y conoce sus horarios."}
           </p>
         </div>
         <a
@@ -139,7 +174,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
               {day.times.length === 0 ? (
                 <p className="text-center text-[11px] text-[#9ca3af] py-1">No disponible</p>
               ) : (
-                day.times.slice(0, 4).map((time) => (
+                day.times.slice(0, 3).map((time) => (
                   <button
                     key={time}
                     onClick={(e) => { e.stopPropagation(); pick({ date: day.key, time }); }}
@@ -167,25 +202,35 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       <Link
         href={`/profesionales/${professional.slug}`}
         onClick={(e) => e.stopPropagation()}
-        className="block text-center text-sm font-semibold text-[#009FD9] bg-[#EBF5FB] hover:bg-[#d6ecf7] rounded-lg py-2.5 transition-colors"
+        className="block text-center text-xs font-medium text-[#009FD9] hover:underline"
       >
         Ver horario completo
       </Link>
 
-      <ClientRegistrationModal
-        open={showRegistration}
-        onClose={() => setShowRegistration(false)}
-        onSuccess={() => { setShowRegistration(false); setShowBooking(true); }}
-        professionalName={professional.fullName}
-      />
-      <BookingModal
-        professional={professional}
-        categoryName={categoryName}
-        open={showBooking}
-        onClose={() => setShowBooking(false)}
-        initialDate={preset?.date}
-        initialTime={preset?.time}
-      />
+      {/* Always-visible primary CTA */}
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); openBooking(); }}
+        className="w-full bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-semibold py-2.5 rounded-lg transition-colors"
+      >
+        Solicitar servicio
+      </button>
+
+      {/* WhatsApp shown too when the pro accepts both channels */}
+      {canWhatsApp && (
+        <a
+          href={getWhatsAppLink(professional.whatsapp, `Hola ${professional.fullName.split(" ")[0]}, vi tu perfil en ContrataCR y me gustaría coordinar un servicio.`)}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="inline-flex items-center justify-center gap-2 border border-[#25D366] text-[#1ebe5d] hover:bg-[#25D366]/10 text-sm font-semibold py-2.5 rounded-lg transition-colors"
+        >
+          <WhatsAppIcon className="h-4 w-4" />
+          WhatsApp
+        </a>
+      )}
+
+      {bookingModals}
     </div>
   );
 }

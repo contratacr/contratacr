@@ -168,7 +168,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                   <div className="flex flex-col gap-4">
                     {await Promise.all(results.map((pro) => (
                       <SaveableCard key={pro.id} pro={pro}>
-                        <ProfessionalCard professional={pro} slots={slotsByPro[pro.id] ?? []} />
+                        <ProfessionalCard professional={pro} slots={slotsByPro[pro.id] ?? []} activeCategory={activeCategoryId} />
                       </SaveableCard>
                     )))}
                   </div>

@@ -30,6 +30,8 @@ export type ProfessionalCardData = {
   isFeatured: boolean;
   isAvailable: boolean;
   availabilityPublic?: boolean;
+  contactPreference?: "solo_whatsapp" | "solo_citas" | "ambas";
+  languages?: string[];
   lat?: number | null;
   lng?: number | null;
   serviceType?: string | null;
@@ -39,17 +41,24 @@ interface ProfessionalCardProps {
   professional: ProfessionalCardData;
   className?: string;
   slots?: ScheduleSlot[];
+  /** Active category filter from the search query — narrows the badges shown. */
+  activeCategory?: string;
 }
 
-export async function ProfessionalCard({ professional, className, slots = [] }: ProfessionalCardProps) {
+export async function ProfessionalCard({ professional, className, slots = [], activeCategory }: ProfessionalCardProps) {
   const tCat = await getTranslations("categories");
   const tCard = await getTranslations("card");
   const isPrivate = professional.availabilityPublic === false;
   const categoryName = tCat(professional.categoryId);
-  const professionList = (professional.professions && professional.professions.length > 0
+  const allProfessions = (professional.professions && professional.professions.length > 0
     ? professional.professions
     : [professional.categoryId]
-  ).filter(Boolean).slice(0, 3);
+  ).filter(Boolean);
+  // When the user searched a specific category, show only that matching badge.
+  const professionList =
+    activeCategory && allProfessions.includes(activeCategory)
+      ? [activeCategory]
+      : allProfessions.slice(0, 3);
   const priceLabel = primaryPricingLabel(professional.pricing, professional.hourlyRate);
 
   return (
@@ -93,18 +102,23 @@ export async function ProfessionalCard({ professional, className, slots = [] }: 
 
                 <StarRating rating={professional.ratingAvg} showValue reviewCount={professional.reviewCount} size="sm" className="mt-2" />
 
-                <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                  <span className="inline-flex items-center gap-1 rounded-md bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-medium text-[#374151]">
-                    <MapPin className="h-3 w-3 text-[#009FD9]" />
-                    {professional.provinceName}
-                  </span>
-                  {professional.cantonName && (
-                    <span className="inline-flex items-center gap-1 rounded-md bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-medium text-[#374151]">
-                      <Building2 className="h-3 w-3 text-[#9ca3af]" />
-                      {professional.cantonName}
-                    </span>
-                  )}
-                </div>
+                {/* Location — province + canton when present; nothing (no empty pin) otherwise */}
+                {(professional.provinceName || professional.cantonName) && (
+                  <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                    {professional.provinceName && (
+                      <span className="inline-flex items-center gap-1 rounded-md bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-medium text-[#374151]">
+                        <MapPin className="h-3 w-3 text-[#009FD9]" />
+                        {professional.provinceName}
+                      </span>
+                    )}
+                    {professional.cantonName && (
+                      <span className="inline-flex items-center gap-1 rounded-md bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-medium text-[#374151]">
+                        <Building2 className="h-3 w-3 text-[#9ca3af]" />
+                        {professional.cantonName}
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -113,12 +127,13 @@ export async function ProfessionalCard({ professional, className, slots = [] }: 
             )}
           </div>
 
-          {/* ── Right: availability panel ───────────────────────────── */}
-          <div className="md:w-[280px] md:shrink-0 md:border-l md:border-[#f3f4f6] md:pl-5 pt-4 md:pt-0 border-t border-[#f3f4f6] md:border-t-0">
+          {/* ── Right: availability panel (md:pt-7 clears the corner favorites button) ── */}
+          <div className="md:w-[280px] md:shrink-0 md:border-l md:border-[#f3f4f6] md:pl-5 pt-4 md:pt-7 border-t border-[#f3f4f6] md:border-t-0">
             <ProfessionalSchedule
               professional={professional}
               categoryName={categoryName}
               availabilityPublic={!isPrivate}
+              contactPreference={professional.contactPreference ?? "ambas"}
               slots={slots}
             />
           </div>
