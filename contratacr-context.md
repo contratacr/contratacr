@@ -560,7 +560,9 @@ of the app's partial i18n.
 
 **/buscar (HuliHealth layout)**
 - `SearchResultsLayout`: 55% results / 45% sticky map on desktop; mobile List/Map toggle.
-- Cards: photo, name, multiple category badges, price-by-type, **next available slot chips** (open booking pre-selected) or **"Solo por WhatsApp"** when private, "Ver horario completo" link, location, verification badge.
+- Cards (`professional-card.tsx`) are a **two-column HuliHealth replica**: left = avatar + name + verified check + multiple category badges + price-by-type (top-right) + star rating + province/cantón pills + bio. Right (≤280px, divided by a border; stacks below on mobile) = the **availability panel** (`professional-schedule.tsx`):
+  - **Public**: a 3-day column carousel (`‹ Jue 18 Jun | Vie 19 Jun | Sáb 20 Jun ›`) with prev/next arrows paging ±3 days over a 21-day window; each column shows that day's time chips (open booking pre-selected) or "No disponible"; "Ver horario completo" button → full profile.
+  - **Private**: red lock + "La disponibilidad de este profesional no es pública…" + green **"Contáctanos por Whatsapp"** + outline **"Contáctanos por llamada"** (`tel:`).
 - Map **re-renders markers on every filter/category change** (clusterer `clearMarkers`/`addMarkers`) — no full reload; greedy wheel-zoom + fullscreen control.
 
 **Availability**
