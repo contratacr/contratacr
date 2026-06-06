@@ -1,6 +1,6 @@
 # ContrataCR.com — Project Context
 
-_Last updated: 2026-06-06 (sprint 14/15/16 — see "Sprint 14-16" section below: multi-profession + multi-category, pricing tiers, HuliHealth /buscar split + inline schedules, real-time email/cédula checks, availability auto public/private, project→pro notifications, .ics export, emoji blocking, brands marquee, footer/social/support, OAuth pro cédula+name, sign-out fix). Earlier: sprint 13 — date-based availability + public/private toggle, search map clustered pins, verified-only reviews, booking notifications; sprint 12 — OAuth pro registration, category FK migration 013)_
+_Last updated: 2026-06-06 (sprint 17 — see "Sprint 17" section: client OTP, standardized PhoneInput, booking phone capture, contact_preference, languages, account_type/business_name, per-service pricing, reverse-geocode province/canton, completion CTA, footer cleanup; run migration 019. Earlier sprint 14/15/16 — see "Sprint 14-16" section below: multi-profession + multi-category, pricing tiers, HuliHealth /buscar split + inline schedules, real-time email/cédula checks, availability auto public/private, project→pro notifications, .ics export, emoji blocking, brands marquee, footer/social/support, OAuth pro cédula+name, sign-out fix). Earlier: sprint 13 — date-based availability + public/private toggle, search map clustered pins, verified-only reviews, booking notifications; sprint 12 — OAuth pro registration, category FK migration 013)_
 
 ---
 
@@ -578,6 +578,48 @@ of the app's partial i18n.
 - OTP window shows only the logo + code input. Homepage province/cantón pills link to `/buscar?provincia=<id>[&canton=<id>]` and auto-populate filters. All WhatsApp actions use the official WhatsApp SVG (`components/icons/whatsapp-icon.tsx`).
 
 **Known partial:** map pin → card highlight sync (task 8) not implemented; pin click opens the InfoWindow popup instead.
+
+## Sprint 17 (2026-06-06) — 20-fix batch #2
+
+**Run this migration in Supabase SQL Editor:**
+```
+019_pro_contact_languages_account.sql  -- professionals.contact_preference, languages text[], account_type, business_name
+```
+
+**Supabase Dashboard config (not code) — required for task 16 (Google OAuth shows Supabase URL):**
+- Authentication → URL Configuration → **Site URL** = `https://contratacr.com`; add `https://contratacr.com/auth/callback` (and `https://contratacr.com/**`) to **Redirect URLs**.
+- Google Cloud Console → OAuth client → **Authorized redirect URIs** keep the Supabase `…/auth/v1/callback` (Supabase needs it) but the app's Site URL above makes the final redirect land on contratacr.com instead of the Supabase domain.
+- Task 1 also depends on **"Confirm email" being ENABLED** in Authentication → Providers → Email (otherwise signUp returns a session immediately and the OTP step is skipped).
+
+**Auth / registration**
+- **Client registration page now forces email OTP** (`/registro/cliente` → `OtpVerification` before success). OAuth users skip it (already verified). The quick-login modal already had OTP.
+- New **`PhoneInput`** (`components/ui/phone-input.tsx`): 🇨🇷 +506 prefix + `XXXX-XXXX` formatting, country selector for international. Used in pro/client registration, profile editor, and booking. `formatWhatsApp` now leaves >8-digit (international) numbers untouched. Removed all "Ej: 8888-8888 / sin +506" hints.
+- **Province & cantón optional** in pro registration (canton still enables only after province; both labelled "(opcional)"). Register API no longer requires bio/province/canton.
+- **Service description (bio) requirement removed** from pro registration (bio field deleted; services are category + name + price).
+- **Account type** toggle (Persona física / Empresa) in registration + profile editor; `business_name` stored and used as the display name for businesses.
+- **Dropping a map pin reverse-geocodes** to auto-fill province + canton (`matchProvinceCanton` in cr-geography; editable). Province/cantón selects made controlled.
+
+**Booking**
+- **Phone captured during booking** (task 18): guests get a required WhatsApp field in the contact step; logged-in clients without a phone get a phone-only "complete" step ("Para coordinar tu cita…"), saved to their profile (never asked again). Removed the "Serás redirigido a WhatsApp…" note.
+
+**Search cards**
+- Location pills hidden entirely when there's no province/cantón (no empty pin).
+- Cards respect **`contact_preference`**: `solo_whatsapp` → contact block only; `solo_citas` → booking only; `ambas` → booking + WhatsApp.
+- Favorites button pinned **top-right, always visible** (doesn't overlap the date arrows). Max **3 time slots** per day. Always-visible **"Solicitar servicio"** CTA.
+- Category badges filtered to the **active search category**.
+
+**Professional profile / dashboard**
+- **Languages** ("Idiomas que hablás") multi-select in the editor; shown as tags on the public profile.
+- **Contact preference** setting ("¿Cómo querés que te contacten?").
+- **Per-service pricing** (task 15): each service has a price type (por hora/proyecto/consulta/día/paquete/a convenir) + amount → displayed "₡15,000/hora".
+- Profile photo (registration + dashboard) uses **explicit buttons** (Agregar / Cambiar / Eliminar) — no hover-to-change; format hint removed from the page.
+
+**Service completion + reviews (task 7)**
+- "Marcar como completado" appears for the pro once the booking date has passed (and for in_progress). Completing → `completed` → client `review_request` notification. Reviews remain gated on a completed booking (existing rule).
+
+**Misc**
+- Client project/booking cards: WhatsApp SVG + **"Contactar"** (was "WA"); "Aceptada" badge restyled.
+- Footer: removed the support WhatsApp button and the `soporte@contratacr.com` email (socials only).
 
 ## Next Priorities
 
