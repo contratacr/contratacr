@@ -66,7 +66,8 @@ function UserMenu() {
     setOpen(false);
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.push("/");
+    // Hard reload so the cleared session is reflected everywhere (no RSC crash).
+    window.location.assign("/es");
   }
 
   const displayName = (user.user_metadata?.full_name ?? user.user_metadata?.name ?? "") as string;
@@ -117,7 +118,6 @@ export function Navbar() {
   const [open, setOpen] = useState(false);
   const t = useTranslations("nav");
   const { user } = useAuth();
-  const router = useRouter();
 
   const role = user?.user_metadata?.role as string | undefined;
   const dashboardHref = role === "professional" ? "/dashboard/profesional" : "/dashboard/cliente";
@@ -126,7 +126,7 @@ export function Navbar() {
     setOpen(false);
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.push("/");
+    window.location.assign("/es");
   }
 
   return (

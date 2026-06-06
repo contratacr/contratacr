@@ -1,91 +1,25 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 
-/* ─── Costa Rican brands ─────────────────────────────────────────────
-   Each entry can have an optional logoUrl (Clearbit or direct CDN).
-   If the image fails or is absent → falls back to styled text.
-   "featured" brands render slightly larger for premium placement.
-──────────────────────────────────────────────────────────────────────*/
-interface Brand {
-  name: string;
-  logoUrl?: string;
-  featured?: boolean;
-}
-
-const BRANDS: Brand[] = [
-  { name: "Dos Pinos",        logoUrl: "https://logo.clearbit.com/dospinos.com",       featured: true },
-  { name: "Banco Nacional",   logoUrl: "https://logo.clearbit.com/bncr.fi.cr" },
-  { name: "EPA",              logoUrl: "https://logo.clearbit.com/epa.cr",             featured: true },
-  { name: "Gollo",            logoUrl: "https://logo.clearbit.com/gollo.com" },
-  { name: "Auto Mercado",     logoUrl: "https://logo.clearbit.com/automercado.cr",     featured: true },
-  { name: "PriceSmart",       logoUrl: "https://logo.clearbit.com/pricesmart.com" },
-  { name: "Cemaco",           logoUrl: "https://logo.clearbit.com/cemaco.com" },
-  { name: "Teletica",         logoUrl: "https://logo.clearbit.com/teletica.com" },
-  { name: "Grupo Monge",      logoUrl: "https://logo.clearbit.com/grupomonge.com",     featured: true },
-  { name: "El Colono",        logoUrl: "https://logo.clearbit.com/elcolono.com" },
-  { name: "Claro CR",         logoUrl: "https://logo.clearbit.com/claro.cr" },
-  { name: "Movistar CR",      logoUrl: "https://logo.clearbit.com/movistar.cr" },
-  { name: "Farmacia Fischel", logoUrl: "https://logo.clearbit.com/fischel.com",        featured: true },
-  { name: "BCR",              logoUrl: "https://logo.clearbit.com/bancobcr.com" },
-  { name: "La Nacion",        logoUrl: "https://logo.clearbit.com/nacion.com" },
-  { name: "Repretel",         logoUrl: "https://logo.clearbit.com/repretel.com" },
+// Famous Costa Rican brands — rendered as clean styled TEXT (no logos/images),
+// which avoids broken-image "question marks" on mobile.
+const BRANDS = [
+  "Dos Pinos",
+  "Florida Ice & Farm",
+  "Grupo Britt",
+  "Palí",
+  "Walmart CR",
+  "Automercado",
+  "Claro CR",
+  "Kolbi",
+  "Movistar CR",
+  "BAC Credomatic",
+  "Banco Nacional",
+  "BCR",
 ];
 
 const DOUBLED = [...BRANDS, ...BRANDS];
-
-function BrandItem({ brand }: { brand: Brand }) {
-  const [imgFailed, setImgFailed] = useState(false);
-  const showLogo = brand.logoUrl && !imgFailed;
-
-  return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "0 40px",
-        height: 72,
-        flexShrink: 0,
-        opacity: 0.45,
-        transition: "opacity 0.25s ease",
-        cursor: "default",
-      }}
-      onMouseEnter={e => (e.currentTarget.style.opacity = "1")}
-      onMouseLeave={e => (e.currentTarget.style.opacity = "0.45")}
-    >
-      {showLogo ? (
-        <img
-          src={brand.logoUrl}
-          alt={brand.name}
-          onError={() => setImgFailed(true)}
-          style={{
-            height: brand.featured ? 36 : 28,
-            width: "auto",
-            maxWidth: 120,
-            objectFit: "contain",
-            filter: "grayscale(100%)",
-            display: "block",
-          }}
-        />
-      ) : (
-        <span
-          style={{
-            fontFamily: "system-ui, -apple-system, sans-serif",
-            fontWeight: 700,
-            fontSize: brand.featured ? 16 : 14,
-            letterSpacing: "0.04em",
-            textTransform: "uppercase",
-            color: "#374151",
-            whiteSpace: "nowrap",
-          }}
-        >
-          {brand.name}
-        </span>
-      )}
-    </div>
-  );
-}
 
 export function MarqueeStrip() {
   const [paused, setPaused] = useState(false);
@@ -100,7 +34,6 @@ export function MarqueeStrip() {
         paddingBottom: 32,
       }}
     >
-      {/* Label */}
       <p
         style={{
           textAlign: "center",
@@ -113,10 +46,9 @@ export function MarqueeStrip() {
           fontFamily: "system-ui, -apple-system, sans-serif",
         }}
       >
-        Marcas que confian en ContrataCR
+        Impulsando proyectos en toda Costa Rica.
       </p>
 
-      {/* Masked track */}
       <div
         style={{
           overflow: "hidden",
@@ -136,8 +68,25 @@ export function MarqueeStrip() {
             animationPlayState: paused ? "paused" : "running",
           }}
         >
-          {DOUBLED.map((brand, i) => (
-            <BrandItem key={i} brand={brand} />
+          {DOUBLED.map((name, i) => (
+            <span
+              key={i}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                padding: "0 36px",
+                height: 40,
+                flexShrink: 0,
+                fontWeight: 700,
+                fontSize: 18,
+                letterSpacing: "0.05em",
+                textTransform: "uppercase",
+                color: "#1a2744",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {name}
+            </span>
           ))}
         </div>
       </div>

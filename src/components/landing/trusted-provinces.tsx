@@ -1,13 +1,23 @@
 import { Link } from "@/i18n/navigation";
 import { ArrowRight } from "lucide-react";
+import { PROVINCES } from "@/lib/data/cr-geography";
 
-const PROVINCES = ["San José", "Alajuela", "Cartago", "Heredia", "Guanacaste", "Puntarenas", "Limón"];
-const CANTONS   = ["Desamparados", "Alajuelita", "Escazú", "Santa Ana", "Curridabat", "Liberia", "Pérez Zeledón", "Ciudad Quesada"];
+// A handful of popular cantons (id-based so the search filters auto-populate).
+const POPULAR_CANTONS = [
+  "sj-de", "sj-al", "sj-es", "sj-sa", "sj-cu", "gu-li", "sj-pm", "al-sc",
+];
+
+const cantonLookup = PROVINCES.flatMap((p) =>
+  p.cantons.map((c) => ({ ...c, provinceId: p.id }))
+);
 
 export function TrustedProvinces() {
+  const cantons = POPULAR_CANTONS
+    .map((id) => cantonLookup.find((c) => c.id === id))
+    .filter((c): c is NonNullable<typeof c> => Boolean(c));
+
   return (
     <section className="relative py-20 sm:py-24 overflow-hidden bg-[#EBF5FB]">
-      {/* Decorative white arc — left side */}
       <div
         aria-hidden
         className="pointer-events-none absolute left-0 top-0 bottom-0 w-[40%]"
@@ -22,28 +32,28 @@ export function TrustedProvinces() {
           No te preocupés por encontrar un profesional — cubrimos cada provincia y cantón del país.
         </p>
 
-        {/* Province pills */}
+        {/* Province pills → /buscar?provincia=<id> */}
         <div className="flex flex-wrap justify-center gap-2.5 mb-4">
           {PROVINCES.map((province) => (
             <Link
-              key={province}
-              href={`/buscar?provincia=${encodeURIComponent(province)}`}
+              key={province.id}
+              href={`/buscar?provincia=${province.id}`}
               className="px-5 py-2 rounded-full border border-gray-300 bg-white text-sm font-semibold text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] hover:bg-white transition-all duration-150 shadow-sm"
             >
-              {province}
+              {province.name}
             </Link>
           ))}
         </div>
 
-        {/* Canton pills */}
+        {/* Canton pills → /buscar?provincia=<id>&canton=<id> */}
         <div className="flex flex-wrap justify-center gap-2 mb-8">
-          {CANTONS.map((canton) => (
+          {cantons.map((canton) => (
             <Link
-              key={canton}
-              href={`/buscar?canton=${encodeURIComponent(canton)}`}
+              key={canton.id}
+              href={`/buscar?provincia=${canton.provinceId}&canton=${canton.id}`}
               className="px-3 py-1.5 rounded-full text-xs font-medium text-gray-400 hover:text-[#009FD9] transition-colors"
             >
-              {canton}
+              {canton.name}
             </Link>
           ))}
         </div>

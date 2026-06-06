@@ -102,7 +102,7 @@ export default function ProDashboardPage() {
   async function handleSignOut() {
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.push("/");
+    window.location.assign("/es");
   }
 
   if (authLoading || loading) {

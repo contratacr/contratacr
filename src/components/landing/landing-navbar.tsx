@@ -283,7 +283,7 @@ function LoginModal({ onClose }: { onClose: () => void }) {
             <p className="text-center text-sm text-gray-400">
               {mode === "login" ? (
                 <>¿No tenés cuenta?{" "}
-                  <button onClick={() => { setMode("register"); setError(null); }} className="text-[#009FD9] font-semibold hover:underline">Registrate gratis</button>
+                  <button onClick={() => { onClose(); window.location.assign("/es/registro"); }} className="text-[#009FD9] font-semibold hover:underline">Registrate gratis</button>
                 </>
               ) : (
                 <>¿Ya tenés cuenta?{" "}
