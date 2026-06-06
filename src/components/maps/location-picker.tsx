@@ -9,7 +9,21 @@ export type PickedLocation = {
   lat: number;
   lng: number;
   formattedAddress: string;
+  // Raw Google admin-area names, used to auto-fill province/canton fields.
+  provinceName?: string;
+  cantonName?: string;
 };
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function extractAdmin(components: any[]): { provinceName?: string; cantonName?: string } {
+  if (!Array.isArray(components)) return {};
+  const find = (type: string) =>
+    components.find((c) => Array.isArray(c.types) && c.types.includes(type))?.long_name as string | undefined;
+  return {
+    provinceName: find("administrative_area_level_1"),
+    cantonName: find("administrative_area_level_2"),
+  };
+}
 
 interface LocationPickerProps {
   value: PickedLocation | null;
@@ -64,7 +78,7 @@ export function LocationPicker({ value, onChange, apiKey }: LocationPickerProps)
     if (inputRef.current && maps.places?.Autocomplete) {
       const autocomplete = new maps.places.Autocomplete(inputRef.current, {
         componentRestrictions: { country: "cr" },
-        fields: ["geometry", "formatted_address"],
+        fields: ["geometry", "formatted_address", "address_components"],
       });
       autocomplete.addListener("place_changed", () => {
         const place = autocomplete.getPlace();
@@ -75,7 +89,7 @@ export function LocationPicker({ value, onChange, apiKey }: LocationPickerProps)
           map.setZoom(16);
           const address = place.formatted_address ?? "";
           setAddressInput(address);
-          onChange({ lat: loc.lat(), lng: loc.lng(), formattedAddress: address });
+          onChange({ lat: loc.lat(), lng: loc.lng(), formattedAddress: address, ...extractAdmin(place.address_components) });
         }
       });
       autocompleteRef.current = autocomplete;
@@ -117,12 +131,17 @@ export function LocationPicker({ value, onChange, apiKey }: LocationPickerProps)
     geocoderRef.current.geocode(
       { location: latLng },
       (results: GMaps, status: string) => {
-        const address =
-          status === "OK" && results?.[0]
-            ? results[0].formatted_address
-            : `${latLng.lat().toFixed(6)}, ${latLng.lng().toFixed(6)}`;
+        const ok = status === "OK" && results?.[0];
+        const address = ok
+          ? results[0].formatted_address
+          : `${latLng.lat().toFixed(6)}, ${latLng.lng().toFixed(6)}`;
         setAddressInput(address);
-        onChange({ lat: latLng.lat(), lng: latLng.lng(), formattedAddress: address });
+        onChange({
+          lat: latLng.lat(),
+          lng: latLng.lng(),
+          formattedAddress: address,
+          ...(ok ? extractAdmin(results[0].address_components) : {}),
+        });
       }
     );
   }
@@ -139,7 +158,7 @@ export function LocationPicker({ value, onChange, apiKey }: LocationPickerProps)
           mapInstanceRef.current?.setZoom(15);
           const address = results[0].formatted_address;
           setAddressInput(address);
-          onChange({ lat: loc.lat(), lng: loc.lng(), formattedAddress: address });
+          onChange({ lat: loc.lat(), lng: loc.lng(), formattedAddress: address, ...extractAdmin(results[0].address_components) });
         }
       }
     );

@@ -277,3 +277,42 @@ export function getCantonById(id: string): Canton | undefined {
   }
   return undefined;
 }
+
+function normalizeName(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/provincia de|province|canton de|canton/g, "")
+    .replace(/[^a-z0-9]/g, "")
+    .trim();
+}
+
+/**
+ * Best-effort match of Google reverse-geocode admin-area names to our province
+ * and canton IDs (used to auto-fill the registration fields from a dropped pin).
+ */
+export function matchProvinceCanton(
+  provinceName?: string,
+  cantonName?: string
+): { provinceId?: string; cantonId?: string } {
+  if (!provinceName && !cantonName) return {};
+  const np = provinceName ? normalizeName(provinceName) : "";
+  const nc = cantonName ? normalizeName(cantonName) : "";
+
+  let province = np
+    ? PROVINCES.find((p) => normalizeName(p.name) === np || np.includes(normalizeName(p.name)))
+    : undefined;
+
+  // Some results omit the province; infer it from the canton instead.
+  if (!province && nc) {
+    province = PROVINCES.find((p) => p.cantons.some((c) => normalizeName(c.name) === nc));
+  }
+  if (!province) return {};
+
+  const canton = nc
+    ? province.cantons.find((c) => normalizeName(c.name) === nc || nc.includes(normalizeName(c.name)))
+    : undefined;
+
+  return { provinceId: province.id, cantonId: canton?.id };
+}

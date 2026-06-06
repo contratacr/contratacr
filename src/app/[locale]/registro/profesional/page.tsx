@@ -18,7 +18,7 @@ import { LandingFooter } from "@/components/landing/landing-footer";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { PROVINCES, getCantonsByProvince } from "@/lib/data/cr-geography";
+import { PROVINCES, getCantonsByProvince, matchProvinceCanton } from "@/lib/data/cr-geography";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { OtpVerification } from "@/components/auth/otp-verification";
@@ -1025,8 +1025,22 @@ export default function RegisterProfessionalPage() {
                   </p>
                   <LocationPicker
                     value={pickedLocation}
-                    onChange={setPickedLocation}
+                    onChange={(loc) => {
+                      setPickedLocation(loc);
+                      // Auto-fill province/canton from the dropped pin (still editable).
+                      if (loc) {
+                        const { provinceId, cantonId } = matchProvinceCanton(loc.provinceName, loc.cantonName);
+                        if (provinceId) {
+                          setSelectedProvince(provinceId);
+                          form2.setValue("province", provinceId);
+                          form2.setValue("canton", cantonId ?? "");
+                        }
+                      }
+                    }}
                   />
+                  <p className="text-xs text-[#9ca3af]">
+                    Si marcás tu ubicación, completamos provincia y cantón automáticamente. Podés ajustarlos.
+                  </p>
                 </div>
               )}
 
@@ -1036,6 +1050,7 @@ export default function RegisterProfessionalPage() {
                   {t("province")} <span className="text-[#9ca3af] font-normal">(opcional)</span>
                 </label>
                 <Select
+                  value={form2.watch("province") || undefined}
                   onValueChange={(v) => {
                     setSelectedProvince(v);
                     form2.setValue("province", v);
@@ -1066,6 +1081,7 @@ export default function RegisterProfessionalPage() {
                   {t("canton")} <span className="text-[#9ca3af] font-normal">(opcional)</span>
                 </label>
                 <Select
+                  value={form2.watch("canton") || undefined}
                   disabled={!selectedProvince}
                   onValueChange={(v) => form2.setValue("canton", v)}
                 >

@@ -84,7 +84,11 @@ export function BookingRequests() {
   const upcoming = bookings.filter((b) => ["pending", "confirmed", "in_progress"].includes(b.status));
   const past = bookings.filter((b) => ["completed", "cancelled", "rescheduled"].includes(b.status));
 
+  const todayISO = new Date().toISOString().slice(0, 10);
+
   function BookingCard({ booking }: { booking: Booking }) {
+    // Once the booked date has passed, the pro can mark the service completed.
+    const datePassed = booking.scheduled_date ? booking.scheduled_date <= todayISO : false;
     const dateStr = booking.scheduled_date
       ? (() => {
           const [y, m, d] = booking.scheduled_date.split("-").map(Number);
@@ -144,9 +148,15 @@ export function BookingRequests() {
               )}
               {booking.status === "confirmed" && (
                 <>
-                  <Button size="sm" variant="secondary" onClick={() => updateStatus(booking.id, "in_progress")}>
-                    En progreso
-                  </Button>
+                  {datePassed ? (
+                    <Button size="sm" onClick={() => updateStatus(booking.id, "completed")}>
+                      Marcar como completado
+                    </Button>
+                  ) : (
+                    <Button size="sm" variant="secondary" onClick={() => updateStatus(booking.id, "in_progress")}>
+                      En progreso
+                    </Button>
+                  )}
                   <Button size="sm" variant="outline" onClick={() => updateStatus(booking.id, "cancelled")}>
                     Cancelar
                   </Button>
@@ -154,7 +164,7 @@ export function BookingRequests() {
               )}
               {booking.status === "in_progress" && (
                 <Button size="sm" onClick={() => updateStatus(booking.id, "completed")}>
-                  Completar
+                  Marcar como completado
                 </Button>
               )}
               {booking.client_name && (
