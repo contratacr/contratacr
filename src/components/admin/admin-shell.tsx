@@ -10,7 +10,7 @@ export function AdminShell({ adminName, children }: { adminName: string; childre
   async function signOut() {
     const supabase = createClient();
     await supabase.auth.signOut();
-    window.location.assign("/es/admin/login");
+    window.location.assign("/es/admin");
   }
 
   return (

@@ -2,6 +2,7 @@ import { ShieldCheck, IdCard, FileCheck2, BookOpen, RefreshCw, Search } from "lu
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { Link } from "@/i18n/navigation";
+import { VerificationCta } from "@/components/professionals/verification-cta";
 
 export const metadata = {
   title: "¿Qué es un Proveedor Autorizado? — ContrataCR",
@@ -87,12 +88,7 @@ export default function AuthorizedProvidersPage() {
             >
               <Search className="h-4 w-4" /> Ver Proveedores Autorizados
             </Link>
-            <Link
-              href="/dashboard/profesional?tab=verificacion"
-              className="inline-flex items-center gap-2 rounded-xl border border-[#e5e7eb] bg-white px-5 py-3 text-sm font-bold text-[#374151] hover:border-[#009FD9]"
-            >
-              <ShieldCheck className="h-4 w-4" /> Solicitar mi verificación
-            </Link>
+            <VerificationCta className="inline-flex items-center gap-2 rounded-xl border border-[#e5e7eb] bg-white px-5 py-3 text-sm font-bold text-[#374151] hover:border-[#009FD9]" />
           </div>
         </section>
       </main>

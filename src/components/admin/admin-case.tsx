@@ -23,7 +23,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [rejectOpen, setRejectOpen] = useState(false);
   const [reason, setReason] = useState("");
-  const [tse, setTse] = useState<{ loading: boolean; name?: string; err?: string } | null>(null);
+  const [tseOpened, setTseOpened] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -63,16 +63,13 @@ export function AdminCase({ providerId }: { providerId: string }) {
     }
   }
 
-  async function runTseLookup(cedula: string) {
-    setTse({ loading: true });
-    try {
-      const res = await fetch(`/api/cedula/${cedula}`);
-      const json = await res.json();
-      if (!res.ok) setTse({ loading: false, err: json.error ?? "No encontrado" });
-      else setTse({ loading: false, name: json.fullName });
-    } catch {
-      setTse({ loading: false, err: "El servicio no respondió." });
-    }
+  // Assisted manual check (no scraping): open the official TSE consultation in a
+  // new tab; the admin enters the cédula there and compares the name/ID by hand.
+  const TSE_URL = "https://servicioselectorales.tse.go.cr/chc/consulta_cedula.aspx";
+  function openTse(cedula: string) {
+    navigator.clipboard?.writeText(cedula).catch(() => {});
+    window.open(TSE_URL, "_blank", "noopener,noreferrer");
+    setTseOpened(true);
   }
 
   if (loading) {
@@ -179,27 +176,22 @@ export function AdminCase({ providerId }: { providerId: string }) {
             {idAssist.value && (
               <div className="mt-3">
                 <button
-                  onClick={() => runTseLookup(idAssist.value)}
-                  disabled={tse?.loading}
-                  className="inline-flex items-center gap-1.5 text-xs font-medium rounded-lg border border-[#e5e7eb] px-3 py-1.5 hover:border-[#009FD9] hover:text-[#009FD9] disabled:opacity-60"
+                  onClick={() => openTse(idAssist.value)}
+                  className="inline-flex items-center gap-1.5 text-xs font-medium rounded-lg border border-[#e5e7eb] px-3 py-1.5 hover:border-[#009FD9] hover:text-[#009FD9]"
                 >
-                  {tse?.loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <FileSearch className="h-3.5 w-3.5" />}
-                  Verificar nombre en padrón (TSE)
+                  <FileSearch className="h-3.5 w-3.5" />
+                  Verificar en TSE
                 </button>
-                {tse?.name && (
-                  <div className="mt-2 text-xs">
-                    <p className="text-[#374151]">Padrón: <strong>{tse.name}</strong></p>
-                    <p className="text-[#6b7280]">Registrado: <strong>{profile?.full_name}</strong></p>
-                    <p className={matches(tse.name, profile?.full_name) ? "text-[#15803d]" : "text-[#b45309]"}>
-                      {matches(tse.name, profile?.full_name) ? "✓ Coincide" : "⚠ Revisar — el nombre podría no coincidir"}
-                    </p>
-                  </div>
+                {tseOpened && (
+                  <p className="mt-2 text-xs text-[#374151]">
+                    Se abrió la consulta del TSE en otra pestaña y copiamos la cédula <strong>{formatId(idAssist.value)}</strong> al portapapeles.
+                    Compará el nombre del padrón con <strong>{profile?.full_name}</strong> y, si coincide, aprobá la verificación.
+                  </p>
                 )}
-                {tse?.err && <p className="mt-2 text-xs text-[#b45309]">{tse.err}</p>}
               </div>
             )}
             <p className="text-[11px] text-[#9ca3af] mt-3">
-              La validación de formato es automática. Las fotos y documentos requieren revisión humana antes de otorgar la insignia.
+              La validación de formato es automática; la confirmación de identidad es manual (consulta asistida del TSE). Las fotos y documentos requieren revisión humana antes de otorgar la insignia.
             </p>
           </div>
 
@@ -393,12 +385,3 @@ function auditLabel(action: string): string {
   }
 }
 
-function matches(a?: string, b?: string): boolean {
-  const norm = (s?: string) =>
-    (s ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/\s+/g, " ").trim();
-  const an = norm(a), bn = norm(b);
-  if (!an || !bn) return false;
-  const at = new Set(an.split(" ")), bt = bn.split(" ");
-  const overlap = bt.filter((t) => at.has(t)).length;
-  return overlap >= Math.min(2, bt.length);
-}
