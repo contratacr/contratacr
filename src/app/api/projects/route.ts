@@ -139,7 +139,8 @@ export async function GET(req: NextRequest) {
       console.error("[GET /api/projects] client error:", error.message);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
-    return NextResponse.json({ projects: await enrichProjects(data ?? []) });
+    const confirmed = await autoConfirmStale(admin, data ?? []);
+    return NextResponse.json({ projects: await enrichProjects(confirmed) });
   }
 
   // Professional: browse open projects that match ANY of their professions.
@@ -183,27 +184,119 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ projects: await enrichProjects(data ?? []) });
 }
 
-// Project owner can change their project's status. A cancelled project can be
-// reopened (status → open) — a project is the client's own reusable listing, so
-// reversal is expected and low-risk (unlike a booking, which is a commitment
-// between two parties and stays terminal for auditability).
-export async function PATCH(req: NextRequest) {
-  const { id, status } = await req.json();
-  const allowed = ["open", "cancelled", "completed"];
-  if (!id || !allowed.includes(status)) {
-    return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
+// Lazy auto-confirm: if the pro marked work done > 7 days ago and the client
+// never confirmed, the project auto-completes (anti-stall, both sides protected).
+const AUTO_CONFIRM_DAYS = 7;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function autoConfirmStale(admin: any, rows: any[]): Promise<any[]> {
+  const cutoff = Date.now() - AUTO_CONFIRM_DAYS * 24 * 60 * 60 * 1000;
+  const stale = rows.filter(
+    (r) => r.status === "awaiting_confirmation" && r.work_done_at && new Date(r.work_done_at).getTime() < cutoff
+  );
+  if (stale.length > 0) {
+    const now = new Date().toISOString();
+    await admin.from("projects").update({ status: "completed", completed_at: now }).in("id", stale.map((s) => s.id));
+    for (const r of stale) { r.status = "completed"; r.completed_at = now; }
   }
+  return rows;
+}
+
+// Project status transitions:
+//  - client: cancel/reopen their listing, confirm completion (action="confirm")
+//  - accepted professional: mark work done (action="work_done")
+// Decisions on a project are the client's own listing actions, reversible where
+// it makes sense; completion is two-sided (pro marks → client confirms).
+export async function PATCH(req: NextRequest) {
+  const body = await req.json();
+  const { id, status, action } = body;
+  if (!id) return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
 
   const supabase = await createClient();
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
+  const uid = session.user.id;
+  const admin = createAdminClient();
+
+  // ── Pro marks "trabajo realizado" → awaiting_confirmation ───────────────
+  if (action === "work_done") {
+    const { data: pro } = await admin.from("professionals").select("id").eq("profile_id", uid).maybeSingle();
+    if (!pro) return NextResponse.json({ error: "Solo el profesional puede marcar el trabajo." }, { status: 403 });
+    const { data: project } = await admin
+      .from("projects")
+      .select("id, client_id, accepted_professional_id, title, status")
+      .eq("id", id)
+      .maybeSingle();
+    if (!project || project.accepted_professional_id !== pro.id) {
+      return NextResponse.json({ error: "No autorizado para este proyecto." }, { status: 403 });
+    }
+    if (project.status !== "in_progress") {
+      return NextResponse.json({ error: "El proyecto no está en progreso." }, { status: 409 });
+    }
+    await admin.from("projects").update({ status: "awaiting_confirmation", work_done_at: new Date().toISOString() }).eq("id", id);
+    // Notify the client to confirm.
+    await admin.from("notifications").insert({
+      user_id: project.client_id,
+      type: "project_work_done",
+      title: "Confirmá la finalización del trabajo",
+      message: `El profesional marcó "${project.title}" como realizado. Confirmá para finalizarlo. Si no respondés en ${AUTO_CONFIRM_DAYS} días se confirma automáticamente.`,
+      data: { link: "/es/dashboard/cliente?tab=projects", project_id: id },
+    });
+    return NextResponse.json({ success: true });
+  }
+
+  // ── Client confirms completion → completed ──────────────────────────────
+  if (action === "confirm") {
+    const { data: project } = await admin
+      .from("projects")
+      .select("id, client_id, accepted_professional_id, title, status")
+      .eq("id", id)
+      .maybeSingle();
+    if (!project || project.client_id !== uid) {
+      return NextResponse.json({ error: "No autorizado." }, { status: 403 });
+    }
+    await admin.from("projects").update({ status: "completed", completed_at: new Date().toISOString() }).eq("id", id);
+    // Notify the professional.
+    if (project.accepted_professional_id) {
+      const { data: pro } = await admin.from("professionals").select("profile_id").eq("id", project.accepted_professional_id).maybeSingle();
+      if (pro?.profile_id) {
+        await admin.from("notifications").insert({
+          user_id: pro.profile_id,
+          type: "project_completed",
+          title: "Proyecto finalizado",
+          message: `El cliente confirmó la finalización de "${project.title}". ¡Buen trabajo!`,
+          data: { link: "/es/dashboard/profesional?tab=proposals", project_id: id },
+        });
+      }
+    }
+    return NextResponse.json({ success: true });
+  }
+
+  // ── Client status changes (cancel / reopen) ─────────────────────────────
+  const allowed = ["open", "cancelled"];
+  if (!allowed.includes(status)) {
+    return NextResponse.json({ error: "Estado inválido" }, { status: 400 });
+  }
   const { error } = await supabase
     .from("projects")
     .update({ status, updated_at: new Date().toISOString() })
     .eq("id", id)
-    .eq("client_id", session.user.id);
+    .eq("client_id", uid);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ success: true });
+}
 
+// Client deletes their own project (and its proposals via FK cascade).
+export async function DELETE(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const id = searchParams.get("id");
+  if (!id) return NextResponse.json({ error: "Falta el id" }, { status: 400 });
+
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+
+  const { error } = await supabase.from("projects").delete().eq("id", id).eq("client_id", session.user.id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ success: true });
 }

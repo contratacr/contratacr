@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import {
   CalendarDays, Bookmark, LogOut, Star, Bell, User, FolderOpen,
   CheckCircle2, Clock, XCircle, ChevronDown, ChevronUp,
-  Coins, MapPin, Send, Plus,
+  Coins, MapPin, Send, Plus, Briefcase, Trash2,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Navbar } from "@/components/layout/navbar";
@@ -234,6 +234,21 @@ export default function ClientDashboardPage() {
       body: JSON.stringify({ id: projectId, status }),
     });
     setProjects((prev) => prev.map((p) => (p.id === projectId ? { ...p, status } : p)));
+  }
+
+  async function confirmProjectCompletion(projectId: string) {
+    await fetch("/api/projects", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: projectId, action: "confirm" }),
+    });
+    setProjects((prev) => prev.map((p) => (p.id === projectId ? { ...p, status: "completed" } : p)));
+  }
+
+  async function deleteProject(projectId: string) {
+    if (!confirm("¿Eliminar este proyecto? Esta acción no se puede deshacer.")) return;
+    await fetch(`/api/projects?id=${projectId}`, { method: "DELETE" });
+    setProjects((prev) => prev.filter((p) => p.id !== projectId));
   }
 
   async function loadProposals(projectId: string) {
@@ -620,16 +635,23 @@ export default function ClientDashboardPage() {
                               <div className="flex items-start justify-between gap-3">
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-2 flex-wrap mb-1">
-                                    {project.categories && <span>{project.categories.icon}</span>}
+                                    <span className="flex h-6 w-6 items-center justify-center rounded-md bg-[#EBF5FB] text-[#009FD9] shrink-0">
+                                      <Briefcase className="h-3.5 w-3.5" />
+                                    </span>
                                     <span className="font-semibold text-sm text-[#111827]">{project.title}</span>
                                     <Badge
                                       variant={
                                         project.status === "open" ? "success"
                                           : project.status === "in_progress" ? "warning"
+                                          : project.status === "awaiting_confirmation" ? "warning"
                                           : "default"
                                       }
                                     >
-                                      {project.status === "open" ? "Abierto" : project.status === "in_progress" ? "En progreso" : project.status === "completed" ? "Completado" : "Cancelado"}
+                                      {project.status === "open" ? "Abierto"
+                                        : project.status === "in_progress" ? "En progreso"
+                                        : project.status === "awaiting_confirmation" ? "Esperando tu confirmación"
+                                        : project.status === "completed" ? "Finalizado"
+                                        : "Cancelado"}
                                     </Badge>
                                   </div>
                                   <p className="text-sm text-[#6b7280] line-clamp-2 mb-2">{project.description}</p>
@@ -660,19 +682,28 @@ export default function ClientDashboardPage() {
                                 )}
                               </div>
 
-                              {(project.status === "open" || project.status === "cancelled") && (
-                                <div className="mt-3">
-                                  {project.status === "open" ? (
-                                    <Button size="sm" variant="outline" onClick={() => updateProjectStatus(project.id, "cancelled")}>
-                                      Cancelar proyecto
-                                    </Button>
-                                  ) : (
-                                    <Button size="sm" variant="outline" onClick={() => updateProjectStatus(project.id, "open")}>
-                                      Reabrir proyecto
-                                    </Button>
-                                  )}
-                                </div>
-                              )}
+                              <div className="mt-3 flex flex-wrap gap-2">
+                                {project.status === "open" && (
+                                  <Button size="sm" variant="outline" onClick={() => updateProjectStatus(project.id, "cancelled")}>
+                                    Cancelar proyecto
+                                  </Button>
+                                )}
+                                {project.status === "cancelled" && (
+                                  <Button size="sm" variant="outline" onClick={() => updateProjectStatus(project.id, "open")}>
+                                    Reabrir proyecto
+                                  </Button>
+                                )}
+                                {project.status === "awaiting_confirmation" && (
+                                  <Button size="sm" onClick={() => confirmProjectCompletion(project.id)}>
+                                    <CheckCircle2 className="h-4 w-4" /> Confirmar finalización
+                                  </Button>
+                                )}
+                                {project.status !== "in_progress" && project.status !== "awaiting_confirmation" && (
+                                  <Button size="sm" variant="ghost" className="text-red-500 hover:bg-red-50" onClick={() => deleteProject(project.id)}>
+                                    <Trash2 className="h-4 w-4" /> Eliminar
+                                  </Button>
+                                )}
+                              </div>
 
                               {isExpanded && proposalList && (
                                 <div className="mt-4 pt-4 border-t border-[#f3f4f6] flex flex-col gap-3">

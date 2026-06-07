@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(req: NextRequest) {
   try {
@@ -121,6 +122,40 @@ export async function PATCH(req: NextRequest) {
       .eq("id", id);
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+    // On accept: move the project into "in_progress" and record the accepted
+    // professional so the completion flow knows who can mark work done.
+    if (status === "accepted") {
+      try {
+        const admin = createAdminClient();
+        const { data: prop } = await admin
+          .from("proposals")
+          .select("project_id, professional_id, projects:project_id(title)")
+          .eq("id", id)
+          .maybeSingle();
+        if (prop?.project_id) {
+          await admin
+            .from("projects")
+            .update({ status: "in_progress", accepted_professional_id: prop.professional_id })
+            .eq("id", prop.project_id);
+          const { data: pro } = await admin.from("professionals").select("profile_id").eq("id", prop.professional_id).maybeSingle();
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const title = (prop.projects as any)?.title ?? "tu propuesta";
+          if (pro?.profile_id) {
+            await admin.from("notifications").insert({
+              user_id: pro.profile_id,
+              type: "project_proposal_accepted",
+              title: "¡Tu propuesta fue aceptada!",
+              message: `El cliente aceptó tu propuesta para "${title}". Coordiná el trabajo y marcalo como realizado al terminar.`,
+              data: { link: "/es/dashboard/profesional?tab=proposals", project_id: prop.project_id },
+            });
+          }
+        }
+      } catch (e) {
+        console.error("[PATCH /api/proposals] accept side-effects failed:", e);
+      }
+    }
+
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("[PATCH /api/proposals]", err);

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { FolderOpen, Send, ChevronDown, ChevronUp, MapPin, Clock, Coins, User } from "lucide-react";
+import { FolderOpen, Send, ChevronDown, ChevronUp, MapPin, Clock, Coins, User, Briefcase, CheckCircle2 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -120,6 +120,19 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
     setSubmitting(null);
   }
 
+  async function markWorkDone(projectId: string) {
+    const res = await fetch("/api/projects", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: projectId, action: "work_done" }),
+    });
+    if (res.ok) {
+      setMyProposals((prev) =>
+        prev.map((p) => (p.project_id === projectId && p.projects ? { ...p, projects: { ...p.projects, status: "awaiting_confirmation" } } : p))
+      );
+    }
+  }
+
   function updateForm(projectId: string, field: "price" | "message", value: string) {
     setProposalForms((prev) => ({
       ...prev,
@@ -179,9 +192,9 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap mb-1">
-                            {project.categories && (
-                              <span className="text-sm">{project.categories.icon}</span>
-                            )}
+                            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-[#EBF5FB] text-[#009FD9] shrink-0">
+                              <Briefcase className="h-3.5 w-3.5" />
+                            </span>
                             <span className="font-semibold text-[#111827] text-sm">{project.title}</span>
                           </div>
                           <p className="text-sm text-[#6b7280] line-clamp-2 mb-2">{project.description}</p>
@@ -230,7 +243,7 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                           </button>
                         )}
                         {alreadySubmitted && (
-                          <Badge variant="success">Propuesta enviada</Badge>
+                          <Badge variant="success">Ya hiciste una propuesta</Badge>
                         )}
                       </div>
 
@@ -336,6 +349,17 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                               WhatsApp
                             </a>
                           </Button>
+                        )}
+                        {p.status === "accepted" && p.projects?.status === "in_progress" && (
+                          <Button size="sm" variant="outline" onClick={() => markWorkDone(p.project_id)}>
+                            <CheckCircle2 className="h-3.5 w-3.5" /> Marcar trabajo realizado
+                          </Button>
+                        )}
+                        {p.status === "accepted" && p.projects?.status === "awaiting_confirmation" && (
+                          <Badge variant="warning">Esperando confirmación del cliente</Badge>
+                        )}
+                        {p.projects?.status === "completed" && (
+                          <Badge variant="success">Finalizado</Badge>
                         )}
                       </div>
                     </div>
