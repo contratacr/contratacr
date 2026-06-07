@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { IdCard, Phone, User as UserIcon, AlertCircle, Camera } from "lucide-react";
+import { Phone, User as UserIcon, AlertCircle, Camera } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
+import { CedulaInput } from "@/components/ui/cedula-input";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
 import { ContrataCRLogo } from "@/components/landing/landing-navbar";
@@ -219,20 +220,11 @@ export default function CompleteProfilePage() {
               </div>
             </div>
 
-            <div>
-              <label className="text-sm font-medium text-[#374151] block mb-1.5">Cédula</label>
-              <div className="relative">
-                <IdCard className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={cedula}
-                  onChange={(e) => setCedula(e.target.value)}
-                  placeholder="1-2345-6789"
-                  className={inputClass}
-                />
-              </div>
-            </div>
+            <CedulaInput
+              required
+              value={cedula}
+              onChange={setCedula}
+            />
 
             <button
               type="submit"

@@ -10,6 +10,7 @@ import { useTranslations } from "next-intl";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { PhoneInput } from "@/components/ui/phone-input";
+import { CedulaInput } from "@/components/ui/cedula-input";
 import { StarRating } from "@/components/ui/star-rating";
 import { getInitials, getWhatsAppLink, buildBookingIcs } from "@/lib/utils";
 import { cn } from "@/lib/utils";
@@ -702,17 +703,11 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     onChange={setProfilePhone}
                   />
                   {needsProfile && (
-                    <div>
-                      <label className="text-sm font-medium text-[#374151] block mb-1.5">Cédula</label>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        className="w-full h-10 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
-                        placeholder="1-2345-6789"
-                        value={profileCedula}
-                        onChange={(e) => setProfileCedula(e.target.value)}
-                      />
-                    </div>
+                    <CedulaInput
+                      required
+                      value={profileCedula}
+                      onChange={setProfileCedula}
+                    />
                   )}
                 </div>
               )}

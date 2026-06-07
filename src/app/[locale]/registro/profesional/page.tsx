@@ -14,6 +14,7 @@ import { Navbar } from "@/components/layout/navbar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { PhoneInput, isPhoneComplete } from "@/components/ui/phone-input";
+import { CedulaInput } from "@/components/ui/cedula-input";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -791,15 +792,13 @@ export default function RegisterProfessionalPage() {
                 {...form1.register("secondLastName")}
               />
 
-              {/* Cédula — manual input, no API lookup */}
+              {/* Identificación — masked, auto-detecting (no API lookup) */}
               <div>
-                <Input
-                  label={<>Número de cédula <span className="text-red-500">*</span></>}
-                  placeholder="1-0000-0000"
-                  hint="CR: 9 dígitos · DIMEX: 11-12 · NITE: 10"
-                  error={form1.formState.errors.cedula?.message ?? (cedulaCheck.taken ? "Esta cédula ya está registrada en ContrataCR." : undefined)}
-                  {...form1.register("cedula")}
-                  // onBlur={(e) => lookupCedula(e.target.value)}  // ← activate when API credentials arrive
+                <CedulaInput
+                  required
+                  value={form1.watch("cedula") ?? ""}
+                  onChange={(c) => form1.setValue("cedula", c, { shouldValidate: true })}
+                  error={form1.formState.errors.cedula?.message ?? (cedulaCheck.taken ? "Esta identificación ya está registrada en ContrataCR." : undefined)}
                 />
               </div>
 
@@ -878,13 +877,11 @@ export default function RegisterProfessionalPage() {
                 />
               )}
               {currentUser && (
-                <Input
-                  label={<>Número de cédula <span className="text-red-500">*</span></>}
-                  placeholder="1-0000-0000"
-                  hint="Requerido para profesionales · CR: 9 dígitos · DIMEX: 11-12 · NITE: 10"
+                <CedulaInput
+                  required
                   value={oauthCedula}
-                  onChange={(e) => { setOauthCedula(e.target.value); setOauthCedulaError(null); }}
-                  error={oauthCedulaError ?? (oauthCedulaCheck.taken ? "Esta cédula ya está registrada en ContrataCR." : undefined)}
+                  onChange={(c) => { setOauthCedula(c); setOauthCedulaError(null); }}
+                  error={oauthCedulaError ?? (oauthCedulaCheck.taken ? "Esta identificación ya está registrada en ContrataCR." : undefined)}
                 />
               )}
 

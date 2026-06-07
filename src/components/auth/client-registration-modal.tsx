@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
+import { CedulaInput } from "@/components/ui/cedula-input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ContrataCRLogo } from "@/components/landing/landing-navbar";
@@ -501,14 +502,11 @@ export function ClientRegistrationModal({
                       onChange={(e) => setManualName(e.target.value)}
                       autoFocus
                     />
-                    <Input
-                      label="Número de cédula *"
-                      placeholder="101234567"
-                      hint="Cédula CR (9 dígitos) · DIMEX (11-12) · NITE (10)"
+                    <CedulaInput
+                      required
                       value={cedula}
-                      onChange={(e) => { setCedula(e.target.value); setCedulaError(null); }}
+                      onChange={(c) => { setCedula(c); setCedulaError(null); }}
                       error={cedulaError ?? undefined}
-                      inputMode="numeric"
                     />
                   </div>
                 )}
