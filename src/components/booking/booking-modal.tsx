@@ -283,7 +283,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     const cleanCedula = profileCedula.replace(/\D/g, "");
     const cleanPhone = profilePhone.replace(/\D/g, "");
     if (cleanPhone.length < 8) { setProfileError("Ingresá un teléfono válido (8 dígitos)."); return; }
-    if (needsProfile && !clientName.trim()) { setProfileError("Ingresá tu nombre legal completo."); return; }
+    if (needsProfile && !clientName.trim()) { setProfileError("Ingresá tu nombre completo."); return; }
     if (needsProfile && cleanCedula.length < 9) { setProfileError("Ingresá una cédula válida (9 dígitos)."); return; }
 
     setSavingProfile(true);
@@ -687,7 +687,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
 
                   {needsProfile && (
                     <div>
-                      <label className="text-sm font-medium text-[#374151] block mb-1.5">Nombre legal completo</label>
+                      <label className="text-sm font-medium text-[#374151] block mb-1.5">Nombre completo</label>
                       <input
                         type="text"
                         className="w-full h-10 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"

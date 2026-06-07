@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from "react";
 import { AlertCircle, RotateCcw } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "@/i18n/navigation";
-import { ContrataCRLogo } from "@/components/landing/landing-navbar";
 
 interface OtpVerificationProps {
   email: string;
@@ -98,14 +97,9 @@ export function OtpVerification({ email, onVerified }: OtpVerificationProps) {
 
   return (
     <div className="text-center">
-      <div className="flex justify-center mb-5">
-        <ContrataCRLogo className="scale-125" />
-      </div>
-
       <h1 className="text-xl font-bold text-[#111827]">Verificá tu correo</h1>
       <p className="text-sm text-[#6b7280] mt-1.5 mb-6">
-        Enviamos un código de verificación de 6 dígitos a<br />
-        <strong className="text-[#111827]">{email}</strong>. Ingresalo abajo para continuar.
+        Ingresá el código de 6 dígitos que enviamos a <strong className="text-[#111827]">{email}</strong>.
       </p>
 
       {error && (

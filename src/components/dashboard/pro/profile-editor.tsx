@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
+import { useUnsavedWarning } from "@/hooks/use-unsaved-warning";
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { LanguagesInput } from "@/components/ui/languages-input";
@@ -63,14 +64,8 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
   const [dirty, setDirty] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Unsaved-changes guard: warn before leaving the tab/page with pending edits.
-  useEffect(() => {
-    function beforeUnload(e: BeforeUnloadEvent) {
-      if (dirty) { e.preventDefault(); e.returnValue = ""; }
-    }
-    window.addEventListener("beforeunload", beforeUnload);
-    return () => window.removeEventListener("beforeunload", beforeUnload);
-  }, [dirty]);
+  // Unsaved-changes guard: warn before leaving (hard unload OR in-app link nav).
+  useUnsavedWarning(dirty);
 
   // Single helper so every field marks the form dirty + clears the saved flag.
   function touch() { setSaved((_p) => false); setDirty(true); }

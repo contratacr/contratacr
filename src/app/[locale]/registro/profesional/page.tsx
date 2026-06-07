@@ -510,7 +510,7 @@ export default function RegisterProfessionalPage() {
       return;
     }
     if (currentUser && oauthFullName.trim().length < 3) {
-      setOauthNameError("Ingresá tu nombre legal completo.");
+      setOauthNameError("Ingresá tu nombre completo.");
       return;
     }
     setOauthNameError(null);

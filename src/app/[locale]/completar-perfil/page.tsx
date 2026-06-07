@@ -96,7 +96,7 @@ export default function CompleteProfilePage() {
 
     const cleanCedula = cedula.replace(/\D/g, "");
     const cleanPhone = phone.replace(/\D/g, "");
-    if (!fullName.trim()) return setError("Ingresá tu nombre legal completo.");
+    if (!fullName.trim()) return setError("Ingresá tu nombre completo.");
     if (cleanPhone.length < 8) return setError("Ingresá un número de teléfono válido (8 dígitos).");
     if (cleanCedula.length < 9) return setError("Ingresá un número de cédula válido (9 dígitos).");
 
@@ -191,7 +191,7 @@ export default function CompleteProfilePage() {
             </div>
 
             <div>
-              <label className="text-sm font-medium text-[#374151] block mb-1.5">Nombre legal completo</label>
+              <label className="text-sm font-medium text-[#374151] block mb-1.5">Nombre completo</label>
               <div className="relative">
                 <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
                 <input
