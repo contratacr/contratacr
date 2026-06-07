@@ -12,13 +12,14 @@ _Last updated: 2026-06-07 (sprint 24 — fully automatic identity verification: 
                                   professionals.verification_method/provider/verified_at;
                                   status authorized → verified; support_tickets; notif type verification_pending
 ```
-**Then load the padrón + schedule it (one-time setup):**
-- Download the public TSE roll `https://www.tse.go.cr/zip/padron/padron_completo.zip`, unzip, and run
-  `SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… node scripts/load-padron.mjs ./padron_completo.txt`.
+**Padrón loaded ✅ (2026-06-07):**
+- Source: public TSE roll `padron_completo.zip` → `PADRON_COMPLETO.txt` (latin1, comma-delimited; fields per the bundled `Leame.txt`: `CEDULA,CODELEC,SEXO,FECHACADUC,JUNTA,NOMBRE,1.APELLIDO,2.APELLIDO`). The loader reads only fields 0/5/6/7 (cédula + 3 names) — data minimization. `distelec.txt` (district lookup) intentionally NOT loaded.
+- Loaded via `node scripts/load-padron.mjs PADRON_COMPLETO.txt` → **3,758,113 rows live** (staging → `finalize_padron_swap()` atomic promote).
+- **Cédula normalization alignment (verified):** the padrón stores cédula digits-only/seamless (e.g. `101053316`). The verifier queries with `cleanId(cedula)` (`.replace(/\D/g,"")`), which produces the identical seamless form (e.g. `2-0806-0421` → `208060421`). Confirmed empirically: `.eq("cedula","101053316")` returns the row. National cédulas only — DIMEX/NITE holders aren't in the TSE padrón, so they correctly fall to `pending`/manual.
 - Recurring refresh: GitHub Action `.github/workflows/padron-refresh.yml` (monthly) — set repo secrets
   `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`. The load goes into `padron_staging` then `finalize_padron_swap()`
   atomically promotes it (verification never down mid-update).
-- Until the padrón is loaded, the verifier finds nothing → new pros land in "pendiente de revisión" (graceful).
+- Before the padrón was loaded, the verifier found nothing → new pros landed in "pendiente de revisión" (graceful, no crash).
 
 ### Shared ID input (already in place, sprint 21 — recap)
 `CedulaInput` + `lib/cedula.ts`: label **"Número de identificación"**, `required` prop (red `*` / "(opcional)"; client flows kept required), live `X-XXXX-XXXX` masking, **hyphen-free storage** (display-only hyphens, zero-padded segments), **type auto-detection** (cédula 9 + first 1–9, NITE 10, DIMEX 11–12), **format/length validation only** (no local check digit — there is no published control digit; truth comes from the padrón), `inputMode="numeric"`, helper "CR: 9 dígitos · DIMEX: 11-12 · NITE: 10", reused everywhere.
@@ -44,7 +45,7 @@ _Last updated: 2026-06-07 (sprint 24 — fully automatic identity verification: 
 - `POST /api/appeals` re-runs verification (`runIdentityVerification(proId, { appeal:true })`): **now passes → `verified` automatically**; **still fails → `under_appeal` + a `support_tickets` row** (the rare manual tail) + admin notification + a WhatsApp convenience (pre-filled case id). Never auto-approves a repeatedly-failing appeal; never drops to WhatsApp with no record.
 
 ### Admin panel — exception-only
-- Login at **/admin** (guarded server + client; non-admins blocked). Queue defaults to **Pendientes** + **Apelaciones (tickets)**; clean auto-verified pros are tucked behind "Verificados". Case view shows **entered name vs padrón name side by side** (read-only/transient, not stored), the ID-format assist, an **assisted "Verificar en TSE"** button (opens the official consult, copies the cédula), and **Marcar verificado / Rechazar (reason required) / Revocar / Volver a pendiente**. **Work photos removed** from the verification flow entirely (not a criterion; profile-only). Audit trail logs both automatic grants (`auto_verified`/`auto_pending`) and manual decisions (who/when/action/reason).
+- Login at **/admin** (guarded server + client; non-admins blocked). Queue defaults to **Pendientes** + **Apelaciones (tickets)**; clean auto-verified pros are tucked behind "Verificados". Case view shows **entered name vs padrón name side by side** (read-only/transient, not stored) and the ID-format assist. Actions are **Marcar verificado / Rechazar (reason required) / Revocar / Volver a pendiente** + **Contactar por WhatsApp**. The manual **"Verificar en TSE"** button (and its helper text) was **removed** — confirmation against the padrón is fully automatic, so there's no manual TSE consult step. **Work photos removed** from the verification flow entirely (not a criterion; profile-only). Audit trail logs both automatic grants (`auto_verified`/`auto_pending`) and manual decisions (who/when/action/reason).
 
 ### Notifications
 - Email + in-app on every change: `verification_approved` (verified), `verification_pending`, `verification_rejected`, `verification_reverted`. Rejections include the reason + how to appeal.
