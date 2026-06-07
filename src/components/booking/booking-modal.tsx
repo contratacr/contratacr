@@ -14,6 +14,7 @@ import { CedulaInput } from "@/components/ui/cedula-input";
 import { StarRating } from "@/components/ui/star-rating";
 import { getInitials, getWhatsAppLink, buildBookingIcs } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import { isPastDateTimeCR } from "@/lib/time-cr";
 import { createClient } from "@/lib/supabase/client";
 import { useAvailabilityCheck } from "@/hooks/use-availability-check";
 import type { ProfessionalCardData } from "@/lib/data/mock-professionals";
@@ -213,8 +214,9 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
       if (!daySchedule?.enabled) return [];
       baseSlots = generateSlots(daySchedule.ranges ?? []);
     }
-    // Exclude slots already booked by other clients on this date.
-    return baseSlots.filter((slot) => !takenSlots.has(`${dateStr} ${slot}`));
+    // Exclude slots already booked by other clients, and any time that already
+    // passed today (Costa Rica time).
+    return baseSlots.filter((slot) => !takenSlots.has(`${dateStr} ${slot}`) && !isPastDateTimeCR(dateStr, slot));
   }
 
   function prevMonth() {

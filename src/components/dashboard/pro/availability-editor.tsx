@@ -4,8 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import { Plus, X, CalendarPlus, Globe, Lock, Loader2, Video, MapPin } from "lucide-react";
+import { Plus, X, CalendarPlus, Globe, Lock, Loader2, Video, MapPin, AlertCircle } from "lucide-react";
 import { CONTACT_PREFERENCES, type ContactPreference } from "@/lib/constants";
+import { crTodayISO, isPastDateTimeCR } from "@/lib/time-cr";
 
 type Slot = { id?: string; slot_date: string; slot_time: string; location_id?: string | null };
 
@@ -37,9 +38,10 @@ function prettyDate(iso: string): string {
   return `${weekday} ${d} ${MONTHS[m - 1]} ${y}`;
 }
 
+// All "today" comparisons use Costa Rica time so past slots are rejected
+// consistently regardless of the professional's device timezone.
 function todayISO(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  return crTodayISO();
 }
 
 type Place = { id?: string; name: string };
@@ -114,6 +116,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
   const [customInterval, setCustomInterval] = useState(45);
   const [singleTime, setSingleTime] = useState("10:00");
   const [busy, setBusy] = useState(false);
+  const [pastError, setPastError] = useState<string | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
@@ -186,6 +189,19 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
   async function insertSlots(times: string[]) {
     if (times.length === 0) return;
     if (!genLocation) return;
+    setPastError(null);
+    // Reject past dates outright (CR time).
+    if (isPastDateTimeCR(genDate)) {
+      setPastError("No podés agregar horarios en una fecha pasada.");
+      return;
+    }
+    // Drop any individual times already in the past today (CR time).
+    const notPast = times.filter((t) => !isPastDateTimeCR(genDate, t));
+    if (notPast.length === 0) {
+      setPastError("Esa hora ya pasó (hora de Costa Rica). Elegí una hora futura.");
+      return;
+    }
+    times = notPast;
     setBusy(true);
     const supabase = createClient();
     const locId = genLocation;
@@ -209,7 +225,11 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
         .select("id, slot_date, slot_time"));
     }
     setBusy(false);
-    if (error) { console.error("[availability] insert", error); return; }
+    if (error) {
+      console.error("[availability] insert", error);
+      if (/pasado|past/i.test(error.message)) setPastError("No podés agregar horarios en el pasado (hora de Costa Rica).");
+      return;
+    }
     setSlots((prev) => [
       ...prev,
       ...((data ?? []).map((s) => ({ id: s.id, slot_date: s.slot_date, slot_time: String(s.slot_time).slice(0, 5), location_id: (s as { location_id?: string }).location_id ?? locId }))),
@@ -404,6 +424,12 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
               + Agregar
             </button>
           </div>
+
+          {pastError && (
+            <div className="flex items-center gap-2 rounded-lg bg-red-50 border border-red-100 p-2.5 text-xs text-red-600">
+              <AlertCircle className="h-3.5 w-3.5 shrink-0" /> {pastError}
+            </div>
+          )}
         </div>
         )}
       </div>
