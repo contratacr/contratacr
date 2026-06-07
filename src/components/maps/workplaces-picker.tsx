@@ -43,6 +43,8 @@ export function WorkplacesPicker({ value, onChange, apiKey }: WorkplacesPickerPr
   const valueRef = useRef<Workplace[]>(value);
   valueRef.current = value;
   const [search, setSearch] = useState("");
+  const [locating, setLocating] = useState(false);
+  const [geoError, setGeoError] = useState<string | null>(null);
   const effectiveKey = apiKey ?? process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -143,6 +145,45 @@ export function WorkplacesPicker({ value, onChange, apiKey }: WorkplacesPickerPr
     renderMarkers();
   }
 
+  function useMyLocation() {
+    setGeoError(null);
+    if (!navigator.geolocation) { setGeoError("Tu navegador no permite geolocalización."); return; }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        const map = mapInstanceRef.current;
+        const finish = (name: string, address: string) => {
+          addWorkplace({ name, address, lat, lng });
+          if (map) { map.setCenter({ lat, lng }); map.setZoom(15); }
+          setLocating(false);
+        };
+        if (geocoderRef.current) {
+          geocoderRef.current.geocode({ location: { lat, lng } }, (results: GMaps, status: string) => {
+            const ok = status === "OK" && results?.[0];
+            finish(ok ? (results[0].formatted_address as string) : "Mi ubicación actual", ok ? (results[0].formatted_address as string) : "");
+          });
+        } else {
+          finish("Mi ubicación actual", "");
+        }
+      },
+      () => { setGeoError("No pudimos obtener tu ubicación. Revisá los permisos."); setLocating(false); },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }
+
+  // Initialise the map on EVERY mount. The Script's onLoad only fires the first
+  // time it loads; when this component unmounts and remounts (e.g. toggling work
+  // mode off and on) the script is cached, so we init from this effect instead —
+  // fixes the map going blank after fixed → mobile → fixed.
+  useEffect(() => {
+    if (getMaps()) { initMap(); return; }
+    const t = setInterval(() => { if (getMaps()) { clearInterval(t); initMap(); } }, 200);
+    return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Re-render pins whenever the workplaces change.
   useEffect(() => {
     renderMarkers();
@@ -178,6 +219,17 @@ export function WorkplacesPicker({ value, onChange, apiKey }: WorkplacesPickerPr
             className="w-full pl-9 pr-4 h-10 rounded-xl border border-[#e5e7eb] text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
           />
         </div>
+
+        <button
+          type="button"
+          onClick={useMyLocation}
+          disabled={locating}
+          className="self-start inline-flex items-center gap-1.5 text-sm font-medium text-[#009FD9] hover:underline disabled:opacity-60"
+        >
+          <MapPin className="h-4 w-4" />
+          {locating ? "Obteniendo tu ubicación…" : "Usar mi ubicación actual"}
+        </button>
+        {geoError && <p className="text-xs text-amber-600">{geoError}</p>}
 
         <div className="relative rounded-xl overflow-hidden border border-[#e5e7eb]" style={{ height: 240 }}>
           <div ref={mapRef} className="w-full h-full" />

@@ -50,10 +50,10 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
   const [businessName, setBusinessName] = useState<string>(initial.business_name ?? "");
   const [workplaces, setWorkplaces] = useState<Workplace[]>(Array.isArray(initial.workplaces) ? initial.workplaces : []);
   const [languages, setLanguages] = useState<string[]>(Array.isArray(initial.languages) ? initial.languages : []);
-  // Work mode: "fixed" → has workplaces; "mobile" → travels to the client.
-  const [workMode, setWorkMode] = useState<"mobile" | "fixed">(
-    String(initial.service_type ?? "mobile").includes("fixed") ? "fixed" : "mobile"
-  );
+  // Work mode — BOTH can be selected (travels AND has fixed locations).
+  const initialTypes = String(initial.service_type ?? "mobile");
+  const [serviceMobile, setServiceMobile] = useState(initialTypes.includes("mobile") || initialTypes === "");
+  const [serviceFixed, setServiceFixed] = useState(initialTypes.includes("fixed"));
   const [avatarPreview, setAvatarPreview] = useState<string | null>(
     initial.profiles?.avatar_url ?? null
   );
@@ -141,9 +141,9 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         .filter((p) => p.type === "a_convenir" || p.amount != null)
         .map((p) => ({ ...p, amount: p.type === "a_convenir" ? undefined : p.amount }));
 
-      // "mobile" pros don't keep workplaces; clear them so /buscar shows the
-      // travel mode instead of stale pins.
-      const effectiveWorkplaces = workMode === "fixed" ? workplaces : [];
+      // Only keep workplaces when "fixed" is selected.
+      const effectiveWorkplaces = serviceFixed ? workplaces : [];
+      const serviceType = [serviceMobile ? "mobile" : null, serviceFixed ? "fixed" : null].filter(Boolean).join(",") || "mobile";
 
       const baseUpdate: Record<string, unknown> = {
         bio,
@@ -152,7 +152,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         pricing: cleanPricing,
         professions,
         languages,
-        service_type: workMode,
+        service_type: serviceType,
         ...(professions[0] ? { category_id: professions[0] } : {}),
         ...(provinceId ? { provincia_id: provinceId } : {}),
         ...(cantonId ? { canton_id: cantonId } : {}),
@@ -262,21 +262,21 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         placeholder="Ej: Servicios Eléctricos GAM"
       />
 
-      {/* Work mode — travels to client vs fixed location(s) */}
+      {/* Work mode — both can be selected (travels AND has fixed locations) */}
       <div>
-        <label className="text-sm font-medium text-[#374151] block mb-2">¿Cómo ofrecés tus servicios?</label>
+        <label className="text-sm font-medium text-[#374151] block mb-2">¿Cómo ofrecés tus servicios? <span className="text-[#9ca3af] font-normal">(podés elegir ambas)</span></label>
         <div className="grid grid-cols-2 gap-2">
           {([
-            { id: "mobile", icon: Truck, title: "Me desplazo donde el cliente", desc: "Vas al lugar del cliente" },
-            { id: "fixed", icon: MapPin, title: "Trabajo desde un lugar fijo", desc: "Taller, consultorio, local" },
+            { id: "mobile", icon: Truck, title: "Me desplazo donde el cliente", desc: "Vas al lugar del cliente", active: serviceMobile, toggle: () => { setServiceMobile((v) => !v); touch(); } },
+            { id: "fixed", icon: MapPin, title: "Trabajo desde un lugar fijo", desc: "Taller, consultorio, local", active: serviceFixed, toggle: () => { setServiceFixed((v) => !v); touch(); } },
           ] as const).map((opt) => (
             <button
               key={opt.id}
               type="button"
-              onClick={() => { setWorkMode(opt.id); touch(); }}
+              onClick={opt.toggle}
               className={cn(
                 "flex flex-col items-start gap-1 p-3 rounded-xl border-2 text-left transition-all",
-                workMode === opt.id ? "border-[#009FD9] bg-[#EBF5FB]" : "border-[#e5e7eb] hover:border-[#009FD9]/40"
+                opt.active ? "border-[#009FD9] bg-[#EBF5FB]" : "border-[#e5e7eb] hover:border-[#009FD9]/40"
               )}
             >
               <opt.icon className="h-4 w-4 text-[#009FD9]" />
@@ -288,7 +288,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
       </div>
 
       {/* Workplaces — only when working from a fixed location */}
-      {workMode === "fixed" && (
+      {serviceFixed && (
         <div>
           <label className="text-sm font-medium text-[#374151] block mb-1.5">
             Tus lugares de trabajo <span className="text-[#9ca3af] font-normal">(opcional)</span>
