@@ -232,6 +232,8 @@ export default function ProDashboardPage() {
                       professionalId={pro.id}
                       initialPublic={pro.availability_public ?? true}
                       initialContactPreference={pro.contact_preference ?? "ambas"}
+                      workplaces={pro.workplaces ?? []}
+                      initialVideoconsulta={pro.videoconsulta ?? false}
                       onSaved={handleSaved}
                     />
                   )}

@@ -10,7 +10,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { getWhatsAppLink } from "@/lib/utils";
 import type { ProfessionalCardData } from "@/lib/data/mock-professionals";
 
-export type ScheduleSlot = { date: string; time: string };
+export type ScheduleSlot = { date: string; time: string; locationId?: string | null };
 
 interface ProfessionalScheduleProps {
   professional: ProfessionalCardData;
@@ -63,10 +63,28 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const canBook = availabilityPublic && contactPreference !== "solo_whatsapp";
   const canWhatsApp = contactPreference !== "solo_citas";
 
+  // Distinct locations present in the published slots (item 8: per-location
+  // schedules). Chips let the client switch which location's schedule is shown.
+  const [selectedLoc, setSelectedLoc] = useState<string | null>(null);
+  function locLabel(id: string | null): string {
+    if (!id || id === "general") return "General";
+    if (id === "videoconsulta") return "Videoconsulta";
+    return professional.workplaces?.find((w) => w.id === id)?.name ?? "Ubicación";
+  }
+  const locationIds = useMemo(() => {
+    const set = new Set<string>();
+    for (const s of slots) set.add(s.locationId ?? "general");
+    return Array.from(set);
+  }, [slots]);
+  const filteredSlots = useMemo(
+    () => (selectedLoc === null ? slots : slots.filter((s) => (s.locationId ?? "general") === selectedLoc)),
+    [slots, selectedLoc]
+  );
+
   // Rolling window of upcoming days, with each day's published time slots.
   const days = useMemo(() => {
     const byDate = new Map<string, string[]>();
-    for (const s of slots) {
+    for (const s of filteredSlots) {
       if (!byDate.has(s.date)) byDate.set(s.date, []);
       byDate.get(s.date)!.push(s.time);
     }
@@ -79,7 +97,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       const times = (byDate.get(key) ?? []).sort();
       return { key, label: headerLabel(d), times };
     });
-  }, [slots]);
+  }, [filteredSlots]);
 
   function pick(slot: ScheduleSlot) {
     setPreset(slot);
@@ -156,6 +174,26 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
 
   return (
     <div className="flex flex-col gap-3">
+      {/* Location chips — switch which location's schedule is shown */}
+      {locationIds.length > 1 && (
+        <div className="flex flex-wrap gap-1.5">
+          <button
+            onClick={(e) => { e.stopPropagation(); setSelectedLoc(null); }}
+            className={`px-2 py-0.5 rounded-md text-[11px] font-medium transition-colors ${selectedLoc === null ? "bg-[#009FD9] text-white" : "bg-[#f3f4f6] text-[#374151] hover:bg-[#EBF5FB]"}`}
+          >
+            Todas
+          </button>
+          {locationIds.map((id) => (
+            <button
+              key={id}
+              onClick={(e) => { e.stopPropagation(); setSelectedLoc(id); }}
+              className={`px-2 py-0.5 rounded-md text-[11px] font-medium transition-colors ${selectedLoc === id ? "bg-[#009FD9] text-white" : "bg-[#f3f4f6] text-[#374151] hover:bg-[#EBF5FB]"}`}
+            >
+              {locLabel(id)}
+            </button>
+          ))}
+        </div>
+      )}
       <div className="flex items-stretch gap-1.5">
         <button
           type="button"

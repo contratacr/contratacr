@@ -4,10 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import { Plus, X, CalendarPlus, Globe, Lock, Loader2 } from "lucide-react";
+import { Plus, X, CalendarPlus, Globe, Lock, Loader2, Video, MapPin } from "lucide-react";
 import { CONTACT_PREFERENCES, type ContactPreference } from "@/lib/constants";
 
-type Slot = { id?: string; slot_date: string; slot_time: string };
+type Slot = { id?: string; slot_date: string; slot_time: string; location_id?: string | null };
+
+const GENERAL_LOC = "general";
+const VIDEO_LOC = "videoconsulta";
 
 const INTERVAL_OPTIONS = [
   { value: 30, label: "Cada 30 min" },
@@ -39,17 +42,46 @@ function todayISO(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
+type Place = { id?: string; name: string };
+
 interface AvailabilityEditorProps {
   professionalId: string;
   initialPublic?: boolean;
   initialContactPreference?: ContactPreference;
+  workplaces?: Place[];
+  initialVideoconsulta?: boolean;
   onSaved?: () => void;
 }
 
-export function AvailabilityEditor({ professionalId, initialPublic = true, initialContactPreference = "ambas", onSaved }: AvailabilityEditorProps) {
+export function AvailabilityEditor({ professionalId, initialPublic = true, initialContactPreference = "ambas", workplaces = [], initialVideoconsulta = false, onSaved }: AvailabilityEditorProps) {
   const [isPublic, setIsPublic] = useState(initialPublic);
   const [contactPreference, setContactPreference] = useState<ContactPreference>(initialContactPreference);
   const [savingContact, setSavingContact] = useState(false);
+  const [videoconsulta, setVideoconsulta] = useState(initialVideoconsulta);
+
+  // Locations a schedule can belong to: General + each workplace + Videoconsulta.
+  const locationOptions = useMemo(() => {
+    const opts: { id: string; label: string }[] = [{ id: GENERAL_LOC, label: "General (todas las ubicaciones)" }];
+    for (const w of workplaces) if (w.id) opts.push({ id: w.id, label: w.name });
+    if (videoconsulta) opts.push({ id: VIDEO_LOC, label: "Videoconsulta" });
+    return opts;
+  }, [workplaces, videoconsulta]);
+  const [genLocation, setGenLocation] = useState(GENERAL_LOC);
+
+  function locationLabel(id?: string | null): string {
+    if (!id || id === GENERAL_LOC) return "General";
+    if (id === VIDEO_LOC) return "Videoconsulta";
+    return workplaces.find((w) => w.id === id)?.name ?? "Ubicación";
+  }
+
+  async function toggleVideoconsulta() {
+    const next = !videoconsulta;
+    setVideoconsulta(next);
+    if (!next && genLocation === VIDEO_LOC) setGenLocation(GENERAL_LOC);
+    const supabase = createClient();
+    await supabase.from("professionals").update({ videoconsulta: next }).eq("id", professionalId);
+    onSaved?.();
+  }
   // "solo_whatsapp" hides all scheduling — those pros only take WhatsApp.
   const schedulingEnabled = contactPreference !== "solo_whatsapp";
 
@@ -79,14 +111,29 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
     const supabase = createClient();
     supabase
       .from("availability_slots")
-      .select("id, slot_date, slot_time")
+      .select("id, slot_date, slot_time, location_id")
       .eq("professional_id", professionalId)
       .gte("slot_date", todayISO())
       .order("slot_date")
       .order("slot_time")
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        // Retry without location_id if the column isn't migrated yet.
+        if (error && /location_id|column/i.test(error.message)) {
+          supabase
+            .from("availability_slots")
+            .select("id, slot_date, slot_time")
+            .eq("professional_id", professionalId)
+            .gte("slot_date", todayISO())
+            .order("slot_date")
+            .order("slot_time")
+            .then(({ data: d2 }) => {
+              setSlots((d2 ?? []).map((s) => ({ id: s.id, slot_date: s.slot_date, slot_time: String(s.slot_time).slice(0, 5), location_id: null })));
+              setLoading(false);
+            });
+          return;
+        }
         setSlots(
-          (data ?? []).map((s) => ({ id: s.id, slot_date: s.slot_date, slot_time: String(s.slot_time).slice(0, 5) }))
+          (data ?? []).map((s) => ({ id: s.id, slot_date: s.slot_date, slot_time: String(s.slot_time).slice(0, 5), location_id: (s as { location_id?: string }).location_id ?? null }))
         );
         setLoading(false);
       });
@@ -132,21 +179,31 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
     if (times.length === 0) return;
     setBusy(true);
     const supabase = createClient();
-    // Skip times that already exist for this date
-    const existing = new Set(slots.filter((s) => s.slot_date === genDate).map((s) => s.slot_time));
+    const locId = genLocation === GENERAL_LOC ? null : genLocation;
+    // Skip times that already exist for this date AND location
+    const existing = new Set(
+      slots.filter((s) => s.slot_date === genDate && (s.location_id ?? null) === locId).map((s) => s.slot_time)
+    );
     const fresh = times.filter((t) => !existing.has(t));
     if (fresh.length === 0) { setBusy(false); return; }
 
-    const rows = fresh.map((t) => ({ professional_id: professionalId, slot_date: genDate, slot_time: t }));
-    const { data, error } = await supabase
+    const rows = fresh.map((t) => ({ professional_id: professionalId, slot_date: genDate, slot_time: t, location_id: locId }));
+    let { data, error } = await supabase
       .from("availability_slots")
       .insert(rows)
-      .select("id, slot_date, slot_time");
+      .select("id, slot_date, slot_time, location_id");
+    // Retry without location_id if the column isn't migrated yet.
+    if (error && /location_id|column/i.test(error.message)) {
+      ({ data, error } = await supabase
+        .from("availability_slots")
+        .insert(fresh.map((t) => ({ professional_id: professionalId, slot_date: genDate, slot_time: t })))
+        .select("id, slot_date, slot_time"));
+    }
     setBusy(false);
     if (error) { console.error("[availability] insert", error); return; }
     setSlots((prev) => [
       ...prev,
-      ...((data ?? []).map((s) => ({ id: s.id, slot_date: s.slot_date, slot_time: String(s.slot_time).slice(0, 5) }))),
+      ...((data ?? []).map((s) => ({ id: s.id, slot_date: s.slot_date, slot_time: String(s.slot_time).slice(0, 5), location_id: (s as { location_id?: string }).location_id ?? locId }))),
     ]);
     // Adding a schedule automatically makes availability public.
     if (!isPublic) {
@@ -254,6 +311,27 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
         </button>
       </div>
 
+      {/* ── Videoconsulta toggle ────────────────────────────────── */}
+      <div className="flex items-center justify-between gap-4 rounded-2xl border border-[#e5e7eb] p-4">
+        <div className="flex items-center gap-3">
+          <div className={cn("flex h-9 w-9 items-center justify-center rounded-full", videoconsulta ? "bg-[#EBF5FB] text-[#009FD9]" : "bg-[#f3f4f6] text-[#6b7280]")}>
+            <Video className="h-4 w-4" />
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-[#111827]">Ofrecés videoconsulta</p>
+            <p className="text-xs text-[#6b7280]">Atendés en línea. Podés crear horarios específicos para videoconsulta.</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={toggleVideoconsulta}
+          className={cn("relative h-6 w-11 rounded-full transition-all shrink-0", videoconsulta ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
+          aria-label="Videoconsulta"
+        >
+          <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", videoconsulta ? "left-5" : "left-0.5")} />
+        </button>
+      </div>
+
       {/* ── Slot generator ──────────────────────────────────────── */}
       <div className="rounded-2xl border border-[#e5e7eb] p-5">
         <div className="flex items-center gap-2 mb-4">
@@ -262,6 +340,14 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
         </div>
 
         <div className="flex flex-col gap-4">
+          {locationOptions.length > 1 && (
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-[#6b7280] flex items-center gap-1"><MapPin className="h-3 w-3" /> Ubicación de este horario</label>
+              <select value={genLocation} onChange={(e) => setGenLocation(e.target.value)} className={cn(inputCls, "cursor-pointer w-full sm:w-72")}>
+                {locationOptions.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+              </select>
+            </div>
+          )}
           <div className="flex flex-wrap items-end gap-3">
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-[#6b7280]">Fecha</label>
@@ -332,8 +418,11 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {list.map((s) => (
-                    <span key={s.id ?? s.slot_time} className="group inline-flex items-center gap-1.5 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium pl-3 pr-1.5 py-1.5">
+                    <span key={s.id ?? `${s.slot_time}-${s.location_id ?? ""}`} className="group inline-flex items-center gap-1.5 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium pl-3 pr-1.5 py-1.5">
                       {s.slot_time}
+                      {locationOptions.length > 1 && (s.location_id ?? null) !== null && (
+                        <span className="text-[10px] font-normal text-[#0089bb]/70">· {locationLabel(s.location_id)}</span>
+                      )}
                       <button onClick={() => removeSlot(s)} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors cursor-pointer" aria-label="Quitar">
                         <X className="h-3.5 w-3.5" />
                       </button>

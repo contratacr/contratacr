@@ -61,16 +61,17 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       const todayISO = new Date().toISOString().slice(0, 10);
       const { data: slotRows } = await supabase
         .from("availability_slots")
-        .select("professional_id, slot_date, slot_time")
+        .select("professional_id, slot_date, slot_time, location_id")
         .in("professional_id", publicIds)
         .gte("slot_date", todayISO)
         .order("slot_date")
         .order("slot_time")
-        .limit(300);
+        .limit(400);
       for (const r of slotRows ?? []) {
         (slotsByPro[r.professional_id] ??= []).push({
           date: r.slot_date as string,
           time: String(r.slot_time).slice(0, 5),
+          locationId: (r as { location_id?: string }).location_id ?? null,
         });
       }
     } catch {

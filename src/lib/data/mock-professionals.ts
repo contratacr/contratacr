@@ -18,4 +18,5 @@ export type ProfessionalCardData = {
   isVerified: boolean;
   isFeatured: boolean;
   isAvailable: boolean;
+  workplaces?: { id?: string; name: string; address?: string; lat?: number; lng?: number }[];
 };
