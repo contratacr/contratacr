@@ -1,6 +1,55 @@
 # ContrataCR.com — Project Context
 
-_Last updated: 2026-06-07 (sprint 22 — 43-item batch: admin role + "Proveedor Autorizado" verification system (lifecycle/audit/appeals/badge/explainer), single Nombre completo, phone-input alignment, OTP email context, languages chip, contact-mode in Disponibilidad + per-location & videoconsulta schedules, work-mode toggle, unsaved-changes guard, compact /buscar cards + unified WhatsApp + no-reviews state, home-search autocomplete + canton→province, panel-aware register links + error/out-of-service pages, notifications badge + /notificaciones, Cloudinary transforms + 5-photo limit + profile gallery, numeric-only PriceInput, project completion lifecycle + delete; run migrations 023-026). Earlier: sprint 21 — shared CedulaInput: live X-XXXX-XXXX masking, clean-digit storage, auto type detection (cédula/DIMEX/NITE), format-only validation, label "Número de identificación" with required/optional prop. Earlier sprint 20 — unified workplaces (map autocomplete, multiple pins, supersedes affiliations + single fixed pin), PhoneInput flag/selection/length fixes, registration location flow reordered (province/canton required first, optional pin after); run migration 022. Earlier sprint 19 — flexible professional identity: replaced persona física/empresa binary with optional brand name + affiliations (institutions/workplaces), searchable + visible in /buscar; run migration 021. Earlier sprint 18 — registration hardening: account-creation error fix + retry/friendly errors, navbar scrolled label, reliable canton geocode, full country phone selector, form validation (defaults/onBlur/scroll/red asterisks), per-service experience; run migrations 019 + 020. Earlier sprint 17 — see "Sprint 17" section: client OTP, standardized PhoneInput, booking phone capture, contact_preference, languages, account_type/business_name, per-service pricing, reverse-geocode province/canton, completion CTA, footer cleanup; run migration 019. Earlier sprint 14/15/16 — see "Sprint 14-16" section below: multi-profession + multi-category, pricing tiers, HuliHealth /buscar split + inline schedules, real-time email/cédula checks, availability auto public/private, project→pro notifications, .ics export, emoji blocking, brands marquee, footer/social/support, OAuth pro cédula+name, sign-out fix). Earlier: sprint 13 — date-based availability + public/private toggle, search map clustered pins, verified-only reviews, booking notifications; sprint 12 — OAuth pro registration, category FK migration 013)_
+_Last updated: 2026-06-07 (sprint 23 — 28-item batch: route-change unsaved guard, condensed OTP, unified input focus color, post-verify lands on panel, robust Google client onboarding, client→professional upgrade, per-user favorites scoping, booking-persistence fix, admin login at /admin, smart verification CTA, TSE-assisted manual check, geolocation + both work modes + map re-init, availability single contact-mode decision + privada toggle + per-location-only schedules, 5-photo text + registration work-photos tip, booking slot auto-scroll + "Continuar por WhatsApp", notifications corner badge + pro notifications tab, proposal WA/revert/edit/cancel, project cancel-delete notify, self-interaction guards, project-confirmed reviews). Earlier: sprint 22 — 43-item batch: admin role + "Proveedor Autorizado" verification system (lifecycle/audit/appeals/badge/explainer), single Nombre completo, phone-input alignment, OTP email context, languages chip, contact-mode in Disponibilidad + per-location & videoconsulta schedules, work-mode toggle, unsaved-changes guard, compact /buscar cards + unified WhatsApp + no-reviews state, home-search autocomplete + canton→province, panel-aware register links + error/out-of-service pages, notifications badge + /notificaciones, Cloudinary transforms + 5-photo limit + profile gallery, numeric-only PriceInput, project completion lifecycle + delete; run migrations 023-026). Earlier: sprint 21 — shared CedulaInput: live X-XXXX-XXXX masking, clean-digit storage, auto type detection (cédula/DIMEX/NITE), format-only validation, label "Número de identificación" with required/optional prop. Earlier sprint 20 — unified workplaces (map autocomplete, multiple pins, supersedes affiliations + single fixed pin), PhoneInput flag/selection/length fixes, registration location flow reordered (province/canton required first, optional pin after); run migration 022. Earlier sprint 19 — flexible professional identity: replaced persona física/empresa binary with optional brand name + affiliations (institutions/workplaces), searchable + visible in /buscar; run migration 021. Earlier sprint 18 — registration hardening: account-creation error fix + retry/friendly errors, navbar scrolled label, reliable canton geocode, full country phone selector, form validation (defaults/onBlur/scroll/red asterisks), per-service experience; run migrations 019 + 020. Earlier sprint 17 — see "Sprint 17" section: client OTP, standardized PhoneInput, booking phone capture, contact_preference, languages, account_type/business_name, per-service pricing, reverse-geocode province/canton, completion CTA, footer cleanup; run migration 019. Earlier sprint 14/15/16 — see "Sprint 14-16" section below: multi-profession + multi-category, pricing tiers, HuliHealth /buscar split + inline schedules, real-time email/cédula checks, availability auto public/private, project→pro notifications, .ics export, emoji blocking, brands marquee, footer/social/support, OAuth pro cédula+name, sign-out fix). Earlier: sprint 13 — date-based availability + public/private toggle, search map clustered pins, verified-only reviews, booking notifications; sprint 12 — OAuth pro registration, category FK migration 013)_
+
+---
+
+## Sprint 23 (2026-06-07) — 28-item batch
+
+No new migrations. Behavioural/UX fixes + a few API/data-flow corrections.
+
+### Forms & session
+- **Unsaved-changes guard** (`useUnsavedWarning`): warns on hard unload AND in-app link navigation when the profile editor has unsaved edits (capture-phase link interception, since App Router has no route-abort API). Photo still auto-saves.
+- **OTP modal** condensed to one block: "Verificá tu correo" + "Ingresá el código de 6 dígitos que enviamos a {email}." (logo + duplicate copy removed; the registration wrapper no longer repeats it).
+- **"Nombre completo"** everywhere ("Nombre legal completo" removed in booking, completar-perfil, registration).
+- **Input focus color unified** to brand blue `#009FD9` (design-system `Input` was green `#319278`) so cédula / teléfono / nombre match; neutral hover border.
+
+### Onboarding / role / session bugs
+- Client email signup now sets `onboarding_completed` in **auth metadata** → after verifying, middleware sends them to their panel instead of the role-selection screen (fix 5).
+- Onboarding role select hardened: `updateUser` first, best-effort profile upsert, **hard navigation** → fixes the Google "Busco profesionales" choice not loading (fix 6).
+- **Client → professional upgrade**: "Convertirme en profesional" card in the client panel (same account → pro onboarding). The register API already upserts `role='professional'` + creates the professional record (fix 7).
+- **Favorites scoped per user**: localStorage key is namespaced with the user id (JWT `sub`), so two accounts on one browser never share Guardados (fix 8).
+- **Booking persistence fix**: the client bookings GET embedded `categories(...)` on professionals, which has no FK → the query 500'd and dropped every booking. Replaced with `category_id`; booked appointments now appear in Solicitudes (fix 9).
+
+### Admin / verification
+- **Admin login moved to `/admin`** itself (non-admins see the form inline); `/admin/login` redirects there; `requireAdmin` + sign-out updated (fix 10).
+- Explainer **"Solicitar mi verificación"** is session-aware (`VerificationCta`): existing professionals → verification tab, never registration (fix 11).
+- **TSE verification is assisted/manual** (no scraping): "Verificar en TSE" opens the official consultation in a new tab and copies the cédula to the clipboard; the admin compares the name and marks verified (fix 12).
+
+### Map / location
+- `WorkplacesPicker`: **"Usar mi ubicación actual"** (geolocation + reverse geocode) and **re-inits the map on every mount** (the Script `onLoad` only fires once) — fixes the blank map after fixed→mobile→fixed (fixes 13–14).
+- Profile **work mode allows BOTH** ("me desplazo" + "lugar fijo" are independent toggles); `service_type` stored as a comma list.
+
+### Availability structure
+- One top-level decision **"¿Cómo recibís clientes?"** (Solo WhatsApp / Citas en la app / Ambas). Visibility is no longer a separate question: when scheduling is enabled a **"Disponibilidad privada" toggle** appears (ON ⇒ hidden in /buscar + published slots cleared) (fix 15).
+- Schedules are **per-location only** — the "general/all locations" option was removed; guidance shown when the pro has no workplace and no videoconsulta (fix 16).
+
+### Photos / booking
+- Photos hint is a single "Máximo 5 fotos." (no more conflicting "Máx. 10") (fix 17).
+- Registration step 2: optional tip that posting work photos speeds the Authorized badge (fix 18).
+- Booking: selecting a day **auto-scrolls to the time slots** (fix 19); success WhatsApp button → **"Continuar por WhatsApp"** (fix 20).
+
+### Notifications
+- Client panel tab badge → clean corner badge with ring (no longer covers the bell) (fix 21).
+- Shared `NotificationsList`; the **professional panel has a Notificaciones tab** (parity with client) (fix 22).
+
+### Projects & proposals
+- Removed icons from "Lugares de trabajo" (fix 23).
+- Client proposals: **WhatsApp on any proposal** + **"Cambiar decisión"** to revert an accept/decline (reopens the project, clears the accepted pro) (fix 24).
+- Professional "Mis propuestas": **Editar** (price/message) + **Cancelar** a *pending* proposal — new proposals `PATCH` (field edit) + `DELETE` (owner + pending only) (fix 25).
+- Cancelling/deleting a project **notifies the assigned professional** (fix 26).
+- **Self-interaction guards** (server-side): a professional can't book or review their own profile (fix 27).
+- **Reviews unlock on a confirmed-finished project** too, not only completed bookings (the pro-marks → client-confirms → finalizado lifecycle with 7-day auto-confirm shipped in sprint 22) (fix 28).
 
 ---
 
