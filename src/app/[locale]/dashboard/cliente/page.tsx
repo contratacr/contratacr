@@ -893,6 +893,24 @@ export default function ClientDashboardPage() {
                     </div>
                   </div>
 
+                  {/* Become a professional — same account, adds the pro role + onboarding */}
+                  <div className="bg-white rounded-2xl border border-[#e5e7eb] p-6">
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#EBF5FB] shrink-0">
+                        <Briefcase className="h-5 w-5 text-[#009FD9]" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-sm font-semibold text-[#111827]">¿Ofrecés servicios?</h3>
+                        <p className="text-xs text-[#6b7280] mt-0.5 mb-3">
+                          Convertí tu cuenta en profesional sin crear una nueva. Completás tu cédula y datos de servicio una sola vez.
+                        </p>
+                        <Button size="sm" onClick={() => router.push("/registro/profesional")}>
+                          <Briefcase className="h-4 w-4" /> Convertirme en profesional
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Email */}
                   <div className="bg-white rounded-2xl border border-[#e5e7eb] p-6">
                     <label className="text-sm font-medium text-[#374151] block mb-1.5">Correo electrónico</label>

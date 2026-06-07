@@ -66,7 +66,9 @@ export default function RegisterClientPage() {
           email,
           password,
           options: {
-            data: { role: "client", full_name: fullName },
+            // onboarding_completed lets middleware send them straight to their
+            // panel after verifying — never back to the role-selection screen.
+            data: { role: "client", full_name: fullName, onboarding_completed: true },
           },
         });
 
@@ -126,10 +128,6 @@ export default function RegisterClientPage() {
         <main className="flex-1 flex items-center justify-center px-4 py-12">
           <div className="w-full max-w-sm">
             <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-8">
-              <h1 className="text-xl font-bold text-[#111827] text-center mb-1">Verificá tu correo</h1>
-              <p className="text-sm text-[#6b7280] text-center mb-6">
-                Ingresá el código de 6 dígitos que enviamos a <strong>{otpEmail}</strong>.
-              </p>
               <OtpVerification email={otpEmail} onVerified={() => { setOtpEmail(null); setSuccess(true); }} />
             </div>
           </div>

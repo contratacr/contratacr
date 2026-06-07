@@ -42,36 +42,39 @@ export default function OnboardingPage() {
     setSelecting(role);
     const supabase = createClient();
 
-    await supabase.from("profiles").upsert(
-      {
-        id: user.id,
-        email: user.email ?? "",
-        full_name:
-          (user.user_metadata?.full_name as string) ??
-          (user.user_metadata?.name as string) ??
-          user.email?.split("@")[0] ??
-          "",
-        avatar_url:
-          (user.user_metadata?.avatar_url as string) ??
-          (user.user_metadata?.picture as string) ??
-          null,
-        role,
-        onboarding_completed: true,
-      },
-      { onConflict: "id" }
-    );
-
-    await supabase.auth.updateUser({
-      data: { role, onboarding_completed: true },
-    });
-
-    if (role === "professional") {
-      router.push("/registro/profesional");
-    } else {
-      // Clients go straight to their dashboard — the cédula is collected later,
-      // at booking time, to keep onboarding fast and low-friction.
-      router.push("/dashboard/cliente");
+    // Persist the role in auth metadata first (drives middleware). Then upsert
+    // the profile best-effort. A hard navigation avoids the SPA/middleware race
+    // that previously left the client choice "stuck" without loading.
+    try {
+      await supabase.auth.updateUser({ data: { role, onboarding_completed: true } });
+    } catch (err) {
+      console.error("[onboarding] updateUser failed:", err);
     }
+    try {
+      await supabase.from("profiles").upsert(
+        {
+          id: user.id,
+          email: user.email ?? "",
+          full_name:
+            (user.user_metadata?.full_name as string) ??
+            (user.user_metadata?.name as string) ??
+            user.email?.split("@")[0] ??
+            "",
+          avatar_url:
+            (user.user_metadata?.avatar_url as string) ??
+            (user.user_metadata?.picture as string) ??
+            null,
+          role,
+          onboarding_completed: true,
+        },
+        { onConflict: "id" }
+      );
+    } catch (err) {
+      console.error("[onboarding] profile upsert failed:", err);
+    }
+
+    // Clients go straight to their dashboard (cédula collected later at booking).
+    window.location.assign(role === "professional" ? "/es/registro/profesional" : "/es/dashboard/cliente");
   }
 
   if (authLoading || !user) {

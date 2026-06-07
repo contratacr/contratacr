@@ -110,13 +110,19 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ bookings: data ?? [] });
   }
 
-  // Client role
-  const { data } = await supabase
+  // Client role. NOTE: professionals↔categories has no FK (category_id is plain
+  // text), so an embedded categories(...) join 500s and silently drops every
+  // booking. Select category_id as a column instead.
+  const { data, error } = await supabase
     .from("bookings")
-    .select("*, professionals(slug, profiles(full_name, avatar_url), categories(id, icon))")
+    .select("*, professionals(slug, category_id, profiles(full_name, avatar_url))")
     .eq("client_id", session.user.id)
     .order("created_at", { ascending: false });
 
+  if (error) {
+    console.error("[GET /api/bookings] client error:", error.message);
+    return NextResponse.json({ error: error.message, bookings: [] }, { status: 500 });
+  }
   return NextResponse.json({ bookings: data ?? [] });
 }
 

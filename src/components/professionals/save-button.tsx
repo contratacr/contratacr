@@ -4,7 +4,38 @@ import { useEffect, useState } from "react";
 import { Bookmark } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const STORAGE_KEY = "contratacr_saved_pros";
+const STORAGE_PREFIX = "contratacr_saved_pros";
+
+// Favorites are scoped to the signed-in user so two accounts on the same browser
+// never see each other's saved pros. We derive the user id synchronously from
+// the Supabase auth token in localStorage (the JWT "sub" claim); falls back to
+// "guest" when logged out.
+function currentUserId(): string {
+  if (typeof window === "undefined") return "guest";
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith("sb-") && k.endsWith("-auth-token")) {
+        const raw = localStorage.getItem(k);
+        if (!raw) continue;
+        const parsed = JSON.parse(raw);
+        const token: string | undefined = parsed?.access_token ?? parsed?.currentSession?.access_token;
+        if (token) {
+          const payload = JSON.parse(atob(token.split(".")[1]));
+          if (payload?.sub) return payload.sub as string;
+        }
+        if (parsed?.user?.id) return parsed.user.id as string;
+      }
+    }
+  } catch {
+    /* fall through to guest */
+  }
+  return "guest";
+}
+
+function storageKey(): string {
+  return `${STORAGE_PREFIX}_${currentUserId()}`;
+}
 
 export type SavedPro = {
   id: string;
@@ -24,7 +55,7 @@ export type SavedPro = {
 export function getSavedPros(): SavedPro[] {
   if (typeof window === "undefined") return [];
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "[]");
+    return JSON.parse(localStorage.getItem(storageKey()) ?? "[]");
   } catch {
     return [];
   }
@@ -33,13 +64,13 @@ export function getSavedPros(): SavedPro[] {
 export function savePro(pro: SavedPro) {
   const saved = getSavedPros();
   if (!saved.find((p) => p.id === pro.id)) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([...saved, pro]));
+    localStorage.setItem(storageKey(), JSON.stringify([...saved, pro]));
   }
 }
 
 export function unsavePro(id: string) {
   const saved = getSavedPros().filter((p) => p.id !== id);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+  localStorage.setItem(storageKey(), JSON.stringify(saved));
 }
 
 export function isSaved(id: string): boolean {
