@@ -8,18 +8,17 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
-import { CedulaInput } from "@/components/ui/cedula-input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ContrataCRLogo } from "@/components/landing/landing-navbar";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type RegisterStep = "email" | "cedula" | "password" | "otp";
+type RegisterStep = "email" | "name" | "password" | "otp";
 type ModalView = "register" | "login";
 
 const STEP_NUM: Record<RegisterStep, number> = {
-  email: 1, cedula: 2, password: 3, otp: 4,
+  email: 1, name: 2, password: 3, otp: 4,
 };
 
 export interface ClientRegistrationModalProps {
@@ -192,10 +191,8 @@ export function ClientRegistrationModal({
 
   // Register state
   const [email, setEmail] = useState("");
-  const [cedula, setCedula] = useState("");
   const [fullName, setFullName] = useState("");
   const [manualName, setManualName] = useState("");
-  const [useManualName, setUseManualName] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -206,8 +203,6 @@ export function ClientRegistrationModal({
   const [showLoginPw, setShowLoginPw] = useState(false);
 
   // Async states
-  const [loadingCedula, setLoadingCedula] = useState(false);
-  const [cedulaError, setCedulaError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [duplicateEmailDetected, setDuplicateEmailDetected] = useState(false);
@@ -216,15 +211,12 @@ export function ClientRegistrationModal({
     setView("register");
     setStep("email");
     setEmail("");
-    setCedula("");
     setFullName("");
     setManualName("");
-    setUseManualName(false);
     setPassword("");
     setConfirmPassword("");
     setLoginPassword("");
     setError(null);
-    setCedulaError(null);
     setDuplicateEmailDetected(false);
   }
 
@@ -260,30 +252,15 @@ export function ClientRegistrationModal({
     setSubmitting(true);
     setError(null);
     const resolved = manualName.trim() || fullName;
-    const cedulaClean = cedula.replace(/\D/g, "");
     const supabase = createClient();
 
-    // Check cédula uniqueness before creating account
-    if (cedulaClean) {
-      const { data: existingCedula } = await supabase
-        .from("profiles")
-        .select("id")
-        .eq("cedula", cedulaClean)
-        .maybeSingle();
-      if (existingCedula) {
-        setError("Esta cédula ya está registrada en ContrataCR.");
-        setSubmitting(false);
-        return;
-      }
-    }
-
+    // No cédula at client signup — it's requested at booking time (per request).
     const { data: signUpData, error: e } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
           full_name: resolved,
-          cedula: cedulaClean,
           role: "client",
           onboarding_completed: true,
         },
@@ -308,20 +285,16 @@ export function ClientRegistrationModal({
       return;
     }
 
-    // Save cédula + fullName to profiles via API (also handles profiles trigger gap)
+    // Save fullName to profiles via API (also handles profiles trigger gap).
     if (signUpData?.user?.id) {
       try {
         await fetch("/api/register/client", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userId: signUpData.user.id,
-            fullName: resolved,
-            cedula: cedulaClean,
-          }),
+          body: JSON.stringify({ userId: signUpData.user.id, fullName: resolved }),
         });
       } catch {
-        // Non-fatal — cedula will be saved when session is established
+        // Non-fatal — name will be saved when session is established
       }
     }
 
@@ -351,7 +324,7 @@ export function ClientRegistrationModal({
 
   const stepLabels: Record<RegisterStep, string> = {
     email:    "Correo",
-    cedula:   "Identidad",
+    name:     "Nombre",
     password: "Contraseña",
     otp:      "Verificar",
   };
@@ -469,13 +442,13 @@ export function ClientRegistrationModal({
                 <div>
                   <h2 className="text-xl font-bold text-[#111827]">
                     {step === "email" && "Tu correo electrónico"}
-                    {step === "cedula" && "Tu información personal"}
+                    {step === "name" && "Tu nombre"}
                     {step === "password" && "Creá tu contraseña"}
                     {step === "otp" && "Código de verificación"}
                   </h2>
                   <p className="text-sm text-[#6b7280] mt-1">
                     {step === "email" && "Ingresá el correo que usarás para tu cuenta."}
-                    {step === "cedula" && "Ingresá tu nombre completo y número de cédula."}
+                    {step === "name" && "¿Cómo te llamás? Tu cédula te la pediremos solo al solicitar un servicio."}
                     {step === "password" && "Elegí una contraseña segura para tu cuenta."}
                     {step === "otp" && "Ingresá el código de 6 dígitos enviado a tu correo."}
                   </p>
@@ -499,23 +472,15 @@ export function ClientRegistrationModal({
                   />
                 )}
 
-                {/* STEP: cedula — manual name + cedula number only */}
-                {step === "cedula" && (
-                  <div className="flex flex-col gap-4">
-                    <Input
-                      label="Nombre completo *"
-                      placeholder="Juan Carlos Pérez González"
-                      value={manualName}
-                      onChange={(e) => setManualName(e.target.value)}
-                      autoFocus
-                    />
-                    <CedulaInput
-                      required
-                      value={cedula}
-                      onChange={(c) => { setCedula(c); setCedulaError(null); }}
-                      error={cedulaError ?? undefined}
-                    />
-                  </div>
+                {/* STEP: name — full name only (cédula is collected at booking) */}
+                {step === "name" && (
+                  <Input
+                    label="Nombre completo *"
+                    placeholder="Juan Carlos Pérez González"
+                    value={manualName}
+                    onChange={(e) => setManualName(e.target.value)}
+                    autoFocus
+                  />
                 )}
 
                 {/* STEP: password */}
@@ -573,8 +538,8 @@ export function ClientRegistrationModal({
                       size="md"
                       onClick={() => {
                         setError(null);
-                        if (step === "cedula") setStep("email");
-                        else if (step === "password") setStep("cedula");
+                        if (step === "name") setStep("email");
+                        else if (step === "password") setStep("name");
                       }}
                     >
                       <ArrowLeft className="h-4 w-4" />
@@ -583,22 +548,20 @@ export function ClientRegistrationModal({
                   <Button
                     size="md"
                     className="flex-1"
-                    loading={submitting || loadingCedula}
+                    loading={submitting}
                     disabled={
                       (step === "email" && !email.includes("@")) ||
-                      (step === "cedula" && (!manualName.trim() || cedula.replace(/\D/g, "").length < 9)) ||
+                      (step === "name" && !manualName.trim()) ||
                       (step === "password" && (!isPasswordValid() || !confirmPassword))
                     }
                     onClick={() => {
                       setError(null);
-                      if (step === "email") setStep("cedula");
-                      else if (step === "cedula") setStep("password");
+                      if (step === "email") setStep("name");
+                      else if (step === "name") setStep("password");
                       else if (step === "password") handleSignUp();
                     }}
                   >
-                    {step === "cedula" && loadingCedula
-                      ? "Verificando…"
-                      : step === "password"
+                    {step === "password"
                       ? submitting ? "Creando cuenta…" : "Crear cuenta"
                       : <>Continuar <ArrowRight className="h-4 w-4" /></>}
                   </Button>

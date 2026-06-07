@@ -116,7 +116,7 @@ export async function GET(req: NextRequest) {
 
     const { data } = await supabase
       .from("bookings")
-      .select("*, profiles:client_id(full_name, avatar_url)")
+      .select("*, profiles:client_id(full_name, avatar_url, is_flagged)")
       .eq("professional_id", pro.id)
       .order("created_at", { ascending: false });
 

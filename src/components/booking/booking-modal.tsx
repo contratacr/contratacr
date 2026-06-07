@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { CedulaInput } from "@/components/ui/cedula-input";
+import { isValidId, detectIdType, cleanId } from "@/lib/cedula";
 import { StarRating } from "@/components/ui/star-rating";
 import { getInitials, getWhatsAppLink, buildBookingIcs } from "@/lib/utils";
 import { cn } from "@/lib/utils";
@@ -117,6 +118,11 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   const [savingProfile, setSavingProfile] = useState(false);
   // Pro hid their availability → slots are not shown; we offer WhatsApp instead.
   const [availabilityPrivate, setAvailabilityPrivate] = useState(false);
+  // Client cédula is requested HERE (at booking), not at signup. Format-only for
+  // the client (no TSE name confirmation); national cédulas are also checked to
+  // EXIST in the padrón to reject invented numbers. Recoverable inline error.
+  const [cedulaError, setCedulaError] = useState<string | null>(null);
+  const [checkingCedula, setCheckingCedula] = useState(false);
   // Guest email duplicate detection (inline, real-time).
   const guestEmailCheck = useAvailabilityCheck(clientEmail, "email", !isLoggedIn);
 
@@ -295,7 +301,8 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     const cleanPhone = profilePhone.replace(/\D/g, "");
     if (cleanPhone.length < 8) { setProfileError("Ingresá un teléfono válido (8 dígitos)."); return; }
     if (needsProfile && !clientName.trim()) { setProfileError("Ingresá tu nombre completo."); return; }
-    if (needsProfile && cleanCedula.length < 9) { setProfileError("Ingresá una cédula válida (9 dígitos)."); return; }
+    // Validate the cédula (format + padrón existence) — recoverable inline error.
+    if (needsCedula && !(await validateClientCedula())) return;
 
     setSavingProfile(true);
     const supabase = createClient();
@@ -303,7 +310,8 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     if (user) {
       // Only write the fields we actually collected on this step.
       const updates: Record<string, string> = { phone: cleanPhone };
-      if (needsProfile) { updates.full_name = clientName.trim(); updates.cedula = cleanCedula; }
+      if (needsProfile) updates.full_name = clientName.trim();
+      if (needsCedula) updates.cedula = cleanCedula;
       const { error } = await supabase
         .from("profiles")
         .update(updates)
@@ -351,11 +359,41 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   const slots = selectedDate ? getSlotsForDate(selectedDate) : [];
   const hasAnyAvailability = usesExplicitSlots || Object.values(availability).some((d) => d.enabled);
 
-  // Logged-in clients who have a cédula but no phone on file still need to give
-  // us a WhatsApp number once — we collect it on the "complete" step (phone-only).
-  const needsPhone = isLoggedIn && !needsProfile && !profilePhone;
-  const totalSteps = isLoggedIn ? (needsProfile || needsPhone ? 3 : 2) : 3;
+  // Cédula is requested at booking for EVERY client who doesn't have one on file
+  // (it's no longer collected at signup). Phone is collected the same way.
+  const needsCedula = isLoggedIn && !profileCedula;
+  const needsPhone = isLoggedIn && !profilePhone;
+  const needsCompleteStep = needsProfile || needsCedula || needsPhone;
+  const totalSteps = isLoggedIn ? (needsCompleteStep ? 3 : 2) : 3;
   const stepIndex = { calendar: 0, details: 1, contact: 2, complete: 2, success: 3 };
+
+  // Validate the client's cédula: format always; existence in the padrón for
+  // national cédulas (DIMEX/NITE aren't in the TSE roll). Returns true if OK and
+  // sets a recoverable inline error otherwise. Never drops the booking.
+  async function validateClientCedula(): Promise<boolean> {
+    setCedulaError(null);
+    const clean = cleanId(profileCedula);
+    if (!isValidId(clean)) {
+      setCedulaError("El número de identificación no es válido (CR: 9 dígitos · DIMEX: 11-12 · NITE: 10). Revisalo e intentá de nuevo.");
+      return false;
+    }
+    // Only national cédulas exist in the TSE padrón — verify to reject fakes.
+    if (detectIdType(clean) === "cedula") {
+      setCheckingCedula(true);
+      try {
+        const res = await fetch(`/api/cedula/${clean}`);
+        if (!res.ok) {
+          setCedulaError("No encontramos esa cédula en el padrón. Revisá el número e intentá de nuevo.");
+          return false;
+        }
+      } catch {
+        // Network/lookup down — don't block the client over our own outage.
+      } finally {
+        setCheckingCedula(false);
+      }
+    }
+    return true;
+  }
 
   return (
     <Dialog.Root open={open} onOpenChange={(v) => !v && resetAndClose()}>
@@ -672,6 +710,13 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                   <p className="text-xs text-[#9ca3af] -mt-2">
                     Para coordinar tu cita necesitamos tu número de WhatsApp.
                   </p>
+                  <CedulaInput
+                    required
+                    value={profileCedula}
+                    onChange={(c) => { setProfileCedula(c); setCedulaError(null); }}
+                    error={cedulaError ?? undefined}
+                    hint="Solo para tu solicitud — no es una verificación de identidad."
+                  />
                 </div>
               )}
 
@@ -713,12 +758,16 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     value={profilePhone}
                     onChange={setProfilePhone}
                   />
-                  {needsProfile && (
-                    <CedulaInput
-                      required
-                      value={profileCedula}
-                      onChange={setProfileCedula}
-                    />
+                  {needsCedula && (
+                    <div>
+                      <CedulaInput
+                        required
+                        value={profileCedula}
+                        onChange={(c) => { setProfileCedula(c); setCedulaError(null); }}
+                        error={cedulaError ?? undefined}
+                        hint="Solo para tu solicitud — no es una verificación de identidad."
+                      />
+                    </div>
                   )}
                 </div>
               )}
@@ -790,7 +839,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     onClick={async () => {
                       if (!description.trim()) return;
                       if (isLoggedIn) {
-                        if (needsProfile || needsPhone) setStep("complete");
+                        if (needsCompleteStep) setStep("complete");
                         else await handleSubmit();
                       } else {
                         setStep("contact");
@@ -799,7 +848,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                   >
                     {submitting
                       ? "Enviando…"
-                      : isLoggedIn && !needsProfile
+                      : isLoggedIn && !needsCompleteStep
                         ? <><WhatsAppIcon className="h-4 w-4" /> {t("step4.submit")}</>
                         : t("continue")}
                   </Button>
@@ -809,11 +858,11 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                   <Button
                     size="md"
                     className="flex-1"
-                    loading={submitting}
-                    disabled={profilePhone.replace(/\D/g, "").length < 8 || guestEmailCheck.taken}
-                    onClick={() => handleSubmit()}
+                    loading={submitting || checkingCedula}
+                    disabled={profilePhone.replace(/\D/g, "").length < 8 || guestEmailCheck.taken || !profileCedula}
+                    onClick={async () => { if (await validateClientCedula()) await handleSubmit(); }}
                   >
-                    {submitting ? "Enviando…" : <><WhatsAppIcon className="h-4 w-4" /> {t("step4.submit")}</>}
+                    {submitting || checkingCedula ? "Enviando…" : <><WhatsAppIcon className="h-4 w-4" /> {t("step4.submit")}</>}
                   </Button>
                 )}
 

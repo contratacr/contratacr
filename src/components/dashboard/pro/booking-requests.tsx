@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CalendarDays, User, FileText } from "lucide-react";
+import { CalendarDays, User, FileText, Phone, Flag } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,7 @@ import type { BookingStatus } from "@/types";
 
 type Booking = {
   id: string;
+  client_id?: string | null;
   client_cedula?: string;
   client_name?: string;
   client_email?: string;
@@ -23,6 +24,7 @@ type Booking = {
   status: BookingStatus;
   created_at: string;
   professional_whatsapp?: string;
+  profiles?: { full_name?: string; avatar_url?: string; is_flagged?: boolean } | null;
 };
 
 const STATUS_VARIANT: Record<BookingStatus, "warning" | "success" | "error" | "default"> = {
@@ -61,6 +63,18 @@ export function BookingRequests() {
       body: JSON.stringify({ id, status }),
     });
     setBookings((prev) => prev.map((b) => (b.id === id ? { ...b, status } : b)));
+  }
+
+  async function reportClient(booking: Booking) {
+    const reason = window.prompt("¿Por qué reportás a este cliente? (no se presentó, datos falsos, trato irrespetuoso, etc.)");
+    if (!reason || !reason.trim()) return;
+    const res = await fetch("/api/report-client", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bookingId: booking.id, clientId: booking.client_id ?? null, reason: reason.trim() }),
+    });
+    if (res.ok) alert("Gracias. Tu reporte fue enviado al equipo de moderación.");
+    else alert("No se pudo enviar el reporte. Intentá de nuevo.");
   }
 
   if (loading) {
@@ -115,9 +129,20 @@ export function BookingRequests() {
 
               <div className="space-y-2">
                 {(booking.client_name) && (
-                  <div className="flex items-center gap-2 text-sm">
+                  <div className="flex items-center gap-2 text-sm flex-wrap">
                     <User className="h-4 w-4 text-[#6b7280] shrink-0" />
                     <span className="font-medium text-[#111827]">{booking.client_name}</span>
+                    {booking.profiles?.is_flagged && (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#b45309] bg-[#fef3c7] px-1.5 py-0.5 rounded-md">
+                        ⚠ Cliente reportado
+                      </span>
+                    )}
+                  </div>
+                )}
+                {booking.client_phone && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <Phone className="h-4 w-4 text-[#6b7280] shrink-0" />
+                    <span className="text-[#374151]">{booking.client_phone}</span>
                   </div>
                 )}
                 {booking.service_description && (
@@ -167,12 +192,12 @@ export function BookingRequests() {
                   Marcar como completado
                 </Button>
               )}
-              {booking.client_name && (
+              {booking.client_phone && (
                 <Button size="sm" variant="whatsapp" asChild>
                   <a
                     href={getWhatsAppLink(
-                      booking.professional_whatsapp ?? "",
-                      `Hola ${booking.client_name}, te contacto por tu solicitud en ContrataCR.`
+                      booking.client_phone,
+                      `Hola ${booking.client_name ?? ""}, te contacto por tu solicitud en ContrataCR.`
                     )}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -182,6 +207,12 @@ export function BookingRequests() {
                   </a>
                 </Button>
               )}
+              <button
+                onClick={() => reportClient(booking)}
+                className="inline-flex items-center justify-center gap-1.5 text-xs text-[#9ca3af] hover:text-red-500 transition-colors mt-0.5"
+              >
+                <Flag className="h-3.5 w-3.5" /> Reportar cliente
+              </button>
             </div>
           </div>
         </CardContent>
