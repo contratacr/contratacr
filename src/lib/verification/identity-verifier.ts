@@ -24,8 +24,26 @@ export interface IdentityCheckResult {
   provider: string;
 }
 
+export interface IdentityLookupResult {
+  /** Cédula exists in the source. */
+  found: boolean;
+  /** Official full name from the source (properly cased), or null when not found. */
+  fullName: string | null;
+  /** Identifier of the provider that produced this result. */
+  provider: string;
+}
+
 export interface IdentityVerifier {
   readonly name: string;
+
+  // ── Primary flow (robust): look up the official name by cédula ──
+  // The professional does NOT type their name for verification; we read it from
+  // the source and have them CONFIRM it. This removes name-matching entirely:
+  // found → official name (auto-fill + confirm + auto-verify); not found → manual
+  // entry + pendiente de revisión. There is NO permissive fallback — a cédula not
+  // in the source MUST return found:false (integrity guard against false grants).
+  lookup(cedula: string): Promise<IdentityLookupResult>;
+
   verify(input: IdentityCheckInput): Promise<IdentityCheckResult>;
 
   // ── Future extension point (DO NOT implement now) ──
@@ -33,6 +51,16 @@ export interface IdentityVerifier {
   // this and gate the future "Proveedor Autorizado" tier. Optional by design so
   // the current padrón provider doesn't need it.
   verifyBiometric?(input: { cedula: string; selfie: Blob }): Promise<IdentityCheckResult>;
+}
+
+/** Title-case a padrón name ("LUCILA PORRAS AGUERO" → "Lucila Porras Aguero"). */
+export function titleCaseName(s: string): string {
+  return (s ?? "")
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
 }
 
 // ── Name normalization + similarity ─────────────────────────────────────────
@@ -78,6 +106,23 @@ export const NAME_MATCH_THRESHOLD = 0.6;
 // ── Self-hosted padrón provider ─────────────────────────────────────────────
 export class SelfHostedPadronVerifier implements IdentityVerifier {
   readonly name = "self_hosted_padron";
+
+  async lookup(cedula: string): Promise<IdentityLookupResult> {
+    const id = cleanId(cedula);
+    if (!id) return { found: false, fullName: null, provider: this.name };
+    const admin = createAdminClient();
+    const { data, error } = await admin
+      .from("padron")
+      .select("nombre, papellido, sapellido")
+      .eq("cedula", id)
+      .maybeSingle();
+    // Not found / error → found:false. NO permissive fallback (integrity guard).
+    if (error || !data) return { found: false, fullName: null, provider: this.name };
+    const official = titleCaseName(
+      [data.nombre, data.papellido, data.sapellido].filter(Boolean).join(" ")
+    );
+    return { found: true, fullName: official || null, provider: this.name };
+  }
 
   async verify({ cedula, fullName }: IdentityCheckInput): Promise<IdentityCheckResult> {
     const id = cleanId(cedula);

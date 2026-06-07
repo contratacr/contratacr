@@ -14,7 +14,7 @@ import { Navbar } from "@/components/layout/navbar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { PhoneInput, isPhoneComplete } from "@/components/ui/phone-input";
-import { CedulaInput } from "@/components/ui/cedula-input";
+import { IdentityField } from "@/components/ui/identity-field";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
@@ -763,24 +763,16 @@ export default function RegisterProfessionalPage() {
               </div>
 
             <form noValidate onSubmit={form1.handleSubmit(onStep1, scrollToFirstError)} className="flex flex-col gap-4">
-              {/* Name — single full-name field */}
-              <Input
-                label={<>Nombre completo <span className="text-red-500">*</span></>}
-                placeholder="Juan Pérez González"
-                hint="tal como aparece en tu documento"
-                error={form1.formState.errors.fullName?.message}
-                {...form1.register("fullName")}
+              {/* Identity: cédula → padrón lookup → confirm official name. The
+                  name is NOT typed for verification; it comes from the padrón. */}
+              <IdentityField
+                cedula={form1.watch("cedula") ?? ""}
+                fullName={form1.watch("fullName") ?? ""}
+                onCedulaChange={(c) => form1.setValue("cedula", c, { shouldValidate: true })}
+                onFullNameChange={(n) => form1.setValue("fullName", n, { shouldValidate: true })}
+                cedulaError={form1.formState.errors.cedula?.message ?? (cedulaCheck.taken ? "Esta identificación ya está registrada en ContrataCR." : undefined)}
+                nameError={form1.formState.errors.fullName?.message}
               />
-
-              {/* Identificación — masked, auto-detecting (no API lookup) */}
-              <div>
-                <CedulaInput
-                  required
-                  value={form1.watch("cedula") ?? ""}
-                  onChange={(c) => form1.setValue("cedula", c, { shouldValidate: true })}
-                  error={form1.formState.errors.cedula?.message ?? (cedulaCheck.taken ? "Esta identificación ya está registrada en ContrataCR." : undefined)}
-                />
-              </div>
 
               <div className="border-t border-[#f3f4f6] pt-4">
                 <Input
@@ -846,23 +838,16 @@ export default function RegisterProfessionalPage() {
           {step === 1 && (
             <form noValidate onSubmit={form2.handleSubmit(onStep2, scrollToFirstError)} className="flex flex-col gap-4">
 
-              {/* Name + cédula — required for OAuth professionals (no identity step) */}
+              {/* Identity — required for OAuth professionals (no identity step).
+                  Cédula → padrón lookup → confirm official name. */}
               {currentUser && (
-                <Input
-                  label={<>Nombre completo <span className="text-red-500">*</span></>}
-                  placeholder="Juan Pérez González"
-                  hint="tal como aparece en tu documento"
-                  value={oauthFullName}
-                  onChange={(e) => { setOauthFullName(e.target.value); setOauthNameError(null); }}
-                  error={oauthNameError ?? undefined}
-                />
-              )}
-              {currentUser && (
-                <CedulaInput
-                  required
-                  value={oauthCedula}
-                  onChange={(c) => { setOauthCedula(c); setOauthCedulaError(null); }}
-                  error={oauthCedulaError ?? (oauthCedulaCheck.taken ? "Esta identificación ya está registrada en ContrataCR." : undefined)}
+                <IdentityField
+                  cedula={oauthCedula}
+                  fullName={oauthFullName}
+                  onCedulaChange={(c) => { setOauthCedula(c); setOauthCedulaError(null); }}
+                  onFullNameChange={(n) => { setOauthFullName(n); setOauthNameError(null); }}
+                  cedulaError={oauthCedulaError ?? (oauthCedulaCheck.taken ? "Esta identificación ya está registrada en ContrataCR." : undefined)}
+                  nameError={oauthNameError ?? undefined}
                 />
               )}
 

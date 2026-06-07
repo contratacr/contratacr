@@ -14,6 +14,7 @@ interface CedulaInputProps {
   autoFocus?: boolean;
   /** Override the default helper text. */
   hint?: string;
+  disabled?: boolean;
 }
 
 const DEFAULT_HINT = "CR: 9 dígitos · DIMEX: 11-12 · NITE: 10";
@@ -31,6 +32,7 @@ export function CedulaInput({
   id = "identificacion",
   autoFocus,
   hint,
+  disabled,
 }: CedulaInputProps) {
   const type = detectIdType(value);
   const label = (
@@ -66,6 +68,7 @@ export function CedulaInput({
       hint={hint ?? DEFAULT_HINT}
       error={error}
       autoFocus={autoFocus}
+      disabled={disabled}
       aria-invalid={!!error}
     />
   );

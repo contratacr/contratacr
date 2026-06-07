@@ -7,10 +7,15 @@ export type RunOutcome = "verified" | "pending" | "ticket" | "skipped";
 
 /**
  * Run automatic identity verification for one professional against the padrón.
- *  - match → grant "Identidad verificada" automatically (method=automatic).
- *  - not found / name mismatch → "pendiente de revisión" (never auto-reject).
- * Data minimization: we store only the RESULT (verified flag, method, provider,
- * timestamp) — never the padrón person data.
+ * ROBUST flow (no name-matching): we look up the cédula in the padrón and read
+ * the OFFICIAL name from it.
+ *  - found  → write the official name onto the profile + grant "Identidad
+ *             verificada" automatically (method=automatic). The displayed name
+ *             always comes from the padrón, never free text.
+ *  - not found → "pendiente de revisión" (never auto-reject). NO permissive
+ *             fallback — a cédula absent from the padrón is NEVER auto-verified.
+ * Data minimization: we store only this professional's OWN official name + the
+ * verification RESULT — never other people's padrón data.
  * Best-effort: returns the outcome; notification failures don't throw.
  */
 export async function runIdentityVerification(
@@ -21,7 +26,7 @@ export async function runIdentityVerification(
 
   const { data: pro } = await admin
     .from("professionals")
-    .select("id, verification_status, profiles(full_name, cedula)")
+    .select("id, profile_id, verification_status, profiles(full_name, cedula)")
     .eq("id", professionalId)
     .maybeSingle();
   if (!pro) return "skipped";
@@ -30,15 +35,21 @@ export async function runIdentityVerification(
   const profile = pro.profiles as any;
   const cedula = cleanId(profile?.cedula ?? "");
   const fullName: string = profile?.full_name ?? "";
-  if (!cedula || !fullName) return "skipped";
+  if (!cedula) return "skipped";
 
   const verifier = getIdentityVerifier();
-  const result = await verifier.verify({ cedula, fullName });
+  const result = await verifier.lookup(cedula);
 
   const now = new Date().toISOString();
   const fromStatus = pro.verification_status as string;
 
-  if (result.matched) {
+  if (result.found) {
+    // Source of truth for the name is the padrón. Overwrite the profile name with
+    // the official one so a typed mismatch ("Isaac Monge") can never stand.
+    if (result.fullName && result.fullName !== fullName) {
+      await admin.from("profiles").update({ full_name: result.fullName }).eq("id", pro.profile_id);
+    }
+
     await admin
       .from("professionals")
       .update({
@@ -59,16 +70,14 @@ export async function runIdentityVerification(
       action: "auto_verified",
       from_status: fromStatus,
       to_status: "verified",
-      reason: `Coincidencia automática (${result.provider}, score ${result.score.toFixed(2)}).`,
+      reason: `Cédula encontrada en el padrón (${result.provider}); identidad confirmada.`,
     });
 
     await notifyVerificationDecision({ professionalId, kind: "verified" });
     return "verified";
   }
 
-  const failReason = result.found
-    ? `Cédula encontrada pero el nombre no coincide (score ${result.score.toFixed(2)}).`
-    : "Cédula no encontrada en el padrón.";
+  const failReason = "Cédula no encontrada en el padrón.";
 
   // Appeal that STILL fails → under_appeal + support ticket (the rare tail the
   // owner resolves manually). Never auto-reject; never silently drop.
