@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { Button } from "@/components/ui/button";
+import { PriceInput } from "@/components/ui/price-input";
 import { CheckCircle2 } from "lucide-react";
 import { PROVINCES } from "@/lib/data/cr-geography";
 import { cn } from "@/lib/utils";
@@ -291,20 +292,8 @@ export default function PublicarProyectoPage() {
                   Presupuesto estimado (₡) <span className="text-[#9ca3af] font-normal">(opcional)</span>
                 </label>
                 <div className="grid grid-cols-2 gap-3">
-                  <input
-                    type="number"
-                    className={inputClass}
-                    placeholder="Mínimo"
-                    value={form.budgetMin}
-                    onChange={(e) => update("budgetMin", e.target.value)}
-                  />
-                  <input
-                    type="number"
-                    className={inputClass}
-                    placeholder="Máximo"
-                    value={form.budgetMax}
-                    onChange={(e) => update("budgetMax", e.target.value)}
-                  />
+                  <PriceInput placeholder="Mínimo" value={form.budgetMin} onChange={(v) => update("budgetMin", v)} />
+                  <PriceInput placeholder="Máximo" value={form.budgetMax} onChange={(v) => update("budgetMax", v)} />
                 </div>
               </div>
 

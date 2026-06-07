@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { PriceInput } from "@/components/ui/price-input";
 import { cn, getWhatsAppLink, getInitials } from "@/lib/utils";
 
 type ProposalStatus = "pending" | "accepted" | "declined";
@@ -239,12 +240,10 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                             <label className="text-xs font-medium text-[#374151] block mb-1.5">
                               Tu precio (₡) <span className="text-[#9ca3af] font-normal">opcional</span>
                             </label>
-                            <input
-                              type="number"
+                            <PriceInput
                               placeholder="Ej: 50000"
                               value={form.price}
-                              onChange={(e) => updateForm(project.id, "price", e.target.value)}
-                              className={inputClass}
+                              onChange={(v) => updateForm(project.id, "price", v)}
                             />
                           </div>
                           <div>

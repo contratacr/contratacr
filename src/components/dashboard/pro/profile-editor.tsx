@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { LanguagesInput } from "@/components/ui/languages-input";
+import { PriceInput } from "@/components/ui/price-input";
 import { WorkplacesPicker, type Workplace } from "@/components/maps/workplaces-picker";
 import { createClient } from "@/lib/supabase/client";
 import { Camera, Check, X, Plus, Truck, MapPin } from "lucide-react";
@@ -403,14 +404,11 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
                 ))}
               </select>
               {tier.type !== "a_convenir" && (
-                <div className="relative flex-1">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[#9ca3af]">₡</span>
-                  <input
-                    type="number"
+                <div className="flex-1">
+                  <PriceInput
                     placeholder="10000"
-                    value={tier.amount ?? ""}
-                    onChange={(e) => updateTier(tier.id, { amount: e.target.value ? Number(e.target.value) : undefined })}
-                    className="w-full h-10 pl-7 pr-3 rounded-xl border border-[#e5e7eb] bg-white text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+                    value={tier.amount != null ? String(tier.amount) : ""}
+                    onChange={(v) => updateTier(tier.id, { amount: v ? Number(v) : undefined })}
                   />
                 </div>
               )}

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Plus, Trash2, Check, Pencil, X, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PriceInput } from "@/components/ui/price-input";
 import { CategorySearch } from "@/components/ui/category-search";
 import { createClient } from "@/lib/supabase/client";
 import { getCategoryLabel } from "@/lib/data/categories";
@@ -365,15 +366,11 @@ export function ServicesEditor({
                       ))}
                     </select>
                     {form.priceType !== "a_convenir" && (
-                      <div className="relative flex-1">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[#9ca3af]">₡</span>
-                        <input
-                          type="number"
-                          inputMode="numeric"
+                      <div className="flex-1">
+                        <PriceInput
                           placeholder="15000"
                           value={form.priceAmount}
-                          onChange={(e) => setForm((f) => ({ ...f, priceAmount: e.target.value }))}
-                          className="w-full h-10 pl-7 pr-3 rounded-xl border border-[#e5e7eb] bg-white text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+                          onChange={(v) => setForm((f) => ({ ...f, priceAmount: v }))}
                         />
                       </div>
                     )}
