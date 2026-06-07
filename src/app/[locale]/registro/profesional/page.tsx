@@ -201,9 +201,7 @@ function validateCedulaFormat(v: string): boolean {
 
 const step1Schema = z
   .object({
-    firstName: z.string().min(2, "El nombre es requerido"),
-    firstLastName: z.string().min(2, "El primer apellido es requerido"),
-    secondLastName: z.string().optional(),
+    fullName: z.string().min(3, "El nombre completo es requerido"),
     cedula: z
       .string()
       .min(1, "El número de cédula es requerido")
@@ -404,7 +402,7 @@ export default function RegisterProfessionalPage() {
   const form1 = useForm<Step1Data>({
     resolver: zodResolver(step1Schema),
     mode: "onBlur",
-    defaultValues: { firstName: "", firstLastName: "", secondLastName: "", cedula: "", email: "", password: "", confirmPassword: "" },
+    defaultValues: { fullName: "", cedula: "", email: "", password: "", confirmPassword: "" },
   });
   const form2 = useForm<Step2Data>({
     resolver: zodResolver(step2Schema),
@@ -553,10 +551,7 @@ export default function RegisterProfessionalPage() {
       } else {
         // ── 2b. Email/password path ───────────────────────────────────────────
         if (!step1Data) return;
-        const fullName = [step1Data.firstName, step1Data.firstLastName, step1Data.secondLastName]
-          .filter(Boolean)
-          .join(" ")
-          .trim();
+        const fullName = step1Data.fullName.trim();
 
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email: step1Data.email,
@@ -582,10 +577,7 @@ export default function RegisterProfessionalPage() {
           (currentUser.user_metadata?.full_name as string) ||
           (currentUser.user_metadata?.name as string) ||
           (currentUser.email?.split("@")[0] ?? "profesional"))
-        : [step1Data!.firstName, step1Data!.firstLastName, step1Data!.secondLastName]
-            .filter(Boolean)
-            .join(" ")
-            .trim();
+        : step1Data!.fullName.trim();
 
       const serviceType = [
         serviceMobile ? "mobile" : null,
@@ -769,27 +761,14 @@ export default function RegisterProfessionalPage() {
                 <div className="flex-1 h-px bg-[#f3f4f6]" /><span className="text-xs text-[#9ca3af] font-medium">o con correo y contraseña</span><div className="flex-1 h-px bg-[#f3f4f6]" />
               </div>
 
-            <form onSubmit={form1.handleSubmit(onStep1, scrollToFirstError)} className="flex flex-col gap-4">
-              {/* Name fields */}
-              <div className="grid grid-cols-2 gap-3">
-                <Input
-                  label={<>Nombre <span className="text-red-500">*</span></>}
-                  placeholder="Juan"
-                  error={form1.formState.errors.firstName?.message}
-                  {...form1.register("firstName")}
-                />
-                <Input
-                  label={<>Primer apellido <span className="text-red-500">*</span></>}
-                  placeholder="Pérez"
-                  error={form1.formState.errors.firstLastName?.message}
-                  {...form1.register("firstLastName")}
-                />
-              </div>
+            <form noValidate onSubmit={form1.handleSubmit(onStep1, scrollToFirstError)} className="flex flex-col gap-4">
+              {/* Name — single full-name field */}
               <Input
-                label="Segundo apellido"
-                placeholder="González"
-                hint="Opcional"
-                {...form1.register("secondLastName")}
+                label={<>Nombre completo <span className="text-red-500">*</span></>}
+                placeholder="Juan Pérez González"
+                hint="tal como aparece en tu documento"
+                error={form1.formState.errors.fullName?.message}
+                {...form1.register("fullName")}
               />
 
               {/* Identificación — masked, auto-detecting (no API lookup) */}
@@ -864,13 +843,14 @@ export default function RegisterProfessionalPage() {
 
           {/* ── Step 1: Service + Location ───────────────────────────────── */}
           {step === 1 && (
-            <form onSubmit={form2.handleSubmit(onStep2, scrollToFirstError)} className="flex flex-col gap-4">
+            <form noValidate onSubmit={form2.handleSubmit(onStep2, scrollToFirstError)} className="flex flex-col gap-4">
 
               {/* Name + cédula — required for OAuth professionals (no identity step) */}
               {currentUser && (
                 <Input
-                  label={<>Nombre legal completo <span className="text-red-500">*</span></>}
+                  label={<>Nombre completo <span className="text-red-500">*</span></>}
                   placeholder="Juan Pérez González"
+                  hint="tal como aparece en tu documento"
                   value={oauthFullName}
                   onChange={(e) => { setOauthFullName(e.target.value); setOauthNameError(null); }}
                   error={oauthNameError ?? undefined}
@@ -1104,7 +1084,7 @@ export default function RegisterProfessionalPage() {
 
           {/* ── Step 2: Profile + Photo ──────────────────────────────────── */}
           {step === 2 && (
-            <form onSubmit={form3.handleSubmit(onStep3, scrollToFirstError)} className="flex flex-col gap-4">
+            <form noValidate onSubmit={form3.handleSubmit(onStep3, scrollToFirstError)} className="flex flex-col gap-4">
               {/* Photo upload */}
               <PhotoPicker preview={photoPreview} onFile={handlePhotoSelect} onRemove={() => { setPhotoFile(null); setPhotoPreview(null); }} />
 

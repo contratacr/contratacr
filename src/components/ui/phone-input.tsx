@@ -105,18 +105,18 @@ export function PhoneInput({ value, onChange, label, error, required, optional, 
           {optional && <span className="text-[#9ca3af] font-normal"> (opcional)</span>}
         </label>
       )}
-      <div className="flex items-stretch gap-0">
-        <div className="relative flex items-center gap-1.5 rounded-l-xl border border-r-0 border-[#e5e7eb] bg-[#f3f4f6] pl-2.5 pr-1.5 shrink-0">
+      <div className="flex items-stretch">
+        <div className="relative flex h-11 items-center gap-1.5 rounded-l-xl border border-r-0 border-[#e5e7eb] bg-[#f3f4f6] px-2.5 shrink-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={`https://flagcdn.com/24x18/${country.iso}.png`}
             srcSet={`https://flagcdn.com/48x36/${country.iso}.png 2x`}
-            width={24}
-            height={18}
+            width={22}
+            height={16}
             alt={country.name}
-            className="rounded-[2px] shrink-0"
+            className="rounded-[2px] shrink-0 h-4 w-[22px] object-cover"
           />
-          <span className="text-sm font-medium text-[#374151]">+{country.code}</span>
+          <span className="text-sm font-medium text-[#374151] leading-none whitespace-nowrap">+{country.code}</span>
           <select
             value={code}
             onChange={(e) => changeCountry(e.target.value)}
@@ -136,7 +136,7 @@ export function PhoneInput({ value, onChange, label, error, required, optional, 
           onChange={(e) => changeNational(e.target.value)}
           aria-invalid={!!error}
           className={cn(
-            "flex-1 h-10 px-3 rounded-r-xl border text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all",
+            "flex-1 h-11 px-3 rounded-r-xl border text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all",
             error ? "border-red-400" : "border-[#e5e7eb]"
           )}
         />

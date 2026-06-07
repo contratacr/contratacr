@@ -231,6 +231,7 @@ export default function ProDashboardPage() {
                     <AvailabilityEditor
                       professionalId={pro.id}
                       initialPublic={pro.availability_public ?? true}
+                      initialContactPreference={pro.contact_preference ?? "ambas"}
                       onSaved={handleSaved}
                     />
                   )}

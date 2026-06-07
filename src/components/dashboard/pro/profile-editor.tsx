@@ -1,20 +1,20 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
+import { LanguagesInput } from "@/components/ui/languages-input";
 import { WorkplacesPicker, type Workplace } from "@/components/maps/workplaces-picker";
 import { createClient } from "@/lib/supabase/client";
-import { Camera, Check, X, Plus } from "lucide-react";
+import { Camera, Check, X, Plus, Truck, MapPin } from "lucide-react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { PROVINCES, getCantonsByProvince } from "@/lib/data/cr-geography";
 import { CategorySearch } from "@/components/ui/category-search";
 import { getCategoryLabel } from "@/lib/data/categories";
-import { LANGUAGES } from "@/lib/data/languages";
-import { CONTACT_PREFERENCES } from "@/lib/constants";
+import { cn } from "@/lib/utils";
 import { PRICING_TYPES, type PricingTier, type PricingType } from "@/lib/pricing";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -48,7 +48,10 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
   const [businessName, setBusinessName] = useState<string>(initial.business_name ?? "");
   const [workplaces, setWorkplaces] = useState<Workplace[]>(Array.isArray(initial.workplaces) ? initial.workplaces : []);
   const [languages, setLanguages] = useState<string[]>(Array.isArray(initial.languages) ? initial.languages : []);
-  const [contactPreference, setContactPreference] = useState<string>(initial.contact_preference ?? "ambas");
+  // Work mode: "fixed" → has workplaces; "mobile" → travels to the client.
+  const [workMode, setWorkMode] = useState<"mobile" | "fixed">(
+    String(initial.service_type ?? "mobile").includes("fixed") ? "fixed" : "mobile"
+  );
   const [avatarPreview, setAvatarPreview] = useState<string | null>(
     initial.profiles?.avatar_url ?? null
   );
@@ -56,7 +59,20 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
 
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [dirty, setDirty] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Unsaved-changes guard: warn before leaving the tab/page with pending edits.
+  useEffect(() => {
+    function beforeUnload(e: BeforeUnloadEvent) {
+      if (dirty) { e.preventDefault(); e.returnValue = ""; }
+    }
+    window.addEventListener("beforeunload", beforeUnload);
+    return () => window.removeEventListener("beforeunload", beforeUnload);
+  }, [dirty]);
+
+  // Single helper so every field marks the form dirty + clears the saved flag.
+  function touch() { setSaved((_p) => false); setDirty(true); }
 
   const cantons = getCantonsByProvince(provinceId);
 
@@ -64,23 +80,23 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
     if (!id || professions.includes(id)) { setAddCat(""); return; }
     setProfessions((prev) => [...prev, id]);
     setAddCat("");
-    setSaved(false);
+    touch();
   }
   function removeProfession(id: string) {
     setProfessions((prev) => (prev.length > 1 ? prev.filter((p) => p !== id) : prev));
-    setSaved(false);
+    touch();
   }
   function addTier() {
     setPricing((prev) => [...prev, { id: `pr_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, type: "por_hora", amount: undefined }]);
-    setSaved(false);
+    touch();
   }
   function updateTier(id: string, patch: Partial<PricingTier>) {
     setPricing((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)));
-    setSaved(false);
+    touch();
   }
   function removeTier(id: string) {
     setPricing((prev) => prev.filter((p) => p.id !== id));
-    setSaved(false);
+    touch();
   }
 
   // Auto-upload the photo as soon as it's picked — no "Guardar cambios" needed.
@@ -128,6 +144,10 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         .filter((p) => p.type === "a_convenir" || p.amount != null)
         .map((p) => ({ ...p, amount: p.type === "a_convenir" ? undefined : p.amount }));
 
+      // "mobile" pros don't keep workplaces; clear them so /buscar shows the
+      // travel mode instead of stale pins.
+      const effectiveWorkplaces = workMode === "fixed" ? workplaces : [];
+
       const baseUpdate: Record<string, unknown> = {
         bio,
         whatsapp,
@@ -135,20 +155,17 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         pricing: cleanPricing,
         professions,
         languages,
-        contact_preference: contactPreference,
+        service_type: workMode,
         ...(professions[0] ? { category_id: professions[0] } : {}),
         ...(provinceId ? { provincia_id: provinceId } : {}),
         ...(cantonId ? { canton_id: cantonId } : {}),
         address: address || null,
+        lat: effectiveWorkplaces[0]?.lat ?? null,
+        lng: effectiveWorkplaces[0]?.lng ?? null,
       };
-      // Keep the primary lat/lng synced to the first workplace (single-pin paths).
-      if (workplaces[0]) {
-        baseUpdate.lat = workplaces[0].lat;
-        baseUpdate.lng = workplaces[0].lng;
-      }
       const identityFields = {
         business_name: businessName.trim() || null,
-        workplaces,
+        workplaces: effectiveWorkplaces,
       };
 
       let { error: proError } = await supabase
@@ -168,7 +185,8 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
       }
 
       setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
+      setDirty(false);
+      setTimeout(() => setSaved((_p) => false), 3000);
       onSaved?.();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Error al guardar");
@@ -235,7 +253,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
       <Input
         label="Nombre completo"
         value={fullName}
-        onChange={(e) => { setFullName(e.target.value); setSaved(false); }}
+        onChange={(e) => { setFullName(e.target.value); touch(); }}
         placeholder="Juan Pérez González"
       />
 
@@ -243,20 +261,47 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
       <Input
         label={<>Nombre comercial o marca <span className="text-[#9ca3af] font-normal">(opcional)</span></>}
         value={businessName}
-        onChange={(e) => { setBusinessName(e.target.value); setSaved(false); }}
+        onChange={(e) => { setBusinessName(e.target.value); touch(); }}
         placeholder="Ej: Servicios Eléctricos GAM"
       />
 
-      {/* Workplaces — fixed locations (optional, multiple). Each is a map pin + a profile entry. */}
+      {/* Work mode — travels to client vs fixed location(s) */}
       <div>
-        <label className="text-sm font-medium text-[#374151] block mb-1.5">
-          Tus lugares de trabajo <span className="text-[#9ca3af] font-normal">(opcional)</span>
-        </label>
-        <p className="text-xs text-[#9ca3af] mb-2">
-          Buscá y agregá uno o más lugares. Cada uno aparece en el mapa de búsqueda y en tu perfil.
-        </p>
-        <WorkplacesPicker value={workplaces} onChange={(next) => { setWorkplaces(next); setSaved(false); }} />
+        <label className="text-sm font-medium text-[#374151] block mb-2">¿Cómo ofrecés tus servicios?</label>
+        <div className="grid grid-cols-2 gap-2">
+          {([
+            { id: "mobile", icon: Truck, title: "Me desplazo donde el cliente", desc: "Vas al lugar del cliente" },
+            { id: "fixed", icon: MapPin, title: "Trabajo desde un lugar fijo", desc: "Taller, consultorio, local" },
+          ] as const).map((opt) => (
+            <button
+              key={opt.id}
+              type="button"
+              onClick={() => { setWorkMode(opt.id); touch(); }}
+              className={cn(
+                "flex flex-col items-start gap-1 p-3 rounded-xl border-2 text-left transition-all",
+                workMode === opt.id ? "border-[#009FD9] bg-[#EBF5FB]" : "border-[#e5e7eb] hover:border-[#009FD9]/40"
+              )}
+            >
+              <opt.icon className="h-4 w-4 text-[#009FD9]" />
+              <p className="text-sm font-medium text-[#111827]">{opt.title}</p>
+              <p className="text-xs text-[#9ca3af]">{opt.desc}</p>
+            </button>
+          ))}
+        </div>
       </div>
+
+      {/* Workplaces — only when working from a fixed location */}
+      {workMode === "fixed" && (
+        <div>
+          <label className="text-sm font-medium text-[#374151] block mb-1.5">
+            Tus lugares de trabajo <span className="text-[#9ca3af] font-normal">(opcional)</span>
+          </label>
+          <p className="text-xs text-[#9ca3af] mb-2">
+            Buscá y agregá uno o más lugares. Cada uno aparece en el mapa de búsqueda y en tu perfil.
+          </p>
+          <WorkplacesPicker value={workplaces} onChange={(next) => { setWorkplaces(next); touch(); }} />
+        </div>
+      )}
 
       {/* Description */}
       <div>
@@ -265,7 +310,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
           className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] min-h-[120px] resize-none focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
           placeholder="Describí tu experiencia, especialidades y qué te diferencia…"
           value={bio}
-          onChange={(e) => { setBio(e.target.value); setSaved(false); }}
+          onChange={(e) => { setBio(e.target.value); touch(); }}
         />
       </div>
 
@@ -298,14 +343,14 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
       <PhoneInput
         label="WhatsApp"
         value={whatsapp}
-        onChange={(digits) => { setWhatsapp(digits); setSaved(false); }}
+        onChange={(digits) => { setWhatsapp(digits); touch(); }}
       />
 
       {/* Location */}
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="text-sm font-medium text-[#374151] block mb-1.5">Provincia</label>
-          <Select value={provinceId} onValueChange={(v) => { setProvinceId(v); setCantonId(""); setSaved(false); }}>
+          <Select value={provinceId} onValueChange={(v) => { setProvinceId(v); setCantonId(""); touch(); }}>
             <SelectTrigger>
               <SelectValue placeholder="Seleccioná" />
             </SelectTrigger>
@@ -321,7 +366,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
           <Select
             value={cantonId}
             disabled={!provinceId}
-            onValueChange={(v) => { setCantonId(v); setSaved(false); }}
+            onValueChange={(v) => { setCantonId(v); touch(); }}
           >
             <SelectTrigger>
               <SelectValue placeholder={provinceId ? "Seleccioná" : "Primero provincia"} />
@@ -339,7 +384,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         label="Dirección (opcional)"
         placeholder="Ej: Barrio Escalante, San José"
         value={address}
-        onChange={(e) => { setAddress(e.target.value); setSaved(false); }}
+        onChange={(e) => { setAddress(e.target.value); touch(); }}
       />
 
       {/* Pricing tiers */}
@@ -382,54 +427,23 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
 
       {/* Experience is captured per service (in the Servicios tab), not globally. */}
 
-      {/* Languages */}
+      {/* Languages — optional chip autocomplete (full language list) */}
       <div>
-        <label className="text-sm font-medium text-[#374151] block mb-1.5">Idiomas que hablás</label>
-        <div className="flex flex-wrap gap-2">
-          {LANGUAGES.map((lang) => {
-            const active = languages.includes(lang.id);
-            return (
-              <button
-                key={lang.id}
-                type="button"
-                onClick={() => {
-                  setLanguages((prev) => (active ? prev.filter((l) => l !== lang.id) : [...prev, lang.id]));
-                  setSaved(false);
-                }}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-all ${active ? "border-[#009FD9] bg-[#EBF5FB] text-[#0089bb]" : "border-[#e5e7eb] text-[#374151] hover:border-[#009FD9]/40"}`}
-              >
-                {lang.label}
-              </button>
-            );
-          })}
-        </div>
+        <label className="text-sm font-medium text-[#374151] block mb-1.5">
+          Idiomas que hablás <span className="text-[#9ca3af] font-normal">(opcional)</span>
+        </label>
+        <LanguagesInput value={languages} onChange={(next) => { setLanguages(next); touch(); }} />
       </div>
 
-      {/* Contact preference */}
-      <div>
-        <label className="text-sm font-medium text-[#374151] block mb-1.5">¿Cómo querés que te contacten?</label>
-        <div className="flex flex-col gap-2">
-          {CONTACT_PREFERENCES.map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => { setContactPreference(opt.value); setSaved(false); }}
-              className={`flex items-center justify-between gap-2 p-3 rounded-xl border-2 text-left transition-all ${contactPreference === opt.value ? "border-[#009FD9] bg-[#EBF5FB]" : "border-[#e5e7eb] hover:border-[#009FD9]/40"}`}
-            >
-              <div>
-                <p className="text-sm font-medium text-[#111827]">{opt.label}</p>
-                <p className="text-xs text-[#9ca3af]">{opt.hint}</p>
-              </div>
-              <span className={`h-4 w-4 rounded-full border-2 shrink-0 ${contactPreference === opt.value ? "border-[#009FD9] bg-[#009FD9]" : "border-[#d1d5db]"}`} />
-            </button>
-          ))}
-        </div>
-      </div>
+      {/* Contact preference lives in the Disponibilidad tab now. */}
 
       <div className="flex items-center gap-3">
         <Button onClick={handleSave} loading={saving}>
           {saving ? "Guardando…" : "Guardar cambios"}
         </Button>
+        {dirty && !saved && (
+          <span className="text-sm text-amber-600 font-medium">Cambios sin guardar</span>
+        )}
         {saved && (
           <span className="flex items-center gap-1 text-sm text-emerald-600 font-medium">
             <Check className="h-4 w-4" /> Guardado

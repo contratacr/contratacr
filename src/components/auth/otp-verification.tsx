@@ -98,9 +98,15 @@ export function OtpVerification({ email, onVerified }: OtpVerificationProps) {
 
   return (
     <div className="text-center">
-      <div className="flex justify-center mb-6">
+      <div className="flex justify-center mb-5">
         <ContrataCRLogo className="scale-125" />
       </div>
+
+      <h1 className="text-xl font-bold text-[#111827]">Verificá tu correo</h1>
+      <p className="text-sm text-[#6b7280] mt-1.5 mb-6">
+        Enviamos un código de verificación de 6 dígitos a<br />
+        <strong className="text-[#111827]">{email}</strong>. Ingresalo abajo para continuar.
+      </p>
 
       {error && (
         <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-100 rounded-xl text-sm text-red-600 mb-4 text-left">

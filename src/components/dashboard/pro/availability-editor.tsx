@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { Plus, X, CalendarPlus, Globe, Lock, Loader2 } from "lucide-react";
+import { CONTACT_PREFERENCES, type ContactPreference } from "@/lib/constants";
 
 type Slot = { id?: string; slot_date: string; slot_time: string };
 
@@ -41,11 +42,25 @@ function todayISO(): string {
 interface AvailabilityEditorProps {
   professionalId: string;
   initialPublic?: boolean;
+  initialContactPreference?: ContactPreference;
   onSaved?: () => void;
 }
 
-export function AvailabilityEditor({ professionalId, initialPublic = true, onSaved }: AvailabilityEditorProps) {
+export function AvailabilityEditor({ professionalId, initialPublic = true, initialContactPreference = "ambas", onSaved }: AvailabilityEditorProps) {
   const [isPublic, setIsPublic] = useState(initialPublic);
+  const [contactPreference, setContactPreference] = useState<ContactPreference>(initialContactPreference);
+  const [savingContact, setSavingContact] = useState(false);
+  // "solo_whatsapp" hides all scheduling — those pros only take WhatsApp.
+  const schedulingEnabled = contactPreference !== "solo_whatsapp";
+
+  async function changeContactPreference(value: ContactPreference) {
+    setContactPreference(value);
+    setSavingContact(true);
+    const supabase = createClient();
+    await supabase.from("professionals").update({ contact_preference: value }).eq("id", professionalId);
+    setSavingContact(false);
+    onSaved?.();
+  }
   const [slots, setSlots] = useState<Slot[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingVisibility, setSavingVisibility] = useState(false);
@@ -174,6 +189,40 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, onSav
 
   return (
     <div className="flex flex-col gap-6">
+      {/* ── Contact preference — the FIRST decision; drives everything below ── */}
+      <div className="rounded-2xl border border-[#e5e7eb] p-5">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold text-[#111827]">¿Cómo querés que te contacten?</h3>
+          {savingContact && <Loader2 className="h-4 w-4 animate-spin text-[#009FD9]" />}
+        </div>
+        <div className="flex flex-col gap-2">
+          {CONTACT_PREFERENCES.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => changeContactPreference(opt.value)}
+              className={cn(
+                "flex items-center justify-between gap-2 p-3 rounded-xl border-2 text-left transition-all",
+                contactPreference === opt.value ? "border-[#009FD9] bg-[#EBF5FB]" : "border-[#e5e7eb] hover:border-[#009FD9]/40"
+              )}
+            >
+              <div>
+                <p className="text-sm font-medium text-[#111827]">{opt.label}</p>
+                <p className="text-xs text-[#9ca3af]">{opt.hint}</p>
+              </div>
+              <span className={cn("h-4 w-4 rounded-full border-2 shrink-0", contactPreference === opt.value ? "border-[#009FD9] bg-[#009FD9]" : "border-[#d1d5db]")} />
+            </button>
+          ))}
+        </div>
+        {!schedulingEnabled && (
+          <p className="text-xs text-[#6b7280] mt-3 bg-[#f4f7fa] rounded-lg p-3">
+            Elegiste <strong>Solo WhatsApp</strong>: los clientes te escribirán directo y no se mostrarán horarios ni
+            agenda. Cambiá a “Ambas” o “Solo citas” si querés habilitar tu disponibilidad.
+          </p>
+        )}
+      </div>
+
+      {schedulingEnabled && (<>
       {/* ── Public / private toggle ─────────────────────────────── */}
       <div className="flex items-start justify-between gap-4 rounded-2xl border border-[#e5e7eb] bg-[#f4f7fa] p-4">
         <div className="flex items-start gap-3">
@@ -296,6 +345,8 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, onSav
           </div>
         )}
       </div>
+
+      </>)}
 
       {/* Confirmation modal — making availability private deletes all schedules */}
       {showPrivateConfirm && (
