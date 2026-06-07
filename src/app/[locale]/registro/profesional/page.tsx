@@ -200,17 +200,17 @@ function validateCedulaFormat(v: string): boolean {
 
 const step1Schema = z
   .object({
-    firstName: z.string().min(2, "Nombre requerido"),
-    firstLastName: z.string().min(2, "Primer apellido requerido"),
+    firstName: z.string().min(2, "El nombre es requerido"),
+    firstLastName: z.string().min(2, "El primer apellido es requerido"),
     secondLastName: z.string().optional(),
     cedula: z
       .string()
-      .min(9, "Cédula inválida")
+      .min(1, "El número de cédula es requerido")
       .refine(validateCedulaFormat, "Formato inválido. CR: 9 dígitos. DIMEX: 11-12. NITE: 10."),
-    email: z.string().email("Email inválido"),
+    email: z.string().min(1, "El correo es requerido").email("Ingresá un correo válido"),
     password: z
       .string()
-      .min(8, "Mínimo 8 caracteres")
+      .min(8, "La contraseña debe tener al menos 8 caracteres")
       .regex(/[A-Z]/, "Al menos una mayúscula")
       .regex(/[a-z]/, "Al menos una minúscula")
       .regex(/[0-9]/, "Al menos un número")
@@ -227,7 +227,7 @@ const step2Schema = z.object({
   // Province and canton are optional, independently. Canton enables after province.
   province: z.string().optional(),
   canton: z.string().optional(),
-  whatsapp: z.string().min(8, "Número inválido").max(12),
+  whatsapp: z.string().min(8, "El número de WhatsApp es requerido").max(15, "Número inválido"),
   address: z.string().optional(),
 });
 
@@ -402,9 +402,32 @@ export default function RegisterProfessionalPage() {
 
   const cantons = getCantonsByProvince(selectedProvince);
 
-  const form1 = useForm<Step1Data>({ resolver: zodResolver(step1Schema) });
-  const form2 = useForm<Step2Data>({ resolver: zodResolver(step2Schema) });
-  const form3 = useForm<Step3Data>({ resolver: zodResolver(step3Schema) });
+  const form1 = useForm<Step1Data>({
+    resolver: zodResolver(step1Schema),
+    mode: "onBlur",
+    defaultValues: { firstName: "", firstLastName: "", secondLastName: "", cedula: "", email: "", password: "", confirmPassword: "" },
+  });
+  const form2 = useForm<Step2Data>({
+    resolver: zodResolver(step2Schema),
+    mode: "onBlur",
+    defaultValues: { category: "", province: "", canton: "", whatsapp: "", address: "" },
+  });
+  const form3 = useForm<Step3Data>({
+    resolver: zodResolver(step3Schema),
+    mode: "onBlur",
+    defaultValues: { yearsExperience: "", hourlyRate: "" },
+  });
+
+  // On a failed submit, jump to the first field with an error.
+  function scrollToFirstError() {
+    setTimeout(() => {
+      const el = document.querySelector('[aria-invalid="true"]') as HTMLElement | null;
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.focus?.();
+      }
+    }, 50);
+  }
 
   const watchedPassword = form1.watch("password") ?? "";
   const watchedEmail = form1.watch("email") ?? "";
@@ -749,17 +772,17 @@ export default function RegisterProfessionalPage() {
                 <div className="flex-1 h-px bg-[#f3f4f6]" /><span className="text-xs text-[#9ca3af] font-medium">o con correo y contraseña</span><div className="flex-1 h-px bg-[#f3f4f6]" />
               </div>
 
-            <form onSubmit={form1.handleSubmit(onStep1)} className="flex flex-col gap-4">
+            <form onSubmit={form1.handleSubmit(onStep1, scrollToFirstError)} className="flex flex-col gap-4">
               {/* Name fields */}
               <div className="grid grid-cols-2 gap-3">
                 <Input
-                  label="Nombre *"
+                  label={<>Nombre <span className="text-red-500">*</span></>}
                   placeholder="Juan"
                   error={form1.formState.errors.firstName?.message}
                   {...form1.register("firstName")}
                 />
                 <Input
-                  label="Primer apellido *"
+                  label={<>Primer apellido <span className="text-red-500">*</span></>}
                   placeholder="Pérez"
                   error={form1.formState.errors.firstLastName?.message}
                   {...form1.register("firstLastName")}
@@ -775,7 +798,7 @@ export default function RegisterProfessionalPage() {
               {/* Cédula — manual input, no API lookup */}
               <div>
                 <Input
-                  label="Número de cédula *"
+                  label={<>Número de cédula <span className="text-red-500">*</span></>}
                   placeholder="1-0000-0000"
                   hint="CR: 9 dígitos · DIMEX: 11-12 · NITE: 10"
                   error={form1.formState.errors.cedula?.message ?? (cedulaCheck.taken ? "Esta cédula ya está registrada en ContrataCR." : undefined)}
@@ -786,7 +809,7 @@ export default function RegisterProfessionalPage() {
 
               <div className="border-t border-[#f3f4f6] pt-4">
                 <Input
-                  label={t("email")}
+                  label={<>{t("email")} <span className="text-red-500">*</span></>}
                   type="email"
                   placeholder={t("emailPlaceholder")}
                   error={form1.formState.errors.email?.message ?? (emailCheck.taken ? "Este correo ya está registrado. Iniciá sesión." : undefined)}
@@ -796,7 +819,7 @@ export default function RegisterProfessionalPage() {
 
               <div>
                 <Input
-                  label={t("password")}
+                  label={<>{t("password")} <span className="text-red-500">*</span></>}
                   type={showPassword ? "text" : "password"}
                   placeholder={t("passwordPlaceholder")}
                   error={form1.formState.errors.password?.message}
@@ -846,7 +869,7 @@ export default function RegisterProfessionalPage() {
 
           {/* ── Step 1: Service + Location ───────────────────────────────── */}
           {step === 1 && (
-            <form onSubmit={form2.handleSubmit(onStep2)} className="flex flex-col gap-4">
+            <form onSubmit={form2.handleSubmit(onStep2, scrollToFirstError)} className="flex flex-col gap-4">
 
               {/* Account type */}
               <div>
@@ -874,7 +897,7 @@ export default function RegisterProfessionalPage() {
 
               {accountType === "empresa" && (
                 <Input
-                  label="Nombre comercial *"
+                  label={<>Nombre comercial <span className="text-red-500">*</span></>}
                   placeholder="Ej: Servicios Eléctricos GAM"
                   value={businessName}
                   onChange={(e) => { setBusinessName(e.target.value); setBusinessNameError(null); }}
@@ -885,7 +908,7 @@ export default function RegisterProfessionalPage() {
               {/* Name + cédula — required for OAuth professionals (no identity step) */}
               {currentUser && (
                 <Input
-                  label="Nombre legal completo *"
+                  label={<>Nombre legal completo <span className="text-red-500">*</span></>}
                   placeholder="Juan Pérez González"
                   value={oauthFullName}
                   onChange={(e) => { setOauthFullName(e.target.value); setOauthNameError(null); }}
@@ -894,7 +917,7 @@ export default function RegisterProfessionalPage() {
               )}
               {currentUser && (
                 <Input
-                  label="Número de cédula *"
+                  label={<>Número de cédula <span className="text-red-500">*</span></>}
                   placeholder="1-0000-0000"
                   hint="Requerido para profesionales · CR: 9 dígitos · DIMEX: 11-12 · NITE: 10"
                   value={oauthCedula}
@@ -906,12 +929,12 @@ export default function RegisterProfessionalPage() {
               {/* Category — searchable combobox */}
               <div>
                 <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                  {t("category")}
+                  {t("category")} <span className="text-red-500">*</span>
                 </label>
                 <CategorySearch
                   value={form2.watch("category") ?? ""}
                   onChange={(v) => form2.setValue("category", v, { shouldValidate: true })}
-                  placeholder="Buscá tu especialidad… ej. psicólogo, plomero, niñera"
+                  placeholder="Buscá tu especialidad"
                   error={form2.formState.errors.category?.message}
                 />
 
@@ -1108,8 +1131,9 @@ export default function RegisterProfessionalPage() {
               {/* WhatsApp */}
               <PhoneInput
                 label={t("whatsapp")}
+                required
                 value={whatsappValue}
-                onChange={(digits) => { setWhatsappValue(digits); form2.setValue("whatsapp", digits); }}
+                onChange={(digits) => { setWhatsappValue(digits); form2.setValue("whatsapp", digits, { shouldValidate: true }); }}
                 error={form2.formState.errors.whatsapp?.message}
               />
 
@@ -1128,25 +1152,13 @@ export default function RegisterProfessionalPage() {
 
           {/* ── Step 2: Profile + Photo ──────────────────────────────────── */}
           {step === 2 && (
-            <form onSubmit={form3.handleSubmit(onStep3)} className="flex flex-col gap-4">
+            <form onSubmit={form3.handleSubmit(onStep3, scrollToFirstError)} className="flex flex-col gap-4">
               {/* Photo upload */}
               <PhotoPicker preview={photoPreview} onFile={handlePhotoSelect} onRemove={() => { setPhotoFile(null); setPhotoPreview(null); }} />
 
-              <div className="grid grid-cols-2 gap-3">
-                <Input
-                  label={t("yearsExp")}
-                  type="number"
-                  placeholder={t("yearsExpPlaceholder")}
-                  {...form3.register("yearsExperience")}
-                />
-                <Input
-                  label={t("hourlyRate")}
-                  type="number"
-                  placeholder={t("hourlyRatePlaceholder")}
-                  hint={t("optional")}
-                  {...form3.register("hourlyRate")}
-                />
-              </div>
+              <p className="text-sm text-[#6b7280] text-center">
+                Después agregás tus servicios con su precio y años de experiencia desde tu panel.
+              </p>
 
               <div className="flex gap-3 mt-2">
                 <Button variant="outline" size="lg" type="button" onClick={() => setStep(1)}>

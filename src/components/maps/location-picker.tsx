@@ -19,9 +19,16 @@ function extractAdmin(components: any[]): { provinceName?: string; cantonName?: 
   if (!Array.isArray(components)) return {};
   const find = (type: string) =>
     components.find((c) => Array.isArray(c.types) && c.types.includes(type))?.long_name as string | undefined;
+  // In Costa Rica the canton is usually administrative_area_level_2, but Google
+  // sometimes returns it as the locality or admin_area_level_3 — try each.
+  const cantonName =
+    find("administrative_area_level_2") ||
+    find("administrative_area_level_3") ||
+    find("locality") ||
+    find("postal_town");
   return {
     provinceName: find("administrative_area_level_1"),
-    cantonName: find("administrative_area_level_2"),
+    cantonName,
   };
 }
 

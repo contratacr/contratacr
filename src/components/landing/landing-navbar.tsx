@@ -577,7 +577,7 @@ export function LandingNavbar() {
                     href="/registro/profesional"
                     className="inline-flex items-center bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-4 py-2 rounded-full transition-all duration-150 active:scale-[0.97] whitespace-nowrap"
                   >
-                    Registrarse
+                    Registrarse como profesional
                   </Link>
                 )}
                 <LanguageTogglePill />

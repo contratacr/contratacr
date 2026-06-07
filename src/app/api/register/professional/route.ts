@@ -35,6 +35,15 @@ export async function POST(req: Request) {
     const accountType = bodyAccountType === "empresa" ? "empresa" : "individual";
     const businessName = bodyBusinessName || null;
 
+    // Columns added in migration 019 — if the DB hasn't been migrated yet, retry
+    // the write without them instead of failing the whole registration.
+    const optionalProFields: Record<string, unknown> = {
+      account_type: accountType,
+      business_name: businessName,
+    };
+    const isUnknownColumn = (msg?: string) =>
+      !!msg && /account_type|business_name|languages|contact_preference|schema cache|PGRST204|could not find/i.test(msg);
+
     // ── 1. Identify the user ──────────────────────────────────────────────────
     //    Two cases:
     //    A) Authenticated (OAuth / already-logged-in): read from session cookies.
@@ -115,10 +124,11 @@ export async function POST(req: Request) {
       );
 
     if (profileError) {
-      return NextResponse.json(
-        { error: `Error al crear perfil: ${profileError.message}` },
-        { status: 500 }
-      );
+      console.error("[register/professional] profile upsert error:", profileError);
+      const friendly = /duplicate key|cedula/i.test(profileError.message)
+        ? "Esta cédula o correo ya está registrado en ContrataCR."
+        : "No pudimos crear tu cuenta. Intentá de nuevo en unos minutos.";
+      return NextResponse.json({ error: friendly }, { status: 500 });
     }
 
     // ── 4. Check if professional already exists ───────────────────────────────
@@ -129,24 +139,30 @@ export async function POST(req: Request) {
       .maybeSingle();
 
     if (existingPro) {
-      await supabase
+      const baseUpdate = {
+        category_id: category,
+        bio: safeBio,
+        whatsapp,
+        years_experience: yearsExperience ? parseInt(yearsExperience, 10) : null,
+        hourly_rate: hourlyRate ? parseInt(hourlyRate, 10) : null,
+        service_type: serviceType ?? "mobile",
+        address: address ?? null,
+        ...(province ? { provincia_id: province } : {}),
+        ...(canton ? { canton_id: canton } : {}),
+        ...(lat != null ? { lat: Number(lat) } : {}),
+        ...(lng != null ? { lng: Number(lng) } : {}),
+      };
+      let { error: updErr } = await supabase
         .from("professionals")
-        .update({
-          category_id: category,
-          bio: safeBio,
-          whatsapp,
-          account_type: accountType,
-          business_name: businessName,
-          years_experience: yearsExperience ? parseInt(yearsExperience, 10) : null,
-          hourly_rate: hourlyRate ? parseInt(hourlyRate, 10) : null,
-          service_type: serviceType ?? "mobile",
-          address: address ?? null,
-          ...(province ? { provincia_id: province } : {}),
-          ...(canton ? { canton_id: canton } : {}),
-          ...(lat != null ? { lat: Number(lat) } : {}),
-          ...(lng != null ? { lng: Number(lng) } : {}),
-        })
+        .update({ ...baseUpdate, ...optionalProFields })
         .eq("id", existingPro.id);
+      if (updErr && isUnknownColumn(updErr.message)) {
+        ({ error: updErr } = await supabase.from("professionals").update(baseUpdate).eq("id", existingPro.id));
+      }
+      if (updErr) {
+        console.error("[register/professional] update error:", updErr);
+        return NextResponse.json({ error: "No pudimos actualizar tu perfil. Intentá de nuevo." }, { status: 500 });
+      }
 
       return NextResponse.json({ ok: true, slug: existingPro.slug });
     }
@@ -165,7 +181,7 @@ export async function POST(req: Request) {
       ? [...new Set([category, ...bodyProfessions].filter(Boolean))]
       : [category];
 
-    const { error: proError } = await supabase.from("professionals").insert({
+    const baseInsert = {
       profile_id: userId,
       category_id: category,
       professions,
@@ -173,8 +189,6 @@ export async function POST(req: Request) {
       availability_public: false,
       bio: safeBio,
       whatsapp,
-      account_type: accountType,
-      business_name: businessName,
       years_experience: yearsExperience ? parseInt(yearsExperience, 10) : null,
       hourly_rate: hourlyRate ? parseInt(hourlyRate, 10) : null,
       service_type: serviceType ?? "mobile",
@@ -184,10 +198,20 @@ export async function POST(req: Request) {
       ...(canton ? { canton_id: canton } : {}),
       ...(lat != null ? { lat: Number(lat) } : {}),
       ...(lng != null ? { lng: Number(lng) } : {}),
-    });
+    };
+
+    let { error: proError } = await supabase.from("professionals").insert({ ...baseInsert, ...optionalProFields });
+    if (proError && isUnknownColumn(proError.message)) {
+      ({ error: proError } = await supabase.from("professionals").insert(baseInsert));
+    }
 
     if (proError) {
-      return NextResponse.json({ error: proError.message }, { status: 500 });
+      console.error("[register/professional] insert error:", proError);
+      const friendly =
+        /duplicate key|already exists/i.test(proError.message)
+          ? "Ya existe un perfil profesional para esta cuenta."
+          : "No pudimos crear tu perfil profesional. Revisá tus datos e intentá de nuevo.";
+      return NextResponse.json({ error: friendly }, { status: 500 });
     }
 
     return NextResponse.json({ ok: true, slug });

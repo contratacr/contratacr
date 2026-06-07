@@ -31,7 +31,6 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
 
   const [bio, setBio] = useState<string>(initial.bio ?? "");
   const [whatsapp, setWhatsapp] = useState<string>(initial.whatsapp ?? "");
-  const [yearsExp, setYearsExp] = useState(String(initial.years_experience ?? ""));
   const [fullName, setFullName] = useState<string>(initial.profiles?.full_name ?? "");
   const seedProfessions: string[] =
     Array.isArray(initial.professions) && initial.professions.length > 0
@@ -135,7 +134,6 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
           hourly_rate: hourTier?.amount ?? null,
           pricing: cleanPricing,
           professions,
-          years_experience: yearsExp ? Number(yearsExp) : null,
           account_type: accountType,
           business_name: accountType === "empresa" ? (fullName || null) : null,
           languages,
@@ -369,15 +367,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         </div>
       </div>
 
-      {/* Experience */}
-      <Input
-        label="Años de experiencia"
-        type="number"
-        placeholder="5"
-        value={yearsExp}
-        onChange={(e) => { setYearsExp(e.target.value); setSaved(false); }}
-        className="max-w-[200px]"
-      />
+      {/* Experience is captured per service (in the Servicios tab), not globally. */}
 
       {/* Languages */}
       <div>

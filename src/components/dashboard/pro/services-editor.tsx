@@ -16,6 +16,7 @@ export type ProService = {
   price?: string;          // display string (kept in sync from amount+type)
   priceAmount?: number;    // colones (optional)
   priceType?: PricingType; // por_hora | por_proyecto | …
+  years?: number;          // years of experience in THIS service (optional)
   // Which profession this service belongs to (a category id). Defaults to the
   // primary profession for legacy services created before multi-profession.
   category?: string;
@@ -38,9 +39,10 @@ interface ServiceFormState {
   description: string;
   priceType: PricingType;
   priceAmount: string;
+  years: string;
 }
 
-const EMPTY_FORM: ServiceFormState = { name: "", description: "", priceType: "por_hora", priceAmount: "" };
+const EMPTY_FORM: ServiceFormState = { name: "", description: "", priceType: "por_hora", priceAmount: "", years: "" };
 
 export function ServicesEditor({
   professionalId,
@@ -140,6 +142,7 @@ export function ServicesEditor({
       description: svc.description ?? "",
       priceType: svc.priceType ?? "por_hora",
       priceAmount: svc.priceAmount != null ? String(svc.priceAmount) : "",
+      years: svc.years != null ? String(svc.years) : "",
     });
     setFormError(null);
   }
@@ -163,6 +166,7 @@ export function ServicesEditor({
     const amount = form.priceAmount.trim() ? Number(form.priceAmount.replace(/\D/g, "")) : undefined;
     const priceType = form.priceType;
     const priceDisplay = formatServicePrice(amount, priceType) ?? undefined;
+    const years = form.years.trim() ? Number(form.years.replace(/\D/g, "")) : undefined;
 
     let next: ProService[];
     if (editingId) {
@@ -175,6 +179,7 @@ export function ServicesEditor({
               priceAmount: amount,
               priceType,
               price: priceDisplay,
+              years,
               category: formCategory || s.category,
             }
           : s
@@ -189,6 +194,7 @@ export function ServicesEditor({
           priceAmount: amount,
           priceType,
           price: priceDisplay,
+          years,
           category: formCategory || primary,
         },
       ];
@@ -294,6 +300,7 @@ export function ServicesEditor({
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-[#111827] truncate">{svc.name}</p>
                       {svc.description && <p className="text-xs text-[#6b7280] mt-0.5 line-clamp-1">{svc.description}</p>}
+                      {svc.years != null && <p className="text-xs text-[#9ca3af] mt-0.5">{svc.years} {svc.years === 1 ? "año" : "años"} de experiencia</p>}
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
                       {svc.price && <span className="text-sm font-semibold text-[#009FD9] whitespace-nowrap">{svc.price}</span>}
@@ -375,6 +382,15 @@ export function ServicesEditor({
                     <p className="text-xs text-emerald-600 mt-1">Se mostrará como: {formatServicePrice(Number(form.priceAmount.replace(/\D/g, "")), form.priceType)}</p>
                   )}
                 </div>
+
+                <Input
+                  label={<>Años de experiencia en este servicio <span className="text-[#9ca3af] font-normal">(opcional)</span></>}
+                  type="number"
+                  inputMode="numeric"
+                  placeholder="Ej: 5"
+                  value={form.years}
+                  onChange={(e) => setForm((f) => ({ ...f, years: e.target.value }))}
+                />
                 <div className="flex gap-2 pt-1">
                   <Button onClick={handleFormSave} loading={saving} size="sm">
                     {saving ? "Guardando…" : editingId ? "Guardar cambios" : "Agregar servicio"}

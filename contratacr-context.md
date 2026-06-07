@@ -1,6 +1,6 @@
 # ContrataCR.com — Project Context
 
-_Last updated: 2026-06-06 (sprint 17 — see "Sprint 17" section: client OTP, standardized PhoneInput, booking phone capture, contact_preference, languages, account_type/business_name, per-service pricing, reverse-geocode province/canton, completion CTA, footer cleanup; run migration 019. Earlier sprint 14/15/16 — see "Sprint 14-16" section below: multi-profession + multi-category, pricing tiers, HuliHealth /buscar split + inline schedules, real-time email/cédula checks, availability auto public/private, project→pro notifications, .ics export, emoji blocking, brands marquee, footer/social/support, OAuth pro cédula+name, sign-out fix). Earlier: sprint 13 — date-based availability + public/private toggle, search map clustered pins, verified-only reviews, booking notifications; sprint 12 — OAuth pro registration, category FK migration 013)_
+_Last updated: 2026-06-06 (sprint 18 — registration hardening: account-creation error fix + retry/friendly errors, navbar scrolled label, reliable canton geocode, full country phone selector, form validation (defaults/onBlur/scroll/red asterisks), per-service experience; run migrations 019 + 020. Earlier sprint 17 — see "Sprint 17" section: client OTP, standardized PhoneInput, booking phone capture, contact_preference, languages, account_type/business_name, per-service pricing, reverse-geocode province/canton, completion CTA, footer cleanup; run migration 019. Earlier sprint 14/15/16 — see "Sprint 14-16" section below: multi-profession + multi-category, pricing tiers, HuliHealth /buscar split + inline schedules, real-time email/cédula checks, availability auto public/private, project→pro notifications, .ics export, emoji blocking, brands marquee, footer/social/support, OAuth pro cédula+name, sign-out fix). Earlier: sprint 13 — date-based availability + public/private toggle, search map clustered pins, verified-only reviews, booking notifications; sprint 12 — OAuth pro registration, category FK migration 013)_
 
 ---
 
@@ -578,6 +578,21 @@ of the app's partial i18n.
 - OTP window shows only the logo + code input. Homepage province/cantón pills link to `/buscar?provincia=<id>[&canton=<id>]` and auto-populate filters. All WhatsApp actions use the official WhatsApp SVG (`components/icons/whatsapp-icon.tsx`).
 
 **Known partial:** map pin → card highlight sync (task 8) not implemented; pin click opens the InfoWindow popup instead.
+
+## Sprint 18 (2026-06-06) — registration hardening batch
+
+**Run these migrations in Supabase SQL Editor (if not already):**
+```
+019_pro_contact_languages_account.sql   -- (from sprint 17) account_type, business_name, languages, contact_preference
+020_professionals_optional_location.sql -- provincia_id/canton_id/bio DROP NOT NULL (fixes account-creation failures)
+```
+
+- **Task 1 (account creation error):** likely root causes were (a) `provincia_id/canton_id` `NOT NULL` after province/canton became optional, and (b) `account_type/business_name` columns missing when migration 019 hadn't been applied. Fixes: migration 020 drops the NOT NULLs; the register API now **retries the professional insert/update without the 019 columns** if they don't exist, and returns **friendly Spanish error messages** (raw errors go to `console.error`).
+- **Task 2:** the landing navbar **compact (scrolled) state** now says "Registrarse como profesional" (matched the full state).
+- **Task 3:** reverse-geocode canton is more reliable — `extractAdmin` falls back through `administrative_area_level_2 → _3 → locality → postal_town`; `matchProvinceCanton` infers province from canton when needed; if canton can't be matched the field is left empty but enabled.
+- **Task 4:** `PhoneInput` now has a full **country selector** (🇨🇷🇺🇸🇲🇽🇨🇴🇪🇸🇨🇳🇧🇷🇦🇷🇵🇦🇳🇮🇬🇹🇭🇳🇸🇻🇵🇪🇨🇱🇪🇨🇺🇾🇵🇾🇧🇴🇮🇹🇫🇷🇩🇪🇬🇧) with per-country digit limits; flag + dial code prefix is non-editable; CR formats `XXXX-XXXX`. **Stores the full number with country code** (CR → `506XXXXXXXX`; `formatWhatsApp` handles both new and legacy 8-digit values).
+- **Task 5:** all three registration forms now have `defaultValues` (kills "Invalid input: expected string, received undefined"), validate **on blur**, **scroll to the first error** on failed submit, and required fields show a **red asterisk**. Field messages are human-readable ("El nombre es requerido", "El número de cédula es requerido", "El número de WhatsApp es requerido", …).
+- **Task 6:** removed the single "Tarifa por hora (₡)" and global "Años de experiencia" from the registration profile step and the profile editor. **Experience is now per-service**: each service in `ServicesEditor` has its own "Años de experiencia en este servicio" (`ProService.years`), shown in the service list.
 
 ## Sprint 17 (2026-06-06) — 20-fix batch #2
 
