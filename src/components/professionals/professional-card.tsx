@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { MapPin, ShieldCheck, Building2 } from "lucide-react";
+import { MapPin, ShieldCheck, Building2, Truck } from "lucide-react";
 import { ProfessionalSchedule, type ScheduleSlot } from "@/components/professionals/professional-schedule";
 import { Link } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -73,20 +73,21 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
         </div>
       )}
 
-      <CardContent className="p-5">
-        <div className="flex flex-col md:flex-row gap-5">
+      <CardContent className="p-4">
+        <div className="flex flex-col md:flex-row gap-4">
           {/* ── Left: professional info ─────────────────────────────── */}
           <div className="flex-1 min-w-0">
-            <div className="flex gap-3.5">
+            <div className="flex gap-3">
               <Link href={`/profesionales/${professional.slug}`} className="shrink-0">
-                <Avatar className="h-16 w-16">
+                <Avatar className="h-14 w-14">
                   <AvatarImage src={professional.avatarUrl} alt={professional.fullName} />
-                  <AvatarFallback className="text-lg bg-[#EBF5FB] text-[#009FD9] font-semibold">{getInitials(professional.fullName)}</AvatarFallback>
+                  <AvatarFallback className="text-base bg-[#EBF5FB] text-[#009FD9] font-semibold">{getInitials(professional.fullName)}</AvatarFallback>
                 </Avatar>
               </Link>
 
               <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-2">
+                {/* pr-10 on mobile clears the absolute favorites button (no overlap) */}
+                <div className="flex items-start justify-between gap-2 pr-10 md:pr-0">
                   <div className="min-w-0">
                     <Link href={`/profesionales/${professional.slug}`} className="flex items-center gap-1.5">
                       <h3 className="font-semibold text-[#111827] text-base leading-tight hover:text-[#009FD9] transition-colors">{professional.fullName}</h3>
@@ -112,7 +113,11 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
                   <p className="font-bold text-[#111827] text-sm whitespace-nowrap shrink-0">{priceLabel}</p>
                 </div>
 
-                <StarRating rating={professional.ratingAvg} showValue reviewCount={professional.reviewCount} size="sm" className="mt-2" />
+                {professional.reviewCount > 0 ? (
+                  <StarRating rating={professional.ratingAvg} showValue reviewCount={professional.reviewCount} size="sm" className="mt-1.5" />
+                ) : (
+                  <p className="text-xs text-[#9ca3af] mt-1.5">Sin reseñas todavía</p>
+                )}
 
                 {/* Location — province + canton when present; nothing (no empty pin) otherwise */}
                 {(professional.provinceName || professional.cantonName) && (
@@ -133,6 +138,14 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
                 )}
               </div>
             </div>
+
+            {professional.serviceType?.includes("mobile") && (
+              <div className="mt-2">
+                <span className="inline-flex items-center gap-1 rounded-md bg-[#EBF5FB] px-2 py-0.5 text-[11px] font-medium text-[#0089bb]">
+                  <Truck className="h-3 w-3" /> Se desplaza a tu ubicación
+                </span>
+              </div>
+            )}
 
             {professional.workplaces && professional.workplaces.length > 0 && (
               <div className="flex items-center gap-1.5 mt-2 flex-wrap">

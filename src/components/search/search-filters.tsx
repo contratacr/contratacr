@@ -127,8 +127,8 @@ export function SearchFilters() {
             <SelectContent>
               <SelectItem value="todas">{t("filters.allCategories")}</SelectItem>
               {CATEGORY_GROUPS.map((group) => (
-                <div key={group.id}>
-                  <div className="px-2 py-1 text-[10px] font-bold text-[#9ca3af] uppercase tracking-widest sticky top-0 bg-white">
+                <div key={group.id} className="pb-1">
+                  <div className="sticky top-0 z-10 bg-white px-2.5 py-1.5 mb-0.5 text-[10px] font-bold text-[#6b7280] uppercase tracking-widest border-b border-[#f3f4f6]">
                     {group.emoji} {group.label}
                   </div>
                   {group.items.map((item) => (

@@ -135,7 +135,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           className="inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1ebe5d] text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors"
         >
           <WhatsAppIcon className="h-4 w-4" />
-          Contáctanos por Whatsapp
+          Contactar por WhatsApp
         </a>
         <a
           href={telHref(professional.whatsapp)}
@@ -226,7 +226,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           className="inline-flex items-center justify-center gap-2 border border-[#25D366] text-[#1ebe5d] hover:bg-[#25D366]/10 text-sm font-semibold py-2.5 rounded-lg transition-colors"
         >
           <WhatsAppIcon className="h-4 w-4" />
-          WhatsApp
+          Contactar por WhatsApp
         </a>
       )}
 
