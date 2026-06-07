@@ -102,7 +102,7 @@ export function NotificationBell() {
       >
         <Bell className="h-5 w-5" />
         {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white">
+          <span className="absolute -top-0.5 -right-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white ring-2 ring-white">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
@@ -168,6 +168,14 @@ export function NotificationBell() {
               </ul>
             )}
           </div>
+
+          {/* Footer — go to the full notifications page */}
+          <a
+            href="/es/notificaciones"
+            className="block text-center px-4 py-2.5 border-t border-[#f3f4f6] text-sm font-medium text-[#009FD9] hover:bg-[#f9fafb] transition-colors"
+          >
+            Ver todas
+          </a>
         </div>
       )}
     </div>
