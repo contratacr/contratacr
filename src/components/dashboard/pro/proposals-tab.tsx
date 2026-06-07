@@ -120,6 +120,32 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
     setSubmitting(null);
   }
 
+  const [editing, setEditing] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<{ price: string; message: string }>({ price: "", message: "" });
+
+  function startEdit(p: MyProposal) {
+    setEditing(p.id);
+    setEditForm({ price: p.price ? String(p.price) : "", message: p.message });
+  }
+
+  async function saveEdit(id: string) {
+    const res = await fetch("/api/proposals", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, price: editForm.price || null, message: editForm.message }),
+    });
+    if (res.ok) {
+      setMyProposals((prev) => prev.map((p) => (p.id === id ? { ...p, price: editForm.price ? Number(editForm.price) : undefined, message: editForm.message } : p)));
+      setEditing(null);
+    }
+  }
+
+  async function cancelProposal(id: string) {
+    if (!confirm("¿Cancelar esta propuesta?")) return;
+    const res = await fetch(`/api/proposals?id=${id}`, { method: "DELETE" });
+    if (res.ok) setMyProposals((prev) => prev.filter((p) => p.id !== id));
+  }
+
   async function markWorkDone(projectId: string) {
     const res = await fetch("/api/projects", {
       method: "PATCH",
@@ -335,6 +361,12 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                         <Badge variant={STATUS_VARIANT[p.status]}>
                           {STATUS_LABEL[p.status]}
                         </Badge>
+                        {p.status === "pending" && (
+                          <div className="flex gap-1.5">
+                            <Button size="sm" variant="outline" onClick={() => startEdit(p)}>Editar</Button>
+                            <Button size="sm" variant="ghost" className="text-red-500 hover:bg-red-50" onClick={() => cancelProposal(p.id)}>Cancelar</Button>
+                          </div>
+                        )}
                         {p.status === "accepted" && p.projects?.profiles?.phone && (
                           <Button size="sm" variant="whatsapp" asChild>
                             <a
@@ -363,6 +395,27 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                         )}
                       </div>
                     </div>
+
+                    {editing === p.id && (
+                      <div className="mt-4 pt-4 border-t border-[#f3f4f6] flex flex-col gap-3">
+                        <div>
+                          <label className="text-xs font-medium text-[#374151] block mb-1.5">Tu precio (₡) <span className="text-[#9ca3af] font-normal">opcional</span></label>
+                          <PriceInput placeholder="Ej: 50000" value={editForm.price} onChange={(v) => setEditForm((f) => ({ ...f, price: v }))} />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-[#374151] block mb-1.5">Tu mensaje</label>
+                          <textarea
+                            value={editForm.message}
+                            onChange={(e) => setEditForm((f) => ({ ...f, message: e.target.value }))}
+                            className={`${inputClass} min-h-[90px] resize-none`}
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <Button size="sm" onClick={() => saveEdit(p.id)} disabled={!editForm.message.trim()}>Guardar</Button>
+                          <Button size="sm" variant="ghost" onClick={() => setEditing(null)}>Cancelar</Button>
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               ))}

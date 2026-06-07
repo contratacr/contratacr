@@ -17,6 +17,19 @@ export async function POST(req: NextRequest) {
     // Check if an authenticated user session exists to link the booking
     const { data: { session } } = await supabase.auth.getSession();
 
+    // Self-interaction guard: a professional cannot request a service from themselves.
+    if (session?.user) {
+      const admin = createAdminClient();
+      const { data: targetPro } = await admin
+        .from("professionals")
+        .select("profile_id")
+        .eq("id", professionalId)
+        .maybeSingle();
+      if (targetPro?.profile_id === session.user.id) {
+        return NextResponse.json({ error: "No podés solicitarte un servicio a vos mismo." }, { status: 400 });
+      }
+    }
+
     const { scheduledDate, scheduledTime, clientPhone } = body;
 
     const { data, error } = await supabase.from("bookings").insert({

@@ -108,13 +108,29 @@ export async function GET(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   try {
     const body = await req.json();
-    const { id, status } = body;
-
-    if (!id || !status) return NextResponse.json({ error: "Faltan campos" }, { status: 400 });
+    const { id, status, price, message } = body;
+    if (!id) return NextResponse.json({ error: "Faltan campos" }, { status: 400 });
 
     const supabase = await createClient();
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+
+    // ── Professional edits their OWN pending proposal (price / message) ──────
+    if (status === undefined && (price !== undefined || message !== undefined)) {
+      const { data: pro } = await supabase.from("professionals").select("id").eq("profile_id", session.user.id).maybeSingle();
+      if (!pro) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+      const { data: prop } = await supabase.from("proposals").select("status, professional_id").eq("id", id).maybeSingle();
+      if (!prop || prop.professional_id !== pro.id) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+      if (prop.status !== "pending") return NextResponse.json({ error: "Solo podés editar una propuesta pendiente." }, { status: 409 });
+      const patch: Record<string, unknown> = {};
+      if (price !== undefined) patch.price = price ? parseInt(String(price), 10) : null;
+      if (message !== undefined) patch.message = message;
+      const { error: e } = await supabase.from("proposals").update(patch).eq("id", id);
+      if (e) return NextResponse.json({ error: e.message }, { status: 500 });
+      return NextResponse.json({ success: true });
+    }
+
+    if (!status) return NextResponse.json({ error: "Faltan campos" }, { status: 400 });
 
     const { error } = await supabase
       .from("proposals")
@@ -122,6 +138,23 @@ export async function PATCH(req: NextRequest) {
       .eq("id", id);
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+    // Reverting an accepted decision (→ pending/declined): reopen the project and
+    // clear the accepted professional so the client can choose again.
+    if (status === "pending" || status === "declined") {
+      try {
+        const admin = createAdminClient();
+        const { data: prop } = await admin.from("proposals").select("project_id, professional_id").eq("id", id).maybeSingle();
+        if (prop?.project_id) {
+          const { data: project } = await admin.from("projects").select("accepted_professional_id, status").eq("id", prop.project_id).maybeSingle();
+          if (project?.accepted_professional_id === prop.professional_id) {
+            await admin.from("projects").update({ status: "open", accepted_professional_id: null }).eq("id", prop.project_id);
+          }
+        }
+      } catch (e) {
+        console.error("[PATCH /api/proposals] revert side-effects failed:", e);
+      }
+    }
 
     // On accept: move the project into "in_progress" and record the accepted
     // professional so the completion flow knows who can mark work done.
@@ -161,4 +194,26 @@ export async function PATCH(req: NextRequest) {
     console.error("[PATCH /api/proposals]", err);
     return NextResponse.json({ error: "Error interno" }, { status: 500 });
   }
+}
+
+// Professional cancels (deletes) their OWN pending proposal.
+export async function DELETE(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const id = searchParams.get("id");
+  if (!id) return NextResponse.json({ error: "Falta el id" }, { status: 400 });
+
+  const supabase = await createClient();
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+
+  const { data: pro } = await supabase.from("professionals").select("id").eq("profile_id", session.user.id).maybeSingle();
+  if (!pro) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+
+  const { data: prop } = await supabase.from("proposals").select("status, professional_id").eq("id", id).maybeSingle();
+  if (!prop || prop.professional_id !== pro.id) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+  if (prop.status !== "pending") return NextResponse.json({ error: "Solo podés cancelar una propuesta pendiente." }, { status: 409 });
+
+  const { error } = await supabase.from("proposals").delete().eq("id", id);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ success: true });
 }

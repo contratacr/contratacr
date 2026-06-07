@@ -286,6 +286,22 @@ export default function ClientDashboardPage() {
     }));
   }
 
+  // Revert an accepted/declined decision back to pending (client can change mind).
+  async function revertProposal(proposalId: string, projectId: string) {
+    await fetch("/api/proposals", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: proposalId, status: "pending" }),
+    });
+    setProjectProposals((prev) => ({
+      ...prev,
+      [projectId]: (prev[projectId] ?? []).map((p) =>
+        p.id === proposalId ? { ...p, status: "pending" } : p
+      ),
+    }));
+    setProjects((prev) => prev.map((p) => (p.id === projectId ? { ...p, status: "open" } : p)));
+  }
+
   function openNotification(n: Notification) {
     if (!n.read) {
       const supabase = createClient();
@@ -751,15 +767,22 @@ export default function ClientDashboardPage() {
                                           {proposal.status === "declined" && (
                                             <Badge variant="error">Rechazada</Badge>
                                           )}
-                                          {proposal.professionals?.whatsapp && proposal.status === "accepted" && (
+                                          {/* Change/revert a previous decision */}
+                                          {(proposal.status === "accepted" || proposal.status === "declined") && (
+                                            <Button size="sm" variant="outline" onClick={() => revertProposal(proposal.id, project.id)}>
+                                              Cambiar decisión
+                                            </Button>
+                                          )}
+                                          {/* WhatsApp available for any proposal (in addition to Accept/Reject) */}
+                                          {proposal.professionals?.whatsapp && (
                                             <Button size="sm" variant="whatsapp" asChild>
                                               <a
-                                                href={getWhatsAppLink(proposal.professionals.whatsapp, `Hola, acepté tu propuesta en ContrataCR para el proyecto "${project.title}".`)}
+                                                href={getWhatsAppLink(proposal.professionals.whatsapp, `Hola, te escribo por tu propuesta en ContrataCR para el proyecto "${project.title}".`)}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                               >
                                                 <WhatsAppIcon className="h-3.5 w-3.5" />
-                                                Contactar
+                                                WhatsApp
                                               </a>
                                             </Button>
                                           )}

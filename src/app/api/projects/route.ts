@@ -277,6 +277,9 @@ export async function PATCH(req: NextRequest) {
   if (!allowed.includes(status)) {
     return NextResponse.json({ error: "Estado inválido" }, { status: 400 });
   }
+  // Notify the assigned professional when the project is cancelled.
+  if (status === "cancelled") await notifyAssignedPro(admin, id, "cancelled");
+
   const { error } = await supabase
     .from("projects")
     .update({ status, updated_at: new Date().toISOString() })
@@ -284,6 +287,31 @@ export async function PATCH(req: NextRequest) {
     .eq("client_id", uid);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ success: true });
+}
+
+// Notify the accepted professional that a project was cancelled/deleted, so it
+// disappears from their active work.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function notifyAssignedPro(admin: any, projectId: string, kind: "cancelled" | "deleted") {
+  try {
+    const { data: project } = await admin
+      .from("projects")
+      .select("title, accepted_professional_id")
+      .eq("id", projectId)
+      .maybeSingle();
+    if (!project?.accepted_professional_id) return;
+    const { data: pro } = await admin.from("professionals").select("profile_id").eq("id", project.accepted_professional_id).maybeSingle();
+    if (!pro?.profile_id) return;
+    await admin.from("notifications").insert({
+      user_id: pro.profile_id,
+      type: "project_completed", // reuse an allowed project type for the channel
+      title: kind === "deleted" ? "Proyecto eliminado" : "Proyecto cancelado",
+      message: `El cliente ${kind === "deleted" ? "eliminó" : "canceló"} el proyecto "${project.title}". Ya no está activo.`,
+      data: { link: "/es/dashboard/profesional?tab=proposals" },
+    });
+  } catch (e) {
+    console.error("[notifyAssignedPro] failed:", e);
+  }
 }
 
 // Client deletes their own project (and its proposals via FK cascade).
@@ -295,6 +323,9 @@ export async function DELETE(req: NextRequest) {
   const supabase = await createClient();
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
+
+  // Notify the assigned pro before the row (and its proposals) cascade away.
+  await notifyAssignedPro(createAdminClient(), id, "deleted");
 
   const { error } = await supabase.from("projects").delete().eq("id", id).eq("client_id", session.user.id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
