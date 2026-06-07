@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
   X, CheckCircle2, MapPin, Shield, ArrowLeft, ChevronLeft, ChevronRight, Lock, CalendarPlus,
@@ -88,10 +88,19 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
+  const slotsRef = useRef<HTMLDivElement>(null);
   const [availability, setAvailability] = useState<WeeklyAvailability>({});
   const [dateSlots, setDateSlots] = useState<Record<string, string[]>>({});
   const [blockedDates, setBlockedDates] = useState<string[]>([]);
   const [takenSlots, setTakenSlots] = useState<Set<string>>(new Set());
+
+  // When a day is picked, bring the time slots into view so they aren't missed.
+  useEffect(() => {
+    if (selectedDate) {
+      const id = setTimeout(() => slotsRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 60);
+      return () => clearTimeout(id);
+    }
+  }, [selectedDate]);
   const [availabilityLoaded, setAvailabilityLoaded] = useState(false);
   const [description, setDescription] = useState("");
   const [clientName, setClientName] = useState("");
@@ -553,7 +562,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
 
                       {/* Time slots */}
                       {selectedDate && (
-                        <div className="mt-4 pt-4 border-t border-[#f3f4f6]">
+                        <div ref={slotsRef} className="mt-4 pt-4 border-t border-[#f3f4f6] scroll-mt-4">
                           {slots.length === 0 ? (
                             <p className="text-sm text-[#9ca3af] text-center py-2">
                               Sin horarios disponibles para este día.

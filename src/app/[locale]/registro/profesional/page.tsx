@@ -1093,6 +1093,13 @@ export default function RegisterProfessionalPage() {
                 Después agregás tus servicios con su precio y años de experiencia desde tu panel.
               </p>
 
+              <div className="rounded-xl bg-[#f0fdf4] border border-[#bbf7d0] p-3 text-center">
+                <p className="text-xs text-[#15803d] leading-relaxed">
+                  <strong>Tip:</strong> subí fotos de tus trabajos desde tu panel (pestaña Fotos). Tener trabajos
+                  publicados ayuda a que obtengás la insignia de <strong>Proveedor Autorizado</strong> más rápido. Es opcional.
+                </p>
+              </div>
+
               <div className="flex gap-3 mt-2">
                 <Button variant="outline" size="lg" type="button" onClick={() => setStep(1)}>
                   <ArrowLeft className="h-4 w-4" /> {t("back")}

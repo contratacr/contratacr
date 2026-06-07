@@ -329,8 +329,8 @@
     },
     "success": {
       "title": "¡Solicitud enviada!",
-      "desc": "Tu solicitud fue registrada. Ahora podés contactar al profesional por WhatsApp.",
-      "whatsapp": "Abrir WhatsApp",
+      "desc": "Tu solicitud fue registrada. Ahora podés continuar la coordinación por WhatsApp.",
+      "whatsapp": "Continuar por WhatsApp",
       "close": "Listo"
     },
     "back": "Atrás",

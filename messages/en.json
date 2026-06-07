@@ -329,8 +329,8 @@
     },
     "success": {
       "title": "Request sent!",
-      "desc": "Your request has been registered. You can now contact the professional via WhatsApp.",
-      "whatsapp": "Open WhatsApp",
+      "desc": "Your request has been registered. You can continue coordinating via WhatsApp.",
+      "whatsapp": "Continue on WhatsApp",
       "close": "Done"
     },
     "back": "Back",
