@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
-import { User, Image as ImageIcon, CalendarDays, Inbox, LogOut, ExternalLink, Wrench, FolderOpen, ShieldCheck } from "lucide-react";
+import { User, Image as ImageIcon, CalendarDays, Inbox, LogOut, ExternalLink, Wrench, FolderOpen, ShieldCheck, Bell } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -17,13 +17,14 @@ import { ServicesEditor } from "@/components/dashboard/pro/services-editor";
 import { BookingRequests } from "@/components/dashboard/pro/booking-requests";
 import { ProposalsTab } from "@/components/dashboard/pro/proposals-tab";
 import { VerificationPanel } from "@/components/dashboard/pro/verification-panel";
+import { NotificationsList } from "@/components/notifications/notifications-list";
 import { createClient } from "@/lib/supabase/client";
 import { getInitials } from "@/lib/utils";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 
-type Tab = "profile" | "services" | "photos" | "availability" | "bookings" | "proposals" | "verificacion";
+type Tab = "profile" | "services" | "photos" | "availability" | "bookings" | "proposals" | "notifications" | "verificacion";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ProData = Record<string, any>;
@@ -35,6 +36,7 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
   availability: <CalendarDays className="h-4 w-4" />,
   bookings: <Inbox className="h-4 w-4" />,
   proposals: <FolderOpen className="h-4 w-4" />,
+  notifications: <Bell className="h-4 w-4" />,
   verificacion: <ShieldCheck className="h-4 w-4" />,
 };
 
@@ -45,6 +47,7 @@ const TAB_LABELS: Record<Tab, string> = {
   availability: "Disponibilidad",
   bookings: "Solicitudes",
   proposals: "Proyectos",
+  notifications: "Notificaciones",
   verificacion: "Verificación",
 };
 
@@ -125,7 +128,7 @@ export default function ProDashboardPage() {
     );
   }
 
-  const TABS: Tab[] = ["profile", "services", "photos", "availability", "bookings", "proposals", "verificacion"];
+  const TABS: Tab[] = ["profile", "services", "photos", "availability", "bookings", "proposals", "notifications", "verificacion"];
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
@@ -241,6 +244,7 @@ export default function ProDashboardPage() {
                   {activeTab === "proposals" && (
                     <ProposalsTab categoryId={pro.category_id} />
                   )}
+                  {activeTab === "notifications" && <NotificationsList />}
                   {activeTab === "verificacion" && (
                     <VerificationPanel
                       professionalId={pro.id}
