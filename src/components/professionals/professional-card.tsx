@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { MapPin, ShieldCheck, Building2, Truck } from "lucide-react";
+import { MapPin, ShieldCheck, Building2, Truck, Image as ImageIcon } from "lucide-react";
 import { ProfessionalSchedule, type ScheduleSlot } from "@/components/professionals/professional-schedule";
 import { Link } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -38,6 +38,8 @@ export type ProfessionalCardData = {
   lat?: number | null;
   lng?: number | null;
   serviceType?: string | null;
+  /** Count of "casos de éxito" (portfolio photos) — drives the preview link. */
+  portfolioCount?: number;
 };
 
 interface ProfessionalCardProps {
@@ -161,6 +163,17 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
             {professional.bio && (
               <p className="text-xs text-[#9ca3af] mt-3 line-clamp-2 leading-snug">{professional.bio}</p>
             )}
+
+            {/* Casos de éxito preview — link to the gallery before booking */}
+            {professional.portfolioCount ? (
+              <Link
+                href={`/profesionales/${professional.slug}?tab=casos`}
+                className="inline-flex items-center gap-1.5 mt-3 text-xs font-medium text-[#009FD9] hover:underline"
+              >
+                <ImageIcon className="h-3.5 w-3.5" />
+                Ver casos de éxito ({professional.portfolioCount})
+              </Link>
+            ) : null}
           </div>
 
           {/* ── Right: availability panel (md:pt-7 clears the corner favorites button) ── */}

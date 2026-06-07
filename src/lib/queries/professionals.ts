@@ -145,6 +145,7 @@ export async function searchProfessionals(
         lat: row.lat ?? null,
         lng: row.lng ?? null,
         serviceType: row.service_type ?? null,
+        portfolioCount: Array.isArray(row.portfolio_urls) ? row.portfolio_urls.length : 0,
       }));
     } catch (err) {
       console.error("[searchProfessionals] Supabase error:", err);

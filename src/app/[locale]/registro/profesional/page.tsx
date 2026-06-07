@@ -1090,8 +1090,8 @@ export default function RegisterProfessionalPage() {
 
               <div className="rounded-xl bg-[#f0fdf4] border border-[#bbf7d0] p-3 text-center">
                 <p className="text-xs text-[#15803d] leading-relaxed">
-                  <strong>Tip:</strong> subí fotos de tus trabajos desde tu panel (pestaña Fotos). Generan más confianza
-                  con los clientes. <strong>No son necesarias para verificar tu identidad</strong> — es opcional.
+                  <strong>Tip:</strong> subí tus <strong>casos de éxito</strong> (fotos de trabajos anteriores) desde tu
+                  panel. Generan más confianza con los clientes. <strong>No son necesarias para verificar tu identidad</strong> — es opcional.
                 </p>
               </div>
 

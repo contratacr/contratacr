@@ -43,7 +43,7 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
 const TAB_LABELS: Record<Tab, string> = {
   profile: "Mi perfil",
   services: "Servicios",
-  photos: "Fotos",
+  photos: "Casos de éxito",
   availability: "Disponibilidad",
   bookings: "Solicitudes",
   proposals: "Proyectos",

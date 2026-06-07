@@ -54,7 +54,15 @@ function SubRating({ label, value }: { label: string; value: number }) {
 }
 
 // ─── Tab types ────────────────────────────────────────────────────────────────
-type Tab = "servicios" | "disponibilidad" | "resenas" | "sobre";
+type Tab = "servicios" | "disponibilidad" | "casos" | "resenas" | "sobre";
+
+function initialTabFromUrl(): Tab {
+  if (typeof window === "undefined") return "servicios";
+  const tab = new URLSearchParams(window.location.search).get("tab");
+  return (["servicios", "disponibilidad", "casos", "resenas", "sobre"] as const).includes(tab as Tab)
+    ? (tab as Tab)
+    : "servicios";
+}
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function ProfilePage({ params }: ProfilePageProps) {
@@ -64,6 +72,8 @@ export default function ProfilePage({ params }: ProfilePageProps) {
   const [loading, setLoading] = useState(true);
   const [proNotFound, setProNotFound] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("servicios");
+  // Deep-link support: /profesionales/[slug]?tab=casos opens that tab.
+  useEffect(() => { setActiveTab(initialTabFromUrl()); }, []);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showAllServices, setShowAllServices] = useState(false);
@@ -143,9 +153,11 @@ export default function ProfilePage({ params }: ProfilePageProps) {
   const visibleServices = showAllServices ? services : services.slice(0, 5);
   const locationText = [professional.cantonName, professional.provinceName].filter(Boolean).join(", ");
 
+  const hasCasos = !!professional.portfolioUrls && professional.portfolioUrls.length > 0;
   const TABS: Array<{ id: Tab; label: string }> = [
     { id: "servicios",      label: "Servicios" },
     { id: "disponibilidad", label: "Disponibilidad" },
+    ...(hasCasos ? [{ id: "casos" as Tab, label: "Casos de éxito" }] : []),
     { id: "resenas",        label: "Reseñas" },
     { id: "sobre",          label: "Sobre mí" },
   ];
@@ -448,6 +460,19 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                     </div>
                   )}
 
+                  {/* ── TAB: Casos de éxito ── */}
+                  {activeTab === "casos" && (
+                    <div>
+                      <h2 className="text-lg font-semibold text-[#111827] mb-1">Casos de éxito</h2>
+                      <p className="text-sm text-[#6b7280] mb-4">Fotos de trabajos anteriores de {professional.fullName.split(" ")[0]}.</p>
+                      {hasCasos ? (
+                        <ProfileGallery urls={professional.portfolioUrls!} />
+                      ) : (
+                        <p className="text-sm text-[#9ca3af]">Este profesional todavía no agregó casos de éxito.</p>
+                      )}
+                    </div>
+                  )}
+
                   {/* ── TAB: Reseñas ── */}
                   {activeTab === "resenas" && (
                     <div>
@@ -493,13 +518,6 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                         </div>
                       )}
 
-                      {/* Work gallery — optimized thumbnails + lightbox */}
-                      {professional.portfolioUrls && professional.portfolioUrls.length > 0 && (
-                        <div>
-                          <h2 className="text-lg font-semibold text-[#111827] mb-3">Galería de trabajos</h2>
-                          <ProfileGallery urls={professional.portfolioUrls} />
-                        </div>
-                      )}
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {expYears > 0 && (

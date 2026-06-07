@@ -74,7 +74,8 @@ export function PhotoGallery({ professionalId, initialUrls = [], onSaved }: Phot
   return (
     <div>
       <p className="text-sm text-[#6b7280] mb-5">
-        Subí fotos de tus trabajos para mostrar tu experiencia. Máximo {MAX_PORTFOLIO_PHOTOS} fotos.
+        Subí fotos de tus <strong>casos de éxito</strong> (trabajos anteriores) para generar confianza con los
+        clientes. Aparecen en tu perfil y en los resultados de búsqueda. Máximo {MAX_PORTFOLIO_PHOTOS} fotos.
       </p>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
