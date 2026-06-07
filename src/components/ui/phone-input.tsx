@@ -105,8 +105,16 @@ export function PhoneInput({ value, onChange, label, error, required, optional, 
           {optional && <span className="text-[#9ca3af] font-normal"> (opcional)</span>}
         </label>
       )}
-      <div className="flex items-stretch">
-        <div className="relative flex h-11 items-center gap-1.5 rounded-l-xl border border-r-0 border-[#e5e7eb] bg-[#f3f4f6] px-2.5 shrink-0">
+      {/* One unified field: the prefix + input share a single border and the
+          focus ring highlights the whole control together (no mismatched ring). */}
+      <div
+        className={cn(
+          "flex items-stretch h-11 rounded-xl border bg-white overflow-hidden transition-all",
+          "focus-within:ring-2 focus-within:ring-[#009FD9] focus-within:border-transparent",
+          error ? "border-red-400" : "border-[#e5e7eb]"
+        )}
+      >
+        <div className="relative flex items-center gap-1.5 bg-[#f3f4f6] px-2.5 border-r border-[#e5e7eb] shrink-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={`https://flagcdn.com/24x18/${country.iso}.png`}
@@ -135,10 +143,7 @@ export function PhoneInput({ value, onChange, label, error, required, optional, 
           value={isCR ? formatCRNational(national) : national}
           onChange={(e) => changeNational(e.target.value)}
           aria-invalid={!!error}
-          className={cn(
-            "flex-1 h-11 px-3 rounded-r-xl border text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all",
-            error ? "border-red-400" : "border-[#e5e7eb]"
-          )}
+          className="flex-1 min-w-0 h-full px-3 bg-transparent border-0 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-0"
         />
       </div>
       {/* Live length hint — enforces exactly N digits for the selected country. */}
