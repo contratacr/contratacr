@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import {
   ArrowLeft, CheckCircle2, XCircle, RotateCcw, AlertCircle, ExternalLink,
-  ShieldCheck, IdCard, Loader2, FileSearch,
+  ShieldCheck, IdCard, Loader2,
 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
@@ -23,7 +23,6 @@ export function AdminCase({ providerId }: { providerId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [rejectOpen, setRejectOpen] = useState(false);
   const [reason, setReason] = useState("");
-  const [tseOpened, setTseOpened] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -61,15 +60,6 @@ export function AdminCase({ providerId }: { providerId: string }) {
     } finally {
       setBusy(false);
     }
-  }
-
-  // Assisted manual check (no scraping): open the official TSE consultation in a
-  // new tab; the admin enters the cédula there and compares the name/ID by hand.
-  const TSE_URL = "https://servicioselectorales.tse.go.cr/chc/consulta_cedula.aspx";
-  function openTse(cedula: string) {
-    navigator.clipboard?.writeText(cedula).catch(() => {});
-    window.open(TSE_URL, "_blank", "noopener,noreferrer");
-    setTseOpened(true);
   }
 
   if (loading) {
@@ -172,25 +162,8 @@ export function AdminCase({ providerId }: { providerId: string }) {
                 </span>
               )}
             </div>
-            {idAssist.value && (
-              <div className="mt-3">
-                <button
-                  onClick={() => openTse(idAssist.value)}
-                  className="inline-flex items-center gap-1.5 text-xs font-medium rounded-lg border border-[#e5e7eb] px-3 py-1.5 hover:border-[#009FD9] hover:text-[#009FD9]"
-                >
-                  <FileSearch className="h-3.5 w-3.5" />
-                  Verificar en TSE
-                </button>
-                {tseOpened && (
-                  <p className="mt-2 text-xs text-[#374151]">
-                    Se abrió la consulta del TSE en otra pestaña y copiamos la cédula <strong>{formatId(idAssist.value)}</strong> al portapapeles.
-                    Compará el nombre del padrón con <strong>{profile?.full_name}</strong> y, si coincide, aprobá la verificación.
-                  </p>
-                )}
-              </div>
-            )}
             <p className="text-[11px] text-[#9ca3af] mt-3">
-              La validación de formato es automática; la confirmación de identidad se hace contra el padrón (TSE). Las fotos de trabajo NO son criterio de verificación.
+              La validación de formato y la confirmación de identidad contra el padrón (TSE) son automáticas. Revisá la comparación con el padrón más abajo. Las fotos de trabajo NO son criterio de verificación.
             </p>
           </div>
 
