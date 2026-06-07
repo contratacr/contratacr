@@ -395,10 +395,12 @@ export default function RegisterProfessionalPage() {
   // Additional categories (multi-category support). Primary = step2 `category`.
   const [extraCategories, setExtraCategories] = useState<string[]>([]);
   const [extraCatInput, setExtraCatInput] = useState("");
-  // Account type — persona física or empresa/negocio.
-  const [accountType, setAccountType] = useState<"individual" | "empresa">("individual");
+  // Flexible identity (all optional beyond the personal name):
+  //  - businessName: a brand or business they operate under
+  //  - affiliations: institutions / workplaces they're affiliated with (multiple)
   const [businessName, setBusinessName] = useState("");
-  const [businessNameError, setBusinessNameError] = useState<string | null>(null);
+  const [affiliations, setAffiliations] = useState<string[]>([]);
+  const [affiliationInput, setAffiliationInput] = useState("");
 
   const cantons = getCantonsByProvince(selectedProvince);
 
@@ -498,11 +500,6 @@ export default function RegisterProfessionalPage() {
       setServiceTypeError("Seleccioná al menos un tipo de servicio");
       return;
     }
-    if (accountType === "empresa" && businessName.trim().length < 2) {
-      setBusinessNameError("Ingresá el nombre comercial.");
-      return;
-    }
-    setBusinessNameError(null);
     // OAuth professionals must provide a cédula (clients don't — they're asked at booking).
     if (currentUser && !validateCedulaFormat(oauthCedula)) {
       setOauthCedulaError("Cédula requerida. CR: 9 dígitos · DIMEX: 11-12 · NITE: 10.");
@@ -588,9 +585,6 @@ export default function RegisterProfessionalPage() {
             .join(" ")
             .trim();
 
-      // Businesses display their commercial name everywhere.
-      const displayName = accountType === "empresa" ? businessName.trim() : fullName;
-
       const serviceType = [
         serviceMobile ? "mobile" : null,
         serviceFixed ? "fixed" : null,
@@ -605,9 +599,9 @@ export default function RegisterProfessionalPage() {
         body: JSON.stringify({
           userId,
           email: userEmail,
-          fullName: displayName,
-          accountType,
-          businessName: accountType === "empresa" ? businessName.trim() : null,
+          fullName,
+          businessName: businessName.trim() || null,
+          affiliations: affiliations.filter(Boolean),
           cedula: step1Data?.cedula?.replace(/\D/g, "") ?? (oauthCedula ? oauthCedula.replace(/\D/g, "") : null),
           photoUrl,
           category: step2Data.category,
@@ -871,40 +865,6 @@ export default function RegisterProfessionalPage() {
           {step === 1 && (
             <form onSubmit={form2.handleSubmit(onStep2, scrollToFirstError)} className="flex flex-col gap-4">
 
-              {/* Account type */}
-              <div>
-                <label className="text-sm font-medium text-[#374151] block mb-2">¿Te registrás como?</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {([
-                    { v: "individual", label: "Persona física", desc: "Profesional independiente" },
-                    { v: "empresa", label: "Empresa o negocio", desc: "Comercio o compañía" },
-                  ] as const).map((opt) => (
-                    <button
-                      key={opt.v}
-                      type="button"
-                      onClick={() => { setAccountType(opt.v); setBusinessNameError(null); }}
-                      className={cn(
-                        "p-3 rounded-xl border-2 text-left transition-all",
-                        accountType === opt.v ? "border-[#009FD9] bg-[#EBF5FB]" : "border-[#e5e7eb] hover:border-[#009FD9]/40"
-                      )}
-                    >
-                      <p className="text-sm font-semibold text-[#111827]">{opt.label}</p>
-                      <p className="text-xs text-[#9ca3af]">{opt.desc}</p>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {accountType === "empresa" && (
-                <Input
-                  label={<>Nombre comercial <span className="text-red-500">*</span></>}
-                  placeholder="Ej: Servicios Eléctricos GAM"
-                  value={businessName}
-                  onChange={(e) => { setBusinessName(e.target.value); setBusinessNameError(null); }}
-                  error={businessNameError ?? undefined}
-                />
-              )}
-
               {/* Name + cédula — required for OAuth professionals (no identity step) */}
               {currentUser && (
                 <Input
@@ -925,6 +885,66 @@ export default function RegisterProfessionalPage() {
                   error={oauthCedulaError ?? (oauthCedulaCheck.taken ? "Esta cédula ya está registrada en ContrataCR." : undefined)}
                 />
               )}
+
+              {/* Identidad (todo opcional — se puede completar luego en el perfil) */}
+              <div className="rounded-xl border border-[#e5e7eb] p-4 flex flex-col gap-3">
+                <p className="text-xs text-[#6b7280]">
+                  Tu nombre personal ya quedó registrado. Lo siguiente es <strong>opcional</strong> y
+                  podés completarlo después desde tu perfil.
+                </p>
+                <Input
+                  label={<>Nombre comercial o marca <span className="text-[#9ca3af] font-normal">(opcional)</span></>}
+                  placeholder="Ej: Servicios Eléctricos GAM"
+                  value={businessName}
+                  onChange={(e) => setBusinessName(e.target.value)}
+                />
+                <div>
+                  <label className="text-sm font-medium text-[#374151] block mb-1.5">
+                    Instituciones o lugares donde trabajás <span className="text-[#9ca3af] font-normal">(opcional)</span>
+                  </label>
+                  {affiliations.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {affiliations.map((a) => (
+                        <span key={a} className="inline-flex items-center gap-1.5 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium pl-3 pr-1.5 py-1.5">
+                          {a}
+                          <button type="button" onClick={() => setAffiliations((prev) => prev.filter((x) => x !== a))} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors" aria-label="Quitar">
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={affiliationInput}
+                      onChange={(e) => setAffiliationInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          const v = affiliationInput.trim();
+                          if (v && !affiliations.includes(v)) setAffiliations((prev) => [...prev, v]);
+                          setAffiliationInput("");
+                        }
+                      }}
+                      placeholder="Ej: Hospital CIMA, Clínica Bíblica…"
+                      className="flex-1 h-10 px-3 rounded-xl border border-[#e5e7eb] text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="md"
+                      onClick={() => {
+                        const v = affiliationInput.trim();
+                        if (v && !affiliations.includes(v)) setAffiliations((prev) => [...prev, v]);
+                        setAffiliationInput("");
+                      }}
+                    >
+                      Agregar
+                    </Button>
+                  </div>
+                </div>
+              </div>
 
               {/* Category — searchable combobox */}
               <div>

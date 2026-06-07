@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { createClient } from "@/lib/supabase/client";
-import { Camera, Check, X, Plus, User, Building2 } from "lucide-react";
+import { Camera, Check, X, Plus } from "lucide-react";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -44,7 +44,9 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
   const [provinceId, setProvinceId] = useState<string>(initial.provincia_id ?? "");
   const [cantonId, setCantonId] = useState<string>(initial.canton_id ?? "");
   const [address, setAddress] = useState<string>(initial.address ?? "");
-  const [accountType, setAccountType] = useState<"individual" | "empresa">(initial.account_type === "empresa" ? "empresa" : "individual");
+  const [businessName, setBusinessName] = useState<string>(initial.business_name ?? "");
+  const [affiliations, setAffiliations] = useState<string[]>(Array.isArray(initial.affiliations) ? initial.affiliations : []);
+  const [affiliationInput, setAffiliationInput] = useState("");
   const [languages, setLanguages] = useState<string[]>(Array.isArray(initial.languages) ? initial.languages : []);
   const [contactPreference, setContactPreference] = useState<string>(initial.contact_preference ?? "ambas");
   const [avatarPreview, setAvatarPreview] = useState<string | null>(
@@ -126,29 +128,36 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         .filter((p) => p.type === "a_convenir" || p.amount != null)
         .map((p) => ({ ...p, amount: p.type === "a_convenir" ? undefined : p.amount }));
 
-      const { error: proError } = await supabase
+      const baseUpdate: Record<string, unknown> = {
+        bio,
+        whatsapp,
+        hourly_rate: hourTier?.amount ?? null,
+        pricing: cleanPricing,
+        professions,
+        languages,
+        contact_preference: contactPreference,
+        ...(professions[0] ? { category_id: professions[0] } : {}),
+        ...(provinceId ? { provincia_id: provinceId } : {}),
+        ...(cantonId ? { canton_id: cantonId } : {}),
+        address: address || null,
+      };
+      const identityFields = {
+        business_name: businessName.trim() || null,
+        affiliations: affiliations.filter(Boolean),
+      };
+
+      let { error: proError } = await supabase
         .from("professionals")
-        .update({
-          bio,
-          whatsapp,
-          hourly_rate: hourTier?.amount ?? null,
-          pricing: cleanPricing,
-          professions,
-          account_type: accountType,
-          business_name: accountType === "empresa" ? (fullName || null) : null,
-          languages,
-          contact_preference: contactPreference,
-          ...(professions[0] ? { category_id: professions[0] } : {}),
-          ...(provinceId ? { provincia_id: provinceId } : {}),
-          ...(cantonId ? { canton_id: cantonId } : {}),
-          address: address || null,
-        })
+        .update({ ...baseUpdate, ...identityFields })
         .eq("id", professionalId);
+      // Retry without the optional identity columns if the DB isn't migrated yet.
+      if (proError && /business_name|affiliations|schema cache|could not find|PGRST204/i.test(proError.message)) {
+        ({ error: proError } = await supabase.from("professionals").update(baseUpdate).eq("id", professionalId));
+      }
 
       if (proError) throw proError;
 
-      // Photo is auto-saved on selection; here we persist the display name.
-      // For businesses the displayed name IS the business name.
+      // Persist the professional's personal/display name.
       if (fullName) {
         await supabase.from("profiles").update({ full_name: fullName }).eq("id", profileId);
       }
@@ -217,33 +226,69 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         />
       </div>
 
-      {/* Account type — persona física or empresa */}
-      <div>
-        <label className="text-sm font-medium text-[#374151] block mb-1.5">¿Te registrás como?</label>
-        <div className="grid grid-cols-2 gap-2">
-          {([
-            { v: "individual", icon: <User className="h-4 w-4" />, label: "Persona física" },
-            { v: "empresa", icon: <Building2 className="h-4 w-4" />, label: "Empresa o negocio" },
-          ] as const).map((opt) => (
-            <button
-              key={opt.v}
-              type="button"
-              onClick={() => { setAccountType(opt.v); setSaved(false); }}
-              className={`flex items-center gap-2 p-3 rounded-xl border-2 text-sm font-medium transition-all ${accountType === opt.v ? "border-[#009FD9] bg-[#EBF5FB] text-[#0089bb]" : "border-[#e5e7eb] text-[#374151] hover:border-[#009FD9]/40"}`}
-            >
-              {opt.icon} {opt.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Name (or business name) */}
+      {/* Personal name — always your own name */}
       <Input
-        label={accountType === "empresa" ? "Nombre comercial" : "Nombre completo"}
+        label="Nombre completo"
         value={fullName}
         onChange={(e) => { setFullName(e.target.value); setSaved(false); }}
-        placeholder={accountType === "empresa" ? "Ej: Servicios Eléctricos GAM" : "Juan Pérez González"}
+        placeholder="Juan Pérez González"
       />
+
+      {/* Brand / business name — optional */}
+      <Input
+        label={<>Nombre comercial o marca <span className="text-[#9ca3af] font-normal">(opcional)</span></>}
+        value={businessName}
+        onChange={(e) => { setBusinessName(e.target.value); setSaved(false); }}
+        placeholder="Ej: Servicios Eléctricos GAM"
+      />
+
+      {/* Affiliations — institutions / workplaces (optional, multiple) */}
+      <div>
+        <label className="text-sm font-medium text-[#374151] block mb-1.5">
+          Instituciones o lugares donde trabajás <span className="text-[#9ca3af] font-normal">(opcional)</span>
+        </label>
+        {affiliations.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-2">
+            {affiliations.map((a) => (
+              <span key={a} className="inline-flex items-center gap-1.5 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium pl-3 pr-1.5 py-1.5">
+                {a}
+                <button type="button" onClick={() => { setAffiliations((prev) => prev.filter((x) => x !== a)); setSaved(false); }} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors" aria-label="Quitar">
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={affiliationInput}
+            onChange={(e) => setAffiliationInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                const v = affiliationInput.trim();
+                if (v && !affiliations.includes(v)) { setAffiliations((prev) => [...prev, v]); setSaved(false); }
+                setAffiliationInput("");
+              }
+            }}
+            placeholder="Ej: Hospital CIMA, Clínica Bíblica…"
+            className="flex-1 h-10 px-3 rounded-xl border border-[#e5e7eb] text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="md"
+            onClick={() => {
+              const v = affiliationInput.trim();
+              if (v && !affiliations.includes(v)) { setAffiliations((prev) => [...prev, v]); setSaved(false); }
+              setAffiliationInput("");
+            }}
+          >
+            Agregar
+          </Button>
+        </div>
+      </div>
 
       {/* Description */}
       <div>

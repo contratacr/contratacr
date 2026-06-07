@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import {
   MapPin, Shield, ArrowLeft,
-  Share2, Flag, ChevronDown, Lock, Phone,
+  Share2, Flag, ChevronDown, Lock, Phone, Building2,
 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Navbar } from "@/components/layout/navbar";
@@ -184,6 +184,9 @@ export default function ProfilePage({ params }: ProfilePageProps) {
 
                   <div>
                     <h1 className="text-xl font-bold text-[#111827]">{professional.fullName}</h1>
+                    {professional.businessName && (
+                      <p className="text-sm font-medium text-[#009FD9] mt-0.5">{professional.businessName}</p>
+                    )}
                     <div className="flex flex-wrap gap-1 justify-center mt-1">
                       {(professional.professions && professional.professions.length > 0
                         ? professional.professions
@@ -526,6 +529,20 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                           </div>
                         ) : null}
                       </div>
+
+                      {professional.affiliations && professional.affiliations.length > 0 && (
+                        <div>
+                          <h2 className="text-lg font-semibold text-[#111827] mb-3">Instituciones y lugares de trabajo</h2>
+                          <div className="flex flex-wrap gap-2">
+                            {professional.affiliations.map((a) => (
+                              <span key={a} className="inline-flex items-center gap-1.5 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium px-3 py-1.5">
+                                <Building2 className="h-3.5 w-3.5" />
+                                {a}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
 
                       {professional.languages && professional.languages.length > 0 && (
                         <div>

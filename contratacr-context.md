@@ -1,6 +1,6 @@
 # ContrataCR.com — Project Context
 
-_Last updated: 2026-06-06 (sprint 18 — registration hardening: account-creation error fix + retry/friendly errors, navbar scrolled label, reliable canton geocode, full country phone selector, form validation (defaults/onBlur/scroll/red asterisks), per-service experience; run migrations 019 + 020. Earlier sprint 17 — see "Sprint 17" section: client OTP, standardized PhoneInput, booking phone capture, contact_preference, languages, account_type/business_name, per-service pricing, reverse-geocode province/canton, completion CTA, footer cleanup; run migration 019. Earlier sprint 14/15/16 — see "Sprint 14-16" section below: multi-profession + multi-category, pricing tiers, HuliHealth /buscar split + inline schedules, real-time email/cédula checks, availability auto public/private, project→pro notifications, .ics export, emoji blocking, brands marquee, footer/social/support, OAuth pro cédula+name, sign-out fix). Earlier: sprint 13 — date-based availability + public/private toggle, search map clustered pins, verified-only reviews, booking notifications; sprint 12 — OAuth pro registration, category FK migration 013)_
+_Last updated: 2026-06-06 (sprint 19 — flexible professional identity: replaced persona física/empresa binary with optional brand name + affiliations (institutions/workplaces), searchable + visible in /buscar; run migration 021. Earlier sprint 18 — registration hardening: account-creation error fix + retry/friendly errors, navbar scrolled label, reliable canton geocode, full country phone selector, form validation (defaults/onBlur/scroll/red asterisks), per-service experience; run migrations 019 + 020. Earlier sprint 17 — see "Sprint 17" section: client OTP, standardized PhoneInput, booking phone capture, contact_preference, languages, account_type/business_name, per-service pricing, reverse-geocode province/canton, completion CTA, footer cleanup; run migration 019. Earlier sprint 14/15/16 — see "Sprint 14-16" section below: multi-profession + multi-category, pricing tiers, HuliHealth /buscar split + inline schedules, real-time email/cédula checks, availability auto public/private, project→pro notifications, .ics export, emoji blocking, brands marquee, footer/social/support, OAuth pro cédula+name, sign-out fix). Earlier: sprint 13 — date-based availability + public/private toggle, search map clustered pins, verified-only reviews, booking notifications; sprint 12 — OAuth pro registration, category FK migration 013)_
 
 ---
 
@@ -578,6 +578,21 @@ of the app's partial i18n.
 - OTP window shows only the logo + code input. Homepage province/cantón pills link to `/buscar?provincia=<id>[&canton=<id>]` and auto-populate filters. All WhatsApp actions use the official WhatsApp SVG (`components/icons/whatsapp-icon.tsx`).
 
 **Known partial:** map pin → card highlight sync (task 8) not implemented; pin click opens the InfoWindow popup instead.
+
+## Sprint 19 (2026-06-06) — flexible professional identity
+
+**Run this migration in Supabase SQL Editor:**
+```
+021_professional_affiliations.sql  -- professionals.affiliations text[] (business_name already from 019; account_type now unused)
+```
+
+- Replaced the binary **persona física / empresa** choice with a **flexible identity model**. Beyond the required personal name (`profiles.full_name`), everything is optional and editable later from profile settings:
+  - `business_name` — a brand/business name they operate under.
+  - `affiliations text[]` — one or more institutions/workplaces they're affiliated with (chips: type + Enter / "Agregar").
+- **Registration** (`/registro/profesional`): account-type toggle removed; the service step now has an optional "Identidad" card (brand name + affiliations). Personal name still required (step-0 for email/pw, OAuth name field otherwise).
+- **Profile editor**: account-type toggle removed; name field is always the personal name; added optional brand name + affiliations. Save retries without the optional columns if the DB isn't migrated yet.
+- **Register API**: accepts `businessName` + `affiliations` (dropped `accountType`); `full_name` is always the personal name; graceful retry covers `affiliations` too.
+- **Searchable + visible** in `/buscar`: query selects + returns `business_name`/`affiliations`; text search includes `business_name.ilike` and `affiliations.cs.{q}` (exact-tag). Cards show the brand under the name + affiliation tags; the public profile shows the brand under the name and an "Instituciones y lugares de trabajo" section.
 
 ## Sprint 18 (2026-06-06) — registration hardening batch
 

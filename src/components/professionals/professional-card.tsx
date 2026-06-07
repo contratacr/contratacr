@@ -32,6 +32,8 @@ export type ProfessionalCardData = {
   availabilityPublic?: boolean;
   contactPreference?: "solo_whatsapp" | "solo_citas" | "ambas";
   languages?: string[];
+  businessName?: string;
+  affiliations?: string[];
   lat?: number | null;
   lng?: number | null;
   serviceType?: string | null;
@@ -88,6 +90,9 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
                       <h3 className="font-semibold text-[#111827] text-base leading-tight hover:text-[#009FD9] transition-colors">{professional.fullName}</h3>
                       {professional.isVerified && <CheckCircle2 className="h-4 w-4 text-[#009FD9] shrink-0" />}
                     </Link>
+                    {professional.businessName && (
+                      <p className="text-xs font-medium text-[#009FD9] mt-0.5 truncate">{professional.businessName}</p>
+                    )}
                     <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                       {professionList.map((cat) => (
                         <Badge key={cat} variant="default" className="text-[11px]">
@@ -121,6 +126,17 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
                 )}
               </div>
             </div>
+
+            {professional.affiliations && professional.affiliations.length > 0 && (
+              <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                {professional.affiliations.slice(0, 3).map((a) => (
+                  <span key={a} className="inline-flex items-center gap-1 rounded-md bg-[#EBF5FB] px-2 py-0.5 text-[11px] font-medium text-[#0089bb]">
+                    <Building2 className="h-3 w-3" />
+                    {a}
+                  </span>
+                ))}
+              </div>
+            )}
 
             {professional.bio && (
               <p className="text-xs text-[#9ca3af] mt-3 line-clamp-2 leading-snug">{professional.bio}</p>

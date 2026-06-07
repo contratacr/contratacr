@@ -53,6 +53,7 @@ export async function searchProfessionals(
           `id, slug, hourly_rate, is_verified, is_featured, is_available,
            rating_avg, review_count, bio, whatsapp, years_experience, portfolio_urls,
            category_id, professions, pricing, lat, lng, service_type, availability_public, contact_preference,
+           business_name, affiliations,
            profiles(full_name, avatar_url),
            provincias(id, name),
            cantones(id, name)`
@@ -72,7 +73,7 @@ export async function searchProfessionals(
         const q = filters.query.trim();
         // Match text against bio/name AND expand keyword synonyms to category IDs
         const keywordCategoryIds = getMatchingCategoryIds(q);
-        const textFilter = `bio.ilike.%${q}%,profiles.full_name.ilike.%${q}%,services::text.ilike.%${q}%`;
+        const textFilter = `bio.ilike.%${q}%,profiles.full_name.ilike.%${q}%,services::text.ilike.%${q}%,business_name.ilike.%${q}%,affiliations.cs.{${q}}`;
         if (keywordCategoryIds.length > 0 && !filters.categoryId) {
           // Include professionals whose category matches the keyword query
           const catFilter = keywordCategoryIds.map((id) => `category_id.eq.${id}`).join(",");
@@ -133,6 +134,8 @@ export async function searchProfessionals(
         isAvailable: row.is_available ?? true,
         availabilityPublic: row.availability_public ?? true,
         contactPreference: (row.contact_preference as ProfessionalCardData["contactPreference"]) ?? "ambas",
+        businessName: row.business_name ?? undefined,
+        affiliations: (row.affiliations as string[]) ?? [],
         lat: row.lat ?? null,
         lng: row.lng ?? null,
         serviceType: row.service_type ?? null,
@@ -165,7 +168,7 @@ export async function getProfessionalBySlug(
         .select(
           `id, slug, hourly_rate, is_verified, is_featured, is_available,
            rating_avg, review_count, bio, whatsapp, years_experience, portfolio_urls,
-           category_id, professions, pricing, services, availability_public, contact_preference, languages, lat, lng, service_type,
+           category_id, professions, pricing, services, availability_public, contact_preference, languages, business_name, affiliations, lat, lng, service_type,
            profiles(full_name, avatar_url),
            provincias(id, name),
            cantones(id, name),
@@ -220,6 +223,10 @@ export async function getProfessionalBySlug(
         contactPreference: ((pro as any).contact_preference as ProfessionalCardData["contactPreference"]) ?? "ambas",
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         languages: ((pro as any).languages as string[]) ?? [],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        businessName: ((pro as any).business_name as string) ?? undefined,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        affiliations: ((pro as any).affiliations as string[]) ?? [],
       };
     } catch (err) {
       console.error("[getProfessionalBySlug] Supabase error:", err);

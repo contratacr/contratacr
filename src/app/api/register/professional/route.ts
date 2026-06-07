@@ -23,8 +23,8 @@ export async function POST(req: Request) {
       fullName: bodyFullName,
       cedula: bodyCedula,
       photoUrl,
-      accountType: bodyAccountType,
       businessName: bodyBusinessName,
+      affiliations: bodyAffiliations,
     } = body;
 
     // Bio and location are now optional; only a category + WhatsApp are required.
@@ -32,17 +32,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Faltan campos requeridos" }, { status: 400 });
     }
     const safeBio = typeof bio === "string" ? bio : "";
-    const accountType = bodyAccountType === "empresa" ? "empresa" : "individual";
     const businessName = bodyBusinessName || null;
+    const affiliations: string[] = Array.isArray(bodyAffiliations)
+      ? bodyAffiliations.filter((a: unknown): a is string => typeof a === "string" && a.trim().length > 0)
+      : [];
 
-    // Columns added in migration 019 — if the DB hasn't been migrated yet, retry
-    // the write without them instead of failing the whole registration.
+    // Optional identity columns (migrations 019/021) — if the DB hasn't been
+    // migrated yet, retry the write without them instead of failing registration.
     const optionalProFields: Record<string, unknown> = {
-      account_type: accountType,
       business_name: businessName,
+      affiliations,
     };
     const isUnknownColumn = (msg?: string) =>
-      !!msg && /account_type|business_name|languages|contact_preference|schema cache|PGRST204|could not find/i.test(msg);
+      !!msg && /account_type|business_name|affiliations|languages|contact_preference|schema cache|PGRST204|could not find/i.test(msg);
 
     // ── 1. Identify the user ──────────────────────────────────────────────────
     //    Two cases:
