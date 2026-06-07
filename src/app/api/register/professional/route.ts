@@ -24,7 +24,7 @@ export async function POST(req: Request) {
       cedula: bodyCedula,
       photoUrl,
       businessName: bodyBusinessName,
-      affiliations: bodyAffiliations,
+      workplaces: bodyWorkplaces,
     } = body;
 
     // Bio and location are now optional; only a category + WhatsApp are required.
@@ -33,18 +33,17 @@ export async function POST(req: Request) {
     }
     const safeBio = typeof bio === "string" ? bio : "";
     const businessName = bodyBusinessName || null;
-    const affiliations: string[] = Array.isArray(bodyAffiliations)
-      ? bodyAffiliations.filter((a: unknown): a is string => typeof a === "string" && a.trim().length > 0)
-      : [];
+    // Workplaces: [{ id, name, address, lat, lng }] — fixed-location pins.
+    const workplaces = Array.isArray(bodyWorkplaces) ? bodyWorkplaces : [];
 
-    // Optional identity columns (migrations 019/021) — if the DB hasn't been
-    // migrated yet, retry the write without them instead of failing registration.
+    // Optional columns (migrations 019/021/022) — if the DB hasn't been migrated
+    // yet, retry the write without them instead of failing registration.
     const optionalProFields: Record<string, unknown> = {
       business_name: businessName,
-      affiliations,
+      workplaces,
     };
     const isUnknownColumn = (msg?: string) =>
-      !!msg && /account_type|business_name|affiliations|languages|contact_preference|schema cache|PGRST204|could not find/i.test(msg);
+      !!msg && /account_type|business_name|affiliations|workplaces|languages|contact_preference|schema cache|PGRST204|could not find/i.test(msg);
 
     // ── 1. Identify the user ──────────────────────────────────────────────────
     //    Two cases:

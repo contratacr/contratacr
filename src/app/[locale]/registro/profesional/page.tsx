@@ -13,19 +13,19 @@ import { z } from "zod";
 import { Navbar } from "@/components/layout/navbar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { PhoneInput } from "@/components/ui/phone-input";
+import { PhoneInput, isPhoneComplete } from "@/components/ui/phone-input";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { PROVINCES, getCantonsByProvince, matchProvinceCanton } from "@/lib/data/cr-geography";
+import { PROVINCES, getCantonsByProvince } from "@/lib/data/cr-geography";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { OtpVerification } from "@/components/auth/otp-verification";
 import { useAuth } from "@/hooks/use-auth";
 import { CategorySearch } from "@/components/ui/category-search";
 import { getCategoryLabel } from "@/lib/data/categories";
-import { LocationPicker, type PickedLocation } from "@/components/maps/location-picker";
+import { WorkplacesPicker, type Workplace } from "@/components/maps/workplaces-picker";
 import { useAvailabilityCheck } from "@/hooks/use-availability-check";
 
 // ─── Category data now lives in src/lib/data/categories.ts ───────────────────
@@ -224,9 +224,9 @@ const step1Schema = z
 
 const step2Schema = z.object({
   category: z.string().min(1, "Seleccioná una categoría"),
-  // Province and canton are optional, independently. Canton enables after province.
-  province: z.string().optional(),
-  canton: z.string().optional(),
+  // Province + canton are required and manual; they drive search filtering.
+  province: z.string().min(1, "La provincia es requerida"),
+  canton: z.string().min(1, "El cantón es requerido"),
   whatsapp: z.string().min(8, "El número de WhatsApp es requerido").max(15, "Número inválido"),
   address: z.string().optional(),
 });
@@ -381,7 +381,7 @@ export default function RegisterProfessionalPage() {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const [pickedLocation, setPickedLocation] = useState<PickedLocation | null>(null);
+  const [workplaces, setWorkplaces] = useState<Workplace[]>([]);
   const [otpEmail, setOtpEmail] = useState<string | null>(null);
 
   const [step1Data, setStep1Data] = useState<Step1Data | null>(null);
@@ -395,12 +395,8 @@ export default function RegisterProfessionalPage() {
   // Additional categories (multi-category support). Primary = step2 `category`.
   const [extraCategories, setExtraCategories] = useState<string[]>([]);
   const [extraCatInput, setExtraCatInput] = useState("");
-  // Flexible identity (all optional beyond the personal name):
-  //  - businessName: a brand or business they operate under
-  //  - affiliations: institutions / workplaces they're affiliated with (multiple)
+  // Optional brand/business name (workplaces are captured via the map below).
   const [businessName, setBusinessName] = useState("");
-  const [affiliations, setAffiliations] = useState<string[]>([]);
-  const [affiliationInput, setAffiliationInput] = useState("");
 
   const cantons = getCantonsByProvince(selectedProvince);
 
@@ -496,6 +492,11 @@ export default function RegisterProfessionalPage() {
   }
 
   function onStep2(data: Step2Data) {
+    // The WhatsApp number must match the exact digit length of its country.
+    if (!isPhoneComplete(data.whatsapp)) {
+      form2.setError("whatsapp", { message: "Ingresá un número de teléfono completo para el país seleccionado." });
+      return;
+    }
     if (!serviceMobile && !serviceFixed) {
       setServiceTypeError("Seleccioná al menos un tipo de servicio");
       return;
@@ -601,7 +602,6 @@ export default function RegisterProfessionalPage() {
           email: userEmail,
           fullName,
           businessName: businessName.trim() || null,
-          affiliations: affiliations.filter(Boolean),
           cedula: step1Data?.cedula?.replace(/\D/g, "") ?? (oauthCedula ? oauthCedula.replace(/\D/g, "") : null),
           photoUrl,
           category: step2Data.category,
@@ -609,9 +609,11 @@ export default function RegisterProfessionalPage() {
           serviceType,
           province: step2Data.province,
           canton: step2Data.canton,
-          address: pickedLocation?.formattedAddress || step2Data.address || null,
-          lat: pickedLocation?.lat ?? null,
-          lng: pickedLocation?.lng ?? null,
+          // Workplaces (fixed-location): each is a pin on /buscar + a workplace on the profile.
+          workplaces: serviceFixed ? workplaces : [],
+          address: workplaces[0]?.address || step2Data.address || null,
+          lat: workplaces[0]?.lat ?? null,
+          lng: workplaces[0]?.lng ?? null,
           whatsapp: step2Data.whatsapp,
           yearsExperience: data.yearsExperience,
           hourlyRate: data.hourlyRate,
@@ -886,65 +888,13 @@ export default function RegisterProfessionalPage() {
                 />
               )}
 
-              {/* Identidad (todo opcional — se puede completar luego en el perfil) */}
-              <div className="rounded-xl border border-[#e5e7eb] p-4 flex flex-col gap-3">
-                <p className="text-xs text-[#6b7280]">
-                  Tu nombre personal ya quedó registrado. Lo siguiente es <strong>opcional</strong> y
-                  podés completarlo después desde tu perfil.
-                </p>
-                <Input
-                  label={<>Nombre comercial o marca <span className="text-[#9ca3af] font-normal">(opcional)</span></>}
-                  placeholder="Ej: Servicios Eléctricos GAM"
-                  value={businessName}
-                  onChange={(e) => setBusinessName(e.target.value)}
-                />
-                <div>
-                  <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                    Instituciones o lugares donde trabajás <span className="text-[#9ca3af] font-normal">(opcional)</span>
-                  </label>
-                  {affiliations.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      {affiliations.map((a) => (
-                        <span key={a} className="inline-flex items-center gap-1.5 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium pl-3 pr-1.5 py-1.5">
-                          {a}
-                          <button type="button" onClick={() => setAffiliations((prev) => prev.filter((x) => x !== a))} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors" aria-label="Quitar">
-                            <X className="h-3.5 w-3.5" />
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={affiliationInput}
-                      onChange={(e) => setAffiliationInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          const v = affiliationInput.trim();
-                          if (v && !affiliations.includes(v)) setAffiliations((prev) => [...prev, v]);
-                          setAffiliationInput("");
-                        }
-                      }}
-                      placeholder="Ej: Hospital CIMA, Clínica Bíblica…"
-                      className="flex-1 h-10 px-3 rounded-xl border border-[#e5e7eb] text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="md"
-                      onClick={() => {
-                        const v = affiliationInput.trim();
-                        if (v && !affiliations.includes(v)) setAffiliations((prev) => [...prev, v]);
-                        setAffiliationInput("");
-                      }}
-                    >
-                      Agregar
-                    </Button>
-                  </div>
-                </div>
-              </div>
+              {/* Optional brand / business name */}
+              <Input
+                label={<>Nombre comercial o marca <span className="text-[#9ca3af] font-normal">(opcional)</span></>}
+                placeholder="Ej: Servicios Eléctricos GAM"
+                value={businessName}
+                onChange={(e) => setBusinessName(e.target.value)}
+              />
 
               {/* Category — searchable combobox */}
               <div>
@@ -984,6 +934,67 @@ export default function RegisterProfessionalPage() {
                     placeholder="Agregá otra categoría (opcional)"
                   />
                 </div>
+              </div>
+
+              {/* Province (required, manual — no auto-fill) */}
+              <div>
+                <label className="text-sm font-medium text-[#374151] block mb-1.5">
+                  {t("province")} <span className="text-red-500">*</span>
+                </label>
+                <Select
+                  value={form2.watch("province") || undefined}
+                  onValueChange={(v) => {
+                    setSelectedProvince(v);
+                    form2.setValue("province", v, { shouldValidate: true });
+                    form2.setValue("canton", "");
+                  }}
+                >
+                  <SelectTrigger aria-invalid={!!form2.formState.errors.province}>
+                    <SelectValue placeholder={t("provincePlaceholder")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PROVINCES.map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {form2.formState.errors.province && (
+                  <p className="text-xs text-red-500 mt-1">
+                    {form2.formState.errors.province.message}
+                  </p>
+                )}
+              </div>
+
+              {/* Canton (required, enables after province) */}
+              <div>
+                <label className="text-sm font-medium text-[#374151] block mb-1.5">
+                  {t("canton")} <span className="text-red-500">*</span>
+                </label>
+                <Select
+                  value={form2.watch("canton") || undefined}
+                  disabled={!selectedProvince}
+                  onValueChange={(v) => form2.setValue("canton", v, { shouldValidate: true })}
+                >
+                  <SelectTrigger aria-invalid={!!form2.formState.errors.canton}>
+                    <SelectValue
+                      placeholder={selectedProvince ? t("cantonPlaceholder") : t("cantonDisabled")}
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {cantons.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {form2.formState.errors.canton && (
+                  <p className="text-xs text-red-500 mt-1">
+                    {form2.formState.errors.canton.message}
+                  </p>
+                )}
               </div>
 
               {/* Service type */}
@@ -1057,96 +1068,20 @@ export default function RegisterProfessionalPage() {
                 )}
               </div>
 
-              {/* Fixed location — map picker */}
+              {/* Fixed location — workplaces map (optional, precise location only) */}
               {serviceFixed && (
                 <div className="flex flex-col gap-2">
                   <label className="text-sm font-medium text-[#374151]">
-                    Ubicación de tu local / estudio / oficina
+                    Tus lugares de trabajo <span className="text-[#9ca3af] font-normal">(opcional)</span>
                   </label>
                   <p className="text-xs text-[#9ca3af]">
-                    Marcá tu dirección exacta. Los clientes la verán en el mapa.
+                    Buscá y agregá uno o más lugares. Cada uno aparece como un punto en el mapa de
+                    búsqueda y como lugar de trabajo en tu perfil. La provincia y el cantón de arriba
+                    son los que se usan para filtrar.
                   </p>
-                  <LocationPicker
-                    value={pickedLocation}
-                    onChange={(loc) => {
-                      setPickedLocation(loc);
-                      // Auto-fill province/canton from the dropped pin (still editable).
-                      if (loc) {
-                        const { provinceId, cantonId } = matchProvinceCanton(loc.provinceName, loc.cantonName);
-                        if (provinceId) {
-                          setSelectedProvince(provinceId);
-                          form2.setValue("province", provinceId);
-                          form2.setValue("canton", cantonId ?? "");
-                        }
-                      }
-                    }}
-                  />
-                  <p className="text-xs text-[#9ca3af]">
-                    Si marcás tu ubicación, completamos provincia y cantón automáticamente. Podés ajustarlos.
-                  </p>
+                  <WorkplacesPicker value={workplaces} onChange={setWorkplaces} />
                 </div>
               )}
-
-              {/* Province */}
-              <div>
-                <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                  {t("province")} <span className="text-[#9ca3af] font-normal">(opcional)</span>
-                </label>
-                <Select
-                  value={form2.watch("province") || undefined}
-                  onValueChange={(v) => {
-                    setSelectedProvince(v);
-                    form2.setValue("province", v);
-                    form2.setValue("canton", "");
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={t("provincePlaceholder")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PROVINCES.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {form2.formState.errors.province && (
-                  <p className="text-xs text-red-500 mt-1">
-                    {form2.formState.errors.province.message}
-                  </p>
-                )}
-              </div>
-
-              {/* Canton */}
-              <div>
-                <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                  {t("canton")} <span className="text-[#9ca3af] font-normal">(opcional)</span>
-                </label>
-                <Select
-                  value={form2.watch("canton") || undefined}
-                  disabled={!selectedProvince}
-                  onValueChange={(v) => form2.setValue("canton", v)}
-                >
-                  <SelectTrigger>
-                    <SelectValue
-                      placeholder={selectedProvince ? t("cantonPlaceholder") : t("cantonDisabled")}
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {cantons.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {form2.formState.errors.canton && (
-                  <p className="text-xs text-red-500 mt-1">
-                    {form2.formState.errors.canton.message}
-                  </p>
-                )}
-              </div>
 
               {/* WhatsApp */}
               <PhoneInput

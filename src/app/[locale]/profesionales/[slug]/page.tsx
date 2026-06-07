@@ -530,15 +530,18 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                         ) : null}
                       </div>
 
-                      {professional.affiliations && professional.affiliations.length > 0 && (
+                      {professional.workplaces && professional.workplaces.length > 0 && (
                         <div>
-                          <h2 className="text-lg font-semibold text-[#111827] mb-3">Instituciones y lugares de trabajo</h2>
-                          <div className="flex flex-wrap gap-2">
-                            {professional.affiliations.map((a) => (
-                              <span key={a} className="inline-flex items-center gap-1.5 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium px-3 py-1.5">
-                                <Building2 className="h-3.5 w-3.5" />
-                                {a}
-                              </span>
+                          <h2 className="text-lg font-semibold text-[#111827] mb-3">Lugares de trabajo</h2>
+                          <div className="flex flex-col gap-2">
+                            {professional.workplaces.map((w, i) => (
+                              <div key={w.id ?? i} className="flex items-start gap-2 text-sm text-[#374151]">
+                                <Building2 className="h-4 w-4 text-[#009FD9] shrink-0 mt-0.5" />
+                                <div>
+                                  <p className="font-medium">{w.name}</p>
+                                  {w.address && w.address !== w.name && <p className="text-xs text-[#9ca3af]">{w.address}</p>}
+                                </div>
+                              </div>
                             ))}
                           </div>
                         </div>

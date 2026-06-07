@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
+import { WorkplacesPicker, type Workplace } from "@/components/maps/workplaces-picker";
 import { createClient } from "@/lib/supabase/client";
 import { Camera, Check, X, Plus } from "lucide-react";
 import {
@@ -45,8 +46,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
   const [cantonId, setCantonId] = useState<string>(initial.canton_id ?? "");
   const [address, setAddress] = useState<string>(initial.address ?? "");
   const [businessName, setBusinessName] = useState<string>(initial.business_name ?? "");
-  const [affiliations, setAffiliations] = useState<string[]>(Array.isArray(initial.affiliations) ? initial.affiliations : []);
-  const [affiliationInput, setAffiliationInput] = useState("");
+  const [workplaces, setWorkplaces] = useState<Workplace[]>(Array.isArray(initial.workplaces) ? initial.workplaces : []);
   const [languages, setLanguages] = useState<string[]>(Array.isArray(initial.languages) ? initial.languages : []);
   const [contactPreference, setContactPreference] = useState<string>(initial.contact_preference ?? "ambas");
   const [avatarPreview, setAvatarPreview] = useState<string | null>(
@@ -141,9 +141,14 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         ...(cantonId ? { canton_id: cantonId } : {}),
         address: address || null,
       };
+      // Keep the primary lat/lng synced to the first workplace (single-pin paths).
+      if (workplaces[0]) {
+        baseUpdate.lat = workplaces[0].lat;
+        baseUpdate.lng = workplaces[0].lng;
+      }
       const identityFields = {
         business_name: businessName.trim() || null,
-        affiliations: affiliations.filter(Boolean),
+        workplaces,
       };
 
       let { error: proError } = await supabase
@@ -151,7 +156,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         .update({ ...baseUpdate, ...identityFields })
         .eq("id", professionalId);
       // Retry without the optional identity columns if the DB isn't migrated yet.
-      if (proError && /business_name|affiliations|schema cache|could not find|PGRST204/i.test(proError.message)) {
+      if (proError && /business_name|workplaces|affiliations|schema cache|could not find|PGRST204/i.test(proError.message)) {
         ({ error: proError } = await supabase.from("professionals").update(baseUpdate).eq("id", professionalId));
       }
 
@@ -242,52 +247,15 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         placeholder="Ej: Servicios Eléctricos GAM"
       />
 
-      {/* Affiliations — institutions / workplaces (optional, multiple) */}
+      {/* Workplaces — fixed locations (optional, multiple). Each is a map pin + a profile entry. */}
       <div>
         <label className="text-sm font-medium text-[#374151] block mb-1.5">
-          Instituciones o lugares donde trabajás <span className="text-[#9ca3af] font-normal">(opcional)</span>
+          Tus lugares de trabajo <span className="text-[#9ca3af] font-normal">(opcional)</span>
         </label>
-        {affiliations.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-2">
-            {affiliations.map((a) => (
-              <span key={a} className="inline-flex items-center gap-1.5 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium pl-3 pr-1.5 py-1.5">
-                {a}
-                <button type="button" onClick={() => { setAffiliations((prev) => prev.filter((x) => x !== a)); setSaved(false); }} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors" aria-label="Quitar">
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              </span>
-            ))}
-          </div>
-        )}
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={affiliationInput}
-            onChange={(e) => setAffiliationInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                const v = affiliationInput.trim();
-                if (v && !affiliations.includes(v)) { setAffiliations((prev) => [...prev, v]); setSaved(false); }
-                setAffiliationInput("");
-              }
-            }}
-            placeholder="Ej: Hospital CIMA, Clínica Bíblica…"
-            className="flex-1 h-10 px-3 rounded-xl border border-[#e5e7eb] text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
-          />
-          <Button
-            type="button"
-            variant="outline"
-            size="md"
-            onClick={() => {
-              const v = affiliationInput.trim();
-              if (v && !affiliations.includes(v)) { setAffiliations((prev) => [...prev, v]); setSaved(false); }
-              setAffiliationInput("");
-            }}
-          >
-            Agregar
-          </Button>
-        </div>
+        <p className="text-xs text-[#9ca3af] mb-2">
+          Buscá y agregá uno o más lugares. Cada uno aparece en el mapa de búsqueda y en tu perfil.
+        </p>
+        <WorkplacesPicker value={workplaces} onChange={(next) => { setWorkplaces(next); setSaved(false); }} />
       </div>
 
       {/* Description */}

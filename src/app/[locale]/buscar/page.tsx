@@ -78,19 +78,26 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   // Map pins for every matching professional (fixed-location → exact coords;
   // mobile pros → province centroid).
-  const mapData = allResults.map((pro) => ({
-    id: pro.id,
-    slug: pro.slug,
-    fullName: pro.fullName,
-    avatarUrl: pro.avatarUrl ?? null,
-    ratingAvg: pro.ratingAvg,
-    reviewCount: pro.reviewCount,
-    categoryLabel: pro.categoryId ? tCat(pro.categoryId as Parameters<typeof tCat>[0]) : undefined,
-    hourlyRate: pro.hourlyRate ?? null,
-    provinceName: pro.provinceName,
-    lat: pro.lat ?? null,
-    lng: pro.lng ?? null,
-  }));
+  // One pin per professional — or one pin per workplace when they have fixed
+  // locations (each workplace shows on the map geographically).
+  const mapData = allResults.flatMap((pro) => {
+    const base = {
+      id: pro.id,
+      slug: pro.slug,
+      fullName: pro.fullName,
+      avatarUrl: pro.avatarUrl ?? null,
+      ratingAvg: pro.ratingAvg,
+      reviewCount: pro.reviewCount,
+      categoryLabel: pro.categoryId ? tCat(pro.categoryId as Parameters<typeof tCat>[0]) : undefined,
+      hourlyRate: pro.hourlyRate ?? null,
+      provinceName: pro.provinceName,
+    };
+    const places = (pro.workplaces ?? []).filter((w) => typeof w.lat === "number" && typeof w.lng === "number");
+    if (places.length > 0) {
+      return places.map((w, i) => ({ ...base, id: `${pro.id}-${w.id ?? i}`, lat: w.lat as number, lng: w.lng as number }));
+    }
+    return [{ ...base, lat: pro.lat ?? null, lng: pro.lng ?? null }];
+  });
 
   const activeCategoryId = params.categoria && params.categoria !== "todas" ? params.categoria : undefined;
   const activeProvince = params.provincia && params.provincia !== "todas"
