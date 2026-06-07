@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { useUnsavedWarning } from "@/hooks/use-unsaved-warning";
+import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { LanguagesInput } from "@/components/ui/languages-input";
@@ -60,15 +60,25 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
   const [photoUploading, setPhotoUploading] = useState(false);
 
   const [saving, setSaving] = useState(false);
+  const [autoSaving, setAutoSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [dirty, setDirty] = useState(false);
+  const [autoNonce, setAutoNonce] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
-  // Unsaved-changes guard: warn before leaving (hard unload OR in-app link nav).
-  useUnsavedWarning(dirty);
+  // Single helper so every field marks the form dirty + clears the saved flag,
+  // and schedules an auto-save (the nonce drives the debounce effect below).
+  function touch() { setSaved((_p) => false); setDirty(true); setAutoNonce((n) => n + 1); }
 
-  // Single helper so every field marks the form dirty + clears the saved flag.
-  function touch() { setSaved((_p) => false); setDirty(true); }
+  // Auto-save: 1.5s after the last edit we persist silently, so leaving rarely
+  // needs the unsaved-changes dialog at all. The dialog is the safety net only
+  // for the brief window before the debounce fires (or if a save fails).
+  useEffect(() => {
+    if (autoNonce === 0 || !dirty) return;
+    const t = setTimeout(() => { handleSave(true); }, 1500);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoNonce]);
 
   const cantons = getCantonsByProvince(provinceId);
 
@@ -129,8 +139,8 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
     onSaved?.();
   }
 
-  async function handleSave() {
-    setSaving(true);
+  async function handleSave(auto = false) {
+    if (auto) setAutoSaving(true); else setSaving(true);
     setError(null);
     const supabase = createClient();
 
@@ -189,6 +199,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
       setError(err instanceof Error ? err.message : "Error al guardar");
     } finally {
       setSaving(false);
+      setAutoSaving(false);
     }
   }
 
@@ -432,10 +443,13 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
       {/* Contact preference lives in the Disponibilidad tab now. */}
 
       <div className="flex items-center gap-3">
-        <Button onClick={handleSave} loading={saving}>
+        <Button onClick={() => handleSave(false)} loading={saving}>
           {saving ? "Guardando…" : "Guardar cambios"}
         </Button>
-        {dirty && !saved && (
+        {autoSaving && (
+          <span className="text-sm text-[#6b7280] font-medium">Guardando automáticamente…</span>
+        )}
+        {!autoSaving && dirty && !saved && (
           <span className="text-sm text-amber-600 font-medium">Cambios sin guardar</span>
         )}
         {saved && (
@@ -444,6 +458,9 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
           </span>
         )}
       </div>
+
+      {/* Designed unsaved-changes dialog (replaces the browser default) */}
+      <UnsavedChangesGuard dirty={dirty} onSave={() => handleSave(false)} />
     </div>
   );
 }
