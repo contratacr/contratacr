@@ -1,6 +1,86 @@
 # ContrataCR.com — Project Context
 
-_Last updated: 2026-06-06 (sprint 21 — shared CedulaInput: live X-XXXX-XXXX masking, clean-digit storage, auto type detection (cédula/DIMEX/NITE), format-only validation, label "Número de identificación" with required/optional prop. Earlier sprint 20 — unified workplaces (map autocomplete, multiple pins, supersedes affiliations + single fixed pin), PhoneInput flag/selection/length fixes, registration location flow reordered (province/canton required first, optional pin after); run migration 022. Earlier sprint 19 — flexible professional identity: replaced persona física/empresa binary with optional brand name + affiliations (institutions/workplaces), searchable + visible in /buscar; run migration 021. Earlier sprint 18 — registration hardening: account-creation error fix + retry/friendly errors, navbar scrolled label, reliable canton geocode, full country phone selector, form validation (defaults/onBlur/scroll/red asterisks), per-service experience; run migrations 019 + 020. Earlier sprint 17 — see "Sprint 17" section: client OTP, standardized PhoneInput, booking phone capture, contact_preference, languages, account_type/business_name, per-service pricing, reverse-geocode province/canton, completion CTA, footer cleanup; run migration 019. Earlier sprint 14/15/16 — see "Sprint 14-16" section below: multi-profession + multi-category, pricing tiers, HuliHealth /buscar split + inline schedules, real-time email/cédula checks, availability auto public/private, project→pro notifications, .ics export, emoji blocking, brands marquee, footer/social/support, OAuth pro cédula+name, sign-out fix). Earlier: sprint 13 — date-based availability + public/private toggle, search map clustered pins, verified-only reviews, booking notifications; sprint 12 — OAuth pro registration, category FK migration 013)_
+_Last updated: 2026-06-07 (sprint 22 — 43-item batch: admin role + "Proveedor Autorizado" verification system (lifecycle/audit/appeals/badge/explainer), single Nombre completo, phone-input alignment, OTP email context, languages chip, contact-mode in Disponibilidad + per-location & videoconsulta schedules, work-mode toggle, unsaved-changes guard, compact /buscar cards + unified WhatsApp + no-reviews state, home-search autocomplete + canton→province, panel-aware register links + error/out-of-service pages, notifications badge + /notificaciones, Cloudinary transforms + 5-photo limit + profile gallery, numeric-only PriceInput, project completion lifecycle + delete; run migrations 023-026). Earlier: sprint 21 — shared CedulaInput: live X-XXXX-XXXX masking, clean-digit storage, auto type detection (cédula/DIMEX/NITE), format-only validation, label "Número de identificación" with required/optional prop. Earlier sprint 20 — unified workplaces (map autocomplete, multiple pins, supersedes affiliations + single fixed pin), PhoneInput flag/selection/length fixes, registration location flow reordered (province/canton required first, optional pin after); run migration 022. Earlier sprint 19 — flexible professional identity: replaced persona física/empresa binary with optional brand name + affiliations (institutions/workplaces), searchable + visible in /buscar; run migration 021. Earlier sprint 18 — registration hardening: account-creation error fix + retry/friendly errors, navbar scrolled label, reliable canton geocode, full country phone selector, form validation (defaults/onBlur/scroll/red asterisks), per-service experience; run migrations 019 + 020. Earlier sprint 17 — see "Sprint 17" section: client OTP, standardized PhoneInput, booking phone capture, contact_preference, languages, account_type/business_name, per-service pricing, reverse-geocode province/canton, completion CTA, footer cleanup; run migration 019. Earlier sprint 14/15/16 — see "Sprint 14-16" section below: multi-profession + multi-category, pricing tiers, HuliHealth /buscar split + inline schedules, real-time email/cédula checks, availability auto public/private, project→pro notifications, .ics export, emoji blocking, brands marquee, footer/social/support, OAuth pro cédula+name, sign-out fix). Earlier: sprint 13 — date-based availability + public/private toggle, search map clustered pins, verified-only reviews, booking notifications; sprint 12 — OAuth pro registration, category FK migration 013)_
+
+---
+
+## Sprint 22 (2026-06-07) — 43-item batch
+
+**Run these migrations in Supabase SQL Editor (in order):**
+```
+023_provider_verification.sql  -- admin role; professionals.verification_status (+reason,+updated_at);
+                                  provider_verification_log (audit); provider_appeals; notification types
+024_project_completion.sql     -- projects status lifecycle + work_done_at/completed_at/accepted_professional_id;
+                                  project notification types
+025_portfolio_limit.sql        -- CHECK: professionals.portfolio_urls length <= 5 (server-side 5-photo limit)
+026_location_schedules.sql     -- availability_slots.location_id; professionals.videoconsulta
+```
+
+**Supabase Dashboard config (item 21 — Google consent shows raw supabase.co URL):**
+- This is a hosting/config change, not code. To brand the OAuth consent + redirect with contratacr.com:
+  1. Supabase → Project Settings → **Custom Domains**: add `auth.contratacr.com` (CNAME) — requires the paid add-on. This makes the GoTrue endpoint `https://auth.contratacr.com` instead of `https://<ref>.supabase.co`.
+  2. Update `NEXT_PUBLIC_SUPABASE_URL` to the custom domain once active.
+  3. Google Cloud Console → OAuth client → Authorized redirect URIs: add `https://auth.contratacr.com/auth/v1/callback`; OAuth consent screen → set the app name/domain to ContrataCR.
+  - Until the custom domain is enabled the consent screen will keep showing the supabase.co host (provider limitation).
+
+### Admin role + "Proveedor Autorizado" verification (items 34-43)
+- **Admin role**: `profiles.role` extended to allow `admin`. Dedicated login at **/admin/login** (signs in, confirms role=admin server-side, else signs out). Panel routes (**/admin**, **/admin/proveedores/[id]**) are guarded **server-side** via `requireAdmin()` (`src/lib/auth/admin.ts`, reads role with the service-role client so an RLS gap can't grant access). **Every** admin API endpoint re-checks `getApiAdmin()` and returns 403 otherwise — the UI is never the only gate.
+- **Verification lifecycle** (`src/lib/verification.ts`): `pending → authorized → rejected → under_appeal`; an admin can move ANY provider to ANY state at any time (nothing locked). `is_verified` is mirrored (authorized ⇒ true) for back-compat. Registration stays open — the badge is earned, never a gate.
+- **Admin panel**: review queue filterable by status with counts (`/api/admin/providers`), case file (`/api/admin/providers/[id]`) showing profile, documents/portfolio images, workplaces, appeals, and an **automatic ID-format assist** (cédula/DIMEX/NITE format validity) plus an on-demand **TSE padrón name-match** lookup (reuses `/api/cedula/[id]`, flags mismatches; human review still required for the badge). Approve / Reject (**reason required on reject**) / revert / revoke via `/api/admin/providers/[id]/decision`. **"Contactar por WhatsApp"** button pre-filled with the case id (official WhatsApp icon).
+- **Audit trail**: `provider_verification_log` records who (admin id+name), when, action, from/to status, reason — every decision, permanent, shown per provider.
+- **Notifications**: `src/lib/verification-notify.ts` sends in-app + email on every status change (approved/rejected/reverted) and on appeal-received (to all admins + support). Rejections include the reason + how to appeal. Copy is **intermediary-safe** (no "garantía"; "respaldo", "verificación de identidad y documentos", "código de conducta").
+- **Appeals** (provider): in-app form (`/api/appeals`, primary/trackable → moves to `under_appeal`, surfaces in admin queue, logged) **and** a WhatsApp button pre-filled with the case id. Provider sees status + reason + appeal in the dashboard **Verificación** tab (`verification-panel.tsx`).
+- **Badge + filter**: earned **"Proveedor Autorizado"** badge on `/buscar` cards + public profile (only when `authorized`). `/buscar` gets a **"Solo Proveedores Autorizados"** toggle (`?autorizados=1`). Explainer page at **/proveedores-autorizados** (intermediary-safe wording + disclaimer).
+
+### Forms & registration (items 1-6)
+- Single **"Nombre completo"** field everywhere (replaced nombre/primer apellido/segundo apellido and the "Nombre legal completo" label); verification-context helper text "tal como aparece en tu documento" (the word "legal" removed).
+- **PhoneInput** flag + dial code + input aligned to a consistent h-11; properly sized flag.
+- **OTP screen** now states a 6-digit code was sent and shows the destination email.
+- Custom Spanish validation: registration forms use `noValidate` (react-hook-form + zod messages) so the browser's "Please fill out this field" never appears.
+- **Languages**: optional chip autocomplete over the full language list (`LanguagesInput`, `lib/data/languages.ts` expanded). Profile only — not asked at registration.
+
+### Profile & availability (items 7-10)
+- **Contact preference** ("¿Cómo querés que te contacten?") moved into **Disponibilidad** as the first decision. `solo_whatsapp` hides all scheduling (WhatsApp-only); `ambas`/`solo_citas` show scheduling. Saved immediately.
+- **Multi-location + videoconsulta schedules** (item 8): schedules belong to a **(professional, location)** pair via `availability_slots.location_id` (a workplace id, the literal `videoconsulta`, or NULL=general). `professionals.videoconsulta` boolean. The availability editor has a videoconsulta toggle + per-schedule location selector; `/buscar` cards show **location chips** that switch which location's schedule is displayed. (Booking carries date/time; location is reflected via the chip selection — wiring the chosen location into the booking record is a small follow-up.)
+- **Work mode** toggle in the profile (me desplazo / lugar fijo). "Me desplazo" hides the workplaces section and shows a "Se desplaza a tu ubicación" pill on the `/buscar` card; switchable both ways. `service_type` stored as `mobile`/`fixed`.
+- **Unsaved-changes guard**: profile editor tracks `dirty`, warns on `beforeunload`, shows a "Cambios sin guardar" hint; photo upload auto-saves.
+
+### Search /buscar (items 11-15)
+- Category-filter dropdown group headers restyled (sticky, separators, no overlap on wheel scroll).
+- **Compact cards** (smaller avatar/padding/gaps → more per screen).
+- **Unified WhatsApp button** ("Contactar por WhatsApp" + official icon) across public/private schedule branches.
+- Mobile: card header gets `pr-10` so the favorites button no longer overlaps the price.
+- **No reviews → "Sin reseñas todavía"** (never a fake rating number).
+
+### Home search bar (items 16-18)
+- Service field: free-text with category suggestions; selecting **fills the text** (does not search).
+- Location field: free-text **province + cantón autocomplete** (replaced the province dropdown); unmatched text falls back to a smart text query.
+- Search runs only on Enter / "Buscar". On submit a cantón (e.g. Atenas) **auto-fills its province** (Alajuela) + cantón filters; the `/buscar` map `fitBounds` to those pins positions on the cantón.
+
+### Nav, session & errors (items 19-21)
+- `SmartRegisterLink`: footer "Registrá tu perfil" routes logged-in users to their panel (header already hid the CTA when logged in).
+- `[locale]/error.tsx` ("Algo salió mal" + retry) and `global-error.tsx` ("fuera de servicio") boundaries replace abrupt failures (e.g. post-logout flash). 404 `not-found.tsx` already present.
+- Item 21 (custom auth domain) documented above — config, not code.
+
+### Notifications (items 22-23)
+- Unread badge repositioned to the corner with a white ring (no longer covers the bell).
+- Bell dropdown gains a **"Ver todas"** link → new **/notificaciones** center (full history, mark-all-read, dismiss), reachable from both client & pro panels (both already receive booking/project/verification notifications).
+
+### Photos & gallery (items 24-25)
+- **Cloudinary is the single source** (audited — no Supabase Storage anywhere; only the URL is stored in `portfolio_urls`/`avatar_url`).
+- Upload route: `type=avatar` → 400² face crop; `type=portfolio` (default) → ONE optimized original (max 1600, `f_auto`/`q_auto`). `src/lib/cloudinary.ts` (`cldThumb`/`cldLarge`) derives thumbnail/gallery sizes via URL transforms — no extra stored copies.
+- **5-photo limit** enforced client-side AND server-side (DB CHECK, migration 025).
+- Public profile **"Galería de trabajos"**: optimized thumbnail grid + keyboard lightbox/carousel (`profile-gallery.tsx`).
+
+### Pricing (items 26-27)
+- Shared numeric-only **`PriceInput`** (digits only; blocks e/+/-/.,) used in proposals, services editor, profile pricing tiers, and project budget. "Precio a convenir" wording kept.
+
+### Projects (items 28-33)
+- Clean **Briefcase** iconography (removed emoji category icons) in both project lists.
+- Duplicate proposal already blocked (unique constraint + 409) → label "Ya hiciste una propuesta".
+- **Profession-scoped visibility** already enforced server-side in `/api/projects` (matches ANY of the pro's `professions`; uncategorized stay visible) — supports multiple professions.
+- "Mis propuestas" already shows the client's photo + full name.
+- **Delete** project (DELETE `/api/projects?id=`) + **two-sided completion lifecycle**: open → in_progress (proposal accepted) → awaiting_confirmation (pro "Marcar trabajo realizado") → completed (client "Confirmar finalización", or **lazy auto-confirm after 7 days** on read). Notifications both sides at accept / work-done / confirm. (Reviews remain gated on completed work; the existing review entry points are booking-based — extending review unlock to confirmed projects is a documented follow-up.)
 
 ---
 
