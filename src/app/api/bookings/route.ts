@@ -155,7 +155,24 @@ export async function PATCH(req: NextRequest) {
     .eq("profile_id", session.user.id)
     .maybeSingle();
 
-  const { error } = await supabase
+  // Authorize against the actual row, then persist with the service-role client.
+  // (The RLS-bound update could silently affect 0 rows if no UPDATE policy covers
+  // the professional — which is exactly why confirm/complete wasn't persisting.)
+  const admin = createAdminClient();
+  const { data: bookingRow } = await admin
+    .from("bookings")
+    .select("id, professional_id, client_id")
+    .eq("id", id)
+    .maybeSingle();
+  if (!bookingRow) return NextResponse.json({ error: "Solicitud no encontrada." }, { status: 404 });
+
+  const isOwnerPro = !!actorPro && bookingRow.professional_id === actorPro.id;
+  const isOwnerClient = bookingRow.client_id === session.user.id;
+  if (!isOwnerPro && !isOwnerClient) {
+    return NextResponse.json({ error: "No autorizado." }, { status: 403 });
+  }
+
+  const { error } = await admin
     .from("bookings")
     .update({ status, updated_at: new Date().toISOString() })
     .eq("id", id);
@@ -171,7 +188,6 @@ export async function PATCH(req: NextRequest) {
   // When a booking is marked completed, prompt the client to leave a review.
   if (status === "completed") {
     try {
-      const admin = createAdminClient();
       const { data: booking } = await admin
         .from("bookings")
         .select("client_id, professional_id, professionals(slug, profiles(full_name))")
