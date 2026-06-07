@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
-import { User, Image as ImageIcon, CalendarDays, Inbox, LogOut, ExternalLink, Wrench, FolderOpen } from "lucide-react";
+import { User, Image as ImageIcon, CalendarDays, Inbox, LogOut, ExternalLink, Wrench, FolderOpen, ShieldCheck } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -16,13 +16,14 @@ import { AvailabilityEditor } from "@/components/dashboard/pro/availability-edit
 import { ServicesEditor } from "@/components/dashboard/pro/services-editor";
 import { BookingRequests } from "@/components/dashboard/pro/booking-requests";
 import { ProposalsTab } from "@/components/dashboard/pro/proposals-tab";
+import { VerificationPanel } from "@/components/dashboard/pro/verification-panel";
 import { createClient } from "@/lib/supabase/client";
 import { getInitials } from "@/lib/utils";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 
-type Tab = "profile" | "services" | "photos" | "availability" | "bookings" | "proposals";
+type Tab = "profile" | "services" | "photos" | "availability" | "bookings" | "proposals" | "verificacion";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ProData = Record<string, any>;
@@ -34,6 +35,7 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
   availability: <CalendarDays className="h-4 w-4" />,
   bookings: <Inbox className="h-4 w-4" />,
   proposals: <FolderOpen className="h-4 w-4" />,
+  verificacion: <ShieldCheck className="h-4 w-4" />,
 };
 
 const TAB_LABELS: Record<Tab, string> = {
@@ -43,6 +45,7 @@ const TAB_LABELS: Record<Tab, string> = {
   availability: "Disponibilidad",
   bookings: "Solicitudes",
   proposals: "Proyectos",
+  verificacion: "Verificación",
 };
 
 export default function ProDashboardPage() {
@@ -122,7 +125,7 @@ export default function ProDashboardPage() {
     );
   }
 
-  const TABS: Tab[] = ["profile", "services", "photos", "availability", "bookings", "proposals"];
+  const TABS: Tab[] = ["profile", "services", "photos", "availability", "bookings", "proposals", "verificacion"];
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
@@ -147,7 +150,9 @@ export default function ProDashboardPage() {
                       {tCat(pro.category_id as any)}
                     </Badge>
                   )}
-                  {pro.is_verified && <Badge variant="verified">Verificado</Badge>}
+                  {pro.verification_status === "authorized" && (
+                    <Badge variant="verified" className="gap-1"><ShieldCheck className="h-3 w-3" />Proveedor Autorizado</Badge>
+                  )}
                 </div>
               </div>
             </div>
@@ -232,6 +237,14 @@ export default function ProDashboardPage() {
                   {activeTab === "bookings" && <BookingRequests />}
                   {activeTab === "proposals" && (
                     <ProposalsTab categoryId={pro.category_id} />
+                  )}
+                  {activeTab === "verificacion" && (
+                    <VerificationPanel
+                      professionalId={pro.id}
+                      status={pro.verification_status ?? "pending"}
+                      reason={pro.verification_reason}
+                      onSaved={handleSaved}
+                    />
                   )}
                 </CardContent>
               </Card>

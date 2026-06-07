@@ -10,6 +10,8 @@ export type SearchFilters = {
   cantonId?: string;
   sortBy?: string;
   query?: string;
+  /** "Solo Proveedores Autorizados" — only show authorized providers. */
+  authorizedOnly?: boolean;
 };
 
 export type ProService = {
@@ -53,7 +55,7 @@ export async function searchProfessionals(
           `id, slug, hourly_rate, is_verified, is_featured, is_available,
            rating_avg, review_count, bio, whatsapp, years_experience, portfolio_urls,
            category_id, professions, pricing, lat, lng, service_type, availability_public, contact_preference,
-           business_name, workplaces,
+           business_name, workplaces, verification_status,
            profiles(full_name, avatar_url),
            provincias(id, name),
            cantones(id, name)`
@@ -68,6 +70,9 @@ export async function searchProfessionals(
       }
       if (filters.cantonId && filters.cantonId !== "todos") {
         query = query.eq("canton_id", filters.cantonId);
+      }
+      if (filters.authorizedOnly) {
+        query = query.eq("verification_status", "authorized");
       }
       if (filters.query) {
         const q = filters.query.trim();
@@ -136,6 +141,7 @@ export async function searchProfessionals(
         contactPreference: (row.contact_preference as ProfessionalCardData["contactPreference"]) ?? "ambas",
         businessName: row.business_name ?? undefined,
         workplaces: (row.workplaces as ProfessionalCardData["workplaces"]) ?? [],
+        verificationStatus: (row.verification_status as ProfessionalCardData["verificationStatus"]) ?? "pending",
         lat: row.lat ?? null,
         lng: row.lng ?? null,
         serviceType: row.service_type ?? null,
@@ -168,7 +174,7 @@ export async function getProfessionalBySlug(
         .select(
           `id, slug, hourly_rate, is_verified, is_featured, is_available,
            rating_avg, review_count, bio, whatsapp, years_experience, portfolio_urls,
-           category_id, professions, pricing, services, availability_public, contact_preference, languages, business_name, workplaces, lat, lng, service_type,
+           category_id, professions, pricing, services, availability_public, contact_preference, languages, business_name, workplaces, verification_status, lat, lng, service_type,
            profiles(full_name, avatar_url),
            provincias(id, name),
            cantones(id, name),
@@ -227,6 +233,8 @@ export async function getProfessionalBySlug(
         businessName: ((pro as any).business_name as string) ?? undefined,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         workplaces: ((pro as any).workplaces as ProfessionalCardData["workplaces"]) ?? [],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        verificationStatus: ((pro as any).verification_status as ProfessionalCardData["verificationStatus"]) ?? "pending",
       };
     } catch (err) {
       console.error("[getProfessionalBySlug] Supabase error:", err);

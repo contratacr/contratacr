@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import {
-  MapPin, Shield, ArrowLeft,
+  MapPin, Shield, ShieldCheck, ArrowLeft,
   Share2, Flag, ChevronDown, Lock, Phone, Building2,
 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
@@ -200,11 +200,14 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                     </div>
                   </div>
 
-                  {professional.isVerified && (
-                    <div className="flex items-center gap-1.5 text-xs text-[#009FD9]">
-                      <Shield className="h-3.5 w-3.5" />
-                      <span className="font-medium">Cédula verificada</span>
-                    </div>
+                  {professional.verificationStatus === "authorized" && (
+                    <a
+                      href="/es/proveedores-autorizados"
+                      className="flex items-center gap-1.5 text-xs rounded-full bg-[#dcfce7] px-2.5 py-1 text-[#15803d] font-semibold hover:bg-[#bbf7d0] transition-colors"
+                    >
+                      <ShieldCheck className="h-3.5 w-3.5" />
+                      <span>Proveedor Autorizado</span>
+                    </a>
                   )}
                 </div>
 
@@ -495,12 +498,12 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                             <p className="text-base font-bold text-[#111827]">{expYears} {expYears === 1 ? "año" : "años"}</p>
                           </div>
                         )}
-                        {professional.isVerified && (
-                          <div className="bg-[#EBF5FB] rounded-xl p-4 flex items-center gap-3">
-                            <Shield className="h-5 w-5 text-[#009FD9] shrink-0" />
+                        {professional.verificationStatus === "authorized" && (
+                          <div className="bg-[#f0fdf4] rounded-xl p-4 flex items-center gap-3">
+                            <ShieldCheck className="h-5 w-5 text-[#16a34a] shrink-0" />
                             <div>
-                              <p className="text-xs text-[#6b7280] font-medium">Cédula</p>
-                              <p className="text-sm font-bold text-[#009FD9]">Verificada</p>
+                              <p className="text-xs text-[#6b7280] font-medium">Verificación</p>
+                              <p className="text-sm font-bold text-[#15803d]">Proveedor Autorizado</p>
                             </div>
                           </div>
                         )}

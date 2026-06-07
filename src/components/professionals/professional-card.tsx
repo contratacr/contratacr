@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { MapPin, CheckCircle2, Building2 } from "lucide-react";
+import { MapPin, ShieldCheck, Building2 } from "lucide-react";
 import { ProfessionalSchedule, type ScheduleSlot } from "@/components/professionals/professional-schedule";
 import { Link } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -34,6 +34,7 @@ export type ProfessionalCardData = {
   languages?: string[];
   businessName?: string;
   workplaces?: { id?: string; name: string; address?: string; lat?: number; lng?: number }[];
+  verificationStatus?: "pending" | "authorized" | "rejected" | "under_appeal";
   lat?: number | null;
   lng?: number | null;
   serviceType?: string | null;
@@ -62,6 +63,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
       ? [activeCategory]
       : allProfessions.slice(0, 3);
   const priceLabel = primaryPricingLabel(professional.pricing, professional.hourlyRate);
+  const isAuthorized = professional.verificationStatus === "authorized";
 
   return (
     <Card className={`group hover:shadow-md transition-all duration-200 overflow-hidden ${className ?? ""}`}>
@@ -88,8 +90,13 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
                   <div className="min-w-0">
                     <Link href={`/profesionales/${professional.slug}`} className="flex items-center gap-1.5">
                       <h3 className="font-semibold text-[#111827] text-base leading-tight hover:text-[#009FD9] transition-colors">{professional.fullName}</h3>
-                      {professional.isVerified && <CheckCircle2 className="h-4 w-4 text-[#009FD9] shrink-0" />}
+                      {isAuthorized && <ShieldCheck className="h-4 w-4 text-[#16a34a] shrink-0" />}
                     </Link>
+                    {isAuthorized && (
+                      <span className="inline-flex items-center gap-1 mt-1 rounded-md bg-[#dcfce7] px-1.5 py-0.5 text-[10px] font-semibold text-[#15803d]">
+                        <ShieldCheck className="h-3 w-3" /> Proveedor Autorizado
+                      </span>
+                    )}
                     {professional.businessName && (
                       <p className="text-xs font-medium text-[#009FD9] mt-0.5 truncate">{professional.businessName}</p>
                     )}
