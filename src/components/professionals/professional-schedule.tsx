@@ -268,6 +268,18 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
         </a>
       )}
 
+      {/* Call option — available alongside WhatsApp */}
+      {professional.whatsapp && (
+        <a
+          href={telHref(professional.whatsapp)}
+          onClick={(e) => e.stopPropagation()}
+          className="inline-flex items-center justify-center gap-2 border border-[#e5e7eb] text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] text-sm font-semibold py-2.5 rounded-lg transition-colors"
+        >
+          <Phone className="h-4 w-4" />
+          Contáctanos por llamada
+        </a>
+      )}
+
       {bookingModals}
     </div>
   );

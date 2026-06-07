@@ -798,7 +798,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     {submitting
                       ? "Enviando…"
                       : isLoggedIn && !needsProfile
-                        ? t("step4.submit")
+                        ? <><WhatsAppIcon className="h-4 w-4" /> {t("step4.submit")}</>
                         : t("continue")}
                   </Button>
                 )}
@@ -811,7 +811,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     disabled={profilePhone.replace(/\D/g, "").length < 8 || guestEmailCheck.taken}
                     onClick={() => handleSubmit()}
                   >
-                    {submitting ? "Enviando…" : t("step4.submit")}
+                    {submitting ? "Enviando…" : <><WhatsAppIcon className="h-4 w-4" /> {t("step4.submit")}</>}
                   </Button>
                 )}
 
@@ -822,7 +822,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     loading={savingProfile || submitting}
                     onClick={saveProfileAndSubmit}
                   >
-                    {savingProfile || submitting ? "Enviando…" : t("step4.submit")}
+                    {savingProfile || submitting ? "Enviando…" : <><WhatsAppIcon className="h-4 w-4" /> {t("step4.submit")}</>}
                   </Button>
                 )}
               </div>
