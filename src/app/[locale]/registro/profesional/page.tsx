@@ -568,6 +568,11 @@ export default function RegisterProfessionalPage() {
         });
         if (signUpError) throw signUpError;
         if (!signUpData.user?.id) throw new Error("No se pudo crear la cuenta.");
+        // Supabase anti-enumeration: an already-registered email returns a user
+        // object with an EMPTY identities array (no error). Detect it explicitly.
+        if (Array.isArray(signUpData.user.identities) && signUpData.user.identities.length === 0) {
+          throw new Error("Este correo ya está registrado. Iniciá sesión.");
+        }
         userId = signUpData.user.id;
         userEmail = step1Data.email;
       }
@@ -626,8 +631,13 @@ export default function RegisterProfessionalPage() {
       }
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Error al registrarse";
-      if (msg.includes("already registered") || msg.includes("already been registered") || msg.includes("already exists")) {
-        setError("Ya existe una cuenta con este correo. ¿Querés iniciar sesión en su lugar?");
+      if (
+        msg.includes("already registered") ||
+        msg.includes("already been registered") ||
+        msg.includes("already exists") ||
+        msg.includes("ya está registrado")
+      ) {
+        setError("Este correo ya está registrado. Iniciá sesión.");
       } else {
         setError(msg);
       }

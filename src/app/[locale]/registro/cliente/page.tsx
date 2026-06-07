@@ -21,7 +21,9 @@ export default function RegisterClientPage() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [phone, setPhone] = useState("");
   const [provinciaId, setProvinciaId] = useState("");
   const [cantonId, setCantonId] = useState("");
@@ -53,6 +55,7 @@ export default function RegisterClientPage() {
     if (!fullName.trim()) { setError("El nombre es requerido."); return; }
     if (!user && !email.trim()) { setError("El correo es requerido."); return; }
     if (!user && password.length < 8) { setError("La contraseña debe tener al menos 8 caracteres."); return; }
+    if (!user && password !== confirmPassword) { setError("Las contraseñas no coinciden."); return; }
 
     setSubmitting(true);
 
@@ -78,6 +81,13 @@ export default function RegisterClientPage() {
           } else {
             setError(signUpError.message);
           }
+          setSubmitting(false);
+          return;
+        }
+
+        // Supabase anti-enumeration: existing email → user with empty identities.
+        if (Array.isArray(data.user?.identities) && data.user!.identities!.length === 0) {
+          setError("Este correo ya está registrado. Iniciá sesión.");
           setSubmitting(false);
           return;
         }
@@ -245,6 +255,31 @@ export default function RegisterClientPage() {
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
                     </div>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-[#374151] block mb-1.5">Confirmar contraseña</label>
+                    <div className="relative">
+                      <input
+                        type={showConfirm ? "text" : "password"}
+                        className={cn(inputClass, "pr-11", confirmPassword && password !== confirmPassword && "border-red-400 focus:ring-red-400")}
+                        placeholder="Repetí tu contraseña"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        required
+                        minLength={8}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirm((s) => !s)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9ca3af] hover:text-[#374151] transition-colors"
+                      >
+                        {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      </button>
+                    </div>
+                    {confirmPassword && password !== confirmPassword && (
+                      <p className="text-xs text-red-500 mt-1">Las contraseñas no coinciden.</p>
+                    )}
                   </div>
                 </>
               )}

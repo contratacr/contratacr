@@ -300,6 +300,13 @@ export function ClientRegistrationModal({
       }
       return;
     }
+    // Supabase anti-enumeration: existing email → user with empty identities.
+    if (Array.isArray(signUpData?.user?.identities) && signUpData!.user!.identities!.length === 0) {
+      setDuplicateEmailDetected(true);
+      setError(null);
+      setView("login");
+      return;
+    }
 
     // Save cédula + fullName to profiles via API (also handles profiles trigger gap)
     if (signUpData?.user?.id) {

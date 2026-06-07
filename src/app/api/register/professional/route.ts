@@ -79,8 +79,8 @@ export async function POST(req: Request) {
         await supabase.auth.admin.getUserById(bodyUserId);
       if (adminError || !adminLookup.user) {
         return NextResponse.json(
-          { error: "No se encontró el usuario. Intentá de nuevo." },
-          { status: 401 }
+          { error: "Este correo ya está registrado. Iniciá sesión." },
+          { status: 409 }
         );
       }
       userId = adminLookup.user.id;
