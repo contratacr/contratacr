@@ -6,6 +6,7 @@ import { Upload, X, ImageIcon, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
+import { MAX_PORTFOLIO_PHOTOS, cldThumb } from "@/lib/cloudinary";
 
 interface PhotoGalleryProps {
   professionalId: string;
@@ -22,9 +23,12 @@ export function PhotoGallery({ professionalId, initialUrls = [], onSaved }: Phot
   const inputRef = useRef<HTMLInputElement>(null);
 
   async function handleUpload(files: FileList) {
-    const remaining = 10 - urls.length;
+    const remaining = MAX_PORTFOLIO_PHOTOS - urls.length;
     const toUpload = Array.from(files).slice(0, Math.max(0, remaining));
-    if (toUpload.length === 0) return;
+    if (toUpload.length === 0) {
+      alert(`Podés subir un máximo de ${MAX_PORTFOLIO_PHOTOS} fotos.`);
+      return;
+    }
 
     setUploading(true);
     try {
@@ -32,6 +36,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], onSaved }: Phot
       for (const file of toUpload) {
         const formData = new FormData();
         formData.append("file", file);
+        formData.append("type", "portfolio");
         const res = await fetch("/api/upload/photo", { method: "POST", body: formData });
         const data = await res.json();
         if (data.url) uploaded.push(data.url);
@@ -68,13 +73,13 @@ export function PhotoGallery({ professionalId, initialUrls = [], onSaved }: Phot
 
   return (
     <div>
-      <p className="text-sm text-[#6b7280] mb-5">{t("hint")}</p>
+      <p className="text-sm text-[#6b7280] mb-5">{t("hint")} Máximo {MAX_PORTFOLIO_PHOTOS} fotos.</p>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         {urls.map((url) => (
           <div key={url} className="relative group aspect-square rounded-2xl overflow-hidden border border-[#e5e7eb]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={url} alt="" className="w-full h-full object-cover" />
+            <img src={cldThumb(url, 400)} alt="" className="w-full h-full object-cover" />
             <button
               onClick={() => removePhoto(url)}
               className="absolute top-2 right-2 h-7 w-7 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
@@ -85,7 +90,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], onSaved }: Phot
           </div>
         ))}
 
-        {urls.length < 10 && (
+        {urls.length < MAX_PORTFOLIO_PHOTOS && (
           <button
             onClick={() => inputRef.current?.click()}
             disabled={uploading}

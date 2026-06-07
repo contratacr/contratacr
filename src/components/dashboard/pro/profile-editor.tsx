@@ -109,6 +109,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
     try {
       const fd = new FormData();
       fd.append("file", file);
+      fd.append("type", "avatar");
       const res = await fetch("/api/upload/photo", { method: "POST", body: fd });
       if (!res.ok) throw new Error();
       const { url } = await res.json();

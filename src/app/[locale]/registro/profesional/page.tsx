@@ -532,6 +532,7 @@ export default function RegisterProfessionalPage() {
         setUploadingPhoto(true);
         const fd = new FormData();
         fd.append("file", photoFile);
+        fd.append("type", "avatar");
         const uploadRes = await fetch("/api/upload/photo", { method: "POST", body: fd });
         setUploadingPhoto(false);
         if (uploadRes.ok) {

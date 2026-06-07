@@ -35,14 +35,20 @@ export async function POST(req: Request) {
     const buffer = Buffer.from(await file.arrayBuffer());
     const dataUri = `data:${file.type};base64,${buffer.toString("base64")}`;
 
+    // "avatar" → square face crop (profile photo). "portfolio" (default) →
+    // store ONE optimized original (max 1600px, auto format/quality); thumbnails
+    // and gallery sizes are derived via URL transforms, never stored copies.
+    const kind = (formData.get("type") as string | null) ?? "portfolio";
+    const isAvatar = kind === "avatar";
+
     const result = await cloudinary.uploader.upload(dataUri, {
-      folder: "contratacr/profiles",
-      transformation: [
-        { width: 400, height: 400, crop: "fill", gravity: "face", quality: "auto" },
-      ],
+      folder: isAvatar ? "contratacr/profiles" : "contratacr/portfolio",
+      transformation: isAvatar
+        ? [{ width: 400, height: 400, crop: "fill", gravity: "face", quality: "auto", fetch_format: "auto" }]
+        : [{ width: 1600, height: 1600, crop: "limit", quality: "auto", fetch_format: "auto" }],
     });
 
-    return NextResponse.json({ url: result.secure_url });
+    return NextResponse.json({ url: result.secure_url, publicId: result.public_id });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Error al subir la imagen";
     return NextResponse.json({ error: message }, { status: 500 });

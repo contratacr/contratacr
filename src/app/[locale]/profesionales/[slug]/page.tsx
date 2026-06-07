@@ -17,6 +17,8 @@ import { getInitials, getWhatsAppLink } from "@/lib/utils";
 import { formatPricingTier } from "@/lib/pricing";
 import { languageLabel } from "@/lib/data/languages";
 import { ReviewSection } from "@/components/professionals/review-section";
+import { ProfileGallery } from "@/components/professionals/profile-gallery";
+import { cldThumb } from "@/lib/cloudinary";
 import { ReportProfileModal } from "@/components/professionals/report-profile-modal";
 import { createClient } from "@/lib/supabase/client";
 import { BookingButton } from "@/components/booking/booking-button";
@@ -231,7 +233,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                 {professional.portfolioUrls && professional.portfolioUrls.length > 0 && (
                   <div className="flex gap-1.5 justify-center flex-wrap">
                     {professional.portfolioUrls.slice(0, 4).map((url, i) => (
-                      <img key={i} src={url} alt={`Portfolio ${i + 1}`} className="h-14 w-14 object-cover rounded-xl border border-gray-100" />
+                      <img key={i} src={cldThumb(url, 120)} alt={`Portfolio ${i + 1}`} className="h-14 w-14 object-cover rounded-xl border border-gray-100" />
                     ))}
                     {professional.portfolioUrls.length > 4 && (
                       <div className="h-14 w-14 rounded-xl bg-[#f3f4f6] border border-gray-100 flex items-center justify-center text-xs font-bold text-[#6b7280]">
@@ -488,6 +490,14 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                         <div>
                           <h2 className="text-lg font-semibold text-[#111827] mb-3">Descripción</h2>
                           <p className="text-sm text-[#374151] leading-relaxed">{professional.bio}</p>
+                        </div>
+                      )}
+
+                      {/* Work gallery — optimized thumbnails + lightbox */}
+                      {professional.portfolioUrls && professional.portfolioUrls.length > 0 && (
+                        <div>
+                          <h2 className="text-lg font-semibold text-[#111827] mb-3">Galería de trabajos</h2>
+                          <ProfileGallery urls={professional.portfolioUrls} />
                         </div>
                       )}
 
