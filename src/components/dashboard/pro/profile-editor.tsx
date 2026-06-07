@@ -8,12 +8,10 @@ import { PhoneInput } from "@/components/ui/phone-input";
 import { LanguagesInput } from "@/components/ui/languages-input";
 import { PriceInput } from "@/components/ui/price-input";
 import { WorkplacesPicker, type Workplace } from "@/components/maps/workplaces-picker";
+import { CoverageAreaSelector } from "@/components/maps/coverage-area-selector";
 import { createClient } from "@/lib/supabase/client";
 import { Camera, Check, X, Plus, Truck, MapPin } from "lucide-react";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
-import { PROVINCES, getCantonsByProvince } from "@/lib/data/cr-geography";
+import { computeSearchAreas, primaryArea, type CoverageArea } from "@/lib/location";
 import { CategorySearch } from "@/components/ui/category-search";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { cn } from "@/lib/utils";
@@ -44,8 +42,9 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
   const [pricing, setPricing] = useState<PricingTier[]>(
     Array.isArray(initial.pricing) ? initial.pricing : []
   );
-  const [provinceId, setProvinceId] = useState<string>(initial.provincia_id ?? "");
-  const [cantonId, setCantonId] = useState<string>(initial.canton_id ?? "");
+  const [coverageAreas, setCoverageAreas] = useState<CoverageArea[]>(
+    Array.isArray(initial.coverage_areas) ? initial.coverage_areas : []
+  );
   const [address, setAddress] = useState<string>(initial.address ?? "");
   const [businessName, setBusinessName] = useState<string>(initial.business_name ?? "");
   const [workplaces, setWorkplaces] = useState<Workplace[]>(Array.isArray(initial.workplaces) ? initial.workplaces : []);
@@ -79,8 +78,6 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoNonce]);
-
-  const cantons = getCantonsByProvince(provinceId);
 
   function addProfession(id: string) {
     if (!id || professions.includes(id)) { setAddCat(""); return; }
@@ -151,9 +148,16 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         .filter((p) => p.type === "a_convenir" || p.amount != null)
         .map((p) => ({ ...p, amount: p.type === "a_convenir" ? undefined : p.amount }));
 
-      // Only keep workplaces when "fixed" is selected.
+      // Only keep workplaces when "fixed" is selected; coverage when "mobile".
       const effectiveWorkplaces = serviceFixed ? workplaces : [];
+      const effectiveCoverage = serviceMobile ? coverageAreas : [];
       const serviceType = [serviceMobile ? "mobile" : null, serviceFixed ? "fixed" : null].filter(Boolean).join(",") || "mobile";
+
+      // Location is derived from pins (fixed) + coverage areas (mobile) — the
+      // single source of truth. provincia_id/canton_id keep the PRIMARY area for
+      // back-compat display; search_* arrays drive location-aware /buscar.
+      const { provincias, cantones } = computeSearchAreas(effectiveWorkplaces, effectiveCoverage);
+      const primary = primaryArea(effectiveWorkplaces, effectiveCoverage);
 
       const baseUpdate: Record<string, unknown> = {
         bio,
@@ -164,8 +168,8 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         languages,
         service_type: serviceType,
         ...(professions[0] ? { category_id: professions[0] } : {}),
-        ...(provinceId ? { provincia_id: provinceId } : {}),
-        ...(cantonId ? { canton_id: cantonId } : {}),
+        provincia_id: primary.provinciaId ?? null,
+        canton_id: primary.cantonId ?? null,
         address: address || null,
         lat: effectiveWorkplaces[0]?.lat ?? null,
         lng: effectiveWorkplaces[0]?.lng ?? null,
@@ -173,6 +177,9 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
       const identityFields = {
         business_name: businessName.trim() || null,
         workplaces: effectiveWorkplaces,
+        coverage_areas: effectiveCoverage,
+        search_provincias: provincias,
+        search_cantones: cantones,
       };
 
       let { error: proError } = await supabase
@@ -180,7 +187,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         .update({ ...baseUpdate, ...identityFields })
         .eq("id", professionalId);
       // Retry without the optional identity columns if the DB isn't migrated yet.
-      if (proError && /business_name|workplaces|affiliations|schema cache|could not find|PGRST204/i.test(proError.message)) {
+      if (proError && /business_name|workplaces|coverage_areas|search_provincias|search_cantones|affiliations|schema cache|could not find|PGRST204/i.test(proError.message)) {
         ({ error: proError } = await supabase.from("professionals").update(baseUpdate).eq("id", professionalId));
       }
 
@@ -298,16 +305,31 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         </div>
       </div>
 
-      {/* Workplaces — only when working from a fixed location */}
+      {/* Fixed locations — pins are the single source of truth; provincia/cantón
+          are derived from each pin (no manual selection). */}
       {serviceFixed && (
         <div>
           <label className="text-sm font-medium text-[#374151] block mb-1.5">
-            Tus lugares de trabajo <span className="text-[#9ca3af] font-normal">(opcional)</span>
+            Tus lugares de trabajo
           </label>
           <p className="text-xs text-[#9ca3af] mb-2">
-            Buscá y agregá uno o más lugares. Cada uno aparece en el mapa de búsqueda y en tu perfil.
+            Agregá uno o más lugares en el mapa. La provincia y el cantón se detectan
+            automáticamente de cada punto y definen dónde aparecés en /buscar.
           </p>
           <WorkplacesPicker value={workplaces} onChange={(next) => { setWorkplaces(next); touch(); }} />
+        </div>
+      )}
+
+      {/* Coverage areas — only for "me desplazo": provincia+cantón pairs traveled to */}
+      {serviceMobile && (
+        <div>
+          <label className="text-sm font-medium text-[#374151] block mb-1.5">
+            Zonas a las que te desplazás
+          </label>
+          <p className="text-xs text-[#9ca3af] mb-2">
+            Elegí las provincias y cantones donde atendés. Aparecés en /buscar en cada una.
+          </p>
+          <CoverageAreaSelector value={coverageAreas} onChange={(next) => { setCoverageAreas(next); touch(); }} />
         </div>
       )}
 
@@ -353,40 +375,6 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         value={whatsapp}
         onChange={(digits) => { setWhatsapp(digits); touch(); }}
       />
-
-      {/* Location */}
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="text-sm font-medium text-[#374151] block mb-1.5">Provincia</label>
-          <Select value={provinceId} onValueChange={(v) => { setProvinceId(v); setCantonId(""); touch(); }}>
-            <SelectTrigger>
-              <SelectValue placeholder="Seleccioná" />
-            </SelectTrigger>
-            <SelectContent>
-              {PROVINCES.map((p) => (
-                <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <label className="text-sm font-medium text-[#374151] block mb-1.5">Cantón</label>
-          <Select
-            value={cantonId}
-            disabled={!provinceId}
-            onValueChange={(v) => { setCantonId(v); touch(); }}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={provinceId ? "Seleccioná" : "Primero provincia"} />
-            </SelectTrigger>
-            <SelectContent>
-              {cantons.map((c) => (
-                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
 
       <Input
         label="Dirección (opcional)"

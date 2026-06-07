@@ -236,6 +236,7 @@ export default function ProDashboardPage() {
                       initialPublic={pro.availability_public ?? true}
                       initialContactPreference={pro.contact_preference ?? "ambas"}
                       workplaces={pro.workplaces ?? []}
+                      coverageAreas={pro.coverage_areas ?? []}
                       initialVideoconsulta={pro.videoconsulta ?? false}
                       onSaved={handleSaved}
                     />

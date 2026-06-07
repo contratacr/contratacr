@@ -16,10 +16,6 @@ import { Button } from "@/components/ui/button";
 import { PhoneInput, isPhoneComplete } from "@/components/ui/phone-input";
 import { IdentityField } from "@/components/ui/identity-field";
 import { LandingFooter } from "@/components/landing/landing-footer";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
-import { PROVINCES, getCantonsByProvince } from "@/lib/data/cr-geography";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { OtpVerification } from "@/components/auth/otp-verification";
@@ -27,6 +23,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { CategorySearch } from "@/components/ui/category-search";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { WorkplacesPicker, type Workplace } from "@/components/maps/workplaces-picker";
+import { CoverageAreaSelector } from "@/components/maps/coverage-area-selector";
+import { computeSearchAreas, primaryArea, type CoverageArea } from "@/lib/location";
 import { useAvailabilityCheck } from "@/hooks/use-availability-check";
 
 // ─── Category data now lives in src/lib/data/categories.ts ───────────────────
@@ -223,9 +221,8 @@ const step1Schema = z
 
 const step2Schema = z.object({
   category: z.string().min(1, "Seleccioná una categoría"),
-  // Province + canton are required and manual; they drive search filtering.
-  province: z.string().min(1, "La provincia es requerida"),
-  canton: z.string().min(1, "El cantón es requerido"),
+  // Location is derived from map pins (fixed) and coverage areas (mobile) — not
+  // manual province/canton fields anymore.
   whatsapp: z.string().min(8, "El número de WhatsApp es requerido").max(15, "Número inválido"),
   address: z.string().optional(),
 });
@@ -368,7 +365,6 @@ export default function RegisterProfessionalPage() {
 
   // step: -1=loading, 0=identity (email/pw users), 1=service+location, 2=profile+photo
   const [step, setStep] = useState(-1);
-  const [selectedProvince, setSelectedProvince] = useState("");
   const [serviceMobile, setServiceMobile] = useState(false);
   const [serviceFixed, setServiceFixed] = useState(false);
   const [serviceTypeError, setServiceTypeError] = useState<string | null>(null);
@@ -381,6 +377,8 @@ export default function RegisterProfessionalPage() {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [workplaces, setWorkplaces] = useState<Workplace[]>([]);
+  const [coverageAreas, setCoverageAreas] = useState<CoverageArea[]>([]);
+  const [locationError, setLocationError] = useState<string | null>(null);
   const [otpEmail, setOtpEmail] = useState<string | null>(null);
 
   const [step1Data, setStep1Data] = useState<Step1Data | null>(null);
@@ -397,8 +395,6 @@ export default function RegisterProfessionalPage() {
   // Optional brand/business name (workplaces are captured via the map below).
   const [businessName, setBusinessName] = useState("");
 
-  const cantons = getCantonsByProvince(selectedProvince);
-
   const form1 = useForm<Step1Data>({
     resolver: zodResolver(step1Schema),
     mode: "onBlur",
@@ -407,7 +403,7 @@ export default function RegisterProfessionalPage() {
   const form2 = useForm<Step2Data>({
     resolver: zodResolver(step2Schema),
     mode: "onBlur",
-    defaultValues: { category: "", province: "", canton: "", whatsapp: "", address: "" },
+    defaultValues: { category: "", whatsapp: "", address: "" },
   });
   const form3 = useForm<Step3Data>({
     resolver: zodResolver(step3Schema),
@@ -500,6 +496,16 @@ export default function RegisterProfessionalPage() {
       setServiceTypeError("Seleccioná al menos un tipo de servicio");
       return;
     }
+    // Location must come from at least one pin (fixed) or coverage area (mobile).
+    if (serviceFixed && workplaces.length === 0) {
+      setLocationError("Agregá al menos un lugar de trabajo en el mapa.");
+      return;
+    }
+    if (serviceMobile && coverageAreas.length === 0) {
+      setLocationError("Agregá al menos una zona a la que te desplazás.");
+      return;
+    }
+    setLocationError(null);
     // OAuth professionals must provide a cédula (clients don't — they're asked at booking).
     if (currentUser && !validateCedulaFormat(oauthCedula)) {
       setOauthCedulaError("Cédula requerida. CR: 9 dígitos · DIMEX: 11-12 · NITE: 10.");
@@ -592,6 +598,12 @@ export default function RegisterProfessionalPage() {
         .filter(Boolean)
         .join(",");
 
+      // Location is derived from pins (fixed) + coverage areas (mobile).
+      const effWorkplaces = serviceFixed ? workplaces : [];
+      const effCoverage = serviceMobile ? coverageAreas : [];
+      const { provincias, cantones } = computeSearchAreas(effWorkplaces, effCoverage);
+      const primary = primaryArea(effWorkplaces, effCoverage);
+
       // ── 4. Create/upsert profile + professional record ─────────────────────
       const proRes = await fetch("/api/register/professional", {
         method: "POST",
@@ -606,10 +618,13 @@ export default function RegisterProfessionalPage() {
           category: step2Data.category,
           professions: [step2Data.category, ...extraCategories],
           serviceType,
-          province: step2Data.province,
-          canton: step2Data.canton,
-          // Workplaces (fixed-location): each is a pin on /buscar + a workplace on the profile.
-          workplaces: serviceFixed ? workplaces : [],
+          province: primary.provinciaId ?? null,
+          canton: primary.cantonId ?? null,
+          // Pins + coverage areas + denormalized search arrays (location-aware /buscar).
+          workplaces: effWorkplaces,
+          coverageAreas: effCoverage,
+          searchProvincias: provincias,
+          searchCantones: cantones,
           address: workplaces[0]?.address || step2Data.address || null,
           lat: workplaces[0]?.lat ?? null,
           lng: workplaces[0]?.lng ?? null,
@@ -909,67 +924,6 @@ export default function RegisterProfessionalPage() {
                 </div>
               </div>
 
-              {/* Province (required, manual — no auto-fill) */}
-              <div>
-                <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                  {t("province")} <span className="text-red-500">*</span>
-                </label>
-                <Select
-                  value={form2.watch("province") || undefined}
-                  onValueChange={(v) => {
-                    setSelectedProvince(v);
-                    form2.setValue("province", v, { shouldValidate: true });
-                    form2.setValue("canton", "");
-                  }}
-                >
-                  <SelectTrigger aria-invalid={!!form2.formState.errors.province}>
-                    <SelectValue placeholder={t("provincePlaceholder")} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PROVINCES.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>
-                        {p.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {form2.formState.errors.province && (
-                  <p className="text-xs text-red-500 mt-1">
-                    {form2.formState.errors.province.message}
-                  </p>
-                )}
-              </div>
-
-              {/* Canton (required, enables after province) */}
-              <div>
-                <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                  {t("canton")} <span className="text-red-500">*</span>
-                </label>
-                <Select
-                  value={form2.watch("canton") || undefined}
-                  disabled={!selectedProvince}
-                  onValueChange={(v) => form2.setValue("canton", v, { shouldValidate: true })}
-                >
-                  <SelectTrigger aria-invalid={!!form2.formState.errors.canton}>
-                    <SelectValue
-                      placeholder={selectedProvince ? t("cantonPlaceholder") : t("cantonDisabled")}
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {cantons.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {form2.formState.errors.canton && (
-                  <p className="text-xs text-red-500 mt-1">
-                    {form2.formState.errors.canton.message}
-                  </p>
-                )}
-              </div>
-
               {/* Service type */}
               <div>
                 <label className="text-sm font-medium text-[#374151] block mb-2">
@@ -1041,20 +995,31 @@ export default function RegisterProfessionalPage() {
                 )}
               </div>
 
-              {/* Fixed location — workplaces map (optional, precise location only) */}
+              {/* Fixed location — pins are the source of truth; provincia/cantón
+                  are detected automatically from each pin. */}
               {serviceFixed && (
                 <div className="flex flex-col gap-2">
-                  <label className="text-sm font-medium text-[#374151]">
-                    Tus lugares de trabajo <span className="text-[#9ca3af] font-normal">(opcional)</span>
-                  </label>
+                  <label className="text-sm font-medium text-[#374151]">Tus lugares de trabajo</label>
                   <p className="text-xs text-[#9ca3af]">
-                    Buscá y agregá uno o más lugares. Cada uno aparece como un punto en el mapa de
-                    búsqueda y como lugar de trabajo en tu perfil. La provincia y el cantón de arriba
-                    son los que se usan para filtrar.
+                    Agregá uno o más lugares en el mapa. La provincia y el cantón se detectan
+                    automáticamente de cada punto y definen dónde aparecés en /buscar.
                   </p>
-                  <WorkplacesPicker value={workplaces} onChange={setWorkplaces} />
+                  <WorkplacesPicker value={workplaces} onChange={(n) => { setWorkplaces(n); setLocationError(null); }} />
                 </div>
               )}
+
+              {/* Coverage areas — for "me desplazo": provincia+cantón pairs traveled to */}
+              {serviceMobile && (
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-medium text-[#374151]">Zonas a las que te desplazás</label>
+                  <p className="text-xs text-[#9ca3af]">
+                    Elegí las provincias y cantones donde atendés. Aparecés en /buscar en cada una.
+                  </p>
+                  <CoverageAreaSelector value={coverageAreas} onChange={(n) => { setCoverageAreas(n); setLocationError(null); }} />
+                </div>
+              )}
+
+              {locationError && <p className="text-xs text-red-500">{locationError}</p>}
 
               {/* WhatsApp */}
               <PhoneInput

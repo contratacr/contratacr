@@ -51,7 +51,9 @@ export async function searchProfessionals(
 
       // Built as a closure so we can retry without the `is_banned` filter if that
       // column hasn't been migrated yet (migration 029) — search never breaks.
-      const build = (excludeBanned: boolean) => {
+      // modern = use is_banned + location-aware search arrays (migrations 029/030).
+      // legacy = fall back to the old single provincia_id/canton_id columns.
+      const build = (modern: boolean) => {
         let query = supabase
           .from("professionals")
           .select(
@@ -64,17 +66,23 @@ export async function searchProfessionals(
              cantones(id, name)`
           );
 
-        if (excludeBanned) query = query.eq("is_banned", false);
+        if (modern) query = query.eq("is_banned", false);
 
         if (filters.categoryId && filters.categoryId !== "todas") {
           // Match the professional if ANY of their professions matches (multi-category).
           query = query.or(`category_id.eq.${filters.categoryId},professions.cs.{${filters.categoryId}}`);
         }
         if (filters.provinceId && filters.provinceId !== "todas") {
-          query = query.eq("provincia_id", filters.provinceId);
+          // Location-aware: appears under EVERY covered provincia (pins + coverage),
+          // falling back to the legacy single column for un-migrated pros.
+          query = modern
+            ? query.or(`search_provincias.cs.{${filters.provinceId}},provincia_id.eq.${filters.provinceId}`)
+            : query.eq("provincia_id", filters.provinceId);
         }
         if (filters.cantonId && filters.cantonId !== "todos") {
-          query = query.eq("canton_id", filters.cantonId);
+          query = modern
+            ? query.or(`search_cantones.cs.{${filters.cantonId}},canton_id.eq.${filters.cantonId}`)
+            : query.eq("canton_id", filters.cantonId);
         }
         if (filters.verifiedOnly) {
           query = query.eq("verification_status", "verified");
@@ -117,7 +125,7 @@ export async function searchProfessionals(
       };
 
       let { data, error } = await build(true);
-      if (error && /is_banned|column/i.test(error.message)) {
+      if (error && /is_banned|search_provincias|search_cantones|column/i.test(error.message)) {
         ({ data, error } = await build(false)); // pre-migration fallback
       }
       if (error) throw error;

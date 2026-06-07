@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Script from "next/script";
 import { MapPin, Search, X } from "lucide-react";
 import { BRAND_MAP_STYLE } from "@/lib/maps/map-style";
+import { matchProvinceCanton, getCantonById, getProvinceById } from "@/lib/data/cr-geography";
 
 export type Workplace = {
   id: string;
@@ -11,7 +12,23 @@ export type Workplace = {
   address: string;
   lat: number;
   lng: number;
+  // Reverse-geocoded administrative areas (single source of truth for location).
+  provinciaId?: string;
+  cantonId?: string;
+  distrito?: string;
 };
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function deriveAdmin(components: any[]): { provinciaId?: string; cantonId?: string; distrito?: string } {
+  if (!Array.isArray(components)) return {};
+  const find = (type: string) =>
+    components.find((c) => Array.isArray(c.types) && c.types.includes(type))?.long_name as string | undefined;
+  const provinceName = find("administrative_area_level_1");
+  const cantonName = find("administrative_area_level_2") || find("locality");
+  const distrito = find("administrative_area_level_3") || find("sublocality") || find("neighborhood");
+  const { provinceId, cantonId } = matchProvinceCanton(provinceName, cantonName);
+  return { provinciaId: provinceId, cantonId, distrito };
+}
 
 interface WorkplacesPickerProps {
   value: Workplace[];
@@ -109,7 +126,7 @@ export function WorkplacesPicker({ value, onChange, apiKey }: WorkplacesPickerPr
     if (inputRef.current && maps.places?.Autocomplete) {
       const autocomplete = new maps.places.Autocomplete(inputRef.current, {
         componentRestrictions: { country: "cr" },
-        fields: ["geometry", "formatted_address", "name"],
+        fields: ["geometry", "formatted_address", "name", "address_components"],
       });
       autocomplete.addListener("place_changed", () => {
         const place = autocomplete.getPlace();
@@ -120,6 +137,7 @@ export function WorkplacesPicker({ value, onChange, apiKey }: WorkplacesPickerPr
             address: place.formatted_address || "",
             lat: loc.lat(),
             lng: loc.lng(),
+            ...deriveAdmin(place.address_components),
           });
           setSearch("");
           map.setCenter(loc);
@@ -138,6 +156,7 @@ export function WorkplacesPicker({ value, onChange, apiKey }: WorkplacesPickerPr
           address: ok ? (results[0].formatted_address as string) : "",
           lat: latLng.lat(),
           lng: latLng.lng(),
+          ...(ok ? deriveAdmin(results[0].address_components) : {}),
         });
       });
     });
@@ -154,15 +173,20 @@ export function WorkplacesPicker({ value, onChange, apiKey }: WorkplacesPickerPr
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
         const map = mapInstanceRef.current;
-        const finish = (name: string, address: string) => {
-          addWorkplace({ name, address, lat, lng });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const finish = (name: string, address: string, admin: any = {}) => {
+          addWorkplace({ name, address, lat, lng, ...admin });
           if (map) { map.setCenter({ lat, lng }); map.setZoom(15); }
           setLocating(false);
         };
         if (geocoderRef.current) {
           geocoderRef.current.geocode({ location: { lat, lng } }, (results: GMaps, status: string) => {
             const ok = status === "OK" && results?.[0];
-            finish(ok ? (results[0].formatted_address as string) : "Mi ubicación actual", ok ? (results[0].formatted_address as string) : "");
+            finish(
+              ok ? (results[0].formatted_address as string) : "Mi ubicación actual",
+              ok ? (results[0].formatted_address as string) : "",
+              ok ? deriveAdmin(results[0].address_components) : {}
+            );
           });
         } else {
           finish("Mi ubicación actual", "");
@@ -246,7 +270,14 @@ export function WorkplacesPicker({ value, onChange, apiKey }: WorkplacesPickerPr
             {value.map((wp) => (
               <div key={wp.id} className="flex items-center gap-2 bg-[#EBF5FB] rounded-xl px-3 py-2">
                 <MapPin className="h-4 w-4 text-[#009FD9] shrink-0" />
-                <p className="flex-1 min-w-0 text-xs text-[#374151] truncate" title={wp.address || wp.name}>{wp.name}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-[#374151] truncate" title={wp.address || wp.name}>{wp.name}</p>
+                  {wp.cantonId && (
+                    <p className="text-[10px] text-[#0089bb]">
+                      {[getCantonById(wp.cantonId)?.name, getProvinceById(wp.provinciaId ?? "")?.name].filter(Boolean).join(", ")}
+                    </p>
+                  )}
+                </div>
                 <button
                   type="button"
                   onClick={() => removeWorkplace(wp.id)}

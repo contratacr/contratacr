@@ -26,6 +26,9 @@ export async function POST(req: Request) {
       photoUrl,
       businessName: bodyBusinessName,
       workplaces: bodyWorkplaces,
+      coverageAreas: bodyCoverage,
+      searchProvincias: bodySearchProv,
+      searchCantones: bodySearchCant,
     } = body;
 
     // Bio and location are now optional; only a category + WhatsApp are required.
@@ -34,17 +37,24 @@ export async function POST(req: Request) {
     }
     const safeBio = typeof bio === "string" ? bio : "";
     const businessName = bodyBusinessName || null;
-    // Workplaces: [{ id, name, address, lat, lng }] — fixed-location pins.
+    // Workplaces: [{ id, name, address, lat, lng, provinciaId, cantonId, distrito }]
+    // — fixed-location pins (single source of truth). Coverage = travel areas.
     const workplaces = Array.isArray(bodyWorkplaces) ? bodyWorkplaces : [];
+    const coverageAreas = Array.isArray(bodyCoverage) ? bodyCoverage : [];
+    const searchProvincias = Array.isArray(bodySearchProv) ? bodySearchProv : [];
+    const searchCantones = Array.isArray(bodySearchCant) ? bodySearchCant : [];
 
-    // Optional columns (migrations 019/021/022) — if the DB hasn't been migrated
-    // yet, retry the write without them instead of failing registration.
+    // Optional columns (migrations 019/021/022/030) — if the DB hasn't been
+    // migrated yet, retry the write without them instead of failing registration.
     const optionalProFields: Record<string, unknown> = {
       business_name: businessName,
       workplaces,
+      coverage_areas: coverageAreas,
+      search_provincias: searchProvincias,
+      search_cantones: searchCantones,
     };
     const isUnknownColumn = (msg?: string) =>
-      !!msg && /account_type|business_name|affiliations|workplaces|languages|contact_preference|schema cache|PGRST204|could not find/i.test(msg);
+      !!msg && /account_type|business_name|affiliations|workplaces|coverage_areas|search_provincias|search_cantones|languages|contact_preference|schema cache|PGRST204|could not find/i.test(msg);
 
     // ── 1. Identify the user ──────────────────────────────────────────────────
     //    Two cases:

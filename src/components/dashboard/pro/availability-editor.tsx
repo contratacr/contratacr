@@ -45,17 +45,19 @@ function todayISO(): string {
 }
 
 type Place = { id?: string; name: string };
+type Coverage = { cantonId: string; cantonName?: string; provinceName?: string };
 
 interface AvailabilityEditorProps {
   professionalId: string;
   initialPublic?: boolean;
   initialContactPreference?: ContactPreference;
   workplaces?: Place[];
+  coverageAreas?: Coverage[];
   initialVideoconsulta?: boolean;
   onSaved?: () => void;
 }
 
-export function AvailabilityEditor({ professionalId, initialPublic = true, initialContactPreference = "ambas", workplaces = [], initialVideoconsulta = false, onSaved }: AvailabilityEditorProps) {
+export function AvailabilityEditor({ professionalId, initialPublic = true, initialContactPreference = "ambas", workplaces = [], coverageAreas = [], initialVideoconsulta = false, onSaved }: AvailabilityEditorProps) {
   const [isPublic, setIsPublic] = useState(initialPublic);
   const [contactPreference, setContactPreference] = useState<ContactPreference>(initialContactPreference);
   const [savingContact, setSavingContact] = useState(false);
@@ -66,9 +68,13 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
   const locationOptions = useMemo(() => {
     const opts: { id: string; label: string }[] = [];
     for (const w of workplaces) if (w.id) opts.push({ id: w.id, label: w.name });
+    // Coverage areas ("me desplazo") are schedulable locations too.
+    for (const c of coverageAreas) {
+      if (c.cantonId) opts.push({ id: `cov_${c.cantonId}`, label: `${c.cantonName ?? "Zona"}${c.provinceName ? `, ${c.provinceName}` : ""} (a domicilio)` });
+    }
     if (videoconsulta) opts.push({ id: VIDEO_LOC, label: "Videoconsulta" });
     return opts;
-  }, [workplaces, videoconsulta]);
+  }, [workplaces, coverageAreas, videoconsulta]);
   const [genLocation, setGenLocation] = useState("");
 
   // Keep the selected location valid as options change.
