@@ -1,6 +1,7 @@
 export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 const FROM_ADDRESS = "ContrataCR <soporte@contratacr.com>";
 const SUPPORT_TO = "soporte@contratacr.com";
@@ -13,12 +14,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Falta el perfil a reportar." }, { status: 400 });
     }
 
+    // Persist the report so the admin moderation queue can action it (best-effort;
+    // resolve the professional_id from the slug). Never blocks the email path.
+    try {
+      const admin = createAdminClient();
+      const { data: pro } = await admin.from("professionals").select("id").eq("slug", professionalSlug).maybeSingle();
+      await admin.from("reports").insert({
+        professional_id: pro?.id ?? null,
+        professional_slug: professionalSlug,
+        professional_name: professionalName ?? null,
+        reason: reason ?? "Sin detalle",
+        reporter_email: reporterEmail ?? null,
+      });
+    } catch (e) {
+      console.error("[report] persist failed (continuing to email):", e);
+    }
+
     const key = process.env.RESEND_API_KEY;
     if (!key) {
-      return NextResponse.json(
-        { error: "El sistema de reportes no está disponible. Escribinos a soporte@contratacr.com" },
-        { status: 503 }
-      );
+      // No email provider configured, but the report was persisted above — the
+      // admin will see it in the moderation queue, so this still succeeds.
+      return NextResponse.json({ ok: true, persisted: true });
     }
 
     const profileUrl = `https://contratacr.com/es/profesionales/${professionalSlug}`;

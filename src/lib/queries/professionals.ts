@@ -49,71 +49,77 @@ export async function searchProfessionals(
       const { createClient } = await import("@/lib/supabase/server");
       const supabase = await createClient();
 
-      let query = supabase
-        .from("professionals")
-        .select(
-          `id, slug, hourly_rate, is_verified, is_featured, is_available,
-           rating_avg, review_count, bio, whatsapp, years_experience, portfolio_urls,
-           category_id, professions, pricing, lat, lng, service_type, availability_public, contact_preference,
-           business_name, workplaces, verification_status,
-           profiles(full_name, avatar_url),
-           provincias(id, name),
-           cantones(id, name)`
-        );
+      // Built as a closure so we can retry without the `is_banned` filter if that
+      // column hasn't been migrated yet (migration 029) — search never breaks.
+      const build = (excludeBanned: boolean) => {
+        let query = supabase
+          .from("professionals")
+          .select(
+            `id, slug, hourly_rate, is_verified, is_featured, is_available,
+             rating_avg, review_count, bio, whatsapp, years_experience, portfolio_urls,
+             category_id, professions, pricing, lat, lng, service_type, availability_public, contact_preference,
+             business_name, workplaces, verification_status,
+             profiles(full_name, avatar_url),
+             provincias(id, name),
+             cantones(id, name)`
+          );
 
-      if (filters.categoryId && filters.categoryId !== "todas") {
-        // Match the professional if ANY of their professions matches (multi-category).
-        query = query.or(`category_id.eq.${filters.categoryId},professions.cs.{${filters.categoryId}}`);
-      }
-      if (filters.provinceId && filters.provinceId !== "todas") {
-        query = query.eq("provincia_id", filters.provinceId);
-      }
-      if (filters.cantonId && filters.cantonId !== "todos") {
-        query = query.eq("canton_id", filters.cantonId);
-      }
-      if (filters.verifiedOnly) {
-        query = query.eq("verification_status", "verified");
-      }
-      if (filters.query) {
-        const q = filters.query.trim();
-        // Match text against bio/name AND expand keyword synonyms to category IDs
-        const keywordCategoryIds = getMatchingCategoryIds(q);
-        const textFilter = `bio.ilike.%${q}%,profiles.full_name.ilike.%${q}%,services::text.ilike.%${q}%,business_name.ilike.%${q}%,workplaces::text.ilike.%${q}%`;
-        if (keywordCategoryIds.length > 0 && !filters.categoryId) {
-          // Include professionals whose category matches the keyword query
-          const catFilter = keywordCategoryIds.map((id) => `category_id.eq.${id}`).join(",");
-          query = query.or(`${textFilter},${catFilter}`);
-        } else {
-          query = query.or(textFilter);
+        if (excludeBanned) query = query.eq("is_banned", false);
+
+        if (filters.categoryId && filters.categoryId !== "todas") {
+          // Match the professional if ANY of their professions matches (multi-category).
+          query = query.or(`category_id.eq.${filters.categoryId},professions.cs.{${filters.categoryId}}`);
         }
+        if (filters.provinceId && filters.provinceId !== "todas") {
+          query = query.eq("provincia_id", filters.provinceId);
+        }
+        if (filters.cantonId && filters.cantonId !== "todos") {
+          query = query.eq("canton_id", filters.cantonId);
+        }
+        if (filters.verifiedOnly) {
+          query = query.eq("verification_status", "verified");
+        }
+        if (filters.query) {
+          const q = filters.query.trim();
+          // Match text against bio/name AND expand keyword synonyms to category IDs
+          const keywordCategoryIds = getMatchingCategoryIds(q);
+          const textFilter = `bio.ilike.%${q}%,profiles.full_name.ilike.%${q}%,services::text.ilike.%${q}%,business_name.ilike.%${q}%,workplaces::text.ilike.%${q}%`;
+          if (keywordCategoryIds.length > 0 && !filters.categoryId) {
+            const catFilter = keywordCategoryIds.map((id) => `category_id.eq.${id}`).join(",");
+            query = query.or(`${textFilter},${catFilter}`);
+          } else {
+            query = query.or(textFilter);
+          }
+        }
+
+        // Featured ("destacado") professionals surface first within the filtered set.
+        query = query.order("is_featured", { ascending: false });
+
+        switch (filters.sortBy) {
+          case "reviews":
+            query = query.order("review_count", { ascending: false });
+            break;
+          case "priceAsc":
+            query = query.order("hourly_rate", { ascending: true, nullsFirst: false });
+            break;
+          case "priceDesc":
+            query = query.order("hourly_rate", { ascending: false, nullsFirst: false });
+            break;
+          case "newest":
+            query = query.order("created_at", { ascending: false });
+            break;
+          default:
+            query = query
+              .order("rating_avg", { ascending: false })
+              .order("review_count", { ascending: false });
+        }
+        return query.limit(50);
+      };
+
+      let { data, error } = await build(true);
+      if (error && /is_banned|column/i.test(error.message)) {
+        ({ data, error } = await build(false)); // pre-migration fallback
       }
-
-      // Featured ("destacado") professionals surface first — but only within the
-      // already-filtered set, so they never bypass the active category/location/
-      // search filters. Applied as the primary sort key ahead of the chosen order.
-      query = query.order("is_featured", { ascending: false });
-
-      switch (filters.sortBy) {
-        case "reviews":
-          query = query.order("review_count", { ascending: false });
-          break;
-        case "priceAsc":
-          query = query.order("hourly_rate", { ascending: true, nullsFirst: false });
-          break;
-        case "priceDesc":
-          query = query.order("hourly_rate", { ascending: false, nullsFirst: false });
-          break;
-        case "newest":
-          query = query.order("created_at", { ascending: false });
-          break;
-        default:
-          // Default: highest average rating, total review count as tiebreaker.
-          query = query
-            .order("rating_avg", { ascending: false })
-            .order("review_count", { ascending: false });
-      }
-
-      const { data, error } = await query.limit(50);
       if (error) throw error;
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

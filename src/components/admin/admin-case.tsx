@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import {
   ArrowLeft, CheckCircle2, XCircle, RotateCcw, AlertCircle, ExternalLink,
-  ShieldCheck, IdCard, Loader2,
+  ShieldCheck, IdCard, Loader2, ShieldAlert, Trash2, Ban,
 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
@@ -62,6 +62,26 @@ export function AdminCase({ providerId }: { providerId: string }) {
     }
   }
 
+  // Moderation: ban/unban a professional or remove a fake/inappropriate caso de éxito.
+  async function moderate(action: "ban" | "unban" | "remove_photo", opts: { reason?: string; url?: string } = {}) {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/admin/providers/${providerId}/moderate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, ...opts }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Error");
+      await load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "No se pudo completar la acción de moderación.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="py-20 flex justify-center">
@@ -80,6 +100,8 @@ export function AdminCase({ providerId }: { providerId: string }) {
   const appeals = (data!.appeals as Any[]) ?? [];
   const idAssist = data!.idAssist as Any;
   const padron = data!.padron as Any;
+  const portfolio = (pro.portfolio_urls as string[]) ?? [];
+  const isBanned = !!pro.is_banned;
 
   const waDigits = String(pro.whatsapp ?? "").replace(/\D/g, "");
   const waTo = waDigits.length === 8 ? `506${waDigits}` : waDigits;
@@ -210,6 +232,63 @@ export function AdminCase({ providerId }: { providerId: string }) {
               </ul>
             </div>
           )}
+
+          {/* ── Moderación: casos de éxito + ban ─────────────────── */}
+          <div className="bg-white rounded-xl border border-[#e5e7eb] p-5">
+            <h2 className="flex items-center gap-2 font-semibold text-[#111827] text-sm mb-3">
+              <ShieldAlert className="h-4 w-4 text-[#dc2626]" /> Moderación
+            </h2>
+
+            {/* Casos de éxito — remove fake/inappropriate photos */}
+            <p className="text-xs text-[#6b7280] mb-2">Casos de éxito (fotos de trabajos)</p>
+            {portfolio.length === 0 ? (
+              <p className="text-xs text-[#9ca3af] mb-4">Sin fotos.</p>
+            ) : (
+              <div className="grid grid-cols-3 gap-2 mb-4">
+                {portfolio.map((url) => (
+                  <div key={url} className="relative group aspect-square rounded-lg overflow-hidden border border-[#e5e7eb]">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={url} alt="" className="h-full w-full object-cover" />
+                    <button
+                      onClick={() => { if (confirm("¿Eliminar esta foto por moderación?")) moderate("remove_photo", { url }); }}
+                      disabled={busy}
+                      className="absolute top-1 right-1 h-6 w-6 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                      aria-label="Eliminar foto"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Ban / unban */}
+            <div className="border-t border-[#f3f4f6] pt-3">
+              {isBanned ? (
+                <>
+                  <p className="text-xs text-[#b91c1c] mb-2">
+                    Este perfil está <strong>bloqueado</strong> y no aparece en /buscar.
+                    {pro.banned_reason ? ` Motivo: ${pro.banned_reason}` : ""}
+                  </p>
+                  <button
+                    onClick={() => moderate("unban")}
+                    disabled={busy}
+                    className="w-full h-9 rounded-xl border border-[#e5e7eb] text-[#374151] hover:bg-[#f9fafb] text-sm font-medium disabled:opacity-60"
+                  >
+                    Restaurar perfil (quitar bloqueo)
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => { const r = prompt("Motivo del bloqueo (se registra en el historial):"); if (r !== null) moderate("ban", { reason: r }); }}
+                  disabled={busy}
+                  className="w-full flex items-center justify-center gap-2 h-9 rounded-xl border border-[#dc2626] text-[#dc2626] hover:bg-red-50 text-sm font-bold disabled:opacity-60"
+                >
+                  <Ban className="h-4 w-4" /> Bloquear perfil (quitar de /buscar)
+                </button>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* ── Right: actions + audit ─────────────────────────────── */}
@@ -354,6 +433,9 @@ function auditLabel(action: string): string {
     case "reverted_pending": return "Devuelto a pendiente";
     case "appeal_received": return "Apelación recibida";
     case "appeal_failed": return "Apelación falló (re-ejecución)";
+    case "banned": return "Perfil bloqueado (moderación)";
+    case "unbanned": return "Perfil restaurado";
+    case "photo_removed": return "Caso de éxito eliminado (moderación)";
     default: return action;
   }
 }
