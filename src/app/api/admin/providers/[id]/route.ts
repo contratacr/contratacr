@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getApiAdmin } from "@/lib/auth/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { detectIdType, idTypeLabel, isValidId, cleanId } from "@/lib/cedula";
+import { nameSimilarity, NAME_MATCH_THRESHOLD } from "@/lib/verification/identity-verifier";
 
 // GET /api/admin/providers/[id]
 // Full case file for one provider: profile, documents/images, audit log,
@@ -54,5 +55,21 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
       }
     : { value: "", valid: false, type: null, typeLabel: null };
 
-  return NextResponse.json({ provider: pro, log: log ?? [], appeals: appeals ?? [], idAssist });
+  // Live padrón comparison for the manual reviewer (entered vs official name).
+  // Read-only/transient — not stored on the profile (data minimization).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const enteredName: string = (pro.profiles as any)?.full_name ?? "";
+  let padron: { found: boolean; name: string; score: number; matched: boolean } | null = null;
+  if (cedula) {
+    const { data: row } = await db.from("padron").select("nombre, papellido, sapellido").eq("cedula", cedula).maybeSingle();
+    if (row) {
+      const name = [row.nombre, row.papellido, row.sapellido].filter(Boolean).join(" ");
+      const score = nameSimilarity(enteredName, name);
+      padron = { found: true, name, score, matched: score >= NAME_MATCH_THRESHOLD };
+    } else {
+      padron = { found: false, name: "", score: 0, matched: false };
+    }
+  }
+
+  return NextResponse.json({ provider: pro, log: log ?? [], appeals: appeals ?? [], idAssist, padron });
 }

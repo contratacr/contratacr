@@ -4,12 +4,12 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { notifyVerificationDecision } from "@/lib/verification-notify";
 import type { VerificationStatus } from "@/lib/verification";
 
-type Action = "authorize" | "reject" | "revert_pending";
+type Action = "verify" | "reject" | "revert_pending";
 
 // POST /api/admin/providers/[id]/decision  { action, reason? }
-// Changes a provider's verification status, writes an audit-log entry, and
-// notifies the provider (in-app + email). Decisions are never locked — an admin
-// can move ANY provider to ANY state at any time. Admin-only.
+// Manual decision on a flagged case. Writes an audit-log entry and notifies the
+// provider (in-app + email). Decisions are never locked — an admin can move ANY
+// provider to ANY state at any time. Admin-only.
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const admin = await getApiAdmin();
   if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
@@ -19,7 +19,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const action = body.action as Action;
   const reason = typeof body.reason === "string" ? body.reason.trim() : "";
 
-  if (!["authorize", "reject", "revert_pending"].includes(action)) {
+  if (!["verify", "reject", "revert_pending"].includes(action)) {
     return NextResponse.json({ error: "Acción inválida." }, { status: 400 });
   }
   // A reason is REQUIRED when rejecting.
@@ -39,20 +39,20 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const fromStatus = pro.verification_status as VerificationStatus;
 
   const toStatus: VerificationStatus =
-    action === "authorize" ? "authorized" : action === "reject" ? "rejected" : "pending";
+    action === "verify" ? "verified" : action === "reject" ? "rejected" : "pending";
 
-  // "reverted" notification when an admin reverses an already-decided case
-  // (e.g. revoking an authorized pro or flipping a rejected one to pending).
-  const notifyKind: "approved" | "rejected" | "reverted" =
-    action === "authorize" ? "approved" : action === "reject" ? "rejected" : "reverted";
+  const notifyKind: "verified" | "rejected" | "reverted" =
+    action === "verify" ? "verified" : action === "reject" ? "rejected" : "reverted";
 
   const { error: updErr } = await db
     .from("professionals")
     .update({
       verification_status: toStatus,
       verification_reason: action === "reject" ? reason : null,
+      verification_method: "manual",
       verification_updated_at: new Date().toISOString(),
-      is_verified: toStatus === "authorized", // mirror legacy flag
+      verified_at: toStatus === "verified" ? new Date().toISOString() : null,
+      is_verified: toStatus === "verified", // mirror legacy flag
     })
     .eq("id", id);
 
@@ -61,16 +61,23 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json({ error: "No se pudo guardar la decisión." }, { status: 500 });
   }
 
-  // Audit trail — permanent record of who/when/what/why.
+  // Audit trail — permanent record of who/when/what/why (manual decision).
   await db.from("provider_verification_log").insert({
     professional_id: id,
     admin_id: admin.id,
     admin_name: admin.fullName,
-    action: action === "authorize" ? "authorized" : action === "reject" ? "rejected" : "reverted_pending",
+    action: action === "verify" ? "verified" : action === "reject" ? "rejected" : "reverted_pending",
     from_status: fromStatus,
     to_status: toStatus,
     reason: action === "reject" ? reason : null,
   });
+
+  // Resolve any open support tickets for this pro when manually decided.
+  await db
+    .from("support_tickets")
+    .update({ status: "resolved", resolved_at: new Date().toISOString() })
+    .eq("professional_id", id)
+    .eq("status", "open");
 
   // Resolve any open appeals once the case leaves "under_appeal".
   if (fromStatus === "under_appeal") {

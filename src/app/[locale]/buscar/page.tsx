@@ -23,7 +23,7 @@ interface SearchPageProps {
     sortBy?: string;
     q?: string;
     page?: string;
-    autorizados?: string;
+    verificados?: string;
   }>;
 }
 
@@ -43,7 +43,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     cantonId: params.canton,
     sortBy: params.sortBy,
     query: params.q,
-    authorizedOnly: params.autorizados === "1",
+    verifiedOnly: params.verificados === "1",
   });
 
   const totalPages = Math.max(1, Math.ceil(allResults.length / PAGE_SIZE));
@@ -122,7 +122,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     if (params.provincia && params.provincia !== "todas") next.set("provincia", params.provincia);
     if (params.canton && params.canton !== "todos") next.set("canton", params.canton);
     if (params.sortBy && params.sortBy !== "rating") next.set("sortBy", params.sortBy);
-    if (params.autorizados === "1") next.set("autorizados", "1");
+    if (params.verificados === "1") next.set("verificados", "1");
     if (page > 1) next.set("page", String(page));
     const qs = next.toString();
     return qs ? `?${qs}` : "?";

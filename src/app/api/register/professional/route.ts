@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient as createServerClient } from "@/lib/supabase/server";
+import { runIdentityVerification } from "@/lib/verification/run-verification";
 
 export async function POST(req: Request) {
   try {
@@ -165,6 +166,9 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "No pudimos actualizar tu perfil. Intentá de nuevo." }, { status: 500 });
       }
 
+      // Fire automatic identity verification (best-effort; never blocks).
+      try { await runIdentityVerification(existingPro.id); } catch (e) { console.error("[register] auto-verify:", e); }
+
       return NextResponse.json({ ok: true, slug: existingPro.slug });
     }
 
@@ -213,6 +217,14 @@ export async function POST(req: Request) {
           ? "Ya existe un perfil profesional para esta cuenta."
           : "No pudimos crear tu perfil profesional. Revisá tus datos e intentá de nuevo.";
       return NextResponse.json({ error: friendly }, { status: 500 });
+    }
+
+    // Fire automatic identity verification against the padrón (best-effort).
+    try {
+      const { data: newPro } = await supabase.from("professionals").select("id").eq("profile_id", userId).maybeSingle();
+      if (newPro) await runIdentityVerification(newPro.id);
+    } catch (e) {
+      console.error("[register] auto-verify:", e);
     }
 
     return NextResponse.json({ ok: true, slug });

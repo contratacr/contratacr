@@ -3,20 +3,21 @@ import { createAdminClient } from "@/lib/supabase/admin";
 const FROM_ADDRESS = "ContrataCR <soporte@contratacr.com>";
 const PRO_LINK = "/es/dashboard/profesional?tab=verificacion";
 
-type DecisionKind = "approved" | "rejected" | "reverted";
+type DecisionKind = "verified" | "pending" | "rejected" | "reverted";
 
 interface DecisionArgs {
   professionalId: string;
   kind: DecisionKind;
-  /** Required for "rejected": the admin's stated reason. */
+  /** Required for "rejected": the stated reason. */
   reason?: string | null;
 }
 
 /**
- * Notify a provider that their verification status changed — in-app AND email.
- * Best-effort: notification failures must never break the admin action.
- * Legal framing: the badge confirms identity/document verification, it is NOT a
- * guarantee of the outcome of any job. Copy avoids "garantía".
+ * Notify a provider that their identity-verification status changed — in-app AND
+ * email. Best-effort: notification failures must never break the flow.
+ * Legal framing: the badge confirms IDENTITY only (the cédula is real and the
+ * name matches official records); it never endorses job quality or outcomes.
+ * Copy avoids "garantía" / "autorizado".
  */
 export async function notifyVerificationDecision({
   professionalId,
@@ -43,43 +44,56 @@ export async function notifyVerificationDecision({
     let message: string;
     let html: string;
 
-    if (kind === "approved") {
+    if (kind === "verified") {
       type = "verification_approved";
-      title = "¡Ya sos Proveedor Autorizado!";
+      title = "¡Tu identidad fue verificada!";
       message =
-        "Verificamos tu identidad y documentos. La insignia de Proveedor Autorizado ya aparece en tu perfil y en los resultados de búsqueda.";
+        "Confirmamos que tu cédula es real y coincide con los registros oficiales. La insignia \"Identidad verificada\" ya aparece en tu perfil y en los resultados de búsqueda.";
       html = emailShell(
         firstName,
-        "¡Ya sos Proveedor Autorizado!",
-        "#009FD9",
-        `Verificamos tu identidad y tus documentos. La insignia <strong>Proveedor Autorizado</strong> ya aparece en tu perfil y en los resultados de búsqueda, dándote más visibilidad ante los clientes.
-         <br/><br/><span style="color:#6b7280;font-size:13px;">Recordá que la insignia respalda la verificación de identidad y documentos; no garantiza el resultado de ningún trabajo.</span>`,
+        "¡Tu identidad fue verificada!",
+        "#16a34a",
+        `Confirmamos que tu cédula es real y el nombre coincide con los registros oficiales. La insignia <strong>Identidad verificada</strong> ya aparece en tu perfil y en /buscar, dándote más visibilidad.
+         <br/><br/><span style="color:#6b7280;font-size:13px;">ContrataCR es una plataforma intermediaria: verificamos tu identidad, no la calidad ni el resultado de los trabajos.</span>`,
+        "Ver mi verificación"
+      );
+    } else if (kind === "pending") {
+      type = "verification_pending";
+      title = "Tu verificación está en revisión";
+      message =
+        "No pudimos confirmar automáticamente tu identidad (cédula no encontrada o el nombre no coincide). Tu caso quedó en revisión; tu cuenta sigue activa.";
+      html = emailShell(
+        firstName,
+        "Tu verificación está en revisión",
+        "#b45309",
+        `No pudimos confirmar automáticamente tu identidad contra los registros oficiales (la cédula no se encontró o el nombre no coincidió lo suficiente).
+         Tu caso quedó <strong>pendiente de revisión</strong>. Revisá que tu nombre coincida con tu cédula y, si hace falta, apelá desde tu panel. Tu cuenta sigue activa mientras tanto.`,
         "Ver mi verificación"
       );
     } else if (kind === "rejected") {
       type = "verification_rejected";
       title = "Tu verificación no fue aprobada";
       const safeReason = reason?.trim() || "No se especificó un motivo.";
-      message = `Tu solicitud de Proveedor Autorizado no fue aprobada. Motivo: ${safeReason}. Podés apelar esta decisión desde tu panel.`;
+      message = `Tu verificación de identidad no fue aprobada. Motivo: ${safeReason}. Podés apelar desde tu panel.`;
       html = emailShell(
         firstName,
         "Tu verificación no fue aprobada",
         "#dc2626",
-        `Revisamos tu solicitud de <strong>Proveedor Autorizado</strong> y por ahora no fue aprobada.
+        `Revisamos tu verificación de identidad y por ahora no fue aprobada.
          <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:14px;margin:16px 0;font-size:14px;color:#991b1b;"><strong>Motivo:</strong> ${escapeHtml(safeReason)}</div>
-         Podés <strong>apelar</strong> esta decisión desde tu panel: corregí lo indicado y volvé a enviar tu caso para una nueva revisión. Tu cuenta sigue activa y podés seguir recibiendo clientes mientras tanto.`,
+         Podés <strong>apelar</strong> desde tu panel: corregí lo indicado y volvé a enviar tu caso. Tu cuenta sigue activa y podés seguir recibiendo clientes.`,
         "Apelar o corregir"
       );
     } else {
       type = "verification_reverted";
-      title = "Tu insignia de Proveedor Autorizado fue actualizada";
+      title = "Tu verificación de identidad fue actualizada";
       message =
         "Tras una nueva revisión, el estado de tu verificación cambió. Revisá tu panel para ver el detalle.";
       html = emailShell(
         firstName,
         "Tu verificación fue actualizada",
         "#b45309",
-        `Tras una nueva revisión, el estado de tu verificación de <strong>Proveedor Autorizado</strong> cambió. Entrá a tu panel para ver el detalle y los próximos pasos.`,
+        `Tras una nueva revisión, el estado de tu <strong>verificación de identidad</strong> cambió. Entrá a tu panel para ver el detalle y los próximos pasos.`,
         "Ver mi verificación"
       );
     }

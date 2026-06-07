@@ -1,23 +1,24 @@
-// Shared "Proveedor Autorizado" verification lifecycle — used by the admin
-// panel, the provider dashboard, search and the public profile.
+// Shared identity-verification lifecycle — used by the admin panel, the
+// provider dashboard, search and the public profile. The badge is
+// "Identidad verificada" (identity only — never job quality/authorization).
 
-export type VerificationStatus = "pending" | "authorized" | "rejected" | "under_appeal";
+export type VerificationStatus = "pending" | "verified" | "rejected" | "under_appeal";
 
 export const VERIFICATION_STATUSES: VerificationStatus[] = [
   "pending",
-  "authorized",
+  "verified",
   "rejected",
   "under_appeal",
 ];
 
 export function verificationLabel(status: VerificationStatus): string {
   switch (status) {
-    case "authorized":
-      return "Autorizado";
+    case "verified":
+      return "Identidad verificada";
     case "rejected":
-      return "Rechazado";
+      return "No verificada";
     case "under_appeal":
-      return "En apelación";
+      return "En revisión";
     case "pending":
     default:
       return "Pendiente de revisión";
@@ -27,7 +28,7 @@ export function verificationLabel(status: VerificationStatus): string {
 /** Tailwind classes for a status pill. */
 export function verificationPillClasses(status: VerificationStatus): string {
   switch (status) {
-    case "authorized":
+    case "verified":
       return "bg-[#dcfce7] text-[#15803d] border-[#bbf7d0]";
     case "rejected":
       return "bg-[#fee2e2] text-[#b91c1c] border-[#fecaca]";
@@ -39,8 +40,8 @@ export function verificationPillClasses(status: VerificationStatus): string {
   }
 }
 
-export function isAuthorized(status?: string | null): boolean {
-  return status === "authorized";
+export function isVerified(status?: string | null): boolean {
+  return status === "verified";
 }
 
 /** A short, human-friendly case id for WhatsApp / support references. */

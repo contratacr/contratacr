@@ -21,7 +21,7 @@ export function SearchFilters() {
   const [province, setProvince] = useState(params.get("provincia") ?? "");
   const [canton, setCanton] = useState(params.get("canton") ?? "");
   const [sortBy, setSortBy] = useState(params.get("sortBy") ?? "rating");
-  const [authorizedOnly, setAuthorizedOnly] = useState(params.get("autorizados") === "1");
+  const [verifiedOnly, setVerifiedOnly] = useState(params.get("verificados") === "1");
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cantons = getCantonsByProvince(province);
@@ -29,16 +29,16 @@ export function SearchFilters() {
   const applyFilters = useCallback(
     (overrides: Record<string, string> = {}) => {
       const next = new URLSearchParams();
-      const vals = { q: query, categoria: category, provincia: province, canton, sortBy, autorizados: authorizedOnly ? "1" : "", ...overrides };
+      const vals = { q: query, categoria: category, provincia: province, canton, sortBy, verificados: verifiedOnly ? "1" : "", ...overrides };
       if (vals.q) next.set("q", vals.q);
       if (vals.categoria && vals.categoria !== "todas") next.set("categoria", vals.categoria);
       if (vals.provincia && vals.provincia !== "todas") next.set("provincia", vals.provincia);
       if (vals.canton && vals.canton !== "todos" && vals.provincia) next.set("canton", vals.canton);
       if (vals.sortBy && vals.sortBy !== "rating") next.set("sortBy", vals.sortBy);
-      if (vals.autorizados === "1") next.set("autorizados", "1");
+      if (vals.verificados === "1") next.set("verificados", "1");
       router.push(`${pathname}?${next.toString()}`);
     },
-    [query, category, province, canton, sortBy, authorizedOnly, router, pathname]
+    [query, category, province, canton, sortBy, verifiedOnly, router, pathname]
   );
 
   function handleQueryChange(value: string) {
@@ -65,7 +65,7 @@ export function SearchFilters() {
   }, []);
 
   function clearAll() {
-    setQuery(""); setCategory(""); setProvince(""); setCanton(""); setSortBy("rating"); setAuthorizedOnly(false);
+    setQuery(""); setCategory(""); setProvince(""); setCanton(""); setSortBy("rating"); setVerifiedOnly(false);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     router.push(pathname);
   }
@@ -183,22 +183,22 @@ export function SearchFilters() {
         </div>
       </div>
 
-      {/* "Solo Proveedores Autorizados" — earned-badge incentive, never a gate */}
+      {/* "Solo con identidad verificada" — earned-badge incentive, never a gate */}
       <div className="mt-3 pt-3 border-t border-[#f3f4f6]">
         <button
           type="button"
-          onClick={() => { const v = !authorizedOnly; setAuthorizedOnly(v); applyFilters({ autorizados: v ? "1" : "" }); }}
+          onClick={() => { const v = !verifiedOnly; setVerifiedOnly(v); applyFilters({ verificados: v ? "1" : "" }); }}
           className={`inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium transition-colors ${
-            authorizedOnly
+            verifiedOnly
               ? "bg-[#dcfce7] border-[#bbf7d0] text-[#15803d]"
               : "bg-white border-[#e5e7eb] text-[#374151] hover:border-[#16a34a]"
           }`}
         >
-          <span className={`flex h-4 w-7 items-center rounded-full transition-colors ${authorizedOnly ? "bg-[#16a34a]" : "bg-[#d1d5db]"}`}>
-            <span className={`h-3 w-3 rounded-full bg-white transition-transform ${authorizedOnly ? "translate-x-3.5" : "translate-x-0.5"}`} />
+          <span className={`flex h-4 w-7 items-center rounded-full transition-colors ${verifiedOnly ? "bg-[#16a34a]" : "bg-[#d1d5db]"}`}>
+            <span className={`h-3 w-3 rounded-full bg-white transition-transform ${verifiedOnly ? "translate-x-3.5" : "translate-x-0.5"}`} />
           </span>
           <ShieldCheck className="h-4 w-4" />
-          Solo Proveedores Autorizados
+          Solo con identidad verificada
         </button>
       </div>
     </div>

@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import {
   ArrowLeft, CheckCircle2, XCircle, RotateCcw, AlertCircle, ExternalLink,
-  ShieldCheck, IdCard, MapPin, Loader2, FileSearch,
+  ShieldCheck, IdCard, Loader2, FileSearch,
 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
@@ -42,7 +42,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
     load();
   }, [load]);
 
-  async function decide(action: "authorize" | "reject" | "revert_pending", reasonText?: string) {
+  async function decide(action: "verify" | "reject" | "revert_pending", reasonText?: string) {
     setBusy(true);
     setError(null);
     try {
@@ -89,13 +89,12 @@ export function AdminCase({ providerId }: { providerId: string }) {
   const log = (data!.log as Any[]) ?? [];
   const appeals = (data!.appeals as Any[]) ?? [];
   const idAssist = data!.idAssist as Any;
-  const photos: string[] = pro.portfolio_urls ?? [];
-  const workplaces: Any[] = pro.workplaces ?? [];
+  const padron = data!.padron as Any;
 
   const waDigits = String(pro.whatsapp ?? "").replace(/\D/g, "");
   const waTo = waDigits.length === 8 ? `506${waDigits}` : waDigits;
   const waMsg = encodeURIComponent(
-    `Hola ${(profile?.full_name ?? "").split(" ")[0]}, te contactamos de ContrataCR sobre tu verificación de Proveedor Autorizado (Caso #${caseRef(pro.id)}).`
+    `Hola ${(profile?.full_name ?? "").split(" ")[0]}, te contactamos de ContrataCR sobre tu verificación de identidad (Caso #${caseRef(pro.id)}).`
   );
 
   return (
@@ -191,38 +190,36 @@ export function AdminCase({ providerId }: { providerId: string }) {
               </div>
             )}
             <p className="text-[11px] text-[#9ca3af] mt-3">
-              La validación de formato es automática; la confirmación de identidad es manual (consulta asistida del TSE). Las fotos y documentos requieren revisión humana antes de otorgar la insignia.
+              La validación de formato es automática; la confirmación de identidad se hace contra el padrón (TSE). Las fotos de trabajo NO son criterio de verificación.
             </p>
           </div>
 
-          {/* Documents / photos */}
-          <div className="bg-white rounded-xl border border-[#e5e7eb] p-5">
-            <h2 className="font-semibold text-[#111827] text-sm mb-3">Fotos y documentos</h2>
-            {photos.length === 0 ? (
-              <p className="text-sm text-[#6b7280]">El proveedor no ha subido fotos todavía.</p>
-            ) : (
-              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                {photos.map((url, i) => (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <a key={i} href={url} target="_blank" rel="noopener noreferrer">
-                    <img src={url} alt={`Documento ${i + 1}`} className="aspect-square w-full object-cover rounded-lg border border-[#e5e7eb] hover:opacity-90" />
-                  </a>
-                ))}
-              </div>
-            )}
-            {workplaces.length > 0 && (
-              <div className="mt-4">
-                <p className="text-xs font-medium text-[#6b7280] mb-1.5">Lugares de trabajo</p>
-                <ul className="space-y-1">
-                  {workplaces.map((w, i) => (
-                    <li key={w.id ?? i} className="flex items-center gap-1.5 text-sm text-[#374151]">
-                      <MapPin className="h-3.5 w-3.5 text-[#009FD9]" /> {w.name}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
+          {/* Padrón comparison — entered vs official, side by side. Work photos
+              are NOT a verification criterion and are intentionally not shown. */}
+          {padron && (
+            <div className="bg-white rounded-xl border border-[#e5e7eb] p-5">
+              <h2 className="font-semibold text-[#111827] text-sm mb-3">Comparación con el padrón (TSE)</h2>
+              {!padron.found ? (
+                <p className="text-sm text-[#b45309]">La cédula no se encontró en el padrón cargado.</p>
+              ) : (
+                <div className="grid sm:grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-xs text-[#9ca3af]">Nombre ingresado</p>
+                    <p className="text-[#374151] font-medium">{profile?.full_name}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-[#9ca3af]">Nombre en el padrón</p>
+                    <p className="text-[#374151] font-medium">{padron.name || "—"}</p>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <span className={`text-xs px-2 py-0.5 rounded-md ${padron.matched ? "bg-[#dcfce7] text-[#15803d]" : "bg-[#fef3c7] text-[#b45309]"}`}>
+                      {padron.matched ? "✓ Coincide" : "⚠ Revisar"} · similitud {(padron.score * 100).toFixed(0)}%
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Appeals */}
           {appeals.length > 0 && (
@@ -252,13 +249,13 @@ export function AdminCase({ providerId }: { providerId: string }) {
 
             {!rejectOpen ? (
               <div className="space-y-2">
-                {status !== "authorized" && (
+                {status !== "verified" && (
                   <button
-                    onClick={() => decide("authorize")}
+                    onClick={() => decide("verify")}
                     disabled={busy}
                     className="w-full flex items-center justify-center gap-2 h-10 rounded-xl bg-[#16a34a] hover:bg-[#15803d] text-white text-sm font-bold disabled:opacity-60"
                   >
-                    <CheckCircle2 className="h-4 w-4" /> Autorizar
+                    <CheckCircle2 className="h-4 w-4" /> Marcar verificado
                   </button>
                 )}
                 {status !== "rejected" && (
@@ -270,13 +267,13 @@ export function AdminCase({ providerId }: { providerId: string }) {
                     <XCircle className="h-4 w-4" /> Rechazar
                   </button>
                 )}
-                {status === "authorized" && (
+                {status === "verified" && (
                   <button
                     onClick={() => setRejectOpen(true)}
                     disabled={busy}
                     className="w-full flex items-center justify-center gap-2 h-10 rounded-xl border border-[#dc2626] text-[#dc2626] hover:bg-red-50 text-sm font-bold disabled:opacity-60"
                   >
-                    <XCircle className="h-4 w-4" /> Revocar insignia
+                    <XCircle className="h-4 w-4" /> Revocar verificación
                   </button>
                 )}
                 {status !== "pending" && (
@@ -377,10 +374,13 @@ function Field({ label, value }: { label: string; value?: string | null }) {
 
 function auditLabel(action: string): string {
   switch (action) {
-    case "authorized": return "Autorizado";
+    case "verified": return "Verificado (manual)";
+    case "auto_verified": return "Verificado (automático)";
+    case "auto_pending": return "Pendiente (automático)";
     case "rejected": return "Rechazado";
     case "reverted_pending": return "Devuelto a pendiente";
     case "appeal_received": return "Apelación recibida";
+    case "appeal_failed": return "Apelación falló (re-ejecución)";
     default: return action;
   }
 }

@@ -34,7 +34,7 @@ export type ProfessionalCardData = {
   languages?: string[];
   businessName?: string;
   workplaces?: { id?: string; name: string; address?: string; lat?: number; lng?: number }[];
-  verificationStatus?: "pending" | "authorized" | "rejected" | "under_appeal";
+  verificationStatus?: "pending" | "verified" | "rejected" | "under_appeal";
   lat?: number | null;
   lng?: number | null;
   serviceType?: string | null;
@@ -63,7 +63,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
       ? [activeCategory]
       : allProfessions.slice(0, 3);
   const priceLabel = primaryPricingLabel(professional.pricing, professional.hourlyRate);
-  const isAuthorized = professional.verificationStatus === "authorized";
+  const isVerified = professional.verificationStatus === "verified";
 
   return (
     <Card className={`group hover:shadow-md transition-all duration-200 overflow-hidden ${className ?? ""}`}>
@@ -91,11 +91,11 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
                   <div className="min-w-0">
                     <Link href={`/profesionales/${professional.slug}`} className="flex items-center gap-1.5">
                       <h3 className="font-semibold text-[#111827] text-base leading-tight hover:text-[#009FD9] transition-colors">{professional.fullName}</h3>
-                      {isAuthorized && <ShieldCheck className="h-4 w-4 text-[#16a34a] shrink-0" />}
+                      {isVerified && <ShieldCheck className="h-4 w-4 text-[#16a34a] shrink-0" />}
                     </Link>
-                    {isAuthorized && (
+                    {isVerified && (
                       <span className="inline-flex items-center gap-1 mt-1 rounded-md bg-[#dcfce7] px-1.5 py-0.5 text-[10px] font-semibold text-[#15803d]">
-                        <ShieldCheck className="h-3 w-3" /> Proveedor Autorizado
+                        <ShieldCheck className="h-3 w-3" /> Identidad verificada
                       </span>
                     )}
                     {professional.businessName && (

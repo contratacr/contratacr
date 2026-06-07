@@ -10,8 +10,8 @@ export type SearchFilters = {
   cantonId?: string;
   sortBy?: string;
   query?: string;
-  /** "Solo Proveedores Autorizados" — only show authorized providers. */
-  authorizedOnly?: boolean;
+  /** "Solo con identidad verificada" — only show verified providers. */
+  verifiedOnly?: boolean;
 };
 
 export type ProService = {
@@ -71,8 +71,8 @@ export async function searchProfessionals(
       if (filters.cantonId && filters.cantonId !== "todos") {
         query = query.eq("canton_id", filters.cantonId);
       }
-      if (filters.authorizedOnly) {
-        query = query.eq("verification_status", "authorized");
+      if (filters.verifiedOnly) {
+        query = query.eq("verification_status", "verified");
       }
       if (filters.query) {
         const q = filters.query.trim();

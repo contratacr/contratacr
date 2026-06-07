@@ -23,10 +23,12 @@ type Row = {
   profiles: { full_name?: string; email?: string; cedula?: string; avatar_url?: string } | null;
 };
 
+// Exception-only by default: the owner reviews flagged cases, not everyone.
+// Clean auto-verified pros are tucked behind "Verificados".
 const FILTERS: { value: string; label: string }[] = [
-  { value: "pending", label: "Pendientes" },
-  { value: "under_appeal", label: "En apelación" },
-  { value: "authorized", label: "Autorizados" },
+  { value: "pending", label: "Pendientes de revisión" },
+  { value: "under_appeal", label: "Apelaciones (tickets)" },
+  { value: "verified", label: "Verificados" },
   { value: "rejected", label: "Rechazados" },
   { value: "all", label: "Todos" },
 ];

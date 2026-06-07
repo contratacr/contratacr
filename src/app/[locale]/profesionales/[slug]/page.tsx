@@ -202,13 +202,13 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                     </div>
                   </div>
 
-                  {professional.verificationStatus === "authorized" && (
+                  {professional.verificationStatus === "verified" && (
                     <a
                       href="/es/proveedores-autorizados"
                       className="flex items-center gap-1.5 text-xs rounded-full bg-[#dcfce7] px-2.5 py-1 text-[#15803d] font-semibold hover:bg-[#bbf7d0] transition-colors"
                     >
                       <ShieldCheck className="h-3.5 w-3.5" />
-                      <span>Proveedor Autorizado</span>
+                      <span>Identidad verificada</span>
                     </a>
                   )}
                 </div>
@@ -508,12 +508,12 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                             <p className="text-base font-bold text-[#111827]">{expYears} {expYears === 1 ? "año" : "años"}</p>
                           </div>
                         )}
-                        {professional.verificationStatus === "authorized" && (
+                        {professional.verificationStatus === "verified" && (
                           <div className="bg-[#f0fdf4] rounded-xl p-4 flex items-center gap-3">
                             <ShieldCheck className="h-5 w-5 text-[#16a34a] shrink-0" />
                             <div>
                               <p className="text-xs text-[#6b7280] font-medium">Verificación</p>
-                              <p className="text-sm font-bold text-[#15803d]">Proveedor Autorizado</p>
+                              <p className="text-sm font-bold text-[#15803d]">Identidad verificada</p>
                             </div>
                           </div>
                         )}

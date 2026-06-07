@@ -1,0 +1,30 @@
+# Monthly refresh of the TSE padrón used for automatic identity verification.
+# Runs the download + atomic staging-swap reload so verification data stays
+# current without any manual work. Runs on a server (not serverless) so the
+# large download/parse has no time/memory limits.
+name: Padrón refresh
+
+on:
+  schedule:
+    - cron: "0 6 1 * *" # 06:00 UTC on the 1st of every month
+  workflow_dispatch: {} # allow manual runs
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install deps
+        run: npm ci
+      - name: Download + unzip padrón
+        run: |
+          curl -L -o padron.zip "https://www.tse.go.cr/zip/padron/padron_completo.zip"
+          unzip -o padron.zip
+      - name: Load into Supabase (staging → atomic swap)
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/load-padron.mjs ./padron_completo.txt

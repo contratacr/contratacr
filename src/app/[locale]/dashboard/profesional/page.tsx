@@ -153,8 +153,8 @@ export default function ProDashboardPage() {
                       {tCat(pro.category_id as any)}
                     </Badge>
                   )}
-                  {pro.verification_status === "authorized" && (
-                    <Badge variant="verified" className="gap-1"><ShieldCheck className="h-3 w-3" />Proveedor Autorizado</Badge>
+                  {pro.verification_status === "verified" && (
+                    <Badge variant="verified" className="gap-1"><ShieldCheck className="h-3 w-3" />Identidad verificada</Badge>
                   )}
                 </div>
               </div>
