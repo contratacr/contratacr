@@ -9,9 +9,9 @@ export const SUPPORT_EMAIL            = "soporte@contratacr.com";
 export type ContactPreference = "solo_whatsapp" | "solo_citas" | "ambas";
 
 export const CONTACT_PREFERENCES: { value: ContactPreference; label: string; hint: string }[] = [
-  { value: "ambas",         label: "Ambas opciones",       hint: "Citas en la app y WhatsApp" },
-  { value: "solo_citas",    label: "Solo citas en la app", hint: "Los clientes agendan por ContrataCR" },
-  { value: "solo_whatsapp", label: "Solo WhatsApp",        hint: "Los clientes te escriben directo" },
+  { value: "solo_whatsapp", label: "Solo WhatsApp",          hint: "Los clientes te escriben directo (sin agenda)" },
+  { value: "solo_citas",    label: "Citas en la app",         hint: "Los clientes agendan por ContrataCR" },
+  { value: "ambas",         label: "Ambas (app + WhatsApp)",  hint: "Agenda en la app y también WhatsApp" },
 ];
 
 // ─── Account type ────────────────────────────────────────────────────────────

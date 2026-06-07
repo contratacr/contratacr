@@ -59,14 +59,22 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
   const [savingContact, setSavingContact] = useState(false);
   const [videoconsulta, setVideoconsulta] = useState(initialVideoconsulta);
 
-  // Locations a schedule can belong to: General + each workplace + Videoconsulta.
+  // Schedules belong to a specific location only (item 16): each workplace +
+  // Videoconsulta. No "general/all locations" option.
   const locationOptions = useMemo(() => {
-    const opts: { id: string; label: string }[] = [{ id: GENERAL_LOC, label: "General (todas las ubicaciones)" }];
+    const opts: { id: string; label: string }[] = [];
     for (const w of workplaces) if (w.id) opts.push({ id: w.id, label: w.name });
     if (videoconsulta) opts.push({ id: VIDEO_LOC, label: "Videoconsulta" });
     return opts;
   }, [workplaces, videoconsulta]);
-  const [genLocation, setGenLocation] = useState(GENERAL_LOC);
+  const [genLocation, setGenLocation] = useState("");
+
+  // Keep the selected location valid as options change.
+  useEffect(() => {
+    if (locationOptions.length > 0 && !locationOptions.some((o) => o.id === genLocation)) {
+      setGenLocation(locationOptions[0].id);
+    }
+  }, [locationOptions, genLocation]);
 
   function locationLabel(id?: string | null): string {
     if (!id || id === GENERAL_LOC) return "General";
@@ -177,9 +185,10 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
 
   async function insertSlots(times: string[]) {
     if (times.length === 0) return;
+    if (!genLocation) return;
     setBusy(true);
     const supabase = createClient();
-    const locId = genLocation === GENERAL_LOC ? null : genLocation;
+    const locId = genLocation;
     // Skip times that already exist for this date AND location
     const existing = new Set(
       slots.filter((s) => s.slot_date === genDate && (s.location_id ?? null) === locId).map((s) => s.slot_time)
@@ -249,7 +258,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
       {/* ── Contact preference — the FIRST decision; drives everything below ── */}
       <div className="rounded-2xl border border-[#e5e7eb] p-5">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-[#111827]">¿Cómo querés que te contacten?</h3>
+          <h3 className="text-sm font-semibold text-[#111827]">¿Cómo recibís clientes?</h3>
           {savingContact && <Loader2 className="h-4 w-4 animate-spin text-[#009FD9]" />}
         </div>
         <div className="flex flex-col gap-2">
@@ -280,20 +289,18 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
       </div>
 
       {schedulingEnabled && (<>
-      {/* ── Public / private toggle ─────────────────────────────── */}
+      {/* ── "Disponibilidad privada" toggle (ON = private; hides + clears slots) ── */}
       <div className="flex items-start justify-between gap-4 rounded-2xl border border-[#e5e7eb] bg-[#f4f7fa] p-4">
         <div className="flex items-start gap-3">
-          <div className={cn("flex h-9 w-9 items-center justify-center rounded-full", isPublic ? "bg-[#EBF5FB] text-[#009FD9]" : "bg-[#f3f4f6] text-[#6b7280]")}>
-            {isPublic ? <Globe className="h-4 w-4" /> : <Lock className="h-4 w-4" />}
+          <div className={cn("flex h-9 w-9 items-center justify-center rounded-full", !isPublic ? "bg-[#fef3c7] text-[#b45309]" : "bg-[#f3f4f6] text-[#6b7280]")}>
+            {!isPublic ? <Lock className="h-4 w-4" /> : <Globe className="h-4 w-4" />}
           </div>
           <div>
-            <p className="text-sm font-semibold text-[#111827]">
-              {isPublic ? "Disponibilidad pública" : "Disponibilidad privada"}
-            </p>
+            <p className="text-sm font-semibold text-[#111827]">Disponibilidad privada</p>
             <p className="text-xs text-[#6b7280] mt-0.5 max-w-md">
-              {isPublic
-                ? "Los clientes pueden ver tus horarios y reservar directamente."
-                : "Tu perfil mostrará un mensaje para contactarte por WhatsApp o llamada; tus horarios no se muestran."}
+              {!isPublic
+                ? "Tus horarios NO se muestran en /buscar; tu tarjeta invita a contactarte por WhatsApp."
+                : "Tus horarios se muestran y los clientes pueden reservar. Activá esto para ocultarlos (se eliminan los horarios publicados)."}
             </p>
           </div>
         </div>
@@ -303,11 +310,11 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
           disabled={savingVisibility}
           className={cn(
             "relative h-6 w-11 rounded-full transition-all duration-200 shrink-0 cursor-pointer mt-1",
-            isPublic ? "bg-[#009FD9]" : "bg-[#d1d5db]"
+            !isPublic ? "bg-[#b45309]" : "bg-[#d1d5db]"
           )}
           aria-label={isPublic ? "Hacer privada" : "Hacer pública"}
         >
-          <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all duration-200", isPublic ? "left-5" : "left-0.5")} />
+          <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all duration-200", !isPublic ? "left-5" : "left-0.5")} />
         </button>
       </div>
 
@@ -339,15 +346,19 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
           <h3 className="text-sm font-semibold text-[#111827]">Agregar horarios disponibles</h3>
         </div>
 
+        {locationOptions.length === 0 ? (
+          <div className="rounded-xl bg-[#fffbeb] border border-[#fde68a] p-4 text-sm text-[#92400e]">
+            Para crear horarios necesitás al menos una ubicación. Agregá un <strong>lugar de trabajo</strong> en
+            tu perfil o activá <strong>videoconsulta</strong> arriba. Los horarios se definen por ubicación.
+          </div>
+        ) : (
         <div className="flex flex-col gap-4">
-          {locationOptions.length > 1 && (
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-[#6b7280] flex items-center gap-1"><MapPin className="h-3 w-3" /> Ubicación de este horario</label>
-              <select value={genLocation} onChange={(e) => setGenLocation(e.target.value)} className={cn(inputCls, "cursor-pointer w-full sm:w-72")}>
-                {locationOptions.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
-              </select>
-            </div>
-          )}
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-[#6b7280] flex items-center gap-1"><MapPin className="h-3 w-3" /> Ubicación de este horario</label>
+            <select value={genLocation} onChange={(e) => setGenLocation(e.target.value)} className={cn(inputCls, "cursor-pointer w-full sm:w-72")}>
+              {locationOptions.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+            </select>
+          </div>
           <div className="flex flex-wrap items-end gap-3">
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-[#6b7280]">Fecha</label>
@@ -394,6 +405,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
             </button>
           </div>
         </div>
+        )}
       </div>
 
       {/* ── Slot list ───────────────────────────────────────────── */}
