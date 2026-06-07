@@ -1,5 +1,6 @@
 import { Link } from "@/i18n/navigation";
 import { ContrataCRLogo } from "./landing-navbar";
+import { SmartRegisterLink } from "@/components/layout/smart-register-link";
 
 function InstagramIcon() {
   return (
@@ -97,12 +98,18 @@ export function LandingFooter() {
               <ul className="space-y-3">
                 {col.links.map(({ label, href }) => (
                   <li key={label}>
-                    <Link
-                      href={href}
-                      className="text-sm text-white/60 hover:text-white transition-colors"
-                    >
-                      {label}
-                    </Link>
+                    {href === "/registro/profesional" ? (
+                      <SmartRegisterLink className="text-sm text-white/60 hover:text-white transition-colors">
+                        {label}
+                      </SmartRegisterLink>
+                    ) : (
+                      <Link
+                        href={href}
+                        className="text-sm text-white/60 hover:text-white transition-colors"
+                      >
+                        {label}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>

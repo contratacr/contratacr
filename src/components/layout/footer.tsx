@@ -1,5 +1,6 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
+import { SmartRegisterLink } from "@/components/layout/smart-register-link";
 
 export async function Footer() {
   const t = await getTranslations("footer");
@@ -32,7 +33,7 @@ export async function Footer() {
           <div>
             <h3 className="text-sm font-semibold text-[#111827] mb-3">{t("pros.title")}</h3>
             <ul className="space-y-2">
-              <li><Link href="/registro/profesional" className="text-sm text-[#6b7280] hover:text-[#009FD9] transition-colors">{t("pros.register")}</Link></li>
+              <li><SmartRegisterLink className="text-sm text-[#6b7280] hover:text-[#009FD9] transition-colors">{t("pros.register")}</SmartRegisterLink></li>
               <li><Link href="/como-funciona" className="text-sm text-[#6b7280] hover:text-[#009FD9] transition-colors">{t("pros.howItWorks")}</Link></li>
               <li><Link href="/planes" className="text-sm text-[#6b7280] hover:text-[#009FD9] transition-colors">{t("pros.plans")}</Link></li>
             </ul>
