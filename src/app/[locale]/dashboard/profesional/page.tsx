@@ -62,6 +62,10 @@ export default function ProDashboardPage() {
   const [pro, setPro] = useState<ProData | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
+  // Count of consecutive "no pro row" fetches. A freshly-created account can lag
+  // (replication/RLS) — we retry a few times before bouncing to registration so
+  // the panel never flashes back to the registration flow (item 6).
+  const [noProTries, setNoProTries] = useState(0);
 
   useEffect(() => {
     if (!authLoading && !user) router.push("/login");
@@ -74,8 +78,9 @@ export default function ProDashboardPage() {
       .from("professionals")
       .select("*, profiles(*), provincia_id, canton_id, address, service_type, category_id, services")
       .eq("profile_id", user.id)
-      .single();
+      .maybeSingle();
     setPro(data);
+    if (!data) setNoProTries((n) => n + 1);
     setLoading(false);
   }, [user]);
 
@@ -91,10 +96,14 @@ export default function ProDashboardPage() {
   // stays stable across renders (a hook after a conditional return crashes the
   // page with "Rendered more hooks than during the previous render").
   useEffect(() => {
-    if (!authLoading && !loading && !pro && user) {
-      router.replace("/registro/profesional");
+    if (authLoading || loading || pro || !user) return;
+    // Retry a few times (replication/RLS lag right after creation) before bouncing.
+    if (noProTries < 4) {
+      const id = setTimeout(() => fetchPro(), 700);
+      return () => clearTimeout(id);
     }
-  }, [authLoading, loading, pro, user, router]);
+    router.replace("/registro/profesional");
+  }, [authLoading, loading, pro, user, router, noProTries, fetchPro]);
 
   function setTab(tab: Tab) {
     const params = new URLSearchParams({ tab });

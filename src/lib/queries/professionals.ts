@@ -159,9 +159,12 @@ export async function searchProfessionals(
             query = query.order("created_at", { ascending: false });
             break;
           default:
+            // No filters / "Mejor calificados": best-rated → most reviews → most
+            // recently active, applied by default and reflected in the control.
             query = query
               .order("rating_avg", { ascending: false })
-              .order("review_count", { ascending: false });
+              .order("review_count", { ascending: false })
+              .order("created_at", { ascending: false });
         }
         return query.limit(50);
       };

@@ -288,7 +288,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
 
       {/* Work mode — both can be selected (travels AND has fixed locations) */}
       <div>
-        <label className="text-sm font-medium text-[#374151] block mb-2">¿Cómo ofrecés tus servicios? <span className="text-[#9ca3af] font-normal">(podés elegir ambas)</span></label>
+        <label className="text-sm font-medium text-[#374151] block mb-2">¿Cómo ofrecés tus servicios? <span className="text-red-500">*</span> <span className="text-[#9ca3af] font-normal">(podés elegir ambas)</span></label>
         <div className="grid grid-cols-2 gap-2">
           {([
             { id: "mobile", icon: Truck, title: "Me desplazo donde el cliente", desc: "Vas al lugar del cliente", active: serviceMobile, toggle: () => { setServiceMobile((v) => !v); touch(); } },
@@ -350,9 +350,11 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         />
       </div>
 
-      {/* Categories — multi-select (first is the primary/principal) */}
+      {/* Professions — multi-select (first is the primary/principal). Each profesión
+          groups the servicios managed in the Servicios tab. */}
       <div>
-        <label className="text-sm font-medium text-[#374151] block mb-1.5">Categorías / servicios</label>
+        <label className="text-sm font-medium text-[#374151] block mb-1.5">Profesiones</label>
+        <p className="text-xs text-[#9ca3af] mb-2">Tus profesiones (ej. Nutricionista). Los servicios de cada una se gestionan en la pestaña <strong>Servicios</strong>.</p>
         {professions.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-2">
             {professions.map((p, i) => (
@@ -371,7 +373,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         <CategorySearch
           value={addCat}
           onChange={(v) => addProfession(v)}
-          placeholder="Agregá una categoría… ej. plomero, fotógrafo"
+          placeholder="Agregá una profesión… ej. plomero, fotógrafo"
         />
       </div>
 

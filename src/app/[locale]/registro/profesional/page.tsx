@@ -418,6 +418,9 @@ export default function RegisterProfessionalPage() {
   const [serviceTypeError, setServiceTypeError] = useState<string | null>(null);
   const [whatsappValue, setWhatsappValue] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  // After a successful create we navigate to the panel. Render a full-screen
+  // loader meanwhile so the form/step never flashes back (item 6).
+  const [redirecting, setRedirecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -737,8 +740,11 @@ export default function RegisterProfessionalPage() {
         try {
           await supabase.auth.updateUser({ data: { role: "professional", onboarding_completed: true } });
         } catch { /* best-effort */ }
-        // Hard navigation so the refreshed session (with the new role) is read.
+        // Show the full-screen loader BEFORE navigating so the photo step never
+        // flashes back. Hard navigation so the refreshed session (new role) is read.
+        setRedirecting(true);
         window.location.href = "/es/dashboard/profesional";
+        return;
       } else {
         setOtpEmail(step1Data!.email);
       }
@@ -780,6 +786,16 @@ export default function RegisterProfessionalPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
+      </div>
+    );
+  }
+
+  // ── Post-create redirect — clean loader, never flash the form/step back ──────
+  if (redirecting) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-3">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
+        <p className="text-sm text-[#6b7280]">Creando tu cuenta…</p>
       </div>
     );
   }
@@ -979,19 +995,21 @@ export default function RegisterProfessionalPage() {
                 onChange={(e) => setBusinessName(e.target.value)}
               />
 
-              {/* Category — searchable combobox */}
+              {/* Profession — searchable combobox (a profesión groups the servicios
+                  the pro later adds in their panel). */}
               <div>
                 <label className="text-sm font-medium text-[#374151] block mb-1.5">
                   {t("category")} <span className="text-red-500">*</span>
                 </label>
+                <p className="text-xs text-[#9ca3af] mb-1.5">Tu profesión (ej. Nutricionista). Luego agregás los servicios que ofrecés en cada una.</p>
                 <CategorySearch
                   value={form2.watch("category") ?? ""}
                   onChange={(v) => form2.setValue("category", v, { shouldValidate: true })}
-                  placeholder="Buscá tu especialidad"
+                  placeholder="Buscá tu profesión"
                   error={form2.formState.errors.category?.message}
                 />
 
-                {/* Additional categories (optional, multi-category) */}
+                {/* Additional professions (optional, multi-profession) */}
                 <div className="mt-2">
                   {extraCategories.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-2">
@@ -1014,7 +1032,7 @@ export default function RegisterProfessionalPage() {
                       }
                       setExtraCatInput("");
                     }}
-                    placeholder="Agregá otra categoría (opcional)"
+                    placeholder="Agregá otra profesión (opcional)"
                   />
                 </div>
               </div>
@@ -1022,7 +1040,7 @@ export default function RegisterProfessionalPage() {
               {/* Service type */}
               <div>
                 <label className="text-sm font-medium text-[#374151] block mb-2">
-                  ¿Cómo ofrecés tus servicios?
+                  ¿Cómo ofrecés tus servicios? <span className="text-red-500">*</span>
                 </label>
                 <div className="flex flex-col gap-2">
                   <label className={cn(
