@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { Plus, X, CalendarPlus, Globe, Lock, Loader2, Video, MapPin, AlertCircle } from "lucide-react";
 import { CONTACT_PREFERENCES, type ContactPreference } from "@/lib/constants";
-import { crTodayISO, isPastDateTimeCR } from "@/lib/time-cr";
+import { crTodayISO, isPastDateTimeCR, isTooSoonCR, earliestValidTimeCR, crDatePretty, LEAD_MINUTES } from "@/lib/time-cr";
 
 type Slot = { id?: string; slot_date: string; slot_time: string; location_id?: string | null };
 
@@ -19,8 +19,6 @@ const INTERVAL_OPTIONS = [
   { value: 120, label: "Cada 2 horas" },
   { value: 0, label: "Personalizado" },
 ];
-
-const MONTHS = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
 
 function hhmm(mins: number): string {
   return `${String(Math.floor(mins / 60)).padStart(2, "0")}:${String(mins % 60).padStart(2, "0")}`;
@@ -35,7 +33,8 @@ function prettyDate(iso: string): string {
   const [y, m, d] = iso.split("-").map(Number);
   const date = new Date(y, m - 1, d);
   const weekday = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"][date.getDay()];
-  return `${weekday} ${d} ${MONTHS[m - 1]} ${y}`;
+  // Costa Rica style dd/mm/aaaa.
+  return `${weekday} ${crDatePretty(iso)}`;
 }
 
 // All "today" comparisons use Costa Rica time so past slots are rejected
@@ -201,13 +200,15 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
       setPastError("No podés agregar horarios en una fecha pasada.");
       return;
     }
-    // Drop any individual times already in the past today (CR time).
-    const notPast = times.filter((t) => !isPastDateTimeCR(genDate, t));
-    if (notPast.length === 0) {
-      setPastError("Esa hora ya pasó (hora de Costa Rica). Elegí una hora futura.");
+    // Enforce a 15-minute lead time (CR): drop any time less than 15 min ahead.
+    // The picker already only offers valid times — this is the safety-net check,
+    // and it fires every time (not just once).
+    const valid = times.filter((t) => !isTooSoonCR(genDate, t));
+    if (valid.length === 0) {
+      setPastError(`Esa hora ya pasó o es muy pronto (hora de Costa Rica). Elegí una hora al menos ${LEAD_MINUTES} minutos en el futuro.`);
       return;
     }
-    times = notPast;
+    times = valid;
     setBusy(true);
     const supabase = createClient();
     const locId = genLocation;
@@ -278,6 +279,17 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
 
   const inputCls =
     "h-9 px-3 rounded-xl border border-[#e5e7eb] bg-white text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
+
+  // When the chosen date is today, the time pickers only OFFER times ≥ 15 min
+  // ahead (CR). Future dates allow any time.
+  const minTime = genDate === todayISO() ? earliestValidTimeCR(genDate) : undefined;
+  // Keep the start / single-time fields at a valid value so the pro never hits an error.
+  useEffect(() => {
+    if (!minTime) return;
+    if (toMins(genStart) < toMins(minTime)) setGenStart(minTime);
+    if (toMins(singleTime) < toMins(minTime)) setSingleTime(minTime);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [minTime]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -392,11 +404,11 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-[#6b7280]">Desde</label>
-              <input type="time" value={genStart} onChange={(e) => setGenStart(e.target.value)} className={inputCls} />
+              <input type="time" min={minTime} value={genStart} onChange={(e) => setGenStart(e.target.value)} className={inputCls} />
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-[#6b7280]">Hasta</label>
-              <input type="time" value={genEnd} onChange={(e) => setGenEnd(e.target.value)} className={inputCls} />
+              <input type="time" min={minTime} value={genEnd} onChange={(e) => setGenEnd(e.target.value)} className={inputCls} />
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-[#6b7280]">Intervalo</label>
@@ -420,7 +432,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
 
           <div className="flex items-center gap-2 pt-1">
             <span className="text-xs text-[#9ca3af]">o agregá una hora puntual:</span>
-            <input type="time" value={singleTime} onChange={(e) => setSingleTime(e.target.value)} className={cn(inputCls, "h-8")} />
+            <input type="time" min={minTime} value={singleTime} onChange={(e) => setSingleTime(e.target.value)} className={cn(inputCls, "h-8")} />
             <button
               type="button"
               onClick={() => insertSlots([singleTime])}

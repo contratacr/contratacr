@@ -41,3 +41,38 @@ export function isPastDateTimeCR(dateISO: string, time?: string): boolean {
   const [h, m] = time.split(":").map(Number);
   return h * 60 + m <= hour * 60 + minute;
 }
+
+/** Minimum lead time (minutes) before a slot can be booked/published. */
+export const LEAD_MINUTES = 15;
+
+/**
+ * Is a date + time too soon to be valid (less than LEAD_MINUTES ahead of the
+ * current Costa Rica time)? Future dates are always fine; only "today" is gated.
+ */
+export function isTooSoonCR(dateISO: string, time: string, lead: number = LEAD_MINUTES): boolean {
+  const { date, hour, minute } = crParts();
+  if (dateISO < date) return true;
+  if (dateISO > date) return false;
+  const [h, m] = time.split(":").map(Number);
+  return h * 60 + m < hour * 60 + minute + lead;
+}
+
+/**
+ * Earliest valid HH:MM for a given date (CR). For a future date → "00:00"; for
+ * today → now + LEAD_MINUTES rounded up to the next minute, clamped to 23:59.
+ * Lets a picker OFFER only valid times instead of validating after the fact.
+ */
+export function earliestValidTimeCR(dateISO: string, lead: number = LEAD_MINUTES): string {
+  const { date, hour, minute } = crParts();
+  if (dateISO > date) return "00:00";
+  if (dateISO < date) return "24:00"; // nothing valid in the past
+  const total = Math.min(hour * 60 + minute + lead, 23 * 60 + 59);
+  return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+}
+
+/** Costa Rica display date dd/mm/aaaa from a YYYY-MM-DD string. */
+export function crDatePretty(dateISO: string): string {
+  const [y, m, d] = dateISO.split("-");
+  if (!y || !m || !d) return dateISO;
+  return `${d}/${m}/${y}`;
+}
