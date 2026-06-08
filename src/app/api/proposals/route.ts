@@ -63,21 +63,44 @@ export async function GET(req: NextRequest) {
       .single();
     if (!pro) return NextResponse.json({ proposals: [] });
 
-    // Client name + photo are always shown (transparency). The client's PHONE
-    // is exposed only on accepted proposals (privacy: the pro earns contact
-    // details once the client picks them). Cédula is never exposed.
     const { data, error } = await supabase
       .from("proposals")
-      .select("*, projects:project_id(title, status, profiles:client_id(full_name, avatar_url, phone))")
+      .select("*")
       .eq("professional_id", pro.id)
       .order("created_at", { ascending: false });
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+    // Enrich each proposal with its project (title, STATUS, client) via the
+    // service-role client. The projects RLS only lets the OWNER (or "open"
+    // projects) be read, so the embedded join returned NULL/stale status once the
+    // project moved to in_progress — which hid the pro's "Marcar trabajo realizado"
+    // button and stuck the project at "Aceptada". Reading via admin fixes that.
+    // Client name + photo are always shown; the PHONE only on accepted proposals.
+    const admin = createAdminClient();
+    const projIds = [...new Set((data ?? []).map((p) => p.project_id).filter(Boolean))];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const projMap: Record<string, any> = {};
+    if (projIds.length > 0) {
+      const { data: projs } = await admin
+        .from("projects")
+        .select("id, title, status, client_id, profiles:client_id(full_name, avatar_url, phone)")
+        .in("id", projIds);
+      for (const pj of projs ?? []) projMap[pj.id] = pj;
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const safe = (data ?? []).map((p: any) => {
-      if (p.status !== "accepted" && p.projects?.profiles) {
-        const { full_name, avatar_url } = p.projects.profiles;
-        p.projects.profiles = { full_name, avatar_url };
+      const pj = projMap[p.project_id];
+      if (pj) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const prof = pj.profiles as any;
+        const profiles = p.status === "accepted"
+          ? prof
+          : prof ? { full_name: prof.full_name, avatar_url: prof.avatar_url } : prof;
+        p.projects = { title: pj.title, status: pj.status, profiles };
+      } else {
+        p.projects = null;
       }
       return p;
     });

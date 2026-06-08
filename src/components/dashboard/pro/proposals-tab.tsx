@@ -189,6 +189,9 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
       setMyProposals((prev) =>
         prev.map((p) => (p.project_id === projectId && p.projects ? { ...p, projects: { ...p.projects, status: "awaiting_confirmation" } } : p))
       );
+    } else {
+      const j = await res.json().catch(() => ({}));
+      alert(j.error ?? "No se pudo marcar el trabajo como realizado. Intentá de nuevo.");
     }
   }
 
