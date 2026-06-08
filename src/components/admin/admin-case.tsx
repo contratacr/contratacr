@@ -184,6 +184,12 @@ export function AdminCase({ providerId }: { providerId: string }) {
                 </span>
               )}
             </div>
+            {pro.no_cr_id && (
+              <div className="mt-3 rounded-lg border border-[#fde68a] bg-[#fffbeb] p-3 text-xs text-[#92400e]">
+                <p className="font-semibold">Sin identificación costarricense (revisión manual)</p>
+                <p className="mt-1">{pro.id_document_note || "El proveedor no indicó un documento. Contactalo para verificar."}</p>
+              </div>
+            )}
             <p className="text-[11px] text-[#9ca3af] mt-3">
               La validación de formato y la confirmación de identidad contra el padrón (TSE) son automáticas. Revisá la comparación con el padrón más abajo. Las fotos de trabajo NO son criterio de verificación.
             </p>

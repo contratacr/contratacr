@@ -200,10 +200,9 @@ function validateCedulaFormat(v: string): boolean {
 const step1Schema = z
   .object({
     fullName: z.string().min(3, "El nombre completo es requerido"),
-    cedula: z
-      .string()
-      .min(1, "El número de cédula es requerido")
-      .refine(validateCedulaFormat, "Formato inválido. CR: 9 dígitos. DIMEX: 11-12. NITE: 10."),
+    // Cédula format is validated in onStep1 (so it can be skipped when the pro
+    // selects "No tengo identificación costarricense" → manual review).
+    cedula: z.string(),
     email: z.string().min(1, "El correo es requerido").email("Ingresá un correo válido"),
     password: z
       .string()
@@ -356,6 +355,55 @@ function PhotoPicker({
   );
 }
 
+// ─── "No tengo identificación costarricense" (foreigners) ─────────────────────
+// Routes the account to the admin EXCEPTIONS queue ("pendiente de revisión") where
+// the admin reviews whatever document they have (passport, DIMEX in progress).
+function NoCrIdToggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <label className="flex items-start gap-2.5 cursor-pointer text-sm text-[#374151]">
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[#009FD9]" />
+      <span>No tengo identificación costarricense <span className="text-[#9ca3af]">(extranjero/a, pasaporte o DIMEX en trámite)</span></span>
+    </label>
+  );
+}
+
+function NoCrIdFields({
+  fullName, onFullName, note, onNote, nameError,
+}: {
+  fullName: string; onFullName: (v: string) => void; note: string; onNote: (v: string) => void; nameError?: string;
+}) {
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-start gap-2 rounded-xl border border-[#fde68a] bg-[#fffbeb] p-3 text-xs text-[#92400e]">
+        <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+        <span>
+          Sin cédula costarricense tu cuenta queda <strong>pendiente de revisión</strong>. Un agente revisará tu
+          documento (pasaporte, DIMEX en trámite) y aprobará tu identidad. Podés usar la plataforma mientras tanto.
+        </span>
+      </div>
+      <Input
+        label={<>Nombre completo <span className="text-red-500">*</span></>}
+        placeholder="Tal como aparece en tu pasaporte / documento"
+        value={fullName}
+        onChange={(e) => onFullName(e.target.value)}
+        error={nameError}
+      />
+      <div>
+        <label className="text-sm font-medium text-[#374151] block mb-1.5">
+          Tu documento <span className="text-[#9ca3af] font-normal">(opcional)</span>
+        </label>
+        <textarea
+          value={note}
+          onChange={(e) => onNote(e.target.value)}
+          rows={2}
+          placeholder="Ej: Pasaporte de Nicaragua N° ..., o DIMEX en trámite N° ..."
+          className="w-full rounded-xl border border-[#e5e7eb] bg-white px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+        />
+      </div>
+    </div>
+  );
+}
+
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function RegisterProfessionalPage() {
@@ -387,6 +435,9 @@ export default function RegisterProfessionalPage() {
   // identity step, so we collect their (required) cédula in the service step.
   const [oauthCedula, setOauthCedula] = useState("");
   const [oauthCedulaError, setOauthCedulaError] = useState<string | null>(null);
+  // "No tengo identificación costarricense" → manual review (admin exceptions).
+  const [noCrId, setNoCrId] = useState(false);
+  const [idDocNote, setIdDocNote] = useState("");
   const [oauthFullName, setOauthFullName] = useState("");
   const [oauthNameError, setOauthNameError] = useState<string | null>(null);
   // Additional categories (multi-category support). Primary = step2 `category`.
@@ -478,7 +529,12 @@ export default function RegisterProfessionalPage() {
       form1.setError("email", { message: "Este correo ya está registrado. Iniciá sesión." });
       return;
     }
-    if (cedulaCheck.taken) {
+    // Cédula format required UNLESS the pro has no CR identification (→ manual review).
+    if (!noCrId && !validateCedulaFormat(data.cedula ?? "")) {
+      form1.setError("cedula", { message: "Formato inválido. CR: 9 dígitos · DIMEX: 11-12 · NITE: 10." });
+      return;
+    }
+    if (!noCrId && cedulaCheck.taken) {
       form1.setError("cedula", { message: "Esta cédula ya está registrada en ContrataCR." });
       return;
     }
@@ -506,12 +562,12 @@ export default function RegisterProfessionalPage() {
       return;
     }
     setLocationError(null);
-    // OAuth professionals must provide a cédula (clients don't — they're asked at booking).
-    if (currentUser && !validateCedulaFormat(oauthCedula)) {
+    // OAuth professionals must provide a cédula UNLESS they have no CR ID (→ review).
+    if (currentUser && !noCrId && !validateCedulaFormat(oauthCedula)) {
       setOauthCedulaError("Cédula requerida. CR: 9 dígitos · DIMEX: 11-12 · NITE: 10.");
       return;
     }
-    if (currentUser && oauthCedulaCheck.taken) {
+    if (currentUser && !noCrId && oauthCedulaCheck.taken) {
       setOauthCedulaError("Esta cédula ya está registrada en ContrataCR.");
       return;
     }
@@ -613,7 +669,9 @@ export default function RegisterProfessionalPage() {
           email: userEmail,
           fullName,
           businessName: businessName.trim() || null,
-          cedula: step1Data?.cedula?.replace(/\D/g, "") ?? (oauthCedula ? oauthCedula.replace(/\D/g, "") : null),
+          cedula: noCrId ? null : (step1Data?.cedula?.replace(/\D/g, "") ?? (oauthCedula ? oauthCedula.replace(/\D/g, "") : null)),
+          noCrId,
+          idDocNote: idDocNote.trim() || null,
           photoUrl,
           category: step2Data.category,
           professions: [step2Data.category, ...extraCategories],
@@ -788,16 +846,28 @@ export default function RegisterProfessionalPage() {
               </div>
 
             <form noValidate onSubmit={form1.handleSubmit(onStep1, scrollToFirstError)} className="flex flex-col gap-4">
-              {/* Identity: cédula → padrón lookup → confirm official name. The
-                  name is NOT typed for verification; it comes from the padrón. */}
-              <IdentityField
-                cedula={form1.watch("cedula") ?? ""}
-                fullName={form1.watch("fullName") ?? ""}
-                onCedulaChange={(c) => form1.setValue("cedula", c, { shouldValidate: true })}
-                onFullNameChange={(n) => form1.setValue("fullName", n, { shouldValidate: true })}
-                cedulaError={form1.formState.errors.cedula?.message ?? (cedulaCheck.taken ? "Esta identificación ya está registrada en ContrataCR." : undefined)}
-                nameError={form1.formState.errors.fullName?.message}
-              />
+              {!noCrId ? (
+                <>
+                  {/* Identity: cédula → padrón lookup → confirm official name. */}
+                  <IdentityField
+                    cedula={form1.watch("cedula") ?? ""}
+                    fullName={form1.watch("fullName") ?? ""}
+                    onCedulaChange={(c) => form1.setValue("cedula", c, { shouldValidate: true })}
+                    onFullNameChange={(n) => form1.setValue("fullName", n, { shouldValidate: true })}
+                    cedulaError={form1.formState.errors.cedula?.message ?? (cedulaCheck.taken ? "Esta identificación ya está registrada en ContrataCR." : undefined)}
+                    nameError={form1.formState.errors.fullName?.message}
+                  />
+                </>
+              ) : (
+                <NoCrIdFields
+                  fullName={form1.watch("fullName") ?? ""}
+                  onFullName={(n) => form1.setValue("fullName", n, { shouldValidate: true })}
+                  note={idDocNote}
+                  onNote={setIdDocNote}
+                  nameError={form1.formState.errors.fullName?.message}
+                />
+              )}
+              <NoCrIdToggle checked={noCrId} onChange={setNoCrId} />
 
               <div className="border-t border-[#f3f4f6] pt-4">
                 <Input
@@ -863,9 +933,8 @@ export default function RegisterProfessionalPage() {
           {step === 1 && (
             <form noValidate onSubmit={form2.handleSubmit(onStep2, scrollToFirstError)} className="flex flex-col gap-4">
 
-              {/* Identity — required for OAuth professionals (no identity step).
-                  Cédula → padrón lookup → confirm official name. */}
-              {currentUser && (
+              {/* Identity — required for OAuth professionals (no identity step). */}
+              {currentUser && !noCrId && (
                 <IdentityField
                   cedula={oauthCedula}
                   fullName={oauthFullName}
@@ -875,6 +944,16 @@ export default function RegisterProfessionalPage() {
                   nameError={oauthNameError ?? undefined}
                 />
               )}
+              {currentUser && noCrId && (
+                <NoCrIdFields
+                  fullName={oauthFullName}
+                  onFullName={(n) => { setOauthFullName(n); setOauthNameError(null); }}
+                  note={idDocNote}
+                  onNote={setIdDocNote}
+                  nameError={oauthNameError ?? undefined}
+                />
+              )}
+              {currentUser && <NoCrIdToggle checked={noCrId} onChange={setNoCrId} />}
 
               {/* Optional brand / business name */}
               <Input

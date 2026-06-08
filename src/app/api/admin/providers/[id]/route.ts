@@ -20,7 +20,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
       `id, slug, verification_status, verification_reason, verification_updated_at,
        category_id, professions, whatsapp, bio, address, portfolio_urls,
        business_name, workplaces, lat, lng, service_type, created_at,
-       is_banned, banned_reason,
+       is_banned, banned_reason, no_cr_id, id_document_note, insurance_networks,
        profiles(full_name, email, cedula, phone, avatar_url)`
     )
     .eq("id", id)
