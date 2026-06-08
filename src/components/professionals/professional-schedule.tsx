@@ -11,7 +11,7 @@ import { getWhatsAppLink } from "@/lib/utils";
 import { isTooSoonCR } from "@/lib/time-cr";
 import type { ProfessionalCardData } from "@/lib/data/mock-professionals";
 
-export type ScheduleSlot = { date: string; time: string; locationId?: string | null };
+export type ScheduleSlot = { date: string; time: string; locationId?: string | null; categoryId?: string | null };
 
 interface ProfessionalScheduleProps {
   professional: ProfessionalCardData;
@@ -19,6 +19,8 @@ interface ProfessionalScheduleProps {
   availabilityPublic: boolean;
   contactPreference?: "solo_whatsapp" | "solo_citas" | "ambas";
   slots: ScheduleSlot[];
+  /** When the client searched a specific profession, only show that one's slots. */
+  activeCategory?: string;
 }
 
 const DAY_SHORT = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
@@ -51,7 +53,13 @@ function telHref(whatsapp: string): string {
  *    "Ver horario completo" link to the full profile.
  *  - Private: lock state with "Contáctanos por Whatsapp" + "por llamada".
  */
-export function ProfessionalSchedule({ professional, categoryName, availabilityPublic, contactPreference = "ambas", slots }: ProfessionalScheduleProps) {
+export function ProfessionalSchedule({ professional, categoryName, availabilityPublic, contactPreference = "ambas", slots: allSlots, activeCategory }: ProfessionalScheduleProps) {
+  // When a specific profession was searched, only show that profession's hours
+  // (item 1). Slots with no category (legacy/pre-migration) always show.
+  const slots = useMemo(
+    () => (activeCategory ? allSlots.filter((s) => !s.categoryId || s.categoryId === activeCategory) : allSlots),
+    [allSlots, activeCategory]
+  );
   const { user } = useAuth();
   const [showRegistration, setShowRegistration] = useState(false);
   const [showBooking, setShowBooking] = useState(false);

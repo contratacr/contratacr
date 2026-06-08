@@ -222,6 +222,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
               availabilityPublic={!isPrivate}
               contactPreference={professional.contactPreference ?? "ambas"}
               slots={slots}
+              activeCategory={activeCategory}
             />
           </div>
         </div>

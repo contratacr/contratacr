@@ -7,8 +7,9 @@ import { createClient } from "@/lib/supabase/client";
 import { Plus, X, CalendarPlus, Globe, Lock, Loader2, Video, MapPin, AlertCircle } from "lucide-react";
 import { CONTACT_PREFERENCES, type ContactPreference } from "@/lib/constants";
 import { crTodayISO, isPastDateTimeCR, isTooSoonCR, nextFullHourCR, crDatePretty, LEAD_MINUTES } from "@/lib/time-cr";
+import { getCategoryLabel } from "@/lib/data/categories";
 
-type Slot = { id?: string; slot_date: string; slot_time: string; location_id?: string | null };
+type Slot = { id?: string; slot_date: string; slot_time: string; location_id?: string | null; category_id?: string | null };
 
 const GENERAL_LOC = "general";
 const VIDEO_LOC = "videoconsulta";
@@ -44,7 +45,9 @@ function todayISO(): string {
 }
 
 type Place = { id?: string; name: string };
-type Coverage = { cantonId: string; cantonName?: string; provinceName?: string };
+// Coverage areas can be cantón-, provincia-, or country-level (item 2): ALL are
+// schedulable, not just cantón-level ones.
+type Coverage = { level?: "canton" | "provincia" | "country"; provinciaId?: string; cantonId?: string; cantonName?: string; provinceName?: string };
 
 interface AvailabilityEditorProps {
   professionalId: string;
@@ -52,12 +55,14 @@ interface AvailabilityEditorProps {
   initialContactPreference?: ContactPreference;
   workplaces?: Place[];
   coverageAreas?: Coverage[];
+  /** The pro's professions (category ids). Schedules are tied to a profession. */
+  professions?: string[];
   initialVideoconsulta?: boolean;
   initialAllowPhoneCall?: boolean;
   onSaved?: () => void;
 }
 
-export function AvailabilityEditor({ professionalId, initialPublic = true, initialContactPreference = "ambas", workplaces = [], coverageAreas = [], initialVideoconsulta = false, initialAllowPhoneCall = false, onSaved }: AvailabilityEditorProps) {
+export function AvailabilityEditor({ professionalId, initialPublic = true, initialContactPreference = "ambas", workplaces = [], coverageAreas = [], professions = [], initialVideoconsulta = false, initialAllowPhoneCall = false, onSaved }: AvailabilityEditorProps) {
   const [isPublic, setIsPublic] = useState(initialPublic);
   const [contactPreference, setContactPreference] = useState<ContactPreference>(initialContactPreference);
   const [savingContact, setSavingContact] = useState(false);
@@ -72,19 +77,38 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
     onSaved?.();
   }
 
-  // Schedules belong to a specific location only (item 16): each workplace +
-  // Videoconsulta. No "general/all locations" option.
+  // Schedules belong to a specific location: each workplace, each travel-coverage
+  // area (item 2 — cantón/provincia/país ALL schedulable), and Videoconsulta.
   const locationOptions = useMemo(() => {
     const opts: { id: string; label: string }[] = [];
     for (const w of workplaces) if (w.id) opts.push({ id: w.id, label: w.name });
-    // Coverage areas ("me desplazo") are schedulable locations too.
-    for (const c of coverageAreas) {
-      if (c.cantonId) opts.push({ id: `cov_${c.cantonId}`, label: `${c.cantonName ?? "Zona"}${c.provinceName ? `, ${c.provinceName}` : ""} (a domicilio)` });
-    }
+    // Coverage areas ("me desplazo") are schedulable at every level — a traveling
+    // pro must be able to add hours even with only province/country coverage.
+    coverageAreas.forEach((c, i) => {
+      const level = c.level ?? (c.cantonId ? "canton" : c.provinciaId ? "provincia" : "country");
+      const key = c.cantonId ?? c.provinciaId ?? `pais${i}`;
+      const label =
+        level === "country"
+          ? "Todo el país (a domicilio)"
+          : level === "provincia"
+          ? `${c.provinceName ?? "Provincia"} (a domicilio)`
+          : `${c.cantonName ?? "Zona"}${c.provinceName ? `, ${c.provinceName}` : ""} (a domicilio)`;
+      opts.push({ id: `cov_${key}`, label });
+    });
     if (videoconsulta) opts.push({ id: VIDEO_LOC, label: "Videoconsulta" });
     return opts;
   }, [workplaces, coverageAreas, videoconsulta]);
   const [genLocation, setGenLocation] = useState("");
+
+  // Profession this schedule is for (item 1). Each schedule belongs to a
+  // (profession + location) pair. Defaults to the only/primary profession.
+  const professionOptions = useMemo(() => professions.filter(Boolean), [professions]);
+  const [genCategory, setGenCategory] = useState("");
+  useEffect(() => {
+    if (professionOptions.length > 0 && !professionOptions.includes(genCategory)) {
+      setGenCategory(professionOptions[0]);
+    }
+  }, [professionOptions, genCategory]);
 
   // Keep the selected location valid as options change.
   useEffect(() => {
@@ -139,14 +163,14 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
     const supabase = createClient();
     supabase
       .from("availability_slots")
-      .select("id, slot_date, slot_time, location_id")
+      .select("id, slot_date, slot_time, location_id, category_id")
       .eq("professional_id", professionalId)
       .gte("slot_date", todayISO())
       .order("slot_date")
       .order("slot_time")
       .then(({ data, error }) => {
-        // Retry without location_id if the column isn't migrated yet.
-        if (error && /location_id|column/i.test(error.message)) {
+        // Retry without the optional columns if not migrated yet (location_id/category_id).
+        if (error && /location_id|category_id|column/i.test(error.message)) {
           supabase
             .from("availability_slots")
             .select("id, slot_date, slot_time")
@@ -155,13 +179,13 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
             .order("slot_date")
             .order("slot_time")
             .then(({ data: d2 }) => {
-              setSlots((d2 ?? []).map((s) => ({ id: s.id, slot_date: s.slot_date, slot_time: String(s.slot_time).slice(0, 5), location_id: null })));
+              setSlots((d2 ?? []).map((s) => ({ id: s.id, slot_date: s.slot_date, slot_time: String(s.slot_time).slice(0, 5), location_id: null, category_id: null })));
               setLoading(false);
             });
           return;
         }
         setSlots(
-          (data ?? []).map((s) => ({ id: s.id, slot_date: s.slot_date, slot_time: String(s.slot_time).slice(0, 5), location_id: (s as { location_id?: string }).location_id ?? null }))
+          (data ?? []).map((s) => ({ id: s.id, slot_date: s.slot_date, slot_time: String(s.slot_time).slice(0, 5), location_id: (s as { location_id?: string }).location_id ?? null, category_id: (s as { category_id?: string }).category_id ?? null }))
         );
         setLoading(false);
       });
@@ -224,20 +248,21 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
     setBusy(true);
     const supabase = createClient();
     const locId = genLocation;
-    // Skip times that already exist for this date AND location
+    const catId = genCategory || null;
+    // Skip times that already exist for this date AND location AND profession.
     const existing = new Set(
-      slots.filter((s) => s.slot_date === genDate && (s.location_id ?? null) === locId).map((s) => s.slot_time)
+      slots.filter((s) => s.slot_date === genDate && (s.location_id ?? null) === locId && (s.category_id ?? null) === catId).map((s) => s.slot_time)
     );
     const fresh = times.filter((t) => !existing.has(t));
     if (fresh.length === 0) { setBusy(false); return; }
 
-    const rows = fresh.map((t) => ({ professional_id: professionalId, slot_date: genDate, slot_time: t, location_id: locId }));
+    const rows = fresh.map((t) => ({ professional_id: professionalId, slot_date: genDate, slot_time: t, location_id: locId, category_id: catId }));
     let { data, error } = await supabase
       .from("availability_slots")
       .insert(rows)
-      .select("id, slot_date, slot_time, location_id");
-    // Retry without location_id if the column isn't migrated yet.
-    if (error && /location_id|column/i.test(error.message)) {
+      .select("id, slot_date, slot_time, location_id, category_id");
+    // Retry without the optional columns if not migrated yet.
+    if (error && /location_id|category_id|column/i.test(error.message)) {
       ({ data, error } = await supabase
         .from("availability_slots")
         .insert(fresh.map((t) => ({ professional_id: professionalId, slot_date: genDate, slot_time: t })))
@@ -251,7 +276,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
     }
     setSlots((prev) => [
       ...prev,
-      ...((data ?? []).map((s) => ({ id: s.id, slot_date: s.slot_date, slot_time: String(s.slot_time).slice(0, 5), location_id: (s as { location_id?: string }).location_id ?? locId }))),
+      ...((data ?? []).map((s) => ({ id: s.id, slot_date: s.slot_date, slot_time: String(s.slot_time).slice(0, 5), location_id: (s as { location_id?: string }).location_id ?? locId, category_id: (s as { category_id?: string }).category_id ?? catId }))),
     ]);
     // Adding a schedule automatically makes availability public.
     if (!isPublic) {
@@ -420,11 +445,21 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
           </div>
         ) : (
         <div className="flex flex-col gap-4">
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-[#6b7280] flex items-center gap-1"><MapPin className="h-3 w-3" /> Ubicación de este horario</label>
-            <select value={genLocation} onChange={(e) => setGenLocation(e.target.value)} className={cn(inputCls, "cursor-pointer w-full sm:w-72")}>
-              {locationOptions.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
-            </select>
+          <div className="flex flex-wrap gap-4">
+            {professionOptions.length > 1 && (
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-[#6b7280]">Profesión / servicio</label>
+                <select value={genCategory} onChange={(e) => setGenCategory(e.target.value)} className={cn(inputCls, "cursor-pointer w-full sm:w-60")}>
+                  {professionOptions.map((p) => <option key={p} value={p}>{getCategoryLabel(p)}</option>)}
+                </select>
+              </div>
+            )}
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-[#6b7280] flex items-center gap-1"><MapPin className="h-3 w-3" /> Ubicación de este horario</label>
+              <select value={genLocation} onChange={(e) => setGenLocation(e.target.value)} className={cn(inputCls, "cursor-pointer w-full sm:w-72")}>
+                {locationOptions.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+              </select>
+            </div>
           </div>
           <div className="flex flex-wrap items-end gap-3">
             <div className="flex flex-col gap-1">
@@ -503,8 +538,11 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {list.map((s) => (
-                    <span key={s.id ?? `${s.slot_time}-${s.location_id ?? ""}`} className="group inline-flex items-center gap-1.5 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium pl-3 pr-1.5 py-1.5">
+                    <span key={s.id ?? `${s.slot_time}-${s.location_id ?? ""}-${s.category_id ?? ""}`} className="group inline-flex items-center gap-1.5 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium pl-3 pr-1.5 py-1.5">
                       {s.slot_time}
+                      {professionOptions.length > 1 && s.category_id && (
+                        <span className="text-[10px] font-normal text-[#0089bb]/70">· {getCategoryLabel(s.category_id)}</span>
+                      )}
                       {locationOptions.length > 1 && (s.location_id ?? null) !== null && (
                         <span className="text-[10px] font-normal text-[#0089bb]/70">· {locationLabel(s.location_id)}</span>
                       )}

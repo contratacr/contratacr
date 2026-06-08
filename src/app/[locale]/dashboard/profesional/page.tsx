@@ -248,6 +248,7 @@ export default function ProDashboardPage() {
                       initialContactPreference={pro.contact_preference ?? "ambas"}
                       workplaces={pro.workplaces ?? []}
                       coverageAreas={pro.coverage_areas ?? []}
+                      professions={(pro.professions && pro.professions.length > 0) ? pro.professions : (pro.category_id ? [pro.category_id] : [])}
                       initialVideoconsulta={pro.videoconsulta ?? false}
                       initialAllowPhoneCall={pro.allow_phone_call ?? false}
                       onSaved={handleSaved}
