@@ -75,6 +75,7 @@ const STATUS_ICON: Record<BookingStatus, React.ReactNode> = {
   pending: <Clock className="h-3.5 w-3.5" />,
   confirmed: <CheckCircle2 className="h-3.5 w-3.5" />,
   in_progress: <Clock className="h-3.5 w-3.5" />,
+  awaiting_confirmation: <Clock className="h-3.5 w-3.5" />,
   completed: <CheckCircle2 className="h-3.5 w-3.5" />,
   cancelled: <XCircle className="h-3.5 w-3.5" />,
   rescheduled: <Clock className="h-3.5 w-3.5" />,
@@ -84,6 +85,7 @@ const STATUS_VARIANT: Record<BookingStatus, "warning" | "success" | "error" | "d
   pending: "warning",
   confirmed: "success",
   in_progress: "success",
+  awaiting_confirmation: "warning",
   completed: "default",
   cancelled: "error",
   rescheduled: "warning",
@@ -93,7 +95,8 @@ const STATUS_LABEL: Record<BookingStatus, string> = {
   pending: "Pendiente",
   confirmed: "Confirmada",
   in_progress: "En progreso",
-  completed: "Completada",
+  awaiting_confirmation: "Confirmá la finalización",
+  completed: "Finalizada",
   cancelled: "Cancelada",
   rescheduled: "Reprogramada",
 };
@@ -199,12 +202,23 @@ export default function ClientDashboardPage() {
   }
 
   async function cancelBooking(id: string) {
+    const reason = window.prompt("¿Por qué querés cancelar? (se le avisa al profesional)") ?? "";
     await fetch("/api/bookings", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, status: "cancelled" }),
+      body: JSON.stringify({ id, status: "cancelled", cancelReason: reason.trim() || undefined }),
     });
     setBookings((prev) => prev.map((b) => (b.id === id ? { ...b, status: "cancelled" } : b)));
+  }
+
+  // Client confirms the professional's "trabajo realizado" → finaliza la solicitud.
+  async function confirmBookingDone(id: string) {
+    await fetch("/api/bookings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, status: "completed" }),
+    });
+    setBookings((prev) => prev.map((b) => (b.id === id ? { ...b, status: "completed" } : b)));
   }
 
   // Two-way reputation: report a professional (no-show, service not performed).
@@ -403,7 +417,7 @@ export default function ClientDashboardPage() {
     return b.preferred_date_text ?? null;
   }
 
-  const upcomingBookings = bookings.filter((b) => ["pending", "confirmed", "in_progress"].includes(b.status));
+  const upcomingBookings = bookings.filter((b) => ["pending", "confirmed", "in_progress", "awaiting_confirmation"].includes(b.status));
   const pastBookings = bookings.filter((b) => ["completed", "cancelled", "rescheduled"].includes(b.status));
 
   return (
@@ -497,9 +511,15 @@ export default function ClientDashboardPage() {
                                       </Avatar>
                                       <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 flex-wrap mb-1">
-                                          <span className="text-sm font-semibold text-[#111827]">
-                                            {b.professionals?.categories?.icon} {b.professionals?.profiles?.full_name ?? "Profesional"}
-                                          </span>
+                                          {b.professionals?.slug ? (
+                                            <Link href={`/profesionales/${b.professionals.slug}`} className="text-sm font-semibold text-[#111827] hover:text-[#009FD9] hover:underline">
+                                              {b.professionals?.categories?.icon} {b.professionals?.profiles?.full_name ?? "Profesional"}
+                                            </Link>
+                                          ) : (
+                                            <span className="text-sm font-semibold text-[#111827]">
+                                              {b.professionals?.categories?.icon} {b.professionals?.profiles?.full_name ?? "Profesional"}
+                                            </span>
+                                          )}
                                           <Badge variant={STATUS_VARIANT[b.status]}>
                                             <span className="flex items-center gap-1">
                                               {STATUS_ICON[b.status]}
@@ -514,7 +534,12 @@ export default function ClientDashboardPage() {
                                       </div>
                                     </div>
                                     <div className="flex flex-col gap-2 shrink-0">
-                                      {b.status === "pending" && (
+                                      {b.status === "awaiting_confirmation" && (
+                                        <Button size="sm" onClick={() => confirmBookingDone(b.id)}>
+                                          <CheckCircle2 className="h-3.5 w-3.5" /> Confirmar finalización
+                                        </Button>
+                                      )}
+                                      {["pending", "confirmed", "in_progress"].includes(b.status) && (
                                         <Button size="sm" variant="outline" onClick={() => cancelBooking(b.id)}>
                                           Cancelar
                                         </Button>
@@ -530,6 +555,14 @@ export default function ClientDashboardPage() {
                                             Contactar
                                           </a>
                                         </Button>
+                                      )}
+                                      {["confirmed", "in_progress", "awaiting_confirmation"].includes(b.status) && (
+                                        <button
+                                          onClick={() => reportProfessional(b.id)}
+                                          className="inline-flex items-center justify-center gap-1.5 text-xs text-[#9ca3af] hover:text-red-500 transition-colors"
+                                        >
+                                          <Flag className="h-3.5 w-3.5" /> Reportar
+                                        </button>
                                       )}
                                     </div>
                                   </div>
@@ -550,9 +583,15 @@ export default function ClientDashboardPage() {
                                   <div className="flex items-start justify-between gap-4">
                                     <div className="flex-1 min-w-0">
                                       <div className="flex items-center gap-2 flex-wrap mb-1">
-                                        <span className="text-sm font-semibold text-[#111827]">
-                                          {b.professionals?.categories?.icon} {b.professionals?.profiles?.full_name ?? "Profesional"}
-                                        </span>
+                                        {b.professionals?.slug ? (
+                                          <Link href={`/profesionales/${b.professionals.slug}`} className="text-sm font-semibold text-[#111827] hover:text-[#009FD9] hover:underline">
+                                            {b.professionals?.categories?.icon} {b.professionals?.profiles?.full_name ?? "Profesional"}
+                                          </Link>
+                                        ) : (
+                                          <span className="text-sm font-semibold text-[#111827]">
+                                            {b.professionals?.categories?.icon} {b.professionals?.profiles?.full_name ?? "Profesional"}
+                                          </span>
+                                        )}
                                         <Badge variant={STATUS_VARIANT[b.status]}>
                                           {STATUS_LABEL[b.status]}
                                         </Badge>
@@ -578,7 +617,7 @@ export default function ClientDashboardPage() {
                                           Reseña
                                         </Button>
                                       )}
-                                      {["confirmed", "in_progress", "completed"].includes(b.status) && (
+                                      {["completed", "cancelled"].includes(b.status) && (
                                         <button
                                           onClick={() => reportProfessional(b.id)}
                                           className="inline-flex items-center justify-center gap-1.5 text-xs text-[#9ca3af] hover:text-red-500 transition-colors"
@@ -721,9 +760,15 @@ export default function ClientDashboardPage() {
                                             </AvatarFallback>
                                           </Avatar>
                                           <div className="flex-1 min-w-0">
-                                            <p className="text-sm font-semibold text-[#111827]">
-                                              {proposal.professionals?.profiles?.full_name}
-                                            </p>
+                                            {proposal.professionals?.slug ? (
+                                              <Link href={`/profesionales/${proposal.professionals.slug}`} className="text-sm font-semibold text-[#111827] hover:text-[#009FD9] hover:underline">
+                                                {proposal.professionals?.profiles?.full_name}
+                                              </Link>
+                                            ) : (
+                                              <p className="text-sm font-semibold text-[#111827]">
+                                                {proposal.professionals?.profiles?.full_name}
+                                              </p>
+                                            )}
                                             {proposal.price && (
                                               <p className="text-xs text-[#009FD9] font-medium">
                                                 ₡{proposal.price.toLocaleString("es-CR")}

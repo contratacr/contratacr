@@ -42,7 +42,7 @@ export type Review = {
   client?: Profile;
 };
 
-export type BookingStatus = "pending" | "confirmed" | "in_progress" | "completed" | "cancelled" | "rescheduled";
+export type BookingStatus = "pending" | "confirmed" | "in_progress" | "awaiting_confirmation" | "completed" | "cancelled" | "rescheduled";
 
 export type Booking = {
   id: string;

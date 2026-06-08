@@ -37,6 +37,7 @@ const STATUS_VARIANT: Record<BookingStatus, "warning" | "success" | "error" | "d
   pending: "warning",
   confirmed: "success",
   in_progress: "success",
+  awaiting_confirmation: "warning",
   cancelled: "error",
   rescheduled: "warning",
   completed: "default",
@@ -46,7 +47,8 @@ const STATUS_LABEL: Record<BookingStatus, string> = {
   pending: "Pendiente",
   confirmed: "Confirmada",
   in_progress: "En progreso",
-  completed: "Completada",
+  awaiting_confirmation: "Esperando confirmación",
+  completed: "Finalizada",
   cancelled: "Cancelada",
   rescheduled: "Reprogramada",
 };
@@ -101,7 +103,7 @@ export function BookingRequests() {
     );
   }
 
-  const upcoming = bookings.filter((b) => ["pending", "confirmed", "in_progress"].includes(b.status));
+  const upcoming = bookings.filter((b) => ["pending", "confirmed", "in_progress", "awaiting_confirmation"].includes(b.status));
   const past = bookings.filter((b) => ["completed", "cancelled", "rescheduled"].includes(b.status));
 
   const todayISO = new Date().toISOString().slice(0, 10);
@@ -198,8 +200,8 @@ export function BookingRequests() {
               {booking.status === "confirmed" && (
                 <>
                   {datePassed ? (
-                    <Button size="sm" onClick={() => updateStatus(booking.id, "completed")}>
-                      Marcar como completado
+                    <Button size="sm" onClick={() => updateStatus(booking.id, "awaiting_confirmation")}>
+                      Marcar trabajo realizado
                     </Button>
                   ) : (
                     <Button size="sm" variant="secondary" onClick={() => updateStatus(booking.id, "in_progress")}>
@@ -212,9 +214,19 @@ export function BookingRequests() {
                 </>
               )}
               {booking.status === "in_progress" && (
-                <Button size="sm" onClick={() => updateStatus(booking.id, "completed")}>
-                  Marcar como completado
-                </Button>
+                <>
+                  <Button size="sm" onClick={() => updateStatus(booking.id, "awaiting_confirmation")}>
+                    Marcar trabajo realizado
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => updateStatus(booking.id, "cancelled")}>
+                    Cancelar
+                  </Button>
+                </>
+              )}
+              {booking.status === "awaiting_confirmation" && (
+                <p className="text-xs text-[#b45309] bg-[#fffbeb] border border-[#fde68a] rounded-lg px-2.5 py-1.5 max-w-[200px]">
+                  Esperando que el cliente confirme la finalización. Se confirma sola en 7 días.
+                </p>
               )}
               {booking.client_phone && (
                 <Button size="sm" variant="whatsapp" asChild>

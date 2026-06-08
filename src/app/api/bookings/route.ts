@@ -3,6 +3,19 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notifyNewBooking, notifyBookingStatusChange } from "@/lib/notifications";
 
+// Lazy auto-confirm: a booking the pro marked "trabajo realizado" auto-completes
+// 7 days after work_done_at if the client never confirmed. Best-effort.
+async function autoConfirmStale(admin: ReturnType<typeof createAdminClient>, filter: { professional_id?: string; client_id?: string }) {
+  try {
+    const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    let q = admin.from("bookings").update({ status: "completed", completed_at: new Date().toISOString() })
+      .eq("status", "awaiting_confirmation").lt("work_done_at", cutoff);
+    if (filter.professional_id) q = q.eq("professional_id", filter.professional_id);
+    if (filter.client_id) q = q.eq("client_id", filter.client_id);
+    await q;
+  } catch { /* column may not be migrated yet */ }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -135,6 +148,8 @@ export async function GET(req: NextRequest) {
 
     if (!pro) return NextResponse.json({ bookings: [] });
 
+    await autoConfirmStale(createAdminClient(), { professional_id: pro.id });
+
     const { data } = await supabase
       .from("bookings")
       .select("*, profiles:client_id(full_name, avatar_url, is_flagged)")
@@ -144,9 +159,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ bookings: data ?? [] });
   }
 
-  // Client role. NOTE: professionals↔categories has no FK (category_id is plain
-  // text), so an embedded categories(...) join 500s and silently drops every
-  // booking. Select category_id as a column instead.
+  // Client role.
+  await autoConfirmStale(createAdminClient(), { client_id: session.user.id });
+  // NOTE: professionals↔categories has no FK (category_id is plain text), so an
+  // embedded categories(...) join 500s and silently drops every booking. Select
+  // category_id as a column instead.
   const { data, error } = await supabase
     .from("bookings")
     .select("*, professionals(slug, category_id, profiles(full_name, avatar_url))")
@@ -162,14 +179,14 @@ export async function GET(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   const body = await req.json();
-  const { id, status } = body;
+  const { id, status, cancelReason } = body;
 
   const supabase = await createClient();
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  // Identify who is updating: only the professional accepting/cancelling should
-  // trigger an automated client notification (not the client cancelling their own).
+  // Identify who is updating (professional vs client) to set ownership fields and
+  // notify the OTHER party on every state change.
   const { data: actorPro } = await supabase
     .from("professionals")
     .select("id")
@@ -182,7 +199,7 @@ export async function PATCH(req: NextRequest) {
   const admin = createAdminClient();
   const { data: bookingRow } = await admin
     .from("bookings")
-    .select("id, professional_id, client_id")
+    .select("id, professional_id, client_id, status")
     .eq("id", id)
     .maybeSingle();
   if (!bookingRow) return NextResponse.json({ error: "Solicitud no encontrada." }, { status: 404 });
@@ -193,18 +210,46 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "No autorizado." }, { status: 403 });
   }
 
-  const { error } = await admin
-    .from("bookings")
-    .update({ status, updated_at: new Date().toISOString() })
-    .eq("id", id);
+  const now = new Date().toISOString();
+  const update: Record<string, unknown> = { status, updated_at: now };
+  // Lifecycle timestamps + cancellation ownership (migration 033).
+  if (status === "awaiting_confirmation") update.work_done_at = now;
+  if (status === "completed") update.completed_at = now;
+  if (status === "cancelled") {
+    update.cancelled_by = isOwnerPro ? "professional" : "client";
+    if (typeof cancelReason === "string" && cancelReason.trim()) update.cancel_reason = cancelReason.trim();
+  }
+
+  let { error } = await admin.from("bookings").update(update).eq("id", id);
+  // Retry without the new lifecycle columns if not migrated yet.
+  if (error && /work_done_at|completed_at|cancelled_by|cancel_reason|column|schema cache|PGRST204/i.test(error.message)) {
+    ({ error } = await admin.from("bookings").update({ status, updated_at: now }).eq("id", id));
+  }
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // Professional accepted (confirmed) or cancelled → notify the client via
-  // ContrataCR's own WhatsApp + email (fallback). Best-effort, never blocks.
-  if (actorPro && (status === "confirmed" || status === "cancelled")) {
+  // Notify the OTHER party on every state change (best-effort, never blocks).
+  if (status === "confirmed" || status === "cancelled") {
     await notifyBookingStatusChange(id, status);
   }
+  // In-app notification to the other side for the new lifecycle states.
+  try {
+    const otherUserId = isOwnerPro ? bookingRow.client_id : null;
+    const labelMap: Record<string, { title: string; message: string }> = {
+      awaiting_confirmation: { title: "El profesional marcó el trabajo como realizado", message: "Confirmá la finalización para cerrar la solicitud (se confirma sola en 7 días)." },
+      in_progress: { title: "Tu solicitud está en progreso", message: "El profesional marcó tu solicitud en progreso." },
+    };
+    if (isOwnerPro && otherUserId && labelMap[status]) {
+      await admin.from("notifications").insert({ user_id: otherUserId, type: "booking_update", title: labelMap[status].title, message: labelMap[status].message });
+    }
+    // Client confirmed completion → notify the professional.
+    if (isOwnerClient && status === "completed") {
+      const { data: pr } = await admin.from("professionals").select("profile_id").eq("id", bookingRow.professional_id).maybeSingle();
+      if (pr?.profile_id) {
+        await admin.from("notifications").insert({ user_id: pr.profile_id, type: "booking_update", title: "El cliente confirmó la finalización", message: "La solicitud quedó finalizada." });
+      }
+    }
+  } catch (e) { console.error("[PATCH /api/bookings] notify:", e); }
 
   // When a booking is marked completed, prompt the client to leave a review.
   if (status === "completed") {
