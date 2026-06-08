@@ -18,8 +18,8 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter, Link } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
-import { getInitials, getWhatsAppLink, formatRelativeTime } from "@/lib/utils";
-import { notificationHref } from "@/lib/notification-link";
+import { getInitials, getWhatsAppLink } from "@/lib/utils";
+import { NotificationsList } from "@/components/notifications/notifications-list";
 import { LeaveReviewModal } from "@/components/professionals/leave-review-modal";
 import { SavedProfessionalsTab } from "@/components/professionals/saved-professionals-tab";
 import type { BookingStatus } from "@/types";
@@ -70,15 +70,6 @@ type Proposal = {
   };
 };
 
-type Notification = {
-  id: string;
-  type: string;
-  title: string;
-  message: string;
-  read: boolean;
-  created_at: string;
-  data?: { link?: string } | null;
-};
 
 const STATUS_ICON: Record<BookingStatus, React.ReactNode> = {
   pending: <Clock className="h-3.5 w-3.5" />,
@@ -115,7 +106,6 @@ export default function ClientDashboardPage() {
 
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [profileData, setProfileData] = useState<{ full_name: string; phone?: string; avatar_url?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [reviewModal, setReviewModal] = useState<{ professionalId: string; professionalName: string } | null>(null);
@@ -166,16 +156,6 @@ export default function ClientDashboardPage() {
       const res = await fetch("/api/projects?role=client");
       const { projects } = await res.json();
       setProjects(projects ?? []);
-    } else if (activeTab === "notifications") {
-      const supabase = createClient();
-      const { data } = await supabase
-        .from("notifications")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(30);
-      setNotifications(data ?? []);
-      setUnreadCount((data ?? []).filter((n) => !n.read).length);
     } else if (activeTab === "profile") {
       const supabase = createClient();
       const { data } = await supabase
@@ -313,24 +293,6 @@ export default function ClientDashboardPage() {
       ),
     }));
     setProjects((prev) => prev.map((p) => (p.id === projectId ? { ...p, status: "open" } : p)));
-  }
-
-  function openNotification(n: Notification) {
-    if (!n.read) {
-      const supabase = createClient();
-      supabase.from("notifications").update({ read: true }).eq("id", n.id).then(() => {});
-      setNotifications((prev) => prev.map((x) => (x.id === n.id ? { ...x, read: true } : x)));
-      setUnreadCount((c) => Math.max(0, c - 1));
-    }
-    window.location.assign(notificationHref(n));
-  }
-
-  async function markAllNotificationsRead() {
-    if (!user) return;
-    const supabase = createClient();
-    await supabase.from("notifications").update({ read: true }).eq("user_id", user.id).eq("read", false);
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-    setUnreadCount(0);
   }
 
   async function saveProfile() {
@@ -835,46 +797,9 @@ export default function ClientDashboardPage() {
               {/* NOTIFICATIONS TAB */}
               {activeTab === "notifications" && (
                 <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold text-[#111827]">Notificaciones</h2>
-                    {unreadCount > 0 && (
-                      <button
-                        onClick={markAllNotificationsRead}
-                        className="text-sm text-[#009FD9] hover:underline"
-                      >
-                        Marcar todo leído
-                      </button>
-                    )}
-                  </div>
-
-                  {notifications.length === 0 ? (
-                    <div className="text-center py-16">
-                      <Bell className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
-                      <p className="font-medium text-[#374151]">No tenés notificaciones</p>
-                    </div>
-                  ) : (
-                    <div className="flex flex-col gap-2">
-                      {notifications.map((n) => (
-                        <button
-                          key={n.id}
-                          onClick={() => openNotification(n)}
-                          className={cn(
-                            "w-full text-left p-4 rounded-2xl border transition-colors hover:border-[#009FD9]",
-                            n.read ? "bg-white border-[#e5e7eb]" : "bg-[#EBF5FB] border-[#bfdbfe]"
-                          )}
-                        >
-                          <div className="flex items-start gap-3">
-                            {!n.read && <span className="mt-1.5 h-2 w-2 rounded-full bg-[#009FD9] shrink-0" />}
-                            <div className={cn("flex-1", n.read && "ml-5")}>
-                              <p className="text-sm font-semibold text-[#111827]">{n.title}</p>
-                              <p className="text-sm text-[#6b7280] mt-0.5">{n.message}</p>
-                              <p className="text-xs text-[#9ca3af] mt-1">{formatRelativeTime(n.created_at)}</p>
-                            </div>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                  <h2 className="text-lg font-semibold text-[#111827] mb-4">Notificaciones</h2>
+                  {/* Shared list with full management: mark single/all read, delete single/all. */}
+                  <NotificationsList />
                 </div>
               )}
 

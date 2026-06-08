@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Bell, CheckCheck, X } from "lucide-react";
+import { Bell, CheckCheck, Check, X, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { cn, formatRelativeTime } from "@/lib/utils";
@@ -45,6 +45,13 @@ export function NotificationsList() {
     setItems((prev) => prev.map((n) => ({ ...n, read: true })));
   }
 
+  async function markOneRead(e: React.MouseEvent, id: string) {
+    e.stopPropagation();
+    setItems((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+    const supabase = createClient();
+    await supabase.from("notifications").update({ read: true }).eq("id", id);
+  }
+
   function open(n: Notification) {
     if (!n.read) {
       const supabase = createClient();
@@ -60,12 +67,25 @@ export function NotificationsList() {
     await supabase.from("notifications").delete().eq("id", id);
   }
 
+  async function deleteAll() {
+    if (!user || items.length === 0) return;
+    if (!window.confirm("¿Eliminar todas tus notificaciones?")) return;
+    setItems([]);
+    const supabase = createClient();
+    await supabase.from("notifications").delete().eq("user_id", user.id);
+  }
+
   return (
     <div>
-      {unread > 0 && (
-        <div className="flex justify-end mb-3">
-          <button onClick={markAllRead} className="flex items-center gap-1.5 text-sm text-[#009FD9] hover:underline">
-            <CheckCheck className="h-4 w-4" /> Marcar todo leído
+      {items.length > 0 && (
+        <div className="flex justify-end items-center gap-4 mb-3">
+          {unread > 0 && (
+            <button onClick={markAllRead} className="flex items-center gap-1.5 text-sm text-[#009FD9] hover:underline">
+              <CheckCheck className="h-4 w-4" /> Marcar todo leído
+            </button>
+          )}
+          <button onClick={deleteAll} className="flex items-center gap-1.5 text-sm text-red-500 hover:underline">
+            <Trash2 className="h-4 w-4" /> Eliminar todas
           </button>
         </div>
       )}
@@ -81,7 +101,7 @@ export function NotificationsList() {
           <ul>
             {items.map((n) => (
               <li key={n.id} className={cn("relative group border-b border-[#f3f4f6] last:border-0", !n.read && "bg-[#f0f9f6]")}>
-                <button onClick={() => open(n)} className="w-full text-left px-4 py-3 pr-10 hover:bg-[#f9fafb] transition-colors">
+                <button onClick={() => open(n)} className="w-full text-left px-4 py-3 pr-16 hover:bg-[#f9fafb] transition-colors">
                   <div className="flex items-start gap-2">
                     {!n.read && <span className="mt-1.5 h-2 w-2 rounded-full bg-[#319278] shrink-0" />}
                     <div className={cn(!n.read ? "" : "ml-4")}>
@@ -91,9 +111,16 @@ export function NotificationsList() {
                     </div>
                   </div>
                 </button>
-                <button onClick={(e) => dismiss(e, n.id)} className="absolute top-2.5 right-2.5 p-1 rounded-md text-[#9ca3af] hover:bg-[#e5e7eb] hover:text-[#374151] transition-colors" aria-label="Descartar">
-                  <X className="h-3.5 w-3.5" />
-                </button>
+                <div className="absolute top-2.5 right-2.5 flex items-center gap-0.5">
+                  {!n.read && (
+                    <button onClick={(e) => markOneRead(e, n.id)} className="p-1 rounded-md text-[#9ca3af] hover:bg-[#e5e7eb] hover:text-[#15803d] transition-colors" aria-label="Marcar leído" title="Marcar leído">
+                      <Check className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                  <button onClick={(e) => dismiss(e, n.id)} className="p-1 rounded-md text-[#9ca3af] hover:bg-[#e5e7eb] hover:text-[#374151] transition-colors" aria-label="Eliminar" title="Eliminar">
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               </li>
             ))}
           </ul>
