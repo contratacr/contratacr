@@ -231,6 +231,24 @@ export function getCategoryLabel(id: string): string {
   return found?.label ?? id;
 }
 
+/* ─── Health categories (es_salud) — drive DOB behaviour. AUTHORITATIVE flag,
+   never inferred from names; mirrors categories.es_salud in the DB (migration 036).
+   Only HEALTH/medical services where the patient's age matters. ─── */
+export const HEALTH_CATEGORY_IDS = new Set<string>([
+  "entrenamiento_personal", "nutricion", "masajes", "psicologia", "fisioterapia",
+  "enfermeria", "cuidado_adultos", "cuidado_infantil",
+]);
+
+/** True if the category is a health/medical category (DOB relevant). */
+export function isHealthCategory(id?: string | null): boolean {
+  return !!id && HEALTH_CATEGORY_IDS.has(id);
+}
+
+/** True if ANY of the professional's categories is a health category. */
+export function anyHealthCategory(ids?: (string | null | undefined)[]): boolean {
+  return (ids ?? []).some((id) => isHealthCategory(id));
+}
+
 /* ─── Get category IDs that match a text query (for search page) ─── */
 export function getMatchingCategoryIds(query: string): string[] {
   if (!query.trim()) return [];

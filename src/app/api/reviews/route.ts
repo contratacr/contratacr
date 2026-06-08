@@ -23,19 +23,23 @@ export async function POST(req: Request) {
   }
 
   // ── Verified-review gate, tied to the SPECIFIC finished item when given ──────
+  // Also snapshot the job title so each per-job review shows its context.
   let allowed = false;
+  let jobTitle: string | null = null;
   if (bookingId) {
     const { data: b } = await supabase
-      .from("bookings").select("id")
+      .from("bookings").select("id, service_description")
       .eq("id", bookingId).eq("client_id", user.id).eq("professional_id", professionalId)
       .eq("status", "completed").maybeSingle();
     allowed = !!b;
+    if (b?.service_description) jobTitle = String(b.service_description).slice(0, 80);
   } else if (projectId) {
     const { data: pj } = await supabase
-      .from("projects").select("id")
+      .from("projects").select("id, title")
       .eq("id", projectId).eq("client_id", user.id).eq("accepted_professional_id", professionalId)
       .eq("status", "completed").maybeSingle();
     allowed = !!pj;
+    if (pj?.title) jobTitle = String(pj.title).slice(0, 80);
   } else {
     // Legacy: any completed booking/project between this client and pro.
     const { data: cb } = await supabase
@@ -74,9 +78,10 @@ export async function POST(req: Request) {
   const row: Record<string, unknown> = { professional_id: professionalId, client_id: user.id, rating, comment };
   if (bookingId) row.booking_id = bookingId;
   if (projectId) row.project_id = projectId;
+  if (jobTitle) row.job_title = jobTitle;
   let { error } = await supabase.from("reviews").insert(row);
-  // Retry without booking_id/project_id if not migrated yet (migration 035).
-  if (error && /booking_id|project_id|column|schema cache|PGRST204/i.test(error.message)) {
+  // Retry without the new columns if not migrated yet (migrations 035/036).
+  if (error && /booking_id|project_id|job_title|column|schema cache|PGRST204/i.test(error.message)) {
     ({ error } = await supabase.from("reviews").insert({ professional_id: professionalId, client_id: user.id, rating, comment }));
   }
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

@@ -13,6 +13,7 @@ import { PhoneInput } from "@/components/ui/phone-input";
 import { CedulaInput } from "@/components/ui/cedula-input";
 import { isValidId, detectIdType, cleanId } from "@/lib/cedula";
 import { computeAge, formatAge, isMinorFromDob } from "@/lib/age";
+import { anyHealthCategory } from "@/lib/data/categories";
 import { StarRating } from "@/components/ui/star-rating";
 import { getInitials, getWhatsAppLink, buildBookingIcs } from "@/lib/utils";
 import { cn } from "@/lib/utils";
@@ -82,6 +83,10 @@ interface BookingModalProps {
 
 export function BookingModal({ professional, categoryName, open, onClose, initialDate, initialTime }: BookingModalProps) {
   const t = useTranslations("booking");
+
+  // DOB is only relevant for HEALTH/medical services (patient age). Driven by the
+  // es_salud category flag — requested/shown/stored ONLY when the pro is health.
+  const proIsHealth = anyHealthCategory([professional.categoryId, ...(professional.professions ?? [])]);
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -341,9 +346,11 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
           forSomeoneElse,
           beneficiaryName: forSomeoneElse ? (benName.trim() || null) : null,
           beneficiaryCedula: forSomeoneElse && benHasCedula ? (cleanId(benCedula) || null) : null,
-          beneficiaryDob: forSomeoneElse && benDob ? benDob : null,
+          // DOB only for HEALTH services (data minimization). Omitted for non-health.
+          clientDob: proIsHealth && !forSomeoneElse && selfDob ? selfDob : null,
+          beneficiaryDob: proIsHealth && forSomeoneElse && benDob ? benDob : null,
           beneficiaryPhone: forSomeoneElse ? (benPhone.trim() || null) : null,
-          beneficiaryIsMinor: forSomeoneElse && benDob ? isMinorFromDob(benDob) : false,
+          beneficiaryIsMinor: proIsHealth && forSomeoneElse && benDob ? isMinorFromDob(benDob) : false,
         }),
       });
 
@@ -736,7 +743,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     {isLoggedIn && profileCedula && (
                       <div className="text-xs text-[#15803d] mt-1 leading-relaxed">
                         <span>Reservás como <strong>{clientName || "vos"}</strong> · cédula {profileCedula}</span>
-                        {selfDob && computeAge(selfDob) && (
+                        {proIsHealth && selfDob && computeAge(selfDob) && (
                           <span className="block">Nacimiento: {selfDob} · {formatAge(computeAge(selfDob))}</span>
                         )}
                       </div>
@@ -828,6 +835,8 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                             />
                           </div>
                           )}
+                          {/* DOB only for HEALTH-category services (patient age). */}
+                          {proIsHealth && (
                           <div>
                             <label className="text-xs font-medium text-[#374151] block mb-1.5">
                               Fecha de nacimiento {benHasCedula === true && <span className="text-[#9ca3af] font-normal">(opcional)</span>}
@@ -845,6 +854,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                               </p>
                             )}
                           </div>
+                          )}
                           <PhoneInput
                             label={<>Teléfono de contacto <span className="text-[#9ca3af] font-normal">(opcional)</span></>}
                             value={benPhone}
@@ -979,7 +989,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                       {selfCedulaName && (
                         <div className="rounded-lg bg-[#f0fdf4] border border-[#bbf7d0] px-3 py-2 mt-1.5">
                           <p className="text-xs text-[#15803d]">Confirmá: <strong>{selfCedulaName}</strong></p>
-                          {selfDob && computeAge(selfDob) && (
+                          {proIsHealth && selfDob && computeAge(selfDob) && (
                             <p className="text-[11px] text-[#16a34a]">Nacimiento: {selfDob} · {formatAge(computeAge(selfDob))}</p>
                           )}
                         </div>

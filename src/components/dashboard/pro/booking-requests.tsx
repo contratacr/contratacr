@@ -25,6 +25,7 @@ type Booking = {
   created_at: string;
   professional_whatsapp?: string;
   profiles?: { full_name?: string; avatar_url?: string; is_flagged?: boolean } | null;
+  client_dob?: string | null;
   for_someone_else?: boolean;
   beneficiary_name?: string | null;
   beneficiary_cedula?: string | null;
@@ -153,6 +154,13 @@ export function BookingRequests() {
                     <span className="text-[#374151]">{booking.client_phone}</span>
                   </div>
                 )}
+                {/* Client DOB — only stored/shown for HEALTH-category solicitudes. */}
+                {booking.client_dob && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <CalendarDays className="h-4 w-4 text-[#6b7280] shrink-0" />
+                    <span className="text-[#374151]">Nacimiento: {booking.client_dob}</span>
+                  </div>
+                )}
 
                 {/* Beneficiary (booking for someone else): who the service is for */}
                 {booking.for_someone_else && (
@@ -201,7 +209,7 @@ export function BookingRequests() {
                 <>
                   {datePassed ? (
                     <Button size="sm" onClick={() => updateStatus(booking.id, "awaiting_confirmation")}>
-                      Marcar trabajo realizado
+                      Marcar como completado
                     </Button>
                   ) : (
                     <Button size="sm" variant="secondary" onClick={() => updateStatus(booking.id, "in_progress")}>

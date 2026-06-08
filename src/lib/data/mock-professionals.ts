@@ -7,6 +7,8 @@ export type ProfessionalCardData = {
   avatarUrl?: string;
   categoryId: string;
   categoryIcon: string;
+  /** All of the pro's categories (drives e.g. the health/DOB rule). */
+  professions?: string[];
   bio: string;
   whatsapp: string;
   provinceName: string;

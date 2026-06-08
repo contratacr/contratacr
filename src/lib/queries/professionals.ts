@@ -59,7 +59,8 @@ export type Review = {
   rating: number;
   comment: string;
   createdAt: string;
-  edited?: boolean;
+  /** The job (solicitud/proyecto) this review belongs to — shown for context. */
+  jobTitle?: string | null;
 };
 
 // ---------------------------------------------------------------------------
@@ -274,17 +275,19 @@ export async function getProfessionalBySlug(
         portfolioItems = (pro.portfolio_urls ?? []).map((url: string) => ({ url }));
       }
 
-      // Edited-review timestamps (best-effort; column from migration 034).
-      const editedMap: Record<string, boolean> = {};
+      // Job-title snapshot per review (best-effort; column from migration 036) so
+      // each review shows which job it belongs to. (Edited timestamps are NOT
+      // surfaced publicly — only the author sees that, item 4.)
+      const titleMap: Record<string, string | null> = {};
       try {
-        const { data: ed } = await supabase.from("reviews").select("id, edited_at").eq("professional_id", pro.id);
-        for (const r of (ed ?? []) as { id: string; edited_at?: string | null }[]) editedMap[r.id] = !!r.edited_at;
+        const { data: rj } = await supabase.from("reviews").select("id, job_title").eq("professional_id", pro.id);
+        for (const r of (rj ?? []) as { id: string; job_title?: string | null }[]) titleMap[r.id] = r.job_title ?? null;
       } catch { /* column not migrated yet */ }
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const reviews: Review[] = ((pro.reviews as any[]) ?? []).map((r: any) => ({
         id: r.id,
-        edited: editedMap[r.id] ?? false,
+        jobTitle: titleMap[r.id] ?? null,
         clientName: r.profiles?.full_name ?? "Cliente",
         clientAvatarUrl: r.profiles?.avatar_url,
         rating: r.rating,

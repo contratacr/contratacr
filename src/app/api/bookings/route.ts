@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
     }
 
     const {
-      scheduledDate, scheduledTime, clientPhone,
+      scheduledDate, scheduledTime, clientPhone, clientDob,
       forSomeoneElse, beneficiaryName, beneficiaryCedula, beneficiaryDob, beneficiaryPhone, beneficiaryIsMinor,
     } = body;
 
@@ -70,10 +70,12 @@ export async function POST(req: NextRequest) {
       beneficiary_dob: beneficiaryDob ?? null,
       beneficiary_phone: beneficiaryPhone ?? null,
       beneficiary_is_minor: !!beneficiaryIsMinor,
+      // Client DOB — sent only for HEALTH-category services (data minimization).
+      client_dob: clientDob ?? null,
     };
 
     let { data, error } = await supabase.from("bookings").insert({ ...baseBooking, ...beneficiaryFields }).select("id").single();
-    if (error && /for_someone_else|beneficiary_|column|schema cache|PGRST204|could not find/i.test(error.message)) {
+    if (error && /for_someone_else|beneficiary_|client_dob|column|schema cache|PGRST204|could not find/i.test(error.message)) {
       ({ data, error } = await supabase.from("bookings").insert(baseBooking).select("id").single());
     }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { FolderOpen, Send, ChevronDown, ChevronUp, MapPin, Clock, Coins, User, Briefcase, CheckCircle2 } from "lucide-react";
+import { FolderOpen, Send, ChevronDown, ChevronUp, MapPin, Clock, Coins, User, Briefcase, CheckCircle2, Phone } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -383,6 +383,12 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                             <span className="text-xs font-medium text-[#374151]">{p.projects.profiles.full_name}</span>
                           </div>
                         )}
+                        {/* Client contact — shown to the pro once their proposal is accepted. */}
+                        {p.status === "accepted" && p.projects?.profiles?.phone && (
+                          <p className="text-xs text-[#374151] mb-2 flex items-center gap-1.5">
+                            <Phone className="h-3 w-3 text-[#6b7280]" /> {p.projects.profiles.phone}
+                          </p>
+                        )}
                         <p className="text-xs text-[#6b7280] line-clamp-2 mb-2">{p.message}</p>
                         {p.price && (
                           <p className="text-xs text-[#374151]">
@@ -428,7 +434,7 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                         )}
                         {p.status === "accepted" && p.projects?.status === "in_progress" && (
                           <Button size="sm" onClick={() => markWorkDone(p.project_id)}>
-                            <CheckCircle2 className="h-3.5 w-3.5" /> Marcar trabajo realizado
+                            <CheckCircle2 className="h-3.5 w-3.5" /> Marcar como completado
                           </Button>
                         )}
                         {p.status === "accepted" && p.projects?.status === "cancelled" && (

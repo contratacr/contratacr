@@ -53,10 +53,14 @@ export function ReviewSection({
             <div className="flex-1">
               <div className="flex items-center justify-between gap-2">
                 <span className="text-sm font-medium text-[#111827]">{review.clientName}</span>
-                <span className="text-xs text-[#9ca3af]">{timeAgo(review.createdAt)}{review.edited ? " · editada" : ""}</span>
+                {/* "editada" is intentionally NOT shown publicly (item 4). */}
+                <span className="text-xs text-[#9ca3af]">{timeAgo(review.createdAt)}</span>
               </div>
               <StarRating rating={review.rating} size="sm" className="my-1" />
-              <p className="text-sm text-[#374151] leading-relaxed">{review.comment}</p>
+              {review.jobTitle && (
+                <p className="text-xs text-[#9ca3af] mt-0.5">Reseña de “{review.jobTitle}”</p>
+              )}
+              <p className="text-sm text-[#374151] leading-relaxed mt-1">{review.comment}</p>
             </div>
           </div>
         ))}
