@@ -40,7 +40,7 @@ export function LanguagesInput({ value, onChange }: Props) {
 
   return (
     <div className="relative">
-      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[#e5e7eb] bg-white p-2 focus-within:border-[#009FD9] transition-all">
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[#e5e7eb] bg-white p-2 overflow-hidden transition-all focus-within:ring-2 focus-within:ring-[#009FD9] focus-within:border-transparent">
         {value.map((id) => (
           <span key={id} className="inline-flex items-center gap-1.5 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium pl-2.5 pr-1.5 py-1">
             {languageLabel(id)}
