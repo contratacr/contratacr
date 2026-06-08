@@ -22,6 +22,7 @@ import { getInitials, getWhatsAppLink } from "@/lib/utils";
 import { NotificationsList } from "@/components/notifications/notifications-list";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { CloseAccountSection } from "@/components/account/close-account-section";
+import { StatusFilterTabs, SOLICITUD_TABS, PROYECTO_TABS, solicitudMatches, proyectoMatches } from "@/components/dashboard/status-filter-tabs";
 import { LeaveReviewModal } from "@/components/professionals/leave-review-modal";
 import { SavedProfessionalsTab } from "@/components/professionals/saved-professionals-tab";
 import type { BookingStatus } from "@/types";
@@ -116,8 +117,8 @@ export default function ClientDashboardPage() {
   const [reviewModal, setReviewModal] = useState<{ professionalId: string; professionalName: string; bookingId?: string; projectId?: string } | null>(null);
   // The client's reviews, to mark which finished items are already reviewed (per-job).
   const [myReviews, setMyReviews] = useState<{ professional_id: string; booking_id?: string | null; project_id?: string | null; rating: number }[]>([]);
-  const [bookingFilter, setBookingFilter] = useState<"todas" | "activas" | "finalizadas" | "canceladas">("todas");
-  const [projectFilter, setProjectFilter] = useState<"todas" | "abiertos" | "encurso" | "finalizados" | "cancelados">("todas");
+  const [bookingFilter, setBookingFilter] = useState("todas");
+  const [projectFilter, setProjectFilter] = useState("todas");
   const [expandedProject, setExpandedProject] = useState<string | null>(null);
   const [projectProposals, setProjectProposals] = useState<Record<string, Proposal[]>>({});
   const [profileForm, setProfileForm] = useState({ full_name: "", phone: "" });
@@ -482,24 +483,9 @@ export default function ClientDashboardPage() {
     return b.preferred_date_text ?? null;
   }
 
-  // Status filters (mini tabs) for solicitudes + proyectos.
-  const bActive = ["pending", "confirmed", "in_progress", "awaiting_confirmation"];
-  const filteredBookings = bookings.filter((b) => {
-    if (bookingFilter === "activas") return bActive.includes(b.status);
-    if (bookingFilter === "finalizadas") return b.status === "completed";
-    if (bookingFilter === "canceladas") return b.status === "cancelled" || b.status === "rescheduled";
-    return true;
-  });
-  const upcomingBookings = filteredBookings.filter((b) => bActive.includes(b.status));
-  const pastBookings = filteredBookings.filter((b) => ["completed", "cancelled", "rescheduled"].includes(b.status));
-
-  const filteredProjects = projects.filter((p) => {
-    if (projectFilter === "abiertos") return p.status === "open";
-    if (projectFilter === "encurso") return p.status === "in_progress" || p.status === "awaiting_confirmation";
-    if (projectFilter === "finalizados") return p.status === "completed";
-    if (projectFilter === "cancelados") return p.status === "cancelled";
-    return true;
-  });
+  // Unified status filters for solicitudes + proyectos (shared helpers).
+  const filteredBookings = bookings.filter((b) => solicitudMatches(bookingFilter, b.status));
+  const filteredProjects = projects.filter((p) => proyectoMatches(projectFilter, p.status));
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
@@ -575,19 +561,14 @@ export default function ClientDashboardPage() {
                     </div>
                   ) : (
                     <>
-                      <div className="flex gap-1.5 flex-wrap">
-                        {([["todas", "Todas"], ["activas", "Activas"], ["finalizadas", "Finalizadas"], ["canceladas", "Canceladas"]] as const).map(([id, label]) => (
-                          <button key={id} onClick={() => setBookingFilter(id)} className={cn("px-3 py-1 rounded-full text-xs font-medium transition-colors", bookingFilter === id ? "bg-[#009FD9] text-white" : "bg-[#f3f4f6] text-[#374151] hover:bg-[#e5e7eb]")}>{label}</button>
-                        ))}
-                      </div>
-                      {upcomingBookings.length === 0 && pastBookings.length === 0 && (
+                      <StatusFilterTabs tabs={SOLICITUD_TABS} value={bookingFilter} onChange={setBookingFilter} />
+                      {filteredBookings.length === 0 ? (
                         <p className="text-sm text-[#9ca3af] text-center py-8">No hay solicitudes en esta vista.</p>
-                      )}
-                      {upcomingBookings.length > 0 && (
-                        <div>
-                          <h2 className="text-sm font-semibold text-[#374151] mb-3">Próximas</h2>
-                          <div className="flex flex-col gap-3">
-                            {upcomingBookings.map((b) => (
+                      ) : (
+                        <div className="flex flex-col gap-3">
+                          {filteredBookings.map((b) => {
+                            const rev = b.status === "completed" ? bookingReview(b.id) : undefined;
+                            return (
                               <Card key={b.id}>
                                 <CardContent className="p-5">
                                   <div className="flex items-start justify-between gap-4">
@@ -610,10 +591,7 @@ export default function ClientDashboardPage() {
                                             </span>
                                           )}
                                           <Badge variant={STATUS_VARIANT[b.status]}>
-                                            <span className="flex items-center gap-1">
-                                              {STATUS_ICON[b.status]}
-                                              {STATUS_LABEL[b.status]}
-                                            </span>
+                                            <span className="flex items-center gap-1">{STATUS_ICON[b.status]}{STATUS_LABEL[b.status]}</span>
                                           </Badge>
                                         </div>
                                         <p className="text-sm text-[#374151] line-clamp-2 mb-1">{b.service_description}</p>
@@ -628,28 +606,24 @@ export default function ClientDashboardPage() {
                                           <CheckCircle2 className="h-3.5 w-3.5" /> Confirmar finalización
                                         </Button>
                                       )}
-                                      {["pending", "confirmed", "in_progress"].includes(b.status) && (
-                                        <Button size="sm" variant="outline" onClick={() => cancelBooking(b.id)}>
-                                          Cancelar
+                                      {b.status === "completed" && (
+                                        <Button variant="outline" size="sm" onClick={() => setReviewModal({ professionalId: b.professional_id, professionalName: b.professionals?.profiles?.full_name ?? "Profesional", bookingId: b.id })}>
+                                          <Star className={cn("h-3.5 w-3.5", rev && "fill-yellow-400 text-yellow-400")} />
+                                          {rev ? "Ver/Editar reseña" : "Reseña"}
                                         </Button>
                                       )}
-                                      {b.professionals?.whatsapp && (
+                                      {["pending", "confirmed", "in_progress"].includes(b.status) && (
+                                        <Button size="sm" variant="outline" onClick={() => cancelBooking(b.id)}>Cancelar</Button>
+                                      )}
+                                      {b.professionals?.whatsapp && b.status !== "cancelled" && b.status !== "completed" && (
                                         <Button size="sm" variant="whatsapp" asChild>
-                                          <a
-                                            href={getWhatsAppLink(b.professionals.whatsapp, `Hola, te contacto por mi solicitud en ContrataCR.`)}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                          >
-                                            <WhatsAppIcon className="h-3.5 w-3.5" />
-                                            Contactar
+                                          <a href={getWhatsAppLink(b.professionals.whatsapp, `Hola, te contacto por mi solicitud en ContrataCR.`)} target="_blank" rel="noopener noreferrer">
+                                            <WhatsAppIcon className="h-3.5 w-3.5" /> Contactar
                                           </a>
                                         </Button>
                                       )}
-                                      {["confirmed", "in_progress", "awaiting_confirmation"].includes(b.status) && (
-                                        <button
-                                          onClick={() => reportProfessional(b.id)}
-                                          className="inline-flex items-center justify-center gap-1.5 text-xs text-[#9ca3af] hover:text-red-500 transition-colors"
-                                        >
+                                      {["confirmed", "in_progress", "awaiting_confirmation", "completed", "cancelled"].includes(b.status) && (
+                                        <button onClick={() => reportProfessional(b.id)} className="inline-flex items-center justify-center gap-1.5 text-xs text-[#9ca3af] hover:text-red-500 transition-colors">
                                           <Flag className="h-3.5 w-3.5" /> Reportar
                                         </button>
                                       )}
@@ -657,73 +631,8 @@ export default function ClientDashboardPage() {
                                   </div>
                                 </CardContent>
                               </Card>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {pastBookings.length > 0 && (
-                        <div>
-                          <h2 className="text-sm font-semibold text-[#374151] mb-3">Historial</h2>
-                          <div className="flex flex-col gap-3">
-                            {pastBookings.map((b) => (
-                              <Card key={b.id}>
-                                <CardContent className="p-5">
-                                  <div className="flex items-start justify-between gap-4">
-                                    <div className="flex-1 min-w-0">
-                                      <div className="flex items-center gap-2 flex-wrap mb-1">
-                                        {b.professionals?.slug ? (
-                                          <Link href={`/profesionales/${b.professionals.slug}`} className="text-sm font-semibold text-[#111827] hover:text-[#009FD9] hover:underline">
-                                            {b.professionals?.categories?.icon} {b.professionals?.profiles?.full_name ?? "Profesional"}
-                                          </Link>
-                                        ) : (
-                                          <span className="text-sm font-semibold text-[#111827]">
-                                            {b.professionals?.categories?.icon} {b.professionals?.profiles?.full_name ?? "Profesional"}
-                                          </span>
-                                        )}
-                                        <Badge variant={STATUS_VARIANT[b.status]}>
-                                          {STATUS_LABEL[b.status]}
-                                        </Badge>
-                                      </div>
-                                      <p className="text-sm text-[#374151] line-clamp-2">{b.service_description}</p>
-                                      <p className="text-xs text-[#9ca3af] mt-1">
-                                        {new Date(b.created_at).toLocaleDateString("es-CR")}
-                                      </p>
-                                    </div>
-                                    <div className="flex flex-col gap-1.5 shrink-0">
-                                      {b.status === "completed" && (() => {
-                                        const rev = bookingReview(b.id);
-                                        return (
-                                          <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() =>
-                                              setReviewModal({
-                                                professionalId: b.professional_id,
-                                                professionalName: b.professionals?.profiles?.full_name ?? "Profesional",
-                                                bookingId: b.id,
-                                              })
-                                            }
-                                          >
-                                            <Star className={cn("h-3.5 w-3.5", rev && "fill-yellow-400 text-yellow-400")} />
-                                            {rev ? "Ver/Editar reseña" : "Reseña"}
-                                          </Button>
-                                        );
-                                      })()}
-                                      {["completed", "cancelled"].includes(b.status) && (
-                                        <button
-                                          onClick={() => reportProfessional(b.id)}
-                                          className="inline-flex items-center justify-center gap-1.5 text-xs text-[#9ca3af] hover:text-red-500 transition-colors"
-                                        >
-                                          <Flag className="h-3.5 w-3.5" /> Reportar
-                                        </button>
-                                      )}
-                                    </div>
-                                  </div>
-                                </CardContent>
-                              </Card>
-                            ))}
-                          </div>
+                            );
+                          })}
                         </div>
                       )}
                     </>
@@ -734,16 +643,6 @@ export default function ClientDashboardPage() {
               {/* PROJECTS TAB */}
               {activeTab === "projects" && (
                 <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold text-[#111827]">Mis proyectos</h2>
-                    <Button size="sm" asChild>
-                      <a href="/publicar-proyecto">
-                        <Plus className="h-4 w-4" />
-                        Publicar proyecto
-                      </a>
-                    </Button>
-                  </div>
-
                   {projects.length === 0 ? (
                     <div className="text-center py-16">
                       <FolderOpen className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
@@ -757,10 +656,11 @@ export default function ClientDashboardPage() {
                     </div>
                   ) : (
                     <div className="flex flex-col gap-4">
-                      <div className="flex gap-1.5 flex-wrap">
-                        {([["todas", "Todos"], ["abiertos", "Abiertos"], ["encurso", "En curso"], ["finalizados", "Finalizados"], ["cancelados", "Cancelados"]] as const).map(([id, label]) => (
-                          <button key={id} onClick={() => setProjectFilter(id)} className={cn("px-3 py-1 rounded-full text-xs font-medium transition-colors", projectFilter === id ? "bg-[#009FD9] text-white" : "bg-[#f3f4f6] text-[#374151] hover:bg-[#e5e7eb]")}>{label}</button>
-                        ))}
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <StatusFilterTabs tabs={PROYECTO_TABS} value={projectFilter} onChange={setProjectFilter} />
+                        <Button size="sm" asChild>
+                          <a href="/publicar-proyecto"><Plus className="h-4 w-4" /> Publicar proyecto</a>
+                        </Button>
                       </div>
                       {filteredProjects.length === 0 && (
                         <p className="text-sm text-[#9ca3af] text-center py-8">No hay proyectos en esta vista.</p>

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { getWhatsAppLink } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import { StatusFilterTabs, SOLICITUD_TABS, solicitudMatches } from "@/components/dashboard/status-filter-tabs";
 import type { BookingStatus } from "@/types";
 
 type Booking = {
@@ -57,6 +58,7 @@ const STATUS_LABEL: Record<BookingStatus, string> = {
 export function BookingRequests() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState("todas");
 
   useEffect(() => {
     fetch("/api/bookings?role=professional")
@@ -104,8 +106,7 @@ export function BookingRequests() {
     );
   }
 
-  const upcoming = bookings.filter((b) => ["pending", "confirmed", "in_progress", "awaiting_confirmation"].includes(b.status));
-  const past = bookings.filter((b) => ["completed", "cancelled", "rescheduled"].includes(b.status));
+  const filtered = bookings.filter((b) => solicitudMatches(filter, b.status));
 
   const todayISO = new Date().toISOString().slice(0, 10);
 
@@ -265,21 +266,13 @@ export function BookingRequests() {
   }
 
   return (
-    <div className="space-y-6">
-      {upcoming.length > 0 && (
-        <div>
-          <h3 className="text-sm font-semibold text-[#374151] mb-3">Próximas y activas</h3>
-          <div className="flex flex-col gap-3">
-            {upcoming.map((b) => <BookingCard key={b.id} booking={b} />)}
-          </div>
-        </div>
-      )}
-      {past.length > 0 && (
-        <div>
-          <h3 className="text-sm font-semibold text-[#374151] mb-3">Historial</h3>
-          <div className="flex flex-col gap-3">
-            {past.map((b) => <BookingCard key={b.id} booking={b} />)}
-          </div>
+    <div className="space-y-4">
+      <StatusFilterTabs tabs={SOLICITUD_TABS} value={filter} onChange={setFilter} />
+      {filtered.length === 0 ? (
+        <p className="text-sm text-[#9ca3af] text-center py-8">No hay solicitudes en esta vista.</p>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {filtered.map((b) => <BookingCard key={b.id} booking={b} />)}
         </div>
       )}
     </div>

@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PriceInput } from "@/components/ui/price-input";
 import { cn, getWhatsAppLink, getInitials } from "@/lib/utils";
+import { StatusFilterTabs, PROYECTO_TABS, proyectoMatches } from "@/components/dashboard/status-filter-tabs";
 
 type ProposalStatus = "pending" | "accepted" | "declined";
 
@@ -85,6 +86,7 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
   const [proposalForms, setProposalForms] = useState<Record<string, { price: string; message: string }>>({});
   const [submitting, setSubmitting] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState<Set<string>>(new Set());
+  const [projectFilter, setProjectFilter] = useState("todas");
 
   async function fetchOpenProjects() {
     setLoading(true);
@@ -364,7 +366,11 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
             </div>
           ) : (
             <div className="flex flex-col gap-4">
-              {myProposals.map((p) => (
+              <StatusFilterTabs tabs={PROYECTO_TABS} value={projectFilter} onChange={setProjectFilter} />
+              {(() => {
+                const shown = myProposals.filter((p) => proyectoMatches(projectFilter, p.projects?.status ?? "open"));
+                if (shown.length === 0) return <p className="text-sm text-[#9ca3af] text-center py-8">No hay proyectos en esta vista.</p>;
+                return shown.map((p) => (
                 <Card key={p.id}>
                   <CardContent className="p-5">
                     <div className="flex items-start justify-between gap-3">
@@ -465,7 +471,8 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                     )}
                   </CardContent>
                 </Card>
-              ))}
+                ));
+              })()}
             </div>
           )}
         </div>
