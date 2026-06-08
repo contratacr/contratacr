@@ -18,7 +18,9 @@ export function verificationLabel(status: VerificationStatus): string {
     case "rejected":
       return "No verificada";
     case "under_appeal":
-      return "En revisión";
+      // Still unresolved — its pending nature stays visible so the admin doesn't
+      // lose sight of it when an appeal is filed (item 7).
+      return "Pendiente — en apelación";
     case "pending":
     default:
       return "Pendiente de revisión";

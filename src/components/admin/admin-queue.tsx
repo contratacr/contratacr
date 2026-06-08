@@ -85,6 +85,9 @@ export function AdminQueue() {
           const count =
             f.value === "all"
               ? VERIFICATION_STATUSES.reduce((sum, s) => sum + (counts[s] ?? 0), 0)
+              : f.value === "pending"
+              ? // Pending view also surfaces appeals (item 7) — count both.
+                (counts.pending ?? 0) + (counts.under_appeal ?? 0)
               : counts[f.value] ?? 0;
           const active = status === f.value;
           return (

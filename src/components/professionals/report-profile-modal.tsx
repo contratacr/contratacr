@@ -10,7 +10,12 @@ interface ReportProfileModalProps {
   onClose: () => void;
 }
 
+// "Suplantación de identidad" is the real-world protection layer against an
+// impostor who entered a real cédula+name (the padrón cannot prove physical
+// identity). It routes to a HIGH-PRIORITY admin moderation ticket (item 10a).
+const IMPERSONATION = "Suplantación de identidad (se hace pasar por otra persona)";
 const REASONS = [
+  IMPERSONATION,
   "Información falsa o engañosa",
   "Estafa o fraude",
   "Contenido inapropiado",
@@ -123,6 +128,17 @@ export function ReportProfileModal({ professionalName, professionalSlug, onClose
                 ))}
               </div>
             </div>
+
+            {reason === IMPERSONATION && (
+              <div className="flex items-start gap-2 rounded-xl bg-[#fffbeb] border border-[#fde68a] px-3.5 py-3 text-xs text-[#92400e]">
+                <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5" />
+                <span>
+                  Si alguien usa <strong>tu identidad</strong> sin permiso, esto crea un caso de
+                  <strong> prioridad alta</strong>. El equipo puede suspender la cuenta y revocar la
+                  verificación mientras se investiga. Contanos los detalles abajo.
+                </span>
+              </div>
+            )}
 
             <div>
               <label className="text-sm font-medium text-[#374151] block mb-1.5">

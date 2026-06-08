@@ -14,6 +14,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Falta el perfil a reportar." }, { status: 400 });
     }
 
+    // Impersonation reports are the real-world deterrent against an impostor who
+    // entered a real cédula + matching name (the padrón cannot prove physical
+    // identity) — flag them HIGH PRIORITY so support triages first (items 8/10).
+    const isImpersonation = /suplantaci[oó]n de identidad/i.test(String(reason ?? ""));
+    const storedReason = isImpersonation ? `[PRIORIDAD ALTA] ${reason}` : (reason ?? "Sin detalle");
+
     // Persist the report so the admin moderation queue can action it (best-effort;
     // resolve the professional_id from the slug). Never blocks the email path.
     try {
@@ -23,7 +29,7 @@ export async function POST(req: NextRequest) {
         professional_id: pro?.id ?? null,
         professional_slug: professionalSlug,
         professional_name: professionalName ?? null,
-        reason: reason ?? "Sin detalle",
+        reason: storedReason,
         reporter_email: reporterEmail ?? null,
       });
     } catch (e) {
@@ -62,7 +68,7 @@ export async function POST(req: NextRequest) {
         from: FROM_ADDRESS,
         to: [SUPPORT_TO],
         reply_to: reporterEmail || undefined,
-        subject: `[Reporte] Perfil de ${professionalName ?? professionalSlug}`,
+        subject: `${isImpersonation ? "[PRIORIDAD ALTA] " : ""}[Reporte] Perfil de ${professionalName ?? professionalSlug}`,
         html,
       }),
     });

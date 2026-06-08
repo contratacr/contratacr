@@ -23,7 +23,12 @@ export async function GET(req: Request) {
     .order("verification_updated_at", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false });
 
-  if (status !== "all" && (VERIFICATION_STATUSES as string[]).includes(status)) {
+  // The "pending" (actionable) view ALSO includes accounts under appeal, so a
+  // pending case that files an appeal is never lost from the admin's review queue
+  // (item 7). The dedicated "under_appeal" tab still lists appeals specifically.
+  if (status === "pending") {
+    query = query.in("verification_status", ["pending", "under_appeal"]);
+  } else if (status !== "all" && (VERIFICATION_STATUSES as string[]).includes(status)) {
     query = query.eq("verification_status", status);
   }
 
