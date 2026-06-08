@@ -766,52 +766,54 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                         </div>
                       </div>
 
-                      {/* Has cédula → auto-fill name from padrón (optional) */}
+                      {/* YES → cédula → auto-fill name from padrón (ALWAYS optional) */}
                       {benHasCedula === true && (
                         <>
                           <CedulaInput
                             value={benCedula}
                             onChange={setBenCedula}
-                            hint="Opcional — se autocompleta el nombre del padrón."
+                            hint="Opcional — autocompleta el nombre del padrón. Nunca bloquea la cita."
                           />
                           {benLookupName && (
-                            <p className="text-xs text-[#15803d]">Encontramos: <strong>{benLookupName}</strong></p>
+                            <p className="text-xs text-[#15803d] -mt-1">Encontramos: <strong>{benLookupName}</strong></p>
+                          )}
+                          {benCedula && isValidId(cleanId(benCedula)) && detectIdType(cleanId(benCedula)) === "cedula" && !benLookupName && (
+                            <p className="text-xs text-[#b45309] -mt-1">No encontramos esa cédula en el padrón. Podés escribir el nombre abajo igual.</p>
                           )}
                         </>
                       )}
 
-                      {/* Name (always) + DOB (when no cédula) + optional phone */}
+                      {/* Name (both branches; auto-filled in YES, editable) + DOB (optional
+                          in YES since the padrón has no birth date; entered in NO) + phone */}
                       {benHasCedula !== null && (
                         <>
-                          {benHasCedula === false && (
-                            <>
-                              <div>
-                                <label className="text-xs font-medium text-[#374151] block mb-1.5">Nombre completo de la persona</label>
-                                <input
-                                  type="text"
-                                  value={benName}
-                                  onChange={(e) => setBenName(e.target.value)}
-                                  placeholder="Nombre de la persona que recibe el servicio"
-                                  className="w-full h-10 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent"
-                                />
-                              </div>
-                              <div>
-                                <label className="text-xs font-medium text-[#374151] block mb-1.5">Fecha de nacimiento</label>
-                                <input
-                                  type="date"
-                                  value={benDob}
-                                  max={new Date().toISOString().slice(0, 10)}
-                                  onChange={(e) => setBenDob(e.target.value)}
-                                  className="h-10 rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent"
-                                />
-                                {benDob && computeAge(benDob) && (
-                                  <p className={cn("text-xs mt-1", isMinorFromDob(benDob) ? "text-[#b45309]" : "text-[#6b7280]")}>
-                                    {formatAge(computeAge(benDob))}{isMinorFromDob(benDob) ? " · menor de edad (la cita queda marcada como 'para un menor')" : ""}
-                                  </p>
-                                )}
-                              </div>
-                            </>
-                          )}
+                          <div>
+                            <label className="text-xs font-medium text-[#374151] block mb-1.5">Nombre completo de la persona</label>
+                            <input
+                              type="text"
+                              value={benName}
+                              onChange={(e) => setBenName(e.target.value)}
+                              placeholder="Nombre de la persona que recibe el servicio"
+                              className="w-full h-10 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium text-[#374151] block mb-1.5">
+                              Fecha de nacimiento {benHasCedula === true && <span className="text-[#9ca3af] font-normal">(opcional)</span>}
+                            </label>
+                            <input
+                              type="date"
+                              value={benDob}
+                              max={new Date().toISOString().slice(0, 10)}
+                              onChange={(e) => setBenDob(e.target.value)}
+                              className="h-10 rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent"
+                            />
+                            {benDob && computeAge(benDob) && (
+                              <p className={cn("text-xs mt-1", isMinorFromDob(benDob) ? "text-[#b45309]" : "text-[#6b7280]")}>
+                                {formatAge(computeAge(benDob))}{isMinorFromDob(benDob) ? " · menor de edad (la cita queda marcada como 'para un menor')" : ""}
+                              </p>
+                            )}
+                          </div>
                           <div>
                             <label className="text-xs font-medium text-[#374151] block mb-1.5">Teléfono de contacto <span className="text-[#9ca3af] font-normal">(opcional)</span></label>
                             <input
@@ -1014,10 +1016,13 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                   <Button
                     size="md"
                     className="flex-1"
-                    disabled={!description.trim()}
+                    disabled={!description.trim() || (forSomeoneElse && (benHasCedula === null || !benName.trim()))}
                     loading={submitting}
                     onClick={async () => {
                       if (!description.trim()) return;
+                      // Booking for someone else needs at least the beneficiary's name
+                      // (cédula stays optional) so the professional knows who it's for.
+                      if (forSomeoneElse && (benHasCedula === null || !benName.trim())) return;
                       if (isLoggedIn) {
                         if (needsCompleteStep) setStep("complete");
                         else await handleSubmit();
