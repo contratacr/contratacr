@@ -8,6 +8,7 @@ import { ClientRegistrationModal } from "@/components/auth/client-registration-m
 import { Link } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { getWhatsAppLink } from "@/lib/utils";
+import { isTooSoonCR } from "@/lib/time-cr";
 import type { ProfessionalCardData } from "@/lib/data/mock-professionals";
 
 export type ScheduleSlot = { date: string; time: string; locationId?: string | null };
@@ -94,7 +95,9 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       const d = new Date(today);
       d.setDate(today.getDate() + i);
       const key = toKey(d);
-      const times = (byDate.get(key) ?? []).sort();
+      // Hide any slot within the 15-minute lead time (today only) — it's no longer
+      // bookable, so it must stop showing in search.
+      const times = (byDate.get(key) ?? []).filter((t) => !isTooSoonCR(key, t)).sort();
       return { key, label: headerLabel(d), times };
     });
   }, [filteredSlots]);

@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { Plus, X, CalendarPlus, Globe, Lock, Loader2, Video, MapPin, AlertCircle } from "lucide-react";
 import { CONTACT_PREFERENCES, type ContactPreference } from "@/lib/constants";
-import { crTodayISO, isPastDateTimeCR, isTooSoonCR, earliestValidTimeCR, crDatePretty, LEAD_MINUTES } from "@/lib/time-cr";
+import { crTodayISO, isPastDateTimeCR, isTooSoonCR, earliestValidTimeCR, nextFullHourCR, crDatePretty, LEAD_MINUTES } from "@/lib/time-cr";
 
 type Slot = { id?: string; slot_date: string; slot_time: string; location_id?: string | null };
 
@@ -290,16 +290,18 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
   const inputCls =
     "h-9 px-3 rounded-xl border border-[#e5e7eb] bg-white text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
 
-  // When the chosen date is today, the time pickers only OFFER times ≥ 15 min
-  // ahead (CR). Future dates allow any time.
-  const minTime = genDate === todayISO() ? earliestValidTimeCR(genDate) : undefined;
-  // Keep the start / single-time fields at a valid value so the pro never hits an error.
+  // When the chosen date is today, the time pickers only OFFER valid times.
+  //  - "Desde" (range start) begins at the next ROUNDED full hour (9:55 → 10:00).
+  //  - A single puntual time only needs the 15-minute lead.
+  const isToday = genDate === todayISO();
+  const startMin = isToday ? nextFullHourCR(genDate) : undefined;     // Desde / Hasta
+  const singleMin = isToday ? earliestValidTimeCR(genDate) : undefined; // hora puntual
+  // Keep the fields at valid values so the pro never hits an error.
   useEffect(() => {
-    if (!minTime) return;
-    if (toMins(genStart) < toMins(minTime)) setGenStart(minTime);
-    if (toMins(singleTime) < toMins(minTime)) setSingleTime(minTime);
+    if (startMin && toMins(genStart) < toMins(startMin)) setGenStart(startMin);
+    if (singleMin && toMins(singleTime) < toMins(singleMin)) setSingleTime(singleMin);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [minTime]);
+  }, [startMin, singleMin]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -430,11 +432,11 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-[#6b7280]">Desde</label>
-              <input type="time" min={minTime} value={genStart} onChange={(e) => setGenStart(e.target.value)} className={inputCls} />
+              <input type="time" min={startMin} step={3600} value={genStart} onChange={(e) => setGenStart(e.target.value)} className={inputCls} />
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-[#6b7280]">Hasta</label>
-              <input type="time" min={minTime} value={genEnd} onChange={(e) => setGenEnd(e.target.value)} className={inputCls} />
+              <input type="time" min={startMin} value={genEnd} onChange={(e) => setGenEnd(e.target.value)} className={inputCls} />
             </div>
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-[#6b7280]">Intervalo</label>
@@ -458,7 +460,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
 
           <div className="flex items-center gap-2 pt-1">
             <span className="text-xs text-[#9ca3af]">o agregá una hora puntual:</span>
-            <input type="time" min={minTime} value={singleTime} onChange={(e) => setSingleTime(e.target.value)} className={cn(inputCls, "h-8")} />
+            <input type="time" min={singleMin} value={singleTime} onChange={(e) => setSingleTime(e.target.value)} className={cn(inputCls, "h-8")} />
             <button
               type="button"
               onClick={() => insertSlots([singleTime])}

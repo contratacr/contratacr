@@ -70,6 +70,20 @@ export function earliestValidTimeCR(dateISO: string, lead: number = LEAD_MINUTES
   return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
 }
 
+/**
+ * Earliest sensible "Desde" start time when configuring availability: the next
+ * ROUNDED full hour (e.g. at 9:55 → "10:00"; at 9:00 exactly → "09:00"). For a
+ * future date → "00:00". Past date → "24:00" (nothing valid).
+ */
+export function nextFullHourCR(dateISO: string): string {
+  const { date, hour, minute } = crParts();
+  if (dateISO > date) return "00:00";
+  if (dateISO < date) return "24:00";
+  const h = minute > 0 ? hour + 1 : hour; // round up to the next o'clock
+  if (h > 23) return "23:59";
+  return `${String(h).padStart(2, "0")}:00`;
+}
+
 /** Costa Rica display date dd/mm/aaaa from a YYYY-MM-DD string. */
 export function crDatePretty(dateISO: string): string {
   const [y, m, d] = dateISO.split("-");
