@@ -5,8 +5,8 @@ import { Clock, ChevronDown, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // A polished 12-hour time picker (custom popover). Each option is a full,
-// unambiguous label ("10:00 a.m.", "3:00 p.m."), so the meridiem is intrinsic —
-// crossing noon flips a.m./p.m. automatically (there is no separate, sticky AM/PM
+// unambiguous label ("10:00 AM", "3:00 PM"), so the meridiem is intrinsic —
+// crossing noon flips AM/PM automatically (there is no separate, sticky AM/PM
 // control). Stores a 24-hour "HH:MM" value. Earlier-than-`min` options are hidden.
 
 function toMins(t: string): number {
@@ -19,7 +19,7 @@ function hhmm(mins: number): string {
 export function to12h(value: string): string {
   if (!value) return "";
   const [h, m] = value.split(":").map(Number);
-  const mer = h < 12 ? "a.m." : "p.m.";
+  const mer = h < 12 ? "AM" : "PM";
   const h12 = h % 12 === 0 ? 12 : h % 12;
   return `${h12}:${String(m).padStart(2, "0")} ${mer}`;
 }
