@@ -13,12 +13,16 @@ import { CheckCircle2, Eye, EyeOff, User } from "lucide-react";
 import { PROVINCES } from "@/lib/data/cr-geography";
 import { cn } from "@/lib/utils";
 import { getInitials } from "@/lib/utils";
+import { IdentityField, type IdentityResult } from "@/components/ui/identity-field";
+import { cleanId, detectIdType, isValidId } from "@/lib/cedula";
 
 export default function RegisterClientPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
 
   const [fullName, setFullName] = useState("");
+  const [cedula, setCedula] = useState("");
+  const [identity, setIdentity] = useState<IdentityResult | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -57,6 +61,19 @@ export default function RegisterClientPage() {
     if (!user && password.length < 8) { setError("La contraseña debe tener al menos 8 caracteres."); return; }
     if (!user && password !== confirmPassword) { setError("Las contraseñas no coinciden."); return; }
 
+    // Cédula required + 18+ gate. National cédulas must be found in the padrón
+    // (the electoral roll only contains citizens 18+) — this blocks minors. A
+    // DIMEX/NITE can't be age-checked here, so it's accepted on format.
+    const cleanCedula = cleanId(cedula);
+    if (!isValidId(cleanCedula)) {
+      setError("Ingresá un número de identificación válido (CR: 9 dígitos · DIMEX: 11-12 · NITE: 10).");
+      return;
+    }
+    if (detectIdType(cleanCedula) === "cedula" && (!identity || !identity.found)) {
+      setError("No pudimos confirmar tu identidad ni tu mayoría de edad con esa cédula. Si tu cédula es nueva o sos extranjero, escribinos a soporte@contratacr.com.");
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -71,7 +88,7 @@ export default function RegisterClientPage() {
           options: {
             // onboarding_completed lets middleware send them straight to their
             // panel after verifying — never back to the role-selection screen.
-            data: { role: "client", full_name: fullName, onboarding_completed: true },
+            data: { role: "client", full_name: fullName, cedula: cleanCedula, onboarding_completed: true },
           },
         });
 
@@ -104,6 +121,7 @@ export default function RegisterClientPage() {
         body: JSON.stringify({
           userId,
           fullName: fullName.trim(),
+          cedula: cleanCedula,
           phone: phone.trim() || null,
           provinciaId: provinciaId || null,
           cantonId: cantonId || null,
@@ -209,17 +227,15 @@ export default function RegisterClientPage() {
             )}
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-              <div>
-                <label className="text-sm font-medium text-[#374151] block mb-1.5">Nombre completo</label>
-                <input
-                  type="text"
-                  className={inputClass}
-                  placeholder="Tu nombre completo"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  required
-                />
-              </div>
+              {/* Cédula → padrón auto-fill (name comes from the padrón; also our
+                  18+ gate). The client does not type their name when found. */}
+              <IdentityField
+                cedula={cedula}
+                fullName={fullName}
+                onCedulaChange={setCedula}
+                onFullNameChange={setFullName}
+                onResult={setIdentity}
+              />
 
               {!user && (
                 <>
