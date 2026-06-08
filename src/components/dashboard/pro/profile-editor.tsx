@@ -13,6 +13,7 @@ import { createClient } from "@/lib/supabase/client";
 import { Camera, Check, X, Plus, Truck, MapPin } from "lucide-react";
 import { computeSearchAreas, primaryArea, type CoverageArea } from "@/lib/location";
 import { AseguradorasInput } from "@/components/ui/aseguradoras-input";
+import { CloseAccountSection } from "@/components/account/close-account-section";
 import { CategorySearch } from "@/components/ui/category-search";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { cn } from "@/lib/utils";
@@ -460,6 +461,9 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
           </span>
         )}
       </div>
+
+      {/* Cerrar / deshabilitar cuenta */}
+      <CloseAccountSection />
 
       {/* Designed unsaved-changes dialog (replaces the browser default) */}
       <UnsavedChangesGuard dirty={dirty} onSave={() => handleSave(false)} />

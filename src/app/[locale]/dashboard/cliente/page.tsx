@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { getInitials, getWhatsAppLink } from "@/lib/utils";
 import { NotificationsList } from "@/components/notifications/notifications-list";
 import { PhoneInput } from "@/components/ui/phone-input";
+import { CloseAccountSection } from "@/components/account/close-account-section";
 import { LeaveReviewModal } from "@/components/professionals/leave-review-modal";
 import { SavedProfessionalsTab } from "@/components/professionals/saved-professionals-tab";
 import type { BookingStatus } from "@/types";
@@ -996,6 +997,9 @@ export default function ClientDashboardPage() {
                       </div>
                     )}
                   </div>
+
+                  {/* Cerrar / deshabilitar cuenta */}
+                  <CloseAccountSection />
                 </div>
               )}
             </>

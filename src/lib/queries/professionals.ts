@@ -86,7 +86,7 @@ export async function searchProfessionals(
              rating_avg, review_count, bio, whatsapp, years_experience, portfolio_urls,
              category_id, professions, pricing, lat, lng, service_type, availability_public, contact_preference,
              business_name, workplaces, verification_status${modern ? ", no_cr_id, insurance_networks, coverage_areas, coverage_provincias, coverage_country, allow_phone_call" : ""},
-             profiles(full_name, avatar_url),
+             profiles(full_name, avatar_url${modern ? ", is_disabled" : ""}),
              provincias(id, name),
              cantones(id, name)`
           );
@@ -171,8 +171,12 @@ export async function searchProfessionals(
       }
       if (error) throw error;
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return (data ?? []).map((row: any) => ({
+      return (data ?? [])
+        // Hide soft-disabled accounts (item 17). undefined (pre-migration) → shown.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .filter((row: any) => !row.profiles?.is_disabled)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .map((row: any) => ({
         id: row.id,
         slug: row.slug,
         fullName: row.profiles?.full_name ?? "Profesional",
