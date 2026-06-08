@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import {
   CalendarDays, Bookmark, LogOut, Star, Bell, User, FolderOpen,
   CheckCircle2, Clock, XCircle, ChevronDown, ChevronUp,
-  Coins, MapPin, Send, Plus, Briefcase, Trash2,
+  Coins, MapPin, Send, Plus, Briefcase, Trash2, Flag,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Navbar } from "@/components/layout/navbar";
@@ -225,6 +225,19 @@ export default function ClientDashboardPage() {
       body: JSON.stringify({ id, status: "cancelled" }),
     });
     setBookings((prev) => prev.map((b) => (b.id === id ? { ...b, status: "cancelled" } : b)));
+  }
+
+  // Two-way reputation: report a professional (no-show, service not performed).
+  // No monetary penalty — payments are off-platform; this feeds reputation/moderation.
+  async function reportProfessional(bookingId: string) {
+    const reason = window.prompt("¿Qué pasó? (no se presentó / servicio no realizado / otro). Tu reporte ayuda a la moderación.");
+    if (!reason || !reason.trim()) return;
+    const res = await fetch("/api/report-professional", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bookingId, reason: reason.trim() }),
+    });
+    alert(res.ok ? "Gracias. Tu reporte fue enviado al equipo de moderación." : "No se pudo enviar el reporte.");
   }
 
   async function updateProjectStatus(projectId: string, status: string) {
@@ -587,21 +600,31 @@ export default function ClientDashboardPage() {
                                         {new Date(b.created_at).toLocaleDateString("es-CR")}
                                       </p>
                                     </div>
-                                    {b.status === "completed" && (
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() =>
-                                          setReviewModal({
-                                            professionalId: b.professional_id,
-                                            professionalName: b.professionals?.profiles?.full_name ?? "Profesional",
-                                          })
-                                        }
-                                      >
-                                        <Star className="h-3.5 w-3.5" />
-                                        Reseña
-                                      </Button>
-                                    )}
+                                    <div className="flex flex-col gap-1.5 shrink-0">
+                                      {b.status === "completed" && (
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() =>
+                                            setReviewModal({
+                                              professionalId: b.professional_id,
+                                              professionalName: b.professionals?.profiles?.full_name ?? "Profesional",
+                                            })
+                                          }
+                                        >
+                                          <Star className="h-3.5 w-3.5" />
+                                          Reseña
+                                        </Button>
+                                      )}
+                                      {["confirmed", "in_progress", "completed"].includes(b.status) && (
+                                        <button
+                                          onClick={() => reportProfessional(b.id)}
+                                          className="inline-flex items-center justify-center gap-1.5 text-xs text-[#9ca3af] hover:text-red-500 transition-colors"
+                                        >
+                                          <Flag className="h-3.5 w-3.5" /> Reportar
+                                        </button>
+                                      )}
+                                    </div>
                                   </div>
                                 </CardContent>
                               </Card>

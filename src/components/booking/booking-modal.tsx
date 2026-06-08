@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { CedulaInput } from "@/components/ui/cedula-input";
 import { isValidId, detectIdType, cleanId } from "@/lib/cedula";
+import { computeAge, formatAge, isMinorFromDob } from "@/lib/age";
 import { StarRating } from "@/components/ui/star-rating";
 import { getInitials, getWhatsAppLink, buildBookingIcs } from "@/lib/utils";
 import { cn } from "@/lib/utils";
@@ -123,6 +124,18 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   // EXIST in the padrón to reject invented numbers. Recoverable inline error.
   const [cedulaError, setCedulaError] = useState<string | null>(null);
   const [checkingCedula, setCheckingCedula] = useState(false);
+  // Booking for someone else: responsible party (the account holder) vs beneficiary.
+  // The beneficiary's cédula is ALWAYS optional; a minor may be a beneficiary but
+  // never an account holder. Data minimization: only the appointment-needed info.
+  const [forSomeoneElse, setForSomeoneElse] = useState(false);
+  const [benHasCedula, setBenHasCedula] = useState<boolean | null>(null);
+  const [benCedula, setBenCedula] = useState("");
+  const [benName, setBenName] = useState("");
+  const [benDob, setBenDob] = useState("");
+  const [benPhone, setBenPhone] = useState("");
+  const [benLookupName, setBenLookupName] = useState<string | null>(null);
+  // Live padrón name for the client's OWN cédula (auto-fill display, item 1b).
+  const [selfCedulaName, setSelfCedulaName] = useState<string | null>(null);
   // Guest email duplicate detection (inline, real-time).
   const guestEmailCheck = useAvailabilityCheck(clientEmail, "email", !isLoggedIn);
 
@@ -141,6 +154,9 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     setNeedsProfile(false);
     setProfileError(null);
     setAvailabilityPrivate(false);
+    setForSomeoneElse(false);
+    setBenHasCedula(null);
+    setBenCedula(""); setBenName(""); setBenDob(""); setBenPhone(""); setBenLookupName(null);
 
     const supabase = createClient();
     Promise.all([
@@ -194,6 +210,44 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
       }
     });
   }, [open, professional.id, initialDate, initialTime]);
+
+  // Beneficiary cédula → padrón name auto-fill (debounced). Optional; never blocks.
+  useEffect(() => {
+    if (!forSomeoneElse || benHasCedula !== true) { setBenLookupName(null); return; }
+    const clean = cleanId(benCedula);
+    if (!isValidId(clean) || detectIdType(clean) !== "cedula") { setBenLookupName(null); return; }
+    let active = true;
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/cedula/${clean}`);
+        if (!active) return;
+        if (res.ok) {
+          const { fullName } = await res.json();
+          setBenLookupName(fullName ?? null);
+          if (fullName) setBenName(fullName);
+        } else {
+          setBenLookupName(null);
+        }
+      } catch { if (active) setBenLookupName(null); }
+    }, 500);
+    return () => { active = false; clearTimeout(t); };
+  }, [benCedula, benHasCedula, forSomeoneElse]);
+
+  // Live padrón name for the client's own cédula (guest/needs-cédula flows).
+  useEffect(() => {
+    const clean = cleanId(profileCedula);
+    if (!isValidId(clean) || detectIdType(clean) !== "cedula") { setSelfCedulaName(null); return; }
+    let active = true;
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/cedula/${clean}`);
+        if (!active) return;
+        const j = await res.json().catch(() => ({}));
+        setSelfCedulaName(res.ok ? (j.fullName ?? null) : null);
+      } catch { if (active) setSelfCedulaName(null); }
+    }, 500);
+    return () => { active = false; clearTimeout(t); };
+  }, [profileCedula]);
 
   // Professionals using the new date-based model have explicit slots.
   const usesExplicitSlots = Object.keys(dateSlots).length > 0;
@@ -266,6 +320,13 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
           preferredDateText: selectedDate
             ? `${formatDateDisplay(selectedDate)}${selectedTime ? ` a las ${selectedTime}` : ""}`
             : null,
+          // Booking for someone else (responsible adult vs beneficiary).
+          forSomeoneElse,
+          beneficiaryName: forSomeoneElse ? (benName.trim() || null) : null,
+          beneficiaryCedula: forSomeoneElse && benHasCedula ? (cleanId(benCedula) || null) : null,
+          beneficiaryDob: forSomeoneElse && benDob ? benDob : null,
+          beneficiaryPhone: forSomeoneElse ? (benPhone.trim() || null) : null,
+          beneficiaryIsMinor: forSomeoneElse && benDob ? isMinorFromDob(benDob) : false,
         }),
       });
 
@@ -650,7 +711,124 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                         Hola, <span className="font-medium text-[#374151]">{clientName.split(" ")[0]}</span>. Describí lo que necesitás.
                       </p>
                     )}
+                    {/* Stored identity (logged-in + already has cédula) — shown, not re-asked */}
+                    {isLoggedIn && profileCedula && (
+                      <p className="text-xs text-[#15803d] mt-1">
+                        Reservás como <strong>{clientName || "vos"}</strong> · cédula {profileCedula}
+                      </p>
+                    )}
                   </div>
+
+                  {/* ¿Para quién es la cita? — responsible adult vs beneficiary */}
+                  <div>
+                    <label className="text-sm font-medium text-[#374151] block mb-1.5">¿Para quién es la cita?</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {([
+                        { v: false, label: "Para mí" },
+                        { v: true, label: "Para otra persona" },
+                      ] as const).map((opt) => (
+                        <button
+                          key={String(opt.v)}
+                          type="button"
+                          onClick={() => setForSomeoneElse(opt.v)}
+                          className={cn(
+                            "p-2.5 rounded-xl border-2 text-sm font-medium transition-all",
+                            forSomeoneElse === opt.v ? "border-[#009FD9] bg-[#EBF5FB] text-[#0089bb]" : "border-[#e5e7eb] text-[#374151] hover:border-[#009FD9]/40"
+                          )}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {forSomeoneElse && (
+                    <div className="rounded-xl border border-[#e5e7eb] p-3 flex flex-col gap-3 bg-[#f9fafb]">
+                      <p className="text-xs text-[#6b7280]">
+                        Vos sos la persona responsable de la cita. Contanos para quién es:
+                      </p>
+                      <div>
+                        <label className="text-xs font-medium text-[#374151] block mb-1.5">¿La persona tiene cédula?</label>
+                        <div className="grid grid-cols-2 gap-2">
+                          {([{ v: true, label: "Sí" }, { v: false, label: "No" }] as const).map((opt) => (
+                            <button
+                              key={String(opt.v)}
+                              type="button"
+                              onClick={() => setBenHasCedula(opt.v)}
+                              className={cn(
+                                "p-2 rounded-lg border-2 text-sm font-medium transition-all",
+                                benHasCedula === opt.v ? "border-[#009FD9] bg-[#EBF5FB] text-[#0089bb]" : "border-[#e5e7eb] text-[#374151] hover:border-[#009FD9]/40"
+                              )}
+                            >
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Has cédula → auto-fill name from padrón (optional) */}
+                      {benHasCedula === true && (
+                        <>
+                          <CedulaInput
+                            value={benCedula}
+                            onChange={setBenCedula}
+                            hint="Opcional — se autocompleta el nombre del padrón."
+                          />
+                          {benLookupName && (
+                            <p className="text-xs text-[#15803d]">Encontramos: <strong>{benLookupName}</strong></p>
+                          )}
+                        </>
+                      )}
+
+                      {/* Name (always) + DOB (when no cédula) + optional phone */}
+                      {benHasCedula !== null && (
+                        <>
+                          {benHasCedula === false && (
+                            <>
+                              <div>
+                                <label className="text-xs font-medium text-[#374151] block mb-1.5">Nombre completo de la persona</label>
+                                <input
+                                  type="text"
+                                  value={benName}
+                                  onChange={(e) => setBenName(e.target.value)}
+                                  placeholder="Nombre de la persona que recibe el servicio"
+                                  className="w-full h-10 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-xs font-medium text-[#374151] block mb-1.5">Fecha de nacimiento</label>
+                                <input
+                                  type="date"
+                                  value={benDob}
+                                  max={new Date().toISOString().slice(0, 10)}
+                                  onChange={(e) => setBenDob(e.target.value)}
+                                  className="h-10 rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent"
+                                />
+                                {benDob && computeAge(benDob) && (
+                                  <p className={cn("text-xs mt-1", isMinorFromDob(benDob) ? "text-[#b45309]" : "text-[#6b7280]")}>
+                                    {formatAge(computeAge(benDob))}{isMinorFromDob(benDob) ? " · menor de edad (la cita queda marcada como 'para un menor')" : ""}
+                                  </p>
+                                )}
+                              </div>
+                            </>
+                          )}
+                          <div>
+                            <label className="text-xs font-medium text-[#374151] block mb-1.5">Teléfono de contacto <span className="text-[#9ca3af] font-normal">(opcional)</span></label>
+                            <input
+                              type="tel"
+                              value={benPhone}
+                              onChange={(e) => setBenPhone(e.target.value)}
+                              placeholder="Solo si querés que el profesional pueda contactar a la persona"
+                              className="w-full h-10 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent"
+                            />
+                          </div>
+                          <p className="text-[11px] text-[#9ca3af]">
+                            La cédula de la persona es opcional — nunca bloquea la cita. La identidad la respaldás vos como responsable.
+                          </p>
+                        </>
+                      )}
+                    </div>
+                  )}
 
                   <div>
                     <label className="text-sm font-medium text-[#374151] block mb-1.5">
@@ -661,7 +839,6 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                       placeholder={t("step4.descPlaceholder")}
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
-                      autoFocus
                     />
                   </div>
                 </div>
@@ -717,6 +894,9 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     error={cedulaError ?? undefined}
                     hint="Solo para tu solicitud — no es una verificación de identidad."
                   />
+                  {selfCedulaName && (
+                    <p className="text-xs text-[#15803d] -mt-1">Encontramos: <strong>{selfCedulaName}</strong></p>
+                  )}
                 </div>
               )}
 

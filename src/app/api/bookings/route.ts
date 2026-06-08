@@ -30,9 +30,12 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const { scheduledDate, scheduledTime, clientPhone } = body;
+    const {
+      scheduledDate, scheduledTime, clientPhone,
+      forSomeoneElse, beneficiaryName, beneficiaryCedula, beneficiaryDob, beneficiaryPhone, beneficiaryIsMinor,
+    } = body;
 
-    const { data, error } = await supabase.from("bookings").insert({
+    const baseBooking = {
       professional_id: professionalId,
       client_id: session?.user?.id ?? null,
       client_cedula: clientCedula ?? null,
@@ -44,10 +47,28 @@ export async function POST(req: NextRequest) {
       scheduled_date: scheduledDate ?? null,
       scheduled_time: scheduledTime ?? null,
       status: "pending",
-    }).select("id").single();
+    };
+    // Beneficiary fields (booking for someone else) — optional; retried-away if
+    // the columns aren't migrated yet (migration 032).
+    const beneficiaryFields = {
+      for_someone_else: !!forSomeoneElse,
+      beneficiary_name: beneficiaryName ?? null,
+      beneficiary_cedula: beneficiaryCedula ?? null,
+      beneficiary_dob: beneficiaryDob ?? null,
+      beneficiary_phone: beneficiaryPhone ?? null,
+      beneficiary_is_minor: !!beneficiaryIsMinor,
+    };
+
+    let { data, error } = await supabase.from("bookings").insert({ ...baseBooking, ...beneficiaryFields }).select("id").single();
+    if (error && /for_someone_else|beneficiary_|column|schema cache|PGRST204|could not find/i.test(error.message)) {
+      ({ data, error } = await supabase.from("bookings").insert(baseBooking).select("id").single());
+    }
 
     if (error) {
       console.error("[POST /api/bookings]", error);
+      return NextResponse.json({ error: "Failed to create booking" }, { status: 500 });
+    }
+    if (!data) {
       return NextResponse.json({ error: "Failed to create booking" }, { status: 500 });
     }
 

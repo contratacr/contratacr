@@ -25,6 +25,12 @@ type Booking = {
   created_at: string;
   professional_whatsapp?: string;
   profiles?: { full_name?: string; avatar_url?: string; is_flagged?: boolean } | null;
+  for_someone_else?: boolean;
+  beneficiary_name?: string | null;
+  beneficiary_cedula?: string | null;
+  beneficiary_dob?: string | null;
+  beneficiary_phone?: string | null;
+  beneficiary_is_minor?: boolean;
 };
 
 const STATUS_VARIANT: Record<BookingStatus, "warning" | "success" | "error" | "default"> = {
@@ -143,6 +149,24 @@ export function BookingRequests() {
                   <div className="flex items-center gap-2 text-sm">
                     <Phone className="h-4 w-4 text-[#6b7280] shrink-0" />
                     <span className="text-[#374151]">{booking.client_phone}</span>
+                  </div>
+                )}
+
+                {/* Beneficiary (booking for someone else): who the service is for */}
+                {booking.for_someone_else && (
+                  <div className="rounded-lg bg-[#EBF5FB] border border-[#bfdbfe] p-2.5 text-xs">
+                    <p className="font-semibold text-[#0089bb] flex items-center gap-1.5 flex-wrap">
+                      Para: {booking.beneficiary_name || "otra persona"}
+                      {booking.beneficiary_is_minor && (
+                        <span className="text-[10px] font-semibold text-[#b45309] bg-[#fef3c7] px-1.5 py-0.5 rounded-md">Menor de edad</span>
+                      )}
+                    </p>
+                    <p className="text-[#374151] mt-0.5">
+                      {booking.beneficiary_dob ? `Nac.: ${booking.beneficiary_dob}` : ""}
+                      {booking.beneficiary_cedula ? `${booking.beneficiary_dob ? " · " : ""}Cédula: ${booking.beneficiary_cedula}` : ""}
+                      {booking.beneficiary_phone ? ` · Tel: ${booking.beneficiary_phone}` : ""}
+                    </p>
+                    <p className="text-[10px] text-[#6b7280] mt-0.5">Reservado por {booking.client_name} (responsable)</p>
                   </div>
                 )}
                 {booking.service_description && (
