@@ -8,6 +8,7 @@ import { Plus, X, CalendarPlus, Globe, Lock, Loader2, Video, MapPin, AlertCircle
 import { CONTACT_PREFERENCES, type ContactPreference } from "@/lib/constants";
 import { crTodayISO, isPastDateTimeCR, isTooSoonCR, nextFullHourCR, crDatePretty, LEAD_MINUTES } from "@/lib/time-cr";
 import { getCategoryLabel } from "@/lib/data/categories";
+import { TimeSelect, to12h } from "@/components/ui/time-select";
 
 type Slot = { id?: string; slot_date: string; slot_time: string; location_id?: string | null; category_id?: string | null };
 
@@ -117,10 +118,18 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
     }
   }, [locationOptions, genLocation]);
 
+  // Resolve any slot's location id to its human label using the SAME option list
+  // used to create them — so workplaces, coverage zones (cov_*) and videoconsulta
+  // all display correctly in "Tus horarios próximos" (item 2).
+  const locLabelById = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const o of locationOptions) m.set(o.id, o.label);
+    return m;
+  }, [locationOptions]);
   function locationLabel(id?: string | null): string {
     if (!id || id === GENERAL_LOC) return "General";
     if (id === VIDEO_LOC) return "Videoconsulta";
-    return workplaces.find((w) => w.id === id)?.name ?? "Ubicación";
+    return locLabelById.get(id) ?? workplaces.find((w) => w.id === id)?.name ?? "Ubicación";
   }
 
   async function toggleVideoconsulta() {
@@ -287,10 +296,15 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
   }
 
   function generate() {
+    setPastError(null);
     const step = interval === 0 ? Math.max(5, customInterval) : interval;
     const start = toMins(genStart);
     const end = toMins(genEnd);
-    if (end <= start) return;
+    // Explicit, friendly validation — never a silent no-op (item 1).
+    if (end <= start) {
+      setPastError("La hora de fin debe ser posterior a la de inicio.");
+      return;
+    }
     const times: string[] = [];
     for (let m = start; m + step <= end; m += step) times.push(hhmm(m));
     // Range shorter than one step but still valid → keep the start time.
@@ -321,6 +335,9 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
   // next ROUNDED full hour (e.g. 12:49 → 13:00) and stay in sync.
   const isToday = genDate === todayISO();
   const startMin = isToday ? nextFullHourCR(genDate) : undefined; // Desde / Hasta / hora puntual
+  // Live range validity for the Desde/Hasta pickers (item 1) — surfaced inline so
+  // an invalid combo (e.g. 5pm–5pm) never just dead-ends on "Generar".
+  const rangeInvalid = toMins(genEnd) <= toMins(genStart);
   // Keep the fields at valid values so the pro never hits an error. Bump anything
   // below the next full hour (covers time passing + switching back to today).
   useEffect(() => {
@@ -464,19 +481,13 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
           <div className="flex flex-wrap items-end gap-3">
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-[#6b7280]">Fecha</label>
-              <input type="date" min={todayISO()} value={genDate} onChange={(e) => setGenDate(e.target.value)} className={inputCls} />
+              <input type="date" min={todayISO()} value={genDate} onChange={(e) => { setGenDate(e.target.value); setPastError(null); }} className={cn(inputCls, "h-10")} />
             </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-[#6b7280]">Desde</label>
-              <input type="time" min={startMin} step={3600} value={genStart} onChange={(e) => setGenStart(e.target.value)} className={inputCls} />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-[#6b7280]">Hasta</label>
-              <input type="time" min={startMin} value={genEnd} onChange={(e) => setGenEnd(e.target.value)} className={inputCls} />
-            </div>
+            <TimeSelect label="Desde" min={startMin} value={genStart} onChange={(v) => { setGenStart(v); setPastError(null); }} className="w-36" />
+            <TimeSelect label="Hasta" min={startMin} value={genEnd} onChange={(v) => { setGenEnd(v); setPastError(null); }} className="w-36" error={rangeInvalid ? "Debe ser posterior a “Desde”." : undefined} />
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-[#6b7280]">Intervalo</label>
-              <select value={interval} onChange={(e) => setInterval(Number(e.target.value))} className={cn(inputCls, "cursor-pointer")}>
+              <select value={interval} onChange={(e) => setInterval(Number(e.target.value))} className={cn(inputCls, "h-10 cursor-pointer")}>
                 {INTERVAL_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value}>{o.label}</option>
                 ))}
@@ -485,7 +496,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
             {interval === 0 && (
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-medium text-[#6b7280]">Minutos</label>
-                <input type="number" min={5} step={5} value={customInterval} onChange={(e) => setCustomInterval(Number(e.target.value))} className={cn(inputCls, "w-24")} />
+                <input type="number" min={5} step={5} value={customInterval} onChange={(e) => setCustomInterval(Number(e.target.value))} className={cn(inputCls, "h-10 w-24")} />
               </div>
             )}
             <Button type="button" size="md" onClick={generate} disabled={busy}>
@@ -494,16 +505,16 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
             </Button>
           </div>
 
-          <div className="flex items-center gap-2 pt-1">
-            <span className="text-xs text-[#9ca3af]">o agregá una hora puntual:</span>
-            <input type="time" min={startMin} value={singleTime} onChange={(e) => setSingleTime(e.target.value)} className={cn(inputCls, "h-8")} />
+          <div className="flex flex-wrap items-end gap-2 pt-1">
+            <span className="text-xs text-[#9ca3af] mb-2.5">o agregá una hora puntual:</span>
+            <TimeSelect min={startMin} value={singleTime} onChange={setSingleTime} className="w-36" />
             <button
               type="button"
               onClick={() => insertSlots([singleTime])}
               disabled={busy}
-              className="text-xs font-medium text-[#009FD9] hover:underline cursor-pointer"
+              className="text-xs font-medium text-[#009FD9] hover:underline cursor-pointer mb-2.5"
             >
-              + Agregar
+              + Agregar {to12h(singleTime)}
             </button>
           </div>
 
@@ -528,32 +539,57 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
           </div>
         ) : (
           <div className="flex flex-col gap-3">
-            {grouped.map(([date, list]) => (
-              <div key={date} className="rounded-2xl border border-[#e5e7eb] p-4">
-                <div className="flex items-center justify-between mb-2.5">
-                  <span className="text-sm font-semibold text-[#111827] capitalize">{prettyDate(date)}</span>
-                  <button onClick={() => removeDate(date)} className="text-xs text-[#9ca3af] hover:text-red-500 transition-colors cursor-pointer">
-                    Quitar día
-                  </button>
+            {grouped.map(([date, list]) => {
+              // Within a day, group by (profesión + ubicación) so a pro with several
+              // professions/locations can tell each block apart (item 2).
+              const subMap = new Map<string, Slot[]>();
+              for (const s of list) {
+                const key = `${s.category_id ?? ""}|${s.location_id ?? ""}`;
+                if (!subMap.has(key)) subMap.set(key, []);
+                subMap.get(key)!.push(s);
+              }
+              const subgroups = Array.from(subMap.entries());
+              return (
+                <div key={date} className="rounded-2xl border border-[#e5e7eb] p-4">
+                  <div className="flex items-center justify-between mb-2.5">
+                    <span className="text-sm font-semibold text-[#111827] capitalize">{prettyDate(date)}</span>
+                    <button onClick={() => removeDate(date)} className="text-xs text-[#9ca3af] hover:text-red-500 transition-colors cursor-pointer">
+                      Quitar día
+                    </button>
+                  </div>
+                  <div className="flex flex-col gap-2.5">
+                    {subgroups.map(([key, sg]) => {
+                      const cat = sg[0].category_id;
+                      const loc = sg[0].location_id ?? null;
+                      const tags = [
+                        cat ? getCategoryLabel(cat) : null,
+                        loc ? locationLabel(loc) : null,
+                      ].filter(Boolean);
+                      return (
+                        <div key={key}>
+                          {tags.length > 0 && (
+                            <p className="text-xs font-medium text-[#374151] mb-1.5 flex items-center gap-1">
+                              {cat && <span className="rounded bg-[#EBF5FB] text-[#0089bb] px-1.5 py-0.5">{getCategoryLabel(cat)}</span>}
+                              {loc && <span className="inline-flex items-center gap-1 rounded bg-[#f3f4f6] text-[#374151] px-1.5 py-0.5"><MapPin className="h-3 w-3" />{locationLabel(loc)}</span>}
+                            </p>
+                          )}
+                          <div className="flex flex-wrap gap-2">
+                            {sg.map((s) => (
+                              <span key={s.id ?? `${s.slot_time}-${s.location_id ?? ""}-${s.category_id ?? ""}`} className="group inline-flex items-center gap-1.5 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium pl-3 pr-1.5 py-1.5">
+                                {to12h(s.slot_time)}
+                                <button onClick={() => removeSlot(s)} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors cursor-pointer" aria-label="Quitar">
+                                  <X className="h-3.5 w-3.5" />
+                                </button>
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {list.map((s) => (
-                    <span key={s.id ?? `${s.slot_time}-${s.location_id ?? ""}-${s.category_id ?? ""}`} className="group inline-flex items-center gap-1.5 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium pl-3 pr-1.5 py-1.5">
-                      {s.slot_time}
-                      {professionOptions.length > 1 && s.category_id && (
-                        <span className="text-[10px] font-normal text-[#0089bb]/70">· {getCategoryLabel(s.category_id)}</span>
-                      )}
-                      {locationOptions.length > 1 && (s.location_id ?? null) !== null && (
-                        <span className="text-[10px] font-normal text-[#0089bb]/70">· {locationLabel(s.location_id)}</span>
-                      )}
-                      <button onClick={() => removeSlot(s)} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors cursor-pointer" aria-label="Quitar">
-                        <X className="h-3.5 w-3.5" />
-                      </button>
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
