@@ -65,6 +65,17 @@ body {
   outline-offset: 2px;
 }
 
+/* Form fields render their own ring-based focus (focus:ring-2 / focus-within:ring-2).
+   The offset outline above would double up — a second box inside the field's
+   padding (e.g. the Idiomas / Aseguradoras chip inputs). Suppress it for fields;
+   this rule is unlayered + higher specificity so it wins over Tailwind utilities. */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+  outline-offset: 0;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
