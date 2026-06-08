@@ -1,19 +1,19 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { CheckCircle2, Loader2, ShieldCheck, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { CedulaInput } from "@/components/ui/cedula-input";
+import { IdentityInfoBlock } from "@/components/ui/identity-info-block";
 import { cleanId, isValidId } from "@/lib/cedula";
 
-// Identity field: cédula → padrón lookup → confirm the OFFICIAL name (no typing
+// Identity field: cédula → padrón lookup → confirm the OFFICIAL info (no typing
 // your own name for verification). Found → official name auto-filled + confirmed
-// (identity will auto-verify). Not found → manual name + "pendiente de revisión".
-//
-// Reports state upward via onChange so the parent can submit { cedula, fullName }
-// and know whether it came from the padrón.
+// (identity will auto-verify); shows name + cédula (+ DOB/age when available) with
+// a "¿No es tu información?" link. Not found → manual name + "pendiente de revisión".
 
 export type IdentityStatus = "idle" | "loading" | "found" | "notfound";
+export type IdentityResult = { found: boolean; isAdult: boolean; dob: string | null };
 
 interface Props {
   cedula: string;
@@ -21,6 +21,7 @@ interface Props {
   onCedulaChange: (cedula: string) => void;
   onFullNameChange: (fullName: string) => void;
   onStatusChange?: (status: IdentityStatus) => void;
+  onResult?: (r: IdentityResult) => void;
   cedulaError?: string;
   nameError?: string;
   /** When true the cédula is locked (e.g. it was set at signup). */
@@ -33,12 +34,14 @@ export function IdentityField({
   onCedulaChange,
   onFullNameChange,
   onStatusChange,
+  onResult,
   cedulaError,
   nameError,
   cedulaReadOnly,
 }: Props) {
   const [status, setStatus] = useState<IdentityStatus>("idle");
   const [officialName, setOfficialName] = useState<string>("");
+  const [dob, setDob] = useState<string | null>(null);
   const [manualOverride, setManualOverride] = useState(false);
   const reqId = useRef(0);
 
@@ -62,17 +65,22 @@ export function IdentityField({
         const res = await fetch(`/api/cedula/${clean}`);
         if (myReq !== reqId.current) return; // stale
         if (res.ok) {
-          const { fullName: official } = await res.json();
+          const { fullName: official, dob: d, isAdult } = await res.json();
           setOfficialName(official ?? "");
+          setDob(d ?? null);
           setManualOverride(false);
           onFullNameChange(official ?? "");
+          onResult?.({ found: true, isAdult: !!isAdult, dob: d ?? null });
           setStatusBoth("found");
         } else {
           setOfficialName("");
+          setDob(null);
+          onResult?.({ found: false, isAdult: false, dob: null });
           setStatusBoth("notfound");
         }
       } catch {
         if (myReq !== reqId.current) return;
+        onResult?.({ found: false, isAdult: false, dob: null });
         setStatusBoth("notfound");
       }
     }, 500);
@@ -98,28 +106,14 @@ export function IdentityField({
         </div>
       )}
 
-      {/* Found in the padrón → confirm the official name */}
+      {/* Found in the padrón → confirm the official info */}
       {status === "found" && !manualOverride && (
-        <div className="rounded-xl border border-[#bbf7d0] bg-[#f0fdf4] p-4">
-          <div className="flex items-start gap-3">
-            <ShieldCheck className="h-5 w-5 text-[#15803d] shrink-0 mt-0.5" />
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-[#15803d]">Encontramos tu cédula en el padrón</p>
-              <p className="text-base font-bold text-[#111827] mt-0.5">{officialName}</p>
-              <p className="text-xs text-[#15803d] mt-1">
-                Confirmamos tu identidad con este nombre oficial. Aparecerá así en tu perfil.
-              </p>
-              <button
-                type="button"
-                onClick={() => { setManualOverride(true); setStatusBoth("notfound"); }}
-                className="text-xs text-[#6b7280] underline mt-2 hover:text-[#374151]"
-              >
-                ¿No sos vos? Ingresar el nombre manualmente
-              </button>
-            </div>
-            <CheckCircle2 className="h-5 w-5 text-[#15803d] shrink-0" />
-          </div>
-        </div>
+        <IdentityInfoBlock
+          fullName={officialName}
+          cedula={cedula}
+          dob={dob}
+          onReset={() => { setManualOverride(true); setStatusBoth("notfound"); }}
+        />
       )}
 
       {/* Not in the padrón → manual name + pending notice */}

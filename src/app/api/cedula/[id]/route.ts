@@ -34,7 +34,15 @@ export async function GET(
   const result = await getIdentityVerifier().lookup(cedula);
 
   if (result.found && result.fullName) {
-    return NextResponse.json({ found: true, fullName: result.fullName, source: result.provider });
+    // dob is null for the padrón (electoral roll has no birth date); isAdult is
+    // true because the roll only contains citizens 18+.
+    return NextResponse.json({
+      found: true,
+      fullName: result.fullName,
+      dob: result.dob,
+      isAdult: result.isAdult,
+      source: result.provider,
+    });
   }
 
   // Not in the padrón (DIMEX/NITE/foreigners, newly issued, stale roll) → manual

@@ -29,6 +29,18 @@ export interface IdentityLookupResult {
   found: boolean;
   /** Official full name from the source (properly cased), or null when not found. */
   fullName: string | null;
+  /**
+   * Date of birth (YYYY-MM-DD) when the source provides it. The TSE padrón
+   * (electoral roll) does NOT carry a birth date, so this is null for the
+   * self-hosted provider; a future provider can fill it.
+   */
+  dob: string | null;
+  /**
+   * Whether the person is known to be an adult (18+). For the padrón provider
+   * this is TRUE when found, because the electoral roll only contains citizens
+   * 18 or older — this is our 18+ gate without needing a birth date.
+   */
+  isAdult: boolean;
   /** Identifier of the provider that produced this result. */
   provider: string;
 }
@@ -109,7 +121,7 @@ export class SelfHostedPadronVerifier implements IdentityVerifier {
 
   async lookup(cedula: string): Promise<IdentityLookupResult> {
     const id = cleanId(cedula);
-    if (!id) return { found: false, fullName: null, provider: this.name };
+    if (!id) return { found: false, fullName: null, dob: null, isAdult: false, provider: this.name };
     const admin = createAdminClient();
     const { data, error } = await admin
       .from("padron")
@@ -117,11 +129,13 @@ export class SelfHostedPadronVerifier implements IdentityVerifier {
       .eq("cedula", id)
       .maybeSingle();
     // Not found / error → found:false. NO permissive fallback (integrity guard).
-    if (error || !data) return { found: false, fullName: null, provider: this.name };
+    if (error || !data) return { found: false, fullName: null, dob: null, isAdult: false, provider: this.name };
     const official = titleCaseName(
       [data.nombre, data.papellido, data.sapellido].filter(Boolean).join(" ")
     );
-    return { found: true, fullName: official || null, provider: this.name };
+    // Found in the electoral roll ⇒ the person is 18+ (our adult gate). The roll
+    // has no birth date, so dob stays null.
+    return { found: true, fullName: official || null, dob: null, isAdult: true, provider: this.name };
   }
 
   async verify({ cedula, fullName }: IdentityCheckInput): Promise<IdentityCheckResult> {
