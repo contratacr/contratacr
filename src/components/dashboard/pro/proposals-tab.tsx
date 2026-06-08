@@ -116,6 +116,20 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view]);
 
+  // Refetch when the pro returns to the tab/window so a project cancelled or
+  // deleted by the client updates automatically (no stale "Aceptada").
+  useEffect(() => {
+    function onFocus() {
+      if (document.visibilityState === "visible") {
+        if (view === "browse") fetchOpenProjects(); else fetchMyProposals();
+      }
+    }
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onFocus);
+    return () => { window.removeEventListener("focus", onFocus); document.removeEventListener("visibilitychange", onFocus); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view]);
+
   async function submitProposal(projectId: string) {
     const form = proposalForms[projectId];
     if (!form?.message?.trim()) return;
