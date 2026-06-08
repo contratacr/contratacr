@@ -79,9 +79,14 @@ interface BookingModalProps {
   // Optional preselection when opened from a slot chip in search results.
   initialDate?: string;
   initialTime?: string;
+  // The (service + location) context of the picked slot — recorded on the booking
+  // so the request carries the correct profession + place.
+  initialCategoryId?: string | null;
+  initialLocationId?: string | null;
+  initialLocationLabel?: string | null;
 }
 
-export function BookingModal({ professional, categoryName, open, onClose, initialDate, initialTime }: BookingModalProps) {
+export function BookingModal({ professional, categoryName, open, onClose, initialDate, initialTime, initialCategoryId, initialLocationId, initialLocationLabel }: BookingModalProps) {
   const t = useTranslations("booking");
 
   // DOB is only relevant for HEALTH/medical services (patient age). Driven by the
@@ -352,6 +357,10 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
           serviceDescription: description,
           scheduledDate: selectedDate || null,
           scheduledTime: selectedTime || null,
+          // (service + location) context of the picked slot.
+          categoryId: initialCategoryId ?? professional.categoryId ?? null,
+          slotLocationId: initialLocationId ?? null,
+          slotLocationLabel: initialLocationLabel ?? null,
           preferredDateText: selectedDate
             ? `${formatDateDisplay(selectedDate)}${selectedTime ? ` a las ${selectedTime}` : ""}`
             : null,
@@ -379,6 +388,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
         ``,
         description ? `Servicio: ${description}` : null,
         dateStr ? `Fecha y hora: ${dateStr}` : null,
+        initialLocationLabel ? `Lugar: ${initialLocationLabel}` : null,
         ``,
         `¿Me podés confirmar disponibilidad?`,
       ]

@@ -72,12 +72,13 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const canBook = availabilityPublic && contactPreference !== "solo_whatsapp";
   const canWhatsApp = contactPreference !== "solo_citas";
 
-  // Distinct locations present in the published slots (item 8: per-location
-  // schedules). Chips let the client switch which location's schedule is shown.
-  const [selectedLoc, setSelectedLoc] = useState<string | null>(null);
+  // Distinct locations present in the published slots. Chips let the client choose
+  // WHICH place a slot is for before booking (item 3) — a traveling pro's coverage
+  // zones (cov_*) and videoconsulta are labeled too, never a bare "Ubicación".
   function locLabel(id: string | null): string {
     if (!id || id === "general") return "General";
     if (id === "videoconsulta") return "Videoconsulta";
+    if (id.startsWith("cov_")) return "A domicilio";
     return professional.workplaces?.find((w) => w.id === id)?.name ?? "Ubicación";
   }
   const locationIds = useMemo(() => {
@@ -85,17 +86,22 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     for (const s of slots) set.add(s.locationId ?? "general");
     return Array.from(set);
   }, [slots]);
+  // Default to the FIRST specific location when there's more than one, so hours are
+  // never shown as an undifferentiated mix; the chips switch between them.
+  const [selectedLoc, setSelectedLoc] = useState<string | null>(null);
+  const effectiveLoc = selectedLoc ?? (locationIds.length > 1 ? locationIds[0] : null);
   const filteredSlots = useMemo(
-    () => (selectedLoc === null ? slots : slots.filter((s) => (s.locationId ?? "general") === selectedLoc)),
-    [slots, selectedLoc]
+    () => (effectiveLoc === null ? slots : slots.filter((s) => (s.locationId ?? "general") === effectiveLoc)),
+    [slots, effectiveLoc]
   );
 
-  // Rolling window of upcoming days, with each day's published time slots.
+  // Rolling window of upcoming days, keyed to the FULL slot so picking carries the
+  // (service + location) context into the booking.
   const days = useMemo(() => {
-    const byDate = new Map<string, string[]>();
+    const byDate = new Map<string, ScheduleSlot[]>();
     for (const s of filteredSlots) {
       if (!byDate.has(s.date)) byDate.set(s.date, []);
-      byDate.get(s.date)!.push(s.time);
+      byDate.get(s.date)!.push(s);
     }
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -105,8 +111,8 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       const key = toKey(d);
       // Hide any slot within the 15-minute lead time (today only) — it's no longer
       // bookable, so it must stop showing in search.
-      const times = (byDate.get(key) ?? []).filter((t) => !isTooSoonCR(key, t)).sort();
-      return { key, label: headerLabel(d), times };
+      const items = (byDate.get(key) ?? []).filter((s) => !isTooSoonCR(key, s.time)).sort((a, b) => a.time.localeCompare(b.time));
+      return { key, label: headerLabel(d), items };
     });
   }, [filteredSlots]);
 
@@ -138,6 +144,9 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
         onClose={() => setShowBooking(false)}
         initialDate={preset?.date}
         initialTime={preset?.time}
+        initialCategoryId={preset?.categoryId ?? activeCategory ?? professional.categoryId ?? null}
+        initialLocationId={preset?.locationId ?? (effectiveLoc !== "general" ? effectiveLoc : null)}
+        initialLocationLabel={preset?.locationId ? locLabel(preset.locationId) : (effectiveLoc && effectiveLoc !== "general" ? locLabel(effectiveLoc) : null)}
       />
     </>
   );
@@ -187,26 +196,26 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Location chips — switch which location's schedule is shown */}
+      {/* Location chips/tabs — the client picks WHICH place before booking, so hours
+          are never an undifferentiated mix (item 3). Defaults to the first place. */}
       {locationIds.length > 1 && (
         <div className="flex flex-wrap gap-1.5">
-          <button
-            onClick={(e) => { e.stopPropagation(); setSelectedLoc(null); }}
-            className={`px-2 py-0.5 rounded-md text-[11px] font-medium transition-colors ${selectedLoc === null ? "bg-[#009FD9] text-white" : "bg-[#f3f4f6] text-[#374151] hover:bg-[#EBF5FB]"}`}
-          >
-            Todas
-          </button>
           {locationIds.map((id) => (
             <button
               key={id}
               onClick={(e) => { e.stopPropagation(); setSelectedLoc(id); }}
-              className={`px-2 py-0.5 rounded-md text-[11px] font-medium transition-colors ${selectedLoc === id ? "bg-[#009FD9] text-white" : "bg-[#f3f4f6] text-[#374151] hover:bg-[#EBF5FB]"}`}
+              className={`px-2 py-0.5 rounded-md text-[11px] font-medium transition-colors ${effectiveLoc === id ? "bg-[#009FD9] text-white" : "bg-[#f3f4f6] text-[#374151] hover:bg-[#EBF5FB]"}`}
             >
               {locLabel(id)}
             </button>
           ))}
         </div>
       )}
+      {/* Service + location caption so it's always clear what these hours are for. */}
+      <p className="text-[11px] text-[#6b7280] leading-tight">
+        Horarios de <span className="font-semibold text-[#374151]">{categoryName}</span>
+        {effectiveLoc && effectiveLoc !== "general" && <> · <span className="font-semibold text-[#374151]">{locLabel(effectiveLoc)}</span></>}
+      </p>
       <div className="flex items-stretch gap-1.5">
         <button
           type="button"
@@ -222,16 +231,16 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           {windowDays.map((day) => (
             <div key={day.key} className="flex flex-col gap-1.5">
               <p className="text-center text-[11px] font-semibold text-[#374151] leading-tight">{day.label}</p>
-              {day.times.length === 0 ? (
+              {day.items.length === 0 ? (
                 <p className="text-center text-[11px] text-[#9ca3af] py-1">No disponible</p>
               ) : (
-                day.times.slice(0, 3).map((time) => (
+                day.items.slice(0, 3).map((slot) => (
                   <button
-                    key={time}
-                    onClick={(e) => { e.stopPropagation(); pick({ date: day.key, time }); }}
+                    key={`${slot.time}-${slot.locationId ?? ""}`}
+                    onClick={(e) => { e.stopPropagation(); pick(slot); }}
                     className="w-full px-1 py-1.5 rounded-md text-[11px] font-medium text-[#009FD9] bg-[#EBF5FB] hover:bg-[#009FD9] hover:text-white transition-colors"
                   >
-                    {time}
+                    {slot.time}
                   </button>
                 ))
               )}

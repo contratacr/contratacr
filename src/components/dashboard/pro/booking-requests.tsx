@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CalendarDays, User, FileText, Phone, Flag } from "lucide-react";
+import { CalendarDays, User, FileText, Phone, Flag, MapPin } from "lucide-react";
+import { getCategoryLabel } from "@/lib/data/categories";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +28,8 @@ type Booking = {
   professional_whatsapp?: string;
   profiles?: { full_name?: string; avatar_url?: string; is_flagged?: boolean } | null;
   client_dob?: string | null;
+  category_id?: string | null;
+  slot_location_label?: string | null;
   for_someone_else?: boolean;
   beneficiary_name?: string | null;
   beneficiary_cedula?: string | null;
@@ -190,6 +193,17 @@ export function BookingRequests() {
                   <div className="flex items-center gap-2 text-sm">
                     <CalendarDays className="h-4 w-4 text-[#6b7280] shrink-0" />
                     <span className="text-[#374151]">{dateStr}</span>
+                  </div>
+                )}
+                {/* Profession + location the slot belonged to (migration 038). */}
+                {(booking.category_id || booking.slot_location_label) && (
+                  <div className="flex items-center gap-2 text-sm flex-wrap">
+                    <MapPin className="h-4 w-4 text-[#6b7280] shrink-0" />
+                    <span className="text-[#374151]">
+                      {[booking.category_id ? getCategoryLabel(booking.category_id) : null, booking.slot_location_label]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </span>
                   </div>
                 )}
               </div>

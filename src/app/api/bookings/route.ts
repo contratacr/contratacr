@@ -46,6 +46,7 @@ export async function POST(req: NextRequest) {
     const {
       scheduledDate, scheduledTime, clientPhone, clientDob,
       forSomeoneElse, beneficiaryName, beneficiaryCedula, beneficiaryDob, beneficiaryPhone, beneficiaryIsMinor,
+      categoryId, slotLocationId, slotLocationLabel,
     } = body;
 
     const baseBooking = {
@@ -72,10 +73,14 @@ export async function POST(req: NextRequest) {
       beneficiary_is_minor: !!beneficiaryIsMinor,
       // Client DOB — sent only for HEALTH-category services (data minimization).
       client_dob: clientDob ?? null,
+      // (service + location) context of the picked slot (migration 038).
+      category_id: categoryId ?? null,
+      slot_location_id: slotLocationId ?? null,
+      slot_location_label: slotLocationLabel ?? null,
     };
 
     let { data, error } = await supabase.from("bookings").insert({ ...baseBooking, ...beneficiaryFields }).select("id").single();
-    if (error && /for_someone_else|beneficiary_|client_dob|column|schema cache|PGRST204|could not find/i.test(error.message)) {
+    if (error && /for_someone_else|beneficiary_|client_dob|category_id|slot_location|column|schema cache|PGRST204|could not find/i.test(error.message)) {
       ({ data, error } = await supabase.from("bookings").insert(baseBooking).select("id").single());
     }
 
