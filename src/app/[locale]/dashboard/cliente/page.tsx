@@ -113,7 +113,9 @@ export default function ClientDashboardPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [profileData, setProfileData] = useState<{ full_name: string; phone?: string; avatar_url?: string } | null>(null);
   const [loading, setLoading] = useState(true);
-  const [reviewModal, setReviewModal] = useState<{ professionalId: string; professionalName: string } | null>(null);
+  const [reviewModal, setReviewModal] = useState<{ professionalId: string; professionalName: string; bookingId?: string; projectId?: string } | null>(null);
+  // The client's reviews, to mark which finished items are already reviewed (per-job).
+  const [myReviews, setMyReviews] = useState<{ professional_id: string; booking_id?: string | null; project_id?: string | null; rating: number }[]>([]);
   const [expandedProject, setExpandedProject] = useState<string | null>(null);
   const [projectProposals, setProjectProposals] = useState<Record<string, Proposal[]>>({});
   const [profileForm, setProfileForm] = useState({ full_name: "", phone: "" });
@@ -179,6 +181,24 @@ export default function ClientDashboardPage() {
   useEffect(() => {
     fetchTab();
   }, [fetchTab]);
+
+  // Load the client's reviews so finished items can show "Ver/Editar reseña".
+  const loadMyReviews = useCallback(async () => {
+    if (!user) return;
+    try {
+      const res = await fetch("/api/reviews?mine=1");
+      const { reviews } = await res.json();
+      setMyReviews(reviews ?? []);
+    } catch { /* ignore */ }
+  }, [user]);
+  useEffect(() => { loadMyReviews(); }, [loadMyReviews]);
+
+  function bookingReview(bookingId: string) {
+    return myReviews.find((r) => r.booking_id === bookingId);
+  }
+  function projectReview(projectId: string) {
+    return myReviews.find((r) => r.project_id === projectId);
+  }
 
   // Unread count for notification badge
   useEffect(() => {
@@ -280,7 +300,7 @@ export default function ClientDashboardPage() {
     const accepted = (list ?? []).find((p) => p.status === "accepted");
     const pro = accepted?.professionals;
     if (pro?.id) {
-      setReviewModal({ professionalId: pro.id, professionalName: pro.profiles?.full_name ?? "Profesional" });
+      setReviewModal({ professionalId: pro.id, professionalName: pro.profiles?.full_name ?? "Profesional", projectId });
     } else {
       alert("No encontramos al profesional asignado para reseñar.");
     }
@@ -623,21 +643,25 @@ export default function ClientDashboardPage() {
                                       </p>
                                     </div>
                                     <div className="flex flex-col gap-1.5 shrink-0">
-                                      {b.status === "completed" && (
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          onClick={() =>
-                                            setReviewModal({
-                                              professionalId: b.professional_id,
-                                              professionalName: b.professionals?.profiles?.full_name ?? "Profesional",
-                                            })
-                                          }
-                                        >
-                                          <Star className="h-3.5 w-3.5" />
-                                          Reseña
-                                        </Button>
-                                      )}
+                                      {b.status === "completed" && (() => {
+                                        const rev = bookingReview(b.id);
+                                        return (
+                                          <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() =>
+                                              setReviewModal({
+                                                professionalId: b.professional_id,
+                                                professionalName: b.professionals?.profiles?.full_name ?? "Profesional",
+                                                bookingId: b.id,
+                                              })
+                                            }
+                                          >
+                                            <Star className={cn("h-3.5 w-3.5", rev && "fill-yellow-400 text-yellow-400")} />
+                                            {rev ? "Ver/Editar reseña" : "Reseña"}
+                                          </Button>
+                                        );
+                                      })()}
                                       {["completed", "cancelled"].includes(b.status) && (
                                         <button
                                           onClick={() => reportProfessional(b.id)}
@@ -766,11 +790,14 @@ export default function ClientDashboardPage() {
                                   </Button>
                                 )}
                                 {/* Review unlocks on FINALIZADO (completed) projects. */}
-                                {project.status === "completed" && (
-                                  <Button size="sm" variant="outline" onClick={() => reviewProjectPro(project.id)}>
-                                    <Star className="h-3.5 w-3.5" /> Dejar reseña
-                                  </Button>
-                                )}
+                                {project.status === "completed" && (() => {
+                                  const rev = projectReview(project.id);
+                                  return (
+                                    <Button size="sm" variant="outline" onClick={() => reviewProjectPro(project.id)}>
+                                      <Star className={cn("h-3.5 w-3.5", rev && "fill-yellow-400 text-yellow-400")} /> {rev ? "Ver/Editar reseña" : "Dejar reseña"}
+                                    </Button>
+                                  );
+                                })()}
                                 {project.status !== "in_progress" && project.status !== "awaiting_confirmation" && (
                                   <Button size="sm" variant="ghost" className="text-red-500 hover:bg-red-50" onClick={() => deleteProject(project.id)}>
                                     <Trash2 className="h-4 w-4" /> Eliminar
@@ -1012,6 +1039,7 @@ export default function ClientDashboardPage() {
       {reviewModal && (
         <LeaveReviewModal
           {...reviewModal}
+          onSuccess={loadMyReviews}
           onClose={() => setReviewModal(null)}
         />
       )}

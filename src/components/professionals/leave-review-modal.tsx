@@ -6,6 +6,9 @@ import { AlertCircle, CheckCircle2, Star, X } from "lucide-react";
 interface LeaveReviewModalProps {
   professionalId: string;
   professionalName: string;
+  /** Tie the review to a specific finished item (per-job reviews). */
+  bookingId?: string;
+  projectId?: string;
   onClose: () => void;
   onSuccess?: () => void;
 }
@@ -13,6 +16,8 @@ interface LeaveReviewModalProps {
 export function LeaveReviewModal({
   professionalId,
   professionalName,
+  bookingId,
+  projectId,
   onClose,
   onSuccess,
 }: LeaveReviewModalProps) {
@@ -26,12 +31,13 @@ export function LeaveReviewModal({
 
   const backdropRef = useRef<HTMLDivElement>(null);
 
-  // Prefill from an existing review so it can be EDITED (and the stars show filled).
+  // Prefill from this item's existing review so it can be EDITED (stars filled).
   useEffect(() => {
     let active = true;
+    const qs = bookingId ? `bookingId=${bookingId}` : projectId ? `projectId=${projectId}` : `professionalId=${professionalId}`;
     (async () => {
       try {
-        const res = await fetch(`/api/reviews?professionalId=${professionalId}`);
+        const res = await fetch(`/api/reviews?${qs}`);
         const { review } = await res.json();
         if (active && review) {
           setRating(review.rating ?? 0);
@@ -41,7 +47,7 @@ export function LeaveReviewModal({
       } catch { /* ignore */ }
     })();
     return () => { active = false; };
-  }, [professionalId]);
+  }, [professionalId, bookingId, projectId]);
 
   // Close on Escape
   useEffect(() => {
@@ -72,7 +78,7 @@ export function LeaveReviewModal({
       const res = await fetch("/api/reviews", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ professionalId, rating, comment: comment.trim() }),
+        body: JSON.stringify({ professionalId, rating, comment: comment.trim(), bookingId, projectId }),
       });
       const json = await res.json();
       if (!res.ok) {

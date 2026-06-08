@@ -53,6 +53,25 @@ const STATUS_LABEL: Record<ProposalStatus, string> = {
   declined: "Rechazada",
 };
 
+// Project lifecycle (mirrors solicitudes) shown for an ACCEPTED proposal.
+function projStatusLabel(status?: string): string {
+  switch (status) {
+    case "in_progress": return "Asignado · En curso";
+    case "awaiting_confirmation": return "Trabajo realizado · esperando confirmación";
+    case "completed": return "Finalizado";
+    case "cancelled": return "Cancelado por el cliente";
+    default: return "Aceptada";
+  }
+}
+function projStatusVariant(status?: string): "warning" | "success" | "error" | "default" {
+  switch (status) {
+    case "completed": return "success";
+    case "cancelled": return "error";
+    case "awaiting_confirmation": return "warning";
+    default: return "warning";
+  }
+}
+
 interface ProposalsTabProps {
   categoryId?: string;
 }
@@ -358,16 +377,24 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                         </p>
                       </div>
                       <div className="flex flex-col items-end gap-2 shrink-0">
-                        <Badge variant={STATUS_VARIANT[p.status]}>
-                          {STATUS_LABEL[p.status]}
-                        </Badge>
+                        {/* For an accepted proposal the PROJECT status is the source of
+                            truth (mirrors solicitudes); otherwise the proposal status. */}
+                        {p.status === "accepted" ? (
+                          <Badge variant={projStatusVariant(p.projects?.status)}>{projStatusLabel(p.projects?.status)}</Badge>
+                        ) : (
+                          <Badge variant={STATUS_VARIANT[p.status]}>{STATUS_LABEL[p.status]}</Badge>
+                        )}
+
                         {p.status === "pending" && (
                           <div className="flex gap-1.5">
                             <Button size="sm" variant="outline" onClick={() => startEdit(p)}>Editar</Button>
                             <Button size="sm" variant="ghost" className="text-red-500 hover:bg-red-50" onClick={() => cancelProposal(p.id)}>Cancelar</Button>
                           </div>
                         )}
-                        {p.status === "accepted" && p.projects?.profiles?.phone && (
+
+                        {/* Accepted + still active → contact + mark work done. Cancelled
+                            by the client → no actions (auto-loses the accepted state). */}
+                        {p.status === "accepted" && p.projects?.status !== "cancelled" && p.projects?.profiles?.phone && (
                           <Button size="sm" variant="whatsapp" asChild>
                             <a
                               href={getWhatsAppLink(
@@ -383,15 +410,12 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                           </Button>
                         )}
                         {p.status === "accepted" && p.projects?.status === "in_progress" && (
-                          <Button size="sm" variant="outline" onClick={() => markWorkDone(p.project_id)}>
+                          <Button size="sm" onClick={() => markWorkDone(p.project_id)}>
                             <CheckCircle2 className="h-3.5 w-3.5" /> Marcar trabajo realizado
                           </Button>
                         )}
-                        {p.status === "accepted" && p.projects?.status === "awaiting_confirmation" && (
-                          <Badge variant="warning">Esperando confirmación del cliente</Badge>
-                        )}
-                        {p.projects?.status === "completed" && (
-                          <Badge variant="success">Finalizado</Badge>
+                        {p.status === "accepted" && p.projects?.status === "cancelled" && (
+                          <span className="text-xs text-red-500">El cliente canceló este proyecto.</span>
                         )}
                       </div>
                     </div>
