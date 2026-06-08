@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
-import { Search, X, ChevronDown } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Search, X, ChevronDown, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   CATEGORY_GROUPS,
@@ -30,6 +30,29 @@ export function CategorySearch({
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // "¿No ves tu categoría?" → suggestion ticket (admin moderation).
+  const [suggesting, setSuggesting] = useState(false);
+  const [suggestName, setSuggestName] = useState("");
+  const [suggestSent, setSuggestSent] = useState(false);
+  const [sending, setSending] = useState(false);
+
+  async function sendSuggestion() {
+    const name = suggestName.trim();
+    if (!name) return;
+    setSending(true);
+    try {
+      await fetch("/api/categories/suggest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
+      });
+      setSuggestSent(true);
+      setSuggestName("");
+      setSuggesting(false);
+    } catch { /* best-effort */ }
+    finally { setSending(false); }
+  }
 
   const selectedLabel = value ? getCategoryLabel(value) : "";
 
@@ -193,6 +216,34 @@ export function CategorySearch({
               >
                 Otro servicio — describirlo en mi perfil
               </button>
+
+              {/* "¿No ves tu categoría?" → tracked suggestion ticket (admin reviews;
+                  not usable/filterable until approved). */}
+              <div className="px-3 py-2.5 border-t border-[#f3f4f6]">
+                {suggestSent ? (
+                  <p className="inline-flex items-center gap-1.5 text-xs text-[#15803d]">
+                    <Check className="h-3.5 w-3.5" /> Gracias. Enviamos tu sugerencia al equipo para revisión.
+                  </p>
+                ) : suggesting ? (
+                  <div className="flex items-center gap-2">
+                    <input
+                      value={suggestName}
+                      onChange={(e) => setSuggestName(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); sendSuggestion(); } }}
+                      placeholder="Nombre de la categoría"
+                      className="flex-1 h-9 px-3 rounded-lg border border-[#e5e7eb] text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20"
+                    />
+                    <button type="button" disabled={!suggestName.trim() || sending} onClick={sendSuggestion} className="h-9 px-3 rounded-lg bg-[#009FD9] text-white text-sm font-medium disabled:opacity-50">
+                      {sending ? "Enviando…" : "Enviar"}
+                    </button>
+                    <button type="button" onClick={() => setSuggesting(false)} className="h-9 px-2 text-sm text-[#9ca3af] hover:text-[#374151]">Cancelar</button>
+                  </div>
+                ) : (
+                  <button type="button" onClick={() => setSuggesting(true)} className="text-xs text-[#009FD9] hover:underline">
+                    ¿No ves tu categoría?
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>

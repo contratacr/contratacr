@@ -1,6 +1,6 @@
 "use client";
 
-import { ShieldCheck, LogOut, Flag, Shield } from "lucide-react";
+import { ShieldCheck, LogOut, Flag, Shield, Tag } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
@@ -16,7 +16,7 @@ export function AdminShell({
   children,
 }: {
   adminName: string;
-  active?: "verificacion" | "reportes" | "aseguradoras";
+  active?: "verificacion" | "reportes" | "aseguradoras" | "categorias";
   children: React.ReactNode;
 }) {
   async function signOut() {
@@ -29,6 +29,7 @@ export function AdminShell({
     { id: "verificacion", label: "Verificación", icon: ShieldCheck, href: "/admin" as const },
     { id: "reportes", label: "Reportes", icon: Flag, href: "/admin/reportes" as const },
     { id: "aseguradoras", label: "Aseguradoras", icon: Shield, href: "/admin/aseguradoras" as const },
+    { id: "categorias", label: "Categorías", icon: Tag, href: "/admin/categorias" as const },
   ];
 
   return (
