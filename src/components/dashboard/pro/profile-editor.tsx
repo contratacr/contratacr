@@ -12,7 +12,7 @@ import { CoverageAreaSelector } from "@/components/maps/coverage-area-selector";
 import { createClient } from "@/lib/supabase/client";
 import { Camera, Check, X, Plus, Truck, MapPin } from "lucide-react";
 import { computeSearchAreas, primaryArea, type CoverageArea } from "@/lib/location";
-import { INSURERS } from "@/lib/data/insurers";
+import { AseguradorasInput } from "@/components/ui/aseguradoras-input";
 import { CategorySearch } from "@/components/ui/category-search";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { cn } from "@/lib/utils";
@@ -439,24 +439,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
           Aseguradoras <span className="text-[#9ca3af] font-normal">(opcional)</span>
         </label>
         <p className="text-xs text-[#9ca3af] mb-2">Marcá las redes de seguros con las que trabajás. Los clientes pueden filtrar por aseguradora.</p>
-        <div className="flex flex-wrap gap-2">
-          {INSURERS.map((ins) => {
-            const active = insurers.includes(ins.id);
-            return (
-              <button
-                key={ins.id}
-                type="button"
-                onClick={() => { setInsurers((prev) => active ? prev.filter((x) => x !== ins.id) : [...prev, ins.id]); touch(); }}
-                className={cn(
-                  "px-3 py-1.5 rounded-lg text-sm font-medium border-2 transition-all",
-                  active ? "border-[#009FD9] bg-[#EBF5FB] text-[#0089bb]" : "border-[#e5e7eb] text-[#374151] hover:border-[#009FD9]/40"
-                )}
-              >
-                {ins.label}
-              </button>
-            );
-          })}
-        </div>
+        <AseguradorasInput value={insurers} onChange={(next) => { setInsurers(next); touch(); }} />
       </div>
 
       {/* Contact preference lives in the Disponibilidad tab now. */}

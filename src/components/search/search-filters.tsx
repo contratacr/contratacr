@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { PROVINCES, getCantonsByProvince } from "@/lib/data/cr-geography";
 import { CATEGORY_GROUPS, getCategoryLabel } from "@/lib/data/categories";
 import { INSURERS } from "@/lib/data/insurers";
+import { createClient } from "@/lib/supabase/client";
 
 export function SearchFilters() {
   const router = useRouter();
@@ -24,6 +25,22 @@ export function SearchFilters() {
   const [sortBy, setSortBy] = useState(params.get("sortBy") ?? "rating");
   const [aseguradora, setAseguradora] = useState(params.get("aseguradora") ?? "");
   const [verifiedOnly, setVerifiedOnly] = useState(params.get("verificados") === "1");
+
+  // Official list = static INSURERS + admin-approved additions from the DB.
+  const [insurerOptions, setInsurerOptions] = useState<{ id: string; label: string }[]>(INSURERS);
+  useEffect(() => {
+    (async () => {
+      try {
+        const supabase = createClient();
+        const { data } = await supabase.from("insurers").select("id, label").eq("approved", true);
+        if (Array.isArray(data) && data.length) {
+          const map = new Map(INSURERS.map((i) => [i.id, { id: i.id, label: i.label }]));
+          for (const d of data) map.set(d.id as string, { id: d.id as string, label: d.label as string });
+          setInsurerOptions(Array.from(map.values()));
+        }
+      } catch { /* static list still works */ }
+    })();
+  }, []);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cantons = getCantonsByProvince(province);
@@ -189,11 +206,11 @@ export function SearchFilters() {
           <label className="text-xs font-medium text-[#6b7280] mb-1.5 block">Aseguradora</label>
           <Select value={aseguradora} onValueChange={(v) => { setAseguradora(v); applyFilters({ aseguradora: v }); }}>
             <SelectTrigger className="text-sm">
-              <SelectValue placeholder="Todas">{aseguradora && aseguradora !== "todas" ? INSURERS.find((i) => i.id === aseguradora)?.label : "Todas"}</SelectValue>
+              <SelectValue placeholder="Todas">{aseguradora && aseguradora !== "todas" ? insurerOptions.find((i) => i.id === aseguradora)?.label : "Todas"}</SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="todas">Todas</SelectItem>
-              {INSURERS.map((i) => <SelectItem key={i.id} value={i.id}>{i.label}</SelectItem>)}
+              {insurerOptions.map((i) => <SelectItem key={i.id} value={i.id}>{i.label}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
