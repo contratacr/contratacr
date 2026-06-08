@@ -22,8 +22,26 @@ export function LeaveReviewModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
 
   const backdropRef = useRef<HTMLDivElement>(null);
+
+  // Prefill from an existing review so it can be EDITED (and the stars show filled).
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const res = await fetch(`/api/reviews?professionalId=${professionalId}`);
+        const { review } = await res.json();
+        if (active && review) {
+          setRating(review.rating ?? 0);
+          setComment(review.comment ?? "");
+          setIsEditing(true);
+        }
+      } catch { /* ignore */ }
+    })();
+    return () => { active = false; };
+  }, [professionalId]);
 
   // Close on Escape
   useEffect(() => {
@@ -94,7 +112,7 @@ export function LeaveReviewModal({
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-[#f3f4f6]">
           <div>
-            <h2 className="text-lg font-bold text-[#111827]">Dejar una reseña</h2>
+            <h2 className="text-lg font-bold text-[#111827]">{isEditing ? "Editar tu reseña" : "Dejar una reseña"}</h2>
             <p className="text-sm text-[#6b7280] mt-0.5">{professionalName}</p>
           </div>
           <button
@@ -110,6 +128,12 @@ export function LeaveReviewModal({
           <div className="flex flex-col items-center gap-3 px-6 py-10">
             <CheckCircle2 className="h-14 w-14 text-emerald-500" />
             <p className="text-lg font-semibold text-[#111827]">¡Gracias por tu reseña!</p>
+            {/* Filled stars so the user can see their submitted rating. */}
+            <div className="flex gap-1">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <Star key={star} className={`h-7 w-7 ${star <= rating ? "text-yellow-400 fill-yellow-400" : "text-[#d1d5db] fill-[#d1d5db]"}`} />
+              ))}
+            </div>
             <p className="text-sm text-[#6b7280] text-center">Tu opinión ayuda a otros clientes a elegir mejor.</p>
           </div>
         ) : (
@@ -181,7 +205,7 @@ export function LeaveReviewModal({
                   Enviando...
                 </span>
               ) : (
-                "Enviar reseña"
+                isEditing ? "Actualizar reseña" : "Enviar reseña"
               )}
             </button>
           </form>

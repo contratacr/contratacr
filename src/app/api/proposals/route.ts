@@ -125,14 +125,19 @@ export async function PATCH(req: NextRequest) {
       const patch: Record<string, unknown> = {};
       if (price !== undefined) patch.price = price ? parseInt(String(price), 10) : null;
       if (message !== undefined) patch.message = message;
-      const { error: e } = await supabase.from("proposals").update(patch).eq("id", id);
+      // Persist with the service-role client: the RLS-bound update can silently
+      // affect 0 rows if no UPDATE policy covers the professional (edits were lost).
+      const admin = createAdminClient();
+      const { error: e } = await admin.from("proposals").update(patch).eq("id", id);
       if (e) return NextResponse.json({ error: e.message }, { status: 500 });
       return NextResponse.json({ success: true });
     }
 
     if (!status) return NextResponse.json({ error: "Faltan campos" }, { status: 400 });
 
-    const { error } = await supabase
+    // Persist via service-role so the status change isn't silently dropped by RLS.
+    const adminStatus = createAdminClient();
+    const { error } = await adminStatus
       .from("proposals")
       .update({ status })
       .eq("id", id);

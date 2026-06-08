@@ -265,6 +265,25 @@ export default function ClientDashboardPage() {
     setProjectProposals((prev) => ({ ...prev, [projectId]: proposals ?? [] }));
   }
 
+  // Review the professional who completed a FINALIZADO project. Finds the accepted
+  // proposal's pro and opens the review modal.
+  async function reviewProjectPro(projectId: string) {
+    let list = projectProposals[projectId];
+    if (!list) {
+      const res = await fetch(`/api/proposals?project=${projectId}`);
+      const json = await res.json().catch(() => ({ proposals: [] }));
+      list = json.proposals ?? [];
+      setProjectProposals((prev) => ({ ...prev, [projectId]: list }));
+    }
+    const accepted = (list ?? []).find((p) => p.status === "accepted");
+    const pro = accepted?.professionals;
+    if (pro?.id) {
+      setReviewModal({ professionalId: pro.id, professionalName: pro.profiles?.full_name ?? "Profesional" });
+    } else {
+      alert("No encontramos al profesional asignado para reseñar.");
+    }
+  }
+
   async function acceptProposal(proposalId: string, projectId: string) {
     await fetch("/api/proposals", {
       method: "PATCH",
@@ -736,6 +755,18 @@ export default function ClientDashboardPage() {
                                 {project.status === "awaiting_confirmation" && (
                                   <Button size="sm" onClick={() => confirmProjectCompletion(project.id)}>
                                     <CheckCircle2 className="h-4 w-4" /> Confirmar finalización
+                                  </Button>
+                                )}
+                                {/* Either party can cancel before completion. */}
+                                {(project.status === "in_progress" || project.status === "awaiting_confirmation") && (
+                                  <Button size="sm" variant="outline" className="text-red-500 hover:bg-red-50" onClick={() => updateProjectStatus(project.id, "cancelled")}>
+                                    Cancelar proyecto
+                                  </Button>
+                                )}
+                                {/* Review unlocks on FINALIZADO (completed) projects. */}
+                                {project.status === "completed" && (
+                                  <Button size="sm" variant="outline" onClick={() => reviewProjectPro(project.id)}>
+                                    <Star className="h-3.5 w-3.5" /> Dejar reseña
                                   </Button>
                                 )}
                                 {project.status !== "in_progress" && project.status !== "awaiting_confirmation" && (

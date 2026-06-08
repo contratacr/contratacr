@@ -56,7 +56,8 @@ export async function POST(req: Request) {
     );
   }
 
-  // Prevent duplicate reviews from the same client for the same professional.
+  // One review per client+professional. If it already exists, EDITING is allowed
+  // (update + mark edited) instead of rejecting.
   const { data: existing } = await supabase
     .from("reviews")
     .select("id")
@@ -66,10 +67,16 @@ export async function POST(req: Request) {
     .maybeSingle();
 
   if (existing) {
-    return NextResponse.json(
-      { error: "Ya dejaste una reseña para este profesional." },
-      { status: 409 }
-    );
+    let { error } = await supabase
+      .from("reviews")
+      .update({ rating, comment, edited_at: new Date().toISOString() })
+      .eq("id", existing.id);
+    // Retry without edited_at if the column isn't migrated yet (migration 034).
+    if (error && /edited_at|column|schema cache|PGRST204/i.test(error.message)) {
+      ({ error } = await supabase.from("reviews").update({ rating, comment }).eq("id", existing.id));
+    }
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: true, edited: true });
   }
 
   const { error } = await supabase.from("reviews").insert({
@@ -80,5 +87,25 @@ export async function POST(req: Request) {
   });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, edited: false });
+}
+
+// The current user's existing review for a professional (to prefill the edit form).
+export async function GET(req: Request) {
+  const professionalId = new URL(req.url).searchParams.get("professionalId");
+  if (!professionalId) return NextResponse.json({ review: null });
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ review: null });
+
+  const { data } = await supabase
+    .from("reviews")
+    .select("id, rating, comment, edited_at")
+    .eq("client_id", user.id)
+    .eq("professional_id", professionalId)
+    .limit(1)
+    .maybeSingle();
+
+  return NextResponse.json({ review: data ?? null });
 }

@@ -280,11 +280,14 @@ export async function PATCH(req: NextRequest) {
   // Notify the assigned professional when the project is cancelled.
   if (status === "cancelled") await notifyAssignedPro(admin, id, "cancelled");
 
-  const { error } = await supabase
+  // Authorize against the row, then persist with the service-role client (an
+  // RLS-bound update could silently affect 0 rows, like the bookings bug).
+  const { data: ownRow } = await admin.from("projects").select("client_id").eq("id", id).maybeSingle();
+  if (!ownRow || ownRow.client_id !== uid) return NextResponse.json({ error: "No autorizado." }, { status: 403 });
+  const { error } = await admin
     .from("projects")
     .update({ status, updated_at: new Date().toISOString() })
-    .eq("id", id)
-    .eq("client_id", uid);
+    .eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ success: true });
 }

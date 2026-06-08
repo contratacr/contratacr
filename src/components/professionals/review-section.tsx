@@ -53,7 +53,7 @@ export function ReviewSection({
             <div className="flex-1">
               <div className="flex items-center justify-between gap-2">
                 <span className="text-sm font-medium text-[#111827]">{review.clientName}</span>
-                <span className="text-xs text-[#9ca3af]">{timeAgo(review.createdAt)}</span>
+                <span className="text-xs text-[#9ca3af]">{timeAgo(review.createdAt)}{review.edited ? " · editada" : ""}</span>
               </div>
               <StarRating rating={review.rating} size="sm" className="my-1" />
               <p className="text-sm text-[#374151] leading-relaxed">{review.comment}</p>

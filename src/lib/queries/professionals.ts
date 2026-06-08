@@ -59,6 +59,7 @@ export type Review = {
   rating: number;
   comment: string;
   createdAt: string;
+  edited?: boolean;
 };
 
 // ---------------------------------------------------------------------------
@@ -269,9 +270,17 @@ export async function getProfessionalBySlug(
         portfolioItems = (pro.portfolio_urls ?? []).map((url: string) => ({ url }));
       }
 
+      // Edited-review timestamps (best-effort; column from migration 034).
+      const editedMap: Record<string, boolean> = {};
+      try {
+        const { data: ed } = await supabase.from("reviews").select("id, edited_at").eq("professional_id", pro.id);
+        for (const r of (ed ?? []) as { id: string; edited_at?: string | null }[]) editedMap[r.id] = !!r.edited_at;
+      } catch { /* column not migrated yet */ }
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const reviews: Review[] = ((pro.reviews as any[]) ?? []).map((r: any) => ({
         id: r.id,
+        edited: editedMap[r.id] ?? false,
         clientName: r.profiles?.full_name ?? "Cliente",
         clientAvatarUrl: r.profiles?.avatar_url,
         rating: r.rating,
