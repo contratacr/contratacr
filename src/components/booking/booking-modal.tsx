@@ -115,6 +115,10 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   const [needsProfile, setNeedsProfile] = useState(false);
   const [profileCedula, setProfileCedula] = useState("");
   const [profilePhone, setProfilePhone] = useState("");
+  // Whether the logged-in user's profile (cédula/phone) has loaded. The cédula
+  // input must NEVER render before this is known, or it flashes for registered
+  // clients who already have a cédula on file.
+  const [profileLoaded, setProfileLoaded] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [savingProfile, setSavingProfile] = useState(false);
   // Pro hid their availability → slots are not shown; we offer WhatsApp instead.
@@ -157,6 +161,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     setForSomeoneElse(false);
     setBenHasCedula(null);
     setBenCedula(""); setBenName(""); setBenDob(""); setBenPhone(""); setBenLookupName(null);
+    setProfileLoaded(false);
 
     const supabase = createClient();
     Promise.all([
@@ -204,9 +209,11 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
             if (data?.phone) setProfilePhone(String(data.phone));
             if (data?.full_name) setClientName((prev) => prev || String(data.full_name));
             setNeedsProfile(isOAuth && !hasCedula);
+            setProfileLoaded(true);
           });
       } else {
         setIsLoggedIn(false);
+        setProfileLoaded(true);
       }
     });
   }, [open, professional.id, initialDate, initialTime]);
@@ -422,7 +429,9 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
 
   // Cédula is requested at booking for EVERY client who doesn't have one on file
   // (it's no longer collected at signup). Phone is collected the same way.
-  const needsCedula = isLoggedIn && !profileCedula;
+  // Only treat the cédula as "needed" once the profile has loaded — otherwise a
+  // registered client who already has one sees the input flash and disappear.
+  const needsCedula = isLoggedIn && profileLoaded && !profileCedula;
   const needsPhone = isLoggedIn && !profilePhone;
   const needsCompleteStep = needsProfile || needsCedula || needsPhone;
   const totalSteps = isLoggedIn ? (needsCompleteStep ? 3 : 2) : 3;
@@ -766,27 +775,33 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                         </div>
                       </div>
 
-                      {/* YES → cédula → auto-fill name from padrón (ALWAYS optional) */}
+                      {/* YES → cédula AUTO-FILLS the person's info. When found we show
+                          it confirmed (no manual typing); only if NOT found do we fall
+                          back to a manual name field. Cédula stays optional. */}
                       {benHasCedula === true && (
                         <>
                           <CedulaInput
                             value={benCedula}
                             onChange={setBenCedula}
-                            hint="Opcional — autocompleta el nombre del padrón. Nunca bloquea la cita."
+                            hint="Autocompleta los datos de la persona. Nunca bloquea la cita."
                           />
                           {benLookupName && (
-                            <p className="text-xs text-[#15803d] -mt-1">Encontramos: <strong>{benLookupName}</strong></p>
+                            <div className="rounded-lg bg-[#f0fdf4] border border-[#bbf7d0] px-3 py-2 -mt-1">
+                              <p className="text-xs text-[#15803d]">Persona: <strong>{benLookupName}</strong></p>
+                              <p className="text-[11px] text-[#16a34a]">Datos confirmados con el padrón.</p>
+                            </div>
                           )}
                           {benCedula && isValidId(cleanId(benCedula)) && detectIdType(cleanId(benCedula)) === "cedula" && !benLookupName && (
-                            <p className="text-xs text-[#b45309] -mt-1">No encontramos esa cédula en el padrón. Podés escribir el nombre abajo igual.</p>
+                            <p className="text-xs text-[#b45309] -mt-1">No encontramos esa cédula en el padrón. Escribí el nombre abajo.</p>
                           )}
                         </>
                       )}
 
-                      {/* Name (both branches; auto-filled in YES, editable) + DOB (optional
-                          in YES since the padrón has no birth date; entered in NO) + phone */}
+                      {/* Manual name — only when there is no auto-filled padrón name
+                          (NO branch always; YES branch only when not found). */}
                       {benHasCedula !== null && (
                         <>
+                          {!(benHasCedula === true && benLookupName) && (
                           <div>
                             <label className="text-xs font-medium text-[#374151] block mb-1.5">Nombre completo de la persona</label>
                             <input
@@ -797,6 +812,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                               className="w-full h-10 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent"
                             />
                           </div>
+                          )}
                           <div>
                             <label className="text-xs font-medium text-[#374151] block mb-1.5">
                               Fecha de nacimiento {benHasCedula === true && <span className="text-[#9ca3af] font-normal">(opcional)</span>}
@@ -1034,7 +1050,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     {submitting
                       ? "Enviando…"
                       : isLoggedIn && !needsCompleteStep
-                        ? <><WhatsAppIcon className="h-4 w-4" /> {t("step4.submit")}</>
+                        ? t("step4.submit")
                         : t("continue")}
                   </Button>
                 )}
@@ -1047,7 +1063,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     disabled={profilePhone.replace(/\D/g, "").length < 8 || guestEmailCheck.taken || !profileCedula}
                     onClick={async () => { if (await validateClientCedula()) await handleSubmit(); }}
                   >
-                    {submitting || checkingCedula ? "Enviando…" : <><WhatsAppIcon className="h-4 w-4" /> {t("step4.submit")}</>}
+                    {submitting || checkingCedula ? "Enviando…" : t("step4.submit")}
                   </Button>
                 )}
 
@@ -1058,7 +1074,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     loading={savingProfile || submitting}
                     onClick={saveProfileAndSubmit}
                   >
-                    {savingProfile || submitting ? "Enviando…" : <><WhatsAppIcon className="h-4 w-4" /> {t("step4.submit")}</>}
+                    {savingProfile || submitting ? "Enviando…" : t("step4.submit")}
                   </Button>
                 )}
               </div>
