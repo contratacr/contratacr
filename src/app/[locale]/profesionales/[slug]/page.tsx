@@ -16,6 +16,7 @@ import { StarRating } from "@/components/ui/star-rating";
 import { getInitials, getWhatsAppLink } from "@/lib/utils";
 import { formatPricingTier } from "@/lib/pricing";
 import { languageLabel } from "@/lib/data/languages";
+import { insurerLabel } from "@/lib/data/insurers";
 import { ReviewSection } from "@/components/professionals/review-section";
 import { ProfileGallery } from "@/components/professionals/profile-gallery";
 import { cldThumb } from "@/lib/cloudinary";
@@ -582,6 +583,19 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                             {professional.languages.map((l) => (
                               <span key={l} className="inline-flex items-center rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium px-3 py-1.5">
                                 {languageLabel(l)}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {professional.insuranceNetworks && professional.insuranceNetworks.length > 0 && (
+                        <div>
+                          <h2 className="text-lg font-semibold text-[#111827] mb-3">Aseguradoras</h2>
+                          <div className="flex flex-wrap gap-2">
+                            {professional.insuranceNetworks.map((id) => (
+                              <span key={id} className="inline-flex items-center gap-1.5 rounded-lg bg-[#f0fdf4] text-[#15803d] text-sm font-medium px-3 py-1.5">
+                                <ShieldCheck className="h-3.5 w-3.5" /> {insurerLabel(id)}
                               </span>
                             ))}
                           </div>

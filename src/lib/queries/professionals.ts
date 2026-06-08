@@ -12,6 +12,8 @@ export type SearchFilters = {
   query?: string;
   /** "Solo con identidad verificada" — only show verified providers. */
   verifiedOnly?: boolean;
+  /** Filter by an insurance network (aseguradora) the pro belongs to. */
+  insurerId?: string;
 };
 
 export type ProService = {
@@ -60,13 +62,16 @@ export async function searchProfessionals(
             `id, slug, hourly_rate, is_verified, is_featured, is_available,
              rating_avg, review_count, bio, whatsapp, years_experience, portfolio_urls,
              category_id, professions, pricing, lat, lng, service_type, availability_public, contact_preference,
-             business_name, workplaces, verification_status,
+             business_name, workplaces, verification_status${modern ? ", insurance_networks" : ""},
              profiles(full_name, avatar_url),
              provincias(id, name),
              cantones(id, name)`
           );
 
         if (modern) query = query.eq("is_banned", false);
+        if (modern && filters.insurerId && filters.insurerId !== "todas") {
+          query = query.contains("insurance_networks", [filters.insurerId]);
+        }
 
         if (filters.categoryId && filters.categoryId !== "todas") {
           // Match the professional if ANY of their professions matches (multi-category).
@@ -160,6 +165,7 @@ export async function searchProfessionals(
         lng: row.lng ?? null,
         serviceType: row.service_type ?? null,
         portfolioCount: Array.isArray(row.portfolio_urls) ? row.portfolio_urls.length : 0,
+        insuranceNetworks: (row.insurance_networks as string[]) ?? [],
       }));
     } catch (err) {
       console.error("[searchProfessionals] Supabase error:", err);
@@ -189,7 +195,7 @@ export async function getProfessionalBySlug(
         .select(
           `id, slug, hourly_rate, is_verified, is_featured, is_available,
            rating_avg, review_count, bio, whatsapp, years_experience, portfolio_urls,
-           category_id, professions, pricing, services, availability_public, contact_preference, languages, business_name, workplaces, verification_status, lat, lng, service_type,
+           category_id, professions, pricing, services, availability_public, contact_preference, languages, business_name, workplaces, verification_status, insurance_networks, lat, lng, service_type,
            profiles(full_name, avatar_url),
            provincias(id, name),
            cantones(id, name),
@@ -250,6 +256,8 @@ export async function getProfessionalBySlug(
         workplaces: ((pro as any).workplaces as ProfessionalCardData["workplaces"]) ?? [],
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         verificationStatus: ((pro as any).verification_status as ProfessionalCardData["verificationStatus"]) ?? "pending",
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        insuranceNetworks: ((pro as any).insurance_networks as string[]) ?? [],
       };
     } catch (err) {
       console.error("[getProfessionalBySlug] Supabase error:", err);

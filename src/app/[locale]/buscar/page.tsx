@@ -24,6 +24,7 @@ interface SearchPageProps {
     q?: string;
     page?: string;
     verificados?: string;
+    aseguradora?: string;
   }>;
 }
 
@@ -44,6 +45,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     sortBy: params.sortBy,
     query: params.q,
     verifiedOnly: params.verificados === "1",
+    insurerId: params.aseguradora,
   });
 
   const totalPages = Math.max(1, Math.ceil(allResults.length / PAGE_SIZE));
@@ -123,6 +125,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     if (params.canton && params.canton !== "todos") next.set("canton", params.canton);
     if (params.sortBy && params.sortBy !== "rating") next.set("sortBy", params.sortBy);
     if (params.verificados === "1") next.set("verificados", "1");
+    if (params.aseguradora && params.aseguradora !== "todas") next.set("aseguradora", params.aseguradora);
     if (page > 1) next.set("page", String(page));
     const qs = next.toString();
     return qs ? `?${qs}` : "?";

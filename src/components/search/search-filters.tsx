@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { PROVINCES, getCantonsByProvince } from "@/lib/data/cr-geography";
 import { CATEGORY_GROUPS, getCategoryLabel } from "@/lib/data/categories";
+import { INSURERS } from "@/lib/data/insurers";
 
 export function SearchFilters() {
   const router = useRouter();
@@ -21,6 +22,7 @@ export function SearchFilters() {
   const [province, setProvince] = useState(params.get("provincia") ?? "");
   const [canton, setCanton] = useState(params.get("canton") ?? "");
   const [sortBy, setSortBy] = useState(params.get("sortBy") ?? "rating");
+  const [aseguradora, setAseguradora] = useState(params.get("aseguradora") ?? "");
   const [verifiedOnly, setVerifiedOnly] = useState(params.get("verificados") === "1");
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -29,16 +31,17 @@ export function SearchFilters() {
   const applyFilters = useCallback(
     (overrides: Record<string, string> = {}) => {
       const next = new URLSearchParams();
-      const vals = { q: query, categoria: category, provincia: province, canton, sortBy, verificados: verifiedOnly ? "1" : "", ...overrides };
+      const vals = { q: query, categoria: category, provincia: province, canton, sortBy, aseguradora, verificados: verifiedOnly ? "1" : "", ...overrides };
       if (vals.q) next.set("q", vals.q);
       if (vals.categoria && vals.categoria !== "todas") next.set("categoria", vals.categoria);
       if (vals.provincia && vals.provincia !== "todas") next.set("provincia", vals.provincia);
       if (vals.canton && vals.canton !== "todos" && vals.provincia) next.set("canton", vals.canton);
       if (vals.sortBy && vals.sortBy !== "rating") next.set("sortBy", vals.sortBy);
+      if (vals.aseguradora && vals.aseguradora !== "todas") next.set("aseguradora", vals.aseguradora);
       if (vals.verificados === "1") next.set("verificados", "1");
       router.push(`${pathname}?${next.toString()}`);
     },
-    [query, category, province, canton, sortBy, verifiedOnly, router, pathname]
+    [query, category, province, canton, sortBy, aseguradora, verifiedOnly, router, pathname]
   );
 
   function handleQueryChange(value: string) {
@@ -65,7 +68,7 @@ export function SearchFilters() {
   }, []);
 
   function clearAll() {
-    setQuery(""); setCategory(""); setProvince(""); setCanton(""); setSortBy("rating"); setVerifiedOnly(false);
+    setQuery(""); setCategory(""); setProvince(""); setCanton(""); setSortBy("rating"); setAseguradora(""); setVerifiedOnly(false);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     router.push(pathname);
   }
@@ -178,6 +181,19 @@ export function SearchFilters() {
               <SelectItem value="priceAsc">{t("sort.priceAsc")}</SelectItem>
               <SelectItem value="priceDesc">{t("sort.priceDesc")}</SelectItem>
               <SelectItem value="newest">{t("sort.newest")}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="sm:w-48">
+          <label className="text-xs font-medium text-[#6b7280] mb-1.5 block">Aseguradora</label>
+          <Select value={aseguradora} onValueChange={(v) => { setAseguradora(v); applyFilters({ aseguradora: v }); }}>
+            <SelectTrigger className="text-sm">
+              <SelectValue placeholder="Todas">{aseguradora && aseguradora !== "todas" ? INSURERS.find((i) => i.id === aseguradora)?.label : "Todas"}</SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todas">Todas</SelectItem>
+              {INSURERS.map((i) => <SelectItem key={i.id} value={i.id}>{i.label}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>

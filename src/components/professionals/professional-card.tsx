@@ -40,6 +40,8 @@ export type ProfessionalCardData = {
   serviceType?: string | null;
   /** Count of "casos de éxito" (portfolio photos) — drives the preview link. */
   portfolioCount?: number;
+  /** Insurance networks (aseguradoras) the pro belongs to. */
+  insuranceNetworks?: string[];
 };
 
 interface ProfessionalCardProps {

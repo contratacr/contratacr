@@ -12,6 +12,7 @@ import { CoverageAreaSelector } from "@/components/maps/coverage-area-selector";
 import { createClient } from "@/lib/supabase/client";
 import { Camera, Check, X, Plus, Truck, MapPin } from "lucide-react";
 import { computeSearchAreas, primaryArea, type CoverageArea } from "@/lib/location";
+import { INSURERS } from "@/lib/data/insurers";
 import { CategorySearch } from "@/components/ui/category-search";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { cn } from "@/lib/utils";
@@ -49,6 +50,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
   const [businessName, setBusinessName] = useState<string>(initial.business_name ?? "");
   const [workplaces, setWorkplaces] = useState<Workplace[]>(Array.isArray(initial.workplaces) ? initial.workplaces : []);
   const [languages, setLanguages] = useState<string[]>(Array.isArray(initial.languages) ? initial.languages : []);
+  const [insurers, setInsurers] = useState<string[]>(Array.isArray(initial.insurance_networks) ? initial.insurance_networks : []);
   // Work mode — BOTH can be selected (travels AND has fixed locations).
   const initialTypes = String(initial.service_type ?? "mobile");
   const [serviceMobile, setServiceMobile] = useState(initialTypes.includes("mobile") || initialTypes === "");
@@ -180,6 +182,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         coverage_areas: effectiveCoverage,
         search_provincias: provincias,
         search_cantones: cantones,
+        insurance_networks: insurers,
       };
 
       let { error: proError } = await supabase
@@ -187,7 +190,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         .update({ ...baseUpdate, ...identityFields })
         .eq("id", professionalId);
       // Retry without the optional identity columns if the DB isn't migrated yet.
-      if (proError && /business_name|workplaces|coverage_areas|search_provincias|search_cantones|affiliations|schema cache|could not find|PGRST204/i.test(proError.message)) {
+      if (proError && /business_name|workplaces|coverage_areas|search_provincias|search_cantones|insurance_networks|affiliations|schema cache|could not find|PGRST204/i.test(proError.message)) {
         ({ error: proError } = await supabase.from("professionals").update(baseUpdate).eq("id", professionalId));
       }
 
@@ -426,6 +429,32 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
           Idiomas que hablás <span className="text-[#9ca3af] font-normal">(opcional)</span>
         </label>
         <LanguagesInput value={languages} onChange={(next) => { setLanguages(next); touch(); }} />
+      </div>
+
+      {/* Aseguradoras — insurance networks the pro belongs to */}
+      <div>
+        <label className="text-sm font-medium text-[#374151] block mb-1.5">
+          Aseguradoras <span className="text-[#9ca3af] font-normal">(opcional)</span>
+        </label>
+        <p className="text-xs text-[#9ca3af] mb-2">Marcá las redes de seguros con las que trabajás. Los clientes pueden filtrar por aseguradora.</p>
+        <div className="flex flex-wrap gap-2">
+          {INSURERS.map((ins) => {
+            const active = insurers.includes(ins.id);
+            return (
+              <button
+                key={ins.id}
+                type="button"
+                onClick={() => { setInsurers((prev) => active ? prev.filter((x) => x !== ins.id) : [...prev, ins.id]); touch(); }}
+                className={cn(
+                  "px-3 py-1.5 rounded-lg text-sm font-medium border-2 transition-all",
+                  active ? "border-[#009FD9] bg-[#EBF5FB] text-[#0089bb]" : "border-[#e5e7eb] text-[#374151] hover:border-[#009FD9]/40"
+                )}
+              >
+                {ins.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Contact preference lives in the Disponibilidad tab now. */}
