@@ -903,7 +903,7 @@ export default function ClientDashboardPage() {
                   {/* Name + phone */}
                   <div className="bg-white rounded-2xl border border-[#e5e7eb] p-6 flex flex-col gap-4 mb-4">
                     <div>
-                      <label className="text-sm font-medium text-[#374151] block mb-1.5">Nombre completo</label>
+                      <label className="text-sm font-medium text-[#374151] block mb-1.5">Nombre completo <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         className={inputClass}

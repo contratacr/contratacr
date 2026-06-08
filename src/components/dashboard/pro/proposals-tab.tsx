@@ -315,7 +315,7 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                         <div className="mt-4 pt-4 border-t border-[#f3f4f6] flex flex-col gap-3">
                           <div>
                             <label className="text-xs font-medium text-[#374151] block mb-1.5">
-                              Tu precio (₡) <span className="text-[#9ca3af] font-normal">opcional</span>
+                              Tu precio (₡) <span className="text-[#9ca3af] font-normal">(opcional)</span>
                             </label>
                             <PriceInput
                               placeholder="Ej: 50000"
@@ -452,11 +452,11 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                     {editing === p.id && (
                       <div className="mt-4 pt-4 border-t border-[#f3f4f6] flex flex-col gap-3">
                         <div>
-                          <label className="text-xs font-medium text-[#374151] block mb-1.5">Tu precio (₡) <span className="text-[#9ca3af] font-normal">opcional</span></label>
+                          <label className="text-xs font-medium text-[#374151] block mb-1.5">Tu precio (₡) <span className="text-[#9ca3af] font-normal">(opcional)</span></label>
                           <PriceInput placeholder="Ej: 50000" value={editForm.price} onChange={(v) => setEditForm((f) => ({ ...f, price: v }))} />
                         </div>
                         <div>
-                          <label className="text-xs font-medium text-[#374151] block mb-1.5">Tu mensaje</label>
+                          <label className="text-xs font-medium text-[#374151] block mb-1.5">Tu mensaje <span className="text-red-500">*</span></label>
                           <textarea
                             value={editForm.message}
                             onChange={(e) => setEditForm((f) => ({ ...f, message: e.target.value }))}

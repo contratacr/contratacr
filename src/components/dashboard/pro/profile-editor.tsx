@@ -272,7 +272,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
 
       {/* Personal name — always your own name */}
       <Input
-        label="Nombre completo"
+        label={<>Nombre completo <span className="text-red-500">*</span></>}
         value={fullName}
         onChange={(e) => { setFullName(e.target.value); touch(); }}
         placeholder="Juan Pérez González"
@@ -341,7 +341,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
 
       {/* Description */}
       <div>
-        <label className="text-sm font-medium text-[#374151] block mb-1.5">Descripción</label>
+        <label className="text-sm font-medium text-[#374151] block mb-1.5">Descripción <span className="text-[#9ca3af] font-normal">(opcional)</span></label>
         <textarea
           className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] min-h-[120px] resize-none focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
           placeholder="Describí tu experiencia, especialidades y qué te diferencia…"
@@ -353,7 +353,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
       {/* Professions — multi-select (first is the primary/principal). Each profesión
           groups the servicios managed in the Servicios tab. */}
       <div>
-        <label className="text-sm font-medium text-[#374151] block mb-1.5">Profesiones</label>
+        <label className="text-sm font-medium text-[#374151] block mb-1.5">Profesiones <span className="text-red-500">*</span></label>
         <p className="text-xs text-[#9ca3af] mb-2">Tus profesiones (ej. Nutricionista). Los servicios de cada una se gestionan en la pestaña <strong>Servicios</strong>.</p>
         {professions.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-2">
@@ -377,15 +377,16 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         />
       </div>
 
-      {/* WhatsApp */}
+      {/* WhatsApp — required contact channel */}
       <PhoneInput
         label="WhatsApp"
+        required
         value={whatsapp}
         onChange={(digits) => { setWhatsapp(digits); touch(); }}
       />
 
       <Input
-        label="Dirección (opcional)"
+        label={<>Dirección <span className="text-[#9ca3af] font-normal">(opcional)</span></>}
         placeholder="Ej: Barrio Escalante, San José"
         value={address}
         onChange={(e) => { setAddress(e.target.value); touch(); }}

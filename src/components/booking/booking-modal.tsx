@@ -839,7 +839,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                         <>
                           {!(benHasCedula === true && benLookupName) && (
                           <div>
-                            <label className="text-xs font-medium text-[#374151] block mb-1.5">Nombre completo de la persona</label>
+                            <label className="text-xs font-medium text-[#374151] block mb-1.5">Nombre completo de la persona <span className="text-red-500">*</span></label>
                             <input
                               type="text"
                               value={benName}
@@ -884,7 +884,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
 
                   <div>
                     <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                      {t("step4.description")} <span className="text-[#9ca3af] font-normal">(requerido)</span>
+                      {t("step4.description")} <span className="text-red-500">*</span>
                     </label>
                     <textarea
                       className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] min-h-[110px] resize-none focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
@@ -901,7 +901,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                 <div className="flex flex-col gap-5">
                   <h3 className="text-lg font-semibold text-[#111827]">Tu información de contacto</h3>
                   <div>
-                    <label className="text-sm font-medium text-[#374151] block mb-1.5">Nombre completo</label>
+                    <label className="text-sm font-medium text-[#374151] block mb-1.5">Nombre completo <span className="text-red-500">*</span></label>
                     <input
                       type="text"
                       className="w-full h-10 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
@@ -975,7 +975,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
 
                   {needsProfile && (
                     <div>
-                      <label className="text-sm font-medium text-[#374151] block mb-1.5">Nombre completo</label>
+                      <label className="text-sm font-medium text-[#374151] block mb-1.5">Nombre completo <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         className="w-full h-10 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
@@ -987,6 +987,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                   )}
                   <PhoneInput
                     label="Teléfono (WhatsApp)"
+                    required
                     value={profilePhone}
                     onChange={setProfilePhone}
                   />

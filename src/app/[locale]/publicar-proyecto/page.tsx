@@ -276,7 +276,9 @@ export default function PublicarProyectoPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-[#374151] block mb-1.5">Cantón</label>
+                  <label className="text-sm font-medium text-[#374151] block mb-1.5">
+                    Cantón <span className="text-[#9ca3af] font-normal">(opcional)</span>
+                  </label>
                   <select
                     className={cn(inputClass, "cursor-pointer", !form.provinciaId && "opacity-50")}
                     value={form.cantonId}

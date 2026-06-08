@@ -192,7 +192,7 @@ export default function CompleteProfilePage() {
             </div>
 
             <div>
-              <label className="text-sm font-medium text-[#374151] block mb-1.5">Nombre completo</label>
+              <label className="text-sm font-medium text-[#374151] block mb-1.5">Nombre completo <span className="text-red-500">*</span></label>
               <div className="relative">
                 <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
                 <input
@@ -208,7 +208,7 @@ export default function CompleteProfilePage() {
               )}
             </div>
 
-            <PhoneInput label="Teléfono" value={phone} onChange={setPhone} />
+            <PhoneInput label="Teléfono" required value={phone} onChange={setPhone} />
 
             <CedulaInput
               required

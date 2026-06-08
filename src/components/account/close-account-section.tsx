@@ -79,11 +79,12 @@ export function CloseAccountSection({ initialDisabled = false }: { initialDisabl
             </button>
           ) : (
             <div className="mt-3 flex flex-col gap-2">
+              <label className="text-sm font-medium text-[#374151]">Motivo <span className="text-red-500">*</span></label>
               <textarea
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 rows={2}
-                placeholder="Motivo (requerido)… ej. ya no necesito el servicio"
+                placeholder="Ej. ya no necesito el servicio"
                 className="w-full rounded-lg border border-[#e5e7eb] p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30"
               />
               {error && <p className="text-xs text-red-600">{error}</p>}
