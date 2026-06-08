@@ -22,6 +22,9 @@ interface Props {
   onFullNameChange: (fullName: string) => void;
   onStatusChange?: (status: IdentityStatus) => void;
   onResult?: (r: IdentityResult) => void;
+  /** Fired when the user clicks "¿No es tu información?" — the padrón match must be
+   *  DISCARDED and the case routed to manual admin review (never auto-verified). */
+  onMismatch?: () => void;
   cedulaError?: string;
   nameError?: string;
   /** When true the cédula is locked (e.g. it was set at signup). */
@@ -35,6 +38,7 @@ export function IdentityField({
   onFullNameChange,
   onStatusChange,
   onResult,
+  onMismatch,
   cedulaError,
   nameError,
   cedulaReadOnly,
@@ -112,7 +116,17 @@ export function IdentityField({
           fullName={officialName}
           cedula={cedula}
           dob={dob}
-          onReset={() => { setManualOverride(true); setStatusBoth("notfound"); }}
+          onReset={() => {
+            // Discard the padrón auto-fill: clear the matched name, mark the case as
+            // a mismatch (manual review), and let the user type their real name.
+            setManualOverride(true);
+            setOfficialName("");
+            setDob(null);
+            onFullNameChange("");
+            onResult?.({ found: false, isAdult: false, dob: null });
+            setStatusBoth("notfound");
+            onMismatch?.();
+          }}
         />
       )}
 
@@ -123,9 +137,14 @@ export function IdentityField({
             <div className="flex items-start gap-2 rounded-xl border border-[#fde68a] bg-[#fffbeb] p-3 text-xs text-[#92400e]">
               <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
               <span>
-                No encontramos tu cédula en el padrón (puede ser DIMEX/NITE, extranjero o recién emitida).
-                Ingresá tu nombre completo: tu identidad quedará <strong>pendiente de revisión</strong> y la
-                confirmaremos manualmente.
+                {manualOverride ? (
+                  <>Indicaste que la información del padrón no es tuya. Ingresá tu nombre completo: tu identidad
+                  quedará <strong>pendiente de revisión</strong> y la confirmaremos manualmente.</>
+                ) : (
+                  <>No encontramos tu cédula en el padrón (puede ser DIMEX/NITE, extranjero o recién emitida).
+                  Ingresá tu nombre completo: tu identidad quedará <strong>pendiente de revisión</strong> y la
+                  confirmaremos manualmente.</>
+                )}
               </span>
             </div>
           )}

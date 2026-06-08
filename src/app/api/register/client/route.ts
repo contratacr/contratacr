@@ -50,12 +50,24 @@ export async function POST(req: Request) {
       );
 
     if (profileError) {
-      return NextResponse.json({ error: profileError.message }, { status: 500 });
+      // Never surface raw DB constraint errors. A duplicate cédula → friendly message.
+      const dupCedula = /profiles_cedula_key|cedula/i.test(profileError.message);
+      const dupEmail = /profiles_email|email/i.test(profileError.message) && /duplicate|unique/i.test(profileError.message);
+      if (dupCedula) {
+        return NextResponse.json({ error: "Esta cédula ya está registrada.", code: "cedula_taken" }, { status: 409 });
+      }
+      if (dupEmail) {
+        return NextResponse.json({ error: "Este correo ya está registrado. Iniciá sesión.", code: "email_taken" }, { status: 409 });
+      }
+      return NextResponse.json({ error: "No pudimos crear tu cuenta. Intentá de nuevo en unos minutos." }, { status: 500 });
     }
 
     return NextResponse.json({ ok: true });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Error interno del servidor";
-    return NextResponse.json({ error: message }, { status: 500 });
+    const friendly = /profiles_cedula_key|duplicate key/i.test(message)
+      ? "Esta cédula ya está registrada."
+      : "Ocurrió un error. Intentá de nuevo.";
+    return NextResponse.json({ error: friendly }, { status: 500 });
   }
 }

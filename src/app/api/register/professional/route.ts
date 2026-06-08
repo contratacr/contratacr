@@ -124,7 +124,7 @@ export async function POST(req: Request) {
 
       if (existingCedula) {
         return NextResponse.json(
-          { error: "Esta cédula ya está registrada en ContrataCR." },
+          { error: "Esta cédula ya está registrada. Iniciá sesión o recuperá tu cuenta.", code: "cedula_taken" },
           { status: 409 }
         );
       }
@@ -151,7 +151,7 @@ export async function POST(req: Request) {
     if (profileError) {
       console.error("[register/professional] profile upsert error:", profileError);
       const friendly = /duplicate key|cedula/i.test(profileError.message)
-        ? "Esta cédula o correo ya está registrado en ContrataCR."
+        ? "Esta cédula ya está registrada. Iniciá sesión o recuperá tu cuenta."
         : "No pudimos crear tu cuenta. Intentá de nuevo en unos minutos.";
       return NextResponse.json({ error: friendly }, { status: 500 });
     }

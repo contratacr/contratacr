@@ -437,6 +437,9 @@ export default function RegisterProfessionalPage() {
   const [oauthCedulaError, setOauthCedulaError] = useState<string | null>(null);
   // "No tengo identificación costarricense" → manual review (admin exceptions).
   const [noCrId, setNoCrId] = useState(false);
+  // "¿No es tu información?" — the padrón matched but the user says it's not theirs.
+  // Routed to the SAME manual-review path as no_cr_id (never auto-verified).
+  const [identityMismatch, setIdentityMismatch] = useState(false);
   const [idDocNote, setIdDocNote] = useState("");
   const [oauthFullName, setOauthFullName] = useState("");
   const [oauthNameError, setOauthNameError] = useState<string | null>(null);
@@ -547,13 +550,19 @@ export default function RegisterProfessionalPage() {
       form1.setError("email", { message: "Este correo ya está registrado. Iniciá sesión." });
       return;
     }
-    // Cédula format required UNLESS the pro has no CR identification (→ manual review).
-    if (!noCrId && !validateCedulaFormat(data.cedula ?? "")) {
+    // Cédula format required UNLESS the pro has no CR identification OR flagged the
+    // padrón match as "not mine" (both → manual review; the cédula isn't stored).
+    if (!noCrId && !identityMismatch && !validateCedulaFormat(data.cedula ?? "")) {
       form1.setError("cedula", { message: "Formato inválido. CR: 9 dígitos · DIMEX: 11-12 · NITE: 10." });
       return;
     }
-    if (!noCrId && cedulaCheck.taken) {
+    if (!noCrId && !identityMismatch && cedulaCheck.taken) {
       form1.setError("cedula", { message: "Esta cédula ya está registrada en ContrataCR." });
+      return;
+    }
+    // Manual-review cases still need a typed name.
+    if ((noCrId || identityMismatch) && (data.fullName ?? "").trim().length < 3) {
+      form1.setError("fullName", { message: "Ingresá tu nombre completo." });
       return;
     }
     setStep1Data(data);
@@ -582,11 +591,11 @@ export default function RegisterProfessionalPage() {
     setLocationError(null);
     // OAuth professionals must provide a cédula UNLESS they have no CR ID (→ review)
     // or already have one on file (converting client — reuse it, never re-ask).
-    if (currentUser && !noCrId && !accountCedula && !validateCedulaFormat(oauthCedula)) {
+    if (currentUser && !noCrId && !identityMismatch && !accountCedula && !validateCedulaFormat(oauthCedula)) {
       setOauthCedulaError("Cédula requerida. CR: 9 dígitos · DIMEX: 11-12 · NITE: 10.");
       return;
     }
-    if (currentUser && !noCrId && !accountCedula && oauthCedulaCheck.taken) {
+    if (currentUser && !noCrId && !identityMismatch && !accountCedula && oauthCedulaCheck.taken) {
       setOauthCedulaError("Esta cédula ya está registrada en ContrataCR.");
       return;
     }
@@ -641,7 +650,9 @@ export default function RegisterProfessionalPage() {
           options: {
             data: {
               full_name: fullName,
-              cedula: step1Data.cedula.replace(/\D/g, ""),
+              // Manual-review cases (no CR ID / "not my info") do NOT store the cédula
+              // — so it is never auto-verified against the padrón.
+              cedula: (noCrId || identityMismatch) ? null : step1Data.cedula.replace(/\D/g, ""),
               role: "professional",
               onboarding_completed: true,
             },
@@ -688,9 +699,10 @@ export default function RegisterProfessionalPage() {
           email: userEmail,
           fullName,
           businessName: businessName.trim() || null,
-          cedula: noCrId ? null : (step1Data?.cedula?.replace(/\D/g, "") ?? (oauthCedula ? oauthCedula.replace(/\D/g, "") : null)),
-          noCrId,
-          idDocNote: idDocNote.trim() || null,
+          cedula: (noCrId || identityMismatch) ? null : (step1Data?.cedula?.replace(/\D/g, "") ?? (oauthCedula ? oauthCedula.replace(/\D/g, "") : null)),
+          // "not my info" reuses the no-CR-ID manual-review path (pending, no auto-verify).
+          noCrId: noCrId || identityMismatch,
+          idDocNote: ((identityMismatch ? "El usuario indicó que la información del padrón no es suya. " : "") + idDocNote.trim()).trim() || null,
           photoUrl,
           category: step2Data.category,
           professions: [step2Data.category, ...extraCategories],
@@ -843,7 +855,9 @@ export default function RegisterProfessionalPage() {
                     fullName={form1.watch("fullName") ?? ""}
                     onCedulaChange={(c) => form1.setValue("cedula", c, { shouldValidate: true })}
                     onFullNameChange={(n) => form1.setValue("fullName", n, { shouldValidate: true })}
-                    cedulaError={form1.formState.errors.cedula?.message ?? (cedulaCheck.taken ? "Esta identificación ya está registrada en ContrataCR." : undefined)}
+                    onResult={(r) => { if (r.found) setIdentityMismatch(false); }}
+                    onMismatch={() => setIdentityMismatch(true)}
+                    cedulaError={form1.formState.errors.cedula?.message ?? (!identityMismatch && cedulaCheck.taken ? "Esta identificación ya está registrada en ContrataCR." : undefined)}
                     nameError={form1.formState.errors.fullName?.message}
                   />
                 </>
@@ -940,7 +954,9 @@ export default function RegisterProfessionalPage() {
                   fullName={oauthFullName}
                   onCedulaChange={(c) => { setOauthCedula(c); setOauthCedulaError(null); }}
                   onFullNameChange={(n) => { setOauthFullName(n); setOauthNameError(null); }}
-                  cedulaError={oauthCedulaError ?? (oauthCedulaCheck.taken ? "Esta identificación ya está registrada en ContrataCR." : undefined)}
+                  onResult={(r) => { if (r.found) setIdentityMismatch(false); }}
+                  onMismatch={() => setIdentityMismatch(true)}
+                  cedulaError={oauthCedulaError ?? (!identityMismatch && oauthCedulaCheck.taken ? "Esta identificación ya está registrada en ContrataCR." : undefined)}
                   nameError={oauthNameError ?? undefined}
                 />
               ) : null}
