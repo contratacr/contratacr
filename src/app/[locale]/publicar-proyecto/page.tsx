@@ -176,9 +176,14 @@ export default function PublicarProyectoPage() {
             <p className="text-[#6b7280] mb-8">
               Los profesionales de tu zona verán tu proyecto y podrán enviarte propuestas.
             </p>
-            <Button size="lg" className="w-full" onClick={() => router.push("/dashboard/cliente?tab=projects")}>
-              Ver mis proyectos
-            </Button>
+            <div className="flex flex-col gap-2">
+              <Button size="lg" className="w-full" onClick={() => router.push("/dashboard/cliente?tab=projects")}>
+                Ver mis proyectos
+              </Button>
+              <Button size="lg" variant="outline" className="w-full" onClick={() => router.push("/dashboard/cliente")}>
+                Ir a mi panel
+              </Button>
+            </div>
           </div>
         </main>
         <LandingFooter />

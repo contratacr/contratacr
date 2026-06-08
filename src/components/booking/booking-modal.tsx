@@ -138,8 +138,9 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   const [benDob, setBenDob] = useState("");
   const [benPhone, setBenPhone] = useState("");
   const [benLookupName, setBenLookupName] = useState<string | null>(null);
-  // Live padrón name for the client's OWN cédula (auto-fill display, item 1b).
+  // Live padrón name (+ DOB when a source provides it) for the client's OWN cédula.
   const [selfCedulaName, setSelfCedulaName] = useState<string | null>(null);
+  const [selfDob, setSelfDob] = useState<string | null>(null);
   // Guest email duplicate detection (inline, real-time).
   const guestEmailCheck = useAvailabilityCheck(clientEmail, "email", !isLoggedIn);
 
@@ -229,9 +230,12 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
         const res = await fetch(`/api/cedula/${clean}`);
         if (!active) return;
         if (res.ok) {
-          const { fullName } = await res.json();
+          const { fullName, dob } = await res.json();
           setBenLookupName(fullName ?? null);
           if (fullName) setBenName(fullName);
+          // Auto-fill DOB from the same lookup when the source provides it (the TSE
+          // padrón has none; a Registro Civil source would populate this).
+          if (dob) setBenDob(dob);
         } else {
           setBenLookupName(null);
         }
@@ -251,7 +255,8 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
         if (!active) return;
         const j = await res.json().catch(() => ({}));
         setSelfCedulaName(res.ok ? (j.fullName ?? null) : null);
-      } catch { if (active) setSelfCedulaName(null); }
+        setSelfDob(res.ok ? (j.dob ?? null) : null);
+      } catch { if (active) { setSelfCedulaName(null); setSelfDob(null); } }
     }, 500);
     return () => { active = false; clearTimeout(t); };
   }, [profileCedula]);
@@ -720,11 +725,16 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                         Hola, <span className="font-medium text-[#374151]">{clientName.split(" ")[0]}</span>. Describí lo que necesitás.
                       </p>
                     )}
-                    {/* Stored identity (logged-in + already has cédula) — shown, not re-asked */}
+                    {/* Stored identity (logged-in + already has cédula) — shown, not re-asked.
+                        Name + cédula always; DOB + age when a source provides the DOB
+                        (the TSE padrón has none). */}
                     {isLoggedIn && profileCedula && (
-                      <p className="text-xs text-[#15803d] mt-1">
-                        Reservás como <strong>{clientName || "vos"}</strong> · cédula {profileCedula}
-                      </p>
+                      <div className="text-xs text-[#15803d] mt-1 leading-relaxed">
+                        <span>Reservás como <strong>{clientName || "vos"}</strong> · cédula {profileCedula}</span>
+                        {selfDob && computeAge(selfDob) && (
+                          <span className="block">Nacimiento: {selfDob} · {formatAge(computeAge(selfDob))}</span>
+                        )}
+                      </div>
                     )}
                   </div>
 
@@ -830,16 +840,11 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                               </p>
                             )}
                           </div>
-                          <div>
-                            <label className="text-xs font-medium text-[#374151] block mb-1.5">Teléfono de contacto <span className="text-[#9ca3af] font-normal">(opcional)</span></label>
-                            <input
-                              type="tel"
-                              value={benPhone}
-                              onChange={(e) => setBenPhone(e.target.value)}
-                              placeholder="Solo si querés que el profesional pueda contactar a la persona"
-                              className="w-full h-10 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent"
-                            />
-                          </div>
+                          <PhoneInput
+                            label={<>Teléfono de contacto <span className="text-[#9ca3af] font-normal">(opcional)</span></>}
+                            value={benPhone}
+                            onChange={setBenPhone}
+                          />
                           <p className="text-[11px] text-[#9ca3af]">
                             La cédula de la persona es opcional — nunca bloquea la cita. La identidad la respaldás vos como responsable.
                           </p>

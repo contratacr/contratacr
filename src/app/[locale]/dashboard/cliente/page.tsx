@@ -20,6 +20,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 import { getInitials, getWhatsAppLink } from "@/lib/utils";
 import { NotificationsList } from "@/components/notifications/notifications-list";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { LeaveReviewModal } from "@/components/professionals/leave-review-modal";
 import { SavedProfessionalsTab } from "@/components/professionals/saved-professionals-tab";
 import type { BookingStatus } from "@/types";
@@ -920,18 +921,11 @@ export default function ClientDashboardPage() {
                         onChange={(e) => setProfileForm((f) => ({ ...f, full_name: e.target.value }))}
                       />
                     </div>
-                    <div>
-                      <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                        Teléfono <span className="text-[#9ca3af] font-normal">(opcional)</span>
-                      </label>
-                      <input
-                        type="tel"
-                        className={inputClass}
-                        placeholder="Ej: 8888-8888"
-                        value={profileForm.phone}
-                        onChange={(e) => setProfileForm((f) => ({ ...f, phone: e.target.value }))}
-                      />
-                    </div>
+                    <PhoneInput
+                      label={<>Teléfono <span className="text-[#9ca3af] font-normal">(opcional)</span></>}
+                      value={profileForm.phone}
+                      onChange={(digits) => setProfileForm((f) => ({ ...f, phone: digits }))}
+                    />
                     <div className="flex items-center gap-3 mt-2">
                       <Button onClick={saveProfile} loading={profileSaving} disabled={profileSaving}>
                         Guardar cambios

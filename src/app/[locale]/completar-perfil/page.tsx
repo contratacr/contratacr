@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Phone, User as UserIcon, AlertCircle, Camera } from "lucide-react";
+import { User as UserIcon, AlertCircle, Camera } from "lucide-react";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { useRouter } from "@/i18n/navigation";
 import { CedulaInput } from "@/components/ui/cedula-input";
 import { useAuth } from "@/hooks/use-auth";
@@ -207,19 +208,7 @@ export default function CompleteProfilePage() {
               )}
             </div>
 
-            <div>
-              <label className="text-sm font-medium text-[#374151] block mb-1.5">Teléfono</label>
-              <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="8888-8888"
-                  className={inputClass}
-                />
-              </div>
-            </div>
+            <PhoneInput label="Teléfono" value={phone} onChange={setPhone} />
 
             <CedulaInput
               required
