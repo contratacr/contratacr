@@ -101,15 +101,23 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   const [dateSlots, setDateSlots] = useState<Record<string, string[]>>({});
   const [blockedDates, setBlockedDates] = useState<string[]>([]);
   const [takenSlots, setTakenSlots] = useState<Set<string>>(new Set());
-
-  // When a day is picked, bring the time slots into view so they aren't missed.
-  useEffect(() => {
-    if (selectedDate) {
-      const id = setTimeout(() => slotsRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 60);
-      return () => clearTimeout(id);
-    }
-  }, [selectedDate]);
   const [availabilityLoaded, setAvailabilityLoaded] = useState(false);
+
+  // When a day is picked, reliably bring the time-slot section into view so the
+  // hours are immediately visible. Runs after layout (rAF) + a couple of retries
+  // so it works even when opened pre-selected from a /buscar card (modal mounting).
+  useEffect(() => {
+    if (!selectedDate || step !== "calendar") return;
+    let raf = 0;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const doScroll = () => slotsRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    raf = requestAnimationFrame(() => {
+      doScroll();
+      timers.push(setTimeout(doScroll, 120));
+      timers.push(setTimeout(doScroll, 350));
+    });
+    return () => { cancelAnimationFrame(raf); timers.forEach(clearTimeout); };
+  }, [selectedDate, step, availabilityLoaded]);
   const [description, setDescription] = useState("");
   const [clientName, setClientName] = useState("");
   const [clientEmail, setClientEmail] = useState("");
@@ -124,6 +132,10 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   // input must NEVER render before this is known, or it flashes for registered
   // clients who already have a cédula on file.
   const [profileLoaded, setProfileLoaded] = useState(false);
+  // STABLE flag: whether the account had a cédula ON FILE when the modal opened.
+  // The cédula input is gated on this — NOT on the live `profileCedula` value —
+  // so typing into the field (which fills profileCedula) never makes it vanish.
+  const [hasStoredCedula, setHasStoredCedula] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [savingProfile, setSavingProfile] = useState(false);
   // Pro hid their availability → slots are not shown; we offer WhatsApp instead.
@@ -169,7 +181,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     setBenCedula(""); setBenName(""); setBenDob(""); setBenPhone(""); setBenLookupName(null);
     // Reset the on-file identity so the DB is the authoritative source each open —
     // a social-login account with no cédula must always be (re)prompted.
-    setProfileCedula(""); setProfilePhone(""); setProfileLoaded(false);
+    setProfileCedula(""); setProfilePhone(""); setProfileLoaded(false); setHasStoredCedula(false);
 
     const supabase = createClient();
     Promise.all([
@@ -216,6 +228,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
             // Social-login (Google/Facebook) accounts usually don't — they must be
             // prompted (then padrón auto-fill/confirm + store), regardless of provider.
             const hasCedula = !!data?.cedula && String(data.cedula).trim() !== "";
+            setHasStoredCedula(hasCedula);
             if (hasCedula) setProfileCedula(String(data!.cedula));
             if (data?.phone) setProfilePhone(String(data.phone));
             if (data?.full_name) setClientName((prev) => prev || String(data.full_name));
@@ -446,9 +459,10 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
 
   // Cédula is requested at booking for EVERY client who doesn't have one on file
   // (it's no longer collected at signup). Phone is collected the same way.
-  // Only treat the cédula as "needed" once the profile has loaded — otherwise a
-  // registered client who already has one sees the input flash and disappear.
-  const needsCedula = isLoggedIn && profileLoaded && !profileCedula;
+  // "Needs cédula" depends on whether the account had one ON FILE (stable), NOT on
+  // the live input value — otherwise typing fills profileCedula and the field
+  // vanishes mid-keystroke. Gated on profileLoaded so it never flashes either.
+  const needsCedula = isLoggedIn && profileLoaded && !hasStoredCedula;
   const needsPhone = isLoggedIn && !profilePhone;
   const needsCompleteStep = needsProfile || needsCedula || needsPhone;
   const totalSteps = isLoggedIn ? (needsCompleteStep ? 3 : 2) : 3;
@@ -489,9 +503,9 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
         <Dialog.Content
           className={cn(
             "fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2",
-            "w-[95vw] max-w-3xl rounded-3xl overflow-hidden shadow-2xl",
+            "w-[95vw] max-w-4xl rounded-3xl overflow-hidden shadow-2xl",
             "flex flex-col md:flex-row",
-            "max-h-[95vh] md:max-h-[650px]",
+            "max-h-[95vh] md:max-h-[720px]",
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
             "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
             "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
