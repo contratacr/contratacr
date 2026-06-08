@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
 import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
-import { PhoneInput } from "@/components/ui/phone-input";
+import { PhoneInput, isPhoneComplete } from "@/components/ui/phone-input";
 import { OtpVerification } from "@/components/auth/otp-verification";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CheckCircle2, Eye, EyeOff, User } from "lucide-react";
@@ -29,6 +29,7 @@ export default function RegisterClientPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [phone, setPhone] = useState("");
+  const [phoneError, setPhoneError] = useState<string | null>(null);
   const [provinciaId, setProvinciaId] = useState("");
   const [cantonId, setCantonId] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -55,11 +56,19 @@ export default function RegisterClientPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    setPhoneError(null);
 
     if (!fullName.trim()) { setError("El nombre es requerido."); return; }
     if (!user && !email.trim()) { setError("El correo es requerido."); return; }
     if (!user && password.length < 8) { setError("La contraseña debe tener al menos 8 caracteres."); return; }
     if (!user && password !== confirmPassword) { setError("Las contraseñas no coinciden."); return; }
+
+    // The account holder's phone is REQUIRED — client↔professional coordination
+    // happens by WhatsApp/call, so without it they can't reach each other.
+    if (!isPhoneComplete(phone)) {
+      setPhoneError("Ingresá un número de teléfono válido — lo usamos para que los profesionales te contacten.");
+      return;
+    }
 
     // Cédula required + 18+ gate. National cédulas must be found in the padrón
     // (the electoral roll only contains citizens 18+) — this blocks minors. A
@@ -122,7 +131,7 @@ export default function RegisterClientPage() {
           userId,
           fullName: fullName.trim(),
           cedula: cleanCedula,
-          phone: phone.trim() || null,
+          phone: phone.trim(),
           provinciaId: provinciaId || null,
           cantonId: cantonId || null,
         }),
@@ -240,7 +249,7 @@ export default function RegisterClientPage() {
               {!user && (
                 <>
                   <div>
-                    <label className="text-sm font-medium text-[#374151] block mb-1.5">Correo electrónico</label>
+                    <label className="text-sm font-medium text-[#374151] block mb-1.5">Correo electrónico <span className="text-red-500">*</span></label>
                     <input
                       type="email"
                       className={inputClass}
@@ -252,7 +261,7 @@ export default function RegisterClientPage() {
                   </div>
 
                   <div>
-                    <label className="text-sm font-medium text-[#374151] block mb-1.5">Contraseña</label>
+                    <label className="text-sm font-medium text-[#374151] block mb-1.5">Contraseña <span className="text-red-500">*</span></label>
                     <div className="relative">
                       <input
                         type={showPassword ? "text" : "password"}
@@ -274,7 +283,7 @@ export default function RegisterClientPage() {
                   </div>
 
                   <div>
-                    <label className="text-sm font-medium text-[#374151] block mb-1.5">Confirmar contraseña</label>
+                    <label className="text-sm font-medium text-[#374151] block mb-1.5">Confirmar contraseña <span className="text-red-500">*</span></label>
                     <div className="relative">
                       <input
                         type={showConfirm ? "text" : "password"}
@@ -302,9 +311,10 @@ export default function RegisterClientPage() {
 
               <PhoneInput
                 label="Teléfono"
-                optional
+                required
                 value={phone}
-                onChange={setPhone}
+                onChange={(v) => { setPhone(v); setPhoneError(null); }}
+                error={phoneError ?? undefined}
               />
 
               <div className="grid grid-cols-2 gap-3">
@@ -324,7 +334,9 @@ export default function RegisterClientPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-[#374151] block mb-1.5">Cantón</label>
+                  <label className="text-sm font-medium text-[#374151] block mb-1.5">
+                    Cantón <span className="text-[#9ca3af] font-normal">(opcional)</span>
+                  </label>
                   <select
                     className={cn(inputClass, "cursor-pointer", !provinciaId && "opacity-50")}
                     value={cantonId}

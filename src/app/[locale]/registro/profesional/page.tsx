@@ -919,7 +919,7 @@ export default function RegisterProfessionalPage() {
               </div>
 
               <Input
-                label="Confirmar contraseña"
+                label={<>Confirmar contraseña <span className="text-red-500">*</span></>}
                 type={showConfirm ? "text" : "password"}
                 placeholder="••••••••"
                 error={form1.formState.errors.confirmPassword?.message}
