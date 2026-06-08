@@ -101,6 +101,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const mapData = allResults.flatMap((pro) => {
     const base = {
       id: pro.id,
+      proId: pro.id,
       slug: pro.slug,
       fullName: pro.fullName,
       avatarUrl: pro.avatarUrl ?? null,
@@ -116,6 +117,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     }
     return [{ ...base, lat: pro.lat ?? null, lng: pro.lng ?? null }];
   });
+
+  // Number the cards on THIS page (1..N top-to-bottom) and pass the same numbers
+  // to the map so each pin shows its card's number (item 9, Hulihealth-style).
+  const numbering: Record<string, number> = {};
+  results.forEach((pro, i) => { numbering[pro.id] = i + 1; });
 
   const activeCategoryId = params.categoria && params.categoria !== "todas" ? params.categoria : undefined;
   const activeProvince = params.provincia && params.provincia !== "todas"
@@ -176,7 +182,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       {/* Main content */}
       <main className="flex-1">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
-          <SearchResultsLayout mapData={mapData} apiKey={MAPS_API_KEY} locale={locale}>
+          <SearchResultsLayout mapData={mapData} apiKey={MAPS_API_KEY} locale={locale} numbering={numbering}>
 
             {/* ── Results list ── */}
             <div className="min-w-0">
@@ -193,10 +199,17 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
               ) : (
                 <>
                   <div className="flex flex-col gap-4">
-                    {await Promise.all(results.map((pro) => (
-                      <SaveableCard key={pro.id} pro={pro}>
-                        <ProfessionalCard professional={pro} slots={slotsByPro[pro.id] ?? []} activeCategory={activeCategoryId} />
-                      </SaveableCard>
+                    {await Promise.all(results.map((pro, i) => (
+                      // data-pro-id + scroll-mt let the map highlight/scroll to this
+                      // card on pin hover; the number badge matches the map pin.
+                      <div key={pro.id} id={`pro-card-${pro.id}`} data-pro-id={pro.id} className="relative scroll-mt-24 rounded-2xl transition-shadow">
+                        <span className="absolute -top-2 -left-2 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-[#009FD9] text-white text-xs font-bold shadow-md ring-2 ring-white">
+                          {i + 1}
+                        </span>
+                        <SaveableCard pro={pro}>
+                          <ProfessionalCard professional={pro} slots={slotsByPro[pro.id] ?? []} activeCategory={activeCategoryId} />
+                        </SaveableCard>
+                      </div>
                     )))}
                   </div>
 

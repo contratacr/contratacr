@@ -7,6 +7,8 @@ import { BRAND_MAP_STYLE } from "@/lib/maps/map-style";
 
 export interface MapProfessional {
   id: string;
+  /** Canonical professional id (the pin id may carry a workplace suffix). */
+  proId?: string;
   slug: string;
   fullName: string;
   avatarUrl?: string | null;
@@ -23,6 +25,8 @@ interface GoogleMapPanelProps {
   apiKey: string;
   professionals: MapProfessional[];
   locale?: string;
+  /** proId → card number (1..N) for the current page; drawn on the pins. */
+  numbering?: Record<string, number>;
 }
 
 // Approximate province centroids — fallback for professionals who travel to
@@ -62,7 +66,21 @@ function starsHtml(rating: number): string {
   return `<span style="color:#ff9b32;font-weight:700;">★ ${rating.toFixed(1)}</span>`;
 }
 
-export function GoogleMapPanel({ apiKey, professionals, locale = "es" }: GoogleMapPanelProps) {
+// Cross-component highlight: on pin hover, ring + scroll the matching list card
+// (cards are server-rendered with data-pro-id; we reach them via the DOM).
+function setCardHighlight(proId: string | undefined, on: boolean) {
+  if (!proId || typeof document === "undefined") return;
+  const el = document.getElementById(`pro-card-${proId}`);
+  if (!el) return;
+  if (on) {
+    el.classList.add("ring-2", "ring-[#009FD9]", "shadow-lg");
+    el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  } else {
+    el.classList.remove("ring-2", "ring-[#009FD9]", "shadow-lg");
+  }
+}
+
+export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering }: GoogleMapPanelProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const initialized = useRef(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -147,8 +165,17 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es" }: GoogleM
         const pos = positionFor(pro);
         if (!pos) return null;
         bounds.extend(pos);
-        const marker = new g.Marker({ position: pos, icon: pinIcon });
-        marker.addListener("click", () => {
+        const num = numbering?.[pro.proId ?? pro.id];
+        const marker = new g.Marker({
+          position: pos,
+          icon: pinIcon,
+          // Mirror the card number on the pin (item 9).
+          label: num ? { text: String(num), color: "#ffffff", fontSize: "11px", fontWeight: "700" } : undefined,
+          zIndex: num ? 500 - num : 1,
+        });
+        // Mini profile preview — opens the info window (photo, name, rating) and
+        // highlights the matching card. On hover AND click (click also navigates).
+        const openPreview = () => {
           const href = `/${locale}/profesionales/${pro.slug}`;
           const avatar = pro.avatarUrl
             ? `<img src="${pro.avatarUrl}" alt="" style="width:48px;height:48px;border-radius:9999px;object-fit:cover;flex-shrink:0;" />`
@@ -156,6 +183,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es" }: GoogleM
           info.setContent(`
             <div style="font-family:Inter,Arial,sans-serif;max-width:240px;padding:4px;">
               <div style="display:flex;gap:10px;align-items:center;">
+                ${num ? `<div style="position:absolute;top:6px;left:6px;background:#009FD9;color:#fff;font-weight:700;font-size:11px;width:20px;height:20px;border-radius:9999px;display:flex;align-items:center;justify-content:center;">${num}</div>` : ""}
                 ${avatar}
                 <div style="min-width:0;">
                   <div style="font-weight:700;color:#111827;font-size:14px;line-height:1.2;">${pro.fullName}</div>
@@ -166,7 +194,10 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es" }: GoogleM
               <a href="${href}" style="display:block;text-align:center;margin-top:12px;background:#009FD9;color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:11px 0;border-radius:8px;min-height:44px;box-sizing:border-box;line-height:22px;">Ver perfil</a>
             </div>`);
           info.open({ map, anchor: marker });
-        });
+        };
+        marker.addListener("mouseover", () => { openPreview(); setCardHighlight(pro.proId ?? pro.id, true); });
+        marker.addListener("mouseout", () => setCardHighlight(pro.proId ?? pro.id, false));
+        marker.addListener("click", openPreview);
         return marker;
       })
       .filter(Boolean);
@@ -207,7 +238,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es" }: GoogleM
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if ((window as any).google?.maps && (window as any).markerClusterer) renderMarkers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [professionals]);
+  }, [professionals, numbering]);
 
   // When the container becomes visible (e.g. mobile list→map toggle) or resizes,
   // tell Google Maps to relayout and re-fit the pins — otherwise a map first

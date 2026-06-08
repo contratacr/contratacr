@@ -10,6 +10,8 @@ interface SearchResultsLayoutProps {
   mapData: MapProfessional[];
   apiKey: string;
   locale: string;
+  /** proId → card number (1..N) for THIS page, mirrored on the map pins. */
+  numbering?: Record<string, number>;
 }
 
 /**
@@ -18,7 +20,7 @@ interface SearchResultsLayoutProps {
  *  - Tablet/desktop (md+): list and map share the row, map sticky on its side.
  * The map respects the bottom safe-area inset so nothing hides behind the home bar.
  */
-export function SearchResultsLayout({ children, mapData, apiKey, locale }: SearchResultsLayoutProps) {
+export function SearchResultsLayout({ children, mapData, apiKey, locale, numbering }: SearchResultsLayoutProps) {
   const [mobileView, setMobileView] = useState<"list" | "map">("list");
 
   return (
@@ -71,7 +73,7 @@ export function SearchResultsLayout({ children, mapData, apiKey, locale }: Searc
               "h-[calc(100dvh-200px-env(safe-area-inset-bottom))] md:h-[calc(100vh-88px)]"
             )}
           >
-            <GoogleMapPanel apiKey={apiKey} professionals={mapData} locale={locale} />
+            <GoogleMapPanel apiKey={apiKey} professionals={mapData} locale={locale} numbering={numbering} />
           </div>
         </aside>
       </div>
