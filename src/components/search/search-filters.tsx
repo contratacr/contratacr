@@ -3,11 +3,11 @@
 import { useRouter, usePathname } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Search, SlidersHorizontal, X, ShieldCheck } from "lucide-react";
+import { Search, SlidersHorizontal, X, ShieldCheck, MapPin, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { PROVINCES, getCantonsByProvince } from "@/lib/data/cr-geography";
+import { PROVINCES, getCantonsByProvince, nearestProvinceId } from "@/lib/data/cr-geography";
 import { CATEGORY_GROUPS, getCategoryLabel } from "@/lib/data/categories";
 import { INSURERS } from "@/lib/data/insurers";
 import { createClient } from "@/lib/supabase/client";
@@ -25,6 +25,11 @@ export function SearchFilters() {
   const [sortBy, setSortBy] = useState(params.get("sortBy") ?? "rating");
   const [aseguradora, setAseguradora] = useState(params.get("aseguradora") ?? "");
   const [verifiedOnly, setVerifiedOnly] = useState(params.get("verificados") === "1");
+  // Geolocation ("cerca de mí") — opt-in, requested only when the user taps the
+  // control, never auto-popped. Denied/unavailable → text search still works.
+  const [geoLoading, setGeoLoading] = useState(false);
+  const [geoError, setGeoError] = useState<string | null>(null);
+  const geoActive = !!params.get("lat") && params.get("sortBy") === "cercania";
 
   // Official list = static INSURERS + admin-approved additions from the DB.
   const [insurerOptions, setInsurerOptions] = useState<{ id: string; label: string }[]>(INSURERS);
@@ -48,7 +53,7 @@ export function SearchFilters() {
   const applyFilters = useCallback(
     (overrides: Record<string, string> = {}) => {
       const next = new URLSearchParams();
-      const vals = { q: query, categoria: category, provincia: province, canton, sortBy, aseguradora, verificados: verifiedOnly ? "1" : "", ...overrides };
+      const vals = { q: query, categoria: category, provincia: province, canton, sortBy, aseguradora, verificados: verifiedOnly ? "1" : "", lat: params.get("lat") ?? "", lng: params.get("lng") ?? "", ...overrides };
       if (vals.q) next.set("q", vals.q);
       if (vals.categoria && vals.categoria !== "todas") next.set("categoria", vals.categoria);
       if (vals.provincia && vals.provincia !== "todas") next.set("provincia", vals.provincia);
@@ -56,10 +61,44 @@ export function SearchFilters() {
       if (vals.sortBy && vals.sortBy !== "rating") next.set("sortBy", vals.sortBy);
       if (vals.aseguradora && vals.aseguradora !== "todas") next.set("aseguradora", vals.aseguradora);
       if (vals.verificados === "1") next.set("verificados", "1");
+      // Carry the geolocation coords so changing another filter keeps proximity.
+      if (vals.lat && vals.lng) { next.set("lat", vals.lat); next.set("lng", vals.lng); }
       router.push(`${pathname}?${next.toString()}`);
     },
-    [query, category, province, canton, sortBy, aseguradora, verifiedOnly, router, pathname]
+    [query, category, province, canton, sortBy, aseguradora, verifiedOnly, params, router, pathname]
   );
+
+  // Request geolocation on demand (item 11). Granted → proximity sort + autofill
+  // the nearest provincia. Denied/unavailable → keep the text-based search.
+  function useMyLocation() {
+    if (geoActive) {
+      // Toggle OFF — drop the proximity sort + coords, keep other filters.
+      setGeoError(null);
+      applyFilters({ sortBy: "rating", lat: "", lng: "" });
+      return;
+    }
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      setGeoError("Tu navegador no permite ubicación. Usá la búsqueda por provincia/cantón.");
+      return;
+    }
+    setGeoLoading(true);
+    setGeoError(null);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        const pid = nearestProvinceId(latitude, longitude);
+        if (pid) { setProvince(pid); setCanton(""); }
+        setSortBy("cercania");
+        setGeoLoading(false);
+        applyFilters({ sortBy: "cercania", provincia: pid ?? "", canton: "", lat: String(latitude.toFixed(5)), lng: String(longitude.toFixed(5)) });
+      },
+      () => {
+        setGeoLoading(false);
+        setGeoError("No pudimos obtener tu ubicación. Podés buscar por provincia y cantón.");
+      },
+      { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
+    );
+  }
 
   function handleQueryChange(value: string) {
     setQuery(value);
@@ -193,6 +232,7 @@ export function SearchFilters() {
           <Select value={sortBy} onValueChange={(v) => { setSortBy(v); applyFilters({ sortBy: v }); }}>
             <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
             <SelectContent>
+              {geoActive && <SelectItem value="cercania">Cerca de mí</SelectItem>}
               <SelectItem value="rating">{t("sort.rating")}</SelectItem>
               <SelectItem value="reviews">{t("sort.reviews")}</SelectItem>
               <SelectItem value="priceAsc">{t("sort.priceAsc")}</SelectItem>
@@ -214,6 +254,24 @@ export function SearchFilters() {
             </SelectContent>
           </Select>
         </div>
+      </div>
+
+      {/* Geolocation + verified toggles */}
+      <div className="mt-3 pt-3 border-t border-[#f3f4f6] flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={useMyLocation}
+          disabled={geoLoading}
+          className={`inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium transition-colors ${
+            geoActive
+              ? "bg-[#EBF5FB] border-[#bfdbfe] text-[#0089bb]"
+              : "bg-white border-[#e5e7eb] text-[#374151] hover:border-[#009FD9]"
+          }`}
+        >
+          {geoLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <MapPin className="h-4 w-4" />}
+          {geoActive ? "Cerca de mí (activo)" : "Usar mi ubicación"}
+        </button>
+        {geoError && <span className="text-xs text-[#b45309]">{geoError}</span>}
       </div>
 
       {/* "Solo con identidad verificada" — earned-badge incentive, never a gate */}

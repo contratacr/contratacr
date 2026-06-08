@@ -1,6 +1,6 @@
 import type { ProfessionalCardData } from "@/components/professionals/professional-card";
 import { getMatchingCategoryIds } from "@/lib/data/categories";
-import { getProvinceById } from "@/lib/data/cr-geography";
+import { getProvinceById, PROVINCE_CENTROIDS, haversineKm } from "@/lib/data/cr-geography";
 
 // Build the real travel-coverage summary for "me desplazo" pros (item 16):
 // whole country, specific provinces, and/or specific cantones (display names).
@@ -23,6 +23,15 @@ function buildCoverage(row: any): { country: boolean; provincias: string[]; cant
 const SUPABASE_CONFIGURED =
   !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
+// Province display name → id (for the proximity sort's centroid fallback).
+const PROVINCE_NAME_TO_ID: Record<string, string> = {
+  "San José": "sj", Alajuela: "al", Cartago: "ca", Heredia: "he",
+  Guanacaste: "gu", Puntarenas: "pu", Limón: "li",
+};
+function getProvinceIdByName(name?: string): string {
+  return (name && PROVINCE_NAME_TO_ID[name]) || "";
+}
+
 export type SearchFilters = {
   categoryId?: string;
   provinceId?: string;
@@ -33,6 +42,9 @@ export type SearchFilters = {
   verifiedOnly?: boolean;
   /** Filter by an insurance network (aseguradora) the pro belongs to. */
   insurerId?: string;
+  /** User coordinates (geolocation) — enables the "cerca de mí" proximity sort. */
+  nearLat?: number;
+  nearLng?: number;
 };
 
 export type ProService = {
@@ -175,7 +187,7 @@ export async function searchProfessionals(
       }
       if (error) throw error;
 
-      return (data ?? [])
+      const mapped = (data ?? [])
         // Hide soft-disabled accounts (item 17). undefined (pre-migration) → shown.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .filter((row: any) => !row.profiles?.is_disabled)
@@ -213,6 +225,21 @@ export async function searchProfessionals(
         coverage: buildCoverage(row),
         allowPhoneCall: row.allow_phone_call ?? false,
       }));
+
+      // "Cerca de mí" — proximity sort by distance to the user's coordinates,
+      // using the pro's exact pin when present, else their province centroid.
+      if (filters.sortBy === "cercania" && typeof filters.nearLat === "number" && typeof filters.nearLng === "number") {
+        const { nearLat, nearLng } = filters;
+        const distOf = (p: ProfessionalCardData): number => {
+          if (typeof p.lat === "number" && typeof p.lng === "number") return haversineKm(nearLat, nearLng, p.lat, p.lng);
+          const wp = (p.workplaces ?? []).find((w) => typeof w.lat === "number" && typeof w.lng === "number");
+          if (wp) return haversineKm(nearLat, nearLng, wp.lat as number, wp.lng as number);
+          const c = PROVINCE_CENTROIDS[getProvinceIdByName(p.provinceName)];
+          return c ? haversineKm(nearLat, nearLng, c.lat, c.lng) : Number.POSITIVE_INFINITY;
+        };
+        mapped.sort((a, b) => distOf(a) - distOf(b));
+      }
+      return mapped;
     } catch (err) {
       console.error("[searchProfessionals] Supabase error:", err);
     }

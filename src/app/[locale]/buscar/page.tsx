@@ -25,6 +25,8 @@ interface SearchPageProps {
     page?: string;
     verificados?: string;
     aseguradora?: string;
+    lat?: string;
+    lng?: string;
   }>;
 }
 
@@ -46,6 +48,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     query: params.q,
     verifiedOnly: params.verificados === "1",
     insurerId: params.aseguradora,
+    nearLat: params.lat ? Number(params.lat) : undefined,
+    nearLng: params.lng ? Number(params.lng) : undefined,
   });
 
   const totalPages = Math.max(1, Math.ceil(allResults.length / PAGE_SIZE));
@@ -145,6 +149,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     if (params.sortBy && params.sortBy !== "rating") next.set("sortBy", params.sortBy);
     if (params.verificados === "1") next.set("verificados", "1");
     if (params.aseguradora && params.aseguradora !== "todas") next.set("aseguradora", params.aseguradora);
+    if (params.lat) next.set("lat", params.lat);
+    if (params.lng) next.set("lng", params.lng);
     if (page > 1) next.set("page", String(page));
     const qs = next.toString();
     return qs ? `?${qs}` : "?";

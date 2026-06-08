@@ -270,6 +270,41 @@ export function getProvinceById(id: string): Province | undefined {
   return PROVINCES.find((p) => p.id === id);
 }
 
+// Approximate province centroids (by province id) for the geolocation feature:
+// pick the nearest province to the user's coordinates for proximity sort + the
+// "cerca de mí" autofill. Coarse but reliable; finer ordering uses exact pins.
+export const PROVINCE_CENTROIDS: Record<string, { lat: number; lng: number }> = {
+  sj: { lat: 9.9281, lng: -84.0907 },
+  al: { lat: 10.0162, lng: -84.2116 },
+  ca: { lat: 9.8644, lng: -83.9194 },
+  he: { lat: 9.9985, lng: -84.1165 },
+  gu: { lat: 10.6267, lng: -85.4437 },
+  pu: { lat: 9.9762, lng: -84.8384 },
+  li: { lat: 9.9907, lng: -83.0359 },
+};
+
+/** Haversine distance in km between two lat/lng points. */
+export function haversineKm(aLat: number, aLng: number, bLat: number, bLng: number): number {
+  const R = 6371;
+  const dLat = ((bLat - aLat) * Math.PI) / 180;
+  const dLng = ((bLng - aLng) * Math.PI) / 180;
+  const s =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((aLat * Math.PI) / 180) * Math.cos((bLat * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(s)));
+}
+
+/** The province id whose centroid is nearest to the given coordinates. */
+export function nearestProvinceId(lat: number, lng: number): string | undefined {
+  let best: string | undefined;
+  let bestD = Infinity;
+  for (const [id, c] of Object.entries(PROVINCE_CENTROIDS)) {
+    const d = haversineKm(lat, lng, c.lat, c.lng);
+    if (d < bestD) { bestD = d; best = id; }
+  }
+  return best;
+}
+
 export function getCantonById(id: string): Canton | undefined {
   for (const province of PROVINCES) {
     const canton = province.cantons.find((c) => c.id === id);
