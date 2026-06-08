@@ -2,33 +2,22 @@
 
 import { useEffect, useRef, useState } from "react";
 import Script from "next/script";
-import { MapPin, Search, X } from "lucide-react";
+import { MapPin, Search, X, Plus } from "lucide-react";
 import { BRAND_MAP_STYLE } from "@/lib/maps/map-style";
-import { matchProvinceCanton, getCantonById, getProvinceById } from "@/lib/data/cr-geography";
+import { PROVINCES, getCantonsByProvince, getCantonById, getProvinceById } from "@/lib/data/cr-geography";
+import { cn } from "@/lib/utils";
 
 export type Workplace = {
   id: string;
   name: string;
   address: string;
-  lat: number;
-  lng: number;
-  // Reverse-geocoded administrative areas (single source of truth for location).
+  lat?: number;
+  lng?: number;
+  // Authoritative, user-selected administrative areas. These drive /buscar
+  // filtering. The pin (lat/lng) is a VISUAL marker only and never overrides them.
   provinciaId?: string;
   cantonId?: string;
-  distrito?: string;
 };
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function deriveAdmin(components: any[]): { provinciaId?: string; cantonId?: string; distrito?: string } {
-  if (!Array.isArray(components)) return {};
-  const find = (type: string) =>
-    components.find((c) => Array.isArray(c.types) && c.types.includes(type))?.long_name as string | undefined;
-  const provinceName = find("administrative_area_level_1");
-  const cantonName = find("administrative_area_level_2") || find("locality");
-  const distrito = find("administrative_area_level_3") || find("sublocality") || find("neighborhood");
-  const { provinceId, cantonId } = matchProvinceCanton(provinceName, cantonName);
-  return { provinciaId: provinceId, cantonId, distrito };
-}
 
 interface WorkplacesPickerProps {
   value: Workplace[];
@@ -46,9 +35,9 @@ function genId() {
 }
 
 /**
- * Add one or more workplaces by searching real places (Google Places
- * autocomplete) or clicking the map. Each appears as a pin and as a workplace
- * entry. This is the single source of "where the professional works".
+ * Add fixed workplaces. The professional FIRST selects provincia → cantón
+ * (authoritative for search), THEN optionally drops a pin (search a place or click
+ * the map) purely as the exact visual marker. Typed values always win.
  */
 export function WorkplacesPicker({ value, onChange, apiKey }: WorkplacesPickerProps) {
   const mapRef = useRef<HTMLDivElement>(null);
@@ -56,12 +45,19 @@ export function WorkplacesPicker({ value, onChange, apiKey }: WorkplacesPickerPr
   const mapInstanceRef = useRef<GMaps>(null);
   const geocoderRef = useRef<GMaps>(null);
   const markersRef = useRef<GMaps[]>([]);
-  // Keep a ref to the latest value so map/autocomplete callbacks add (not replace).
   const valueRef = useRef<Workplace[]>(value);
   valueRef.current = value;
+
+  // Draft for the workplace being added: typed area first, then an optional pin.
+  const [province, setProvince] = useState("");
+  const [canton, setCanton] = useState("");
+  const [draftPin, setDraftPin] = useState<{ lat: number; lng: number; address: string } | null>(null);
+  const draftPinRef = useRef<typeof draftPin>(null);
+  draftPinRef.current = draftPin;
   const [search, setSearch] = useState("");
   const [locating, setLocating] = useState(false);
   const [geoError, setGeoError] = useState<string | null>(null);
+  const cantons = getCantonsByProvince(province);
   const effectiveKey = apiKey ?? process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -70,12 +66,27 @@ export function WorkplacesPicker({ value, onChange, apiKey }: WorkplacesPickerPr
     return (window as any).google?.maps;
   }
 
-  function addWorkplace(wp: Omit<Workplace, "id">) {
-    const exists = valueRef.current.some(
-      (w) => Math.abs(w.lat - wp.lat) < 1e-6 && Math.abs(w.lng - wp.lng) < 1e-6
-    );
-    if (exists) return;
-    onChange([...valueRef.current, { ...wp, id: genId() }]);
+  function addWorkplace() {
+    if (!province || !canton) return;
+    const pin = draftPinRef.current;
+    const cantonName = getCantonById(canton)?.name ?? "";
+    const provinceName = getProvinceById(province)?.name ?? "";
+    onChange([
+      ...valueRef.current,
+      {
+        id: genId(),
+        name: pin?.address || `${cantonName}, ${provinceName}`,
+        address: pin?.address || "",
+        lat: pin?.lat,
+        lng: pin?.lng,
+        provinciaId: province,
+        cantonId: canton,
+      },
+    ]);
+    setProvince("");
+    setCanton("");
+    setDraftPin(null);
+    setSearch("");
   }
 
   function removeWorkplace(id: string) {
@@ -89,19 +100,20 @@ export function WorkplacesPicker({ value, onChange, apiKey }: WorkplacesPickerPr
     markersRef.current.forEach((m) => m.setMap(null));
     markersRef.current = [];
     const bounds = new maps.LatLngBounds();
-    for (const wp of valueRef.current) {
-      const marker = new maps.Marker({
-        position: { lat: wp.lat, lng: wp.lng },
-        map,
-        title: wp.name,
-      });
-      markersRef.current.push(marker);
-      bounds.extend({ lat: wp.lat, lng: wp.lng });
+    let count = 0;
+    const pins = [
+      ...valueRef.current.filter((w) => w.lat != null && w.lng != null).map((w) => ({ lat: w.lat!, lng: w.lng!, title: w.name })),
+      ...(draftPinRef.current ? [{ lat: draftPinRef.current.lat, lng: draftPinRef.current.lng, title: "Nuevo lugar" }] : []),
+    ];
+    for (const p of pins) {
+      markersRef.current.push(new maps.Marker({ position: { lat: p.lat, lng: p.lng }, map, title: p.title }));
+      bounds.extend({ lat: p.lat, lng: p.lng });
+      count++;
     }
-    if (valueRef.current.length === 1) {
-      map.setCenter({ lat: valueRef.current[0].lat, lng: valueRef.current[0].lng });
+    if (count === 1) {
+      map.setCenter({ lat: pins[0].lat, lng: pins[0].lng });
       map.setZoom(15);
-    } else if (valueRef.current.length > 1) {
+    } else if (count > 1) {
       map.fitBounds(bounds, 48);
     }
   }
@@ -111,9 +123,10 @@ export function WorkplacesPicker({ value, onChange, apiKey }: WorkplacesPickerPr
     const maps = getMaps();
     if (!maps) return;
 
+    const first = value.find((w) => w.lat != null && w.lng != null);
     const map = new maps.Map(mapRef.current, {
-      center: value[0] ? { lat: value[0].lat, lng: value[0].lng } : COSTA_RICA_CENTER,
-      zoom: value[0] ? 14 : 8,
+      center: first ? { lat: first.lat, lng: first.lng } : COSTA_RICA_CENTER,
+      zoom: first ? 14 : 8,
       mapTypeControl: false,
       streetViewControl: false,
       fullscreenControl: true,
@@ -126,20 +139,13 @@ export function WorkplacesPicker({ value, onChange, apiKey }: WorkplacesPickerPr
     if (inputRef.current && maps.places?.Autocomplete) {
       const autocomplete = new maps.places.Autocomplete(inputRef.current, {
         componentRestrictions: { country: "cr" },
-        fields: ["geometry", "formatted_address", "name", "address_components"],
+        fields: ["geometry", "formatted_address", "name"],
       });
       autocomplete.addListener("place_changed", () => {
         const place = autocomplete.getPlace();
         if (place.geometry?.location) {
           const loc = place.geometry.location;
-          addWorkplace({
-            name: place.name || place.formatted_address || "Ubicación",
-            address: place.formatted_address || "",
-            lat: loc.lat(),
-            lng: loc.lng(),
-            ...deriveAdmin(place.address_components),
-          });
-          setSearch("");
+          setDraftPin({ lat: loc.lat(), lng: loc.lng(), address: place.formatted_address || place.name || "" });
           map.setCenter(loc);
           map.setZoom(15);
         }
@@ -151,13 +157,7 @@ export function WorkplacesPicker({ value, onChange, apiKey }: WorkplacesPickerPr
       const latLng = e.latLng;
       geocoderRef.current?.geocode({ location: latLng }, (results: GMaps, status: string) => {
         const ok = status === "OK" && results?.[0];
-        addWorkplace({
-          name: ok ? (results[0].formatted_address as string) : "Ubicación marcada",
-          address: ok ? (results[0].formatted_address as string) : "",
-          lat: latLng.lat(),
-          lng: latLng.lng(),
-          ...(ok ? deriveAdmin(results[0].address_components) : {}),
-        });
+        setDraftPin({ lat: latLng.lat(), lng: latLng.lng(), address: ok ? (results[0].formatted_address as string) : "" });
       });
     });
 
@@ -173,34 +173,22 @@ export function WorkplacesPicker({ value, onChange, apiKey }: WorkplacesPickerPr
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
         const map = mapInstanceRef.current;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const finish = (name: string, address: string, admin: any = {}) => {
-          addWorkplace({ name, address, lat, lng, ...admin });
+        const finish = (address: string) => {
+          setDraftPin({ lat, lng, address });
           if (map) { map.setCenter({ lat, lng }); map.setZoom(15); }
           setLocating(false);
         };
         if (geocoderRef.current) {
           geocoderRef.current.geocode({ location: { lat, lng } }, (results: GMaps, status: string) => {
-            const ok = status === "OK" && results?.[0];
-            finish(
-              ok ? (results[0].formatted_address as string) : "Mi ubicación actual",
-              ok ? (results[0].formatted_address as string) : "",
-              ok ? deriveAdmin(results[0].address_components) : {}
-            );
+            finish(status === "OK" && results?.[0] ? (results[0].formatted_address as string) : "");
           });
-        } else {
-          finish("Mi ubicación actual", "");
-        }
+        } else finish("");
       },
       () => { setGeoError("No pudimos obtener tu ubicación. Revisá los permisos."); setLocating(false); },
       { enableHighAccuracy: true, timeout: 10000 }
     );
   }
 
-  // Initialise the map on EVERY mount. The Script's onLoad only fires the first
-  // time it loads; when this component unmounts and remounts (e.g. toggling work
-  // mode off and on) the script is cached, so we init from this effect instead —
-  // fixes the map going blank after fixed → mobile → fixed.
   useEffect(() => {
     if (getMaps()) { initMap(); return; }
     const t = setInterval(() => { if (getMaps()) { clearInterval(t); initMap(); } }, 200);
@@ -208,82 +196,87 @@ export function WorkplacesPicker({ value, onChange, apiKey }: WorkplacesPickerPr
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Re-render pins whenever the workplaces change.
   useEffect(() => {
     renderMarkers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value]);
+  }, [value, draftPin]);
 
-  if (!effectiveKey) {
-    return (
-      <div className="rounded-xl border border-[#e5e7eb] p-4 bg-[#f9fafb] text-center">
-        <MapPin className="h-6 w-6 text-[#9ca3af] mx-auto mb-2" />
-        <p className="text-sm text-[#9ca3af]">Mapa no disponible — configurá NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</p>
-      </div>
-    );
-  }
+  const selectCls =
+    "h-10 px-3 rounded-xl border border-[#e5e7eb] bg-white text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all cursor-pointer";
 
   return (
     <>
-      <Script
-        src={`https://maps.googleapis.com/maps/api/js?key=${effectiveKey}&libraries=places`}
-        strategy="lazyOnload"
-        onLoad={initMap}
-      />
+      {effectiveKey && (
+        <Script
+          src={`https://maps.googleapis.com/maps/api/js?key=${effectiveKey}&libraries=places`}
+          strategy="lazyOnload"
+          onLoad={initMap}
+        />
+      )}
 
       <div className="flex flex-col gap-2">
-        <div className="relative flex items-center">
-          <Search className="absolute left-3 h-4 w-4 text-[#9ca3af] pointer-events-none" />
-          <input
-            ref={inputRef}
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscá un lugar por nombre… ej. Clínica Bíblica, Mall San Pedro"
-            className="w-full pl-9 pr-4 h-10 rounded-xl border border-[#e5e7eb] text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
-          />
+        {/* Step 1 — authoritative provincia + cantón (drives /buscar). */}
+        <div className="grid grid-cols-2 gap-2">
+          <select value={province} onChange={(e) => { setProvince(e.target.value); setCanton(""); }} className={selectCls}>
+            <option value="">Provincia</option>
+            {PROVINCES.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+          <select value={canton} onChange={(e) => setCanton(e.target.value)} disabled={!province} className={cn(selectCls, !province && "opacity-50")}>
+            <option value="">{province ? "Cantón" : "Primero provincia"}</option>
+            {cantons.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
         </div>
+
+        {/* Step 2 — optional visual pin. */}
+        {effectiveKey ? (
+          <>
+            <div className="relative flex items-center">
+              <Search className="absolute left-3 h-4 w-4 text-[#9ca3af] pointer-events-none" />
+              <input
+                ref={inputRef}
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Marcá el punto exacto (opcional)… buscá un lugar o tocá el mapa"
+                className="w-full pl-9 pr-4 h-10 rounded-xl border border-[#e5e7eb] text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+              />
+            </div>
+            <button type="button" onClick={useMyLocation} disabled={locating} className="self-start inline-flex items-center gap-1.5 text-sm font-medium text-[#009FD9] hover:underline disabled:opacity-60">
+              <MapPin className="h-4 w-4" />
+              {locating ? "Obteniendo tu ubicación…" : "Usar mi ubicación actual"}
+            </button>
+            {geoError && <p className="text-xs text-amber-600">{geoError}</p>}
+            <div className="relative rounded-xl overflow-hidden border border-[#e5e7eb]" style={{ height: 220 }}>
+              <div ref={mapRef} className="w-full h-full" />
+            </div>
+            <p className="text-[11px] text-[#9ca3af]">El pin es solo una marca visual; la provincia y el cantón que elegís arriba son los que definen dónde aparecés.</p>
+          </>
+        ) : (
+          <p className="text-xs text-[#9ca3af]">Mapa no disponible — configurá NEXT_PUBLIC_GOOGLE_MAPS_API_KEY. Podés agregar el lugar igual con provincia y cantón.</p>
+        )}
 
         <button
           type="button"
-          onClick={useMyLocation}
-          disabled={locating}
-          className="self-start inline-flex items-center gap-1.5 text-sm font-medium text-[#009FD9] hover:underline disabled:opacity-60"
+          onClick={addWorkplace}
+          disabled={!province || !canton}
+          className="self-start inline-flex items-center gap-1.5 text-sm font-medium text-[#009FD9] hover:underline disabled:opacity-40"
         >
-          <MapPin className="h-4 w-4" />
-          {locating ? "Obteniendo tu ubicación…" : "Usar mi ubicación actual"}
+          <Plus className="h-4 w-4" /> Agregar lugar
         </button>
-        {geoError && <p className="text-xs text-amber-600">{geoError}</p>}
-
-        <div className="relative rounded-xl overflow-hidden border border-[#e5e7eb]" style={{ height: 240 }}>
-          <div ref={mapRef} className="w-full h-full" />
-          {value.length === 0 && (
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm rounded-xl px-3 py-1.5 text-xs text-[#374151] shadow border border-[#e5e7eb] whitespace-nowrap pointer-events-none">
-              Buscá un lugar arriba o hacé clic en el mapa
-            </div>
-          )}
-        </div>
 
         {/* Added workplaces */}
         {value.length > 0 && (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 mt-1">
             {value.map((wp) => (
               <div key={wp.id} className="flex items-center gap-2 bg-[#EBF5FB] rounded-xl px-3 py-2">
                 <MapPin className="h-4 w-4 text-[#009FD9] shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs text-[#374151] truncate" title={wp.address || wp.name}>{wp.name}</p>
-                  {wp.cantonId && (
-                    <p className="text-[10px] text-[#0089bb]">
-                      {[getCantonById(wp.cantonId)?.name, getProvinceById(wp.provinciaId ?? "")?.name].filter(Boolean).join(", ")}
-                    </p>
-                  )}
+                  <p className="text-xs font-medium text-[#0089bb]">
+                    {[getCantonById(wp.cantonId ?? "")?.name, getProvinceById(wp.provinciaId ?? "")?.name].filter(Boolean).join(", ")}
+                  </p>
+                  {wp.address && <p className="text-[10px] text-[#6b7280] truncate" title={wp.address}>{wp.address}</p>}
                 </div>
-                <button
-                  type="button"
-                  onClick={() => removeWorkplace(wp.id)}
-                  className="rounded-md p-0.5 text-[#9ca3af] hover:text-red-500 transition-colors shrink-0"
-                  aria-label="Quitar lugar"
-                >
+                <button type="button" onClick={() => removeWorkplace(wp.id)} className="rounded-md p-0.5 text-[#9ca3af] hover:text-red-500 transition-colors shrink-0" aria-label="Quitar lugar">
                   <X className="h-4 w-4" />
                 </button>
               </div>

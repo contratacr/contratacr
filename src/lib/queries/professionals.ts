@@ -62,13 +62,17 @@ export async function searchProfessionals(
             `id, slug, hourly_rate, is_verified, is_featured, is_available,
              rating_avg, review_count, bio, whatsapp, years_experience, portfolio_urls,
              category_id, professions, pricing, lat, lng, service_type, availability_public, contact_preference,
-             business_name, workplaces, verification_status${modern ? ", insurance_networks" : ""},
+             business_name, workplaces, verification_status${modern ? ", no_cr_id, insurance_networks, coverage_provincias, coverage_country" : ""},
              profiles(full_name, avatar_url),
              provincias(id, name),
              cantones(id, name)`
           );
 
         if (modern) query = query.eq("is_banned", false);
+        // No-ID professionals (no_cr_id) stay hidden from /buscar until an admin
+        // approves them (verification_status = 'verified'). Visibility is driven
+        // solely by status — there is no manual block toggle.
+        if (modern) query = query.or("no_cr_id.eq.false,verification_status.eq.verified");
         if (modern && filters.insurerId && filters.insurerId !== "todas") {
           query = query.contains("insurance_networks", [filters.insurerId]);
         }
@@ -78,16 +82,22 @@ export async function searchProfessionals(
           query = query.or(`category_id.eq.${filters.categoryId},professions.cs.{${filters.categoryId}}`);
         }
         if (filters.provinceId && filters.provinceId !== "todas") {
-          // Location-aware: appears under EVERY covered provincia (pins + coverage),
-          // falling back to the legacy single column for un-migrated pros.
+          // Hierarchy-aware: appears under every covered provincia (pins + cantón/
+          // provincia coverage) OR whole-country coverage. Legacy fallback for
+          // un-migrated pros.
           query = modern
-            ? query.or(`search_provincias.cs.{${filters.provinceId}},provincia_id.eq.${filters.provinceId}`)
+            ? query.or(`search_provincias.cs.{${filters.provinceId}},provincia_id.eq.${filters.provinceId},coverage_country.eq.true`)
             : query.eq("provincia_id", filters.provinceId);
         }
         if (filters.cantonId && filters.cantonId !== "todos") {
-          query = modern
-            ? query.or(`search_cantones.cs.{${filters.cantonId}},canton_id.eq.${filters.cantonId}`)
-            : query.eq("canton_id", filters.cantonId);
+          // A searched cantón matches if covered directly (search_cantones), via its
+          // whole provincia (coverage_provincias), or via whole-country coverage.
+          const parts = [`search_cantones.cs.{${filters.cantonId}}`, `canton_id.eq.${filters.cantonId}`];
+          if (modern) {
+            if (filters.provinceId && filters.provinceId !== "todas") parts.push(`coverage_provincias.cs.{${filters.provinceId}}`);
+            parts.push("coverage_country.eq.true");
+          }
+          query = modern ? query.or(parts.join(",")) : query.eq("canton_id", filters.cantonId);
         }
         if (filters.verifiedOnly) {
           query = query.eq("verification_status", "verified");
@@ -130,7 +140,7 @@ export async function searchProfessionals(
       };
 
       let { data, error } = await build(true);
-      if (error && /is_banned|search_provincias|search_cantones|column/i.test(error.message)) {
+      if (error && /is_banned|search_provincias|search_cantones|coverage_|no_cr_id|column/i.test(error.message)) {
         ({ data, error } = await build(false)); // pre-migration fallback
       }
       if (error) throw error;

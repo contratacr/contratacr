@@ -29,6 +29,8 @@ export async function POST(req: Request) {
       coverageAreas: bodyCoverage,
       searchProvincias: bodySearchProv,
       searchCantones: bodySearchCant,
+      coverageProvincias: bodyCoverageProv,
+      coverageCountry: bodyCoverageCountry,
       noCrId: bodyNoCrId,
       idDocNote: bodyIdDocNote,
     } = body;
@@ -45,6 +47,8 @@ export async function POST(req: Request) {
     const coverageAreas = Array.isArray(bodyCoverage) ? bodyCoverage : [];
     const searchProvincias = Array.isArray(bodySearchProv) ? bodySearchProv : [];
     const searchCantones = Array.isArray(bodySearchCant) ? bodySearchCant : [];
+    const coverageProvincias = Array.isArray(bodyCoverageProv) ? bodyCoverageProv : [];
+    const coverageCountry = !!bodyCoverageCountry;
     const noCrId = !!bodyNoCrId;
     const idDocNote = typeof bodyIdDocNote === "string" ? bodyIdDocNote : null;
 
@@ -56,12 +60,14 @@ export async function POST(req: Request) {
       coverage_areas: coverageAreas,
       search_provincias: searchProvincias,
       search_cantones: searchCantones,
+      coverage_provincias: coverageProvincias,
+      coverage_country: coverageCountry,
       no_cr_id: noCrId,
       id_document_note: idDocNote,
       ...(noCrId ? { verification_status: "pending" } : {}),
     };
     const isUnknownColumn = (msg?: string) =>
-      !!msg && /account_type|business_name|affiliations|workplaces|coverage_areas|search_provincias|search_cantones|no_cr_id|id_document_note|languages|contact_preference|schema cache|PGRST204|could not find/i.test(msg);
+      !!msg && /account_type|business_name|affiliations|workplaces|coverage_areas|search_provincias|search_cantones|coverage_provincias|coverage_country|no_cr_id|id_document_note|languages|contact_preference|schema cache|PGRST204|could not find/i.test(msg);
 
     // ── 1. Identify the user ──────────────────────────────────────────────────
     //    Two cases:

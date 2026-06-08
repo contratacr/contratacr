@@ -440,6 +440,9 @@ export default function RegisterProfessionalPage() {
   const [idDocNote, setIdDocNote] = useState("");
   const [oauthFullName, setOauthFullName] = useState("");
   const [oauthNameError, setOauthNameError] = useState<string | null>(null);
+  // A converting client may already have a verified cédula on file — never re-ask
+  // for it (re-entering would error as "already registered"). null = still loading.
+  const [accountCedula, setAccountCedula] = useState<string | null>("");
   // Additional categories (multi-category support). Primary = step2 `category`.
   const [extraCategories, setExtraCategories] = useState<string[]>([]);
   const [extraCatInput, setExtraCatInput] = useState("");
@@ -501,6 +504,21 @@ export default function RegisterProfessionalPage() {
           (currentUser.user_metadata?.name as string) ||
           ""
         );
+        // Reuse a cédula already on the account (e.g. a client converting to pro).
+        (async () => {
+          const supabase = createClient();
+          const { data: prof } = await supabase
+            .from("profiles")
+            .select("cedula, full_name")
+            .eq("id", currentUser.id)
+            .maybeSingle();
+          const existing = (prof?.cedula as string) || (currentUser.user_metadata?.cedula as string) || "";
+          setAccountCedula(existing);
+          if (existing) setOauthCedula(existing);
+          if (prof?.full_name) setOauthFullName((prev) => prev || (prof.full_name as string));
+        })();
+      } else {
+        setAccountCedula("");
       }
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -562,12 +580,13 @@ export default function RegisterProfessionalPage() {
       return;
     }
     setLocationError(null);
-    // OAuth professionals must provide a cédula UNLESS they have no CR ID (→ review).
-    if (currentUser && !noCrId && !validateCedulaFormat(oauthCedula)) {
+    // OAuth professionals must provide a cédula UNLESS they have no CR ID (→ review)
+    // or already have one on file (converting client — reuse it, never re-ask).
+    if (currentUser && !noCrId && !accountCedula && !validateCedulaFormat(oauthCedula)) {
       setOauthCedulaError("Cédula requerida. CR: 9 dígitos · DIMEX: 11-12 · NITE: 10.");
       return;
     }
-    if (currentUser && !noCrId && oauthCedulaCheck.taken) {
+    if (currentUser && !noCrId && !accountCedula && oauthCedulaCheck.taken) {
       setOauthCedulaError("Esta cédula ya está registrada en ContrataCR.");
       return;
     }
@@ -657,7 +676,7 @@ export default function RegisterProfessionalPage() {
       // Location is derived from pins (fixed) + coverage areas (mobile).
       const effWorkplaces = serviceFixed ? workplaces : [];
       const effCoverage = serviceMobile ? coverageAreas : [];
-      const { provincias, cantones } = computeSearchAreas(effWorkplaces, effCoverage);
+      const { provincias, cantones, coverageProvincias, coverageCountry } = computeSearchAreas(effWorkplaces, effCoverage);
       const primary = primaryArea(effWorkplaces, effCoverage);
 
       // ── 4. Create/upsert profile + professional record ─────────────────────
@@ -683,6 +702,8 @@ export default function RegisterProfessionalPage() {
           coverageAreas: effCoverage,
           searchProvincias: provincias,
           searchCantones: cantones,
+          coverageProvincias,
+          coverageCountry,
           address: workplaces[0]?.address || step2Data.address || null,
           lat: workplaces[0]?.lat ?? null,
           lng: workplaces[0]?.lng ?? null,
@@ -698,7 +719,14 @@ export default function RegisterProfessionalPage() {
       }
 
       if (currentUser) {
-        router.push("/dashboard/profesional");
+        // Persist the professional role in auth metadata too, so navigating away
+        // and back never reverts to the role-selection screen (and a converted
+        // client stays professional across sessions).
+        try {
+          await supabase.auth.updateUser({ data: { role: "professional", onboarding_completed: true } });
+        } catch { /* best-effort */ }
+        // Hard navigation so the refreshed session (with the new role) is read.
+        window.location.href = "/es/dashboard/profesional";
       } else {
         setOtpEmail(step1Data!.email);
       }
@@ -802,49 +830,10 @@ export default function RegisterProfessionalPage() {
           )}
 
           {/* ── Step 0: Identity (email/password users only) ─────────────── */}
+          {/* Social sign-up lives on the LOGIN page only; from there the user
+              proceeds into registration. Registration is email/password here. */}
           {step === 0 && !currentUser && (
             <div className="flex flex-col gap-4">
-              {/* OAuth fast-track — redirect back to this page after auth */}
-              <div className="flex flex-col gap-2">
-                <button
-                  type="button"
-                  onClick={async () => {
-                    const supabase = createClient();
-                    // next param brings them back here after OAuth to complete pro registration
-                    const callbackUrl = `${window.location.origin}/auth/callback?next=${encodeURIComponent("/es/registro/profesional")}`;
-                    const { error: oauthErr } = await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: callbackUrl } });
-                    if (oauthErr) setError(oauthErr.message);
-                  }}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-[#e5e7eb] hover:bg-gray-50 transition-all text-sm font-medium text-[#374151] active:scale-[0.98]"
-                >
-                  <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24">
-                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                  </svg>
-                  Registrarse con Google
-                </button>
-                <button
-                  type="button"
-                  onClick={async () => {
-                    const supabase = createClient();
-                    const callbackUrl = `${window.location.origin}/auth/callback?next=${encodeURIComponent("/es/registro/profesional")}`;
-                    const { error: oauthErr } = await supabase.auth.signInWithOAuth({ provider: "facebook", options: { redirectTo: callbackUrl } });
-                    if (oauthErr) setError(oauthErr.message);
-                  }}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-[#e5e7eb] hover:bg-gray-50 transition-all text-sm font-medium text-[#374151] active:scale-[0.98]"
-                >
-                  <svg className="h-5 w-5 shrink-0 text-[#1877F2]" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                  </svg>
-                  Registrarse con Facebook
-                </button>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="flex-1 h-px bg-[#f3f4f6]" /><span className="text-xs text-[#9ca3af] font-medium">o con correo y contraseña</span><div className="flex-1 h-px bg-[#f3f4f6]" />
-              </div>
-
             <form noValidate onSubmit={form1.handleSubmit(onStep1, scrollToFirstError)} className="flex flex-col gap-4">
               {!noCrId ? (
                 <>
@@ -920,10 +909,11 @@ export default function RegisterProfessionalPage() {
                 {t("continue")} <ArrowRight className="h-4 w-4" />
               </Button>
               <p className="text-center text-xs text-[#9ca3af]">
-                {t("terms")}{" "}
-                <Link href="/terminos" className="text-[#009FD9] hover:underline">
-                  {t("termsLink")}
-                </Link>
+                Al crear una cuenta, aceptás los{" "}
+                <Link href="/terminos" className="text-[#009FD9] hover:underline">Términos</Link>{" "}
+                y la{" "}
+                <Link href="/privacidad" className="text-[#009FD9] hover:underline">Política de Privacidad</Link>{" "}
+                de ContrataCR.
               </p>
             </form>
             </div>
@@ -933,8 +923,18 @@ export default function RegisterProfessionalPage() {
           {step === 1 && (
             <form noValidate onSubmit={form2.handleSubmit(onStep2, scrollToFirstError)} className="flex flex-col gap-4">
 
-              {/* Identity — required for OAuth professionals (no identity step). */}
-              {currentUser && !noCrId && (
+              {/* Identity — required for OAuth professionals (no identity step).
+                  A converting client who already has a cédula on file skips this
+                  entirely (we reuse the stored, already-verified cédula). */}
+              {currentUser && !noCrId && accountCedula ? (
+                <div className="flex items-center gap-3 bg-[#f0fdf4] border border-[#bbf7d0] rounded-xl px-4 py-3">
+                  <CheckCircle2 className="h-5 w-5 text-[#16a34a] shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-[#15803d]">Identidad ya registrada</p>
+                    <p className="text-sm text-[#111827] truncate">{oauthFullName || "Tu cuenta"} · usamos la identificación de tu cuenta</p>
+                  </div>
+                </div>
+              ) : currentUser && !noCrId ? (
                 <IdentityField
                   cedula={oauthCedula}
                   fullName={oauthFullName}
@@ -943,7 +943,7 @@ export default function RegisterProfessionalPage() {
                   cedulaError={oauthCedulaError ?? (oauthCedulaCheck.taken ? "Esta identificación ya está registrada en ContrataCR." : undefined)}
                   nameError={oauthNameError ?? undefined}
                 />
-              )}
+              ) : null}
               {currentUser && noCrId && (
                 <NoCrIdFields
                   fullName={oauthFullName}
@@ -953,7 +953,7 @@ export default function RegisterProfessionalPage() {
                   nameError={oauthNameError ?? undefined}
                 />
               )}
-              {currentUser && <NoCrIdToggle checked={noCrId} onChange={setNoCrId} />}
+              {currentUser && !accountCedula && <NoCrIdToggle checked={noCrId} onChange={setNoCrId} />}
 
               {/* Optional brand / business name */}
               <Input
@@ -1074,14 +1074,14 @@ export default function RegisterProfessionalPage() {
                 )}
               </div>
 
-              {/* Fixed location — pins are the source of truth; provincia/cantón
-                  are detected automatically from each pin. */}
+              {/* Fixed location — provincia/cantón typed first (authoritative for
+                  /buscar), then an optional pin as the exact visual marker. */}
               {serviceFixed && (
                 <div className="flex flex-col gap-2">
                   <label className="text-sm font-medium text-[#374151]">Tus lugares de trabajo</label>
                   <p className="text-xs text-[#9ca3af]">
-                    Agregá uno o más lugares en el mapa. La provincia y el cantón se detectan
-                    automáticamente de cada punto y definen dónde aparecés en /buscar.
+                    Elegí la provincia y el cantón (definen dónde aparecés en /buscar) y, si querés,
+                    marcá el punto exacto en el mapa.
                   </p>
                   <WorkplacesPicker value={workplaces} onChange={(n) => { setWorkplaces(n); setLocationError(null); }} />
                 </div>
@@ -1134,8 +1134,9 @@ export default function RegisterProfessionalPage() {
 
               <div className="rounded-xl bg-[#f0fdf4] border border-[#bbf7d0] p-3 text-center">
                 <p className="text-xs text-[#15803d] leading-relaxed">
-                  <strong>Tip:</strong> subí tus <strong>casos de éxito</strong> (fotos de trabajos anteriores) desde tu
-                  panel. Generan más confianza con los clientes. <strong>No son necesarias para verificar tu identidad</strong> — es opcional.
+                  <strong>Tip:</strong> desde tu panel podés subir <strong>casos de éxito</strong> (fotos de trabajos
+                  anteriores) <strong>en cada uno de tus servicios</strong>. Generan más confianza con los clientes.
+                  <strong> No son necesarias para verificar tu identidad</strong> — es opcional.
                 </p>
               </div>
 

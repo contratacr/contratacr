@@ -158,7 +158,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
       // Location is derived from pins (fixed) + coverage areas (mobile) — the
       // single source of truth. provincia_id/canton_id keep the PRIMARY area for
       // back-compat display; search_* arrays drive location-aware /buscar.
-      const { provincias, cantones } = computeSearchAreas(effectiveWorkplaces, effectiveCoverage);
+      const { provincias, cantones, coverageProvincias, coverageCountry } = computeSearchAreas(effectiveWorkplaces, effectiveCoverage);
       const primary = primaryArea(effectiveWorkplaces, effectiveCoverage);
 
       const baseUpdate: Record<string, unknown> = {
@@ -182,6 +182,8 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         coverage_areas: effectiveCoverage,
         search_provincias: provincias,
         search_cantones: cantones,
+        coverage_provincias: coverageProvincias,
+        coverage_country: coverageCountry,
         insurance_networks: insurers,
       };
 
