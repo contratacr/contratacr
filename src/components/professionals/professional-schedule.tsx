@@ -170,7 +170,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           target="_blank"
           rel="noopener noreferrer"
           onClick={(e) => e.stopPropagation()}
-          className="inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1ebe5d] text-white text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors"
+          className="inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1ebe5d] text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
         >
           <WhatsAppIcon className="h-4 w-4" />
           Contactar por WhatsApp
@@ -179,7 +179,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           <a
             href={telHref(professional.whatsapp)}
             onClick={(e) => e.stopPropagation()}
-            className="inline-flex items-center justify-center gap-2 border border-[#e5e7eb] text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] text-sm font-semibold px-4 py-2.5 rounded-lg transition-colors"
+            className="inline-flex items-center justify-center gap-2 border border-[#e5e7eb] text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
           >
             <Phone className="h-4 w-4" />
             Contáctanos por llamada
@@ -195,7 +195,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const canNext = offset + COLS < days.length;
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-2">
       {/* Location chips/tabs — the client picks WHICH place before booking, so hours
           are never an undifferentiated mix (item 3). Defaults to the first place. */}
       {locationIds.length > 1 && (
@@ -271,35 +271,38 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       <button
         type="button"
         onClick={(e) => { e.stopPropagation(); openBooking(); }}
-        className="w-full bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-semibold py-2.5 rounded-lg transition-colors"
+        className="w-full bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-semibold py-2 rounded-lg transition-colors"
       >
         Solicitar servicio
       </button>
 
-      {/* WhatsApp shown too when the pro accepts both channels */}
-      {canWhatsApp && (
-        <a
-          href={getWhatsAppLink(professional.whatsapp, `Hola ${professional.fullName.split(" ")[0]}, vi tu perfil en ContrataCR y me gustaría coordinar un servicio.`)}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={(e) => e.stopPropagation()}
-          className="inline-flex items-center justify-center gap-2 border border-[#25D366] text-[#1ebe5d] hover:bg-[#25D366]/10 text-sm font-semibold py-2.5 rounded-lg transition-colors"
-        >
-          <WhatsAppIcon className="h-4 w-4" />
-          Contactar por WhatsApp
-        </a>
-      )}
-
-      {/* Call option — only when the pro opted in (Disponibilidad) */}
-      {professional.whatsapp && professional.allowPhoneCall && (
-        <a
-          href={telHref(professional.whatsapp)}
-          onClick={(e) => e.stopPropagation()}
-          className="inline-flex items-center justify-center gap-2 border border-[#e5e7eb] text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] text-sm font-semibold py-2.5 rounded-lg transition-colors"
-        >
-          <Phone className="h-4 w-4" />
-          Contáctanos por llamada
-        </a>
+      {/* Secondary contact channels — compact, side by side to stay dense. Only
+          those the professional enabled are shown. */}
+      {(canWhatsApp || (professional.whatsapp && professional.allowPhoneCall)) && (
+        <div className="flex gap-2">
+          {canWhatsApp && (
+            <a
+              href={getWhatsAppLink(professional.whatsapp, `Hola ${professional.fullName.split(" ")[0]}, vi tu perfil en ContrataCR y me gustaría coordinar un servicio.`)}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="flex-1 inline-flex items-center justify-center gap-1.5 border border-[#25D366] text-[#1ebe5d] hover:bg-[#25D366]/10 text-sm font-semibold py-2 rounded-lg transition-colors"
+            >
+              <WhatsAppIcon className="h-4 w-4" />
+              WhatsApp
+            </a>
+          )}
+          {professional.whatsapp && professional.allowPhoneCall && (
+            <a
+              href={telHref(professional.whatsapp)}
+              onClick={(e) => e.stopPropagation()}
+              className="flex-1 inline-flex items-center justify-center gap-1.5 border border-[#e5e7eb] text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] text-sm font-semibold py-2 rounded-lg transition-colors"
+            >
+              <Phone className="h-4 w-4" />
+              Llamar
+            </a>
+          )}
+        </div>
       )}
 
       {bookingModals}

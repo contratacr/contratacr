@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { MapPin, ShieldCheck, Building2, Truck, Image as ImageIcon } from "lucide-react";
+import { MapPin, ShieldCheck, Truck, Image as ImageIcon } from "lucide-react";
 import { ProfessionalSchedule, type ScheduleSlot } from "@/components/professionals/professional-schedule";
 import { Link } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -97,125 +97,110 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
       : allProfessions.slice(0, 3);
   const priceLabel = primaryPricingLabel(professional.pricing, professional.hourlyRate);
   const isVerified = professional.verificationStatus === "verified";
+  const extraProfessions = allProfessions.length - professionList.length;
+
+  // ── ONE consolidated location line (keeps cards uniform): a fixed pro shows
+  // their first readable workplace (+N), else province/cantón; a mobile pro shows
+  // their real coverage. Both bits truncate so the row stays a single line. ──
+  const placeLabels = (professional.workplaces ?? [])
+    .map((w) => prettyPlace(w.name))
+    .filter(Boolean) as string[];
+  const fixedText = placeLabels.length > 0
+    ? `${placeLabels[0]}${placeLabels.length > 1 ? ` +${placeLabels.length - 1}` : ""}`
+    : [professional.provinceName, professional.cantonName].filter(Boolean).join(", ");
+  const mobileText = professional.serviceType?.includes("mobile") ? coverageLabel(professional.coverage) : "";
 
   return (
-    <Card className={`group hover:shadow-md transition-all duration-200 overflow-hidden ${className ?? ""}`}>
+    <Card className={`group hover:shadow-md transition-shadow duration-200 overflow-hidden h-full ${className ?? ""}`}>
       {professional.isFeatured && (
-        <div className="bg-gradient-to-r from-[#ff7c0a] to-[#ff9b32] px-4 py-1.5">
-          <span className="text-xs font-semibold text-white tracking-wide">{tCard("featured")}</span>
+        <div className="bg-gradient-to-r from-[#ff7c0a] to-[#ff9b32] px-4 py-1">
+          <span className="text-[11px] font-semibold text-white tracking-wide">{tCard("featured")}</span>
         </div>
       )}
 
       <CardContent className="p-4">
         <div className="flex flex-col md:flex-row gap-4">
-          {/* ── Left: professional info ─────────────────────────────── */}
-          <div className="flex-1 min-w-0">
-            <div className="flex gap-3">
-              <Link href={`/profesionales/${professional.slug}`} className="shrink-0">
-                <Avatar className="h-14 w-14">
-                  <AvatarImage src={professional.avatarUrl} alt={professional.fullName} />
-                  <AvatarFallback className="text-base bg-[#EBF5FB] text-[#009FD9] font-semibold">{getInitials(professional.fullName)}</AvatarFallback>
-                </Avatar>
-              </Link>
+          {/* ── Left: professional info (bounded, consistent rhythm) ──────── */}
+          <div className="flex-1 min-w-0 flex gap-3">
+            <Link href={`/profesionales/${professional.slug}`} className="shrink-0">
+              <Avatar className="h-12 w-12">
+                <AvatarImage src={professional.avatarUrl} alt={professional.fullName} />
+                <AvatarFallback className="text-sm bg-[#EBF5FB] text-[#009FD9] font-semibold">{getInitials(professional.fullName)}</AvatarFallback>
+              </Avatar>
+            </Link>
 
-              <div className="flex-1 min-w-0">
-                {/* pr-10 on mobile clears the absolute favorites button (no overlap) */}
-                <div className="flex items-start justify-between gap-2 pr-10 md:pr-0">
-                  <div className="min-w-0">
-                    <Link href={`/profesionales/${professional.slug}`} className="flex items-center gap-1.5">
-                      <h3 className="font-semibold text-[#111827] text-base leading-tight hover:text-[#009FD9] transition-colors">{professional.fullName}</h3>
-                      {isVerified && <ShieldCheck className="h-4 w-4 text-[#16a34a] shrink-0" />}
-                    </Link>
-                    {isVerified && (
-                      <span className="inline-flex items-center gap-1 mt-1 rounded-md bg-[#dcfce7] px-1.5 py-0.5 text-[10px] font-semibold text-[#15803d]">
-                        <ShieldCheck className="h-3 w-3" /> Identidad verificada
-                      </span>
-                    )}
-                    {professional.businessName && (
-                      <p className="text-xs font-medium text-[#009FD9] mt-0.5 truncate">{professional.businessName}</p>
-                    )}
-                    <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                      {professionList.map((cat) => (
-                        <Badge key={cat} variant="default" className="text-[11px]">
-                          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                          {tCat(cat as any)}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                  <p className="font-bold text-[#111827] text-sm whitespace-nowrap shrink-0">{priceLabel}</p>
-                </div>
+            <div className="flex-1 min-w-0 flex flex-col gap-1">
+              {/* Name + price. pr-10 on mobile clears the absolute favorites button. */}
+              <div className="flex items-start justify-between gap-2 pr-10 md:pr-0">
+                <Link href={`/profesionales/${professional.slug}`} className="flex items-center gap-1 min-w-0">
+                  <h3 className="font-semibold text-[#111827] text-[15px] leading-tight truncate hover:text-[#009FD9] transition-colors">{professional.fullName}</h3>
+                  {isVerified && <ShieldCheck className="h-4 w-4 text-[#16a34a] shrink-0" />}
+                </Link>
+                <p className="font-bold text-[#111827] text-sm whitespace-nowrap shrink-0">{priceLabel}</p>
+              </div>
 
-                {professional.reviewCount > 0 ? (
-                  <StarRating rating={professional.ratingAvg} showValue reviewCount={professional.reviewCount} size="sm" className="mt-1.5" />
-                ) : (
-                  <p className="text-xs text-[#9ca3af] mt-1.5">Sin reseñas todavía</p>
+              {professional.businessName && (
+                <p className="text-xs font-medium text-[#009FD9] truncate -mt-0.5">{professional.businessName}</p>
+              )}
+
+              {/* Verified pill + profession chips on one wrapped row. */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {isVerified && (
+                  <span className="inline-flex items-center gap-1 rounded-md bg-[#dcfce7] px-1.5 py-0.5 text-[10px] font-semibold text-[#15803d]">
+                    <ShieldCheck className="h-3 w-3" /> Identidad verificada
+                  </span>
                 )}
-
-                {/* Location — province + canton when present; nothing (no empty pin) otherwise */}
-                {(professional.provinceName || professional.cantonName) && (
-                  <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                    {professional.provinceName && (
-                      <span className="inline-flex items-center gap-1 rounded-md bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-medium text-[#374151]">
-                        <MapPin className="h-3 w-3 text-[#009FD9]" />
-                        {professional.provinceName}
-                      </span>
-                    )}
-                    {professional.cantonName && (
-                      <span className="inline-flex items-center gap-1 rounded-md bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-medium text-[#374151]">
-                        <Building2 className="h-3 w-3 text-[#9ca3af]" />
-                        {professional.cantonName}
-                      </span>
-                    )}
-                  </div>
+                {professionList.map((cat) => (
+                  <Badge key={cat} variant="default" className="text-[11px]">
+                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                    {tCat(cat as any)}
+                  </Badge>
+                ))}
+                {extraProfessions > 0 && (
+                  <span className="text-[11px] font-medium text-[#9ca3af]">+{extraProfessions}</span>
                 )}
               </div>
-            </div>
 
-            {professional.serviceType?.includes("mobile") && (
-              <div className="mt-2">
-                <span className="inline-flex items-center gap-1 rounded-md bg-[#EBF5FB] px-2 py-0.5 text-[11px] font-medium text-[#0089bb]">
-                  <Truck className="h-3 w-3 shrink-0" /> {coverageLabel(professional.coverage)}
-                </span>
-              </div>
-            )}
+              {/* Rating */}
+              {professional.reviewCount > 0 ? (
+                <StarRating rating={professional.ratingAvg} showValue reviewCount={professional.reviewCount} size="sm" />
+              ) : (
+                <p className="text-xs text-[#9ca3af]">Sin reseñas todavía</p>
+              )}
 
-            {professional.workplaces && professional.workplaces.length > 0 && (() => {
-              const places = professional.workplaces
-                .map((w, i) => ({ key: w.id ?? i, label: prettyPlace(w.name) }))
-                .filter((p) => p.label)
-                .slice(0, 3);
-              if (places.length === 0) return null;
-              return (
-                <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                  {places.map((p) => (
-                    <span key={p.key} className="inline-flex items-center gap-1 rounded-md bg-[#EBF5FB] px-2 py-0.5 text-[11px] font-medium text-[#0089bb] max-w-[180px] truncate">
-                      <Building2 className="h-3 w-3 shrink-0" />
-                      <span className="truncate">{p.label}</span>
+              {/* Single consolidated location/coverage line */}
+              {(fixedText || mobileText) && (
+                <div className="flex items-center gap-2 text-[11px] text-[#6b7280] min-w-0">
+                  {fixedText && (
+                    <span className="inline-flex items-center gap-1 min-w-0">
+                      <MapPin className="h-3 w-3 text-[#009FD9] shrink-0" />
+                      <span className="truncate">{fixedText}</span>
                     </span>
-                  ))}
+                  )}
+                  {mobileText && (
+                    <span className="inline-flex items-center gap-1 min-w-0">
+                      <Truck className="h-3 w-3 text-[#0089bb] shrink-0" />
+                      <span className="truncate">{mobileText}</span>
+                    </span>
+                  )}
                 </div>
-              );
-            })()}
+              )}
 
-            {professional.bio && (
-              <p className="text-xs text-[#9ca3af] mt-3 line-clamp-2 leading-snug">{professional.bio}</p>
-            )}
-
-            {/* Casos de éxito preview — link to the gallery before booking */}
-            {professional.portfolioCount ? (
-              <Link
-                href={`/profesionales/${professional.slug}?tab=casos`}
-                className="inline-flex items-center gap-1.5 mt-3 text-xs font-medium text-[#009FD9] hover:underline"
-              >
-                <ImageIcon className="h-3.5 w-3.5" />
-                Ver casos de éxito ({professional.portfolioCount})
-              </Link>
-            ) : null}
+              {/* Casos de éxito preview */}
+              {professional.portfolioCount ? (
+                <Link
+                  href={`/profesionales/${professional.slug}?tab=casos`}
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-[#009FD9] hover:underline w-fit"
+                >
+                  <ImageIcon className="h-3.5 w-3.5" />
+                  Ver casos de éxito ({professional.portfolioCount})
+                </Link>
+              ) : null}
+            </div>
           </div>
 
           {/* ── Right: availability panel (md:pt-7 clears the corner favorites button) ── */}
-          <div className="md:w-[280px] md:shrink-0 md:border-l md:border-[#f3f4f6] md:pl-5 pt-4 md:pt-7 border-t border-[#f3f4f6] md:border-t-0">
+          <div className="md:w-[260px] md:shrink-0 md:border-l md:border-[#f3f4f6] md:pl-4 md:pt-7 pt-3 border-t border-[#f3f4f6] md:border-t-0">
             <ProfessionalSchedule
               professional={professional}
               categoryName={categoryName}
