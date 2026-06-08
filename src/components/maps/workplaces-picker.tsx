@@ -102,19 +102,18 @@ export function WorkplacesPicker({ value, onChange, apiKey }: WorkplacesPickerPr
     setSearch("");
   }
 
-  // Called when a pin is placed via search / map click / current location.
+  // Called when a pin is placed via search / map click / current location. The pin
+  // becomes the CURRENT draft (only one at a time) and prefills provincia/cantón
+  // from reverse-geocoding (editable). It is NOT added until the pro confirms its
+  // provincia + cantón via "Agregar lugar" — so a second pin can't be added until
+  // the current one is confirmed and saved.
   function onPinPlaced(lat: number, lng: number, address: string, admin: { provinciaId?: string; cantonId?: string }) {
     setGeoError(null);
-    // If we could resolve provincia + cantón, add the location straight away so a
-    // dropped pin always becomes a saved, listed location (no extra step).
-    if (admin.provinciaId && admin.cantonId) {
-      commitWorkplace({ provinciaId: admin.provinciaId, cantonId: admin.cantonId, lat, lng, address });
-      return;
-    }
-    // Otherwise keep it as a draft and prefill whatever we found; the pro finishes
-    // by choosing the cantón (and/or provincia) then "Agregar lugar".
     setDraftPin({ lat, lng, address });
-    if (admin.provinciaId) { setProvince(admin.provinciaId); setCanton(""); }
+    if (admin.provinciaId) {
+      setProvince(admin.provinciaId);
+      setCanton(admin.cantonId ?? "");
+    }
   }
 
   // Manual "Agregar lugar": uses the selected provincia + cantón (+ draft pin if any).
@@ -253,7 +252,7 @@ export function WorkplacesPicker({ value, onChange, apiKey }: WorkplacesPickerPr
       )}
 
       <div className="flex flex-col gap-2">
-        {/* Map — search / click / current location places a pin (added automatically). */}
+        {/* Map — search / click / current location places ONE draft pin at a time. */}
         {effectiveKey ? (
           <>
             <div className="relative flex items-center">
@@ -280,21 +279,23 @@ export function WorkplacesPicker({ value, onChange, apiKey }: WorkplacesPickerPr
           <p className="text-xs text-[#9ca3af]">Mapa no disponible — configurá NEXT_PUBLIC_GOOGLE_MAPS_API_KEY. Podés agregar el lugar igual con provincia y cantón.</p>
         )}
 
-        {/* Manual provincia + cantón (cantón disabled until provincia is chosen).
-            Use this to add a location without a precise pin, or to complete a pin
-            we couldn't place automatically. */}
-        <p className="text-[11px] text-[#9ca3af] mt-1">{draftPin ? "Elegí provincia y cantón para tu punto marcado:" : "O agregá una zona por provincia y cantón:"}</p>
+        {/* Provincia + cantón for the CURRENT location. The cantón field is disabled
+            until a provincia is chosen (the disabled state communicates the
+            dependency — no instructional text). */}
+        <p className="text-[11px] text-[#9ca3af] mt-1">{draftPin ? "Confirmá la provincia y el cantón de tu punto marcado:" : "Agregá un lugar por provincia y cantón (o marcalo en el mapa):"}</p>
         <div className="grid grid-cols-2 gap-2">
           <select value={province} onChange={(e) => { setProvince(e.target.value); setCanton(""); }} className={selectCls}>
             <option value="">Provincia</option>
             {PROVINCES.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
           <select value={canton} onChange={(e) => setCanton(e.target.value)} disabled={!province} className={cn(selectCls, !province && "opacity-50 cursor-not-allowed")}>
-            <option value="">{province ? "Cantón" : "Elegí provincia primero"}</option>
+            <option value="">Cantón</option>
             {cantons.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </div>
 
+        {/* "Agregar lugar" is blocked until the current location's provincia AND
+            cantón are set — so a second pin can't be added until this one is saved. */}
         <button
           type="button"
           onClick={addManual}
@@ -303,6 +304,13 @@ export function WorkplacesPicker({ value, onChange, apiKey }: WorkplacesPickerPr
         >
           <Plus className="h-4 w-4" /> Agregar lugar
         </button>
+        {(draftPin || province) && (!province || !canton) && (
+          <p className="text-[11px] text-amber-600 -mt-1">
+            {!province
+              ? "Elegí la provincia y el cantón para guardar este lugar."
+              : "Elegí el cantón para guardar este lugar."}
+          </p>
+        )}
 
         {/* Added workplaces */}
         {value.length > 0 && (

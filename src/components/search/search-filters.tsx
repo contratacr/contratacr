@@ -179,7 +179,7 @@ export function SearchFilters() {
           <label className="text-xs font-medium text-[#6b7280] mb-1.5 block">{t("filters.canton")}</label>
           <Select value={canton} onValueChange={(v) => { setCanton(v); applyFilters({ canton: v }); }} disabled={!province || cantons.length === 0}>
             <SelectTrigger className="text-sm">
-              <SelectValue placeholder={province ? t("filters.allCantons") : t("filters.selectProvince")} />
+              <SelectValue placeholder={t("filters.allCantons")} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="todos">{t("filters.allCantons")}</SelectItem>

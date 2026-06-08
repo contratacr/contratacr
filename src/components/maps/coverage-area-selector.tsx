@@ -91,8 +91,8 @@ export function CoverageAreaSelector({
             {PROVINCES.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
           {level === "canton" && (
-            <select value={canton} onChange={(e) => setCanton(e.target.value)} disabled={!province} className={cn(selectCls, !province && "opacity-50")}>
-              <option value="">{province ? "Cantón" : "Primero provincia"}</option>
+            <select value={canton} onChange={(e) => setCanton(e.target.value)} disabled={!province} className={cn(selectCls, !province && "opacity-50 cursor-not-allowed")}>
+              <option value="">Cantón</option>
               {cantons.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           )}
