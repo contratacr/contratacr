@@ -42,7 +42,11 @@ The loaded electoral roll (`padron`) contains only cédula + names. It has **no 
 - No account (client or pro) for under-18, enforced via padrón presence (a minor's cédula isn't in the electoral roll). Clients with an unverifiable national cédula are blocked at registration; pros fall to pending review.
 
 ### Booking for someone else (responsible adult vs beneficiary)
-- Booking step **"¿Para quién es la cita?"** → Para mí (uses account holder, no re-entry) / Para otra persona. Then **"¿La persona tiene cédula?"**: **Sí** → beneficiary cédula → padrón name auto-fill (optional, never blocks); **No** → name + DOB (computes age) + optional phone. **Beneficiary cédula is ALWAYS optional** — identity assurance comes from the verified responsible adult. If beneficiary age < 18 → booking marked **"para un menor"** (`beneficiary_is_minor`). The professional sees BOTH parties (responsible booker + beneficiary name/age/cédula-if-given/phone-if-given) with a **Menor de edad** badge. Data minimization: only the appointment-needed beneficiary fields are stored; no account is created for the beneficiary.
+- Booking step **"¿Para quién es la cita?"** → Para mí (uses account holder, no re-entry) / Para otra persona. Then **"¿La persona tiene cédula?"**:
+  - **Sí** → beneficiary cédula → padrón **name auto-fill** into an **editable name field** (so a not-found cédula still shows a "no encontramos esa cédula" hint and never blocks) + **optional DOB** (padrón has no birth date).
+  - **No** → name + DOB (computes age) + optional phone.
+- **Beneficiary cédula is ALWAYS optional** — identity assurance comes from the verified responsible adult. The beneficiary **name is required** (cédula is not) so the pro always knows who the service is for. If beneficiary age < 18 (from an entered DOB) → booking marked **"para un menor"** (`beneficiary_is_minor`).
+- The professional sees BOTH parties: who booked it (responsible adult + real contact) and who it's for (beneficiary name/age/cédula-if-given/phone-if-given) with a **Menor de edad** badge. Data minimization: only the appointment-needed beneficiary fields are stored (`beneficiary_name/cedula/dob/phone/is_minor` on the booking); no account is created for the beneficiary; the responsible account holder remains accountable.
 
 ---
 
