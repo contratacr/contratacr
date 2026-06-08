@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import {
   ArrowLeft, CheckCircle2, XCircle, RotateCcw, AlertCircle, ExternalLink,
-  ShieldCheck, IdCard, Loader2, ShieldAlert, Trash2, Ban,
+  ShieldCheck, IdCard, Loader2, ShieldAlert, Trash2,
 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
@@ -187,7 +187,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
             {pro.no_cr_id && (
               <div className="mt-3 rounded-lg border border-[#fde68a] bg-[#fffbeb] p-3 text-xs text-[#92400e]">
                 <p className="font-semibold">Sin identificación costarricense (revisión manual)</p>
-                <p className="mt-1">{pro.id_document_note || "El proveedor no indicó un documento. Contactalo para verificar."}</p>
+                <p className="mt-1">{pro.id_document_note || "El proveedor no adjuntó una nota de documento."}</p>
               </div>
             )}
             <p className="text-[11px] text-[#9ca3af] mt-3">
@@ -268,29 +268,22 @@ export function AdminCase({ providerId }: { providerId: string }) {
               </div>
             )}
 
-            {/* Ban / unban */}
+            {/* Visibility in /buscar is determined SOLELY by verification status:
+                verified → visible; pending/rejected → not visible. There is no
+                manual block toggle. To hide a profile, use "Rechazar" on the right. */}
             <div className="border-t border-[#f3f4f6] pt-3">
-              {isBanned ? (
-                <>
-                  <p className="text-xs text-[#b91c1c] mb-2">
-                    Este perfil está <strong>bloqueado</strong> y no aparece en /buscar.
-                    {pro.banned_reason ? ` Motivo: ${pro.banned_reason}` : ""}
-                  </p>
-                  <button
-                    onClick={() => moderate("unban")}
-                    disabled={busy}
-                    className="w-full h-9 rounded-xl border border-[#e5e7eb] text-[#374151] hover:bg-[#f9fafb] text-sm font-medium disabled:opacity-60"
-                  >
-                    Restaurar perfil (quitar bloqueo)
-                  </button>
-                </>
-              ) : (
+              <p className="text-xs text-[#6b7280]">
+                La visibilidad en <strong>/buscar</strong> depende del estado de verificación
+                (verificado → visible; pendiente o rechazado → no visible). Para quitar un perfil,
+                usá <strong>Rechazar</strong>.
+              </p>
+              {isBanned && (
                 <button
-                  onClick={() => { const r = prompt("Motivo del bloqueo (se registra en el historial):"); if (r !== null) moderate("ban", { reason: r }); }}
+                  onClick={() => moderate("unban")}
                   disabled={busy}
-                  className="w-full flex items-center justify-center gap-2 h-9 rounded-xl border border-[#dc2626] text-[#dc2626] hover:bg-red-50 text-sm font-bold disabled:opacity-60"
+                  className="mt-2 w-full h-9 rounded-xl border border-[#e5e7eb] text-[#374151] hover:bg-[#f9fafb] text-sm font-medium disabled:opacity-60"
                 >
-                  <Ban className="h-4 w-4" /> Bloquear perfil (quitar de /buscar)
+                  Restaurar perfil (quitar bloqueo heredado)
                 </button>
               )}
             </div>

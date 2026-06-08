@@ -21,7 +21,7 @@ export async function POST(req: Request) {
   const db = createAdminClient();
   const { data: pro } = await db
     .from("professionals")
-    .select("id, verification_status")
+    .select("id, verification_status, no_cr_id")
     .eq("profile_id", user.id)
     .maybeSingle();
 
@@ -30,9 +30,26 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true, outcome: "verified" });
   }
 
-  // Record the appeal text for the case, then re-run verification.
+  // Record the appeal text for the case.
   if (message) await db.from("provider_appeals").insert({ professional_id: pro.id, message });
 
+  // No-CR-identification cases have NO cédula to re-verify against the padrón, so
+  // an appeal goes STRAIGHT to a tracked support case (never a padrón re-run).
+  if (pro.no_cr_id) {
+    await db
+      .from("professionals")
+      .update({ verification_status: "under_appeal", verification_updated_at: new Date().toISOString() })
+      .eq("id", pro.id);
+    await db.from("support_tickets").insert({
+      professional_id: pro.id,
+      type: "verification",
+      subject: "Revisión manual — sin identificación costarricense",
+      detail: message || "El proveedor solicita revisión manual de su documento.",
+    });
+    return NextResponse.json({ ok: true, outcome: "ticket" });
+  }
+
+  // Cédula-based cases: re-run automatic verification against the padrón.
   const outcome = await runIdentityVerification(pro.id, { appeal: true, appealMessage: message });
   return NextResponse.json({ ok: true, outcome });
 }

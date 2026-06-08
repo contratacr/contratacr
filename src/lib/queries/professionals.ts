@@ -73,6 +73,9 @@ export async function searchProfessionals(
         // approves them (verification_status = 'verified'). Visibility is driven
         // solely by status — there is no manual block toggle.
         if (modern) query = query.or("no_cr_id.eq.false,verification_status.eq.verified");
+        // Rejected profiles are never visible (visibility is status-driven; there
+        // is no manual block toggle).
+        if (modern) query = query.neq("verification_status", "rejected");
         if (modern && filters.insurerId && filters.insurerId !== "todas") {
           query = query.contains("insurance_networks", [filters.insurerId]);
         }

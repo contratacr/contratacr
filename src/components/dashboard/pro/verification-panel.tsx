@@ -11,14 +11,20 @@ interface Props {
   professionalId: string;
   status: VerificationStatus;
   reason?: string | null;
+  /** No-CR-identification case (manual review; no padrón to check against). */
+  noCrId?: boolean;
   onSaved?: () => void;
 }
 
-export function VerificationPanel({ professionalId, status, reason, onSaved }: Props) {
+export function VerificationPanel({ professionalId, status, reason, noCrId = false, onSaved }: Props) {
   const [appeal, setAppeal] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
+
+  // Add-cédula-later (no-ID pros who obtained a CR cédula).
+  const [newCedula, setNewCedula] = useState("");
+  const [cedulaBusy, setCedulaBusy] = useState(false);
 
   const ref = caseRef(professionalId);
   const waMsg = encodeURIComponent(`Hola, necesito ayuda con mi verificación de identidad en ContrataCR (Caso #${ref}).`);
@@ -50,6 +56,99 @@ export function VerificationPanel({ professionalId, status, reason, onSaved }: P
     } finally {
       setBusy(false);
     }
+  }
+
+  async function addCedula() {
+    setError(null);
+    setNote(null);
+    setCedulaBusy(true);
+    try {
+      const res = await fetch("/api/add-cedula", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cedula: newCedula }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? "Error");
+      if (json.outcome === "verified") setNote("¡Listo! Verificamos tu cédula. Ya aparecés en /buscar.");
+      else setNote("Guardamos tu cédula. Si no se verificó automáticamente, quedó en revisión.");
+      setNewCedula("");
+      onSaved?.();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "No se pudo procesar. Intentá de nuevo.");
+    } finally {
+      setCedulaBusy(false);
+    }
+  }
+
+  // ── No-CR-identification flow (manual review; no padrón check) ──────────────
+  if (noCrId && status !== "verified") {
+    return (
+      <div className="space-y-5">
+        {status === "rejected" ? (
+          <Banner tone="red" icon={<XCircle className="h-5 w-5" />} title="Tu verificación no fue aprobada">
+            {reason ? <span className="block">Motivo: <strong>{reason}</strong></span> : "No se especificó un motivo."}
+            <span className="block mt-1">Tu cuenta sigue activa, pero no aparecés en /buscar hasta ser aprobado.</span>
+          </Banner>
+        ) : status === "under_appeal" ? (
+          <Banner tone="amber" icon={<Clock className="h-5 w-5" />} title="Caso en revisión manual">
+            Abrimos un caso de soporte con tu solicitud. Un agente revisará tu documento y te avisaremos el resultado.
+          </Banner>
+        ) : (
+          <Banner tone="gray" icon={<Clock className="h-5 w-5" />} title="Pendiente de revisión">
+            Como no tenés identificación costarricense, un agente debe aprobar tu identidad manualmente.
+            <strong> Todavía no aparecés en /buscar</strong> — te avisaremos en cuanto te aprobemos. Tu cuenta sigue activa.
+          </Banner>
+        )}
+
+        {note && <Banner tone="green" icon={<CheckCircle2 className="h-5 w-5" />} title="Resultado">{note}</Banner>}
+        {error && (
+          <div className="flex items-center gap-2 p-2.5 bg-red-50 border border-red-100 rounded-lg text-xs text-red-600">
+            <AlertCircle className="h-3.5 w-3.5 shrink-0" /> {error}
+          </div>
+        )}
+
+        {/* WhatsApp follow-up to track the case */}
+        <a href={waUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-[#25D366] hover:bg-[#1eb456] text-white text-sm font-bold px-4 py-2.5">
+          <WhatsAppIcon className="h-4 w-4" /> Dar seguimiento por WhatsApp (Caso #{ref})
+        </a>
+
+        {/* Appeal → straight to support (no padrón re-run for no-ID cases) */}
+        {status !== "under_appeal" && (
+          <div className="bg-white rounded-xl border border-[#e5e7eb] p-5">
+            <h3 className="font-semibold text-[#111827] text-sm mb-1">Solicitar revisión manual</h3>
+            <p className="text-xs text-[#6b7280] mb-3">Contanos sobre tu documento (pasaporte, DIMEX en trámite). Tu solicitud queda registrada como un caso de soporte.</p>
+            <textarea
+              value={appeal}
+              onChange={(e) => setAppeal(e.target.value)}
+              rows={3}
+              placeholder="Ej: Tengo pasaporte de Nicaragua N°…, o DIMEX en trámite N°…"
+              className="w-full rounded-lg border border-[#e5e7eb] p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
+            />
+            <button onClick={() => runCheck(true)} disabled={busy} className="mt-3 inline-flex items-center gap-2 rounded-xl bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-4 py-2.5 disabled:opacity-60">
+              <Send className="h-4 w-4" /> {busy ? "Enviando…" : "Enviar a revisión"}
+            </button>
+          </div>
+        )}
+
+        {/* Add-cédula-later — runs the normal padrón verification automatically */}
+        <div className="bg-white rounded-xl border border-[#e5e7eb] p-5">
+          <h3 className="font-semibold text-[#111827] text-sm mb-1">¿Ya tenés cédula costarricense?</h3>
+          <p className="text-xs text-[#6b7280] mb-3">Agregala acá y verificamos tu identidad automáticamente contra el padrón. No necesitás abrir un caso.</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              value={newCedula}
+              onChange={(e) => setNewCedula(e.target.value)}
+              placeholder="Número de cédula (DIMEX/NITE también)"
+              className="flex-1 min-w-[200px] h-10 px-3 rounded-lg border border-[#e5e7eb] text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
+            />
+            <button onClick={addCedula} disabled={cedulaBusy || newCedula.replace(/\D/g, "").length < 9} className="inline-flex items-center gap-2 rounded-xl bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-4 py-2.5 disabled:opacity-50">
+              <ShieldCheck className="h-4 w-4" /> {cedulaBusy ? "Verificando…" : "Agregar y verificar"}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (

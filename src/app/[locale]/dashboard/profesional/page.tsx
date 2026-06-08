@@ -251,6 +251,7 @@ export default function ProDashboardPage() {
                       professionalId={pro.id}
                       status={pro.verification_status ?? "pending"}
                       reason={pro.verification_reason}
+                      noCrId={pro.no_cr_id ?? false}
                       onSaved={handleSaved}
                     />
                   )}
