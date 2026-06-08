@@ -327,10 +327,19 @@ export async function DELETE(req: NextRequest) {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) return NextResponse.json({ error: "No autorizado" }, { status: 401 });
 
-  // Notify the assigned pro before the row (and its proposals) cascade away.
-  await notifyAssignedPro(createAdminClient(), id, "deleted");
+  const admin = createAdminClient();
+  // Authorize against the row, then delete with the service-role client — the
+  // RLS-bound delete could silently affect 0 rows (same class as the bookings bug).
+  const { data: ownRow } = await admin.from("projects").select("client_id").eq("id", id).maybeSingle();
+  if (!ownRow) return NextResponse.json({ success: true }); // already gone
+  if (ownRow.client_id !== session.user.id) return NextResponse.json({ error: "No autorizado." }, { status: 403 });
 
-  const { error } = await supabase.from("projects").delete().eq("id", id).eq("client_id", session.user.id);
+  // Notify the assigned pro before the row (and its proposals) cascade away.
+  await notifyAssignedPro(admin, id, "deleted");
+
+  // Remove dependent proposals first (in case the FK isn't ON DELETE CASCADE).
+  await admin.from("proposals").delete().eq("project_id", id);
+  const { error } = await admin.from("projects").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ success: true });
 }

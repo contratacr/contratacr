@@ -256,27 +256,46 @@ export default function ClientDashboardPage() {
     alert(res.ok ? "Gracias. Tu reporte fue enviado al equipo de moderación." : "No se pudo enviar el reporte.");
   }
 
+  // Re-fetch projects from the server so the status badge always reflects truth
+  // (incl. lazy 7-day auto-confirm and other-party changes).
+  async function refreshProjects() {
+    try {
+      const res = await fetch("/api/projects?role=client");
+      const { projects } = await res.json();
+      if (Array.isArray(projects)) setProjects(projects);
+    } catch { /* ignore */ }
+  }
+
   async function updateProjectStatus(projectId: string, status: string) {
-    await fetch("/api/projects", {
+    const res = await fetch("/api/projects", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id: projectId, status }),
     });
+    if (!res.ok) { alert("No se pudo actualizar el proyecto. Intentá de nuevo."); return; }
     setProjects((prev) => prev.map((p) => (p.id === projectId ? { ...p, status } : p)));
+    refreshProjects();
   }
 
   async function confirmProjectCompletion(projectId: string) {
-    await fetch("/api/projects", {
+    const res = await fetch("/api/projects", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id: projectId, action: "confirm" }),
     });
+    if (!res.ok) { alert("No se pudo confirmar. Intentá de nuevo."); return; }
     setProjects((prev) => prev.map((p) => (p.id === projectId ? { ...p, status: "completed" } : p)));
+    refreshProjects();
   }
 
   async function deleteProject(projectId: string) {
     if (!confirm("¿Eliminar este proyecto? Esta acción no se puede deshacer.")) return;
-    await fetch(`/api/projects?id=${projectId}`, { method: "DELETE" });
+    const res = await fetch(`/api/projects?id=${projectId}`, { method: "DELETE" });
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}));
+      alert(j.error ?? "No se pudo eliminar el proyecto. Intentá de nuevo.");
+      return;
+    }
     setProjects((prev) => prev.filter((p) => p.id !== projectId));
   }
 
@@ -318,6 +337,9 @@ export default function ClientDashboardPage() {
         p.id === proposalId ? { ...p, status: "accepted" } : p
       ),
     }));
+    // The project moves to "En curso/Asignado" — reflect the new status immediately.
+    setProjects((prev) => prev.map((p) => (p.id === projectId ? { ...p, status: "in_progress" } : p)));
+    refreshProjects();
   }
 
   async function declineProposal(proposalId: string, projectId: string) {
@@ -726,17 +748,18 @@ export default function ClientDashboardPage() {
                                     <span className="font-semibold text-sm text-[#111827]">{project.title}</span>
                                     <Badge
                                       variant={
-                                        project.status === "open" ? "success"
-                                          : project.status === "in_progress" ? "warning"
+                                        project.status === "in_progress" ? "warning"
                                           : project.status === "awaiting_confirmation" ? "warning"
-                                          : "default"
+                                          : project.status === "completed" ? "success"
+                                          : project.status === "cancelled" ? "error"
+                                          : "success"
                                       }
                                     >
-                                      {project.status === "open" ? "Abierto"
-                                        : project.status === "in_progress" ? "En progreso"
+                                      {project.status === "in_progress" ? "En curso · Asignado"
                                         : project.status === "awaiting_confirmation" ? "Esperando tu confirmación"
                                         : project.status === "completed" ? "Finalizado"
-                                        : "Cancelado"}
+                                        : project.status === "cancelled" ? "Cancelado"
+                                        : "Abierto"}
                                     </Badge>
                                   </div>
                                   <p className="text-sm text-[#6b7280] line-clamp-2 mb-2">{project.description}</p>
