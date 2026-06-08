@@ -1,5 +1,24 @@
 import type { ProfessionalCardData } from "@/components/professionals/professional-card";
 import { getMatchingCategoryIds } from "@/lib/data/categories";
+import { getProvinceById } from "@/lib/data/cr-geography";
+
+// Build the real travel-coverage summary for "me desplazo" pros (item 16):
+// whole country, specific provinces, and/or specific cantones (display names).
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function buildCoverage(row: any): { country: boolean; provincias: string[]; cantones: string[] } {
+  const country = !!row.coverage_country;
+  const provincias = Array.isArray(row.coverage_provincias)
+    ? (row.coverage_provincias as string[]).map((id) => getProvinceById(id)?.name ?? id).filter(Boolean)
+    : [];
+  const cantones = Array.isArray(row.coverage_areas)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ? (row.coverage_areas as any[])
+        .filter((a) => (a?.level ?? (a?.cantonId ? "canton" : "")) === "canton")
+        .map((a) => a?.cantonName)
+        .filter(Boolean)
+    : [];
+  return { country, provincias, cantones };
+}
 
 const SUPABASE_CONFIGURED =
   !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -65,7 +84,7 @@ export async function searchProfessionals(
             `id, slug, hourly_rate, is_verified, is_featured, is_available,
              rating_avg, review_count, bio, whatsapp, years_experience, portfolio_urls,
              category_id, professions, pricing, lat, lng, service_type, availability_public, contact_preference,
-             business_name, workplaces, verification_status${modern ? ", no_cr_id, insurance_networks, coverage_provincias, coverage_country" : ""},
+             business_name, workplaces, verification_status${modern ? ", no_cr_id, insurance_networks, coverage_areas, coverage_provincias, coverage_country, allow_phone_call" : ""},
              profiles(full_name, avatar_url),
              provincias(id, name),
              cantones(id, name)`
@@ -182,6 +201,8 @@ export async function searchProfessionals(
         serviceType: row.service_type ?? null,
         portfolioCount: Array.isArray(row.portfolio_urls) ? row.portfolio_urls.length : 0,
         insuranceNetworks: (row.insurance_networks as string[]) ?? [],
+        coverage: buildCoverage(row),
+        allowPhoneCall: row.allow_phone_call ?? false,
       }));
     } catch (err) {
       console.error("[searchProfessionals] Supabase error:", err);
@@ -222,8 +243,8 @@ export async function getProfessionalBySlug(
 
       if (error || !pro) throw error ?? new Error("Not found");
 
-      // Tagged casos-de-éxito (per profession). Best-effort: a separate query so a
-      // missing column (pre-migration 033) never breaks the whole profile.
+      // Tagged casos-de-éxito + phone-call opt-in + coverage. Best-effort: separate
+      // queries so a missing column (pre-migration 033/034) never breaks the profile.
       let portfolioItems: PortfolioItem[] = [];
       try {
         const { data: pi } = await supabase.from("professionals").select("portfolio_items").eq("id", pro.id).maybeSingle();
@@ -231,6 +252,19 @@ export async function getProfessionalBySlug(
           portfolioItems = (pi as { portfolio_items: PortfolioItem[] }).portfolio_items;
         }
       } catch { /* column not migrated yet */ }
+      let allowPhoneCall = false;
+      let coverage = { country: false, provincias: [] as string[], cantones: [] as string[] };
+      try {
+        const { data: extra } = await supabase
+          .from("professionals")
+          .select("allow_phone_call, coverage_areas, coverage_provincias, coverage_country")
+          .eq("id", pro.id)
+          .maybeSingle();
+        if (extra) {
+          allowPhoneCall = !!(extra as { allow_phone_call?: boolean }).allow_phone_call;
+          coverage = buildCoverage(extra);
+        }
+      } catch { /* columns not migrated yet */ }
       if (portfolioItems.length === 0) {
         portfolioItems = (pro.portfolio_urls ?? []).map((url: string) => ({ url }));
       }
@@ -273,6 +307,8 @@ export async function getProfessionalBySlug(
         serviceType: (pro as any).service_type ?? null,
         portfolioUrls: pro.portfolio_urls ?? [],
         portfolioItems,
+        allowPhoneCall,
+        coverage,
         reviews,
         services: ((pro as any).services as ProService[]) ?? [],
         availabilityPublic: (pro as any).availability_public ?? true,

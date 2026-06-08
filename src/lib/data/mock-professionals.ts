@@ -19,4 +19,6 @@ export type ProfessionalCardData = {
   isFeatured: boolean;
   isAvailable: boolean;
   workplaces?: { id?: string; name: string; address?: string; lat?: number; lng?: number }[];
+  /** Opt-in: the pro exposes phone-call contact (Disponibilidad). */
+  allowPhoneCall?: boolean;
 };

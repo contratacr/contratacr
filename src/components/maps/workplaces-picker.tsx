@@ -66,6 +66,7 @@ export function WorkplacesPicker({ value, onChange, apiKey }: WorkplacesPickerPr
   // Draft for the location being added (manual provincia/cantón + optional pin).
   const [province, setProvince] = useState("");
   const [canton, setCanton] = useState("");
+  const [label, setLabel] = useState("");
   const [draftPin, setDraftPin] = useState<{ lat: number; lng: number; address: string } | null>(null);
   const draftPinRef = useRef<typeof draftPin>(null);
   draftPinRef.current = draftPin;
@@ -84,11 +85,15 @@ export function WorkplacesPicker({ value, onChange, apiKey }: WorkplacesPickerPr
   function commitWorkplace(wp: { provinciaId: string; cantonId: string; lat?: number; lng?: number; address?: string }) {
     const cantonName = getCantonById(wp.cantonId)?.name ?? "";
     const provinceName = getProvinceById(wp.provinciaId)?.name ?? "";
+    // `name` is the READABLE label shown in listings: the pro's chosen label, else a
+    // general locality (cantón, provincia) — never the raw Plus Code. `address`
+    // keeps the exact geocoded string for the MAP marker only.
+    const readable = label.trim() || [cantonName, provinceName].filter(Boolean).join(", ") || "Ubicación";
     onChange([
       ...valueRef.current,
       {
         id: genId(),
-        name: wp.address || `${cantonName}, ${provinceName}`,
+        name: readable,
         address: wp.address || "",
         lat: wp.lat,
         lng: wp.lng,
@@ -98,6 +103,7 @@ export function WorkplacesPicker({ value, onChange, apiKey }: WorkplacesPickerPr
     ]);
     setProvince("");
     setCanton("");
+    setLabel("");
     setDraftPin(null);
     setSearch("");
   }
@@ -283,6 +289,13 @@ export function WorkplacesPicker({ value, onChange, apiKey }: WorkplacesPickerPr
             until a provincia is chosen (the disabled state communicates the
             dependency — no instructional text). */}
         <p className="text-[11px] text-[#9ca3af] mt-1">{draftPin ? "Confirmá la provincia y el cantón de tu punto marcado:" : "Agregá un lugar por provincia y cantón (o marcalo en el mapa):"}</p>
+        <input
+          type="text"
+          value={label}
+          onChange={(e) => setLabel(e.target.value)}
+          placeholder="Nombre del lugar (opcional)… ej. Clínica Bíblica"
+          className="h-10 px-3 rounded-xl border border-[#e5e7eb] bg-white text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+        />
         <div className="grid grid-cols-2 gap-2">
           <select value={province} onChange={(e) => { setProvince(e.target.value); setCanton(""); }} className={selectCls}>
             <option value="">Provincia</option>
@@ -320,10 +333,10 @@ export function WorkplacesPicker({ value, onChange, apiKey }: WorkplacesPickerPr
               <div key={wp.id} className="flex items-center gap-2 bg-[#EBF5FB] rounded-xl px-3 py-2">
                 <MapPin className="h-4 w-4 text-[#009FD9] shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-[#0089bb]">
-                    {[getCantonById(wp.cantonId ?? "")?.name, getProvinceById(wp.provinciaId ?? "")?.name].filter(Boolean).join(", ") || "Ubicación"}
+                  <p className="text-xs font-medium text-[#0089bb] truncate">{wp.name}</p>
+                  <p className="text-[10px] text-[#6b7280] truncate">
+                    {[getCantonById(wp.cantonId ?? "")?.name, getProvinceById(wp.provinciaId ?? "")?.name].filter(Boolean).join(", ")}
                   </p>
-                  {wp.address && <p className="text-[10px] text-[#6b7280] truncate" title={wp.address}>{wp.address}</p>}
                 </div>
                 <button type="button" onClick={() => removeWorkplace(wp.id)} className="rounded-md p-0.5 text-[#9ca3af] hover:text-red-500 transition-colors shrink-0" aria-label="Quitar lugar">
                   <X className="h-4 w-4" />

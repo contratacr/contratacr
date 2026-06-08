@@ -240,6 +240,7 @@ export default function ProDashboardPage() {
                       workplaces={pro.workplaces ?? []}
                       coverageAreas={pro.coverage_areas ?? []}
                       initialVideoconsulta={pro.videoconsulta ?? false}
+                      initialAllowPhoneCall={pro.allow_phone_call ?? false}
                       onSaved={handleSaved}
                     />
                   )}

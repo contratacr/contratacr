@@ -53,14 +53,24 @@ interface AvailabilityEditorProps {
   workplaces?: Place[];
   coverageAreas?: Coverage[];
   initialVideoconsulta?: boolean;
+  initialAllowPhoneCall?: boolean;
   onSaved?: () => void;
 }
 
-export function AvailabilityEditor({ professionalId, initialPublic = true, initialContactPreference = "ambas", workplaces = [], coverageAreas = [], initialVideoconsulta = false, onSaved }: AvailabilityEditorProps) {
+export function AvailabilityEditor({ professionalId, initialPublic = true, initialContactPreference = "ambas", workplaces = [], coverageAreas = [], initialVideoconsulta = false, initialAllowPhoneCall = false, onSaved }: AvailabilityEditorProps) {
   const [isPublic, setIsPublic] = useState(initialPublic);
   const [contactPreference, setContactPreference] = useState<ContactPreference>(initialContactPreference);
   const [savingContact, setSavingContact] = useState(false);
   const [videoconsulta, setVideoconsulta] = useState(initialVideoconsulta);
+  const [allowPhoneCall, setAllowPhoneCall] = useState(initialAllowPhoneCall);
+
+  async function toggleAllowPhoneCall() {
+    const next = !allowPhoneCall;
+    setAllowPhoneCall(next);
+    const supabase = createClient();
+    await supabase.from("professionals").update({ allow_phone_call: next }).eq("id", professionalId);
+    onSaved?.();
+  }
 
   // Schedules belong to a specific location only (item 16): each workplace +
   // Videoconsulta. No "general/all locations" option.
@@ -324,6 +334,22 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
             agenda. Cambiá a “Ambas” o “Solo citas” si querés habilitar tu disponibilidad.
           </p>
         )}
+
+        {/* Phone-call contact — opt-in (OFF by default) */}
+        <div className="flex items-center justify-between gap-4 mt-4 pt-4 border-t border-[#f3f4f6]">
+          <div>
+            <p className="text-sm font-medium text-[#111827]">Permitir contacto por llamada</p>
+            <p className="text-xs text-[#9ca3af]">Si lo activás, los clientes verán la opción “Contáctanos por llamada” a tu número.</p>
+          </div>
+          <button
+            type="button"
+            onClick={toggleAllowPhoneCall}
+            className={cn("relative h-6 w-11 rounded-full transition-all shrink-0", allowPhoneCall ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
+            aria-label="Permitir llamada"
+          >
+            <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", allowPhoneCall ? "left-5" : "left-0.5")} />
+          </button>
+        </div>
       </div>
 
       {schedulingEnabled && (<>

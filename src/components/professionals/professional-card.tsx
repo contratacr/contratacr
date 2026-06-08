@@ -9,6 +9,20 @@ import { StarRating } from "@/components/ui/star-rating";
 import { getInitials } from "@/lib/utils";
 import { primaryPricingLabel, type PricingTier } from "@/lib/pricing";
 
+// Listings show a READABLE place label — never a raw Plus Code / long geocoder
+// string. Strips Plus Code tokens (e.g. "XJQ3+227") and noisy segments; returns
+// the cleanest readable part, or "" to hide the chip (province/cantón tags remain).
+function prettyPlace(name?: string): string {
+  if (!name) return "";
+  const dropped = /costa rica|provincia de|ruta nacional|^\s*$/i;
+  const isPlusCode = (s: string) => /[A-Z0-9]{2,}\+[A-Z0-9]{2,}/.test(s);
+  const parts = name.split(",").map((p) => p.trim()).filter((p) => p && !isPlusCode(p) && !dropped.test(p));
+  // Prefer the first 2 meaningful segments (e.g. "C. Mercedes, Atenas").
+  const readable = parts.slice(0, 2).join(", ");
+  if (readable && !isPlusCode(readable)) return readable;
+  return "";
+}
+
 export type ProfessionalCardData = {
   id: string;
   slug: string;
@@ -42,7 +56,22 @@ export type ProfessionalCardData = {
   portfolioCount?: number;
   /** Insurance networks (aseguradoras) the pro belongs to. */
   insuranceNetworks?: string[];
+  /** Real travel-coverage summary (item 16): country-wide, provinces, cantones. */
+  coverage?: { country: boolean; provincias: string[]; cantones: string[] };
+  /** Opt-in: the pro chose to expose phone-call contact (Disponibilidad). */
+  allowPhoneCall?: boolean;
 };
+
+// Human label for the pro's actual travel coverage, e.g. "Atiende en todo el país",
+// "Se desplaza en Alajuela", "Se desplaza en Atenas, Escazú".
+function coverageLabel(c?: ProfessionalCardData["coverage"]): string {
+  if (c?.country) return "Atiende en todo el país";
+  const areas = [...(c?.provincias ?? []), ...(c?.cantones ?? [])];
+  if (areas.length === 0) return "Se desplaza a tu ubicación";
+  const shown = areas.slice(0, 3).join(", ");
+  const extra = areas.length > 3 ? ` +${areas.length - 3}` : "";
+  return `Se desplaza en ${shown}${extra}`;
+}
 
 interface ProfessionalCardProps {
   professional: ProfessionalCardData;
@@ -146,21 +175,28 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
             {professional.serviceType?.includes("mobile") && (
               <div className="mt-2">
                 <span className="inline-flex items-center gap-1 rounded-md bg-[#EBF5FB] px-2 py-0.5 text-[11px] font-medium text-[#0089bb]">
-                  <Truck className="h-3 w-3" /> Se desplaza a tu ubicación
+                  <Truck className="h-3 w-3 shrink-0" /> {coverageLabel(professional.coverage)}
                 </span>
               </div>
             )}
 
-            {professional.workplaces && professional.workplaces.length > 0 && (
-              <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                {professional.workplaces.slice(0, 3).map((w, i) => (
-                  <span key={w.id ?? i} className="inline-flex items-center gap-1 rounded-md bg-[#EBF5FB] px-2 py-0.5 text-[11px] font-medium text-[#0089bb] max-w-[180px] truncate">
-                    <Building2 className="h-3 w-3 shrink-0" />
-                    <span className="truncate">{w.name}</span>
-                  </span>
-                ))}
-              </div>
-            )}
+            {professional.workplaces && professional.workplaces.length > 0 && (() => {
+              const places = professional.workplaces
+                .map((w, i) => ({ key: w.id ?? i, label: prettyPlace(w.name) }))
+                .filter((p) => p.label)
+                .slice(0, 3);
+              if (places.length === 0) return null;
+              return (
+                <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                  {places.map((p) => (
+                    <span key={p.key} className="inline-flex items-center gap-1 rounded-md bg-[#EBF5FB] px-2 py-0.5 text-[11px] font-medium text-[#0089bb] max-w-[180px] truncate">
+                      <Building2 className="h-3 w-3 shrink-0" />
+                      <span className="truncate">{p.label}</span>
+                    </span>
+                  ))}
+                </div>
+              );
+            })()}
 
             {professional.bio && (
               <p className="text-xs text-[#9ca3af] mt-3 line-clamp-2 leading-snug">{professional.bio}</p>
