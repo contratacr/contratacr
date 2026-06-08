@@ -273,7 +273,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
                 manual block toggle. To hide a profile, use "Rechazar" on the right. */}
             <div className="border-t border-[#f3f4f6] pt-3">
               <p className="text-xs text-[#6b7280]">
-                La visibilidad en <strong>/buscar</strong> depende del estado de verificación
+                La visibilidad en <strong>los resultados de búsqueda</strong> depende del estado de verificación
                 (verificado → visible; pendiente o rechazado → no visible). Para quitar un perfil,
                 usá <strong>Rechazar</strong>.
               </p>

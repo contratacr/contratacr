@@ -1074,14 +1074,14 @@ export default function RegisterProfessionalPage() {
                 )}
               </div>
 
-              {/* Fixed location — provincia/cantón typed first (authoritative for
-                  /buscar), then an optional pin as the exact visual marker. */}
+              {/* Fixed location — pin (reverse-geocoded) or manual provincia/cantón;
+                  both define where the pro appears in search results. */}
               {serviceFixed && (
                 <div className="flex flex-col gap-2">
                   <label className="text-sm font-medium text-[#374151]">Tus lugares de trabajo</label>
                   <p className="text-xs text-[#9ca3af]">
-                    Elegí la provincia y el cantón (definen dónde aparecés en /buscar) y, si querés,
-                    marcá el punto exacto en el mapa.
+                    Marcá tu ubicación en el mapa o elegí la provincia y el cantón: definen dónde aparecés
+                    cuando los clientes buscan profesionales.
                   </p>
                   <WorkplacesPicker value={workplaces} onChange={(n) => { setWorkplaces(n); setLocationError(null); }} />
                 </div>
@@ -1092,7 +1092,7 @@ export default function RegisterProfessionalPage() {
                 <div className="flex flex-col gap-2">
                   <label className="text-sm font-medium text-[#374151]">Zonas a las que te desplazás</label>
                   <p className="text-xs text-[#9ca3af]">
-                    Elegí las provincias y cantones donde atendés. Aparecés en /buscar en cada una.
+                    Elegí las provincias y cantones donde atendés. Aparecés en los resultados de búsqueda de cada una.
                   </p>
                   <CoverageAreaSelector value={coverageAreas} onChange={(n) => { setCoverageAreas(n); setLocationError(null); }} />
                 </div>

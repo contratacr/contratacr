@@ -318,8 +318,8 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
             Tus lugares de trabajo
           </label>
           <p className="text-xs text-[#9ca3af] mb-2">
-            Agregá uno o más lugares en el mapa. La provincia y el cantón se detectan
-            automáticamente de cada punto y definen dónde aparecés en /buscar.
+            Marcá uno o más lugares en el mapa (o agregalos por provincia y cantón). Definen dónde
+            aparecés cuando los clientes buscan profesionales.
           </p>
           <WorkplacesPicker value={workplaces} onChange={(next) => { setWorkplaces(next); touch(); }} />
         </div>
@@ -332,7 +332,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
             Zonas a las que te desplazás
           </label>
           <p className="text-xs text-[#9ca3af] mb-2">
-            Elegí las provincias y cantones donde atendés. Aparecés en /buscar en cada una.
+            Elegí las provincias y cantones donde atendés. Aparecés en los resultados de búsqueda de cada una.
           </p>
           <CoverageAreaSelector value={coverageAreas} onChange={(next) => { setCoverageAreas(next); touch(); }} />
         </div>

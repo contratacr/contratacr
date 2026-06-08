@@ -70,7 +70,7 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "Error");
-      if (json.outcome === "verified") setNote("¡Listo! Verificamos tu cédula. Ya aparecés en /buscar.");
+      if (json.outcome === "verified") setNote("¡Listo! Verificamos tu cédula. Ya aparecés en los resultados de búsqueda.");
       else setNote("Guardamos tu cédula. Si no se verificó automáticamente, quedó en revisión.");
       setNewCedula("");
       onSaved?.();
@@ -88,7 +88,7 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
         {status === "rejected" ? (
           <Banner tone="red" icon={<XCircle className="h-5 w-5" />} title="Tu verificación no fue aprobada">
             {reason ? <span className="block">Motivo: <strong>{reason}</strong></span> : "No se especificó un motivo."}
-            <span className="block mt-1">Tu cuenta sigue activa, pero no aparecés en /buscar hasta ser aprobado.</span>
+            <span className="block mt-1">Tu cuenta sigue activa, pero no aparecés en los resultados de búsqueda hasta ser aprobado.</span>
           </Banner>
         ) : status === "under_appeal" ? (
           <Banner tone="amber" icon={<Clock className="h-5 w-5" />} title="Caso en revisión manual">
@@ -97,7 +97,7 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
         ) : (
           <Banner tone="gray" icon={<Clock className="h-5 w-5" />} title="Pendiente de revisión">
             Como no tenés identificación costarricense, un agente debe aprobar tu identidad manualmente.
-            <strong> Todavía no aparecés en /buscar</strong> — te avisaremos en cuanto te aprobemos. Tu cuenta sigue activa.
+            <strong> Todavía no aparecés en los resultados de búsqueda</strong> — te avisaremos en cuanto te aprobemos. Tu cuenta sigue activa.
           </Banner>
         )}
 
@@ -157,7 +157,7 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
       {status === "verified" && (
         <Banner tone="green" icon={<ShieldCheck className="h-5 w-5" />} title="Tu identidad está verificada">
           Confirmamos que tu cédula es real y coincide con los registros oficiales. La insignia
-          <strong> Identidad verificada</strong> aparece en tu perfil y en /buscar. Recordá: verificamos tu identidad,
+          <strong> Identidad verificada</strong> aparece en tu perfil y en los resultados de búsqueda. Recordá: verificamos tu identidad,
           no la calidad ni el resultado de los trabajos.
         </Banner>
       )}

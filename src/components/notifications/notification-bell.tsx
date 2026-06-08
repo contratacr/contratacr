@@ -93,6 +93,14 @@ export function NotificationBell() {
 
   if (!user) return null;
 
+  // "Ver todas" opens the Notifications SECTION inside the user's own panel
+  // (not a separate page), routed by role.
+  const role = user.user_metadata?.role as string | undefined;
+  const allNotificationsHref =
+    role === "professional"
+      ? "/es/dashboard/profesional?tab=notifications"
+      : "/es/dashboard/cliente?tab=notifications";
+
   return (
     <div className="relative" ref={panelRef}>
       <button
@@ -169,9 +177,9 @@ export function NotificationBell() {
             )}
           </div>
 
-          {/* Footer — go to the full notifications page */}
+          {/* Footer — open the Notifications tab inside the user's own panel */}
           <a
-            href="/es/notificaciones"
+            href={allNotificationsHref}
             className="block text-center px-4 py-2.5 border-t border-[#f3f4f6] text-sm font-medium text-[#009FD9] hover:bg-[#f9fafb] transition-colors"
           >
             Ver todas

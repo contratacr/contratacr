@@ -337,7 +337,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
             <p className="text-sm font-semibold text-[#111827]">Disponibilidad privada</p>
             <p className="text-xs text-[#6b7280] mt-0.5 max-w-md">
               {!isPublic
-                ? "Tus horarios NO se muestran en /buscar; tu tarjeta invita a contactarte por WhatsApp."
+                ? "Tus horarios NO se muestran en los resultados de búsqueda; tu tarjeta invita a contactarte por WhatsApp."
                 : "Tus horarios se muestran y los clientes pueden reservar. Activá esto para ocultarlos (se eliminan los horarios publicados)."}
             </p>
           </div>

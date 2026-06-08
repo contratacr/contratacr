@@ -28,7 +28,7 @@ const FAQ_ITEMS = [
   {
     icon: <Search className="h-4 w-4" />,
     q: "¿Cómo busco un profesional?",
-    a: "Usá la barra de búsqueda en la página principal o en /buscar. Podés buscar por tipo de servicio (plomero, psicólogo, diseñador, etc.), por provincia y cantón, y filtrar por calificación. El buscador entiende sinónimos — si escribís 'niñera' también va a encontrar profesionales de cuidado infantil.",
+    a: "Usá la barra de búsqueda en la página principal o la página de búsqueda de profesionales. Podés buscar por tipo de servicio (plomero, psicólogo, diseñador, etc.), por provincia y cantón, y filtrar por calificación. El buscador entiende sinónimos — si escribís 'niñera' también va a encontrar profesionales de cuidado infantil.",
   },
   {
     icon: <CalendarDays className="h-4 w-4" />,

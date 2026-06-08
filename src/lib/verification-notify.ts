@@ -53,7 +53,7 @@ export async function notifyVerificationDecision({
         firstName,
         "¡Tu identidad fue verificada!",
         "#16a34a",
-        `Confirmamos que tu cédula es real y el nombre coincide con los registros oficiales. La insignia <strong>Identidad verificada</strong> ya aparece en tu perfil y en /buscar, dándote más visibilidad.
+        `Confirmamos que tu cédula es real y el nombre coincide con los registros oficiales. La insignia <strong>Identidad verificada</strong> ya aparece en tu perfil y en los resultados de búsqueda, dándote más visibilidad.
          <br/><br/><span style="color:#6b7280;font-size:13px;">ContrataCR es una plataforma intermediaria: verificamos tu identidad, no la calidad ni el resultado de los trabajos.</span>`,
         "Ver mi verificación"
       );
