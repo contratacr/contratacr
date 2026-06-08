@@ -23,8 +23,11 @@ export type ProService = {
   price?: string;
 };
 
+export type PortfolioItem = { url: string; profession?: string };
+
 export type ProfessionalDetail = ProfessionalCardData & {
   portfolioUrls: string[];
+  portfolioItems: PortfolioItem[];
   reviews: Review[];
   services: ProService[];
   availabilityPublic: boolean;
@@ -219,6 +222,19 @@ export async function getProfessionalBySlug(
 
       if (error || !pro) throw error ?? new Error("Not found");
 
+      // Tagged casos-de-éxito (per profession). Best-effort: a separate query so a
+      // missing column (pre-migration 033) never breaks the whole profile.
+      let portfolioItems: PortfolioItem[] = [];
+      try {
+        const { data: pi } = await supabase.from("professionals").select("portfolio_items").eq("id", pro.id).maybeSingle();
+        if (pi && Array.isArray((pi as { portfolio_items?: PortfolioItem[] }).portfolio_items)) {
+          portfolioItems = (pi as { portfolio_items: PortfolioItem[] }).portfolio_items;
+        }
+      } catch { /* column not migrated yet */ }
+      if (portfolioItems.length === 0) {
+        portfolioItems = (pro.portfolio_urls ?? []).map((url: string) => ({ url }));
+      }
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const reviews: Review[] = ((pro.reviews as any[]) ?? []).map((r: any) => ({
         id: r.id,
@@ -256,6 +272,7 @@ export async function getProfessionalBySlug(
         lng: (pro as any).lng ?? null,
         serviceType: (pro as any).service_type ?? null,
         portfolioUrls: pro.portfolio_urls ?? [],
+        portfolioItems,
         reviews,
         services: ((pro as any).services as ProService[]) ?? [],
         availabilityPublic: (pro as any).availability_public ?? true,

@@ -1,119 +1,102 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useTranslations } from "next-intl";
-import { Upload, X, ImageIcon, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Upload, X, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { MAX_PORTFOLIO_PHOTOS, cldThumb } from "@/lib/cloudinary";
+import { getCategoryLabel } from "@/lib/data/categories";
+
+export type PortfolioItem = { url: string; profession?: string };
 
 interface PhotoGalleryProps {
   professionalId: string;
   initialUrls?: string[];
+  initialItems?: PortfolioItem[];
+  /** The pro's categories — casos de éxito are grouped/uploaded per profession. */
+  professions?: string[];
   onSaved?: () => void;
 }
 
-const CLOUDINARY_CONFIGURED = !!process.env.NEXT_PUBLIC_SUPABASE_URL; // reuse env check; actual Cloudinary check is server-side
-
-export function PhotoGallery({ professionalId, initialUrls = [], onSaved }: PhotoGalleryProps) {
-  const t = useTranslations("dashboard.pro.photos");
-  const [urls, setUrls] = useState<string[]>(initialUrls);
-  const [uploading, setUploading] = useState(false);
+// Casos de éxito (work photos) are attached PER PROFESSION/SERVICE: a multi-
+// profession professional adds photos under the relevant service. Stored as
+// portfolio_items [{ url, profession }]; portfolio_urls (flat) kept for back-compat
+// and the 5-photo DB CHECK.
+export function PhotoGallery({ professionalId, initialUrls = [], initialItems, professions = [], onSaved }: PhotoGalleryProps) {
+  // Seed items from the tagged column, falling back to untagged flat urls.
+  const seed: PortfolioItem[] = Array.isArray(initialItems) && initialItems.length > 0
+    ? initialItems
+    : initialUrls.map((url) => ({ url, profession: undefined }));
+  const [items, setItems] = useState<PortfolioItem[]>(seed);
+  const [uploadingFor, setUploadingFor] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const pendingProfessionRef = useRef<string | undefined>(undefined);
 
-  async function handleUpload(files: FileList) {
-    const remaining = MAX_PORTFOLIO_PHOTOS - urls.length;
+  // Sections: one per profession, plus an "Otros" bucket for untagged photos.
+  const groups: { id: string | undefined; label: string }[] = professions.length > 0
+    ? professions.map((p) => ({ id: p, label: getCategoryLabel(p) }))
+    : [{ id: undefined, label: "Casos de éxito" }];
+  const hasUntagged = items.some((it) => !it.profession || !professions.includes(it.profession));
+  if (hasUntagged && professions.length > 0) groups.push({ id: "__other__", label: "Otros trabajos" });
+
+  function itemsFor(groupId: string | undefined): PortfolioItem[] {
+    if (groupId === "__other__") return items.filter((it) => !it.profession || !professions.includes(it.profession));
+    if (groupId === undefined) return items;
+    return items.filter((it) => it.profession === groupId);
+  }
+
+  async function persist(next: PortfolioItem[]) {
+    setItems(next);
+    const supabase = createClient();
+    const urls = next.map((it) => it.url);
+    let { error } = await supabase
+      .from("professionals")
+      .update({ portfolio_items: next, portfolio_urls: urls })
+      .eq("id", professionalId);
+    // Retry without the tagged column if it isn't migrated yet.
+    if (error && /portfolio_items|column|schema cache|PGRST204|could not find/i.test(error.message)) {
+      ({ error } = await supabase.from("professionals").update({ portfolio_urls: urls }).eq("id", professionalId));
+    }
+    onSaved?.();
+  }
+
+  async function handleUpload(files: FileList, profession: string | undefined) {
+    const remaining = MAX_PORTFOLIO_PHOTOS - items.length;
     const toUpload = Array.from(files).slice(0, Math.max(0, remaining));
     if (toUpload.length === 0) {
-      alert(`Podés subir un máximo de ${MAX_PORTFOLIO_PHOTOS} fotos.`);
+      alert(`Podés subir un máximo de ${MAX_PORTFOLIO_PHOTOS} fotos en total.`);
       return;
     }
-
-    setUploading(true);
+    setUploadingFor(profession ?? "__none__");
     try {
-      const uploaded: string[] = [];
+      const uploaded: PortfolioItem[] = [];
       for (const file of toUpload) {
         const formData = new FormData();
         formData.append("file", file);
         formData.append("type", "portfolio");
         const res = await fetch("/api/upload/photo", { method: "POST", body: formData });
         const data = await res.json();
-        if (data.url) uploaded.push(data.url);
-        else alert(data.error ?? t("configure"));
+        if (data.url) uploaded.push({ url: data.url, profession });
+        else alert(data.error ?? "No se pudo subir la foto.");
       }
-
-      if (uploaded.length > 0) {
-        const newUrls = [...urls, ...uploaded];
-        setUrls(newUrls);
-        const supabase = createClient();
-        await supabase
-          .from("professionals")
-          .update({ portfolio_urls: newUrls })
-          .eq("id", professionalId);
-        onSaved?.();
-      }
+      if (uploaded.length > 0) await persist([...items, ...uploaded]);
     } catch {
-      alert(t("configure"));
+      alert("No se pudo subir la foto.");
     } finally {
-      setUploading(false);
+      setUploadingFor(null);
     }
   }
 
   async function removePhoto(url: string) {
-    const newUrls = urls.filter((u) => u !== url);
-    setUrls(newUrls);
-    const supabase = createClient();
-    await supabase
-      .from("professionals")
-      .update({ portfolio_urls: newUrls })
-      .eq("id", professionalId);
-    onSaved?.();
+    await persist(items.filter((it) => it.url !== url));
   }
 
   return (
-    <div>
-      <p className="text-sm text-[#6b7280] mb-5">
-        Subí fotos de tus <strong>casos de éxito</strong> (trabajos anteriores) para generar confianza con los
-        clientes. Aparecen en tu perfil y en los resultados de búsqueda. Máximo {MAX_PORTFOLIO_PHOTOS} fotos.
+    <div className="flex flex-col gap-6">
+      <p className="text-sm text-[#6b7280]">
+        Subí tus <strong>casos de éxito</strong> (trabajos anteriores) <strong>en cada servicio</strong> para generar
+        confianza. Aparecen en tu perfil y en los resultados de búsqueda. Máximo {MAX_PORTFOLIO_PHOTOS} fotos en total.
       </p>
-
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {urls.map((url) => (
-          <div key={url} className="relative group aspect-square rounded-2xl overflow-hidden border border-[#e5e7eb]">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={cldThumb(url, 400)} alt="" className="w-full h-full object-cover" />
-            <button
-              onClick={() => removePhoto(url)}
-              className="absolute top-2 right-2 h-7 w-7 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-              aria-label={t("delete")}
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        ))}
-
-        {urls.length < MAX_PORTFOLIO_PHOTOS && (
-          <button
-            onClick={() => inputRef.current?.click()}
-            disabled={uploading}
-            className={cn(
-              "aspect-square rounded-2xl border-2 border-dashed border-[#d1d5db] flex flex-col items-center justify-center gap-2",
-              "hover:border-[#009FD9] hover:bg-[#EBF5FB] transition-all cursor-pointer",
-              uploading && "opacity-50 cursor-not-allowed"
-            )}
-          >
-            {uploading ? (
-              <Loader2 className="h-6 w-6 text-[#009FD9] animate-spin" />
-            ) : (
-              <>
-                <Upload className="h-6 w-6 text-[#9ca3af]" />
-                <span className="text-xs text-[#6b7280]">{t("upload")}</span>
-              </>
-            )}
-          </button>
-        )}
-      </div>
 
       <input
         ref={inputRef}
@@ -122,10 +105,59 @@ export function PhotoGallery({ professionalId, initialUrls = [], onSaved }: Phot
         multiple
         className="hidden"
         onChange={(e) => {
-          if (e.target.files && e.target.files.length > 0) handleUpload(e.target.files);
+          if (e.target.files && e.target.files.length > 0) handleUpload(e.target.files, pendingProfessionRef.current);
           e.target.value = "";
         }}
       />
+
+      {groups.map((g) => {
+        const list = itemsFor(g.id);
+        const canAdd = g.id !== "__other__" && items.length < MAX_PORTFOLIO_PHOTOS;
+        const isUploadingHere = uploadingFor === (g.id ?? "__none__");
+        return (
+          <div key={g.id ?? "all"}>
+            {professions.length > 0 && (
+              <h4 className="text-sm font-semibold text-[#111827] mb-2">{g.label}</h4>
+            )}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {list.map((it) => (
+                <div key={it.url} className="relative group aspect-square rounded-2xl overflow-hidden border border-[#e5e7eb]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={cldThumb(it.url, 400)} alt="" className="w-full h-full object-cover" />
+                  <button
+                    onClick={() => removePhoto(it.url)}
+                    className="absolute top-2 right-2 h-7 w-7 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                    aria-label="Eliminar"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+
+              {canAdd && (
+                <button
+                  onClick={() => { pendingProfessionRef.current = g.id; inputRef.current?.click(); }}
+                  disabled={!!uploadingFor}
+                  className={cn(
+                    "aspect-square rounded-2xl border-2 border-dashed border-[#d1d5db] flex flex-col items-center justify-center gap-2",
+                    "hover:border-[#009FD9] hover:bg-[#EBF5FB] transition-all cursor-pointer",
+                    !!uploadingFor && "opacity-50 cursor-not-allowed"
+                  )}
+                >
+                  {isUploadingHere ? (
+                    <Loader2 className="h-6 w-6 text-[#009FD9] animate-spin" />
+                  ) : (
+                    <>
+                      <Upload className="h-6 w-6 text-[#9ca3af]" />
+                      <span className="text-xs text-[#6b7280]">Agregar foto</span>
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

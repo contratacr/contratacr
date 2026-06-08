@@ -461,13 +461,40 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                     </div>
                   )}
 
-                  {/* ── TAB: Casos de éxito ── */}
+                  {/* ── TAB: Casos de éxito (grouped per profession/service) ── */}
                   {activeTab === "casos" && (
-                    <div>
-                      <h2 className="text-lg font-semibold text-[#111827] mb-1">Casos de éxito</h2>
-                      <p className="text-sm text-[#6b7280] mb-4">Fotos de trabajos anteriores de {professional.fullName.split(" ")[0]}.</p>
+                    <div className="flex flex-col gap-6">
+                      <div>
+                        <h2 className="text-lg font-semibold text-[#111827] mb-1">Casos de éxito</h2>
+                        <p className="text-sm text-[#6b7280]">Fotos de trabajos anteriores de {professional.fullName.split(" ")[0]}.</p>
+                      </div>
                       {hasCasos ? (
-                        <ProfileGallery urls={professional.portfolioUrls!} />
+                        (() => {
+                          const items = professional.portfolioItems && professional.portfolioItems.length > 0
+                            ? professional.portfolioItems
+                            : professional.portfolioUrls!.map((url) => ({ url, profession: undefined as string | undefined }));
+                          const profs = professional.professions ?? [];
+                          const tagged = profs.filter((p) => items.some((it) => it.profession === p));
+                          const untagged = items.filter((it) => !it.profession || !profs.includes(it.profession));
+                          // No per-profession tags → single gallery (back-compat).
+                          if (tagged.length === 0) return <ProfileGallery urls={items.map((it) => it.url)} />;
+                          return (
+                            <>
+                              {tagged.map((p) => (
+                                <div key={p}>
+                                  <h3 className="text-sm font-semibold text-[#111827] mb-2">{tCat(p as Parameters<typeof tCat>[0])}</h3>
+                                  <ProfileGallery urls={items.filter((it) => it.profession === p).map((it) => it.url)} />
+                                </div>
+                              ))}
+                              {untagged.length > 0 && (
+                                <div>
+                                  <h3 className="text-sm font-semibold text-[#111827] mb-2">Otros trabajos</h3>
+                                  <ProfileGallery urls={untagged.map((it) => it.url)} />
+                                </div>
+                              )}
+                            </>
+                          );
+                        })()
                       ) : (
                         <p className="text-sm text-[#9ca3af]">Este profesional todavía no agregó casos de éxito.</p>
                       )}
