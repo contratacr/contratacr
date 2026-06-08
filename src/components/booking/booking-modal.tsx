@@ -162,7 +162,9 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     setForSomeoneElse(false);
     setBenHasCedula(null);
     setBenCedula(""); setBenName(""); setBenDob(""); setBenPhone(""); setBenLookupName(null);
-    setProfileLoaded(false);
+    // Reset the on-file identity so the DB is the authoritative source each open —
+    // a social-login account with no cédula must always be (re)prompted.
+    setProfileCedula(""); setProfilePhone(""); setProfileLoaded(false);
 
     const supabase = createClient();
     Promise.all([
@@ -203,10 +205,13 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
           .from("profiles")
           .select("cedula, phone, full_name")
           .eq("id", user.id)
-          .single()
+          .maybeSingle()
           .then(({ data }) => {
+            // Authoritative check: does this account actually have a cédula on file?
+            // Social-login (Google/Facebook) accounts usually don't — they must be
+            // prompted (then padrón auto-fill/confirm + store), regardless of provider.
             const hasCedula = !!data?.cedula && String(data.cedula).trim() !== "";
-            if (data?.cedula) setProfileCedula(String(data.cedula));
+            if (hasCedula) setProfileCedula(String(data!.cedula));
             if (data?.phone) setProfilePhone(String(data.phone));
             if (data?.full_name) setClientName((prev) => prev || String(data.full_name));
             setNeedsProfile(isOAuth && !hasCedula);
@@ -970,6 +975,15 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                         error={cedulaError ?? undefined}
                         hint="Solo para tu solicitud — no es una verificación de identidad."
                       />
+                      {/* Padrón auto-fill/confirm — same lookup as the rest of the app */}
+                      {selfCedulaName && (
+                        <div className="rounded-lg bg-[#f0fdf4] border border-[#bbf7d0] px-3 py-2 mt-1.5">
+                          <p className="text-xs text-[#15803d]">Confirmá: <strong>{selfCedulaName}</strong></p>
+                          {selfDob && computeAge(selfDob) && (
+                            <p className="text-[11px] text-[#16a34a]">Nacimiento: {selfDob} · {formatAge(computeAge(selfDob))}</p>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

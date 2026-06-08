@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { Plus, X, CalendarPlus, Globe, Lock, Loader2, Video, MapPin, AlertCircle } from "lucide-react";
 import { CONTACT_PREFERENCES, type ContactPreference } from "@/lib/constants";
-import { crTodayISO, isPastDateTimeCR, isTooSoonCR, earliestValidTimeCR, nextFullHourCR, crDatePretty, LEAD_MINUTES } from "@/lib/time-cr";
+import { crTodayISO, isPastDateTimeCR, isTooSoonCR, nextFullHourCR, crDatePretty, LEAD_MINUTES } from "@/lib/time-cr";
 
 type Slot = { id?: string; slot_date: string; slot_time: string; location_id?: string | null };
 
@@ -123,13 +123,15 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
   const [savingVisibility, setSavingVisibility] = useState(false);
   const [showPrivateConfirm, setShowPrivateConfirm] = useState(false);
 
-  // Generator form
+  // Generator form. For TODAY the start defaults to the next rounded full hour
+  // (e.g. 12:49 → 13:00); "hora puntual" uses the SAME default so both stay in sync.
+  const initialStart = nextFullHourCR(todayISO());
   const [genDate, setGenDate] = useState(todayISO());
-  const [genStart, setGenStart] = useState("08:00");
+  const [genStart, setGenStart] = useState(initialStart);
   const [genEnd, setGenEnd] = useState("17:00");
   const [interval, setInterval] = useState(60);
   const [customInterval, setCustomInterval] = useState(45);
-  const [singleTime, setSingleTime] = useState("10:00");
+  const [singleTime, setSingleTime] = useState(initialStart);
   const [busy, setBusy] = useState(false);
   const [pastError, setPastError] = useState<string | null>(null);
 
@@ -290,18 +292,17 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
   const inputCls =
     "h-9 px-3 rounded-xl border border-[#e5e7eb] bg-white text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
 
-  // When the chosen date is today, the time pickers only OFFER valid times.
-  //  - "Desde" (range start) begins at the next ROUNDED full hour (9:55 → 10:00).
-  //  - A single puntual time only needs the 15-minute lead.
+  // When the chosen date is today, both "Desde" and "hora puntual" start at the
+  // next ROUNDED full hour (e.g. 12:49 → 13:00) and stay in sync.
   const isToday = genDate === todayISO();
-  const startMin = isToday ? nextFullHourCR(genDate) : undefined;     // Desde / Hasta
-  const singleMin = isToday ? earliestValidTimeCR(genDate) : undefined; // hora puntual
-  // Keep the fields at valid values so the pro never hits an error.
+  const startMin = isToday ? nextFullHourCR(genDate) : undefined; // Desde / Hasta / hora puntual
+  // Keep the fields at valid values so the pro never hits an error. Bump anything
+  // below the next full hour (covers time passing + switching back to today).
   useEffect(() => {
     if (startMin && toMins(genStart) < toMins(startMin)) setGenStart(startMin);
-    if (singleMin && toMins(singleTime) < toMins(singleMin)) setSingleTime(singleMin);
+    if (startMin && toMins(singleTime) < toMins(startMin)) setSingleTime(startMin);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [startMin, singleMin]);
+  }, [startMin]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -460,7 +461,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
 
           <div className="flex items-center gap-2 pt-1">
             <span className="text-xs text-[#9ca3af]">o agregá una hora puntual:</span>
-            <input type="time" min={singleMin} value={singleTime} onChange={(e) => setSingleTime(e.target.value)} className={cn(inputCls, "h-8")} />
+            <input type="time" min={startMin} value={singleTime} onChange={(e) => setSingleTime(e.target.value)} className={cn(inputCls, "h-8")} />
             <button
               type="button"
               onClick={() => insertSlots([singleTime])}
