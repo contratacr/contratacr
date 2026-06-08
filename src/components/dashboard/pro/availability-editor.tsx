@@ -334,10 +334,47 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
   // When the chosen date is today, both "Desde" and "hora puntual" start at the
   // next ROUNDED full hour (e.g. 12:49 → 13:00) and stay in sync.
   const isToday = genDate === todayISO();
-  const startMin = isToday ? nextFullHourCR(genDate) : undefined; // Desde / Hasta / hora puntual
-  // Live range validity for the Desde/Hasta pickers (item 1) — surfaced inline so
-  // an invalid combo (e.g. 5pm–5pm) never just dead-ends on "Generar".
+  const startMin = isToday ? nextFullHourCR(genDate) : undefined; // Desde / hora puntual floor
+  const startMinMins = startMin ? toMins(startMin) : 0;
+  const DAY_END = 23 * 60 + 30; // last selectable start on a 30-min grid
+
+  // "Hasta" can NEVER be ≤ "Desde": its options start one grid step after "Desde"
+  // (and never before today's lead floor). The invalid combo can't be picked.
+  const hastaMin = hhmm(Math.min(Math.max(toMins(genStart) + 30, startMinMins), 24 * 60 - 30));
+
+  // Picking "Desde" auto-bumps "Hasta" to stay valid (default span = 1 hour).
+  function setDesde(v: string) {
+    setPastError(null);
+    setGenStart(v);
+    if (toMins(genEnd) <= toMins(v)) setGenEnd(hhmm(Math.min(toMins(v) + 60, DAY_END + 30)));
+  }
+
+  // Quick presets fill the range (clamped to today's lead floor).
+  function applyPreset(s: number, e: number) {
+    setPastError(null);
+    const ms = Math.max(s, startMinMins);
+    const me = Math.max(e, ms + 60);
+    setGenStart(hhmm(Math.min(ms, DAY_END)));
+    setGenEnd(hhmm(Math.min(me, DAY_END + 30)));
+  }
+  const PRESETS: { label: string; s: number; e: number }[] = [
+    { label: "Mañana", s: 8 * 60, e: 12 * 60 },
+    { label: "Tarde", s: 13 * 60, e: 17 * 60 },
+    { label: "Noche", s: 17 * 60, e: 21 * 60 },
+  ];
+
+  // Live range validity + slot-count preview (item 1) — surfaced inline so an
+  // invalid combo never just dead-ends on "Generar".
   const rangeInvalid = toMins(genEnd) <= toMins(genStart);
+  const previewCount = (() => {
+    if (rangeInvalid) return 0;
+    const step = interval === 0 ? Math.max(5, customInterval) : interval;
+    const start = toMins(genStart);
+    const end = toMins(genEnd);
+    let n = 0;
+    for (let m = start; m + step <= end; m += step) n++;
+    return Math.max(n, 1);
+  })();
   // Keep the fields at valid values so the pro never hits an error. Bump anything
   // below the next full hour (covers time passing + switching back to today).
   useEffect(() => {
@@ -478,13 +515,30 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
               </select>
             </div>
           </div>
+          {/* Quick presets — fill the range with one tap. */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-xs text-[#9ca3af]">Rápido:</span>
+            {PRESETS.map((p) => (
+              <button
+                key={p.label}
+                type="button"
+                onClick={() => applyPreset(p.s, p.e)}
+                className="rounded-full border border-[#e5e7eb] px-3 py-1 text-xs font-medium text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] transition-colors"
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+
           <div className="flex flex-wrap items-end gap-3">
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-[#6b7280]">Fecha</label>
               <input type="date" min={todayISO()} value={genDate} onChange={(e) => { setGenDate(e.target.value); setPastError(null); }} className={cn(inputCls, "h-10")} />
             </div>
-            <TimeSelect label="Desde" min={startMin} value={genStart} onChange={(v) => { setGenStart(v); setPastError(null); }} className="w-36" />
-            <TimeSelect label="Hasta" min={startMin} value={genEnd} onChange={(v) => { setGenEnd(v); setPastError(null); }} className="w-36" error={rangeInvalid ? "Debe ser posterior a “Desde”." : undefined} />
+            <TimeSelect label="Desde" min={startMin} value={genStart} onChange={setDesde} className="w-32" />
+            {/* Visual "→" between the two pickers. */}
+            <span className="text-[#9ca3af] mb-2.5 hidden sm:inline">→</span>
+            <TimeSelect label="Hasta" min={hastaMin} value={genEnd} onChange={(v) => { setGenEnd(v); setPastError(null); }} className="w-32" error={rangeInvalid ? "Debe ser posterior a “Desde”." : undefined} />
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-[#6b7280]">Intervalo</label>
               <select value={interval} onChange={(e) => setInterval(Number(e.target.value))} className={cn(inputCls, "h-10 cursor-pointer")}>
@@ -499,11 +553,19 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
                 <input type="number" min={5} step={5} value={customInterval} onChange={(e) => setCustomInterval(Number(e.target.value))} className={cn(inputCls, "h-10 w-24")} />
               </div>
             )}
-            <Button type="button" size="md" onClick={generate} disabled={busy}>
+            <Button type="button" size="md" onClick={generate} disabled={busy || rangeInvalid}>
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
               Generar
             </Button>
           </div>
+
+          {/* Live preview of what "Generar" will create. */}
+          {!rangeInvalid && (
+            <p className="text-xs text-[#6b7280]">
+              Generás <strong className="text-[#374151]">{previewCount}</strong> {previewCount === 1 ? "espacio" : "espacios"} entre{" "}
+              <strong className="text-[#374151]">{to12h(genStart)}</strong> y <strong className="text-[#374151]">{to12h(genEnd)}</strong>.
+            </p>
+          )}
 
           <div className="flex flex-wrap items-end gap-2 pt-1">
             <span className="text-xs text-[#9ca3af] mb-2.5">o agregá una hora puntual:</span>
