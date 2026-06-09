@@ -14,7 +14,7 @@ import { getCategoryLabel } from "@/lib/data/categories";
    auto pauses on hover/interaction and respects prefers-reduced-motion. */
 const CLOUD = "dxxrjx2go";
 const catImg = (id: string) =>
-  `https://res.cloudinary.com/${CLOUD}/image/upload/f_auto,q_auto,c_fill,g_auto,w_600,h_600/contratacr/categorias/${id}`;
+  `https://res.cloudinary.com/${CLOUD}/image/upload/f_auto,q_auto,c_fill,g_auto,w_640,h_440/contratacr/categorias/${id}`;
 
 // Finalized CR categories with matching self-hosted imagery. ONE track, all
 // distinct — a single set is far wider than any viewport, so the off-screen
@@ -26,7 +26,7 @@ const HOME_CATEGORIES = [
   "contabilidad", "marketing_digital", "fotografia", "dj_sonido",
 ];
 
-const AUTO_SPEED = 0.5;       // px per frame (~30px/s) — slow, elegant glide.
+const AUTO_SPEED = 0.32;      // px per frame (~19px/s) — slow, relaxed glide.
 const NUDGE_MS = 480;         // arrow-tween duration.
 const easeInOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
 
@@ -34,21 +34,21 @@ function Card({ id, lifted }: { id: string; lifted: boolean }) {
   const label = getCategoryLabel(id);
   return (
     <div
-      className="shrink-0 mr-4 sm:mr-6 py-2"
+      className="shrink-0 mr-4 sm:mr-5 py-2"
       style={{ transform: `translateY(${lifted ? "-20px" : "20px"})` }}
     >
       <Link
         href={`/buscar?categoria=${id}`}
         draggable={false}
-        className="group relative block w-[220px] h-[220px] sm:w-[264px] sm:h-[264px] rounded-2xl overflow-hidden card-lift shadow-[0_6px_24px_rgba(0,0,0,0.12)] select-none"
+        className="group relative block w-[248px] h-[168px] sm:w-[300px] sm:h-[200px] rounded-lg overflow-hidden shadow-[0_4px_16px_rgba(0,0,0,0.10)] select-none transition-transform duration-300 ease-out will-change-transform hover:scale-[1.04] hover:z-10"
       >
         <Image
           src={catImg(id)}
           alt={label}
           fill
           draggable={false}
-          className="object-cover transition-transform duration-500 group-hover:scale-[1.07] pointer-events-none"
-          sizes="264px"
+          className="object-cover pointer-events-none"
+          sizes="300px"
         />
         <div
           className="absolute inset-0"
