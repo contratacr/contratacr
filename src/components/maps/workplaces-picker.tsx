@@ -24,6 +24,8 @@ interface WorkplacesPickerProps {
   value: Workplace[];
   onChange: (next: Workplace[]) => void;
   apiKey?: string;
+  /** Map viewport height in px (default 220). Lets callers render a more compact map. */
+  mapHeight?: number;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -54,7 +56,7 @@ function deriveAdmin(components: any[]): { provinciaId?: string; cantonId?: stri
  *    chosen) and add a location without a precise pin.
  * Every added location is listed and removable. Multiple locations are supported.
  */
-export function WorkplacesPicker({ value, onChange, apiKey }: WorkplacesPickerProps) {
+export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 220 }: WorkplacesPickerProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const mapInstanceRef = useRef<GMaps>(null);
@@ -277,7 +279,7 @@ export function WorkplacesPicker({ value, onChange, apiKey }: WorkplacesPickerPr
               {locating ? "Obteniendo tu ubicación…" : "Usar mi ubicación actual"}
             </button>
             {geoError && <p className="text-xs text-amber-600">{geoError}</p>}
-            <div className="relative rounded-xl overflow-hidden border border-[#e5e7eb]" style={{ height: 220 }}>
+            <div className="relative rounded-xl overflow-hidden border border-[#e5e7eb]" style={{ height: mapHeight }}>
               <div ref={mapRef} className="w-full h-full" />
             </div>
           </>

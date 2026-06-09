@@ -10,7 +10,7 @@ import { PriceInput } from "@/components/ui/price-input";
 import { WorkplacesPicker, type Workplace } from "@/components/maps/workplaces-picker";
 import { CoverageAreaSelector } from "@/components/maps/coverage-area-selector";
 import { createClient } from "@/lib/supabase/client";
-import { Camera, Check, X, Plus, Truck, MapPin } from "lucide-react";
+import { Camera, Check, X, Plus, Truck, MapPin, ChevronDown, Globe } from "lucide-react";
 import { computeSearchAreas, primaryArea, type CoverageArea } from "@/lib/location";
 import { AseguradorasInput } from "@/components/ui/aseguradoras-input";
 import { CloseAccountSection } from "@/components/account/close-account-section";
@@ -27,6 +27,30 @@ interface ProfileEditorProps {
   profileId: string;
   initial: ProData;
   onSaved?: () => void;
+}
+
+// Collapsible section — groups the long profile form into digestible blocks so
+// it's quick to scan and edit. Presentation only; all fields still live in the
+// same form/state and save identically.
+function Section({ title, desc, defaultOpen = false, children }: { title: string; desc?: string; defaultOpen?: boolean; children: React.ReactNode }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="rounded-2xl border border-[#e5e7eb] bg-white overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-[#fafafa] transition-colors"
+        aria-expanded={open}
+      >
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-[#111827]">{title}</p>
+          {desc && <p className="text-xs text-[#9ca3af] mt-0.5">{desc}</p>}
+        </div>
+        <ChevronDown className={cn("h-4 w-4 text-[#9ca3af] shrink-0 transition-transform", open && "rotate-180")} />
+      </button>
+      {open && <div className="px-4 pb-4 pt-1 flex flex-col gap-4 border-t border-[#f3f4f6]">{children}</div>}
+    </div>
+  );
 }
 
 export function ProfileEditor({ professionalId, profileId, initial, onSaved }: ProfileEditorProps) {
@@ -216,239 +240,262 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
     }
   }
 
+  const hasCountryCoverage = coverageAreas.some((a) => (a.level ?? "canton") === "country");
+  const hasNarrowerCoverage = coverageAreas.some((a) => (a.level ?? "canton") !== "country");
+
   return (
-    <div className="flex flex-col gap-5 max-w-lg">
+    <div className="flex flex-col gap-3 max-w-lg">
       {error && (
         <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-600">
           {error}
         </div>
       )}
 
-      {/* Photo — explicit buttons, no hover-to-change */}
-      <div className="flex items-center gap-4">
-        <div className="relative h-20 w-20 rounded-full shrink-0">
-          {avatarPreview ? (
-            <img
-              src={avatarPreview}
-              alt="Foto de perfil"
-              className="h-20 w-20 rounded-full object-cover border-2 border-[#e5e7eb]"
-            />
-          ) : (
-            <div className="h-20 w-20 rounded-full bg-[#EBF5FB] border-2 border-dashed border-[#bfdbfe] flex items-center justify-center">
-              <Camera className="h-7 w-7 text-[#009FD9]" />
-            </div>
-          )}
-          {photoUploading && (
-            <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center">
-              <span className="h-5 w-5 rounded-full border-2 border-white/40 border-t-white animate-spin" />
-            </div>
-          )}
-        </div>
-        <div className="flex flex-col gap-2">
-          <p className="text-sm font-medium text-[#374151]">Foto de perfil</p>
-          {avatarPreview ? (
-            <div className="flex items-center gap-2">
+      {/* ── Datos básicos ─────────────────────────────────────────────── */}
+      <Section title="Datos básicos" desc="Foto, nombre y descripción" defaultOpen>
+        {/* Photo — explicit buttons, no hover-to-change */}
+        <div className="flex items-center gap-4">
+          <div className="relative h-20 w-20 rounded-full shrink-0">
+            {avatarPreview ? (
+              <img
+                src={avatarPreview}
+                alt="Foto de perfil"
+                className="h-20 w-20 rounded-full object-cover border-2 border-[#e5e7eb]"
+              />
+            ) : (
+              <div className="h-20 w-20 rounded-full bg-[#EBF5FB] border-2 border-dashed border-[#bfdbfe] flex items-center justify-center">
+                <Camera className="h-7 w-7 text-[#009FD9]" />
+              </div>
+            )}
+            {photoUploading && (
+              <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center">
+                <span className="h-5 w-5 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+              </div>
+            )}
+          </div>
+          <div className="flex flex-col gap-2">
+            <p className="text-sm font-medium text-[#374151]">Foto de perfil</p>
+            {avatarPreview ? (
+              <div className="flex items-center gap-2">
+                <Button type="button" variant="outline" size="sm" onClick={() => photoInputRef.current?.click()}>
+                  <Camera className="h-4 w-4" /> Cambiar foto
+                </Button>
+                <Button type="button" variant="ghost" size="sm" onClick={handlePhotoRemove} className="text-red-500 hover:text-red-600">
+                  <X className="h-4 w-4" /> Eliminar
+                </Button>
+              </div>
+            ) : (
               <Button type="button" variant="outline" size="sm" onClick={() => photoInputRef.current?.click()}>
-                <Camera className="h-4 w-4" /> Cambiar foto
+                <Camera className="h-4 w-4" /> Agregar foto
               </Button>
-              <Button type="button" variant="ghost" size="sm" onClick={handlePhotoRemove} className="text-red-500 hover:text-red-600">
-                <X className="h-4 w-4" /> Eliminar
-              </Button>
+            )}
+          </div>
+          <input
+            ref={photoInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="hidden"
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) handlePhotoSelect(f); }}
+          />
+        </div>
+
+        {/* Personal name — always your own name */}
+        <Input
+          label={<>Nombre completo <span className="text-red-500">*</span></>}
+          value={fullName}
+          onChange={(e) => { setFullName(e.target.value); touch(); }}
+          placeholder="Juan Pérez González"
+        />
+
+        {/* Brand / business name — optional */}
+        <Input
+          label={<>Nombre comercial o marca <span className="text-[#9ca3af] font-normal">(opcional)</span></>}
+          value={businessName}
+          onChange={(e) => { setBusinessName(e.target.value); touch(); }}
+          placeholder="Ej: Servicios Eléctricos GAM"
+        />
+
+        {/* Description */}
+        <div>
+          <label className="text-sm font-medium text-[#374151] block mb-1.5">Descripción <span className="text-[#9ca3af] font-normal">(opcional)</span></label>
+          <textarea
+            className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] min-h-[110px] resize-none focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+            placeholder="Describí tu experiencia, especialidades y qué te diferencia…"
+            value={bio}
+            onChange={(e) => { setBio(e.target.value); touch(); }}
+          />
+        </div>
+      </Section>
+
+      {/* ── Profesión ─────────────────────────────────────────────────── */}
+      <Section title="Profesión" desc="Las profesiones bajo las que aparecés" defaultOpen>
+        {/* Professions — multi-select (first is the primary/principal). Each profesión
+            groups the servicios managed in the Servicios tab. */}
+        <div>
+          <p className="text-xs text-[#9ca3af] mb-2">Tus profesiones (ej. Nutricionista). Los servicios de cada una se gestionan en la pestaña <strong>Servicios</strong>.</p>
+          {professions.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-2">
+              {professions.map((p, i) => (
+                <span key={p} className="inline-flex items-center gap-1.5 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium pl-3 pr-1.5 py-1.5">
+                  {getCategoryLabel(p)}
+                  {i === 0 && <span className="text-[10px] font-bold uppercase tracking-wide text-[#009FD9]/70">Principal</span>}
+                  {professions.length > 1 && (
+                    <button type="button" onClick={() => removeProfession(p)} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors" aria-label="Quitar">
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+                </span>
+              ))}
             </div>
-          ) : (
-            <Button type="button" variant="outline" size="sm" onClick={() => photoInputRef.current?.click()}>
-              <Camera className="h-4 w-4" /> Agregar foto
-            </Button>
           )}
+          <CategorySearch
+            value={addCat}
+            onChange={(v) => addProfession(v)}
+            placeholder="Agregá una profesión… ej. plomero, fotógrafo"
+          />
         </div>
-        <input
-          ref={photoInputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          className="hidden"
-          onChange={(e) => { const f = e.target.files?.[0]; if (f) handlePhotoSelect(f); }}
-        />
-      </div>
+      </Section>
 
-      {/* Personal name — always your own name */}
-      <Input
-        label={<>Nombre completo <span className="text-red-500">*</span></>}
-        value={fullName}
-        onChange={(e) => { setFullName(e.target.value); touch(); }}
-        placeholder="Juan Pérez González"
-      />
-
-      {/* Brand / business name — optional */}
-      <Input
-        label={<>Nombre comercial o marca <span className="text-[#9ca3af] font-normal">(opcional)</span></>}
-        value={businessName}
-        onChange={(e) => { setBusinessName(e.target.value); touch(); }}
-        placeholder="Ej: Servicios Eléctricos GAM"
-      />
-
-      {/* Work mode — both can be selected (travels AND has fixed locations) */}
-      <div>
-        <label className="text-sm font-medium text-[#374151] block mb-2">¿Cómo ofrecés tus servicios? <span className="text-red-500">*</span> <span className="text-[#9ca3af] font-normal">(podés elegir ambas)</span></label>
-        <div className="grid grid-cols-2 gap-2">
-          {([
-            { id: "mobile", icon: Truck, title: "Me desplazo donde el cliente", desc: "Vas al lugar del cliente", active: serviceMobile, toggle: () => { setServiceMobile((v) => !v); touch(); } },
-            { id: "fixed", icon: MapPin, title: "Trabajo desde un lugar fijo", desc: "Taller, consultorio, local", active: serviceFixed, toggle: () => { setServiceFixed((v) => !v); touch(); } },
-          ] as const).map((opt) => (
-            <button
-              key={opt.id}
-              type="button"
-              onClick={opt.toggle}
-              className={cn(
-                "flex flex-col items-start gap-1 p-3 rounded-xl border-2 text-left transition-all",
-                opt.active ? "border-[#009FD9] bg-[#EBF5FB]" : "border-[#e5e7eb] hover:border-[#009FD9]/40"
-              )}
-            >
-              <opt.icon className="h-4 w-4 text-[#009FD9]" />
-              <p className="text-sm font-medium text-[#111827]">{opt.title}</p>
-              <p className="text-xs text-[#9ca3af]">{opt.desc}</p>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Fixed locations — pins are the single source of truth; provincia/cantón
-          are derived from each pin (no manual selection). */}
-      {serviceFixed && (
+      {/* ── Ubicación y cobertura ─────────────────────────────────────── */}
+      <Section title="Ubicación y cobertura" desc="Dónde trabajás y a dónde te desplazás">
+        {/* Work mode — both can be selected (travels AND has fixed locations) */}
         <div>
-          <label className="text-sm font-medium text-[#374151] block mb-1.5">
-            Tus lugares de trabajo
-          </label>
-          <p className="text-xs text-[#9ca3af] mb-2">
-            Marcá uno o más lugares en el mapa (o agregalos por provincia y cantón). Definen dónde
-            aparecés cuando los clientes buscan profesionales.
-          </p>
-          <WorkplacesPicker value={workplaces} onChange={(next) => { setWorkplaces(next); touch(); }} />
-        </div>
-      )}
-
-      {/* Coverage areas — only for "me desplazo": provincia+cantón pairs traveled to */}
-      {serviceMobile && (
-        <div>
-          <label className="text-sm font-medium text-[#374151] block mb-1.5">
-            Zonas a las que te desplazás
-          </label>
-          <p className="text-xs text-[#9ca3af] mb-2">
-            Elegí las provincias y cantones donde atendés. Aparecés en los resultados de búsqueda de cada una.
-          </p>
-          <CoverageAreaSelector value={coverageAreas} onChange={(next) => { setCoverageAreas(next); touch(); }} />
-        </div>
-      )}
-
-      {/* Description */}
-      <div>
-        <label className="text-sm font-medium text-[#374151] block mb-1.5">Descripción <span className="text-[#9ca3af] font-normal">(opcional)</span></label>
-        <textarea
-          className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] min-h-[120px] resize-none focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
-          placeholder="Describí tu experiencia, especialidades y qué te diferencia…"
-          value={bio}
-          onChange={(e) => { setBio(e.target.value); touch(); }}
-        />
-      </div>
-
-      {/* Professions — multi-select (first is the primary/principal). Each profesión
-          groups the servicios managed in the Servicios tab. */}
-      <div>
-        <label className="text-sm font-medium text-[#374151] block mb-1.5">Profesiones <span className="text-red-500">*</span></label>
-        <p className="text-xs text-[#9ca3af] mb-2">Tus profesiones (ej. Nutricionista). Los servicios de cada una se gestionan en la pestaña <strong>Servicios</strong>.</p>
-        {professions.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-2">
-            {professions.map((p, i) => (
-              <span key={p} className="inline-flex items-center gap-1.5 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium pl-3 pr-1.5 py-1.5">
-                {getCategoryLabel(p)}
-                {i === 0 && <span className="text-[10px] font-bold uppercase tracking-wide text-[#009FD9]/70">Principal</span>}
-                {professions.length > 1 && (
-                  <button type="button" onClick={() => removeProfession(p)} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors" aria-label="Quitar">
-                    <X className="h-3.5 w-3.5" />
-                  </button>
+          <label className="text-sm font-medium text-[#374151] block mb-2">¿Cómo ofrecés tus servicios? <span className="text-red-500">*</span> <span className="text-[#9ca3af] font-normal">(podés elegir ambas)</span></label>
+          <div className="grid grid-cols-2 gap-2">
+            {([
+              { id: "mobile", icon: Truck, title: "Me desplazo donde el cliente", desc: "Vas al lugar del cliente", active: serviceMobile, toggle: () => { setServiceMobile((v) => !v); touch(); } },
+              { id: "fixed", icon: MapPin, title: "Trabajo desde un lugar fijo", desc: "Taller, consultorio, local", active: serviceFixed, toggle: () => { setServiceFixed((v) => !v); touch(); } },
+            ] as const).map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={opt.toggle}
+                className={cn(
+                  "flex flex-col items-start gap-1 p-3 rounded-xl border-2 text-left transition-all",
+                  opt.active ? "border-[#009FD9] bg-[#EBF5FB]" : "border-[#e5e7eb] hover:border-[#009FD9]/40"
                 )}
-              </span>
+              >
+                <opt.icon className="h-4 w-4 text-[#009FD9]" />
+                <p className="text-sm font-medium text-[#111827]">{opt.title}</p>
+                <p className="text-xs text-[#9ca3af]">{opt.desc}</p>
+              </button>
             ))}
           </div>
-        )}
-        <CategorySearch
-          value={addCat}
-          onChange={(v) => addProfession(v)}
-          placeholder="Agregá una profesión… ej. plomero, fotógrafo"
-        />
-      </div>
-
-      {/* WhatsApp — required contact channel */}
-      <PhoneInput
-        label="WhatsApp"
-        required
-        value={whatsapp}
-        onChange={(digits) => { setWhatsapp(digits); touch(); }}
-      />
-
-      <Input
-        label={<>Dirección <span className="text-[#9ca3af] font-normal">(opcional)</span></>}
-        placeholder="Ej: Barrio Escalante, San José"
-        value={address}
-        onChange={(e) => { setAddress(e.target.value); touch(); }}
-      />
-
-      {/* Pricing tiers */}
-      <div>
-        <label className="text-sm font-medium text-[#374151] block mb-1.5">Precios</label>
-        <div className="flex flex-col gap-2">
-          {pricing.map((tier) => (
-            <div key={tier.id} className="flex items-center gap-2">
-              <select
-                value={tier.type}
-                onChange={(e) => updateTier(tier.id, { type: e.target.value as PricingType })}
-                className="h-10 px-3 rounded-xl border border-[#e5e7eb] bg-white text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
-              >
-                {PRICING_TYPES.map((pt) => (
-                  <option key={pt.value} value={pt.value}>{pt.label}</option>
-                ))}
-              </select>
-              {tier.type !== "a_convenir" && (
-                <div className="flex-1">
-                  <PriceInput
-                    placeholder="10000"
-                    value={tier.amount != null ? String(tier.amount) : ""}
-                    onChange={(v) => updateTier(tier.id, { amount: v ? Number(v) : undefined })}
-                  />
-                </div>
-              )}
-              <button type="button" onClick={() => removeTier(tier.id)} className="h-9 w-9 rounded-lg flex items-center justify-center text-[#9ca3af] hover:text-red-500 hover:bg-red-50 transition-colors shrink-0" aria-label="Quitar tarifa">
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          ))}
-          <button type="button" onClick={addTier} className="inline-flex items-center gap-1.5 text-sm font-medium text-[#009FD9] hover:underline self-start">
-            <Plus className="h-4 w-4" /> Agregar tarifa
-          </button>
         </div>
-      </div>
 
-      {/* Experience is captured per service (in the Servicios tab), not globally. */}
+        {/* Fixed locations — ONE flow: search/tap the map or pick provincia+cantón,
+            then "Agregar lugar". (The picker holds both inputs.) */}
+        {serviceFixed && (
+          <div>
+            <label className="text-sm font-medium text-[#374151] block mb-1">
+              Lugares de trabajo
+            </label>
+            <p className="text-xs text-[#9ca3af] mb-2">
+              Buscá el lugar en el mapa o elegí la provincia y el cantón, y tocá <strong>Agregar lugar</strong>.
+              Cada lugar define dónde aparecés en las búsquedas.
+            </p>
+            <WorkplacesPicker value={workplaces} onChange={(next) => { setWorkplaces(next); touch(); }} mapHeight={168} />
+          </div>
+        )}
 
-      {/* Languages — optional chip autocomplete (full language list) */}
-      <div>
-        <label className="text-sm font-medium text-[#374151] block mb-1.5">
-          Idiomas que hablás <span className="text-[#9ca3af] font-normal">(opcional)</span>
-        </label>
-        <LanguagesInput value={languages} onChange={(next) => { setLanguages(next); touch(); }} />
-      </div>
+        {/* Coverage areas — only for "me desplazo": provincia+cantón pairs traveled to */}
+        {serviceMobile && (
+          <div>
+            <label className="text-sm font-medium text-[#374151] block mb-1">
+              Zonas a las que te desplazás
+            </label>
+            <p className="text-xs text-[#9ca3af] mb-2">
+              Elegí las zonas donde atendés. Aparecés en las búsquedas de cada una.
+            </p>
+            {hasCountryCoverage && hasNarrowerCoverage && (
+              <div className="flex items-start gap-2 rounded-lg bg-[#fffbeb] border border-[#fde68a] px-3 py-2 mb-2 text-xs text-[#92400e]">
+                <Globe className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                <span>Ya cubrís <strong>todo el país</strong>, así que las zonas más específicas no agregan nada. Podés quitarlas para simplificar.</span>
+              </div>
+            )}
+            <CoverageAreaSelector value={coverageAreas} onChange={(next) => { setCoverageAreas(next); touch(); }} />
+          </div>
+        )}
 
-      {/* Aseguradoras — insurance networks the pro belongs to */}
-      <div>
-        <label className="text-sm font-medium text-[#374151] block mb-1.5">
-          Aseguradoras <span className="text-[#9ca3af] font-normal">(opcional)</span>
-        </label>
-        <p className="text-xs text-[#9ca3af] mb-2">Marcá las redes de seguros con las que trabajás. Los clientes pueden filtrar por aseguradora.</p>
-        <AseguradorasInput value={insurers} onChange={(next) => { setInsurers(next); touch(); }} />
-      </div>
+        <Input
+          label={<>Dirección <span className="text-[#9ca3af] font-normal">(opcional)</span></>}
+          placeholder="Ej: Barrio Escalante, San José"
+          value={address}
+          onChange={(e) => { setAddress(e.target.value); touch(); }}
+        />
+      </Section>
+
+      {/* ── Contacto y precios ────────────────────────────────────────── */}
+      <Section title="Contacto y precios" desc="WhatsApp y tus tarifas">
+        {/* WhatsApp — required contact channel */}
+        <PhoneInput
+          label="WhatsApp"
+          required
+          value={whatsapp}
+          onChange={(digits) => { setWhatsapp(digits); touch(); }}
+        />
+
+        {/* Pricing tiers */}
+        <div>
+          <label className="text-sm font-medium text-[#374151] block mb-1.5">Precios <span className="text-[#9ca3af] font-normal">(opcional)</span></label>
+          <div className="flex flex-col gap-2">
+            {pricing.map((tier) => (
+              <div key={tier.id} className="flex items-center gap-2">
+                <select
+                  value={tier.type}
+                  onChange={(e) => updateTier(tier.id, { type: e.target.value as PricingType })}
+                  className="h-10 px-3 rounded-xl border border-[#e5e7eb] bg-white text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+                >
+                  {PRICING_TYPES.map((pt) => (
+                    <option key={pt.value} value={pt.value}>{pt.label}</option>
+                  ))}
+                </select>
+                {tier.type !== "a_convenir" && (
+                  <div className="flex-1">
+                    <PriceInput
+                      placeholder="10000"
+                      value={tier.amount != null ? String(tier.amount) : ""}
+                      onChange={(v) => updateTier(tier.id, { amount: v ? Number(v) : undefined })}
+                    />
+                  </div>
+                )}
+                <button type="button" onClick={() => removeTier(tier.id)} className="h-9 w-9 rounded-lg flex items-center justify-center text-[#9ca3af] hover:text-red-500 hover:bg-red-50 transition-colors shrink-0" aria-label="Quitar tarifa">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            ))}
+            <button type="button" onClick={addTier} className="inline-flex items-center gap-1.5 text-sm font-medium text-[#009FD9] hover:underline self-start">
+              <Plus className="h-4 w-4" /> Agregar tarifa
+            </button>
+          </div>
+        </div>
+        {/* Experience is captured per service (in the Servicios tab), not globally. */}
+      </Section>
+
+      {/* ── Idiomas y aseguradoras ────────────────────────────────────── */}
+      <Section title="Idiomas y aseguradoras" desc="Opcional — ayudan a los clientes a filtrar">
+        {/* Languages — optional chip autocomplete (full language list) */}
+        <div>
+          <label className="text-sm font-medium text-[#374151] block mb-1.5">
+            Idiomas que hablás <span className="text-[#9ca3af] font-normal">(opcional)</span>
+          </label>
+          <LanguagesInput value={languages} onChange={(next) => { setLanguages(next); touch(); }} />
+        </div>
+
+        {/* Aseguradoras — insurance networks the pro belongs to */}
+        <div>
+          <label className="text-sm font-medium text-[#374151] block mb-1.5">
+            Aseguradoras <span className="text-[#9ca3af] font-normal">(opcional)</span>
+          </label>
+          <p className="text-xs text-[#9ca3af] mb-2">Marcá las redes de seguros con las que trabajás. Los clientes pueden filtrar por aseguradora.</p>
+          <AseguradorasInput value={insurers} onChange={(next) => { setInsurers(next); touch(); }} />
+        </div>
+      </Section>
 
       {/* Contact preference lives in the Disponibilidad tab now. */}
 
-      <div className="flex items-center gap-3">
+      {/* Save bar — always visible (auto-save also runs 1.5s after each edit) */}
+      <div className="flex items-center gap-3 pt-1">
         <Button onClick={() => handleSave(false)} loading={saving}>
           {saving ? "Guardando…" : "Guardar cambios"}
         </Button>
