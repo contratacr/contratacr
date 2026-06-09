@@ -70,7 +70,7 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "Error");
-      if (json.outcome === "verified") setNote("¡Listo! Verificamos tu cédula. Ya apareces en los resultados de búsqueda.");
+      if (json.outcome === "verified") setNote("¡Listo! Verificamos tu cédula. Ahora tienes la insignia “Identidad verificada” y subes en los resultados.");
       else setNote("Guardamos tu cédula. Si no se verificó automáticamente, quedó en revisión.");
       setNewCedula("");
       onSaved?.();
@@ -95,9 +95,10 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
             Abrimos un caso de soporte con tu solicitud. Un agente revisará tu documento y te avisaremos el resultado.
           </Banner>
         ) : (
-          <Banner tone="gray" icon={<Clock className="h-5 w-5" />} title="Pendiente de revisión">
-            Como no tienes identificación costarricense, un agente debe aprobar tu identidad manualmente.
-            <strong> Todavía no apareces en los resultados de búsqueda</strong> — te avisaremos en cuanto te aprobemos. Tu cuenta sigue activa.
+          <Banner tone="amber" icon={<AlertCircle className="h-5 w-5" />} title="Identidad sin verificar">
+            Como no tienes identificación costarricense, un agente revisará tu documento. Mientras tanto
+            <strong> ya apareces en los resultados de búsqueda con la etiqueta “Identidad sin verificar”</strong>,
+            por debajo de los profesionales verificados. Tu cuenta está activa — verifica tu identidad para obtener la insignia y subir en los resultados.
           </Banner>
         )}
 
@@ -162,9 +163,10 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
         </Banner>
       )}
       {status === "pending" && (
-        <Banner tone="gray" icon={<Clock className="h-5 w-5" />} title="Verificación pendiente">
-          No pudimos confirmar tu identidad automáticamente (cédula no encontrada o el nombre no coincide). Verifica
-          que tu nombre coincida con tu cédula y vuelve a intentar. Tu cuenta sigue activa.
+        <Banner tone="amber" icon={<AlertCircle className="h-5 w-5" />} title="Identidad sin verificar">
+          No pudimos confirmar tu identidad automáticamente (cédula no encontrada o el nombre no coincide).
+          <strong> Apareces en los resultados con la etiqueta “Identidad sin verificar”</strong>, por debajo de los verificados.
+          Verifica que tu nombre coincida con tu cédula y vuelve a intentar para obtener la insignia y subir en los resultados. Tu cuenta sigue activa.
         </Banner>
       )}
       {status === "under_appeal" && (

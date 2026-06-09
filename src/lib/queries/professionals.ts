@@ -105,12 +105,10 @@ export async function searchProfessionals(
           );
 
         if (modern) query = query.eq("is_banned", false);
-        // No-ID professionals (no_cr_id) stay hidden from /buscar until an admin
-        // approves them (verification_status = 'verified'). Visibility is driven
-        // solely by status — there is no manual block toggle.
-        if (modern) query = query.or("no_cr_id.eq.false,verification_status.eq.verified");
-        // Rejected profiles are never visible (visibility is status-driven; there
-        // is no manual block toggle).
+        // Unverified professionals (no_cr_id / pending / under appeal) ARE listed —
+        // shown with an explicit "Identidad sin verificar" label and ranked BELOW
+        // verified ones (see the verified-first pass below). Only rejected profiles
+        // are never visible.
         if (modern) query = query.neq("verification_status", "rejected");
         if (modern && filters.insurerId && filters.insurerId !== "todas") {
           query = query.contains("insurance_networks", [filters.insurerId]);
@@ -154,7 +152,9 @@ export async function searchProfessionals(
           }
         }
 
-        // Featured ("destacado") professionals surface first within the filtered set.
+        // Verified professionals surface first (built-in trust incentive), then
+        // featured, then the chosen sort. Finalized authoritatively in JS below.
+        query = query.order("is_verified", { ascending: false });
         query = query.order("is_featured", { ascending: false });
 
         switch (filters.sortBy) {
@@ -239,6 +239,15 @@ export async function searchProfessionals(
         };
         mapped.sort((a, b) => distOf(a) - distOf(b));
       }
+
+      // Verified-first ranking (default trust incentive): verified above unverified,
+      // featured above non-featured — applied as a STABLE pass so the chosen sort
+      // (rating/price/proximity/…) is preserved within each rank group. Unverified
+      // pros still appear, just lower.
+      const rank = (p: ProfessionalCardData) =>
+        (p.verificationStatus === "verified" ? 2 : 0) + (p.isFeatured ? 1 : 0);
+      mapped.sort((a, b) => rank(b) - rank(a));
+
       return mapped;
     } catch (err) {
       console.error("[searchProfessionals] Supabase error:", err);

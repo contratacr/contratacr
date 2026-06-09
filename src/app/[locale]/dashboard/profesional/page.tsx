@@ -160,7 +160,7 @@ export default function ProDashboardPage() {
                     <Badge variant="verified" className="gap-1"><ShieldCheck className="h-3 w-3" />Identidad verificada · visible para clientes</Badge>
                   )}
                   {(pro.verification_status === "pending" || pro.verification_status === "under_appeal") && (
-                    <Badge variant="warning">Pendiente de revisión</Badge>
+                    <Badge variant="warning">Identidad sin verificar · visible para clientes</Badge>
                   )}
                   {pro.verification_status === "rejected" && (
                     <Badge variant="error">Verificación rechazada</Badge>

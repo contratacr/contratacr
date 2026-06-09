@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { MapPin, ShieldCheck, Truck, Image as ImageIcon, Lock } from "lucide-react";
+import { MapPin, ShieldCheck, ShieldAlert, Truck, Image as ImageIcon, Lock } from "lucide-react";
 import { ProfessionalSchedule, type ScheduleSlot } from "@/components/professionals/professional-schedule";
 import { Link } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -144,9 +144,13 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
 
               {/* Verified badge + status chips + profession chips on one row. */}
               <div className="flex items-center gap-1.5 flex-wrap overflow-hidden">
-                {isVerified && (
+                {isVerified ? (
                   <span className="inline-flex items-center gap-1 rounded-md bg-[#dcfce7] px-1.5 py-0.5 text-[10px] font-semibold text-[#15803d]">
-                    <ShieldCheck className="h-3 w-3" /> Verificado
+                    <ShieldCheck className="h-3 w-3" /> Identidad verificada
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 rounded-md bg-[#fef3c7] border border-[#fde68a] px-1.5 py-0.5 text-[10px] font-semibold text-[#92400e]">
+                    <ShieldAlert className="h-3 w-3" /> Identidad sin verificar
                   </span>
                 )}
                 {contactOnly && (

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
-  X, CheckCircle2, MapPin, Shield, ArrowLeft, ChevronLeft, ChevronRight, Lock, CalendarPlus,
+  X, CheckCircle2, MapPin, Shield, ShieldAlert, ArrowLeft, ChevronLeft, ChevronRight, Lock, CalendarPlus,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { useTranslations } from "next-intl";
@@ -607,6 +607,17 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
 
             {/* Step content */}
             <div className="flex-1 overflow-y-auto px-6 py-5">
+
+              {/* Honest notice for unverified professionals (informative, not an
+                  endorsement — ContrataCR only displays verification status). */}
+              {step !== "success" && !professional.isVerified && (
+                <div className="mb-4 flex items-start gap-2 rounded-xl bg-[#fffbeb] border border-[#fde68a] px-3 py-2.5 text-[#92400e]">
+                  <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5" />
+                  <p className="text-xs leading-snug">
+                    Este profesional aún no ha verificado su identidad. Coordina con cuidado.
+                  </p>
+                </div>
+              )}
 
               {/* STEP: calendar */}
               {step === "calendar" && (
