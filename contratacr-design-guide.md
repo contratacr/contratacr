@@ -142,6 +142,11 @@ A professional is always **ONE card** (never split per location). **Every card i
 ### Long forms — collapsible sections
 Break long forms (pro profile, etc.) into **accordion sections** with a header + chevron. **First section open by default, the rest collapsed.** Group logically (e.g. Datos básicos · Profesión · Ubicación y cobertura · Contacto y precios · …). Keep the save bar always visible. This kills the endless single-column scroll.
 
+### Home / landing page (the standard structure)
+Focused — **less is more: a focused home looks more professional than a crowded one.** In order: **(1) Hero** — a strong headline + the **primary search (service + location)** front and center + "Popular:" quick links + a row of honest trust signals; no hero stock photo (a subtle brand glow instead). **(2) Servicios populares** — a clean **icon grid** (emoji in a brand-tint circle, no stock photos), each tile → `/buscar?categoria=…`, plus "Ver todas" → /categorias. **(3) Así de fácil** — 3 numbered steps (Busca · Elige · Coordina por WhatsApp). **(4) Por qué ContrataCR (trust)** — 4 honest cards: identidad verificada (TSE padrón), sin intermediarios, reseñas reales (two-way), en todo el país. **(5) Professional CTA** — a dark brand band with benefit chips + a **session-aware** "Registra tu perfil gratis" (`SmartRegisterLink`: logged-out → registration, logged-in → panel). Then footer.
+- **Do NOT** add phone mockups, a "coming soon" app-store section, or a brand-logo strip (unaffiliated brand names imply a false partnership — a veracity/legal risk). Imagery must be authentically Costa Rican or icon-based — **no US-style stock photos**.
+- Subtle scroll reveals only (`FadeInUp`); the page must feel fast.
+
 ### Modals & drawers
 Centered modal for focused tasks (booking); slide-over drawer for filters/secondary panels on small screens. Dismiss on click-outside / Escape. Keep them as compact as the content allows.
 

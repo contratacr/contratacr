@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, MapPin, User } from "lucide-react";
+import { Search, MapPin, User, ShieldCheck, BadgeCheck } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import Image from "next/image";
+import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { cn } from "@/lib/utils";
 import type { SearchSuggestion } from "@/app/api/search/suggestions/route";
 
@@ -185,6 +185,9 @@ export function LandingHero() {
 
   return (
     <section className="relative bg-white overflow-hidden">
+      {/* Subtle brand glow behind the headline (premium feel, no hero photo). */}
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[460px] bg-[radial-gradient(70%_60%_at_50%_0%,#EBF5FB_0%,transparent_72%)]" />
+
       {/* Headline + subtitle — narrower container for readability */}
       <div className="relative mx-auto max-w-3xl px-4 sm:px-6 text-center pt-20 sm:pt-28 pb-6">
         <h1
@@ -301,20 +304,17 @@ export function LandingHero() {
         </div>
       </div>
 
-      {/* Arch / dome image — responsive height */}
-      <div className="flex justify-center px-4 pb-0">
-        <div
-          className="relative overflow-hidden w-full h-[180px] sm:h-[280px] md:h-[360px] lg:h-[420px]"
-          style={{ maxWidth: 800, borderRadius: "50% 50% 0 0 / 100% 100% 0 0" }}
-        >
-          <Image
-            src="https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=1400&q=85"
-            alt="Casa residencial en Costa Rica"
-            fill
-            className="object-cover object-center"
-            priority
-            sizes="(min-width:860px) 800px, 100vw"
-          />
+      {/* Honest trust signals — no brand logos, no stock photos. */}
+      <div className="relative mx-auto max-w-3xl px-4 pb-20 sm:pb-24">
+        <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs sm:text-sm text-[#6b7280]">
+          {[
+            { icon: <ShieldCheck className="h-4 w-4 text-[#16a34a]" />, label: "Identidad verificada" },
+            { icon: <MapPin className="h-4 w-4 text-[#009FD9]" />, label: "En las 7 provincias" },
+            { icon: <WhatsAppIcon className="h-4 w-4 text-[#25D366]" />, label: "Coordinas por WhatsApp" },
+            { icon: <BadgeCheck className="h-4 w-4 text-[#009FD9]" />, label: "Sin comisiones" },
+          ].map((c) => (
+            <span key={c.label} className="inline-flex items-center gap-1.5 font-medium">{c.icon}{c.label}</span>
+          ))}
         </div>
       </div>
     </section>
