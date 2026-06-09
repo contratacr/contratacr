@@ -204,6 +204,9 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const windowDays = days.slice(offset, offset + COLS);
   const canPrev = offset > 0;
   const canNext = offset + COLS < days.length;
+  // Don't waste space on a 3-column grid of "—" when there are no upcoming slots
+  // for the selected location/profession; show a single compact line instead.
+  const hasUpcoming = days.some((d) => d.items.length > 0);
 
   return (
     <div className="flex flex-col gap-2">
@@ -227,6 +230,9 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
         Horarios de <span className="font-semibold text-[#374151]">{categoryName}</span>
         {effectiveLabel && effectiveLabel !== "General" && <> · <span className="font-semibold text-[#374151]">{effectiveLabel}</span></>}
       </p>
+      {!hasUpcoming ? (
+        <p className="text-[11px] text-[#9ca3af] py-0.5">Sin horarios en los próximos días.</p>
+      ) : (
       <div className="flex items-stretch gap-1.5">
         <button
           type="button"
@@ -279,6 +285,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           <ChevronRight className="h-4 w-4" />
         </button>
       </div>
+      )}
 
       <Link
         href={`/profesionales/${professional.slug}`}
