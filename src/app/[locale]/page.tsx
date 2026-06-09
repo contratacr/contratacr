@@ -1,13 +1,19 @@
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingHero } from "@/components/landing/landing-hero";
 import { ProsSection } from "@/components/landing/pros-section";
+import { HowItWorks } from "@/components/landing/how-it-works";
 import { TrustBenefits } from "@/components/landing/trust-benefits";
-import { TrustedProvinces } from "@/components/landing/trusted-provinces";
+import { FindByZone } from "@/components/landing/find-by-zone";
+import { GrowBusinessCta } from "@/components/landing/grow-business-cta";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { FadeInUp } from "@/components/landing/fade-in-up";
 import { BackToTop } from "@/components/landing/back-to-top";
+import { getZoneCoverage } from "@/lib/queries/professionals";
 
-export default function HomePage() {
+export default async function HomePage() {
+  // Real zone coverage (no fabricated cantón counts) for the find-by-zone band.
+  const coverage = await getZoneCoverage();
+
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <LandingNavbar />
@@ -15,9 +21,14 @@ export default function HomePage() {
       {/* Hero — rotating headline + primary search */}
       <LandingHero />
 
-      {/* "Profesionales para cada proyecto en tu zona" — icon tabs + cards */}
+      {/* "Profesionales para cada proyecto" — two-row category carousel */}
       <FadeInUp>
         <ProsSection />
+      </FadeInUp>
+
+      {/* How it works — 3 steps */}
+      <FadeInUp delay={40}>
+        <HowItWorks />
       </FadeInUp>
 
       {/* Client trust benefits */}
@@ -25,9 +36,14 @@ export default function HomePage() {
         <TrustBenefits />
       </FadeInUp>
 
-      {/* Zones — find professionals by province */}
+      {/* Zones — find professionals by province (real coverage) */}
       <FadeInUp delay={40}>
-        <TrustedProvinces />
+        <FindByZone coverage={coverage} />
+      </FadeInUp>
+
+      {/* Professional recruitment CTA */}
+      <FadeInUp delay={40}>
+        <GrowBusinessCta />
       </FadeInUp>
 
       <BackToTop />

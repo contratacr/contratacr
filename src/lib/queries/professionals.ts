@@ -259,6 +259,85 @@ export async function searchProfessionals(
 }
 
 // ---------------------------------------------------------------------------
+// Real zone coverage (home "Encuentra profesionales en tu zona")
+// ---------------------------------------------------------------------------
+// Returns, per province id, the set of cantón ids that GENUINELY have at least
+// one listed professional — mirroring /buscar search semantics so a clicked
+// zone never lands on an empty result. NO fabricated counts: a province with no
+// professionals returns an empty list, and the UI then hides the count / shows
+// an honest empty state. Best-effort + column-fallback so it never breaks home.
+export type ZoneCoverage = {
+  /** province id → covered cantón ids (deduped). Empty array = no coverage yet. */
+  byProvince: Record<string, string[]>;
+  /** True if ANY professional covers the whole country (every zone then matches). */
+  countryWide: boolean;
+};
+
+export async function getZoneCoverage(): Promise<ZoneCoverage> {
+  const empty: ZoneCoverage = { byProvince: {}, countryWide: false };
+  if (!SUPABASE_CONFIGURED) return empty;
+  try {
+    const { createClient } = await import("@/lib/supabase/server");
+    const { getProvinceById } = await import("@/lib/data/cr-geography");
+    const supabase = await createClient();
+
+    const select = (modern: boolean) =>
+      supabase
+        .from("professionals")
+        .select(
+          `provincia_id, canton_id${modern ? ", search_provincias, search_cantones, coverage_provincias, coverage_country, is_banned" : ""}, verification_status, profiles(is_disabled)`
+        );
+
+    let modern = true;
+    let res = await select(true).eq("is_banned", false).neq("verification_status", "rejected");
+    if (res.error && /is_banned|search_|coverage_|column/i.test(res.error.message)) {
+      modern = false;
+      res = await select(false).neq("verification_status", "rejected");
+    }
+    if (res.error || !res.data) return empty;
+
+    const byProvince: Record<string, Set<string>> = {};
+    let countryWide = false;
+    const add = (prov?: string | null, canton?: string | null) => {
+      if (!prov) return;
+      (byProvince[prov] ??= new Set<string>());
+      if (canton) byProvince[prov].add(canton);
+    };
+
+    for (const row of res.data as unknown as Record<string, unknown>[]) {
+      if ((row.profiles as { is_disabled?: boolean } | null)?.is_disabled) continue;
+
+      add(row.provincia_id as string, row.canton_id as string);
+
+      const searchProvs = Array.isArray(row.search_provincias) ? (row.search_provincias as string[]) : [];
+      const searchCants = Array.isArray(row.search_cantones) ? (row.search_cantones as string[]) : [];
+      for (const p of searchProvs) add(p, null);
+      for (const c of searchCants) {
+        const prov = getProvinceById((c.split("-")[0] as string) || "")?.id ?? c.split("-")[0];
+        add(prov, c);
+      }
+
+      // Whole-province coverage → every cantón in that province genuinely matches.
+      const covProvs = Array.isArray(row.coverage_provincias) ? (row.coverage_provincias as string[]) : [];
+      for (const pid of covProvs) {
+        const prov = getProvinceById(pid);
+        if (prov) prov.cantons.forEach((ct) => add(prov.id, ct.id));
+      }
+
+      if (row.coverage_country) countryWide = true;
+    }
+
+    return {
+      byProvince: Object.fromEntries(Object.entries(byProvince).map(([k, v]) => [k, [...v]])),
+      countryWide,
+    };
+  } catch (err) {
+    console.error("[getZoneCoverage] Supabase error:", err);
+    return empty;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Single professional by slug
 // ---------------------------------------------------------------------------
 

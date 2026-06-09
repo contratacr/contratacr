@@ -125,7 +125,7 @@ export function LandingFooter() {
           <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
             <Link href="/terminos" className="text-xs text-white/40 hover:text-white transition-colors">Términos y Condiciones</Link>
             <Link href="/privacidad" className="text-xs text-white/40 hover:text-white transition-colors">Política de Privacidad</Link>
-            <span className="text-xs text-white/25">Hecho en Costa Rica 🇨🇷</span>
+            <span className="text-xs text-white/25">Hecho en Costa Rica</span>
           </div>
         </div>
       </div>
