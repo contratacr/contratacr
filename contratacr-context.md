@@ -16,6 +16,15 @@ _Earlier: 2026-06-07 (sprint 24 — fully automatic identity verification: self-
 
 ---
 
+## Sprint 45 (2026-06-09) — "¿Cómo funciona?" redesigned (clear two-audience flow + trust)
+
+No migration. Presentation/content only.
+- Restructured into clearly separated **Para clientes** (3 numbered steps: Busca → Elige con confianza → Coordina por WhatsApp, plus the two ways to start: buscar / publicar proyecto) and **Para profesionales** (3 steps: Crea tu perfil → **Verifica tu identidad — cédula contra el padrón/TSE** → Recibe clientes) paths.
+- Added a **"Pensado para la confianza"** section (identidad verificada · sin intermediarios — *ContrataCR conecta, no garantiza resultados ni cobra comisiones* · reseñas en ambas vías) and refreshed the FAQ (payments off-platform, intermediary framing, two-way reviews).
+- Pro CTA is **session-aware** (`SmartRegisterLink`); fixed residual "vos" (Acordás→Acuerdan, Revisás→Revisas); design-guide tokens (numbered Step cards, brand-glow hero, dark final CTA); subtle FadeInUp. Recorded the informational-page pattern in the guide.
+
+---
+
 ## Sprint 44 (2026-06-09) — home page refocused (less-is-more) + honest trust, no fake brands/app
 
 No migration. Presentation/content only — no panels/buscar/booking/logic touched. Recorded as the standard home structure in the design guide.
