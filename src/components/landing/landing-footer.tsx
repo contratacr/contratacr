@@ -122,8 +122,10 @@ export function LandingFooter() {
           <p className="text-xs text-white/25">
             © {new Date().getFullYear()} ContrataCR. Todos los derechos reservados.
           </p>
-          <div className="flex items-center gap-4">
-            <span className="text-xs text-white/25">Diseñado y desarrollado en Costa Rica</span>
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
+            <Link href="/terminos" className="text-xs text-white/40 hover:text-white transition-colors">Términos y Condiciones</Link>
+            <Link href="/privacidad" className="text-xs text-white/40 hover:text-white transition-colors">Política de Privacidad</Link>
+            <span className="text-xs text-white/25">Hecho en Costa Rica 🇨🇷</span>
           </div>
         </div>
       </div>
