@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Phone } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, MapPin, Phone } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { BookingModal } from "@/components/booking/booking-modal";
 import { ClientRegistrationModal } from "@/components/auth/client-registration-modal";
@@ -37,8 +37,11 @@ function toKey(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-function headerLabel(d: Date): string {
-  return `${DAY_SHORT[d.getDay()]} ${d.getDate()} ${MONTH_SHORT[d.getMonth()]}`;
+function dayLabel(d: Date, offset: number, today: Date): string {
+  if (offset === 0) return "Hoy";
+  if (offset === 1) return "Mañana";
+  if (d.getMonth() !== today.getMonth()) return `${d.getDate()} ${MONTH_SHORT[d.getMonth()].toLowerCase()}`;
+  return `${DAY_SHORT[d.getDay()]} ${d.getDate()}`;
 }
 
 function telHref(whatsapp: string): string {
@@ -123,7 +126,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       // Hide any slot within the 15-minute lead time (today only) — it's no longer
       // bookable, so it must stop showing in search.
       const items = (byDate.get(key) ?? []).filter((s) => !isTooSoonCR(key, s.time)).sort((a, b) => a.time.localeCompare(b.time));
-      return { key, label: headerLabel(d), items };
+      return { key, label: dayLabel(d, i, today), soon: i <= 1, items };
     });
   }, [filteredSlots]);
 
@@ -194,99 +197,111 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     );
   }
 
-  // ── Public availability — date-column carousel ────────────────────────
-  const windowDays = days.slice(offset, offset + COLS);
-  const canPrev = offset > 0;
-  const canNext = offset + COLS < days.length;
-  // Don't waste space on a 3-column grid of "—" when there are no upcoming slots
-  // for the selected location/profession; show a single compact line instead.
-  const hasUpcoming = days.some((d) => d.items.length > 0);
+  // ── Public availability — packed date columns (skip empty days) ───────
+  // Show only the upcoming days that actually have bookable slots (no "—"
+  // filler columns), paged 3 at a time — matches the redesign.
+  const daysWithSlots = days.filter((d) => d.items.length > 0);
+  const hasUpcoming = daysWithSlots.length > 0;
+  const maxOffset = Math.max(0, daysWithSlots.length - COLS);
+  const effOffset = Math.min(offset, maxOffset);
+  const windowDays = daysWithSlots.slice(effOffset, effOffset + COLS);
+  const canPrev = effOffset > 0;
+  const canNext = effOffset + COLS < daysWithSlots.length;
 
   return (
-    <div className="flex flex-col gap-2 h-full">
-      {/* Location chips/tabs — the client picks WHICH place before booking, so hours
-          are never an undifferentiated mix (item 3). Defaults to the first place. */}
-      {locationGroups.length > 1 && (
-        <div className="flex flex-wrap gap-1.5">
-          {locationGroups.map((g) => (
-            <button
-              key={g.label}
-              onClick={(e) => { e.stopPropagation(); setSelectedLoc(g.label); }}
-              className={`px-2 py-0.5 rounded-md text-[11px] font-medium transition-colors ${effectiveLabel === g.label ? "bg-[#009FD9] text-white" : "bg-[#f3f4f6] text-[#374151] hover:bg-[#EBF5FB]"}`}
-            >
-              {g.label}
-            </button>
-          ))}
+    <div className="flex flex-col gap-1.5 h-full">
+      {/* Location — a selector when the pro publishes hours at more than one place
+          (item 3), else a single label. Defaults to the first place. */}
+      {locationGroups.length > 1 ? (
+        <div className="relative">
+          <MapPin className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-[#009FD9] pointer-events-none" />
+          <select
+            value={effectiveLabel ?? ""}
+            onClick={(e) => e.stopPropagation()}
+            onChange={(e) => { e.stopPropagation(); setSelectedLoc(e.target.value); setOffset(0); }}
+            aria-label="Ubicación"
+            className="w-full appearance-none rounded-lg border border-[#bfdbfe] bg-[#EBF5FB] pl-6 pr-6 py-1 text-[11px] font-semibold text-[#0089bb] focus:outline-none focus:ring-2 focus:ring-[#009FD9] cursor-pointer truncate"
+          >
+            {locationGroups.map((g) => <option key={g.label} value={g.label}>{g.label}</option>)}
+          </select>
+          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-[#0089bb] pointer-events-none" />
         </div>
-      )}
-      {/* Service + location caption so it's always clear what these hours are for. */}
-      <p className="text-[11px] text-[#6b7280] leading-tight truncate">
-        Horarios de <span className="font-semibold text-[#374151]">{categoryName}</span>
-        {effectiveLabel && effectiveLabel !== "General" && <> · <span className="font-semibold text-[#374151]">{effectiveLabel}</span></>}
-      </p>
-      <div className="flex-1 min-h-0 overflow-hidden">
-      {!hasUpcoming ? (
-        <p className="text-[11px] text-[#9ca3af] py-0.5">Sin horarios en los próximos días.</p>
       ) : (
-      <div className="flex items-stretch gap-1.5">
-        <button
-          type="button"
-          disabled={!canPrev}
-          onClick={(e) => { e.stopPropagation(); setOffset((o) => Math.max(0, o - COLS)); }}
-          aria-label="Días anteriores"
-          className="flex w-6 shrink-0 items-center justify-center rounded-md text-[#9ca3af] hover:text-[#009FD9] disabled:opacity-30 disabled:hover:text-[#9ca3af]"
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </button>
-
-        <div className="grid flex-1 grid-cols-3 gap-1.5">
-          {windowDays.map((day) => (
-            <div key={day.key} className="flex flex-col gap-1.5">
-              <p className="text-center text-[11px] font-semibold text-[#374151] leading-tight">{day.label}</p>
-              {day.items.length === 0 ? (
-                <p className="text-center text-[11px] text-[#9ca3af] py-1">—</p>
-              ) : (
-                <>
-                  {day.items.slice(0, 2).map((slot) => (
-                    <button
-                      key={`${slot.time}-${slot.locationId ?? ""}`}
-                      onClick={(e) => { e.stopPropagation(); pick(slot); }}
-                      className="w-full px-1 py-1 rounded-md text-[11px] font-medium text-[#009FD9] bg-[#EBF5FB] hover:bg-[#009FD9] hover:text-white transition-colors"
-                    >
-                      {slot.time}
-                    </button>
-                  ))}
-                  {day.items.length > 2 && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); pick(day.items[2]); }}
-                      className="text-[10px] text-[#9ca3af] hover:text-[#009FD9] transition-colors"
-                    >
-                      +{day.items.length - 2}
-                    </button>
-                  )}
-                </>
-              )}
-            </div>
-          ))}
-        </div>
-
-        <button
-          type="button"
-          disabled={!canNext}
-          onClick={(e) => { e.stopPropagation(); setOffset((o) => Math.min(days.length - COLS, o + COLS)); }}
-          aria-label="Días siguientes"
-          className="flex w-6 shrink-0 items-center justify-center rounded-md text-[#9ca3af] hover:text-[#009FD9] disabled:opacity-30 disabled:hover:text-[#9ca3af]"
-        >
-          <ChevronRight className="h-4 w-4" />
-        </button>
-      </div>
+        <p className="flex items-center gap-1 text-[11px] leading-tight truncate">
+          {effectiveLabel && effectiveLabel !== "General" ? (
+            <>
+              <MapPin className="h-3 w-3 text-[#009FD9] shrink-0" />
+              <span className="truncate font-medium text-[#374151]">{effectiveLabel}</span>
+            </>
+          ) : (
+            <span className="text-[#6b7280]">Próximos horarios</span>
+          )}
+        </p>
       )}
+
+      <div className="flex-1 min-h-0 flex items-center">
+        {!hasUpcoming ? (
+          <div className="w-full rounded-lg bg-[#f9fafb] border border-[#f3f4f6] px-2.5 py-2">
+            <p className="text-[11px] text-[#9ca3af] leading-snug">Sin horarios próximos. Solicita el servicio para coordinar.</p>
+          </div>
+        ) : (
+          <div className="flex w-full items-start gap-1">
+            <button
+              type="button"
+              disabled={!canPrev}
+              onClick={(e) => { e.stopPropagation(); setOffset(() => Math.max(0, effOffset - COLS)); }}
+              aria-label="Días anteriores"
+              className="flex w-4 shrink-0 self-center items-center justify-center rounded text-[#9ca3af] enabled:hover:text-[#009FD9] disabled:opacity-25"
+            >
+              <ChevronLeft className="h-[15px] w-[15px]" />
+            </button>
+
+            <div className="grid flex-1 grid-cols-3 gap-1.5">
+              {windowDays.map((day) => {
+                const extra = day.items.length - 2;
+                return (
+                  <div key={day.key} className="flex flex-col gap-1 min-w-0">
+                    <p className={`text-center text-[10px] font-bold uppercase tracking-wide leading-tight truncate ${day.soon ? "text-[#009FD9]" : "text-[#9ca3af]"}`}>{day.label}</p>
+                    {day.items.slice(0, 2).map((slot) => (
+                      <button
+                        key={`${slot.time}-${slot.locationId ?? ""}`}
+                        onClick={(e) => { e.stopPropagation(); pick(slot); }}
+                        className="w-full rounded-md py-0.5 text-[11px] font-semibold text-[#0089bb] bg-[#EBF5FB] hover:bg-[#009FD9] hover:text-white transition-colors leading-none"
+                      >
+                        {slot.time}
+                      </button>
+                    ))}
+                    {extra > 0 && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); pick(day.items[2]); }}
+                        title="Ver horario completo"
+                        className="w-full rounded-md py-0.5 text-[10px] font-bold leading-none text-[#0089bb] border border-dashed border-[#bfdbfe] hover:bg-[#EBF5FB] transition-colors"
+                      >
+                        +{extra}
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            <button
+              type="button"
+              disabled={!canNext}
+              onClick={(e) => { e.stopPropagation(); setOffset(() => Math.min(maxOffset, effOffset + COLS)); }}
+              aria-label="Días siguientes"
+              className="flex w-4 shrink-0 self-center items-center justify-center rounded text-[#9ca3af] enabled:hover:text-[#009FD9] disabled:opacity-25"
+            >
+              <ChevronRight className="h-[15px] w-[15px]" />
+            </button>
+          </div>
+        )}
       </div>
 
       <Link
         href={`/profesionales/${professional.slug}`}
         onClick={(e) => e.stopPropagation()}
-        className="block text-center text-xs font-medium text-[#009FD9] hover:underline"
+        className="block text-center text-[10px] font-medium text-[#009FD9] hover:underline"
       >
         Ver horario completo
       </Link>
