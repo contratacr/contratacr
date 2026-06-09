@@ -115,22 +115,19 @@ select:focus-visible {
 }
 
 /* ─── Category carousel: ONE staggered (zigzag) track ───
-   A single horizontal scroller (JS-driven scrollLeft for auto + manual drag/
-   arrows). The track holds the full set TWICE for a seamless loop; spacing is a
-   per-card right-margin so one set = N×(card+margin) and the wrap is exact.
-   Soft edge fade so cards glide in/out. */
+   A single horizontal band. Motion is TRANSFORM-based on `.cat-track` (JS rAF
+   for auto + arrow tweens + pointer drag) — NOT native scroll, which rounds
+   scrollLeft to integers and stalls a sub-pixel/frame auto-scroll. The track
+   holds the full set TWICE for a seamless loop; per-card right-margin keeps one
+   set width exact. `touch-action: pan-y` lets vertical page scroll through while
+   horizontal drags arrive as pointer events. Soft edge fade at the rails. */
 .cat-carousel {
   -webkit-mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent);
           mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent);
-  overflow-x: auto;
-  overflow-y: hidden;
-  -ms-overflow-style: none;   /* IE/Edge */
-  scrollbar-width: none;      /* Firefox */
-  touch-action: pan-x;
-  overscroll-behavior-x: contain;
+  overflow: hidden;
+  touch-action: pan-y;
 }
-.cat-carousel::-webkit-scrollbar { display: none; } /* Chrome/Safari */
-.cat-carousel.is-dragging { cursor: grabbing; scroll-behavior: auto; }
+.cat-carousel.is-dragging { cursor: grabbing; }
 .cat-track {
   display: flex;
   flex-wrap: nowrap;
