@@ -14,7 +14,7 @@
       "title": "Encuentra el profesional",
       "titleHighlight": "que necesitas",
       "titleSuffix": "en Costa Rica",
-      "subtitle": "Conectamos clientes con profesionales verificados cerca de vos. Sin intermediarios, sin pagos en la app. Simple y confiable."
+      "subtitle": "Conectamos clientes con profesionales verificados cerca de ti. Sin intermediarios, sin pagos en la app. Simple y confiable."
     },
     "stats": {
       "professionals": "Profesionales",
@@ -24,7 +24,7 @@
     },
     "categories": {
       "title": "¿Qué servicio necesitas?",
-      "subtitle": "Explorá todas las categorías disponibles"
+      "subtitle": "Explora todas las categorías disponibles"
     },
     "featured": {
       "title": "Profesionales destacados",
@@ -35,16 +35,16 @@
       "title": "¿Cómo funciona?",
       "subtitle": "Simple, rápido y sin complicaciones",
       "step1": {
-        "title": "Buscá el servicio",
-        "desc": "Filtrá por categoría y cantón para encontrar al profesional más cercano a vos."
+        "title": "Busca el servicio",
+        "desc": "Filtra por categoría y cantón para encontrar al profesional más cercano a ti."
       },
       "step2": {
-        "title": "Revisá perfiles",
-        "desc": "Leé reseñas verificadas, mirá el portafolio y comparálos."
+        "title": "Revisa perfiles",
+        "desc": "Leé reseñas verificadas, mira el portafolio y comparálos."
       },
       "step3": {
         "title": "Contactalo por WhatsApp",
-        "desc": "Un tap y hablás directo con el profesional. Acordáis precio y fecha sin intermediarios."
+        "desc": "Un tap y hablas directo con el profesional. Acuerdan precio y fecha sin intermediarios."
       }
     },
     "trust": {
@@ -62,8 +62,8 @@
       }
     },
     "cta": {
-      "title": "¿Sos profesional de servicios?",
-      "subtitle": "Registrá tu perfil gratis y empezá a recibir clientes hoy mismo. Sin comisiones. Sin pagos hasta que vos decidás.",
+      "title": "¿Eres profesional de servicios?",
+      "subtitle": "Registra tu perfil gratis y empieza a recibir clientes hoy mismo. Sin comisiones. Sin pagos hasta que tú decidas.",
       "button": "Registrar mi perfil gratis",
       "learnMore": "Saber más",
       "feature1": "✓ Registro en 3 pasos",
@@ -81,7 +81,7 @@
     "resultsInCR": "{count} profesionales en Costa Rica",
     "noResults": {
       "title": "No encontramos resultados",
-      "desc": "Intentá con otra categoría o expandí la zona de búsqueda."
+      "desc": "Intenta con otra categoría o expandí la zona de búsqueda."
     },
     "filters": {
       "title": "Filtros",
@@ -92,7 +92,7 @@
       "allProvinces": "Todas",
       "canton": "Cantón",
       "allCantons": "Todos los cantones",
-      "selectProvince": "Seleccioná provincia",
+      "selectProvince": "Selecciona provincia",
       "sortBy": "Ordenar por"
     },
     "sort": {
@@ -152,26 +152,26 @@
   "auth": {
     "login": {
       "title": "Bienvenido de vuelta",
-      "subtitle": "Ingresá a tu cuenta",
+      "subtitle": "Ingresa a tu cuenta",
       "email": "Correo electrónico",
       "password": "Contraseña",
       "forgotPassword": "¿Olvidaste tu contraseña?",
       "submit": "Ingresar",
       "submitting": "Ingresando...",
-      "noAccount": "¿No tenés cuenta?",
-      "signUp": "Registrate gratis",
+      "noAccount": "¿No tienes cuenta?",
+      "signUp": "Regístrate gratis",
       "or": "o"
     },
     "register": {
       "title": "Crear cuenta",
-      "subtitle": "¿Cómo querés usar ContrataCR?",
+      "subtitle": "¿Cómo quieres usar ContrataCR?",
       "client": "Soy cliente",
       "clientDesc": "Quiero contratar servicios profesionales",
       "professional": "Soy profesional",
       "professionalDesc": "Quiero ofrecer mis servicios",
       "register": "Registrarme",
-      "alreadyHaveAccount": "¿Ya tenés cuenta?",
-      "signIn": "Iniciá sesión"
+      "alreadyHaveAccount": "¿Ya tienes cuenta?",
+      "signIn": "Inicia sesión"
     }
   },
   "registration": {
@@ -186,33 +186,33 @@
       "verifyNote": "Verificamos tu identidad con el Registro Civil de Costa Rica",
       "cedula": "Número de cédula",
       "cedulaPlaceholder": "101230456",
-      "cedulaHint": "Ingresá tu cédula para verificar tu identidad automáticamente",
+      "cedulaHint": "Ingresa tu cédula para verificar tu identidad automáticamente",
       "verifiedName": "Nombre verificado",
       "email": "Correo electrónico",
       "emailPlaceholder": "tu@email.com",
       "password": "Contraseña",
       "passwordPlaceholder": "Mínimo 8 caracteres",
-      "passwordHint": "Usá una combinación de letras y números",
-      "terms": "Al registrarte aceptás nuestros",
+      "passwordHint": "Usa una combinación de letras y números",
+      "terms": "Al registrarte aceptas nuestros",
       "termsLink": "Términos de uso",
       "category": "Profesión",
-      "categoryPlaceholder": "Seleccioná tu especialidad",
+      "categoryPlaceholder": "Selecciona tu especialidad",
       "province": "Provincia",
-      "provincePlaceholder": "Seleccioná tu provincia",
+      "provincePlaceholder": "Selecciona tu provincia",
       "canton": "Cantón",
-      "cantonPlaceholder": "Seleccioná tu cantón",
-      "cantonDisabled": "Primero seleccioná provincia",
+      "cantonPlaceholder": "Selecciona tu cantón",
+      "cantonDisabled": "Primero selecciona provincia",
       "whatsapp": "WhatsApp",
       "whatsappHint": "Número de 8 dígitos. Los clientes te contactarán aquí.",
       "bio": "Descripción de tus servicios",
       "bioMin": "mínimo 30 caracteres",
-      "bioPlaceholder": "Describí tus servicios, experiencia y lo que te diferencia de otros profesionales...",
+      "bioPlaceholder": "Describe tus servicios, experiencia y lo que te diferencia de otros profesionales...",
       "yearsExp": "Años de experiencia",
       "yearsExpPlaceholder": "Ej: 5",
       "hourlyRate": "Tarifa por hora (₡)",
       "hourlyRatePlaceholder": "Ej: 10000",
       "optional": "Opcional",
-      "addLater": "Podés agregar después:",
+      "addLater": "Puedes agregar después:",
       "photos": "Fotos de trabajos",
       "coverage": "Zona de cobertura",
       "availability": "Disponibilidad",
@@ -225,12 +225,12 @@
         "desc": "Tu perfil está listo. En breve aparecerá en los resultados de búsqueda.",
         "viewProfile": "Ver mi perfil público"
       },
-      "alreadyHaveAccount": "¿Ya tenés cuenta?",
-      "signIn": "Iniciá sesión"
+      "alreadyHaveAccount": "¿Ya tienes cuenta?",
+      "signIn": "Inicia sesión"
     },
     "client": {
       "title": "Crear cuenta de cliente",
-      "subtitle": "Encontrá profesionales cerca de vos. Gratis.",
+      "subtitle": "Encuentra profesionales cerca de ti. Gratis.",
       "oauthBanner": "Identidad confirmada",
       "fullName": "Nombre completo",
       "fullNamePlaceholder": "Tu nombre completo",
@@ -242,20 +242,20 @@
       "phonePlaceholder": "Ej: 8888-8888",
       "optional": "(opcional)",
       "province": "Provincia",
-      "provincePlaceholder": "Seleccioná tu provincia",
+      "provincePlaceholder": "Selecciona tu provincia",
       "canton": "Cantón",
-      "cantonPlaceholder": "Seleccioná tu cantón",
-      "terms": "Al registrarte aceptás nuestros",
+      "cantonPlaceholder": "Selecciona tu cantón",
+      "terms": "Al registrarte aceptas nuestros",
       "termsLink": "Términos de uso",
       "submit": "Crear cuenta gratis",
       "submitting": "Creando cuenta...",
       "success": {
         "title": "¡Bienvenido a ContrataCR!",
-        "desc": "Tu cuenta está lista. Ahora podés buscar y contratar profesionales cerca de vos.",
+        "desc": "Tu cuenta está lista. Ahora puedes buscar y contratar profesionales cerca de ti.",
         "button": "Ir a mi panel"
       },
-      "alreadyHaveAccount": "¿Ya tenés cuenta?",
-      "signIn": "Iniciá sesión"
+      "alreadyHaveAccount": "¿Ya tienes cuenta?",
+      "signIn": "Inicia sesión"
     }
   },
   "footer": {
@@ -284,7 +284,7 @@
   },
   "notFound": {
     "title": "Página no encontrada",
-    "desc": "La página que buscás no existe o fue movida.",
+    "desc": "La página que buscas no existe o fue movida.",
     "home": "Volver al inicio"
   },
   "booking": {
@@ -295,16 +295,16 @@
       "forOther": "Para otra persona"
     },
     "step2": {
-      "title": "Verificá tu identidad",
+      "title": "Verifica tu identidad",
       "cedula": "Número de cédula",
       "cedulaPlaceholder": "101230456",
       "cedulaHint": "Tu nombre se auto-completa del Registro Civil",
       "verify": "Verificar",
       "verifying": "Verificando...",
-      "notFound": "Cédula no encontrada. Verificá el número."
+      "notFound": "Cédula no encontrada. Verifica el número."
     },
     "step3": {
-      "title": "Confirmá tu información",
+      "title": "Confirma tu información",
       "source": "Información obtenida del Registro Civil de Costa Rica",
       "name": "Nombre completo",
       "correct": "¿Es correcta tu información?",
@@ -312,9 +312,9 @@
       "no": "Ingresar otra cédula"
     },
     "step4": {
-      "title": "¿Qué necesitás?",
-      "description": "Describí el servicio",
-      "descPlaceholder": "Contale brevemente al profesional qué necesitás...",
+      "title": "¿Qué necesitas?",
+      "description": "Describe el servicio",
+      "descPlaceholder": "Cuéntale brevemente al profesional qué necesitas...",
       "date": "¿Cuándo te viene bien?",
       "datePlaceholder": "Ej: Este fin de semana, Próximo lunes por la tarde...",
       "email": "Tu email",
@@ -329,7 +329,7 @@
     },
     "success": {
       "title": "¡Solicitud enviada!",
-      "desc": "Tu solicitud fue registrada. Ahora podés continuar la coordinación por WhatsApp.",
+      "desc": "Tu solicitud fue registrada. Ahora puedes continuar la coordinación por WhatsApp.",
       "whatsapp": "Continuar por WhatsApp",
       "close": "Listo"
     },
@@ -352,7 +352,7 @@
       "profile": {
         "title": "Información del perfil",
         "bio": "Descripción",
-        "bioPlaceholder": "Describí tus servicios...",
+        "bioPlaceholder": "Describe tus servicios...",
         "whatsapp": "WhatsApp",
         "rate": "Tarifa por hora (₡)",
         "yearsExp": "Años de experiencia",
@@ -362,15 +362,15 @@
       },
       "photos": {
         "title": "Fotos del portafolio",
-        "hint": "Mostrá tu trabajo. Máx. 10 fotos.",
+        "hint": "Muestra tu trabajo. Máx. 10 fotos.",
         "upload": "Subir foto",
         "uploading": "Subiendo...",
         "delete": "Eliminar",
-        "configure": "Configurá CLOUDINARY_CLOUD_NAME para subir fotos"
+        "configure": "Configura CLOUDINARY_CLOUD_NAME para subir fotos"
       },
       "availability": {
         "title": "Mi disponibilidad semanal",
-        "hint": "Indicá cuándo estás disponible para trabajar",
+        "hint": "Indica cuándo estás disponible para trabajar",
         "save": "Guardar disponibilidad",
         "saving": "Guardando...",
         "saved": "¡Disponibilidad actualizada!",
@@ -391,16 +391,16 @@
       },
       "services": {
         "title": "Servicios ofrecidos",
-        "hint": "Agregá los servicios específicos que ofrecés con nombre, descripción y precio.",
+        "hint": "Agrega los servicios específicos que ofreces con nombre, descripción y precio.",
         "empty": "Todavía no agregaste ningún servicio.",
-        "emptyHint": "Agregá servicios para que los clientes sepan exactamente qué ofrecés.",
+        "emptyHint": "Agrega servicios para que los clientes sepan exactamente qué ofreces.",
         "add": "Agregar servicio",
         "edit": "Editar",
         "delete": "Eliminar",
         "name": "Nombre del servicio",
         "namePlaceholder": "Ej: Instalación eléctrica residencial",
         "description": "Descripción",
-        "descPlaceholder": "Describí brevemente en qué consiste...",
+        "descPlaceholder": "Describe brevemente en qué consiste...",
         "price": "Precio",
         "pricePlaceholder": "Ej: ₡15,000/hora o Desde ₡25,000",
         "save": "Guardar servicio",
@@ -412,7 +412,7 @@
       },
       "bookings": {
         "title": "Solicitudes recibidas",
-        "empty": "No tenés solicitudes todavía",
+        "empty": "No tienes solicitudes todavía",
         "emptyHint": "Cuando los clientes te contacten, aparecerán aquí.",
         "from": "De",
         "needs": "Necesita",
@@ -441,7 +441,7 @@
         "price": "Tu precio (₡)",
         "pricePlaceholder": "Ej: 50000",
         "message": "Tu mensaje",
-        "messagePlaceholder": "Describí cómo podés ayudar, tu experiencia, y por qué elegirte...",
+        "messagePlaceholder": "Describe cómo puedes ayudar, tu experiencia, y por qué elegirte...",
         "submit": "Enviar",
         "submitting": "Enviando...",
         "sent": "Propuesta enviada",
@@ -465,8 +465,8 @@
         "title": "Mis solicitudes",
         "upcoming": "Próximas",
         "past": "Historial",
-        "empty": "No tenés solicitudes todavía",
-        "emptyHint": "Cuando solicités un servicio, aparecerá aquí.",
+        "empty": "No tienes solicitudes todavía",
+        "emptyHint": "Cuando solicites un servicio, aparecerá aquí.",
         "leaveReview": "Dejar reseña",
         "cancel": "Cancelar solicitud",
         "status": {
@@ -482,7 +482,7 @@
         "title": "Mis proyectos",
         "publish": "Publicar proyecto",
         "empty": "No publicaste ningún proyecto todavía",
-        "emptyHint": "Publicá un proyecto para recibir propuestas de profesionales.",
+        "emptyHint": "Publica un proyecto para recibir propuestas de profesionales.",
         "proposals": "propuesta(s)",
         "noProposals": "Sin propuestas todavía",
         "accept": "Aceptar propuesta",
@@ -497,11 +497,11 @@
       "saved": {
         "title": "Profesionales guardados",
         "empty": "No guardaste ningún profesional todavía",
-        "emptyHint": "Guardá tus profesionales favoritos para encontrarlos fácil."
+        "emptyHint": "Guarda tus profesionales favoritos para encontrarlos fácil."
       },
       "notifications": {
         "title": "Notificaciones",
-        "empty": "No tenés notificaciones",
+        "empty": "No tienes notificaciones",
         "markAllRead": "Marcar todo leído"
       },
       "profile": {
@@ -517,34 +517,34 @@
   },
   "notifications": {
     "title": "Notificaciones",
-    "empty": "No tenés notificaciones",
+    "empty": "No tienes notificaciones",
     "markAllRead": "Marcar todo leído",
     "types": {
       "booking_received": "Nueva solicitud",
       "booking_confirmed": "Solicitud confirmada",
       "booking_completed": "Servicio completado",
       "booking_cancelled": "Solicitud cancelada",
-      "review_request": "Dejá tu reseña",
+      "review_request": "Deja tu reseña",
       "proposal_received": "Nueva propuesta",
       "proposal_accepted": "¡Propuesta aceptada!"
     }
   },
   "projects": {
     "title": "Publicar proyecto",
-    "subtitle": "Describí tu proyecto y recibí propuestas de profesionales.",
+    "subtitle": "Describe tu proyecto y recibe propuestas de profesionales.",
     "category": "Categoría",
-    "categoryPlaceholder": "Seleccioná una categoría",
+    "categoryPlaceholder": "Selecciona una categoría",
     "projectTitle": "Título del proyecto",
     "titlePlaceholder": "Ej: Pintura de sala y comedor, 50m²",
     "description": "Descripción detallada",
-    "descPlaceholder": "Describí el trabajo que necesitás, materiales, dimensiones, condiciones especiales, etc.",
+    "descPlaceholder": "Describe el trabajo que necesitas, materiales, dimensiones, condiciones especiales, etc.",
     "province": "Provincia",
     "canton": "Cantón",
     "budget": "Presupuesto estimado (₡)",
     "budgetMin": "Mínimo",
     "budgetMax": "Máximo",
     "budgetOptional": "Opcional",
-    "timeline": "¿Cuándo lo necesitás?",
+    "timeline": "¿Cuándo lo necesitas?",
     "timelines": {
       "urgent": "Urgente (esta semana)",
       "soon": "Pronto (este mes)",
@@ -684,8 +684,8 @@
   "landing": {
     "hero": {
       "headline2": "sin complicaciones.",
-      "subtitle": "Describí tu proyecto y te conectamos con el profesional perfecto.",
-      "searchPlaceholder": "Describí tu proyecto o problema — sé tan detallado como quieras!",
+      "subtitle": "Describe tu proyecto y te conectamos con el profesional perfecto.",
+      "searchPlaceholder": "Describe tu proyecto o problema — sé tan detallado como quieras!",
       "location": "Ubicación",
       "search": "Buscar",
       "popular": "Popular:"
@@ -697,15 +697,15 @@
     "why": {
       "heading": "Por qué los clientes eligen ContrataCR.",
       "subtitle": "Cada día, miles de ticos confían en ContrataCR para encontrar el profesional que necesitan — y los respaldamos en cada proyecto.",
-      "feature0Title": "Llegá a una contratación más rápido.",
-      "feature0Desc": "Describí tu proyecto con tus palabras y encontramos el profesional perfecto para el trabajo en tu zona.",
+      "feature0Title": "Llega a una contratación más rápido.",
+      "feature0Desc": "Describe tu proyecto con tus palabras y encontramos el profesional perfecto para el trabajo en tu zona.",
       "feature1Title": "Solo ves profesionales locales y verificados.",
-      "feature1Desc": "Solo mostramos profesionales con cédula verificada que podés contratar en tu cantón.",
+      "feature1Desc": "Solo mostramos profesionales con cédula verificada que puedes contratar en tu cantón.",
       "feature2Title": "Un trabajo bien hecho — respaldado.",
       "feature2Desc": "Si el trabajo no sale como acordado, te tenemos cubierto. Así de simple."
     },
     "explore": {
-      "heading": "Explorá más proyectos.",
+      "heading": "Explora más proyectos.",
       "subtitle": "Profesionales en cada categoría, en tu cantón.",
       "tab0": "Mantenimiento del hogar",
       "tab1": "Remodelación",
@@ -717,7 +717,7 @@
     },
     "app": {
       "badge": "Muy pronto",
-      "heading": "La app que necesitás para todo.",
+      "heading": "La app que necesitas para todo.",
       "subtitle": "Desde guías personalizadas hasta planificación sin esfuerzo — todo en una app gratuita.",
       "feature0": "Guías de proyectos personalizadas",
       "feature1": "Presupuestos en tiempo real",
