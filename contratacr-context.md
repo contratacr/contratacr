@@ -23,6 +23,8 @@ No migration.
 - **Tighter availability panel**: `gap-2`, `py-2` buttons, and the secondary channels (**WhatsApp + Llamar**) are now **side-by-side compact buttons** (short labels) instead of two stacked full-width rows — only those the pro enabled show.
 - **Everything preserved**: numbered card ↔ numbered map pin, pin-hover mini-preview + card highlight, location chips/tabs + upcoming-slot one-click booking (carrying service+location context), the private-availability state + "Ver horario completo", "Ver casos de éxito (N)", the identity-verified filter and sorting. Fully responsive (`md:flex-row`), no favorite/price overlap.
 
+**Follow-up (same sprint) — smaller filter + smaller cards (Hulihealth density pass).** The filter bar was bulky (its own "Filtros" header + 3 separate bordered rows). Now: dropped the redundant inner "Filtros" header (the page already labels it), `p-4→p-3`, tighter label margins, and the **geolocation + verified + Limpiar controls merged into ONE compact row of small pills** (`text-xs`, `py-1.5`). Cards shrunk too: `CardContent p-4→p-3`, avatar `48→44px`, column gap `4→3`, availability column `260→244px`; page list/section spacing reduced (`gap-4→3`, filter `py-2.5`, content `py-4`). Result: more professionals per screen, closer to the Hulihealth reference.
+
 ---
 
 ## Sprint 34 (2026-06-08) — time picker redesign + validation, upcoming-slots profession/location, /buscar location chips + booking context
