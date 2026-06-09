@@ -16,6 +16,15 @@ _Earlier: 2026-06-07 (sprint 24 — fully automatic identity verification: self-
 
 ---
 
+## Sprint 46 (2026-06-09) — "Categorías" page redesigned (live search + grouped grid + suggest)
+
+No migration. Presentation/content only.
+- Rebuilt with a **live category search** (accent-insensitive `normalizeText` filter across all groups → flat results), a cleaner **grouped grid** (icon + group header + category links → `/buscar?categoria=…`), and a **"¿No ves tu categoría?"** suggest box → `POST /api/categories/suggest` (admin ticket) with a thank-you state.
+- Brand-glow hero, design-guide tokens, subtle `FadeInUp`, no-"vos".
+- **Category-name cleanup** (wording only — ids/data relationships unchanged): "Limpieza post construcción" → "Limpieza post-construcción"; "CCTV" → "Circuito cerrado (CCTV)".
+
+---
+
 ## Sprint 45 (2026-06-09) — "¿Cómo funciona?" redesigned (clear two-audience flow + trust)
 
 No migration. Presentation/content only.
