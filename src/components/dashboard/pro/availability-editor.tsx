@@ -56,6 +56,14 @@ function todayISO(): string {
   return crTodayISO();
 }
 
+// Sensible default for the "hora puntual" picker: today → the next rounded full
+// hour (same logic as "Desde"); a future date → 8:00 a.m. (its next full hour would
+// be midnight). The picker's `min` + the insert check still enforce the CR 15-min lead.
+function puntualDefault(dateISO: string): string {
+  const t = nextFullHourCR(dateISO);
+  return t === "00:00" ? "08:00" : t;
+}
+
 type Place = { id?: string; name: string };
 // Coverage areas can be cantón-, provincia-, or country-level (item 2): ALL are
 // schedulable, not just cantón-level ones.
@@ -168,14 +176,15 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
   const [showPrivateConfirm, setShowPrivateConfirm] = useState(false);
 
   // Generator form. For TODAY the start defaults to the next rounded full hour
-  // (e.g. 12:49 → 13:00); "hora puntual" uses the SAME default so both stay in sync.
+  // (e.g. 12:49 → 13:00). "Hora puntual" uses puntualDefault (next full hour today,
+  // 8:00 a.m. for a future date) and resets when the date changes.
   const initialStart = nextFullHourCR(todayISO());
   const [genDate, setGenDate] = useState(todayISO());
   const [genStart, setGenStart] = useState(initialStart);
   const [genEnd, setGenEnd] = useState("17:00");
   const [interval, setInterval] = useState(60);
   const [customInterval, setCustomInterval] = useState(45);
-  const [singleTime, setSingleTime] = useState(initialStart);
+  const [singleTime, setSingleTime] = useState(puntualDefault(todayISO()));
   const [busy, setBusy] = useState(false);
   const [pastError, setPastError] = useState<string | null>(null);
 
@@ -360,32 +369,8 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
     if (toMins(genEnd) <= toMins(v)) setGenEnd(hhmm(Math.min(toMins(v) + 60, DAY_END + 30)));
   }
 
-  // Quick presets fill the range (clamped to today's lead floor).
-  function applyPreset(s: number, e: number) {
-    setPastError(null);
-    const ms = Math.max(s, startMinMins);
-    const me = Math.max(e, ms + 60);
-    setGenStart(hhmm(Math.min(ms, DAY_END)));
-    setGenEnd(hhmm(Math.min(me, DAY_END + 30)));
-  }
-  const PRESETS: { label: string; s: number; e: number }[] = [
-    { label: "Mañana", s: 8 * 60, e: 12 * 60 },
-    { label: "Tarde", s: 13 * 60, e: 17 * 60 },
-    { label: "Noche", s: 17 * 60, e: 21 * 60 },
-  ];
-
-  // Live range validity + slot-count preview (item 1) — surfaced inline so an
-  // invalid combo never just dead-ends on "Generar".
+  // Range validity drives the single inline "Hasta" error + the disabled "Generar".
   const rangeInvalid = toMins(genEnd) <= toMins(genStart);
-  const previewCount = (() => {
-    if (rangeInvalid) return 0;
-    const step = interval === 0 ? Math.max(5, customInterval) : interval;
-    const start = toMins(genStart);
-    const end = toMins(genEnd);
-    let n = 0;
-    for (let m = start; m + step <= end; m += step) n++;
-    return Math.max(n, 1);
-  })();
   // Keep the fields at valid values so the pro never hits an error. Bump anything
   // below the next full hour (covers time passing + switching back to today).
   useEffect(() => {
@@ -531,25 +516,11 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
             </div>
           </div>
 
-          {/* Paso 2 — el rango horario. Presets above the fields they fill. */}
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="text-xs text-[#9ca3af]">Rápido:</span>
-            {PRESETS.map((p) => (
-              <button
-                key={p.label}
-                type="button"
-                onClick={() => applyPreset(p.s, p.e)}
-                className="rounded-full border border-[#e5e7eb] px-3 py-1 text-xs font-medium text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] transition-colors"
-              >
-                {p.label}
-              </button>
-            ))}
-          </div>
-
+          {/* Paso 2 — el rango horario. */}
           <div className="flex flex-wrap items-end gap-3">
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-[#6b7280]">Fecha</label>
-              <input type="date" min={todayISO()} value={genDate} onChange={(e) => { setGenDate(e.target.value); setPastError(null); }} className={cn(inputCls, "h-10")} />
+              <input type="date" min={todayISO()} value={genDate} onChange={(e) => { setGenDate(e.target.value); setPastError(null); setSingleTime(puntualDefault(e.target.value)); }} className={cn(inputCls, "h-10")} />
             </div>
             <TimeSelect label="Desde" min={startMin} value={genStart} onChange={setDesde} className="w-32" />
             {/* Visual "→" between the two pickers. */}
@@ -570,15 +541,6 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
               </div>
             )}
           </div>
-
-          {/* Live preview — shown only when the range is valid. The ONE error for an
-              invalid range lives inline on "Hasta" (no duplicate message). */}
-          {!rangeInvalid && (
-            <p className="text-xs text-[#6b7280]">
-              Generas <strong className="text-[#374151]">{previewCount}</strong> {previewCount === 1 ? "espacio" : "espacios"} entre{" "}
-              <strong className="text-[#374151]">{to12h(genStart)}</strong> y <strong className="text-[#374151]">{to12h(genEnd)}</strong>.
-            </p>
-          )}
 
           {/* Generar — its own row, clearly OFF (solid gray) when the range is invalid. */}
           <Button

@@ -16,6 +16,15 @@ _Earlier: 2026-06-07 (sprint 24 — fully automatic identity verification: self-
 
 ---
 
+## Sprint 43 (2026-06-09) — Disponibilidad "Agregar horarios" cleanup (no logic changes)
+
+No migration. Presentation-only tidy of the slot generator (`availability-editor.tsx`); scheduling/validation/save unchanged.
+- Removed the **"Rápido: Mañana / Tarde / Noche"** quick-preset row (and its `PRESETS`/`applyPreset`).
+- Removed the redundant **"Generas N espacios entre… y…"** preview line (and `previewCount`) — it stated the obvious; the single inline "Hasta" error + the disabled "Generar" remain.
+- **"o agrega una hora puntual"** now defaults sensibly via `puntualDefault()`: today → the next rounded full hour (same as "Desde"); a future date → 8:00 a.m.; resets when the date changes (it could previously show 11:59 p.m. late at night). The CR future-time + 15-min lead are still enforced by the picker `min` + the insert safety-net.
+
+---
+
 ## Sprint 42 (2026-06-09) — /buscar redesigned: full-width 3-column + uniform fixed-height cards + new sort set
 
 No migration. Recorded as THE standard search layout in `contratacr-design-guide.md`.
