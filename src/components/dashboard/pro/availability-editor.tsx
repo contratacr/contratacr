@@ -253,7 +253,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
     setPastError(null);
     // Reject past dates outright (CR time).
     if (isPastDateTimeCR(genDate)) {
-      setPastError("No podés agregar horarios en una fecha pasada.");
+      setPastError("No puedes agregar horarios en una fecha pasada.");
       return;
     }
     // Enforce a 15-minute lead time (CR): drop any time less than 15 min ahead.
@@ -261,7 +261,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
     // and it fires every time (not just once).
     const valid = times.filter((t) => !isTooSoonCR(genDate, t));
     if (valid.length === 0) {
-      setPastError(`Esa hora ya pasó o es muy pronto (hora de Costa Rica). Elegí una hora al menos ${LEAD_MINUTES} minutos en el futuro.`);
+      setPastError(`Esa hora ya pasó o es muy pronto (hora de Costa Rica). Elige una hora al menos ${LEAD_MINUTES} minutos en el futuro.`);
       return;
     }
     times = valid;
@@ -291,7 +291,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
     setBusy(false);
     if (error) {
       console.error("[availability] insert", error);
-      if (/pasado|past/i.test(error.message)) setPastError("No podés agregar horarios en el pasado (hora de Costa Rica).");
+      if (/pasado|past/i.test(error.message)) setPastError("No puedes agregar horarios en el pasado (hora de Costa Rica).");
       return;
     }
     setSlots((prev) => [
@@ -397,9 +397,9 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
   return (
     <div className="flex flex-col gap-4">
       {/* ── Contact preference — the FIRST decision; drives everything below ── */}
-      <div className="rounded-2xl border border-[#e5e7eb] p-4">
+      <div className="rounded-xl border border-[#e5e7eb] p-4">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-[#111827]">¿Cómo recibís clientes?</h3>
+          <h3 className="text-sm font-semibold text-[#111827]">¿Cómo recibes clientes?</h3>
           {savingContact && <Loader2 className="h-4 w-4 animate-spin text-[#009FD9]" />}
         </div>
         <div className="flex flex-col gap-2">
@@ -424,7 +424,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
         {!schedulingEnabled && (
           <p className="text-xs text-[#6b7280] mt-3 bg-[#f4f7fa] rounded-lg p-3">
             Elegiste <strong>Solo WhatsApp</strong>: los clientes te escribirán directo y no se mostrarán horarios ni
-            agenda. Cambiá a “Ambas” o “Solo citas” si querés habilitar tu disponibilidad.
+            agenda. Cambia a “Ambas” o “Solo citas” si quieres habilitar tu disponibilidad.
           </p>
         )}
 
@@ -432,7 +432,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
         <div className="flex items-center justify-between gap-4 mt-4 pt-4 border-t border-[#f3f4f6]">
           <div>
             <p className="text-sm font-medium text-[#111827]">Permitir contacto por llamada</p>
-            <p className="text-xs text-[#9ca3af]">Si lo activás, los clientes verán la opción “Contáctanos por llamada” a tu número.</p>
+            <p className="text-xs text-[#9ca3af]">Si lo activas, los clientes verán la opción “Contáctanos por llamada” a tu número.</p>
           </div>
           <button
             type="button"
@@ -446,58 +446,61 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
       </div>
 
       {schedulingEnabled && (<>
-      {/* ── "Disponibilidad privada" toggle (ON = private; hides + clears slots) ── */}
-      <div className="flex items-start justify-between gap-4 rounded-2xl border border-[#e5e7eb] bg-[#f4f7fa] p-4">
-        <div className="flex items-start gap-3">
-          <div className={cn("flex h-9 w-9 items-center justify-center rounded-full", !isPublic ? "bg-[#fef3c7] text-[#b45309]" : "bg-[#f3f4f6] text-[#6b7280]")}>
-            {!isPublic ? <Lock className="h-4 w-4" /> : <Globe className="h-4 w-4" />}
+      {/* ── Visibilidad y modalidad — quick settings grouped in ONE card to cut noise ── */}
+      <div className="rounded-xl border border-[#e5e7eb]">
+        {/* "Disponibilidad privada" (ON = private; hides + clears slots) */}
+        <div className="flex items-start justify-between gap-4 p-4">
+          <div className="flex items-start gap-3">
+            <div className={cn("flex h-9 w-9 items-center justify-center rounded-full shrink-0", !isPublic ? "bg-[#fef3c7] text-[#b45309]" : "bg-[#f3f4f6] text-[#6b7280]")}>
+              {!isPublic ? <Lock className="h-4 w-4" /> : <Globe className="h-4 w-4" />}
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-[#111827]">Disponibilidad privada</p>
+              <p className="text-xs text-[#6b7280] mt-0.5 max-w-md">
+                {!isPublic
+                  ? "Activada: tus horarios están ocultos en las búsquedas y los clientes te contactan por WhatsApp para coordinar. Desactívala para volver a mostrarlos."
+                  : "Actívala para ocultar tus horarios. Los clientes deberán contactarte para conocer tu disponibilidad. (Se eliminan los horarios publicados.)"}
+              </p>
+            </div>
           </div>
-          <div>
-            <p className="text-sm font-semibold text-[#111827]">Disponibilidad privada</p>
-            <p className="text-xs text-[#6b7280] mt-0.5 max-w-md">
-              {!isPublic
-                ? "Activada: tus horarios están ocultos en las búsquedas y los clientes te contactan por WhatsApp para coordinar. Desactivala para volver a mostrarlos."
-                : "Activá para ocultar tus horarios. Los clientes deberán contactarte para conocer tu disponibilidad. (Se eliminan los horarios publicados.)"}
-            </p>
-          </div>
+          <button
+            type="button"
+            onClick={toggleVisibility}
+            disabled={savingVisibility}
+            className={cn(
+              "relative h-6 w-11 rounded-full transition-all duration-200 shrink-0 cursor-pointer mt-1",
+              !isPublic ? "bg-[#b45309]" : "bg-[#d1d5db]"
+            )}
+            aria-label={isPublic ? "Hacer privada" : "Hacer pública"}
+          >
+            <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all duration-200", !isPublic ? "left-5" : "left-0.5")} />
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={toggleVisibility}
-          disabled={savingVisibility}
-          className={cn(
-            "relative h-6 w-11 rounded-full transition-all duration-200 shrink-0 cursor-pointer mt-1",
-            !isPublic ? "bg-[#b45309]" : "bg-[#d1d5db]"
-          )}
-          aria-label={isPublic ? "Hacer privada" : "Hacer pública"}
-        >
-          <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all duration-200", !isPublic ? "left-5" : "left-0.5")} />
-        </button>
-      </div>
 
-      {/* ── Videoconsulta toggle ────────────────────────────────── */}
-      <div className="flex items-center justify-between gap-4 rounded-2xl border border-[#e5e7eb] p-4">
-        <div className="flex items-center gap-3">
-          <div className={cn("flex h-9 w-9 items-center justify-center rounded-full", videoconsulta ? "bg-[#EBF5FB] text-[#009FD9]" : "bg-[#f3f4f6] text-[#6b7280]")}>
-            <Video className="h-4 w-4" />
+        {/* Videoconsulta */}
+        <div className="flex items-center justify-between gap-4 p-4 border-t border-[#f3f4f6]">
+          <div className="flex items-center gap-3">
+            <div className={cn("flex h-9 w-9 items-center justify-center rounded-full shrink-0", videoconsulta ? "bg-[#EBF5FB] text-[#009FD9]" : "bg-[#f3f4f6] text-[#6b7280]")}>
+              <Video className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-[#111827]">Ofreces videoconsulta</p>
+              <p className="text-xs text-[#6b7280]">Atiendes en línea. Puedes crear horarios específicos para videoconsulta.</p>
+            </div>
           </div>
-          <div>
-            <p className="text-sm font-semibold text-[#111827]">Ofrecés videoconsulta</p>
-            <p className="text-xs text-[#6b7280]">Atendés en línea. Podés crear horarios específicos para videoconsulta.</p>
-          </div>
+          <button
+            type="button"
+            onClick={toggleVideoconsulta}
+            className={cn("relative h-6 w-11 rounded-full transition-all shrink-0", videoconsulta ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
+            aria-label="Videoconsulta"
+          >
+            <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", videoconsulta ? "left-5" : "left-0.5")} />
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={toggleVideoconsulta}
-          className={cn("relative h-6 w-11 rounded-full transition-all shrink-0", videoconsulta ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
-          aria-label="Videoconsulta"
-        >
-          <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", videoconsulta ? "left-5" : "left-0.5")} />
-        </button>
       </div>
 
       {/* ── Slot generator ──────────────────────────────────────── */}
-      <div className="rounded-2xl border border-[#e5e7eb] p-4">
+      <div className="rounded-xl border border-[#e5e7eb] p-4">
         <div className="flex items-center gap-2 mb-4">
           <CalendarPlus className="h-4 w-4 text-[#009FD9]" />
           <h3 className="text-sm font-semibold text-[#111827]">Agregar horarios disponibles</h3>
@@ -505,28 +508,30 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
 
         {locationOptions.length === 0 ? (
           <div className="rounded-xl bg-[#fffbeb] border border-[#fde68a] p-4 text-sm text-[#92400e]">
-            Para crear horarios necesitás al menos una ubicación. Agregá un <strong>lugar de trabajo</strong> en
-            tu perfil o activá <strong>videoconsulta</strong> arriba. Los horarios se definen por ubicación.
+            Para crear horarios necesitas al menos una ubicación. Agrega un <strong>lugar de trabajo</strong> en
+            tu perfil o activa <strong>videoconsulta</strong> arriba. Los horarios se definen por ubicación.
           </div>
         ) : (
         <div className="flex flex-col gap-4">
-          <div className="flex flex-wrap gap-4">
+          {/* Paso 1 — ¿para qué servicio y en qué ubicación? */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {professionOptions.length > 1 && (
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-medium text-[#6b7280]">Profesión / servicio</label>
-                <select value={genCategory} onChange={(e) => setGenCategory(e.target.value)} className={cn(inputCls, "cursor-pointer w-full sm:w-60")}>
+                <select value={genCategory} onChange={(e) => setGenCategory(e.target.value)} className={cn(inputCls, "cursor-pointer w-full")}>
                   {professionOptions.map((p) => <option key={p} value={p}>{getCategoryLabel(p)}</option>)}
                 </select>
               </div>
             )}
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-[#6b7280] flex items-center gap-1"><MapPin className="h-3 w-3" /> Ubicación de este horario</label>
-              <select value={genLocation} onChange={(e) => setGenLocation(e.target.value)} className={cn(inputCls, "cursor-pointer w-full sm:w-72")}>
+              <select value={genLocation} onChange={(e) => setGenLocation(e.target.value)} className={cn(inputCls, "cursor-pointer w-full")}>
                 {locationOptions.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
               </select>
             </div>
           </div>
-          {/* Quick presets — fill the range with one tap. */}
+
+          {/* Paso 2 — el rango horario. Presets above the fields they fill. */}
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="text-xs text-[#9ca3af]">Rápido:</span>
             {PRESETS.map((p) => (
@@ -564,36 +569,32 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
                 <input type="number" min={5} step={5} value={customInterval} onChange={(e) => setCustomInterval(Number(e.target.value))} className={cn(inputCls, "h-10 w-24")} />
               </div>
             )}
-            <Button
-              type="button"
-              size="md"
-              onClick={generate}
-              disabled={busy || rangeInvalid}
-              aria-disabled={busy || rangeInvalid}
-              // Clearly OFF (solid gray) when the range is invalid — never a faded
-              // primary that still looks clickable.
-              className={cn(rangeInvalid && "bg-[#d1d5db] text-white shadow-none hover:bg-[#d1d5db] hover:shadow-none")}
-            >
-              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-              Generar
-            </Button>
           </div>
 
-          {/* Live preview of what "Generar" will create — or the reason it's blocked. */}
-          {rangeInvalid ? (
-            <p className="flex items-center gap-1.5 text-xs text-amber-600">
-              <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-              Ajustá la hora de fin (“Hasta” debe ser posterior a “Desde”) para generar.
-            </p>
-          ) : (
+          {/* Live preview — shown only when the range is valid. The ONE error for an
+              invalid range lives inline on "Hasta" (no duplicate message). */}
+          {!rangeInvalid && (
             <p className="text-xs text-[#6b7280]">
-              Generás <strong className="text-[#374151]">{previewCount}</strong> {previewCount === 1 ? "espacio" : "espacios"} entre{" "}
+              Generas <strong className="text-[#374151]">{previewCount}</strong> {previewCount === 1 ? "espacio" : "espacios"} entre{" "}
               <strong className="text-[#374151]">{to12h(genStart)}</strong> y <strong className="text-[#374151]">{to12h(genEnd)}</strong>.
             </p>
           )}
 
-          <div className="flex flex-wrap items-end gap-2 pt-1">
-            <span className="text-xs text-[#9ca3af] mb-2.5">o agregá una hora puntual:</span>
+          {/* Generar — its own row, clearly OFF (solid gray) when the range is invalid. */}
+          <Button
+            type="button"
+            size="md"
+            onClick={generate}
+            disabled={busy || rangeInvalid}
+            aria-disabled={busy || rangeInvalid}
+            className={cn("w-full sm:w-auto sm:self-start", rangeInvalid && "bg-[#d1d5db] text-white shadow-none hover:bg-[#d1d5db] hover:shadow-none")}
+          >
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+            Generar horarios
+          </Button>
+
+          <div className="flex flex-wrap items-end gap-2 pt-3 border-t border-[#f3f4f6]">
+            <span className="text-xs text-[#9ca3af] mb-2.5">o agrega una hora puntual:</span>
             <TimeSelect min={startMin} value={singleTime} onChange={setSingleTime} className="w-36" />
             <button
               type="button"
@@ -620,9 +621,9 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
         {loading ? (
           <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin text-[#009FD9]" /></div>
         ) : grouped.length === 0 ? (
-          <div className="text-center py-10 rounded-2xl bg-[#f4f7fa] border border-dashed border-[#d1d5db]">
+          <div className="text-center py-10 rounded-xl bg-[#f4f7fa] border border-dashed border-[#d1d5db]">
             <p className="text-sm text-[#6b7280]">Todavía no agregaste horarios.</p>
-            <p className="text-xs text-[#9ca3af] mt-1">Usá el generador de arriba para crear tus espacios disponibles.</p>
+            <p className="text-xs text-[#9ca3af] mt-1">Usa el generador de arriba para crear tus espacios disponibles.</p>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
@@ -637,7 +638,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
               }
               const subgroups = Array.from(subMap.entries());
               return (
-                <div key={date} className="rounded-2xl border border-[#e5e7eb] p-4">
+                <div key={date} className="rounded-xl border border-[#e5e7eb] p-4">
                   <div className="flex items-center justify-between mb-2.5">
                     <span className="text-sm font-semibold text-[#111827] capitalize">{prettyDate(date)}</span>
                     <button onClick={() => removeDate(date)} className="text-xs text-[#9ca3af] hover:text-red-500 transition-colors cursor-pointer">
