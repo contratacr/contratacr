@@ -368,11 +368,17 @@ export function LandingNavbar() {
 
   function renderLink(link: NavLink, onClick?: () => void) {
     const cls = "text-sm text-gray-600 hover:text-[#009FD9] transition-colors leading-tight block";
-    if (link.href.startsWith("mailto:")) {
-      return <a key={link.label} href={link.href} className={cls} onClick={onClick}>{link.label}</a>;
+    // "Registra tu perfil" routes to the user's own panel when already logged in.
+    let href = link.href;
+    if (href === "/registro/profesional" && user) {
+      const role = (user.user_metadata?.role as string | undefined) ?? "client";
+      href = role === "professional" ? "/dashboard/profesional" : "/dashboard/cliente";
+    }
+    if (href.startsWith("mailto:")) {
+      return <a key={link.label} href={href} className={cls} onClick={onClick}>{link.label}</a>;
     }
     return (
-      <Link key={link.label} href={link.href} className={cls} onClick={onClick}>
+      <Link key={link.label} href={href} className={cls} onClick={onClick}>
         {link.label}
       </Link>
     );

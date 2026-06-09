@@ -56,6 +56,15 @@ const COLUMNS = [
       { label: "Centro de ayuda",   href: "/ayuda" },
     ],
   },
+  {
+    heading: "ContrataCR",
+    links: [
+      { label: "Sobre nosotros",          href: "/sobre-nosotros" },
+      { label: "Para profesionales",      href: "/para-profesionales" },
+      { label: "Términos y condiciones",  href: "/terminos" },
+      { label: "Política de Privacidad",  href: "/privacidad" },
+    ],
+  },
 ];
 
 export function LandingFooter() {
@@ -64,7 +73,7 @@ export function LandingFooter() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-14 pb-8">
 
         {/* Main grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-10 pb-10 border-b border-white/10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-10 pb-10 border-b border-white/10">
 
           {/* Brand column — spans 2 cols on lg */}
           <div className="lg:col-span-2">
@@ -122,8 +131,10 @@ export function LandingFooter() {
           <p className="text-xs text-white/25">
             © {new Date().getFullYear()} ContrataCR. Todos los derechos reservados.
           </p>
-          <div className="flex items-center gap-4">
-            <span className="text-xs text-white/25">Diseñado y desarrollado en Costa Rica</span>
+          <div className="flex items-center gap-5">
+            <Link href="/terminos" className="text-xs text-white/40 hover:text-white transition-colors">Términos</Link>
+            <Link href="/privacidad" className="text-xs text-white/40 hover:text-white transition-colors">Privacidad</Link>
+            <span className="text-xs text-white/25">Hecho en Costa Rica 🇨🇷</span>
           </div>
         </div>
       </div>

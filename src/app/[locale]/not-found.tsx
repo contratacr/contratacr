@@ -11,16 +11,20 @@ export default async function NotFound() {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-1 flex items-center justify-center py-12 px-4">
-        <div className="text-center">
-          <div className="flex h-20 w-20 mx-auto items-center justify-center rounded-full bg-[#EBF5FB] mb-6">
-            <Search className="h-9 w-9 text-[#009FD9]" />
+      <main className="relative flex-1 flex items-center justify-center py-20 px-4 overflow-hidden">
+        <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[400px] bg-[radial-gradient(70%_60%_at_50%_0%,#EBF5FB_0%,transparent_72%)]" />
+        <div className="relative text-center max-w-md">
+          <p className="text-6xl font-extrabold text-[#009FD9] mb-3">404</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-[#111827] mb-2">{t("title")}</h1>
+          <p className="text-[#6b7280] mb-8">{t("desc")}</p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <Button asChild size="lg">
+              <Link href="/">{t("home")}</Link>
+            </Button>
+            <Button asChild size="lg" variant="outline">
+              <Link href="/buscar"><Search className="h-4 w-4" /> Buscar profesionales</Link>
+            </Button>
           </div>
-          <h1 className="text-3xl font-bold text-[#111827] mb-2">{t("title")}</h1>
-          <p className="text-[#6b7280] mb-8 max-w-sm mx-auto">{t("desc")}</p>
-          <Button asChild size="lg">
-            <Link href="/">{t("home")}</Link>
-          </Button>
         </div>
       </main>
       <LandingFooter />

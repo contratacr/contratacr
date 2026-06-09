@@ -16,6 +16,16 @@ _Earlier: 2026-06-07 (sprint 24 — fully automatic identity verification: self-
 
 ---
 
+## Sprint 48 (2026-06-09) — global header/footer polish + legal/about pages + friendlier 404
+
+No migration. Presentation/content only.
+- **Footer**: added a **"ContrataCR"** column (Sobre nosotros · Para profesionales · Términos · Privacidad) + legal links (Términos · Privacidad) in the bottom bar (grid 5→6 cols). "Registra tu perfil" stays session-aware (`SmartRegisterLink`).
+- **Header (navbar)**: the megamenu **"Registra tu perfil"** now routes to the user's **panel when logged in** (`renderLink` role check); the top-right "Registrarse como profesional" CTA stays logged-out-only.
+- **New static pages** (none existed before): **Sobre nosotros** (brand story + values), **Términos y condiciones** and **Política de Privacidad** — ContrataCR-specific, intermediary framing (connects, no guarantees, no commissions, payments off-platform, identity-verified ≠ quality guarantee), **Ley 8968** data-protection basics, support contact. Linked from the footer.
+- **404** redesigned: brand-glow, "404" numeral + clear **Ir al inicio** / **Buscar profesionales** actions; the error/"fuera de servicio" boundary kept (already on-brand). No-"vos", subtle reveals, responsive.
+
+---
+
 ## Sprint 47 (2026-06-09) — professional recruitment landing `/para-profesionales` (new)
 
 No migration. Presentation/content only — registration flow & logic untouched.
