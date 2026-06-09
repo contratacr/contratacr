@@ -2,6 +2,8 @@ export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
 import nodemailer from "nodemailer";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 
 const FROM_ADDRESS = "ContrataCR <soporte@contratacr.com>";
 const SUPPORT_TO   = "soporte@contratacr.com";
@@ -134,6 +136,27 @@ async function sendViaSMTP(
   return true;
 }
 
+/* ─── Persist as an admin support ticket (best-effort; survives pre-migration) ─── */
+async function saveTicket(name: string, email: string, subject: string, message: string): Promise<boolean> {
+  try {
+    let userId: string | null = null;
+    try {
+      const supa = await createClient();
+      const { data } = await supa.auth.getUser();
+      userId = data.user?.id ?? null;
+    } catch { /* guest — no session */ }
+    const admin = createAdminClient();
+    const { error } = await admin
+      .from("support_tickets")
+      .insert({ user_id: userId, name: name || null, email, subject, message });
+    if (error) { console.error("[contact] ticket insert:", error.message); return false; }
+    return true;
+  } catch (e) {
+    console.error("[contact] ticket insert:", e);
+    return false;
+  }
+}
+
 /* ─── Route handler ─── */
 export async function POST(req: NextRequest) {
   try {
@@ -143,14 +166,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Faltan campos requeridos" }, { status: 400 });
     }
 
-    // Try Resend first (configured in .env.local and Vercel), then SMTP fallback
+    // Record the ticket in the admin panel (primary record), then notify by email.
+    const ticketSaved = await saveTicket(name, email, subject, message);
     const sent = await sendViaResend(name, email, subject, message, fileAttachments)
       || await sendViaSMTP(name, email, subject, message, fileAttachments);
 
-    if (!sent) {
+    if (!ticketSaved && !sent) {
       return NextResponse.json({
         ok: false,
-        error: "El sistema de correo no está configurado. Escríbenos directamente a soporte@contratacr.com",
+        error: "No pudimos registrar tu mensaje. Escríbenos directamente a soporte@contratacr.com",
       }, { status: 503 });
     }
 
