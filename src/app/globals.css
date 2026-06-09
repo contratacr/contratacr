@@ -114,6 +114,42 @@ select:focus-visible {
   animation: marquee-infinite 32s linear infinite;
 }
 
+/* ─── Bark-style category carousel: two rows, opposite directions ─── */
+@keyframes cat-scroll-left {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+@keyframes cat-scroll-right {
+  0%   { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}
+.cat-carousel {
+  /* Soft fade at both edges so cards glide in/out, not pop. */
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+          mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+}
+.cat-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+}
+.cat-track--left  { animation: cat-scroll-left  64s linear infinite; }
+.cat-track--right { animation: cat-scroll-right 64s linear infinite; }
+/* Pause both rows when the user hovers anywhere on the carousel. */
+.cat-carousel:hover .cat-track { animation-play-state: paused; }
+@media (max-width: 640px) {
+  .cat-track--left  { animation-duration: 46s; }
+  .cat-track--right { animation-duration: 46s; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cat-track { animation: none; }
+  .cat-carousel {
+    overflow-x: auto;
+    -webkit-mask-image: none;
+            mask-image: none;
+  }
+}
+
 .animate-slider {
   animation: slider-scroll 44s linear infinite;
 }
