@@ -34,14 +34,14 @@ function CategoryCard({ id }: { id: string }) {
   return (
     <Link
       href={`/buscar?categoria=${id}`}
-      className="group relative block shrink-0 w-[200px] sm:w-[236px] h-[150px] sm:h-[164px] mr-4 sm:mr-5 rounded-2xl overflow-hidden card-lift shadow-[0_4px_18px_rgba(0,0,0,0.08)]"
+      className="group relative block shrink-0 w-[230px] sm:w-[284px] h-[160px] sm:h-[196px] mr-4 sm:mr-7 rounded-2xl overflow-hidden card-lift shadow-[0_4px_18px_rgba(0,0,0,0.08)]"
     >
       <Image
         src={catImg(id)}
         alt={label}
         fill
         className="object-cover transition-transform duration-500 group-hover:scale-[1.07]"
-        sizes="236px"
+        sizes="284px"
       />
       <div
         className="absolute inset-0"
