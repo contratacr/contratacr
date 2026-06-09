@@ -171,7 +171,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   if (!canBook) {
     return (
       <div className="flex h-full flex-col justify-end">
-      <div className="flex gap-1.5">
+      <div className="flex items-stretch gap-1.5">
         <a
           href={getWhatsAppLink(professional.whatsapp, `Hola ${professional.fullName.split(" ")[0]}, vi tu perfil en ContrataCR y me gustaría coordinar un servicio.`)}
           target="_blank"
@@ -187,7 +187,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
             href={telHref(professional.whatsapp)}
             onClick={(e) => e.stopPropagation()}
             aria-label="Llamar"
-            className="flex w-10 shrink-0 items-center justify-center border border-[#e5e7eb] text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] rounded-lg transition-colors"
+            className="flex w-9 shrink-0 items-center justify-center border border-[#e5e7eb] text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] rounded-lg transition-colors"
           >
             <Phone className="h-4 w-4" />
           </a>
@@ -306,9 +306,9 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
         Ver horario completo
       </Link>
 
-      {/* One compact action row: primary CTA + icon-only secondary channels (only
-          those the professional enabled), keeping every card the same short height. */}
-      <div className="flex gap-1.5">
+      {/* One compact action row: primary CTA + small secondary icon-buttons for the
+          direct-contact channels the professional enabled (one-tap, never hidden). */}
+      <div className="flex items-stretch gap-1.5">
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); openBooking(); }}
@@ -323,7 +323,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
             aria-label="Contactar por WhatsApp"
-            className="flex w-10 shrink-0 items-center justify-center border border-[#25D366] text-[#1ebe5d] hover:bg-[#25D366]/10 rounded-lg transition-colors"
+            className="flex w-9 shrink-0 items-center justify-center border border-[#25D366] text-[#1ebe5d] hover:bg-[#25D366]/10 rounded-lg transition-colors"
           >
             <WhatsAppIcon className="h-4 w-4" />
           </a>
@@ -333,7 +333,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
             href={telHref(professional.whatsapp)}
             onClick={(e) => e.stopPropagation()}
             aria-label="Llamar"
-            className="flex w-10 shrink-0 items-center justify-center border border-[#e5e7eb] text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] rounded-lg transition-colors"
+            className="flex w-9 shrink-0 items-center justify-center border border-[#e5e7eb] text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] rounded-lg transition-colors"
           >
             <Phone className="h-4 w-4" />
           </a>

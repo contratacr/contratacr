@@ -109,17 +109,14 @@ export function SaveButton({ pro, className }: SaveButtonProps) {
       onClick={toggle}
       aria-label={saved ? "Quitar de guardados" : "Guardar profesional"}
       className={cn(
-        "group flex items-center justify-center w-9 h-9 rounded-full border transition-all duration-200",
+        "flex items-center justify-center w-7 h-7 rounded-full border bg-white/90 backdrop-blur transition-colors duration-200",
         saved
-          ? "bg-[#009FD9] border-[#009FD9] text-white shadow-md"
-          : "bg-white/90 border-gray-200 text-gray-400 hover:border-[#009FD9] hover:text-[#009FD9] hover:bg-white shadow-sm",
+          ? "border-[#009FD9] text-[#009FD9]"
+          : "border-[#e5e7eb] text-[#9ca3af] hover:text-[#374151] hover:border-[#cbd5e1]",
         className
       )}
     >
-      <Bookmark
-        className="h-4 w-4 transition-transform duration-200 group-hover:scale-110"
-        fill={saved ? "currentColor" : "none"}
-      />
+      <Bookmark className="h-3.5 w-3.5" fill={saved ? "currentColor" : "none"} />
     </button>
   );
 }
@@ -134,8 +131,9 @@ export function SaveableCard({ pro, children }: CardWrapperProps) {
   return (
     <div className="relative">
       {children}
-      {/* Always-visible favorites button, pinned to the card's top-right corner. */}
-      <div className="absolute top-3 right-3 z-20">
+      {/* Always-visible favorites button, pinned consistently to the card's
+          top-right corner (small + subtle; price row clears it via md:pr-10). */}
+      <div className="absolute top-2.5 right-2.5 z-20">
         <SaveButton pro={pro} />
       </div>
     </div>

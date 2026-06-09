@@ -217,7 +217,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
 
           {/* ── Action zone: price + availability ── */}
           <div className="md:w-[232px] md:shrink-0 md:border-l md:border-[#f3f4f6] md:pl-4 pt-3 md:pt-0 border-t border-[#f3f4f6] md:border-t-0 flex flex-col">
-            <div className="flex items-baseline justify-between gap-2 mb-1.5 md:pr-8">
+            <div className="flex items-baseline justify-between gap-2 mb-1.5 pr-9 md:pr-10">
               <span className="text-[10px] font-bold uppercase tracking-wide text-[#9ca3af]">{hasNumericPrice ? "Desde" : "Tarifa"}</span>
               <span className="font-bold text-[#111827] text-[15px] whitespace-nowrap truncate">{priceLabel}</span>
             </div>
