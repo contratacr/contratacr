@@ -32,80 +32,75 @@ const HERO_IMAGE = {
   alt: "Profesional de oficio trabajando en Costa Rica",
 };
 
-/* Vertical slide-up (masked roll) rotating word — slot-machine style. The whole
-   word slides up into place from below, holds, then slides up and out as the
-   next word rolls in. A clipping mask (overflow-hidden, one line tall) keeps
-   words within the line. Seamless loop via a cloned first word at the end, then
-   a no-transition snap back to 0. Reduced-motion → a static word. */
-const ROLL_LINE = 1.18;    // em — line/clip height (room for accents like í, J).
-const ROLL_HOLD_MS = 2200; // time each word is shown (incl. the slide).
-const ROLL_MS = 620;       // slide duration.
+/* Per-letter staggered vertical slide-up. Each letter of the word rises from
+   below into place one after another (left → right), the word holds, then each
+   letter slides up and out (same staggered order) as the next word's letters
+   roll in. A clipping mask (overflow-hidden, one line tall) keeps letters within
+   the line. Word stays centered; no layout shift. Reduced-motion → static word. */
+const ROLL_LINE = 1.18;   // em — line/clip height (room for accents like í, J).
+const LETTER_MS = 520;    // per-letter slide duration.
+const STAGGER_MS = 46;    // delay between consecutive letters.
+const WORD_HOLD_MS = 1400; // pause on the full word before it leaves.
 
 function RotatingLine({ lines }: { lines: string[] }) {
   const [index, setIndex] = useState(0);
-  const [animate, setAnimate] = useState(true);
+  const [shown, setShown] = useState(false);   // letters in place (entered)
+  const [leaving, setLeaving] = useState(false); // letters sliding out
   const [reduced, setReduced] = useState(false);
 
-  // Advance one word at a time.
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
     if (mq.matches) { setReduced(true); return; }
-    const id = setInterval(() => setIndex((i) => i + 1), ROLL_HOLD_MS);
-    return () => clearInterval(id);
   }, []);
 
-  // When we land on the cloned first word, let the slide finish then snap back
-  // to the real index 0 WITHOUT a transition — invisible, seamless loop.
+  // Enter → hold → exit → next word, per index.
   useEffect(() => {
     if (reduced) return;
-    if (index === lines.length) {
-      const t = setTimeout(() => { setAnimate(false); setIndex(0); }, ROLL_MS + 40);
-      return () => clearTimeout(t);
-    }
-  }, [index, lines.length, reduced]);
+    const word = lines[index] ?? "";
+    const span = Math.max(0, word.length - 1) * STAGGER_MS;
+    const enterDur = LETTER_MS + span;
+    const exitDur = LETTER_MS + span;
 
-  // Re-enable the transition on the frame after the snap-back.
-  useEffect(() => {
-    if (animate) return;
-    const r = requestAnimationFrame(() => requestAnimationFrame(() => setAnimate(true)));
-    return () => cancelAnimationFrame(r);
-  }, [animate]);
+    setLeaving(false);
+    setShown(false);
+    const raf = requestAnimationFrame(() => requestAnimationFrame(() => setShown(true)));
+    const tExit = setTimeout(() => setLeaving(true), enterDur + WORD_HOLD_MS);
+    const tNext = setTimeout(() => setIndex((i) => (i + 1) % lines.length), enterDur + WORD_HOLD_MS + exitDur);
+
+    return () => { cancelAnimationFrame(raf); clearTimeout(tExit); clearTimeout(tNext); };
+  }, [index, reduced, lines]);
 
   if (reduced) {
     return <span className="block" style={{ minHeight: `${ROLL_LINE}em`, color: "#009FD9" }}>{lines[0]}</span>;
   }
 
-  const stack = [...lines, lines[0]];
+  const word = lines[index] ?? "";
+  const visible = shown && !leaving;
+
   return (
     <span
-      className="block overflow-hidden"
+      className="flex justify-center overflow-hidden"
       style={{ height: `${ROLL_LINE}em` }}
-      aria-label={lines[index % lines.length]}
+      aria-label={word}
     >
-      <span
-        aria-hidden
-        style={{
-          display: "block",
-          transform: `translateY(-${index * ROLL_LINE}em)`,
-          transition: animate ? `transform ${ROLL_MS}ms cubic-bezier(0.16, 1, 0.3, 1)` : "none",
-          willChange: "transform",
-        }}
-      >
-        {stack.map((w, i) => (
-          <span
-            key={i}
-            style={{
-              display: "flex",
-              height: `${ROLL_LINE}em`,
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#009FD9",
-            }}
-          >
-            {w}
-          </span>
-        ))}
-      </span>
+      {Array.from(word).map((ch, i) => (
+        <span
+          key={`${index}-${i}`}
+          aria-hidden
+          style={{
+            display: "inline-block",
+            color: "#009FD9",
+            willChange: "transform, opacity",
+            transform: visible ? "translateY(0)" : `translateY(${leaving ? "-110%" : "110%"})`,
+            opacity: visible ? 1 : 0,
+            transition: shown
+              ? `transform ${LETTER_MS}ms cubic-bezier(0.16,1,0.3,1) ${i * STAGGER_MS}ms, opacity ${LETTER_MS}ms ease ${i * STAGGER_MS}ms`
+              : "none",
+          }}
+        >
+          {ch === " " ? " " : ch}
+        </span>
+      ))}
     </span>
   );
 }
