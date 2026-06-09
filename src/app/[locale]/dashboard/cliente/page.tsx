@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import {
   CalendarDays, Bookmark, LogOut, Star, Bell, User, FolderOpen,
   CheckCircle2, Clock, XCircle, ChevronDown, ChevronUp,
-  Coins, MapPin, Send, Plus, Briefcase, Trash2, Flag,
+  Coins, MapPin, Send, Plus, Briefcase, Trash2, Flag, Search,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Navbar } from "@/components/layout/navbar";
@@ -491,11 +491,11 @@ export default function ClientDashboardPage() {
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
       <Navbar />
       <main className="flex-1">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
           {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
+          <div className="flex items-center justify-between gap-3 mb-5">
+            <div className="flex items-center gap-3 min-w-0">
               <div className="relative h-11 w-11 shrink-0">
                 {headerAvatar ? (
                   <img
@@ -509,27 +509,33 @@ export default function ClientDashboardPage() {
                   </div>
                 )}
               </div>
-              <div>
-                <h1 className="text-lg font-bold text-[#111827]">
+              <div className="min-w-0">
+                <h1 className="text-lg font-bold text-[#111827] truncate">
                   Hola, {displayName.split(" ")[0]} 👋
                 </h1>
-                <p className="text-xs text-[#9ca3af]">Panel del cliente</p>
+                <p className="text-xs text-[#9ca3af]">Tu panel en ContrataCR</p>
               </div>
             </div>
-            <Button variant="ghost" size="sm" onClick={handleSignOut} className="text-[#6b7280] hover:text-red-500">
-              <LogOut className="h-4 w-4" />
-              Salir
-            </Button>
+            <div className="flex items-center gap-1.5 shrink-0">
+              {/* Most-used action surfaced in the header. */}
+              <Button size="sm" asChild>
+                <a href="/buscar"><Search className="h-4 w-4" /> <span className="hidden sm:inline">Buscar profesionales</span><span className="sm:hidden">Buscar</span></a>
+              </Button>
+              <Button variant="ghost" size="sm" onClick={handleSignOut} className="text-[#6b7280] hover:text-red-500">
+                <LogOut className="h-4 w-4" />
+                <span className="hidden sm:inline">Salir</span>
+              </Button>
+            </div>
           </div>
 
           {/* Tab nav — scrollable on mobile */}
-          <div className="flex gap-1 bg-[#f3f4f6] rounded-xl p-1 mb-6 overflow-x-auto">
+          <div className="flex gap-1 bg-[#f3f4f6] rounded-xl p-1 mb-5 overflow-x-auto">
             {TABS.map(({ key, icon, label }) => (
               <button
                 key={key}
                 onClick={() => setTab(key)}
                 className={cn(
-                  "flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap shrink-0",
+                  "flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all whitespace-nowrap shrink-0",
                   activeTab === key
                     ? "bg-white text-[#009FD9] shadow-sm"
                     : "text-[#6b7280] hover:text-[#374151]"
@@ -549,14 +555,14 @@ export default function ClientDashboardPage() {
             <>
               {/* BOOKINGS TAB */}
               {activeTab === "bookings" && (
-                <div className="space-y-6">
+                <div className="space-y-4">
                   {bookings.length === 0 ? (
-                    <div className="text-center py-16">
+                    <div className="text-center py-14 rounded-2xl border border-dashed border-[#e5e7eb] bg-white">
                       <CalendarDays className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
-                      <p className="font-medium text-[#374151]">No tenés solicitudes todavía</p>
-                      <p className="text-sm text-[#9ca3af] mt-1">Cuando solicités un servicio, aparecerá aquí.</p>
+                      <p className="font-semibold text-[#374151]">Todavía no tenés solicitudes</p>
+                      <p className="text-sm text-[#9ca3af] mt-1">Buscá un profesional y solicitá tu primer servicio.</p>
                       <Button className="mt-5" asChild>
-                        <a href="/buscar">Buscar profesionales</a>
+                        <a href="/buscar"><Search className="h-4 w-4" /> Buscar profesionales</a>
                       </Button>
                     </div>
                   ) : (
@@ -570,7 +576,7 @@ export default function ClientDashboardPage() {
                             const rev = b.status === "completed" ? bookingReview(b.id) : undefined;
                             return (
                               <Card key={b.id}>
-                                <CardContent className="p-5">
+                                <CardContent className="p-4">
                                   <div className="flex items-start justify-between gap-4">
                                     <div className="flex items-start gap-3 flex-1 min-w-0">
                                       <Avatar className="h-10 w-10 shrink-0">
@@ -609,7 +615,7 @@ export default function ClientDashboardPage() {
                                       {b.status === "completed" && (
                                         <Button variant="outline" size="sm" onClick={() => setReviewModal({ professionalId: b.professional_id, professionalName: b.professionals?.profiles?.full_name ?? "Profesional", bookingId: b.id })}>
                                           <Star className={cn("h-3.5 w-3.5", rev && "fill-yellow-400 text-yellow-400")} />
-                                          {rev ? "Ver/Editar reseña" : "Reseña"}
+                                          {rev ? "Ver/Editar reseña" : "Dejar reseña"}
                                         </Button>
                                       )}
                                       {["pending", "confirmed", "in_progress"].includes(b.status) && (
@@ -644,18 +650,18 @@ export default function ClientDashboardPage() {
               {activeTab === "projects" && (
                 <div>
                   {projects.length === 0 ? (
-                    <div className="text-center py-16">
+                    <div className="text-center py-14 rounded-2xl border border-dashed border-[#e5e7eb] bg-white">
                       <FolderOpen className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
-                      <p className="font-medium text-[#374151]">No publicaste ningún proyecto todavía</p>
+                      <p className="font-semibold text-[#374151]">Todavía no publicaste proyectos</p>
                       <p className="text-sm text-[#9ca3af] mt-1">
-                        Publicá un proyecto para recibir propuestas de profesionales.
+                        Publicá lo que necesitás y recibí propuestas de varios profesionales.
                       </p>
                       <Button className="mt-5" asChild>
-                        <a href="/publicar-proyecto">Publicar proyecto</a>
+                        <a href="/publicar-proyecto"><Plus className="h-4 w-4" /> Publicar proyecto</a>
                       </Button>
                     </div>
                   ) : (
-                    <div className="flex flex-col gap-4">
+                    <div className="flex flex-col gap-3">
                       <div className="flex items-center justify-between gap-2 flex-wrap">
                         <StatusFilterTabs tabs={PROYECTO_TABS} value={projectFilter} onChange={setProjectFilter} />
                         <Button size="sm" asChild>
@@ -672,7 +678,7 @@ export default function ClientDashboardPage() {
 
                         return (
                           <Card key={project.id}>
-                            <CardContent className="p-5">
+                            <CardContent className="p-4">
                               <div className="flex items-start justify-between gap-3">
                                 <div className="flex-1 min-w-0">
                                   <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -872,21 +878,16 @@ export default function ClientDashboardPage() {
 
               {/* PROFILE TAB */}
               {activeTab === "profile" && (
-                <div>
-                  <h2 className="text-lg font-semibold text-[#111827] mb-5">Mi información</h2>
-
-                  {/* Photo */}
-                  <div className="bg-white rounded-2xl border border-[#e5e7eb] p-6 mb-4">
-                    <label className="text-sm font-medium text-[#374151] block mb-3">Foto de perfil</label>
+                <div className="space-y-4">
+                  {/* Photo + name + phone — one card */}
+                  <div className="bg-white rounded-2xl border border-[#e5e7eb] p-5 flex flex-col gap-4">
                     <div className="flex items-center gap-4">
-                      <div className="relative">
-                        <div className="h-16 w-16 rounded-full overflow-hidden bg-[#EBF5FB] flex items-center justify-center shrink-0">
-                          {profileAvatar ? (
-                            <img src={profileAvatar} alt="Foto" className="h-full w-full object-cover" />
-                          ) : (
-                            <span className="text-[#009FD9] font-bold text-xl">{getInitials(displayName)}</span>
-                          )}
-                        </div>
+                      <div className="h-16 w-16 rounded-full overflow-hidden bg-[#EBF5FB] flex items-center justify-center shrink-0">
+                        {profileAvatar ? (
+                          <img src={profileAvatar} alt="Foto" className="h-full w-full object-cover" />
+                        ) : (
+                          <span className="text-[#009FD9] font-bold text-xl">{getInitials(displayName)}</span>
+                        )}
                       </div>
                       <div>
                         <label className="cursor-pointer inline-flex items-center gap-2 text-sm font-medium text-[#009FD9] border border-[#009FD9] rounded-xl px-4 py-2 hover:bg-[#EBF5FB] transition-colors">
@@ -898,34 +899,33 @@ export default function ClientDashboardPage() {
                         <p className="text-xs text-[#9ca3af] mt-1">JPG, PNG o WebP — máx 5MB</p>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Name + phone */}
-                  <div className="bg-white rounded-2xl border border-[#e5e7eb] p-6 flex flex-col gap-4 mb-4">
-                    <div>
-                      <label className="text-sm font-medium text-[#374151] block mb-1.5">Nombre completo <span className="text-red-500">*</span></label>
-                      <input
-                        type="text"
-                        className={inputClass}
-                        value={profileForm.full_name}
-                        onChange={(e) => setProfileForm((f) => ({ ...f, full_name: e.target.value }))}
+                    <div className="border-t border-[#f3f4f6] pt-4 flex flex-col gap-4">
+                      <div>
+                        <label className="text-sm font-medium text-[#374151] block mb-1.5">Nombre completo <span className="text-red-500">*</span></label>
+                        <input
+                          type="text"
+                          className={inputClass}
+                          value={profileForm.full_name}
+                          onChange={(e) => setProfileForm((f) => ({ ...f, full_name: e.target.value }))}
+                        />
+                      </div>
+                      <PhoneInput
+                        label={<>Teléfono <span className="text-[#9ca3af] font-normal">(opcional)</span></>}
+                        value={profileForm.phone}
+                        onChange={(digits) => setProfileForm((f) => ({ ...f, phone: digits }))}
                       />
-                    </div>
-                    <PhoneInput
-                      label={<>Teléfono <span className="text-[#9ca3af] font-normal">(opcional)</span></>}
-                      value={profileForm.phone}
-                      onChange={(digits) => setProfileForm((f) => ({ ...f, phone: digits }))}
-                    />
-                    <div className="flex items-center gap-3 mt-2">
-                      <Button onClick={saveProfile} loading={profileSaving} disabled={profileSaving}>
-                        Guardar cambios
-                      </Button>
-                      {profileSaved && <span className="text-sm text-emerald-600 font-medium">✓ ¡Cambios guardados!</span>}
+                      <div className="flex items-center gap-3">
+                        <Button onClick={saveProfile} loading={profileSaving} disabled={profileSaving}>
+                          Guardar cambios
+                        </Button>
+                        {profileSaved && <span className="text-sm text-emerald-600 font-medium">✓ ¡Cambios guardados!</span>}
+                      </div>
                     </div>
                   </div>
 
                   {/* Become a professional — same account, adds the pro role + onboarding */}
-                  <div className="bg-white rounded-2xl border border-[#e5e7eb] p-6">
+                  <div className="bg-white rounded-2xl border border-[#e5e7eb] p-5">
                     <div className="flex items-start gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#EBF5FB] shrink-0">
                         <Briefcase className="h-5 w-5 text-[#009FD9]" />
@@ -943,7 +943,7 @@ export default function ClientDashboardPage() {
                   </div>
 
                   {/* Email */}
-                  <div className="bg-white rounded-2xl border border-[#e5e7eb] p-6">
+                  <div className="bg-white rounded-2xl border border-[#e5e7eb] p-5">
                     <label className="text-sm font-medium text-[#374151] block mb-1.5">Correo electrónico</label>
                     {isOAuthAccount ? (
                       <div className="flex flex-col gap-2">
