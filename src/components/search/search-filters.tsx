@@ -3,10 +3,9 @@
 import { useRouter, usePathname } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Search, SlidersHorizontal, X, ShieldCheck, MapPin, Loader2 } from "lucide-react";
+import { Search, X, ShieldCheck, MapPin, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { PROVINCES, getCantonsByProvince, nearestProvinceId } from "@/lib/data/cr-geography";
 import { CATEGORY_GROUPS, getCategoryLabel } from "@/lib/data/categories";
 import { INSURERS } from "@/lib/data/insurers";
@@ -134,22 +133,9 @@ export function SearchFilters() {
     [category, province, canton].filter((v) => v && v !== "todas" && v !== "todos").length;
 
   return (
-    <div className="bg-white rounded-2xl border border-[#e5e7eb] p-4">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <SlidersHorizontal className="h-4 w-4 text-[#6b7280]" />
-          <span className="text-sm font-semibold text-[#374151]">{t("filters.title")}</span>
-          {activeCount > 0 && <Badge variant="default" className="text-xs">{activeCount}</Badge>}
-        </div>
-        {activeCount > 0 && (
-          <button onClick={clearAll} className="flex items-center gap-1 text-xs text-[#6b7280] hover:text-red-500 transition-colors">
-            <X className="h-3 w-3" />{t("filters.clear")}
-          </button>
-        )}
-      </div>
-
+    <div className="bg-white rounded-2xl border border-[#e5e7eb] p-3">
       {/* Text search */}
-      <div className="mb-3">
+      <div className="mb-2">
         <div className="relative flex items-center">
           <Search className="absolute left-3 h-4 w-4 text-[#9ca3af] pointer-events-none" />
           <input
@@ -166,17 +152,12 @@ export function SearchFilters() {
             </button>
           )}
         </div>
-        {query && (
-          <p className="text-xs text-[#9ca3af] mt-1 pl-1">
-            Buscando profesionales relacionados con <strong className="text-[#374151]">"{query}"</strong>
-          </p>
-        )}
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex flex-col sm:flex-row gap-2">
         {/* Category — grouped select */}
         <div className="flex-1">
-          <label className="text-xs font-medium text-[#6b7280] mb-1.5 block">{t("filters.category")}</label>
+          <label className="text-xs font-medium text-[#6b7280] mb-1 block">{t("filters.category")}</label>
           <Select value={category} onValueChange={(v) => { setCategory(v); applyFilters({ categoria: v }); }}>
             <SelectTrigger className="text-sm">
               <SelectValue placeholder={t("filters.allCategories")}>
@@ -202,7 +183,7 @@ export function SearchFilters() {
         </div>
 
         <div className="sm:w-44">
-          <label className="text-xs font-medium text-[#6b7280] mb-1.5 block">{t("filters.province")}</label>
+          <label className="text-xs font-medium text-[#6b7280] mb-1 block">{t("filters.province")}</label>
           <Select value={province} onValueChange={(v) => { setProvince(v); setCanton(""); applyFilters({ provincia: v, canton: "" }); }}>
             <SelectTrigger className="text-sm">
               <SelectValue placeholder={t("filters.allProvinces")} />
@@ -215,7 +196,7 @@ export function SearchFilters() {
         </div>
 
         <div className="sm:w-44">
-          <label className="text-xs font-medium text-[#6b7280] mb-1.5 block">{t("filters.canton")}</label>
+          <label className="text-xs font-medium text-[#6b7280] mb-1 block">{t("filters.canton")}</label>
           <Select value={canton} onValueChange={(v) => { setCanton(v); applyFilters({ canton: v }); }} disabled={!province || cantons.length === 0}>
             <SelectTrigger className="text-sm">
               <SelectValue placeholder={t("filters.allCantons")} />
@@ -228,7 +209,7 @@ export function SearchFilters() {
         </div>
 
         <div className="sm:w-44">
-          <label className="text-xs font-medium text-[#6b7280] mb-1.5 block">{t("filters.sortBy")}</label>
+          <label className="text-xs font-medium text-[#6b7280] mb-1 block">{t("filters.sortBy")}</label>
           <Select value={sortBy} onValueChange={(v) => { setSortBy(v); applyFilters({ sortBy: v }); }}>
             <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -243,7 +224,7 @@ export function SearchFilters() {
         </div>
 
         <div className="sm:w-48">
-          <label className="text-xs font-medium text-[#6b7280] mb-1.5 block">Aseguradora</label>
+          <label className="text-xs font-medium text-[#6b7280] mb-1 block">Aseguradora</label>
           <Select value={aseguradora} onValueChange={(v) => { setAseguradora(v); applyFilters({ aseguradora: v }); }}>
             <SelectTrigger className="text-sm">
               <SelectValue placeholder="Todas">{aseguradora && aseguradora !== "todas" ? insurerOptions.find((i) => i.id === aseguradora)?.label : "Todas"}</SelectValue>
@@ -256,41 +237,44 @@ export function SearchFilters() {
         </div>
       </div>
 
-      {/* Geolocation + verified toggles */}
-      <div className="mt-3 pt-3 border-t border-[#f3f4f6] flex flex-wrap items-center gap-2">
+      {/* Geolocation + verified toggles + clear — one compact row */}
+      <div className="mt-2 pt-2 border-t border-[#f3f4f6] flex flex-wrap items-center gap-2">
         <button
           type="button"
           onClick={useMyLocation}
           disabled={geoLoading}
-          className={`inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium transition-colors ${
+          className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors ${
             geoActive
               ? "bg-[#EBF5FB] border-[#bfdbfe] text-[#0089bb]"
               : "bg-white border-[#e5e7eb] text-[#374151] hover:border-[#009FD9]"
           }`}
         >
-          {geoLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <MapPin className="h-4 w-4" />}
+          {geoLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MapPin className="h-3.5 w-3.5" />}
           {geoActive ? "Cerca de mí (activo)" : "Usar mi ubicación"}
         </button>
-        {geoError && <span className="text-xs text-[#b45309]">{geoError}</span>}
-      </div>
 
-      {/* "Solo con identidad verificada" — earned-badge incentive, never a gate */}
-      <div className="mt-3 pt-3 border-t border-[#f3f4f6]">
         <button
           type="button"
           onClick={() => { const v = !verifiedOnly; setVerifiedOnly(v); applyFilters({ verificados: v ? "1" : "" }); }}
-          className={`inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-sm font-medium transition-colors ${
+          className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors ${
             verifiedOnly
               ? "bg-[#dcfce7] border-[#bbf7d0] text-[#15803d]"
               : "bg-white border-[#e5e7eb] text-[#374151] hover:border-[#16a34a]"
           }`}
         >
-          <span className={`flex h-4 w-7 items-center rounded-full transition-colors ${verifiedOnly ? "bg-[#16a34a]" : "bg-[#d1d5db]"}`}>
-            <span className={`h-3 w-3 rounded-full bg-white transition-transform ${verifiedOnly ? "translate-x-3.5" : "translate-x-0.5"}`} />
+          <span className={`flex h-3.5 w-6 items-center rounded-full transition-colors ${verifiedOnly ? "bg-[#16a34a]" : "bg-[#d1d5db]"}`}>
+            <span className={`h-2.5 w-2.5 rounded-full bg-white transition-transform ${verifiedOnly ? "translate-x-3" : "translate-x-0.5"}`} />
           </span>
-          <ShieldCheck className="h-4 w-4" />
+          <ShieldCheck className="h-3.5 w-3.5" />
           Solo con identidad verificada
         </button>
+
+        {activeCount > 0 && (
+          <button onClick={clearAll} className="ml-auto inline-flex items-center gap-1 text-xs text-[#6b7280] hover:text-red-500 transition-colors">
+            <X className="h-3 w-3" /> {t("filters.clear")}
+          </button>
+        )}
+        {geoError && <span className="basis-full text-xs text-[#b45309]">{geoError}</span>}
       </div>
     </div>
   );

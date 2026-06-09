@@ -178,7 +178,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
       {/* Filters */}
       <div className="bg-white border-b border-[#e5e7eb]">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-2.5">
           <Suspense fallback={null}>
             <SearchFilters />
           </Suspense>
@@ -187,7 +187,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
       {/* Main content */}
       <main className="flex-1">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
           <SearchResultsLayout mapData={mapData} apiKey={MAPS_API_KEY} locale={locale} numbering={numbering}>
 
             {/* ── Results list ── */}
@@ -204,7 +204,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                 </div>
               ) : (
                 <>
-                  <div className="flex flex-col gap-4">
+                  <div className="flex flex-col gap-3">
                     {await Promise.all(results.map((pro, i) => (
                       // data-pro-id + scroll-mt let the map highlight/scroll to this
                       // card on pin hover; the number badge matches the map pin.

@@ -118,12 +118,12 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
         </div>
       )}
 
-      <CardContent className="p-4">
-        <div className="flex flex-col md:flex-row gap-4">
+      <CardContent className="p-3">
+        <div className="flex flex-col md:flex-row gap-3">
           {/* ── Left: professional info (bounded, consistent rhythm) ──────── */}
-          <div className="flex-1 min-w-0 flex gap-3">
+          <div className="flex-1 min-w-0 flex gap-2.5">
             <Link href={`/profesionales/${professional.slug}`} className="shrink-0">
-              <Avatar className="h-12 w-12">
+              <Avatar className="h-11 w-11">
                 <AvatarImage src={professional.avatarUrl} alt={professional.fullName} />
                 <AvatarFallback className="text-sm bg-[#EBF5FB] text-[#009FD9] font-semibold">{getInitials(professional.fullName)}</AvatarFallback>
               </Avatar>
@@ -200,7 +200,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
           </div>
 
           {/* ── Right: availability panel (md:pt-7 clears the corner favorites button) ── */}
-          <div className="md:w-[260px] md:shrink-0 md:border-l md:border-[#f3f4f6] md:pl-4 md:pt-7 pt-3 border-t border-[#f3f4f6] md:border-t-0">
+          <div className="md:w-[244px] md:shrink-0 md:border-l md:border-[#f3f4f6] md:pl-3 md:pt-7 pt-3 border-t border-[#f3f4f6] md:border-t-0">
             <ProfessionalSchedule
               professional={professional}
               categoryName={categoryName}
