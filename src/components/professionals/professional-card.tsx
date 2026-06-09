@@ -88,10 +88,11 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
     : [professional.categoryId]
   ).filter(Boolean);
   // When the user searched a specific category, show only that matching badge.
+  // Fewer, cleaner chips — cap at 2 (the rest collapse to "+N").
   const professionList =
     activeCategory && allProfessions.includes(activeCategory)
       ? [activeCategory]
-      : allProfessions.slice(0, 3);
+      : allProfessions.slice(0, 2);
   const priceLabel = primaryPricingLabel(professional.pricing, professional.hourlyRate);
   const hasNumericPrice = priceLabel.includes("₡");
   const isVerified = professional.verificationStatus === "verified";
@@ -128,32 +129,34 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
             </Link>
 
             <div className="flex-1 min-w-0 flex flex-col gap-1 overflow-hidden">
-              {/* Name (pr-9 on mobile clears the absolute favorites button) */}
-              <div className="min-w-0 pr-9 md:pr-0">
-                <Link href={`/profesionales/${professional.slug}`} className="min-w-0 block">
+              {/* Name + verified trust mark (right of the name — where the eye
+                  looks for trust). The mark is a subtle icon+label, deliberately
+                  NOT a bordered pill, so it reads differently from profession tags. */}
+              <div className="flex items-center gap-2 min-w-0 pr-9 md:pr-0">
+                <Link href={`/profesionales/${professional.slug}`} className="min-w-0">
                   <h3 className="font-bold text-[#111827] text-[15px] leading-tight truncate hover:text-[#009FD9] transition-colors">{professional.fullName}</h3>
                 </Link>
-                {/* Verification label + business name on one row */}
-                <div className="flex items-center gap-1.5 -mt-0.5 min-w-0">
-                  {isVerified ? (
-                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#dcfce7] border border-[#bbf7d0] px-1.5 py-0.5 text-[10px] font-bold text-[#15803d] leading-none">
-                      <ShieldCheck className="h-3 w-3" /> Verificado
-                    </span>
-                  ) : (
-                    <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#fef3c7] border border-[#fde68a] px-1.5 py-0.5 text-[10px] font-bold text-[#92400e] leading-none">
-                      <ShieldAlert className="h-3 w-3" /> Sin verificar
-                    </span>
-                  )}
-                  {professional.businessName && (
-                    <p className="text-[11px] font-medium text-[#009FD9] truncate">{professional.businessName}</p>
-                  )}
-                </div>
+                {isVerified ? (
+                  <span title="Identidad verificada por ContrataCR" className="inline-flex shrink-0 items-center gap-1 text-[#16a34a]">
+                    <ShieldCheck className="h-4 w-4" />
+                    <span className="text-[11px] font-semibold">Verificado</span>
+                  </span>
+                ) : (
+                  <span title="Identidad sin verificar" className="inline-flex shrink-0 items-center gap-1 text-[#b45309]">
+                    <ShieldAlert className="h-4 w-4" />
+                    <span className="text-[11px] font-medium">Sin verificar</span>
+                  </span>
+                )}
               </div>
 
-              {/* Profession chips + status (brand-tint pills) */}
-              <div className="flex items-center gap-1.5 flex-wrap">
+              {professional.businessName && (
+                <p className="text-[11px] font-medium text-[#009FD9] truncate -mt-0.5">{professional.businessName}</p>
+              )}
+
+              {/* Profession tags — soft, muted, few (categories, not trust). */}
+              <div className="flex items-center gap-1 flex-wrap">
                 {professionList.map((cat) => (
-                  <span key={cat} className="inline-flex shrink-0 items-center rounded-full bg-[#EBF5FB] text-[#0089bb] border border-[#bfdbfe] px-2 py-0.5 text-[11px] font-medium whitespace-nowrap">
+                  <span key={cat} className="inline-flex shrink-0 items-center rounded-full bg-[#f3f4f6] text-[#6b7280] px-2 py-0.5 text-[11px] font-medium whitespace-nowrap">
                     {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                     {tCat(cat as any)}
                   </span>
@@ -162,12 +165,12 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
                   <span className="text-[11px] font-medium text-[#9ca3af]">+{extraProfessions}</span>
                 )}
                 {contactOnly && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-[#fff7ed] border border-[#fed7aa] px-2 py-0.5 text-[10px] font-semibold text-[#9a3412]">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-[#fff7ed] px-2 py-0.5 text-[10px] font-medium text-[#9a3412]">
                     <Lock className="h-3 w-3" /> {isPrivate ? "Coordina por WhatsApp" : "Solo WhatsApp"}
                   </span>
                 )}
                 {professional.isFeatured && (
-                  <span className="inline-flex items-center rounded-full bg-[#fff8ed] border border-[#ffdba5] px-2 py-0.5 text-[10px] font-semibold text-[#c74600]">
+                  <span className="inline-flex items-center rounded-full bg-[#fff8ed] px-2 py-0.5 text-[10px] font-semibold text-[#c74600]">
                     {tCard("featured")}
                   </span>
                 )}

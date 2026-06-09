@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { getTranslations, getLocale } from "next-intl/server";
 import Link from "next/link";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
-import { Navbar } from "@/components/layout/navbar";
+import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { SearchFilters } from "@/components/search/search-filters";
 import { ProfessionalCard } from "@/components/professionals/professional-card";
@@ -196,7 +196,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f4f7fa]">
-      <Navbar />
+      {/* Same app-wide header as every page; it's fixed, so reserve its height. */}
+      <LandingNavbar />
+      <div className="h-16" aria-hidden />
 
       {/* Top bar — title + subtitle */}
       <div className="bg-white border-b border-[#e5e7eb]">
