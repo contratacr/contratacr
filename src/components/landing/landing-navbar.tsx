@@ -10,7 +10,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { getInitials } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { NotificationBell } from "@/components/notifications/notification-bell";
-import { CATEGORY_GROUPS } from "@/lib/data/categories";
 
 const PROVINCES = [
   "San José", "Alajuela", "Cartago", "Heredia",
@@ -64,19 +63,99 @@ function LanguageTogglePill() {
   );
 }
 
-/* ─── Categorías mega-menu data (single "Explore"-style dropdown) ─── */
+/* ─── Dropdown data ─── */
 type NavLink = { label: string; href: string };
+type NavColumn = { heading: string; links: NavLink[] };
+type NavMenu = { id: string; label: string; columns: NavColumn[] };
 
-// Popular services list shown on the right of the mega-menu
-const POPULAR_SERVICES: NavLink[] = [
-  { label: "Limpieza del hogar",     href: "/buscar?categoria=limpieza" },
-  { label: "Plomería",               href: "/buscar?categoria=plomeria" },
-  { label: "Electricidad",           href: "/buscar?categoria=electricidad" },
-  { label: "Jardinería",             href: "/buscar?categoria=jardineria" },
-  { label: "Entrenamiento personal", href: "/buscar?categoria=entrenamiento_personal" },
-  { label: "Peluquería y barbería",  href: "/buscar?categoria=peluqueria" },
-  { label: "Diseño web",             href: "/buscar?categoria=desarrollo_web" },
-  { label: "Fotografía de eventos",  href: "/buscar?categoria=fotografia_eventos" },
+const NAV_MENUS: NavMenu[] = [
+  {
+    id: "interior",
+    label: "Interior",
+    columns: [
+      {
+        heading: "Hogar",
+        links: [
+          { label: "Limpieza del hogar",  href: "/buscar?categoria=limpieza" },
+          { label: "Plomería",            href: "/buscar?categoria=plomeria" },
+          { label: "Electricidad",        href: "/buscar?categoria=electricidad" },
+          { label: "Pintura interior",    href: "/buscar?categoria=pintura" },
+          { label: "Carpintería",         href: "/buscar?categoria=carpinteria" },
+          { label: "Remodelación",        href: "/buscar?categoria=remodelacion" },
+        ],
+      },
+    ],
+  },
+  {
+    id: "exterior",
+    label: "Exterior",
+    columns: [
+      {
+        heading: "Al aire libre",
+        links: [
+          { label: "Jardinería",          href: "/buscar?categoria=jardineria" },
+          { label: "Construcción",        href: "/buscar?categoria=construccion" },
+          { label: "Lavado a presión",    href: "/buscar?categoria=impermeabilizacion" },
+          { label: "Impermeabilización",  href: "/buscar?categoria=impermeabilizacion" },
+          { label: "Mudanzas",            href: "/buscar?categoria=mudanzas" },
+          { label: "Piscinas",            href: "/buscar?categoria=limpieza_piscinas" },
+        ],
+      },
+    ],
+  },
+  {
+    id: "mas",
+    label: "Más servicios",
+    columns: [
+      {
+        heading: "Tecnología",
+        links: [
+          { label: "Soporte técnico",     href: "/buscar?categoria=soporte_tecnico" },
+          { label: "Redes y WiFi",        href: "/buscar?categoria=redes_internet" },
+          { label: "Seguridad CCTV",      href: "/buscar?categoria=camaras_seguridad" },
+          { label: "Diseño web",          href: "/buscar?categoria=desarrollo_web" },
+        ],
+      },
+      {
+        heading: "Bienestar",
+        links: [
+          { label: "Belleza y estética",       href: "/buscar?categoria=peluqueria" },
+          { label: "Entrenamiento personal",   href: "/buscar?categoria=entrenamiento_personal" },
+          { label: "Masajes",                  href: "/buscar?categoria=masajes" },
+          { label: "Nutrición",                href: "/buscar?categoria=nutricion" },
+        ],
+      },
+      {
+        heading: "Vehículos",
+        links: [
+          { label: "Mecánica automotriz",  href: "/buscar?categoria=mecanica" },
+          { label: "Lavado de autos",      href: "/buscar?categoria=lavado_vehiculos" },
+          { label: "Cerrajería",           href: "/buscar?categoria=cerrajeria" },
+        ],
+      },
+    ],
+  },
+  {
+    id: "recursos",
+    label: "Recursos",
+    columns: [
+      {
+        heading: "Aprendé",
+        links: [
+          { label: "Cómo funciona",    href: "/como-funciona" },
+          { label: "Centro de ayuda",  href: "/ayuda" },
+          { label: "Soporte",          href: "/soporte" },
+        ],
+      },
+      {
+        heading: "Profesionales",
+        links: [
+          { label: "Registrá tu perfil",    href: "/registro/profesional" },
+          { label: "Cómo atraer clientes",  href: "/atraer-clientes" },
+        ],
+      },
+    ],
+  },
 ];
 
 /* ─── Login Modal ─── */
@@ -224,7 +303,6 @@ export function LandingNavbar() {
   const [compact, setCompact] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
-  const [activeGroup, setActiveGroup] = useState<string>(CATEGORY_GROUPS[0].id);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [provinceQuery, setProvinceQuery] = useState("");
@@ -316,79 +394,50 @@ export function LandingNavbar() {
                 <ContrataCRLogo />
               </Link>
 
-              {/* Single "Categorías" mega-menu (Explore-style) */}
-              <nav className="hidden lg:flex items-center">
-                <div
-                  className="relative"
-                  onMouseEnter={() => openDropdown("categorias")}
-                  onMouseLeave={closeDropdown}
-                >
-                  <button
-                    className={cn(
-                      "flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-medium transition-colors",
-                      openMenu === "categorias" ? "text-[#1a2744] bg-gray-50" : "text-[#374151] hover:text-[#1a2744] hover:bg-gray-50"
-                    )}
+              <nav className="hidden lg:flex items-center gap-0.5">
+                {NAV_MENUS.map((menu) => (
+                  <div
+                    key={menu.id}
+                    className="relative"
+                    onMouseEnter={() => openDropdown(menu.id)}
+                    onMouseLeave={closeDropdown}
                   >
-                    Categorías
-                    <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", openMenu === "categorias" && "rotate-180")} />
-                  </button>
-
-                  {openMenu === "categorias" && (
-                    <div
-                      className="absolute top-full left-0 mt-1.5 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 w-[780px] overflow-hidden"
-                      style={{ animation: "tab-cards-in 0.15s ease both" }}
+                    <button
+                      className={cn(
+                        "flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-medium transition-colors",
+                        openMenu === menu.id ? "text-[#1a2744] bg-gray-50" : "text-[#374151] hover:text-[#1a2744] hover:bg-gray-50"
+                      )}
                     >
-                      <div className="grid grid-cols-[230px_1fr_220px]">
-                        {/* Col 1 — service groups */}
-                        <div className="bg-[#f9fafb] border-r border-gray-100 p-4">
-                          <div className="flex items-center justify-between px-2 mb-2">
-                            <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Servicios</h4>
-                            <Link href="/categorias" className="text-[11px] font-semibold text-[#009FD9] hover:underline">Ver todas</Link>
+                      {menu.label}
+                      <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", openMenu === menu.id && "rotate-180")} />
+                    </button>
+
+                    {openMenu === menu.id && (
+                      <div
+                        className={cn(
+                          "absolute top-full left-1/2 -translate-x-1/2 mt-1.5 bg-white rounded-2xl shadow-2xl border border-gray-100 p-6 z-50 min-w-[220px]",
+                          menu.columns.length > 1 && "grid gap-8"
+                        )}
+                        style={{
+                          gridTemplateColumns: `repeat(${menu.columns.length}, minmax(160px, 1fr))`,
+                          animation: "tab-cards-in 0.15s ease both",
+                        }}
+                      >
+                        <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white border-l border-t border-gray-100 rotate-45" />
+                        {menu.columns.map((col) => (
+                          <div key={col.heading}>
+                            <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">{col.heading}</h4>
+                            <ul className="space-y-2.5">
+                              {col.links.map((link) => (
+                                <li key={link.label}>{renderLink(link)}</li>
+                              ))}
+                            </ul>
                           </div>
-                          <ul>
-                            {CATEGORY_GROUPS.map((g) => (
-                              <li key={g.id}>
-                                <Link
-                                  href="/categorias"
-                                  onMouseEnter={() => setActiveGroup(g.id)}
-                                  className={cn(
-                                    "flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg text-sm transition-colors",
-                                    activeGroup === g.id ? "bg-white text-[#1a2744] font-medium shadow-sm" : "text-[#374151] hover:text-[#1a2744]"
-                                  )}
-                                >
-                                  <span className="flex items-center gap-2 truncate"><span>{g.emoji}</span>{g.label}</span>
-                                  <ChevronDown className="h-3.5 w-3.5 -rotate-90 text-gray-300 shrink-0" />
-                                </Link>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-
-                        {/* Col 2 — items of the active group */}
-                        <div className="p-5">
-                          <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">
-                            {CATEGORY_GROUPS.find((g) => g.id === activeGroup)?.label}
-                          </h4>
-                          <ul className="grid grid-cols-2 gap-x-6 gap-y-2.5">
-                            {CATEGORY_GROUPS.find((g) => g.id === activeGroup)?.items.map((it) => (
-                              <li key={it.id}>{renderLink({ label: it.label, href: `/buscar?categoria=${it.id}` })}</li>
-                            ))}
-                          </ul>
-                        </div>
-
-                        {/* Col 3 — popular services */}
-                        <div className="bg-[#f9fafb] border-l border-gray-100 p-5">
-                          <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Servicios populares</h4>
-                          <ul className="space-y-2.5">
-                            {POPULAR_SERVICES.map((link) => (
-                              <li key={link.label}>{renderLink(link)}</li>
-                            ))}
-                          </ul>
-                        </div>
+                        ))}
                       </div>
-                    </div>
-                  )}
-                </div>
+                    )}
+                  </div>
+                ))}
               </nav>
 
               <div className="flex-1" />
@@ -444,18 +493,18 @@ export function LandingNavbar() {
                   </div>
                 ) : (
                   <>
+                    <Link
+                      href="/registro/profesional"
+                      className="ml-1 inline-flex items-center bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 rounded-full transition-all duration-150 active:scale-[0.97] shadow-sm hover:shadow-[0_4px_20px_rgba(0,159,217,0.35)] whitespace-nowrap"
+                    >
+                      Registrarse como profesional
+                    </Link>
                     <button
                       onClick={() => setShowLogin(true)}
                       className="text-sm font-medium px-3 py-2 rounded-xl text-[#374151] hover:bg-gray-50 transition-colors"
                     >
                       Iniciar sesión
                     </button>
-                    <Link
-                      href="/registro/profesional"
-                      className="ml-1 inline-flex items-center bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 rounded-full transition-colors shadow-sm whitespace-nowrap"
-                    >
-                      Únete como profesional
-                    </Link>
                   </>
                 )}
                 <LanguageTogglePill />
@@ -488,7 +537,7 @@ export function LandingNavbar() {
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Busca un servicio…"
+                      placeholder="Describí tu proyecto o problema…"
                       className="flex-1 text-sm sm:text-base text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-none min-w-0"
                     />
                   </div>
@@ -526,9 +575,9 @@ export function LandingNavbar() {
                 ) : (
                   <Link
                     href="/registro/profesional"
-                    className="inline-flex items-center bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-4 py-2 rounded-full transition-colors whitespace-nowrap"
+                    className="inline-flex items-center bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-4 py-2 rounded-full transition-all duration-150 active:scale-[0.97] whitespace-nowrap"
                   >
-                    Únete como profesional
+                    Registrarse como profesional
                   </Link>
                 )}
                 <LanguageTogglePill />
@@ -544,25 +593,14 @@ export function LandingNavbar() {
           mobileOpen ? "max-h-[80vh] opacity-100" : "max-h-0 opacity-0"
         )}>
           <div className="px-4 py-4 overflow-y-auto max-h-[70vh]">
-            <div className="mb-4">
-              <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Categorías</p>
-              <div className="space-y-1.5 px-2">
-                {POPULAR_SERVICES.slice(0, 6).map((link) => renderLink(link, () => setMobileOpen(false)))}
-                <Link href="/categorias" onClick={() => setMobileOpen(false)} className="block text-sm font-semibold text-[#009FD9] hover:underline leading-tight">
-                  Ver todas las categorías
-                </Link>
+            {NAV_MENUS.map((menu) => (
+              <div key={menu.id} className="mb-4">
+                <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{menu.label}</p>
+                {menu.columns.flatMap((col) => col.links).slice(0, 5).map((link) =>
+                  renderLink(link, () => setMobileOpen(false))
+                )}
               </div>
-            </div>
-            <div className="mb-4">
-              <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Más</p>
-              <div className="space-y-1.5 px-2">
-                {[
-                  { label: "Cómo funciona", href: "/como-funciona" },
-                  { label: "Centro de ayuda", href: "/ayuda" },
-                  { label: "Atraer clientes", href: "/atraer-clientes" },
-                ].map((link) => renderLink(link, () => setMobileOpen(false)))}
-              </div>
-            </div>
+            ))}
             <div className="border-t border-gray-100 pt-4 flex flex-col gap-2">
               <div className="flex items-center justify-between px-1 pb-1">
                 <span className="text-xs text-gray-400 font-medium">Idioma / Language</span>
@@ -587,7 +625,7 @@ export function LandingNavbar() {
                   </button>
                   <Link href="/registro/profesional" onClick={() => setMobileOpen(false)}
                     className="w-full block px-4 py-3 rounded-full bg-[#009FD9] text-white text-sm font-bold text-center hover:bg-[#0089bb] transition-colors">
-                    Únete como profesional
+                    Registrarse como profesional
                   </Link>
                 </>
               )}
