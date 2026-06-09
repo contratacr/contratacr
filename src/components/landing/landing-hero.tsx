@@ -32,62 +32,80 @@ const HERO_IMAGE = {
   alt: "Profesional de oficio trabajando en Costa Rica",
 };
 
-/* Typewriter rotating word: types a word out letter by letter, holds, deletes
-   in reverse, then types the next — NO cursor. The word stays horizontally
-   centered above "sin complicaciones." (it recenters as it grows/shrinks; the
-   second line never shifts). Reduced-motion → a static word. */
-const TYPE_MS = 78;     // per-letter typing
-const DELETE_MS = 42;   // per-letter deleting
-const HOLD_MS = 1500;   // pause on the full word
-const GAP_MS = 380;     // pause on empty before the next word
+/* Vertical slide-up (masked roll) rotating word — slot-machine style. The whole
+   word slides up into place from below, holds, then slides up and out as the
+   next word rolls in. A clipping mask (overflow-hidden, one line tall) keeps
+   words within the line. Seamless loop via a cloned first word at the end, then
+   a no-transition snap back to 0. Reduced-motion → a static word. */
+const ROLL_LINE = 1.18;    // em — line/clip height (room for accents like í, J).
+const ROLL_HOLD_MS = 2200; // time each word is shown (incl. the slide).
+const ROLL_MS = 620;       // slide duration.
 
 function RotatingLine({ lines }: { lines: string[] }) {
-  const [text, setText] = useState(lines[0]);
+  const [index, setIndex] = useState(0);
+  const [animate, setAnimate] = useState(true);
+  const [reduced, setReduced] = useState(false);
 
+  // Advance one word at a time.
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    if (mq.matches) {
-      setText(lines[0]);
-      return;
+    if (mq.matches) { setReduced(true); return; }
+    const id = setInterval(() => setIndex((i) => i + 1), ROLL_HOLD_MS);
+    return () => clearInterval(id);
+  }, []);
+
+  // When we land on the cloned first word, let the slide finish then snap back
+  // to the real index 0 WITHOUT a transition — invisible, seamless loop.
+  useEffect(() => {
+    if (reduced) return;
+    if (index === lines.length) {
+      const t = setTimeout(() => { setAnimate(false); setIndex(0); }, ROLL_MS + 40);
+      return () => clearTimeout(t);
     }
-    let wordIdx = 0;
-    let charIdx = lines[0].length;
-    let deleting = true; // start by holding the full first word, then delete
-    let timer: ReturnType<typeof setTimeout>;
+  }, [index, lines.length, reduced]);
 
-    const tick = () => {
-      const word = lines[wordIdx];
-      if (!deleting) {
-        charIdx += 1;
-        setText(word.slice(0, charIdx));
-        if (charIdx >= word.length) {
-          deleting = true;
-          timer = setTimeout(tick, HOLD_MS);
-        } else {
-          timer = setTimeout(tick, TYPE_MS);
-        }
-      } else {
-        charIdx -= 1;
-        setText(word.slice(0, Math.max(0, charIdx)));
-        if (charIdx <= 0) {
-          deleting = false;
-          wordIdx = (wordIdx + 1) % lines.length;
-          timer = setTimeout(tick, GAP_MS);
-        } else {
-          timer = setTimeout(tick, DELETE_MS);
-        }
-      }
-    };
+  // Re-enable the transition on the frame after the snap-back.
+  useEffect(() => {
+    if (animate) return;
+    const r = requestAnimationFrame(() => requestAnimationFrame(() => setAnimate(true)));
+    return () => cancelAnimationFrame(r);
+  }, [animate]);
 
-    timer = setTimeout(tick, HOLD_MS);
-    return () => clearTimeout(timer);
-  }, [lines]);
+  if (reduced) {
+    return <span className="block" style={{ minHeight: `${ROLL_LINE}em`, color: "#009FD9" }}>{lines[0]}</span>;
+  }
 
+  const stack = [...lines, lines[0]];
   return (
-    // Own centered line; min-height reserves the row so it never collapses while
-    // the word is empty between cycles. No cursor — letters type/untype cleanly.
-    <span className="block" style={{ minHeight: "1.1em", color: "#009FD9" }}>
-      {text}
+    <span
+      className="block overflow-hidden"
+      style={{ height: `${ROLL_LINE}em` }}
+      aria-label={lines[index % lines.length]}
+    >
+      <span
+        aria-hidden
+        style={{
+          display: "block",
+          transform: `translateY(-${index * ROLL_LINE}em)`,
+          transition: animate ? `transform ${ROLL_MS}ms cubic-bezier(0.16, 1, 0.3, 1)` : "none",
+          willChange: "transform",
+        }}
+      >
+        {stack.map((w, i) => (
+          <span
+            key={i}
+            style={{
+              display: "flex",
+              height: `${ROLL_LINE}em`,
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#009FD9",
+            }}
+          >
+            {w}
+          </span>
+        ))}
+      </span>
     </span>
   );
 }
