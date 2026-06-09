@@ -114,20 +114,14 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
   const mobileText = professional.serviceType?.includes("mobile") ? coverageLabel(professional.coverage) : "";
 
   return (
-    <Card className={`group hover:shadow-md transition-shadow duration-200 overflow-hidden md:min-h-[184px] ${className ?? ""}`}>
-      {professional.isFeatured && (
-        <div className="bg-gradient-to-r from-[#ff7c0a] to-[#ff9b32] px-4 py-1">
-          <span className="text-[11px] font-semibold text-white tracking-wide">{tCard("featured")}</span>
-        </div>
-      )}
-
-      {/* Private/contact-only is shown as a compact inline chip in the chips row
-          below — no full-width band, so it adds NO extra card height. */}
-
-      <CardContent className="p-3">
-        <div className="flex flex-col md:flex-row gap-3">
-          {/* ── Left: professional info (bounded, consistent rhythm) ──────── */}
-          <div className="flex-1 min-w-0 flex gap-2.5">
+    // Fixed height on md+ (with overflow-hidden) so EVERY card in the list is the
+    // exact same size regardless of content — sparse cards get a little breathing
+    // room, rich cards cap/truncate. On mobile the card stacks to natural height.
+    <Card className={`group relative hover:shadow-md transition-shadow duration-200 overflow-hidden md:h-[216px] ${className ?? ""}`}>
+      <CardContent className="p-3 h-full">
+        <div className="flex flex-col md:flex-row gap-3 h-full">
+          {/* ── Left: professional info (bounded, fills height) ──────── */}
+          <div className="flex-1 min-w-0 flex gap-2.5 overflow-hidden">
             <Link href={`/profesionales/${professional.slug}`} className="shrink-0">
               <Avatar className="h-11 w-11">
                 <AvatarImage src={professional.avatarUrl} alt={professional.fullName} />
@@ -135,12 +129,11 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
               </Avatar>
             </Link>
 
-            <div className="flex-1 min-w-0 flex flex-col gap-1">
+            <div className="flex-1 min-w-0 flex flex-col gap-1 overflow-hidden">
               {/* Name + price. pr-10 on mobile clears the absolute favorites button. */}
               <div className="flex items-start justify-between gap-2 pr-10 md:pr-0">
-                <Link href={`/profesionales/${professional.slug}`} className="flex items-center gap-1 min-w-0">
+                <Link href={`/profesionales/${professional.slug}`} className="min-w-0">
                   <h3 className="font-semibold text-[#111827] text-[15px] leading-tight truncate hover:text-[#009FD9] transition-colors">{professional.fullName}</h3>
-                  {isVerified && <ShieldCheck className="h-4 w-4 text-[#16a34a] shrink-0" />}
                 </Link>
                 <p className="font-bold text-[#111827] text-sm whitespace-nowrap shrink-0">{priceLabel}</p>
               </div>
@@ -149,16 +142,21 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
                 <p className="text-xs font-medium text-[#009FD9] truncate -mt-0.5">{professional.businessName}</p>
               )}
 
-              {/* Verified pill + profession chips on one wrapped row. */}
-              <div className="flex items-center gap-1.5 flex-wrap">
+              {/* Verified badge + status chips + profession chips on one row. */}
+              <div className="flex items-center gap-1.5 flex-wrap overflow-hidden">
                 {isVerified && (
                   <span className="inline-flex items-center gap-1 rounded-md bg-[#dcfce7] px-1.5 py-0.5 text-[10px] font-semibold text-[#15803d]">
-                    <ShieldCheck className="h-3 w-3" /> Identidad verificada
+                    <ShieldCheck className="h-3 w-3" /> Verificado
                   </span>
                 )}
                 {contactOnly && (
                   <span className="inline-flex items-center gap-1 rounded-md bg-[#fff7ed] border border-[#fed7aa] px-1.5 py-0.5 text-[10px] font-semibold text-[#9a3412]">
                     <Lock className="h-3 w-3" /> {isPrivate ? "Coordina por WhatsApp" : "Solo WhatsApp"}
+                  </span>
+                )}
+                {professional.isFeatured && (
+                  <span className="inline-flex items-center rounded-md bg-[#fff8ed] border border-[#ffdba5] px-1.5 py-0.5 text-[10px] font-semibold text-[#c74600]">
+                    {tCard("featured")}
                   </span>
                 )}
                 {professionList.map((cat) => (
@@ -197,11 +195,11 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
                 </div>
               )}
 
-              {/* Casos de éxito preview */}
+              {/* Casos de éxito preview — pinned to the bottom of the column. */}
               {professional.portfolioCount ? (
                 <Link
                   href={`/profesionales/${professional.slug}?tab=casos`}
-                  className="inline-flex items-center gap-1.5 text-xs font-medium text-[#009FD9] hover:underline w-fit"
+                  className="mt-auto inline-flex items-center gap-1.5 text-xs font-medium text-[#009FD9] hover:underline w-fit"
                 >
                   <ImageIcon className="h-3.5 w-3.5" />
                   Ver casos de éxito ({professional.portfolioCount})
@@ -210,8 +208,8 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
             </div>
           </div>
 
-          {/* ── Right: availability panel (md:pt-7 clears the corner favorites button) ── */}
-          <div className="md:w-[212px] md:shrink-0 md:border-l md:border-[#f3f4f6] md:pl-3 md:pt-7 pt-3 border-t border-[#f3f4f6] md:border-t-0">
+          {/* ── Right: availability panel (fills height; md:pt-7 clears the favorites button) ── */}
+          <div className="md:w-[228px] md:shrink-0 md:border-l md:border-[#f3f4f6] md:pl-3 md:pt-7 pt-3 border-t border-[#f3f4f6] md:border-t-0 md:h-full md:overflow-hidden">
             <ProfessionalSchedule
               professional={professional}
               categoryName={categoryName}

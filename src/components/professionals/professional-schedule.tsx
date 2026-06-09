@@ -167,6 +167,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   // compact contact actions so every card stays the same tidy height.
   if (!canBook) {
     return (
+      <div className="flex h-full flex-col justify-end">
       <div className="flex gap-1.5">
         <a
           href={getWhatsAppLink(professional.whatsapp, `Hola ${professional.fullName.split(" ")[0]}, vi tu perfil en ContrataCR y me gustaría coordinar un servicio.`)}
@@ -189,6 +190,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           </a>
         )}
       </div>
+      </div>
     );
   }
 
@@ -201,7 +203,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const hasUpcoming = days.some((d) => d.items.length > 0);
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2 h-full">
       {/* Location chips/tabs — the client picks WHICH place before booking, so hours
           are never an undifferentiated mix (item 3). Defaults to the first place. */}
       {locationGroups.length > 1 && (
@@ -222,6 +224,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
         Horarios de <span className="font-semibold text-[#374151]">{categoryName}</span>
         {effectiveLabel && effectiveLabel !== "General" && <> · <span className="font-semibold text-[#374151]">{effectiveLabel}</span></>}
       </p>
+      <div className="flex-1 min-h-0 overflow-hidden">
       {!hasUpcoming ? (
         <p className="text-[11px] text-[#9ca3af] py-0.5">Sin horarios en los próximos días.</p>
       ) : (
@@ -278,6 +281,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
         </button>
       </div>
       )}
+      </div>
 
       <Link
         href={`/profesionales/${professional.slug}`}

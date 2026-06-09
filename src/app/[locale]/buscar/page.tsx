@@ -52,9 +52,47 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     nearLng: params.lng ? Number(params.lng) : undefined,
   });
 
+  // "Disponibilidad inmediata" sort — order pros by their SOONEST upcoming bookable
+  // slot (those with no upcoming slots go last). Done here (not in the SQL query)
+  // because slots live in a separate table; best-effort, falls back to default order.
+  let orderedResults = allResults;
+  if (params.sortBy === "availability") {
+    try {
+      const supabase = await createClient();
+      const todayISO = new Date().toISOString().slice(0, 10);
+      const ids = allResults.filter((p) => p.availabilityPublic !== false).map((p) => p.id);
+      const earliest: Record<string, string> = {};
+      if (ids.length > 0) {
+        const { data } = await supabase
+          .from("availability_slots")
+          .select("professional_id, slot_date, slot_time")
+          .in("professional_id", ids)
+          .gte("slot_date", todayISO)
+          .order("slot_date")
+          .order("slot_time")
+          .limit(3000);
+        for (const r of data ?? []) {
+          const pid = r.professional_id as string;
+          const key = `${r.slot_date}T${String(r.slot_time).slice(0, 5)}`;
+          if (!earliest[pid] || key < earliest[pid]) earliest[pid] = key;
+        }
+      }
+      orderedResults = [...allResults].sort((a, b) => {
+        const ea = earliest[a.id];
+        const eb = earliest[b.id];
+        if (ea && eb) return ea < eb ? -1 : ea > eb ? 1 : 0;
+        if (ea) return -1;
+        if (eb) return 1;
+        return 0;
+      });
+    } catch {
+      /* fall back to default order */
+    }
+  }
+
   const totalPages = Math.max(1, Math.ceil(allResults.length / PAGE_SIZE));
   const safePage = Math.min(currentPage, totalPages);
-  const results = allResults.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const results = orderedResults.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   // Fetch upcoming published slots for the professionals on THIS page so each
   // card can show inline availability (Hulihealth-style). Private pros are
@@ -162,7 +200,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
       {/* Top bar — title + subtitle */}
       <div className="bg-white border-b border-[#e5e7eb]">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3">
+        <div className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 py-3">
           <h1 className="text-xl font-bold text-[#111827]">{pageTitle}</h1>
           <p className="text-[#6b7280] text-sm mt-0.5">{subtitle}</p>
         </div>
@@ -170,7 +208,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
       {/* Main content — 3-column shell (filters · results · map) */}
       <main className="flex-1">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
+        <div className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 py-4">
           <SearchResultsLayout
             mapData={mapData}
             apiKey={MAPS_API_KEY}

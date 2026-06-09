@@ -100,7 +100,8 @@
       "reviews": "Most reviews",
       "priceAsc": "Price: low to high",
       "priceDesc": "Price: high to low",
-      "newest": "Newest"
+      "newest": "Newest",
+      "availability": "Immediate availability"
     }
   },
   "hero": {

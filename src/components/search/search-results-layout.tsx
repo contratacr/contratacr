@@ -89,7 +89,7 @@ export function SearchResultsLayout({ children, filters, mapData, apiKey, locale
 
       <div className="flex gap-5">
         {/* Filters sidebar — xl+ only */}
-        <aside className="hidden xl:block w-56 shrink-0">
+        <aside className="hidden xl:block w-64 shrink-0">
           <div className="sticky top-20">{filters}</div>
         </aside>
 
@@ -101,7 +101,7 @@ export function SearchResultsLayout({ children, filters, mapData, apiKey, locale
         {/* Map — inline sticky column on lg+; the toggled full-width panel on phones. */}
         <aside
           className={cn(
-            "lg:block lg:w-[40%] xl:w-[34%] lg:shrink-0",
+            "lg:block lg:w-[40%] xl:w-[38%] lg:shrink-0",
             mobileView === "map" ? "block w-full" : "hidden"
           )}
         >

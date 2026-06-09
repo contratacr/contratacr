@@ -194,15 +194,19 @@ export function SearchFilters() {
 
         <div>
           <label className="text-xs font-medium text-[#6b7280] mb-1 block">{t("filters.sortBy")}</label>
-          <Select value={sortBy} onValueChange={(v) => { setSortBy(v); applyFilters({ sortBy: v }); }}>
+          <Select value={sortBy} onValueChange={(v) => {
+            setSortBy(v);
+            // "Cercanía" needs the user's coordinates — request geolocation if we
+            // don't have them yet; otherwise apply directly.
+            if (v === "cercania" && !geoActive) { useMyLocation(); return; }
+            applyFilters({ sortBy: v });
+          }}>
             <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
             <SelectContent>
-              {geoActive && <SelectItem value="cercania">Cerca de mí</SelectItem>}
               <SelectItem value="rating">{t("sort.rating")}</SelectItem>
-              <SelectItem value="reviews">{t("sort.reviews")}</SelectItem>
               <SelectItem value="priceAsc">{t("sort.priceAsc")}</SelectItem>
-              <SelectItem value="priceDesc">{t("sort.priceDesc")}</SelectItem>
-              <SelectItem value="newest">{t("sort.newest")}</SelectItem>
+              <SelectItem value="availability">{t("sort.availability")}</SelectItem>
+              <SelectItem value="cercania">Cercanía</SelectItem>
             </SelectContent>
           </Select>
         </div>

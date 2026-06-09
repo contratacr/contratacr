@@ -118,25 +118,26 @@ Use the standard 4px Tailwind steps. Defaults for this app:
 
 ## 3. Layout patterns
 
-### /buscar — three-column directory (the signature screen)
-Filters · results · map, Hulihealth-style, responsive:
-- **xl+ (≥1280):** `filters sidebar (w-56, sticky)` · `results list (flex-1)` · `map (xl:w-[34%], sticky)`.
-- **lg–xl (1024–1279):** `results` · `map (lg:w-[40%])`; filters move behind a **"Filtros" slide-over drawer** (3 columns here squeezes cards too narrow).
+### /buscar — full-width three-column directory (THE standard search layout)
+This is the signature screen and is **full-width** — NOT a narrow `max-w-7xl` centered container (that wastes horizontal space next to a map). Wrap it in `mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8` so it fills the screen on laptops/desktops. Three columns, Hulihealth-style, responsive:
+- **xl+ (≥1280):** `filters sidebar (w-64, sticky)` · `results list (flex-1)` · `map (xl:w-[38%], sticky, full viewport height)`.
+- **lg–xl (1024–1279):** `results` · `map (lg:w-[40%])`; filters move behind a **"Filtros" slide-over drawer**.
 - **<lg:** single column; **"Filtros"** button opens the drawer + a **List/Map toggle** swaps results/map.
-- `SearchResultsLayout` owns the three slots + drawer (takes a `filters` prop). `SearchFilters` is a **vertical sidebar** (stacked search, selects, geolocation, verified, clear). Don't reintroduce a tall top filter band.
+- `SearchResultsLayout` owns the three slots + drawer (takes a `filters` prop). `SearchFilters` is a **vertical sidebar** (stacked search, category [typeable+browsable], province/cantón, sort, aseguradora, geolocation, verified, clear). **Filters live ONLY in the sidebar — never inside the cards.**
+- **Sort ("Ordenar por") — the standard set:** Mejor calificados (`rating`, default) · Precio (de menor a mayor) (`priceAsc`) · Disponibilidad inmediata (`availability` — soonest upcoming slot first) · Cercanía (`cercania` — requests geolocation when picked).
 
-### Result cards — uniform & compact
-A professional is always **ONE card** (never split per location). Bounded, aligned columns:
-- Left: small avatar (44px) · **name + price** header row · **verified pill inlined with capped profession chips** (`+N` overflow) · rating or "Sin reseñas" · **ONE consolidated location/coverage line** (truncated). Don't stack a separate row per province/cantón/workplace/bio — that's the main source of height variance. No bio on the card.
-- Numbered cards **1..N** mirrored on numbered map pins; pin hover previews + highlights the card.
-- Private/contact-only availability: a **slim top band flush to the card edge** (not a floating paragraph that adds height) — see §3 availability.
-- Bound the availability column and cap slots so every card is the same height (`md:min-h-[…]`).
+### Result cards — UNIFORM fixed height, compact, dense (Hulihealth)
+A professional is always **ONE card** (never split per location). **Every card in the list is the EXACT same height** — set a fixed height on md+ (`md:h-[216px]`) with `overflow-hidden`, so a sparse card gets a little breathing room and a rich card caps/truncates; both render as the same box. On mobile the card stacks to natural height. Two `h-full` columns:
+- **Left (`flex-1`, fills height):** small avatar (44px) · **name + price** header row · ONE chips row (**Verificado** badge + capped profession chips with `+N` overflow + the contact-only/featured chip) · rating or "Sin reseñas" · **ONE consolidated location/coverage line** (truncated) · **"Ver casos de éxito (N)"** pinned to the bottom (`mt-auto`). Never stack a row per province/cantón/workplace, and no bio — those are the height-variance culprits.
+- **Right (availability, `md:w-[228px]`, fills height, `md:pt-7` clears the favorites button):** the Hulihealth availability panel (below) with its **action buttons pinned to the bottom** so they align across every card.
+- Numbered cards **1..N** mirrored on numbered map pins; pin hover previews + highlights the card. The number badge + favorites button overlay the corners (name/price use `pr-10 md:pr-0` so they never collide on mobile).
+- Overflow always **truncates/collapses ("+N")**, never grows the card.
 
 ### Availability display (Hulihealth-style)
 - A **day/time strip**: per upcoming day, a few time chips (cap to ~2/day + a muted "+N más"); empty → collapse to one line ("Sin horarios en los próximos días."). Slots are one-click → opens booking pre-selected.
 - **Location chips/tabs** above the strip pick the place (default to the first; caption "Horarios de <servicio> · <lugar>"). Dedupe chips by label.
 - Grouped lists (e.g. the pro's own "Tus horarios próximos") group times by **Mañana (<12h) / Tarde (12–18h) / Noche (≥18h)** so dense lists are scannable; each part renders only when it has slots.
-- **Private / contact-only:** a compact band/badge "🔒 Disponibilidad no pública — coordina por WhatsApp" + compact WhatsApp/llamar actions. Never let the private notice add card height.
+- **Private / contact-only:** shown as a compact **inline chip** in the card's chips row ("🔒 Coordina por WhatsApp" / "Solo WhatsApp") — NOT a full-width band — so it never adds card height; the availability column then renders just the compact WhatsApp/llamar actions (pinned to the bottom).
 
 ### Long forms — collapsible sections
 Break long forms (pro profile, etc.) into **accordion sections** with a header + chevron. **First section open by default, the rest collapsed.** Group logically (e.g. Datos básicos · Profesión · Ubicación y cobertura · Contacto y precios · …). Keep the save bar always visible. This kills the endless single-column scroll.

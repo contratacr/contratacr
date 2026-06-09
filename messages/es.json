@@ -98,9 +98,10 @@
     "sort": {
       "rating": "Mejor calificados",
       "reviews": "Más reseñas",
-      "priceAsc": "Precio: menor a mayor",
+      "priceAsc": "Precio (de menor a mayor)",
       "priceDesc": "Precio: mayor a menor",
-      "newest": "Más recientes"
+      "newest": "Más recientes",
+      "availability": "Disponibilidad inmediata"
     }
   },
   "hero": {
