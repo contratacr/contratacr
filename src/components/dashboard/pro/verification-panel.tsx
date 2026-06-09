@@ -35,7 +35,7 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
     setError(null);
     setNote(null);
     if (appealMode && appeal.trim().length < 10) {
-      setError("Contanos qué corregiste (mínimo 10 caracteres).");
+      setError("Cuéntanos qué corregiste (mínimo 10 caracteres).");
       return;
     }
     setBusy(true);
@@ -52,7 +52,7 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
       else setNote("No pudimos confirmarla automáticamente. Tu caso quedó en revisión.");
       onSaved?.();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "No se pudo procesar. Intentá de nuevo.");
+      setError(e instanceof Error ? e.message : "No se pudo procesar. Intenta de nuevo.");
     } finally {
       setBusy(false);
     }
@@ -70,12 +70,12 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "Error");
-      if (json.outcome === "verified") setNote("¡Listo! Verificamos tu cédula. Ya aparecés en los resultados de búsqueda.");
+      if (json.outcome === "verified") setNote("¡Listo! Verificamos tu cédula. Ya apareces en los resultados de búsqueda.");
       else setNote("Guardamos tu cédula. Si no se verificó automáticamente, quedó en revisión.");
       setNewCedula("");
       onSaved?.();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "No se pudo procesar. Intentá de nuevo.");
+      setError(e instanceof Error ? e.message : "No se pudo procesar. Intenta de nuevo.");
     } finally {
       setCedulaBusy(false);
     }
@@ -88,7 +88,7 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
         {status === "rejected" ? (
           <Banner tone="red" icon={<XCircle className="h-5 w-5" />} title="Tu verificación no fue aprobada">
             {reason ? <span className="block">Motivo: <strong>{reason}</strong></span> : "No se especificó un motivo."}
-            <span className="block mt-1">Tu cuenta sigue activa, pero no aparecés en los resultados de búsqueda hasta ser aprobado.</span>
+            <span className="block mt-1">Tu cuenta sigue activa, pero no apareces en los resultados de búsqueda hasta ser aprobado.</span>
           </Banner>
         ) : status === "under_appeal" ? (
           <Banner tone="amber" icon={<Clock className="h-5 w-5" />} title="Caso en revisión manual">
@@ -96,8 +96,8 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
           </Banner>
         ) : (
           <Banner tone="gray" icon={<Clock className="h-5 w-5" />} title="Pendiente de revisión">
-            Como no tenés identificación costarricense, un agente debe aprobar tu identidad manualmente.
-            <strong> Todavía no aparecés en los resultados de búsqueda</strong> — te avisaremos en cuanto te aprobemos. Tu cuenta sigue activa.
+            Como no tienes identificación costarricense, un agente debe aprobar tu identidad manualmente.
+            <strong> Todavía no apareces en los resultados de búsqueda</strong> — te avisaremos en cuanto te aprobemos. Tu cuenta sigue activa.
           </Banner>
         )}
 
@@ -117,7 +117,7 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
         {status !== "under_appeal" && (
           <div className="bg-white rounded-xl border border-[#e5e7eb] p-5">
             <h3 className="font-semibold text-[#111827] text-sm mb-1">Solicitar revisión manual</h3>
-            <p className="text-xs text-[#6b7280] mb-3">Contanos sobre tu documento (pasaporte, DIMEX en trámite). Tu solicitud queda registrada como un caso de soporte.</p>
+            <p className="text-xs text-[#6b7280] mb-3">Cuéntanos sobre tu documento (pasaporte, DIMEX en trámite). Tu solicitud queda registrada como un caso de soporte.</p>
             <textarea
               value={appeal}
               onChange={(e) => setAppeal(e.target.value)}
@@ -133,8 +133,8 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
 
         {/* Add-cédula-later — runs the normal padrón verification automatically */}
         <div className="bg-white rounded-xl border border-[#e5e7eb] p-5">
-          <h3 className="font-semibold text-[#111827] text-sm mb-1">¿Ya tenés cédula costarricense?</h3>
-          <p className="text-xs text-[#6b7280] mb-3">Agregala acá y verificamos tu identidad automáticamente contra el padrón. No necesitás abrir un caso.</p>
+          <h3 className="font-semibold text-[#111827] text-sm mb-1">¿Ya tienes cédula costarricense?</h3>
+          <p className="text-xs text-[#6b7280] mb-3">Agrégala acá y verificamos tu identidad automáticamente contra el padrón. No necesitas abrir un caso.</p>
           <div className="flex flex-wrap items-center gap-2">
             <input
               value={newCedula}
@@ -157,14 +157,14 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
       {status === "verified" && (
         <Banner tone="green" icon={<ShieldCheck className="h-5 w-5" />} title="Tu identidad está verificada">
           Confirmamos que tu cédula es real y coincide con los registros oficiales. La insignia
-          <strong> Identidad verificada</strong> aparece en tu perfil y en los resultados de búsqueda. Recordá: verificamos tu identidad,
+          <strong> Identidad verificada</strong> aparece en tu perfil y en los resultados de búsqueda. Recuerda: verificamos tu identidad,
           no la calidad ni el resultado de los trabajos.
         </Banner>
       )}
       {status === "pending" && (
         <Banner tone="gray" icon={<Clock className="h-5 w-5" />} title="Verificación pendiente">
-          No pudimos confirmar tu identidad automáticamente (cédula no encontrada o el nombre no coincide). Verificá
-          que tu nombre coincida con tu cédula y volvé a intentar. Tu cuenta sigue activa.
+          No pudimos confirmar tu identidad automáticamente (cédula no encontrada o el nombre no coincide). Verifica
+          que tu nombre coincida con tu cédula y vuelve a intentar. Tu cuenta sigue activa.
         </Banner>
       )}
       {status === "under_appeal" && (
@@ -176,7 +176,7 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
       {status === "rejected" && (
         <Banner tone="red" icon={<XCircle className="h-5 w-5" />} title="Tu verificación no fue aprobada">
           {reason ? <span className="block">Motivo: <strong>{reason}</strong></span> : "No se especificó un motivo."}
-          <span className="block mt-1">Tu cuenta sigue activa. Corregí lo indicado y apelá para una nueva revisión.</span>
+          <span className="block mt-1">Tu cuenta sigue activa. Corrige lo indicado y apela para una nueva revisión.</span>
         </Banner>
       )}
 
@@ -190,7 +190,7 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
       )}
 
       <p className="text-sm text-[#6b7280]">
-        ¿Querés saber cómo funciona?{" "}
+        ¿Quieres saber cómo funciona?{" "}
         <Link href="/proveedores-autorizados" className="text-[#009FD9] font-medium hover:underline">
           ¿Qué es la verificación de identidad?
         </Link>
@@ -213,13 +213,13 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
           <h3 className="font-semibold text-[#111827] text-sm mb-1">Apelar esta decisión</h3>
           <p className="text-xs text-[#6b7280] mb-3">
             Al apelar, volvemos a verificar tu identidad automáticamente. Si aún no coincide, abrimos un caso de soporte
-            (queda registrado). También podés escribirnos por WhatsApp.
+            (queda registrado). También puedes escribirnos por WhatsApp.
           </p>
           <textarea
             value={appeal}
             onChange={(e) => setAppeal(e.target.value)}
             rows={4}
-            placeholder="Explicá qué corregiste o por qué deberíamos revisar de nuevo…"
+            placeholder="Explica qué corregiste o por qué deberíamos revisar de nuevo…"
             className="w-full rounded-lg border border-[#e5e7eb] p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
           />
           <div className="flex flex-wrap gap-2 mt-3">

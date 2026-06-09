@@ -75,7 +75,7 @@ export function BlockedDatesEditor({ professionalId }: BlockedDatesEditorProps) 
         <h3 className="text-sm font-semibold text-[#374151]">Fechas bloqueadas</h3>
       </div>
       <p className="text-xs text-[#9ca3af] mb-4">
-        Marcá días específicos en los que no estás disponible (vacaciones, feriados, etc.)
+        Marca días específicos en los que no estás disponible (vacaciones, feriados, etc.)
       </p>
 
       <div className="flex gap-2 mb-4">

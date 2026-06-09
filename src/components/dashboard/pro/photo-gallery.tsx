@@ -64,7 +64,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
     const remaining = MAX_PORTFOLIO_PHOTOS - items.length;
     const toUpload = Array.from(files).slice(0, Math.max(0, remaining));
     if (toUpload.length === 0) {
-      alert(`Podés subir un máximo de ${MAX_PORTFOLIO_PHOTOS} fotos en total.`);
+      alert(`Puedes subir un máximo de ${MAX_PORTFOLIO_PHOTOS} fotos en total.`);
       return;
     }
     setUploadingFor(profession ?? "__none__");
@@ -94,7 +94,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
   return (
     <div className="flex flex-col gap-6">
       <p className="text-sm text-[#6b7280]">
-        Subí tus <strong>casos de éxito</strong> (trabajos anteriores) <strong>en cada servicio</strong> para generar
+        Sube tus <strong>casos de éxito</strong> (trabajos anteriores) <strong>en cada servicio</strong> para generar
         confianza. Aparecen en tu perfil y en los resultados de búsqueda. Máximo {MAX_PORTFOLIO_PHOTOS} fotos en total.
       </p>
 

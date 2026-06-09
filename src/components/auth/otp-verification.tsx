@@ -42,7 +42,7 @@ export function OtpVerification({ email, onVerified }: OtpVerificationProps) {
     setVerifying(false);
 
     if (otpError) {
-      setError("Código incorrecto o expirado. Solicitá uno nuevo.");
+      setError("Código incorrecto o expirado. Solicita uno nuevo.");
       setDigits(["", "", "", "", "", ""]);
       setTimeout(() => inputRefs.current[0]?.focus(), 50);
       return;
@@ -97,9 +97,9 @@ export function OtpVerification({ email, onVerified }: OtpVerificationProps) {
 
   return (
     <div className="text-center">
-      <h1 className="text-xl font-bold text-[#111827]">Verificá tu correo</h1>
+      <h1 className="text-xl font-bold text-[#111827]">Verifica tu correo</h1>
       <p className="text-sm text-[#6b7280] mt-1.5 mb-6">
-        Ingresá el código de 6 dígitos que enviamos a <strong className="text-[#111827]">{email}</strong>.
+        Ingresa el código de 6 dígitos que enviamos a <strong className="text-[#111827]">{email}</strong>.
       </p>
 
       {error && (
@@ -155,7 +155,7 @@ export function OtpVerification({ email, onVerified }: OtpVerificationProps) {
           </button>
         )}
       </p>
-      <p className="text-xs text-[#9ca3af] mt-2">Revisá también tu carpeta de spam.</p>
+      <p className="text-xs text-[#9ca3af] mt-2">Revisa también tu carpeta de spam.</p>
     </div>
   );
 }

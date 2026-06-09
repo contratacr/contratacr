@@ -16,7 +16,7 @@ import { LandingFooter } from "@/components/landing/landing-footer";
 
 const schema = z.object({
   email: z.string().email("Email inválido"),
-  password: z.string().min(1, "Ingresá tu contraseña"),
+  password: z.string().min(1, "Ingresa tu contraseña"),
 });
 
 type FormData = z.infer<typeof schema>;

@@ -390,7 +390,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
         dateStr ? `Fecha y hora: ${dateStr}` : null,
         initialLocationLabel ? `Lugar: ${initialLocationLabel}` : null,
         ``,
-        `¿Me podés confirmar disponibilidad?`,
+        `¿Me puedes confirmar disponibilidad?`,
       ]
         .filter((l) => l !== null)
         .join("\n");
@@ -407,8 +407,8 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     setProfileError(null);
     const cleanCedula = profileCedula.replace(/\D/g, "");
     const cleanPhone = profilePhone.replace(/\D/g, "");
-    if (cleanPhone.length < 8) { setProfileError("Ingresá un teléfono válido (8 dígitos)."); return; }
-    if (needsProfile && !clientName.trim()) { setProfileError("Ingresá tu nombre completo."); return; }
+    if (cleanPhone.length < 8) { setProfileError("Ingresa un teléfono válido (8 dígitos)."); return; }
+    if (needsProfile && !clientName.trim()) { setProfileError("Ingresa tu nombre completo."); return; }
     // Validate the cédula (format + padrón existence) — recoverable inline error.
     if (needsCedula && !(await validateClientCedula())) return;
 
@@ -429,7 +429,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
         setProfileError(
           error.code === "23505"
             ? "Esa cédula ya está registrada en otra cuenta."
-            : "No se pudo guardar. Intentá de nuevo."
+            : "No se pudo guardar. Intenta de nuevo."
         );
         return;
       }
@@ -485,7 +485,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     setCedulaError(null);
     const clean = cleanId(profileCedula);
     if (!isValidId(clean)) {
-      setCedulaError("El número de identificación no es válido (CR: 9 dígitos · DIMEX: 11-12 · NITE: 10). Revisalo e intentá de nuevo.");
+      setCedulaError("El número de identificación no es válido (CR: 9 dígitos · DIMEX: 11-12 · NITE: 10). Revísalo e intenta de nuevo.");
       return false;
     }
     // Only national cédulas exist in the TSE padrón — verify to reject fakes.
@@ -494,7 +494,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
       try {
         const res = await fetch(`/api/cedula/${clean}`);
         if (!res.ok) {
-          setCedulaError("No encontramos esa cédula en el padrón. Revisá el número e intentá de nuevo.");
+          setCedulaError("No encontramos esa cédula en el padrón. Revisa el número e intenta de nuevo.");
           return false;
         }
       } catch {
@@ -559,14 +559,18 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
               )}
             </div>
 
-            <div className="hidden md:flex flex-col gap-2 mt-auto pt-5">
+            {/* What happens next — genuinely useful to the client at booking time
+                (replaces the generic "sin comisiones" trust chips). */}
+            <div className="hidden md:flex flex-col gap-2.5 mt-auto pt-5">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-white/50">Qué sigue</p>
               {[
-                { icon: <Shield className="h-3 w-3" />, text: "Sin comisiones" },
-                { icon: <CheckCircle2 className="h-3 w-3" />, text: "Contacto directo" },
-                { icon: <WhatsAppIcon className="h-3 w-3" />, text: "Respuesta por WhatsApp" },
-              ].map(({ icon, text }) => (
-                <div key={text} className="flex items-center gap-1.5 text-white/60 text-xs">
-                  {icon} {text}
+                "Envías tu solicitud y se abre WhatsApp con el profesional.",
+                "El profesional confirma disponibilidad y precio.",
+                "Coordinan los detalles directamente, sin intermediarios.",
+              ].map((text, i) => (
+                <div key={i} className="flex items-start gap-2 text-white/70 text-xs">
+                  <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-white/15 text-[10px] font-semibold text-white">{i + 1}</span>
+                  <span className="leading-snug">{text}</span>
                 </div>
               ))}
             </div>
@@ -607,9 +611,9 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
               {/* STEP: calendar */}
               {step === "calendar" && (
                 <div>
-                  <h3 className="text-lg font-semibold text-[#111827] mb-1">Elegí fecha y hora</h3>
+                  <h3 className="text-lg font-semibold text-[#111827] mb-1">Elige fecha y hora</h3>
                   <p className="text-sm text-[#6b7280] mb-4">
-                    Seleccioná una fecha disponible para tu servicio.
+                    Selecciona una fecha disponible para tu servicio.
                   </p>
 
                   {!availabilityLoaded ? (
@@ -624,7 +628,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                       <div>
                         <p className="text-sm font-semibold text-[#111827]">Disponibilidad privada</p>
                         <p className="text-xs text-[#9ca3af] mt-1 max-w-xs">
-                          Este profesional coordina sus horarios directamente. Escribile por WhatsApp para agendar.
+                          Este profesional coordina sus horarios directamente. Escríbele por WhatsApp para agendar.
                         </p>
                       </div>
                       <a
@@ -640,7 +644,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                   ) : !hasAnyAvailability ? (
                     <div className="text-center py-8 rounded-2xl bg-[#f9fafb] border border-[#e5e7eb]">
                       <p className="text-sm text-[#6b7280]">Este profesional no ha configurado su disponibilidad todavía.</p>
-                      <p className="text-xs text-[#9ca3af] mt-1">Podés contactarlo directamente por WhatsApp.</p>
+                      <p className="text-xs text-[#9ca3af] mt-1">Puedes contactarlo directamente por WhatsApp.</p>
                     </div>
                   ) : (
                     <>
@@ -720,7 +724,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                             </p>
                           ) : (
                             <>
-                              <p className="text-sm font-medium text-[#374151] mb-2">Elegí una hora:</p>
+                              <p className="text-sm font-medium text-[#374151] mb-2">Elige una hora:</p>
                               <div className="flex flex-wrap gap-2">
                                 {slots.map((slot) => (
                                   <button
@@ -758,7 +762,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     )}
                     {isLoggedIn && clientName && (
                       <p className="text-sm text-[#6b7280] mt-1">
-                        Hola, <span className="font-medium text-[#374151]">{clientName.split(" ")[0]}</span>. Describí lo que necesitás.
+                        Hola, <span className="font-medium text-[#374151]">{clientName.split(" ")[0]}</span>. Describe lo que necesitas.
                       </p>
                     )}
                     {/* Stored identity (logged-in + already has cédula) — shown, not re-asked.
@@ -766,7 +770,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                         (the TSE padrón has none). */}
                     {isLoggedIn && profileCedula && (
                       <div className="text-xs text-[#15803d] mt-1 leading-relaxed">
-                        <span>Reservás como <strong>{clientName || "vos"}</strong> · cédula {profileCedula}</span>
+                        <span>Reservas como <strong>{clientName || "tú"}</strong> · cédula {profileCedula}</span>
                         {proIsHealth && selfDob && computeAge(selfDob) && (
                           <span className="block">Nacimiento: {selfDob} · {formatAge(computeAge(selfDob))}</span>
                         )}
@@ -776,7 +780,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
 
                   {/* ¿Para quién es la cita? — responsible adult vs beneficiary */}
                   <div>
-                    <label className="text-sm font-medium text-[#374151] block mb-1.5">¿Para quién es la cita?</label>
+                    <label className="text-sm font-medium text-[#374151] block mb-1.5">¿Para quién es la cita? <span className="text-red-500">*</span></label>
                     <div className="grid grid-cols-2 gap-2">
                       {([
                         { v: false, label: "Para mí" },
@@ -800,10 +804,10 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                   {forSomeoneElse && (
                     <div className="rounded-xl border border-[#e5e7eb] p-3 flex flex-col gap-3 bg-[#f9fafb]">
                       <p className="text-xs text-[#6b7280]">
-                        Vos sos la persona responsable de la cita. Contanos para quién es:
+                        Tú eres la persona responsable de la cita. Cuéntanos para quién es:
                       </p>
                       <div>
-                        <label className="text-xs font-medium text-[#374151] block mb-1.5">¿La persona tiene cédula?</label>
+                        <label className="text-xs font-medium text-[#374151] block mb-1.5">¿La persona tiene cédula? <span className="text-red-500">*</span></label>
                         <div className="grid grid-cols-2 gap-2">
                           {([{ v: true, label: "Sí" }, { v: false, label: "No" }] as const).map((opt) => (
                             <button
@@ -838,7 +842,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                             </div>
                           )}
                           {benCedula && isValidId(cleanId(benCedula)) && detectIdType(cleanId(benCedula)) === "cedula" && !benLookupName && (
-                            <p className="text-xs text-[#b45309] -mt-1">No encontramos esa cédula en el padrón. Escribí el nombre abajo.</p>
+                            <p className="text-xs text-[#b45309] -mt-1">No encontramos esa cédula en el padrón. Escribe el nombre abajo.</p>
                           )}
                         </>
                       )}
@@ -885,7 +889,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                             onChange={setBenPhone}
                           />
                           <p className="text-[11px] text-[#9ca3af]">
-                            La cédula de la persona es opcional — nunca bloquea la cita. La identidad la respaldás vos como responsable.
+                            La cédula de la persona es opcional — nunca bloquea la cita. La identidad la respaldas tú como responsable.
                           </p>
                         </>
                       )}
@@ -937,7 +941,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     />
                     {guestEmailCheck.taken && (
                       <p className="text-xs text-red-500 mt-1">
-                        Este correo ya tiene una cuenta. Iniciá sesión para continuar.
+                        Este correo ya tiene una cuenta. Inicia sesión para continuar.
                       </p>
                     )}
                   </div>
@@ -967,7 +971,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                 <div className="flex flex-col gap-4">
                   <div>
                     <h3 className="text-lg font-semibold text-[#111827]">
-                      {needsProfile ? "Completá tu perfil" : "Tu número de WhatsApp"}
+                      {needsProfile ? "Completa tu perfil" : "Tu número de WhatsApp"}
                     </h3>
                     <p className="text-sm text-[#6b7280] mt-1">
                       {needsProfile
@@ -1013,7 +1017,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                       {/* Padrón auto-fill/confirm — same lookup as the rest of the app */}
                       {selfCedulaName && (
                         <div className="rounded-lg bg-[#f0fdf4] border border-[#bbf7d0] px-3 py-2 mt-1.5">
-                          <p className="text-xs text-[#15803d]">Confirmá: <strong>{selfCedulaName}</strong></p>
+                          <p className="text-xs text-[#15803d]">Confirma: <strong>{selfCedulaName}</strong></p>
                           {proIsHealth && selfDob && computeAge(selfDob) && (
                             <p className="text-[11px] text-[#16a34a]">Nacimiento: {selfDob} · {formatAge(computeAge(selfDob))}</p>
                           )}
@@ -1075,9 +1079,9 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     onClick={() => setStep("details")}
                   >
                     {!selectedDate
-                      ? "Elegí una fecha"
+                      ? "Elige una fecha"
                       : !selectedTime
-                        ? "Elegí una hora"
+                        ? "Elige una hora"
                         : t("continue")}
                   </Button>
                 )}

@@ -209,7 +209,7 @@ export function LocationPicker({ value, onChange, apiKey }: LocationPickerProps)
     return (
       <div className="rounded-xl border border-[#e5e7eb] p-4 bg-[#f9fafb] text-center">
         <MapPin className="h-6 w-6 text-[#9ca3af] mx-auto mb-2" />
-        <p className="text-sm text-[#9ca3af]">Mapa no disponible — configurá NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</p>
+        <p className="text-sm text-[#9ca3af]">Mapa no disponible — configura NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</p>
       </div>
     );
   }
@@ -233,7 +233,7 @@ export function LocationPicker({ value, onChange, apiKey }: LocationPickerProps)
             value={addressInput}
             onChange={(e) => setAddressInput(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); geocodeManual(); } }}
-            placeholder="Buscá la dirección de tu local… ej. Escazú Centro"
+            placeholder="Busca la dirección de tu local… ej. Escazú Centro"
             className="w-full pl-9 pr-4 h-10 rounded-xl border border-[#e5e7eb] text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
           />
         </div>
@@ -243,7 +243,7 @@ export function LocationPicker({ value, onChange, apiKey }: LocationPickerProps)
           <div ref={mapRef} className="w-full h-full" />
           {!value && (
             <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm rounded-xl px-3 py-1.5 text-xs text-[#374151] shadow border border-[#e5e7eb] whitespace-nowrap pointer-events-none">
-              Buscá una dirección arriba o hacé clic en el mapa
+              Busca una dirección arriba o haz clic en el mapa
             </div>
           )}
         </div>

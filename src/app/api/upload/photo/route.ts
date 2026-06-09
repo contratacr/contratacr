@@ -8,7 +8,7 @@ export async function POST(req: Request) {
 
   if (!cloudName || !apiKey || !apiSecret) {
     return NextResponse.json(
-      { error: "Cloudinary no está configurado. Revisá las variables de entorno en Vercel." },
+      { error: "Cloudinary no está configurado. Revisa las variables de entorno en Vercel." },
       { status: 503 }
     );
   }
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
 
     const allowed = ["image/jpeg", "image/png", "image/webp"];
     if (!allowed.includes(file.type)) {
-      return NextResponse.json({ error: "Formato no permitido. Usá JPG, PNG o WebP." }, { status: 400 });
+      return NextResponse.json({ error: "Formato no permitido. Usa JPG, PNG o WebP." }, { status: 400 });
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());

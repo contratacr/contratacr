@@ -20,7 +20,7 @@ export function CloseAccountSection({ initialDisabled = false }: { initialDisabl
   }, []);
 
   async function disableAccount() {
-    if (!reason.trim()) { setError("Contanos el motivo."); return; }
+    if (!reason.trim()) { setError("Cuéntanos el motivo."); return; }
     setBusy(true);
     setError(null);
     try {
@@ -36,7 +36,7 @@ export function CloseAccountSection({ initialDisabled = false }: { initialDisabl
       await supabase.auth.signOut();
       window.location.assign("/es");
     } catch {
-      setError("Error de conexión. Intentá de nuevo.");
+      setError("Error de conexión. Intenta de nuevo.");
     } finally {
       setBusy(false);
     }
@@ -58,7 +58,7 @@ export function CloseAccountSection({ initialDisabled = false }: { initialDisabl
     return (
       <div className="rounded-xl border border-[#fde68a] bg-[#fffbeb] p-4">
         <p className="text-sm font-semibold text-[#92400e]">Tu cuenta está deshabilitada</p>
-        <p className="text-xs text-[#92400e] mt-0.5">No aparecés en los resultados de búsqueda. Podés reactivarla cuando quieras.</p>
+        <p className="text-xs text-[#92400e] mt-0.5">No apareces en los resultados de búsqueda. Puedes reactivarla cuando quieras.</p>
         <button onClick={reactivate} disabled={busy} className="mt-3 rounded-lg bg-[#009FD9] text-white text-sm font-semibold px-4 py-2 hover:bg-[#0089bb] disabled:opacity-60">
           {busy ? "Reactivando…" : "Reactivar mi cuenta"}
         </button>
@@ -72,7 +72,7 @@ export function CloseAccountSection({ initialDisabled = false }: { initialDisabl
         <AlertTriangle className="h-4 w-4 text-[#b91c1c] shrink-0 mt-0.5" />
         <div className="flex-1">
           <p className="text-sm font-semibold text-[#b91c1c]">Cerrar / deshabilitar mi cuenta</p>
-          <p className="text-xs text-[#7f1d1d] mt-0.5">Tu perfil deja de mostrarse. Es recuperable: podés reactivarla iniciando sesión.</p>
+          <p className="text-xs text-[#7f1d1d] mt-0.5">Tu perfil deja de mostrarse. Es recuperable: puedes reactivarla iniciando sesión.</p>
           {!open ? (
             <button onClick={() => setOpen(true)} className="mt-3 rounded-lg border border-[#b91c1c] text-[#b91c1c] text-sm font-semibold px-4 py-2 hover:bg-red-50">
               Cerrar mi cuenta

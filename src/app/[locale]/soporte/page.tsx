@@ -81,7 +81,7 @@ export default function SoportePage() {
     e.preventDefault();
     setError(null);
     if (!form.email || !form.subject || !form.message) {
-      setError("Por favor completá todos los campos requeridos.");
+      setError("Por favor completa todos los campos requeridos.");
       return;
     }
     setSubmitting(true);
@@ -99,12 +99,12 @@ export default function SoportePage() {
       const data = await res.json();
 
       if (!res.ok || data.ok === false) {
-        setError(data.error ?? "Error al enviar. Intentá de nuevo.");
+        setError(data.error ?? "Error al enviar. Intenta de nuevo.");
         return;
       }
       setSuccess(true);
     } catch {
-      setError("Error inesperado. Por favor escribinos a soporte@contratacr.com");
+      setError("Error inesperado. Por favor escríbenos a soporte@contratacr.com");
     } finally {
       setSubmitting(false);
     }
@@ -127,7 +127,7 @@ export default function SoportePage() {
               Te respondemos a <strong>{form.email}</strong> en menos de 24 horas.
             </p>
             <p className="text-sm text-[#9ca3af]">
-              También podés escribirnos directamente a{" "}
+              También puedes escribirnos directamente a{" "}
               <a href="mailto:soporte@contratacr.com" className="text-[#009FD9] hover:underline">
                 soporte@contratacr.com
               </a>
@@ -151,7 +151,7 @@ export default function SoportePage() {
               <MessageSquare className="h-6 w-6 text-[#009FD9]" />
             </div>
             <h1 className="text-2xl font-bold text-[#111827] mb-1">Centro de soporte</h1>
-            <p className="text-sm text-[#6b7280]">Completá el formulario y te respondemos en menos de 24 horas.</p>
+            <p className="text-sm text-[#6b7280]">Completa el formulario y te respondemos en menos de 24 horas.</p>
           </div>
 
           {/* Primary: support ticket form */}
@@ -182,7 +182,7 @@ export default function SoportePage() {
                     </label>
                     <select className={inputClass + " cursor-pointer"} value={form.subject}
                       onChange={(e) => update("subject", e.target.value)} required>
-                      <option value="">Seleccioná el motivo de tu consulta</option>
+                      <option value="">Selecciona el motivo de tu consulta</option>
                       {SUBJECTS.map((s) => <option key={s} value={s}>{s}</option>)}
                     </select>
                   </div>
@@ -193,7 +193,7 @@ export default function SoportePage() {
                     </label>
                     <textarea
                       className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] min-h-[130px] resize-none focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
-                      placeholder="Describí tu consulta con el mayor detalle posible. Si es un problema técnico, describí qué pasó y en qué pantalla estás."
+                      placeholder="Describe tu consulta con el mayor detalle posible. Si es un problema técnico, describe qué pasó y en qué pantalla estás."
                       value={form.message} onChange={(e) => update("message", e.target.value)} required
                     />
                   </div>
@@ -266,7 +266,7 @@ export default function SoportePage() {
           {/* Secondary: WhatsApp option */}
           <div className="mt-4 flex flex-col items-center gap-3 py-6 border-t border-[#e5e7eb]">
             <p className="text-sm text-[#6b7280]">
-              También podés contactarnos directamente por WhatsApp
+              También puedes contactarnos directamente por WhatsApp
             </p>
             <a
               href={SUPPORT_WHATSAPP_URL}

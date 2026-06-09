@@ -22,7 +22,7 @@ interface CategorySearchProps {
 export function CategorySearch({
   value,
   onChange,
-  placeholder = "Escribí tu especialidad o buscá…",
+  placeholder = "Escribe tu especialidad o busca…",
   error,
   className,
 }: CategorySearchProps) {
@@ -152,7 +152,7 @@ export function CategorySearch({
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Escribí tu servicio… ej. psicólogo, plomero, niñera"
+                placeholder="Escribe tu servicio… ej. psicólogo, plomero, niñera"
                 className="w-full pl-9 pr-3 py-2 text-sm text-[#111827] placeholder:text-[#9ca3af] bg-[#f9fafb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20"
               />
               {query && (
@@ -168,7 +168,7 @@ export function CategorySearch({
             {query && results.length === 0 ? (
               <div className="px-3 py-4 text-center">
                 <p className="text-sm text-[#374151] font-medium mb-1">No encontramos esa categoría</p>
-                <p className="text-xs text-[#9ca3af]">Seleccioná "Otro servicio" y describí tu especialidad en tu perfil.</p>
+                <p className="text-xs text-[#9ca3af]">Selecciona "Otro servicio" y describe tu especialidad en tu perfil.</p>
               </div>
             ) : (
               grouped.map(([groupLabel, items]) => (

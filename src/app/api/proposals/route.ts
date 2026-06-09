@@ -144,7 +144,7 @@ export async function PATCH(req: NextRequest) {
       if (!pro) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
       const { data: prop } = await supabase.from("proposals").select("status, professional_id").eq("id", id).maybeSingle();
       if (!prop || prop.professional_id !== pro.id) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
-      if (prop.status !== "pending") return NextResponse.json({ error: "Solo podés editar una propuesta pendiente." }, { status: 409 });
+      if (prop.status !== "pending") return NextResponse.json({ error: "Solo puedes editar una propuesta pendiente." }, { status: 409 });
       const patch: Record<string, unknown> = {};
       if (price !== undefined) patch.price = price ? parseInt(String(price), 10) : null;
       if (message !== undefined) patch.message = message;
@@ -207,7 +207,7 @@ export async function PATCH(req: NextRequest) {
               user_id: pro.profile_id,
               type: "project_proposal_accepted",
               title: "¡Tu propuesta fue aceptada!",
-              message: `El cliente aceptó tu propuesta para "${title}". Coordiná el trabajo y marcalo como realizado al terminar.`,
+              message: `El cliente aceptó tu propuesta para "${title}". Coordina el trabajo y márcalo como realizado al terminar.`,
               data: { link: "/es/dashboard/profesional?tab=proposals", project_id: prop.project_id },
             });
           }
@@ -239,7 +239,7 @@ export async function DELETE(req: NextRequest) {
 
   const { data: prop } = await supabase.from("proposals").select("status, professional_id").eq("id", id).maybeSingle();
   if (!prop || prop.professional_id !== pro.id) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
-  if (prop.status !== "pending") return NextResponse.json({ error: "Solo podés cancelar una propuesta pendiente." }, { status: 409 });
+  if (prop.status !== "pending") return NextResponse.json({ error: "Solo puedes cancelar una propuesta pendiente." }, { status: 409 });
 
   const { error } = await supabase.from("proposals").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

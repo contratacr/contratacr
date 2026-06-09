@@ -23,7 +23,7 @@ export default function LocaleError({
       </div>
       <h1 className="text-2xl font-bold text-[#111827]">Algo salió mal</h1>
       <p className="text-[#6b7280] mt-2 max-w-sm">
-        Estamos teniendo un problema temporal. Probá recargar la página; si continúa, intentá de nuevo en unos minutos.
+        Estamos teniendo un problema temporal. Prueba recargar la página; si continúa, intenta de nuevo en unos minutos.
       </p>
       <div className="flex gap-3 mt-6">
         <button

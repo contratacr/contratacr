@@ -19,7 +19,6 @@ import { languageLabel } from "@/lib/data/languages";
 import { insurerLabel } from "@/lib/data/insurers";
 import { ReviewSection } from "@/components/professionals/review-section";
 import { ProfileGallery } from "@/components/professionals/profile-gallery";
-import { cldThumb } from "@/lib/cloudinary";
 import { ReportProfileModal } from "@/components/professionals/report-profile-modal";
 import { createClient } from "@/lib/supabase/client";
 import { BookingButton } from "@/components/booking/booking-button";
@@ -133,7 +132,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
           </div>
           <h1 className="text-2xl font-bold text-[#111827]">Profesional no encontrado</h1>
           <p className="text-[#6b7280] text-sm max-w-sm">
-            El perfil que buscás no existe o fue eliminado.
+            El perfil que buscas no existe o fue eliminado.
           </p>
           <Link href="/buscar" className="mt-2 inline-flex items-center gap-2 bg-[#009FD9] hover:bg-[#0089bb] text-white font-semibold px-6 py-3 rounded-full transition-colors text-sm">
             Buscar profesionales
@@ -242,19 +241,8 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                   </div>
                 )}
 
-                {/* Portfolio thumbnails */}
-                {professional.portfolioUrls && professional.portfolioUrls.length > 0 && (
-                  <div className="flex gap-1.5 justify-center flex-wrap">
-                    {professional.portfolioUrls.slice(0, 4).map((url, i) => (
-                      <img key={i} src={cldThumb(url, 120)} alt={`Portfolio ${i + 1}`} className="h-14 w-14 object-cover rounded-xl border border-gray-100" />
-                    ))}
-                    {professional.portfolioUrls.length > 4 && (
-                      <div className="h-14 w-14 rounded-xl bg-[#f3f4f6] border border-gray-100 flex items-center justify-center text-xs font-bold text-[#6b7280]">
-                        +{professional.portfolioUrls.length - 4}
-                      </div>
-                    )}
-                  </div>
-                )}
+                {/* Casos de éxito images live ONLY in the "Casos de éxito" tab — no
+                    duplicate thumbnail strip here under the profile summary. */}
 
                 {/* WhatsApp CTA */}
                 {isAuthenticated ? (
@@ -408,7 +396,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                             <MapPin className="h-6 w-6 text-[#009FD9]" />
                           </div>
                           <p className="text-sm text-[#374151] max-w-sm">
-                            Este profesional tiene horarios disponibles. Usá <strong>Solicitar servicio</strong> para
+                            Este profesional tiene horarios disponibles. Usa <strong>Solicitar servicio</strong> para
                             elegir una fecha y hora y reservar directamente.
                           </p>
                           <BookingButton
@@ -426,7 +414,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                             La disponibilidad de este profesional no es pública.
                           </p>
                           <p className="text-xs text-[#9ca3af] max-w-sm -mt-2">
-                            Contactalo directamente y conocé sus horarios.
+                            Contactalo directamente y conoce sus horarios.
                           </p>
                           <div className="flex flex-col sm:flex-row gap-2.5 w-full max-w-xs">
                             {isAuthenticated ? (
@@ -521,7 +509,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                       <div className="flex items-start gap-2 bg-[#EBF5FB] border border-[#bfdbfe] rounded-xl px-4 py-3 mb-5">
                         <Shield className="h-4 w-4 text-[#009FD9] shrink-0 mt-0.5" />
                         <p className="text-xs text-[#0089bb] font-medium">
-                          Sello de veracidad — solo clientes que usaron el servicio pueden dejar reseñas.
+                          Solo clientes que recibieron un servicio de este profesional pueden dejar una reseña.
                         </p>
                       </div>
 

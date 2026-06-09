@@ -28,7 +28,7 @@ export async function POST(req: Request) {
   const reason = typeof body.reason === "string" ? body.reason.trim() : "";
 
   if (action === "disable" && !reason) {
-    return NextResponse.json({ error: "Contanos el motivo para cerrar tu cuenta." }, { status: 400 });
+    return NextResponse.json({ error: "Cuéntanos el motivo para cerrar tu cuenta." }, { status: 400 });
   }
 
   const admin = createAdminClient();
@@ -38,7 +38,7 @@ export async function POST(req: Request) {
 
   let { error } = await admin.from("profiles").update(update).eq("id", user.id);
   if (error && /is_disabled|disabled_reason|disabled_at|column|schema cache|PGRST204/i.test(error.message)) {
-    return NextResponse.json({ error: "Función no disponible todavía. Intentá más tarde." }, { status: 503 });
+    return NextResponse.json({ error: "Función no disponible todavía. Intenta más tarde." }, { status: 503 });
   }
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 

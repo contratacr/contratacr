@@ -61,7 +61,7 @@ function buildHtml(name: string, email: string, subject: string, message: string
         <hr style="border:none;border-top:1px solid #f3f4f6;margin:16px 0;"/>
         <div style="font-size:14px;color:#374151;line-height:1.7;white-space:pre-wrap;">${message.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
         <hr style="border:none;border-top:1px solid #f3f4f6;margin:24px 0 16px;"/>
-        <p style="font-size:12px;color:#9ca3af;margin:0;">Respondé directamente a este correo para contestar al usuario.</p>
+        <p style="font-size:12px;color:#9ca3af;margin:0;">Responde directamente a este correo para contestar al usuario.</p>
       </div>
     </div>`;
 }
@@ -150,7 +150,7 @@ export async function POST(req: NextRequest) {
     if (!sent) {
       return NextResponse.json({
         ok: false,
-        error: "El sistema de correo no está configurado. Escribinos directamente a soporte@contratacr.com",
+        error: "El sistema de correo no está configurado. Escríbenos directamente a soporte@contratacr.com",
       }, { status: 503 });
     }
 
@@ -159,7 +159,7 @@ export async function POST(req: NextRequest) {
     console.error("[contact] error:", err);
     return NextResponse.json({
       ok: false,
-      error: "Error al enviar el mensaje. Escribinos a soporte@contratacr.com",
+      error: "Error al enviar el mensaje. Escríbenos a soporte@contratacr.com",
     }, { status: 500 });
   }
 }

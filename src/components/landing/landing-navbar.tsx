@@ -140,7 +140,7 @@ const NAV_MENUS: NavMenu[] = [
     label: "Recursos",
     columns: [
       {
-        heading: "Aprendé",
+        heading: "Aprende",
         links: [
           { label: "Cómo funciona",    href: "/como-funciona" },
           { label: "Centro de ayuda",  href: "/ayuda" },
@@ -150,7 +150,7 @@ const NAV_MENUS: NavMenu[] = [
       {
         heading: "Profesionales",
         links: [
-          { label: "Registrá tu perfil",    href: "/registro/profesional" },
+          { label: "Registra tu perfil",    href: "/registro/profesional" },
           { label: "Cómo atraer clientes",  href: "/atraer-clientes" },
         ],
       },
@@ -187,7 +187,7 @@ function LoginModal({ onClose }: { onClose: () => void }) {
 
   async function handleEmailAuth(e: React.FormEvent) {
     e.preventDefault();
-    if (!email || !password) { setError("Completá todos los campos."); return; }
+    if (!email || !password) { setError("Completa todos los campos."); return; }
     setLoading(true); setError(null);
     const supabase = createClient();
     if (mode === "login") {
@@ -197,7 +197,7 @@ function LoginModal({ onClose }: { onClose: () => void }) {
     } else {
       const { error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: callbackUrl } });
       if (error) { setError(error.message); setLoading(false); return; }
-      setSuccess("¡Revisá tu correo para confirmar tu cuenta!");
+      setSuccess("¡Revisa tu correo para confirmar tu cuenta!");
       setLoading(false);
     }
   }
@@ -218,13 +218,13 @@ function LoginModal({ onClose }: { onClose: () => void }) {
           <h2 className="text-2xl font-bold text-[#1a2744]">
             {mode === "login" ? "Bienvenido de vuelta" : "Crear cuenta gratis"}
           </h2>
-          <p className="text-sm text-gray-400 mt-1">{mode === "login" ? "Iniciá sesión para continuar" : "Registrate en segundos"}</p>
+          <p className="text-sm text-gray-400 mt-1">{mode === "login" ? "Inicia sesión para continuar" : "Regístrate en segundos"}</p>
         </div>
 
         {success ? (
           <div className="text-center py-6">
             <div className="text-4xl mb-3">📧</div>
-            <p className="font-semibold text-[#1a2744] mb-2">¡Revisá tu correo!</p>
+            <p className="font-semibold text-[#1a2744] mb-2">¡Revisa tu correo!</p>
             <p className="text-sm text-gray-400">{success}</p>
             <button onClick={onClose} className="mt-6 text-sm text-[#009FD9] hover:underline">Cerrar</button>
           </div>
@@ -282,12 +282,12 @@ function LoginModal({ onClose }: { onClose: () => void }) {
 
             <p className="text-center text-sm text-gray-400">
               {mode === "login" ? (
-                <>¿No tenés cuenta?{" "}
-                  <button onClick={() => { onClose(); window.location.assign("/es/registro"); }} className="text-[#009FD9] font-semibold hover:underline">Registrate gratis</button>
+                <>¿No tienes cuenta?{" "}
+                  <button onClick={() => { onClose(); window.location.assign("/es/registro"); }} className="text-[#009FD9] font-semibold hover:underline">Regístrate gratis</button>
                 </>
               ) : (
-                <>¿Ya tenés cuenta?{" "}
-                  <button onClick={() => { setMode("login"); setError(null); }} className="text-[#009FD9] font-semibold hover:underline">Iniciá sesión</button>
+                <>¿Ya tienes cuenta?{" "}
+                  <button onClick={() => { setMode("login"); setError(null); }} className="text-[#009FD9] font-semibold hover:underline">Inicia sesión</button>
                 </>
               )}
             </p>
@@ -537,7 +537,7 @@ export function LandingNavbar() {
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Describí tu proyecto o problema…"
+                      placeholder="Describe tu proyecto o problema…"
                       className="flex-1 text-sm sm:text-base text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-none min-w-0"
                     />
                   </div>

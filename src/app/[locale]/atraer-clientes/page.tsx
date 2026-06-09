@@ -21,48 +21,48 @@ type Tip = {
 const TIPS: Tip[] = [
   {
     icon: <Camera className="h-6 w-6 text-[#009FD9]" />,
-    title: "Usá una foto de perfil profesional",
-    body: "Los clientes deciden en segundos si confiar en vos. Una foto clara, bien iluminada y donde se vea tu cara genera hasta 3 veces más contactos que un perfil sin foto o con foto de poca calidad.",
+    title: "Usa una foto de perfil profesional",
+    body: "Los clientes deciden en segundos si confiar en ti. Una foto clara, bien iluminada y donde se vea tu cara genera hasta 3 veces más contactos que un perfil sin foto o con foto de poca calidad.",
     highlight: "Nada de fotos borrosas, con lentes oscuros, o de fiestas.",
   },
   {
     icon: <UserCheck className="h-6 w-6 text-[#009FD9]" />,
-    title: "Verificá tu cédula",
+    title: "Verifica tu cédula",
     body: "El sello 'Verificado' es el principal factor de confianza en ContrataCR. Los clientes costarricenses priorizan a los profesionales verificados — especialmente para trabajos en el hogar o con niños. Es gratis y toma menos de 24 horas.",
     highlight: "Pros verificados reciben significativamente más consultas.",
   },
   {
     icon: <ImageIcon className="h-6 w-6 text-[#009FD9]" />,
-    title: "Publicá fotos de trabajos anteriores",
+    title: "Publica fotos de trabajos anteriores",
     body: "Las fotos de trabajos reales son tu portafolio. Antes de contratar, los clientes van a querer ver ejemplos de tu trabajo. Una cocina remozada, un jardín bien mantenido, un diseño que hiciste — cualquier foto real de tu trabajo vale mucho.",
     highlight: "Mínimo 3 fotos de trabajos anteriores para empezar.",
   },
   {
     icon: <WhatsAppIcon className="h-6 w-6 text-[#009FD9]" />,
-    title: "Respondé rápido por WhatsApp",
-    body: "Costa Rica tiene una cultura de respuesta inmediata por WhatsApp. Si un cliente te escribe y tardás más de 2 horas en responder, es muy probable que ya contactó a otro profesional. Activá notificaciones y respondé de inmediato.",
+    title: "Responde rápido por WhatsApp",
+    body: "Costa Rica tiene una cultura de respuesta inmediata por WhatsApp. Si un cliente te escribe y tardas más de 2 horas en responder, es muy probable que ya contactó a otro profesional. Activa notificaciones y responde de inmediato.",
     highlight: "La rapidez de respuesta es tu mayor diferenciador.",
   },
   {
     icon: <Star className="h-6 w-6 text-[#009FD9]" />,
-    title: "Pedí reseñas después de cada trabajo",
-    body: "Las reseñas son oro. Después de completar un trabajo, pedile al cliente que te deje una reseña en ContrataCR. Una frase corta como '¿Me podrías dejar una reseña en la plataforma? Me ayuda mucho a conseguir más clientes' es suficiente. La mayoría lo hace con gusto.",
+    title: "Pide reseñas después de cada trabajo",
+    body: "Las reseñas son oro. Después de completar un trabajo, pídele al cliente que te deje una reseña en ContrataCR. Una frase corta como '¿Me podrías dejar una reseña en la plataforma? Me ayuda mucho a conseguir más clientes' es suficiente. La mayoría lo hace con gusto.",
   },
   {
     icon: <MapPin className="h-6 w-6 text-[#009FD9]" />,
-    title: "Sé específico sobre dónde trabajás",
-    body: "Los clientes filtran por cantón. Si trabajás en Escazú, Belén y Santa Ana, mencionalo en tu bio. Si viajás a toda la Gran Área Metropolitana, decilo. Entre más claro seas sobre tu cobertura, más aparecés en búsquedas relevantes.",
+    title: "Sé específico sobre dónde trabajas",
+    body: "Los clientes filtran por cantón. Si trabajas en Escazú, Belén y Santa Ana, menciónalo en tu bio. Si viajas a toda la Gran Área Metropolitana, dilo. Entre más claro seas sobre tu cobertura, más apareces en búsquedas relevantes.",
   },
   {
     icon: <CheckCircle2 className="h-6 w-6 text-[#009FD9]" />,
-    title: "Escribí una bio honesta y específica",
-    body: "Evitá frases genéricas como 'soy el mejor de Costa Rica' o 'trabajo con calidad'. En cambio, describí exactamente qué hacés, cuántos años de experiencia tenés, y qué tipos de trabajos son tu especialidad. La especificidad genera confianza.",
+    title: "Escribe una bio honesta y específica",
+    body: "Evita frases genéricas como 'soy el mejor de Costa Rica' o 'trabajo con calidad'. En cambio, describe exactamente qué haces, cuántos años de experiencia tienes, y qué tipos de trabajos son tu especialidad. La especificidad genera confianza.",
     highlight: "Ejemplo: '12 años como electricista. Especialidad en instalaciones residenciales y certificación del ICE.'",
   },
   {
     icon: <Clock className="h-6 w-6 text-[#009FD9]" />,
-    title: "Actualizá tu disponibilidad",
-    body: "Si estás ocupado por dos semanas, marcalo en tu calendario. Los clientes que ven que estás disponible para la fecha que necesitan tienen mucho más chance de contactarte. Un perfil con disponibilidad actualizada transmite profesionalismo.",
+    title: "Actualiza tu disponibilidad",
+    body: "Si estás ocupado por dos semanas, márcalo en tu calendario. Los clientes que ven que estás disponible para la fecha que necesitan tienen mucho más chance de contactarte. Un perfil con disponibilidad actualizada transmite profesionalismo.",
   },
 ];
 
@@ -185,7 +185,7 @@ export default function AtraerClientesPage() {
                 </div>
                 <div>
                   <p className="font-semibold text-[#1a2744] mb-2">El cantón importa</p>
-                  <p>Los clientes generalmente buscan "plomero en Desamparados" o "niñera en Heredia", no simplemente "plomero" o "niñera". Ser específico sobre los cantones donde trabajás te posiciona mejor en esas búsquedas locales.</p>
+                  <p>Los clientes generalmente buscan "plomero en Desamparados" o "niñera en Heredia", no simplemente "plomero" o "niñera". Ser específico sobre los cantones donde trabajas te posiciona mejor en esas búsquedas locales.</p>
                 </div>
                 <div>
                   <p className="font-semibold text-[#1a2744] mb-2">El precio razonable gana ante el precio bajo</p>
@@ -204,14 +204,14 @@ export default function AtraerClientesPage() {
             ¿Listo para recibir más clientes?
           </h2>
           <p className="text-[#93c5fd] mb-8 max-w-md mx-auto text-sm">
-            Completá tu perfil, verificá tu cédula, y empezá a aparecer en búsquedas hoy.
+            Completa tu perfil, verifica tu cédula, y empieza a aparecer en búsquedas hoy.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/registro/profesional"
               className="inline-flex items-center justify-center gap-2 bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold px-7 py-3 rounded-full transition-all"
             >
-              Registrá tu perfil gratis <ArrowRight className="h-4 w-4" />
+              Registra tu perfil gratis <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               href="/dashboard/profesional"

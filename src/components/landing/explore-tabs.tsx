@@ -43,7 +43,7 @@ const TABS: TabData[] = [
       label: "Remodelación de cocinas",
       href: "/buscar?categoria=remodelacion",
       src: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?auto=format&fit=crop&w=900&q=80",
-      editorial: "Tu espacio soñado, más cerca de lo que creés.",
+      editorial: "Tu espacio soñado, más cerca de lo que crees.",
     },
     small: [
       { label: "Carpintería a medida", href: "/buscar?categoria=carpinteria", src: "https://images.unsplash.com/photo-1588854337115-1c67d9247e4d?auto=format&fit=crop&w=480&q=80" },

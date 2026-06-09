@@ -36,7 +36,7 @@ function ContactForm() {
       });
       setSubmitted(true);
     } catch {
-      setServerError("Hubo un error al enviar el mensaje. Por favor intentá de nuevo.");
+      setServerError("Hubo un error al enviar el mensaje. Por favor intenta de nuevo.");
     } finally {
       setLoading(false);
     }
@@ -88,7 +88,7 @@ function ContactForm() {
             required: "El correo es obligatorio.",
             pattern: {
               value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-              message: "Ingresá un correo válido.",
+              message: "Ingresa un correo válido.",
             },
           })}
           type="email"
@@ -106,10 +106,10 @@ function ContactForm() {
           Asunto <span className="text-red-400">*</span>
         </label>
         <select
-          {...register("subject", { required: "Seleccioná un asunto." })}
+          {...register("subject", { required: "Selecciona un asunto." })}
           className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30 focus:border-[#009FD9] transition-all bg-gray-50/50 text-gray-700"
         >
-          <option value="">Seleccioná una opción</option>
+          <option value="">Selecciona una opción</option>
           <option value="problema">Tengo un problema</option>
           <option value="profesional">Soy profesional y necesito ayuda</option>
           <option value="reporte">Quiero reportar un usuario</option>
@@ -134,7 +134,7 @@ function ContactForm() {
             },
           })}
           rows={5}
-          placeholder="Describí tu consulta con el mayor detalle posible..."
+          placeholder="Describe tu consulta con el mayor detalle posible..."
           className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30 focus:border-[#009FD9] transition-all bg-gray-50/50 placeholder:text-gray-400 resize-none"
         />
         {errors.message && (
@@ -186,7 +186,7 @@ export default function ContactoPage() {
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
                 <h2 className="text-xl font-bold text-[#1a2744] mb-1">Envianos un mensaje</h2>
                 <p className="text-sm text-gray-400 mb-6">
-                  Completá el formulario y te respondemos pronto.
+                  Completa el formulario y te respondemos pronto.
                 </p>
                 <ContactForm />
               </div>
@@ -212,7 +212,7 @@ export default function ContactoPage() {
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#25D366] hover:underline"
                       >
-                        Escribinos por WhatsApp →
+                        Escríbenos por WhatsApp →
                       </a>
                     </div>
                   </div>

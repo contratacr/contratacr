@@ -17,7 +17,7 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "ContrataCR — Profesionales de servicios en Costa Rica",
   description:
-    "Encontrá electricistas, plomeros, pintores, tutores y más profesionales verificados en tu cantón.",
+    "Encuentra electricistas, plomeros, pintores, tutores y más profesionales verificados en tu cantón.",
 };
 
 // viewport-fit=cover exposes the env(safe-area-inset-*) values used by the

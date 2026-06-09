@@ -101,7 +101,7 @@ export function ServicesEditor({
 
   function confirmAddProfession() {
     if (!newProfession) {
-      setProfessionError("Elegí una profesión.");
+      setProfessionError("Elige una profesión.");
       return;
     }
     if (professions.includes(newProfession)) {
@@ -214,7 +214,7 @@ export function ServicesEditor({
   if (professions.length === 0) {
     return (
       <div className="text-center py-8 rounded-xl border-2 border-dashed border-[#e5e7eb]">
-        <p className="text-sm text-[#6b7280]">Primero elegí tu profesión principal en la pestaña <strong>Mi perfil</strong>.</p>
+        <p className="text-sm text-[#6b7280]">Primero elige tu profesión principal en la pestaña <strong>Mi perfil</strong>.</p>
       </div>
     );
   }
@@ -222,7 +222,7 @@ export function ServicesEditor({
   return (
     <div className="flex flex-col gap-6">
       <p className="text-sm text-[#6b7280]">
-        Organizá tus servicios por profesión. Podés ofrecer más de una profesión —
+        Organiza tus servicios por profesión. Puedes ofrecer más de una profesión —
         cada servicio se agrega bajo la profesión a la que pertenece.
       </p>
 
@@ -262,7 +262,7 @@ export function ServicesEditor({
             <CategorySearch
               value={newProfession}
               onChange={(v) => { setNewProfession(v); setProfessionError(null); }}
-              placeholder="Buscá otra profesión… ej. fotógrafo, electricista"
+              placeholder="Busca otra profesión… ej. fotógrafo, electricista"
               error={professionError ?? undefined}
             />
             <div className="flex gap-2">
@@ -346,7 +346,7 @@ export function ServicesEditor({
                   </label>
                   <textarea
                     className="w-full rounded-xl border border-[#e5e7eb] bg-white px-3.5 py-2.5 text-sm text-[#111827] placeholder:text-[#9ca3af] min-h-[72px] resize-none focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
-                    placeholder="Describí brevemente en qué consiste este servicio..."
+                    placeholder="Describe brevemente en qué consiste este servicio..."
                     value={form.description}
                     onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                   />

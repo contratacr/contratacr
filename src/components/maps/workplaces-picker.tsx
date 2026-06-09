@@ -229,7 +229,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 220 }: W
           });
         } else { onPinPlaced(lat, lng, "", {}); setLocating(false); }
       },
-      () => { setGeoError("No pudimos obtener tu ubicación. Revisá los permisos."); setLocating(false); },
+      () => { setGeoError("No pudimos obtener tu ubicación. Revisa los permisos."); setLocating(false); },
       { enableHighAccuracy: true, timeout: 10000 }
     );
   }
@@ -270,7 +270,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 220 }: W
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Buscá un lugar o tocá el mapa para marcar tu ubicación"
+                placeholder="Busca un lugar o toca el mapa para marcar tu ubicación"
                 className="w-full pl-9 pr-4 h-10 rounded-xl border border-[#e5e7eb] text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
               />
             </div>
@@ -284,13 +284,13 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 220 }: W
             </div>
           </>
         ) : (
-          <p className="text-xs text-[#9ca3af]">Mapa no disponible — configurá NEXT_PUBLIC_GOOGLE_MAPS_API_KEY. Podés agregar el lugar igual con provincia y cantón.</p>
+          <p className="text-xs text-[#9ca3af]">Mapa no disponible — configura NEXT_PUBLIC_GOOGLE_MAPS_API_KEY. Puedes agregar el lugar igual con provincia y cantón.</p>
         )}
 
         {/* Provincia + cantón for the CURRENT location. The cantón field is disabled
             until a provincia is chosen (the disabled state communicates the
             dependency — no instructional text). */}
-        <p className="text-[11px] text-[#9ca3af] mt-1">{draftPin ? "Confirmá la provincia y el cantón de tu punto marcado:" : "Agregá un lugar por provincia y cantón (o marcalo en el mapa):"}</p>
+        <p className="text-[11px] text-[#9ca3af] mt-1">{draftPin ? "Confirma la provincia y el cantón de tu punto marcado:" : "Agrega un lugar por provincia y cantón (o márcalo en el mapa):"}</p>
         <input
           type="text"
           value={label}
@@ -322,8 +322,8 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 220 }: W
         {(draftPin || province) && (!province || !canton) && (
           <p className="text-[11px] text-amber-600 -mt-1">
             {!province
-              ? "Elegí la provincia y el cantón para guardar este lugar."
-              : "Elegí el cantón para guardar este lugar."}
+              ? "Elige la provincia y el cantón para guardar este lugar."
+              : "Elige el cantón para guardar este lugar."}
           </p>
         )}
 

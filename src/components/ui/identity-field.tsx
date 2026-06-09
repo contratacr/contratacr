@@ -138,11 +138,11 @@ export function IdentityField({
               <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
               <span>
                 {manualOverride ? (
-                  <>Indicaste que la información del padrón no es tuya. Ingresá tu nombre completo: tu identidad
+                  <>Indicaste que la información del padrón no es tuya. Ingresa tu nombre completo: tu identidad
                   quedará <strong>pendiente de revisión</strong> y la confirmaremos manualmente.</>
                 ) : (
                   <>No encontramos tu cédula en el padrón (puede ser DIMEX/NITE, extranjero o recién emitida).
-                  Ingresá tu nombre completo: tu identidad quedará <strong>pendiente de revisión</strong> y la
+                  Ingresa tu nombre completo: tu identidad quedará <strong>pendiente de revisión</strong> y la
                   confirmaremos manualmente.</>
                 )}
               </span>

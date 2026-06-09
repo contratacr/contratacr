@@ -88,7 +88,7 @@ export default function NotificationsPage() {
             ) : items.length === 0 ? (
               <div className="text-center py-16">
                 <Bell className="h-10 w-10 text-[#e5e7eb] mx-auto mb-3" />
-                <p className="text-sm text-[#6b7280]">No tenés notificaciones.</p>
+                <p className="text-sm text-[#6b7280]">No tienes notificaciones.</p>
               </div>
             ) : (
               <ul>

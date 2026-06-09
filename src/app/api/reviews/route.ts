@@ -19,7 +19,7 @@ export async function POST(req: Request) {
   const { data: targetPro } = await supabase
     .from("professionals").select("profile_id").eq("id", professionalId).maybeSingle();
   if (targetPro?.profile_id === user.id) {
-    return NextResponse.json({ error: "No podés dejarte una reseña a vos mismo." }, { status: 400 });
+    return NextResponse.json({ error: "No puedes dejarte una reseña a ti mismo." }, { status: 400 });
   }
 
   // ── Verified-review gate, tied to the SPECIFIC finished item when given ──────
@@ -54,7 +54,7 @@ export async function POST(req: Request) {
 
   if (!allowed) {
     return NextResponse.json(
-      { error: "Solo podés dejar una reseña después de completar este servicio con el profesional." },
+      { error: "Solo puedes dejar una reseña después de completar este servicio con el profesional." },
       { status: 403 }
     );
   }

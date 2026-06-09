@@ -13,7 +13,7 @@ export default function RegisterPage() {
         <div className="w-full max-w-xl">
           <div className="text-center mb-10">
             <h1 className="text-3xl font-bold text-[#111827] mb-2">Crear cuenta gratis</h1>
-            <p className="text-[#6b7280] text-base">¿Cómo querés usar ContrataCR?</p>
+            <p className="text-[#6b7280] text-base">¿Cómo quieres usar ContrataCR?</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -57,9 +57,9 @@ export default function RegisterPage() {
           </div>
 
           <p className="text-center text-sm text-[#6b7280] mt-8">
-            ¿Ya tenés cuenta?{" "}
+            ¿Ya tienes cuenta?{" "}
             <Link href="/login" className="text-[#009FD9] font-medium hover:underline">
-              Iniciá sesión
+              Inicia sesión
             </Link>
           </p>
         </div>

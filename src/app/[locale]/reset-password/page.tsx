@@ -85,7 +85,7 @@ export default function ResetPasswordPage() {
     setSubmitting(false);
     if (updateError) {
       setError(
-        "No se pudo actualizar la contraseña. El enlace puede haber expirado — solicitá uno nuevo."
+        "No se pudo actualizar la contraseña. El enlace puede haber expirado — solicita uno nuevo."
       );
       return;
     }
@@ -125,7 +125,7 @@ export default function ResetPasswordPage() {
             <ContrataCRLogo className="justify-center mb-4" />
             <h1 className="text-2xl font-bold text-[#111827]">Nueva contraseña</h1>
             <p className="text-[#6b7280] text-sm mt-1">
-              Creá una contraseña segura para tu cuenta ContrataCR.
+              Crea una contraseña segura para tu cuenta ContrataCR.
             </p>
           </div>
 

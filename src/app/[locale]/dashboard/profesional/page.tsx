@@ -53,7 +53,6 @@ const TAB_LABELS: Record<Tab, string> = {
 
 export default function ProDashboardPage() {
   const t = useTranslations("dashboard.pro");
-  const tCat = useTranslations("categories");
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -155,15 +154,16 @@ export default function ProDashboardPage() {
               </Avatar>
               <div>
                 <h1 className="text-xl font-bold text-[#111827]">{pro.profiles?.full_name}</h1>
-                <div className="flex items-center gap-2 mt-1">
-                  {pro.category_id && (
-                    <Badge variant="default">
-                      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                      {tCat(pro.category_id as any)}
-                    </Badge>
-                  )}
+                {/* Account status at a glance — NOT the profession (redundant here). */}
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
                   {pro.verification_status === "verified" && (
-                    <Badge variant="verified" className="gap-1"><ShieldCheck className="h-3 w-3" />Identidad verificada</Badge>
+                    <Badge variant="verified" className="gap-1"><ShieldCheck className="h-3 w-3" />Identidad verificada · visible para clientes</Badge>
+                  )}
+                  {(pro.verification_status === "pending" || pro.verification_status === "under_appeal") && (
+                    <Badge variant="warning">Pendiente de revisión</Badge>
+                  )}
+                  {pro.verification_status === "rejected" && (
+                    <Badge variant="error">Verificación rechazada</Badge>
                   )}
                 </div>
               </div>
@@ -173,7 +173,7 @@ export default function ProDashboardPage() {
                 <Button variant="outline" size="sm" asChild>
                   <a href={`/es/profesionales/${pro.slug}`} target="_blank" rel="noopener noreferrer">
                     <ExternalLink className="h-4 w-4" />
-                    Ver mi perfil
+                    Ver cómo me ven los clientes
                   </a>
                 </Button>
               )}

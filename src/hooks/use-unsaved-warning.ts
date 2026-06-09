@@ -6,7 +6,7 @@ import { useEffect } from "react";
 // unload (tab close / refresh) and in-app navigations (clicking a link or any
 // element inside a link). App Router has no built-in route-abort API, so we
 // intercept link clicks in the capture phase and confirm before letting them go.
-export function useUnsavedWarning(dirty: boolean, message = "Tenés cambios sin guardar. ¿Querés salir sin guardar?") {
+export function useUnsavedWarning(dirty: boolean, message = "Tienes cambios sin guardar. ¿Quieres salir sin guardar?") {
   useEffect(() => {
     if (!dirty) return;
 

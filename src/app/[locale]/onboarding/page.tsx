@@ -134,7 +134,7 @@ export default function OnboardingPage() {
               ¿Para qué usarás ContrataCR?
             </h1>
             <p className="text-[#6b7280] text-base text-center">
-              Elegí cómo querés usar la plataforma. Podés cambiar esto más adelante.
+              Elige cómo quieres usar la plataforma. Puedes cambiar esto más adelante.
             </p>
           </div>
 

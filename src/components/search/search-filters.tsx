@@ -7,7 +7,7 @@ import { Search, X, ShieldCheck, MapPin, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PROVINCES, getCantonsByProvince, nearestProvinceId } from "@/lib/data/cr-geography";
-import { CATEGORY_GROUPS, getCategoryLabel } from "@/lib/data/categories";
+import { CategorySearch } from "@/components/ui/category-search";
 import { INSURERS } from "@/lib/data/insurers";
 import { createClient } from "@/lib/supabase/client";
 
@@ -77,7 +77,7 @@ export function SearchFilters() {
       return;
     }
     if (typeof navigator === "undefined" || !navigator.geolocation) {
-      setGeoError("Tu navegador no permite ubicación. Usá la búsqueda por provincia/cantón.");
+      setGeoError("Tu navegador no permite ubicación. Usa la búsqueda por provincia/cantón.");
       return;
     }
     setGeoLoading(true);
@@ -93,7 +93,7 @@ export function SearchFilters() {
       },
       () => {
         setGeoLoading(false);
-        setGeoError("No pudimos obtener tu ubicación. Podés buscar por provincia y cantón.");
+        setGeoError("No pudimos obtener tu ubicación. Puedes buscar por provincia y cantón.");
       },
       { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
     );
@@ -143,7 +143,7 @@ export function SearchFilters() {
             value={query}
             onChange={(e) => handleQueryChange(e.target.value)}
             onKeyDown={handleQueryKeyDown}
-            placeholder="Buscá cualquier servicio…"
+            placeholder="Busca un servicio…"
             className="w-full rounded-xl border border-[#e5e7eb] bg-white py-2 pl-9 pr-9 text-sm text-[#111827] placeholder-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition"
           />
           {query && (
@@ -156,31 +156,14 @@ export function SearchFilters() {
 
       {/* Vertical stack — designed for the left sidebar (and the mobile drawer). */}
       <div className="flex flex-col gap-2.5">
-        {/* Category — grouped select */}
+        {/* Category — typeable + browsable list (with "¿No ves tu categoría?"). */}
         <div className="flex-1">
           <label className="text-xs font-medium text-[#6b7280] mb-1 block">{t("filters.category")}</label>
-          <Select value={category} onValueChange={(v) => { setCategory(v); applyFilters({ categoria: v }); }}>
-            <SelectTrigger className="text-sm">
-              <SelectValue placeholder={t("filters.allCategories")}>
-                {category && category !== "todas" ? getCategoryLabel(category) : t("filters.allCategories")}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todas">{t("filters.allCategories")}</SelectItem>
-              {CATEGORY_GROUPS.map((group) => (
-                <div key={group.id} className="pb-1">
-                  <div className="sticky top-0 z-10 bg-white px-2.5 py-1.5 mb-0.5 text-[10px] font-bold text-[#6b7280] uppercase tracking-widest border-b border-[#f3f4f6]">
-                    {group.emoji} {group.label}
-                  </div>
-                  {group.items.map((item) => (
-                    <SelectItem key={item.id} value={item.id} className="pl-4">
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                </div>
-              ))}
-            </SelectContent>
-          </Select>
+          <CategorySearch
+            value={category && category !== "todas" ? category : ""}
+            onChange={(id) => { setCategory(id); applyFilters({ categoria: id }); }}
+            placeholder={t("filters.allCategories")}
+          />
         </div>
 
         <div>
@@ -251,7 +234,7 @@ export function SearchFilters() {
           }`}
         >
           {geoLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MapPin className="h-3.5 w-3.5" />}
-          {geoActive ? "Cerca de mí (activo)" : "Usar mi ubicación"}
+          {geoActive ? "Cerca de mí (activo)" : "Buscar profesionales cerca de mí"}
         </button>
 
         <button

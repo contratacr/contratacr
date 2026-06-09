@@ -98,7 +98,7 @@ const STATUS_LABEL: Record<BookingStatus, string> = {
   pending: "Pendiente",
   confirmed: "Confirmada",
   in_progress: "En progreso",
-  awaiting_confirmation: "Confirmá la finalización",
+  awaiting_confirmation: "Confirma la finalización",
   completed: "Finalizada",
   cancelled: "Cancelada",
   rescheduled: "Reprogramada",
@@ -227,7 +227,7 @@ export default function ClientDashboardPage() {
   }
 
   async function cancelBooking(id: string) {
-    const reason = window.prompt("¿Por qué querés cancelar? (se le avisa al profesional)") ?? "";
+    const reason = window.prompt("¿Por qué quieres cancelar? (se le avisa al profesional)") ?? "";
     await fetch("/api/bookings", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -275,7 +275,7 @@ export default function ClientDashboardPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id: projectId, status }),
     });
-    if (!res.ok) { alert("No se pudo actualizar el proyecto. Intentá de nuevo."); return; }
+    if (!res.ok) { alert("No se pudo actualizar el proyecto. Intenta de nuevo."); return; }
     setProjects((prev) => prev.map((p) => (p.id === projectId ? { ...p, status } : p)));
     refreshProjects();
   }
@@ -286,7 +286,7 @@ export default function ClientDashboardPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id: projectId, action: "confirm" }),
     });
-    if (!res.ok) { alert("No se pudo confirmar. Intentá de nuevo."); return; }
+    if (!res.ok) { alert("No se pudo confirmar. Intenta de nuevo."); return; }
     setProjects((prev) => prev.map((p) => (p.id === projectId ? { ...p, status: "completed" } : p)));
     refreshProjects();
   }
@@ -296,7 +296,7 @@ export default function ClientDashboardPage() {
     const res = await fetch(`/api/projects?id=${projectId}`, { method: "DELETE" });
     if (!res.ok) {
       const j = await res.json().catch(() => ({}));
-      alert(j.error ?? "No se pudo eliminar el proyecto. Intentá de nuevo.");
+      alert(j.error ?? "No se pudo eliminar el proyecto. Intenta de nuevo.");
       return;
     }
     setProjects((prev) => prev.filter((p) => p.id !== projectId));
@@ -559,8 +559,8 @@ export default function ClientDashboardPage() {
                   {bookings.length === 0 ? (
                     <div className="text-center py-14 rounded-2xl border border-dashed border-[#e5e7eb] bg-white">
                       <CalendarDays className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
-                      <p className="font-semibold text-[#374151]">Todavía no tenés solicitudes</p>
-                      <p className="text-sm text-[#9ca3af] mt-1">Buscá un profesional y solicitá tu primer servicio.</p>
+                      <p className="font-semibold text-[#374151]">Todavía no tienes solicitudes</p>
+                      <p className="text-sm text-[#9ca3af] mt-1">Busca un profesional y solicita tu primer servicio.</p>
                       <Button className="mt-5" asChild>
                         <a href="/buscar"><Search className="h-4 w-4" /> Buscar profesionales</a>
                       </Button>
@@ -654,7 +654,7 @@ export default function ClientDashboardPage() {
                       <FolderOpen className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
                       <p className="font-semibold text-[#374151]">Todavía no publicaste proyectos</p>
                       <p className="text-sm text-[#9ca3af] mt-1">
-                        Publicá lo que necesitás y recibí propuestas de varios profesionales.
+                        Publica lo que necesitas y recibe propuestas de varios profesionales.
                       </p>
                       <Button className="mt-5" asChild>
                         <a href="/publicar-proyecto"><Plus className="h-4 w-4" /> Publicar proyecto</a>
@@ -701,6 +701,9 @@ export default function ClientDashboardPage() {
                                         : project.status === "cancelled" ? "Cancelado"
                                         : "Abierto"}
                                     </Badge>
+                                    {project.categories?.name && (
+                                      <Badge variant="muted" className="text-[11px]">{project.categories.name}</Badge>
+                                    )}
                                   </div>
                                   <p className="text-sm text-[#6b7280] line-clamp-2 mb-2">{project.description}</p>
                                   <div className="flex items-center gap-3 text-xs text-[#9ca3af]">
@@ -931,9 +934,9 @@ export default function ClientDashboardPage() {
                         <Briefcase className="h-5 w-5 text-[#009FD9]" />
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-sm font-semibold text-[#111827]">¿Ofrecés servicios?</h3>
+                        <h3 className="text-sm font-semibold text-[#111827]">¿Ofreces servicios?</h3>
                         <p className="text-xs text-[#6b7280] mt-0.5 mb-3">
-                          Convertí tu cuenta en profesional sin crear una nueva. Completás tu cédula y datos de servicio una sola vez.
+                          Convierte tu cuenta en profesional sin crear una nueva. Completas tu cédula y datos de servicio una sola vez.
                         </p>
                         <Button size="sm" onClick={() => router.push("/registro/profesional")}>
                           <Briefcase className="h-4 w-4" /> Convertirme en profesional
@@ -954,7 +957,7 @@ export default function ClientDashboardPage() {
                       </div>
                     ) : emailChangeSent ? (
                       <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-700">
-                        ✓ Revisá tu bandeja — enviamos un correo de confirmación al nuevo email.
+                        ✓ Revisa tu bandeja — enviamos un correo de confirmación al nuevo email.
                       </div>
                     ) : emailChangeMode ? (
                       <div className="flex flex-col gap-3">

@@ -35,10 +35,10 @@ export function ProCTASection() {
               Para profesionales
             </span>
             <h2 className="text-3xl sm:text-4xl lg:text-[2.6rem] font-extrabold text-[#1a2744] leading-tight mb-4">
-              Conseguí clientes y hacé crecer tu negocio
+              Consigue clientes y haz crecer tu negocio
             </h2>
             <p className="text-gray-400 text-base sm:text-lg leading-relaxed mb-8 max-w-md">
-              Miles de personas en Costa Rica buscan profesionales como vos. Registrá tu perfil hoy y empezá a recibir consultas.
+              Miles de personas en Costa Rica buscan profesionales como tú. Registra tu perfil hoy y empieza a recibir consultas.
             </p>
 
             {/* Benefits grid */}
@@ -59,7 +59,7 @@ export function ProCTASection() {
               href="/registro/profesional"
               className="inline-flex items-center gap-2 bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold text-base px-8 py-4 rounded-2xl transition-all duration-150 active:scale-[0.97] shadow-[0_4px_24px_rgba(37,99,235,0.3)] hover:shadow-[0_8px_32px_rgba(37,99,235,0.45)]"
             >
-              Registrá tu perfil gratis
+              Registra tu perfil gratis
               <ArrowRight className="h-5 w-5" />
             </Link>
           </div>

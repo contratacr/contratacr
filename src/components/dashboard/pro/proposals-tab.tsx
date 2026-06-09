@@ -193,7 +193,7 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
       );
     } else {
       const j = await res.json().catch(() => ({}));
-      alert(j.error ?? "No se pudo marcar el trabajo como realizado. Intentá de nuevo.");
+      alert(j.error ?? "No se pudo marcar el trabajo como realizado. Intenta de nuevo.");
     }
   }
 
@@ -260,6 +260,9 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                               <Briefcase className="h-3.5 w-3.5" />
                             </span>
                             <span className="font-semibold text-[#111827] text-sm">{project.title}</span>
+                            {project.categories?.name && (
+                              <Badge variant="muted" className="text-[11px]">{project.categories.name}</Badge>
+                            )}
                           </div>
                           <p className="text-sm text-[#6b7280] line-clamp-2 mb-2">{project.description}</p>
                           <div className="flex flex-wrap gap-3 text-xs text-[#9ca3af]">
@@ -328,7 +331,7 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                               Tu mensaje <span className="text-red-500">*</span>
                             </label>
                             <textarea
-                              placeholder="Describí cómo podés ayudar, tu experiencia, y por qué elegirte..."
+                              placeholder="Describe cómo puedes ayudar, tu experiencia, y por qué elegirte..."
                               value={form.message}
                               onChange={(e) => updateForm(project.id, "message", e.target.value)}
                               className={`${inputClass} min-h-[100px] resize-none`}
@@ -362,7 +365,7 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
             <div className="text-center py-16">
               <Send className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
               <p className="font-medium text-[#374151]">No enviaste propuestas todavía</p>
-              <p className="text-sm text-[#9ca3af] mt-1">Explorá proyectos disponibles y envía tu primera propuesta.</p>
+              <p className="text-sm text-[#9ca3af] mt-1">Explora proyectos disponibles y envía tu primera propuesta.</p>
             </div>
           ) : (
             <div className="flex flex-col gap-4">

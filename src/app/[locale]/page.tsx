@@ -32,7 +32,7 @@ export default function HomePage() {
         <PhoneMockupSection />
       </FadeInUp>
 
-      {/* "Explorá más proyectos" — underline tabs + editorial large card */}
+      {/* "Explora más proyectos" — underline tabs + editorial large card */}
       <FadeInUp delay={60}>
         <ExploreTabs />
       </FadeInUp>
@@ -47,7 +47,7 @@ export default function HomePage() {
         <TrustedProvinces />
       </FadeInUp>
 
-      {/* "La app que necesitás para todo" — dark bg + phone on right */}
+      {/* "La app que necesitas para todo" — dark bg + phone on right */}
       <FadeInUp delay={40}>
         <AppSection />
       </FadeInUp>

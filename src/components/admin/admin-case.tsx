@@ -191,7 +191,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
               </div>
             )}
             <p className="text-[11px] text-[#9ca3af] mt-3">
-              La validación de formato y la confirmación de identidad contra el padrón (TSE) son automáticas. Revisá la comparación con el padrón más abajo. Las fotos de trabajo NO son criterio de verificación.
+              La validación de formato y la confirmación de identidad contra el padrón (TSE) son automáticas. Revisa la comparación con el padrón más abajo. Las fotos de trabajo NO son criterio de verificación.
             </p>
           </div>
 
@@ -275,7 +275,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
               <p className="text-xs text-[#6b7280]">
                 La visibilidad en <strong>los resultados de búsqueda</strong> depende del estado de verificación
                 (verificado → visible; pendiente o rechazado → no visible). Para quitar un perfil,
-                usá <strong>Rechazar</strong>.
+                usa <strong>Rechazar</strong>.
               </p>
               {isBanned && (
                 <button
@@ -337,7 +337,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
                   </button>
                 )}
                 <p className="text-[11px] text-[#9ca3af] pt-1">
-                  Las decisiones nunca quedan bloqueadas: podés cambiarlas en cualquier momento.
+                  Las decisiones nunca quedan bloqueadas: puedes cambiarlas en cualquier momento.
                 </p>
               </div>
             ) : (
@@ -347,7 +347,7 @@ export function AdminCase({ providerId }: { providerId: string }) {
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   rows={4}
-                  placeholder="Explicá por qué no pasa la verificación. El proveedor verá este motivo y podrá apelar."
+                  placeholder="Explica por qué no pasa la verificación. El proveedor verá este motivo y podrá apelar."
                   className="w-full rounded-lg border border-[#e5e7eb] p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#dc2626]"
                 />
                 <div className="flex gap-2">

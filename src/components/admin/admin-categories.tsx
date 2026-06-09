@@ -84,7 +84,7 @@ export function AdminCategories() {
           ))}
         </div>
       )}
-      <p className="text-xs text-[#9ca3af] mt-4">Al aprobar, agregá la categoría a la lista oficial (lib/data/categories.ts) para que sea seleccionable y filtrable.</p>
+      <p className="text-xs text-[#9ca3af] mt-4">Al aprobar, agrega la categoría a la lista oficial (lib/data/categories.ts) para que sea seleccionable y filtrable.</p>
     </div>
   );
 }

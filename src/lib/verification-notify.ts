@@ -67,33 +67,33 @@ export async function notifyVerificationDecision({
         "Tu verificación está en revisión",
         "#b45309",
         `No pudimos confirmar automáticamente tu identidad contra los registros oficiales (la cédula no se encontró o el nombre no coincidió lo suficiente).
-         Tu caso quedó <strong>pendiente de revisión</strong>. Revisá que tu nombre coincida con tu cédula y, si hace falta, apelá desde tu panel. Tu cuenta sigue activa mientras tanto.`,
+         Tu caso quedó <strong>pendiente de revisión</strong>. Revisa que tu nombre coincida con tu cédula y, si hace falta, apela desde tu panel. Tu cuenta sigue activa mientras tanto.`,
         "Ver mi verificación"
       );
     } else if (kind === "rejected") {
       type = "verification_rejected";
       title = "Tu verificación no fue aprobada";
       const safeReason = reason?.trim() || "No se especificó un motivo.";
-      message = `Tu verificación de identidad no fue aprobada. Motivo: ${safeReason}. Podés apelar desde tu panel.`;
+      message = `Tu verificación de identidad no fue aprobada. Motivo: ${safeReason}. Puedes apelar desde tu panel.`;
       html = emailShell(
         firstName,
         "Tu verificación no fue aprobada",
         "#dc2626",
         `Revisamos tu verificación de identidad y por ahora no fue aprobada.
          <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:14px;margin:16px 0;font-size:14px;color:#991b1b;"><strong>Motivo:</strong> ${escapeHtml(safeReason)}</div>
-         Podés <strong>apelar</strong> desde tu panel: corregí lo indicado y volvé a enviar tu caso. Tu cuenta sigue activa y podés seguir recibiendo clientes.`,
+         Puedes <strong>apelar</strong> desde tu panel: corrige lo indicado y vuelve a enviar tu caso. Tu cuenta sigue activa y puedes seguir recibiendo clientes.`,
         "Apelar o corregir"
       );
     } else {
       type = "verification_reverted";
       title = "Tu verificación de identidad fue actualizada";
       message =
-        "Tras una nueva revisión, el estado de tu verificación cambió. Revisá tu panel para ver el detalle.";
+        "Tras una nueva revisión, el estado de tu verificación cambió. Revisa tu panel para ver el detalle.";
       html = emailShell(
         firstName,
         "Tu verificación fue actualizada",
         "#b45309",
-        `Tras una nueva revisión, el estado de tu <strong>verificación de identidad</strong> cambió. Entrá a tu panel para ver el detalle y los próximos pasos.`,
+        `Tras una nueva revisión, el estado de tu <strong>verificación de identidad</strong> cambió. Entra a tu panel para ver el detalle y los próximos pasos.`,
         "Ver mi verificación"
       );
     }

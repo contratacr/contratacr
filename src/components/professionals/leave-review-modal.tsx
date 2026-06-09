@@ -69,7 +69,7 @@ export function LeaveReviewModal({
       return;
     }
     if (!comment.trim()) {
-      setError("Por favor escribí un comentario.");
+      setError("Por favor escribe un comentario.");
       return;
     }
     setError(null);

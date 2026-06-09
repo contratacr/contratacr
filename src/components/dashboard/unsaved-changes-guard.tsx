@@ -92,10 +92,10 @@ export function UnsavedChangesGuard({
               </div>
               <div className="min-w-0">
                 <Dialog.Title className="text-base font-bold text-[#111827]">
-                  Tenés cambios sin guardar
+                  Tienes cambios sin guardar
                 </Dialog.Title>
                 <Dialog.Description className="text-sm text-[#6b7280] mt-1">
-                  Si salís ahora, se perderán los cambios que hiciste en tu perfil. ¿Qué querés hacer?
+                  Si sales ahora, se perderán los cambios que hiciste en tu perfil. ¿Qué quieres hacer?
                 </Dialog.Description>
               </div>
             </div>

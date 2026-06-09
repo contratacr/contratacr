@@ -203,7 +203,7 @@ const step1Schema = z
     // Cédula format is validated in onStep1 (so it can be skipped when the pro
     // selects "No tengo identificación costarricense" → manual review).
     cedula: z.string(),
-    email: z.string().min(1, "El correo es requerido").email("Ingresá un correo válido"),
+    email: z.string().min(1, "El correo es requerido").email("Ingresa un correo válido"),
     password: z
       .string()
       .min(8, "La contraseña debe tener al menos 8 caracteres")
@@ -219,7 +219,7 @@ const step1Schema = z
   });
 
 const step2Schema = z.object({
-  category: z.string().min(1, "Seleccioná una categoría"),
+  category: z.string().min(1, "Selecciona una categoría"),
   // Location is derived from map pins (fixed) and coverage areas (mobile) — not
   // manual province/canton fields anymore.
   whatsapp: z.string().min(8, "El número de WhatsApp es requerido").max(15, "Número inválido"),
@@ -378,7 +378,7 @@ function NoCrIdFields({
         <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
         <span>
           Sin cédula costarricense tu cuenta queda <strong>pendiente de revisión</strong>. Un agente revisará tu
-          documento (pasaporte, DIMEX en trámite) y aprobará tu identidad. Podés usar la plataforma mientras tanto.
+          documento (pasaporte, DIMEX en trámite) y aprobará tu identidad. Puedes usar la plataforma mientras tanto.
         </span>
       </div>
       <Input
@@ -550,7 +550,7 @@ export default function RegisterProfessionalPage() {
 
   function onStep1(data: Step1Data) {
     if (emailCheck.taken) {
-      form1.setError("email", { message: "Este correo ya está registrado. Iniciá sesión." });
+      form1.setError("email", { message: "Este correo ya está registrado. Inicia sesión." });
       return;
     }
     // Cédula format required UNLESS the pro has no CR identification OR flagged the
@@ -565,7 +565,7 @@ export default function RegisterProfessionalPage() {
     }
     // Manual-review cases still need a typed name.
     if ((noCrId || identityMismatch) && (data.fullName ?? "").trim().length < 3) {
-      form1.setError("fullName", { message: "Ingresá tu nombre completo." });
+      form1.setError("fullName", { message: "Ingresa tu nombre completo." });
       return;
     }
     setStep1Data(data);
@@ -575,20 +575,20 @@ export default function RegisterProfessionalPage() {
   function onStep2(data: Step2Data) {
     // The WhatsApp number must match the exact digit length of its country.
     if (!isPhoneComplete(data.whatsapp)) {
-      form2.setError("whatsapp", { message: "Ingresá un número de teléfono completo para el país seleccionado." });
+      form2.setError("whatsapp", { message: "Ingresa un número de teléfono completo para el país seleccionado." });
       return;
     }
     if (!serviceMobile && !serviceFixed) {
-      setServiceTypeError("Seleccioná al menos un tipo de servicio");
+      setServiceTypeError("Selecciona al menos un tipo de servicio");
       return;
     }
     // Location must come from at least one pin (fixed) or coverage area (mobile).
     if (serviceFixed && workplaces.length === 0) {
-      setLocationError("Agregá al menos un lugar de trabajo en el mapa.");
+      setLocationError("Agrega al menos un lugar de trabajo en el mapa.");
       return;
     }
     if (serviceMobile && coverageAreas.length === 0) {
-      setLocationError("Agregá al menos una zona a la que te desplazás.");
+      setLocationError("Agrega al menos una zona a la que te desplazas.");
       return;
     }
     setLocationError(null);
@@ -603,7 +603,7 @@ export default function RegisterProfessionalPage() {
       return;
     }
     if (currentUser && oauthFullName.trim().length < 3) {
-      setOauthNameError("Ingresá tu nombre completo.");
+      setOauthNameError("Ingresa tu nombre completo.");
       return;
     }
     setOauthNameError(null);
@@ -666,7 +666,7 @@ export default function RegisterProfessionalPage() {
         // Supabase anti-enumeration: an already-registered email returns a user
         // object with an EMPTY identities array (no error). Detect it explicitly.
         if (Array.isArray(signUpData.user.identities) && signUpData.user.identities.length === 0) {
-          throw new Error("Este correo ya está registrado. Iniciá sesión.");
+          throw new Error("Este correo ya está registrado. Inicia sesión.");
         }
         userId = signUpData.user.id;
         userEmail = step1Data.email;
@@ -756,7 +756,7 @@ export default function RegisterProfessionalPage() {
         msg.includes("already exists") ||
         msg.includes("ya está registrado")
       ) {
-        setError("Este correo ya está registrado. Iniciá sesión.");
+        setError("Este correo ya está registrado. Inicia sesión.");
       } else {
         setError(msg);
       }
@@ -812,11 +812,11 @@ export default function RegisterProfessionalPage() {
         <div className="mx-auto max-w-lg">
           <div className="text-center mb-2">
             <h1 className="text-2xl font-bold text-[#111827]">
-              {currentUser ? "Completá tu perfil profesional" : t("title")}
+              {currentUser ? "Completa tu perfil profesional" : t("title")}
             </h1>
             <p className="text-[#6b7280] text-sm mt-1">
               {currentUser
-                ? "Contanos sobre tu servicio para que los clientes te encuentren."
+                ? "Cuéntanos sobre tu servicio para que los clientes te encuentren."
                 : t("subtitle")}
             </p>
           </div>
@@ -893,7 +893,7 @@ export default function RegisterProfessionalPage() {
                   label={<>{t("email")} <span className="text-red-500">*</span></>}
                   type="email"
                   placeholder={t("emailPlaceholder")}
-                  error={form1.formState.errors.email?.message ?? (emailCheck.taken ? "Este correo ya está registrado. Iniciá sesión." : undefined)}
+                  error={form1.formState.errors.email?.message ?? (emailCheck.taken ? "Este correo ya está registrado. Inicia sesión." : undefined)}
                   {...form1.register("email")}
                 />
               </div>
@@ -939,7 +939,7 @@ export default function RegisterProfessionalPage() {
                 {t("continue")} <ArrowRight className="h-4 w-4" />
               </Button>
               <p className="text-center text-xs text-[#9ca3af]">
-                Al crear una cuenta, aceptás los{" "}
+                Al crear una cuenta, aceptas los{" "}
                 <Link href="/terminos" className="text-[#009FD9] hover:underline">Términos</Link>{" "}
                 y la{" "}
                 <Link href="/privacidad" className="text-[#009FD9] hover:underline">Política de Privacidad</Link>{" "}
@@ -1001,11 +1001,11 @@ export default function RegisterProfessionalPage() {
                 <label className="text-sm font-medium text-[#374151] block mb-1.5">
                   {t("category")} <span className="text-red-500">*</span>
                 </label>
-                <p className="text-xs text-[#9ca3af] mb-1.5">Tu profesión (ej. Nutricionista). Luego agregás los servicios que ofrecés en cada una.</p>
+                <p className="text-xs text-[#9ca3af] mb-1.5">Tu profesión (ej. Nutricionista). Luego agregas los servicios que ofreces en cada una.</p>
                 <CategorySearch
                   value={form2.watch("category") ?? ""}
                   onChange={(v) => form2.setValue("category", v, { shouldValidate: true })}
-                  placeholder="Buscá tu profesión"
+                  placeholder="Busca tu profesión"
                   error={form2.formState.errors.category?.message}
                 />
 
@@ -1032,7 +1032,7 @@ export default function RegisterProfessionalPage() {
                       }
                       setExtraCatInput("");
                     }}
-                    placeholder="Agregá otra profesión (opcional)"
+                    placeholder="Agrega otra profesión (opcional)"
                   />
                 </div>
               </div>
@@ -1040,7 +1040,7 @@ export default function RegisterProfessionalPage() {
               {/* Service type */}
               <div>
                 <label className="text-sm font-medium text-[#374151] block mb-2">
-                  ¿Cómo ofrecés tus servicios? <span className="text-red-500">*</span>
+                  ¿Cómo ofreces tus servicios? <span className="text-red-500">*</span>
                 </label>
                 <div className="flex flex-col gap-2">
                   <label className={cn(
@@ -1114,7 +1114,7 @@ export default function RegisterProfessionalPage() {
                 <div className="flex flex-col gap-2">
                   <label className="text-sm font-medium text-[#374151]">Tus lugares de trabajo</label>
                   <p className="text-xs text-[#9ca3af]">
-                    Marcá tu ubicación en el mapa o elegí la provincia y el cantón: definen dónde aparecés
+                    Marca tu ubicación en el mapa o elige la provincia y el cantón: definen dónde apareces
                     cuando los clientes buscan profesionales.
                   </p>
                   <WorkplacesPicker value={workplaces} onChange={(n) => { setWorkplaces(n); setLocationError(null); }} />
@@ -1124,9 +1124,9 @@ export default function RegisterProfessionalPage() {
               {/* Coverage areas — for "me desplazo": provincia+cantón pairs traveled to */}
               {serviceMobile && (
                 <div className="flex flex-col gap-2">
-                  <label className="text-sm font-medium text-[#374151]">Zonas a las que te desplazás</label>
+                  <label className="text-sm font-medium text-[#374151]">Zonas a las que te desplazas</label>
                   <p className="text-xs text-[#9ca3af]">
-                    Elegí las provincias y cantones donde atendés. Aparecés en los resultados de búsqueda de cada una.
+                    Elige las provincias y cantones donde atiendes. Apareces en los resultados de búsqueda de cada una.
                   </p>
                   <CoverageAreaSelector value={coverageAreas} onChange={(n) => { setCoverageAreas(n); setLocationError(null); }} />
                 </div>
@@ -1163,12 +1163,12 @@ export default function RegisterProfessionalPage() {
               <PhotoPicker preview={photoPreview} onFile={handlePhotoSelect} onRemove={() => { setPhotoFile(null); setPhotoPreview(null); }} />
 
               <p className="text-sm text-[#6b7280] text-center">
-                Después agregás tus servicios con su precio y años de experiencia desde tu panel.
+                Después agregas tus servicios con su precio y años de experiencia desde tu panel.
               </p>
 
               <div className="rounded-xl bg-[#f0fdf4] border border-[#bbf7d0] p-3 text-center">
                 <p className="text-xs text-[#15803d] leading-relaxed">
-                  <strong>Tip:</strong> desde tu panel podés subir <strong>casos de éxito</strong> (fotos de trabajos
+                  <strong>Tip:</strong> desde tu panel puedes subir <strong>casos de éxito</strong> (fotos de trabajos
                   anteriores) <strong>en cada uno de tus servicios</strong>. Generan más confianza con los clientes.
                   <strong> No son necesarias para verificar tu identidad</strong> — es opcional.
                 </p>

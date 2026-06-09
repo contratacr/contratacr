@@ -148,7 +148,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
       setAvatarPreview(url);
       onSaved?.();
     } catch {
-      setError("No se pudo subir la foto. Intentá de nuevo.");
+      setError("No se pudo subir la foto. Intenta de nuevo.");
     } finally {
       setPhotoUploading(false);
     }
@@ -320,7 +320,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
           <label className="text-sm font-medium text-[#374151] block mb-1.5">Descripción <span className="text-[#9ca3af] font-normal">(opcional)</span></label>
           <textarea
             className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] min-h-[110px] resize-none focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
-            placeholder="Describí tu experiencia, especialidades y qué te diferencia…"
+            placeholder="Describe tu experiencia, especialidades y qué te diferencia…"
             value={bio}
             onChange={(e) => { setBio(e.target.value); touch(); }}
           />
@@ -328,7 +328,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
       </Section>
 
       {/* ── Profesión ─────────────────────────────────────────────────── */}
-      <Section title="Profesión" desc="Las profesiones bajo las que aparecés" defaultOpen>
+      <Section title="Profesión" desc="Las profesiones bajo las que apareces" defaultOpen>
         {/* Professions — multi-select (first is the primary/principal). Each profesión
             groups the servicios managed in the Servicios tab. */}
         <div>
@@ -351,16 +351,16 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
           <CategorySearch
             value={addCat}
             onChange={(v) => addProfession(v)}
-            placeholder="Agregá una profesión… ej. plomero, fotógrafo"
+            placeholder="Agrega una profesión… ej. plomero, fotógrafo"
           />
         </div>
       </Section>
 
       {/* ── Ubicación y cobertura ─────────────────────────────────────── */}
-      <Section title="Ubicación y cobertura" desc="Dónde trabajás y a dónde te desplazás">
+      <Section title="Ubicación y cobertura" desc="Dónde trabajas y a dónde te desplazas">
         {/* Work mode — both can be selected (travels AND has fixed locations) */}
         <div>
-          <label className="text-sm font-medium text-[#374151] block mb-2">¿Cómo ofrecés tus servicios? <span className="text-red-500">*</span> <span className="text-[#9ca3af] font-normal">(podés elegir ambas)</span></label>
+          <label className="text-sm font-medium text-[#374151] block mb-2">¿Cómo ofreces tus servicios? <span className="text-red-500">*</span> <span className="text-[#9ca3af] font-normal">(puedes elegir ambas)</span></label>
           <div className="grid grid-cols-2 gap-2">
             {([
               { id: "mobile", icon: Truck, title: "Me desplazo donde el cliente", desc: "Vas al lugar del cliente", active: serviceMobile, toggle: () => { setServiceMobile((v) => !v); touch(); } },
@@ -391,8 +391,8 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
               Lugares de trabajo
             </label>
             <p className="text-xs text-[#9ca3af] mb-2">
-              Buscá el lugar en el mapa o elegí la provincia y el cantón, y tocá <strong>Agregar lugar</strong>.
-              Cada lugar define dónde aparecés en las búsquedas.
+              Busca el lugar en el mapa o elige la provincia y el cantón, y toca <strong>Agregar lugar</strong>.
+              Cada lugar define dónde apareces en las búsquedas.
             </p>
             <WorkplacesPicker value={workplaces} onChange={(next) => { setWorkplaces(next); touch(); }} mapHeight={168} />
           </div>
@@ -402,15 +402,15 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         {serviceMobile && (
           <div>
             <label className="text-sm font-medium text-[#374151] block mb-1">
-              Zonas a las que te desplazás
+              Zonas a las que te desplazas
             </label>
             <p className="text-xs text-[#9ca3af] mb-2">
-              Elegí las zonas donde atendés. Aparecés en las búsquedas de cada una.
+              Elige las zonas donde atiendes. Apareces en las búsquedas de cada una.
             </p>
             {hasCountryCoverage && hasNarrowerCoverage && (
               <div className="flex items-start gap-2 rounded-lg bg-[#fffbeb] border border-[#fde68a] px-3 py-2 mb-2 text-xs text-[#92400e]">
                 <Globe className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                <span>Ya cubrís <strong>todo el país</strong>, así que las zonas más específicas no agregan nada. Podés quitarlas para simplificar.</span>
+                <span>Ya cubres <strong>todo el país</strong>, así que las zonas más específicas no agregan nada. Puedes quitarlas para simplificar.</span>
               </div>
             )}
             <CoverageAreaSelector value={coverageAreas} onChange={(next) => { setCoverageAreas(next); touch(); }} />
@@ -477,7 +477,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         {/* Languages — optional chip autocomplete (full language list) */}
         <div>
           <label className="text-sm font-medium text-[#374151] block mb-1.5">
-            Idiomas que hablás <span className="text-[#9ca3af] font-normal">(opcional)</span>
+            Idiomas que hablas <span className="text-[#9ca3af] font-normal">(opcional)</span>
           </label>
           <LanguagesInput value={languages} onChange={(next) => { setLanguages(next); touch(); }} />
         </div>
@@ -487,7 +487,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
           <label className="text-sm font-medium text-[#374151] block mb-1.5">
             Aseguradoras <span className="text-[#9ca3af] font-normal">(opcional)</span>
           </label>
-          <p className="text-xs text-[#9ca3af] mb-2">Marcá las redes de seguros con las que trabajás. Los clientes pueden filtrar por aseguradora.</p>
+          <p className="text-xs text-[#9ca3af] mb-2">Marca las redes de seguros con las que trabajas. Los clientes pueden filtrar por aseguradora.</p>
           <AseguradorasInput value={insurers} onChange={(next) => { setInsurers(next); touch(); }} />
         </div>
       </Section>

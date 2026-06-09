@@ -41,7 +41,7 @@ export default function OlvideContrasenaPage() {
     });
     setSubmitting(false);
     if (resetError) {
-      setError("Ocurrió un error. Verificá el correo e intentá de nuevo.");
+      setError("Ocurrió un error. Verifica el correo e intenta de nuevo.");
       return;
     }
     setSuccess(true);
@@ -56,7 +56,7 @@ export default function OlvideContrasenaPage() {
             <ContrataCRLogo className="justify-center mb-4" />
             <h1 className="text-2xl font-bold text-[#111827]">Olvidé mi contraseña</h1>
             <p className="text-[#6b7280] text-sm mt-1">
-              Ingresá tu correo y te enviamos un enlace para restablecer tu contraseña.
+              Ingresa tu correo y te enviamos un enlace para restablecer tu contraseña.
             </p>
           </div>
 
@@ -73,7 +73,7 @@ export default function OlvideContrasenaPage() {
               <div>
                 <p className="font-semibold text-[#1a2744]">Correo enviado</p>
                 <p className="mt-0.5 text-[#374151]">
-                  Revisá tu bandeja de entrada y seguí el enlace para crear una nueva contraseña. Revisá también la carpeta de spam.
+                  Revisa tu bandeja de entrada y sigue el enlace para crear una nueva contraseña. Revisa también la carpeta de spam.
                 </p>
               </div>
             </div>

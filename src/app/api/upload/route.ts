@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
 
   if (!cloudName || !apiKey || !apiSecret) {
     return NextResponse.json(
-      { error: "Cloudinary no está configurado. Revisá las variables de entorno en Vercel." },
+      { error: "Cloudinary no está configurado. Revisa las variables de entorno en Vercel." },
       { status: 503 }
     );
   }

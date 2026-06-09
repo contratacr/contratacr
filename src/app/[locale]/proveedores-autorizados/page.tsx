@@ -24,7 +24,7 @@ const STEPS = [
   {
     icon: RefreshCw,
     title: "Datos siempre al día",
-    body: "El padrón se actualiza periódicamente. Si tu caso no pasa automáticamente, podés apelar y se vuelve a verificar.",
+    body: "El padrón se actualiza periódicamente. Si tu caso no pasa automáticamente, puedes apelar y se vuelve a verificar.",
   },
 ];
 

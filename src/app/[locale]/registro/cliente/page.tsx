@@ -66,7 +66,7 @@ export default function RegisterClientPage() {
     // The account holder's phone is REQUIRED — client↔professional coordination
     // happens by WhatsApp/call, so without it they can't reach each other.
     if (!isPhoneComplete(phone)) {
-      setPhoneError("Ingresá un número de teléfono válido — lo usamos para que los profesionales te contacten.");
+      setPhoneError("Ingresa un número de teléfono válido — lo usamos para que los profesionales te contacten.");
       return;
     }
 
@@ -75,11 +75,11 @@ export default function RegisterClientPage() {
     // DIMEX/NITE can't be age-checked here, so it's accepted on format.
     const cleanCedula = cleanId(cedula);
     if (!isValidId(cleanCedula)) {
-      setError("Ingresá un número de identificación válido (CR: 9 dígitos · DIMEX: 11-12 · NITE: 10).");
+      setError("Ingresa un número de identificación válido (CR: 9 dígitos · DIMEX: 11-12 · NITE: 10).");
       return;
     }
     if (detectIdType(cleanCedula) === "cedula" && (!identity || !identity.found)) {
-      setError("No pudimos confirmar tu identidad ni tu mayoría de edad con esa cédula. Si tu cédula es nueva o sos extranjero, escribinos a soporte@contratacr.com.");
+      setError("No pudimos confirmar tu identidad ni tu mayoría de edad con esa cédula. Si tu cédula es nueva o eres extranjero, escríbenos a soporte@contratacr.com.");
       return;
     }
 
@@ -103,7 +103,7 @@ export default function RegisterClientPage() {
 
         if (signUpError) {
           if (signUpError.message.toLowerCase().includes("already registered")) {
-            setError("Ya existe una cuenta con ese correo. Iniciá sesión.");
+            setError("Ya existe una cuenta con ese correo. Inicia sesión.");
           } else {
             setError(signUpError.message);
           }
@@ -113,7 +113,7 @@ export default function RegisterClientPage() {
 
         // Supabase anti-enumeration: existing email → user with empty identities.
         if (Array.isArray(data.user?.identities) && data.user!.identities!.length === 0) {
-          setError("Este correo ya está registrado. Iniciá sesión.");
+          setError("Este correo ya está registrado. Inicia sesión.");
           setSubmitting(false);
           return;
         }
@@ -152,7 +152,7 @@ export default function RegisterClientPage() {
         setSuccess(true);
       }
     } catch {
-      setError("Error inesperado. Intentá de nuevo.");
+      setError("Error inesperado. Intenta de nuevo.");
     } finally {
       setSubmitting(false);
     }
@@ -184,7 +184,7 @@ export default function RegisterClientPage() {
             </div>
             <h1 className="text-2xl font-bold text-[#111827] mb-2">¡Bienvenido a ContrataCR!</h1>
             <p className="text-[#6b7280] mb-8">
-              Tu cuenta está lista. Ahora podés buscar y contratar profesionales cerca de vos.
+              Tu cuenta está lista. Ahora puedes buscar y contratar profesionales cerca de ti.
             </p>
             <Button size="lg" className="w-full" onClick={() => router.push("/dashboard/cliente")}>
               Ir a mi panel
@@ -212,7 +212,7 @@ export default function RegisterClientPage() {
                 <User className="h-6 w-6 text-[#009FD9]" />
               </div>
               <h1 className="text-2xl font-bold text-[#111827]">Crear cuenta de cliente</h1>
-              <p className="text-sm text-[#6b7280] mt-1">Encontrá profesionales cerca de vos. Gratis.</p>
+              <p className="text-sm text-[#6b7280] mt-1">Encuentra profesionales cerca de ti. Gratis.</p>
             </div>
 
             {/* OAuth banner */}
@@ -288,7 +288,7 @@ export default function RegisterClientPage() {
                       <input
                         type={showConfirm ? "text" : "password"}
                         className={cn(inputClass, "pr-11", confirmPassword && password !== confirmPassword && "border-red-400 focus:ring-red-400")}
-                        placeholder="Repetí tu contraseña"
+                        placeholder="Repite tu contraseña"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         required
@@ -327,7 +327,7 @@ export default function RegisterClientPage() {
                     value={provinciaId}
                     onChange={(e) => { setProvinciaId(e.target.value); setCantonId(""); }}
                   >
-                    <option value="">Seleccioná</option>
+                    <option value="">Selecciona</option>
                     {PROVINCES.map((p) => (
                       <option key={p.id} value={p.id}>{p.name}</option>
                     ))}
@@ -343,7 +343,7 @@ export default function RegisterClientPage() {
                     onChange={(e) => setCantonId(e.target.value)}
                     disabled={!provinciaId}
                   >
-                    <option value="">Seleccioná</option>
+                    <option value="">Selecciona</option>
                     {cantons.map((c) => (
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
@@ -362,14 +362,14 @@ export default function RegisterClientPage() {
               </Button>
 
               <p className="text-center text-xs text-[#9ca3af]">
-                Al registrarte aceptás nuestros{" "}
+                Al registrarte aceptas nuestros{" "}
                 <a href="/terminos" className="underline hover:text-[#374151]">Términos de uso</a>.
               </p>
 
               <div className="text-center text-sm text-[#6b7280]">
-                ¿Ya tenés cuenta?{" "}
+                ¿Ya tienes cuenta?{" "}
                 <a href="/login" className="text-[#009FD9] font-medium hover:underline">
-                  Iniciá sesión
+                  Inicia sesión
                 </a>
               </div>
             </form>

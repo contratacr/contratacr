@@ -37,7 +37,7 @@ export function ReportProfileModal({ professionalName, professionalSlug, onClose
   }, [onClose]);
 
   async function handleSubmit() {
-    if (!reason) { setError("Seleccioná un motivo."); return; }
+    if (!reason) { setError("Selecciona un motivo."); return; }
     setSubmitting(true);
     setError(null);
     try {
@@ -55,12 +55,12 @@ export function ReportProfileModal({ professionalName, professionalSlug, onClose
       });
       if (!res.ok) {
         const json = await res.json().catch(() => ({}));
-        setError(json.error ?? "No se pudo enviar el reporte. Intentá de nuevo.");
+        setError(json.error ?? "No se pudo enviar el reporte. Intenta de nuevo.");
         return;
       }
       setSent(true);
     } catch {
-      setError("Error de conexión. Intentá de nuevo.");
+      setError("Error de conexión. Intenta de nuevo.");
     } finally {
       setSubmitting(false);
     }
@@ -135,7 +135,7 @@ export function ReportProfileModal({ professionalName, professionalSlug, onClose
                 <span>
                   Si alguien usa <strong>tu identidad</strong> sin permiso, esto crea un caso de
                   <strong> prioridad alta</strong>. El equipo puede suspender la cuenta y revocar la
-                  verificación mientras se investiga. Contanos los detalles abajo.
+                  verificación mientras se investiga. Cuéntanos los detalles abajo.
                 </span>
               </div>
             )}
@@ -149,7 +149,7 @@ export function ReportProfileModal({ professionalName, professionalSlug, onClose
                 onChange={(e) => setDetail(e.target.value)}
                 rows={3}
                 maxLength={500}
-                placeholder="Contanos qué pasó…"
+                placeholder="Cuéntanos qué pasó…"
                 className="w-full resize-none rounded-xl border border-[#e5e7eb] bg-white px-3.5 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:border-[#009FD9] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20 transition"
               />
             </div>

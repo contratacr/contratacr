@@ -111,7 +111,7 @@ export function AseguradorasInput({ value, onChange }: Props) {
               else if (e.key === "Enter" && suggestions[highlight]) { e.preventDefault(); add(suggestions[highlight].id); }
               else if (e.key === "Backspace" && query === "" && value.length > 0) { remove(value[value.length - 1]); }
             }}
-            placeholder={value.length === 0 ? "Escribí una aseguradora… ej. INS" : "Agregar otra…"}
+            placeholder={value.length === 0 ? "Escribe una aseguradora… ej. INS" : "Agregar otra…"}
             className="flex-1 min-w-[140px] bg-transparent text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus-visible:outline-none py-1"
           />
         </div>

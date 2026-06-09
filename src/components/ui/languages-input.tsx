@@ -61,7 +61,7 @@ export function LanguagesInput({ value, onChange }: Props) {
             else if (e.key === "Enter" && suggestions[highlight]) { e.preventDefault(); add(suggestions[highlight].id); }
             else if (e.key === "Backspace" && query === "" && value.length > 0) { remove(value[value.length - 1]); }
           }}
-          placeholder={value.length === 0 ? "Escribí un idioma… ej. Inglés" : "Agregar otro…"}
+          placeholder={value.length === 0 ? "Escribe un idioma… ej. Inglés" : "Agregar otro…"}
           className="flex-1 min-w-[120px] bg-transparent text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus-visible:outline-none py-1"
         />
       </div>

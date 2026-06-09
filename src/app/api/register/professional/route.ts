@@ -94,7 +94,7 @@ export async function POST(req: Request) {
       const bodyUserId: string | undefined = body.userId;
       if (!bodyUserId) {
         return NextResponse.json(
-          { error: "Usuario inválido. Intentá de nuevo." },
+          { error: "Usuario inválido. Intenta de nuevo." },
           { status: 401 }
         );
       }
@@ -102,7 +102,7 @@ export async function POST(req: Request) {
         await supabase.auth.admin.getUserById(bodyUserId);
       if (adminError || !adminLookup.user) {
         return NextResponse.json(
-          { error: "Este correo ya está registrado. Iniciá sesión." },
+          { error: "Este correo ya está registrado. Inicia sesión." },
           { status: 409 }
         );
       }
@@ -124,7 +124,7 @@ export async function POST(req: Request) {
 
       if (existingCedula) {
         return NextResponse.json(
-          { error: "Esta cédula ya está registrada. Iniciá sesión o recuperá tu cuenta.", code: "cedula_taken" },
+          { error: "Esta cédula ya está registrada. Inicia sesión o recupera tu cuenta.", code: "cedula_taken" },
           { status: 409 }
         );
       }
@@ -151,8 +151,8 @@ export async function POST(req: Request) {
     if (profileError) {
       console.error("[register/professional] profile upsert error:", profileError);
       const friendly = /duplicate key|cedula/i.test(profileError.message)
-        ? "Esta cédula ya está registrada. Iniciá sesión o recuperá tu cuenta."
-        : "No pudimos crear tu cuenta. Intentá de nuevo en unos minutos.";
+        ? "Esta cédula ya está registrada. Inicia sesión o recupera tu cuenta."
+        : "No pudimos crear tu cuenta. Intenta de nuevo en unos minutos.";
       return NextResponse.json({ error: friendly }, { status: 500 });
     }
 
@@ -186,7 +186,7 @@ export async function POST(req: Request) {
       }
       if (updErr) {
         console.error("[register/professional] update error:", updErr);
-        return NextResponse.json({ error: "No pudimos actualizar tu perfil. Intentá de nuevo." }, { status: 500 });
+        return NextResponse.json({ error: "No pudimos actualizar tu perfil. Intenta de nuevo." }, { status: 500 });
       }
 
       // Fire automatic identity verification (best-effort; never blocks).
@@ -238,7 +238,7 @@ export async function POST(req: Request) {
       const friendly =
         /duplicate key|already exists/i.test(proError.message)
           ? "Ya existe un perfil profesional para esta cuenta."
-          : "No pudimos crear tu perfil profesional. Revisá tus datos e intentá de nuevo.";
+          : "No pudimos crear tu perfil profesional. Revisa tus datos e intenta de nuevo.";
       return NextResponse.json({ error: friendly }, { status: 500 });
     }
 

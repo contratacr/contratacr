@@ -88,7 +88,7 @@ export function BookingRequests() {
       body: JSON.stringify({ bookingId: booking.id, clientId: booking.client_id ?? null, reason: reason.trim() }),
     });
     if (res.ok) alert("Gracias. Tu reporte fue enviado al equipo de moderación.");
-    else alert("No se pudo enviar el reporte. Intentá de nuevo.");
+    else alert("No se pudo enviar el reporte. Intenta de nuevo.");
   }
 
   if (loading) {
@@ -103,7 +103,7 @@ export function BookingRequests() {
     return (
       <div className="text-center py-16">
         <CalendarDays className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
-        <h3 className="font-semibold text-[#374151] mb-1">No tenés solicitudes todavía</h3>
+        <h3 className="font-semibold text-[#374151] mb-1">No tienes solicitudes todavía</h3>
         <p className="text-sm text-[#9ca3af]">Cuando los clientes te contacten, aparecerán aquí.</p>
       </div>
     );

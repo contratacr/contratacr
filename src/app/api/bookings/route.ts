@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
         .eq("id", professionalId)
         .maybeSingle();
       if (targetPro?.profile_id === session.user.id) {
-        return NextResponse.json({ error: "No podés solicitarte un servicio a vos mismo." }, { status: 400 });
+        return NextResponse.json({ error: "No puedes solicitarte un servicio a ti mismo." }, { status: 400 });
       }
     }
 
@@ -243,7 +243,7 @@ export async function PATCH(req: NextRequest) {
   try {
     const otherUserId = isOwnerPro ? bookingRow.client_id : null;
     const labelMap: Record<string, { title: string; message: string }> = {
-      awaiting_confirmation: { title: "El profesional marcó el trabajo como realizado", message: "Confirmá la finalización para cerrar la solicitud (se confirma sola en 7 días)." },
+      awaiting_confirmation: { title: "El profesional marcó el trabajo como realizado", message: "Confirma la finalización para cerrar la solicitud (se confirma sola en 7 días)." },
       in_progress: { title: "Tu solicitud está en progreso", message: "El profesional marcó tu solicitud en progreso." },
     };
     if (isOwnerPro && otherUserId && labelMap[status]) {
@@ -275,7 +275,7 @@ export async function PATCH(req: NextRequest) {
           user_id: booking.client_id,
           type: "review_request",
           title: "¿Cómo te fue?",
-          message: `Tu servicio con ${proName} se marcó como completado. Dejá una reseña para ayudar a otros clientes.`,
+          message: `Tu servicio con ${proName} se marcó como completado. Deja una reseña para ayudar a otros clientes.`,
         });
       }
     } catch (err) {

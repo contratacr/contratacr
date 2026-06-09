@@ -121,15 +121,8 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
         </div>
       )}
 
-      {/* Private/contact-only notice — flush top band (pl-8 clears the number badge). */}
-      {contactOnly && (
-        <div className="flex items-center gap-1.5 bg-[#fff7ed] border-b border-[#fed7aa] pl-8 pr-3 py-1.5">
-          <Lock className="h-3 w-3 text-[#c2410c] shrink-0" />
-          <span className="text-[11px] font-medium text-[#9a3412] truncate">
-            {isPrivate ? "Disponibilidad no pública — coordiná por WhatsApp" : "Atiende por WhatsApp — coordiná directamente"}
-          </span>
-        </div>
-      )}
+      {/* Private/contact-only is shown as a compact inline chip in the chips row
+          below — no full-width band, so it adds NO extra card height. */}
 
       <CardContent className="p-3">
         <div className="flex flex-col md:flex-row gap-3">
@@ -161,6 +154,11 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
                 {isVerified && (
                   <span className="inline-flex items-center gap-1 rounded-md bg-[#dcfce7] px-1.5 py-0.5 text-[10px] font-semibold text-[#15803d]">
                     <ShieldCheck className="h-3 w-3" /> Identidad verificada
+                  </span>
+                )}
+                {contactOnly && (
+                  <span className="inline-flex items-center gap-1 rounded-md bg-[#fff7ed] border border-[#fed7aa] px-1.5 py-0.5 text-[10px] font-semibold text-[#9a3412]">
+                    <Lock className="h-3 w-3" /> {isPrivate ? "Coordina por WhatsApp" : "Solo WhatsApp"}
                   </span>
                 )}
                 {professionList.map((cat) => (

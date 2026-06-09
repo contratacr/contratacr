@@ -109,9 +109,9 @@ export function SavedProfessionalsTab() {
     return (
       <div className="text-center py-16">
         <Bookmark className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
-        <p className="font-semibold text-[#374151]">No tenés profesionales guardados</p>
+        <p className="font-semibold text-[#374151]">No tienes profesionales guardados</p>
         <p className="text-sm text-[#9ca3af] mt-1 max-w-xs mx-auto">
-          Guardá profesionales que te interesan con el ícono de marcador en sus tarjetas.
+          Guarda profesionales que te interesan con el ícono de marcador en sus tarjetas.
         </p>
         <Button className="mt-5" asChild>
           <Link href="/buscar">Buscar profesionales</Link>

@@ -84,7 +84,7 @@ export default function CompleteProfilePage() {
       await supabase.auth.updateUser({ data: { avatar_url: url } });
       setAvatarUrl(url);
     } catch {
-      setError("No se pudo subir la foto. Podés continuar sin ella.");
+      setError("No se pudo subir la foto. Puedes continuar sin ella.");
     } finally {
       setPhotoUploading(false);
     }
@@ -97,9 +97,9 @@ export default function CompleteProfilePage() {
 
     const cleanCedula = cedula.replace(/\D/g, "");
     const cleanPhone = phone.replace(/\D/g, "");
-    if (!fullName.trim()) return setError("Ingresá tu nombre completo.");
-    if (cleanPhone.length < 8) return setError("Ingresá un número de teléfono válido (8 dígitos).");
-    if (cleanCedula.length < 9) return setError("Ingresá un número de cédula válido (9 dígitos).");
+    if (!fullName.trim()) return setError("Ingresa tu nombre completo.");
+    if (cleanPhone.length < 8) return setError("Ingresa un número de teléfono válido (8 dígitos).");
+    if (cleanCedula.length < 9) return setError("Ingresa un número de cédula válido (9 dígitos).");
 
     setSaving(true);
     const supabase = createClient();
@@ -113,7 +113,7 @@ export default function CompleteProfilePage() {
       setError(
         upErr.code === "23505"
           ? "Esa cédula ya está registrada en otra cuenta."
-          : "No se pudo guardar. Intentá de nuevo."
+          : "No se pudo guardar. Intenta de nuevo."
       );
       return;
     }
@@ -145,7 +145,7 @@ export default function CompleteProfilePage() {
 
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-12">
         <div className="w-full max-w-md bg-white rounded-2xl border border-[#e5e7eb] shadow-sm p-8">
-          <h1 className="text-2xl font-bold text-[#111827] mb-1">Completá tu perfil</h1>
+          <h1 className="text-2xl font-bold text-[#111827] mb-1">Completa tu perfil</h1>
           <p className="text-sm text-[#6b7280] mb-6">
             Necesitamos unos datos más para que puedás contratar profesionales con confianza.
           </p>
@@ -204,7 +204,7 @@ export default function CompleteProfilePage() {
                 />
               </div>
               {nameFromOAuth && (
-                <p className="text-xs text-[#9ca3af] mt-1">Confirmá que coincide con tu cédula.</p>
+                <p className="text-xs text-[#9ca3af] mt-1">Confirma que coincide con tu cédula.</p>
               )}
             </div>
 

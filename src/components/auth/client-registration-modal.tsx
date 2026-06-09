@@ -80,7 +80,7 @@ function OtpStep({ email, onVerified }: { email: string; onVerified: () => void 
     const { error: e } = await supabase.auth.verifyOtp({ email, token, type: "signup" });
     setVerifying(false);
     if (e) {
-      setError("Código incorrecto o expirado. Solicitá uno nuevo.");
+      setError("Código incorrecto o expirado. Solicita uno nuevo.");
       setDigits(["", "", "", "", "", ""]);
       setTimeout(() => refs.current[0]?.focus(), 50);
     } else {
@@ -173,7 +173,7 @@ function OtpStep({ email, onVerified }: { email: string; onVerified: () => void 
           </button>
         )}
       </p>
-      <p className="text-xs text-center text-[#9ca3af]">Revisá también tu carpeta de spam.</p>
+      <p className="text-xs text-center text-[#9ca3af]">Revisa también tu carpeta de spam.</p>
     </div>
   );
 }
@@ -388,9 +388,9 @@ export function ClientRegistrationModal({
             {view === "login" && (
               <div className="flex flex-col gap-5">
                 <div>
-                  <h2 className="text-xl font-bold text-[#111827]">Iniciá sesión</h2>
+                  <h2 className="text-xl font-bold text-[#111827]">Inicia sesión</h2>
                   <p className="text-sm text-[#6b7280] mt-1">
-                    Usá tu correo y contraseña de ContrataCR.
+                    Usa tu correo y contraseña de ContrataCR.
                   </p>
                 </div>
 
@@ -399,7 +399,7 @@ export function ClientRegistrationModal({
                     <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
                     <div>
                       <p className="font-semibold text-amber-800">Ya existe una cuenta con este correo</p>
-                      <p className="text-amber-700 mt-0.5">Ingresá tu contraseña para continuar.</p>
+                      <p className="text-amber-700 mt-0.5">Ingresa tu contraseña para continuar.</p>
                     </div>
                   </div>
                 )}
@@ -443,14 +443,14 @@ export function ClientRegistrationModal({
                   <h2 className="text-xl font-bold text-[#111827]">
                     {step === "email" && "Tu correo electrónico"}
                     {step === "name" && "Tu nombre"}
-                    {step === "password" && "Creá tu contraseña"}
+                    {step === "password" && "Crea tu contraseña"}
                     {step === "otp" && "Código de verificación"}
                   </h2>
                   <p className="text-sm text-[#6b7280] mt-1">
-                    {step === "email" && "Ingresá el correo que usarás para tu cuenta."}
-                    {step === "name" && "¿Cómo te llamás? Tu cédula te la pediremos solo al solicitar un servicio."}
-                    {step === "password" && "Elegí una contraseña segura para tu cuenta."}
-                    {step === "otp" && "Ingresá el código de 6 dígitos enviado a tu correo."}
+                    {step === "email" && "Ingresa el correo que usarás para tu cuenta."}
+                    {step === "name" && "¿Cómo te llamas? Tu cédula te la pediremos solo al solicitar un servicio."}
+                    {step === "password" && "Elige una contraseña segura para tu cuenta."}
+                    {step === "otp" && "Ingresa el código de 6 dígitos enviado a tu correo."}
                   </p>
                 </div>
 
@@ -581,24 +581,24 @@ export function ClientRegistrationModal({
               <p className="text-center text-sm text-[#6b7280]">
                 {view === "register" ? (
                   <>
-                    ¿Ya tenés cuenta?{" "}
+                    ¿Ya tienes cuenta?{" "}
                     <button
                       type="button"
                       onClick={() => { setView("login"); setError(null); setDuplicateEmailDetected(false); }}
                       className="text-[#009FD9] font-semibold hover:underline"
                     >
-                      Iniciá sesión
+                      Inicia sesión
                     </button>
                   </>
                 ) : (
                   <>
-                    ¿No tenés cuenta?{" "}
+                    ¿No tienes cuenta?{" "}
                     <button
                       type="button"
                       onClick={() => { setView("register"); setError(null); }}
                       className="text-[#009FD9] font-semibold hover:underline"
                     >
-                      Registrate gratis
+                      Regístrate gratis
                     </button>
                   </>
                 )}

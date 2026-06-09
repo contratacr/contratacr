@@ -3,7 +3,7 @@
 import { Link } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 
-// A "Registrá tu perfil" link that respects the session: logged-in users are
+// A "Registra tu perfil" link that respects the session: logged-in users are
 // sent to their own panel instead of the registration flow.
 export function SmartRegisterLink({
   className,
