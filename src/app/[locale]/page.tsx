@@ -1,6 +1,7 @@
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingHero } from "@/components/landing/landing-hero";
 import { ProsSection } from "@/components/landing/pros-section";
+import { TrustBenefits } from "@/components/landing/trust-benefits";
 import { TrustedProvinces } from "@/components/landing/trusted-provinces";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { FadeInUp } from "@/components/landing/fade-in-up";
@@ -19,7 +20,12 @@ export default function HomePage() {
         <ProsSection />
       </FadeInUp>
 
-      {/* "Profesionales en toda Costa Rica" — province pills */}
+      {/* Client trust benefits */}
+      <FadeInUp delay={40}>
+        <TrustBenefits />
+      </FadeInUp>
+
+      {/* Zones — find professionals by province */}
       <FadeInUp delay={40}>
         <TrustedProvinces />
       </FadeInUp>

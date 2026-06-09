@@ -23,6 +23,15 @@ const POPULAR_TAGS: Record<string, string[]> = {
   en: ["Plumbing", "Electrical", "Cleaning", "Painting", "Gardening", "Moving"],
 };
 
+/* ── Hero image — ONE easy-to-swap asset shown in the dome. ──
+   Replace `src` (and `alt`) with the final high-quality Costa Rican photo when
+   it's provided; nothing else needs to change. Placeholder = a local service
+   professional at work (never a foreign-looking house). */
+const HERO_IMAGE = {
+  src: "https://images.unsplash.com/photo-1504148455328-c376907d081c?auto=format&fit=crop&w=1400&q=85",
+  alt: "Profesional de oficio trabajando en Costa Rica",
+};
+
 function RotatingLine({ lines }: { lines: string[] }) {
   const [index, setIndex] = useState(0);
   const [phase, setPhase] = useState<"in" | "visible" | "out">("visible");
@@ -308,8 +317,8 @@ export function LandingHero() {
           style={{ maxWidth: 800, borderRadius: "50% 50% 0 0 / 100% 100% 0 0" }}
         >
           <Image
-            src="https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1400&q=85"
-            alt="Profesional de servicios para el hogar trabajando en Costa Rica"
+            src={HERO_IMAGE.src}
+            alt={HERO_IMAGE.alt}
             fill
             className="object-cover object-center"
             priority

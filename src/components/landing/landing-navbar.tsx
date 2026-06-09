@@ -150,7 +150,7 @@ const NAV_MENUS: NavMenu[] = [
       {
         heading: "Profesionales",
         links: [
-          { label: "Registrá tu perfil",    href: "/registro/profesional" },
+          { label: "Registra tu perfil",    href: "/registro/profesional" },
           { label: "Cómo atraer clientes",  href: "/atraer-clientes" },
         ],
       },
@@ -187,7 +187,7 @@ function LoginModal({ onClose }: { onClose: () => void }) {
 
   async function handleEmailAuth(e: React.FormEvent) {
     e.preventDefault();
-    if (!email || !password) { setError("Completá todos los campos."); return; }
+    if (!email || !password) { setError("Completa todos los campos."); return; }
     setLoading(true); setError(null);
     const supabase = createClient();
     if (mode === "login") {
@@ -197,7 +197,7 @@ function LoginModal({ onClose }: { onClose: () => void }) {
     } else {
       const { error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: callbackUrl } });
       if (error) { setError(error.message); setLoading(false); return; }
-      setSuccess("¡Revisá tu correo para confirmar tu cuenta!");
+      setSuccess("¡Revisa tu correo para confirmar tu cuenta!");
       setLoading(false);
     }
   }
@@ -218,13 +218,13 @@ function LoginModal({ onClose }: { onClose: () => void }) {
           <h2 className="text-2xl font-bold text-[#1a2744]">
             {mode === "login" ? "Bienvenido de vuelta" : "Crear cuenta gratis"}
           </h2>
-          <p className="text-sm text-gray-400 mt-1">{mode === "login" ? "Iniciá sesión para continuar" : "Registrate en segundos"}</p>
+          <p className="text-sm text-gray-400 mt-1">{mode === "login" ? "Inicia sesión para continuar" : "Regístrate en segundos"}</p>
         </div>
 
         {success ? (
           <div className="text-center py-6">
             <div className="text-4xl mb-3">📧</div>
-            <p className="font-semibold text-[#1a2744] mb-2">¡Revisá tu correo!</p>
+            <p className="font-semibold text-[#1a2744] mb-2">¡Revisa tu correo!</p>
             <p className="text-sm text-gray-400">{success}</p>
             <button onClick={onClose} className="mt-6 text-sm text-[#009FD9] hover:underline">Cerrar</button>
           </div>
@@ -282,12 +282,12 @@ function LoginModal({ onClose }: { onClose: () => void }) {
 
             <p className="text-center text-sm text-gray-400">
               {mode === "login" ? (
-                <>¿No tenés cuenta?{" "}
-                  <button onClick={() => { onClose(); window.location.assign("/es/registro"); }} className="text-[#009FD9] font-semibold hover:underline">Registrate gratis</button>
+                <>¿No tienes cuenta?{" "}
+                  <button onClick={() => { onClose(); window.location.assign("/es/registro"); }} className="text-[#009FD9] font-semibold hover:underline">Regístrate gratis</button>
                 </>
               ) : (
-                <>¿Ya tenés cuenta?{" "}
-                  <button onClick={() => { setMode("login"); setError(null); }} className="text-[#009FD9] font-semibold hover:underline">Iniciá sesión</button>
+                <>¿Ya tienes cuenta?{" "}
+                  <button onClick={() => { setMode("login"); setError(null); }} className="text-[#009FD9] font-semibold hover:underline">Inicia sesión</button>
                 </>
               )}
             </p>
@@ -520,24 +520,20 @@ export function LandingNavbar() {
               </button>
             </div>
 
-            {/* ── Compact row ── */}
+            {/* ── Compact row — only the centered search bar (Thumbtack-style) ── */}
             <div
-              className="absolute inset-0 flex items-center gap-3 transition-opacity duration-300"
+              className="absolute inset-0 flex items-center justify-center transition-opacity duration-300"
               style={{ opacity: compact ? 1 : 0, pointerEvents: compact ? "auto" : "none" }}
             >
-              <Link href="/" aria-label="ContrataCR inicio" className="shrink-0">
-                <ContrataCRLogo />
-              </Link>
-
-              <form onSubmit={handleCompactSearch} className="flex-1 min-w-0">
-                <div className="flex items-center h-11 sm:h-12 bg-white border border-gray-200 rounded-[6px] overflow-hidden pl-4 pr-2 shadow-[0_4px_20px_rgba(0,0,0,0.10)]">
+              <form onSubmit={handleCompactSearch} className="w-full max-w-2xl">
+                <div className="flex items-center h-11 sm:h-12 bg-white border border-gray-200 rounded-full overflow-hidden pl-5 pr-1.5 shadow-[0_4px_20px_rgba(0,0,0,0.10)]">
                   <div className="flex items-center gap-2 flex-1 min-w-0 h-full">
                     <Search className="h-4 w-4 sm:h-5 sm:w-5 text-gray-300 shrink-0" />
                     <input
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Describí tu proyecto o problema…"
+                      placeholder="Busca un servicio o profesional…"
                       className="flex-1 text-sm sm:text-base text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-none min-w-0"
                     />
                   </div>
@@ -557,31 +553,12 @@ export function LandingNavbar() {
                   </div>
                   <button
                     type="submit"
-                    className="ml-2 h-8 sm:h-9 px-5 sm:px-7 bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold rounded-[4px] transition-all duration-150 active:scale-[0.97] whitespace-nowrap shrink-0"
+                    className="ml-2 h-8 sm:h-9 px-5 sm:px-7 bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold rounded-full transition-colors whitespace-nowrap shrink-0"
                   >
                     Buscar
                   </button>
                 </div>
               </form>
-
-              <div className="hidden sm:flex items-center gap-2 shrink-0">
-                {user ? (
-                  <a
-                    href={dashboardHref}
-                    className="inline-flex items-center bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-4 py-2 rounded-full transition-all duration-150 active:scale-[0.97] whitespace-nowrap"
-                  >
-                    Mi panel
-                  </a>
-                ) : (
-                  <Link
-                    href="/registro/profesional"
-                    className="inline-flex items-center bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-4 py-2 rounded-full transition-all duration-150 active:scale-[0.97] whitespace-nowrap"
-                  >
-                    Registrarse como profesional
-                  </Link>
-                )}
-                <LanguageTogglePill />
-              </div>
             </div>
 
           </div>
