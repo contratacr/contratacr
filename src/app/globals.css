@@ -114,45 +114,27 @@ select:focus-visible {
   animation: marquee-infinite 32s linear infinite;
 }
 
-/* ─── Bark-style category carousel: two rows, OPPOSITE directions ───
-   The track holds the SAME set of cards TWICE (the 2nd set is aria-hidden and
-   sits off-screen). Spacing is applied as right-margin on each card — NOT flex
-   gap — so each set is exactly N×(card+margin) wide and translateX(-50%) lands
-   pixel-perfect (no drift, no visible duplicate, no snap). */
-@keyframes cat-scroll-left {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-@keyframes cat-scroll-right {
-  0%   { transform: translateX(-50%); }
-  100% { transform: translateX(0); }
-}
+/* ─── Category carousel: ONE staggered (zigzag) track ───
+   A single horizontal scroller (JS-driven scrollLeft for auto + manual drag/
+   arrows). The track holds the full set TWICE for a seamless loop; spacing is a
+   per-card right-margin so one set = N×(card+margin) and the wrap is exact.
+   Soft edge fade so cards glide in/out. */
 .cat-carousel {
-  /* Soft fade at both edges so cards glide in/out, not pop. */
-  -webkit-mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent);
-          mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent);
+          mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent);
+  overflow-x: auto;
+  overflow-y: hidden;
+  -ms-overflow-style: none;   /* IE/Edge */
+  scrollbar-width: none;      /* Firefox */
+  touch-action: pan-x;
+  overscroll-behavior-x: contain;
 }
+.cat-carousel::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+.cat-carousel.is-dragging { cursor: grabbing; scroll-behavior: auto; }
 .cat-track {
   display: flex;
   flex-wrap: nowrap;
   width: max-content;
-  will-change: transform;
-}
-.cat-track--left  { animation: cat-scroll-left  70s linear infinite; }
-.cat-track--right { animation: cat-scroll-right 70s linear infinite; }
-/* Pause both rows when the user hovers anywhere on the carousel. */
-.cat-carousel:hover .cat-track { animation-play-state: paused; }
-@media (max-width: 640px) {
-  .cat-track--left  { animation-duration: 48s; }
-  .cat-track--right { animation-duration: 48s; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .cat-track { animation: none; }
-  .cat-carousel {
-    overflow-x: auto;
-    -webkit-mask-image: none;
-            mask-image: none;
-  }
 }
 
 .animate-slider {
