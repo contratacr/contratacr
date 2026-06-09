@@ -525,35 +525,35 @@ export function LandingNavbar() {
               className="absolute inset-0 flex items-center justify-center transition-opacity duration-300"
               style={{ opacity: compact ? 1 : 0, pointerEvents: compact ? "auto" : "none" }}
             >
-              <form onSubmit={handleCompactSearch} className="w-full max-w-2xl">
-                <div className="flex items-center h-11 sm:h-12 bg-white border border-gray-200 rounded-full overflow-hidden pl-5 pr-1.5 shadow-[0_4px_20px_rgba(0,0,0,0.10)]">
-                  <div className="flex items-center gap-2 flex-1 min-w-0 h-full">
-                    <Search className="h-4 w-4 sm:h-5 sm:w-5 text-gray-300 shrink-0" />
+              {/* Mirrors the hero search bar exactly so it reads as the same
+                  element "sticking" to the header on scroll. */}
+              <form onSubmit={handleCompactSearch} className="w-full max-w-5xl px-4 sm:px-8">
+                <div className="flex items-center h-12 bg-white border border-gray-200 rounded-[6px] overflow-hidden pl-4 sm:pl-5 pr-2 shadow-[0_8px_28px_rgba(0,0,0,0.14)]">
+                  <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 h-full">
+                    <Search className="h-5 w-5 text-gray-300 shrink-0" />
                     <input
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Busca un servicio o profesional…"
+                      placeholder="Describe tu proyecto o problema — sé tan detallado como quieras!"
                       className="flex-1 text-sm sm:text-base text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-none min-w-0"
                     />
                   </div>
-                  <div className="hidden md:flex items-center h-full">
-                    <div className="w-px bg-gray-200 self-stretch my-2 mx-2 shrink-0" />
-                    <div className="flex items-center gap-1.5 min-w-[120px] shrink-0">
-                      <MapPin className="h-4 w-4 text-gray-300 shrink-0" />
-                      <select
-                        value={provinceQuery}
-                        onChange={(e) => setProvinceQuery(e.target.value)}
-                        className="flex-1 text-sm text-gray-500 bg-transparent focus:outline-none appearance-none cursor-pointer"
-                      >
-                        <option value="">Ubicación</option>
-                        {PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
-                      </select>
-                    </div>
+                  <div className="hidden sm:block w-px bg-gray-200 self-stretch my-3 mx-2 shrink-0" />
+                  <div className="hidden sm:flex items-center gap-2 min-w-[140px] shrink-0 h-full">
+                    <MapPin className="h-5 w-5 text-gray-300 shrink-0" />
+                    <select
+                      value={provinceQuery}
+                      onChange={(e) => setProvinceQuery(e.target.value)}
+                      className="flex-1 text-base text-gray-500 bg-transparent focus:outline-none appearance-none cursor-pointer"
+                    >
+                      <option value="">Ubicación</option>
+                      {PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
+                    </select>
                   </div>
                   <button
                     type="submit"
-                    className="ml-2 h-8 sm:h-9 px-5 sm:px-7 bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold rounded-full transition-colors whitespace-nowrap shrink-0"
+                    className="ml-2 h-9 px-6 sm:px-8 bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm sm:text-base font-bold rounded-[4px] transition-colors whitespace-nowrap shrink-0"
                   >
                     Buscar
                   </button>

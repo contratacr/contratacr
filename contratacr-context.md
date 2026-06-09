@@ -16,6 +16,10 @@ _Earlier: 2026-06-07 (sprint 24 — fully automatic identity verification: self-
 
 ---
 
+## Sprint 60.1 (2026-06-09) — header compact search = hero search twin (sticky transition)
+
+`landing-navbar` compact (scrolled) search rebuilt to **mirror the hero search bar exactly** — same `rounded-[6px]` white bar, Search-icon + service input + divider + provincia select + "Buscar", same placeholder ("Describe tu proyecto o problema — sé tan detallado como quieras!"), centered `max-w-5xl` to align with the hero — so on scroll it reads as the **same search "sticking" to the header**. No logic change; `next build` clean.
+
 ## Sprint 60 (2026-06-09) — categories finalized + consistent; home category images self-hosted on Cloudinary
 
 Category taxonomy + home imagery only. Business logic, /buscar logic, booking logic, panels untouched. Zones (provinces/cantones) untouched.
