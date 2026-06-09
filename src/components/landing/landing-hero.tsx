@@ -32,38 +32,70 @@ const HERO_IMAGE = {
   alt: "Profesional de oficio trabajando en Costa Rica",
 };
 
+/* Typewriter rotating word: types a word out letter by letter, holds, deletes,
+   then types the next — with a blinking caret. Layout can't jump: an invisible
+   sizer reserves the WIDEST word's width and the typed text is left-aligned
+   inside it. Reduced-motion → a static word with a steady caret. */
+const TYPE_MS = 78;     // per-letter typing
+const DELETE_MS = 42;   // per-letter deleting
+const HOLD_MS = 1500;   // pause on the full word
+const GAP_MS = 380;     // pause on empty before the next word
+
 function RotatingLine({ lines }: { lines: string[] }) {
-  const [index, setIndex] = useState(0);
-  const [phase, setPhase] = useState<"in" | "visible" | "out">("visible");
+  const [text, setText] = useState(lines[0]);
+  const [reduced, setReduced] = useState(false);
+  const longest = lines.reduce((a, b) => (b.length > a.length ? b : a), "");
 
   useEffect(() => {
-    const id = setInterval(() => {
-      setPhase("out");
-      setTimeout(() => {
-        setIndex((i) => (i + 1) % lines.length);
-        setPhase("in");
-        setTimeout(() => setPhase("visible"), 20);
-      }, 300);
-    }, 2500);
-    return () => clearInterval(id);
-  }, [lines.length]);
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (mq.matches) {
+      setReduced(true);
+      setText(lines[0]);
+      return;
+    }
+    let wordIdx = 0;
+    let charIdx = lines[0].length;
+    let deleting = true; // start by holding the full first word, then delete
+    let timer: ReturnType<typeof setTimeout>;
 
-  const style: React.CSSProperties = {
-    display: "block",
-    transition: "opacity 0.3s ease, transform 0.3s ease",
-    opacity: phase === "visible" || phase === "in" ? 1 : 0,
-    transform:
-      phase === "out"
-        ? "translateY(-22px)"
-        : phase === "in"
-        ? "translateY(18px)"
-        : "translateY(0)",
-    color: "#009FD9",
-  };
+    const tick = () => {
+      const word = lines[wordIdx];
+      if (!deleting) {
+        charIdx += 1;
+        setText(word.slice(0, charIdx));
+        if (charIdx >= word.length) {
+          deleting = true;
+          timer = setTimeout(tick, HOLD_MS);
+        } else {
+          timer = setTimeout(tick, TYPE_MS);
+        }
+      } else {
+        charIdx -= 1;
+        setText(word.slice(0, Math.max(0, charIdx)));
+        if (charIdx <= 0) {
+          deleting = false;
+          wordIdx = (wordIdx + 1) % lines.length;
+          timer = setTimeout(tick, GAP_MS);
+        } else {
+          timer = setTimeout(tick, DELETE_MS);
+        }
+      }
+    };
+
+    timer = setTimeout(tick, HOLD_MS);
+    return () => clearTimeout(timer);
+  }, [lines]);
 
   return (
     <span className="block" style={{ minHeight: "1.1em" }}>
-      <span style={style}>{lines[index]}</span>
+      <span className="relative inline-block text-left align-top">
+        {/* Sizer reserves the widest word's width so the line never reflows. */}
+        <span className="invisible" aria-hidden>{longest}</span>
+        <span className="absolute left-0 top-0 whitespace-pre" style={{ color: "#009FD9" }}>
+          {text}
+          <span className={reduced ? "tw-caret tw-caret-static" : "tw-caret"} aria-hidden>|</span>
+        </span>
+      </span>
     </span>
   );
 }
