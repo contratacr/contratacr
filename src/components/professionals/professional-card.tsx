@@ -111,7 +111,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
   const mobileText = professional.serviceType?.includes("mobile") ? coverageLabel(professional.coverage) : "";
 
   return (
-    <Card className={`group hover:shadow-md transition-shadow duration-200 overflow-hidden h-full ${className ?? ""}`}>
+    <Card className={`group hover:shadow-md transition-shadow duration-200 overflow-hidden md:min-h-[184px] ${className ?? ""}`}>
       {professional.isFeatured && (
         <div className="bg-gradient-to-r from-[#ff7c0a] to-[#ff9b32] px-4 py-1">
           <span className="text-[11px] font-semibold text-white tracking-wide">{tCard("featured")}</span>

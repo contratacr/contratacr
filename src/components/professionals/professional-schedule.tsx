@@ -81,18 +81,29 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     if (id.startsWith("cov_")) return "A domicilio";
     return professional.workplaces?.find((w) => w.id === id)?.name ?? "Ubicación";
   }
-  const locationIds = useMemo(() => {
-    const set = new Set<string>();
-    for (const s of slots) set.add(s.locationId ?? "general");
-    return Array.from(set);
+  // Group by LABEL so two coverage zones that both read "A domicilio" collapse to
+  // a single chip (no confusing duplicates); each group keeps its underlying ids.
+  const locationGroups = useMemo(() => {
+    const map = new Map<string, string[]>();
+    for (const s of slots) {
+      const id = s.locationId ?? "general";
+      const label = locLabel(id);
+      const ids = map.get(label) ?? [];
+      if (!ids.includes(id)) ids.push(id);
+      map.set(label, ids);
+    }
+    return Array.from(map.entries()).map(([label, ids]) => ({ label, ids }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slots]);
-  // Default to the FIRST specific location when there's more than one, so hours are
+  // Default to the FIRST location group when there's more than one, so hours are
   // never shown as an undifferentiated mix; the chips switch between them.
   const [selectedLoc, setSelectedLoc] = useState<string | null>(null);
-  const effectiveLoc = selectedLoc ?? (locationIds.length > 1 ? locationIds[0] : null);
+  const effectiveLabel = selectedLoc ?? (locationGroups.length > 1 ? locationGroups[0].label : null);
+  const effectiveIds = locationGroups.find((g) => g.label === effectiveLabel)?.ids ?? null;
   const filteredSlots = useMemo(
-    () => (effectiveLoc === null ? slots : slots.filter((s) => (s.locationId ?? "general") === effectiveLoc)),
-    [slots, effectiveLoc]
+    () => (effectiveLabel === null ? slots : slots.filter((s) => locLabel(s.locationId ?? "general") === effectiveLabel)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [slots, effectiveLabel]
   );
 
   // Rolling window of upcoming days, keyed to the FULL slot so picking carries the
@@ -145,8 +156,8 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
         initialDate={preset?.date}
         initialTime={preset?.time}
         initialCategoryId={preset?.categoryId ?? activeCategory ?? professional.categoryId ?? null}
-        initialLocationId={preset?.locationId ?? (effectiveLoc !== "general" ? effectiveLoc : null)}
-        initialLocationLabel={preset?.locationId ? locLabel(preset.locationId) : (effectiveLoc && effectiveLoc !== "general" ? locLabel(effectiveLoc) : null)}
+        initialLocationId={preset?.locationId ?? (effectiveIds && effectiveIds[0] !== "general" ? effectiveIds[0] : null)}
+        initialLocationLabel={preset?.locationId ? locLabel(preset.locationId) : (effectiveLabel && effectiveLabel !== "General" ? effectiveLabel : null)}
       />
     </>
   );
@@ -198,23 +209,23 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     <div className="flex flex-col gap-2">
       {/* Location chips/tabs — the client picks WHICH place before booking, so hours
           are never an undifferentiated mix (item 3). Defaults to the first place. */}
-      {locationIds.length > 1 && (
+      {locationGroups.length > 1 && (
         <div className="flex flex-wrap gap-1.5">
-          {locationIds.map((id) => (
+          {locationGroups.map((g) => (
             <button
-              key={id}
-              onClick={(e) => { e.stopPropagation(); setSelectedLoc(id); }}
-              className={`px-2 py-0.5 rounded-md text-[11px] font-medium transition-colors ${effectiveLoc === id ? "bg-[#009FD9] text-white" : "bg-[#f3f4f6] text-[#374151] hover:bg-[#EBF5FB]"}`}
+              key={g.label}
+              onClick={(e) => { e.stopPropagation(); setSelectedLoc(g.label); }}
+              className={`px-2 py-0.5 rounded-md text-[11px] font-medium transition-colors ${effectiveLabel === g.label ? "bg-[#009FD9] text-white" : "bg-[#f3f4f6] text-[#374151] hover:bg-[#EBF5FB]"}`}
             >
-              {locLabel(id)}
+              {g.label}
             </button>
           ))}
         </div>
       )}
       {/* Service + location caption so it's always clear what these hours are for. */}
-      <p className="text-[11px] text-[#6b7280] leading-tight">
+      <p className="text-[11px] text-[#6b7280] leading-tight truncate">
         Horarios de <span className="font-semibold text-[#374151]">{categoryName}</span>
-        {effectiveLoc && effectiveLoc !== "general" && <> · <span className="font-semibold text-[#374151]">{locLabel(effectiveLoc)}</span></>}
+        {effectiveLabel && effectiveLabel !== "General" && <> · <span className="font-semibold text-[#374151]">{effectiveLabel}</span></>}
       </p>
       <div className="flex items-stretch gap-1.5">
         <button
@@ -232,17 +243,27 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
             <div key={day.key} className="flex flex-col gap-1.5">
               <p className="text-center text-[11px] font-semibold text-[#374151] leading-tight">{day.label}</p>
               {day.items.length === 0 ? (
-                <p className="text-center text-[11px] text-[#9ca3af] py-1">No disponible</p>
+                <p className="text-center text-[11px] text-[#9ca3af] py-1">—</p>
               ) : (
-                day.items.slice(0, 3).map((slot) => (
-                  <button
-                    key={`${slot.time}-${slot.locationId ?? ""}`}
-                    onClick={(e) => { e.stopPropagation(); pick(slot); }}
-                    className="w-full px-1 py-1.5 rounded-md text-[11px] font-medium text-[#009FD9] bg-[#EBF5FB] hover:bg-[#009FD9] hover:text-white transition-colors"
-                  >
-                    {slot.time}
-                  </button>
-                ))
+                <>
+                  {day.items.slice(0, 2).map((slot) => (
+                    <button
+                      key={`${slot.time}-${slot.locationId ?? ""}`}
+                      onClick={(e) => { e.stopPropagation(); pick(slot); }}
+                      className="w-full px-1 py-1 rounded-md text-[11px] font-medium text-[#009FD9] bg-[#EBF5FB] hover:bg-[#009FD9] hover:text-white transition-colors"
+                    >
+                      {slot.time}
+                    </button>
+                  ))}
+                  {day.items.length > 2 && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); pick(day.items[2]); }}
+                      className="text-[10px] font-medium text-[#009FD9] hover:underline"
+                    >
+                      +{day.items.length - 2} más
+                    </button>
+                  )}
+                </>
               )}
             </div>
           ))}
@@ -267,43 +288,39 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
         Ver horario completo
       </Link>
 
-      {/* Always-visible primary CTA */}
-      <button
-        type="button"
-        onClick={(e) => { e.stopPropagation(); openBooking(); }}
-        className="w-full bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-semibold py-2 rounded-lg transition-colors"
-      >
-        Solicitar servicio
-      </button>
-
-      {/* Secondary contact channels — compact, side by side to stay dense. Only
-          those the professional enabled are shown. */}
-      {(canWhatsApp || (professional.whatsapp && professional.allowPhoneCall)) && (
-        <div className="flex gap-2">
-          {canWhatsApp && (
-            <a
-              href={getWhatsAppLink(professional.whatsapp, `Hola ${professional.fullName.split(" ")[0]}, vi tu perfil en ContrataCR y me gustaría coordinar un servicio.`)}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 border border-[#25D366] text-[#1ebe5d] hover:bg-[#25D366]/10 text-sm font-semibold py-2 rounded-lg transition-colors"
-            >
-              <WhatsAppIcon className="h-4 w-4" />
-              WhatsApp
-            </a>
-          )}
-          {professional.whatsapp && professional.allowPhoneCall && (
-            <a
-              href={telHref(professional.whatsapp)}
-              onClick={(e) => e.stopPropagation()}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 border border-[#e5e7eb] text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] text-sm font-semibold py-2 rounded-lg transition-colors"
-            >
-              <Phone className="h-4 w-4" />
-              Llamar
-            </a>
-          )}
-        </div>
-      )}
+      {/* One compact action row: primary CTA + icon-only secondary channels (only
+          those the professional enabled), keeping every card the same short height. */}
+      <div className="flex gap-1.5">
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); openBooking(); }}
+          className="flex-1 bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-semibold py-2 rounded-lg transition-colors"
+        >
+          Solicitar servicio
+        </button>
+        {canWhatsApp && (
+          <a
+            href={getWhatsAppLink(professional.whatsapp, `Hola ${professional.fullName.split(" ")[0]}, vi tu perfil en ContrataCR y me gustaría coordinar un servicio.`)}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            aria-label="Contactar por WhatsApp"
+            className="flex w-10 shrink-0 items-center justify-center border border-[#25D366] text-[#1ebe5d] hover:bg-[#25D366]/10 rounded-lg transition-colors"
+          >
+            <WhatsAppIcon className="h-4 w-4" />
+          </a>
+        )}
+        {professional.whatsapp && professional.allowPhoneCall && (
+          <a
+            href={telHref(professional.whatsapp)}
+            onClick={(e) => e.stopPropagation()}
+            aria-label="Llamar"
+            className="flex w-10 shrink-0 items-center justify-center border border-[#e5e7eb] text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] rounded-lg transition-colors"
+          >
+            <Phone className="h-4 w-4" />
+          </a>
+        )}
+      </div>
 
       {bookingModals}
     </div>
