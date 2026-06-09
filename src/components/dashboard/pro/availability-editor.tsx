@@ -31,6 +31,17 @@ function toMins(t: string): number {
   return h * 60 + m;
 }
 
+// Part of the day a slot falls in — used to visually group the chips so a long
+// list (5:00, 5:15, 5:30…) is easy to scan. Mañana <12h · Tarde 12–18h · Noche ≥18h.
+const DAY_PARTS = ["Mañana", "Tarde", "Noche"] as const;
+type DayPart = (typeof DAY_PARTS)[number];
+function partOfDay(time: string): DayPart {
+  const h = Math.floor(toMins(time) / 60);
+  if (h < 12) return "Mañana";
+  if (h < 18) return "Tarde";
+  return "Noche";
+}
+
 function prettyDate(iso: string): string {
   const [y, m, d] = iso.split("-").map(Number);
   const date = new Date(y, m - 1, d);
@@ -384,9 +395,9 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
   }, [startMin]);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       {/* ── Contact preference — the FIRST decision; drives everything below ── */}
-      <div className="rounded-2xl border border-[#e5e7eb] p-5">
+      <div className="rounded-2xl border border-[#e5e7eb] p-4">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-semibold text-[#111827]">¿Cómo recibís clientes?</h3>
           {savingContact && <Loader2 className="h-4 w-4 animate-spin text-[#009FD9]" />}
@@ -445,8 +456,8 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
             <p className="text-sm font-semibold text-[#111827]">Disponibilidad privada</p>
             <p className="text-xs text-[#6b7280] mt-0.5 max-w-md">
               {!isPublic
-                ? "Tus horarios NO se muestran en los resultados de búsqueda; tu tarjeta invita a contactarte por WhatsApp."
-                : "Tus horarios se muestran y los clientes pueden reservar. Activá esto para ocultarlos (se eliminan los horarios publicados)."}
+                ? "Activada: tus horarios están ocultos en las búsquedas y los clientes te contactan por WhatsApp para coordinar. Desactivala para volver a mostrarlos."
+                : "Activá para ocultar tus horarios. Los clientes deberán contactarte para conocer tu disponibilidad. (Se eliminan los horarios publicados.)"}
             </p>
           </div>
         </div>
@@ -486,7 +497,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
       </div>
 
       {/* ── Slot generator ──────────────────────────────────────── */}
-      <div className="rounded-2xl border border-[#e5e7eb] p-5">
+      <div className="rounded-2xl border border-[#e5e7eb] p-4">
         <div className="flex items-center gap-2 mb-4">
           <CalendarPlus className="h-4 w-4 text-[#009FD9]" />
           <h3 className="text-sm font-semibold text-[#111827]">Agregar horarios disponibles</h3>
@@ -553,14 +564,28 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
                 <input type="number" min={5} step={5} value={customInterval} onChange={(e) => setCustomInterval(Number(e.target.value))} className={cn(inputCls, "h-10 w-24")} />
               </div>
             )}
-            <Button type="button" size="md" onClick={generate} disabled={busy || rangeInvalid}>
+            <Button
+              type="button"
+              size="md"
+              onClick={generate}
+              disabled={busy || rangeInvalid}
+              aria-disabled={busy || rangeInvalid}
+              // Clearly OFF (solid gray) when the range is invalid — never a faded
+              // primary that still looks clickable.
+              className={cn(rangeInvalid && "bg-[#d1d5db] text-white shadow-none hover:bg-[#d1d5db] hover:shadow-none")}
+            >
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
               Generar
             </Button>
           </div>
 
-          {/* Live preview of what "Generar" will create. */}
-          {!rangeInvalid && (
+          {/* Live preview of what "Generar" will create — or the reason it's blocked. */}
+          {rangeInvalid ? (
+            <p className="flex items-center gap-1.5 text-xs text-amber-600">
+              <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+              Ajustá la hora de fin (“Hasta” debe ser posterior a “Desde”) para generar.
+            </p>
+          ) : (
             <p className="text-xs text-[#6b7280]">
               Generás <strong className="text-[#374151]">{previewCount}</strong> {previewCount === 1 ? "espacio" : "espacios"} entre{" "}
               <strong className="text-[#374151]">{to12h(genStart)}</strong> y <strong className="text-[#374151]">{to12h(genEnd)}</strong>.
@@ -635,15 +660,28 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
                               {loc && <span className="inline-flex items-center gap-1 rounded bg-[#f3f4f6] text-[#374151] px-1.5 py-0.5"><MapPin className="h-3 w-3" />{locationLabel(loc)}</span>}
                             </p>
                           )}
-                          <div className="flex flex-wrap gap-2">
-                            {sg.map((s) => (
-                              <span key={s.id ?? `${s.slot_time}-${s.location_id ?? ""}-${s.category_id ?? ""}`} className="group inline-flex items-center gap-1.5 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium pl-3 pr-1.5 py-1.5">
-                                {to12h(s.slot_time)}
-                                <button onClick={() => removeSlot(s)} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors cursor-pointer" aria-label="Quitar">
-                                  <X className="h-3.5 w-3.5" />
-                                </button>
-                              </span>
-                            ))}
+                          {/* Slots grouped by Mañana / Tarde / Noche so a long list is
+                              easy to scan; each block only renders when it has slots. */}
+                          <div className="flex flex-col gap-1.5">
+                            {DAY_PARTS.map((part) => {
+                              const partSlots = sg.filter((s) => partOfDay(s.slot_time) === part);
+                              if (partSlots.length === 0) return null;
+                              return (
+                                <div key={part} className="flex items-start gap-2">
+                                  <span className="text-[10px] font-semibold uppercase tracking-wide text-[#9ca3af] w-12 shrink-0 pt-2">{part}</span>
+                                  <div className="flex flex-wrap gap-2">
+                                    {partSlots.map((s) => (
+                                      <span key={s.id ?? `${s.slot_time}-${s.location_id ?? ""}-${s.category_id ?? ""}`} className="group inline-flex items-center gap-1.5 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium pl-3 pr-1.5 py-1.5">
+                                        {to12h(s.slot_time)}
+                                        <button onClick={() => removeSlot(s)} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors cursor-pointer" aria-label="Quitar">
+                                          <X className="h-3.5 w-3.5" />
+                                        </button>
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
                       );
