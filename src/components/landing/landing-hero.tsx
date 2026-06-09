@@ -32,10 +32,10 @@ const HERO_IMAGE = {
   alt: "Profesional de oficio trabajando en Costa Rica",
 };
 
-/* Typewriter rotating word: types a word out letter by letter, holds, deletes,
-   then types the next — with a blinking caret. Layout can't jump: an invisible
-   sizer reserves the WIDEST word's width and the typed text is left-aligned
-   inside it. Reduced-motion → a static word with a steady caret. */
+/* Typewriter rotating word: types a word out letter by letter, holds, deletes
+   in reverse, then types the next — NO cursor. The word stays horizontally
+   centered above "sin complicaciones." (it recenters as it grows/shrinks; the
+   second line never shifts). Reduced-motion → a static word. */
 const TYPE_MS = 78;     // per-letter typing
 const DELETE_MS = 42;   // per-letter deleting
 const HOLD_MS = 1500;   // pause on the full word
@@ -43,13 +43,10 @@ const GAP_MS = 380;     // pause on empty before the next word
 
 function RotatingLine({ lines }: { lines: string[] }) {
   const [text, setText] = useState(lines[0]);
-  const [reduced, setReduced] = useState(false);
-  const longest = lines.reduce((a, b) => (b.length > a.length ? b : a), "");
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
     if (mq.matches) {
-      setReduced(true);
       setText(lines[0]);
       return;
     }
@@ -87,15 +84,10 @@ function RotatingLine({ lines }: { lines: string[] }) {
   }, [lines]);
 
   return (
-    <span className="block" style={{ minHeight: "1.1em" }}>
-      <span className="relative inline-block text-left align-top">
-        {/* Sizer reserves the widest word's width so the line never reflows. */}
-        <span className="invisible" aria-hidden>{longest}</span>
-        <span className="absolute left-0 top-0 whitespace-pre" style={{ color: "#009FD9" }}>
-          {text}
-          <span className={reduced ? "tw-caret tw-caret-static" : "tw-caret"} aria-hidden>|</span>
-        </span>
-      </span>
+    // Own centered line; min-height reserves the row so it never collapses while
+    // the word is empty between cycles. No cursor — letters type/untype cleanly.
+    <span className="block" style={{ minHeight: "1.1em", color: "#009FD9" }}>
+      {text}
     </span>
   );
 }

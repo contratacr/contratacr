@@ -114,24 +114,6 @@ select:focus-visible {
   animation: marquee-infinite 32s linear infinite;
 }
 
-/* ─── Hero typewriter caret ─── */
-@keyframes caret-blink {
-  0%, 45%   { opacity: 1; }
-  50%, 95%  { opacity: 0; }
-  100%      { opacity: 1; }
-}
-.tw-caret {
-  display: inline-block;
-  margin-left: 1px;
-  font-weight: 500;
-  color: #009FD9;
-  animation: caret-blink 1.05s steps(1, end) infinite;
-}
-.tw-caret-static { animation: none; opacity: 1; }
-@media (prefers-reduced-motion: reduce) {
-  .tw-caret { animation: none; opacity: 1; }
-}
-
 /* ─── Category carousel: ONE staggered (zigzag) track ───
    A single horizontal band. Motion is TRANSFORM-based on `.cat-track` (JS rAF
    for auto + arrow tweens + pointer drag) — NOT native scroll, which rounds
