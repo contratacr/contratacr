@@ -26,15 +26,11 @@ export default async function HomePage() {
         <ProsSection />
       </FadeInUp>
 
-      {/* How it works — 3 steps */}
-      <FadeInUp delay={40}>
-        <HowItWorks />
-      </FadeInUp>
+      {/* How it works — connected 3-step journey (own staggered reveals) */}
+      <HowItWorks />
 
-      {/* Client trust benefits */}
-      <FadeInUp delay={40}>
-        <TrustBenefits />
-      </FadeInUp>
+      {/* Client trust benefits — prominent pillars (own staggered reveals) */}
+      <TrustBenefits />
 
       {/* Zones — find professionals by province (real coverage) */}
       <FadeInUp delay={40}>
