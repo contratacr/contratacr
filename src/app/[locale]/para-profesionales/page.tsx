@@ -36,25 +36,24 @@ export default function ParaProfesionalesPage() {
       <LandingNavbar />
 
       {/* Hero */}
-      <section className="relative overflow-hidden pt-32 pb-16 text-center px-4">
-        <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[460px] bg-[radial-gradient(70%_60%_at_50%_0%,#EBF5FB_0%,transparent_72%)]" />
+      <section className="pt-32 pb-16 text-center px-4 bg-white">
         <FadeInUp>
-          <span className="relative inline-block text-xs font-bold uppercase tracking-widest text-[#009FD9] bg-[#EBF5FB] px-4 py-1.5 rounded-full mb-4">Para profesionales</span>
-          <h1 className="relative text-4xl sm:text-5xl font-extrabold text-[#111827] mb-4 leading-tight">
+          <span className="inline-block text-xs font-bold uppercase tracking-widest text-[#009FD9] bg-[#EBF5FB] px-4 py-1.5 rounded-full mb-4">Para profesionales</span>
+          <h1 className="text-4xl sm:text-5xl font-extrabold text-[#111827] mb-4 leading-tight">
             Haz crecer tu negocio<br className="hidden sm:block" /> en Costa Rica
           </h1>
-          <p className="relative text-lg text-[#6b7280] max-w-xl mx-auto mb-8">
+          <p className="text-lg text-[#6b7280] max-w-xl mx-auto mb-8">
             Miles de personas buscan profesionales como tú todos los días. Crea tu perfil gratis y recibe clientes directos por WhatsApp.
           </p>
-          <div className="relative flex flex-col sm:flex-row items-center justify-center gap-3">
-            <SmartRegisterLink className="inline-flex items-center gap-2 bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold text-base px-8 py-4 rounded-2xl transition-all duration-150 active:scale-[0.97] shadow-[0_8px_32px_rgba(0,159,217,0.35)]">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            <SmartRegisterLink className="inline-flex items-center gap-2 bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold text-base px-8 py-4 rounded-2xl transition-colors shadow-sm">
               Registra tu perfil gratis <ArrowRight className="h-5 w-5" />
             </SmartRegisterLink>
             <Link href="/como-funciona" className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#374151] hover:text-[#009FD9] transition-colors">
               Ver cómo funciona
             </Link>
           </div>
-          <div className="relative mt-7 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs sm:text-sm text-[#6b7280]">
+          <div className="mt-7 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs sm:text-sm text-[#6b7280]">
             <span className="inline-flex items-center gap-1.5 font-medium"><BadgeCheck className="h-4 w-4 text-[#009FD9]" /> Perfil 100% gratis</span>
             <span className="inline-flex items-center gap-1.5 font-medium"><Ban className="h-4 w-4 text-[#16a34a]" /> Sin comisiones</span>
             <span className="inline-flex items-center gap-1.5 font-medium"><ShieldCheck className="h-4 w-4 text-[#16a34a]" /> Verificación gratis</span>
@@ -109,7 +108,7 @@ export default function ParaProfesionalesPage() {
       <section className="py-16 sm:py-20 px-4 bg-white">
         <div className="mx-auto max-w-4xl">
           <FadeInUp>
-            <div className="relative overflow-hidden rounded-3xl border border-[#bbf7d0] bg-[#f0fdf4] p-8 sm:p-12 text-center">
+            <div className="rounded-2xl border border-[#bbf7d0] bg-[#f0fdf4] p-8 sm:p-12 text-center">
               <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#dcfce7] text-[#16a34a]">
                 <ShieldCheck className="h-7 w-7" />
               </div>
@@ -126,20 +125,12 @@ export default function ParaProfesionalesPage() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-20 px-4 bg-white">
-        <div className="mx-auto max-w-5xl">
-          <div className="relative overflow-hidden rounded-3xl bg-[#1a2744] px-6 py-12 sm:px-12 sm:py-16 text-center">
-            <div aria-hidden className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-[#009FD9]/20" />
-            <div aria-hidden className="pointer-events-none absolute -bottom-28 -left-24 h-72 w-72 rounded-full bg-[#009FD9]/10" />
-            <div className="relative">
-              <h2 className="text-3xl sm:text-4xl font-extrabold text-white leading-tight mb-3">Tu próximo cliente te está buscando</h2>
-              <p className="text-white/60 text-base sm:text-lg leading-relaxed mb-8 max-w-xl mx-auto">Crea tu perfil hoy. Es gratis, toma unos minutos y empiezas a recibir solicitudes por WhatsApp.</p>
-              <SmartRegisterLink className="inline-flex items-center gap-2 bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold text-base px-8 py-4 rounded-2xl transition-all duration-150 active:scale-[0.97] shadow-[0_8px_32px_rgba(0,159,217,0.45)]">
-                Registra tu perfil gratis <ArrowRight className="h-5 w-5" />
-              </SmartRegisterLink>
-            </div>
-          </div>
-        </div>
+      <section className="py-16 px-4 bg-[#1a2744] text-center">
+        <h2 className="text-2xl sm:text-3xl font-extrabold text-white leading-tight mb-3">Tu próximo cliente te está buscando</h2>
+        <p className="text-[#93c5fd] text-sm sm:text-base leading-relaxed mb-8 max-w-xl mx-auto">Crea tu perfil hoy. Es gratis, toma unos minutos y empiezas a recibir solicitudes por WhatsApp.</p>
+        <SmartRegisterLink className="inline-flex items-center gap-2 bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold text-base px-8 py-3.5 rounded-2xl transition-colors">
+          Registra tu perfil gratis <ArrowRight className="h-5 w-5" />
+        </SmartRegisterLink>
       </section>
 
       <LandingFooter />

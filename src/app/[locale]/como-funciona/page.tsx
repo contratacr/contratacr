@@ -77,16 +77,15 @@ export default function ComoFuncionaPage() {
       <LandingNavbar />
 
       {/* Hero */}
-      <section className="relative overflow-hidden pt-32 pb-16 text-center px-4">
-        <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[380px] bg-[radial-gradient(70%_60%_at_50%_0%,#EBF5FB_0%,transparent_72%)]" />
+      <section className="pt-32 pb-16 text-center px-4 bg-white">
         <FadeInUp>
-          <span className="relative inline-block text-xs font-bold uppercase tracking-widest text-[#009FD9] bg-[#EBF5FB] px-4 py-1.5 rounded-full mb-4">
+          <span className="inline-block text-xs font-bold uppercase tracking-widest text-[#009FD9] bg-[#EBF5FB] px-4 py-1.5 rounded-full mb-4">
             Cómo funciona
           </span>
-          <h1 className="relative text-4xl sm:text-5xl font-extrabold text-[#111827] mb-4 leading-tight">
+          <h1 className="text-4xl sm:text-5xl font-extrabold text-[#111827] mb-4 leading-tight">
             Contratar un servicio,<br className="hidden sm:block" /> simple y directo
           </h1>
-          <p className="relative text-lg text-[#6b7280] max-w-2xl mx-auto">
+          <p className="text-lg text-[#6b7280] max-w-2xl mx-auto">
             ContrataCR conecta a clientes con profesionales verificados de Costa Rica. Sin intermediarios y sin comisiones: tú coordinas directo con el profesional.
           </p>
         </FadeInUp>
@@ -143,7 +142,7 @@ export default function ComoFuncionaPage() {
               <Step n={3} icon={<Star className="h-5 w-5" />} title="Recibe clientes" desc="Apareces en las búsquedas de tu cantón, recibes solicitudes y respondes proyectos. Coordinas todo por WhatsApp." />
             </div>
             <div className="mt-10 text-center">
-              <SmartRegisterLink className="inline-flex items-center gap-2 bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold px-8 py-3.5 rounded-2xl transition-all shadow-sm hover:shadow-[0_4px_20px_rgba(0,159,217,0.35)]">
+              <SmartRegisterLink className="inline-flex items-center gap-2 bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold px-8 py-3.5 rounded-2xl transition-colors shadow-sm">
                 Registra tu perfil gratis <ArrowRight className="h-4 w-4" />
               </SmartRegisterLink>
             </div>

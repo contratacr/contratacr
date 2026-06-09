@@ -78,13 +78,12 @@ export default function AyudaPage() {
       <LandingNavbar />
 
       {/* Hero + search */}
-      <section className="relative overflow-hidden pt-32 pb-10 text-center px-4">
-        <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[380px] bg-[radial-gradient(70%_60%_at_50%_0%,#EBF5FB_0%,transparent_72%)]" />
+      <section className="pt-32 pb-10 text-center px-4 bg-white">
         <FadeInUp>
-          <span className="relative inline-block text-xs font-bold uppercase tracking-widest text-[#009FD9] bg-[#EBF5FB] px-4 py-1.5 rounded-full mb-4">Centro de ayuda</span>
-          <h1 className="relative text-4xl sm:text-5xl font-extrabold text-[#111827] mb-4 leading-tight">¿En qué te podemos ayudar?</h1>
-          <p className="relative text-lg text-[#6b7280] max-w-lg mx-auto mb-8">Busca tu pregunta o explora por tema.</p>
-          <div className="relative mx-auto max-w-xl">
+          <span className="inline-block text-xs font-bold uppercase tracking-widest text-[#009FD9] bg-[#EBF5FB] px-4 py-1.5 rounded-full mb-4">Centro de ayuda</span>
+          <h1 className="text-4xl sm:text-5xl font-extrabold text-[#111827] mb-4 leading-tight">¿En qué te podemos ayudar?</h1>
+          <p className="text-lg text-[#6b7280] max-w-lg mx-auto mb-8">Busca tu pregunta o explora por tema.</p>
+          <div className="mx-auto max-w-xl">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[#9ca3af] pointer-events-none" />
             <input
               type="text"

@@ -24,12 +24,11 @@ export default function SobreNosotrosPage() {
       <LandingNavbar />
 
       {/* Hero */}
-      <section className="relative overflow-hidden pt-32 pb-16 text-center px-4">
-        <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[400px] bg-[radial-gradient(70%_60%_at_50%_0%,#EBF5FB_0%,transparent_72%)]" />
+      <section className="pt-32 pb-16 text-center px-4 bg-white">
         <FadeInUp>
-          <span className="relative inline-block text-xs font-bold uppercase tracking-widest text-[#009FD9] bg-[#EBF5FB] px-4 py-1.5 rounded-full mb-4">Sobre nosotros</span>
-          <h1 className="relative text-4xl sm:text-5xl font-extrabold text-[#111827] mb-4 leading-tight">Contratar servicios,<br className="hidden sm:block" /> simple y confiable</h1>
-          <p className="relative text-lg text-[#6b7280] max-w-2xl mx-auto">
+          <span className="inline-block text-xs font-bold uppercase tracking-widest text-[#009FD9] bg-[#EBF5FB] px-4 py-1.5 rounded-full mb-4">Sobre nosotros</span>
+          <h1 className="text-4xl sm:text-5xl font-extrabold text-[#111827] mb-4 leading-tight">Contratar servicios,<br className="hidden sm:block" /> simple y confiable</h1>
+          <p className="text-lg text-[#6b7280] max-w-2xl mx-auto">
             ContrataCR nació en Costa Rica con una idea sencilla: cuando necesitas un plomero, una niñera o un electricista, encontrar a la persona correcta debería ser rápido y dar confianza.
           </p>
         </FadeInUp>

@@ -184,12 +184,9 @@ export function LandingHero() {
   }
 
   return (
-    <section className="relative bg-white overflow-hidden">
-      {/* Subtle brand glow behind the headline (premium feel, no hero photo). */}
-      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[460px] bg-[radial-gradient(70%_60%_at_50%_0%,#EBF5FB_0%,transparent_72%)]" />
-
+    <section className="bg-white">
       {/* Headline + subtitle — narrower container for readability */}
-      <div className="relative mx-auto max-w-3xl px-4 sm:px-6 text-center pt-20 sm:pt-28 pb-6">
+      <div className="mx-auto max-w-3xl px-4 sm:px-6 text-center pt-20 sm:pt-28 pb-6">
         <h1
           className="font-extrabold text-[#1a2744] tracking-tight mb-4"
           style={{ fontSize: "clamp(2rem, 5.5vw, 3.6rem)", lineHeight: 1.1 }}
@@ -210,7 +207,7 @@ export function LandingHero() {
         >
           {/* Desktop row: single line h-14 */}
           <div className="hidden sm:block relative">
-            <div className="flex items-center h-14 bg-white border border-gray-200 rounded-[6px] overflow-hidden pl-5 pr-2 shadow-[0_8px_48px_rgba(0,0,0,0.12)] hover:shadow-[0_12px_60px_rgba(0,159,217,0.20)] transition-shadow duration-300">
+            <div className="flex items-center h-14 bg-white border border-gray-200 rounded-[6px] overflow-hidden pl-5 pr-2 shadow-sm">
               {/* Text input */}
               <div className="flex items-center gap-3 flex-1 min-w-0 h-full">
                 <Search className="h-5 w-5 text-gray-300 shrink-0" />
@@ -244,7 +241,7 @@ export function LandingHero() {
               {/* Buscar button */}
               <button
                 type="submit"
-                className="ml-2 h-10 px-8 bg-[#009FD9] hover:bg-[#0089bb] text-white text-base font-bold rounded-[4px] transition-all duration-150 active:scale-[0.97] shadow-sm whitespace-nowrap shrink-0"
+                className="ml-2 h-10 px-8 bg-[#009FD9] hover:bg-[#0089bb] text-white text-base font-bold rounded-[4px] transition-colors shadow-sm whitespace-nowrap shrink-0"
               >
                 {t("search")}
               </button>
@@ -257,7 +254,7 @@ export function LandingHero() {
           {/* Mobile stacked layout */}
           <div className="sm:hidden flex flex-col gap-2">
             <div className="relative">
-              <div className="flex items-center h-12 bg-white border border-gray-200 rounded-[6px] overflow-hidden pl-4 pr-3 shadow-[0_4px_24px_rgba(0,0,0,0.10)]">
+              <div className="flex items-center h-12 bg-white border border-gray-200 rounded-[6px] overflow-hidden pl-4 pr-3 shadow-sm">
                 <Search className="h-5 w-5 text-gray-300 shrink-0 mr-3" />
                 <input
                   type="text"
@@ -279,7 +276,7 @@ export function LandingHero() {
             </div>
             <button
               type="submit"
-              className="w-full h-12 bg-[#009FD9] hover:bg-[#0089bb] text-white text-base font-bold rounded-[6px] transition-all duration-150 active:scale-[0.97]"
+              className="w-full h-12 bg-[#009FD9] hover:bg-[#0089bb] text-white text-base font-bold rounded-[6px] transition-colors"
             >
               {t("search")}
             </button>
@@ -305,7 +302,7 @@ export function LandingHero() {
       </div>
 
       {/* Honest trust signals — no brand logos, no stock photos. */}
-      <div className="relative mx-auto max-w-3xl px-4 pb-20 sm:pb-24">
+      <div className="mx-auto max-w-3xl px-4 pb-20 sm:pb-24">
         <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs sm:text-sm text-[#6b7280]">
           {[
             { icon: <ShieldCheck className="h-4 w-4 text-[#16a34a]" />, label: "Identidad verificada" },

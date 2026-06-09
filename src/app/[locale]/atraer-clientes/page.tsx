@@ -93,16 +93,15 @@ export default function AtraerClientesPage() {
       <LandingNavbar />
 
       {/* Hero */}
-      <section className="relative overflow-hidden pt-32 pb-14 text-center px-4 bg-white">
-        <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[380px] bg-[radial-gradient(70%_60%_at_50%_0%,#EBF5FB_0%,transparent_72%)]" />
+      <section className="pt-32 pb-14 text-center px-4 bg-white">
         <FadeInUp>
-          <span className="relative inline-block text-xs font-bold uppercase tracking-widest text-[#009FD9] bg-[#EBF5FB] px-4 py-1.5 rounded-full mb-4">
+          <span className="inline-block text-xs font-bold uppercase tracking-widest text-[#009FD9] bg-[#EBF5FB] px-4 py-1.5 rounded-full mb-4">
             Consejos para profesionales
           </span>
-          <h1 className="relative text-4xl sm:text-5xl font-extrabold text-[#111827] mb-4 leading-tight">
+          <h1 className="text-4xl sm:text-5xl font-extrabold text-[#111827] mb-4 leading-tight">
             Cómo atraer más clientes<br className="hidden sm:block" /> en ContrataCR
           </h1>
-          <p className="relative text-lg text-[#6b7280] max-w-xl mx-auto">
+          <p className="text-lg text-[#6b7280] max-w-xl mx-auto">
             Consejos prácticos y honestos para crecer en el mercado costarricense.
           </p>
         </FadeInUp>
@@ -174,7 +173,7 @@ export default function AtraerClientesPage() {
       <section className="py-16 px-4 bg-[#f4f7fa]">
         <div className="mx-auto max-w-4xl">
           <FadeInUp>
-            <div className="bg-white rounded-3xl border border-gray-100 p-8">
+            <div className="bg-white rounded-2xl border border-gray-100 p-8">
               <h2 className="text-xl font-bold text-[#1a2744] mb-4">El mercado costarricense — cómo funciona en la práctica</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-600 leading-relaxed">
                 <div>
