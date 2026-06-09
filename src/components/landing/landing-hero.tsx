@@ -14,8 +14,8 @@ const PROVINCES = [
 ];
 
 const ROTATING_LINES: Record<string, string[]> = {
-  es: ["Limpieza del hogar,", "Electricidad,", "Plomería,", "Pintura interior,", "Jardinería,", "Carpintería,"],
-  en: ["Home cleaning,", "Electrical work,", "Plumbing,", "Interior painting,", "Gardening,", "Carpentry,"],
+  es: ["Limpieza,", "Plomería,", "Electricidad,", "Jardinería,", "Pintura,", "Niñera,", "Mudanzas,", "Fumigación,"],
+  en: ["Cleaning,", "Plumbing,", "Electrical,", "Gardening,", "Painting,", "Babysitting,", "Moving,", "Pest control,"],
 };
 
 const POPULAR_TAGS: Record<string, string[]> = {
@@ -308,8 +308,8 @@ export function LandingHero() {
           style={{ maxWidth: 800, borderRadius: "50% 50% 0 0 / 100% 100% 0 0" }}
         >
           <Image
-            src="https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=1400&q=85"
-            alt="Casa residencial en Costa Rica"
+            src="https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=1400&q=85"
+            alt="Profesional de servicios para el hogar trabajando en Costa Rica"
             fill
             className="object-cover object-center"
             priority
