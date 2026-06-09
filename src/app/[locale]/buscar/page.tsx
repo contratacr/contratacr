@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { getTranslations, getLocale } from "next-intl/server";
 import Link from "next/link";
-import { Search, SlidersHorizontal, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { SearchFilters } from "@/components/search/search-filters";
@@ -162,33 +162,22 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
       {/* Top bar — title + subtitle */}
       <div className="bg-white border-b border-[#e5e7eb]">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <div>
-              <h1 className="text-xl font-bold text-[#111827]">{pageTitle}</h1>
-              <p className="text-[#6b7280] text-sm mt-0.5">{subtitle}</p>
-            </div>
-            <div className="flex items-center gap-2 text-sm text-[#6b7280]">
-              <SlidersHorizontal className="h-4 w-4" />
-              <span>{t("filters.title")}</span>
-            </div>
-          </div>
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-3">
+          <h1 className="text-xl font-bold text-[#111827]">{pageTitle}</h1>
+          <p className="text-[#6b7280] text-sm mt-0.5">{subtitle}</p>
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="bg-white border-b border-[#e5e7eb]">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-2.5">
-          <Suspense fallback={null}>
-            <SearchFilters />
-          </Suspense>
-        </div>
-      </div>
-
-      {/* Main content */}
+      {/* Main content — 3-column shell (filters · results · map) */}
       <main className="flex-1">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-4">
-          <SearchResultsLayout mapData={mapData} apiKey={MAPS_API_KEY} locale={locale} numbering={numbering}>
+          <SearchResultsLayout
+            mapData={mapData}
+            apiKey={MAPS_API_KEY}
+            locale={locale}
+            numbering={numbering}
+            filters={<Suspense fallback={null}><SearchFilters /></Suspense>}
+          >
 
             {/* ── Results list ── */}
             <div className="min-w-0">

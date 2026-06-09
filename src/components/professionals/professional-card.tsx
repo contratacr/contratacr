@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { MapPin, ShieldCheck, Truck, Image as ImageIcon } from "lucide-react";
+import { MapPin, ShieldCheck, Truck, Image as ImageIcon, Lock } from "lucide-react";
 import { ProfessionalSchedule, type ScheduleSlot } from "@/components/professionals/professional-schedule";
 import { Link } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -98,6 +98,9 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
   const priceLabel = primaryPricingLabel(professional.pricing, professional.hourlyRate);
   const isVerified = professional.verificationStatus === "verified";
   const extraProfessions = allProfessions.length - professionList.length;
+  // Contact-only when the pro hid their availability OR only takes WhatsApp — shown
+  // as a flush top band (cleaner than a floating paragraph in the panel).
+  const contactOnly = isPrivate || professional.contactPreference === "solo_whatsapp";
 
   // ── ONE consolidated location line (keeps cards uniform): a fixed pro shows
   // their first readable workplace (+N), else province/cantón; a mobile pro shows
@@ -115,6 +118,16 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
       {professional.isFeatured && (
         <div className="bg-gradient-to-r from-[#ff7c0a] to-[#ff9b32] px-4 py-1">
           <span className="text-[11px] font-semibold text-white tracking-wide">{tCard("featured")}</span>
+        </div>
+      )}
+
+      {/* Private/contact-only notice — flush top band (pl-8 clears the number badge). */}
+      {contactOnly && (
+        <div className="flex items-center gap-1.5 bg-[#fff7ed] border-b border-[#fed7aa] pl-8 pr-3 py-1.5">
+          <Lock className="h-3 w-3 text-[#c2410c] shrink-0" />
+          <span className="text-[11px] font-medium text-[#9a3412] truncate">
+            {isPrivate ? "Disponibilidad no pública — coordiná por WhatsApp" : "Atiende por WhatsApp — coordiná directamente"}
+          </span>
         </div>
       )}
 
@@ -200,7 +213,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
           </div>
 
           {/* ── Right: availability panel (md:pt-7 clears the corner favorites button) ── */}
-          <div className="md:w-[244px] md:shrink-0 md:border-l md:border-[#f3f4f6] md:pl-3 md:pt-7 pt-3 border-t border-[#f3f4f6] md:border-t-0">
+          <div className="md:w-[212px] md:shrink-0 md:border-l md:border-[#f3f4f6] md:pl-3 md:pt-7 pt-3 border-t border-[#f3f4f6] md:border-t-0">
             <ProfessionalSchedule
               professional={professional}
               categoryName={categoryName}

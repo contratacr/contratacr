@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Lock, ChevronLeft, ChevronRight, Phone } from "lucide-react";
+import { ChevronLeft, ChevronRight, Phone } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { BookingModal } from "@/components/booking/booking-modal";
 import { ClientRegistrationModal } from "@/components/auth/client-registration-modal";
@@ -163,37 +163,29 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   );
 
   // ── Contact-only (private availability OR WhatsApp-only preference) ────
+  // The reason is shown as a flush top band on the card; here we only render the
+  // compact contact actions so every card stays the same tidy height.
   if (!canBook) {
     return (
-      <div className="flex flex-col gap-2.5">
-        <div className="flex items-start gap-2 text-[#6b7280]">
-          <span className="flex h-5 w-5 items-center justify-center rounded bg-[#fee2e2] shrink-0 mt-0.5">
-            <Lock className="h-3 w-3 text-[#dc2626]" />
-          </span>
-          <p className="text-xs leading-snug">
-            {availabilityPublic
-              ? "Este profesional atiende directamente por WhatsApp. Contáctalo para coordinar."
-              : "La disponibilidad de este profesional no es pública. Contáctanos y conoce sus horarios."}
-          </p>
-        </div>
+      <div className="flex gap-1.5">
         <a
           href={getWhatsAppLink(professional.whatsapp, `Hola ${professional.fullName.split(" ")[0]}, vi tu perfil en ContrataCR y me gustaría coordinar un servicio.`)}
           target="_blank"
           rel="noopener noreferrer"
           onClick={(e) => e.stopPropagation()}
-          className="inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1ebe5d] text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+          className="flex-1 inline-flex items-center justify-center gap-1.5 bg-[#25D366] hover:bg-[#1ebe5d] text-white text-sm font-semibold py-2 rounded-lg transition-colors"
         >
           <WhatsAppIcon className="h-4 w-4" />
-          Contactar por WhatsApp
+          WhatsApp
         </a>
         {professional.allowPhoneCall && (
           <a
             href={telHref(professional.whatsapp)}
             onClick={(e) => e.stopPropagation()}
-            className="inline-flex items-center justify-center gap-2 border border-[#e5e7eb] text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] text-sm font-semibold px-4 py-2 rounded-lg transition-colors"
+            aria-label="Llamar"
+            className="flex w-10 shrink-0 items-center justify-center border border-[#e5e7eb] text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] rounded-lg transition-colors"
           >
             <Phone className="h-4 w-4" />
-            Contáctanos por llamada
           </a>
         )}
       </div>
@@ -264,9 +256,9 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
                   {day.items.length > 2 && (
                     <button
                       onClick={(e) => { e.stopPropagation(); pick(day.items[2]); }}
-                      className="text-[10px] font-medium text-[#009FD9] hover:underline"
+                      className="text-[10px] text-[#9ca3af] hover:text-[#009FD9] transition-colors"
                     >
-                      +{day.items.length - 2} más
+                      +{day.items.length - 2}
                     </button>
                   )}
                 </>

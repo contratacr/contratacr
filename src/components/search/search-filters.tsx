@@ -135,7 +135,7 @@ export function SearchFilters() {
   return (
     <div className="bg-white rounded-2xl border border-[#e5e7eb] p-3">
       {/* Text search */}
-      <div className="mb-2">
+      <div className="mb-2.5">
         <div className="relative flex items-center">
           <Search className="absolute left-3 h-4 w-4 text-[#9ca3af] pointer-events-none" />
           <input
@@ -143,7 +143,7 @@ export function SearchFilters() {
             value={query}
             onChange={(e) => handleQueryChange(e.target.value)}
             onKeyDown={handleQueryKeyDown}
-            placeholder="Buscá cualquier servicio… ej. niñera Escazú, contador, fotógrafo"
+            placeholder="Buscá cualquier servicio…"
             className="w-full rounded-xl border border-[#e5e7eb] bg-white py-2 pl-9 pr-9 text-sm text-[#111827] placeholder-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition"
           />
           {query && (
@@ -154,7 +154,8 @@ export function SearchFilters() {
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row gap-2">
+      {/* Vertical stack — designed for the left sidebar (and the mobile drawer). */}
+      <div className="flex flex-col gap-2.5">
         {/* Category — grouped select */}
         <div className="flex-1">
           <label className="text-xs font-medium text-[#6b7280] mb-1 block">{t("filters.category")}</label>
@@ -182,7 +183,7 @@ export function SearchFilters() {
           </Select>
         </div>
 
-        <div className="sm:w-44">
+        <div>
           <label className="text-xs font-medium text-[#6b7280] mb-1 block">{t("filters.province")}</label>
           <Select value={province} onValueChange={(v) => { setProvince(v); setCanton(""); applyFilters({ provincia: v, canton: "" }); }}>
             <SelectTrigger className="text-sm">
@@ -195,7 +196,7 @@ export function SearchFilters() {
           </Select>
         </div>
 
-        <div className="sm:w-44">
+        <div>
           <label className="text-xs font-medium text-[#6b7280] mb-1 block">{t("filters.canton")}</label>
           <Select value={canton} onValueChange={(v) => { setCanton(v); applyFilters({ canton: v }); }} disabled={!province || cantons.length === 0}>
             <SelectTrigger className="text-sm">
@@ -208,7 +209,7 @@ export function SearchFilters() {
           </Select>
         </div>
 
-        <div className="sm:w-44">
+        <div>
           <label className="text-xs font-medium text-[#6b7280] mb-1 block">{t("filters.sortBy")}</label>
           <Select value={sortBy} onValueChange={(v) => { setSortBy(v); applyFilters({ sortBy: v }); }}>
             <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
@@ -223,7 +224,7 @@ export function SearchFilters() {
           </Select>
         </div>
 
-        <div className="sm:w-48">
+        <div>
           <label className="text-xs font-medium text-[#6b7280] mb-1 block">Aseguradora</label>
           <Select value={aseguradora} onValueChange={(v) => { setAseguradora(v); applyFilters({ aseguradora: v }); }}>
             <SelectTrigger className="text-sm">
@@ -237,13 +238,13 @@ export function SearchFilters() {
         </div>
       </div>
 
-      {/* Geolocation + verified toggles + clear — one compact row */}
-      <div className="mt-2 pt-2 border-t border-[#f3f4f6] flex flex-wrap items-center gap-2">
+      {/* Geolocation + verified toggles + clear */}
+      <div className="mt-2.5 pt-2.5 border-t border-[#f3f4f6] flex flex-col gap-2">
         <button
           type="button"
           onClick={useMyLocation}
           disabled={geoLoading}
-          className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors ${
+          className={`w-full inline-flex items-center justify-center gap-1.5 rounded-lg border px-2.5 py-2 text-xs font-medium transition-colors ${
             geoActive
               ? "bg-[#EBF5FB] border-[#bfdbfe] text-[#0089bb]"
               : "bg-white border-[#e5e7eb] text-[#374151] hover:border-[#009FD9]"
@@ -256,7 +257,7 @@ export function SearchFilters() {
         <button
           type="button"
           onClick={() => { const v = !verifiedOnly; setVerifiedOnly(v); applyFilters({ verificados: v ? "1" : "" }); }}
-          className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors ${
+          className={`w-full inline-flex items-center justify-center gap-1.5 rounded-lg border px-2.5 py-2 text-xs font-medium transition-colors ${
             verifiedOnly
               ? "bg-[#dcfce7] border-[#bbf7d0] text-[#15803d]"
               : "bg-white border-[#e5e7eb] text-[#374151] hover:border-[#16a34a]"
@@ -266,15 +267,15 @@ export function SearchFilters() {
             <span className={`h-2.5 w-2.5 rounded-full bg-white transition-transform ${verifiedOnly ? "translate-x-3" : "translate-x-0.5"}`} />
           </span>
           <ShieldCheck className="h-3.5 w-3.5" />
-          Solo con identidad verificada
+          Solo identidad verificada
         </button>
 
+        {geoError && <span className="text-xs text-[#b45309]">{geoError}</span>}
         {activeCount > 0 && (
-          <button onClick={clearAll} className="ml-auto inline-flex items-center gap-1 text-xs text-[#6b7280] hover:text-red-500 transition-colors">
-            <X className="h-3 w-3" /> {t("filters.clear")}
+          <button onClick={clearAll} className="inline-flex items-center justify-center gap-1 text-xs text-[#6b7280] hover:text-red-500 transition-colors pt-0.5">
+            <X className="h-3 w-3" /> {t("filters.clear")} ({activeCount})
           </button>
         )}
-        {geoError && <span className="basis-full text-xs text-[#b45309]">{geoError}</span>}
       </div>
     </div>
   );
