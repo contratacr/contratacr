@@ -4,6 +4,7 @@ import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { FadeInUp } from "@/components/landing/fade-in-up";
 import { Link } from "@/i18n/navigation";
+import { SmartRegisterLink } from "@/components/layout/smart-register-link";
 import {
   Camera, Star, MapPin, ArrowRight,
   CheckCircle2, UserCheck, Clock, Image as ImageIcon,
@@ -92,16 +93,17 @@ export default function AtraerClientesPage() {
       <LandingNavbar />
 
       {/* Hero */}
-      <section className="pt-32 pb-14 text-center px-4 bg-white">
+      <section className="relative overflow-hidden pt-32 pb-14 text-center px-4 bg-white">
+        <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[380px] bg-[radial-gradient(70%_60%_at_50%_0%,#EBF5FB_0%,transparent_72%)]" />
         <FadeInUp>
-          <span className="inline-block text-xs font-bold uppercase tracking-widest text-[#009FD9] bg-[#EBF5FB] px-4 py-1.5 rounded-full mb-4">
-            Para profesionales
+          <span className="relative inline-block text-xs font-bold uppercase tracking-widest text-[#009FD9] bg-[#EBF5FB] px-4 py-1.5 rounded-full mb-4">
+            Consejos para profesionales
           </span>
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-[#1a2744] mb-4 leading-tight">
+          <h1 className="relative text-4xl sm:text-5xl font-extrabold text-[#111827] mb-4 leading-tight">
             Cómo atraer más clientes<br className="hidden sm:block" /> en ContrataCR
           </h1>
-          <p className="text-lg text-gray-500 max-w-xl mx-auto">
-            Consejos prácticos y honestos para profesionales que quieren crecer en el mercado costarricense.
+          <p className="relative text-lg text-[#6b7280] max-w-xl mx-auto">
+            Consejos prácticos y honestos para crecer en el mercado costarricense.
           </p>
         </FadeInUp>
       </section>
@@ -207,17 +209,14 @@ export default function AtraerClientesPage() {
             Completa tu perfil, verifica tu cédula, y empieza a aparecer en búsquedas hoy.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link
-              href="/registro/profesional"
-              className="inline-flex items-center justify-center gap-2 bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold px-7 py-3 rounded-full transition-all"
-            >
+            <SmartRegisterLink className="inline-flex items-center justify-center gap-2 bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold px-7 py-3.5 rounded-2xl transition-all">
               Registra tu perfil gratis <ArrowRight className="h-4 w-4" />
-            </Link>
+            </SmartRegisterLink>
             <Link
-              href="/dashboard/profesional"
-              className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold px-7 py-3 rounded-full transition-all border border-white/20"
+              href="/para-profesionales"
+              className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold px-7 py-3.5 rounded-2xl transition-all border border-white/20"
             >
-              Ir a mi panel
+              Por qué ContrataCR
             </Link>
           </div>
         </FadeInUp>

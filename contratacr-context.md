@@ -16,6 +16,12 @@ _Earlier: 2026-06-07 (sprint 24 — fully automatic identity verification: self-
 
 ---
 
+## Sprint 50 (2026-06-09) — "Consejos para profesionales" (atraer-clientes) refresh
+
+No migration. Presentation/content only. The page's tips (foto profesional, verifica cédula, casos de éxito, responde rápido, pide reseñas, cobertura por cantón, bio específica, disponibilidad al día), the Do/Don't list and the CR-market reality section were already strong and no-"vos" — refreshed to the guide: **brand-glow hero** + token alignment (#111827/#6b7280, rounded-2xl), and the CTA is now **session-aware** ("Registra tu perfil gratis" via `SmartRegisterLink` → registration logged-out / panel logged-in) with a "Por qué ContrataCR" → `/para-profesionales` secondary (replacing the bouncing "Ir a mi panel").
+
+---
+
 ## Sprint 49 (2026-06-09) — "Centro de ayuda" rebuilt (searchable, grouped FAQ)
 
 No migration. Presentation/content only.
