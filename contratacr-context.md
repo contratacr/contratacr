@@ -16,6 +16,14 @@ _Earlier: 2026-06-07 (sprint 24 — fully automatic identity verification: self-
 
 ---
 
+## Sprint 47 (2026-06-09) — professional recruitment landing `/para-profesionales` (new)
+
+No migration. Presentation/content only — registration flow & logic untouched.
+- Created a dedicated **"Para profesionales"** recruitment landing (none existed; the CTAs previously jumped straight to the registration flow): hero value prop ("Haz crecer tu negocio en Costa Rica") + **session-aware** "Registra tu perfil gratis" (`SmartRegisterLink` → registration logged-out, panel logged-in) + honest trust chips; a **benefits** grid (clientes directos por WhatsApp · **sin comisiones — te quedas con el 100%** · identidad verificada gratis · visible en tu cantón · controlas tu agenda · muestra tu trabajo); a **3-step** "Empieza" recap (crea perfil → verifica identidad/TSE → recibe clientes); a green **identity-verified** trust band linking to `/proveedores-autorizados`; and a dark final CTA. Claims kept honest & consistent with the intermediary framing (it's free, no commissions — not "pay-when-you-win").
+- Linked it from the navbar **Recursos → Profesionales → "Para profesionales"**.
+
+---
+
 ## Sprint 46 (2026-06-09) — "Categorías" page redesigned (live search + grouped grid + suggest)
 
 No migration. Presentation/content only.

@@ -150,6 +150,7 @@ const NAV_MENUS: NavMenu[] = [
       {
         heading: "Profesionales",
         links: [
+          { label: "Para profesionales",    href: "/para-profesionales" },
           { label: "Registra tu perfil",    href: "/registro/profesional" },
           { label: "Cómo atraer clientes",  href: "/atraer-clientes" },
         ],
