@@ -10,6 +10,12 @@ _Earlier: 2026-06-07 (sprint 24 — fully automatic identity verification: self-
 
 ---
 
+## ⚠️ Design guide is mandatory — read `contratacr-design-guide.md` first for ANY UI work
+
+`contratacr-design-guide.md` (repo root, created sprint 40) is the **single source of truth** for visual/UX direction. **Every task that touches UI, layout, components, or user-facing copy must read it before writing code and conform to it.** It defines: the simplicity-first principle; the canonical color/typography/spacing tokens + component standards (compact buttons with a clear primary/secondary hierarchy and a real disabled state, inputs, chips, cards, toggles, badges); the layout patterns (/buscar 3-column filters·results·map, uniform compact cards, Hulihealth-style availability strip + location chips, collapsible long forms with the first section open); density/sizing rules; the **app-wide copy standard — normal Costa Rican Spanish WITHOUT "vos" imperatives** ("Describe lo que necesitas", "Agrega", "Elige" — never "Describí", "Agregá", "Elegí"); and the required-field convention (red `*` / `(opcional)`). If existing UI violates it while you're in the area, align it (within scope).
+
+---
+
 ## Sprint 39 (2026-06-08) — professional "Disponibilidad" presentation polish (no logic changes)
 
 No migration. **Presentation-only** pass on `AvailabilityEditor` (`dashboard/pro/availability-editor.tsx`); no scheduling rules, validation, or save behavior changed.

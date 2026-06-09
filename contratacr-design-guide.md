@@ -1,0 +1,221 @@
+# ContrataCR — Design & UX Guide
+
+> **READ THIS FIRST.** Every task that touches UI, layout, copy, or visual design **must read this file before writing any code** and conform to it. If a change would contradict this guide, follow the guide (or, if the guide is genuinely wrong for the case, note it and update this file in the same change). The goal is a single, cohesive, dead-simple product — not many locally-clever screens.
+
+ContrataCR is a Costa Rican services marketplace (clients find and book professionals). Our users value apps that are **very easy and intuitive**. The reference for structure and UX patterns is a clean service-directory experience in the spirit of **Hulihealth** (well-organized search with a results list + map, compact information-dense cards, clear availability). We replicate the **structure and patterns**, never their code, assets, or brand — everything uses ContrataCR's own brand, colors, content, and features.
+
+---
+
+## 1. Core principle — simplicity first
+
+**Function means nothing if it's cluttered or confusing.** Every screen must be immediately understandable by a non-technical Costa Rican user on a phone.
+
+Apply, in order:
+1. **One primary action per screen.** Make the most common next step obvious (one filled primary button). Everything else is secondary/quiet.
+2. **Show only what's needed now.** Hide advanced or rare options behind collapsible sections, "+N" overflows, popovers, or drawers. Never dump every field/option on screen at once.
+3. **No redundancy.** One piece of information appears in exactly one place. One validation error shows once. Never two messages saying the same thing.
+4. **Group related things; separate unrelated things.** Use clear visual grouping (cards/sections), consistent spacing, and a clear hierarchy (size, weight, color) so the eye lands on the right thing first.
+5. **Compact but legible.** Dense like a good directory — no wasted vertical space — but never cramped or tiny to the point of being hard to read (see §5).
+6. **Consistency beats cleverness.** Reuse the tokens, components, and patterns below. A familiar pattern used everywhere is easier than a new bespoke one per screen.
+
+When in doubt, remove. If a block doesn't help the user complete their task, cut it.
+
+---
+
+## 2. Design tokens
+
+These are the **canonical** values. Use them via the existing primitives (`Button`, `Input`, `Badge`, `Card`, `Select`) wherever possible instead of re-deriving styles. Tailwind arbitrary values (`bg-[#009FD9]`) are how the codebase expresses these today — match the surrounding code.
+
+### Color palette
+
+**Brand (blue) — primary identity & primary actions**
+| Token | Hex | Use |
+|---|---|---|
+| Brand | `#009FD9` | Primary buttons, links, focus ring, active states, verified badge |
+| Brand hover | `#0089bb` | Primary button hover |
+| Brand tint | `#EBF5FB` | Light brand background (chips, hovers, highlights) |
+| Brand tint border | `#bfdbfe` | Border on brand-tint chips/badges |
+
+**Accent (orange) — sparingly, for featured/secondary emphasis only.** Not the default CTA color.
+| Token | Hex |
+|---|---|
+| Accent | `#ff7c0a` · hover `#f05f00` · text-on-tint `#c74600` · tint `#fff8ed` / border `#ffdba5` |
+
+**WhatsApp** (the contact channel): `#25d366` · hover `#1da851`. Use only for the WhatsApp action.
+
+**Neutrals (gray scale)**
+| Hex | Use |
+|---|---|
+| `#111827` | Primary text / headings (foreground) |
+| `#374151` | Body text, form labels |
+| `#6b7280` | Muted text, hints, secondary captions |
+| `#9ca3af` | Placeholders, disabled-ish icons, faint labels |
+| `#cbd5e1` | Input border on hover |
+| `#e5e7eb` | Default borders, dividers |
+| `#d1d5db` | Disabled control fill (solid, see §2 buttons) |
+| `#f3f4f6` | Muted background (ghost hover, disabled input) |
+| `#fafafa` | Page background |
+| `#ffffff` | Surface (cards) |
+
+**Semantic**
+| Meaning | Tokens |
+|---|---|
+| Success | `emerald-50` bg / `emerald-700` text / `emerald-200` border |
+| Warning / caution | `amber-50` bg / `amber-700` text / `amber-200` border (deep text `#92400e`, fill `#fde68a`) |
+| Error | `red-500` text, `red-400` input border, `red-50`/`red-700`/`red-200` badge |
+
+> Note: `globals.css` also defines a legacy green `--color-primary-*` palette. The **live brand is the blue `#009FD9`** used by `Button`/`Badge`/`Input` — use the blue, not the green tokens.
+
+### Typography
+
+Font: **Inter** / system-ui sans (set globally). Scale (Tailwind):
+| Role | Class | Notes |
+|---|---|---|
+| Page title | `text-2xl`/`text-3xl` `font-bold` `text-[#111827]` | One per page |
+| Section heading | `text-lg`/`text-xl` `font-semibold` | |
+| Card title / strong label | `text-sm`/`text-base` `font-semibold` | |
+| Body | `text-sm` `text-[#374151]` | Default |
+| Label (form) | `text-sm font-medium text-[#374151]` | |
+| Hint / caption / meta | `text-xs` `text-[#6b7280]` | |
+| Micro-label (eyebrow) | `text-[10px] font-semibold uppercase tracking-wide text-[#9ca3af]` | e.g. Mañana/Tarde/Noche |
+
+Don't go below `text-xs` for anything the user must read (the `10px` eyebrow is for ALL-CAPS labels only). Numbers/prices: `font-semibold`, `whitespace-nowrap`.
+
+### Spacing scale
+
+Use the standard 4px Tailwind steps. Defaults for this app:
+- **Page padding:** `py-6` (`px-4` mobile → container).
+- **Between cards / major blocks:** `gap-4` / `space-y-4`.
+- **Inside a card:** padding `p-4` (compact) — not `p-5`/`p-6`. Internal stacks `gap-3` / `space-y-3`.
+- **Tight clusters** (label+control, chip rows): `gap-1.5` / `gap-2`.
+- Prefer removing vertical space over adding it. If two blocks relate, keep them close.
+
+### Radius & elevation
+- Radius: cards/inputs/buttons `rounded-xl` (12px); chips/badges/pills `rounded-full`; small buttons `rounded-lg`. Big hero CTAs only `rounded-2xl`.
+- Borders over shadows for structure (`border border-[#e5e7eb]`). Use soft shadow (`shadow-sm`) for raised primary buttons and floating popovers/drawers only. Don't stack heavy shadows.
+
+### Components & standards
+
+**Buttons** (`Button` component). Clear hierarchy, **compact sizing by default**:
+- **Primary** — `variant="default"` (filled brand `#009FD9`). Exactly one per context. The main action ("Solicitar servicio", "Generar", "Guardar").
+- **Secondary** — `variant="secondary"` (white, brand border/text) or `variant="outline"` (neutral). Supporting actions.
+- **Ghost** — `variant="ghost"` for low-emphasis/tertiary (icon buttons, "Cancelar").
+- **WhatsApp** — `variant="whatsapp"` only for the WhatsApp contact action.
+- **Size:** default to **`size="sm"`** (`h-8 px-3 text-xs`) for in-card / dense contexts and **`size="md"`** (`h-10`) for form submits. Reserve `lg`/`xl` for the landing/hero. Compact is the rule.
+- **Disabled state must READ as disabled, not just dimmed.** The default `disabled:opacity-50` makes a primary button look like a faded-but-clickable button. When a control is blocked by validation, render a **solid gray** state (`bg-[#d1d5db] text-white shadow-none hover:bg-[#d1d5db]`) + `aria-disabled`, so it's unmistakably inert. Pair it with **one** clear reason (inline), never a second duplicate message.
+
+**Inputs** (`Input`/`Select`): `rounded-xl border border-[#e5e7eb] bg-white px-4 py-2.5 text-sm`, focus `ring-2 ring-[#009FD9]`, error `border-red-400`. Label above (`text-sm font-medium text-[#374151]`); hint/error below (`text-xs`). Always pair a label with its control; never rely on placeholder as the label.
+
+**Chips / tags / pills**: `rounded-full px-2.5 py-0.5 text-xs font-medium`. Selectable chips (location/profession tabs): brand-tint when active (`bg-[#EBF5FB] text-[#009FD9] border border-[#bfdbfe]`), neutral when not (`bg-[#f3f4f6] text-[#6b7280] border border-[#e5e7eb]`). Overflow → a muted **"+N"** chip rather than wrapping endlessly.
+
+**Cards** (`Card`): white surface, `border border-[#e5e7eb]`, `rounded-xl`, `p-4`. In a list, cards must be **uniform height** — bound variable content (cap lists, consolidate optional rows, use `min-h-[…]`) so a sparse card matches a rich one. See §3/§4.
+
+**Badges** (`Badge`): status/labels. `default` brand-tint, `success`, `warning`, `error`, `muted`, `verified` (solid brand), `featured` (solid accent). Use `verified` for "Identidad verificada".
+
+**Toggles**: a switch with a short, **state-aware** label/description — the text describes what's true now and what the toggle does, and never contradicts itself across states. (e.g. private on → "tus horarios están ocultos…"; private off → "Activa para ocultar tus horarios…").
+
+---
+
+## 3. Layout patterns
+
+### /buscar — three-column directory (the signature screen)
+Filters · results · map, Hulihealth-style, responsive:
+- **xl+ (≥1280):** `filters sidebar (w-56, sticky)` · `results list (flex-1)` · `map (xl:w-[34%], sticky)`.
+- **lg–xl (1024–1279):** `results` · `map (lg:w-[40%])`; filters move behind a **"Filtros" slide-over drawer** (3 columns here squeezes cards too narrow).
+- **<lg:** single column; **"Filtros"** button opens the drawer + a **List/Map toggle** swaps results/map.
+- `SearchResultsLayout` owns the three slots + drawer (takes a `filters` prop). `SearchFilters` is a **vertical sidebar** (stacked search, selects, geolocation, verified, clear). Don't reintroduce a tall top filter band.
+
+### Result cards — uniform & compact
+A professional is always **ONE card** (never split per location). Bounded, aligned columns:
+- Left: small avatar (44px) · **name + price** header row · **verified pill inlined with capped profession chips** (`+N` overflow) · rating or "Sin reseñas" · **ONE consolidated location/coverage line** (truncated). Don't stack a separate row per province/cantón/workplace/bio — that's the main source of height variance. No bio on the card.
+- Numbered cards **1..N** mirrored on numbered map pins; pin hover previews + highlights the card.
+- Private/contact-only availability: a **slim top band flush to the card edge** (not a floating paragraph that adds height) — see §3 availability.
+- Bound the availability column and cap slots so every card is the same height (`md:min-h-[…]`).
+
+### Availability display (Hulihealth-style)
+- A **day/time strip**: per upcoming day, a few time chips (cap to ~2/day + a muted "+N más"); empty → collapse to one line ("Sin horarios en los próximos días."). Slots are one-click → opens booking pre-selected.
+- **Location chips/tabs** above the strip pick the place (default to the first; caption "Horarios de <servicio> · <lugar>"). Dedupe chips by label.
+- Grouped lists (e.g. the pro's own "Tus horarios próximos") group times by **Mañana (<12h) / Tarde (12–18h) / Noche (≥18h)** so dense lists are scannable; each part renders only when it has slots.
+- **Private / contact-only:** a compact band/badge "🔒 Disponibilidad no pública — coordina por WhatsApp" + compact WhatsApp/llamar actions. Never let the private notice add card height.
+
+### Long forms — collapsible sections
+Break long forms (pro profile, etc.) into **accordion sections** with a header + chevron. **First section open by default, the rest collapsed.** Group logically (e.g. Datos básicos · Profesión · Ubicación y cobertura · Contacto y precios · …). Keep the save bar always visible. This kills the endless single-column scroll.
+
+### Modals & drawers
+Centered modal for focused tasks (booking); slide-over drawer for filters/secondary panels on small screens. Dismiss on click-outside / Escape. Keep them as compact as the content allows.
+
+---
+
+## 4. Density & sizing rules
+
+Reference Hulihealth density: **a lot of useful information per screen, cleanly.**
+- **No wasted vertical space.** Cards `p-4`, lists `gap-3/4`, page `py-6`. Don't pad for the sake of it.
+- **Cap and overflow** instead of growing: long chip rows → `+N`; long slot lists → "+N más"; long text → `truncate` / `line-clamp-2`.
+- **Uniform heights** in any list/grid (see cards). A short card must rise to match (`min-h`), a tall card must be bounded (caps), so the list reads as a tidy grid.
+- **Compact controls:** `size="sm"` buttons in cards; tight selects; small pills for filters.
+- **Legibility floor:** body stays `text-sm`; never shrink essential text below `text-xs`. Maintain contrast (text on white ≥ `#374151`; don't put `#9ca3af` on white for anything that must be read).
+- **Mobile first:** everything must work one-handed on a phone. Stack to one column, keep tap targets ≥ ~32px, avoid horizontal scroll except intentional chip/slot strips.
+
+---
+
+## 5. Copy & voice
+
+**Language: clear, normal Costa Rican Spanish — WITHOUT the imperative "vos" conjugation.** Use **standard imperatives** (the "tú"/standard form). This is the app-wide standard for ALL copy.
+
+| ✅ Use (standard imperative) | ❌ Not (vos imperative) |
+|---|---|
+| Describe lo que necesitas | Describí lo que necesitás |
+| Describe el servicio | Describí el servicio |
+| Agrega | Agregá |
+| Elige | Elegí |
+| Marca | Marcá |
+| Busca | Buscá |
+| Activa / Desactiva | Activá / Desactivá |
+| Guarda | Guardá |
+| Selecciona | Seleccioná |
+| Ingresa / Escribe | Ingresá / Escribí |
+| Revisa | Revisá |
+| Toca / Presiona | Tocá / Presioná |
+| Confirma | Confirmá |
+| Crea | Creá |
+| Sube (una foto) | Subí |
+| Continúa | Continuá |
+
+Rules:
+- **Imperatives → standard form** (drop the accented final syllable: `-á/-í/-é` → `-a/-e`). Verb roots that change (Elegí→Elige, Seguí→Sigue) use the normal form.
+- This applies to **second-person verb forms aimed at the user** (buttons, instructions, hints, placeholders, empty states, errors). Don't "fix" unrelated words that merely end in an accent.
+- Keep it **warm, plain, and short.** No jargon, no internal terms (never expose "/buscar" — say "los resultados de búsqueda"). Prefer concrete verbs ("Solicitar servicio") over vague ones.
+- Sentence case, not Title Case, for sentences and most buttons. Costa Rican vocabulary is fine; just avoid the `vos` imperative.
+- One idea per message. Errors say what's wrong **and** how to fix it, once.
+
+When writing or editing ANY user-facing string, scan it against this list first.
+
+---
+
+## 6. Required-field convention (app-wide)
+
+- **Every required field** shows a red **`*`** after its label.
+- **Every optional field** shows **`(opcional)`** after its label (parenthesized — never bare "opcional", never "(requerido)").
+- The only optional phone is a **third-party/beneficiary** contact; the account holder's own phone is required.
+- No required field may submit empty — block with a **friendly Spanish inline error** (never a raw browser/DB error), and validate per field (email format, password rules, numeric phone, cédula format).
+- Use the shared primitives that already render the `*`/`(opcional)` (`Input` label, `CedulaInput`/`IdentityField`, etc.) so it's consistent everywhere.
+
+Reusable label pattern:
+```tsx
+<label className="text-sm font-medium text-[#374151]">
+  Nombre completo <span className="text-red-500">*</span>
+</label>
+// optional:
+Cantón <span className="text-[#6b7280] font-normal">(opcional)</span>
+```
+
+---
+
+## 7. Process rule — this guide is mandatory
+
+1. **Any** task that creates or changes UI, layout, components, or user-facing copy must **read `contratacr-design-guide.md` first** and conform to it.
+2. Reuse the tokens and the shared primitives/patterns above before inventing new ones. New bespoke styles need a reason.
+3. If you find existing UI that violates this guide while you're in the area, align it (within your task's scope) rather than copying the violation.
+4. If the guide is missing or wrong for a real case, **update this file** in the same change (and note it in `contratacr-context.md`) so the standard stays single-source-of-truth.
+
+The point is cohesion: a client should feel they're using **one** simple, well-made app on every screen.
