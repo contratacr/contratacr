@@ -16,6 +16,14 @@ _Earlier: 2026-06-07 (sprint 24 — fully automatic identity verification: self-
 
 ---
 
+## Sprint 49 (2026-06-09) — "Centro de ayuda" rebuilt (searchable, grouped FAQ)
+
+No migration. Presentation/content only.
+- Added a **live search** (accent-insensitive over question + answer) — flat results while querying, otherwise FAQ **grouped by audience**: **Para clientes** (costo/sin comisiones, buscar+contactar, publicar proyecto, pago off-platform, qué es identidad verificada, reseñas, reportes, privacidad/Ley 8968), **Para profesionales** (registro, verificación/insignia TSE, recibir clientes, disponibilidad, sin comisiones, propuestas), **Cuenta y seguridad** (intermediary framing — no garantiza el trabajo, cerrar/desactivar cuenta, contraseña).
+- One-open-at-a-time accordion in bordered cards; **Contactar soporte** + **WhatsApp** footer; brand-glow hero; no-"vos"; responsive.
+
+---
+
 ## Sprint 48 (2026-06-09) — global header/footer polish + legal/about pages + friendlier 404
 
 No migration. Presentation/content only.
