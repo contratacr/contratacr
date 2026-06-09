@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, MapPin, User, ShieldCheck, BadgeCheck } from "lucide-react";
+import { Search, MapPin, User } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import type { SearchSuggestion } from "@/app/api/search/suggestions/route";
 
@@ -184,9 +184,9 @@ export function LandingHero() {
   }
 
   return (
-    <section className="bg-white">
+    <section className="relative bg-white overflow-hidden">
       {/* Headline + subtitle — narrower container for readability */}
-      <div className="mx-auto max-w-3xl px-4 sm:px-6 text-center pt-20 sm:pt-28 pb-6">
+      <div className="relative mx-auto max-w-3xl px-4 sm:px-6 text-center pt-20 sm:pt-28 pb-6">
         <h1
           className="font-extrabold text-[#1a2744] tracking-tight mb-4"
           style={{ fontSize: "clamp(2rem, 5.5vw, 3.6rem)", lineHeight: 1.1 }}
@@ -207,7 +207,7 @@ export function LandingHero() {
         >
           {/* Desktop row: single line h-14 */}
           <div className="hidden sm:block relative">
-            <div className="flex items-center h-14 bg-white border border-gray-200 rounded-[6px] overflow-hidden pl-5 pr-2 shadow-sm">
+            <div className="flex items-center h-14 bg-white border border-gray-200 rounded-[6px] overflow-hidden pl-5 pr-2 shadow-[0_8px_48px_rgba(0,0,0,0.12)] hover:shadow-[0_12px_60px_rgba(0,159,217,0.20)] transition-shadow duration-300">
               {/* Text input */}
               <div className="flex items-center gap-3 flex-1 min-w-0 h-full">
                 <Search className="h-5 w-5 text-gray-300 shrink-0" />
@@ -241,7 +241,7 @@ export function LandingHero() {
               {/* Buscar button */}
               <button
                 type="submit"
-                className="ml-2 h-10 px-8 bg-[#009FD9] hover:bg-[#0089bb] text-white text-base font-bold rounded-[4px] transition-colors shadow-sm whitespace-nowrap shrink-0"
+                className="ml-2 h-10 px-8 bg-[#009FD9] hover:bg-[#0089bb] text-white text-base font-bold rounded-[4px] transition-all duration-150 active:scale-[0.97] shadow-sm whitespace-nowrap shrink-0"
               >
                 {t("search")}
               </button>
@@ -254,7 +254,7 @@ export function LandingHero() {
           {/* Mobile stacked layout */}
           <div className="sm:hidden flex flex-col gap-2">
             <div className="relative">
-              <div className="flex items-center h-12 bg-white border border-gray-200 rounded-[6px] overflow-hidden pl-4 pr-3 shadow-sm">
+              <div className="flex items-center h-12 bg-white border border-gray-200 rounded-[6px] overflow-hidden pl-4 pr-3 shadow-[0_4px_24px_rgba(0,0,0,0.10)]">
                 <Search className="h-5 w-5 text-gray-300 shrink-0 mr-3" />
                 <input
                   type="text"
@@ -276,7 +276,7 @@ export function LandingHero() {
             </div>
             <button
               type="submit"
-              className="w-full h-12 bg-[#009FD9] hover:bg-[#0089bb] text-white text-base font-bold rounded-[6px] transition-colors"
+              className="w-full h-12 bg-[#009FD9] hover:bg-[#0089bb] text-white text-base font-bold rounded-[6px] transition-all duration-150 active:scale-[0.97]"
             >
               {t("search")}
             </button>
@@ -301,17 +301,20 @@ export function LandingHero() {
         </div>
       </div>
 
-      {/* Honest trust signals — no brand logos, no stock photos. */}
-      <div className="mx-auto max-w-3xl px-4 pb-20 sm:pb-24">
-        <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs sm:text-sm text-[#6b7280]">
-          {[
-            { icon: <ShieldCheck className="h-4 w-4 text-[#16a34a]" />, label: "Identidad verificada" },
-            { icon: <MapPin className="h-4 w-4 text-[#009FD9]" />, label: "En las 7 provincias" },
-            { icon: <WhatsAppIcon className="h-4 w-4 text-[#25D366]" />, label: "Coordinas por WhatsApp" },
-            { icon: <BadgeCheck className="h-4 w-4 text-[#009FD9]" />, label: "Sin comisiones" },
-          ].map((c) => (
-            <span key={c.label} className="inline-flex items-center gap-1.5 font-medium">{c.icon}{c.label}</span>
-          ))}
+      {/* Arch / dome image — responsive height */}
+      <div className="flex justify-center px-4 pb-0">
+        <div
+          className="relative overflow-hidden w-full h-[180px] sm:h-[280px] md:h-[360px] lg:h-[420px]"
+          style={{ maxWidth: 800, borderRadius: "50% 50% 0 0 / 100% 100% 0 0" }}
+        >
+          <Image
+            src="https://images.unsplash.com/photo-1570129477492-45c003edd2be?auto=format&fit=crop&w=1400&q=85"
+            alt="Casa residencial en Costa Rica"
+            fill
+            className="object-cover object-center"
+            priority
+            sizes="(min-width:860px) 800px, 100vw"
+          />
         </div>
       </div>
     </section>

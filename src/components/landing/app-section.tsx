@@ -73,7 +73,7 @@ function AppPhoneMock() {
             </div>
 
             <div className="bg-[#EBF5FB] rounded-xl p-2.5 mb-3">
-              <p className="text-[10px] font-bold text-[#1a2744] mb-1.5">Profesionales cerca de ti</p>
+              <p className="text-[10px] font-bold text-[#1a2744] mb-1.5">Profesionales cerca de vos</p>
               {items.slice(0, 3).map((item) => (
                 <div key={item.label} className="flex items-center justify-between py-1.5 border-b border-blue-100 last:border-0">
                   <div className="flex items-center gap-1.5">

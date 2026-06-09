@@ -29,7 +29,7 @@ export function TrustedProvinces() {
           Profesionales en toda Costa Rica.
         </h2>
         <p className="text-gray-500 text-base mb-10 max-w-lg mx-auto">
-          No te preocupes por encontrar un profesional — cubrimos cada provincia y cantón del país.
+          No te preocupés por encontrar un profesional — cubrimos cada provincia y cantón del país.
         </p>
 
         {/* Province pills → /buscar?provincia=<id> */}
@@ -62,7 +62,7 @@ export function TrustedProvinces() {
           href="/buscar"
           className="inline-flex items-center gap-1.5 text-sm font-bold text-[#009FD9] hover:underline"
         >
-          Encuentra profesionales en tu zona <ArrowRight className="h-4 w-4" />
+          Encontrá profesionales en tu zona <ArrowRight className="h-4 w-4" />
         </Link>
       </div>
     </section>

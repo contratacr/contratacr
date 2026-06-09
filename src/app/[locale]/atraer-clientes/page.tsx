@@ -4,7 +4,6 @@ import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { FadeInUp } from "@/components/landing/fade-in-up";
 import { Link } from "@/i18n/navigation";
-import { SmartRegisterLink } from "@/components/layout/smart-register-link";
 import {
   Camera, Star, MapPin, ArrowRight,
   CheckCircle2, UserCheck, Clock, Image as ImageIcon,
@@ -22,48 +21,48 @@ type Tip = {
 const TIPS: Tip[] = [
   {
     icon: <Camera className="h-6 w-6 text-[#009FD9]" />,
-    title: "Usa una foto de perfil profesional",
-    body: "Los clientes deciden en segundos si confiar en ti. Una foto clara, bien iluminada y donde se vea tu cara genera hasta 3 veces más contactos que un perfil sin foto o con foto de poca calidad.",
+    title: "Usá una foto de perfil profesional",
+    body: "Los clientes deciden en segundos si confiar en vos. Una foto clara, bien iluminada y donde se vea tu cara genera hasta 3 veces más contactos que un perfil sin foto o con foto de poca calidad.",
     highlight: "Nada de fotos borrosas, con lentes oscuros, o de fiestas.",
   },
   {
     icon: <UserCheck className="h-6 w-6 text-[#009FD9]" />,
-    title: "Verifica tu cédula",
+    title: "Verificá tu cédula",
     body: "El sello 'Verificado' es el principal factor de confianza en ContrataCR. Los clientes costarricenses priorizan a los profesionales verificados — especialmente para trabajos en el hogar o con niños. Es gratis y toma menos de 24 horas.",
     highlight: "Pros verificados reciben significativamente más consultas.",
   },
   {
     icon: <ImageIcon className="h-6 w-6 text-[#009FD9]" />,
-    title: "Publica fotos de trabajos anteriores",
+    title: "Publicá fotos de trabajos anteriores",
     body: "Las fotos de trabajos reales son tu portafolio. Antes de contratar, los clientes van a querer ver ejemplos de tu trabajo. Una cocina remozada, un jardín bien mantenido, un diseño que hiciste — cualquier foto real de tu trabajo vale mucho.",
     highlight: "Mínimo 3 fotos de trabajos anteriores para empezar.",
   },
   {
     icon: <WhatsAppIcon className="h-6 w-6 text-[#009FD9]" />,
-    title: "Responde rápido por WhatsApp",
-    body: "Costa Rica tiene una cultura de respuesta inmediata por WhatsApp. Si un cliente te escribe y tardas más de 2 horas en responder, es muy probable que ya contactó a otro profesional. Activa notificaciones y responde de inmediato.",
+    title: "Respondé rápido por WhatsApp",
+    body: "Costa Rica tiene una cultura de respuesta inmediata por WhatsApp. Si un cliente te escribe y tardás más de 2 horas en responder, es muy probable que ya contactó a otro profesional. Activá notificaciones y respondé de inmediato.",
     highlight: "La rapidez de respuesta es tu mayor diferenciador.",
   },
   {
     icon: <Star className="h-6 w-6 text-[#009FD9]" />,
-    title: "Pide reseñas después de cada trabajo",
-    body: "Las reseñas son oro. Después de completar un trabajo, pídele al cliente que te deje una reseña en ContrataCR. Una frase corta como '¿Me podrías dejar una reseña en la plataforma? Me ayuda mucho a conseguir más clientes' es suficiente. La mayoría lo hace con gusto.",
+    title: "Pedí reseñas después de cada trabajo",
+    body: "Las reseñas son oro. Después de completar un trabajo, pedile al cliente que te deje una reseña en ContrataCR. Una frase corta como '¿Me podrías dejar una reseña en la plataforma? Me ayuda mucho a conseguir más clientes' es suficiente. La mayoría lo hace con gusto.",
   },
   {
     icon: <MapPin className="h-6 w-6 text-[#009FD9]" />,
-    title: "Sé específico sobre dónde trabajas",
-    body: "Los clientes filtran por cantón. Si trabajas en Escazú, Belén y Santa Ana, menciónalo en tu bio. Si viajas a toda la Gran Área Metropolitana, dilo. Entre más claro seas sobre tu cobertura, más apareces en búsquedas relevantes.",
+    title: "Sé específico sobre dónde trabajás",
+    body: "Los clientes filtran por cantón. Si trabajás en Escazú, Belén y Santa Ana, mencionalo en tu bio. Si viajás a toda la Gran Área Metropolitana, decilo. Entre más claro seas sobre tu cobertura, más aparecés en búsquedas relevantes.",
   },
   {
     icon: <CheckCircle2 className="h-6 w-6 text-[#009FD9]" />,
-    title: "Escribe una bio honesta y específica",
-    body: "Evita frases genéricas como 'soy el mejor de Costa Rica' o 'trabajo con calidad'. En cambio, describe exactamente qué haces, cuántos años de experiencia tienes, y qué tipos de trabajos son tu especialidad. La especificidad genera confianza.",
+    title: "Escribí una bio honesta y específica",
+    body: "Evitá frases genéricas como 'soy el mejor de Costa Rica' o 'trabajo con calidad'. En cambio, describí exactamente qué hacés, cuántos años de experiencia tenés, y qué tipos de trabajos son tu especialidad. La especificidad genera confianza.",
     highlight: "Ejemplo: '12 años como electricista. Especialidad en instalaciones residenciales y certificación del ICE.'",
   },
   {
     icon: <Clock className="h-6 w-6 text-[#009FD9]" />,
-    title: "Actualiza tu disponibilidad",
-    body: "Si estás ocupado por dos semanas, márcalo en tu calendario. Los clientes que ven que estás disponible para la fecha que necesitan tienen mucho más chance de contactarte. Un perfil con disponibilidad actualizada transmite profesionalismo.",
+    title: "Actualizá tu disponibilidad",
+    body: "Si estás ocupado por dos semanas, marcalo en tu calendario. Los clientes que ven que estás disponible para la fecha que necesitan tienen mucho más chance de contactarte. Un perfil con disponibilidad actualizada transmite profesionalismo.",
   },
 ];
 
@@ -96,13 +95,13 @@ export default function AtraerClientesPage() {
       <section className="pt-32 pb-14 text-center px-4 bg-white">
         <FadeInUp>
           <span className="inline-block text-xs font-bold uppercase tracking-widest text-[#009FD9] bg-[#EBF5FB] px-4 py-1.5 rounded-full mb-4">
-            Consejos para profesionales
+            Para profesionales
           </span>
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-[#111827] mb-4 leading-tight">
+          <h1 className="text-4xl sm:text-5xl font-extrabold text-[#1a2744] mb-4 leading-tight">
             Cómo atraer más clientes<br className="hidden sm:block" /> en ContrataCR
           </h1>
-          <p className="text-lg text-[#6b7280] max-w-xl mx-auto">
-            Consejos prácticos y honestos para crecer en el mercado costarricense.
+          <p className="text-lg text-gray-500 max-w-xl mx-auto">
+            Consejos prácticos y honestos para profesionales que quieren crecer en el mercado costarricense.
           </p>
         </FadeInUp>
       </section>
@@ -173,7 +172,7 @@ export default function AtraerClientesPage() {
       <section className="py-16 px-4 bg-[#f4f7fa]">
         <div className="mx-auto max-w-4xl">
           <FadeInUp>
-            <div className="bg-white rounded-2xl border border-gray-100 p-8">
+            <div className="bg-white rounded-3xl border border-gray-100 p-8">
               <h2 className="text-xl font-bold text-[#1a2744] mb-4">El mercado costarricense — cómo funciona en la práctica</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-gray-600 leading-relaxed">
                 <div>
@@ -186,7 +185,7 @@ export default function AtraerClientesPage() {
                 </div>
                 <div>
                   <p className="font-semibold text-[#1a2744] mb-2">El cantón importa</p>
-                  <p>Los clientes generalmente buscan "plomero en Desamparados" o "niñera en Heredia", no simplemente "plomero" o "niñera". Ser específico sobre los cantones donde trabajas te posiciona mejor en esas búsquedas locales.</p>
+                  <p>Los clientes generalmente buscan "plomero en Desamparados" o "niñera en Heredia", no simplemente "plomero" o "niñera". Ser específico sobre los cantones donde trabajás te posiciona mejor en esas búsquedas locales.</p>
                 </div>
                 <div>
                   <p className="font-semibold text-[#1a2744] mb-2">El precio razonable gana ante el precio bajo</p>
@@ -205,17 +204,20 @@ export default function AtraerClientesPage() {
             ¿Listo para recibir más clientes?
           </h2>
           <p className="text-[#93c5fd] mb-8 max-w-md mx-auto text-sm">
-            Completa tu perfil, verifica tu cédula, y empieza a aparecer en búsquedas hoy.
+            Completá tu perfil, verificá tu cédula, y empezá a aparecer en búsquedas hoy.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <SmartRegisterLink className="inline-flex items-center justify-center gap-2 bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold px-7 py-3.5 rounded-2xl transition-all">
-              Registra tu perfil gratis <ArrowRight className="h-4 w-4" />
-            </SmartRegisterLink>
             <Link
-              href="/para-profesionales"
-              className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold px-7 py-3.5 rounded-2xl transition-all border border-white/20"
+              href="/registro/profesional"
+              className="inline-flex items-center justify-center gap-2 bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold px-7 py-3 rounded-full transition-all"
             >
-              Por qué ContrataCR
+              Registrá tu perfil gratis <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link
+              href="/dashboard/profesional"
+              className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold px-7 py-3 rounded-full transition-all border border-white/20"
+            >
+              Ir a mi panel
             </Link>
           </div>
         </FadeInUp>
