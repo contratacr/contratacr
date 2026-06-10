@@ -13,8 +13,10 @@ import { getCategoryLabel } from "@/lib/data/categories";
    Auto-scrolls continuously + can be driven by drag/swipe or arrow buttons;
    auto pauses on hover/interaction and respects prefers-reduced-motion. */
 const CLOUD = "dxxrjx2go";
+// f_auto + q_auto + DPR-aware sizing handled by next/image `sizes`; base kept
+// modest (≤600w) so mobile never pulls a heavy image while the track moves.
 const catImg = (id: string) =>
-  `https://res.cloudinary.com/${CLOUD}/image/upload/f_auto,q_auto,c_fill,g_auto,w_640,h_440/contratacr/categorias/${id}`;
+  `https://res.cloudinary.com/${CLOUD}/image/upload/f_auto,q_auto,c_fill,g_auto,w_600,h_400/contratacr/categorias/${id}`;
 
 // Finalized CR categories with matching self-hosted imagery. ONE track, all
 // distinct — a single set is far wider than any viewport, so the off-screen
@@ -26,7 +28,9 @@ const HOME_CATEGORIES = [
   "contabilidad", "marketing_digital", "fotografia", "dj_sonido",
 ];
 
-const AUTO_SPEED = 0.32;      // px per frame (~19px/s) — slow, relaxed glide.
+// Time-based (px per MILLISECOND) so the speed is identical on 60/90/120 Hz
+// screens and dropped frames don't slow it down (it advances by elapsed time).
+const AUTO_SPEED = 0.019;     // px/ms (~19px/s) — slow, relaxed glide.
 const NUDGE_MS = 480;         // arrow-tween duration.
 const easeInOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
 
@@ -40,15 +44,19 @@ function Card({ id, lifted }: { id: string; lifted: boolean }) {
       <Link
         href={`/buscar?categoria=${id}`}
         draggable={false}
-        className="group relative block w-[248px] h-[168px] sm:w-[300px] sm:h-[200px] rounded-lg overflow-hidden shadow-[0_4px_16px_rgba(0,0,0,0.10)] select-none transition-transform duration-300 ease-out will-change-transform hover:scale-[1.04] hover:z-10"
+        // No per-card will-change/3d here — that promoted all 38 cards to their
+        // own GPU layers and choked mobile. They now paint into the single track
+        // layer; hover still scales fine (auto-promoted on hover, desktop only).
+        className="group relative block w-[248px] h-[168px] sm:w-[300px] sm:h-[200px] rounded-lg overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.10)] sm:shadow-[0_4px_16px_rgba(0,0,0,0.10)] select-none transition-transform duration-300 ease-out hover:scale-[1.04] hover:z-10"
       >
         <Image
           src={catImg(id)}
           alt={label}
           fill
           draggable={false}
+          loading="lazy"
           className="object-cover pointer-events-none"
-          sizes="300px"
+          sizes="(max-width: 640px) 250px, 300px"
         />
         <div
           className="absolute inset-0"
@@ -99,7 +107,14 @@ export function CategoryCarousel() {
     };
 
     let raf = 0;
+    let last = 0;
     const frame = (now: number) => {
+      if (!last) last = now;
+      // Elapsed time, capped so returning from a background tab doesn't jump.
+      let dt = now - last;
+      last = now;
+      if (dt > 50) dt = 50;
+
       const h = half.current;
       if (h > 0) {
         if (tween.current) {
@@ -108,7 +123,7 @@ export function CategoryCarousel() {
           pos.current = from + (to - from) * easeInOut(t);
           if (t >= 1) tween.current = null;
         } else if (!paused.current && !reduced.current && !drag.current.active) {
-          pos.current -= AUTO_SPEED;
+          pos.current -= AUTO_SPEED * dt;
         }
         pos.current = wrap(pos.current);
         tr.style.transform = `translate3d(${pos.current}px,0,0)`;

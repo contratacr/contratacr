@@ -1,5 +1,9 @@
 import { Search, MapPin, ShieldCheck, Star, Send, LifeBuoy, CheckCircle2 } from "lucide-react";
+import { Poppins } from "next/font/google";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
+
+// New brand wordmark font (matches the official ContrataCR logo).
+const poppins = Poppins({ subsets: ["latin"], weight: ["700", "800"], display: "swap" });
 
 /* Reusable phone frame + the real-app screens shown in the sticky showcase
    ("Por qué elegir ContrataCR"). Each screen mirrors the actual ContrataCR UI.
@@ -52,7 +56,14 @@ export function PhoneFrame({ children }: { children: React.ReactNode }) {
 function AppBar({ title }: { title: string }) {
   return (
     <div className="flex items-center justify-between bg-white px-4 pt-1 pb-3 border-b border-[#eef1f5]">
-      <span className="text-[12px] font-extrabold tracking-tight text-[#1a2744]">Contrata<span className="text-[#009FD9]">CR</span></span>
+      {/* New ContrataCR logo: CR mark + wordmark (Poppins, brand blue #008ce0) */}
+      <span className="flex items-center gap-1.5">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo-mark.png" srcSet="/logo-mark.png 1x, /logo-mark@2x.png 2x" alt="ContrataCR" width={16} height={16} className="h-4 w-4" />
+        <span className={`${poppins.className} text-[12px] font-extrabold tracking-tight leading-none`}>
+          <span className="text-[#1a2744]">Contrata</span><span style={{ color: "#008ce0" }}>CR</span>
+        </span>
+      </span>
       <span className="text-[10px] font-medium text-[#9ca3af]">{title}</span>
     </div>
   );
