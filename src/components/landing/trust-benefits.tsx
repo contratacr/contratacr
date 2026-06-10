@@ -9,7 +9,7 @@ import { FadeInUp } from "@/components/landing/fade-in-up";
    technical features; no invented numbers.
    Swap the photo by editing PRO_IMAGE.src (self-hosted Cloudinary cutout). */
 const PRO_IMAGE = {
-  src: "https://res.cloudinary.com/dxxrjx2go/image/upload/f_auto,q_auto,w_900/contratacr/home/deal-tranquilidad.png",
+  src: "https://res.cloudinary.com/dxxrjx2go/image/upload/f_auto,q_auto,w_1100/contratacr/home/deal-tranquilidad.png",
   alt: "Cliente y profesional cerrando un acuerdo con un apretón de manos",
 };
 
@@ -82,8 +82,7 @@ export function TrustBenefits() {
           {/* Right: cutout professional on a soft brand backdrop */}
           <FadeInUp delay={120}>
             <div className="relative flex justify-center lg:justify-end">
-              {/* Soft brand shapes for depth (no rectangular photo background) */}
-              <div aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[24rem] w-[24rem] sm:h-[30rem] sm:w-[30rem] rounded-full bg-gradient-to-br from-[#EBF5FB] to-[#d7ecf7]" />
+              {/* Subtle ground shadow only — no backdrop circle */}
               <div aria-hidden className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 h-3 w-72 rounded-full bg-[#1a2744]/10 blur-xl" />
               <div className="relative h-[380px] sm:h-[540px] w-full max-w-[480px]">
                 <Image

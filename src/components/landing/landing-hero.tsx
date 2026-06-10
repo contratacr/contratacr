@@ -28,8 +28,8 @@ const POPULAR_TAGS: Record<string, string[]> = {
    it's provided; nothing else needs to change. Placeholder = a local service
    professional at work (never a foreign-looking house). */
 const HERO_IMAGE = {
-  src: "https://images.unsplash.com/photo-1504148455328-c376907d081c?auto=format&fit=crop&w=1400&q=85",
-  alt: "Profesional de oficio trabajando en Costa Rica",
+  src: "https://res.cloudinary.com/dxxrjx2go/image/upload/f_auto,q_auto,w_1600/contratacr/home/hero-sanjose.jpg",
+  alt: "Vista de la ciudad de San José, Costa Rica al atardecer",
 };
 
 /* Per-letter staggered vertical slide-up. Each letter of the word rises from
