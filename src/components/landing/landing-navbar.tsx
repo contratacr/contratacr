@@ -547,31 +547,32 @@ export function LandingNavbar() {
               </button>
             </div>
 
-            {/* ── Compact row — brand mark + the centered search bar (Thumbtack-style) ── */}
+            {/* ── Compact row — brand mark + search bar (Thumbtack-style) ──
+                Flex row (mark + flex-1 form) so nothing overlaps/clips at any
+                width; the form centers its capped search box on wide screens. */}
             <div
-              className="absolute inset-0 flex items-center justify-center transition-opacity duration-300"
+              className="absolute inset-0 flex items-center gap-2 sm:gap-3 px-4 sm:px-6 lg:px-8 transition-opacity duration-300"
               style={{ opacity: compact ? 1 : 0, pointerEvents: compact ? "auto" : "none" }}
             >
-              {/* Brand mark pinned left so the search stays centered (twins the hero). */}
-              <Link href="/" aria-label="ContrataCR inicio" className="absolute left-4 sm:left-6 lg:left-8 shrink-0">
+              <Link href="/" aria-label="ContrataCR inicio" className="shrink-0">
                 <ContrataCRMark className="h-9 w-9" />
               </Link>
-              {/* Mirrors the hero search bar exactly so it reads as the same
-                  element "sticking" to the header on scroll. */}
-              <form onSubmit={handleCompactSearch} className="w-full max-w-5xl px-4 sm:px-8">
-                <div className="flex items-center h-12 bg-white border border-gray-200 rounded-[6px] overflow-hidden pl-4 sm:pl-5 pr-2 shadow-[0_8px_28px_rgba(0,0,0,0.14)]">
+              {/* Mirrors the hero search bar so it reads as the same element
+                  "sticking" to the header on scroll. */}
+              <form onSubmit={handleCompactSearch} className="flex-1 min-w-0 flex justify-center">
+                <div className="flex w-full max-w-5xl items-center h-12 bg-white border border-gray-200 rounded-[6px] overflow-hidden pl-3 sm:pl-5 pr-1.5 sm:pr-2 shadow-[0_8px_28px_rgba(0,0,0,0.14)]">
                   <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 h-full">
                     <Search className="h-5 w-5 text-gray-300 shrink-0" />
                     <input
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Describe tu proyecto o problema — sé tan detallado como quieras!"
+                      placeholder="Describe tu proyecto…"
                       className="flex-1 text-sm sm:text-base text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-none min-w-0"
                     />
                   </div>
                   <div className="hidden sm:block w-px bg-gray-200 self-stretch my-3 mx-2 shrink-0" />
-                  <div className="hidden sm:flex items-center gap-2 min-w-[140px] shrink-0 h-full">
+                  <div className="hidden sm:flex items-center gap-2 min-w-[120px] shrink-0 h-full">
                     <MapPin className="h-5 w-5 text-gray-300 shrink-0" />
                     <select
                       value={provinceQuery}
@@ -584,9 +585,11 @@ export function LandingNavbar() {
                   </div>
                   <button
                     type="submit"
-                    className="ml-2 h-9 px-6 sm:px-8 bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm sm:text-base font-bold rounded-[4px] transition-colors whitespace-nowrap shrink-0"
+                    aria-label="Buscar"
+                    className="ml-1.5 sm:ml-2 h-9 px-3 sm:px-8 bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm sm:text-base font-bold rounded-[4px] transition-colors whitespace-nowrap shrink-0 inline-flex items-center justify-center gap-1.5"
                   >
-                    Buscar
+                    <Search className="h-4 w-4 sm:hidden" />
+                    <span className="hidden sm:inline">Buscar</span>
                   </button>
                 </div>
               </form>
