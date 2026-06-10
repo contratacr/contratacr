@@ -567,7 +567,7 @@ export function LandingNavbar() {
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="Describe tu proyecto…"
+                      placeholder="¿Qué servicio estás buscando?"
                       className="flex-1 text-sm sm:text-base text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-none min-w-0"
                     />
                   </div>
