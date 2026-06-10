@@ -13,28 +13,26 @@ const PRO_IMAGE = {
   alt: "Profesional verificado de ContrataCR",
 };
 
+// Monochrome icons (grey/black) — serious, restrained tone, no color accents.
+const ICON_TILE = "bg-[#f3f4f6] text-[#1a2744]";
 const BENEFITS = [
   {
     Icon: ShieldCheck,
-    tile: "bg-[#dcfce7] text-[#16a34a]",
     title: "Identidad verificada",
     desc: "Confirmamos la identidad de cada profesional contra los registros oficiales del país.",
   },
   {
     Icon: Star,
-    tile: "bg-[#fef3c7] text-[#d97706]",
     title: "Reseñas reales",
     desc: "Solo quienes recibieron un servicio pueden dejar una reseña. Sin opiniones inventadas.",
   },
   {
     Icon: WhatsAppIcon,
-    tile: "bg-[#dcfce7] text-[#1da851]",
     title: "Coordina por WhatsApp",
     desc: "Hablas directo con el profesional, sin intermediarios y a tu propio ritmo.",
   },
   {
     Icon: LifeBuoy,
-    tile: "bg-[#EBF5FB] text-[#009FD9]",
     title: "Soporte cuando lo necesites",
     desc: "Te ayudamos por ticket o WhatsApp si algo no sale como esperabas.",
   },
@@ -59,9 +57,9 @@ export function TrustBenefits() {
               </p>
 
               <ul className="mt-8 space-y-5">
-                {BENEFITS.map(({ Icon, tile, title, desc }) => (
+                {BENEFITS.map(({ Icon, title, desc }) => (
                   <li key={title} className="flex items-start gap-4">
-                    <span className={`mt-0.5 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${tile}`}>
+                    <span className={`mt-0.5 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${ICON_TILE}`}>
                       <Icon className="h-5 w-5" />
                     </span>
                     <div className="min-w-0">
