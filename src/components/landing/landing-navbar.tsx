@@ -31,18 +31,23 @@ export function ContrataCRMark({ className }: { className?: string }) {
   );
 }
 
-/* ─── Logo (mark + wordmark) ─── */
-export function ContrataCRLogo({ className, chip = false }: { className?: string; chip?: boolean }) {
+/* ─── Logo (mark + wordmark). `size="lg"` gives the header more brand presence. ─── */
+export function ContrataCRLogo({ className, chip = false, size = "md" }: { className?: string; chip?: boolean; size?: "md" | "lg" }) {
+  const lg = size === "lg";
+  const markCls = lg ? "h-8 w-8 sm:h-9 sm:w-9" : "h-7 w-7";
+  const textCls = lg ? "text-[19px] sm:text-[22px]" : "text-[17px]";
+  const chipCls = lg ? "h-9 w-9 sm:h-10 sm:w-10" : "h-8 w-8";
+  const chipMarkCls = lg ? "h-6 w-6 sm:h-7 sm:w-7" : "h-[1.35rem] w-[1.35rem]";
   return (
-    <div className={cn("flex items-center gap-2 select-none", className)}>
+    <div className={cn("flex items-center select-none", lg ? "gap-2.5" : "gap-2", className)}>
       {chip ? (
-        <span className="grid place-items-center h-8 w-8 rounded-lg bg-white shadow-sm">
-          <ContrataCRMark className="h-[1.35rem] w-[1.35rem]" />
+        <span className={cn("grid place-items-center rounded-lg bg-white shadow-sm", chipCls)}>
+          <ContrataCRMark className={chipMarkCls} />
         </span>
       ) : (
-        <ContrataCRMark />
+        <ContrataCRMark className={markCls} />
       )}
-      <span className="text-[17px] font-extrabold tracking-tight leading-none">
+      <span className={cn("font-extrabold tracking-tight leading-none", textCls)}>
         <span className="text-[#1a2744]">Contrata</span>
         <span className="text-[#009FD9]">CR</span>
       </span>
@@ -413,7 +418,7 @@ export function LandingNavbar() {
               style={{ opacity: compact ? 0 : 1, pointerEvents: compact ? "none" : "auto" }}
             >
               <Link href="/" aria-label="ContrataCR inicio" className="shrink-0">
-                <ContrataCRLogo />
+                <ContrataCRLogo size="lg" />
               </Link>
 
               <nav className="hidden lg:flex items-center gap-0.5">
@@ -549,7 +554,7 @@ export function LandingNavbar() {
             >
               {/* Brand mark pinned left so the search stays centered (twins the hero). */}
               <Link href="/" aria-label="ContrataCR inicio" className="absolute left-4 sm:left-6 lg:left-8 shrink-0">
-                <ContrataCRMark className="h-8 w-8" />
+                <ContrataCRMark className="h-9 w-9" />
               </Link>
               {/* Mirrors the hero search bar exactly so it reads as the same
                   element "sticking" to the header on scroll. */}
