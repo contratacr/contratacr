@@ -533,7 +533,7 @@ export default function RegisterProfessionalPage() {
   // Registro guard — a user who is ALREADY a professional must never land on the
   // registration/convert flow; bounce them to their professional panel. A client
   // converting to professional has NO `professionals` row yet, so they stay and
-  // continue the flow (this is the "Convertirme en profesional" path).
+  // continue the flow (this is the "Ofrecer mis servicios" path).
   useEffect(() => {
     if (authLoading || !currentUser) return;
     let cancelled = false;

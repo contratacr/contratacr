@@ -664,7 +664,7 @@ export function LandingNavbar() {
                         className="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-xl text-[#009FD9] hover:bg-[#EBF5FB] transition-colors whitespace-nowrap"
                       >
                         <Briefcase className="h-4 w-4" />
-                        Convertirme en profesional
+                        Ofrecer mis servicios
                       </Link>
                     )}
                     <a
@@ -750,7 +750,7 @@ export function LandingNavbar() {
                               className="flex items-center gap-2.5 px-3 py-2 mt-1 border-t border-gray-50 text-sm text-[#009FD9] hover:bg-[#EBF5FB] transition-colors"
                             >
                               <Briefcase className="h-4 w-4" />
-                              Convertirme en profesional
+                              Ofrecer mis servicios
                             </Link>
                           )}
 
@@ -948,7 +948,7 @@ export function LandingNavbar() {
                     <Link href="/registro/profesional" onClick={() => setMobileOpen(false)}
                       className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold text-[#009FD9] border border-[#009FD9]/30 hover:bg-[#EBF5FB] text-center transition-colors">
                       <Briefcase className="h-4 w-4" />
-                      Convertirme en profesional
+                      Ofrecer mis servicios
                     </Link>
                   )}
                   <button onClick={handleSignOut}

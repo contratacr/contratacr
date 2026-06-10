@@ -222,7 +222,7 @@ Branded HTML templates live in **`supabase/email-templates/`** (paste into Supab
 
 **Role-aware right actions** (`isPro = user.user_metadata.role === "professional"`; a professional is a **superset** of a client and keeps ALL client capabilities):
 - **Logged out:** "Registrarse como profesional" (prominent pill) · "Iniciar sesión" · ES/EN.
-- **Logged-in client:** "Convertirme en profesional" · "Mi panel" (/dashboard/cliente) · NotificationBell · avatar menu (Mis solicitudes/Proyectos/Favoritos via `?tab=bookings|projects|saved`, + Convertirme en profesional) · ES/EN. **No "Iniciar sesión".**
+- **Logged-in client:** "Ofrecer mis servicios" · "Mi panel" (/dashboard/cliente) · NotificationBell · avatar menu (Mis solicitudes/Proyectos/Favoritos via `?tab=bookings|projects|saved`, + Ofrecer mis servicios) · ES/EN. **No "Iniciar sesión".** The client→professional CTA label is **always "Ofrecer mis servicios"** (never "Convertirme en profesional"), everywhere it appears (header, account menu, client dashboard); it still leads to `/registro/profesional` (the convert flow).
 - **Logged-in professional:** "Panel profesional" (/dashboard/profesional) · NotificationBell · avatar menu exposing BOTH the **pro panel** AND the **client area** (Panel de cliente + Mis solicitudes/Proyectos/Favoritos) · ES/EN. **No "Iniciar sesión" / "Registrarse".**
 - **Registro guard:** `/registro/profesional` redirects anyone who already has a `professionals` row to /dashboard/profesional; a converting client (no pro row yet) stays in the flow.
 
