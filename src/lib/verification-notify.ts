@@ -10,11 +10,20 @@ interface DecisionArgs {
   kind: DecisionKind;
   /** Required for "rejected": the stated reason. */
   reason?: string | null;
+  /**
+   * Which channels to notify on. "both" (default) = in-app + email; "in_app"
+   * = in-app notification only (no email). At REGISTRATION we use "in_app" —
+   * the user is already in the app and sees the bell immediately, so the email
+   * is redundant. For changes that happen later/outside the app (admin
+   * decision, appeal, add-cédula) we use "both" because time has passed and the
+   * user may not be online.
+   */
+  channel?: "both" | "in_app";
 }
 
 /**
- * Notify a provider that their identity-verification status changed — in-app AND
- * email. Best-effort: notification failures must never break the flow.
+ * Notify a provider that their identity-verification status changed — in-app and
+ * (optionally) email. Best-effort: notification failures must never break the flow.
  * Legal framing: the badge confirms IDENTITY only (the cédula is real and the
  * name matches official records); it never endorses job quality or outcomes.
  * Copy avoids "garantía" / "autorizado".
@@ -23,6 +32,7 @@ export async function notifyVerificationDecision({
   professionalId,
   kind,
   reason,
+  channel = "both",
 }: DecisionArgs): Promise<void> {
   try {
     const admin = createAdminClient();
@@ -98,7 +108,7 @@ export async function notifyVerificationDecision({
       );
     }
 
-    // 1. In-app
+    // 1. In-app (always)
     await admin.from("notifications").insert({
       user_id: pro.profile_id,
       type,
@@ -107,8 +117,11 @@ export async function notifyVerificationDecision({
       data: { link: PRO_LINK },
     });
 
-    // 2. Email (Resend)
-    await sendEmail(email, `${title} — ContrataCR`, html);
+    // 2. Email (Resend) — skipped for "in_app" (e.g. at registration, where the
+    // in-app notification is enough and a second email would be redundant).
+    if (channel === "both") {
+      await sendEmail(email, `${title} — ContrataCR`, html);
+    }
   } catch (err) {
     console.error("[notifyVerificationDecision] failed:", err);
   }

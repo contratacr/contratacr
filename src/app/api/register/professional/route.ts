@@ -190,7 +190,9 @@ export async function POST(req: Request) {
       }
 
       // Fire automatic identity verification (best-effort; never blocks).
-      try { await runIdentityVerification(existingPro.id); } catch (e) { console.error("[register] auto-verify:", e); }
+      // Registration → in-app notification only (no email); re-saves notify only
+      // when the status actually changes (no duplicate "identidad verificada").
+      try { await runIdentityVerification(existingPro.id, { notifyChannel: "in_app" }); } catch (e) { console.error("[register] auto-verify:", e); }
 
       return NextResponse.json({ ok: true, slug: existingPro.slug });
     }
@@ -243,9 +245,11 @@ export async function POST(req: Request) {
     }
 
     // Fire automatic identity verification against the padrón (best-effort).
+    // First-ever run for this brand-new pro: in-app notification only (no email),
+    // and `isInitial` so the result still shows once even if status is unchanged.
     try {
       const { data: newPro } = await supabase.from("professionals").select("id").eq("profile_id", userId).maybeSingle();
-      if (newPro) await runIdentityVerification(newPro.id);
+      if (newPro) await runIdentityVerification(newPro.id, { notifyChannel: "in_app", isInitial: true });
     } catch (e) {
       console.error("[register] auto-verify:", e);
     }

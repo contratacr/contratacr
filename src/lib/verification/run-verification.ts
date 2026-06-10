@@ -20,8 +20,25 @@ export type RunOutcome = "verified" | "pending" | "ticket" | "skipped";
  */
 export async function runIdentityVerification(
   professionalId: string,
-  opts: { appeal?: boolean; appealMessage?: string } = {}
+  opts: {
+    appeal?: boolean;
+    appealMessage?: string;
+    /**
+     * "both" (default) = notify by in-app + email; "in_app" = in-app only.
+     * Registration passes "in_app" so it doesn't email the verification result
+     * (the user is already in the app); later/external changes keep "both".
+     */
+    notifyChannel?: "both" | "in_app";
+    /**
+     * First-ever run for a brand-new registration. Forces a notification even
+     * if the computed status equals the row's default ("pending"), so the new
+     * pro still sees the result once. On re-saves (isInitial=false) we only
+     * notify when the status ACTUALLY changes — no duplicate emails/notifs.
+     */
+    isInitial?: boolean;
+  } = {}
 ): Promise<RunOutcome> {
+  const channel = opts.notifyChannel ?? "both";
   const admin = createAdminClient();
 
   const { data: pro } = await admin
@@ -73,7 +90,11 @@ export async function runIdentityVerification(
       reason: `Cédula encontrada en el padrón (${result.provider}); identidad confirmada.`,
     });
 
-    await notifyVerificationDecision({ professionalId, kind: "verified" });
+    // Only notify when the status actually changed (or it's the first run) so a
+    // re-save/edit of an already-verified pro never re-fires the email/notif.
+    if (fromStatus !== "verified" || opts.isInitial) {
+      await notifyVerificationDecision({ professionalId, kind: "verified", channel });
+    }
     return "verified";
   }
 
@@ -99,7 +120,7 @@ export async function runIdentityVerification(
       detail: `${failReason}${opts.appealMessage ? `\n\nMensaje del proveedor: ${opts.appealMessage}` : ""}`,
     });
 
-    await notifyVerificationDecision({ professionalId, kind: "pending" });
+    await notifyVerificationDecision({ professionalId, kind: "pending", channel });
     await notifyAppealReceived(professionalId, fullName, opts.appealMessage ?? failReason);
     return "ticket";
   }
@@ -125,6 +146,10 @@ export async function runIdentityVerification(
     reason: failReason,
   });
 
-  await notifyVerificationDecision({ professionalId, kind: "pending" });
+  // Notify only on a real status change (or first run) — avoids re-notifying an
+  // already-pending pro who re-saves their registration.
+  if (fromStatus !== "pending" || opts.isInitial) {
+    await notifyVerificationDecision({ professionalId, kind: "pending", channel });
+  }
   return "pending";
 }
