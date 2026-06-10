@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { Search, X, ChevronDown, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -30,6 +31,40 @@ export function CategorySearch({
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // The dropdown is rendered in a PORTAL (document.body) so it's never clipped
+  // by a parent with overflow:hidden/auto (e.g. the accordion Section / card).
+  // We position it as `fixed` from the trigger's rect, flipping up if there's
+  // more room above than below, and recompute on scroll/resize.
+  const [pos, setPos] = useState<{ left: number; width: number; top?: number; bottom?: number; maxH: number } | null>(null);
+
+  const reposition = useCallback(() => {
+    const el = containerRef.current;
+    if (!el || typeof window === "undefined") return;
+    const r = el.getBoundingClientRect();
+    const MARGIN = 6, PAD = 12, MAXH = 340;
+    const spaceBelow = window.innerHeight - r.bottom;
+    const spaceAbove = r.top;
+    const openUp = spaceBelow < 240 && spaceAbove > spaceBelow;
+    if (openUp) {
+      setPos({ left: r.left, width: r.width, bottom: window.innerHeight - r.top + MARGIN, maxH: Math.max(160, Math.min(MAXH, spaceAbove - PAD)) });
+    } else {
+      setPos({ left: r.left, width: r.width, top: r.bottom + MARGIN, maxH: Math.max(160, Math.min(MAXH, spaceBelow - PAD)) });
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    reposition();
+    const onScroll = () => reposition();
+    window.addEventListener("scroll", onScroll, true); // capture → catches scrolling parents
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll, true);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [open, reposition]);
 
   // "¿No ves tu categoría?" → suggestion ticket (admin moderation).
   const [suggesting, setSuggesting] = useState(false);
@@ -56,13 +91,14 @@ export function CategorySearch({
 
   const selectedLabel = value ? getCategoryLabel(value) : "";
 
-  // Close on outside click
+  // Close on outside click — the portaled panel lives outside containerRef, so
+  // check both the trigger container AND the panel before closing.
   useEffect(() => {
     function handler(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setOpen(false);
-        setQuery("");
-      }
+      const t = e.target as Node;
+      if (containerRef.current?.contains(t) || panelRef.current?.contains(t)) return;
+      setOpen(false);
+      setQuery("");
     }
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -92,8 +128,14 @@ export function CategorySearch({
 
   function openDropdown() {
     setOpen(true);
-    setTimeout(() => inputRef.current?.focus(), 0);
   }
+
+  // Focus the search input once the portaled panel has mounted.
+  useEffect(() => {
+    if (!open) return;
+    const id = requestAnimationFrame(() => inputRef.current?.focus());
+    return () => cancelAnimationFrame(id);
+  }, [open]);
 
   const results = searchCategories(query);
 
@@ -140,9 +182,21 @@ export function CategorySearch({
         </div>
       </button>
 
-      {/* Dropdown */}
-      {open && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#e5e7eb] rounded-xl shadow-xl z-50 overflow-hidden flex flex-col max-h-[320px]">
+      {/* Dropdown — portaled to <body> so no parent overflow can clip it. */}
+      {open && pos && typeof document !== "undefined" && createPortal(
+        <div
+          ref={panelRef}
+          style={{
+            position: "fixed",
+            left: pos.left,
+            width: pos.width,
+            top: pos.top,
+            bottom: pos.bottom,
+            maxHeight: pos.maxH,
+            zIndex: 9999,
+          }}
+          className="bg-white border border-[#e5e7eb] rounded-xl shadow-2xl overflow-hidden flex flex-col"
+        >
           {/* Search input */}
           <div className="p-2 border-b border-[#f3f4f6]">
             <div className="relative flex items-center">
@@ -246,7 +300,8 @@ export function CategorySearch({
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {error && <p className="text-xs text-red-500 mt-1">{error}</p>}

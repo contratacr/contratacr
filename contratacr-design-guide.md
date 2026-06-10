@@ -151,6 +151,9 @@ A professional is always **ONE card** (`rounded-2xl bg-white border`, never spli
 - **Action row** (bottom of the availability panel): **"Solicitar servicio"** is the `flex-1` primary; the **direct-contact channels** the pro enabled render as **small square secondary icon-buttons next to it** (`w-9`, official `WhatsAppIcon` green-outline, `Phone` neutral) — shown only when enabled (`canWhatsApp`/`allowPhoneCall`) and **never hidden inside the primary** (they must stay one-tap).
 - **Private / contact-only:** shown as a compact **inline chip** in the card's chips row ("🔒 Coordina por WhatsApp" / "Solo WhatsApp") — NOT a full-width band — so it never adds card height; the availability column then renders just the compact WhatsApp/llamar actions (pinned to the bottom).
 
+### Overlays must never be clipped by parents
+Dropdowns, autocompletes, popovers and menus **must render in a portal to `document.body`** (or otherwise escape the layout) so a parent with `overflow:hidden/auto` (cards, **accordion `Section`s** whose open animation clips), or a low stacking context, can't crop them. Pattern (see `CategorySearch`): position the panel **`fixed`** from the trigger's `getBoundingClientRect()`, recompute on `scroll` (capture) + `resize`, **flip up** when there's more room above than below, cap `max-height` to the available space (its own list scrolls), high `z-index`, and treat the portaled panel as "inside" for outside-click detection. Never rely on `absolute` positioning inside a clipping container for an overlay.
+
 ### Long forms — collapsible sections
 Break long forms (pro profile, etc.) into **accordion sections** with a header + chevron. **First section open by default, the rest collapsed.** Group logically (e.g. Datos básicos · Profesión · Ubicación y cobertura · Contacto y precios · …). Keep the save bar always visible. This kills the endless single-column scroll.
 
