@@ -1,4 +1,5 @@
-import { Search, BadgeCheck, MessageCircle, LifeBuoy, ArrowRight } from "lucide-react";
+import { Search, BadgeCheck, LifeBuoy, ArrowRight } from "lucide-react";
+import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { PhoneFrame, ResultsScreen } from "@/components/landing/phone-screens";
 import { SmartRegisterLink } from "@/components/layout/smart-register-link";
 import { Link } from "@/i18n/navigation";
@@ -10,7 +11,7 @@ import { FadeInUp } from "@/components/landing/fade-in-up";
 const POINTS = [
   { Icon: Search, title: "Describe tu proyecto", desc: "Cuéntanos qué necesitas y dónde, en tus palabras. Sin llamadas a ciegas." },
   { Icon: BadgeCheck, title: "Profesionales verificados", desc: "Identidad confirmada contra los registros oficiales y reseñas reales de clientes." },
-  { Icon: MessageCircle, title: "Coordina por WhatsApp", desc: "Hablas directo con el profesional para acordar fecha y precio, sin intermediarios." },
+  { Icon: WhatsAppIcon, title: "Coordina por WhatsApp", desc: "Hablas directo con el profesional para acordar fecha y precio, sin intermediarios." },
   { Icon: LifeBuoy, title: "Con soporte cuando lo necesites", desc: "Deja tu reseña al terminar y, si algo no sale bien, te ayudamos." },
 ];
 
