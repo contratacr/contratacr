@@ -122,13 +122,14 @@ export function FindByZone({ coverage }: { coverage: ZoneCoverage }) {
 
           {/* ── Active-province panel ── */}
           <div className="rounded-3xl bg-white border border-[#eef1f5] p-7 sm:p-8 shadow-[0_18px_50px_rgba(16,39,68,0.10)]">
-            <div className="flex items-center justify-between gap-3 mb-5">
-              <div className="flex items-center gap-2.5 min-w-0">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5">
+              <div className="flex items-center gap-2.5">
                 <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#EBF5FB] text-[#009FD9]">
                   <MapPin className="h-5 w-5" />
                 </span>
-                <div className="min-w-0">
-                  <span className="block text-xl font-extrabold text-[#1a2744] leading-tight truncate">{province.name}</span>
+                <div>
+                  {/* Province name has priority — never truncate it. */}
+                  <span className="block text-xl font-extrabold text-[#1a2744] leading-tight">{province.name}</span>
                   {count > 0 ? (
                     <span className="block text-[12px] font-semibold text-[#16a34a]">
                       {count} {count === 1 ? "cantón con cobertura" : "cantones con cobertura"}
@@ -141,7 +142,7 @@ export function FindByZone({ coverage }: { coverage: ZoneCoverage }) {
               <button
                 type="button"
                 onClick={goToProvince}
-                className="shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-[#009FD9] hover:bg-[#0089bb] px-4 py-2.5 text-sm font-bold text-white transition-colors shadow-[0_8px_22px_rgba(0,159,217,0.3)]"
+                className="w-full sm:w-auto shrink-0 inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#009FD9] hover:bg-[#0089bb] px-4 py-2.5 text-sm font-bold text-white transition-colors shadow-[0_8px_22px_rgba(0,159,217,0.3)]"
               >
                 Ver profesionales <ArrowRight className="h-4 w-4" />
               </button>
