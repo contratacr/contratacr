@@ -562,6 +562,7 @@
     }
   },
   "categories": {
+    "otro": "Otro servicio",
     "plomeria": "Plomería",
     "electricidad": "Electricidad",
     "construccion": "Construcción",

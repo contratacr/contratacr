@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, ChevronDown, MapPin, Phone } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, MapPin } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { BookingModal } from "@/components/booking/booking-modal";
 import { ClientRegistrationModal } from "@/components/auth/client-registration-modal";
@@ -44,11 +44,6 @@ function dayLabel(d: Date, offset: number, today: Date): string {
   return `${DAY_SHORT[d.getDay()]} ${d.getDate()}`;
 }
 
-function telHref(whatsapp: string): string {
-  const digits = whatsapp.replace(/\D/g, "");
-  return `tel:+${digits}`;
-}
-
 /**
  * Right-hand availability panel for search cards (HuliHealth-style).
  *  - Public: a 3-day column carousel with tappable time chips that open the
@@ -73,7 +68,6 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   // preference that isn't WhatsApp-only; WhatsApp shows unless they chose
   // appointments-only.
   const canBook = availabilityPublic && contactPreference !== "solo_whatsapp";
-  const canWhatsApp = contactPreference !== "solo_citas";
 
   // Distinct locations present in the published slots. Chips let the client choose
   // WHICH place a slot is for before booking (item 3) — a traveling pro's coverage
@@ -169,30 +163,20 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   // The reason is shown as a flush top band on the card; here we only render the
   // compact contact actions so every card stays the same tidy height.
   if (!canBook) {
+    // Contact-only: a single FULL-WIDTH WhatsApp primary. The call icon (when
+    // enabled) lives in the card's top row, so this stays one tidy line.
     return (
       <div className="flex h-full flex-col justify-end">
-      <div className="flex items-stretch gap-1.5">
         <a
           href={getWhatsAppLink(professional.whatsapp, `Hola ${professional.fullName.split(" ")[0]}, vi tu perfil en ContrataCR y me gustaría coordinar un servicio.`)}
           target="_blank"
           rel="noopener noreferrer"
           onClick={(e) => e.stopPropagation()}
-          className="flex-1 inline-flex items-center justify-center gap-1.5 bg-[#25D366] hover:bg-[#1ebe5d] text-white text-sm font-semibold py-2 rounded-lg transition-colors"
+          className="w-full inline-flex items-center justify-center gap-1.5 bg-[#25D366] hover:bg-[#1ebe5d] text-white text-sm font-semibold py-2 rounded-lg transition-colors"
         >
           <WhatsAppIcon className="h-4 w-4" />
-          WhatsApp
+          Solicitar por WhatsApp
         </a>
-        {professional.allowPhoneCall && (
-          <a
-            href={telHref(professional.whatsapp)}
-            onClick={(e) => e.stopPropagation()}
-            aria-label="Llamar"
-            className="flex w-9 shrink-0 items-center justify-center border border-[#e5e7eb] text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] rounded-lg transition-colors"
-          >
-            <Phone className="h-4 w-4" />
-          </a>
-        )}
-      </div>
       </div>
     );
   }
@@ -306,39 +290,16 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
         Ver horario completo
       </Link>
 
-      {/* One compact action row: primary CTA + small secondary icon-buttons for the
-          direct-contact channels the professional enabled (one-tap, never hidden). */}
-      <div className="flex items-stretch gap-1.5">
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); openBooking(); }}
-          className="flex-1 bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-semibold py-2 rounded-lg transition-colors"
-        >
-          Solicitar servicio
-        </button>
-        {canWhatsApp && (
-          <a
-            href={getWhatsAppLink(professional.whatsapp, `Hola ${professional.fullName.split(" ")[0]}, vi tu perfil en ContrataCR y me gustaría coordinar un servicio.`)}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            aria-label="Contactar por WhatsApp"
-            className="flex w-9 shrink-0 items-center justify-center border border-[#25D366] text-[#1ebe5d] hover:bg-[#25D366]/10 rounded-lg transition-colors"
-          >
-            <WhatsAppIcon className="h-4 w-4" />
-          </a>
-        )}
-        {professional.whatsapp && professional.allowPhoneCall && (
-          <a
-            href={telHref(professional.whatsapp)}
-            onClick={(e) => e.stopPropagation()}
-            aria-label="Llamar"
-            className="flex w-9 shrink-0 items-center justify-center border border-[#e5e7eb] text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] rounded-lg transition-colors"
-          >
-            <Phone className="h-4 w-4" />
-          </a>
-        )}
-      </div>
+      {/* Full-width primary — identical on every card. The WhatsApp/call
+          contact icons live in the card's top row (next to the name), so this
+          stays a single full-width button and the card never grows taller. */}
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); openBooking(); }}
+        className="w-full bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-semibold py-2 rounded-lg transition-colors"
+      >
+        Solicitar servicio
+      </button>
 
       {bookingModals}
     </div>

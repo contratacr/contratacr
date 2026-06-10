@@ -1,9 +1,11 @@
 import { getTranslations } from "next-intl/server";
-import { MapPin, ShieldCheck, ShieldAlert, Truck, Image as ImageIcon, Lock, Star } from "lucide-react";
+import { MapPin, ShieldCheck, ShieldAlert, Truck, Image as ImageIcon, Lock, Star, Phone } from "lucide-react";
 import { ProfessionalSchedule, type ScheduleSlot } from "@/components/professionals/professional-schedule";
+import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Link } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getInitials } from "@/lib/utils";
+import { getInitials, getWhatsAppLink } from "@/lib/utils";
+import { getCategoryLabel } from "@/lib/data/categories";
 import { primaryPricingLabel, type PricingTier } from "@/lib/pricing";
 
 // Listings show a READABLE place label — never a raw Plus Code / long geocoder
@@ -81,8 +83,16 @@ interface ProfessionalCardProps {
 export async function ProfessionalCard({ professional, className, slots = [], activeCategory }: ProfessionalCardProps) {
   const tCat = await getTranslations("categories");
   const tCard = await getTranslations("card");
+  // Safe category label: if a translation key is missing, next-intl returns the
+  // raw "categories.xxx" path — fall back to the taxonomy label (e.g. "otro" →
+  // "Otro servicio") so no internal key ever leaks into the UI.
+  const catLabel = (id: string) => {
+    if (!id) return "";
+    const l = tCat(id as never);
+    return l.startsWith("categories.") ? getCategoryLabel(id) : l;
+  };
   const isPrivate = professional.availabilityPublic === false;
-  const categoryName = tCat(professional.categoryId);
+  const categoryName = catLabel(professional.categoryId);
   const allProfessions = (professional.professions && professional.professions.length > 0
     ? professional.professions
     : [professional.categoryId]
@@ -100,6 +110,18 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
   // Contact-only when the pro hid their availability OR only takes WhatsApp — shown
   // as a flush top band (cleaner than a floating paragraph in the panel).
   const contactOnly = isPrivate || professional.contactPreference === "solo_whatsapp";
+
+  // Direct-contact icons live in the TOP row (next to the name) so the action
+  // area keeps a single full-width primary button and the card never grows.
+  // WhatsApp shows on bookable cards as a secondary (contact-only keeps WhatsApp
+  // as its primary button below); call shows whenever the pro opted in.
+  const canWhatsApp = (professional.contactPreference ?? "ambas") !== "solo_citas";
+  const showTopWhatsApp = !contactOnly && canWhatsApp && !!professional.whatsapp;
+  const showTopCall = !!professional.allowPhoneCall && !!professional.whatsapp;
+  const waHref = professional.whatsapp
+    ? getWhatsAppLink(professional.whatsapp, `Hola ${professional.fullName.split(" ")[0]}, vi tu perfil en ContrataCR y me gustaría coordinar un servicio.`)
+    : "#";
+  const telHref = `tel:+${(professional.whatsapp || "").replace(/\D/g, "")}`;
 
   // ── ONE consolidated location line (keeps cards uniform): a fixed pro shows
   // their first readable workplace (+N), else province/cantón; a mobile pro shows
@@ -139,12 +161,39 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
                 {isVerified ? (
                   <span title="Identidad verificada por ContrataCR" className="inline-flex shrink-0 items-center gap-1 text-[#16a34a]">
                     <ShieldCheck className="h-4 w-4" />
-                    <span className="text-[11px] font-semibold">Verificado</span>
+                    <span className="text-[11px] font-semibold">Identidad verificada</span>
                   </span>
                 ) : (
                   <span title="Identidad sin verificar" className="inline-flex shrink-0 items-center gap-1 text-[#b45309]">
                     <ShieldAlert className="h-4 w-4" />
                     <span className="text-[11px] font-medium">Sin verificar</span>
+                  </span>
+                )}
+
+                {/* Direct-contact icons — reuse the existing name row's spare
+                    horizontal space (no extra row → card height unchanged). */}
+                {(showTopWhatsApp || showTopCall) && (
+                  <span className="ml-auto flex shrink-0 items-center gap-1">
+                    {showTopWhatsApp && (
+                      <a
+                        href={waHref}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="Contactar por WhatsApp"
+                        className="grid h-7 w-7 place-items-center rounded-md border border-[#25D366] text-[#1ebe5d] hover:bg-[#25D366]/10 transition-colors"
+                      >
+                        <WhatsAppIcon className="h-4 w-4" />
+                      </a>
+                    )}
+                    {showTopCall && (
+                      <a
+                        href={telHref}
+                        aria-label="Llamar"
+                        className="grid h-7 w-7 place-items-center rounded-md border border-[#e5e7eb] text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] transition-colors"
+                      >
+                        <Phone className="h-4 w-4" />
+                      </a>
+                    )}
                   </span>
                 )}
               </div>
@@ -157,8 +206,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
               <div className="flex items-center gap-1 flex-wrap">
                 {professionList.map((cat) => (
                   <span key={cat} className="inline-flex shrink-0 items-center rounded-full bg-[#f3f4f6] text-[#6b7280] px-2 py-0.5 text-[11px] font-medium whitespace-nowrap">
-                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                    {tCat(cat as any)}
+                    {catLabel(cat)}
                   </span>
                 ))}
                 {extraProfessions > 0 && (
