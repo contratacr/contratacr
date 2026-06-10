@@ -810,7 +810,11 @@ export function LandingNavbar() {
               className="absolute inset-0 flex items-center gap-2 sm:gap-3 px-4 sm:px-6 lg:px-8 transition-opacity duration-300"
               style={{ opacity: compact ? 1 : 0, pointerEvents: compact ? "auto" : "none" }}
             >
-              <Link href="/" aria-label="ContrataCR inicio" className="shrink-0">
+              <Link
+                href="/"
+                aria-label="ContrataCR inicio"
+                className="relative z-20 shrink-0 -ml-1 grid place-items-center p-1 rounded-lg active:bg-gray-100 touch-manipulation"
+              >
                 <ContrataCRMark className="h-9 w-9" />
               </Link>
               <form onSubmit={handleCompactSearch} className="flex-1 min-w-0 flex justify-center">
