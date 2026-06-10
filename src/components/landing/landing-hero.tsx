@@ -14,8 +14,8 @@ const PROVINCES = [
 ];
 
 const ROTATING_LINES: Record<string, string[]> = {
-  es: ["Limpieza,", "Plomería,", "Electricidad,", "Jardinería,", "Pintura,", "Niñera,", "Mudanzas,", "Fumigación,"],
-  en: ["Cleaning,", "Plumbing,", "Electrical,", "Gardening,", "Painting,", "Babysitting,", "Moving,", "Pest control,"],
+  es: ["Plomería,", "Electricidad,", "Limpieza,", "Jardinería,", "Pintura,", "Niñera,", "Mudanzas,", "Fumigación,"],
+  en: ["Plumbing,", "Electrical,", "Cleaning,", "Gardening,", "Painting,", "Babysitting,", "Moving,", "Pest control,"],
 };
 
 const POPULAR_TAGS: Record<string, string[]> = {
@@ -46,16 +46,10 @@ function RotatingLine({ lines }: { lines: string[] }) {
   const [index, setIndex] = useState(0);
   const [shown, setShown] = useState(false);   // letters in place (entered)
   const [leaving, setLeaving] = useState(false); // letters sliding out
-  const [reduced, setReduced] = useState(false);
 
+  // Enter → hold → exit → next word, per index. This animation ALWAYS plays —
+  // reduced-motion is intentionally ignored here (the effect is subtle/smooth).
   useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    if (mq.matches) { setReduced(true); return; }
-  }, []);
-
-  // Enter → hold → exit → next word, per index.
-  useEffect(() => {
-    if (reduced) return;
     const word = lines[index] ?? "";
     const span = Math.max(0, word.length - 1) * STAGGER_MS;
     const enterDur = LETTER_MS + span;
@@ -68,11 +62,7 @@ function RotatingLine({ lines }: { lines: string[] }) {
     const tNext = setTimeout(() => setIndex((i) => (i + 1) % lines.length), enterDur + WORD_HOLD_MS + exitDur);
 
     return () => { cancelAnimationFrame(raf); clearTimeout(tExit); clearTimeout(tNext); };
-  }, [index, reduced, lines]);
-
-  if (reduced) {
-    return <span className="block" style={{ minHeight: `${ROLL_LINE}em`, color: "#009FD9" }}>{lines[0]}</span>;
-  }
+  }, [index, lines]);
 
   const word = lines[index] ?? "";
   const visible = shown && !leaving;

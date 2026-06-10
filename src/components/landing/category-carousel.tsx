@@ -78,7 +78,6 @@ export function CategoryCarousel() {
   const pos = useRef(0);        // float translateX (px, ≤ 0 as it drifts left).
   const half = useRef(0);       // width of ONE set = scrollWidth / 2.
   const paused = useRef(false);
-  const reduced = useRef(false);
   const tween = useRef<{ from: number; to: number; start: number } | null>(null);
   const drag = useRef({ active: false, startX: 0, startPos: 0, moved: false });
 
@@ -92,11 +91,6 @@ export function CategoryCarousel() {
     const ro = new ResizeObserver(measure);
     ro.observe(tr);
     window.addEventListener("resize", measure);
-
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    reduced.current = mq.matches;
-    const onMq = () => { reduced.current = mq.matches; };
-    mq.addEventListener?.("change", onMq);
 
     const wrap = (p: number) => {
       const h = half.current;
@@ -122,7 +116,8 @@ export function CategoryCarousel() {
           const t = Math.min(1, (now - start) / NUDGE_MS);
           pos.current = from + (to - from) * easeInOut(t);
           if (t >= 1) tween.current = null;
-        } else if (!paused.current && !reduced.current && !drag.current.active) {
+        } else if (!paused.current && !drag.current.active) {
+          // Home carousel always animates (reduced-motion intentionally ignored).
           pos.current -= AUTO_SPEED * dt;
         }
         pos.current = wrap(pos.current);
@@ -136,7 +131,6 @@ export function CategoryCarousel() {
       cancelAnimationFrame(raf);
       ro.disconnect();
       window.removeEventListener("resize", measure);
-      mq.removeEventListener?.("change", onMq);
     };
   }, []);
 
