@@ -123,6 +123,20 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
     : "#";
   const telHref = `tel:+${(professional.whatsapp || "").replace(/\D/g, "")}`;
 
+  // Verified trust mark — rendered inline beside the name on desktop, but BELOW
+  // the name on mobile so the name keeps the full top line and never truncates first.
+  const verifiedBadge = isVerified ? (
+    <span title="Identidad verificada por ContrataCR" className="inline-flex shrink-0 items-center gap-1 text-[#16a34a]">
+      <ShieldCheck className="h-4 w-4" />
+      <span className="text-[11px] font-semibold">Identidad verificada</span>
+    </span>
+  ) : (
+    <span title="Identidad sin verificar" className="inline-flex shrink-0 items-center gap-1 text-[#b45309]">
+      <ShieldAlert className="h-4 w-4" />
+      <span className="text-[11px] font-medium">Sin verificar</span>
+    </span>
+  );
+
   // ── ONE consolidated location line (keeps cards uniform): a fixed pro shows
   // their first readable workplace (+N), else province/cantón; a mobile pro shows
   // their real coverage. Both bits truncate so the row stays a single line. ──
@@ -151,29 +165,21 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
             </Link>
 
             <div className="flex-1 min-w-0 flex flex-col gap-1 overflow-hidden">
-              {/* Name + verified trust mark (right of the name — where the eye
-                  looks for trust). The mark is a subtle icon+label, deliberately
-                  NOT a bordered pill, so it reads differently from profession tags. */}
-              <div className="flex items-center gap-2 min-w-0 pr-9 md:pr-0">
-                <Link href={`/profesionales/${professional.slug}`} className="min-w-0">
-                  <h3 className="font-bold text-[#111827] text-[15px] leading-tight truncate hover:text-[#009FD9] transition-colors">{professional.fullName}</h3>
+              {/* Name has horizontal priority: it takes the full top line and
+                  may wrap to 2 lines on mobile rather than truncating with "…".
+                  The verified mark sits inline on desktop but drops BELOW the
+                  name on mobile (see badge under the name) to free the space. */}
+              <div className="flex items-start gap-2 min-w-0 pr-9 md:pr-0">
+                <Link href={`/profesionales/${professional.slug}`} className="min-w-0 flex-1">
+                  <h3 className="font-bold text-[#111827] text-[15px] leading-tight hover:text-[#009FD9] transition-colors line-clamp-2 md:line-clamp-1">{professional.fullName}</h3>
                 </Link>
-                {isVerified ? (
-                  <span title="Identidad verificada por ContrataCR" className="inline-flex shrink-0 items-center gap-1 text-[#16a34a]">
-                    <ShieldCheck className="h-4 w-4" />
-                    <span className="text-[11px] font-semibold">Identidad verificada</span>
-                  </span>
-                ) : (
-                  <span title="Identidad sin verificar" className="inline-flex shrink-0 items-center gap-1 text-[#b45309]">
-                    <ShieldAlert className="h-4 w-4" />
-                    <span className="text-[11px] font-medium">Sin verificar</span>
-                  </span>
-                )}
 
-                {/* Direct-contact icons — reuse the existing name row's spare
-                    horizontal space (no extra row → card height unchanged). */}
+                {/* Verified mark — inline beside the name on desktop only */}
+                <span className="hidden md:inline-flex shrink-0 mt-0.5">{verifiedBadge}</span>
+
+                {/* Direct-contact icons — compact, right-aligned (no extra row) */}
                 {(showTopWhatsApp || showTopCall) && (
-                  <span className="ml-auto flex shrink-0 items-center gap-0.5">
+                  <span className="flex shrink-0 items-center gap-0.5 -mt-0.5">
                     {showTopWhatsApp && (
                       <a
                         href={waHref}
@@ -197,6 +203,9 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
                   </span>
                 )}
               </div>
+
+              {/* Verified mark — under the name on mobile only (frees the top line) */}
+              <div className="md:hidden -mt-0.5">{verifiedBadge}</div>
 
               {professional.businessName && (
                 <p className="text-[11px] font-medium text-[#009FD9] truncate -mt-0.5">{professional.businessName}</p>
