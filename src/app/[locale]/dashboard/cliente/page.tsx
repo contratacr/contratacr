@@ -34,6 +34,7 @@ export default function ClientDashboardPage() {
   const [photoUploading, setPhotoUploading] = useState(false);
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [supportUnread, setSupportUnread] = useState(0);
 
   useEffect(() => {
     if (!authLoading && !user) router.push("/login");
@@ -88,6 +89,19 @@ export default function ClientDashboardPage() {
       .eq("read", false)
       .then(({ count }) => setUnreadCount(count ?? 0));
   }, [user]);
+
+  // Unread support replies → badge on the Soporte tab (refreshes on tab change).
+  useEffect(() => {
+    if (!user) return;
+    const supabase = createClient();
+    supabase
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("type", "support_reply")
+      .eq("read", false)
+      .then(({ count }) => setSupportUnread(count ?? 0));
+  }, [user, activeTab]);
 
   function setTab(tab: Tab) {
     router.push(`/dashboard/cliente?tab=${tab}`);
@@ -170,7 +184,20 @@ export default function ClientDashboardPage() {
       ),
       label: "Notificaciones",
     },
-    { key: "soporte", icon: <LifeBuoy className="h-4 w-4" />, label: "Soporte" },
+    {
+      key: "soporte",
+      icon: (
+        <div className="relative">
+          <LifeBuoy className="h-4 w-4" />
+          {supportUnread > 0 && (
+            <span className="absolute -top-2 -right-2.5 flex h-[16px] min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold leading-none text-white ring-2 ring-white">
+              {supportUnread > 9 ? "9+" : supportUnread}
+            </span>
+          )}
+        </div>
+      ),
+      label: "Soporte",
+    },
     { key: "profile", icon: <User className="h-4 w-4" />, label: "Mi perfil" },
   ];
 
@@ -258,7 +285,7 @@ export default function ClientDashboardPage() {
           {activeTab === "soporte" && (
             <div>
               <h2 className="text-lg font-semibold text-[#111827] mb-4">Soporte</h2>
-              <SupportTickets />
+              <SupportTickets onUnreadChange={setSupportUnread} />
             </div>
           )}
 

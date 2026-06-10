@@ -46,9 +46,12 @@ function fmt(d: string) {
   return new Date(d).toLocaleString("es-CR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 }
 
+type Counts = { open: number; in_progress: number; awaiting: number };
+
 export function AdminSupport() {
   const [status, setStatus] = useState<string>("open");
   const [items, setItems] = useState<Ticket[]>([]);
+  const [counts, setCounts] = useState<Counts>({ open: 0, in_progress: 0, awaiting: 0 });
   const [loading, setLoading] = useState(true);
 
   // Open thread
@@ -63,7 +66,7 @@ export function AdminSupport() {
     setLoading(true);
     fetch(`/api/admin/support?status=${s}`)
       .then((r) => r.json())
-      .then(({ tickets }) => setItems(tickets ?? []))
+      .then(({ tickets, counts }) => { setItems(tickets ?? []); if (counts) setCounts(counts); })
       .finally(() => setLoading(false));
   }, []);
 
@@ -127,12 +130,19 @@ export function AdminSupport() {
                   <p className="text-[11px] text-[#9ca3af] mt-0.5">Atendido por {ticket.handled_by_name}{ticket.handled_at ? ` · ${fmt(ticket.handled_at)}` : ""}</p>
                 )}
               </div>
+              {/* Forward-only: open→en proceso→resuelto. No moving back to pendiente
+                  (a resolved ticket reopens only when someone replies). */}
               <select
                 value={ticket.status}
                 onChange={(e) => changeStatus(e.target.value)}
                 className="rounded-lg border border-[#e5e7eb] bg-white text-sm px-2.5 py-1.5 font-medium text-[#374151]"
               >
-                {Object.keys(STATUS_LABEL).map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
+                {(ticket.status === "open"
+                  ? ["open", "in_progress", "resolved"]
+                  : ticket.status === "in_progress"
+                  ? ["in_progress", "resolved"]
+                  : ["resolved"]
+                ).map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
               </select>
             </div>
 
@@ -176,15 +186,25 @@ export function AdminSupport() {
   return (
     <div>
       <div className="flex items-center gap-2 mb-4 flex-wrap">
-        {STATUSES.map((s) => (
-          <button
-            key={s.id}
-            onClick={() => setStatus(s.id)}
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${status === s.id ? "bg-[#0f172a] text-white" : "bg-white text-[#374151] border border-[#e5e7eb] hover:bg-gray-50"}`}
-          >
-            {s.label}
-          </button>
-        ))}
+        {STATUSES.map((s) => {
+          // Badge: "Pendientes" → all pending; "En proceso" → only those awaiting
+          // an admin reply (the actionable ones).
+          const badge = s.id === "open" ? counts.open : s.id === "in_progress" ? counts.awaiting : 0;
+          return (
+            <button
+              key={s.id}
+              onClick={() => setStatus(s.id)}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${status === s.id ? "bg-[#0f172a] text-white" : "bg-white text-[#374151] border border-[#e5e7eb] hover:bg-gray-50"}`}
+            >
+              {s.label}
+              {badge > 0 && (
+                <span className={`inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-bold ${status === s.id ? "bg-white text-[#0f172a]" : "bg-red-500 text-white"}`}>
+                  {badge > 9 ? "9+" : badge}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {loading ? (
@@ -204,8 +224,8 @@ export function AdminSupport() {
                     <p className="text-sm font-semibold text-[#111827]">{t.subject}</p>
                     <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${STATUS_COLOR[t.status] ?? "bg-gray-100 text-gray-600"}`}>{STATUS_LABEL[t.status] ?? t.status}</span>
                     <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${t.user_id ? "bg-[#dbeafe] text-[#1d4ed8]" : "bg-gray-100 text-gray-500"}`}>{t.user_id ? "Registrado" : "Invitado"}</span>
-                    {t.last_reply_role === "user" && t.status !== "closed" && (
-                      <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#fee2e2] text-[#b91c1c]">Espera respuesta</span>
+                    {t.last_reply_role === "user" && t.status !== "resolved" && (
+                      <span className="flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#fee2e2] text-[#b91c1c]"><span className="h-1.5 w-1.5 rounded-full bg-[#b91c1c]" />Espera respuesta</span>
                     )}
                   </div>
                   <p className="text-xs text-[#9ca3af] truncate mt-0.5">{t.name || "Sin nombre"} · {t.email} · {fmt(t.last_reply_at || t.created_at)}</p>

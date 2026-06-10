@@ -68,9 +68,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  // REOPEN — the problem persists; back to "Pendiente" and notify the inbox.
+  // REOPEN — the problem persists; the SAME thread goes back to "En proceso"
+  // (never a new ticket) and the inbox is notified.
   if (action === "reopen") {
-    await db.from("support_tickets").update({ status: "open", user_confirmed: false, last_reply_at: now, last_reply_role: "user" }).eq("id", ticketId);
+    await db.from("support_tickets").update({ status: "in_progress", user_confirmed: false, last_reply_at: now, last_reply_role: "user" }).eq("id", ticketId);
     await db.from("support_ticket_messages").insert({
       ticket_id: ticketId, sender_role: "user", sender_id: user.id, sender_name: senderName, body: body?.trim() || "El usuario solicitó reabrir el ticket: el problema continúa.",
     });
@@ -85,7 +86,7 @@ export async function POST(req: Request) {
   });
   if (msgErr) return NextResponse.json({ error: msgErr.message }, { status: 500 });
 
-  // A user reply re-opens a resolved ticket into "in_progress".
+  // A user reply re-opens a resolved ticket into "En proceso" (same thread).
   const nextStatus = ticket.status === "resolved" ? "in_progress" : ticket.status;
   await db.from("support_tickets").update({ status: nextStatus, user_confirmed: false, last_reply_at: now, last_reply_role: "user" }).eq("id", ticketId);
 

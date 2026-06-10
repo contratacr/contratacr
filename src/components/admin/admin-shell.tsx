@@ -23,13 +23,19 @@ export function AdminShell({
   const [supportCount, setSupportCount] = useState(0);
 
   // Badge: how many tickets need attention (pending + awaiting an admin reply).
+  // Polls so it updates without a manual reload as tickets are handled.
   useEffect(() => {
     let alive = true;
-    fetch("/api/admin/support?status=open")
-      .then((r) => r.json())
-      .then((d) => { if (alive) setSupportCount(d.needsAttention ?? d.openCount ?? 0); })
-      .catch(() => {});
-    return () => { alive = false; };
+    const fetchCount = () =>
+      fetch("/api/admin/support?status=open")
+        .then((r) => r.json())
+        .then((d) => { if (alive) setSupportCount(d.needsAttention ?? d.openCount ?? 0); })
+        .catch(() => {});
+    fetchCount();
+    const id = setInterval(fetchCount, 30000);
+    const onFocus = () => fetchCount();
+    window.addEventListener("focus", onFocus);
+    return () => { alive = false; clearInterval(id); window.removeEventListener("focus", onFocus); };
   }, []);
 
   async function signOut() {

@@ -57,9 +57,14 @@ function ContactForm() {
         {user ? (
           <>
             <p className="text-gray-500 mb-5">Recibimos tu consulta. Te respondemos por correo y puedes seguir la conversación en tus tickets.</p>
-            <Link href="/dashboard/cliente?tab=soporte" className="inline-flex items-center gap-2 bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold px-6 py-3 rounded-full transition-all text-sm">
-              <LifeBuoy className="h-4 w-4" /> Ver mis tickets
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link href="/dashboard/cliente?tab=soporte" className="inline-flex items-center justify-center gap-2 bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold px-6 py-3 rounded-full transition-all text-sm">
+                <LifeBuoy className="h-4 w-4" /> Ver mis tickets
+              </Link>
+              <Link href="/dashboard/cliente" className="inline-flex items-center justify-center gap-2 bg-white border border-gray-200 text-[#374151] font-bold px-6 py-3 rounded-full transition-all text-sm hover:bg-gray-50">
+                Ir a mi panel
+              </Link>
+            </div>
           </>
         ) : (
           <p className="text-gray-500">Recibimos tu consulta y te responderemos por correo. <Link href="/login" className="text-[#009FD9] font-semibold hover:underline">Inicia sesión</Link> con ese correo para seguir tus tickets en la plataforma.</p>

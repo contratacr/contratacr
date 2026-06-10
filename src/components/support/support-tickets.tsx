@@ -1,8 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { LifeBuoy, ArrowLeft, Send, User, Shield, Plus } from "lucide-react";
 import { Link } from "@/i18n/navigation";
+import { useAuth } from "@/hooks/use-auth";
+import { createClient } from "@/lib/supabase/client";
 
 type Ticket = {
   id: string;
@@ -32,14 +34,26 @@ const STATUS_COLOR: Record<string, string> = {
   in_progress: "bg-blue-100 text-blue-700",
   resolved: "bg-emerald-100 text-emerald-700",
 };
+const FILTERS = [
+  { id: "todas", label: "Todas" },
+  { id: "open", label: "Pendiente" },
+  { id: "in_progress", label: "En proceso" },
+  { id: "resolved", label: "Resuelto" },
+] as const;
 
 function fmt(d: string) {
   return new Date(d).toLocaleString("es-CR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 }
 
-export function SupportTickets() {
+export function SupportTickets({ onUnreadChange }: { onUnreadChange?: (n: number) => void }) {
+  const { user } = useAuth();
   const [items, setItems] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<string>("todas");
+  // Ticket ids with an UNREAD admin reply (from the notifications table) → drives
+  // the per-ticket "Nueva respuesta" marker, the per-status badges, and the
+  // dashboard Soporte badge (via onUnreadChange).
+  const [unread, setUnread] = useState<Set<string>>(new Set());
 
   const [openId, setOpenId] = useState<string | null>(null);
   const [ticket, setTicket] = useState<Ticket | null>(null);
@@ -47,6 +61,29 @@ export function SupportTickets() {
   const [threadLoading, setThreadLoading] = useState(false);
   const [reply, setReply] = useState("");
   const [sending, setSending] = useState(false);
+
+  const setUnreadAndNotify = useCallback((s: Set<string>) => {
+    setUnread(s);
+    onUnreadChange?.(s.size);
+  }, [onUnreadChange]);
+
+  const loadUnread = useCallback(async () => {
+    if (!user) return;
+    const supabase = createClient();
+    const { data } = await supabase
+      .from("notifications")
+      .select("data")
+      .eq("user_id", user.id)
+      .eq("type", "support_reply")
+      .eq("read", false);
+    const ids = new Set<string>();
+    for (const r of data ?? []) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const tid = (r as any).data?.ticketId as string | undefined;
+      if (tid) ids.add(tid);
+    }
+    setUnreadAndNotify(ids);
+  }, [user, setUnreadAndNotify]);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -56,16 +93,26 @@ export function SupportTickets() {
       .finally(() => setLoading(false));
   }, []);
 
-  useEffect(() => { if (!openId) load(); }, [openId, load]);
+  useEffect(() => { if (!openId) { load(); loadUnread(); } }, [openId, load, loadUnread]);
 
-  const openTicket = useCallback((id: string) => {
+  const openTicket = useCallback(async (id: string) => {
     setOpenId(id);
     setThreadLoading(true);
     fetch(`/api/support?id=${id}`)
       .then((r) => r.json())
       .then(({ ticket, messages }) => { setTicket(ticket); setMessages(messages ?? []); })
       .finally(() => setThreadLoading(false));
-  }, []);
+    // Reading the ticket clears its "new reply" notifications (auto-refresh badges).
+    if (user) {
+      const supabase = createClient();
+      await supabase.from("notifications").update({ read: true })
+        .eq("user_id", user.id).eq("type", "support_reply").eq("read", false)
+        .contains("data", { ticketId: id });
+      setUnread((prev) => {
+        const next = new Set(prev); next.delete(id); onUnreadChange?.(next.size); return next;
+      });
+    }
+  }, [user, onUnreadChange]);
 
   async function sendReply() {
     if (!reply.trim() || !openId) return;
@@ -92,6 +139,16 @@ export function SupportTickets() {
     if (res.ok) openTicket(openId);
     else alert("No se pudo procesar. Intenta de nuevo.");
   }
+
+  const filtered = useMemo(
+    () => (filter === "todas" ? items : items.filter((t) => t.status === filter)),
+    [items, filter]
+  );
+  const unreadByStatus = useMemo(() => {
+    const m: Record<string, number> = {};
+    for (const t of items) if (unread.has(t.id)) m[t.status] = (m[t.status] ?? 0) + 1;
+    return m;
+  }, [items, unread]);
 
   // ── Thread view ──
   if (openId) {
@@ -167,12 +224,35 @@ export function SupportTickets() {
   // ── List view ──
   return (
     <div>
-      <div className="flex items-center justify-between gap-3 mb-4">
+      <div className="flex items-center justify-between gap-3 mb-3">
         <p className="text-sm text-[#6b7280]">Tus conversaciones con soporte.</p>
         <Link href="/soporte" className="inline-flex items-center gap-1.5 rounded-lg bg-[#009FD9] text-white text-sm font-semibold px-3 py-2 hover:bg-[#0089bb]">
           <Plus className="h-4 w-4" /> Nuevo ticket
         </Link>
       </div>
+
+      {/* Status filter — like the admin inbox, with a "new" badge per status */}
+      {items.length > 0 && (
+        <div className="flex items-center gap-1.5 mb-4 flex-wrap">
+          {FILTERS.map((f) => {
+            const badge = f.id === "todas" ? unread.size : (unreadByStatus[f.id] ?? 0);
+            return (
+              <button
+                key={f.id}
+                onClick={() => setFilter(f.id)}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${filter === f.id ? "bg-[#0f172a] text-white" : "bg-white text-[#374151] border border-[#e5e7eb] hover:bg-gray-50"}`}
+              >
+                {f.label}
+                {badge > 0 && (
+                  <span className={`inline-flex h-[16px] min-w-[16px] items-center justify-center rounded-full px-1 text-[9px] font-bold ${filter === f.id ? "bg-white text-[#0f172a]" : "bg-red-500 text-white"}`}>
+                    {badge > 9 ? "9+" : badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {loading ? (
         <div className="flex justify-center py-12"><div className="h-7 w-7 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" /></div>
@@ -185,21 +265,27 @@ export function SupportTickets() {
             <Plus className="h-4 w-4" /> Abrir un ticket
           </Link>
         </div>
+      ) : filtered.length === 0 ? (
+        <p className="text-sm text-[#9ca3af] text-center py-8">No hay tickets en esta vista.</p>
       ) : (
         <div className="flex flex-col gap-2">
-          {items.map((t) => (
-            <button key={t.id} onClick={() => openTicket(t.id)} className="text-left bg-white rounded-2xl border border-[#e5e7eb] p-4 hover:border-[#bfe3f5] hover:shadow-sm transition-all">
-              <div className="flex items-center gap-2 flex-wrap">
-                <p className="text-sm font-semibold text-[#111827]">{t.subject}</p>
-                <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${STATUS_COLOR[t.status] ?? ""}`}>{STATUS_LABEL[t.status] ?? t.status}</span>
-                {t.last_reply_role === "admin" && (
-                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#EBF5FB] text-[#0077a8]">Nueva respuesta</span>
-                )}
-              </div>
-              <p className="text-xs text-[#9ca3af] mt-0.5">Actualizado {fmt(t.last_reply_at || t.created_at)}</p>
-              <p className="text-sm text-[#6b7280] line-clamp-1 mt-1">{t.message}</p>
-            </button>
-          ))}
+          {filtered.map((t) => {
+            const hasNew = unread.has(t.id);
+            return (
+              <button key={t.id} onClick={() => openTicket(t.id)} className={`text-left bg-white rounded-2xl border p-4 hover:shadow-sm transition-all ${hasNew ? "border-[#bfe3f5] ring-1 ring-[#EBF5FB]" : "border-[#e5e7eb] hover:border-[#bfe3f5]"}`}>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {hasNew && <span className="h-2 w-2 rounded-full bg-[#009FD9] shrink-0" />}
+                  <p className="text-sm font-semibold text-[#111827]">{t.subject}</p>
+                  <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${STATUS_COLOR[t.status] ?? ""}`}>{STATUS_LABEL[t.status] ?? t.status}</span>
+                  {hasNew && (
+                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#EBF5FB] text-[#0077a8]">Nueva respuesta</span>
+                  )}
+                </div>
+                <p className="text-xs text-[#9ca3af] mt-0.5">Actualizado {fmt(t.last_reply_at || t.created_at)}</p>
+                <p className="text-sm text-[#6b7280] line-clamp-1 mt-1">{t.message}</p>
+              </button>
+            );
+          })}
         </div>
       )}
     </div>

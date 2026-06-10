@@ -112,6 +112,8 @@ export function NotificationsList() {
                           "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold mb-1",
                           notificationContext(n.type) === "professional"
                             ? "bg-[#EBF5FB] text-[#0077a8]"
+                            : notificationContext(n.type) === "support"
+                            ? "bg-[#dcfce7] text-[#15803d]"
                             : "bg-[#f3e8ff] text-[#7c3aed]"
                         )}>
                           {notificationContextLabel(n.type)}

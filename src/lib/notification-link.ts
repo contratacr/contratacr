@@ -8,7 +8,7 @@ export type NotificationLinkInput = {
   data?: { link?: string } | null;
 };
 
-export type NotificationContext = "professional" | "client" | null;
+export type NotificationContext = "professional" | "client" | "support" | null;
 
 // Notification types raised while the user is acting as a PROFESSIONAL.
 const PRO_TYPES = new Set([
@@ -28,6 +28,7 @@ const CLIENT_TYPES = new Set([
 ]);
 
 export function notificationContext(type: string): NotificationContext {
+  if (type === "support_reply") return "support";
   if (PRO_TYPES.has(type)) return "professional";
   if (CLIENT_TYPES.has(type)) return "client";
   return null;
@@ -38,17 +39,19 @@ export function notificationContextLabel(type: string): string | null {
   const ctx = notificationContext(type);
   if (ctx === "professional") return "Como profesional";
   if (ctx === "client") return "Como cliente";
+  if (ctx === "support") return "Soporte";
   return null;
 }
 
-// For a professional, the client-area sections live INSIDE the unified
-// professional dashboard ("Cuando contrato" group), not in a separate panel.
+// For a professional, the client-area + soporte sections live INSIDE the unified
+// professional dashboard, not in a separate client panel.
 function remapClientLinkForPro(link: string): string {
   return link
     .replace("/dashboard/cliente?tab=bookings", "/dashboard/profesional?tab=sent_bookings")
     .replace("/dashboard/cliente?tab=projects", "/dashboard/profesional?tab=sent_projects")
     .replace("/dashboard/cliente?tab=saved", "/dashboard/profesional?tab=saved")
-    .replace("/dashboard/cliente?tab=notifications", "/dashboard/profesional?tab=notifications");
+    .replace("/dashboard/cliente?tab=notifications", "/dashboard/profesional?tab=notifications")
+    .replace("/dashboard/cliente?tab=soporte", "/dashboard/profesional?tab=soporte");
 }
 
 export function notificationHref(n: NotificationLinkInput, role?: string): string {

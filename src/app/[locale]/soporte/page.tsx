@@ -130,12 +130,20 @@ export default function SoportePage() {
                 <p className="text-[#6b7280] mb-6">
                   Recibimos tu consulta. Te respondemos por correo y puedes seguir la conversación en tus tickets.
                 </p>
-                <Link
-                  href="/dashboard/cliente?tab=soporte"
-                  className="inline-flex items-center gap-2 bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold px-6 py-3 rounded-full transition-all text-sm"
-                >
-                  <LifeBuoy className="h-4 w-4" /> Ver mis tickets
-                </Link>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <Link
+                    href="/dashboard/cliente?tab=soporte"
+                    className="inline-flex items-center justify-center gap-2 bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold px-6 py-3 rounded-full transition-all text-sm"
+                  >
+                    <LifeBuoy className="h-4 w-4" /> Ver mis tickets
+                  </Link>
+                  <Link
+                    href="/dashboard/cliente"
+                    className="inline-flex items-center justify-center gap-2 bg-white border border-[#e5e7eb] text-[#374151] font-bold px-6 py-3 rounded-full transition-all text-sm hover:bg-gray-50"
+                  >
+                    Ir a mi panel
+                  </Link>
+                </div>
               </>
             ) : (
               <>

@@ -97,6 +97,7 @@ export default function ProDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [supportUnread, setSupportUnread] = useState(0);
   const contentRef = useRef<HTMLDivElement>(null);
   // Count of consecutive "no pro row" fetches. A freshly-created account can lag
   // (replication/RLS) — we retry a few times before bouncing to registration so
@@ -136,6 +137,19 @@ export default function ProDashboardPage() {
       .eq("user_id", user.id)
       .eq("read", false)
       .then(({ count }) => setUnreadCount(count ?? 0));
+  }, [user, activeTab, refreshKey]);
+
+  // Unread support replies → badge on the Soporte sidebar item.
+  useEffect(() => {
+    if (!user) return;
+    const supabase = createClient();
+    supabase
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("type", "support_reply")
+      .eq("read", false)
+      .then(({ count }) => setSupportUnread(count ?? 0));
   }, [user, activeTab, refreshKey]);
 
   // No professional record yet — send them to finish registration. Declared
@@ -190,7 +204,7 @@ export default function ProDashboardPage() {
   }
 
   function navButton(tab: Tab) {
-    const isNotif = tab === "notifications";
+    const badge = tab === "notifications" ? unreadCount : tab === "soporte" ? supportUnread : 0;
     return (
       <button
         key={tab}
@@ -202,9 +216,9 @@ export default function ProDashboardPage() {
       >
         <span className="relative">
           {TAB_ICONS[tab]}
-          {isNotif && unreadCount > 0 && (
+          {badge > 0 && (
             <span className="absolute -top-2 -right-2.5 flex h-[16px] min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold leading-none text-white ring-2 ring-white">
-              {unreadCount > 9 ? "9+" : unreadCount}
+              {badge > 9 ? "9+" : badge}
             </span>
           )}
         </span>
@@ -354,7 +368,7 @@ export default function ProDashboardPage() {
 
                   {activeTab === "notifications" && <NotificationsList />}
 
-                  {activeTab === "soporte" && <SupportTickets />}
+                  {activeTab === "soporte" && <SupportTickets onUnreadChange={setSupportUnread} />}
 
                   {activeTab === "cuenta" && (
                     <div className="space-y-6">
