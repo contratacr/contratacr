@@ -31,7 +31,7 @@ import { cn } from "@/lib/utils";
 
 // Unified professional dashboard (Mercado Libre-style): ONE account, two clearly
 // labeled groups — "Mi perfil profesional" (acting as a professional) and
-// "Cuando contrato" (acting as a client) — plus a single notifications stream.
+// "Contratar servicios" (acting as a client) — plus a single notifications stream.
 type Tab =
   | "profile" | "services" | "photos" | "availability" | "bookings" | "proposals" | "verificacion"
   | "sent_bookings" | "sent_projects" | "saved"
@@ -148,7 +148,9 @@ export default function ProDashboardPage() {
 
   function setTab(tab: Tab) {
     const params = new URLSearchParams({ tab });
-    router.push(`/dashboard/profesional?${params}`);
+    // `scroll: false` stops Next's default jump-to-top on navigation — otherwise
+    // it fires AFTER our scroll-to-section and bounces the user back up.
+    router.push(`/dashboard/profesional?${params}`, { scroll: false });
     // On mobile the sidebar sits ABOVE the content (stacked), so after tapping a
     // menu item, smooth-scroll down to the section the user chose instead of
     // leaving them on the menu. `scroll-mt` on the content clears the fixed header.
@@ -266,7 +268,7 @@ export default function ProDashboardPage() {
                   </div>
                   <div className="border-t border-[#f3f4f6] pt-2">
                     <p className="px-3 pt-1 pb-1.5 text-[10px] font-bold text-[#9ca3af] uppercase tracking-widest">
-                      Cuando contrato
+                      Contratar servicios
                     </p>
                     {GROUP_CLIENT.map(navButton)}
                   </div>
@@ -341,7 +343,7 @@ export default function ProDashboardPage() {
                     />
                   )}
 
-                  {/* "Cuando contrato" — same account, acting as a client */}
+                  {/* "Contratar servicios" — same account, acting as a client */}
                   {activeTab === "sent_bookings" && <ClientActivity section="bookings" />}
                   {activeTab === "sent_projects" && <ClientActivity section="projects" />}
                   {activeTab === "saved" && <ClientActivity section="saved" />}

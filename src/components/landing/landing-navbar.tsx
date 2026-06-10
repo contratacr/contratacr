@@ -456,7 +456,7 @@ export function LandingNavbar() {
   const displayName = (user?.user_metadata?.full_name as string) || (user?.user_metadata?.name as string) || user?.email?.split("@")[0] || "";
 
   // A professional is a superset of a client. For a professional the client
-  // ("Cuando contrato") sections live INSIDE the unified pro dashboard, so a
+  // ("Contratar servicios") sections live INSIDE the unified pro dashboard, so a
   // pro never switches panels; a plain client uses the client dashboard.
   const proPanelHref = "/es/dashboard/profesional";
   const clientPanelHref = "/es/dashboard/cliente";
@@ -727,7 +727,7 @@ export function LandingNavbar() {
                           )}
 
                           <p className="px-3 pt-2 pb-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                            {isPro ? "Cuando contrato" : "Mi cuenta"}
+                            {isPro ? "Contratar servicios" : "Mi cuenta"}
                           </p>
                           {!isPro && (
                             <a
