@@ -309,6 +309,13 @@ When writing or editing ANY user-facing string, scan it against this list first.
 
 ---
 
+### Profile completeness — count ONLY what applies (context-aware)
+Any "perfil completo / X% completo" prompt must be computed from fields **relevant to that specific professional** — never penalize someone for a field that doesn't apply:
+- **Aseguradoras** are **health-only** (`anyHealthCategory(professions)` / `es_salud`). For non-health pros, **hide the field entirely** and exclude it from completeness (a plumber has no insurance networks — it's not "missing", it doesn't exist for them).
+- Any field where **"ninguno / no aplica"** is a valid answer must offer that **explicit choice**, and choosing it marks the item **COMPLETE (answered)**, not blank. Aseguradoras uses a **"No trabajo con seguros"** checkbox → sentinel `NO_INSURERS` (`"ninguna"`), which never matches a real /buscar filter.
+- **Idiomas default to "Español"** — a Spanish-only pro is complete; extra languages are an optional bonus, never required.
+- Net: a non-health pro reaches 100% without ever touching aseguradoras; benefit-framed "completa esto" prompts appear ONLY for fields that genuinely apply AND are actually empty.
+
 ## 6. Required-field convention (app-wide)
 
 - **Every required field** shows a red **`*`** after its label.

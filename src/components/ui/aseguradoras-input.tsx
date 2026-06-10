@@ -14,6 +14,11 @@ interface Props {
   onChange: (next: string[]) => void;
 }
 
+// Explicit "I don't work with insurers" answer. Storing this sentinel means the
+// field is ANSWERED (counts as complete), distinct from a blank/unanswered one.
+// It never matches a real aseguradora filter on /buscar.
+export const NO_INSURERS = "ninguna";
+
 function normalize(s: string): string {
   return s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
 }
@@ -70,6 +75,10 @@ export function AseguradorasInput({ value, onChange }: Props) {
     onChange(value.filter((l) => l !== id));
   }
 
+  const noInsurers = value.includes(NO_INSURERS);
+  // Chips never show the sentinel — it's represented by the checkbox below.
+  const chipValues = value.filter((id) => id !== NO_INSURERS);
+
   async function sendSuggestion() {
     const name = suggestName.trim();
     if (!name) return;
@@ -89,9 +98,10 @@ export function AseguradorasInput({ value, onChange }: Props) {
 
   return (
     <div className="flex flex-col gap-2">
+      {!noInsurers && (<>
       <div className="relative">
         <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[#e5e7eb] bg-white p-2 overflow-hidden transition-all focus-within:ring-2 focus-within:ring-[#009FD9] focus-within:border-transparent">
-          {value.map((id) => (
+          {chipValues.map((id) => (
             <span key={id} className="inline-flex items-center gap-1.5 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium pl-2.5 pr-1.5 py-1">
               {labelFor(id)}
               <button type="button" onClick={() => remove(id)} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors" aria-label="Quitar">
@@ -157,6 +167,18 @@ export function AseguradorasInput({ value, onChange }: Props) {
           ¿No ves tu aseguradora?
         </button>
       )}
+      </>)}
+
+      {/* Explicit "none" — answering this counts as complete (not a blank field). */}
+      <label className="inline-flex items-center gap-2 text-sm text-[#374151] cursor-pointer self-start">
+        <input
+          type="checkbox"
+          checked={noInsurers}
+          onChange={(e) => onChange(e.target.checked ? [NO_INSURERS] : [])}
+          className="h-4 w-4 rounded border-[#d1d5db] text-[#009FD9] focus:ring-[#009FD9]"
+        />
+        No trabajo con seguros
+      </label>
     </div>
   );
 }

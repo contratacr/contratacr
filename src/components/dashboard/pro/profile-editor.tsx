@@ -15,7 +15,7 @@ import { computeSearchAreas, primaryArea, type CoverageArea } from "@/lib/locati
 import { AseguradorasInput } from "@/components/ui/aseguradoras-input";
 import { CloseAccountSection } from "@/components/account/close-account-section";
 import { CategorySearch } from "@/components/ui/category-search";
-import { getCategoryLabel } from "@/lib/data/categories";
+import { getCategoryLabel, anyHealthCategory } from "@/lib/data/categories";
 import { cn } from "@/lib/utils";
 import { PRICING_TYPES, type PricingTier, type PricingType } from "@/lib/pricing";
 
@@ -64,6 +64,8 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
       ? initial.professions
       : initial.category_id ? [initial.category_id] : [];
   const [professions, setProfessions] = useState<string[]>(seedProfessions);
+  // Aseguradoras only apply to health (es_salud) professionals.
+  const isHealthPro = anyHealthCategory(professions);
   const [addCat, setAddCat] = useState("");
   const [pricing, setPricing] = useState<PricingTier[]>(
     Array.isArray(initial.pricing) ? initial.pricing : []
@@ -74,7 +76,11 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
   const [address, setAddress] = useState<string>(initial.address ?? "");
   const [businessName, setBusinessName] = useState<string>(initial.business_name ?? "");
   const [workplaces, setWorkplaces] = useState<Workplace[]>(Array.isArray(initial.workplaces) ? initial.workplaces : []);
-  const [languages, setLanguages] = useState<string[]>(Array.isArray(initial.languages) ? initial.languages : []);
+  // Default to "Español" (most professionals) so a Spanish-only pro is never
+  // treated as "missing" languages. Extra languages are an optional bonus.
+  const [languages, setLanguages] = useState<string[]>(
+    Array.isArray(initial.languages) && initial.languages.length > 0 ? initial.languages : ["Español"]
+  );
   const [insurers, setInsurers] = useState<string[]>(Array.isArray(initial.insurance_networks) ? initial.insurance_networks : []);
   // Work mode — BOTH can be selected (travels AND has fixed locations).
   const initialTypes = String(initial.service_type ?? "mobile");
@@ -472,9 +478,12 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         {/* Experience is captured per service (in the Servicios tab), not globally. */}
       </Section>
 
-      {/* ── Idiomas y aseguradoras ────────────────────────────────────── */}
-      <Section title="Idiomas y aseguradoras" desc="Opcional — ayudan a los clientes a filtrar">
-        {/* Languages — optional chip autocomplete (full language list) */}
+      {/* ── Idiomas (+ aseguradoras only for health pros) ─────────────────
+          Aseguradoras only apply to HEALTH categories (es_salud) — a plumber
+          has nothing to do with insurance, so we hide the field entirely for
+          non-health pros (it isn't part of their profile at all). */}
+      <Section title={isHealthPro ? "Idiomas y aseguradoras" : "Idiomas"} desc="Opcional — ayudan a los clientes a filtrar">
+        {/* Languages — defaults to Español; extra languages are an optional bonus */}
         <div>
           <label className="text-sm font-medium text-[#374151] block mb-1.5">
             Idiomas que hablas <span className="text-[#9ca3af] font-normal">(opcional)</span>
@@ -482,14 +491,16 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
           <LanguagesInput value={languages} onChange={(next) => { setLanguages(next); touch(); }} />
         </div>
 
-        {/* Aseguradoras — insurance networks the pro belongs to */}
-        <div>
-          <label className="text-sm font-medium text-[#374151] block mb-1.5">
-            Aseguradoras <span className="text-[#9ca3af] font-normal">(opcional)</span>
-          </label>
-          <p className="text-xs text-[#9ca3af] mb-2">Marca las redes de seguros con las que trabajas. Los clientes pueden filtrar por aseguradora.</p>
-          <AseguradorasInput value={insurers} onChange={(next) => { setInsurers(next); touch(); }} />
-        </div>
+        {/* Aseguradoras — ONLY for health (es_salud) professionals */}
+        {isHealthPro && (
+          <div>
+            <label className="text-sm font-medium text-[#374151] block mb-1.5">
+              Aseguradoras <span className="text-[#9ca3af] font-normal">(opcional)</span>
+            </label>
+            <p className="text-xs text-[#9ca3af] mb-2">Marca las redes de seguros con las que trabajas, o indica que no trabajas con seguros. Los clientes pueden filtrar por aseguradora.</p>
+            <AseguradorasInput value={insurers} onChange={(next) => { setInsurers(next); touch(); }} />
+          </div>
+        )}
       </Section>
 
       {/* Contact preference lives in the Disponibilidad tab now. */}
