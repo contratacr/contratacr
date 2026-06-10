@@ -147,7 +147,7 @@ export default function CompleteProfilePage() {
         <div className="w-full max-w-md bg-white rounded-2xl border border-[#e5e7eb] shadow-sm p-8">
           <h1 className="text-2xl font-bold text-[#111827] mb-1">Completa tu perfil</h1>
           <p className="text-sm text-[#6b7280] mb-6">
-            Necesitamos unos datos más para que puedás contratar profesionales con confianza.
+            Necesitamos unos datos más para que puedas contratar profesionales con confianza.
           </p>
 
           {error && (

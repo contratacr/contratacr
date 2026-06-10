@@ -175,9 +175,9 @@ export default function CategoriasPage() {
       {/* CTA Bottom */}
       <section className="py-16 bg-[#1a2744] text-white text-center px-4">
         <FadeInUp>
-          <h2 className="text-3xl font-extrabold mb-3">¿No encontrás tu categoría?</h2>
+          <h2 className="text-3xl font-extrabold mb-3">¿No encuentras tu categoría?</h2>
           <p className="text-gray-300 mb-8 max-w-md mx-auto">
-            Tenemos más de 90 especialidades disponibles. Escribinos y te ayudamos a encontrar el profesional que necesitás.
+            Tenemos más de 90 especialidades disponibles. Escríbenos y te ayudamos a encontrar el profesional que necesitas.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link

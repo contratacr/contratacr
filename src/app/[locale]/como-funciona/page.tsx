@@ -14,7 +14,7 @@ import {
 const FAQ_ITEMS = [
   {
     q: "¿Es gratis buscar profesionales?",
-    a: "Sí, completamente gratuito para clientes. Podés buscar, comparar y contactar profesionales sin pagar nada.",
+    a: "Sí, completamente gratuito para clientes. Puedes buscar, comparar y contactar profesionales sin pagar nada.",
   },
   {
     q: "¿Cómo verifican a los profesionales?",
@@ -22,15 +22,15 @@ const FAQ_ITEMS = [
   },
   {
     q: "¿Cómo coordino el servicio?",
-    a: "Te ponemos en contacto directo por WhatsApp con el profesional. Sin intermediarios, sin comisiones. Coordinás precio, fecha y horario directamente con ellos.",
+    a: "Te ponemos en contacto directo por WhatsApp con el profesional. Sin intermediarios, sin comisiones. Coordinas precio, fecha y horario directamente con ellos.",
   },
   {
     q: "¿Qué es la publicación de proyectos?",
-    a: "Podés publicar un proyecto describiendo exactamente lo que necesitás. Los profesionales de la red verán tu publicación y te enviarán propuestas con precio y disponibilidad. Vos elegís con quién trabajar.",
+    a: "Puedes publicar un proyecto describiendo exactamente lo que necesitas. Los profesionales de la red verán tu publicación y te enviarán propuestas con precio y disponibilidad. Tú eliges con quién trabajar.",
   },
   {
     q: "¿Cómo dejo una reseña?",
-    a: "Después de completar un servicio, podés dejar una reseña desde tu panel de cliente. Las reseñas son verificadas y solo pueden hacerlas clientes que realmente usaron el servicio.",
+    a: "Después de completar un servicio, puedes dejar una reseña desde tu panel de cliente. Las reseñas son verificadas y solo pueden hacerlas clientes que realmente usaron el servicio.",
   },
 ];
 
@@ -91,7 +91,7 @@ export default function ComoFuncionaPage() {
           </h1>
           <p className="text-lg text-gray-500 max-w-2xl mx-auto">
             ContrataCR conecta clientes con profesionales verificados de Costa Rica.
-            Elegís cómo querés buscar.
+            Eliges cómo quieres buscar.
           </p>
         </FadeInUp>
       </section>
@@ -110,27 +110,27 @@ export default function ComoFuncionaPage() {
                   </div>
                   <div>
                     <p className="text-xs font-bold uppercase tracking-widest text-[#009FD9]">Opción 1</p>
-                    <h2 className="text-xl font-bold text-[#1a2744]">Buscá un profesional</h2>
+                    <h2 className="text-xl font-bold text-[#1a2744]">Busca un profesional</h2>
                   </div>
                 </div>
                 <p className="text-sm text-gray-500 mb-6 leading-relaxed">
-                  Explorá los perfiles disponibles, revisá trabajos anteriores y agendá una cita directamente.
+                  Explora los perfiles disponibles, revisa trabajos anteriores y agenda una cita directamente.
                 </p>
                 <div className="flex flex-col gap-4">
                   <MiniStep
                     n={1}
-                    label="Buscá por categoría o cantón"
-                    sub="Filtrá por tipo de servicio, provincia y cantón para encontrar profesionales cerca de vos."
+                    label="Busca por categoría o cantón"
+                    sub="Filtra por tipo de servicio, provincia y cantón para encontrar profesionales cerca de ti."
                   />
                   <MiniStep
                     n={2}
-                    label="Revisá el perfil verificado"
+                    label="Revisa el perfil verificado"
                     sub="Fotos de trabajos anteriores, reseñas de clientes reales y cédula verificada."
                   />
                   <MiniStep
                     n={3}
-                    label="Agendá y coordiná por WhatsApp"
-                    sub="Contacto directo sin intermediarios. Acordás precio, fecha y horario en WhatsApp."
+                    label="Agenda y coordina por WhatsApp"
+                    sub="Contacto directo sin intermediarios. Acuerdas precio, fecha y horario en WhatsApp."
                   />
                 </div>
                 <Link
@@ -149,16 +149,16 @@ export default function ComoFuncionaPage() {
                   </div>
                   <div>
                     <p className="text-xs font-bold uppercase tracking-widest text-[#009FD9]">Opción 2</p>
-                    <h2 className="text-xl font-bold text-[#1a2744]">Publicá tu proyecto</h2>
+                    <h2 className="text-xl font-bold text-[#1a2744]">Publica tu proyecto</h2>
                   </div>
                 </div>
                 <p className="text-sm text-gray-500 mb-6 leading-relaxed">
-                  Describí lo que necesitás y dejá que los profesionales te envíen propuestas con precio y disponibilidad.
+                  Describe lo que necesitas y deja que los profesionales te envíen propuestas con precio y disponibilidad.
                 </p>
                 <div className="flex flex-col gap-4">
                   <MiniStep
                     n={1}
-                    label="Describí tu proyecto"
+                    label="Describe tu proyecto"
                     sub="Título, descripción detallada, zona y presupuesto estimado. Toma menos de 2 minutos."
                   />
                   <MiniStep
@@ -168,8 +168,8 @@ export default function ComoFuncionaPage() {
                   />
                   <MiniStep
                     n={3}
-                    label="Elegís la mejor propuesta"
-                    sub="Comparás precios y perfiles, aceptás la propuesta y coordinás por WhatsApp."
+                    label="Eliges la mejor propuesta"
+                    sub="Comparas precios y perfiles, aceptas la propuesta y coordinas por WhatsApp."
                   />
                 </div>
                 <Link
@@ -194,10 +194,10 @@ export default function ComoFuncionaPage() {
                 Para profesionales
               </span>
               <h2 className="text-3xl font-extrabold text-[#1a2744] mb-4">
-                ¿Sos profesional? Registrá tu perfil gratis.
+                ¿Eres profesional? Registra tu perfil gratis.
               </h2>
               <p className="text-gray-500 mb-8 text-sm leading-relaxed max-w-xl mx-auto">
-                Creá tu perfil en minutos y empezá a recibir clientes directos en Costa Rica.
+                Crea tu perfil en minutos y empieza a recibir clientes directos en Costa Rica.
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
                 {[
@@ -226,13 +226,13 @@ export default function ComoFuncionaPage() {
             <div className="mt-12 bg-white rounded-3xl p-8 border border-white/80">
               <div className="flex items-center gap-3 mb-5">
                 <Bell className="h-5 w-5 text-[#009FD9]" />
-                <h3 className="text-base font-bold text-[#1a2744]">¿Cómo funcionan los proyectos para vos?</h3>
+                <h3 className="text-base font-bold text-[#1a2744]">¿Cómo funcionan los proyectos para ti?</h3>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
                 {[
-                  { icon: "📋", title: "Ves los proyectos", sub: "Revisás proyectos abiertos filtrados por tu categoría y zona." },
-                  { icon: "✉️", title: "Enviás propuesta", sub: "Describís tu oferta, precio y disponibilidad en segundos." },
-                  { icon: "🤝", title: "Cerrás el trato", sub: "Si el cliente acepta, coordinás directo por WhatsApp." },
+                  { icon: "📋", title: "Ves los proyectos", sub: "Revisas proyectos abiertos filtrados por tu categoría y zona." },
+                  { icon: "✉️", title: "Envías propuesta", sub: "Describes tu oferta, precio y disponibilidad en segundos." },
+                  { icon: "🤝", title: "Cierras el trato", sub: "Si el cliente acepta, coordinas directo por WhatsApp." },
                 ].map(({ icon, title, sub }) => (
                   <div key={title} className="p-4">
                     <div className="text-3xl mb-2">{icon}</div>
@@ -268,7 +268,7 @@ export default function ComoFuncionaPage() {
             ¿Listo para empezar?
           </h2>
           <p className="text-[#93c5fd] mb-8 max-w-md mx-auto text-sm">
-            Buscá profesionales verificados en Costa Rica o publicá tu proyecto gratis.
+            Busca profesionales verificados en Costa Rica o publica tu proyecto gratis.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link

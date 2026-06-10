@@ -24,7 +24,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   }
   // A reason is REQUIRED when rejecting.
   if (action === "reject" && !reason) {
-    return NextResponse.json({ error: "Debés indicar el motivo del rechazo." }, { status: 400 });
+    return NextResponse.json({ error: "Debes indicar el motivo del rechazo." }, { status: 400 });
   }
 
   const db = createAdminClient();

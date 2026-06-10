@@ -44,7 +44,7 @@ const COLUMNS = [
   {
     heading: "Para profesionales",
     links: [
-      { label: "Registrá tu perfil",   href: "/registro/profesional" },
+      { label: "Registra tu perfil",   href: "/registro/profesional" },
       { label: "Cómo atraer clientes", href: "/atraer-clientes" },
       { label: "Cómo funciona",        href: "/como-funciona" },
     ],

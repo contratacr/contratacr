@@ -18,7 +18,7 @@ const FAQ_ITEMS = [
   {
     icon: <UserCheck className="h-4 w-4" />,
     q: "¿Cómo me registro como profesional?",
-    a: "Hacé clic en 'Registrarse como profesional' en la barra de navegación. Podés registrarte con tu correo o con Google/Facebook. El proceso tiene 2 pasos: primero seleccionás tu tipo de servicio y zona, luego subís una foto y describís tu experiencia. Toma menos de 5 minutos.",
+    a: "Haz clic en 'Registrarse como profesional' en la barra de navegación. Puedes registrarte con tu correo o con Google/Facebook. El proceso tiene 2 pasos: primero seleccionas tu tipo de servicio y zona, luego subes una foto y describes tu experiencia. Toma menos de 5 minutos.",
   },
   {
     icon: <ShieldCheck className="h-4 w-4" />,
@@ -28,27 +28,27 @@ const FAQ_ITEMS = [
   {
     icon: <Search className="h-4 w-4" />,
     q: "¿Cómo busco un profesional?",
-    a: "Usá la barra de búsqueda en la página principal o la página de búsqueda de profesionales. Podés buscar por tipo de servicio (plomero, psicólogo, diseñador, etc.), por provincia y cantón, y filtrar por calificación. El buscador entiende sinónimos — si escribís 'niñera' también va a encontrar profesionales de cuidado infantil.",
+    a: "Usa la barra de búsqueda en la página principal o la página de búsqueda de profesionales. Puedes buscar por tipo de servicio (plomero, psicólogo, diseñador, etc.), por provincia y cantón, y filtrar por calificación. El buscador entiende sinónimos — si escribes 'niñera' también va a encontrar profesionales de cuidado infantil.",
   },
   {
     icon: <CalendarDays className="h-4 w-4" />,
     q: "¿Cómo coordino el servicio con el profesional?",
-    a: "Una vez que encontrás el profesional que querés, hacés clic en su perfil y te conectamos directamente por WhatsApp. Desde ahí coordinás precio, fecha y todo lo necesario sin intermediarios.",
+    a: "Una vez que encuentras el profesional que quieres, haces clic en su perfil y te conectamos directamente por WhatsApp. Desde ahí coordinas precio, fecha y todo lo necesario sin intermediarios.",
   },
   {
     icon: <Star className="h-4 w-4" />,
     q: "¿Cómo dejo una reseña?",
-    a: "Después de completar un servicio, podés dejar una reseña desde tu panel de cliente en la sección 'Solicitudes'. Solo clientes que realmente contrataron ese servicio pueden dejar reseñas — así se garantiza que son auténticas.",
+    a: "Después de completar un servicio, puedes dejar una reseña desde tu panel de cliente en la sección 'Solicitudes'. Solo clientes que realmente contrataron ese servicio pueden dejar reseñas — así se garantiza que son auténticas.",
   },
   {
     icon: <HelpCircle className="h-4 w-4" />,
     q: "¿Qué es publicar un proyecto?",
-    a: "Publicar un proyecto es una alternativa a buscar directamente. Describís lo que necesitás (por ejemplo: 'pintura de sala 4x4m, presupuesto ₡80.000'), y los profesionales de tu zona que tienen esa especialidad te envían propuestas con su precio. Vos elegís con quién trabajar.",
+    a: "Publicar un proyecto es una alternativa a buscar directamente. Describes lo que necesitas (por ejemplo: 'pintura de sala 4x4m, presupuesto ₡80.000'), y los profesionales de tu zona que tienen esa especialidad te envían propuestas con su precio. Tú eliges con quién trabajar.",
   },
   {
     icon: <UserCheck className="h-4 w-4" />,
     q: "¿Mi información personal está segura?",
-    a: "Sí. Tu número de teléfono y correo nunca son visibles públicamente en la plataforma. Cuando hacés contacto con un profesional, lo hacés vía WhatsApp de forma directa. Cumplimos con la Ley 8968 de Protección de Datos de Costa Rica.",
+    a: "Sí. Tu número de teléfono y correo nunca son visibles públicamente en la plataforma. Cuando haces contacto con un profesional, lo haces vía WhatsApp de forma directa. Cumplimos con la Ley 8968 de Protección de Datos de Costa Rica.",
   },
 ];
 
@@ -86,13 +86,13 @@ const HELP_CATEGORIES = [
   {
     icon: <UserCheck className="h-6 w-6 text-[#009FD9]" />,
     title: "Crear tu cuenta",
-    description: "Registrate con correo, Google o Facebook. El proceso toma menos de 2 minutos.",
+    description: "Regístrate con correo, Google o Facebook. El proceso toma menos de 2 minutos.",
     href: null,
   },
   {
     icon: <Search className="h-6 w-6 text-[#009FD9]" />,
     title: "Buscar profesionales",
-    description: "Buscá por servicio, provincia y cantón. El buscador entiende sinónimos.",
+    description: "Busca por servicio, provincia y cantón. El buscador entiende sinónimos.",
     href: "/buscar",
   },
   {
@@ -116,7 +116,7 @@ const HELP_CATEGORIES = [
   {
     icon: <MessageSquare className="h-6 w-6 text-[#009FD9]" />,
     title: "Contactar soporte",
-    description: "¿No encontraste lo que buscás? Nuestro equipo responde en menos de 24 horas.",
+    description: "¿No encontraste lo que buscas? Nuestro equipo responde en menos de 24 horas.",
     href: "/soporte",
   },
 ];
@@ -136,7 +136,7 @@ export default function AyudaPage() {
             ¿En qué te podemos ayudar?
           </h1>
           <p className="text-lg text-gray-500 max-w-lg mx-auto">
-            Encontrá respuestas rápidas o contactanos directamente.
+            Encuentra respuestas rápidas o contáctanos directamente.
           </p>
         </FadeInUp>
       </section>
@@ -186,7 +186,7 @@ export default function AyudaPage() {
           <FadeInUp>
             <div className="bg-white rounded-3xl border border-gray-100 p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
               <div>
-                <h2 className="text-xl font-bold text-[#1a2744] mb-1">¿No encontraste lo que buscás?</h2>
+                <h2 className="text-xl font-bold text-[#1a2744] mb-1">¿No encontraste lo que buscas?</h2>
                 <p className="text-sm text-gray-500">Nuestro equipo responde rápido.</p>
               </div>
               <div className="flex flex-col sm:flex-row gap-3 shrink-0">

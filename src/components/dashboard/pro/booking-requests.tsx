@@ -80,7 +80,7 @@ export function BookingRequests() {
   }
 
   async function reportClient(booking: Booking) {
-    const reason = window.prompt("¿Por qué reportás a este cliente? (no se presentó, datos falsos, trato irrespetuoso, etc.)");
+    const reason = window.prompt("¿Por qué reportas a este cliente? (no se presentó, datos falsos, trato irrespetuoso, etc.)");
     if (!reason || !reason.trim()) return;
     const res = await fetch("/api/report-client", {
       method: "POST",
