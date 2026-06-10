@@ -446,6 +446,7 @@ export function LandingNavbar() {
   const userMenuRef = useRef<HTMLDivElement>(null);
   const searchBlurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const drawerTouchX = useRef<number | null>(null);
   const router = useRouter();
   const { user, avatarUrl } = useAuth();
 
@@ -484,6 +485,14 @@ export function LandingNavbar() {
     mq.addEventListener("change", update);
     return () => mq.removeEventListener("change", update);
   }, []);
+
+  // Lock body scroll while the mobile drawer is open (no scrolling behind it).
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, [mobileOpen]);
 
   async function handleSignOut() {
     setUserMenuOpen(false);
@@ -887,12 +896,47 @@ export function LandingNavbar() {
           </div>
         </div>
 
-        {/* Mobile drawer */}
-        <div className={cn(
-          "lg:hidden bg-white border-t border-gray-100 overflow-hidden transition-all duration-300 ease-in-out",
-          mobileOpen ? "max-h-[85vh] opacity-100" : "max-h-0 opacity-0"
-        )}>
-          <div className="px-4 py-4 overflow-y-auto max-h-[78vh]">
+        {/* Mobile menu — slide-in LEFT drawer + scrim */}
+        <div
+          className={cn(
+            "lg:hidden fixed inset-0 z-[100] bg-black/50 transition-opacity duration-300",
+            mobileOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+          )}
+          onClick={() => setMobileOpen(false)}
+          aria-hidden="true"
+        />
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Menú"
+          onTouchStart={(e) => { drawerTouchX.current = e.touches[0].clientX; }}
+          onTouchEnd={(e) => {
+            if (drawerTouchX.current == null) return;
+            // Swipe left to close.
+            if (e.changedTouches[0].clientX - drawerTouchX.current < -55) setMobileOpen(false);
+            drawerTouchX.current = null;
+          }}
+          className={cn(
+            "lg:hidden fixed top-0 left-0 bottom-0 z-[101] w-[84%] max-w-[360px] bg-white shadow-[0_0_40px_rgba(0,0,0,0.25)] flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform",
+            mobileOpen ? "translate-x-0" : "-translate-x-full"
+          )}
+        >
+          {/* Drawer header — logo (home link) + close */}
+          <div className="flex items-center justify-between px-4 h-16 border-b border-gray-100 shrink-0">
+            <Link href="/" aria-label="ContrataCR inicio" onClick={() => setMobileOpen(false)}>
+              <ContrataCRLogo size="lg" />
+            </Link>
+            <button
+              onClick={() => setMobileOpen(false)}
+              aria-label="Cerrar menú"
+              className="p-2 rounded-xl text-[#1a2744] hover:bg-gray-50 transition-colors"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+
+          {/* Scrollable content */}
+          <div className="flex-1 overflow-y-auto px-4 py-4">
             {/* Smart search on mobile */}
             <div className="mb-4">
               <CategoryAutocomplete
