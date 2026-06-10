@@ -17,7 +17,7 @@ export async function GET(req: Request) {
     const { data: ticket } = await db.from("support_tickets").select("*").eq("id", id).eq("user_id", user.id).single();
     if (!ticket) return NextResponse.json({ error: "Ticket no encontrado" }, { status: 404 });
     const { data: messages } = await db
-      .from("support_messages")
+      .from("support_ticket_messages")
       .select("*")
       .eq("ticket_id", id)
       .order("created_at", { ascending: true });
@@ -49,7 +49,7 @@ export async function POST(req: Request) {
 
   const now = new Date().toISOString();
   const senderName = (user.user_metadata?.full_name as string) || ticket.name || null;
-  const { error: msgErr } = await db.from("support_messages").insert({
+  const { error: msgErr } = await db.from("support_ticket_messages").insert({
     ticket_id: ticketId, sender_role: "user", sender_id: user.id, sender_name: senderName, body: body.trim(),
   });
   if (msgErr) return NextResponse.json({ error: msgErr.message }, { status: 500 });

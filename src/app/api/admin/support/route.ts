@@ -18,7 +18,7 @@ export async function GET(req: Request) {
   if (id) {
     const { data: ticket } = await db.from("support_tickets").select("*").eq("id", id).single();
     const { data: messages } = await db
-      .from("support_messages")
+      .from("support_ticket_messages")
       .select("*")
       .eq("ticket_id", id)
       .order("created_at", { ascending: true });
@@ -71,7 +71,7 @@ export async function POST(req: Request) {
   if (!ticket) return NextResponse.json({ error: "Ticket no encontrado" }, { status: 404 });
 
   const now = new Date().toISOString();
-  const { error: msgErr } = await db.from("support_messages").insert({
+  const { error: msgErr } = await db.from("support_ticket_messages").insert({
     ticket_id: id, sender_role: "admin", sender_id: admin.id, sender_name: admin.fullName, body: body.trim(),
   });
   if (msgErr) return NextResponse.json({ error: msgErr.message }, { status: 500 });

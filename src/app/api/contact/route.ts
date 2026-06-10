@@ -156,7 +156,7 @@ async function saveTicket(name: string, email: string, subject: string, message:
     if (error) { console.error("[contact] ticket insert:", error.message); return false; }
     // Seed the conversation thread with the user's first message.
     if (ticket?.id) {
-      await admin.from("support_messages").insert({
+      await admin.from("support_ticket_messages").insert({
         ticket_id: ticket.id, sender_role: "user", sender_id: userId, sender_name: name || null, body: message,
       });
     }
