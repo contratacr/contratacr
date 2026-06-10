@@ -23,12 +23,12 @@ const FAQ_ITEMS = [
   {
     icon: <ShieldCheck className="h-4 w-4" />,
     q: "¿Cómo se verifica la cédula de un profesional?",
-    a: "Confirmamos la identidad de cada profesional con el Registro Civil de Costa Rica. Una vez verificada, aparece el sello 'Verificado' en su perfil. Los profesionales no verificados pueden estar en la plataforma pero el sello diferencia a quienes pasaron la verificación.",
+    a: "Comparamos la cédula con el padrón del Registro Civil (TSE). Cuando coincide, el perfil muestra el sello 'Identidad verificada' y aparece primero en los resultados. Es una verificación de identidad (confirma que la persona es real y verificable), no una calificación de la calidad del trabajo. Los profesionales sin verificar también pueden aparecer, marcados como 'Identidad sin verificar'.",
   },
   {
     icon: <Search className="h-4 w-4" />,
     q: "¿Cómo busco un profesional?",
-    a: "Usa la barra de búsqueda en la página principal o la página de búsqueda de profesionales. Puedes buscar por tipo de servicio (plomero, psicólogo, diseñador, etc.), por provincia y cantón, y filtrar por calificación. El buscador entiende sinónimos — si escribes 'niñera' también va a encontrar profesionales de cuidado infantil.",
+    a: "Usa la barra de búsqueda en la página principal o la página de búsqueda de profesionales. Puedes buscar por tipo de servicio (plomero, psicólogo, diseñador, etc.), por provincia y cantón, y ordenar por calificación. El buscador entiende sinónimos — si escribes 'niñera' también va a encontrar profesionales de cuidado infantil.",
   },
   {
     icon: <CalendarDays className="h-4 w-4" />,
@@ -97,8 +97,8 @@ const HELP_CATEGORIES = [
   },
   {
     icon: <ShieldCheck className="h-6 w-6 text-[#009FD9]" />,
-    title: "Verificación de cédula",
-    description: "Cómo pedimos y confirmamos la identidad de los profesionales.",
+    title: "Verificación de identidad",
+    description: "Cómo confirmamos la identidad de los profesionales con el padrón del TSE.",
     href: null,
   },
   {

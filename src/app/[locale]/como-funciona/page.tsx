@@ -13,16 +13,16 @@ import {
 /* ── FAQ ── */
 const FAQ_ITEMS = [
   {
-    q: "¿Es gratis buscar profesionales?",
-    a: "Sí, completamente gratuito para clientes. Puedes buscar, comparar y contactar profesionales sin pagar nada.",
+    q: "¿Es gratis usar ContrataCR?",
+    a: "Sí. Es completamente gratuito tanto para clientes como para profesionales: no cobramos comisiones ni mensualidades. ContrataCR conecta a las dos partes; el pago del servicio lo acuerdas directamente con el profesional, fuera de la plataforma.",
   },
   {
-    q: "¿Cómo verifican a los profesionales?",
-    a: "Verificamos la cédula de identidad de cada profesional con el Registro Civil de Costa Rica. Solo aparecen en la plataforma una vez confirmada su identidad.",
+    q: "¿Qué significa que un profesional esté verificado?",
+    a: "Confirmamos su identidad comparando la cédula con el padrón del Registro Civil (TSE). El sello 'Identidad verificada' indica que es una persona real y verificable — no es una calificación de la calidad de su trabajo. Los perfiles verificados aparecen primero en los resultados; los no verificados también pueden aparecer, claramente marcados como 'Identidad sin verificar'.",
   },
   {
     q: "¿Cómo coordino el servicio?",
-    a: "Te ponemos en contacto directo por WhatsApp con el profesional. Sin intermediarios, sin comisiones. Coordinas precio, fecha y horario directamente con ellos.",
+    a: "Te ponemos en contacto directo por WhatsApp con el profesional. Sin intermediarios ni comisiones: acuerdas el precio, la fecha y el horario directamente con la persona.",
   },
   {
     q: "¿Qué es la publicación de proyectos?",
