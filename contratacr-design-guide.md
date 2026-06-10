@@ -249,9 +249,22 @@ Reference Hulihealth density: **a lot of useful information per screen, cleanly.
 | Sube (una foto) | Subí |
 | Continúa | Continuá |
 
+**Also remove voseo in the present tense and pronouns/reflexives** (not just imperatives):
+
+| ✅ Use (standard) | ❌ Not (voseo) |
+|---|---|
+| eres | sos |
+| tienes / puedes / quieres | tenés / podés / querés |
+| necesitas / eliges / describes | necesitás / elegís / describís |
+| haces / apareces / trabajas | hacés / aparecés / trabajás |
+| regístrate / contáctanos / escríbenos | registrate / contactanos / escribinos |
+| menciónalo / dilo / pídele | mencionalo / decilo / pedile |
+| cerca de ti / para ti | cerca de vos / para vos |
+
 Rules:
 - **Imperatives → standard form** (drop the accented final syllable: `-á/-í/-é` → `-a/-e`). Verb roots that change (Elegí→Elige, Seguí→Sigue) use the normal form.
-- This applies to **second-person verb forms aimed at the user** (buttons, instructions, hints, placeholders, empty states, errors). Don't "fix" unrelated words that merely end in an accent.
+- **No voseo anywhere, ever** — not in imperatives, present-tense verbs, the pronoun `vos`, or reflexive imperatives (`-ate/-ite` → `-ate` standard: registrate→regístrate). This is a recurring issue; sweep new copy before shipping.
+- This applies to **second-person verb forms aimed at the user** (buttons, instructions, hints, placeholders, empty states, errors, FAQ answers, emails). Don't "fix" unrelated words that merely end in an accent (`más`, `país`, `qué`, `José`).
 - Keep it **warm, plain, and short.** No jargon, no internal terms (never expose "/buscar" — say "los resultados de búsqueda"). Prefer concrete verbs ("Solicitar servicio") over vague ones.
 - Sentence case, not Title Case, for sentences and most buttons. Costa Rican vocabulary is fine; just avoid the `vos` imperative.
 - One idea per message. Errors say what's wrong **and** how to fix it, once.
