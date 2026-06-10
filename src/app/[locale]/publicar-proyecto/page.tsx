@@ -54,6 +54,8 @@ export default function PublicarProyectoPage() {
     e.preventDefault();
     setError(null);
 
+    // Category is REQUIRED — it's what routes the project to the right pros.
+    if (!form.categoryId) { setError("Elige una categoría para que tu proyecto llegue a los profesionales correctos."); return; }
     if (!form.title.trim()) { setError("El título es requerido."); return; }
     if (!form.description.trim()) { setError("La descripción es requerida."); return; }
 
@@ -139,8 +141,9 @@ export default function PublicarProyectoPage() {
               {/* Category */}
               <div>
                 <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                  Categoría <span className="text-[#9ca3af] font-normal">(opcional)</span>
+                  Categoría <span className="text-red-500">*</span>
                 </label>
+                <p className="text-xs text-[#9ca3af] mb-1.5">Así dirigimos tu proyecto a los profesionales de ese servicio.</p>
                 <CategorySearch
                   value={form.categoryId}
                   onChange={(id) => update("categoryId", id)}

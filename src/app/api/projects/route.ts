@@ -44,6 +44,10 @@ export async function POST(req: NextRequest) {
     if (!title?.trim() || !description?.trim()) {
       return NextResponse.json({ error: "Título y descripción son requeridos" }, { status: 400 });
     }
+    // Category is required — it routes the project to matching professionals.
+    if (!categoryId) {
+      return NextResponse.json({ error: "Elige una categoría para tu proyecto." }, { status: 400 });
+    }
 
     const supabase = await createClient();
     const { data: { session } } = await supabase.auth.getSession();
