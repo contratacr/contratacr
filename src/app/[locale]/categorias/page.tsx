@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { FadeInUp } from "@/components/landing/fade-in-up";
+import { CategorySearchBox } from "@/components/search/category-search-box";
 import { Link } from "@/i18n/navigation";
 import {
   Home,
@@ -131,9 +132,11 @@ export default function CategoriasPage() {
           <h1 className="text-4xl sm:text-5xl font-extrabold text-[#1a2744] mb-4 leading-tight">
             Todos los servicios en ContrataCR.
           </h1>
-          <p className="text-lg text-gray-500 max-w-xl mx-auto">
-            Encontrá profesionales para cualquier proyecto, organizados por categoría.
+          <p className="text-lg text-gray-500 max-w-xl mx-auto mb-7">
+            Encuentra profesionales para cualquier proyecto, organizados por categoría.
           </p>
+          {/* Smart search — autocomplete over the full taxonomy, jumps to /buscar */}
+          <CategorySearchBox />
         </FadeInUp>
       </section>
 
