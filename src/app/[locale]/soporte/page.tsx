@@ -6,6 +6,8 @@ import { LandingFooter } from "@/components/landing/landing-footer";
 import { useAuth } from "@/hooks/use-auth";
 import { CheckCircle2, MessageSquare, AlertCircle, Paperclip, X, LifeBuoy } from "lucide-react";
 import { Link } from "@/i18n/navigation";
+import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
+import { SUPPORT_WHATSAPP_URL } from "@/lib/constants";
 
 const SUBJECTS = [
   "Problema técnico en la plataforma",
@@ -165,7 +167,7 @@ export default function SoportePage() {
               <MessageSquare className="h-6 w-6 text-[#009FD9]" />
             </div>
             <h1 className="text-2xl font-bold text-[#111827] mb-1">Centro de soporte</h1>
-            <p className="text-sm text-[#6b7280]">Abre un ticket y te respondemos por correo y en tu panel. Es nuestro único canal de soporte, así no se pierde ninguna consulta.</p>
+            <p className="text-sm text-[#6b7280]">Abre un ticket y le damos seguimiento por correo y en tu panel — así no se pierde ninguna consulta.</p>
           </div>
 
           {/* Primary: support ticket form */}
@@ -276,6 +278,20 @@ export default function SoportePage() {
                 </form>
               </div>
             </div>
+
+          {/* Secondary, discreet: WhatsApp Business */}
+          <p className="mt-5 text-center text-sm text-[#9ca3af]">
+            ¿Prefieres WhatsApp?{" "}
+            <a
+              href={SUPPORT_WHATSAPP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 font-medium text-[#1ebe5d] hover:underline"
+            >
+              <WhatsAppIcon className="h-4 w-4" /> Escríbenos
+            </a>{" "}
+            <span className="text-[#cbd5e1]">·</span> en horario laboral
+          </p>
 
         </div>
       </main>

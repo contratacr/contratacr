@@ -8,6 +8,8 @@ import { FadeInUp } from "@/components/landing/fade-in-up";
 import { Link } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { LifeBuoy } from "lucide-react";
+import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
+import { SUPPORT_WHATSAPP_URL } from "@/lib/constants";
 
 type FormData = {
   name: string;
@@ -207,23 +209,35 @@ export default function ContactoPage() {
             {/* Right: Contact info */}
             <FadeInUp delay={80}>
               <div className="flex flex-col gap-4">
-                {/* Ticket */}
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                {/* Ticket — primary, featured */}
+                <div className="bg-white rounded-2xl border-2 border-[#bfe3f5] shadow-sm p-6">
                   <div className="flex items-start gap-4">
                     <div className="w-12 h-12 rounded-xl bg-[#EBF5FB] flex items-center justify-center shrink-0">
                       <svg className="h-6 w-6 text-[#009FD9]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
                       </svg>
                     </div>
-                    <div>
-                      <h3 className="text-sm font-bold text-[#1a2744] mb-0.5">Ticket de soporte</h3>
-                      <p className="text-xs text-gray-400 mb-3">Lo gestionamos en el panel y te respondemos por correo</p>
+                    <div className="flex-1">
+                      <h3 className="text-sm font-bold text-[#1a2744] mb-0.5">Abre un ticket de soporte</h3>
+                      <p className="text-xs text-gray-400 mb-3">La mejor forma de que demos seguimiento — te respondemos por correo y en tu panel.</p>
                       <a
                         href="/soporte"
-                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#009FD9] hover:underline"
+                        className="inline-flex items-center justify-center gap-1.5 bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 rounded-full transition-all"
                       >
                         Abrir ticket →
                       </a>
+                      {/* Secondary, discreet: WhatsApp */}
+                      <p className="mt-3 text-xs text-[#9ca3af]">
+                        ¿Prefieres WhatsApp?{" "}
+                        <a
+                          href={SUPPORT_WHATSAPP_URL}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 font-medium text-[#1ebe5d] hover:underline"
+                        >
+                          <WhatsAppIcon className="h-3.5 w-3.5" /> Escríbenos
+                        </a>
+                      </p>
                     </div>
                   </div>
                 </div>

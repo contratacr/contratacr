@@ -5,6 +5,8 @@ import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { FadeInUp } from "@/components/landing/fade-in-up";
 import { Link } from "@/i18n/navigation";
+import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
+import { SUPPORT_WHATSAPP_URL } from "@/lib/constants";
 import { ChevronDown, MessageSquare, Search, UserCheck, CalendarDays, Star, ShieldCheck, HelpCircle } from "lucide-react";
 
 /* ── FAQ ── */
@@ -188,7 +190,7 @@ export default function AyudaPage() {
                 <h2 className="text-xl font-bold text-[#1a2744] mb-1">¿No encontraste lo que buscas?</h2>
                 <p className="text-sm text-gray-500">Nuestro equipo responde rápido.</p>
               </div>
-              <div className="shrink-0">
+              <div className="shrink-0 flex flex-col items-stretch sm:items-end gap-2">
                 <Link
                   href="/soporte"
                   className="inline-flex items-center justify-center gap-2 bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold px-6 py-3 rounded-full transition-all text-sm whitespace-nowrap"
@@ -196,6 +198,14 @@ export default function AyudaPage() {
                   <MessageSquare className="h-4 w-4" />
                   Abrir ticket de soporte
                 </Link>
+                <a
+                  href={SUPPORT_WHATSAPP_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-1.5 text-xs text-[#9ca3af] hover:text-[#1ebe5d] transition-colors"
+                >
+                  <WhatsAppIcon className="h-3.5 w-3.5" /> ¿Prefieres WhatsApp? Escríbenos
+                </a>
               </div>
             </div>
           </FadeInUp>
