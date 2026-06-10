@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light only">
+<meta name="supported-color-schemes" content="light">
+<title>ContrataCR</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f7fa;-webkit-text-size-adjust:100%;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f4f7fa;">
+  <tr><td align="center" style="padding:32px 16px;">
+    <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:100%;background-color:#ffffff;border-radius:16px;border:1px solid #eef1f5;">
+      <tr><td align="center" style="padding:34px 32px 6px 32px;">
+        <img src="https://res.cloudinary.com/dxxrjx2go/image/upload/f_png,w_128/contratacr/brand/email-logo.png" width="48" height="48" alt="ContrataCR" style="display:block;border:0;outline:none;text-decoration:none;">
+        <div style="font-family:Arial,Helvetica,sans-serif;font-size:22px;font-weight:bold;letter-spacing:-0.5px;margin-top:10px;color:#162543;">Contrata<span style="color:#008ce0;">CR</span></div>
+      </td></tr>
+      <tr><td style="padding:6px 32px 0 32px;font-family:Arial,Helvetica,sans-serif;">
+        <h1 style="font-size:20px;font-weight:bold;margin:18px 0 8px 0;color:#162543;">Confirma tu nuevo correo</h1>
+        <p style="font-size:15px;line-height:1.6;color:#374151;margin:0 0 24px 0;">Solicitaste cambiar el correo de tu cuenta de <strong style="color:#162543;">{{ .Email }}</strong> a <strong style="color:#162543;">{{ .NewEmail }}</strong>. Confirma con el botón para aplicar el cambio.</p>
+      </td></tr>
+      <tr><td align="center" style="padding:0 32px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+          <td align="center" bgcolor="#008ce0" style="border-radius:10px;">
+            <a href="{{ .ConfirmationURL }}" target="_blank" style="display:inline-block;padding:14px 32px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:10px;">Confirmar cambio</a>
+          </td>
+        </tr></table>
+      </td></tr>
+      <tr><td style="padding:20px 32px 0 32px;font-family:Arial,Helvetica,sans-serif;">
+        <p style="font-size:12px;line-height:1.6;color:#9ca3af;margin:0 0 6px 0;">O copia y pega este enlace en tu navegador:</p>
+        <p style="font-size:12px;line-height:1.6;margin:0;word-break:break-all;"><a href="{{ .ConfirmationURL }}" style="color:#008ce0;text-decoration:underline;">{{ .ConfirmationURL }}</a></p>
+      </td></tr>
+      <tr><td style="padding:22px 32px 0 32px;font-family:Arial,Helvetica,sans-serif;">
+        <p style="font-size:13px;line-height:1.6;color:#6b7280;margin:0;border-top:1px solid #eef1f5;padding-top:18px;">Si no solicitaste este cambio, ignora este correo y tu cuenta seguirá igual.</p>
+      </td></tr>
+      <tr><td align="center" style="padding:22px 32px 30px 32px;font-family:Arial,Helvetica,sans-serif;">
+        <p style="font-size:12px;line-height:1.6;color:#9ca3af;margin:0;"><strong style="color:#162543;">ContrataCR</strong> — Encuentra y contrata profesionales en Costa Rica</p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>
