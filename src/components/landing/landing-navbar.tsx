@@ -452,11 +452,15 @@ export function LandingNavbar() {
   const initials = getInitials(user?.user_metadata?.full_name ?? user?.email ?? "?");
   const displayName = (user?.user_metadata?.full_name as string) || (user?.user_metadata?.name as string) || user?.email?.split("@")[0] || "";
 
-  // A professional is a superset of a client: they reach their pro panel AND
-  // the client area. Clients only have the client area.
+  // A professional is a superset of a client. For a professional the client
+  // ("Cuando contrato") sections live INSIDE the unified pro dashboard, so a
+  // pro never switches panels; a plain client uses the client dashboard.
   const proPanelHref = "/es/dashboard/profesional";
   const clientPanelHref = "/es/dashboard/cliente";
   const primaryPanelHref = isPro ? proPanelHref : clientPanelHref;
+  const sentBookingsHref = isPro ? "/es/dashboard/profesional?tab=sent_bookings" : "/es/dashboard/cliente?tab=bookings";
+  const sentProjectsHref = isPro ? "/es/dashboard/profesional?tab=sent_projects" : "/es/dashboard/cliente?tab=projects";
+  const savedHref = isPro ? "/es/dashboard/profesional?tab=saved" : "/es/dashboard/cliente?tab=saved";
 
   const compactSuggestions = useMemo(() => matchCategories(searchQuery), [searchQuery]);
 
@@ -702,34 +706,36 @@ export function LandingNavbar() {
                           )}
 
                           <p className="px-3 pt-2 pb-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                            {isPro ? "Mi área de cliente" : "Mi cuenta"}
+                            {isPro ? "Cuando contrato" : "Mi cuenta"}
                           </p>
+                          {!isPro && (
+                            <a
+                              href={`${clientPanelHref}?tab=bookings`}
+                              onClick={() => setUserMenuOpen(false)}
+                              className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
+                            >
+                              <LayoutDashboard className="h-4 w-4 text-[#009FD9]" />
+                              Mi panel
+                            </a>
+                          )}
                           <a
-                            href={isPro ? clientPanelHref : `${clientPanelHref}?tab=bookings`}
-                            onClick={() => setUserMenuOpen(false)}
-                            className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
-                          >
-                            <LayoutDashboard className="h-4 w-4 text-[#009FD9]" />
-                            {isPro ? "Panel de cliente" : "Mi panel"}
-                          </a>
-                          <a
-                            href={`${clientPanelHref}?tab=bookings`}
+                            href={sentBookingsHref}
                             onClick={() => setUserMenuOpen(false)}
                             className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
                           >
                             <CalendarDays className="h-4 w-4 text-gray-400" />
-                            Mis solicitudes
+                            {isPro ? "Mis solicitudes enviadas" : "Mis solicitudes"}
                           </a>
                           <a
-                            href={`${clientPanelHref}?tab=projects`}
+                            href={sentProjectsHref}
                             onClick={() => setUserMenuOpen(false)}
                             className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
                           >
                             <FolderOpen className="h-4 w-4 text-gray-400" />
-                            Mis proyectos
+                            {isPro ? "Mis proyectos publicados" : "Mis proyectos"}
                           </a>
                           <a
-                            href={`${clientPanelHref}?tab=saved`}
+                            href={savedHref}
                             onClick={() => setUserMenuOpen(false)}
                             className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
                           >
@@ -930,11 +936,11 @@ export function LandingNavbar() {
                       Panel profesional
                     </a>
                   )}
-                  <a href={`${clientPanelHref}?tab=bookings`} onClick={() => setMobileOpen(false)}
+                  <a href={isPro ? sentBookingsHref : `${clientPanelHref}?tab=bookings`} onClick={() => setMobileOpen(false)}
                     className="w-full block px-4 py-3 rounded-xl text-sm font-medium text-[#374151] border border-gray-200 hover:bg-gray-50 text-center">
-                    {isPro ? "Panel de cliente" : "Mi panel"}
+                    {isPro ? "Mis solicitudes enviadas" : "Mi panel"}
                   </a>
-                  <a href={`${clientPanelHref}?tab=saved`} onClick={() => setMobileOpen(false)}
+                  <a href={savedHref} onClick={() => setMobileOpen(false)}
                     className="w-full block px-4 py-3 rounded-xl text-sm font-medium text-[#374151] border border-gray-200 hover:bg-gray-50 text-center">
                     Mis favoritos
                   </a>

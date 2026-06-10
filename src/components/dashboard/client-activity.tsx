@@ -1,0 +1,626 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+import {
+  CalendarDays, Star, FolderOpen, CheckCircle2, Clock, XCircle,
+  ChevronDown, ChevronUp, MapPin, Plus, Briefcase, Trash2, Flag, Search,
+} from "lucide-react";
+import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Link } from "@/i18n/navigation";
+import { useAuth } from "@/hooks/use-auth";
+import { cn, getInitials, getWhatsAppLink } from "@/lib/utils";
+import { StatusFilterTabs, SOLICITUD_TABS, PROYECTO_TABS, solicitudMatches, proyectoMatches } from "@/components/dashboard/status-filter-tabs";
+import { LeaveReviewModal } from "@/components/professionals/leave-review-modal";
+import { SavedProfessionalsTab } from "@/components/professionals/saved-professionals-tab";
+import type { BookingStatus } from "@/types";
+
+/**
+ * Shared "acting as a client" activity views — the user's SENT solicitudes,
+ * PUBLISHED projects, and saved professionals. Rendered both in the plain
+ * client dashboard and inside the unified professional dashboard's "Cuando
+ * contrato" group, so a professional manages everything in one place without
+ * switching panels. Pure reorganization — same business logic/endpoints.
+ */
+
+export type ClientActivitySection = "bookings" | "projects" | "saved";
+
+type Booking = {
+  id: string;
+  professional_id: string;
+  service_description: string;
+  preferred_date_text?: string;
+  scheduled_date?: string;
+  scheduled_time?: string;
+  status: BookingStatus;
+  created_at: string;
+  professionals?: {
+    slug: string;
+    whatsapp?: string;
+    profiles: { full_name: string; avatar_url?: string };
+    categories: { id: string; icon: string; name: string };
+  };
+};
+
+type Project = {
+  id: string;
+  title: string;
+  description: string;
+  status: string;
+  created_at: string;
+  categories?: { name: string; icon: string };
+  provincias?: { name: string };
+  cantones?: { name: string };
+  proposals?: { id: string; status: string }[];
+};
+
+type Proposal = {
+  id: string;
+  price?: number;
+  message: string;
+  status: string;
+  created_at: string;
+  professionals?: {
+    id: string;
+    slug: string;
+    whatsapp?: string;
+    profiles: { full_name: string; avatar_url?: string };
+    categories: { name: string; icon: string };
+  };
+};
+
+const STATUS_ICON: Record<BookingStatus, React.ReactNode> = {
+  pending: <Clock className="h-3.5 w-3.5" />,
+  confirmed: <CheckCircle2 className="h-3.5 w-3.5" />,
+  in_progress: <Clock className="h-3.5 w-3.5" />,
+  awaiting_confirmation: <Clock className="h-3.5 w-3.5" />,
+  completed: <CheckCircle2 className="h-3.5 w-3.5" />,
+  cancelled: <XCircle className="h-3.5 w-3.5" />,
+  rescheduled: <Clock className="h-3.5 w-3.5" />,
+};
+
+const STATUS_VARIANT: Record<BookingStatus, "warning" | "success" | "error" | "default"> = {
+  pending: "warning",
+  confirmed: "success",
+  in_progress: "success",
+  awaiting_confirmation: "warning",
+  completed: "default",
+  cancelled: "error",
+  rescheduled: "warning",
+};
+
+const STATUS_LABEL: Record<BookingStatus, string> = {
+  pending: "Pendiente",
+  confirmed: "Confirmada",
+  in_progress: "En progreso",
+  awaiting_confirmation: "Confirma la finalización",
+  completed: "Finalizada",
+  cancelled: "Cancelada",
+  rescheduled: "Reprogramada",
+};
+
+function formatBookingDate(b: Booking) {
+  if (b.scheduled_date) {
+    const [y, m, d] = b.scheduled_date.split("-").map(Number);
+    const label = new Date(y, m - 1, d).toLocaleDateString("es-CR", {
+      weekday: "short", day: "numeric", month: "short",
+    });
+    return b.scheduled_time ? `${label} · ${b.scheduled_time}` : label;
+  }
+  return b.preferred_date_text ?? null;
+}
+
+export function ClientActivity({ section }: { section: ClientActivitySection }) {
+  const { user } = useAuth();
+
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [reviewModal, setReviewModal] = useState<{ professionalId: string; professionalName: string; bookingId?: string; projectId?: string } | null>(null);
+  const [myReviews, setMyReviews] = useState<{ professional_id: string; booking_id?: string | null; project_id?: string | null; rating: number }[]>([]);
+  const [bookingFilter, setBookingFilter] = useState("todas");
+  const [projectFilter, setProjectFilter] = useState("todas");
+  const [expandedProject, setExpandedProject] = useState<string | null>(null);
+  const [projectProposals, setProjectProposals] = useState<Record<string, Proposal[]>>({});
+
+  const fetchSection = useCallback(async () => {
+    if (!user) return;
+    setLoading(true);
+    if (section === "bookings") {
+      const res = await fetch("/api/bookings?role=client");
+      const { bookings } = await res.json();
+      setBookings(bookings ?? []);
+    } else if (section === "projects") {
+      const res = await fetch("/api/projects?role=client");
+      const { projects } = await res.json();
+      setProjects(projects ?? []);
+    }
+    setLoading(false);
+  }, [user, section]);
+
+  useEffect(() => { fetchSection(); }, [fetchSection]);
+
+  const loadMyReviews = useCallback(async () => {
+    if (!user) return;
+    try {
+      const res = await fetch("/api/reviews?mine=1");
+      const { reviews } = await res.json();
+      setMyReviews(reviews ?? []);
+    } catch { /* ignore */ }
+  }, [user]);
+  useEffect(() => { loadMyReviews(); }, [loadMyReviews]);
+
+  function bookingReview(bookingId: string) {
+    return myReviews.find((r) => r.booking_id === bookingId);
+  }
+  function projectReview(projectId: string) {
+    return myReviews.find((r) => r.project_id === projectId);
+  }
+
+  async function cancelBooking(id: string) {
+    const reason = window.prompt("¿Por qué quieres cancelar? (se le avisa al profesional)") ?? "";
+    await fetch("/api/bookings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, status: "cancelled", cancelReason: reason.trim() || undefined }),
+    });
+    setBookings((prev) => prev.map((b) => (b.id === id ? { ...b, status: "cancelled" } : b)));
+  }
+
+  async function confirmBookingDone(id: string) {
+    await fetch("/api/bookings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, status: "completed" }),
+    });
+    setBookings((prev) => prev.map((b) => (b.id === id ? { ...b, status: "completed" } : b)));
+  }
+
+  async function reportProfessional(bookingId: string) {
+    const reason = window.prompt("¿Qué pasó? (no se presentó / servicio no realizado / otro). Tu reporte ayuda a la moderación.");
+    if (!reason || !reason.trim()) return;
+    const res = await fetch("/api/report-professional", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ bookingId, reason: reason.trim() }),
+    });
+    alert(res.ok ? "Gracias. Tu reporte fue enviado al equipo de moderación." : "No se pudo enviar el reporte.");
+  }
+
+  async function refreshProjects() {
+    try {
+      const res = await fetch("/api/projects?role=client");
+      const { projects } = await res.json();
+      if (Array.isArray(projects)) setProjects(projects);
+    } catch { /* ignore */ }
+  }
+
+  async function updateProjectStatus(projectId: string, status: string) {
+    const res = await fetch("/api/projects", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: projectId, status }),
+    });
+    if (!res.ok) { alert("No se pudo actualizar el proyecto. Intenta de nuevo."); return; }
+    setProjects((prev) => prev.map((p) => (p.id === projectId ? { ...p, status } : p)));
+    refreshProjects();
+  }
+
+  async function confirmProjectCompletion(projectId: string) {
+    const res = await fetch("/api/projects", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: projectId, action: "confirm" }),
+    });
+    if (!res.ok) { alert("No se pudo confirmar. Intenta de nuevo."); return; }
+    setProjects((prev) => prev.map((p) => (p.id === projectId ? { ...p, status: "completed" } : p)));
+    refreshProjects();
+  }
+
+  async function deleteProject(projectId: string) {
+    if (!confirm("¿Eliminar este proyecto? Esta acción no se puede deshacer.")) return;
+    const res = await fetch(`/api/projects?id=${projectId}`, { method: "DELETE" });
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}));
+      alert(j.error ?? "No se pudo eliminar el proyecto. Intenta de nuevo.");
+      return;
+    }
+    setProjects((prev) => prev.filter((p) => p.id !== projectId));
+  }
+
+  async function loadProposals(projectId: string) {
+    if (projectProposals[projectId]) return;
+    const res = await fetch(`/api/proposals?project=${projectId}`);
+    const { proposals } = await res.json();
+    setProjectProposals((prev) => ({ ...prev, [projectId]: proposals ?? [] }));
+  }
+
+  async function reviewProjectPro(projectId: string) {
+    let list = projectProposals[projectId];
+    if (!list) {
+      const res = await fetch(`/api/proposals?project=${projectId}`);
+      const json = await res.json().catch(() => ({ proposals: [] }));
+      list = json.proposals ?? [];
+      setProjectProposals((prev) => ({ ...prev, [projectId]: list }));
+    }
+    const accepted = (list ?? []).find((p) => p.status === "accepted");
+    const pro = accepted?.professionals;
+    if (pro?.id) {
+      setReviewModal({ professionalId: pro.id, professionalName: pro.profiles?.full_name ?? "Profesional", projectId });
+    } else {
+      alert("No encontramos al profesional asignado para reseñar.");
+    }
+  }
+
+  async function acceptProposal(proposalId: string, projectId: string) {
+    await fetch("/api/proposals", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: proposalId, status: "accepted" }),
+    });
+    setProjectProposals((prev) => ({
+      ...prev,
+      [projectId]: (prev[projectId] ?? []).map((p) => (p.id === proposalId ? { ...p, status: "accepted" } : p)),
+    }));
+    setProjects((prev) => prev.map((p) => (p.id === projectId ? { ...p, status: "in_progress" } : p)));
+    refreshProjects();
+  }
+
+  async function declineProposal(proposalId: string, projectId: string) {
+    await fetch("/api/proposals", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: proposalId, status: "declined" }),
+    });
+    setProjectProposals((prev) => ({
+      ...prev,
+      [projectId]: (prev[projectId] ?? []).map((p) => (p.id === proposalId ? { ...p, status: "declined" } : p)),
+    }));
+  }
+
+  async function revertProposal(proposalId: string, projectId: string) {
+    await fetch("/api/proposals", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: proposalId, status: "pending" }),
+    });
+    setProjectProposals((prev) => ({
+      ...prev,
+      [projectId]: (prev[projectId] ?? []).map((p) => (p.id === proposalId ? { ...p, status: "pending" } : p)),
+    }));
+    setProjects((prev) => prev.map((p) => (p.id === projectId ? { ...p, status: "open" } : p)));
+  }
+
+  if (section === "saved") {
+    return <SavedProfessionalsTab />;
+  }
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-16">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
+      </div>
+    );
+  }
+
+  const filteredBookings = bookings.filter((b) => solicitudMatches(bookingFilter, b.status));
+  const filteredProjects = projects.filter((p) => proyectoMatches(projectFilter, p.status));
+
+  return (
+    <>
+      {/* SENT SOLICITUDES */}
+      {section === "bookings" && (
+        <div className="space-y-4">
+          {bookings.length === 0 ? (
+            <div className="text-center py-14 rounded-2xl border border-dashed border-[#e5e7eb] bg-white">
+              <CalendarDays className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
+              <p className="font-semibold text-[#374151]">Todavía no tienes solicitudes</p>
+              <p className="text-sm text-[#9ca3af] mt-1">Busca un profesional y solicita tu primer servicio.</p>
+              <Button className="mt-5" asChild>
+                <a href="/buscar"><Search className="h-4 w-4" /> Buscar profesionales</a>
+              </Button>
+            </div>
+          ) : (
+            <>
+              <StatusFilterTabs tabs={SOLICITUD_TABS} value={bookingFilter} onChange={setBookingFilter} />
+              {filteredBookings.length === 0 ? (
+                <p className="text-sm text-[#9ca3af] text-center py-8">No hay solicitudes en esta vista.</p>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  {filteredBookings.map((b) => {
+                    const rev = b.status === "completed" ? bookingReview(b.id) : undefined;
+                    return (
+                      <Card key={b.id}>
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex items-start gap-3 flex-1 min-w-0">
+                              <Avatar className="h-10 w-10 shrink-0">
+                                <AvatarImage src={b.professionals?.profiles?.avatar_url} />
+                                <AvatarFallback className="bg-[#EBF5FB] text-[#009FD9] text-xs font-semibold">
+                                  {getInitials(b.professionals?.profiles?.full_name ?? "?")}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap mb-1">
+                                  {b.professionals?.slug ? (
+                                    <Link href={`/profesionales/${b.professionals.slug}`} className="text-sm font-semibold text-[#111827] hover:text-[#009FD9] hover:underline">
+                                      {b.professionals?.categories?.icon} {b.professionals?.profiles?.full_name ?? "Profesional"}
+                                    </Link>
+                                  ) : (
+                                    <span className="text-sm font-semibold text-[#111827]">
+                                      {b.professionals?.categories?.icon} {b.professionals?.profiles?.full_name ?? "Profesional"}
+                                    </span>
+                                  )}
+                                  <Badge variant={STATUS_VARIANT[b.status]}>
+                                    <span className="flex items-center gap-1">{STATUS_ICON[b.status]}{STATUS_LABEL[b.status]}</span>
+                                  </Badge>
+                                </div>
+                                <p className="text-sm text-[#374151] line-clamp-2 mb-1">{b.service_description}</p>
+                                {formatBookingDate(b) && (
+                                  <p className="text-xs text-[#6b7280]">📅 {formatBookingDate(b)}</p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex flex-col gap-2 shrink-0">
+                              {b.status === "awaiting_confirmation" && (
+                                <Button size="sm" onClick={() => confirmBookingDone(b.id)}>
+                                  <CheckCircle2 className="h-3.5 w-3.5" /> Confirmar finalización
+                                </Button>
+                              )}
+                              {b.status === "completed" && (
+                                <Button variant="outline" size="sm" onClick={() => setReviewModal({ professionalId: b.professional_id, professionalName: b.professionals?.profiles?.full_name ?? "Profesional", bookingId: b.id })}>
+                                  <Star className={cn("h-3.5 w-3.5", rev && "fill-yellow-400 text-yellow-400")} />
+                                  {rev ? "Ver/Editar reseña" : "Dejar reseña"}
+                                </Button>
+                              )}
+                              {["pending", "confirmed", "in_progress"].includes(b.status) && (
+                                <Button size="sm" variant="outline" onClick={() => cancelBooking(b.id)}>Cancelar</Button>
+                              )}
+                              {b.professionals?.whatsapp && b.status !== "cancelled" && b.status !== "completed" && (
+                                <Button size="sm" variant="whatsapp" asChild>
+                                  <a href={getWhatsAppLink(b.professionals.whatsapp, `Hola, te contacto por mi solicitud en ContrataCR.`)} target="_blank" rel="noopener noreferrer">
+                                    <WhatsAppIcon className="h-3.5 w-3.5" /> Contactar
+                                  </a>
+                                </Button>
+                              )}
+                              {["confirmed", "in_progress", "awaiting_confirmation", "completed", "cancelled"].includes(b.status) && (
+                                <button onClick={() => reportProfessional(b.id)} className="inline-flex items-center justify-center gap-1.5 text-xs text-[#9ca3af] hover:text-red-500 transition-colors">
+                                  <Flag className="h-3.5 w-3.5" /> Reportar
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
+
+      {/* PUBLISHED PROJECTS */}
+      {section === "projects" && (
+        <div>
+          {projects.length === 0 ? (
+            <div className="text-center py-14 rounded-2xl border border-dashed border-[#e5e7eb] bg-white">
+              <FolderOpen className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
+              <p className="font-semibold text-[#374151]">Todavía no publicaste proyectos</p>
+              <p className="text-sm text-[#9ca3af] mt-1">
+                Publica lo que necesitas y recibe propuestas de varios profesionales.
+              </p>
+              <Button className="mt-5" asChild>
+                <a href="/publicar-proyecto"><Plus className="h-4 w-4" /> Publicar proyecto</a>
+              </Button>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <StatusFilterTabs tabs={PROYECTO_TABS} value={projectFilter} onChange={setProjectFilter} />
+                <Button size="sm" asChild>
+                  <a href="/publicar-proyecto"><Plus className="h-4 w-4" /> Publicar proyecto</a>
+                </Button>
+              </div>
+              {filteredProjects.length === 0 && (
+                <p className="text-sm text-[#9ca3af] text-center py-8">No hay proyectos en esta vista.</p>
+              )}
+              {filteredProjects.map((project) => {
+                const isExpanded = expandedProject === project.id;
+                const proposalList = projectProposals[project.id];
+                const proposalCount = project.proposals?.length ?? 0;
+
+                return (
+                  <Card key={project.id}>
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap mb-1">
+                            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-[#EBF5FB] text-[#009FD9] shrink-0">
+                              <Briefcase className="h-3.5 w-3.5" />
+                            </span>
+                            <span className="font-semibold text-sm text-[#111827]">{project.title}</span>
+                            <Badge
+                              variant={
+                                project.status === "in_progress" ? "warning"
+                                  : project.status === "awaiting_confirmation" ? "warning"
+                                  : project.status === "completed" ? "success"
+                                  : project.status === "cancelled" ? "error"
+                                  : "success"
+                              }
+                            >
+                              {project.status === "in_progress" ? "En curso · Asignado"
+                                : project.status === "awaiting_confirmation" ? "Esperando tu confirmación"
+                                : project.status === "completed" ? "Finalizado"
+                                : project.status === "cancelled" ? "Cancelado"
+                                : "Abierto"}
+                            </Badge>
+                            {project.categories?.name && (
+                              <Badge variant="muted" className="text-[11px]">{project.categories.name}</Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-[#6b7280] line-clamp-2 mb-2">{project.description}</p>
+                          <div className="flex items-center gap-3 text-xs text-[#9ca3af]">
+                            {(project.provincias?.name || project.cantones?.name) && (
+                              <span className="flex items-center gap-1">
+                                <MapPin className="h-3 w-3" />
+                                {[project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ")}
+                              </span>
+                            )}
+                            <span>{proposalCount} propuesta{proposalCount !== 1 ? "s" : ""}</span>
+                          </div>
+                        </div>
+                        {proposalCount > 0 && (
+                          <button
+                            onClick={async () => {
+                              if (!isExpanded) await loadProposals(project.id);
+                              setExpandedProject(isExpanded ? null : project.id);
+                            }}
+                            className="flex items-center gap-1 text-sm font-medium text-[#009FD9] hover:underline shrink-0"
+                          >
+                            {isExpanded ? (
+                              <>Ver menos <ChevronUp className="h-4 w-4" /></>
+                            ) : (
+                              <>Ver propuestas <ChevronDown className="h-4 w-4" /></>
+                            )}
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {project.status === "open" && (
+                          <Button size="sm" variant="outline" onClick={() => updateProjectStatus(project.id, "cancelled")}>
+                            Cancelar proyecto
+                          </Button>
+                        )}
+                        {project.status === "cancelled" && (
+                          <Button size="sm" variant="outline" onClick={() => updateProjectStatus(project.id, "open")}>
+                            Reabrir proyecto
+                          </Button>
+                        )}
+                        {project.status === "awaiting_confirmation" && (
+                          <Button size="sm" onClick={() => confirmProjectCompletion(project.id)}>
+                            <CheckCircle2 className="h-4 w-4" /> Confirmar finalización
+                          </Button>
+                        )}
+                        {(project.status === "in_progress" || project.status === "awaiting_confirmation") && (
+                          <Button size="sm" variant="outline" className="text-red-500 hover:bg-red-50" onClick={() => updateProjectStatus(project.id, "cancelled")}>
+                            Cancelar proyecto
+                          </Button>
+                        )}
+                        {project.status === "completed" && (() => {
+                          const rev = projectReview(project.id);
+                          return (
+                            <Button size="sm" variant="outline" onClick={() => reviewProjectPro(project.id)}>
+                              <Star className={cn("h-3.5 w-3.5", rev && "fill-yellow-400 text-yellow-400")} /> {rev ? "Ver/Editar reseña" : "Dejar reseña"}
+                            </Button>
+                          );
+                        })()}
+                        {project.status !== "in_progress" && project.status !== "awaiting_confirmation" && (
+                          <Button size="sm" variant="ghost" className="text-red-500 hover:bg-red-50" onClick={() => deleteProject(project.id)}>
+                            <Trash2 className="h-4 w-4" /> Eliminar
+                          </Button>
+                        )}
+                      </div>
+
+                      {isExpanded && proposalList && (() => {
+                        const finalized = project.status === "completed";
+                        const locked = finalized || project.status === "cancelled";
+                        const accepted = proposalList.filter((p) => p.status === "accepted");
+                        const others = proposalList.filter((p) => p.status !== "accepted");
+                        const primary = finalized && accepted.length > 0 ? accepted : proposalList;
+
+                        const renderProposal = (proposal: Proposal) => (
+                          <div key={proposal.id} className="flex items-start justify-between gap-3 p-3 rounded-xl bg-[#f9fafb] border border-[#e5e7eb]">
+                            <div className="flex items-start gap-2 flex-1 min-w-0">
+                              <Avatar className="h-8 w-8 shrink-0">
+                                <AvatarImage src={proposal.professionals?.profiles?.avatar_url} />
+                                <AvatarFallback className="bg-[#EBF5FB] text-[#009FD9] text-xs font-semibold">
+                                  {getInitials(proposal.professionals?.profiles?.full_name ?? "?")}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1 min-w-0">
+                                {proposal.professionals?.slug ? (
+                                  <Link href={`/profesionales/${proposal.professionals.slug}`} className="text-sm font-semibold text-[#111827] hover:text-[#009FD9] hover:underline">
+                                    {proposal.professionals?.profiles?.full_name}
+                                  </Link>
+                                ) : (
+                                  <p className="text-sm font-semibold text-[#111827]">
+                                    {proposal.professionals?.profiles?.full_name}
+                                  </p>
+                                )}
+                                {proposal.price && (
+                                  <p className="text-xs text-[#009FD9] font-medium">₡{proposal.price.toLocaleString("es-CR")}</p>
+                                )}
+                                <p className="text-xs text-[#6b7280] mt-0.5 line-clamp-2">{proposal.message}</p>
+                              </div>
+                            </div>
+                            <div className="flex flex-col gap-1.5 shrink-0">
+                              {proposal.status === "pending" && !locked && (
+                                <>
+                                  <Button size="sm" onClick={() => acceptProposal(proposal.id, project.id)}>Aceptar</Button>
+                                  <Button size="sm" variant="outline" onClick={() => declineProposal(proposal.id, project.id)}>Rechazar</Button>
+                                </>
+                              )}
+                              {proposal.status === "accepted" && (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold px-2.5 py-1">
+                                  <CheckCircle2 className="h-3.5 w-3.5" />
+                                  {finalized ? "Finalizada" : "Aceptada"}
+                                </span>
+                              )}
+                              {proposal.status === "declined" && <Badge variant="error">Rechazada</Badge>}
+                              {!locked && (proposal.status === "accepted" || proposal.status === "declined") && (
+                                <Button size="sm" variant="outline" onClick={() => revertProposal(proposal.id, project.id)}>Cambiar decisión</Button>
+                              )}
+                              {proposal.professionals?.whatsapp && (
+                                <Button size="sm" variant="whatsapp" asChild>
+                                  <a href={getWhatsAppLink(proposal.professionals.whatsapp, `Hola, te escribo por tu propuesta en ContrataCR para el proyecto "${project.title}".`)} target="_blank" rel="noopener noreferrer">
+                                    <WhatsAppIcon className="h-3.5 w-3.5" /> WhatsApp
+                                  </a>
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        );
+
+                        return (
+                          <div className="mt-4 pt-4 border-t border-[#f3f4f6] flex flex-col gap-3">
+                            {proposalList.length === 0 ? (
+                              <p className="text-sm text-[#9ca3af] text-center py-2">Sin propuestas todavía.</p>
+                            ) : (
+                              <>
+                                {primary.map(renderProposal)}
+                                {finalized && others.length > 0 && (
+                                  <details className="text-xs">
+                                    <summary className="cursor-pointer text-[#6b7280] hover:text-[#374151]">Ver propuestas no elegidas ({others.length})</summary>
+                                    <div className="flex flex-col gap-3 mt-2 opacity-70">{others.map(renderProposal)}</div>
+                                  </details>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {reviewModal && (
+        <LeaveReviewModal
+          {...reviewModal}
+          onSuccess={loadMyReviews}
+          onClose={() => setReviewModal(null)}
+        />
+      )}
+    </>
+  );
+}

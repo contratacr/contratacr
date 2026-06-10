@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
-import { User, Image as ImageIcon, CalendarDays, Inbox, LogOut, ExternalLink, Wrench, FolderOpen, ShieldCheck, Bell } from "lucide-react";
+import {
+  User, Image as ImageIcon, CalendarDays, Inbox, LogOut, ExternalLink, Wrench,
+  FolderOpen, ShieldCheck, Bell, Send, ClipboardList, Bookmark,
+} from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -17,6 +19,7 @@ import { ServicesEditor } from "@/components/dashboard/pro/services-editor";
 import { BookingRequests } from "@/components/dashboard/pro/booking-requests";
 import { ProposalsTab } from "@/components/dashboard/pro/proposals-tab";
 import { VerificationPanel } from "@/components/dashboard/pro/verification-panel";
+import { ClientActivity } from "@/components/dashboard/client-activity";
 import { NotificationsList } from "@/components/notifications/notifications-list";
 import { createClient } from "@/lib/supabase/client";
 import { getInitials } from "@/lib/utils";
@@ -24,7 +27,13 @@ import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 
-type Tab = "profile" | "services" | "photos" | "availability" | "bookings" | "proposals" | "notifications" | "verificacion";
+// Unified professional dashboard (Mercado Libre-style): ONE account, two clearly
+// labeled groups — "Mi perfil profesional" (acting as a professional) and
+// "Cuando contrato" (acting as a client) — plus a single notifications stream.
+type Tab =
+  | "profile" | "services" | "photos" | "availability" | "bookings" | "proposals" | "verificacion"
+  | "sent_bookings" | "sent_projects" | "saved"
+  | "notifications";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ProData = Record<string, any>;
@@ -36,8 +45,11 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
   availability: <CalendarDays className="h-4 w-4" />,
   bookings: <Inbox className="h-4 w-4" />,
   proposals: <FolderOpen className="h-4 w-4" />,
-  notifications: <Bell className="h-4 w-4" />,
   verificacion: <ShieldCheck className="h-4 w-4" />,
+  sent_bookings: <Send className="h-4 w-4" />,
+  sent_projects: <ClipboardList className="h-4 w-4" />,
+  saved: <Bookmark className="h-4 w-4" />,
+  notifications: <Bell className="h-4 w-4" />,
 };
 
 const TAB_LABELS: Record<Tab, string> = {
@@ -45,14 +57,30 @@ const TAB_LABELS: Record<Tab, string> = {
   services: "Servicios",
   photos: "Casos de éxito",
   availability: "Disponibilidad",
-  bookings: "Solicitudes",
-  proposals: "Proyectos",
-  notifications: "Notificaciones",
+  bookings: "Solicitudes recibidas",
+  proposals: "Proyectos recibidos",
   verificacion: "Verificación",
+  sent_bookings: "Mis solicitudes enviadas",
+  sent_projects: "Mis proyectos publicados",
+  saved: "Mis favoritos",
+  notifications: "Notificaciones",
 };
 
+// One-line context note shown under the section title, so it's always obvious
+// which role a section belongs to.
+const TAB_SUBTITLE: Partial<Record<Tab, string>> = {
+  bookings: "Solicitudes que te enviaron tus clientes.",
+  proposals: "Proyectos publicados a los que puedes enviar propuestas.",
+  sent_bookings: "Servicios que tú solicitaste a otros profesionales.",
+  sent_projects: "Proyectos que tú publicaste para recibir propuestas.",
+  saved: "Profesionales que guardaste para contratar más adelante.",
+};
+
+// Sidebar layout — two labeled groups + a standalone notifications entry.
+const GROUP_PRO: Tab[] = ["profile", "services", "photos", "availability", "bookings", "proposals", "verificacion"];
+const GROUP_CLIENT: Tab[] = ["sent_bookings", "sent_projects", "saved"];
+
 export default function ProDashboardPage() {
-  const t = useTranslations("dashboard.pro");
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -61,6 +89,7 @@ export default function ProDashboardPage() {
   const [pro, setPro] = useState<ProData | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [unreadCount, setUnreadCount] = useState(0);
   // Count of consecutive "no pro row" fetches. A freshly-created account can lag
   // (replication/RLS) — we retry a few times before bouncing to registration so
   // the panel never flashes back to the registration flow (item 6).
@@ -84,19 +113,27 @@ export default function ProDashboardPage() {
   }, [user]);
 
   // Re-fetch pro data whenever the tab changes OR refreshKey increments.
-  // This ensures navigating back to any tab always shows the latest saved data.
   useEffect(() => {
     if (!user) return;
     fetchPro();
   }, [user, activeTab, refreshKey, fetchPro]);
 
-  // No professional record yet (e.g. just signed up) — send them to finish
-  // registration. Declared here, BEFORE any early return, so the hook order
-  // stays stable across renders (a hook after a conditional return crashes the
-  // page with "Rendered more hooks than during the previous render").
+  // Unread notifications badge (both professional + client notifications — one stream).
+  useEffect(() => {
+    if (!user) return;
+    const supabase = createClient();
+    supabase
+      .from("notifications")
+      .select("id", { count: "exact" })
+      .eq("user_id", user.id)
+      .eq("read", false)
+      .then(({ count }) => setUnreadCount(count ?? 0));
+  }, [user, activeTab, refreshKey]);
+
+  // No professional record yet — send them to finish registration. Declared
+  // BEFORE any early return so the hook order stays stable across renders.
   useEffect(() => {
     if (authLoading || loading || pro || !user) return;
-    // Retry a few times (replication/RLS lag right after creation) before bouncing.
     if (noProTries < 4) {
       const id = setTimeout(() => fetchPro(), 700);
       return () => clearTimeout(id);
@@ -136,7 +173,29 @@ export default function ProDashboardPage() {
     );
   }
 
-  const TABS: Tab[] = ["profile", "services", "photos", "availability", "bookings", "proposals", "notifications", "verificacion"];
+  function navButton(tab: Tab) {
+    const isNotif = tab === "notifications";
+    return (
+      <button
+        key={tab}
+        onClick={() => setTab(tab)}
+        className={cn(
+          "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors text-left",
+          activeTab === tab ? "bg-[#EBF5FB] text-[#009FD9]" : "text-[#374151] hover:bg-[#f3f4f6]"
+        )}
+      >
+        <span className="relative">
+          {TAB_ICONS[tab]}
+          {isNotif && unreadCount > 0 && (
+            <span className="absolute -top-2 -right-2.5 flex h-[16px] min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold leading-none text-white ring-2 ring-white">
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
+          )}
+        </span>
+        {TAB_LABELS[tab]}
+      </button>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
@@ -154,7 +213,6 @@ export default function ProDashboardPage() {
               </Avatar>
               <div>
                 <h1 className="text-xl font-bold text-[#111827]">{pro.profiles?.full_name}</h1>
-                {/* Account status at a glance — NOT the profession (redundant here). */}
                 <div className="flex items-center gap-2 mt-1 flex-wrap">
                   {pro.verification_status === "verified" && (
                     <Badge variant="verified" className="gap-1"><ShieldCheck className="h-3 w-3" />Identidad verificada · visible para clientes</Badge>
@@ -185,25 +243,25 @@ export default function ProDashboardPage() {
           </div>
 
           <div className="flex flex-col lg:flex-row gap-6">
-            {/* Sidebar nav */}
-            <nav className="lg:w-52 shrink-0">
+            {/* Sidebar nav — two clearly-labeled role groups */}
+            <nav className="lg:w-60 shrink-0">
               <Card>
-                <CardContent className="p-2">
-                  {TABS.map((tab) => (
-                    <button
-                      key={tab}
-                      onClick={() => setTab(tab)}
-                      className={cn(
-                        "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors text-left",
-                        activeTab === tab
-                          ? "bg-[#EBF5FB] text-[#009FD9]"
-                          : "text-[#374151] hover:bg-[#f3f4f6]"
-                      )}
-                    >
-                      {TAB_ICONS[tab]}
-                      {TAB_LABELS[tab]}
-                    </button>
-                  ))}
+                <CardContent className="p-2 space-y-3">
+                  <div>
+                    <p className="px-3 pt-1 pb-1.5 text-[10px] font-bold text-[#9ca3af] uppercase tracking-widest">
+                      Mi perfil profesional
+                    </p>
+                    {GROUP_PRO.map(navButton)}
+                  </div>
+                  <div className="border-t border-[#f3f4f6] pt-2">
+                    <p className="px-3 pt-1 pb-1.5 text-[10px] font-bold text-[#9ca3af] uppercase tracking-widest">
+                      Cuando contrato
+                    </p>
+                    {GROUP_CLIENT.map(navButton)}
+                  </div>
+                  <div className="border-t border-[#f3f4f6] pt-2">
+                    {navButton("notifications")}
+                  </div>
                 </CardContent>
               </Card>
             </nav>
@@ -213,6 +271,9 @@ export default function ProDashboardPage() {
               <Card>
                 <CardHeader className="px-6 pt-6 pb-4">
                   <h2 className="text-lg font-semibold text-[#111827]">{TAB_LABELS[activeTab]}</h2>
+                  {TAB_SUBTITLE[activeTab] && (
+                    <p className="text-sm text-[#6b7280] mt-0.5">{TAB_SUBTITLE[activeTab]}</p>
+                  )}
                 </CardHeader>
                 <CardContent className="px-6 pb-6">
                   {activeTab === "profile" && (
@@ -258,7 +319,6 @@ export default function ProDashboardPage() {
                   {activeTab === "proposals" && (
                     <ProposalsTab categoryId={pro.category_id} />
                   )}
-                  {activeTab === "notifications" && <NotificationsList />}
                   {activeTab === "verificacion" && (
                     <VerificationPanel
                       professionalId={pro.id}
@@ -268,6 +328,13 @@ export default function ProDashboardPage() {
                       onSaved={handleSaved}
                     />
                   )}
+
+                  {/* "Cuando contrato" — same account, acting as a client */}
+                  {activeTab === "sent_bookings" && <ClientActivity section="bookings" />}
+                  {activeTab === "sent_projects" && <ClientActivity section="projects" />}
+                  {activeTab === "saved" && <ClientActivity section="saved" />}
+
+                  {activeTab === "notifications" && <NotificationsList />}
                 </CardContent>
               </Card>
             </div>
