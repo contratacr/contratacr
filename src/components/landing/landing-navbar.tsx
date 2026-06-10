@@ -16,10 +16,32 @@ const PROVINCES = [
   "Guanacaste", "Puntarenas", "Limón",
 ];
 
-/* ─── Logo ─── */
-export function ContrataCRLogo({ className }: { className?: string }) {
+/* ─── Brand mark (the square "CR" icon) ─── */
+export function ContrataCRMark({ className }: { className?: string }) {
   return (
-    <div className={cn("flex items-center select-none", className)}>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src="/logo-mark.png"
+      srcSet="/logo-mark.png 1x, /logo-mark@2x.png 2x"
+      alt="ContrataCR"
+      width={28}
+      height={28}
+      className={cn("h-7 w-7 select-none", className)}
+    />
+  );
+}
+
+/* ─── Logo (mark + wordmark) ─── */
+export function ContrataCRLogo({ className, chip = false }: { className?: string; chip?: boolean }) {
+  return (
+    <div className={cn("flex items-center gap-2 select-none", className)}>
+      {chip ? (
+        <span className="grid place-items-center h-8 w-8 rounded-lg bg-white shadow-sm">
+          <ContrataCRMark className="h-[1.35rem] w-[1.35rem]" />
+        </span>
+      ) : (
+        <ContrataCRMark />
+      )}
       <span className="text-[17px] font-extrabold tracking-tight leading-none">
         <span className="text-[#1a2744]">Contrata</span>
         <span className="text-[#009FD9]">CR</span>
@@ -520,11 +542,15 @@ export function LandingNavbar() {
               </button>
             </div>
 
-            {/* ── Compact row — only the centered search bar (Thumbtack-style) ── */}
+            {/* ── Compact row — brand mark + the centered search bar (Thumbtack-style) ── */}
             <div
               className="absolute inset-0 flex items-center justify-center transition-opacity duration-300"
               style={{ opacity: compact ? 1 : 0, pointerEvents: compact ? "auto" : "none" }}
             >
+              {/* Brand mark pinned left so the search stays centered (twins the hero). */}
+              <Link href="/" aria-label="ContrataCR inicio" className="absolute left-4 sm:left-6 lg:left-8 shrink-0">
+                <ContrataCRMark className="h-8 w-8" />
+              </Link>
               {/* Mirrors the hero search bar exactly so it reads as the same
                   element "sticking" to the header on scroll. */}
               <form onSubmit={handleCompactSearch} className="w-full max-w-5xl px-4 sm:px-8">

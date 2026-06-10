@@ -15,9 +15,34 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://contratacr.com"),
   title: "ContrataCR — Profesionales de servicios en Costa Rica",
   description:
     "Encuentra electricistas, plomeros, pintores, tutores y más profesionales verificados en tu cantón.",
+  applicationName: "ContrataCR",
+  manifest: "/site.webmanifest",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon-96x96.png", type: "image/png", sizes: "96x96" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+  },
+  openGraph: {
+    type: "website",
+    siteName: "ContrataCR",
+    title: "ContrataCR",
+    description: "Encuentra y contrata profesionales en Costa Rica",
+    url: "https://contratacr.com",
+    locale: "es_CR",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "ContrataCR — Encuentra y contrata profesionales en Costa Rica" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "ContrataCR",
+    description: "Encuentra y contrata profesionales en Costa Rica",
+    images: ["/og-image.png"],
+  },
 };
 
 // viewport-fit=cover exposes the env(safe-area-inset-*) values used by the
