@@ -1,7 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { X, Menu, Mail, Lock, Eye, EyeOff, AlertCircle, ChevronDown, Search, MapPin, LayoutDashboard, LogOut } from "lucide-react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import {
+  X, Menu, Mail, Lock, Eye, EyeOff, AlertCircle, ChevronDown, Search, MapPin,
+  LayoutDashboard, LogOut, Bookmark, CalendarDays, FolderOpen, UserPlus, Briefcase, Compass,
+} from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { useLocale } from "next-intl";
 import { cn } from "@/lib/utils";
@@ -10,6 +13,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { getInitials } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { NotificationBell } from "@/components/notifications/notification-bell";
+import { ALL_CATEGORIES, searchCategories, normalizeText } from "@/lib/data/categories";
 
 const PROVINCES = [
   "San José", "Alajuela", "Cartago", "Heredia",
@@ -90,100 +94,202 @@ function LanguageTogglePill() {
   );
 }
 
-/* ─── Dropdown data ─── */
-type NavLink = { label: string; href: string };
-type NavColumn = { heading: string; links: NavLink[] };
-type NavMenu = { id: string; label: string; columns: NavColumn[] };
-
-const NAV_MENUS: NavMenu[] = [
+/* ─── Header data ───
+   The "Categorías" mega-menu shows a CURATED set of real categories — every
+   `id` below is verified against `categories.ts` (the single source of truth),
+   so each link lands on the correct /buscar?categoria=<id> filter. The full
+   taxonomy is reachable via the autocomplete search + "Ver todas". */
+type CatLink = { label: string; id: string };
+const CATEGORY_COLUMNS: { heading: string; links: CatLink[] }[] = [
   {
-    id: "interior",
-    label: "Interior",
-    columns: [
-      {
-        heading: "Hogar",
-        links: [
-          { label: "Limpieza del hogar",  href: "/buscar?categoria=limpieza" },
-          { label: "Plomería",            href: "/buscar?categoria=plomeria" },
-          { label: "Electricidad",        href: "/buscar?categoria=electricidad" },
-          { label: "Pintura interior",    href: "/buscar?categoria=pintura" },
-          { label: "Carpintería",         href: "/buscar?categoria=carpinteria" },
-          { label: "Remodelación",        href: "/buscar?categoria=remodelacion" },
-        ],
-      },
+    heading: "Hogar e interior",
+    links: [
+      { label: "Plomería",            id: "plomeria" },
+      { label: "Electricidad",        id: "electricidad" },
+      { label: "Pintura",             id: "pintura" },
+      { label: "Carpintería",         id: "carpinteria" },
+      { label: "Remodelación",        id: "remodelacion" },
+      { label: "Limpieza del hogar",  id: "limpieza" },
     ],
   },
   {
-    id: "exterior",
-    label: "Exterior",
-    columns: [
-      {
-        heading: "Al aire libre",
-        links: [
-          { label: "Jardinería",          href: "/buscar?categoria=jardineria" },
-          { label: "Construcción",        href: "/buscar?categoria=construccion" },
-          { label: "Lavado a presión",    href: "/buscar?categoria=impermeabilizacion" },
-          { label: "Impermeabilización",  href: "/buscar?categoria=impermeabilizacion" },
-          { label: "Mudanzas",            href: "/buscar?categoria=mudanzas" },
-          { label: "Piscinas",            href: "/buscar?categoria=limpieza_piscinas" },
-        ],
-      },
+    heading: "Exterior y jardín",
+    links: [
+      { label: "Jardinería",            id: "jardineria" },
+      { label: "Construcción",          id: "construccion" },
+      { label: "Impermeabilización",    id: "impermeabilizacion" },
+      { label: "Poda de árboles",       id: "poda_arboles" },
+      { label: "Limpieza de piscinas",  id: "limpieza_piscinas" },
+      { label: "Mudanzas",              id: "mudanzas" },
     ],
   },
   {
-    id: "mas",
-    label: "Más servicios",
-    columns: [
-      {
-        heading: "Tecnología",
-        links: [
-          { label: "Soporte técnico",     href: "/buscar?categoria=soporte_tecnico" },
-          { label: "Redes y WiFi",        href: "/buscar?categoria=redes_internet" },
-          { label: "Seguridad CCTV",      href: "/buscar?categoria=camaras_seguridad" },
-          { label: "Diseño web",          href: "/buscar?categoria=desarrollo_web" },
-        ],
-      },
-      {
-        heading: "Bienestar",
-        links: [
-          { label: "Belleza y estética",       href: "/buscar?categoria=peluqueria" },
-          { label: "Entrenamiento personal",   href: "/buscar?categoria=entrenamiento_personal" },
-          { label: "Masajes",                  href: "/buscar?categoria=masajes" },
-          { label: "Nutrición",                href: "/buscar?categoria=nutricion" },
-        ],
-      },
-      {
-        heading: "Vehículos",
-        links: [
-          { label: "Mecánica automotriz",  href: "/buscar?categoria=mecanica" },
-          { label: "Lavado de autos",      href: "/buscar?categoria=lavado_vehiculos" },
-          { label: "Cerrajería",           href: "/buscar?categoria=cerrajeria" },
-        ],
-      },
-    ],
-  },
-  {
-    id: "recursos",
-    label: "Recursos",
-    columns: [
-      {
-        heading: "Aprendé",
-        links: [
-          { label: "Cómo funciona",    href: "/como-funciona" },
-          { label: "Centro de ayuda",  href: "/ayuda" },
-          { label: "Soporte",          href: "/soporte" },
-        ],
-      },
-      {
-        heading: "Profesionales",
-        links: [
-          { label: "Registra tu perfil",    href: "/registro/profesional" },
-          { label: "Cómo atraer clientes",  href: "/atraer-clientes" },
-        ],
-      },
+    heading: "Más servicios",
+    links: [
+      { label: "Soporte técnico",          id: "soporte_tecnico" },
+      { label: "Cámaras de seguridad",     id: "camaras_seguridad" },
+      { label: "Mecánica automotriz",      id: "mecanica" },
+      { label: "Belleza y barbería",       id: "peluqueria" },
+      { label: "Cuidado infantil / Niñera", id: "cuidado_infantil" },
+      { label: "Fumigación",               id: "fumigacion" },
     ],
   },
 ];
+
+const RESOURCES_LINKS: { label: string; href: string }[] = [
+  { label: "Cómo funciona",                 href: "/como-funciona" },
+  { label: "Centro de ayuda",               href: "/ayuda" },
+  { label: "Consejos para profesionales",   href: "/atraer-clientes" },
+  { label: "Soporte",                       href: "/soporte" },
+];
+
+/* ─── Accent- and typo-tolerant category matcher ───
+   `searchCategories` already does accent-insensitive substring matching over
+   labels + keywords; if that yields nothing we fall back to a small edit-
+   distance match so minor typos ("plomeria"→"plomeira", "electicidad") still
+   resolve. ALL_CATEGORIES is ~90 items, so this stays cheap. */
+function editDistance(a: string, b: string): number {
+  const m = a.length, n = b.length;
+  const dp: number[][] = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++)
+    for (let j = 1; j <= n; j++)
+      dp[i][j] = Math.min(
+        dp[i - 1][j] + 1,
+        dp[i][j - 1] + 1,
+        dp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1),
+      );
+  return dp[m][n];
+}
+
+type CatMatch = (typeof ALL_CATEGORIES)[number];
+function matchCategories(query: string, limit = 8): CatMatch[] {
+  if (!query.trim()) return [];
+  const direct = searchCategories(query);
+  if (direct.length) return direct.slice(0, limit);
+  const q = normalizeText(query.trim());
+  const tol = q.length > 6 ? 2 : 1;
+  return ALL_CATEGORIES
+    .map((item) => {
+      const words = normalizeText(item.label).split(/\s+/);
+      const best = Math.min(...words.map((w) => editDistance(w, q)));
+      return { item, best };
+    })
+    .filter((x) => x.best <= tol)
+    .sort((a, b) => a.best - b.best)
+    .slice(0, limit)
+    .map((x) => x.item);
+}
+
+/* ─── Smart category search with autocomplete ───
+   Used both inside the Categorías mega-menu and as the compact (scrolled)
+   header search. Selecting a suggestion jumps straight to /buscar filtered by
+   that category; free text falls back to a keyword search. */
+function CategoryAutocomplete({
+  placeholder = "Busca un servicio…",
+  autoFocus = false,
+  province,
+  onNavigate,
+  size = "md",
+}: {
+  placeholder?: string;
+  autoFocus?: boolean;
+  province?: string;
+  onNavigate?: () => void;
+  size?: "md" | "lg";
+}) {
+  const router = useRouter();
+  const [q, setQ] = useState("");
+  const [active, setActive] = useState(0);
+  const [focused, setFocused] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const blurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const suggestions = useMemo(() => matchCategories(q), [q]);
+
+  useEffect(() => {
+    if (autoFocus) {
+      const id = requestAnimationFrame(() => inputRef.current?.focus());
+      return () => cancelAnimationFrame(id);
+    }
+  }, [autoFocus]);
+  useEffect(() => setActive(0), [q]);
+
+  function go(id?: string) {
+    const params = new URLSearchParams();
+    if (id) params.set("categoria", id);
+    else if (q.trim()) params.set("q", q.trim());
+    if (province) params.set("provincia", province);
+    router.push(`/buscar${params.toString() ? `?${params.toString()}` : ""}`);
+    setQ("");
+    setFocused(false);
+    onNavigate?.();
+  }
+
+  function onKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "ArrowDown") { e.preventDefault(); setActive((a) => Math.min(a + 1, suggestions.length - 1)); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); setActive((a) => Math.max(a - 1, 0)); }
+    else if (e.key === "Enter") { e.preventDefault(); go(suggestions[active]?.id); }
+    else if (e.key === "Escape") { setFocused(false); inputRef.current?.blur(); }
+  }
+
+  const open = focused && q.trim().length > 0;
+  const lg = size === "lg";
+
+  return (
+    <div className="relative w-full">
+      <form
+        onSubmit={(e) => { e.preventDefault(); go(suggestions[active]?.id); }}
+        className={cn(
+          "flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50/70 transition-all focus-within:border-[#009FD9] focus-within:ring-2 focus-within:ring-[#009FD9]/20 focus-within:bg-white",
+          lg ? "h-12 px-4" : "h-10 px-3",
+        )}
+      >
+        <Search className="h-4 w-4 text-gray-400 shrink-0" />
+        <input
+          ref={inputRef}
+          type="text"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          onFocus={() => { if (blurTimer.current) clearTimeout(blurTimer.current); setFocused(true); }}
+          onBlur={() => { blurTimer.current = setTimeout(() => setFocused(false), 150); }}
+          onKeyDown={onKeyDown}
+          placeholder={placeholder}
+          aria-label="Buscar un servicio"
+          className="flex-1 min-w-0 bg-transparent text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none"
+        />
+      </form>
+
+      {open && (
+        <div className="absolute left-0 right-0 top-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 py-1.5 z-[60] max-h-[300px] overflow-y-auto">
+          {suggestions.length === 0 ? (
+            <button
+              onMouseDown={(e) => { e.preventDefault(); go(); }}
+              className="w-full text-left px-4 py-2.5 text-sm text-gray-500 hover:bg-gray-50"
+            >
+              No encontramos ese servicio. <span className="text-[#009FD9] font-medium">Ver todos los profesionales</span>
+            </button>
+          ) : (
+            suggestions.map((s, i) => (
+              <button
+                key={s.id}
+                onMouseDown={(e) => { e.preventDefault(); go(s.id); }}
+                onMouseEnter={() => setActive(i)}
+                className={cn(
+                  "w-full flex items-center justify-between gap-3 px-4 py-2.5 text-left transition-colors",
+                  active === i ? "bg-[#EBF5FB]" : "hover:bg-gray-50",
+                )}
+              >
+                <span className="text-sm font-medium text-[#1a2744]">{s.label}</span>
+                <span className="text-[11px] text-gray-400 shrink-0">{s.groupLabel}</span>
+              </button>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 
 /* ─── Login Modal ─── */
 function LoginModal({ onClose }: { onClose: () => void }) {
@@ -333,16 +439,26 @@ export function LandingNavbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [provinceQuery, setProvinceQuery] = useState("");
+  const [searchFocused, setSearchFocused] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+  const searchBlurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const router = useRouter();
   const { user, avatarUrl } = useAuth();
 
   const role = user?.user_metadata?.role as string | undefined;
-  const dashboardHref = role === "professional" ? "/es/dashboard/profesional" : "/es/dashboard/cliente";
+  const isPro = role === "professional";
   const initials = getInitials(user?.user_metadata?.full_name ?? user?.email ?? "?");
   const displayName = (user?.user_metadata?.full_name as string) || (user?.user_metadata?.name as string) || user?.email?.split("@")[0] || "";
+
+  // A professional is a superset of a client: they reach their pro panel AND
+  // the client area. Clients only have the client area.
+  const proPanelHref = "/es/dashboard/profesional";
+  const clientPanelHref = "/es/dashboard/cliente";
+  const primaryPanelHref = isPro ? proPanelHref : clientPanelHref;
+
+  const compactSuggestions = useMemo(() => matchCategories(searchQuery), [searchQuery]);
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
@@ -365,6 +481,7 @@ export function LandingNavbar() {
     const sentinel = document.getElementById("hero-search-sentinel");
     if (!sentinel) {
       const handler = () => setCompact(window.scrollY > 300);
+      handler();
       window.addEventListener("scroll", handler, { passive: true });
       return () => window.removeEventListener("scroll", handler);
     }
@@ -384,6 +501,12 @@ export function LandingNavbar() {
     closeTimer.current = setTimeout(() => setOpenMenu(null), 120);
   }
 
+  function goToCategory(id: string) {
+    setOpenMenu(null);
+    setMobileOpen(false);
+    router.push(`/buscar?categoria=${id}`);
+  }
+
   function handleCompactSearch(e: React.FormEvent) {
     e.preventDefault();
     const params = new URLSearchParams();
@@ -392,16 +515,13 @@ export function LandingNavbar() {
     router.push(`/buscar?${params.toString()}`);
   }
 
-  function renderLink(link: NavLink, onClick?: () => void) {
-    const cls = "text-sm text-gray-600 hover:text-[#009FD9] transition-colors leading-tight block";
-    if (link.href.startsWith("mailto:")) {
-      return <a key={link.label} href={link.href} className={cls} onClick={onClick}>{link.label}</a>;
-    }
-    return (
-      <Link key={link.label} href={link.href} className={cls} onClick={onClick}>
-        {link.label}
-      </Link>
-    );
+  function selectCompactSuggestion(id: string) {
+    const params = new URLSearchParams();
+    params.set("categoria", id);
+    if (provinceQuery) params.set("provincia", provinceQuery);
+    setSearchQuery("");
+    setSearchFocused(false);
+    router.push(`/buscar?${params.toString()}`);
   }
 
   return (
@@ -422,49 +542,110 @@ export function LandingNavbar() {
               </Link>
 
               <nav className="hidden lg:flex items-center gap-0.5">
-                {NAV_MENUS.map((menu) => (
-                  <div
-                    key={menu.id}
-                    className="relative"
-                    onMouseEnter={() => openDropdown(menu.id)}
-                    onMouseLeave={closeDropdown}
+                {/* Categorías — mega-menu with autocomplete + curated columns */}
+                <div
+                  className="relative"
+                  onMouseEnter={() => openDropdown("categorias")}
+                  onMouseLeave={closeDropdown}
+                >
+                  <button
+                    className={cn(
+                      "flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-medium transition-colors",
+                      openMenu === "categorias" ? "text-[#1a2744] bg-gray-50" : "text-[#374151] hover:text-[#1a2744] hover:bg-gray-50"
+                    )}
                   >
-                    <button
-                      className={cn(
-                        "flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-medium transition-colors",
-                        openMenu === menu.id ? "text-[#1a2744] bg-gray-50" : "text-[#374151] hover:text-[#1a2744] hover:bg-gray-50"
-                      )}
-                    >
-                      {menu.label}
-                      <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", openMenu === menu.id && "rotate-180")} />
-                    </button>
+                    Categorías
+                    <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", openMenu === "categorias" && "rotate-180")} />
+                  </button>
 
-                    {openMenu === menu.id && (
-                      <div
-                        className={cn(
-                          "absolute top-full left-1/2 -translate-x-1/2 mt-1.5 bg-white rounded-2xl shadow-2xl border border-gray-100 p-6 z-50 min-w-[220px]",
-                          menu.columns.length > 1 && "grid gap-8"
-                        )}
-                        style={{
-                          gridTemplateColumns: `repeat(${menu.columns.length}, minmax(160px, 1fr))`,
-                          animation: "tab-cards-in 0.15s ease both",
-                        }}
-                      >
-                        <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-white border-l border-t border-gray-100 rotate-45" />
-                        {menu.columns.map((col) => (
+                  {openMenu === "categorias" && (
+                    <div
+                      className="absolute top-full left-0 mt-1.5 bg-white rounded-2xl shadow-2xl border border-gray-100 p-5 z-50 w-[680px]"
+                      style={{ animation: "tab-cards-in 0.15s ease both" }}
+                    >
+                      <div className="mb-4">
+                        <CategoryAutocomplete
+                          placeholder="Busca un servicio… ej. plomería, niñera"
+                          onNavigate={() => setOpenMenu(null)}
+                        />
+                      </div>
+                      <div className="grid grid-cols-3 gap-6">
+                        {CATEGORY_COLUMNS.map((col) => (
                           <div key={col.heading}>
                             <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">{col.heading}</h4>
                             <ul className="space-y-2.5">
                               {col.links.map((link) => (
-                                <li key={link.label}>{renderLink(link)}</li>
+                                <li key={link.id}>
+                                  <button
+                                    onClick={() => goToCategory(link.id)}
+                                    className="text-sm text-gray-600 hover:text-[#009FD9] transition-colors leading-tight block text-left"
+                                  >
+                                    {link.label}
+                                  </button>
+                                </li>
                               ))}
                             </ul>
                           </div>
                         ))}
                       </div>
+                      <div className="mt-4 pt-3 border-t border-gray-100">
+                        <Link
+                          href="/categorias"
+                          onClick={() => setOpenMenu(null)}
+                          className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#009FD9] hover:underline"
+                        >
+                          <Compass className="h-4 w-4" />
+                          Ver todas las categorías
+                        </Link>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Cómo funciona — direct link */}
+                <Link
+                  href="/como-funciona"
+                  className="px-4 py-2 rounded-xl text-sm font-medium text-[#374151] hover:text-[#1a2744] hover:bg-gray-50 transition-colors"
+                >
+                  Cómo funciona
+                </Link>
+
+                {/* Recursos — simple dropdown */}
+                <div
+                  className="relative"
+                  onMouseEnter={() => openDropdown("recursos")}
+                  onMouseLeave={closeDropdown}
+                >
+                  <button
+                    className={cn(
+                      "flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-medium transition-colors",
+                      openMenu === "recursos" ? "text-[#1a2744] bg-gray-50" : "text-[#374151] hover:text-[#1a2744] hover:bg-gray-50"
                     )}
-                  </div>
-                ))}
+                  >
+                    Recursos
+                    <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", openMenu === "recursos" && "rotate-180")} />
+                  </button>
+                  {openMenu === "recursos" && (
+                    <div
+                      className="absolute top-full left-0 mt-1.5 bg-white rounded-2xl shadow-2xl border border-gray-100 p-4 z-50 min-w-[220px]"
+                      style={{ animation: "tab-cards-in 0.15s ease both" }}
+                    >
+                      <ul className="space-y-1">
+                        {RESOURCES_LINKS.map((link) => (
+                          <li key={link.href}>
+                            <Link
+                              href={link.href}
+                              onClick={() => setOpenMenu(null)}
+                              className="block px-3 py-2 rounded-lg text-sm text-gray-600 hover:text-[#009FD9] hover:bg-gray-50 transition-colors"
+                            >
+                              {link.label}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
               </nav>
 
               <div className="flex-1" />
@@ -473,50 +654,110 @@ export function LandingNavbar() {
               <div className="hidden lg:flex items-center gap-2 shrink-0">
                 {user ? (
                   <div className="flex items-center gap-1">
-                  <a
-                    href={dashboardHref}
-                    className="text-sm font-medium px-3 py-2 text-[#374151] hover:text-[#1a2744] transition-colors whitespace-nowrap"
-                  >
-                    Mi panel
-                  </a>
-                  <NotificationBell />
-                  <div ref={userMenuRef} className="relative">
-                    <button
-                      onClick={() => setUserMenuOpen((o) => !o)}
-                      className="flex items-center gap-1 p-0.5 rounded-full ring-2 ring-transparent hover:ring-[#009FD9]/30 transition-all"
-                      title={displayName || user.email || ""}
-                    >
-                      <Avatar className="h-8 w-8">
-                        <AvatarImage src={avatarUrl ?? undefined} />
-                        <AvatarFallback delayMs={avatarUrl ? 600 : 0} className="text-[12px] bg-[#009FD9] text-white font-bold">
-                          {initials}
-                        </AvatarFallback>
-                      </Avatar>
-                    </button>
-                    {userMenuOpen && (
-                      <div className="absolute right-0 top-full mt-2 w-56 bg-white border border-gray-100 rounded-2xl shadow-xl z-50 py-1.5 overflow-hidden">
-                        <div className="px-3 py-2 border-b border-gray-50 mb-1">
-                          {displayName && <p className="text-sm font-semibold text-[#111827] truncate">{displayName}</p>}
-                          <p className="text-xs text-[#9ca3af] truncate">{user.email}</p>
-                        </div>
-                        <a
-                          href={dashboardHref}
-                          onClick={() => setUserMenuOpen(false)}
-                          className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
-                        >
-                          <LayoutDashboard className="h-4 w-4 text-[#009FD9]" />
-                          Mi panel
-                        </a>
-                        <button
-                          onClick={handleSignOut}
-                          className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                        >
-                          <LogOut className="h-4 w-4" />
-                          Cerrar sesión
-                        </button>
-                      </div>
+                    {!isPro && (
+                      <Link
+                        href="/registro/profesional"
+                        className="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-xl text-[#009FD9] hover:bg-[#EBF5FB] transition-colors whitespace-nowrap"
+                      >
+                        <Briefcase className="h-4 w-4" />
+                        Convertirme en profesional
+                      </Link>
                     )}
-                  </div>
+                    <a
+                      href={primaryPanelHref}
+                      className="text-sm font-medium px-3 py-2 text-[#374151] hover:text-[#1a2744] transition-colors whitespace-nowrap"
+                    >
+                      {isPro ? "Panel profesional" : "Mi panel"}
+                    </a>
+                    <NotificationBell />
+                    <div ref={userMenuRef} className="relative">
+                      <button
+                        onClick={() => setUserMenuOpen((o) => !o)}
+                        className="flex items-center gap-1 p-0.5 rounded-full ring-2 ring-transparent hover:ring-[#009FD9]/30 transition-all"
+                        title={displayName || user.email || ""}
+                      >
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={avatarUrl ?? undefined} />
+                          <AvatarFallback delayMs={avatarUrl ? 600 : 0} className="text-[12px] bg-[#009FD9] text-white font-bold">
+                            {initials}
+                          </AvatarFallback>
+                        </Avatar>
+                      </button>
+                      {userMenuOpen && (
+                        <div className="absolute right-0 top-full mt-2 w-60 bg-white border border-gray-100 rounded-2xl shadow-xl z-50 py-1.5 overflow-hidden">
+                          <div className="px-3 py-2 border-b border-gray-50 mb-1">
+                            {displayName && <p className="text-sm font-semibold text-[#111827] truncate">{displayName}</p>}
+                            <p className="text-xs text-[#9ca3af] truncate">{user.email}</p>
+                          </div>
+
+                          {isPro && (
+                            <a
+                              href={proPanelHref}
+                              onClick={() => setUserMenuOpen(false)}
+                              className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
+                            >
+                              <Briefcase className="h-4 w-4 text-[#009FD9]" />
+                              Panel profesional
+                            </a>
+                          )}
+
+                          <p className="px-3 pt-2 pb-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                            {isPro ? "Mi área de cliente" : "Mi cuenta"}
+                          </p>
+                          <a
+                            href={isPro ? clientPanelHref : `${clientPanelHref}?tab=bookings`}
+                            onClick={() => setUserMenuOpen(false)}
+                            className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
+                          >
+                            <LayoutDashboard className="h-4 w-4 text-[#009FD9]" />
+                            {isPro ? "Panel de cliente" : "Mi panel"}
+                          </a>
+                          <a
+                            href={`${clientPanelHref}?tab=bookings`}
+                            onClick={() => setUserMenuOpen(false)}
+                            className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
+                          >
+                            <CalendarDays className="h-4 w-4 text-gray-400" />
+                            Mis solicitudes
+                          </a>
+                          <a
+                            href={`${clientPanelHref}?tab=projects`}
+                            onClick={() => setUserMenuOpen(false)}
+                            className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
+                          >
+                            <FolderOpen className="h-4 w-4 text-gray-400" />
+                            Mis proyectos
+                          </a>
+                          <a
+                            href={`${clientPanelHref}?tab=saved`}
+                            onClick={() => setUserMenuOpen(false)}
+                            className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
+                          >
+                            <Bookmark className="h-4 w-4 text-gray-400" />
+                            Mis favoritos
+                          </a>
+
+                          {!isPro && (
+                            <Link
+                              href="/registro/profesional"
+                              onClick={() => setUserMenuOpen(false)}
+                              className="flex items-center gap-2.5 px-3 py-2 mt-1 border-t border-gray-50 text-sm text-[#009FD9] hover:bg-[#EBF5FB] transition-colors"
+                            >
+                              <Briefcase className="h-4 w-4" />
+                              Convertirme en profesional
+                            </Link>
+                          )}
+
+                          <button
+                            onClick={handleSignOut}
+                            className="w-full flex items-center gap-2.5 px-3 py-2 mt-1 border-t border-gray-50 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                          >
+                            <LogOut className="h-4 w-4" />
+                            Cerrar sesión
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ) : (
                   <>
@@ -540,16 +781,14 @@ export function LandingNavbar() {
               {/* Mobile toggle */}
               <button
                 onClick={() => setMobileOpen(!mobileOpen)}
-                className="lg:hidden p-2 rounded-xl text-[#1a2744] hover:bg-gray-50 transition-colors"
+                className="lg:hidden ml-auto p-2 rounded-xl text-[#1a2744] hover:bg-gray-50 transition-colors"
                 aria-label="Menú"
               >
                 {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>
             </div>
 
-            {/* ── Compact row — brand mark + search bar (Thumbtack-style) ──
-                Flex row (mark + flex-1 form) so nothing overlaps/clips at any
-                width; the form centers its capped search box on wide screens. */}
+            {/* ── Compact row — brand mark + smart search (Thumbtack-style) ── */}
             <div
               className="absolute inset-0 flex items-center gap-2 sm:gap-3 px-4 sm:px-6 lg:px-8 transition-opacity duration-300"
               style={{ opacity: compact ? 1 : 0, pointerEvents: compact ? "auto" : "none" }}
@@ -557,40 +796,69 @@ export function LandingNavbar() {
               <Link href="/" aria-label="ContrataCR inicio" className="shrink-0">
                 <ContrataCRMark className="h-9 w-9" />
               </Link>
-              {/* Mirrors the hero search bar so it reads as the same element
-                  "sticking" to the header on scroll. */}
               <form onSubmit={handleCompactSearch} className="flex-1 min-w-0 flex justify-center">
-                <div className="flex w-full max-w-5xl items-center h-12 bg-white border border-gray-200 rounded-[6px] overflow-hidden pl-3 sm:pl-5 pr-1.5 sm:pr-2 shadow-[0_8px_28px_rgba(0,0,0,0.14)]">
-                  <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 h-full">
-                    <Search className="h-5 w-5 text-gray-300 shrink-0" />
-                    <input
-                      type="text"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder="¿Qué servicio estás buscando?"
-                      className="flex-1 text-sm sm:text-base text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-none min-w-0"
-                    />
-                  </div>
-                  <div className="hidden sm:block w-px bg-gray-200 self-stretch my-3 mx-2 shrink-0" />
-                  <div className="hidden sm:flex items-center gap-2 min-w-[120px] shrink-0 h-full">
-                    <MapPin className="h-5 w-5 text-gray-300 shrink-0" />
-                    <select
-                      value={provinceQuery}
-                      onChange={(e) => setProvinceQuery(e.target.value)}
-                      className="flex-1 text-base text-gray-500 bg-transparent focus:outline-none appearance-none cursor-pointer"
+                <div className="relative w-full max-w-5xl">
+                  <div className="flex w-full items-center h-12 bg-white border border-gray-200 rounded-[6px] overflow-hidden pl-3 sm:pl-5 pr-1.5 sm:pr-2 shadow-[0_8px_28px_rgba(0,0,0,0.14)]">
+                    <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 h-full">
+                      <Search className="h-5 w-5 text-gray-300 shrink-0" />
+                      <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onFocus={() => { if (searchBlurTimer.current) clearTimeout(searchBlurTimer.current); setSearchFocused(true); }}
+                        onBlur={() => { searchBlurTimer.current = setTimeout(() => setSearchFocused(false), 150); }}
+                        placeholder="¿Qué servicio estás buscando?"
+                        className="flex-1 text-sm sm:text-base text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-none min-w-0"
+                      />
+                    </div>
+                    <div className="hidden sm:block w-px bg-gray-200 self-stretch my-3 mx-2 shrink-0" />
+                    <div className="hidden sm:flex items-center gap-2 min-w-[120px] shrink-0 h-full">
+                      <MapPin className="h-5 w-5 text-gray-300 shrink-0" />
+                      <select
+                        value={provinceQuery}
+                        onChange={(e) => setProvinceQuery(e.target.value)}
+                        className="flex-1 text-base text-gray-500 bg-transparent focus:outline-none appearance-none cursor-pointer"
+                      >
+                        <option value="">Ubicación</option>
+                        {PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
+                      </select>
+                    </div>
+                    <button
+                      type="submit"
+                      aria-label="Buscar"
+                      className="ml-1.5 sm:ml-2 h-9 px-3 sm:px-8 bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm sm:text-base font-bold rounded-[4px] transition-colors whitespace-nowrap shrink-0 inline-flex items-center justify-center gap-1.5"
                     >
-                      <option value="">Ubicación</option>
-                      {PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
-                    </select>
+                      <Search className="h-4 w-4 sm:hidden" />
+                      <span className="hidden sm:inline">Buscar</span>
+                    </button>
                   </div>
-                  <button
-                    type="submit"
-                    aria-label="Buscar"
-                    className="ml-1.5 sm:ml-2 h-9 px-3 sm:px-8 bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm sm:text-base font-bold rounded-[4px] transition-colors whitespace-nowrap shrink-0 inline-flex items-center justify-center gap-1.5"
-                  >
-                    <Search className="h-4 w-4 sm:hidden" />
-                    <span className="hidden sm:inline">Buscar</span>
-                  </button>
+
+                  {/* Autocomplete suggestions for the compact search */}
+                  {searchFocused && searchQuery.trim().length > 0 && (
+                    <div className="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-xl shadow-2xl border border-gray-100 py-1.5 z-[60] max-h-[320px] overflow-y-auto">
+                      {compactSuggestions.length === 0 ? (
+                        <button
+                          type="button"
+                          onMouseDown={(e) => { e.preventDefault(); handleCompactSearch(e as unknown as React.FormEvent); }}
+                          className="w-full text-left px-4 py-2.5 text-sm text-gray-500 hover:bg-gray-50"
+                        >
+                          Buscar “{searchQuery.trim()}” en todos los profesionales
+                        </button>
+                      ) : (
+                        compactSuggestions.map((s) => (
+                          <button
+                            key={s.id}
+                            type="button"
+                            onMouseDown={(e) => { e.preventDefault(); selectCompactSuggestion(s.id); }}
+                            className="w-full flex items-center justify-between gap-3 px-4 py-2.5 text-left hover:bg-[#EBF5FB] transition-colors"
+                          >
+                            <span className="text-sm font-medium text-[#1a2744]">{s.label}</span>
+                            <span className="text-[11px] text-gray-400 shrink-0">{s.groupLabel}</span>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  )}
                 </div>
               </form>
             </div>
@@ -601,17 +869,54 @@ export function LandingNavbar() {
         {/* Mobile drawer */}
         <div className={cn(
           "lg:hidden bg-white border-t border-gray-100 overflow-hidden transition-all duration-300 ease-in-out",
-          mobileOpen ? "max-h-[80vh] opacity-100" : "max-h-0 opacity-0"
+          mobileOpen ? "max-h-[85vh] opacity-100" : "max-h-0 opacity-0"
         )}>
-          <div className="px-4 py-4 overflow-y-auto max-h-[70vh]">
-            {NAV_MENUS.map((menu) => (
-              <div key={menu.id} className="mb-4">
-                <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{menu.label}</p>
-                {menu.columns.flatMap((col) => col.links).slice(0, 5).map((link) =>
-                  renderLink(link, () => setMobileOpen(false))
-                )}
-              </div>
-            ))}
+          <div className="px-4 py-4 overflow-y-auto max-h-[78vh]">
+            {/* Smart search on mobile */}
+            <div className="mb-4">
+              <CategoryAutocomplete
+                placeholder="Busca un servicio…"
+                size="lg"
+                onNavigate={() => setMobileOpen(false)}
+              />
+            </div>
+
+            {/* Categorías */}
+            <div className="mb-4">
+              <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Categorías</p>
+              {CATEGORY_COLUMNS.flatMap((col) => col.links).slice(0, 9).map((link) => (
+                <button
+                  key={link.id}
+                  onClick={() => goToCategory(link.id)}
+                  className="w-full text-left text-sm text-gray-600 hover:text-[#009FD9] transition-colors leading-tight block px-2 py-2"
+                >
+                  {link.label}
+                </button>
+              ))}
+              <Link
+                href="/categorias"
+                onClick={() => setMobileOpen(false)}
+                className="block px-2 py-2 text-sm font-semibold text-[#009FD9]"
+              >
+                Ver todas las categorías →
+              </Link>
+            </div>
+
+            {/* Recursos */}
+            <div className="mb-4">
+              <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Recursos</p>
+              {RESOURCES_LINKS.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileOpen(false)}
+                  className="block px-2 py-2 text-sm text-gray-600 hover:text-[#009FD9] transition-colors leading-tight"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+
             <div className="border-t border-gray-100 pt-4 flex flex-col gap-2">
               <div className="flex items-center justify-between px-1 pb-1">
                 <span className="text-xs text-gray-400 font-medium">Idioma / Language</span>
@@ -619,10 +924,27 @@ export function LandingNavbar() {
               </div>
               {user ? (
                 <>
-                  <a href={dashboardHref} onClick={() => setMobileOpen(false)}
+                  {isPro && (
+                    <a href={proPanelHref} onClick={() => setMobileOpen(false)}
+                      className="w-full block px-4 py-3 rounded-xl text-sm font-semibold text-white bg-[#009FD9] hover:bg-[#0089bb] text-center transition-colors">
+                      Panel profesional
+                    </a>
+                  )}
+                  <a href={`${clientPanelHref}?tab=bookings`} onClick={() => setMobileOpen(false)}
                     className="w-full block px-4 py-3 rounded-xl text-sm font-medium text-[#374151] border border-gray-200 hover:bg-gray-50 text-center">
-                    Mi panel
+                    {isPro ? "Panel de cliente" : "Mi panel"}
                   </a>
+                  <a href={`${clientPanelHref}?tab=saved`} onClick={() => setMobileOpen(false)}
+                    className="w-full block px-4 py-3 rounded-xl text-sm font-medium text-[#374151] border border-gray-200 hover:bg-gray-50 text-center">
+                    Mis favoritos
+                  </a>
+                  {!isPro && (
+                    <Link href="/registro/profesional" onClick={() => setMobileOpen(false)}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold text-[#009FD9] border border-[#009FD9]/30 hover:bg-[#EBF5FB] text-center transition-colors">
+                      <Briefcase className="h-4 w-4" />
+                      Convertirme en profesional
+                    </Link>
+                  )}
                   <button onClick={handleSignOut}
                     className="w-full px-4 py-3 rounded-xl text-sm font-medium text-red-600 border border-red-100 hover:bg-red-50 text-center">
                     Cerrar sesión
@@ -635,7 +957,8 @@ export function LandingNavbar() {
                     Iniciar sesión
                   </button>
                   <Link href="/registro/profesional" onClick={() => setMobileOpen(false)}
-                    className="w-full block px-4 py-3 rounded-full bg-[#009FD9] text-white text-sm font-bold text-center hover:bg-[#0089bb] transition-colors">
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-full bg-[#009FD9] text-white text-sm font-bold text-center hover:bg-[#0089bb] transition-colors">
+                    <UserPlus className="h-4 w-4" />
                     Registrarse como profesional
                   </Link>
                 </>

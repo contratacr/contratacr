@@ -530,6 +530,28 @@ export default function RegisterProfessionalPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, currentUser]);
 
+  // Registro guard — a user who is ALREADY a professional must never land on the
+  // registration/convert flow; bounce them to their professional panel. A client
+  // converting to professional has NO `professionals` row yet, so they stay and
+  // continue the flow (this is the "Convertirme en profesional" path).
+  useEffect(() => {
+    if (authLoading || !currentUser) return;
+    let cancelled = false;
+    (async () => {
+      const supabase = createClient();
+      const { data } = await supabase
+        .from("professionals")
+        .select("id")
+        .eq("profile_id", currentUser.id)
+        .maybeSingle();
+      if (!cancelled && data) {
+        setRedirecting(true);
+        router.replace("/dashboard/profesional");
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [authLoading, currentUser, router]);
+
   function handlePhotoSelect(file: File) {
     setPhotoFile(file);
     const url = URL.createObjectURL(file);
