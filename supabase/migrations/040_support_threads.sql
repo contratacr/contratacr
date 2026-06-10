@@ -71,3 +71,8 @@ where coalesce(t.message, '') <> ''
 update public.support_tickets
   set last_reply_at = coalesce(last_reply_at, created_at),
       last_reply_role = coalesce(last_reply_role, 'user');
+
+-- Reload the PostgREST schema cache so the supabase-js client sees the new
+-- columns/table immediately (otherwise inserts fail with PGRST204 "column not
+-- found in schema cache" even though the column exists).
+notify pgrst, 'reload schema';
