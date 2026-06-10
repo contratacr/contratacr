@@ -9,8 +9,8 @@ import { FadeInUp } from "@/components/landing/fade-in-up";
    technical features; no invented numbers.
    Swap the photo by editing PRO_IMAGE.src (self-hosted Cloudinary cutout). */
 const PRO_IMAGE = {
-  src: "https://res.cloudinary.com/dxxrjx2go/image/upload/f_auto,q_auto,w_900/contratacr/home/pro-tranquilidad.png",
-  alt: "Profesional verificado de ContrataCR",
+  src: "https://res.cloudinary.com/dxxrjx2go/image/upload/f_auto,q_auto,w_900/contratacr/home/deal-tranquilidad.png",
+  alt: "Cliente y profesional cerrando un acuerdo con un apretón de manos",
 };
 
 // Monochrome icons (grey/black) — serious, restrained tone, no color accents.
@@ -83,15 +83,15 @@ export function TrustBenefits() {
           <FadeInUp delay={120}>
             <div className="relative flex justify-center lg:justify-end">
               {/* Soft brand shapes for depth (no rectangular photo background) */}
-              <div aria-hidden className="pointer-events-none absolute inset-0 m-auto h-[22rem] w-[22rem] sm:h-[26rem] sm:w-[26rem] rounded-full bg-gradient-to-br from-[#EBF5FB] to-[#d7ecf7]" />
-              <div aria-hidden className="pointer-events-none absolute -bottom-6 left-1/2 -translate-x-1/2 h-3 w-64 rounded-full bg-[#1a2744]/10 blur-xl" />
-              <div className="relative h-[360px] sm:h-[460px] w-full max-w-[460px]">
+              <div aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[24rem] w-[24rem] sm:h-[30rem] sm:w-[30rem] rounded-full bg-gradient-to-br from-[#EBF5FB] to-[#d7ecf7]" />
+              <div aria-hidden className="pointer-events-none absolute bottom-2 left-1/2 -translate-x-1/2 h-3 w-72 rounded-full bg-[#1a2744]/10 blur-xl" />
+              <div className="relative h-[380px] sm:h-[540px] w-full max-w-[480px]">
                 <Image
                   src={PRO_IMAGE.src}
                   alt={PRO_IMAGE.alt}
                   fill
-                  className="object-contain object-bottom drop-shadow-[0_20px_40px_rgba(16,39,68,0.18)]"
-                  sizes="(min-width:1024px) 460px, 80vw"
+                  className="object-contain object-bottom drop-shadow-[0_22px_44px_rgba(16,39,68,0.20)]"
+                  sizes="(min-width:1024px) 480px, 85vw"
                 />
               </div>
             </div>
