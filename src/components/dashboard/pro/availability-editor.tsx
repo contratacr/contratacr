@@ -84,7 +84,11 @@ interface AvailabilityEditorProps {
 
 export function AvailabilityEditor({ professionalId, initialPublic = true, initialContactPreference = "ambas", workplaces = [], coverageAreas = [], professions = [], initialVideoconsulta = false, initialAllowPhoneCall = false, onSaved }: AvailabilityEditorProps) {
   const [isPublic, setIsPublic] = useState(initialPublic);
-  const [contactPreference, setContactPreference] = useState<ContactPreference>(initialContactPreference);
+  // Legacy "solo_citas" (app-only) is no longer an option — treat it as "ambas"
+  // so the radio shows a valid selection.
+  const [contactPreference, setContactPreference] = useState<ContactPreference>(
+    initialContactPreference === "solo_citas" ? "ambas" : initialContactPreference
+  );
   const [savingContact, setSavingContact] = useState(false);
   const [videoconsulta, setVideoconsulta] = useState(initialVideoconsulta);
   const [allowPhoneCall, setAllowPhoneCall] = useState(initialAllowPhoneCall);

@@ -10,7 +10,8 @@ import { PriceInput } from "@/components/ui/price-input";
 import { WorkplacesPicker, type Workplace } from "@/components/maps/workplaces-picker";
 import { CoverageAreaSelector } from "@/components/maps/coverage-area-selector";
 import { createClient } from "@/lib/supabase/client";
-import { Camera, Check, X, Plus, Truck, MapPin, ChevronDown, Globe } from "lucide-react";
+import { Camera, Check, X, Plus, Truck, MapPin, ChevronDown, Globe, ShieldCheck, Lock } from "lucide-react";
+import { Link } from "@/i18n/navigation";
 import { computeSearchAreas, primaryArea, type CoverageArea } from "@/lib/location";
 import { AseguradorasInput } from "@/components/ui/aseguradoras-input";
 import { CloseAccountSection } from "@/components/account/close-account-section";
@@ -59,6 +60,10 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
   const [bio, setBio] = useState<string>(initial.bio ?? "");
   const [whatsapp, setWhatsapp] = useState<string>(initial.whatsapp ?? "");
   const [fullName, setFullName] = useState<string>(initial.profiles?.full_name ?? "");
+  // The official name is locked once verified — it's what backs the "Identidad
+  // verificada" badge (the guarantee it matches the padrón). Corrections go
+  // through admin review, not a free edit. The commercial name stays editable.
+  const nameLocked = (initial.verification_status as string) === "verified";
   const seedProfessions: string[] =
     Array.isArray(initial.professions) && initial.professions.length > 0
       ? initial.professions
@@ -229,8 +234,9 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
 
       if (proError) throw proError;
 
-      // Persist the professional's personal/display name.
-      if (fullName) {
+      // Persist the personal/display name — but NEVER overwrite a verified
+      // official name (it's locked; corrections go through admin review).
+      if (fullName && !nameLocked) {
         await supabase.from("profiles").update({ full_name: fullName }).eq("id", profileId);
       }
 
@@ -305,13 +311,33 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
           />
         </div>
 
-        {/* Personal name — always your own name */}
-        <Input
-          label={<>Nombre completo <span className="text-red-500">*</span></>}
-          value={fullName}
-          onChange={(e) => { setFullName(e.target.value); touch(); }}
-          placeholder="Juan Pérez González"
-        />
+        {/* Official name — locked once verified (backs the verified badge) */}
+        {nameLocked ? (
+          <div>
+            <Input
+              label={
+                <span className="inline-flex items-center gap-1.5">
+                  Nombre completo
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#16a34a]"><ShieldCheck className="h-3.5 w-3.5" /> Verificado</span>
+                </span>
+              }
+              value={fullName}
+              disabled
+              rightIcon={<Lock className="h-4 w-4" />}
+            />
+            <p className="text-xs text-[#6b7280] mt-1.5">
+              Tu nombre oficial está verificado con el padrón y respalda tu insignia <strong>Identidad verificada</strong>, por eso no se edita aquí. ¿Un error o un cambio legal?{" "}
+              <Link href="/soporte" className="text-[#009FD9] font-medium hover:underline">Solicita la corrección a soporte</Link> para revisión.
+            </p>
+          </div>
+        ) : (
+          <Input
+            label={<>Nombre completo <span className="text-red-500">*</span></>}
+            value={fullName}
+            onChange={(e) => { setFullName(e.target.value); touch(); }}
+            placeholder="Juan Pérez González"
+          />
+        )}
 
         {/* Brand / business name — optional */}
         <Input

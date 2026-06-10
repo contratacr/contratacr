@@ -115,8 +115,9 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
   // area keeps a single full-width primary button and the card never grows.
   // WhatsApp shows on bookable cards as a secondary (contact-only keeps WhatsApp
   // as its primary button below); call shows whenever the pro opted in.
-  const canWhatsApp = (professional.contactPreference ?? "ambas") !== "solo_citas";
-  const showTopWhatsApp = !contactOnly && canWhatsApp && !!professional.whatsapp;
+  // WhatsApp is ALWAYS available (the only choice is whether they also offer
+  // in-app scheduling), so the contact icon shows whenever a number exists.
+  const showTopWhatsApp = !contactOnly && !!professional.whatsapp;
   const showTopCall = !!professional.allowPhoneCall && !!professional.whatsapp;
   const waHref = professional.whatsapp
     ? getWhatsAppLink(professional.whatsapp, `Hola ${professional.fullName.split(" ")[0]}, vi tu perfil en ContrataCR y me gustaría coordinar un servicio.`)
