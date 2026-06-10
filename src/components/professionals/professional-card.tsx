@@ -173,25 +173,25 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
                 {/* Direct-contact icons — reuse the existing name row's spare
                     horizontal space (no extra row → card height unchanged). */}
                 {(showTopWhatsApp || showTopCall) && (
-                  <span className="ml-auto flex shrink-0 items-center gap-1">
+                  <span className="ml-auto flex shrink-0 items-center gap-0.5">
                     {showTopWhatsApp && (
                       <a
                         href={waHref}
                         target="_blank"
                         rel="noopener noreferrer"
                         aria-label="Contactar por WhatsApp"
-                        className="grid h-7 w-7 place-items-center rounded-md border border-[#25D366] text-[#1ebe5d] hover:bg-[#25D366]/10 transition-colors"
+                        className="grid h-7 w-7 place-items-center rounded-full text-[#1ebe5d] hover:bg-[#25D366]/10 transition-colors"
                       >
-                        <WhatsAppIcon className="h-4 w-4" />
+                        <WhatsAppIcon className="h-[18px] w-[18px]" />
                       </a>
                     )}
                     {showTopCall && (
                       <a
                         href={telHref}
                         aria-label="Llamar"
-                        className="grid h-7 w-7 place-items-center rounded-md border border-[#e5e7eb] text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] transition-colors"
+                        className="grid h-7 w-7 place-items-center rounded-full text-[#6b7280] hover:bg-[#EBF5FB] hover:text-[#009FD9] transition-colors"
                       >
-                        <Phone className="h-4 w-4" />
+                        <Phone className="h-[18px] w-[18px]" />
                       </a>
                     )}
                   </span>
