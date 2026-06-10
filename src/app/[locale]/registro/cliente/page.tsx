@@ -79,7 +79,7 @@ export default function RegisterClientPage() {
       return;
     }
     if (detectIdType(cleanCedula) === "cedula" && (!identity || !identity.found)) {
-      setError("No pudimos confirmar tu identidad ni tu mayoría de edad con esa cédula. Si tu cédula es nueva o eres extranjero, escríbenos a soporte@contratacr.com.");
+      setError("No pudimos confirmar tu identidad ni tu mayoría de edad con esa cédula. Si tu cédula es nueva o eres extranjero, abre un ticket en el Centro de soporte.");
       return;
     }
 

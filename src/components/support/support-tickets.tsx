@@ -10,6 +10,7 @@ type Ticket = {
   topic?: string | null;
   message: string;
   status: string;
+  user_confirmed?: boolean;
   created_at: string;
   last_reply_at?: string | null;
   last_reply_role?: string | null;
@@ -24,13 +25,12 @@ type Message = {
 };
 
 const STATUS_LABEL: Record<string, string> = {
-  open: "Abierto", in_progress: "En proceso", resolved: "Resuelto", closed: "Cerrado",
+  open: "Pendiente", in_progress: "En proceso", resolved: "Resuelto",
 };
 const STATUS_COLOR: Record<string, string> = {
   open: "bg-amber-100 text-amber-700",
   in_progress: "bg-blue-100 text-blue-700",
   resolved: "bg-emerald-100 text-emerald-700",
-  closed: "bg-gray-200 text-gray-600",
 };
 
 function fmt(d: string) {
@@ -80,6 +80,19 @@ export function SupportTickets() {
     else alert("No se pudo enviar el mensaje.");
   }
 
+  async function ticketAction(action: "confirm" | "reopen") {
+    if (!openId) return;
+    setSending(true);
+    const res = await fetch("/api/support", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ticketId: openId, action }),
+    });
+    setSending(false);
+    if (res.ok) openTicket(openId);
+    else alert("No se pudo procesar. Intenta de nuevo.");
+  }
+
   // ── Thread view ──
   if (openId) {
     return (
@@ -110,6 +123,26 @@ export function SupportTickets() {
                 </div>
               ))}
             </div>
+
+            {/* Resolved → user confirms the fix or asks to reopen */}
+            {ticket.status === "resolved" && !ticket.user_confirmed && (
+              <div className="px-4 py-3 border-t border-[#e5e7eb] bg-[#f0fdf4]">
+                <p className="text-sm font-medium text-[#166534] mb-2">Marcamos este ticket como resuelto. ¿Se solucionó tu problema?</p>
+                <div className="flex flex-wrap gap-2">
+                  <button onClick={() => ticketAction("confirm")} disabled={sending} className="inline-flex items-center gap-1.5 rounded-lg bg-[#16a34a] text-white text-sm font-medium px-3 py-1.5 hover:bg-[#15803d] disabled:opacity-50">
+                    Sí, está resuelto
+                  </button>
+                  <button onClick={() => ticketAction("reopen")} disabled={sending} className="inline-flex items-center gap-1.5 rounded-lg bg-white border border-[#e5e7eb] text-[#374151] text-sm font-medium px-3 py-1.5 hover:bg-gray-50 disabled:opacity-50">
+                    No, sigo con el problema
+                  </button>
+                </div>
+              </div>
+            )}
+            {ticket.status === "resolved" && ticket.user_confirmed && (
+              <div className="px-4 py-2.5 border-t border-[#e5e7eb] bg-[#f0fdf4] text-sm text-[#166534]">
+                ✓ Confirmaste que este ticket quedó resuelto.
+              </div>
+            )}
 
             <div className="p-4 border-t border-[#e5e7eb]">
               <textarea

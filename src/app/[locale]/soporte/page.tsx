@@ -4,9 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { useAuth } from "@/hooks/use-auth";
-import { CheckCircle2, MessageSquare, AlertCircle, Paperclip, X } from "lucide-react";
-import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
-import { SUPPORT_WHATSAPP_URL } from "@/lib/constants";
+import { CheckCircle2, MessageSquare, AlertCircle, Paperclip, X, LifeBuoy } from "lucide-react";
+import { Link } from "@/i18n/navigation";
 
 const SUBJECTS = [
   "Problema técnico en la plataforma",
@@ -105,7 +104,7 @@ export default function SoportePage() {
       }
       setSuccess(true);
     } catch {
-      setError("Error inesperado. Por favor escríbenos a soporte@contratacr.com");
+      setError("Error inesperado. Intenta de nuevo en unos minutos.");
     } finally {
       setSubmitting(false);
     }
@@ -123,16 +122,30 @@ export default function SoportePage() {
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#EBF5FB] mx-auto mb-5">
               <CheckCircle2 className="h-10 w-10 text-[#009FD9]" />
             </div>
-            <h1 className="text-2xl font-bold text-[#111827] mb-2">¡Mensaje enviado!</h1>
-            <p className="text-[#6b7280] mb-6">
-              Te respondemos a <strong>{form.email}</strong> en menos de 24 horas.
-            </p>
-            <p className="text-sm text-[#9ca3af]">
-              También puedes escribirnos directamente a{" "}
-              <a href="mailto:soporte@contratacr.com" className="text-[#009FD9] hover:underline">
-                soporte@contratacr.com
-              </a>
-            </p>
+            <h1 className="text-2xl font-bold text-[#111827] mb-2">¡Ticket creado!</h1>
+            {user ? (
+              <>
+                <p className="text-[#6b7280] mb-6">
+                  Recibimos tu consulta. Te respondemos por correo y puedes seguir la conversación en tus tickets.
+                </p>
+                <Link
+                  href="/dashboard/cliente?tab=soporte"
+                  className="inline-flex items-center gap-2 bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold px-6 py-3 rounded-full transition-all text-sm"
+                >
+                  <LifeBuoy className="h-4 w-4" /> Ver mis tickets
+                </Link>
+              </>
+            ) : (
+              <>
+                <p className="text-[#6b7280] mb-6">
+                  Recibimos tu consulta. Te responderemos por correo a <strong>{form.email}</strong>.
+                </p>
+                <p className="text-sm text-[#9ca3af]">
+                  ¿Quieres seguir tus tickets en la plataforma?{" "}
+                  <Link href="/login" className="text-[#009FD9] font-semibold hover:underline">Inicia sesión</Link> con ese correo.
+                </p>
+              </>
+            )}
           </div>
         </main>
         <LandingFooter />
@@ -152,7 +165,7 @@ export default function SoportePage() {
               <MessageSquare className="h-6 w-6 text-[#009FD9]" />
             </div>
             <h1 className="text-2xl font-bold text-[#111827] mb-1">Centro de soporte</h1>
-            <p className="text-sm text-[#6b7280]">Completa el formulario y te respondemos por correo en menos de 24 horas. Para algo urgente, escríbenos por WhatsApp.</p>
+            <p className="text-sm text-[#6b7280]">Abre un ticket y te respondemos por correo y en tu panel. Es nuestro único canal de soporte, así no se pierde ninguna consulta.</p>
           </div>
 
           {/* Primary: support ticket form */}
@@ -263,22 +276,6 @@ export default function SoportePage() {
                 </form>
               </div>
             </div>
-
-          {/* Secondary: WhatsApp option */}
-          <div className="mt-4 flex flex-col items-center gap-3 py-6 border-t border-[#e5e7eb]">
-            <p className="text-sm text-[#6b7280]">
-              También puedes contactarnos directamente por WhatsApp
-            </p>
-            <a
-              href={SUPPORT_WHATSAPP_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2.5 bg-[#25D366] hover:bg-[#1db954] text-white font-semibold px-6 py-3 rounded-full transition-all text-sm shadow-sm hover:shadow-md"
-            >
-              <WhatsAppIcon className="h-5 w-5" />
-              Escribir por WhatsApp
-            </a>
-          </div>
 
         </div>
       </main>

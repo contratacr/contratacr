@@ -5,6 +5,7 @@ import { LifeBuoy, ArrowLeft, Send, User, Shield } from "lucide-react";
 
 type Ticket = {
   id: string;
+  user_id?: string | null;
   name?: string | null;
   email: string;
   subject: string;
@@ -27,20 +28,18 @@ type Message = {
 };
 
 const STATUSES = [
-  { id: "open", label: "Abiertos" },
+  { id: "open", label: "Pendientes" },
   { id: "in_progress", label: "En proceso" },
   { id: "resolved", label: "Resueltos" },
-  { id: "closed", label: "Cerrados" },
 ] as const;
 
 const STATUS_LABEL: Record<string, string> = {
-  open: "Abierto", in_progress: "En proceso", resolved: "Resuelto", closed: "Cerrado",
+  open: "Pendiente", in_progress: "En proceso", resolved: "Resuelto",
 };
 const STATUS_COLOR: Record<string, string> = {
   open: "bg-amber-100 text-amber-700",
   in_progress: "bg-blue-100 text-blue-700",
   resolved: "bg-emerald-100 text-emerald-700",
-  closed: "bg-gray-200 text-gray-600",
 };
 
 function fmt(d: string) {
@@ -118,7 +117,12 @@ export function AdminSupport() {
             <div className="px-5 py-4 border-b border-[#e5e7eb] flex items-start justify-between gap-3 flex-wrap">
               <div className="min-w-0">
                 <p className="font-semibold text-[#111827]">{ticket.subject}</p>
-                <p className="text-xs text-[#9ca3af]">{ticket.name || "Sin nombre"} · {ticket.email}{ticket.topic ? ` · ${ticket.topic}` : ""}</p>
+                <p className="text-xs text-[#9ca3af]">
+                  {ticket.name || "Sin nombre"} · {ticket.email}{ticket.topic ? ` · ${ticket.topic}` : ""}
+                  <span className={`ml-1.5 inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${ticket.user_id ? "bg-[#dbeafe] text-[#1d4ed8]" : "bg-gray-100 text-gray-500"}`}>
+                    {ticket.user_id ? "Registrado" : "Invitado"}
+                  </span>
+                </p>
                 {ticket.handled_by_name && (
                   <p className="text-[11px] text-[#9ca3af] mt-0.5">Atendido por {ticket.handled_by_name}{ticket.handled_at ? ` · ${fmt(ticket.handled_at)}` : ""}</p>
                 )}
@@ -199,6 +203,7 @@ export function AdminSupport() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-sm font-semibold text-[#111827]">{t.subject}</p>
                     <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${STATUS_COLOR[t.status] ?? "bg-gray-100 text-gray-600"}`}>{STATUS_LABEL[t.status] ?? t.status}</span>
+                    <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${t.user_id ? "bg-[#dbeafe] text-[#1d4ed8]" : "bg-gray-100 text-gray-500"}`}>{t.user_id ? "Registrado" : "Invitado"}</span>
                     {t.last_reply_role === "user" && t.status !== "closed" && (
                       <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#fee2e2] text-[#b91c1c]">Espera respuesta</span>
                     )}

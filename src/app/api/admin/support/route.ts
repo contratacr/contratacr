@@ -3,7 +3,7 @@ import { getApiAdmin } from "@/lib/auth/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notifyUserOfReply } from "@/lib/support-notify";
 
-const STATUSES = ["open", "in_progress", "resolved", "closed"];
+const STATUSES = ["open", "in_progress", "resolved"];
 
 // GET /api/admin/support?status=… — ticket list (admin-only).
 // GET /api/admin/support?id=… — one ticket + its full message thread.
@@ -30,12 +30,15 @@ export async function GET(req: Request) {
   if (STATUSES.includes(status)) q = q.eq("status", status);
   const { data } = await q;
 
-  const { count: openCount } = await db
-    .from("support_tickets")
-    .select("id", { count: "exact", head: true })
-    .in("status", ["open", "in_progress"]);
+  // "Needs attention" badge = every pending ticket + any in-progress ticket whose
+  // last message is the USER's (i.e. awaiting an admin reply).
+  const { count: pending } = await db
+    .from("support_tickets").select("id", { count: "exact", head: true }).eq("status", "open");
+  const { count: awaitingReply } = await db
+    .from("support_tickets").select("id", { count: "exact", head: true }).eq("status", "in_progress").eq("last_reply_role", "user");
+  const needsAttention = (pending ?? 0) + (awaitingReply ?? 0);
 
-  return NextResponse.json({ tickets: data ?? [], openCount: openCount ?? 0 });
+  return NextResponse.json({ tickets: data ?? [], openCount: needsAttention, needsAttention });
 }
 
 // PATCH /api/admin/support — change ticket status (with audit). Admin-only.

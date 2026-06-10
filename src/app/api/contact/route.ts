@@ -184,7 +184,7 @@ export async function POST(req: NextRequest) {
     if (!ticketSaved && !sent) {
       return NextResponse.json({
         ok: false,
-        error: "No pudimos registrar tu mensaje. Escríbenos directamente a soporte@contratacr.com",
+        error: "No pudimos registrar tu mensaje. Intenta de nuevo en unos minutos.",
       }, { status: 503 });
     }
 
@@ -193,7 +193,7 @@ export async function POST(req: NextRequest) {
     console.error("[contact] error:", err);
     return NextResponse.json({
       ok: false,
-      error: "Error al enviar el mensaje. Escríbenos a soporte@contratacr.com",
+      error: "Error al enviar el mensaje. Intenta de nuevo en unos minutos.",
     }, { status: 500 });
   }
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
@@ -29,6 +30,15 @@ export async function GET(request: NextRequest) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error && data.user) {
+      // Guest→account linking: attach prior GUEST tickets with this (now
+      // verified) email to the account so the history continues in-app.
+      if (data.user.email && data.user.email_confirmed_at) {
+        try {
+          const admin = createAdminClient();
+          await admin.from("support_tickets").update({ user_id: data.user.id }).is("user_id", null).ilike("email", data.user.email);
+        } catch { /* best-effort */ }
+      }
+
       // Password reset flow → explicit next param (e.g. /es/reset-password)
       if (next) {
         return NextResponse.redirect(`${origin}${next}`);

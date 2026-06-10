@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { ShieldCheck, LogOut, Flag, Shield, Tag, UserX, LifeBuoy } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Link } from "@/i18n/navigation";
@@ -19,6 +20,18 @@ export function AdminShell({
   active?: "verificacion" | "reportes" | "aseguradoras" | "categorias" | "cuentas" | "soporte";
   children: React.ReactNode;
 }) {
+  const [supportCount, setSupportCount] = useState(0);
+
+  // Badge: how many tickets need attention (pending + awaiting an admin reply).
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/admin/support?status=open")
+      .then((r) => r.json())
+      .then((d) => { if (alive) setSupportCount(d.needsAttention ?? d.openCount ?? 0); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, []);
+
   async function signOut() {
     const supabase = createClient();
     await supabase.auth.signOut();
@@ -26,12 +39,12 @@ export function AdminShell({
   }
 
   const tabs = [
-    { id: "verificacion", label: "Verificación", icon: ShieldCheck, href: "/admin" as const },
-    { id: "reportes", label: "Reportes", icon: Flag, href: "/admin/reportes" as const },
-    { id: "aseguradoras", label: "Aseguradoras", icon: Shield, href: "/admin/aseguradoras" as const },
-    { id: "categorias", label: "Categorías", icon: Tag, href: "/admin/categorias" as const },
-    { id: "cuentas", label: "Cuentas", icon: UserX, href: "/admin/cuentas" as const },
-    { id: "soporte", label: "Soporte", icon: LifeBuoy, href: "/admin/soporte" as const },
+    { id: "verificacion", label: "Verificación", icon: ShieldCheck, href: "/admin" as const, badge: 0 },
+    { id: "reportes", label: "Reportes", icon: Flag, href: "/admin/reportes" as const, badge: 0 },
+    { id: "aseguradoras", label: "Aseguradoras", icon: Shield, href: "/admin/aseguradoras" as const, badge: 0 },
+    { id: "categorias", label: "Categorías", icon: Tag, href: "/admin/categorias" as const, badge: 0 },
+    { id: "cuentas", label: "Cuentas", icon: UserX, href: "/admin/cuentas" as const, badge: 0 },
+    { id: "soporte", label: "Soporte", icon: LifeBuoy, href: "/admin/soporte" as const, badge: supportCount },
   ];
 
   return (
@@ -63,6 +76,11 @@ export function AdminShell({
               )}
             >
               <t.icon className="h-4 w-4" /> {t.label}
+              {t.badge > 0 && (
+                <span className="ml-0.5 inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold leading-none text-white">
+                  {t.badge > 9 ? "9+" : t.badge}
+                </span>
+              )}
             </Link>
           ))}
         </div>
