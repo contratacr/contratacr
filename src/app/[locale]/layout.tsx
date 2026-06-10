@@ -16,7 +16,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://contratacr.com"),
-  title: "ContrataCR — Profesionales de servicios en Costa Rica",
+  title: "ContrataCR: Profesionales de servicios en Costa Rica",
   description:
     "Encuentra electricistas, plomeros, pintores, tutores y más profesionales verificados en tu cantón.",
   applicationName: "ContrataCR",
