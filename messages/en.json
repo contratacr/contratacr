@@ -219,8 +219,8 @@
       "availability": "Availability",
       "continue": "Continue",
       "back": "Back",
-      "create": "Create my free profile",
-      "creating": "Creating profile...",
+      "create": "Publish my profile",
+      "creating": "Publishing profile...",
       "success": {
         "title": "Profile created!",
         "desc": "Your profile is ready. It will appear in search results shortly.",

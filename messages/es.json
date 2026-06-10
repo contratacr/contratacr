@@ -219,8 +219,8 @@
       "availability": "Disponibilidad",
       "continue": "Continuar",
       "back": "Atrás",
-      "create": "Crear mi perfil gratis",
-      "creating": "Creando perfil...",
+      "create": "Publicar mi perfil",
+      "creating": "Publicando perfil...",
       "success": {
         "title": "¡Perfil creado!",
         "desc": "Tu perfil está listo. En breve aparecerá en los resultados de búsqueda.",
