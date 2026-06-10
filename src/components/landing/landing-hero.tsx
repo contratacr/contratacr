@@ -299,7 +299,7 @@ export function LandingHero() {
                   onKeyDown={handleKeyDown}
                   onFocus={() => { if (suggestions.length > 0) setOpenSug(true); }}
                   onBlur={() => setTimeout(() => setOpenSug(false), 120)}
-                  placeholder={t("searchPlaceholder")}
+                  placeholder={t("searchPlaceholderShort")}
                   className="flex-1 text-base text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-none min-w-0"
                   role="combobox"
                   aria-expanded={openSug}

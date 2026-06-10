@@ -440,6 +440,8 @@ export function LandingNavbar() {
   const [searchQuery, setSearchQuery] = useState("");
   const [provinceQuery, setProvinceQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
+  // Drives a SHORTER search placeholder on small screens so it never clips.
+  const [isSmallScreen, setIsSmallScreen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const searchBlurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -472,6 +474,15 @@ export function LandingNavbar() {
     }
     document.addEventListener("mousedown", onClickOutside);
     return () => document.removeEventListener("mousedown", onClickOutside);
+  }, []);
+
+  // Track small screens so the compact search placeholder can shorten to fit.
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 639px)");
+    const update = () => setIsSmallScreen(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
   }, []);
 
   async function handleSignOut() {
@@ -813,7 +824,7 @@ export function LandingNavbar() {
                         onChange={(e) => setSearchQuery(e.target.value)}
                         onFocus={() => { if (searchBlurTimer.current) clearTimeout(searchBlurTimer.current); setSearchFocused(true); }}
                         onBlur={() => { searchBlurTimer.current = setTimeout(() => setSearchFocused(false), 150); }}
-                        placeholder="¿Qué servicio estás buscando?"
+                        placeholder={isSmallScreen ? "¿Qué necesitas?" : "¿Qué servicio estás buscando?"}
                         className="flex-1 text-sm sm:text-base text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-none min-w-0"
                       />
                     </div>
