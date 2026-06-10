@@ -11,7 +11,7 @@ const SUPPORT_TO   = "soporte@contratacr.com";
 /* ─── Parse FormData from request ─── */
 async function parseRequest(req: NextRequest) {
   const contentType = req.headers.get("content-type") ?? "";
-  let name = "", email = "", subject = "", message = "";
+  let name = "", email = "", subject = "", message = "", topic = "";
   const fileAttachments: { filename: string; content: Buffer; contentType: string }[] = [];
 
   if (contentType.includes("multipart/form-data")) {
@@ -20,6 +20,7 @@ async function parseRequest(req: NextRequest) {
     email   = (fd.get("email")   as string) ?? "";
     subject = (fd.get("subject") as string) ?? "";
     message = (fd.get("message") as string) ?? "";
+    topic   = (fd.get("topic")   as string) ?? "";
     for (const file of fd.getAll("attachments") as File[]) {
       if (file && file.size > 0) {
         fileAttachments.push({
@@ -31,10 +32,10 @@ async function parseRequest(req: NextRequest) {
     }
   } else {
     const body = await req.json();
-    ({ name = "", email = "", subject = "", message = "" } = body);
+    ({ name = "", email = "", subject = "", message = "", topic = "" } = body);
   }
 
-  return { name, email, subject, message, fileAttachments };
+  return { name, email, subject, message, topic, fileAttachments };
 }
 
 /* ─── HTML email body ─── */
@@ -136,8 +137,8 @@ async function sendViaSMTP(
   return true;
 }
 
-/* ─── Persist as an admin support ticket (best-effort; survives pre-migration) ─── */
-async function saveTicket(name: string, email: string, subject: string, message: string): Promise<boolean> {
+/* ─── Persist as an admin support ticket + seed the thread's first message ─── */
+async function saveTicket(name: string, email: string, subject: string, message: string, topic?: string): Promise<boolean> {
   try {
     let userId: string | null = null;
     try {
@@ -146,10 +147,19 @@ async function saveTicket(name: string, email: string, subject: string, message:
       userId = data.user?.id ?? null;
     } catch { /* guest — no session */ }
     const admin = createAdminClient();
-    const { error } = await admin
+    const now = new Date().toISOString();
+    const { data: ticket, error } = await admin
       .from("support_tickets")
-      .insert({ user_id: userId, name: name || null, email, subject, message });
+      .insert({ user_id: userId, name: name || null, email, subject, message, topic: topic || null, last_reply_at: now, last_reply_role: "user" })
+      .select("id")
+      .single();
     if (error) { console.error("[contact] ticket insert:", error.message); return false; }
+    // Seed the conversation thread with the user's first message.
+    if (ticket?.id) {
+      await admin.from("support_messages").insert({
+        ticket_id: ticket.id, sender_role: "user", sender_id: userId, sender_name: name || null, body: message,
+      });
+    }
     return true;
   } catch (e) {
     console.error("[contact] ticket insert:", e);
@@ -160,14 +170,14 @@ async function saveTicket(name: string, email: string, subject: string, message:
 /* ─── Route handler ─── */
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, subject, message, fileAttachments } = await parseRequest(req);
+    const { name, email, subject, message, topic, fileAttachments } = await parseRequest(req);
 
     if (!email || !subject || !message) {
       return NextResponse.json({ error: "Faltan campos requeridos" }, { status: 400 });
     }
 
     // Record the ticket in the admin panel (primary record), then notify by email.
-    const ticketSaved = await saveTicket(name, email, subject, message);
+    const ticketSaved = await saveTicket(name, email, subject, message, topic);
     const sent = await sendViaResend(name, email, subject, message, fileAttachments)
       || await sendViaSMTP(name, email, subject, message, fileAttachments);
 

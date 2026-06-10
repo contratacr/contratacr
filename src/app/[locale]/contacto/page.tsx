@@ -49,7 +49,7 @@ function ContactForm() {
           ✅
         </div>
         <h3 className="text-2xl font-bold text-[#1a2744] mb-2">¡Mensaje enviado!</h3>
-        <p className="text-gray-500">Te respondemos en menos de 24 horas.</p>
+        <p className="text-gray-500">Creamos tu ticket de soporte. Te respondemos por correo y, si tienes cuenta, también en tu panel.</p>
       </div>
     );
   }
@@ -171,7 +171,7 @@ export default function ContactoPage() {
             Hablemos.
           </h1>
           <p className="text-lg text-gray-500 max-w-xl mx-auto">
-            Estamos para ayudarte. Respondemos en menos de 24 horas.
+            Estamos para ayudarte. Envía un ticket y te respondemos por correo y en tu panel.
           </p>
         </FadeInUp>
       </section>
@@ -205,7 +205,7 @@ export default function ContactoPage() {
                     </div>
                     <div>
                       <h3 className="text-sm font-bold text-[#1a2744] mb-0.5">WhatsApp</h3>
-                      <p className="text-xs text-gray-400 mb-3">Respuesta inmediata en horario laboral</p>
+                      <p className="text-xs text-gray-400 mb-3">Te escribimos en horario laboral</p>
                       <a
                         href={SUPPORT_WHATSAPP_URL}
                         target="_blank"
@@ -228,7 +228,7 @@ export default function ContactoPage() {
                     </div>
                     <div>
                       <h3 className="text-sm font-bold text-[#1a2744] mb-0.5">Ticket de soporte</h3>
-                      <p className="text-xs text-gray-400 mb-3">Respondemos en menos de 24 horas</p>
+                      <p className="text-xs text-gray-400 mb-3">Lo gestionamos en el panel y te respondemos por correo</p>
                       <a
                         href="/soporte"
                         className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#009FD9] hover:underline"

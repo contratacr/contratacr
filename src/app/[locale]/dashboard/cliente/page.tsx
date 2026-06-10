@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
-  CalendarDays, Bookmark, LogOut, Bell, User, FolderOpen, Briefcase, Search,
+  CalendarDays, Bookmark, LogOut, Bell, User, FolderOpen, Briefcase, Search, LifeBuoy,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -16,9 +16,10 @@ import { NotificationsList } from "@/components/notifications/notifications-list
 import { PhoneInput } from "@/components/ui/phone-input";
 import { CloseAccountSection } from "@/components/account/close-account-section";
 import { AccountSecuritySection } from "@/components/account/account-security";
+import { SupportTickets } from "@/components/support/support-tickets";
 import { ClientActivity } from "@/components/dashboard/client-activity";
 
-type Tab = "bookings" | "projects" | "saved" | "notifications" | "profile";
+type Tab = "bookings" | "projects" | "saved" | "notifications" | "soporte" | "profile";
 
 export default function ClientDashboardPage() {
   const { user, loading: authLoading } = useAuth();
@@ -49,6 +50,7 @@ export default function ClientDashboardPage() {
       projects: "sent_projects",
       saved: "saved",
       notifications: "notifications",
+      soporte: "soporte",
       profile: "cuenta",
     };
     const target = map[activeTab];
@@ -168,6 +170,7 @@ export default function ClientDashboardPage() {
       ),
       label: "Notificaciones",
     },
+    { key: "soporte", icon: <LifeBuoy className="h-4 w-4" />, label: "Soporte" },
     { key: "profile", icon: <User className="h-4 w-4" />, label: "Mi perfil" },
   ];
 
@@ -248,6 +251,14 @@ export default function ClientDashboardPage() {
             <div>
               <h2 className="text-lg font-semibold text-[#111827] mb-4">Notificaciones</h2>
               <NotificationsList />
+            </div>
+          )}
+
+          {/* SOPORTE TAB */}
+          {activeTab === "soporte" && (
+            <div>
+              <h2 className="text-lg font-semibold text-[#111827] mb-4">Soporte</h2>
+              <SupportTickets />
             </div>
           )}
 

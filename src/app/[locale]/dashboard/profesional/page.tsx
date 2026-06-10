@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   User, Image as ImageIcon, CalendarDays, Inbox, LogOut, ExternalLink, Wrench,
-  FolderOpen, ShieldCheck, Bell, Send, ClipboardList, Bookmark, Settings,
+  FolderOpen, ShieldCheck, Bell, Send, ClipboardList, Bookmark, Settings, LifeBuoy,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -23,6 +23,7 @@ import { ClientActivity } from "@/components/dashboard/client-activity";
 import { NotificationsList } from "@/components/notifications/notifications-list";
 import { AccountSecuritySection } from "@/components/account/account-security";
 import { CloseAccountSection } from "@/components/account/close-account-section";
+import { SupportTickets } from "@/components/support/support-tickets";
 import { createClient } from "@/lib/supabase/client";
 import { getInitials } from "@/lib/utils";
 import { useRouter } from "@/i18n/navigation";
@@ -35,7 +36,7 @@ import { cn } from "@/lib/utils";
 type Tab =
   | "profile" | "services" | "photos" | "availability" | "bookings" | "proposals" | "verificacion"
   | "sent_bookings" | "sent_projects" | "saved"
-  | "notifications" | "cuenta";
+  | "notifications" | "soporte" | "cuenta";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ProData = Record<string, any>;
@@ -52,6 +53,7 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
   sent_projects: <ClipboardList className="h-4 w-4" />,
   saved: <Bookmark className="h-4 w-4" />,
   notifications: <Bell className="h-4 w-4" />,
+  soporte: <LifeBuoy className="h-4 w-4" />,
   cuenta: <Settings className="h-4 w-4" />,
 };
 
@@ -67,6 +69,7 @@ const TAB_LABELS: Record<Tab, string> = {
   sent_projects: "Mis proyectos publicados",
   saved: "Mis favoritos",
   notifications: "Notificaciones",
+  soporte: "Soporte",
   cuenta: "Cuenta y seguridad",
 };
 
@@ -274,6 +277,7 @@ export default function ProDashboardPage() {
                   </div>
                   <div className="border-t border-[#f3f4f6] pt-2">
                     {navButton("notifications")}
+                    {navButton("soporte")}
                     {navButton("cuenta")}
                   </div>
                 </CardContent>
@@ -349,6 +353,8 @@ export default function ProDashboardPage() {
                   {activeTab === "saved" && <ClientActivity section="saved" />}
 
                   {activeTab === "notifications" && <NotificationsList />}
+
+                  {activeTab === "soporte" && <SupportTickets />}
 
                   {activeTab === "cuenta" && (
                     <div className="space-y-6">
