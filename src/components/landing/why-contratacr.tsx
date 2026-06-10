@@ -34,7 +34,7 @@ export function WhyContratacr() {
             <ul className="space-y-6">
               {POINTS.map(({ Icon, title, desc }) => (
                 <li key={title} className="flex items-start gap-4">
-                  <span className="mt-0.5 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#f3f4f6] text-[#1a2744]">
+                  <span className="mt-0.5 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EBF5FB] text-[#009FD9] ring-1 ring-[#dcebf6]">
                     <Icon className="h-5 w-5" />
                   </span>
                   <div className="min-w-0">
@@ -60,10 +60,11 @@ export function WhyContratacr() {
             </div>
           </FadeInUp>
 
-          {/* One phone — the best/most representative screen */}
+          {/* One phone — floats cleanly on the section, just a soft shadow */}
           <FadeInUp delay={120} className="lg:order-2 order-1">
             <div className="relative flex justify-center">
-              <div aria-hidden className="pointer-events-none absolute -inset-10 -z-10 rounded-[3rem] bg-gradient-to-br from-[#EBF5FB] to-transparent opacity-70" />
+              {/* subtle ground shadow only — no container/box behind the phone */}
+              <div aria-hidden className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 h-6 w-52 rounded-[50%] bg-[#1a2744]/15 blur-2xl" />
               <PhoneFrame><ResultsScreen /></PhoneFrame>
             </div>
           </FadeInUp>

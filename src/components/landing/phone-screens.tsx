@@ -6,24 +6,43 @@ import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
    These are easy to later swap for short screen-recording videos. */
 
 export function PhoneFrame({ children }: { children: React.ReactNode }) {
+  // Realistic device: titanium-style outer rail + thin black bezel + crisp
+  // screen, dynamic island, side buttons, layered shadows for depth.
   return (
-    <div className="relative mx-auto" style={{ width: 280 }}>
+    <div className="relative mx-auto" style={{ width: 286 }}>
+      {/* side buttons */}
+      <div aria-hidden className="absolute -left-[2px] top-[120px] h-9 w-[3px] rounded-l bg-[#3a3f47]" />
+      <div aria-hidden className="absolute -left-[2px] top-[168px] h-14 w-[3px] rounded-l bg-[#3a3f47]" />
+      <div aria-hidden className="absolute -right-[2px] top-[150px] h-16 w-[3px] rounded-r bg-[#3a3f47]" />
+
+      {/* outer metal rail */}
       <div
         className="relative"
         style={{
-          background: "linear-gradient(145deg,#111827,#0b1220)",
-          borderRadius: 46,
-          padding: 11,
-          boxShadow: "0 50px 100px -20px rgba(15,23,42,0.55), 0 0 0 1px rgba(255,255,255,0.05) inset",
+          background: "linear-gradient(135deg,#d9dde3 0%,#9aa0a8 22%,#5b606a 50%,#9aa0a8 78%,#d9dde3 100%)",
+          borderRadius: 52,
+          padding: 3,
+          boxShadow: "0 60px 120px -30px rgba(15,23,42,0.55), 0 18px 40px -18px rgba(15,23,42,0.4)",
         }}
       >
-        <div className="absolute z-20" style={{ top: 15, left: "50%", transform: "translateX(-50%)", width: 90, height: 25, background: "#000", borderRadius: 13 }} />
-        <div className="relative overflow-hidden bg-white" style={{ borderRadius: 36, height: 564 }}>
-          <div className="flex items-center justify-between bg-white px-5 pt-3.5 pb-1">
-            <span className="text-[10px] font-semibold text-[#1a2744]">9:41</span>
-            <span className="inline-block h-2 w-4 rounded-sm border border-[#1a2744]"><span className="m-px block h-1 w-2.5 rounded-[1px] bg-[#1a2744]" /></span>
+        {/* black bezel */}
+        <div className="relative" style={{ background: "#05070b", borderRadius: 49, padding: 9 }}>
+          {/* screen */}
+          <div className="relative overflow-hidden bg-white" style={{ borderRadius: 41, height: 580 }}>
+            {/* dynamic island */}
+            <div className="absolute z-30" style={{ top: 12, left: "50%", transform: "translateX(-50%)", width: 92, height: 26, background: "#000", borderRadius: 14 }} />
+            {/* status bar */}
+            <div className="relative z-20 flex items-center justify-between px-6 pt-3.5 pb-1">
+              <span className="text-[11px] font-semibold text-[#1a2744]">9:41</span>
+              <span className="flex items-center gap-1">
+                <span className="flex items-end gap-[1.5px] h-2.5">
+                  <span className="w-[2px] h-1 rounded-sm bg-[#1a2744]" /><span className="w-[2px] h-1.5 rounded-sm bg-[#1a2744]" /><span className="w-[2px] h-2 rounded-sm bg-[#1a2744]" /><span className="w-[2px] h-2.5 rounded-sm bg-[#1a2744]" />
+                </span>
+                <span className="inline-block h-2.5 w-5 rounded-[3px] border border-[#1a2744] relative"><span className="absolute inset-[1.5px] right-1 rounded-[1px] bg-[#1a2744]" /></span>
+              </span>
+            </div>
+            <div className="h-[calc(580px-30px)]">{children}</div>
           </div>
-          <div className="h-[calc(564px-26px)]">{children}</div>
         </div>
       </div>
     </div>
