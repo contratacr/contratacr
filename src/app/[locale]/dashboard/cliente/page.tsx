@@ -38,6 +38,23 @@ export default function ClientDashboardPage() {
     if (!authLoading && !user) router.push("/login");
   }, [user, authLoading, router]);
 
+  // A PROFESSIONAL has no separate client dashboard — their client activity
+  // lives in the unified "Mi panel" under "Contratar servicios". Route any
+  // /dashboard/cliente access into the matching unified tab. Plain clients stay.
+  const role = user?.user_metadata?.role as string | undefined;
+  useEffect(() => {
+    if (authLoading || !user || role !== "professional") return;
+    const map: Record<Tab, string> = {
+      bookings: "sent_bookings",
+      projects: "sent_projects",
+      saved: "saved",
+      notifications: "notifications",
+      profile: "cuenta",
+    };
+    const target = map[activeTab];
+    router.replace(`/dashboard/profesional${target ? `?tab=${target}` : ""}`);
+  }, [authLoading, user, role, activeTab, router]);
+
   const loadProfile = useCallback(() => {
     if (!user) return;
     const supabase = createClient();

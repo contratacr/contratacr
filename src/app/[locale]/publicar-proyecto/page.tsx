@@ -23,6 +23,7 @@ const TIMELINES = [
 export default function PublicarProyectoPage() {
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
+  const isPro = user?.user_metadata?.role === "professional";
 
   const [form, setForm] = useState({
     categoryId: "",
@@ -102,10 +103,12 @@ export default function PublicarProyectoPage() {
               Los profesionales de tu zona verán tu proyecto y podrán enviarte propuestas.
             </p>
             <div className="flex flex-col gap-2">
-              <Button size="lg" className="w-full" onClick={() => router.push("/dashboard/cliente?tab=projects")}>
+              {/* Professionals manage projects inside their unified "Mi panel"
+                  ("Contratar servicios"); plain clients use the client panel. */}
+              <Button size="lg" className="w-full" onClick={() => router.push(isPro ? "/dashboard/profesional?tab=sent_projects" : "/dashboard/cliente?tab=projects")}>
                 Ver mis proyectos
               </Button>
-              <Button size="lg" variant="outline" className="w-full" onClick={() => router.push("/dashboard/cliente")}>
+              <Button size="lg" variant="outline" className="w-full" onClick={() => router.push(isPro ? "/dashboard/profesional" : "/dashboard/cliente")}>
                 Ir a mi panel
               </Button>
             </div>
