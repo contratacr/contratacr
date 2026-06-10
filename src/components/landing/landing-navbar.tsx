@@ -804,13 +804,13 @@ export function LandingNavbar() {
                 <LanguageTogglePill />
               </div>
 
-              {/* Mobile toggle */}
+              {/* Mobile toggle — only OPENS the drawer; the drawer has the single X. */}
               <button
-                onClick={() => setMobileOpen(!mobileOpen)}
+                onClick={() => setMobileOpen(true)}
                 className="lg:hidden ml-auto p-2 rounded-xl text-[#1a2744] hover:bg-gray-50 transition-colors"
-                aria-label="Menú"
+                aria-label="Abrir menú"
               >
-                {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                <Menu className="h-5 w-5" />
               </button>
             </div>
 
@@ -895,8 +895,11 @@ export function LandingNavbar() {
 
           </div>
         </div>
+      </header>
 
-        {/* Mobile menu — slide-in LEFT drawer + scrim */}
+      {/* Mobile menu — slide-in LEFT drawer + scrim (OUTSIDE <header>: the
+          header's backdrop-filter would otherwise become the containing block
+          for these `fixed` elements, breaking full-viewport positioning). */}
         <div
           className={cn(
             "lg:hidden fixed inset-0 z-[100] bg-black/50 transition-opacity duration-300",
@@ -1031,7 +1034,6 @@ export function LandingNavbar() {
             </div>
           </div>
         </div>
-      </header>
 
       {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
     </>
