@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   User, Image as ImageIcon, CalendarDays, Inbox, LogOut, ExternalLink, Wrench,
@@ -90,6 +90,7 @@ export default function ProDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
+  const contentRef = useRef<HTMLDivElement>(null);
   // Count of consecutive "no pro row" fetches. A freshly-created account can lag
   // (replication/RLS) — we retry a few times before bouncing to registration so
   // the panel never flashes back to the registration flow (item 6).
@@ -144,6 +145,12 @@ export default function ProDashboardPage() {
   function setTab(tab: Tab) {
     const params = new URLSearchParams({ tab });
     router.push(`/dashboard/profesional?${params}`);
+    // On mobile the sidebar sits ABOVE the content (stacked), so after tapping a
+    // menu item, smooth-scroll down to the section the user chose instead of
+    // leaving them on the menu. `scroll-mt` on the content clears the fixed header.
+    if (typeof window !== "undefined" && window.matchMedia("(max-width: 1023px)").matches) {
+      requestAnimationFrame(() => contentRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    }
   }
 
   function handleSaved() {
@@ -267,7 +274,7 @@ export default function ProDashboardPage() {
             </nav>
 
             {/* Main content */}
-            <div className="flex-1">
+            <div ref={contentRef} className="flex-1 scroll-mt-20 lg:scroll-mt-0">
               <Card>
                 <CardHeader className="px-6 pt-6 pb-4">
                   <h2 className="text-lg font-semibold text-[#111827]">{TAB_LABELS[activeTab]}</h2>

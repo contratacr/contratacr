@@ -691,7 +691,7 @@ export function LandingNavbar() {
                       href={primaryPanelHref}
                       className="text-sm font-medium px-3 py-2 text-[#374151] hover:text-[#1a2744] transition-colors whitespace-nowrap"
                     >
-                      {isPro ? "Panel profesional" : "Mi panel"}
+                      Mi panel
                     </a>
                     <NotificationBell />
                     <div ref={userMenuRef} className="relative">
@@ -720,8 +720,8 @@ export function LandingNavbar() {
                               onClick={() => setUserMenuOpen(false)}
                               className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
                             >
-                              <Briefcase className="h-4 w-4 text-[#009FD9]" />
-                              Panel profesional
+                              <LayoutDashboard className="h-4 w-4 text-[#009FD9]" />
+                              Mi panel
                             </a>
                           )}
 
@@ -995,7 +995,7 @@ export function LandingNavbar() {
                   {isPro && (
                     <a href={proPanelHref} onClick={() => setMobileOpen(false)}
                       className="w-full block px-4 py-3 rounded-xl text-sm font-semibold text-white bg-[#009FD9] hover:bg-[#0089bb] text-center transition-colors">
-                      Panel profesional
+                      Mi panel
                     </a>
                   )}
                   <a href={isPro ? sentBookingsHref : `${clientPanelHref}?tab=bookings`} onClick={() => setMobileOpen(false)}
