@@ -15,6 +15,7 @@ import { cn, getInitials } from "@/lib/utils";
 import { NotificationsList } from "@/components/notifications/notifications-list";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { CloseAccountSection } from "@/components/account/close-account-section";
+import { AccountSecuritySection } from "@/components/account/account-security";
 import { ClientActivity } from "@/components/dashboard/client-activity";
 
 type Tab = "bookings" | "projects" | "saved" | "notifications" | "profile";
@@ -31,10 +32,6 @@ export default function ClientDashboardPage() {
   const [profileSaved, setProfileSaved] = useState(false);
   const [photoUploading, setPhotoUploading] = useState(false);
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
-  const [emailChangeMode, setEmailChangeMode] = useState(false);
-  const [newEmail, setNewEmail] = useState("");
-  const [emailChangeSent, setEmailChangeSent] = useState(false);
-  const [emailChangeError, setEmailChangeError] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
@@ -113,16 +110,6 @@ export default function ClientDashboardPage() {
     setPhotoUploading(false);
   }
 
-  async function sendEmailChange() {
-    if (!newEmail.trim() || !user) return;
-    setEmailChangeError(null);
-    const supabase = createClient();
-    const { error } = await supabase.auth.updateUser({ email: newEmail.trim() });
-    if (error) { setEmailChangeError(error.message); return; }
-    setEmailChangeSent(true);
-    setEmailChangeMode(false);
-  }
-
   if (authLoading) {
     return (
       <div className="min-h-screen flex flex-col bg-[#fafafa]">
@@ -133,12 +120,6 @@ export default function ClientDashboardPage() {
       </div>
     );
   }
-
-  // Detect OAuth accounts — email change is not allowed for them
-  const oauthProvider = user?.app_metadata?.provider as string | undefined;
-  const isOAuthAccount = oauthProvider === "google" || oauthProvider === "facebook" ||
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (user?.identities ?? []).some((id: any) => id.provider !== "email");
 
   const displayName =
     profileData?.full_name ||
@@ -319,50 +300,8 @@ export default function ClientDashboardPage() {
                 </div>
               </div>
 
-              {/* Email */}
-              <div className="bg-white rounded-2xl border border-[#e5e7eb] p-5">
-                <label className="text-sm font-medium text-[#374151] block mb-1.5">Correo electrónico</label>
-                {isOAuthAccount ? (
-                  <div className="flex flex-col gap-2">
-                    <span className="text-sm text-[#374151] font-medium">{user?.email}</span>
-                    <p className="text-xs text-[#9ca3af]">
-                      Tu correo está vinculado a tu cuenta de {oauthProvider === "google" ? "Google" : "Facebook"} y no puede modificarse aquí.
-                    </p>
-                  </div>
-                ) : emailChangeSent ? (
-                  <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-700">
-                    ✓ Revisa tu bandeja — enviamos un correo de confirmación al nuevo email.
-                  </div>
-                ) : emailChangeMode ? (
-                  <div className="flex flex-col gap-3">
-                    <input
-                      type="email"
-                      className={inputClass}
-                      placeholder="nuevo@correo.com"
-                      value={newEmail}
-                      onChange={(e) => setNewEmail(e.target.value)}
-                    />
-                    {emailChangeError && (
-                      <p className="text-xs text-red-500">{emailChangeError}</p>
-                    )}
-                    <div className="flex gap-2">
-                      <Button size="sm" onClick={sendEmailChange} disabled={!newEmail.trim()}>Confirmar cambio</Button>
-                      <Button size="sm" variant="outline" onClick={() => { setEmailChangeMode(false); setNewEmail(""); setEmailChangeError(null); }}>Cancelar</Button>
-                    </div>
-                    <p className="text-xs text-[#9ca3af]">Te enviaremos un correo de confirmación al nuevo email.</p>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-sm text-[#374151] font-medium">{user?.email}</span>
-                    <button
-                      onClick={() => setEmailChangeMode(true)}
-                      className="text-sm text-[#009FD9] hover:underline whitespace-nowrap"
-                    >
-                      Cambiar email
-                    </button>
-                  </div>
-                )}
-              </div>
+              {/* Cuenta y seguridad — change email/password, OAuth-aware */}
+              <AccountSecuritySection />
 
               {/* Cerrar / deshabilitar cuenta */}
               <CloseAccountSection />

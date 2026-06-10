@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import {
   X, Menu, Mail, Lock, Eye, EyeOff, AlertCircle, ChevronDown, Search, MapPin,
-  LayoutDashboard, LogOut, Bookmark, CalendarDays, FolderOpen, UserPlus, Briefcase, Compass,
+  LayoutDashboard, LogOut, Bookmark, CalendarDays, FolderOpen, UserPlus, Briefcase, Compass, Settings,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { useLocale } from "next-intl";
@@ -464,6 +464,7 @@ export function LandingNavbar() {
   const sentBookingsHref = isPro ? "/es/dashboard/profesional?tab=sent_bookings" : "/es/dashboard/cliente?tab=bookings";
   const sentProjectsHref = isPro ? "/es/dashboard/profesional?tab=sent_projects" : "/es/dashboard/cliente?tab=projects";
   const savedHref = isPro ? "/es/dashboard/profesional?tab=saved" : "/es/dashboard/cliente?tab=saved";
+  const accountHref = isPro ? "/es/dashboard/profesional?tab=cuenta" : "/es/dashboard/cliente?tab=profile";
 
   const compactSuggestions = useMemo(() => matchCategories(searchQuery), [searchQuery]);
 
@@ -761,6 +762,14 @@ export function LandingNavbar() {
                           >
                             <Bookmark className="h-4 w-4 text-gray-400" />
                             Mis favoritos
+                          </a>
+                          <a
+                            href={accountHref}
+                            onClick={() => setUserMenuOpen(false)}
+                            className="flex items-center gap-2.5 px-3 py-2 mt-1 border-t border-gray-50 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
+                          >
+                            <Settings className="h-4 w-4 text-gray-400" />
+                            Cuenta y seguridad
                           </a>
 
                           {!isPro && (
