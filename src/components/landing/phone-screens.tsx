@@ -153,4 +153,39 @@ export function SupportScreen() {
   );
 }
 
-export const SHOWCASE_SCREENS = [SearchScreen, ResultsScreen, ChatScreen, SupportScreen];
+export function ProScreen() {
+  const reqs = [
+    { n: "María V.", s: "Plomería · fuga en cocina", z: "San José" },
+    { n: "Jorge S.", s: "Instalación de grifo", z: "Escazú" },
+  ];
+  return (
+    <div className="flex h-full flex-col bg-[#f4f7fa]">
+      <AppBar title="Mi panel" />
+      <div className="p-3.5 space-y-3">
+        <div className="flex items-center gap-2 rounded-xl border border-[#dcfce7] bg-[#f0fdf4] px-3 py-2.5">
+          <ShieldCheck className="h-4 w-4 text-[#16a34a]" />
+          <span className="text-[11px] font-semibold text-[#166534]">Perfil verificado · apareces primero</span>
+        </div>
+        <p className="text-[10px] font-bold uppercase tracking-wide text-[#9ca3af]">Nuevas solicitudes</p>
+        {reqs.map((r) => (
+          <div key={r.n} className="rounded-xl border border-[#eef1f5] bg-white p-2.5">
+            <div className="flex items-center gap-2">
+              <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#EBF5FB] text-[10px] font-bold text-[#009FD9]">{r.n[0]}</div>
+              <div className="min-w-0 flex-1"><span className="text-[12px] font-bold text-[#111827]">{r.n}</span><p className="text-[10px] text-[#6b7280] truncate">{r.s}</p></div>
+              <span className="text-[9px] text-[#9ca3af]">{r.z}</span>
+            </div>
+            <div className="mt-2 flex gap-1.5">
+              <span className="flex-1 rounded-md bg-[#009FD9] py-1 text-center text-[9px] font-bold text-white">Ver solicitud</span>
+              <span className="grid h-5 w-5 place-items-center rounded-md border border-[#bbf7d0] text-[#16a34a]"><WhatsAppIcon className="h-2.5 w-2.5" /></span>
+            </div>
+          </div>
+        ))}
+        <div className="rounded-xl bg-[#1a2744] px-3 py-2.5 text-center">
+          <span className="text-[11px] font-bold text-white">100% gratis · sin comisiones</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export const SHOWCASE_SCREENS = [SearchScreen, ResultsScreen, ChatScreen, SupportScreen, ProScreen];

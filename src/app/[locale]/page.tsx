@@ -3,7 +3,6 @@ import { LandingHero } from "@/components/landing/landing-hero";
 import { ProsSection } from "@/components/landing/pros-section";
 import { WhyContratacr } from "@/components/landing/why-contratacr";
 import { FindByZone } from "@/components/landing/find-by-zone";
-import { GrowBusinessCta } from "@/components/landing/grow-business-cta";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { FadeInUp } from "@/components/landing/fade-in-up";
 import { BackToTop } from "@/components/landing/back-to-top";
@@ -31,11 +30,6 @@ export default async function HomePage() {
       {/* Zones — find professionals by province (real coverage) */}
       <FadeInUp delay={40}>
         <FindByZone coverage={coverage} />
-      </FadeInUp>
-
-      {/* Professional recruitment CTA */}
-      <FadeInUp delay={40}>
-        <GrowBusinessCta />
       </FadeInUp>
 
       <BackToTop />

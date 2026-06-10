@@ -1,13 +1,16 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Search, UserCheck, MessageCircle, LifeBuoy } from "lucide-react";
+import { Search, UserCheck, MessageCircle, LifeBuoy, TrendingUp, ArrowRight } from "lucide-react";
 import { PhoneFrame, SHOWCASE_SCREENS } from "@/components/landing/phone-screens";
+import { SmartRegisterLink } from "@/components/layout/smart-register-link";
+import { Link } from "@/i18n/navigation";
 
-/* "Por qué elegir ContrataCR" — a Thumbtack-style sticky-phone story that merges
-   the how-it-works steps + the trust benefits into one client narrative. The
-   points scroll on the left; the phone on the right swaps to the matching real
-   app screen for the active point. Monochrome icons (serious tone). */
+/* "Así funciona ContrataCR" — a Thumbtack-style sticky-phone story merging the
+   how-it-works steps + the trust benefits + the professional pitch into ONE
+   narrative. The points scroll on the left; the phone on the right swaps to the
+   matching real app screen. Monochrome icons (serious tone); the last point
+   pivots to professionals with its own CTA. */
 const POINTS = [
   {
     Icon: Search,
@@ -28,6 +31,12 @@ const POINTS = [
     Icon: LifeBuoy,
     title: "Con soporte cuando lo necesites",
     desc: "Deja tu reseña al terminar y, si algo no sale como esperabas, nuestro equipo está para ayudarte.",
+  },
+  {
+    Icon: TrendingUp,
+    title: "¿Ofreces servicios? Haz crecer tu negocio",
+    desc: "Crea tu perfil gratis y recibe solicitudes de clientes de tu zona. Sin comisiones, y los perfiles verificados aparecen primero.",
+    pro: true,
   },
 ];
 
@@ -66,10 +75,10 @@ export function WhyContratacr() {
             <span className="h-1.5 w-1.5 rounded-full bg-[#009FD9]" /> Cómo funciona
           </span>
           <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold text-[#1a2744]">
-            Todo para contratar con confianza
+            Así funciona ContrataCR
           </h2>
           <p className="text-gray-500 mt-3 max-w-xl mx-auto">
-            Del primer mensaje al trabajo terminado: simple, transparente y seguro.
+            Para quienes buscan un profesional y para quienes ofrecen sus servicios. Simple, transparente y seguro.
           </p>
         </div>
 
@@ -94,6 +103,15 @@ export function WhyContratacr() {
                       <h3 className="text-lg font-extrabold text-[#1a2744]">{p.title}</h3>
                     </div>
                     <p className="mt-3 text-[15px] text-gray-500 leading-relaxed">{p.desc}</p>
+
+                    {p.pro && (
+                      <div className="mt-5 flex flex-wrap items-center gap-3">
+                        <SmartRegisterLink className="inline-flex items-center gap-1.5 rounded-xl bg-[#009FD9] hover:bg-[#0089bb] px-5 py-2.5 text-sm font-bold text-white transition-colors shadow-[0_10px_26px_rgba(0,159,217,0.3)]">
+                          Registrarse como profesional <ArrowRight className="h-4 w-4" />
+                        </SmartRegisterLink>
+                        <Link href="/como-funciona" className="text-sm font-bold text-[#009FD9] hover:underline">Cómo funciona</Link>
+                      </div>
+                    )}
 
                     {/* Inline phone on mobile */}
                     <div className="mt-6 lg:hidden">
