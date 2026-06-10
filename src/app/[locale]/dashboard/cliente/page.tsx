@@ -4,7 +4,10 @@ import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   CalendarDays, Bookmark, LogOut, Bell, User, FolderOpen, Briefcase, Search, LifeBuoy,
+  ShieldCheck, ShieldAlert, Lock,
 } from "lucide-react";
+import { Link } from "@/i18n/navigation";
+import { maskId, detectIdType } from "@/lib/cedula";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { Button } from "@/components/ui/button";
@@ -27,7 +30,7 @@ export default function ClientDashboardPage() {
   const searchParams = useSearchParams();
   const activeTab = (searchParams.get("tab") as Tab) ?? "bookings";
 
-  const [profileData, setProfileData] = useState<{ full_name: string; phone?: string; avatar_url?: string } | null>(null);
+  const [profileData, setProfileData] = useState<{ full_name: string; phone?: string; avatar_url?: string; cedula?: string | null } | null>(null);
   const [profileForm, setProfileForm] = useState({ full_name: "", phone: "" });
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileSaved, setProfileSaved] = useState(false);
@@ -63,7 +66,7 @@ export default function ClientDashboardPage() {
     const supabase = createClient();
     supabase
       .from("profiles")
-      .select("full_name, phone, avatar_url")
+      .select("full_name, phone, avatar_url, cedula")
       .eq("id", user.id)
       .single()
       .then(({ data }) => {
@@ -117,10 +120,12 @@ export default function ClientDashboardPage() {
     if (!user) return;
     setProfileSaving(true);
     const supabase = createClient();
-    await supabase.from("profiles").update({
-      full_name: profileForm.full_name,
-      phone: profileForm.phone || null,
-    }).eq("id", user.id);
+    // Never overwrite a verified official name (it's locked; corrections go
+    // through admin review). Phone is always editable.
+    const verified = !!profileData?.cedula && detectIdType(String(profileData.cedula)) === "cedula";
+    const update: Record<string, string | null> = { phone: profileForm.phone || null };
+    if (!verified) update.full_name = profileForm.full_name;
+    await supabase.from("profiles").update(update).eq("id", user.id);
     setProfileSaving(false);
     setProfileSaved(true);
     setTimeout(() => setProfileSaved(false), 3000);
@@ -165,6 +170,14 @@ export default function ClientDashboardPage() {
     profileAvatar ||
     (user?.user_metadata?.avatar_url as string) ||
     null;
+
+  // Client identity: a saved NATIONAL cédula was confirmed against the padrón at
+  // booking (its name became the official one) → "Identidad verificada" + name
+  // locked. A DIMEX/NITE is registered but not padrón-verified. No cédula → name
+  // freely editable (nothing official to protect yet).
+  const savedCedula = profileData?.cedula ? String(profileData.cedula) : "";
+  const hasCedula = !!savedCedula;
+  const cedulaVerified = hasCedula && detectIdType(savedCedula) === "cedula";
 
   const TABS: { key: Tab; icon: React.ReactNode; label: string }[] = [
     { key: "bookings", icon: <CalendarDays className="h-4 w-4" />, label: "Solicitudes" },
@@ -315,13 +328,28 @@ export default function ClientDashboardPage() {
 
                 <div className="border-t border-[#f3f4f6] pt-4 flex flex-col gap-4">
                   <div>
-                    <label className="text-sm font-medium text-[#374151] block mb-1.5">Nombre completo <span className="text-red-500">*</span></label>
-                    <input
-                      type="text"
-                      className={inputClass}
-                      value={profileForm.full_name}
-                      onChange={(e) => setProfileForm((f) => ({ ...f, full_name: e.target.value }))}
-                    />
+                    <label className="text-sm font-medium text-[#374151] mb-1.5 flex items-center gap-1.5">
+                      Nombre completo <span className="text-red-500">*</span>
+                      {cedulaVerified && (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#16a34a]"><ShieldCheck className="h-3.5 w-3.5" /> Verificado</span>
+                      )}
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        className={cn(inputClass, cedulaVerified && "bg-[#f3f4f6] cursor-not-allowed pr-10")}
+                        value={profileForm.full_name}
+                        disabled={cedulaVerified}
+                        onChange={(e) => setProfileForm((f) => ({ ...f, full_name: e.target.value }))}
+                      />
+                      {cedulaVerified && <Lock className="h-4 w-4 text-[#9ca3af] absolute right-3 top-1/2 -translate-y-1/2" />}
+                    </div>
+                    {cedulaVerified && (
+                      <p className="text-xs text-[#6b7280] mt-1.5">
+                        Tu nombre está verificado con tu cédula del padrón. ¿Un error o cambio legal?{" "}
+                        <Link href="/dashboard/cliente?tab=soporte" className="text-[#009FD9] font-medium hover:underline">Solicítalo a soporte</Link>.
+                      </p>
+                    )}
                   </div>
                   <PhoneInput
                     label={<>Teléfono <span className="text-[#9ca3af] font-normal">(opcional)</span></>}
@@ -336,6 +364,34 @@ export default function ClientDashboardPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Identidad — shown once the client has a saved cédula. Masked for
+                  privacy; verified (national + padrón) vs registered (DIMEX/NITE). */}
+              {hasCedula && (
+                <div className="bg-white rounded-2xl border border-[#e5e7eb] p-5">
+                  <h3 className="text-sm font-semibold text-[#111827] mb-3">Identidad</h3>
+                  <div className="flex items-center justify-between gap-3 flex-wrap">
+                    <div>
+                      <p className="text-xs text-[#9ca3af]">Cédula registrada</p>
+                      <p className="text-sm font-semibold text-[#111827] tracking-wider">{maskId(savedCedula)}</p>
+                    </div>
+                    {cedulaVerified ? (
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-[#dcfce7] text-[#15803d] text-xs font-semibold px-3 py-1.5">
+                        <ShieldCheck className="h-4 w-4" /> Identidad verificada
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-[#fffbeb] text-[#b45309] text-xs font-semibold px-3 py-1.5">
+                        <ShieldAlert className="h-4 w-4" /> Pendiente de revisión
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-[#9ca3af] mt-3">
+                    {cedulaVerified
+                      ? "Tu identidad fue confirmada con el padrón a partir de tu cédula. Solo mostramos los últimos dígitos."
+                      : "Registramos tu identificación. Las cédulas que no están en el padrón (DIMEX/NITE) se revisan manualmente."}
+                  </p>
+                </div>
+              )}
 
               {/* Offer my services — same account, adds the pro role + onboarding */}
               <div className="bg-white rounded-2xl border border-[#e5e7eb] p-5">

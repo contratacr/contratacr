@@ -213,15 +213,28 @@ export function SearchFilters() {
 
         <div>
           <label className="text-xs font-medium text-[#6b7280] mb-1 block">Aseguradora</label>
-          <Select value={aseguradora} onValueChange={(v) => { setAseguradora(v); applyFilters({ aseguradora: v }); }}>
-            <SelectTrigger className="text-sm">
-              <SelectValue placeholder="Todas">{aseguradora && aseguradora !== "todas" ? insurerOptions.find((i) => i.id === aseguradora)?.label : "Todas"}</SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todas">Todas</SelectItem>
-              {insurerOptions.map((i) => <SelectItem key={i.id} value={i.id}>{i.label}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          {/* No "Todas" option: by default NONE is selected (no insurance filter).
+              Pick an insurer to filter; tap the X to clear it again. */}
+          <div className="flex items-center gap-1.5">
+            <Select value={aseguradora || undefined} onValueChange={(v) => { setAseguradora(v); applyFilters({ aseguradora: v }); }}>
+              <SelectTrigger className="text-sm flex-1">
+                <SelectValue placeholder="Cualquiera">{aseguradora ? insurerOptions.find((i) => i.id === aseguradora)?.label : "Cualquiera"}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                {insurerOptions.map((i) => <SelectItem key={i.id} value={i.id}>{i.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            {aseguradora && (
+              <button
+                type="button"
+                onClick={() => { setAseguradora(""); applyFilters({ aseguradora: "" }); }}
+                className="shrink-0 rounded-lg border border-[#e5e7eb] p-2 text-[#9ca3af] hover:text-[#374151] hover:border-[#009FD9] transition-colors"
+                aria-label="Quitar filtro de aseguradora"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
         </div>
       </div>
 

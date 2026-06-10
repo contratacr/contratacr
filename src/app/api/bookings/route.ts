@@ -49,6 +49,27 @@ export async function POST(req: NextRequest) {
       categoryId, slotLocationId, slotLocationLabel,
     } = body;
 
+    // No double-booking: if this request targets a specific slot, reject it when
+    // another active booking already holds that pro + date + time. (Cancelled /
+    // completed bookings free the slot again, so they don't count here.)
+    if (scheduledDate && scheduledTime) {
+      const admin = createAdminClient();
+      const { data: clash } = await admin
+        .from("bookings")
+        .select("id")
+        .eq("professional_id", professionalId)
+        .eq("scheduled_date", scheduledDate)
+        .eq("scheduled_time", scheduledTime)
+        .in("status", ["pending", "confirmed", "in_progress"])
+        .limit(1);
+      if (clash && clash.length > 0) {
+        return NextResponse.json(
+          { error: "Ese horario acaba de ser reservado. Elige otra hora disponible." },
+          { status: 409 }
+        );
+      }
+    }
+
     const baseBooking = {
       professional_id: professionalId,
       client_id: session?.user?.id ?? null,

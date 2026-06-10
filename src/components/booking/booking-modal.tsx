@@ -38,6 +38,14 @@ function formatDateISO(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
+// Accent/case/punctuation-insensitive name comparison — so an official padrón
+// name only counts as "different" from the account name when it really is.
+function sameName(a: string, b: string): boolean {
+  const norm = (s: string) =>
+    (s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9\s]/g, " ").replace(/\s+/g, " ").trim();
+  return norm(a) === norm(b) && norm(a).length > 0;
+}
+
 function formatDateDisplay(dateStr: string): string {
   const [y, m, d] = dateStr.split("-").map(Number);
   return new Date(y, m - 1, d).toLocaleDateString("es-CR", {
@@ -163,6 +171,11 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   // Live padrón name (+ DOB when a source provides it) for the client's OWN cédula.
   const [selfCedulaName, setSelfCedulaName] = useState<string | null>(null);
   const [selfDob, setSelfDob] = useState<string | null>(null);
+  // The padrón has no birth date, so for HEALTH bookings "for myself" we must ask
+  // it manually. Effective self DOB = padrón DOB (future provider) ?? this input.
+  const [selfDobInput, setSelfDobInput] = useState("");
+  // Inline error for a submit that fails (e.g. the slot was just taken — 409).
+  const [submitError, setSubmitError] = useState<string | null>(null);
   // Guest email duplicate detection (inline, real-time).
   const guestEmailCheck = useAvailabilityCheck(clientEmail, "email", !isLoggedIn);
 
@@ -184,6 +197,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     setForSomeoneElse(false);
     setBenHasCedula(null);
     setBenCedula(""); setBenName(""); setBenDob(""); setBenPhone(""); setBenLookupName(null);
+    setSelfDobInput(""); setSubmitError(null);
     // Reset the on-file identity so the DB is the authoritative source each open —
     // a social-login account with no cédula must always be (re)prompted.
     setProfileCedula(""); setProfilePhone(""); setProfileLoaded(false); setHasStoredCedula(false);
@@ -342,15 +356,18 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     onClose();
   }
 
-  async function handleSubmit(overrideCedula?: string, overridePhone?: string) {
+  async function handleSubmit(overrideCedula?: string, overridePhone?: string, overrideName?: string) {
     setSubmitting(true);
+    setSubmitError(null);
+    // The official padrón name (for "myself") prevails as the booking name.
+    const submitName = (overrideName ?? (selfOfficialName || clientName)) || "Cliente";
     try {
-      await fetch("/api/bookings", {
+      const res = await fetch("/api/bookings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           professionalId: professional.id,
-          clientName: clientName || "Cliente",
+          clientName: submitName,
           clientEmail: clientEmail || null,
           clientCedula: (overrideCedula ?? profileCedula) || null,
           clientPhone: (overridePhone ?? profilePhone) || null,
@@ -369,15 +386,21 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
           beneficiaryName: forSomeoneElse ? (benName.trim() || null) : null,
           beneficiaryCedula: forSomeoneElse && benHasCedula ? (cleanId(benCedula) || null) : null,
           // DOB only for HEALTH services (data minimization). Omitted for non-health.
-          clientDob: proIsHealth && !forSomeoneElse && selfDob ? selfDob : null,
+          clientDob: proIsHealth && !forSomeoneElse ? (effectiveSelfDob || null) : null,
           beneficiaryDob: proIsHealth && forSomeoneElse && benDob ? benDob : null,
           beneficiaryPhone: forSomeoneElse ? (benPhone.trim() || null) : null,
           beneficiaryIsMinor: proIsHealth && forSomeoneElse && benDob ? isMinorFromDob(benDob) : false,
         }),
       });
+      // Slot taken in the meantime (or another failure) → surface, don't "succeed".
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        setSubmitError(j?.error || "No se pudo enviar la solicitud. Intenta de nuevo.");
+        return;
+      }
 
       const firstName = professional.fullName.split(" ")[0];
-      const senderName = clientName.trim() || "un cliente";
+      const senderName = submitName.trim() || "un cliente";
       const dateStr = selectedDate
         ? `${formatDateDisplay(selectedDate)}${selectedTime ? ` a las ${selectedTime}` : ""}`
         : null;
@@ -415,11 +438,17 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     setSavingProfile(true);
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
+    // "For myself" + national cédula found → the OFFICIAL name prevails and the
+    // account adopts it. "For another person" never changes the account name.
+    const officialName = selfOfficialName; // null when booking for someone else
+    const finalName = officialName || clientName.trim();
     if (user) {
       // Only write the fields we actually collected on this step.
       const updates: Record<string, string> = { phone: cleanPhone };
       if (needsProfile) updates.full_name = clientName.trim();
       if (needsCedula) updates.cedula = cleanCedula;
+      // Link my cédula → official name becomes my account name (identity prevails).
+      if (officialName) updates.full_name = officialName;
       const { error } = await supabase
         .from("profiles")
         .update(updates)
@@ -433,13 +462,14 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
         );
         return;
       }
-      await supabase.auth.updateUser({ data: { full_name: clientName.trim(), profile_completed: true } });
+      await supabase.auth.updateUser({ data: { full_name: finalName, profile_completed: true } });
     }
+    if (officialName) setClientName(officialName);
     setProfileCedula(cleanCedula);
     setProfilePhone(cleanPhone);
     setNeedsProfile(false);
     setSavingProfile(false);
-    await handleSubmit(cleanCedula, cleanPhone);
+    await handleSubmit(cleanCedula, cleanPhone, officialName || undefined);
   }
 
   // Universal calendar export (.ics) — works with Google/Apple/Outlook.
@@ -474,6 +504,14 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   // vanishes mid-keystroke. Gated on profileLoaded so it never flashes either.
   const needsCedula = isLoggedIn && profileLoaded && !hasStoredCedula;
   const needsPhone = isLoggedIn && !profilePhone;
+
+  // Effective DOB for the account holder (padrón has none → manual input).
+  const effectiveSelfDob = selfDob || selfDobInput || null;
+  // "For myself" + a national cédula found in the padrón → the OFFICIAL name. When
+  // it differs from the account name we warn, then let it prevail on confirm.
+  // (Beneficiary cédulas never touch the account, so this is gated on !forSomeoneElse.)
+  const selfOfficialName = !forSomeoneElse ? selfCedulaName : null;
+  const nameWillChange = !!selfOfficialName && !sameName(selfOfficialName, clientName);
   const needsCompleteStep = needsProfile || needsCedula || needsPhone;
   const totalSteps = isLoggedIn ? (needsCompleteStep ? 3 : 2) : 3;
   const stepIndex = { calendar: 0, details: 1, contact: 2, complete: 2, success: 3 };
@@ -812,6 +850,28 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     </div>
                   </div>
 
+                  {/* DOB for HEALTH services when the cita is for MYSELF (the padrón
+                      carries no birth date, so we ask it here). Required. */}
+                  {proIsHealth && !forSomeoneElse && (
+                    <div>
+                      <label className="text-sm font-medium text-[#374151] block mb-1.5">
+                        Fecha de nacimiento <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="date"
+                        value={selfDob ?? selfDobInput}
+                        max={new Date().toISOString().slice(0, 10)}
+                        disabled={!!selfDob}
+                        onChange={(e) => setSelfDobInput(e.target.value)}
+                        className="h-10 rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent disabled:bg-[#f3f4f6]"
+                      />
+                      {effectiveSelfDob && computeAge(effectiveSelfDob) && (
+                        <p className="text-xs mt-1 text-[#6b7280]">{formatAge(computeAge(effectiveSelfDob))}</p>
+                      )}
+                      <p className="text-[11px] text-[#9ca3af] mt-1">La pedimos solo para servicios de salud.</p>
+                    </div>
+                  )}
+
                   {forSomeoneElse && (
                     <div className="rounded-xl border border-[#e5e7eb] p-3 flex flex-col gap-3 bg-[#f9fafb]">
                       <p className="text-xs text-[#6b7280]">
@@ -874,11 +934,11 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                             />
                           </div>
                           )}
-                          {/* DOB only for HEALTH-category services (patient age). */}
+                          {/* DOB REQUIRED for HEALTH-category services (patient age). */}
                           {proIsHealth && (
                           <div>
                             <label className="text-xs font-medium text-[#374151] block mb-1.5">
-                              Fecha de nacimiento {benHasCedula === true && <span className="text-[#9ca3af] font-normal">(opcional)</span>}
+                              Fecha de nacimiento <span className="text-red-500">*</span>
                             </label>
                             <input
                               type="date"
@@ -971,8 +1031,16 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     error={cedulaError ?? undefined}
                     hint="Solo para tu solicitud — no es una verificación de identidad."
                   />
-                  {selfCedulaName && (
-                    <p className="text-xs text-[#15803d] -mt-1">Encontramos: <strong>{selfCedulaName}</strong></p>
+                  {selfCedulaName && !nameWillChange && (
+                    <p className="text-xs text-[#15803d] -mt-1 break-words">Encontramos: <strong>{selfCedulaName}</strong></p>
+                  )}
+                  {nameWillChange && (
+                    <div className="rounded-lg bg-[#fffbeb] border border-[#fde68a] px-3 py-2.5 -mt-1 flex items-start gap-2">
+                      <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5 text-[#b45309]" />
+                      <p className="text-xs text-[#92400e] leading-snug break-words">
+                        La cédula ingresada pertenece a <strong>{selfCedulaName}</strong>. Al confirmar, tu solicitud usará este nombre oficial. Usa únicamente tu propia cédula.
+                      </p>
+                    </div>
                   )}
                 </div>
               )}
@@ -1025,13 +1093,22 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                         error={cedulaError ?? undefined}
                         hint="Solo para tu solicitud — no es una verificación de identidad."
                       />
-                      {/* Padrón auto-fill/confirm — same lookup as the rest of the app */}
-                      {selfCedulaName && (
+                      {/* Padrón lookup: name MATCHES the account → silent green confirm.
+                          Name DIFFERS → amber warning; the official name will prevail. */}
+                      {selfCedulaName && !nameWillChange && (
                         <div className="rounded-lg bg-[#f0fdf4] border border-[#bbf7d0] px-3 py-2 mt-1.5">
-                          <p className="text-xs text-[#15803d]">Confirma: <strong>{selfCedulaName}</strong></p>
+                          <p className="text-xs text-[#15803d] break-words">Confirma: <strong>{selfCedulaName}</strong></p>
                           {proIsHealth && selfDob && computeAge(selfDob) && (
                             <p className="text-[11px] text-[#16a34a]">Nacimiento: {selfDob} · {formatAge(computeAge(selfDob))}</p>
                           )}
+                        </div>
+                      )}
+                      {nameWillChange && (
+                        <div className="rounded-lg bg-[#fffbeb] border border-[#fde68a] px-3 py-2.5 mt-1.5 flex items-start gap-2">
+                          <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5 text-[#b45309]" />
+                          <p className="text-xs text-[#92400e] leading-snug break-words">
+                            La cédula ingresada pertenece a <strong>{selfCedulaName}</strong>. Al confirmar, tu cuenta usará este nombre oficial. Usa únicamente tu propia cédula.
+                          </p>
                         </div>
                       )}
                     </div>
@@ -1068,6 +1145,16 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
               )}
             </div>
 
+            {/* Submit error (e.g. slot just taken) — shown above the footer actions */}
+            {submitError && step !== "success" && (
+              <div className="px-6 pb-1 shrink-0">
+                <div className="flex items-start gap-2 rounded-xl bg-red-50 border border-red-100 px-3 py-2.5 text-xs text-red-600">
+                  <ShieldAlert className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                  <span className="break-words">{submitError}</span>
+                </div>
+              </div>
+            )}
+
             {/* Footer actions */}
             {step !== "success" && (
               <div className="px-6 py-4 border-t border-[#f3f4f6] shrink-0 flex gap-3">
@@ -1101,13 +1188,21 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                   <Button
                     size="md"
                     className="flex-1"
-                    disabled={!description.trim() || (forSomeoneElse && (benHasCedula === null || !benName.trim()))}
+                    disabled={
+                      !description.trim()
+                      || (forSomeoneElse && (benHasCedula === null || !benName.trim()))
+                      || (proIsHealth && !forSomeoneElse && !effectiveSelfDob)
+                      || (proIsHealth && forSomeoneElse && !benDob)
+                    }
                     loading={submitting}
                     onClick={async () => {
                       if (!description.trim()) return;
                       // Booking for someone else needs at least the beneficiary's name
                       // (cédula stays optional) so the professional knows who it's for.
                       if (forSomeoneElse && (benHasCedula === null || !benName.trim())) return;
+                      // Health services require the patient's DOB (self or beneficiary).
+                      if (proIsHealth && !forSomeoneElse && !effectiveSelfDob) return;
+                      if (proIsHealth && forSomeoneElse && !benDob) return;
                       if (isLoggedIn) {
                         if (needsCompleteStep) setStep("complete");
                         else await handleSubmit();

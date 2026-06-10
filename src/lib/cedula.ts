@@ -55,6 +55,31 @@ export function formatId(value: string): string {
 }
 
 /**
+ * Privacy mask for display: hides all but the last 4 digits. National cédulas
+ * keep the `X-XXXX-XXXX` shape (e.g. `X-XXXX-0456`); NITE/DIMEX show seamlessly
+ * (e.g. `XXXXXX1234`). Use anywhere a saved cédula is shown back to the user.
+ */
+export function maskId(value: string): string {
+  const d = cleanId(value);
+  if (!d) return "";
+  const visible = 4;
+  const masked = d
+    .split("")
+    .map((ch, i) => (i >= d.length - visible ? ch : "X"))
+    .join("");
+  if (d.length <= 9) {
+    const province = masked.slice(0, 1);
+    const tomo = masked.slice(1, 5);
+    const asiento = masked.slice(5, 9);
+    let out = province;
+    if (d.length > 1) out += `-${tomo}`;
+    if (d.length > 5) out += `-${asiento}`;
+    return out;
+  }
+  return masked;
+}
+
+/**
  * Normalised storage value. The mask already produces fixed-width segments, so
  * the clean digits ARE the normalised form (national = province + 4-digit tomo +
  * 4-digit asiento, all zero-padded by construction). This just returns the
