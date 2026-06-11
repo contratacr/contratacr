@@ -1778,3 +1778,38 @@ Replaced the generic error screens with on-brand pages built on a shared `src/co
 - **Generic error** (`[locale]/error.tsx`): "Algo salió mal" with Reintentar + Ir al inicio; also detects offline (`navigator.onLine === false`) → "Sin conexión a internet" variant.
 - **404** (`[locale]/not-found.tsx`): branded "Página no encontrada" (Error 404) with Volver al inicio + Buscar profesionales; i18n via `notFound` namespace (added `search`, `code` keys, es/en).
 - **Root/500** (`app/global-error.tsx`): on-brand via inline styles (CSS may not have loaded), logo + Reintentar + Ir al inicio. Root `app/not-found.tsx` still redirects locale-less paths to `/es`.
+
+---
+
+## Security audit & hardening (migration 047 + app layer)
+
+Findings and fixes from the security pass. **SQL was run as migration 047** (must be applied in Supabase).
+
+### 1. RLS / sensitive data — CRITICAL fix
+- **FOUND:** `profiles` had a `USING (true)` SELECT policy → the *public anon key* could read EVERY column of EVERY profile, including **cédula, email, phone** and moderation fields. Anyone could dump all cédulas.
+- **FIXED (migration 047):** column-level privileges — `REVOKE SELECT ON profiles FROM anon, authenticated` then `GRANT SELECT (id, full_name, avatar_url, role, is_disabled, created_at, updated_at)`. Public professional cards + reviewer names (which embed `profiles(full_name, avatar_url)`) still work; cédula/email/phone are now readable only by the **owner** (via the new `get_my_profile()` SECURITY DEFINER RPC, returns only `auth.uid()`'s row) and the **service-role** (admin). Owner code migrated to `rpc("get_my_profile")` / safe-column embeds (pro dashboard, cliente dashboard, completar-perfil, registro pro, booking modal).
+- **Verified OK:** support_tickets/support_ticket_messages/reports/notification_deliveries/padron are RLS-locked to the service-role; `/api/support` scopes every read to `user_id`; notifications/projects/proposals/saved_professionals/reviews/bookings are owner-scoped; the proposals route only returns a client's phone for an **accepted** proposal (service-role gated). Reference tables (categories/provincias/cantones) are intentionally public.
+- **KNOWN FOLLOW-UP (documented, not fixed to avoid breaking the public listing):** `professionals` is `USING(true)` public-read and still exposes internal moderation columns (`banned_reason`, `verification_reason`, `id_document_note`). The public queries don't select them, but a crafted query could. Safe remediation = move these to a service-role-only `professional_moderation` table (the owner dashboard does `select("*")`, so a column-grant would need the owner select rewritten first).
+
+### 2. Auth & access control — OK
+- Admin is enforced server-side: every `/api/admin/*` route calls `getApiAdmin()` and admin pages call `requireAdmin()` (role confirmed via the service-role against `profiles.role`, never trusting the client). Protected `/dashboard/*` gated in middleware + page-level auth checks.
+
+### 3. Input validation / injection
+- No `dangerouslySetInnerHTML` anywhere — React auto-escapes UGC (names, bios, messages, reviews). Queries go through supabase-js/PostgREST (parameterized; no raw SQL concatenation).
+- **FIXED:** `searchProfessionals` interpolated the raw search `q` into a PostgREST `.or()` filter → filter-injection / LIKE-wildcard abuse. Now sanitized (strip `, ( ) : * % _ \ " '`, cap 80 chars) before interpolation.
+
+### 4. Sensitive data exposure
+- **FIXED:** `/api/cedula/[id]` (returns a person's official padrón name) was unauthenticated → an open name-by-cédula enumeration API. Now requires an authenticated session + rate limit (all real callers already have a session).
+- Admin user profile API masks cédula (`maskId`); full cédula only in the verification case file (admin/service-role). No secrets in the repo (`.env*` gitignored; only the public anon key is client-side; service-role key is server-only via `createAdminClient`).
+
+### 5. Rate limiting
+- Added an in-memory per-IP limiter (`src/lib/rate-limit.ts`) on abuse-prone endpoints: `/api/cedula` (20/min), `/api/contact` (5/min), `/api/support` reply (10/min), `/api/report-*` (10/min). NOTE: per-instance memory — best-effort on serverless; a shared store (Upstash/Redis) is the follow-up for global limits.
+
+### 6. General hardening
+- **Security headers** added in `next.config.ts` for all routes: HSTS (2y, preload), `X-Content-Type-Options: nosniff`, `X-Frame-Options: SAMEORIGIN` + CSP `frame-ancestors 'self'` (anti-clickjacking), `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy` (camera/mic/payment/usb off, geolocation self).
+- Auth cookies are managed by `@supabase/ssr` (httpOnly/secure/sameSite). HTTPS enforced by host + HSTS.
+- **Dependencies:** bumped `nodemailer` 6→8 (fixes the high advisory). Remaining: 2 moderate, build-time only (postcss CSS-stringify XSS; a next advisory whose "fix" is an impossible downgrade) — low real-world risk, tracked.
+
+### Manual actions required
+- **Run migration `047_profiles_column_security.sql`** in Supabase (plus the still-pending `043`–`046`).
+- Consider a shared-store rate limiter (Upstash) and the `professional_moderation` table split for defense-in-depth.
