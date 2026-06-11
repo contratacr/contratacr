@@ -774,13 +774,14 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                           ) : (
                             <>
                               <p className="text-sm font-medium text-[#374151] mb-2">Elige una hora:</p>
-                              <div className="flex flex-wrap gap-2">
+                              {/* Even grid → uniform chip width regardless of the time text */}
+                              <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
                                 {slots.map((slot) => (
                                   <button
                                     key={slot}
                                     onClick={() => setSelectedTime(slot)}
                                     className={cn(
-                                      "px-3 py-1.5 rounded-xl text-sm font-medium transition-all border",
+                                      "w-full px-2 py-1.5 rounded-xl text-sm font-medium tabular-nums text-center transition-all border",
                                       selectedTime === slot
                                         ? "bg-[#009FD9] text-white border-[#009FD9]"
                                         : "bg-white text-[#374151] border-[#e5e7eb] hover:border-[#009FD9] hover:text-[#009FD9]"

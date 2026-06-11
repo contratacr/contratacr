@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { Plus, X, CalendarPlus, Globe, Lock, Loader2, Video, MapPin, AlertCircle } from "lucide-react";
-import { CONTACT_PREFERENCES, type ContactPreference } from "@/lib/constants";
+import { type ContactPreference } from "@/lib/constants";
 import { crTodayISO, isPastDateTimeCR, isTooSoonCR, nextFullHourCR, crDatePretty, LEAD_MINUTES } from "@/lib/time-cr";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { TimeSelect, to12h } from "@/components/ui/time-select";
@@ -82,14 +82,8 @@ interface AvailabilityEditorProps {
   onSaved?: () => void;
 }
 
-export function AvailabilityEditor({ professionalId, initialPublic = true, initialContactPreference = "ambas", workplaces = [], coverageAreas = [], professions = [], initialVideoconsulta = false, initialAllowPhoneCall = false, onSaved }: AvailabilityEditorProps) {
+export function AvailabilityEditor({ professionalId, initialPublic = true, workplaces = [], coverageAreas = [], professions = [], initialVideoconsulta = false, initialAllowPhoneCall = false, onSaved }: AvailabilityEditorProps) {
   const [isPublic, setIsPublic] = useState(initialPublic);
-  // Legacy "solo_citas" (app-only) is no longer an option — treat it as "ambas"
-  // so the radio shows a valid selection.
-  const [contactPreference, setContactPreference] = useState<ContactPreference>(
-    initialContactPreference === "solo_citas" ? "ambas" : initialContactPreference
-  );
-  const [savingContact, setSavingContact] = useState(false);
   const [videoconsulta, setVideoconsulta] = useState(initialVideoconsulta);
   const [allowPhoneCall, setAllowPhoneCall] = useState(initialAllowPhoneCall);
 
@@ -161,17 +155,6 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
     if (!next && genLocation === VIDEO_LOC) setGenLocation(GENERAL_LOC);
     const supabase = createClient();
     await supabase.from("professionals").update({ videoconsulta: next }).eq("id", professionalId);
-    onSaved?.();
-  }
-  // "solo_whatsapp" hides all scheduling — those pros only take WhatsApp.
-  const schedulingEnabled = contactPreference !== "solo_whatsapp";
-
-  async function changeContactPreference(value: ContactPreference) {
-    setContactPreference(value);
-    setSavingContact(true);
-    const supabase = createClient();
-    await supabase.from("professionals").update({ contact_preference: value }).eq("id", professionalId);
-    setSavingContact(false);
     onSaved?.();
   }
   const [slots, setSlots] = useState<Slot[]>([]);
@@ -254,7 +237,9 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
     setIsPublic(true);
     setSavingVisibility(true);
     const supabase = createClient();
-    await supabase.from("professionals").update({ availability_public: true }).eq("id", professionalId);
+    // Keep the stored contact_preference in sync (pública = "ambas") so the
+    // /buscar card + schedule logic stay correct now that this is the only control.
+    await supabase.from("professionals").update({ availability_public: true, contact_preference: "ambas" }).eq("id", professionalId);
     setSavingVisibility(false);
     onSaved?.();
   }
@@ -262,9 +247,9 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
   async function confirmMakePrivate() {
     setSavingVisibility(true);
     const supabase = createClient();
-    // Delete all schedules, then mark availability private, then refresh.
+    // Delete all schedules, mark availability private + WhatsApp-only, then refresh.
     await supabase.from("availability_slots").delete().eq("professional_id", professionalId);
-    await supabase.from("professionals").update({ availability_public: false }).eq("id", professionalId);
+    await supabase.from("professionals").update({ availability_public: false, contact_preference: "solo_whatsapp" }).eq("id", professionalId);
     window.location.reload();
   }
 
@@ -319,10 +304,10 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
       ...prev,
       ...((data ?? []).map((s) => ({ id: s.id, slot_date: s.slot_date, slot_time: String(s.slot_time).slice(0, 5), location_id: (s as { location_id?: string }).location_id ?? locId, category_id: (s as { category_id?: string }).category_id ?? catId }))),
     ]);
-    // Adding a schedule automatically makes availability public.
+    // Adding a schedule automatically makes availability public (+ "ambas").
     if (!isPublic) {
       setIsPublic(true);
-      await supabase.from("professionals").update({ availability_public: true }).eq("id", professionalId);
+      await supabase.from("professionals").update({ availability_public: true, contact_preference: "ambas" }).eq("id", professionalId);
     }
     onSaved?.();
   }
@@ -393,62 +378,14 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
 
   return (
     <div className="flex flex-col gap-4">
-      {/* ── STEP 1 — Contact preference: the FIRST decision; drives everything below ── */}
+      {/* ── STEP 1 — Tu disponibilidad: ONE control (privada vs pública) decides
+             everything below. Private = WhatsApp-only (no agenda); pública =
+             agenda publicada. WhatsApp is always available. ── */}
       <div className="rounded-xl border border-[#e5e7eb] p-4">
         <div className="flex items-center gap-2.5 mb-3">
           <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#009FD9] text-white text-xs font-bold shrink-0">1</span>
-          <h3 className="text-sm font-semibold text-[#111827]">¿Cómo recibes clientes?</h3>
-          {savingContact && <Loader2 className="h-4 w-4 animate-spin text-[#009FD9] ml-auto" />}
-        </div>
-        <div className="flex flex-col gap-2">
-          {CONTACT_PREFERENCES.map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => changeContactPreference(opt.value)}
-              className={cn(
-                "flex items-center justify-between gap-2 p-3 rounded-xl border-2 text-left transition-all",
-                contactPreference === opt.value ? "border-[#009FD9] bg-[#EBF5FB]" : "border-[#e5e7eb] hover:border-[#009FD9]/40"
-              )}
-            >
-              <div>
-                <p className="text-sm font-medium text-[#111827]">{opt.label}</p>
-                <p className="text-xs text-[#9ca3af]">{opt.hint}</p>
-              </div>
-              <span className={cn("h-4 w-4 rounded-full border-2 shrink-0", contactPreference === opt.value ? "border-[#009FD9] bg-[#009FD9]" : "border-[#d1d5db]")} />
-            </button>
-          ))}
-        </div>
-        {!schedulingEnabled && (
-          <p className="text-xs text-[#6b7280] mt-3 bg-[#f4f7fa] rounded-lg p-3">
-            Elegiste <strong>Solo WhatsApp</strong>: los clientes te escribirán directo y no se mostrarán horarios ni
-            agenda. Cambia a <strong>Agenda + WhatsApp</strong> si quieres publicar tu disponibilidad.
-          </p>
-        )}
-
-        {/* Phone-call contact — opt-in (OFF by default) */}
-        <div className="flex items-center justify-between gap-4 mt-4 pt-4 border-t border-[#f3f4f6]">
-          <div>
-            <p className="text-sm font-medium text-[#111827]">Permitir contacto por llamada</p>
-            <p className="text-xs text-[#9ca3af]">Si lo activas, los clientes verán la opción “Contáctanos por llamada” a tu número.</p>
-          </div>
-          <button
-            type="button"
-            onClick={toggleAllowPhoneCall}
-            className={cn("relative h-6 w-11 rounded-full transition-all shrink-0", allowPhoneCall ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
-            aria-label="Permitir llamada"
-          >
-            <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", allowPhoneCall ? "left-5" : "left-0.5")} />
-          </button>
-        </div>
-      </div>
-
-      {schedulingEnabled && (<>
-      {/* ── STEP 2 — Tu disponibilidad: privada vs pública (drives what shows below) ── */}
-      <div className="rounded-xl border border-[#e5e7eb] p-4">
-        <div className="flex items-center gap-2.5 mb-3">
-          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#009FD9] text-white text-xs font-bold shrink-0">2</span>
           <h3 className="text-sm font-semibold text-[#111827]">Tu disponibilidad</h3>
+          {savingVisibility && <Loader2 className="h-4 w-4 animate-spin text-[#009FD9] ml-auto" />}
         </div>
 
         {/* "Disponibilidad privada" (ON = private; hides + clears slots) */}
@@ -461,8 +398,8 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
               <p className="text-sm font-semibold text-[#111827]">Disponibilidad privada</p>
               <p className="text-xs text-[#6b7280] mt-0.5 max-w-md">
                 {!isPublic
-                  ? "Activada: tus horarios están ocultos en las búsquedas y los clientes te contactan por WhatsApp para coordinar. Desactívala para volver a mostrarlos."
-                  : "Actívala para ocultar tus horarios. Los clientes deberán contactarte para conocer tu disponibilidad. (Se eliminan los horarios publicados.)"}
+                  ? "Activada: no muestras agenda. Los clientes te contactan por WhatsApp para coordinar. Desactívala para publicar tus horarios."
+                  : "Actívala para ocultar tu agenda: los clientes te contactarán por WhatsApp para coordinar. (Se eliminan los horarios publicados.)"}
               </p>
             </div>
           </div>
@@ -477,6 +414,23 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
             aria-label={isPublic ? "Hacer privada" : "Hacer pública"}
           >
             <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all duration-200", !isPublic ? "left-5" : "left-0.5")} />
+          </button>
+        </div>
+
+        {/* Permitir contacto por llamada — independent; applies in BOTH modes
+            (WhatsApp is always available; this adds a phone-call option). */}
+        <div className="flex items-center justify-between gap-4 mt-4 pt-4 border-t border-[#f3f4f6]">
+          <div>
+            <p className="text-sm font-medium text-[#111827]">Permitir contacto por llamada</p>
+            <p className="text-xs text-[#9ca3af]">Si lo activas, los clientes verán la opción “Contáctanos por llamada” a tu número.</p>
+          </div>
+          <button
+            type="button"
+            onClick={toggleAllowPhoneCall}
+            className={cn("relative h-6 w-11 rounded-full transition-all shrink-0", allowPhoneCall ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
+            aria-label="Permitir llamada"
+          >
+            <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", allowPhoneCall ? "left-5" : "left-0.5")} />
           </button>
         </div>
 
@@ -504,12 +458,12 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
         )}
       </div>
 
-      {/* Public agenda → STEP 3 (add schedules) + the list. Private → a short note. */}
+      {/* Public agenda → STEP 2 (add schedules) + the list. Private → a short note. */}
       {isPublic ? (<>
-      {/* ── STEP 3 — Slot generator (public agenda only) ──────────── */}
+      {/* ── STEP 2 — Slot generator (public agenda only) ──────────── */}
       <div className="rounded-xl border border-[#e5e7eb] p-4">
         <div className="flex items-center gap-2.5 mb-4">
-          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#009FD9] text-white text-xs font-bold shrink-0">3</span>
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#009FD9] text-white text-xs font-bold shrink-0">2</span>
           <CalendarPlus className="h-4 w-4 text-[#009FD9]" />
           <h3 className="text-sm font-semibold text-[#111827]">Agregar horarios disponibles</h3>
         </div>
@@ -655,11 +609,12 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
                               return (
                                 <div key={part} className="flex items-start gap-2">
                                   <span className="text-[10px] font-semibold uppercase tracking-wide text-[#9ca3af] w-12 shrink-0 pt-2">{part}</span>
-                                  <div className="flex flex-wrap gap-2">
+                                  {/* Even grid → every time chip is the SAME width regardless of text */}
+                                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 flex-1 min-w-0">
                                     {partSlots.map((s) => (
-                                      <span key={s.id ?? `${s.slot_time}-${s.location_id ?? ""}-${s.category_id ?? ""}`} className="group inline-flex items-center gap-1.5 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium pl-3 pr-1.5 py-1.5">
-                                        {to12h(s.slot_time)}
-                                        <button onClick={() => removeSlot(s)} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors cursor-pointer" aria-label="Quitar">
+                                      <span key={s.id ?? `${s.slot_time}-${s.location_id ?? ""}-${s.category_id ?? ""}`} className="group inline-flex items-center justify-between gap-1 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium tabular-nums pl-2.5 pr-1 py-1.5">
+                                        <span className="truncate">{to12h(s.slot_time)}</span>
+                                        <button onClick={() => removeSlot(s)} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors cursor-pointer shrink-0" aria-label="Quitar">
                                           <X className="h-3.5 w-3.5" />
                                         </button>
                                       </span>
@@ -687,8 +642,6 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
           </span>
         </div>
       )}
-
-      </>)}
 
       {/* Confirmation modal — making availability private deletes all schedules */}
       {showPrivateConfirm && (
