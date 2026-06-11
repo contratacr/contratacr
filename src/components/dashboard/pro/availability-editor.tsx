@@ -385,11 +385,12 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
 
   return (
     <div className="flex flex-col gap-4">
-      {/* ── Contact preference — the FIRST decision; drives everything below ── */}
+      {/* ── STEP 1 — Contact preference: the FIRST decision; drives everything below ── */}
       <div className="rounded-xl border border-[#e5e7eb] p-4">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2.5 mb-3">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#009FD9] text-white text-xs font-bold shrink-0">1</span>
           <h3 className="text-sm font-semibold text-[#111827]">¿Cómo recibes clientes?</h3>
-          {savingContact && <Loader2 className="h-4 w-4 animate-spin text-[#009FD9]" />}
+          {savingContact && <Loader2 className="h-4 w-4 animate-spin text-[#009FD9] ml-auto" />}
         </div>
         <div className="flex flex-col gap-2">
           {CONTACT_PREFERENCES.map((opt) => (
@@ -413,7 +414,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
         {!schedulingEnabled && (
           <p className="text-xs text-[#6b7280] mt-3 bg-[#f4f7fa] rounded-lg p-3">
             Elegiste <strong>Solo WhatsApp</strong>: los clientes te escribirán directo y no se mostrarán horarios ni
-            agenda. Cambia a “Ambas” o “Solo citas” si quieres habilitar tu disponibilidad.
+            agenda. Cambia a <strong>Agenda + WhatsApp</strong> si quieres publicar tu disponibilidad.
           </p>
         )}
 
@@ -435,10 +436,15 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
       </div>
 
       {schedulingEnabled && (<>
-      {/* ── Visibilidad y modalidad — quick settings grouped in ONE card to cut noise ── */}
-      <div className="rounded-xl border border-[#e5e7eb]">
+      {/* ── STEP 2 — Tu disponibilidad: privada vs pública (drives what shows below) ── */}
+      <div className="rounded-xl border border-[#e5e7eb] p-4">
+        <div className="flex items-center gap-2.5 mb-3">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#009FD9] text-white text-xs font-bold shrink-0">2</span>
+          <h3 className="text-sm font-semibold text-[#111827]">Tu disponibilidad</h3>
+        </div>
+
         {/* "Disponibilidad privada" (ON = private; hides + clears slots) */}
-        <div className="flex items-start justify-between gap-4 p-4">
+        <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3">
             <div className={cn("flex h-9 w-9 items-center justify-center rounded-full shrink-0", !isPublic ? "bg-[#fef3c7] text-[#b45309]" : "bg-[#f3f4f6] text-[#6b7280]")}>
               {!isPublic ? <Lock className="h-4 w-4" /> : <Globe className="h-4 w-4" />}
@@ -466,31 +472,36 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
           </button>
         </div>
 
-        {/* Videoconsulta */}
-        <div className="flex items-center justify-between gap-4 p-4 border-t border-[#f3f4f6]">
-          <div className="flex items-center gap-3">
-            <div className={cn("flex h-9 w-9 items-center justify-center rounded-full shrink-0", videoconsulta ? "bg-[#EBF5FB] text-[#009FD9]" : "bg-[#f3f4f6] text-[#6b7280]")}>
-              <Video className="h-4 w-4" />
+        {/* Videoconsulta — only relevant when the agenda is PUBLIC (hidden in private) */}
+        {isPublic && (
+          <div className="flex items-center justify-between gap-4 mt-4 pt-4 border-t border-[#f3f4f6]">
+            <div className="flex items-center gap-3">
+              <div className={cn("flex h-9 w-9 items-center justify-center rounded-full shrink-0", videoconsulta ? "bg-[#EBF5FB] text-[#009FD9]" : "bg-[#f3f4f6] text-[#6b7280]")}>
+                <Video className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-[#111827]">Ofreces videoconsulta</p>
+                <p className="text-xs text-[#6b7280]">Atiendes en línea. Puedes crear horarios específicos para videoconsulta.</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-semibold text-[#111827]">Ofreces videoconsulta</p>
-              <p className="text-xs text-[#6b7280]">Atiendes en línea. Puedes crear horarios específicos para videoconsulta.</p>
-            </div>
+            <button
+              type="button"
+              onClick={toggleVideoconsulta}
+              className={cn("relative h-6 w-11 rounded-full transition-all shrink-0", videoconsulta ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
+              aria-label="Videoconsulta"
+            >
+              <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", videoconsulta ? "left-5" : "left-0.5")} />
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={toggleVideoconsulta}
-            className={cn("relative h-6 w-11 rounded-full transition-all shrink-0", videoconsulta ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
-            aria-label="Videoconsulta"
-          >
-            <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", videoconsulta ? "left-5" : "left-0.5")} />
-          </button>
-        </div>
+        )}
       </div>
 
-      {/* ── Slot generator ──────────────────────────────────────── */}
+      {/* Public agenda → STEP 3 (add schedules) + the list. Private → a short note. */}
+      {isPublic ? (<>
+      {/* ── STEP 3 — Slot generator (public agenda only) ──────────── */}
       <div className="rounded-xl border border-[#e5e7eb] p-4">
-        <div className="flex items-center gap-2 mb-4">
+        <div className="flex items-center gap-2.5 mb-4">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#009FD9] text-white text-xs font-bold shrink-0">3</span>
           <CalendarPlus className="h-4 w-4 text-[#009FD9]" />
           <h3 className="text-sm font-semibold text-[#111827]">Agregar horarios disponibles</h3>
         </div>
@@ -660,6 +671,14 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
           </div>
         )}
       </div>
+      </>) : (
+        <div className="rounded-xl bg-[#fffbeb] border border-[#fde68a] p-4 text-sm text-[#92400e] flex items-start gap-2">
+          <Lock className="h-4 w-4 shrink-0 mt-0.5" />
+          <span>
+            Tu disponibilidad está en <strong>privado</strong>: tu agenda y tus horarios están ocultos. Los clientes te contactarán por WhatsApp{allowPhoneCall ? " o llamada" : ""} para coordinar. Desactiva <strong>Disponibilidad privada</strong> para publicar tus horarios.
+          </span>
+        </div>
+      )}
 
       </>)}
 
