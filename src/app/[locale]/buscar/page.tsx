@@ -40,6 +40,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   const currentPage = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
 
+  // Who is viewing — so we can hide self-service actions on a pro's OWN card.
+  const supabaseViewer = await createClient();
+  const { data: { user: viewer } } = await supabaseViewer.auth.getUser();
+  const viewerProfileId = viewer?.id;
+
   const allResults = await searchProfessionals({
     categoryId: params.categoria,
     provinceId: params.provincia,
@@ -242,7 +247,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                           {i + 1}
                         </span>
                         <SaveableCard pro={pro}>
-                          <ProfessionalCard professional={pro} slots={slotsByPro[pro.id] ?? []} activeCategory={activeCategoryId} />
+                          <ProfessionalCard professional={pro} slots={slotsByPro[pro.id] ?? []} activeCategory={activeCategoryId} viewerProfileId={viewerProfileId} />
                         </SaveableCard>
                       </div>
                     )))}

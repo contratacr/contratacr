@@ -2,6 +2,8 @@
 // listings are populated exclusively from real Supabase records.
 export type ProfessionalCardData = {
   id: string;
+  /** Owner's auth user id — used to detect "this is my own profile". */
+  profileId?: string;
   slug: string;
   fullName: string;
   avatarUrl?: string;
@@ -23,4 +25,6 @@ export type ProfessionalCardData = {
   workplaces?: { id?: string; name: string; address?: string; lat?: number; lng?: number }[];
   /** Opt-in: the pro exposes phone-call contact (Disponibilidad). */
   allowPhoneCall?: boolean;
+  /** Optional separate call number (else the WhatsApp number is used for calls). */
+  callPhone?: string;
 };

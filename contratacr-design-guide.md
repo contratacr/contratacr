@@ -184,6 +184,13 @@ A professional is always **ONE card** (`rounded-2xl bg-white border`, never spli
 - **Public profile:** a **"Certificaciones" tab** appears only when the pro has any (mirrors the "Casos de éxito" tab pattern), each row = `Award` icon + name + "institución · año". Include the honest note that authenticity isn't verified yet (future admin enhancement).
 - **/buscar card:** **never list certificates on the card** (would grow it). Show a compact **"Ver certificaciones (N)"** link (Award icon) ONLY when there are any, **sharing the same bottom `flex-wrap` row as "Ver casos de éxito"** so the card height stays uniform. It deep-links to `?tab=certificaciones`. Same rule for any future "extra detail" surfaced from a card: a compact link in the shared bottom row, not inline content.
 
+### No self-service (a pro can't hire themselves)
+- A professional must **never** be able to request a service from their **own** profile, nor send a proposal to their **own** project. Detect ownership by comparing the viewer's auth id to the pro's owner (`ProfessionalCardData.profileId` = `professionals.profile_id`) / the project's `client_id`.
+- **Hide, don't just disable:** on a pro's own /buscar card and public profile, hide the WhatsApp/call/Solicitar actions and show a clear **"Este es tu perfil"** state (link to their dashboard). Exclude a pro's own projects from the "propose" feed. Always keep the **server guard** too (booking + proposals APIs reject self-actions) — UI hiding is not enough.
+
+### Separate call vs WhatsApp numbers
+- A pro may set an **optional separate "Número para llamadas"** distinct from their **"Número de WhatsApp"** (`professionals.call_phone`). **If the call number is empty, use the WhatsApp number for calls.** The **WhatsApp** button always uses `whatsapp`; the **"Llamar"/call** action uses `callPhone ?? whatsapp`. Validate both as phone numbers (`PhoneInput`).
+
 ### Dismiss standard — tap-away + Escape (always)
 - **Every** dropdown, menu, autocomplete, popover, modal, and date/time picker MUST close on **click/tap outside** AND on **Escape**, and return focus sensibly. Prefer **Radix** primitives (Dialog/Select/Popover) — they handle this for free. For a CUSTOM outside-click handler, **listen to `mousedown` AND `touchstart`** (mousedown alone can miss touch taps) and add a `keydown`/Escape handler. The content node should `stopPropagation` (or be ref-excluded) so taps inside don't self-close.
 - A modal scrim (`absolute inset-0` / overlay) gets `onClick={onClose}`; the dialog body stops propagation. Never trap the user in an overlay with no tap-away exit.

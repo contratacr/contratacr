@@ -96,10 +96,10 @@ export async function searchProfessionals(
         let query = supabase
           .from("professionals")
           .select(
-            `id, slug, hourly_rate, is_verified, is_featured, is_available,
+            `id, profile_id, slug, hourly_rate, is_verified, is_featured, is_available,
              rating_avg, review_count, bio, whatsapp, years_experience, portfolio_urls,
              category_id, professions, pricing, lat, lng, service_type, availability_public, contact_preference,
-             business_name, workplaces, verification_status${modern ? ", no_cr_id, insurance_networks, coverage_areas, coverage_provincias, coverage_country, allow_phone_call, certifications" : ""},
+             business_name, workplaces, verification_status${modern ? ", no_cr_id, insurance_networks, coverage_areas, coverage_provincias, coverage_country, allow_phone_call, certifications, call_phone" : ""},
              profiles(full_name, avatar_url${modern ? ", is_disabled" : ""}),
              provincias(id, name),
              cantones(id, name)`
@@ -183,7 +183,7 @@ export async function searchProfessionals(
       };
 
       let { data, error } = await build(true);
-      if (error && /is_banned|search_provincias|search_cantones|coverage_|no_cr_id|certifications|column/i.test(error.message)) {
+      if (error && /is_banned|search_provincias|search_cantones|coverage_|no_cr_id|certifications|call_phone|column/i.test(error.message)) {
         ({ data, error } = await build(false)); // pre-migration fallback
       }
       if (error) throw error;
@@ -226,6 +226,8 @@ export async function searchProfessionals(
         insuranceNetworks: (row.insurance_networks as string[]) ?? [],
         coverage: buildCoverage(row),
         allowPhoneCall: row.allow_phone_call ?? false,
+        profileId: row.profile_id ?? undefined,
+        callPhone: row.call_phone ?? undefined,
       }));
 
       // "Cerca de mí" — proximity sort by distance to the user's coordinates,
@@ -356,7 +358,7 @@ export async function getProfessionalBySlug(
       const { data: pro, error } = await supabase
         .from("professionals")
         .select(
-          `id, slug, hourly_rate, is_verified, is_featured, is_available,
+          `id, profile_id, slug, hourly_rate, is_verified, is_featured, is_available,
            rating_avg, review_count, bio, whatsapp, years_experience, portfolio_urls,
            category_id, professions, pricing, services, availability_public, contact_preference, languages, business_name, workplaces, verification_status, insurance_networks, lat, lng, service_type,
            profiles(full_name, avatar_url),
@@ -398,6 +400,11 @@ export async function getProfessionalBySlug(
         if (certRow && Array.isArray((certRow as { certifications?: unknown[] }).certifications)) {
           certifications = (certRow as { certifications: unknown[] }).certifications;
         }
+      } catch { /* column not migrated yet */ }
+      let callPhone: string | undefined;
+      try {
+        const { data: cpRow } = await supabase.from("professionals").select("call_phone").eq("id", pro.id).maybeSingle();
+        callPhone = (cpRow as { call_phone?: string } | null)?.call_phone ?? undefined;
       } catch { /* column not migrated yet */ }
       if (portfolioItems.length === 0) {
         portfolioItems = (pro.portfolio_urls ?? []).map((url: string) => ({ url }));
@@ -469,6 +476,9 @@ export async function getProfessionalBySlug(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         insuranceNetworks: ((pro as any).insurance_networks as string[]) ?? [],
         certifications: certifications as Certification[],
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        profileId: (pro as any).profile_id ?? undefined,
+        callPhone,
       };
     } catch (err) {
       console.error("[getProfessionalBySlug] Supabase error:", err);

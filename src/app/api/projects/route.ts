@@ -168,6 +168,8 @@ export async function GET(req: NextRequest) {
     .from("projects")
     .select(`*, profiles:client_id(full_name), proposals(id)`)
     .eq("status", "open")
+    // No self-service: never list the pro's OWN projects in the "propose" feed.
+    .neq("client_id", session.user.id)
     .order("created_at", { ascending: false })
     .limit(30);
 

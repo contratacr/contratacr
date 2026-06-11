@@ -29,12 +29,23 @@ export function BookingButton({
   const [showBooking, setShowBooking] = useState(false);
   const t = useTranslations("booking");
 
+  // A pro cannot request a service from themselves — show a clear state instead.
+  const isOwn = !!user && !!professional.profileId && user.id === professional.profileId;
+
   function handleClick() {
     if (user) {
       setShowBooking(true);
     } else {
       setShowRegistration(true);
     }
+  }
+
+  if (isOwn) {
+    return (
+      <Button variant="outline" size={size} className={className} asChild>
+        <a href="/es/dashboard/profesional">Este es tu perfil</a>
+      </Button>
+    );
   }
 
   return (

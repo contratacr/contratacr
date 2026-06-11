@@ -81,6 +81,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
     if (typeof window !== "undefined") setPreviewMode(new URLSearchParams(window.location.search).get("preview") === "1");
   }, []);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [viewerId, setViewerId] = useState<string | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showAllServices, setShowAllServices] = useState(false);
   const [showRegistration, setShowRegistration] = useState(false);
@@ -102,6 +103,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       setIsAuthenticated(!!user);
+      setViewerId(user?.id ?? null);
     }
     load();
   }, [params]);
@@ -169,6 +171,10 @@ export default function ProfilePage({ params }: ProfilePageProps) {
   const hasCasos = !!professional.portfolioUrls && professional.portfolioUrls.length > 0;
   const certificationsList = (professional.certifications ?? []).filter((c) => c?.name?.trim());
   const hasCerts = certificationsList.length > 0;
+  // A pro viewing their OWN public profile cannot request a service from themselves.
+  const isOwn = !!viewerId && viewerId === professional.profileId;
+  // Calls use the SEPARATE call number when set, else the WhatsApp number.
+  const callDigits = (professional.callPhone || professional.whatsapp || "").replace(/\D/g, "");
   const TABS: Array<{ id: Tab; label: string }> = [
     { id: "servicios",      label: "Servicios" },
     { id: "disponibilidad", label: "Disponibilidad" },
@@ -274,6 +280,16 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                 {/* Casos de éxito images live ONLY in the "Casos de éxito" tab — no
                     duplicate thumbnail strip here under the profile summary. */}
 
+                {isOwn ? (
+                  /* Own profile — no self-service; offer a shortcut to edit instead. */
+                  <a
+                    href="/es/dashboard/profesional"
+                    className="flex items-center justify-center gap-2 w-full border border-[#009FD9] text-[#009FD9] hover:bg-[#EBF5FB] font-semibold py-3 rounded-xl transition-colors text-sm"
+                  >
+                    Este es tu perfil · Editar
+                  </a>
+                ) : (
+                  <>
                 {/* WhatsApp CTA */}
                 {isAuthenticated ? (
                   <a
@@ -306,12 +322,14 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                   />
                 ) : (
                   <a
-                    href={`tel:+506${professional.whatsapp.replace(/\D/g, "")}`}
+                    href={`tel:+506${callDigits}`}
                     className="flex items-center justify-center gap-2 w-full border border-[#009FD9] text-[#009FD9] hover:bg-[#EBF5FB] font-semibold py-3 rounded-xl transition-colors text-sm"
                   >
                     <Phone className="h-4 w-4" />
                     Llamar
                   </a>
+                )}
+                  </>
                 )}
 
                 <ClientRegistrationModal
@@ -467,7 +485,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                               </button>
                             )}
                             <a
-                              href={`tel:+506${professional.whatsapp.replace(/\D/g, "")}`}
+                              href={`tel:+506${callDigits}`}
                               className="flex-1 flex items-center justify-center gap-2 border border-[#009FD9] text-[#009FD9] hover:bg-[#EBF5FB] font-semibold py-2.5 rounded-xl transition-colors text-sm"
                             >
                               <Phone className="h-4 w-4" />

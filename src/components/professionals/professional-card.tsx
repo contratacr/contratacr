@@ -28,6 +28,9 @@ export type Certification = { id?: string; name: string; institution?: string; y
 
 export type ProfessionalCardData = {
   id: string;
+  /** Owner's auth user id (professionals.profile_id) — used to detect "this is my
+   *  own profile" and hide self-service actions. */
+  profileId?: string;
   slug: string;
   fullName: string;
   avatarUrl?: string;
@@ -65,6 +68,9 @@ export type ProfessionalCardData = {
   coverage?: { country: boolean; provincias: string[]; cantones: string[] };
   /** Opt-in: the pro chose to expose phone-call contact (Disponibilidad). */
   allowPhoneCall?: boolean;
+  /** Optional SEPARATE number for calls. When unset, the WhatsApp number is used
+   *  for calls too. WhatsApp button always uses `whatsapp`. */
+  callPhone?: string;
 };
 
 // Human label for the pro's actual travel coverage, e.g. "Atiende en todo el país",
@@ -84,9 +90,11 @@ interface ProfessionalCardProps {
   slots?: ScheduleSlot[];
   /** Active category filter from the search query — narrows the badges shown. */
   activeCategory?: string;
+  /** Viewer's auth id — when it matches this pro's owner, hide self-service actions. */
+  viewerProfileId?: string;
 }
 
-export async function ProfessionalCard({ professional, className, slots = [], activeCategory }: ProfessionalCardProps) {
+export async function ProfessionalCard({ professional, className, slots = [], activeCategory, viewerProfileId }: ProfessionalCardProps) {
   const tCat = await getTranslations("categories");
   const tCard = await getTranslations("card");
   // Safe category label: if a translation key is missing, next-intl returns the
@@ -123,12 +131,15 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
   // as its primary button below); call shows whenever the pro opted in.
   // WhatsApp is ALWAYS available (the only choice is whether they also offer
   // in-app scheduling), so the contact icon shows whenever a number exists.
-  const showTopWhatsApp = !contactOnly && !!professional.whatsapp;
-  const showTopCall = !!professional.allowPhoneCall && !!professional.whatsapp;
+  // A pro viewing their OWN card cannot request a service from themselves.
+  const isOwn = !!viewerProfileId && viewerProfileId === professional.profileId;
+  const showTopWhatsApp = !isOwn && !contactOnly && !!professional.whatsapp;
+  const showTopCall = !isOwn && !!professional.allowPhoneCall && !!professional.whatsapp;
   const waHref = professional.whatsapp
     ? getWhatsAppLink(professional.whatsapp, `Hola ${professional.fullName.split(" ")[0]}, vi tu perfil en ContrataCR y me gustaría coordinar un servicio.`)
     : "#";
-  const telHref = `tel:+${(professional.whatsapp || "").replace(/\D/g, "")}`;
+  // Calls use the SEPARATE call number when set, else the WhatsApp number.
+  const telHref = `tel:+${((professional.callPhone || professional.whatsapp) || "").replace(/\D/g, "")}`;
 
   // Verified trust mark — rendered inline beside the name on desktop, but BELOW
   // the name on mobile so the name keeps the full top line and never truncates first.
@@ -310,6 +321,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
                 contactPreference={professional.contactPreference ?? "ambas"}
                 slots={slots}
                 activeCategory={activeCategory}
+                isOwn={isOwn}
               />
             </div>
           </div>

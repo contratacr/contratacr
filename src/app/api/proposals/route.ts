@@ -23,6 +23,13 @@ export async function POST(req: NextRequest) {
 
     if (!pro) return NextResponse.json({ error: "Solo profesionales pueden enviar propuestas" }, { status: 403 });
 
+    // No self-service: a professional cannot send a proposal to their OWN project.
+    const { data: project } = await createAdminClient()
+      .from("projects").select("client_id").eq("id", projectId).maybeSingle();
+    if (project?.client_id === session.user.id) {
+      return NextResponse.json({ error: "No puedes enviar una propuesta a tu propio proyecto." }, { status: 400 });
+    }
+
     const { data, error } = await supabase.from("proposals").insert({
       project_id: projectId,
       professional_id: pro.id,

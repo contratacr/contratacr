@@ -21,6 +21,8 @@ interface ProfessionalScheduleProps {
   slots: ScheduleSlot[];
   /** When the client searched a specific profession, only show that one's slots. */
   activeCategory?: string;
+  /** True when the viewer owns this profile — no self-service actions. */
+  isOwn?: boolean;
 }
 
 const DAY_SHORT = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
@@ -51,7 +53,7 @@ function dayLabel(d: Date, offset: number, today: Date): string {
  *    "Ver horario completo" link to the full profile.
  *  - Private: lock state with "Contáctanos por Whatsapp" + "por llamada".
  */
-export function ProfessionalSchedule({ professional, categoryName, availabilityPublic, contactPreference = "ambas", slots: allSlots, activeCategory }: ProfessionalScheduleProps) {
+export function ProfessionalSchedule({ professional, categoryName, availabilityPublic, contactPreference = "ambas", slots: allSlots, activeCategory, isOwn = false }: ProfessionalScheduleProps) {
   // When a specific profession was searched, only show that profession's hours
   // (item 1). Slots with no category (legacy/pre-migration) always show.
   const slots = useMemo(
@@ -158,6 +160,21 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       />
     </>
   );
+
+  // ── Own profile — no self-service. Show a clear state + a shortcut to edit. ──
+  if (isOwn) {
+    return (
+      <div className="flex h-full flex-col justify-end">
+        <Link
+          href="/dashboard/profesional"
+          onClick={(e) => e.stopPropagation()}
+          className="w-full inline-flex items-center justify-center gap-1.5 bg-[#EBF5FB] text-[#0089bb] text-sm font-semibold py-2 rounded-lg hover:bg-[#d8edf9] transition-colors"
+        >
+          Este es tu perfil
+        </Link>
+      </div>
+    );
+  }
 
   // ── Contact-only (private availability OR WhatsApp-only preference) ────
   // The reason is shown as a flush top band on the card; here we only render the

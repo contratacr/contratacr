@@ -60,6 +60,8 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
 
   const [bio, setBio] = useState<string>(initial.bio ?? "");
   const [whatsapp, setWhatsapp] = useState<string>(initial.whatsapp ?? "");
+  // Optional SEPARATE number for calls. Empty → the WhatsApp number is used for calls.
+  const [callPhone, setCallPhone] = useState<string>(initial.call_phone ?? "");
   const [fullName, setFullName] = useState<string>(initial.profiles?.full_name ?? "");
   // The official name is locked once verified — it's what backs the "Identidad
   // verificada" badge (the guarantee it matches the padrón). Corrections go
@@ -244,6 +246,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         coverage_provincias: coverageProvincias,
         coverage_country: coverageCountry,
         insurance_networks: insurers,
+        call_phone: callPhone.trim() || null,
         // Drop blank rows; keep only entries with a name (institución/año optional).
         certifications: certifications
           .filter((c) => c.name?.trim())
@@ -255,7 +258,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         .update({ ...baseUpdate, ...identityFields })
         .eq("id", professionalId);
       // Retry without the optional identity columns if the DB isn't migrated yet.
-      if (proError && /business_name|workplaces|coverage_areas|search_provincias|search_cantones|insurance_networks|certifications|affiliations|schema cache|could not find|PGRST204/i.test(proError.message)) {
+      if (proError && /business_name|workplaces|coverage_areas|search_provincias|search_cantones|insurance_networks|certifications|call_phone|affiliations|schema cache|could not find|PGRST204/i.test(proError.message)) {
         ({ error: proError } = await supabase.from("professionals").update(baseUpdate).eq("id", professionalId));
       }
 
@@ -537,11 +540,22 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
       <Section title="Contacto y precios" desc="WhatsApp y tus tarifas">
         {/* WhatsApp — required contact channel */}
         <PhoneInput
-          label="WhatsApp"
+          label="Número de WhatsApp"
           required
           value={whatsapp}
           onChange={(digits) => { setWhatsapp(digits); touch(); }}
         />
+
+        {/* Optional SEPARATE call number — for pros who use a different line for
+            calls. Empty → the WhatsApp number is used for calls too. */}
+        <div>
+          <PhoneInput
+            label={<>Número para llamadas <span className="text-[#9ca3af] font-normal">(opcional)</span></>}
+            value={callPhone}
+            onChange={(digits) => { setCallPhone(digits); touch(); }}
+          />
+          <p className="text-xs text-[#9ca3af] mt-1">Si lo dejas vacío, usamos tu número de WhatsApp también para las llamadas.</p>
+        </div>
 
         {/* Pricing tiers */}
         <div>
