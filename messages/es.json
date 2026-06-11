@@ -330,28 +330,29 @@
     }
   },
   "footer": {
-    "tagline": "El marketplace de servicios profesionales para Costa Rica.",
+    "tagline": "El mercado de servicios profesionales exclusivo para Costa Rica. Gratuito para clientes y profesionales, sin comisiones ni cargos de ningún tipo.",
     "clients": {
       "title": "Para clientes",
       "search": "Buscar profesionales",
+      "publish": "Publicar un proyecto",
       "howItWorks": "Cómo funciona",
-      "categories": "Categorías"
+      "help": "Centro de ayuda"
     },
     "pros": {
       "title": "Para profesionales",
-      "register": "Registrar perfil",
-      "howItWorks": "Cómo funciona",
-      "plans": "Planes"
+      "register": "Registra tu perfil",
+      "attract": "Cómo atraer clientes",
+      "howItWorks": "Cómo funciona"
     },
-    "company": {
-      "title": "Empresa",
-      "about": "Sobre nosotros",
-      "contact": "Contacto",
-      "terms": "Términos de uso",
-      "privacy": "Privacidad"
+    "support": {
+      "title": "Soporte",
+      "contact": "Contactar soporte",
+      "help": "Centro de ayuda"
     },
-    "rights": "© 2026 ContrataCR. Todos los derechos reservados.",
-    "madeIn": "Hecho con ❤️ en Costa Rica 🇨🇷"
+    "rights": "© {year} ContrataCR. Todos los derechos reservados.",
+    "terms": "Términos y Condiciones",
+    "privacy": "Política de Privacidad",
+    "madeIn": "Hecho en Costa Rica"
   },
   "notFound": {
     "title": "Página no encontrada",

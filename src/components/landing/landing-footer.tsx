@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { ContrataCRLogo } from "./landing-navbar";
 import { SmartRegisterLink } from "@/components/layout/smart-register-link";
@@ -31,34 +34,36 @@ const SOCIAL_LINKS = [
   { label: "TikTok", href: "https://www.tiktok.com/@contratacr", Icon: TikTokIcon },
 ];
 
+// Labels resolve to footer.<key> at render so they translate per locale.
 const COLUMNS = [
   {
-    heading: "Para clientes",
+    headingKey: "clients.title",
     links: [
-      { label: "Buscar profesionales", href: "/buscar" },
-      { label: "Publicar un proyecto", href: "/publicar-proyecto" },
-      { label: "Cómo funciona",        href: "/como-funciona" },
-      { label: "Centro de ayuda",      href: "/ayuda" },
+      { key: "clients.search",     href: "/buscar" },
+      { key: "clients.publish",    href: "/publicar-proyecto" },
+      { key: "clients.howItWorks", href: "/como-funciona" },
+      { key: "clients.help",       href: "/ayuda" },
     ],
   },
   {
-    heading: "Para profesionales",
+    headingKey: "pros.title",
     links: [
-      { label: "Registra tu perfil",   href: "/registro/profesional" },
-      { label: "Cómo atraer clientes", href: "/atraer-clientes" },
-      { label: "Cómo funciona",        href: "/como-funciona" },
+      { key: "pros.register",   href: "/registro/profesional" },
+      { key: "pros.attract",    href: "/atraer-clientes" },
+      { key: "pros.howItWorks", href: "/como-funciona" },
     ],
   },
   {
-    heading: "Soporte",
+    headingKey: "support.title",
     links: [
-      { label: "Contactar soporte", href: "/soporte" },
-      { label: "Centro de ayuda",   href: "/ayuda" },
+      { key: "support.contact", href: "/soporte" },
+      { key: "support.help",    href: "/ayuda" },
     ],
   },
 ];
 
 export function LandingFooter() {
+  const t = useTranslations("footer");
   return (
     <footer className="bg-[#111827] text-white">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-14 pb-8">
@@ -72,7 +77,7 @@ export function LandingFooter() {
               <ContrataCRLogo chip className="[&_span]:text-white [&_.text-\[\#009FD9\]]:text-[#38bdf8]" />
             </Link>
             <p className="text-sm text-white/50 leading-relaxed mb-6 max-w-[260px]">
-              El mercado de servicios profesionales exclusivo para Costa Rica. Gratuito para clientes y profesionales, sin comisiones ni cargos de ningún tipo.
+              {t("tagline")}
             </p>
             {/* Social */}
             <div className="flex items-center gap-2">
@@ -93,23 +98,23 @@ export function LandingFooter() {
 
           {/* Link columns */}
           {COLUMNS.map((col) => (
-            <div key={col.heading}>
+            <div key={col.headingKey}>
               <h3 className="text-xs font-bold uppercase tracking-widest text-white/40 mb-4">
-                {col.heading}
+                {t(col.headingKey)}
               </h3>
               <ul className="space-y-3">
-                {col.links.map(({ label, href }) => (
-                  <li key={label}>
+                {col.links.map(({ key, href }) => (
+                  <li key={key}>
                     {href === "/registro/profesional" ? (
                       <SmartRegisterLink className="text-sm text-white/60 hover:text-white transition-colors">
-                        {label}
+                        {t(key)}
                       </SmartRegisterLink>
                     ) : (
                       <Link
                         href={href}
                         className="text-sm text-white/60 hover:text-white transition-colors"
                       >
-                        {label}
+                        {t(key)}
                       </Link>
                     )}
                   </li>
@@ -122,12 +127,12 @@ export function LandingFooter() {
         {/* Bottom bar */}
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="text-xs text-white/25">
-            © {new Date().getFullYear()} ContrataCR. Todos los derechos reservados.
+            {t("rights", { year: new Date().getFullYear() })}
           </p>
           <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
-            <Link href="/terminos" className="text-xs text-white/40 hover:text-white transition-colors">Términos y Condiciones</Link>
-            <Link href="/privacidad" className="text-xs text-white/40 hover:text-white transition-colors">Política de Privacidad</Link>
-            <span className="text-xs text-white/25">Hecho en Costa Rica</span>
+            <Link href="/terminos" className="text-xs text-white/40 hover:text-white transition-colors">{t("terms")}</Link>
+            <Link href="/privacidad" className="text-xs text-white/40 hover:text-white transition-colors">{t("privacy")}</Link>
+            <span className="text-xs text-white/25">{t("madeIn")}</span>
           </div>
         </div>
       </div>
