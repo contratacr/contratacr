@@ -141,15 +141,26 @@ export async function searchProfessionals(
           query = query.eq("verification_status", "verified");
         }
         if (filters.query) {
-          const q = filters.query.trim();
+          // Sanitize before interpolating into the PostgREST `.or()` filter:
+          // strip the structural chars (`,` `(` `)` `:`) that could inject extra
+          // conditions and the LIKE wildcards (`% _ *`) a user could abuse, and
+          // cap the length. Letters/numbers/accents/spaces (normal search) pass.
+          const q = filters.query.trim().slice(0, 80).replace(/[,()*%_:\\"']/g, " ").replace(/\s+/g, " ").trim();
           // Match text against bio/name AND expand keyword synonyms to category IDs
-          const keywordCategoryIds = getMatchingCategoryIds(q);
-          const textFilter = `bio.ilike.%${q}%,profiles.full_name.ilike.%${q}%,services::text.ilike.%${q}%,business_name.ilike.%${q}%,workplaces::text.ilike.%${q}%`;
-          if (keywordCategoryIds.length > 0 && !filters.categoryId) {
-            const catFilter = keywordCategoryIds.map((id) => `category_id.eq.${id}`).join(",");
-            query = query.or(`${textFilter},${catFilter}`);
+          const keywordCategoryIds = getMatchingCategoryIds(filters.query.trim());
+          if (!q) {
+            if (keywordCategoryIds.length > 0 && !filters.categoryId) {
+              query = query.or(keywordCategoryIds.map((id) => `category_id.eq.${id}`).join(","));
+            }
+            // No usable text after sanitizing → skip the text filter entirely.
           } else {
-            query = query.or(textFilter);
+            const textFilter = `bio.ilike.%${q}%,profiles.full_name.ilike.%${q}%,services::text.ilike.%${q}%,business_name.ilike.%${q}%,workplaces::text.ilike.%${q}%`;
+            if (keywordCategoryIds.length > 0 && !filters.categoryId) {
+              const catFilter = keywordCategoryIds.map((id) => `category_id.eq.${id}`).join(",");
+              query = query.or(`${textFilter},${catFilter}`);
+            } else {
+              query = query.or(textFilter);
+            }
           }
         }
 
