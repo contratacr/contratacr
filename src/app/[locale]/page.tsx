@@ -5,7 +5,6 @@ import { WhyContratacr } from "@/components/landing/why-contratacr";
 import { FindByZone } from "@/components/landing/find-by-zone";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { FadeInUp } from "@/components/landing/fade-in-up";
-import { BackToTop } from "@/components/landing/back-to-top";
 import { getZoneCoverage } from "@/lib/queries/professionals";
 
 export default async function HomePage() {
@@ -32,7 +31,6 @@ export default async function HomePage() {
         <FindByZone coverage={coverage} />
       </FadeInUp>
 
-      <BackToTop />
       <LandingFooter />
     </div>
   );
