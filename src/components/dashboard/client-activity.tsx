@@ -121,8 +121,8 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   const [loading, setLoading] = useState(true);
   const [reviewModal, setReviewModal] = useState<{ professionalId: string; professionalName: string; bookingId?: string; projectId?: string } | null>(null);
   const [myReviews, setMyReviews] = useState<{ professional_id: string; booking_id?: string | null; project_id?: string | null; rating: number }[]>([]);
-  const [bookingFilter, setBookingFilter] = useState("todas");
-  const [projectFilter, setProjectFilter] = useState("todas");
+  const [bookingFilter, setBookingFilter] = useState("activas");
+  const [projectFilter, setProjectFilter] = useState("abiertos");
   const [expandedProject, setExpandedProject] = useState<string | null>(null);
   const [projectProposals, setProjectProposals] = useState<Record<string, Proposal[]>>({});
 

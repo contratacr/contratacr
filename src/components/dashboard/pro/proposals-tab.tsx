@@ -86,7 +86,7 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
   const [proposalForms, setProposalForms] = useState<Record<string, { price: string; message: string }>>({});
   const [submitting, setSubmitting] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState<Set<string>>(new Set());
-  const [projectFilter, setProjectFilter] = useState("todas");
+  const [projectFilter, setProjectFilter] = useState("abiertos");
 
   async function fetchOpenProjects() {
     setLoading(true);

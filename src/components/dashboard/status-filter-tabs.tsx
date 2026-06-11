@@ -34,16 +34,16 @@ export function StatusFilterTabs({
   );
 }
 
-// Canonical tab sets (consistent labels everywhere).
+// Canonical tab sets (consistent labels everywhere). No "Todas/Todos" — the
+// status tabs already cover every lifecycle state, so an all-bucket only added
+// noise. Default to the most relevant ACTIVE tab in each consumer.
 export const SOLICITUD_TABS: readonly FilterTab[] = [
-  { id: "todas", label: "Todas" },
   { id: "activas", label: "Activas" },
   { id: "finalizadas", label: "Finalizadas" },
   { id: "canceladas", label: "Canceladas" },
 ];
 
 export const PROYECTO_TABS: readonly FilterTab[] = [
-  { id: "todas", label: "Todos" },
   { id: "abiertos", label: "Abiertos" },
   { id: "encurso", label: "En curso" },
   { id: "finalizados", label: "Finalizados" },

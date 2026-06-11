@@ -161,6 +161,10 @@ A professional is always **ONE card** (`rounded-2xl bg-white border`, never spli
 - **Health (es_salud) bookings require the patient's DOB** — for **myself** (manual input; the padrón has no birth date) and for **another person** (beneficiary DOB, not optional). Block the step's Continue/Submit until it's provided. Non-health bookings never ask DOB (data minimization).
 - **No double-booking:** the booking API rejects (409) a slot already held by an active booking; the modal surfaces it inline ("Ese horario acaba de ser reservado…"). Cancelling/completing frees the slot again.
 
+### Status filter tabs — no "Todas/Todos"
+- The shared `SOLICITUD_TABS` / `PROYECTO_TABS` (in `status-filter-tabs.tsx`) have **no all-bucket** — the status tabs already cover every lifecycle state, so "Todas/Todos" only added noise. **Default to the most relevant ACTIVE tab**, not an all-view: solicitudes → **"Activas"**; proyectos → **"Abiertos"**.
+- Canonical labels (must match the real lifecycle): **solicitudes** = Activas (`pending/confirmed/in_progress/awaiting_confirmation`) · Finalizadas (`completed`) · Canceladas (`cancelled/rescheduled`). **proyectos** = Abiertos (`open`) · En curso (`in_progress/awaiting_confirmation`) · Finalizados (`completed`) · Cancelados (`cancelled`).
+
 ### Request/list cards with actions (e.g. "Solicitudes recibidas")
 - **Vertical hierarchy, not a left/right split:** header (status badge + date) → details → a **footer separated by `border-top`** holding the actions. Never put the action buttons in a `shrink-0` right column — it cramps them on mobile.
 - **Actions are full-width STACKED on mobile, inline-wrap on desktop:** wrapper `flex flex-col sm:flex-row sm:flex-wrap gap-2`, each button `className="w-full sm:w-auto"`. Keep the **same footer shape across every status** so cards stay uniform. Subtle/destructive links (e.g. "Reportar cliente") go last, `self-start`.

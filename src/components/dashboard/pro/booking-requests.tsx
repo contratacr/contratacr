@@ -61,7 +61,7 @@ const STATUS_LABEL: Record<BookingStatus, string> = {
 export function BookingRequests() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("todas");
+  const [filter, setFilter] = useState("activas");
 
   useEffect(() => {
     fetch("/api/bookings?role=professional")
