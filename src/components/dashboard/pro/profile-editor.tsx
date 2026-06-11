@@ -279,6 +279,10 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
       // official name (it's locked; corrections go through admin review).
       if (fullName && !nameLocked) {
         await supabase.from("profiles").update({ full_name: fullName }).eq("id", profileId);
+        // Mirror into auth metadata so the header/menu (which read
+        // user_metadata.full_name) update IMMEDIATELY — updateUser fires
+        // onAuthStateChange (USER_UPDATED), which useAuth subscribes to. No reload.
+        await supabase.auth.updateUser({ data: { full_name: fullName } });
       }
 
       setSaved(true);

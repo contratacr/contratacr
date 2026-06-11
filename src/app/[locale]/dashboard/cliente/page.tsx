@@ -127,6 +127,12 @@ export default function ClientDashboardPage() {
     const update: Record<string, string | null> = { phone: profileForm.phone || null };
     if (!verified) update.full_name = profileForm.full_name;
     await supabase.from("profiles").update(update).eq("id", user.id);
+    // Mirror the name into auth metadata so the header/menu update IMMEDIATELY
+    // (they read user_metadata.full_name) — updateUser fires onAuthStateChange.
+    if (!verified && profileForm.full_name) {
+      await supabase.auth.updateUser({ data: { full_name: profileForm.full_name } });
+      setProfileData((prev) => (prev ? { ...prev, full_name: profileForm.full_name } : prev));
+    }
     setProfileSaving(false);
     setProfileSaved(true);
     setTimeout(() => setProfileSaved(false), 3000);

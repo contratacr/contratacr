@@ -14,11 +14,7 @@ import { getInitials } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { ALL_CATEGORIES, searchCategories, normalizeText } from "@/lib/data/categories";
-
-const PROVINCES = [
-  "San José", "Alajuela", "Cartago", "Heredia",
-  "Guanacaste", "Puntarenas", "Limón",
-];
+import { searchLocations, resolveLocation, type LocationSuggestion } from "@/lib/data/location-search";
 
 /* ─── Brand mark (the square "CR" icon) ─── */
 export function ContrataCRMark({ className }: { className?: string }) {
@@ -600,8 +596,16 @@ export function LandingNavbar() {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [provinceQuery, setProvinceQuery] = useState("");
+  // A picked category (so a chosen suggestion filters by id, not free text).
+  const [searchCategoryId, setSearchCategoryId] = useState<string | null>(null);
+  const [searchActiveIdx, setSearchActiveIdx] = useState(-1);
   const [searchFocused, setSearchFocused] = useState(false);
+  // Location is a typeable autocomplete (provinces + cantones), like the hero.
+  const [navLocation, setNavLocation] = useState("");
+  const [navLocationSel, setNavLocationSel] = useState<LocationSuggestion | null>(null);
+  const [navLocOpen, setNavLocOpen] = useState(false);
+  const [navLocActive, setNavLocActive] = useState(-1);
+  const navLocBlurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Drives a SHORTER search placeholder on small screens so it never clips.
   const [isSmallScreen, setIsSmallScreen] = useState(false);
   const searchBlurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -642,6 +646,7 @@ export function LandingNavbar() {
   useEffect(() => { refreshNotifUnread(); }, [refreshNotifUnread, mobileOpen]);
 
   const compactSuggestions = useMemo(() => matchCategories(searchQuery), [searchQuery]);
+  const navLocSug = useMemo(() => searchLocations(navLocation), [navLocation]);
 
   // Track small screens so the compact search placeholder can shorten to fit.
   useEffect(() => {
@@ -696,21 +701,97 @@ export function LandingNavbar() {
     router.push(`/buscar?categoria=${id}`);
   }
 
-  function handleCompactSearch(e: React.FormEvent) {
-    e.preventDefault();
+  // Build params from current state and navigate. Runs ONLY on Buscar/Enter.
+  function runCompactSearch() {
     const params = new URLSearchParams();
-    if (searchQuery.trim()) params.set("q", searchQuery.trim());
-    if (provinceQuery) params.set("provincia", provinceQuery);
+    const svc = searchQuery.trim();
+    const picked = compactSuggestions.find((c) => c.id === searchCategoryId);
+    if (searchCategoryId && picked && picked.label === searchQuery) {
+      params.set("categoria", searchCategoryId);
+    } else if (svc) {
+      params.set("q", svc);
+    }
+    const loc = navLocationSel && navLocationSel.label === navLocation ? navLocationSel : resolveLocation(navLocation);
+    if (loc) {
+      if (loc.type === "province") params.set("provincia", loc.id);
+      else params.set("canton", loc.id);
+    }
+    setSearchFocused(false);
+    setNavLocOpen(false);
     router.push(`/buscar?${params.toString()}`);
   }
 
+  function handleCompactSearch(e: React.FormEvent) {
+    e.preventDefault();
+    runCompactSearch();
+  }
+
+  // Selecting a suggestion FILLS the field — it does NOT search immediately.
   function selectCompactSuggestion(id: string) {
-    const params = new URLSearchParams();
-    params.set("categoria", id);
-    if (provinceQuery) params.set("provincia", provinceQuery);
-    setSearchQuery("");
+    const picked = compactSuggestions.find((c) => c.id === id);
+    if (picked) {
+      setSearchQuery(picked.label);
+      setSearchCategoryId(id);
+    }
+    setSearchActiveIdx(-1);
     setSearchFocused(false);
-    router.push(`/buscar?${params.toString()}`);
+  }
+
+  function selectNavLocation(s: LocationSuggestion) {
+    setNavLocation(s.label);
+    setNavLocationSel(s);
+    setNavLocOpen(false);
+    setNavLocActive(-1);
+  }
+
+  function handleCompactSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (searchFocused && compactSuggestions.length > 0) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setSearchActiveIdx((i) => Math.min(i + 1, compactSuggestions.length - 1));
+        return;
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setSearchActiveIdx((i) => Math.max(i - 1, 0));
+        return;
+      } else if (e.key === "Enter" && searchActiveIdx >= 0) {
+        e.preventDefault();
+        selectCompactSuggestion(compactSuggestions[searchActiveIdx].id);
+        return;
+      } else if (e.key === "Escape") {
+        setSearchFocused(false);
+        return;
+      }
+    }
+    if (e.key === "Enter") {
+      e.preventDefault();
+      runCompactSearch();
+    }
+  }
+
+  function handleNavLocKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (navLocOpen && navLocSug.length > 0) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setNavLocActive((i) => Math.min(i + 1, navLocSug.length - 1));
+        return;
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setNavLocActive((i) => Math.max(i - 1, 0));
+        return;
+      } else if (e.key === "Enter" && navLocActive >= 0) {
+        e.preventDefault();
+        selectNavLocation(navLocSug[navLocActive]);
+        return;
+      } else if (e.key === "Escape") {
+        setNavLocOpen(false);
+        return;
+      }
+    }
+    if (e.key === "Enter") {
+      e.preventDefault();
+      runCompactSearch();
+    }
   }
 
   return (
@@ -926,24 +1007,33 @@ export function LandingNavbar() {
                       <input
                         type="text"
                         value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onChange={(e) => { setSearchQuery(e.target.value); setSearchCategoryId(null); setSearchActiveIdx(-1); }}
+                        onKeyDown={handleCompactSearchKeyDown}
                         onFocus={() => { if (searchBlurTimer.current) clearTimeout(searchBlurTimer.current); setSearchFocused(true); }}
                         onBlur={() => { searchBlurTimer.current = setTimeout(() => setSearchFocused(false), 150); }}
                         placeholder={isSmallScreen ? "¿Qué necesitas?" : "¿Qué servicio estás buscando?"}
                         className="flex-1 text-sm sm:text-base text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-none min-w-0"
+                        role="combobox"
+                        aria-expanded={searchFocused && searchQuery.trim().length > 0}
+                        aria-autocomplete="list"
                       />
                     </div>
                     <div className="hidden sm:block w-px bg-gray-200 self-stretch my-3 mx-2 shrink-0" />
-                    <div className="hidden sm:flex items-center gap-2 min-w-[120px] shrink-0 h-full">
+                    <div className="hidden sm:flex items-center gap-2 min-w-[150px] shrink-0 h-full">
                       <MapPin className="h-5 w-5 text-gray-300 shrink-0" />
-                      <select
-                        value={provinceQuery}
-                        onChange={(e) => setProvinceQuery(e.target.value)}
-                        className="flex-1 text-base text-gray-500 bg-transparent focus:outline-none appearance-none cursor-pointer"
-                      >
-                        <option value="">Ubicación</option>
-                        {PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
-                      </select>
+                      <input
+                        type="text"
+                        value={navLocation}
+                        onChange={(e) => { setNavLocation(e.target.value); setNavLocationSel(null); setNavLocOpen(true); setNavLocActive(-1); }}
+                        onKeyDown={handleNavLocKeyDown}
+                        onFocus={() => { if (navLocBlurTimer.current) clearTimeout(navLocBlurTimer.current); if (navLocSug.length > 0) setNavLocOpen(true); }}
+                        onBlur={() => { navLocBlurTimer.current = setTimeout(() => setNavLocOpen(false), 150); }}
+                        placeholder="Ubicación"
+                        className="flex-1 w-full text-base text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-none min-w-0"
+                        role="combobox"
+                        aria-expanded={navLocOpen}
+                        aria-autocomplete="list"
+                      />
                     </div>
                     <button
                       type="submit"
@@ -955,30 +1045,58 @@ export function LandingNavbar() {
                     </button>
                   </div>
 
-                  {/* Autocomplete suggestions for the compact search */}
+                  {/* Service autocomplete — selecting FILLS the field; search
+                      runs only on Buscar/Enter. */}
                   {searchFocused && searchQuery.trim().length > 0 && (
-                    <div className="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-xl shadow-2xl border border-gray-100 py-1.5 z-[60] max-h-[320px] overflow-y-auto">
+                    <div className="absolute left-0 right-0 sm:right-auto sm:w-[60%] top-full mt-1.5 bg-white rounded-xl shadow-2xl border border-gray-100 py-1.5 z-[60] max-h-[320px] overflow-y-auto">
                       {compactSuggestions.length === 0 ? (
                         <button
                           type="button"
-                          onMouseDown={(e) => { e.preventDefault(); handleCompactSearch(e as unknown as React.FormEvent); }}
+                          onMouseDown={(e) => { e.preventDefault(); runCompactSearch(); }}
                           className="w-full text-left px-4 py-2.5 text-sm text-gray-500 hover:bg-gray-50"
                         >
                           Buscar “{searchQuery.trim()}” en todos los profesionales
                         </button>
                       ) : (
-                        compactSuggestions.map((s) => (
+                        compactSuggestions.map((s, i) => (
                           <button
                             key={s.id}
                             type="button"
                             onMouseDown={(e) => { e.preventDefault(); selectCompactSuggestion(s.id); }}
-                            className="w-full flex items-center justify-between gap-3 px-4 py-2.5 text-left hover:bg-[#EBF5FB] transition-colors"
+                            className={cn(
+                              "w-full flex items-center justify-between gap-3 px-4 py-2.5 text-left transition-colors",
+                              i === searchActiveIdx ? "bg-[#EBF5FB]" : "hover:bg-[#EBF5FB]"
+                            )}
                           >
                             <span className="text-sm font-medium text-[#1a2744]">{s.label}</span>
                             <span className="text-[11px] text-gray-400 shrink-0">{s.groupLabel}</span>
                           </button>
                         ))
                       )}
+                    </div>
+                  )}
+
+                  {/* Location autocomplete (desktop) — selecting FILLS the field. */}
+                  {navLocOpen && navLocSug.length > 0 && (
+                    <div className="hidden sm:block absolute right-0 top-full mt-1.5 w-64 bg-white rounded-xl shadow-2xl border border-gray-100 py-1.5 z-[60] max-h-[320px] overflow-y-auto">
+                      {navLocSug.map((s, i) => (
+                        <button
+                          key={`${s.type}-${s.id}`}
+                          type="button"
+                          onMouseDown={(e) => { e.preventDefault(); selectNavLocation(s); }}
+                          className={cn(
+                            "w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors",
+                            i === navLocActive ? "bg-[#EBF5FB]" : "hover:bg-[#EBF5FB]"
+                          )}
+                        >
+                          <MapPin className="h-4 w-4 text-[#009FD9] shrink-0" />
+                          <span className="flex-1 min-w-0">
+                            <span className="block text-sm font-medium text-[#1a2744] truncate">{s.label}</span>
+                            {s.type === "canton" && <span className="block text-[11px] text-gray-400 truncate">{s.sublabel}</span>}
+                          </span>
+                          <span className="text-[10px] uppercase tracking-wide text-gray-300 shrink-0">{s.type === "province" ? "Provincia" : "Cantón"}</span>
+                        </button>
+                      ))}
                     </div>
                   )}
                 </div>
