@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { enforceRateLimit } from "@/lib/rate-limit";
 
 // POST /api/report-professional — a client reports a professional (two-way
 // reputation): no-show, service not performed, etc. No monetary penalty (payments
@@ -9,6 +10,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 const FLAG_THRESHOLD = 3;
 
 export async function POST(req: Request) {
+  const rl = enforceRateLimit(req, "report", 10, 60_000);
+  if (rl) return rl;
   const session = await createServerClient();
   const { data: { user } } = await session.auth.getUser();
   if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });

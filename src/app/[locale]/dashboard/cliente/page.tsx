@@ -65,11 +65,10 @@ export default function ClientDashboardPage() {
   const loadProfile = useCallback(() => {
     if (!user) return;
     const supabase = createClient();
+    // Own profile incl. cédula/phone via the SECURITY DEFINER RPC (sensitive
+    // columns are no longer directly selectable — see migration 047).
     supabase
-      .from("profiles")
-      .select("full_name, phone, avatar_url, cedula")
-      .eq("id", user.id)
-      .single()
+      .rpc("get_my_profile")
       .then(({ data }) => {
         if (data) {
           setProfileData(data);

@@ -237,11 +237,10 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
         // Determine whether this OAuth user still needs to supply a cédula.
         const provider = user.app_metadata?.provider;
         const isOAuth = !!provider && provider !== "email";
+        // Own cédula/phone/name via the SECURITY DEFINER RPC (sensitive columns
+        // are no longer directly selectable — see migration 047).
         supabase
-          .from("profiles")
-          .select("cedula, phone, full_name")
-          .eq("id", user.id)
-          .maybeSingle()
+          .rpc("get_my_profile")
           .then(({ data }) => {
             // Authoritative check: does this account actually have a cédula on file?
             // Social-login (Google/Facebook) accounts usually don't — they must be

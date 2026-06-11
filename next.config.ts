@@ -3,6 +3,23 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 
+// Security headers applied to every response. Conservative set that hardens
+// against clickjacking, MIME-sniffing, and protocol downgrade without risking
+// breakage (no restrictive CSP default-src that could block Cloudinary/Supabase).
+const securityHeaders = [
+  // Force HTTPS for 2 years (incl. subdomains) once seen over HTTPS.
+  { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
+  // Block MIME-type sniffing.
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  // Anti-clickjacking (legacy header + modern CSP frame-ancestors).
+  { key: "X-Frame-Options", value: "SAMEORIGIN" },
+  { key: "Content-Security-Policy", value: "frame-ancestors 'self'" },
+  // Don't leak full URLs to other origins.
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  // Drop powerful features the app doesn't use; allow geolocation for the map.
+  { key: "Permissions-Policy", value: "camera=(), microphone=(), payment=(), usb=(), geolocation=(self)" },
+];
+
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
@@ -11,6 +28,9 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "plus.unsplash.com" },
     ],
+  },
+  async headers() {
+    return [{ source: "/:path*", headers: securityHeaders }];
   },
 };
 

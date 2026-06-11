@@ -513,11 +513,9 @@ export default function RegisterProfessionalPage() {
         // Reuse a cédula already on the account (e.g. a client converting to pro).
         (async () => {
           const supabase = createClient();
-          const { data: prof } = await supabase
-            .from("profiles")
-            .select("cedula, full_name")
-            .eq("id", currentUser.id)
-            .maybeSingle();
+          // Own cédula/name via the SECURITY DEFINER RPC (sensitive columns are
+          // no longer directly selectable — see migration 047).
+          const { data: prof } = await supabase.rpc("get_my_profile");
           const existing = (prof?.cedula as string) || (currentUser.user_metadata?.cedula as string) || "";
           setAccountCedula(existing);
           if (existing) setOauthCedula(existing);

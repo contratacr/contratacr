@@ -4,6 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notifySupportInbox } from "@/lib/support-notify";
+import { enforceRateLimit } from "@/lib/rate-limit";
 
 // Guest→account linking: when a user with a VERIFIED email views/uses support,
 // attach any prior GUEST tickets (user_id null) with the same email to their
@@ -48,6 +49,9 @@ export async function GET(req: Request) {
 
 // POST /api/support — the user replies in one of THEIR ticket threads.
 export async function POST(req: Request) {
+  const rl = enforceRateLimit(req, "support-reply", 10, 60_000);
+  if (rl) return rl;
+
   const supa = await createClient();
   const { data: { user } } = await supa.auth.getUser();
   if (!user) return NextResponse.json({ error: "No autorizado" }, { status: 401 });

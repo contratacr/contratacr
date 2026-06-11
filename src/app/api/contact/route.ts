@@ -3,6 +3,7 @@ export const runtime = "nodejs";
 import { NextRequest, NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
 const FROM_ADDRESS = "ContrataCR <soporte@contratacr.com>";
@@ -169,6 +170,8 @@ async function saveTicket(name: string, email: string, subject: string, message:
 
 /* ─── Route handler ─── */
 export async function POST(req: NextRequest) {
+  const rl = enforceRateLimit(req, "contact", 5, 60_000);
+  if (rl) return rl;
   try {
     const { name, email, subject, message, topic, fileAttachments } = await parseRequest(req);
 
