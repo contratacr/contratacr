@@ -74,6 +74,12 @@ export default function ProfilePage({ params }: ProfilePageProps) {
   const [activeTab, setActiveTab] = useState<Tab>("servicios");
   // Deep-link support: /profesionales/[slug]?tab=casos opens that tab.
   useEffect(() => { setActiveTab(initialTabFromUrl()); }, []);
+  // Preview mode (?preview=1): a pro opened "Ver cómo me ven los clientes" from
+  // their panel → show a clear "Volver a mi panel" bar so they never get stuck.
+  const [previewMode, setPreviewMode] = useState(false);
+  useEffect(() => {
+    if (typeof window !== "undefined") setPreviewMode(new URLSearchParams(window.location.search).get("preview") === "1");
+  }, []);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [showAllServices, setShowAllServices] = useState(false);
@@ -172,11 +178,20 @@ export default function ProfilePage({ params }: ProfilePageProps) {
       <main className="flex-1 py-8">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
 
-          {/* Back link */}
-          <Link href="/buscar" className="inline-flex items-center gap-1.5 text-sm text-[#6b7280] hover:text-[#009FD9] transition-colors mb-6">
-            <ArrowLeft className="h-4 w-4" />
-            {t("back")}
-          </Link>
+          {/* Preview mode → a clear way back to the panel. Otherwise, back to search. */}
+          {previewMode ? (
+            <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-[#bfdbfe] bg-[#EBF5FB] px-4 py-3">
+              <p className="text-sm text-[#0089bb] font-medium">Estás viendo tu perfil como lo ven los clientes.</p>
+              <Link href="/dashboard/profesional" className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-semibold px-4 py-2 transition-colors shrink-0">
+                <ArrowLeft className="h-4 w-4" /> Volver a mi panel
+              </Link>
+            </div>
+          ) : (
+            <Link href="/buscar" className="inline-flex items-center gap-1.5 text-sm text-[#6b7280] hover:text-[#009FD9] transition-colors mb-6">
+              <ArrowLeft className="h-4 w-4" />
+              {t("back")}
+            </Link>
+          )}
 
           {professional.isFeatured && (
             <div className="bg-gradient-to-r from-[#ff7c0a] to-[#ff9b32] px-5 py-2 rounded-t-2xl">

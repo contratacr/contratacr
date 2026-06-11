@@ -259,7 +259,7 @@ export default function ProDashboardPage() {
             <div className="flex items-center gap-2">
               {pro.slug && (
                 <Button variant="outline" size="sm" asChild>
-                  <a href={`/es/profesionales/${pro.slug}`} target="_blank" rel="noopener noreferrer">
+                  <a href={`/es/profesionales/${pro.slug}?preview=1`}>
                     <ExternalLink className="h-4 w-4" />
                     Ver cómo me ven los clientes
                   </a>

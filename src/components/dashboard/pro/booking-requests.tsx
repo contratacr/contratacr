@@ -128,19 +128,19 @@ export function BookingRequests() {
 
     return (
       <Card>
-        <CardContent className="p-5">
-          <div className="flex items-start justify-between gap-4 flex-wrap">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-3 flex-wrap">
-                <Badge variant={STATUS_VARIANT[booking.status]}>
-                  {STATUS_LABEL[booking.status]}
-                </Badge>
-                <span className="text-xs text-[#9ca3af]">
-                  {new Date(booking.created_at).toLocaleDateString("es-CR")}
-                </span>
-              </div>
+        <CardContent className="p-4 sm:p-5">
+          {/* Header — status + created date */}
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <Badge variant={STATUS_VARIANT[booking.status]}>
+              {STATUS_LABEL[booking.status]}
+            </Badge>
+            <span className="text-xs text-[#9ca3af] shrink-0">
+              {new Date(booking.created_at).toLocaleDateString("es-CR")}
+            </span>
+          </div>
 
-              <div className="space-y-2">
+          {/* Details — client, contact, what & when */}
+          <div className="space-y-2">
                 {(booking.client_name) && (
                   <div className="flex items-center gap-2 text-sm flex-wrap">
                     <User className="h-4 w-4 text-[#6b7280] shrink-0" />
@@ -206,16 +206,23 @@ export function BookingRequests() {
                     </span>
                   </div>
                 )}
-              </div>
-            </div>
+          </div>
 
-            <div className="flex flex-col gap-2 shrink-0">
+          {/* Actions — full-width stacked on mobile, inline (wrap) on desktop.
+              Same footer shape across every status so cards stay uniform. */}
+          <div className="mt-4 pt-4 border-t border-[#f3f4f6] flex flex-col gap-2">
+            {booking.status === "awaiting_confirmation" && (
+              <p className="text-xs text-[#b45309] bg-[#fffbeb] border border-[#fde68a] rounded-lg px-2.5 py-2">
+                Esperando que el cliente confirme la finalización. Se confirma sola en 7 días.
+              </p>
+            )}
+            <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
               {booking.status === "pending" && (
                 <>
-                  <Button size="sm" onClick={() => updateStatus(booking.id, "confirmed")}>
+                  <Button size="sm" className="w-full sm:w-auto" onClick={() => updateStatus(booking.id, "confirmed")}>
                     Confirmar
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => updateStatus(booking.id, "cancelled")}>
+                  <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => updateStatus(booking.id, "cancelled")}>
                     Cancelar
                   </Button>
                 </>
@@ -223,36 +230,31 @@ export function BookingRequests() {
               {booking.status === "confirmed" && (
                 <>
                   {datePassed ? (
-                    <Button size="sm" onClick={() => updateStatus(booking.id, "awaiting_confirmation")}>
+                    <Button size="sm" className="w-full sm:w-auto" onClick={() => updateStatus(booking.id, "awaiting_confirmation")}>
                       Marcar como completado
                     </Button>
                   ) : (
-                    <Button size="sm" variant="secondary" onClick={() => updateStatus(booking.id, "in_progress")}>
+                    <Button size="sm" variant="secondary" className="w-full sm:w-auto" onClick={() => updateStatus(booking.id, "in_progress")}>
                       En progreso
                     </Button>
                   )}
-                  <Button size="sm" variant="outline" onClick={() => updateStatus(booking.id, "cancelled")}>
+                  <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => updateStatus(booking.id, "cancelled")}>
                     Cancelar
                   </Button>
                 </>
               )}
               {booking.status === "in_progress" && (
                 <>
-                  <Button size="sm" onClick={() => updateStatus(booking.id, "awaiting_confirmation")}>
+                  <Button size="sm" className="w-full sm:w-auto" onClick={() => updateStatus(booking.id, "awaiting_confirmation")}>
                     Marcar trabajo realizado
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => updateStatus(booking.id, "cancelled")}>
+                  <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => updateStatus(booking.id, "cancelled")}>
                     Cancelar
                   </Button>
                 </>
               )}
-              {booking.status === "awaiting_confirmation" && (
-                <p className="text-xs text-[#b45309] bg-[#fffbeb] border border-[#fde68a] rounded-lg px-2.5 py-1.5 max-w-[200px]">
-                  Esperando que el cliente confirme la finalización. Se confirma sola en 7 días.
-                </p>
-              )}
               {booking.client_phone && (
-                <Button size="sm" variant="whatsapp" asChild>
+                <Button size="sm" variant="whatsapp" asChild className="w-full sm:w-auto">
                   <a
                     href={getWhatsAppLink(
                       booking.client_phone,
@@ -266,13 +268,13 @@ export function BookingRequests() {
                   </a>
                 </Button>
               )}
-              <button
-                onClick={() => reportClient(booking)}
-                className="inline-flex items-center justify-center gap-1.5 text-xs text-[#9ca3af] hover:text-red-500 transition-colors mt-0.5"
-              >
-                <Flag className="h-3.5 w-3.5" /> Reportar cliente
-              </button>
             </div>
+            <button
+              onClick={() => reportClient(booking)}
+              className="inline-flex items-center gap-1.5 text-xs text-[#9ca3af] hover:text-red-500 transition-colors self-start mt-1"
+            >
+              <Flag className="h-3.5 w-3.5" /> Reportar cliente
+            </button>
           </div>
         </CardContent>
       </Card>

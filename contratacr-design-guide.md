@@ -161,6 +161,13 @@ A professional is always **ONE card** (`rounded-2xl bg-white border`, never spli
 - **Health (es_salud) bookings require the patient's DOB** — for **myself** (manual input; the padrón has no birth date) and for **another person** (beneficiary DOB, not optional). Block the step's Continue/Submit until it's provided. Non-health bookings never ask DOB (data minimization).
 - **No double-booking:** the booking API rejects (409) a slot already held by an active booking; the modal surfaces it inline ("Ese horario acaba de ser reservado…"). Cancelling/completing frees the slot again.
 
+### Request/list cards with actions (e.g. "Solicitudes recibidas")
+- **Vertical hierarchy, not a left/right split:** header (status badge + date) → details → a **footer separated by `border-top`** holding the actions. Never put the action buttons in a `shrink-0` right column — it cramps them on mobile.
+- **Actions are full-width STACKED on mobile, inline-wrap on desktop:** wrapper `flex flex-col sm:flex-row sm:flex-wrap gap-2`, each button `className="w-full sm:w-auto"`. Keep the **same footer shape across every status** so cards stay uniform. Subtle/destructive links (e.g. "Reportar cliente") go last, `self-start`.
+
+### Never strand the user — "Volver a mi panel"
+- Any **full-view preview or deep flow** a logged-in user can enter must offer a **clear way back to their dashboard**. The professional "Ver cómo me ven los clientes" preview opens **same-tab with `?preview=1`**, and the public profile shows a prominent **"Volver a mi panel"** bar (→ `/dashboard/profesional`) in that mode instead of the generic "back to search". Standalone pages that keep the global `Navbar` (logo→home + account menu) already satisfy this; full-bleed views do not — add an explicit back action.
+
 ### Image uploads (avatars + casos de éxito)
 - **Accept any image, including iPhone HEIC/HEIF** (Cloudinary converts). Don't whitelist only jpeg/png/webp — mobile photos are often HEIC and some browsers send an **empty MIME type**, so allow `type === "" || type.startsWith("image/")` and use `image/*` on the `<input accept>`. Size cap **10 MB** (phone photos exceed 5 MB; images are downscaled server-side anyway).
 - **Always surface the SERVER's specific error** (size/format/Cloudinary-not-configured) to the user — never collapse it into a generic "no se pudo subir". Revert any optimistic preview on failure.
