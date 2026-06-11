@@ -460,3 +460,14 @@ The admin panel is section-based (one tab per operational queue) and that stays.
 - **Consolidated profile** (`AdminUserProfile`): identity header (avatar, name, role pill, verification/banned/disabled badges, contact, registro date, account-status reason block) followed by clearly-titled `Section` cards — support tickets, verification history + appeals, reports, projects, requests. Each section is a bordered white card with an icon heading + count; empty states are a muted one-liner. Status pills reuse the amber/blue/emerald/gray scale.
 - **Reachable from anywhere a user appears**: link with either the user id (tickets) or the professional id (reports, verification case) — the profile route resolves a professional id to its owner.
 - Keep every section view + its per-status filters/badges intact; the user layer is additive. Admin tab bar scrolls horizontally on mobile.
+
+---
+
+## 12. OAuth guidance blocks (Cuenta y seguridad)
+
+When an action can't work because an external provider owns the data (OAuth email/password), show a guidance block — never a dead field or an error look:
+- **Info style, not error:** sky palette (`bg-[#f0f9ff]`, `border-[#bae6fd]`, text `#0c4a6e`/`#0369a1`), an `Info` icon — calm and informative.
+- **Structure:** bold heading → one-line intro → optional **ordered steps** (numbered circular badges `bg-[#0284c7]` + wrapping text) → an outbound link (`ExternalLink` icon) to manage it in the provider.
+- **Name the provider** correctly (Google / Facebook), detected from `user.app_metadata.provider` / `identities`.
+- **Responsive:** `break-words` + wrapping steps so it stays readable at ~360px (no overflow/cut-off).
+- Reusable as `OAuthGuide({ title, intro, steps?, linkLabel, linkHref })`. Keep the normal working flow for accounts that DO own the credential (email/password users).

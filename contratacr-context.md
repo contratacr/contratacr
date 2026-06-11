@@ -1747,3 +1747,13 @@ The section-based admin views (Verificación, Reportes, Aseguradoras, Categoría
 - **API** `GET /api/admin/users` — `?q=` search (profiles by name/email/cédula, with isPro/verification/banned flags); `?id=` consolidated detail. Admin-only (`getApiAdmin`); cédula masked in responses (`maskId`).
 - **Cross-links added:** Soporte (thread header "Ver perfil completo del usuario" via ticket.user_id + a user-search box atop the list), Reportes ("Ver perfil del usuario" via professional_id). Verificación already had a name/email/cédula filter (kept).
 - AdminShell tab bar is now horizontally scrollable on mobile (7 tabs).
+
+---
+
+## Cuenta y seguridad — OAuth-aware email/password guidance
+
+`AccountSecuritySection` (account-security.tsx) detects OAuth accounts (Google/Facebook) via `user.app_metadata.provider` / non-email `identities`. For those users, BOTH the email and password areas show a clean **ordered info block** (`OAuthGuide`) instead of fields that wouldn't work:
+- **Email:** "Tu correo lo administra {provider}" + ordered steps (1: change the primary email in the provider, 2: log back in to ContrataCR) + link to manage the provider account.
+- **Password:** "Tu acceso lo administra {provider}" — no ContrataCR password; manage sign-in security in the provider, with a link to the provider's security page.
+- Provider is detected and named correctly (Google / Facebook); links in `PROVIDER_LINKS`.
+Email/password (non-OAuth) accounts keep the full working flows (change email with confirmation; change password requiring current password + "¿Olvidaste tu contraseña?" reset link). Info-style (sky), responsive down to ~360px (`break-words`, wrapping steps).

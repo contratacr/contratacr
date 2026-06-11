@@ -1,11 +1,61 @@
 "use client";
 
 import { useState } from "react";
-import { Mail, Lock, ShieldCheck, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, ShieldCheck, Eye, EyeOff, Info, ExternalLink } from "lucide-react";
 import { useLocale } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
+
+/* Where each provider lets the user manage their account/email + sign-in security.
+   Shown to OAuth users instead of fields that wouldn't work here. */
+const PROVIDER_LINKS: Record<string, { account: string; security: string }> = {
+  Google: { account: "https://myaccount.google.com/email", security: "https://myaccount.google.com/security" },
+  Facebook: { account: "https://accounts.facebook.com/", security: "https://www.facebook.com/settings?tab=security" },
+};
+
+/* Reusable info-style guidance block for OAuth users (not an error look). Clean
+   heading, optional ordered steps, and a link out to the provider. Responsive:
+   wraps cleanly down to ~360px. */
+function OAuthGuide({
+  title, intro, steps, linkLabel, linkHref,
+}: {
+  title: string;
+  intro: string;
+  steps?: string[];
+  linkLabel: string;
+  linkHref: string;
+}) {
+  return (
+    <div className="rounded-xl bg-[#f0f9ff] border border-[#bae6fd] p-4">
+      <div className="flex items-start gap-2.5">
+        <Info className="h-4 w-4 text-[#0284c7] shrink-0 mt-0.5" />
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold text-[#0c4a6e]">{title}</p>
+          <p className="text-xs leading-relaxed text-[#0369a1] mt-1 break-words">{intro}</p>
+          {steps && steps.length > 0 && (
+            <ol className="mt-2.5 space-y-2">
+              {steps.map((s, i) => (
+                <li key={i} className="flex items-start gap-2.5">
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#0284c7] text-[10px] font-bold text-white">{i + 1}</span>
+                  <span className="text-xs leading-relaxed text-[#0c4a6e] break-words">{s}</span>
+                </li>
+              ))}
+            </ol>
+          )}
+          <a
+            href={linkHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-[#0284c7] hover:underline break-words"
+          >
+            {linkLabel} <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 /**
  * "Cuenta y seguridad" — manage how you log in: change email + password.
@@ -50,6 +100,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (user?.identities ?? []).some((id: any) => id.provider && id.provider !== "email");
   const providerLabel = oauthProvider === "facebook" ? "Facebook" : "Google";
+  const providerLinks = PROVIDER_LINKS[providerLabel];
 
   async function sendEmailChange() {
     if (!newEmail.trim()) return;
@@ -109,11 +160,18 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
           <h3 className="text-sm font-semibold text-[#374151]">Correo electrónico</h3>
         </div>
         {isOAuthAccount ? (
-          <div className="flex flex-col gap-1.5">
-            <span className="text-sm text-[#111827] font-medium">{user?.email}</span>
-            <p className="text-xs text-[#9ca3af]">
-              Iniciaste sesión con {providerLabel}. Tu correo se administra desde esa cuenta y no puede cambiarse aquí.
-            </p>
+          <div className="flex flex-col gap-3">
+            <span className="text-sm text-[#111827] font-medium break-words">{user?.email}</span>
+            <OAuthGuide
+              title={`Tu correo lo administra ${providerLabel}`}
+              intro={`Iniciaste sesión con ${providerLabel}, así que tu correo se gestiona desde esa cuenta y no puede cambiarse aquí. Para cambiarlo:`}
+              steps={[
+                `Cambia el correo principal de tu cuenta de ${providerLabel}.`,
+                `Vuelve a iniciar sesión en ContrataCR con el correo actualizado.`,
+              ]}
+              linkLabel={`Administrar mi cuenta de ${providerLabel}`}
+              linkHref={providerLinks.account}
+            />
           </div>
         ) : emailSent ? (
           <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-700">
@@ -152,9 +210,12 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
           <h3 className="text-sm font-semibold text-[#374151]">Contraseña</h3>
         </div>
         {isOAuthAccount ? (
-          <p className="text-xs text-[#9ca3af]">
-            Iniciaste sesión con {providerLabel}. Tu acceso se administra desde esa cuenta, así que no usas una contraseña en ContrataCR.
-          </p>
+          <OAuthGuide
+            title={`Tu acceso lo administra ${providerLabel}`}
+            intro={`Como iniciaste sesión con ${providerLabel}, no usas una contraseña en ContrataCR. La seguridad de tu inicio de sesión —contraseña y verificación en dos pasos— se administra en tu cuenta de ${providerLabel}.`}
+            linkLabel={`Administrar seguridad en ${providerLabel}`}
+            linkHref={providerLinks.security}
+          />
         ) : pwSaved ? (
           <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-700">
             ✓ Tu contraseña fue actualizada.
