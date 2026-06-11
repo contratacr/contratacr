@@ -357,9 +357,9 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
           <div>
             <Input
               label={
-                <span className="inline-flex items-center gap-1.5">
+                <span className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
                   Nombre completo
-                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#16a34a]"><ShieldCheck className="h-3.5 w-3.5" /> Verificado</span>
+                  <span className="inline-flex items-center gap-1 whitespace-nowrap shrink-0 text-[11px] font-semibold text-[#16a34a]"><ShieldCheck className="h-3.5 w-3.5 shrink-0" /> Identidad verificada</span>
                 </span>
               }
               value={fullName}

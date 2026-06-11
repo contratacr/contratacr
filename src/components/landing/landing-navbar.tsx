@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import {
   X, Menu, Mail, Lock, Eye, EyeOff, AlertCircle, ChevronDown, Search, MapPin,
-  LayoutDashboard, LogOut, Bookmark, CalendarDays, FolderOpen, UserPlus, Briefcase, Compass, Settings,
+  LayoutDashboard, LogOut, Bookmark, CalendarDays, FolderOpen, UserPlus, Briefcase, Compass, Settings, Bell,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { useLocale } from "next-intl";
@@ -465,6 +465,20 @@ export function LandingNavbar() {
   const sentProjectsHref = isPro ? "/es/dashboard/profesional?tab=sent_projects" : "/es/dashboard/cliente?tab=projects";
   const savedHref = isPro ? "/es/dashboard/profesional?tab=saved" : "/es/dashboard/cliente?tab=saved";
   const accountHref = isPro ? "/es/dashboard/profesional?tab=cuenta" : "/es/dashboard/cliente?tab=profile";
+  const notificationsHref = isPro ? "/es/dashboard/profesional?tab=notifications" : "/es/dashboard/cliente?tab=notifications";
+  // Unread notifications count for the account menu + mobile drawer link badges
+  // (the bell handles its own live updates; this refreshes when those open).
+  const [notifUnread, setNotifUnread] = useState(0);
+  useEffect(() => {
+    if (!user) { setNotifUnread(0); return; }
+    const supabase = createClient();
+    supabase
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .eq("read", false)
+      .then(({ count }) => setNotifUnread(count ?? 0));
+  }, [user, mobileOpen, userMenuOpen]);
 
   const compactSuggestions = useMemo(() => matchCategories(searchQuery), [searchQuery]);
 
@@ -769,6 +783,17 @@ export function LandingNavbar() {
                             Mis favoritos
                           </a>
                           <a
+                            href={notificationsHref}
+                            onClick={() => setUserMenuOpen(false)}
+                            className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
+                          >
+                            <Bell className="h-4 w-4 text-gray-400" />
+                            <span className="flex-1">Notificaciones</span>
+                            {notifUnread > 0 && (
+                              <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">{notifUnread > 9 ? "9+" : notifUnread}</span>
+                            )}
+                          </a>
+                          <a
                             href={accountHref}
                             onClick={() => setUserMenuOpen(false)}
                             className="flex items-center gap-2.5 px-3 py-2 mt-1 border-t border-gray-50 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
@@ -989,6 +1014,13 @@ export function LandingNavbar() {
                 </a>
                 <a href={savedHref} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-2 py-2.5 rounded-lg text-sm text-[#374151] hover:bg-gray-50 transition-colors">
                   <Bookmark className="h-4 w-4 text-gray-400 shrink-0" /> Mis favoritos
+                </a>
+                <a href={notificationsHref} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-2 py-2.5 rounded-lg text-sm text-[#374151] hover:bg-gray-50 transition-colors">
+                  <Bell className="h-4 w-4 text-gray-400 shrink-0" />
+                  <span className="flex-1">Notificaciones</span>
+                  {notifUnread > 0 && (
+                    <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white shrink-0">{notifUnread > 9 ? "9+" : notifUnread}</span>
+                  )}
                 </a>
                 {!isPro && (
                   <Link href="/registro/profesional" onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-2 py-2.5 rounded-lg text-sm font-medium text-[#009FD9] hover:bg-[#EBF5FB] transition-colors">

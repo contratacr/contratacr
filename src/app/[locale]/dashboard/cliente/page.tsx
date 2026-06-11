@@ -28,7 +28,8 @@ export default function ClientDashboardPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const activeTab = (searchParams.get("tab") as Tab) ?? "bookings";
+  // Post-login lands on the panel HOME (Mi perfil), not a deep sub-section.
+  const activeTab = (searchParams.get("tab") as Tab) ?? "profile";
 
   const [profileData, setProfileData] = useState<{ full_name: string; phone?: string; avatar_url?: string; cedula?: string | null } | null>(null);
   const [profileForm, setProfileForm] = useState({ full_name: "", phone: "" });
