@@ -24,6 +24,16 @@ export function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+  // A UNIQUE channel name per component instance. The navbar mounts the bell in
+  // BOTH the default and compact header rows (and dashboards mount one too), so a
+  // shared static name made the 2nd instance call `.channel("notifications")`,
+  // get back Supabase's CACHED already-subscribed channel, and adding `.on()` to
+  // it threw "cannot add postgres_changes callbacks after subscribe()" — crashing
+  // the whole app via the error boundary. A unique topic gives each instance its
+  // own channel, so handlers are always registered before subscribe().
+  const instanceIdRef = useRef<string>(
+    `nb-${Math.random().toString(36).slice(2)}-${Date.now().toString(36)}`
+  );
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -39,9 +49,11 @@ export function NotificationBell() {
       .limit(20)
       .then(({ data }) => setNotifications(data ?? []));
 
-    // Real-time subscription
+    // Real-time subscription. ALL `.on(...)` handlers are registered FIRST and
+    // `.subscribe()` is called LAST, exactly once, on a per-instance unique
+    // channel (so no other mounted bell shares/reuses this channel).
     const channel = supabase
-      .channel("notifications")
+      .channel(`notifications-${user.id}-${instanceIdRef.current}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
@@ -51,6 +63,8 @@ export function NotificationBell() {
       )
       .subscribe();
 
+    // Clean up on unmount / user change so the channel is removed exactly once
+    // and never re-subscribed with stale handlers.
     return () => { supabase.removeChannel(channel); };
   }, [user]);
 
