@@ -123,8 +123,10 @@ export default function CategoriasPage() {
     <div className="min-h-screen flex flex-col bg-white">
       <LandingNavbar />
 
-      {/* Hero */}
-      <section className="pt-32 pb-12 bg-white text-center px-4">
+      {/* Hero — `relative z-30` lifts the whole hero (and the search autocomplete
+          that overflows below it) ABOVE the opaque category-grid section that
+          follows, so suggestions overlay the categories instead of hiding behind. */}
+      <section className="relative z-30 pt-32 pb-12 bg-white text-center px-4">
         <FadeInUp>
           <span className="inline-block text-xs font-bold uppercase tracking-widest text-[#009FD9] bg-[#EBF5FB] px-4 py-1.5 rounded-full mb-4">
             Servicios
