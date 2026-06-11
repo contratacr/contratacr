@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { MapPin, ArrowRight, Loader2, Navigation } from "lucide-react";
 import { PROVINCES, getProvinceById } from "@/lib/data/cr-geography";
@@ -11,6 +12,7 @@ import type { ZoneCoverage } from "@/lib/queries/professionals";
 // Click a province on the map → it highlights and the panel shows its cantones
 // + REAL coverage (computed server-side; never a fabricated count).
 export function FindByZone({ coverage }: { coverage: ZoneCoverage }) {
+  const t = useTranslations("landing.zones");
   const router = useRouter();
   const [activeId, setActiveId] = useState(PROVINCES[0].id);
   const [hoverId, setHoverId] = useState<string | null>(null);
@@ -38,7 +40,7 @@ export function FindByZone({ coverage }: { coverage: ZoneCoverage }) {
 
   function useMyLocation() {
     if (typeof navigator === "undefined" || !navigator.geolocation) {
-      setGeoError("Tu navegador no permite ubicación. Elige tu provincia en el mapa.");
+      setGeoError(t("geoUnsupported"));
       return;
     }
     setGeoLoading(true);
@@ -51,7 +53,7 @@ export function FindByZone({ coverage }: { coverage: ZoneCoverage }) {
       },
       () => {
         setGeoLoading(false);
-        setGeoError("No pudimos obtener tu ubicación. Elige tu provincia en el mapa.");
+        setGeoError(t("geoFailed"));
       },
       { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
     );
@@ -62,20 +64,20 @@ export function FindByZone({ coverage }: { coverage: ZoneCoverage }) {
       <div className="relative z-10 mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-[#EBF5FB] text-[#009FD9] px-3 py-1 text-[11px] font-bold uppercase tracking-wide">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#009FD9]" /> Cobertura local
+            <span className="h-1.5 w-1.5 rounded-full bg-[#009FD9]" /> {t("eyebrow")}
           </span>
           <h2 className="mt-4 text-3xl sm:text-4xl font-extrabold text-[#1a2744]">
-            Encuentra profesionales en tu zona
+            {t("heading")}
           </h2>
           <p className="text-gray-500 mt-3 max-w-xl mx-auto">
-            Toca tu provincia en el mapa, afina por cantón o deja que te ubiquemos. Profesionales cerca de ti, en distintas zonas del país.
+            {t("subtitle")}
           </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           {/* ── Interactive map ── */}
           <div className="relative">
-            <svg viewBox={CR_MAP_VIEWBOX} className="w-full h-auto drop-shadow-[0_18px_40px_rgba(16,39,68,0.12)]" role="group" aria-label="Mapa de Costa Rica por provincia">
+            <svg viewBox={CR_MAP_VIEWBOX} className="w-full h-auto drop-shadow-[0_18px_40px_rgba(16,39,68,0.12)]" role="group" aria-label={t("mapAria")}>
               {PROVINCES.map((p) => (
                 <path
                   key={p.id}
@@ -132,10 +134,10 @@ export function FindByZone({ coverage }: { coverage: ZoneCoverage }) {
                   <span className="block text-xl font-extrabold text-[#1a2744] leading-tight">{province.name}</span>
                   {count > 0 ? (
                     <span className="block text-[12px] font-semibold text-[#16a34a]">
-                      {count} {count === 1 ? "cantón con cobertura" : "cantones con cobertura"}
+                      {t("coverageCount", { count })}
                     </span>
                   ) : (
-                    <span className="block text-[12px] font-medium text-[#9ca3af]">Aún sin profesionales</span>
+                    <span className="block text-[12px] font-medium text-[#9ca3af]">{t("noPros")}</span>
                   )}
                 </div>
               </div>
@@ -144,13 +146,13 @@ export function FindByZone({ coverage }: { coverage: ZoneCoverage }) {
                 onClick={goToProvince}
                 className="w-full sm:w-auto shrink-0 inline-flex items-center justify-center gap-1.5 rounded-xl bg-[#009FD9] hover:bg-[#0089bb] px-4 py-2.5 text-sm font-bold text-white transition-colors shadow-[0_8px_22px_rgba(0,159,217,0.3)]"
               >
-                Ver profesionales <ArrowRight className="h-4 w-4" />
+                {t("viewPros")} <ArrowRight className="h-4 w-4" />
               </button>
             </div>
 
             {count > 0 ? (
               <>
-                <p className="text-[11px] font-bold uppercase tracking-wide text-[#9ca3af] mb-3">Cantones con profesionales</p>
+                <p className="text-[11px] font-bold uppercase tracking-wide text-[#9ca3af] mb-3">{t("cantonsWithPros")}</p>
                 <div className="flex flex-wrap gap-2 mb-6">
                   {coveredCantons.map((c) => (
                     <button
@@ -167,9 +169,9 @@ export function FindByZone({ coverage }: { coverage: ZoneCoverage }) {
               </>
             ) : (
               <div className="rounded-2xl bg-[#f9fafb] border border-[#e5e7eb] p-5 mb-6">
-                <p className="text-sm font-semibold text-[#374151]">Aún no hay profesionales en {province.name}.</p>
+                <p className="text-sm font-semibold text-[#374151]">{t("emptyTitle", { province: province.name })}</p>
                 <p className="text-[13px] text-[#6b7280] mt-1">
-                  Estamos creciendo zona por zona. Prueba otra provincia o explora todos los profesionales disponibles.
+                  {t("emptyDesc")}
                 </p>
               </div>
             )}
@@ -185,11 +187,11 @@ export function FindByZone({ coverage }: { coverage: ZoneCoverage }) {
                 <span className="grid h-7 w-7 place-items-center rounded-lg bg-[#EBF5FB] text-[#009FD9]">
                   {geoLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Navigation className="h-4 w-4" />}
                 </span>
-                Usar mi ubicación
+                {t("useLocation")}
               </button>
               {geoError && <p className="mt-2 text-[12px] text-[#b45309]">{geoError}</p>}
               <p className="mt-3 text-[11px] text-[#9ca3af] leading-relaxed">
-                No prometemos cobertura en todo el país: te mostramos solo a quienes realmente trabajan en tu zona.
+                {t("disclaimer")}
               </p>
             </div>
           </div>

@@ -776,6 +776,22 @@
       "subtitle": "Explore the most-requested services in Costa Rica.",
       "viewAll": "View all categories"
     },
+    "zones": {
+      "eyebrow": "Local coverage",
+      "heading": "Find professionals in your area",
+      "subtitle": "Tap your province on the map, narrow by canton, or let us locate you. Professionals near you, across the country.",
+      "mapAria": "Map of Costa Rica by province",
+      "coverageCount": "{count, plural, one {# canton covered} other {# cantons covered}}",
+      "noPros": "No professionals yet",
+      "viewPros": "View professionals",
+      "cantonsWithPros": "Cantons with professionals",
+      "emptyTitle": "No professionals in {province} yet.",
+      "emptyDesc": "We're growing area by area. Try another province or explore all available professionals.",
+      "useLocation": "Use my location",
+      "geoUnsupported": "Your browser doesn't allow location. Choose your province on the map.",
+      "geoFailed": "We couldn't get your location. Choose your province on the map.",
+      "disclaimer": "We don't promise nationwide coverage: we only show those who actually work in your area."
+    },
     "howItWorks": {
       "eyebrow": "How it works",
       "heading": "How ContrataCR works",
