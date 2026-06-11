@@ -769,6 +769,12 @@
       "headingPre": "Pros for every project in",
       "headingHighlight": "Your Area."
     },
+    "carousel": {
+      "titlePre": "Pros for every",
+      "titleHighlight": "project",
+      "subtitle": "Explore the most-requested services in Costa Rica.",
+      "viewAll": "View all categories"
+    },
     "why": {
       "heading": "Why customers choose ContrataCR.",
       "subtitle": "Every day, thousands of Costa Ricans trust ContrataCR to find the professional they need — and we back them on every project.",

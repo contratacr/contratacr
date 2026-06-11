@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import {
   MapPin, Shield, ShieldCheck, ShieldAlert, ArrowLeft,
   Share2, Flag, ChevronDown, Lock, Phone, Building2, Award,
@@ -69,6 +69,7 @@ function initialTabFromUrl(): Tab {
 export default function ProfilePage({ params }: ProfilePageProps) {
   const t = useTranslations("profile");
   const tCat = useTranslations("categories");
+  const locale = useLocale();
   const [professional, setProfessional] = useState<ProfessionalDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [proNotFound, setProNotFound] = useState(false);
@@ -558,7 +559,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                         {certGroups.map(([prof, certs]) => (
                           <div key={prof || "general"}>
                             {certGroups.length > 1 && prof && (
-                              <h3 className="text-xs font-bold uppercase tracking-wide text-[#0089bb] mb-2">{getCategoryLabel(prof)}</h3>
+                              <h3 className="text-xs font-bold uppercase tracking-wide text-[#0089bb] mb-2">{getCategoryLabel(prof, locale)}</h3>
                             )}
                             <div className="flex flex-col gap-2.5">
                               {certs.map((c, i) => (

@@ -13,7 +13,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { getInitials } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { NotificationBell } from "@/components/notifications/notification-bell";
-import { ALL_CATEGORIES, searchCategories, normalizeText } from "@/lib/data/categories";
+import { ALL_CATEGORIES, searchCategories, normalizeText, getCategoryLabel, getCategoryGroupLabel } from "@/lib/data/categories";
 import { searchLocations, resolveLocation, type LocationSuggestion } from "@/lib/data/location-search";
 
 /* ─── Brand mark (the square "CR" icon) ─── */
@@ -203,6 +203,7 @@ function CategoryAutocomplete({
   size?: "md" | "lg";
 }) {
   const t = useTranslations("header");
+  const locale = useLocale();
   const router = useRouter();
   const [q, setQ] = useState("");
   const [active, setActive] = useState(0);
@@ -284,8 +285,8 @@ function CategoryAutocomplete({
                   active === i ? "bg-[#EBF5FB]" : "hover:bg-gray-50",
                 )}
               >
-                <span className="text-sm font-medium text-[#1a2744]">{s.label}</span>
-                <span className="text-[11px] text-gray-400 shrink-0">{s.groupLabel}</span>
+                <span className="text-sm font-medium text-[#1a2744]">{getCategoryLabel(s.id, locale)}</span>
+                <span className="text-[11px] text-gray-400 shrink-0">{getCategoryGroupLabel(s.groupId, locale)}</span>
               </button>
             ))
           )}
@@ -863,7 +864,7 @@ export function LandingNavbar() {
                                     onClick={() => goToCategory(link.id)}
                                     className="text-sm text-gray-600 hover:text-[#009FD9] transition-colors leading-tight block text-left"
                                   >
-                                    {link.label}
+                                    {getCategoryLabel(link.id, locale)}
                                   </button>
                                 </li>
                               ))}
@@ -1081,8 +1082,8 @@ export function LandingNavbar() {
                               i === searchActiveIdx ? "bg-[#EBF5FB]" : "hover:bg-[#EBF5FB]"
                             )}
                           >
-                            <span className="text-sm font-medium text-[#1a2744]">{s.label}</span>
-                            <span className="text-[11px] text-gray-400 shrink-0">{s.groupLabel}</span>
+                            <span className="text-sm font-medium text-[#1a2744]">{getCategoryLabel(s.id, locale)}</span>
+                            <span className="text-[11px] text-gray-400 shrink-0">{getCategoryGroupLabel(s.groupId, locale)}</span>
                           </button>
                         ))
                       )}
@@ -1252,7 +1253,7 @@ export function LandingNavbar() {
                   onClick={() => goToCategory(link.id)}
                   className="w-full text-left text-sm text-gray-600 hover:text-[#009FD9] transition-colors leading-tight block px-2 py-2"
                 >
-                  {link.label}
+                  {getCategoryLabel(link.id, locale)}
                 </button>
               ))}
               <Link

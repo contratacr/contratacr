@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
+import { useLocale } from "next-intl";
 import { Search, X, ChevronDown, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -9,6 +10,7 @@ import {
   OTHER_CATEGORY,
   searchCategories,
   getCategoryLabel,
+  getCategoryGroupLabel,
   normalizeText,
 } from "@/lib/data/categories";
 
@@ -89,7 +91,8 @@ export function CategorySearch({
     finally { setSending(false); }
   }
 
-  const selectedLabel = value ? getCategoryLabel(value) : "";
+  const locale = useLocale();
+  const selectedLabel = value ? getCategoryLabel(value, locale) : "";
 
   // Close on outside click — the portaled panel lives outside containerRef, so
   // check both the trigger container AND the panel before closing.
@@ -228,7 +231,7 @@ export function CategorySearch({
               grouped.map(([groupLabel, items]) => (
                 <div key={groupLabel}>
                   <p className="px-3 pt-3 pb-1 text-[10px] font-bold text-[#9ca3af] uppercase tracking-widest">
-                    {groupLabel}
+                    {items[0]?.groupId ? getCategoryGroupLabel(items[0].groupId, locale) : groupLabel}
                   </p>
                   {items.map((item) => (
                     <button
@@ -243,9 +246,9 @@ export function CategorySearch({
                       )}
                     >
                       {query ? (
-                        <HighlightMatch text={item.label} query={query} />
+                        <HighlightMatch text={getCategoryLabel(item.id, locale)} query={query} />
                       ) : (
-                        item.label
+                        getCategoryLabel(item.id, locale)
                       )}
                     </button>
                   ))}

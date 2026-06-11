@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import Image from "next/image";
+import { useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { getCategoryLabel } from "@/lib/data/categories";
@@ -35,7 +36,8 @@ const NUDGE_MS = 480;         // arrow-tween duration.
 const easeInOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
 
 function Card({ id, lifted }: { id: string; lifted: boolean }) {
-  const label = getCategoryLabel(id);
+  const locale = useLocale();
+  const label = getCategoryLabel(id, locale);
   return (
     <div
       // Zigzag offset only from sm+ (desktop); on mobile the row is flat —

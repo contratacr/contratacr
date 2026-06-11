@@ -769,6 +769,12 @@
       "headingPre": "Profesionales para cada proyecto en",
       "headingHighlight": "Tu Zona."
     },
+    "carousel": {
+      "titlePre": "Profesionales para cada",
+      "titleHighlight": "proyecto",
+      "subtitle": "Explora los servicios más solicitados en Costa Rica.",
+      "viewAll": "Ver todas las categorías"
+    },
     "why": {
       "heading": "Por qué los clientes eligen ContrataCR.",
       "subtitle": "Cada día, miles de ticos confían en ContrataCR para encontrar el profesional que necesitan — y los respaldamos en cada proyecto.",

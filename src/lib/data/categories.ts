@@ -224,11 +224,89 @@ export function searchCategories(query: string): (CategoryItem & { groupId: stri
   });
 }
 
-/* ─── Get category label from ID ─── */
-export function getCategoryLabel(id: string): string {
+/* ─── English labels for the fixed taxonomy ───
+   Spanish (in CATEGORY_GROUPS above) stays the source of truth; these are the
+   per-language English labels so categories/services also render in English.
+   Apply everywhere via getCategoryLabel(id, locale) / getCategoryGroupLabel. */
+export const CATEGORY_LABELS_EN: Record<string, string> = {
+  otro: "Other service",
+  // Hogar y construcción
+  plomeria: "Plumbing", electricidad: "Electrical", construccion: "Construction",
+  pintura: "Painting", carpinteria: "Carpentry", remodelacion: "Remodeling",
+  techos: "Roofing", pisos: "Flooring", impermeabilizacion: "Waterproofing",
+  fumigacion: "Pest control", cerrajeria: "Locksmith", aire_acondicionado: "Air conditioning",
+  calentadores: "Water heaters", ventanas_puertas: "Windows & doors", soldadura: "Welding",
+  gypsum: "Gypsum / Drywall",
+  // Jardín y exterior
+  jardineria: "Gardening", poda_arboles: "Tree pruning", paisajismo: "Landscaping",
+  limpieza_piscinas: "Pool cleaning", riego_automatizado: "Automated irrigation",
+  control_plagas: "Outdoor pest control",
+  // Limpieza
+  limpieza: "Home cleaning", limpieza_oficinas: "Office cleaning",
+  desinfeccion: "Disinfection & sanitizing", lavado_alfombras: "Carpet & rug cleaning",
+  limpieza_post_construccion: "Post-construction cleaning", lavado_vehiculos: "Car washing",
+  // Tecnología
+  reparacion_computadoras: "Computer repair", redes_internet: "Networks & internet",
+  camaras_seguridad: "Security cameras (CCTV)", domotica: "Smart home automation",
+  desarrollo_web: "Web development", diseno_grafico: "Graphic design", diseno_apps: "App design",
+  soporte_tecnico: "Tech support", audio_video: "Professional audio & video",
+  // Servicios profesionales
+  contabilidad: "Accounting & finance", legal: "Lawyers & legal services",
+  ingenieria_civil: "Civil engineering", arquitectura: "Architecture", topografia: "Surveying",
+  consultoria: "Business consulting", traduccion: "Translation & interpreting",
+  recursos_humanos: "Human resources", marketing_digital: "Digital marketing",
+  fotografia: "Professional photography", produccion_video: "Video production",
+  bienes_raices: "Real estate",
+  // Salud y bienestar
+  entrenamiento_personal: "Personal training", nutricion: "Nutrition & dietetics",
+  masajes: "Therapeutic massage", psicologia: "Psychology & therapy", fisioterapia: "Physical therapy",
+  enfermeria: "Home nursing", cuidado_adultos: "Elderly care", cuidado_infantil: "Childcare / Nanny",
+  veterinaria: "Veterinary", peluqueria_canina: "Dog grooming",
+  // Belleza y estética
+  peluqueria: "Hair & barber", maquillaje: "Makeup", unhas: "Nails / Manicure",
+  pestanas: "Eyelashes", depilacion: "Hair removal", estetica_facial: "Facial aesthetics",
+  bronceado: "Tanning",
+  // Educación y clases
+  tutorias: "Academic tutoring", idiomas: "Languages", musica: "Music & instruments",
+  matematicas: "Math & science", preparacion_universitaria: "University prep",
+  clases_manejo: "Driving lessons", clases_cocina: "Cooking & baking classes",
+  // Mudanzas y transporte
+  mudanzas: "Moving", fletes: "Freight & hauling", mensajeria: "Courier & delivery",
+  transporte_mascotas: "Pet transport",
+  // Eventos
+  fotografia_eventos: "Event photography", videografia: "Event videography",
+  dj_sonido: "DJ & sound", catering: "Catering & banquets", decoracion: "Event decoration",
+  animacion_infantil: "Kids entertainment", bartending: "Bartending",
+  // Seguridad
+  guardas_seguridad: "Security guards", alarmas: "Alarm installation", cctv: "Closed-circuit CCTV",
+  control_acceso: "Access control",
+  // Automotriz
+  mecanica: "General mechanics", hojalateria: "Body work & car painting",
+  electricidad_automotriz: "Auto electrical", tapiceria: "Upholstery",
+  detailing: "Car detailing", cambio_llantas: "Tire change",
+};
+
+export const CATEGORY_GROUP_LABELS_EN: Record<string, string> = {
+  hogar: "Home & construction", jardin: "Garden & outdoor", limpieza: "Cleaning",
+  tecnologia: "Technology", profesional: "Professional services", salud: "Health & wellness",
+  belleza: "Beauty & aesthetics", educacion: "Education & classes",
+  transporte: "Moving & transport", eventos: "Events", seguridad: "Security",
+  automotriz: "Automotive",
+};
+
+/* ─── Get category label from ID (locale-aware) ─── */
+export function getCategoryLabel(id: string, locale?: string): string {
+  if (locale === "en" && CATEGORY_LABELS_EN[id]) return CATEGORY_LABELS_EN[id];
   if (id === "otro") return "Otro servicio";
   const found = ALL_CATEGORIES.find((c) => c.id === id);
   return found?.label ?? id;
+}
+
+/* ─── Get category GROUP label from group ID (locale-aware) ─── */
+export function getCategoryGroupLabel(groupId: string, locale?: string): string {
+  if (locale === "en" && CATEGORY_GROUP_LABELS_EN[groupId]) return CATEGORY_GROUP_LABELS_EN[groupId];
+  const g = CATEGORY_GROUPS.find((x) => x.id === groupId);
+  return g?.label ?? groupId;
 }
 
 /* ─── Health categories (es_salud) — drive DOB behaviour. AUTHORITATIVE flag,
