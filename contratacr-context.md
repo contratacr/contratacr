@@ -1862,3 +1862,17 @@ FIX: each instance now uses a UNIQUE channel name `notifications-${user.id}-${in
 ## Certifications copy — removed unverified-authenticity line
 
 The public profile Certificaciones tab description previously read "Cursos, títulos y certificados que indica el profesional. ContrataCR aún no verifica su autenticidad." The 2nd sentence was removed (reduced trust / could be misread as the pro opting out of verification). Now just: "Cursos, títulos y certificados que indica el profesional." (`profesionales/[slug]` page; string is hardcoded — no separate EN key existed).
+
+---
+
+## Extended EN coverage — standalone pages (this pass)
+
+Translated these previously Spanish-hardcoded pages to full ES/EN (new message namespaces, complete EN, mobile layout verified — English strings fit; titles use a `<br className="hidden sm:block">` so they wrap cleanly on mobile):
+- **/categorias** — `categoriesPage` namespace: hero eyebrow/title/subtitle, CTA block + buttons, and `CategorySearchBox` (placeholder, no-results, suggestion labels now locale-aware via getCategoryLabel/getCategoryGroupLabel).
+- **/como-funciona** — `comoFunciona`: hero, two paths + steps, pros section, "how projects work", FAQ (5), final CTA.
+- **/ayuda** — `ayuda`: hero, 6 help cards, 8-item FAQ, contact block.
+- **/atraer-clientes** — `atraerClientes`: hero, 8 tips (title/body/highlight), dos/donts lists (t.raw arrays), market-reality (4 blocks), CTA.
+- **/soporte** — `soporte`: header, success states (user + guest, with email var), form labels/placeholders/subjects, attachments, validation errors, WhatsApp line.
+- **Status filter tabs** (`StatusFilterTabs`) — now translate via `statusTabs` namespace (`id` doubles as the i18n key); reused in BOTH dashboards' Solicitudes/Proyectos filters.
+
+**STILL Spanish (remaining major sweep, NOT done this pass):** the CLIENT and PROFESSIONAL dashboards and all their sections (Mi perfil, Servicios, Casos de éxito, Disponibilidad, Solicitudes, Proyectos, Verificación, Notificaciones, Soporte, Cuenta y seguridad, Contratar servicios, the "ver cómo me ven los clientes" preview) are 0% i18n (~2×400-line pages + ~15 child components, hundreds of strings) — a large dedicated effort. `/buscar` is mostly translated but a few hardcoded strings remain in `search-filters.tsx` ("Limpiar búsqueda", "Cercanía"), `professional-card.tsx` ("Atiende en todo el país"), and `buscar/page.tsx` ("Disponibilidad inmediata"). Legal pages (`/terminos`, `/privacidad`) intentionally untranslated (flagged for human review).
