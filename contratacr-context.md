@@ -1720,3 +1720,18 @@ No migration needed (storage format unchanged: clean digits).
 8. Email notifications via Resend (booking confirmed, proposal received)
 9. Google Maps integration on /buscar
 10. Payment/subscription system (freemium model)
+
+---
+
+## Sprints 128–133 (search rework, header session access, i18n persistence, polish)
+
+- **128** — Home category carousel: auto-scroll is desktop-only (`matchMedia` min-width:640px); mobile = single flat manual-swipe row (zigzag flattened). Empty search confirmed to browse all (`/buscar` with no params; filters are conditional). `src/components/landing/category-carousel.tsx`.
+- **129** — Soporte "Nuevo ticket" button stacks full-width on mobile / inline desktop (`support-tickets.tsx`). Flattened Servicios add-services nesting: per-profession is a plain divided section (no box), services are a divided list (no surrounding border); only the add/edit form keeps an accent box (`services-editor.tsx`).
+- **130** — Collapsed/scrolled header keeps session access for logged-in users (logo + bell + account menu). Extracted reusable `AccountMenu` (own open state + tap-away; `onOpen` refreshes unread count) used in BOTH the default and compact rows. Logged-out keeps collapse-to-search. `landing-navbar.tsx`.
+- **131** — Search rework. New `src/lib/data/location-search.ts` (`searchLocations`/`resolveLocation` over provinces + cantones). Hero + navbar compact search: service & location are typeable autocompletes, **selecting fills the field**, search runs only on Buscar/Enter, keyboard nav + click-outside. Location now present on mobile (hero stacks). **Bugfix:** province filter was passing the province NAME where `/buscar` expects the ID — now passes `provincia=<id>` / `canton=<id>`. **Name-change auto-refresh:** profile-editor + cliente dashboard now mirror `full_name` into auth `user_metadata` (`auth.updateUser`) so the header/menu update immediately (useAuth subscribes to `onAuthStateChange`), no reload.
+- **132** — `BackToTop` moved into the `[locale]` layout → app-wide; only appears after 400px scroll (long pages only). Removed the redundant home instance.
+- **133** — i18n persistence: toggle writes `NEXT_LOCALE` cookie; middleware honors it for unprefixed URLs only (default stays ES; Accept-Language ignored). Toggle highlights active locale. Legal pages (`/terminos`, `/privacidad`) remain static Spanish — never auto-translated.
+
+**i18n status:** infra + persistence + toggle COMPLETE. String extraction is partial (~18/128 files use `useTranslations`; message namespaces in `messages/{es,en}.json`). Remaining components (navbar mega-menu/drawer, most dashboard editors, support) still have hardcoded Spanish — extract incrementally, area-by-area, adding matching EN keys.
+
+**Pending Supabase SQL to run:** migrations `043`, `044`, `045`, `046`.

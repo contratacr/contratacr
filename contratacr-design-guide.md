@@ -429,3 +429,23 @@ Cantón <span className="text-[#6b7280] font-normal">(opcional)</span>
 4. If the guide is missing or wrong for a real case, **update this file** in the same change (and note it in `contratacr-context.md`) so the standard stays single-source-of-truth.
 
 The point is cohesion: a client should feel they're using **one** simple, well-made app on every screen.
+
+---
+
+## 8. Search bars (hero + compact navbar) — standard
+
+Both the hero and the scrolled/compact navbar search share one model:
+
+- **Two typeable autocompletes:** a **service** field (categories + professionals via `/api/search/suggestions`) and a **location** field (provinces + cantones via `src/lib/data/location-search.ts`).
+- **Selecting a suggestion FILLS the field — it never searches.** The search runs **only** on `Buscar` click or `Enter` (with no active suggestion highlighted).
+- Both dropdowns: overlay correctly (parent field is `relative`; never inside an `overflow-hidden` bar), keyboard-navigable (↑/↓/Enter/Escape, active row highlighted `bg-[#EBF5FB]`), and close on blur/click-outside.
+- **Pass IDs, not names:** province → `provincia=<id>` (e.g. `sj`), canton → `canton=<id>`. `/buscar` looks up by id; sending a name silently filters nothing.
+- **Empty search = browse all** (`/buscar` with no params). The hero stacks vertically on mobile (service → location → Buscar). The fixed navbar stays single-row on mobile (location is desktop-only there).
+
+## 9. Carousels — mobile is manual
+
+Auto-scrolling carousels (e.g. the home "Profesionales para cada proyecto" category strip) run **desktop-only** (`matchMedia("(min-width:640px)")`). On mobile they do **not** auto-move — single flat row the user swipes by hand (zigzag offset flattens too).
+
+## 10. i18n
+
+Infra: next-intl, `[locale]` (`es`/`en`), default **es**, `localePrefix: "always"`, `localeDetection: false`. Persistence = locale in URL (navigation/reload) **plus** a `NEXT_LOCALE` cookie written by the toggle; middleware honors that cookie for unprefixed URLs only (first-time visitors still get ES — Accept-Language is deliberately ignored). The ES|EN pill highlights the active locale. **Never auto-translate legal content** (`/terminos`, `/privacidad`) — they stay authoritative static Spanish.
