@@ -1846,3 +1846,13 @@ The EN gaps were mostly DB-sourced taxonomy + un-wired home sections. Fixed:
 **Pattern for taxonomy:** any fixed DB/taxonomy list (categories, groups; future: service names) must expose per-language labels via an `_EN` map + a locale-aware getter, NOT a hardcoded label, so it translates everywhere it renders.
 
 **Still ES-only (remaining, larger follow-up):** general form chrome/labels/buttons inside the pro dashboards, registration flows, booking modal, and some standalone pages (ayuda/como-funciona/etc.) — these have many strings beyond the taxonomy and are a separate incremental sweep. The taxonomy + all home/nav/footer surfaces (the reported gaps) are done.
+
+---
+
+## Realtime subscription ordering fix (app-wide crash)
+
+SYMPTOM: "Error: cannot add `postgres_changes` callbacks for realtime:notifications after `subscribe()`" → error boundary "Algo salió mal", breaking login/registration/page loads.
+
+ROOT CAUSE: `NotificationBell` (`src/components/notifications/notification-bell.tsx`) used a STATIC channel topic `supabase.channel("notifications")`. The navbar mounts the bell in BOTH header rows (default + compact), and dashboards mount one too — so multiple instances requested the same topic. Supabase returns the CACHED channel by topic name, so the 2nd instance's `.on('postgres_changes', …)` ran on an already-subscribed channel and threw. (The `.on()`→`.subscribe()` order within a single instance was already correct.)
+
+FIX: each instance now uses a UNIQUE channel name `notifications-${user.id}-${instanceId}` (instanceId = a per-mount `useRef` random). Handlers are registered before `.subscribe()` (once), and `removeChannel` cleans up on unmount/user-change. This is the ONLY Realtime channel in the app (verified). RULE: never share a static Realtime channel topic across components that may mount more than once — make the topic unique per instance, and always register all `.on(...)` before `.subscribe()`.
