@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import {
   X, Menu, Mail, Lock, Eye, EyeOff, AlertCircle, ChevronDown, Search, MapPin,
   LayoutDashboard, LogOut, Bookmark, CalendarDays, FolderOpen, UserPlus, Briefcase, Compass, Settings, Bell,
@@ -431,6 +431,168 @@ function LoginModal({ onClose }: { onClose: () => void }) {
   );
 }
 
+/* ─── Account menu (avatar trigger + dropdown) ───
+   Self-contained: owns its open state + tap-away handling, so it can be
+   rendered in BOTH the default header row AND the compact/scrolled row
+   without sharing state. `onOpen` lets the parent refresh the unread count. */
+interface AccountMenuProps {
+  user: { email?: string | null };
+  isPro: boolean;
+  displayName: string;
+  avatarUrl: string | null;
+  initials: string;
+  proPanelHref: string;
+  clientPanelHref: string;
+  sentBookingsHref: string;
+  sentProjectsHref: string;
+  savedHref: string;
+  notificationsHref: string;
+  accountHref: string;
+  notifUnread: number;
+  onSignOut: () => void;
+  onOpen?: () => void;
+}
+
+function AccountMenu({
+  user, isPro, displayName, avatarUrl, initials,
+  proPanelHref, clientPanelHref, sentBookingsHref, sentProjectsHref,
+  savedHref, notificationsHref, accountHref, notifUnread, onSignOut, onOpen,
+}: AccountMenuProps) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function onClickOutside(e: Event) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", onClickOutside);
+    document.addEventListener("touchstart", onClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", onClickOutside);
+      document.removeEventListener("touchstart", onClickOutside);
+    };
+  }, []);
+
+  function toggle() {
+    setOpen((o) => {
+      if (!o) onOpen?.();
+      return !o;
+    });
+  }
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={toggle}
+        className="flex items-center gap-1 p-0.5 rounded-full ring-2 ring-transparent hover:ring-[#009FD9]/30 transition-all"
+        title={displayName || user.email || ""}
+      >
+        <Avatar className="h-8 w-8">
+          <AvatarImage src={avatarUrl ?? undefined} />
+          <AvatarFallback delayMs={avatarUrl ? 600 : 0} className="text-[12px] bg-[#009FD9] text-white font-bold">
+            {initials}
+          </AvatarFallback>
+        </Avatar>
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full mt-2 w-60 bg-white border border-gray-100 rounded-2xl shadow-xl z-50 py-1.5 overflow-hidden">
+          <div className="px-3 py-2 border-b border-gray-50 mb-1">
+            {displayName && <p className="text-sm font-semibold text-[#111827] truncate">{displayName}</p>}
+            <p className="text-xs text-[#9ca3af] truncate">{user.email}</p>
+          </div>
+
+          {isPro && (
+            <a
+              href={proPanelHref}
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
+            >
+              <LayoutDashboard className="h-4 w-4 text-[#009FD9]" />
+              Mi panel
+            </a>
+          )}
+
+          <p className="px-3 pt-2 pb-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+            {isPro ? "Contratar servicios" : "Mi cuenta"}
+          </p>
+          {!isPro && (
+            <a
+              href={`${clientPanelHref}?tab=bookings`}
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
+            >
+              <LayoutDashboard className="h-4 w-4 text-[#009FD9]" />
+              Mi panel
+            </a>
+          )}
+          <a
+            href={sentBookingsHref}
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
+          >
+            <CalendarDays className="h-4 w-4 text-gray-400" />
+            {isPro ? "Mis solicitudes enviadas" : "Mis solicitudes"}
+          </a>
+          <a
+            href={sentProjectsHref}
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
+          >
+            <FolderOpen className="h-4 w-4 text-gray-400" />
+            {isPro ? "Mis proyectos publicados" : "Mis proyectos"}
+          </a>
+          <a
+            href={savedHref}
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
+          >
+            <Bookmark className="h-4 w-4 text-gray-400" />
+            Mis favoritos
+          </a>
+          <a
+            href={notificationsHref}
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
+          >
+            <Bell className="h-4 w-4 text-gray-400" />
+            <span className="flex-1">Notificaciones</span>
+            {notifUnread > 0 && (
+              <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">{notifUnread > 9 ? "9+" : notifUnread}</span>
+            )}
+          </a>
+          <a
+            href={accountHref}
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2.5 px-3 py-2 mt-1 border-t border-gray-50 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
+          >
+            <Settings className="h-4 w-4 text-gray-400" />
+            Cuenta y seguridad
+          </a>
+
+          {!isPro && (
+            <Link
+              href="/registro/profesional"
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2.5 px-3 py-2 mt-1 border-t border-gray-50 text-sm text-[#009FD9] hover:bg-[#EBF5FB] transition-colors"
+            >
+              <Briefcase className="h-4 w-4" />
+              Ofrecer mis servicios
+            </Link>
+          )}
+
+          <button
+            onClick={onSignOut}
+            className="w-full flex items-center gap-2.5 px-3 py-2 mt-1 border-t border-gray-50 text-sm text-red-600 hover:bg-red-50 transition-colors"
+          >
+            <LogOut className="h-4 w-4" />
+            Cerrar sesión
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ─── Navbar ─── */
 export function LandingNavbar() {
   const [compact, setCompact] = useState(false);
@@ -442,8 +604,6 @@ export function LandingNavbar() {
   const [searchFocused, setSearchFocused] = useState(false);
   // Drives a SHORTER search placeholder on small screens so it never clips.
   const [isSmallScreen, setIsSmallScreen] = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const userMenuRef = useRef<HTMLDivElement>(null);
   const searchBlurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const drawerTouchX = useRef<number | null>(null);
@@ -469,7 +629,7 @@ export function LandingNavbar() {
   // Unread notifications count for the account menu + mobile drawer link badges
   // (the bell handles its own live updates; this refreshes when those open).
   const [notifUnread, setNotifUnread] = useState(0);
-  useEffect(() => {
+  const refreshNotifUnread = useCallback(() => {
     if (!user) { setNotifUnread(0); return; }
     const supabase = createClient();
     supabase
@@ -478,24 +638,10 @@ export function LandingNavbar() {
       .eq("user_id", user.id)
       .eq("read", false)
       .then(({ count }) => setNotifUnread(count ?? 0));
-  }, [user, mobileOpen, userMenuOpen]);
+  }, [user]);
+  useEffect(() => { refreshNotifUnread(); }, [refreshNotifUnread, mobileOpen]);
 
   const compactSuggestions = useMemo(() => matchCategories(searchQuery), [searchQuery]);
-
-  useEffect(() => {
-    function onClickOutside(e: Event) {
-      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
-        setUserMenuOpen(false);
-      }
-    }
-    // Listen to BOTH mouse and touch so tapping away closes the menu on mobile too.
-    document.addEventListener("mousedown", onClickOutside);
-    document.addEventListener("touchstart", onClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", onClickOutside);
-      document.removeEventListener("touchstart", onClickOutside);
-    };
-  }, []);
 
   // Track small screens so the compact search placeholder can shorten to fit.
   useEffect(() => {
@@ -515,7 +661,6 @@ export function LandingNavbar() {
   }, [mobileOpen]);
 
   async function handleSignOut() {
-    setUserMenuOpen(false);
     const supabase = createClient();
     await supabase.auth.signOut();
     window.location.href = "/es";
@@ -714,115 +859,23 @@ export function LandingNavbar() {
                       Mi panel
                     </a>
                     <NotificationBell />
-                    <div ref={userMenuRef} className="relative">
-                      <button
-                        onClick={() => setUserMenuOpen((o) => !o)}
-                        className="flex items-center gap-1 p-0.5 rounded-full ring-2 ring-transparent hover:ring-[#009FD9]/30 transition-all"
-                        title={displayName || user.email || ""}
-                      >
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={avatarUrl ?? undefined} />
-                          <AvatarFallback delayMs={avatarUrl ? 600 : 0} className="text-[12px] bg-[#009FD9] text-white font-bold">
-                            {initials}
-                          </AvatarFallback>
-                        </Avatar>
-                      </button>
-                      {userMenuOpen && (
-                        <div className="absolute right-0 top-full mt-2 w-60 bg-white border border-gray-100 rounded-2xl shadow-xl z-50 py-1.5 overflow-hidden">
-                          <div className="px-3 py-2 border-b border-gray-50 mb-1">
-                            {displayName && <p className="text-sm font-semibold text-[#111827] truncate">{displayName}</p>}
-                            <p className="text-xs text-[#9ca3af] truncate">{user.email}</p>
-                          </div>
-
-                          {isPro && (
-                            <a
-                              href={proPanelHref}
-                              onClick={() => setUserMenuOpen(false)}
-                              className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
-                            >
-                              <LayoutDashboard className="h-4 w-4 text-[#009FD9]" />
-                              Mi panel
-                            </a>
-                          )}
-
-                          <p className="px-3 pt-2 pb-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-                            {isPro ? "Contratar servicios" : "Mi cuenta"}
-                          </p>
-                          {!isPro && (
-                            <a
-                              href={`${clientPanelHref}?tab=bookings`}
-                              onClick={() => setUserMenuOpen(false)}
-                              className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
-                            >
-                              <LayoutDashboard className="h-4 w-4 text-[#009FD9]" />
-                              Mi panel
-                            </a>
-                          )}
-                          <a
-                            href={sentBookingsHref}
-                            onClick={() => setUserMenuOpen(false)}
-                            className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
-                          >
-                            <CalendarDays className="h-4 w-4 text-gray-400" />
-                            {isPro ? "Mis solicitudes enviadas" : "Mis solicitudes"}
-                          </a>
-                          <a
-                            href={sentProjectsHref}
-                            onClick={() => setUserMenuOpen(false)}
-                            className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
-                          >
-                            <FolderOpen className="h-4 w-4 text-gray-400" />
-                            {isPro ? "Mis proyectos publicados" : "Mis proyectos"}
-                          </a>
-                          <a
-                            href={savedHref}
-                            onClick={() => setUserMenuOpen(false)}
-                            className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
-                          >
-                            <Bookmark className="h-4 w-4 text-gray-400" />
-                            Mis favoritos
-                          </a>
-                          <a
-                            href={notificationsHref}
-                            onClick={() => setUserMenuOpen(false)}
-                            className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
-                          >
-                            <Bell className="h-4 w-4 text-gray-400" />
-                            <span className="flex-1">Notificaciones</span>
-                            {notifUnread > 0 && (
-                              <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">{notifUnread > 9 ? "9+" : notifUnread}</span>
-                            )}
-                          </a>
-                          <a
-                            href={accountHref}
-                            onClick={() => setUserMenuOpen(false)}
-                            className="flex items-center gap-2.5 px-3 py-2 mt-1 border-t border-gray-50 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
-                          >
-                            <Settings className="h-4 w-4 text-gray-400" />
-                            Cuenta y seguridad
-                          </a>
-
-                          {!isPro && (
-                            <Link
-                              href="/registro/profesional"
-                              onClick={() => setUserMenuOpen(false)}
-                              className="flex items-center gap-2.5 px-3 py-2 mt-1 border-t border-gray-50 text-sm text-[#009FD9] hover:bg-[#EBF5FB] transition-colors"
-                            >
-                              <Briefcase className="h-4 w-4" />
-                              Ofrecer mis servicios
-                            </Link>
-                          )}
-
-                          <button
-                            onClick={handleSignOut}
-                            className="w-full flex items-center gap-2.5 px-3 py-2 mt-1 border-t border-gray-50 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                          >
-                            <LogOut className="h-4 w-4" />
-                            Cerrar sesión
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                    <AccountMenu
+                      user={user}
+                      isPro={isPro}
+                      displayName={displayName}
+                      avatarUrl={avatarUrl}
+                      initials={initials}
+                      proPanelHref={proPanelHref}
+                      clientPanelHref={clientPanelHref}
+                      sentBookingsHref={sentBookingsHref}
+                      sentProjectsHref={sentProjectsHref}
+                      savedHref={savedHref}
+                      notificationsHref={notificationsHref}
+                      accountHref={accountHref}
+                      notifUnread={notifUnread}
+                      onSignOut={handleSignOut}
+                      onOpen={refreshNotifUnread}
+                    />
                   </div>
                 ) : (
                   <>
@@ -930,6 +983,32 @@ export function LandingNavbar() {
                   )}
                 </div>
               </form>
+
+              {/* Session access stays in the compact/scrolled row for logged-in
+                  users (logo links home above; here: bell + account menu). One
+                  header for both roles; logged-out users see only the search. */}
+              {user && (
+                <div className="flex items-center gap-0.5 sm:gap-1.5 shrink-0">
+                  <NotificationBell />
+                  <AccountMenu
+                    user={user}
+                    isPro={isPro}
+                    displayName={displayName}
+                    avatarUrl={avatarUrl}
+                    initials={initials}
+                    proPanelHref={proPanelHref}
+                    clientPanelHref={clientPanelHref}
+                    sentBookingsHref={sentBookingsHref}
+                    sentProjectsHref={sentProjectsHref}
+                    savedHref={savedHref}
+                    notificationsHref={notificationsHref}
+                    accountHref={accountHref}
+                    notifUnread={notifUnread}
+                    onSignOut={handleSignOut}
+                    onOpen={refreshNotifUnread}
+                  />
+                </div>
+              )}
             </div>
 
           </div>
