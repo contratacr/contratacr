@@ -1813,3 +1813,21 @@ Findings and fixes from the security pass. **SQL was run as migration 047** (mus
 ### Manual actions required
 - **Run migration `047_profiles_column_security.sql`** in Supabase (plus the still-pending `043`–`046`).
 - Consider a shared-store rate limiter (Upstash) and the `professional_moderation` table split for defense-in-depth.
+
+---
+
+## RLS re-audit (focused: padron / profiles / professionals / admin / write policies) — migration 048
+
+Second focused pass confirming the items below; new fixes in migration **048** (run it in Supabase).
+
+1. **PADRON (cédulas+names) — SAFE.** `padron`/`padron_staging` have RLS ON with NO policies (deny-all to anon/authenticated). The ONLY code touching them is `src/lib/verification/identity-verifier.ts` and `/api/admin/providers/[id]` — both via `createAdminClient()` (service-role, server-only). The admin UI (`admin-case.tsx`) only renders the comparison object returned by the admin-guarded API; it never queries padron. No client-side padron access exists.
+
+2. **PROFILES — fixed in 047 (must be applied).** Sensitive columns (`cedula`, `email`, `phone`, moderation flags) are no longer readable by anon/authenticated — column-level grants expose only `id, full_name, avatar_url, role, is_disabled, created_at, updated_at`; the owner reads their own sensitive fields via `get_my_profile()`. **PROFESSIONALS (new, 048):** internal moderation columns `banned_reason`/`verification_reason`/`id_document_note` are now revoked from the anon role (catalog-computed grant of all other columns); public cards/profiles are unaffected (they never select those). Public contact fields (`whatsapp`, `call_phone`) remain intentionally public. Residual: a logged-in (authenticated) user could still read those 3 via a crafted query (no UI exposes them) — full lockdown needs the owner dashboard's `select('*')` rewritten or a separate `professional_moderation` table (documented follow-up).
+
+3. **ADMIN tables — SAFE.** `reports`, `support_tickets`, `support_ticket_messages`, `notification_deliveries` have RLS ON with no user policy → service-role only. Admin reads them through admin-guarded API routes (`getApiAdmin`). Users read their OWN tickets only via `/api/support` (every query scoped to `user_id`); they cannot read others' tickets/messages/reports.
+
+4. **Over-permissive write policy — FIXED (048).** Legacy `support_messages` (migration 012, unused) had `"Anyone can insert support messages" WITH CHECK (true)` = world-writable (anon spam/storage abuse). Dropped it (RLS stays on → service-role only; owner-scoped SELECT kept). All other write policies are owner-scoped (`auth.uid() = client_id/id/profile_id/suggested_by`). Public-read tables (categories/provincias/cantones/insurers/blocked_dates/availability_slots/reviews) expose only non-sensitive data.
+
+5. **Service-role key — SAFE.** `createAdminClient()` uses `SUPABASE_SERVICE_ROLE_KEY` (NOT `NEXT_PUBLIC_*`); no client component imports it; only `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` reach the browser (anon key is public by design).
+
+**Manual action:** apply migrations **047 and 048** in Supabase (plus pending `043`–`046`). Until 047 runs, the profiles cédula exposure is still live.
