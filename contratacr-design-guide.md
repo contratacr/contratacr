@@ -165,6 +165,12 @@ A professional is always **ONE card** (`rounded-2xl bg-white border`, never spli
 - **Vertical hierarchy, not a left/right split:** header (status badge + date) → details → a **footer separated by `border-top`** holding the actions. Never put the action buttons in a `shrink-0` right column — it cramps them on mobile.
 - **Actions are full-width STACKED on mobile, inline-wrap on desktop:** wrapper `flex flex-col sm:flex-row sm:flex-wrap gap-2`, each button `className="w-full sm:w-auto"`. Keep the **same footer shape across every status** so cards stay uniform. Subtle/destructive links (e.g. "Reportar cliente") go last, `self-start`.
 
+### Mobile menu (left drawer) — grouped sections, both auth states
+- **Always grouped under uppercase section headers** (`text-[10px] font-bold text-gray-400 uppercase tracking-widest`), never a flat list. Keep the left slide-in drawer + swipe-to-close + scrim.
+- **Logged-in order:** search → **MI CUENTA** (avatar + name/email header, then Mi panel [bold + brand icon], Mis solicitudes, Mis proyectos, Mis favoritos, Ofrecer mis servicios [client-only], Cuenta y seguridad — all **role-aware**, with icons) → CATEGORÍAS → RECURSOS → Idioma ES/EN → **Cerrar sesión** (red, bottom). Surface the account area **right after the search** so the panel is one tap away.
+- **Logged-out order:** search → CATEGORÍAS → RECURSOS → Idioma → **"Ingresar"** (outline) + "Registrarse como profesional" (brand pill). No account area.
+- **Auth label is "Ingresar"** (not "Iniciar sesión" — friendlier, and not "Mis citas"/medical wording since not all services are appointments). Use it consistently on the **mobile drawer AND the desktop nav trigger**.
+
 ### Never strand the user — "Volver a mi panel"
 - Any **full-view preview or deep flow** a logged-in user can enter must offer a **clear way back to their dashboard**. The professional "Ver cómo me ven los clientes" preview opens **same-tab with `?preview=1`**, and the public profile shows a prominent **"Volver a mi panel"** bar (→ `/dashboard/profesional`) in that mode instead of the generic "back to search". Standalone pages that keep the global `Navbar` (logo→home + account menu) already satisfy this; full-bleed views do not — add an explicit back action.
 

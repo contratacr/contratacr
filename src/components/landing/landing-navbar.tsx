@@ -806,7 +806,7 @@ export function LandingNavbar() {
                       onClick={() => setShowLogin(true)}
                       className="text-sm font-medium px-3 py-2 rounded-xl text-[#374151] hover:bg-gray-50 transition-colors"
                     >
-                      Iniciar sesión
+                      Ingresar
                     </button>
                   </>
                 )}
@@ -947,10 +947,10 @@ export function LandingNavbar() {
             </button>
           </div>
 
-          {/* Scrollable content */}
+          {/* Scrollable content — clearly grouped sections; account surfaced first */}
           <div className="flex-1 overflow-y-auto px-4 py-4">
             {/* Smart search on mobile */}
-            <div className="mb-4">
+            <div className="mb-5">
               <CategoryAutocomplete
                 placeholder="Busca un servicio…"
                 size="lg"
@@ -958,8 +958,46 @@ export function LandingNavbar() {
               />
             </div>
 
-            {/* Categorías */}
-            <div className="mb-4">
+            {/* MI CUENTA — surfaced right after the search so a logged-in user reaches
+                their panel fast. Role-aware (pro keeps the unified panel). */}
+            {user && (
+              <div className="mb-5">
+                <div className="flex items-center gap-3 px-2 pb-3 mb-1 border-b border-gray-100">
+                  <Avatar className="h-9 w-9">
+                    <AvatarImage src={avatarUrl ?? undefined} />
+                    <AvatarFallback delayMs={avatarUrl ? 600 : 0} className="text-[12px] bg-[#009FD9] text-white font-bold">{initials}</AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0">
+                    {displayName && <p className="text-sm font-semibold text-[#111827] truncate">{displayName}</p>}
+                    <p className="text-xs text-gray-400 truncate">{user.email}</p>
+                  </div>
+                </div>
+                <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Mi cuenta</p>
+                <a href={primaryPanelHref} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-2 py-2.5 rounded-lg text-sm font-semibold text-[#111827] hover:bg-gray-50 transition-colors">
+                  <LayoutDashboard className="h-4 w-4 text-[#009FD9] shrink-0" /> Mi panel
+                </a>
+                <a href={sentBookingsHref} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-2 py-2.5 rounded-lg text-sm text-[#374151] hover:bg-gray-50 transition-colors">
+                  <CalendarDays className="h-4 w-4 text-gray-400 shrink-0" /> {isPro ? "Mis solicitudes enviadas" : "Mis solicitudes"}
+                </a>
+                <a href={sentProjectsHref} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-2 py-2.5 rounded-lg text-sm text-[#374151] hover:bg-gray-50 transition-colors">
+                  <FolderOpen className="h-4 w-4 text-gray-400 shrink-0" /> {isPro ? "Mis proyectos publicados" : "Mis proyectos"}
+                </a>
+                <a href={savedHref} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-2 py-2.5 rounded-lg text-sm text-[#374151] hover:bg-gray-50 transition-colors">
+                  <Bookmark className="h-4 w-4 text-gray-400 shrink-0" /> Mis favoritos
+                </a>
+                {!isPro && (
+                  <Link href="/registro/profesional" onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-2 py-2.5 rounded-lg text-sm font-medium text-[#009FD9] hover:bg-[#EBF5FB] transition-colors">
+                    <Briefcase className="h-4 w-4 shrink-0" /> Ofrecer mis servicios
+                  </Link>
+                )}
+                <a href={accountHref} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-2 py-2.5 rounded-lg text-sm text-[#374151] hover:bg-gray-50 transition-colors">
+                  <Settings className="h-4 w-4 text-gray-400 shrink-0" /> Cuenta y seguridad
+                </a>
+              </div>
+            )}
+
+            {/* CATEGORÍAS */}
+            <div className="mb-5">
               <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Categorías</p>
               {CATEGORY_COLUMNS.flatMap((col) => col.links).slice(0, 9).map((link) => (
                 <button
@@ -973,14 +1011,14 @@ export function LandingNavbar() {
               <Link
                 href="/categorias"
                 onClick={() => setMobileOpen(false)}
-                className="block px-2 py-2 text-sm font-semibold text-[#009FD9]"
+                className="flex items-center gap-1.5 px-2 py-2 text-sm font-semibold text-[#009FD9]"
               >
-                Ver todas las categorías →
+                <Compass className="h-4 w-4" /> Ver todas las categorías
               </Link>
             </div>
 
-            {/* Recursos */}
-            <div className="mb-4">
+            {/* RECURSOS */}
+            <div className="mb-5">
               <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Recursos</p>
               {RESOURCES_LINKS.map((link) => (
                 <Link
@@ -994,44 +1032,26 @@ export function LandingNavbar() {
               ))}
             </div>
 
-            <div className="border-t border-gray-100 pt-4 flex flex-col gap-2">
-              <div className="flex items-center justify-between px-1 pb-1">
+            {/* Idioma */}
+            <div className="border-t border-gray-100 pt-4">
+              <div className="flex items-center justify-between px-1">
                 <span className="text-xs text-gray-400 font-medium">Idioma / Language</span>
                 <LanguageTogglePill />
               </div>
+            </div>
+
+            {/* Auth actions — Cerrar sesión (in) / Ingresar + Registrarse (out) */}
+            <div className="mt-4 flex flex-col gap-2">
               {user ? (
-                <>
-                  {isPro && (
-                    <a href={proPanelHref} onClick={() => setMobileOpen(false)}
-                      className="w-full block px-4 py-3 rounded-xl text-sm font-semibold text-white bg-[#009FD9] hover:bg-[#0089bb] text-center transition-colors">
-                      Mi panel
-                    </a>
-                  )}
-                  <a href={isPro ? sentBookingsHref : `${clientPanelHref}?tab=bookings`} onClick={() => setMobileOpen(false)}
-                    className="w-full block px-4 py-3 rounded-xl text-sm font-medium text-[#374151] border border-gray-200 hover:bg-gray-50 text-center">
-                    {isPro ? "Mis solicitudes enviadas" : "Mi panel"}
-                  </a>
-                  <a href={savedHref} onClick={() => setMobileOpen(false)}
-                    className="w-full block px-4 py-3 rounded-xl text-sm font-medium text-[#374151] border border-gray-200 hover:bg-gray-50 text-center">
-                    Mis favoritos
-                  </a>
-                  {!isPro && (
-                    <Link href="/registro/profesional" onClick={() => setMobileOpen(false)}
-                      className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold text-[#009FD9] border border-[#009FD9]/30 hover:bg-[#EBF5FB] text-center transition-colors">
-                      <Briefcase className="h-4 w-4" />
-                      Ofrecer mis servicios
-                    </Link>
-                  )}
-                  <button onClick={handleSignOut}
-                    className="w-full px-4 py-3 rounded-xl text-sm font-medium text-red-600 border border-red-100 hover:bg-red-50 text-center">
-                    Cerrar sesión
-                  </button>
-                </>
+                <button onClick={handleSignOut}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium text-red-600 border border-red-100 hover:bg-red-50 transition-colors">
+                  <LogOut className="h-4 w-4" /> Cerrar sesión
+                </button>
               ) : (
                 <>
                   <button onClick={() => { setShowLogin(true); setMobileOpen(false); }}
-                    className="w-full px-4 py-3 rounded-xl text-sm font-medium text-[#374151] border border-gray-200 hover:bg-gray-50 text-left">
-                    Iniciar sesión
+                    className="w-full px-4 py-3 rounded-xl text-sm font-semibold text-[#374151] border border-gray-200 hover:bg-gray-50 text-center transition-colors">
+                    Ingresar
                   </button>
                   <Link href="/registro/profesional" onClick={() => setMobileOpen(false)}
                     className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-full bg-[#009FD9] text-white text-sm font-bold text-center hover:bg-[#0089bb] transition-colors">
