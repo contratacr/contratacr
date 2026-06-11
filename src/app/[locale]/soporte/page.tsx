@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { useAuth } from "@/hooks/use-auth";
@@ -9,21 +10,13 @@ import { Link } from "@/i18n/navigation";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { SUPPORT_WHATSAPP_URL } from "@/lib/constants";
 
-const SUBJECTS = [
-  "Problema técnico en la plataforma",
-  "Tengo una pregunta sobre mi cuenta",
-  "Quiero reportar a un usuario",
-  "Problemas con el registro profesional",
-  "Problemas con una reservación o proyecto",
-  "Otro",
-];
-
 const MAX_FILES = 3;
 const MAX_FILE_MB = 4;
 
 type AttachedFile = { file: File; preview?: string };
 
 export default function SoportePage() {
+  const t = useTranslations("soporte");
   const { user, loading: authLoading } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -54,7 +47,7 @@ export default function SoportePage() {
     const oversized = selected.filter((f) => f.size > MAX_FILE_MB * 1024 * 1024);
 
     if (oversized.length > 0) {
-      setError(`Algunos archivos superan el límite de ${MAX_FILE_MB}MB y fueron omitidos.`);
+      setError(t("errOversized", { mb: MAX_FILE_MB }));
     }
 
     const withPreviews: AttachedFile[] = toAdd.map((file) => {
@@ -83,7 +76,7 @@ export default function SoportePage() {
     e.preventDefault();
     setError(null);
     if (!form.email || !form.subject || !form.message) {
-      setError("Por favor completa todos los campos requeridos.");
+      setError(t("errRequired"));
       return;
     }
     setSubmitting(true);
@@ -101,12 +94,12 @@ export default function SoportePage() {
       const data = await res.json();
 
       if (!res.ok || data.ok === false) {
-        setError(data.error ?? "Error al enviar. Intenta de nuevo.");
+        setError(data.error ?? t("errSend"));
         return;
       }
       setSuccess(true);
     } catch {
-      setError("Error inesperado. Intenta de nuevo en unos minutos.");
+      setError(t("errUnexpected"));
     } finally {
       setSubmitting(false);
     }
@@ -124,35 +117,35 @@ export default function SoportePage() {
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#EBF5FB] mx-auto mb-5">
               <CheckCircle2 className="h-10 w-10 text-[#009FD9]" />
             </div>
-            <h1 className="text-2xl font-bold text-[#111827] mb-2">¡Ticket creado!</h1>
+            <h1 className="text-2xl font-bold text-[#111827] mb-2">{t("successTitle")}</h1>
             {user ? (
               <>
                 <p className="text-[#6b7280] mb-6">
-                  Recibimos tu consulta. Te respondemos por correo y puedes seguir la conversación en tus tickets.
+                  {t("successUserDesc")}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <Link
                     href="/dashboard/cliente?tab=soporte"
                     className="inline-flex items-center justify-center gap-2 bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold px-6 py-3 rounded-full transition-all text-sm"
                   >
-                    <LifeBuoy className="h-4 w-4" /> Ver mis tickets
+                    <LifeBuoy className="h-4 w-4" /> {t("viewTickets")}
                   </Link>
                   <Link
                     href="/dashboard/cliente"
                     className="inline-flex items-center justify-center gap-2 bg-white border border-[#e5e7eb] text-[#374151] font-bold px-6 py-3 rounded-full transition-all text-sm hover:bg-gray-50"
                   >
-                    Ir a mi panel
+                    {t("goPanel")}
                   </Link>
                 </div>
               </>
             ) : (
               <>
                 <p className="text-[#6b7280] mb-6">
-                  Recibimos tu consulta. Te responderemos por correo a <strong>{form.email}</strong>.
+                  {t("successGuestDesc", { email: form.email })}
                 </p>
                 <p className="text-sm text-[#9ca3af]">
-                  ¿Quieres seguir tus tickets en la plataforma?{" "}
-                  <Link href="/login" className="text-[#009FD9] font-semibold hover:underline">Inicia sesión</Link> con ese correo.
+                  {t("guestFollowPre")}{" "}
+                  <Link href="/login" className="text-[#009FD9] font-semibold hover:underline">{t("guestLogin")}</Link> {t("guestFollowPost")}
                 </p>
               </>
             )}
@@ -174,8 +167,8 @@ export default function SoportePage() {
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#EBF5FB] mx-auto mb-3">
               <MessageSquare className="h-6 w-6 text-[#009FD9]" />
             </div>
-            <h1 className="text-2xl font-bold text-[#111827] mb-1">Centro de soporte</h1>
-            <p className="text-sm text-[#6b7280]">Abre un ticket y le damos seguimiento por correo y en tu panel — así no se pierde ninguna consulta.</p>
+            <h1 className="text-2xl font-bold text-[#111827] mb-1">{t("headerTitle")}</h1>
+            <p className="text-sm text-[#6b7280]">{t("headerSubtitle")}</p>
           </div>
 
           {/* Primary: support ticket form */}
@@ -186,38 +179,41 @@ export default function SoportePage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                        Nombre <span className="text-[#9ca3af] font-normal">(opcional)</span>
+                        {t("nameLabel")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
                       </label>
-                      <input type="text" className={inputClass} placeholder="Tu nombre"
+                      <input type="text" className={inputClass} placeholder={t("namePlaceholder")}
                         value={form.name} onChange={(e) => update("name", e.target.value)} />
                     </div>
                     <div>
                       <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                        Correo electrónico <span className="text-red-500">*</span>
+                        {t("emailLabel")} <span className="text-red-500">*</span>
                       </label>
-                      <input type="email" className={inputClass} placeholder="tucorreo@ejemplo.com"
+                      <input type="email" className={inputClass} placeholder={t("emailPlaceholder")}
                         value={form.email} onChange={(e) => update("email", e.target.value)} required />
                     </div>
                   </div>
 
                   <div>
                     <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                      Asunto <span className="text-red-500">*</span>
+                      {t("subjectLabel")} <span className="text-red-500">*</span>
                     </label>
                     <select className={inputClass + " cursor-pointer"} value={form.subject}
                       onChange={(e) => update("subject", e.target.value)} required>
-                      <option value="">Selecciona el motivo de tu consulta</option>
-                      {SUBJECTS.map((s) => <option key={s} value={s}>{s}</option>)}
+                      <option value="">{t("subjectPlaceholder")}</option>
+                      {[0, 1, 2, 3, 4, 5].map((i) => {
+                        const label = t(`subject${i}`);
+                        return <option key={i} value={label}>{label}</option>;
+                      })}
                     </select>
                   </div>
 
                   <div>
                     <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                      Mensaje <span className="text-red-500">*</span>
+                      {t("messageLabel")} <span className="text-red-500">*</span>
                     </label>
                     <textarea
                       className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] min-h-[130px] resize-none focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
-                      placeholder="Describe tu consulta con el mayor detalle posible. Si es un problema técnico, describe qué pasó y en qué pantalla estás."
+                      placeholder={t("messagePlaceholder")}
                       value={form.message} onChange={(e) => update("message", e.target.value)} required
                     />
                   </div>
@@ -225,7 +221,7 @@ export default function SoportePage() {
                   {/* Attachments */}
                   <div>
                     <label className="text-sm font-medium text-[#374151] block mb-2">
-                      Adjuntos <span className="text-[#9ca3af] font-normal">(opcional, máx. {MAX_FILES} archivos · {MAX_FILE_MB}MB c/u)</span>
+                      {t("attachmentsLabel")} <span className="text-[#9ca3af] font-normal">{t("attachmentsHint", { max: MAX_FILES, mb: MAX_FILE_MB })}</span>
                     </label>
 
                     {attachments.length > 0 && (
@@ -255,7 +251,7 @@ export default function SoportePage() {
                         className="flex items-center gap-2 text-sm text-[#009FD9] border border-dashed border-[#009FD9]/40 rounded-xl px-4 py-2.5 hover:bg-[#EBF5FB] transition-colors w-full justify-center"
                       >
                         <Paperclip className="h-4 w-4" />
-                        {attachments.length === 0 ? "Adjuntar imagen o PDF" : "Agregar otro archivo"}
+                        {attachments.length === 0 ? t("attachBtn") : t("addAnother")}
                       </button>
                     )}
                     <input
@@ -267,7 +263,7 @@ export default function SoportePage() {
                       onChange={handleFileChange}
                     />
                     <p className="text-xs text-[#9ca3af] mt-1.5">
-                      Formatos aceptados: JPG, PNG, WebP, PDF
+                      {t("formats")}
                     </p>
                   </div>
 
@@ -281,7 +277,7 @@ export default function SoportePage() {
                   <button type="submit" disabled={submitting}
                     className="h-12 w-full rounded-xl bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold text-sm transition-all active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2">
                     {submitting && <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />}
-                    {submitting ? "Enviando…" : "Enviar mensaje"}
+                    {submitting ? t("submitting") : t("submit")}
                   </button>
                 </form>
               </div>
@@ -289,16 +285,16 @@ export default function SoportePage() {
 
           {/* Secondary, discreet: WhatsApp Business */}
           <p className="mt-5 text-center text-sm text-[#9ca3af]">
-            ¿Prefieres WhatsApp?{" "}
+            {t("whatsappPre")}{" "}
             <a
               href={SUPPORT_WHATSAPP_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 font-medium text-[#1ebe5d] hover:underline"
             >
-              <WhatsAppIcon className="h-4 w-4" /> Escríbenos
+              <WhatsAppIcon className="h-4 w-4" /> {t("whatsappLink")}
             </a>{" "}
-            <span className="text-[#cbd5e1]">·</span> en horario laboral
+            <span className="text-[#cbd5e1]">·</span> {t("whatsappPost")}
           </p>
 
         </div>
