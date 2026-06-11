@@ -224,9 +224,9 @@ export function SupportTickets({ onUnreadChange }: { onUnreadChange?: (n: number
   // ── List view ──
   return (
     <div>
-      <div className="flex items-center justify-between gap-3 mb-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
         <p className="text-sm text-[#6b7280]">Tus conversaciones con soporte.</p>
-        <Link href="/soporte" className="inline-flex items-center gap-1.5 rounded-lg bg-[#009FD9] text-white text-sm font-semibold px-3 py-2 hover:bg-[#0089bb]">
+        <Link href="/soporte" className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#009FD9] text-white text-sm font-semibold px-4 py-2.5 hover:bg-[#0089bb] shrink-0 w-full sm:w-auto">
           <Plus className="h-4 w-4" /> Nuevo ticket
         </Link>
       </div>

@@ -275,12 +275,15 @@ export function ServicesEditor({
         )}
       </div>
 
-      {/* ── Services grouped by profession ──────────────────────────────── */}
-      {professions.map((prof) => {
+      {/* ── Services grouped by profession ──────────────────────────────────
+          Flat layout: each profession is a plain section divided by a hairline
+          (no nested boxes); services are a simple divided list (no surrounding
+          border). Only the add/edit form keeps an accent box so it stands out. */}
+      {professions.map((prof, idx) => {
         const profServices = services.filter((s) => effectiveCategory(s) === prof);
         return (
-          <div key={prof} className="rounded-2xl border border-[#e5e7eb] p-4">
-            <div className="flex items-center justify-between mb-3">
+          <div key={prof} className={idx > 0 ? "pt-6 border-t border-[#f3f4f6]" : ""}>
+            <div className="flex items-center justify-between mb-2">
               <h3 className="text-sm font-semibold text-[#111827]">{getCategoryLabel(prof)}</h3>
               <button
                 onClick={() => openAdd(prof)}
@@ -295,9 +298,9 @@ export function ServicesEditor({
             )}
 
             {profServices.length > 0 && (
-              <div className="flex flex-col divide-y divide-[#f3f4f6] border border-[#e5e7eb] rounded-xl overflow-hidden">
+              <div className="flex flex-col divide-y divide-[#f3f4f6]">
                 {profServices.map((svc) => (
-                  <div key={svc.id} className="flex items-center justify-between gap-3 px-4 py-3 bg-white hover:bg-[#fafafa] transition-colors">
+                  <div key={svc.id} className="flex items-center justify-between gap-3 py-3 hover:bg-[#fafafa] transition-colors -mx-2 px-2 rounded-lg">
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-[#111827] truncate">{svc.name}</p>
                       {svc.description && <p className="text-xs text-[#6b7280] mt-0.5 line-clamp-1">{svc.description}</p>}
