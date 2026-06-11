@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { FadeInUp } from "@/components/landing/fade-in-up";
@@ -10,49 +11,27 @@ import {
   Bell, Users, Banknote, CalendarClock, ArrowRight,
 } from "lucide-react";
 
-/* ── FAQ ── */
-const FAQ_ITEMS = [
-  {
-    q: "¿Es gratis usar ContrataCR?",
-    a: "Sí. Es completamente gratuito tanto para clientes como para profesionales: no cobramos comisiones ni mensualidades. ContrataCR conecta a las dos partes; el pago del servicio lo acuerdas directamente con el profesional, fuera de la plataforma.",
-  },
-  {
-    q: "¿Qué significa que un profesional esté verificado?",
-    a: "Confirmamos su identidad comparando la cédula con el padrón del Registro Civil (TSE). El sello 'Identidad verificada' indica que es una persona real y verificable — no es una calificación de la calidad de su trabajo. Los perfiles verificados aparecen primero en los resultados; los no verificados también pueden aparecer, claramente marcados como 'Identidad sin verificar'.",
-  },
-  {
-    q: "¿Cómo coordino el servicio?",
-    a: "Te ponemos en contacto directo por WhatsApp con el profesional. Sin intermediarios ni comisiones: acuerdas el precio, la fecha y el horario directamente con la persona.",
-  },
-  {
-    q: "¿Qué es la publicación de proyectos?",
-    a: "Puedes publicar un proyecto describiendo exactamente lo que necesitas. Los profesionales de la red verán tu publicación y te enviarán propuestas con precio y disponibilidad. Tú eliges con quién trabajar.",
-  },
-  {
-    q: "¿Cómo dejo una reseña?",
-    a: "Después de completar un servicio, puedes dejar una reseña desde tu panel de cliente. Las reseñas son verificadas y solo pueden hacerlas clientes que realmente usaron el servicio.",
-  },
-];
-
 function FaqAccordion() {
+  const t = useTranslations("comoFunciona");
   const [open, setOpen] = useState<number | null>(null);
+  const items = [0, 1, 2, 3, 4];
   return (
     <div className="divide-y divide-gray-100">
-      {FAQ_ITEMS.map((item, i) => (
+      {items.map((i) => (
         <div key={i}>
           <button
             onClick={() => setOpen(open === i ? null : i)}
             className="w-full flex items-center justify-between py-5 text-left gap-4 group"
           >
             <span className="text-base font-semibold text-[#1a2744] group-hover:text-[#009FD9] transition-colors">
-              {item.q}
+              {t(`faq${i}Q`)}
             </span>
             <ChevronDown
               className={`h-5 w-5 text-gray-400 shrink-0 transition-transform duration-200 ${open === i ? "rotate-180 text-[#009FD9]" : ""}`}
             />
           </button>
           {open === i && (
-            <p className="pb-5 text-sm text-gray-500 leading-relaxed">{item.a}</p>
+            <p className="pb-5 text-sm text-gray-500 leading-relaxed">{t(`faq${i}A`)}</p>
           )}
         </div>
       ))}
@@ -76,6 +55,7 @@ function MiniStep({ n, label, sub }: { n: number; label: string; sub: string }) 
 }
 
 export default function ComoFuncionaPage() {
+  const t = useTranslations("comoFunciona");
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <LandingNavbar />
@@ -84,14 +64,13 @@ export default function ComoFuncionaPage() {
       <section className="pt-32 pb-16 bg-white text-center px-4">
         <FadeInUp>
           <span className="inline-block text-xs font-bold uppercase tracking-widest text-[#009FD9] bg-[#EBF5FB] px-4 py-1.5 rounded-full mb-4">
-            Cómo funciona
+            {t("eyebrow")}
           </span>
           <h1 className="text-4xl sm:text-5xl font-extrabold text-[#1a2744] mb-4 leading-tight">
-            Dos formas de encontrar<br className="hidden sm:block" /> al profesional correcto
+            {t("titleA")}<br className="hidden sm:block" />{" "}{t("titleB")}
           </h1>
           <p className="text-lg text-gray-500 max-w-2xl mx-auto">
-            ContrataCR conecta clientes con profesionales verificados de Costa Rica.
-            Eliges cómo quieres buscar.
+            {t("subtitle")}
           </p>
         </FadeInUp>
       </section>
@@ -109,35 +88,23 @@ export default function ComoFuncionaPage() {
                     <Search className="h-6 w-6 text-[#009FD9]" />
                   </div>
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-widest text-[#009FD9]">Opción 1</p>
-                    <h2 className="text-xl font-bold text-[#1a2744]">Busca un profesional</h2>
+                    <p className="text-xs font-bold uppercase tracking-widest text-[#009FD9]">{t("opt1Badge")}</p>
+                    <h2 className="text-xl font-bold text-[#1a2744]">{t("opt1Title")}</h2>
                   </div>
                 </div>
                 <p className="text-sm text-gray-500 mb-6 leading-relaxed">
-                  Explora los perfiles disponibles, revisa trabajos anteriores y agenda una cita directamente.
+                  {t("opt1Desc")}
                 </p>
                 <div className="flex flex-col gap-4">
-                  <MiniStep
-                    n={1}
-                    label="Busca por categoría o cantón"
-                    sub="Filtra por tipo de servicio, provincia y cantón para encontrar profesionales cerca de ti."
-                  />
-                  <MiniStep
-                    n={2}
-                    label="Revisa el perfil verificado"
-                    sub="Fotos de trabajos anteriores, reseñas de clientes reales y cédula verificada."
-                  />
-                  <MiniStep
-                    n={3}
-                    label="Agenda y coordina por WhatsApp"
-                    sub="Contacto directo sin intermediarios. Acuerdas precio, fecha y horario en WhatsApp."
-                  />
+                  <MiniStep n={1} label={t("opt1Step1Title")} sub={t("opt1Step1Sub")} />
+                  <MiniStep n={2} label={t("opt1Step2Title")} sub={t("opt1Step2Sub")} />
+                  <MiniStep n={3} label={t("opt1Step3Title")} sub={t("opt1Step3Sub")} />
                 </div>
                 <Link
                   href="/buscar"
                   className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-[#009FD9] hover:underline"
                 >
-                  Ver profesionales <ArrowRight className="h-4 w-4" />
+                  {t("opt1Cta")} <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
 
@@ -148,35 +115,23 @@ export default function ComoFuncionaPage() {
                     <FileText className="h-6 w-6 text-[#009FD9]" />
                   </div>
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-widest text-[#009FD9]">Opción 2</p>
-                    <h2 className="text-xl font-bold text-[#1a2744]">Publica tu proyecto</h2>
+                    <p className="text-xs font-bold uppercase tracking-widest text-[#009FD9]">{t("opt2Badge")}</p>
+                    <h2 className="text-xl font-bold text-[#1a2744]">{t("opt2Title")}</h2>
                   </div>
                 </div>
                 <p className="text-sm text-gray-500 mb-6 leading-relaxed">
-                  Describe lo que necesitas y deja que los profesionales te envíen propuestas con precio y disponibilidad.
+                  {t("opt2Desc")}
                 </p>
                 <div className="flex flex-col gap-4">
-                  <MiniStep
-                    n={1}
-                    label="Describe tu proyecto"
-                    sub="Título, descripción detallada, zona y presupuesto estimado. Toma menos de 2 minutos."
-                  />
-                  <MiniStep
-                    n={2}
-                    label="Profesionales te contactan"
-                    sub="Los profesionales registrados en tu zona ven tu proyecto y te envían propuestas."
-                  />
-                  <MiniStep
-                    n={3}
-                    label="Eliges la mejor propuesta"
-                    sub="Comparas precios y perfiles, aceptas la propuesta y coordinas por WhatsApp."
-                  />
+                  <MiniStep n={1} label={t("opt2Step1Title")} sub={t("opt2Step1Sub")} />
+                  <MiniStep n={2} label={t("opt2Step2Title")} sub={t("opt2Step2Sub")} />
+                  <MiniStep n={3} label={t("opt2Step3Title")} sub={t("opt2Step3Sub")} />
                 </div>
                 <Link
                   href="/publicar-proyecto"
                   className="mt-8 inline-flex items-center gap-2 text-sm font-semibold text-[#009FD9] hover:underline"
                 >
-                  Publicar proyecto <ArrowRight className="h-4 w-4" />
+                  {t("opt2Cta")} <ArrowRight className="h-4 w-4" />
                 </Link>
               </div>
 
@@ -191,24 +146,24 @@ export default function ComoFuncionaPage() {
           <FadeInUp>
             <div className="text-center">
               <span className="inline-block text-xs font-bold uppercase tracking-widest text-[#009FD9] bg-white px-4 py-1.5 rounded-full mb-4">
-                Para profesionales
+                {t("prosBadge")}
               </span>
               <h2 className="text-3xl font-extrabold text-[#1a2744] mb-4">
-                ¿Eres profesional? Registra tu perfil gratis.
+                {t("prosTitle")}
               </h2>
               <p className="text-gray-500 mb-8 text-sm leading-relaxed max-w-xl mx-auto">
-                Crea tu perfil en minutos y empieza a recibir clientes directos en Costa Rica.
+                {t("prosSubtitle")}
               </p>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
                 {[
-                  { Icon: Banknote, text: "Sin comisiones" },
-                  { Icon: BadgeCheck, text: "Cédula verificada" },
-                  { Icon: Users, text: "Clientes directos" },
-                  { Icon: CalendarClock, text: "Control de agenda" },
-                ].map(({ Icon, text }) => (
-                  <div key={text} className="bg-white rounded-2xl p-4 text-center border border-white/80">
+                  { Icon: Banknote, key: "benefit0" },
+                  { Icon: BadgeCheck, key: "benefit1" },
+                  { Icon: Users, key: "benefit2" },
+                  { Icon: CalendarClock, key: "benefit3" },
+                ].map(({ Icon, key }) => (
+                  <div key={key} className="bg-white rounded-2xl p-4 text-center border border-white/80">
                     <Icon className="h-6 w-6 text-[#009FD9] mx-auto mb-2" />
-                    <p className="text-xs font-semibold text-[#374151]">{text}</p>
+                    <p className="text-xs font-semibold text-[#374151]">{t(key)}</p>
                   </div>
                 ))}
               </div>
@@ -216,7 +171,7 @@ export default function ComoFuncionaPage() {
                 href="/registro/profesional"
                 className="inline-flex items-center gap-2 bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold px-8 py-3.5 rounded-full transition-all shadow-sm hover:shadow-[0_4px_20px_rgba(0,159,217,0.35)]"
               >
-                Registrarte gratis <ArrowRight className="h-4 w-4" />
+                {t("prosCta")} <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
           </FadeInUp>
@@ -226,18 +181,18 @@ export default function ComoFuncionaPage() {
             <div className="mt-12 bg-white rounded-3xl p-8 border border-white/80">
               <div className="flex items-center gap-3 mb-5">
                 <Bell className="h-5 w-5 text-[#009FD9]" />
-                <h3 className="text-base font-bold text-[#1a2744]">¿Cómo funcionan los proyectos para ti?</h3>
+                <h3 className="text-base font-bold text-[#1a2744]">{t("projectsTitle")}</h3>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
                 {[
-                  { icon: "📋", title: "Ves los proyectos", sub: "Revisas proyectos abiertos filtrados por tu categoría y zona." },
-                  { icon: "✉️", title: "Envías propuesta", sub: "Describes tu oferta, precio y disponibilidad en segundos." },
-                  { icon: "🤝", title: "Cierras el trato", sub: "Si el cliente acepta, coordinas directo por WhatsApp." },
-                ].map(({ icon, title, sub }) => (
-                  <div key={title} className="p-4">
+                  { icon: "📋", key: "proj0" },
+                  { icon: "✉️", key: "proj1" },
+                  { icon: "🤝", key: "proj2" },
+                ].map(({ icon, key }) => (
+                  <div key={key} className="p-4">
                     <div className="text-3xl mb-2">{icon}</div>
-                    <p className="text-sm font-semibold text-[#1a2744] mb-1">{title}</p>
-                    <p className="text-xs text-gray-400">{sub}</p>
+                    <p className="text-sm font-semibold text-[#1a2744] mb-1">{t(`${key}Title`)}</p>
+                    <p className="text-xs text-gray-400">{t(`${key}Sub`)}</p>
                   </div>
                 ))}
               </div>
@@ -251,10 +206,10 @@ export default function ComoFuncionaPage() {
         <div className="mx-auto max-w-4xl">
           <FadeInUp>
             <h2 className="text-3xl font-extrabold text-[#1a2744] mb-2 text-center">
-              Preguntas frecuentes
+              {t("faqTitle")}
             </h2>
             <p className="text-gray-500 text-center mb-10">
-              Respondemos las dudas más comunes sobre ContrataCR.
+              {t("faqSubtitle")}
             </p>
             <FaqAccordion />
           </FadeInUp>
@@ -265,23 +220,23 @@ export default function ComoFuncionaPage() {
       <section className="py-16 px-4 bg-[#1a2744] text-center">
         <FadeInUp>
           <h2 className="text-3xl font-extrabold text-white mb-3">
-            ¿Listo para empezar?
+            {t("ctaTitle")}
           </h2>
           <p className="text-[#93c5fd] mb-8 max-w-md mx-auto text-sm">
-            Busca profesionales verificados en Costa Rica o publica tu proyecto gratis.
+            {t("ctaSubtitle")}
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/buscar"
               className="inline-flex items-center justify-center gap-2 bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold px-7 py-3 rounded-full transition-all"
             >
-              <Search className="h-4 w-4" /> Buscar profesionales
+              <Search className="h-4 w-4" /> {t("ctaSearch")}
             </Link>
             <Link
               href="/publicar-proyecto"
               className="inline-flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold px-7 py-3 rounded-full transition-all border border-white/20"
             >
-              <MessageCircle className="h-4 w-4" /> Publicar mi proyecto
+              <MessageCircle className="h-4 w-4" /> {t("ctaPublish")}
             </Link>
           </div>
         </FadeInUp>
