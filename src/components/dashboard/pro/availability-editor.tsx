@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
@@ -83,6 +84,7 @@ interface AvailabilityEditorProps {
 }
 
 export function AvailabilityEditor({ professionalId, initialPublic = true, workplaces = [], coverageAreas = [], professions = [], initialVideoconsulta = false, initialAllowPhoneCall = false, onSaved }: AvailabilityEditorProps) {
+  const locale = useLocale();
   const [isPublic, setIsPublic] = useState(initialPublic);
   const [videoconsulta, setVideoconsulta] = useState(initialVideoconsulta);
   const [allowPhoneCall, setAllowPhoneCall] = useState(initialAllowPhoneCall);
@@ -470,7 +472,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
               <div className="flex flex-col gap-1">
                 <label className="text-xs font-medium text-[#6b7280]">Profesión / servicio</label>
                 <select value={genCategory} onChange={(e) => setGenCategory(e.target.value)} className={cn(inputCls, "cursor-pointer w-full")}>
-                  {professionOptions.map((p) => <option key={p} value={p}>{getCategoryLabel(p)}</option>)}
+                  {professionOptions.map((p) => <option key={p} value={p}>{getCategoryLabel(p, locale)}</option>)}
                 </select>
               </div>
             )}
@@ -578,14 +580,14 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                       const cat = sg[0].category_id;
                       const loc = sg[0].location_id ?? null;
                       const tags = [
-                        cat ? getCategoryLabel(cat) : null,
+                        cat ? getCategoryLabel(cat, locale) : null,
                         loc ? locationLabel(loc) : null,
                       ].filter(Boolean);
                       return (
                         <div key={key}>
                           {tags.length > 0 && (
                             <p className="text-xs font-medium text-[#374151] mb-1.5 flex items-center gap-1">
-                              {cat && <span className="rounded bg-[#EBF5FB] text-[#0089bb] px-1.5 py-0.5">{getCategoryLabel(cat)}</span>}
+                              {cat && <span className="rounded bg-[#EBF5FB] text-[#0089bb] px-1.5 py-0.5">{getCategoryLabel(cat, locale)}</span>}
                               {loc && <span className="inline-flex items-center gap-1 rounded bg-[#f3f4f6] text-[#374151] px-1.5 py-0.5"><MapPin className="h-3 w-3" />{locationLabel(loc)}</span>}
                             </p>
                           )}

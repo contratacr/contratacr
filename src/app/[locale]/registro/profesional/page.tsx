@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import {
   CheckCircle2, ArrowRight, ArrowLeft, Loader2, AlertCircle,
@@ -408,6 +408,7 @@ function NoCrIdFields({
 
 export default function RegisterProfessionalPage() {
   const t = useTranslations("registration.pro");
+  const locale = useLocale();
   const router = useRouter();
   const { user: currentUser, loading: authLoading } = useAuth();
 
@@ -1035,7 +1036,7 @@ export default function RegisterProfessionalPage() {
                     <div className="flex flex-wrap gap-2 mb-2">
                       {extraCategories.map((c) => (
                         <span key={c} className="inline-flex items-center gap-1.5 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium pl-3 pr-1.5 py-1.5">
-                          {getCategoryLabel(c)}
+                          {getCategoryLabel(c, locale)}
                           <button type="button" onClick={() => setExtraCategories((prev) => prev.filter((x) => x !== c))} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors" aria-label="Quitar">
                             <X className="h-3.5 w-3.5" />
                           </button>

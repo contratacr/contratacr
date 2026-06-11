@@ -16,13 +16,15 @@ export type SearchSuggestion =
 // taxonomy (mirrors the `categories` table) with actual professional specialties
 // pulled from the `professionals` table, so suggestions always lead to results.
 export async function GET(req: NextRequest) {
-  const q = (new URL(req.url).searchParams.get("q") ?? "").trim();
+  const url = new URL(req.url);
+  const q = (url.searchParams.get("q") ?? "").trim();
+  const locale = url.searchParams.get("locale") ?? "es";
   if (q.length < 2) return NextResponse.json({ suggestions: [] });
 
-  // 1. Matching service categories (taxonomy + keyword synonyms)
+  // 1. Matching service categories (taxonomy + keyword synonyms), localized.
   const categorySuggestions: SearchSuggestion[] = searchCategories(q)
     .slice(0, 6)
-    .map((c) => ({ type: "category", id: c.id, label: c.label }));
+    .map((c) => ({ type: "category", id: c.id, label: getCategoryLabel(c.id, locale) }));
 
   // 2. Real professionals whose specialty matches the query
   let professionalSuggestions: SearchSuggestion[] = [];
@@ -46,7 +48,7 @@ export async function GET(req: NextRequest) {
             type: "professional" as const,
             slug: p.slug as string,
             label: (p.profiles?.full_name as string) ?? "Profesional",
-            sublabel: getCategoryLabel(p.category_id as string),
+            sublabel: getCategoryLabel(p.category_id as string, locale),
           }))
           .filter((s) => s.slug);
       }

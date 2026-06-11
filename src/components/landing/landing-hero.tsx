@@ -218,7 +218,7 @@ export function LandingHero() {
         return;
       }
       try {
-        const res = await fetch(`/api/search/suggestions?q=${encodeURIComponent(q)}`);
+        const res = await fetch(`/api/search/suggestions?q=${encodeURIComponent(q)}&locale=${locale}`);
         const { suggestions } = await res.json();
         setSuggestions(suggestions ?? []);
         setActiveIdx(-1);
@@ -228,7 +228,7 @@ export function LandingHero() {
       }
     }, q.length < 2 ? 0 : 250);
     return () => clearTimeout(id);
-  }, [service]);
+  }, [service, locale]);
 
   // Local (synchronous) location suggestions as the user types.
   useEffect(() => {

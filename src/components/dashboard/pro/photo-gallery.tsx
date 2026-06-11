@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useLocale } from "next-intl";
 import { Upload, X, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -23,6 +24,7 @@ interface PhotoGalleryProps {
 // portfolio_items [{ url, profession }]; portfolio_urls (flat) kept for back-compat
 // and the 5-photo DB CHECK.
 export function PhotoGallery({ professionalId, initialUrls = [], initialItems, professions = [], onSaved }: PhotoGalleryProps) {
+  const locale = useLocale();
   // Seed items from the tagged column, falling back to untagged flat urls.
   const seed: PortfolioItem[] = Array.isArray(initialItems) && initialItems.length > 0
     ? initialItems
@@ -34,7 +36,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
 
   // Sections: one per profession, plus an "Otros" bucket for untagged photos.
   const groups: { id: string | undefined; label: string }[] = professions.length > 0
-    ? professions.map((p) => ({ id: p, label: getCategoryLabel(p) }))
+    ? professions.map((p) => ({ id: p, label: getCategoryLabel(p, locale) }))
     : [{ id: undefined, label: "Casos de éxito" }];
   const hasUntagged = items.some((it) => !it.profession || !professions.includes(it.profession));
   if (hasUntagged && professions.length > 0) groups.push({ id: "__other__", label: "Otros trabajos" });

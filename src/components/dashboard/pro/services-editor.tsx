@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useLocale } from "next-intl";
 import { Plus, Trash2, Check, Pencil, X, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,6 +53,7 @@ export function ServicesEditor({
   initialServices = [],
   onSaved,
 }: ServicesEditorProps) {
+  const locale = useLocale();
   const seedProfessions =
     initialProfessions.length > 0
       ? initialProfessions
@@ -246,7 +248,7 @@ export function ServicesEditor({
         <div className="flex flex-wrap gap-2">
           {professions.map((p, i) => (
             <span key={p} className="inline-flex items-center gap-1.5 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium pl-3 pr-1.5 py-1.5">
-              {getCategoryLabel(p)}
+              {getCategoryLabel(p, locale)}
               {i === 0 && <span className="text-[10px] font-bold uppercase tracking-wide text-[#009FD9]/70">Principal</span>}
               {professions.length > 1 && (
                 <button onClick={() => removeProfession(p)} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors" aria-label="Quitar profesión">
@@ -284,7 +286,7 @@ export function ServicesEditor({
         return (
           <div key={prof} className={idx > 0 ? "pt-6 border-t border-[#f3f4f6]" : ""}>
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-semibold text-[#111827]">{getCategoryLabel(prof)}</h3>
+              <h3 className="text-sm font-semibold text-[#111827]">{getCategoryLabel(prof, locale)}</h3>
               <button
                 onClick={() => openAdd(prof)}
                 className="flex items-center gap-1 text-xs font-medium text-[#009FD9] hover:underline"
@@ -325,7 +327,7 @@ export function ServicesEditor({
               <div className="border border-[#009FD9]/30 bg-[#EBF5FB]/30 rounded-xl p-4 mt-3 flex flex-col gap-3">
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-semibold text-[#111827]">
-                    {editingId ? "Editar servicio" : `Nuevo servicio · ${getCategoryLabel(prof)}`}
+                    {editingId ? "Editar servicio" : `Nuevo servicio · ${getCategoryLabel(prof, locale)}`}
                   </p>
                   <button onClick={cancelForm} className="text-[#9ca3af] hover:text-[#374151] transition-colors">
                     <X className="h-4 w-4" />

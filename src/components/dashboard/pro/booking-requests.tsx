@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLocale } from "next-intl";
 import { CalendarDays, User, FileText, Phone, Flag, MapPin } from "lucide-react";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
@@ -59,6 +60,7 @@ const STATUS_LABEL: Record<BookingStatus, string> = {
 };
 
 export function BookingRequests() {
+  const locale = useLocale();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("activas");
@@ -200,7 +202,7 @@ export function BookingRequests() {
                   <div className="flex items-center gap-2 text-sm flex-wrap">
                     <MapPin className="h-4 w-4 text-[#6b7280] shrink-0" />
                     <span className="text-[#374151]">
-                      {[booking.category_id ? getCategoryLabel(booking.category_id) : null, booking.slot_location_label]
+                      {[booking.category_id ? getCategoryLabel(booking.category_id, locale) : null, booking.slot_location_label]
                         .filter(Boolean)
                         .join(" · ")}
                     </span>

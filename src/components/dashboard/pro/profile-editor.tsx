@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
 import { Input } from "@/components/ui/input";
@@ -56,6 +57,7 @@ function Section({ title, desc, defaultOpen = false, children }: { title: string
 }
 
 export function ProfileEditor({ professionalId, profileId, initial, onSaved }: ProfileEditorProps) {
+  const locale = useLocale();
   const photoInputRef = useRef<HTMLInputElement>(null);
 
   const [bio, setBio] = useState<string>(initial.bio ?? "");
@@ -414,7 +416,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
             <div className="flex flex-wrap gap-2 mb-2">
               {professions.map((p, i) => (
                 <span key={p} className="inline-flex items-center gap-1.5 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium pl-3 pr-1.5 py-1.5">
-                  {getCategoryLabel(p)}
+                  {getCategoryLabel(p, locale)}
                   {i === 0 && <span className="text-[10px] font-bold uppercase tracking-wide text-[#009FD9]/70">Principal</span>}
                   {professions.length > 1 && (
                     <button type="button" onClick={() => removeProfession(p)} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors" aria-label="Quitar">
@@ -445,7 +447,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
           return (
             <div key={prof || "general"} className="flex flex-col gap-2.5 border-t border-[#f3f4f6] pt-3 first:border-t-0 first:pt-0">
               {professions.length > 1 && prof && (
-                <p className="text-xs font-bold uppercase tracking-wide text-[#0089bb]">{getCategoryLabel(prof)}</p>
+                <p className="text-xs font-bold uppercase tracking-wide text-[#0089bb]">{getCategoryLabel(prof, locale)}</p>
               )}
               {certsForProf.map((c) => (
                 <div key={c.id} className="rounded-xl border border-[#e5e7eb] p-3 flex flex-col gap-2">
@@ -483,7 +485,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
                 </div>
               ))}
               <button type="button" onClick={() => addCertification(prof || undefined)} className="inline-flex items-center gap-1.5 text-sm font-medium text-[#009FD9] hover:underline self-start">
-                <Plus className="h-4 w-4" /> Agregar certificación{professions.length > 1 && prof ? ` a ${getCategoryLabel(prof)}` : ""}
+                <Plus className="h-4 w-4" /> Agregar certificación{professions.length > 1 && prof ? ` a ${getCategoryLabel(prof, locale)}` : ""}
               </button>
             </div>
           );
