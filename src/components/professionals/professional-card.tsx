@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { MapPin, ShieldCheck, ShieldAlert, Truck, Image as ImageIcon, Lock, Star, Phone, Award } from "lucide-react";
+import { MapPin, ShieldCheck, ShieldAlert, Truck, Image as ImageIcon, Star, Phone, Award } from "lucide-react";
 import { ProfessionalSchedule, type ScheduleSlot } from "@/components/professionals/professional-schedule";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Link } from "@/i18n/navigation";
@@ -123,23 +123,15 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
   const hasNumericPrice = priceLabel.includes("₡");
   const isVerified = professional.verificationStatus === "verified";
   const extraProfessions = allProfessions.length - professionList.length;
-  // Contact-only when the pro hid their availability OR only takes WhatsApp — shown
-  // as a flush top band (cleaner than a floating paragraph in the panel).
-  const contactOnly = isPrivate || professional.contactPreference === "solo_whatsapp";
-
   // Direct-contact icons live in the TOP row (next to the name) so the action
   // area keeps a single full-width primary button and the card never grows.
-  // WhatsApp shows on bookable cards as a secondary (contact-only keeps WhatsApp
-  // as its primary button below); call shows whenever the pro opted in.
-  // WhatsApp is ALWAYS available (the only choice is whether they also offer
-  // in-app scheduling), so the contact icon shows whenever a number exists.
   // A pro viewing their OWN card cannot request a service from themselves.
   const isOwn = !!viewerProfileId && viewerProfileId === professional.profileId;
-  // WhatsApp + call are independent of the privada toggle. WhatsApp shows here as
-  // a top icon on BOOKABLE cards (contact-only cards render it as the full-width
-  // primary instead, so it isn't duplicated). Call shows whenever the pro enabled
-  // "Permitir contacto por llamada" and has a reachable number — in BOTH states.
-  const showTopWhatsApp = !isOwn && !contactOnly && !!professional.whatsapp;
+  // WhatsApp + call are INDEPENDENT of the "Disponibilidad privada" toggle and
+  // appear consistently on every card when their own condition is met: WhatsApp
+  // whenever a number exists; call whenever "Permitir contacto por llamada" is on
+  // and a reachable number exists. (The primary action button below is separate.)
+  const showTopWhatsApp = !isOwn && !!professional.whatsapp;
   const showTopCall = !isOwn && !!professional.allowPhoneCall && !!(professional.callPhone || professional.whatsapp);
   const waHref = professional.whatsapp
     ? getWhatsAppLink(professional.whatsapp, `Hola ${professional.fullName.split(" ")[0]}, vi tu perfil en ContrataCR y me gustaría coordinar un servicio.`)
@@ -244,11 +236,6 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
                 ))}
                 {extraProfessions > 0 && (
                   <span className="text-[11px] font-medium text-[#9ca3af]">+{extraProfessions}</span>
-                )}
-                {contactOnly && (
-                  <span className="inline-flex items-center gap-1 rounded-full bg-[#fff7ed] px-2 py-0.5 text-[10px] font-medium text-[#9a3412]">
-                    <Lock className="h-3 w-3" /> {isPrivate ? "Coordina por WhatsApp" : "Solo WhatsApp"}
-                  </span>
                 )}
                 {professional.isFeatured && (
                   <span className="inline-flex items-center rounded-full bg-[#fff8ed] px-2 py-0.5 text-[10px] font-semibold text-[#c74600]">
