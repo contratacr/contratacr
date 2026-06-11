@@ -27,6 +27,20 @@ const PUBLIC_PREFIXES = [
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Honor a stored language preference (NEXT_LOCALE cookie set by the toggle)
+  // for unprefixed URLs only. First-time visitors (no cookie) still default to
+  // Spanish — we deliberately do NOT use Accept-Language, so an English browser
+  // does not silently flip the site to English.
+  const hasLocalePrefix = /^\/(?:es|en)(?:\/|$)/.test(pathname);
+  if (!hasLocalePrefix) {
+    const cookieLocale = request.cookies.get("NEXT_LOCALE")?.value;
+    if (cookieLocale === "en") {
+      const url = request.nextUrl.clone();
+      url.pathname = `/en${pathname === "/" ? "" : pathname}`;
+      return NextResponse.redirect(url);
+    }
+  }
+
   // Strip locale prefix to get the base path for matching
   const withoutLocale = pathname.replace(/^\/(?:es|en)/, "") || "/";
 
