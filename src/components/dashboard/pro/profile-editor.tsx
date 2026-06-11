@@ -146,8 +146,8 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
     setPricing((prev) => prev.filter((p) => p.id !== id));
     touch();
   }
-  function addCertification() {
-    setCertifications((prev) => [...prev, { id: `ct_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, name: "", institution: "", year: "" }]);
+  function addCertification(profession?: string) {
+    setCertifications((prev) => [...prev, { id: `ct_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, name: "", institution: "", year: "", profession }]);
     touch();
   }
   function updateCertification(id: string, patch: Partial<Certification>) {
@@ -247,10 +247,6 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         coverage_country: coverageCountry,
         insurance_networks: insurers,
         call_phone: callPhone.trim() || null,
-        // Drop blank rows; keep only entries with a name (institución/año optional).
-        certifications: certifications
-          .filter((c) => c.name?.trim())
-          .map((c) => ({ id: c.id, name: c.name.trim(), institution: c.institution?.trim() || undefined, year: c.year?.trim() || undefined })),
       };
 
       let { error: proError } = await supabase
@@ -258,11 +254,26 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         .update({ ...baseUpdate, ...identityFields })
         .eq("id", professionalId);
       // Retry without the optional identity columns if the DB isn't migrated yet.
-      if (proError && /business_name|workplaces|coverage_areas|search_provincias|search_cantones|insurance_networks|certifications|call_phone|affiliations|schema cache|could not find|PGRST204/i.test(proError.message)) {
+      if (proError && /business_name|workplaces|coverage_areas|search_provincias|search_cantones|insurance_networks|call_phone|affiliations|schema cache|could not find|PGRST204/i.test(proError.message)) {
         ({ error: proError } = await supabase.from("professionals").update(baseUpdate).eq("id", professionalId));
       }
 
       if (proError) throw proError;
+
+      // Persist certifications in their OWN update so an unrelated optional column
+      // can never drop them (that was the "not saving" bug). Each keeps its
+      // profession tag. Errors here (column not migrated) are non-fatal.
+      const cleanCerts = certifications
+        .filter((c) => c.name?.trim())
+        .map((c) => ({
+          id: c.id,
+          name: c.name.trim(),
+          institution: c.institution?.trim() || undefined,
+          year: c.year?.trim() || undefined,
+          // Default an untagged cert to the principal profession so it has a home.
+          profession: c.profession || professions[0] || undefined,
+        }));
+      await supabase.from("professionals").update({ certifications: cleanCerts }).eq("id", professionalId);
 
       // Persist the personal/display name — but NEVER overwrite a verified
       // official name (it's locked; corrections go through admin review).
@@ -418,53 +429,61 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         </div>
       </Section>
 
-      {/* ── Certificaciones (texto, sin imágenes) ─────────────────────── */}
+      {/* ── Certificaciones (texto, sin imágenes) — POR PROFESIÓN ─────── */}
       <Section title="Certificaciones" desc="Cursos, títulos o certificados (texto, sin imágenes)">
         <p className="text-xs text-[#9ca3af]">
-          Agrega tus certificaciones como texto. El nombre es obligatorio; la institución y el año son opcionales. No subas imágenes ni documentos.
+          Agrega tus certificaciones <strong>por profesión</strong>. El nombre es obligatorio; la institución y el año son opcionales. No subas imágenes ni documentos.
         </p>
-        {certifications.length > 0 && (
-          <div className="flex flex-col gap-3">
-            {certifications.map((c) => (
-              <div key={c.id} className="rounded-xl border border-[#e5e7eb] p-3 flex flex-col gap-2">
-                <div className="flex items-start gap-2">
-                  <Award className="h-4 w-4 text-[#009FD9] mt-2.5 shrink-0" />
-                  <input
-                    type="text"
-                    value={c.name}
-                    onChange={(e) => updateCertification(c.id!, { name: e.target.value })}
-                    placeholder="Nombre del certificado (ej. Técnico en Refrigeración)"
-                    className="flex-1 h-10 rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
-                  />
-                  <button type="button" onClick={() => removeCertification(c.id!)} className="h-9 w-9 rounded-lg flex items-center justify-center text-[#9ca3af] hover:text-red-500 hover:bg-red-50 transition-colors shrink-0" aria-label="Quitar certificación">
-                    <X className="h-4 w-4" />
-                  </button>
+        {(professions.length > 0 ? professions : [""]).map((prof) => {
+          // A cert belongs to `prof` when tagged so; legacy untagged certs fall
+          // under the principal profession.
+          const certsForProf = certifications.filter((c) => (c.profession || professions[0] || "") === prof);
+          return (
+            <div key={prof || "general"} className="flex flex-col gap-2.5 border-t border-[#f3f4f6] pt-3 first:border-t-0 first:pt-0">
+              {professions.length > 1 && prof && (
+                <p className="text-xs font-bold uppercase tracking-wide text-[#0089bb]">{getCategoryLabel(prof)}</p>
+              )}
+              {certsForProf.map((c) => (
+                <div key={c.id} className="rounded-xl border border-[#e5e7eb] p-3 flex flex-col gap-2">
+                  <div className="flex items-start gap-2">
+                    <Award className="h-4 w-4 text-[#009FD9] mt-2.5 shrink-0" />
+                    <input
+                      type="text"
+                      value={c.name}
+                      onChange={(e) => updateCertification(c.id!, { name: e.target.value })}
+                      placeholder="Nombre del certificado (ej. Técnico en Refrigeración)"
+                      className="flex-1 h-10 rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+                    />
+                    <button type="button" onClick={() => removeCertification(c.id!)} className="h-9 w-9 rounded-lg flex items-center justify-center text-[#9ca3af] hover:text-red-500 hover:bg-red-50 transition-colors shrink-0" aria-label="Quitar certificación">
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-[1fr,7rem] gap-2 pl-6">
+                    <input
+                      type="text"
+                      value={c.institution ?? ""}
+                      onChange={(e) => updateCertification(c.id!, { institution: e.target.value })}
+                      placeholder="Institución (opcional)"
+                      className="h-10 rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+                    />
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={4}
+                      value={c.year ?? ""}
+                      onChange={(e) => updateCertification(c.id!, { year: e.target.value.replace(/\D/g, "").slice(0, 4) })}
+                      placeholder="Año"
+                      className="h-10 rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+                    />
+                  </div>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-[1fr,7rem] gap-2 pl-6">
-                  <input
-                    type="text"
-                    value={c.institution ?? ""}
-                    onChange={(e) => updateCertification(c.id!, { institution: e.target.value })}
-                    placeholder="Institución (opcional)"
-                    className="h-10 rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
-                  />
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={4}
-                    value={c.year ?? ""}
-                    onChange={(e) => updateCertification(c.id!, { year: e.target.value.replace(/\D/g, "").slice(0, 4) })}
-                    placeholder="Año"
-                    className="h-10 rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-        <button type="button" onClick={addCertification} className="inline-flex items-center gap-1.5 text-sm font-medium text-[#009FD9] hover:underline self-start">
-          <Plus className="h-4 w-4" /> Agregar certificación
-        </button>
+              ))}
+              <button type="button" onClick={() => addCertification(prof || undefined)} className="inline-flex items-center gap-1.5 text-sm font-medium text-[#009FD9] hover:underline self-start">
+                <Plus className="h-4 w-4" /> Agregar certificación{professions.length > 1 && prof ? ` a ${getCategoryLabel(prof)}` : ""}
+              </button>
+            </div>
+          );
+        })}
       </Section>
 
       {/* ── Ubicación y cobertura ─────────────────────────────────────── */}

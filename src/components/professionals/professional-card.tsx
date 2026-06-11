@@ -23,8 +23,10 @@ function prettyPlace(name?: string): string {
 }
 
 // A certification is a plain TEXT entry (no images): the certificate name, and
-// optionally the issuing institution + year. Authenticity isn't verified yet.
-export type Certification = { id?: string; name: string; institution?: string; year?: string };
+// optionally the issuing institution + year. It belongs to a specific PROFESSION
+// (category id) so a multi-profession pro lists them per profession. Authenticity
+// isn't verified yet.
+export type Certification = { id?: string; name: string; institution?: string; year?: string; profession?: string };
 
 export type ProfessionalCardData = {
   id: string;

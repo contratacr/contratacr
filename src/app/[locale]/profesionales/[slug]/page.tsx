@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { StarRating } from "@/components/ui/star-rating";
 import { getInitials, getWhatsAppLink } from "@/lib/utils";
+import { getCategoryLabel } from "@/lib/data/categories";
 import { formatPricingTier } from "@/lib/pricing";
 import { languageLabel } from "@/lib/data/languages";
 import { insurerLabel } from "@/lib/data/insurers";
@@ -171,6 +172,17 @@ export default function ProfilePage({ params }: ProfilePageProps) {
   const hasCasos = !!professional.portfolioUrls && professional.portfolioUrls.length > 0;
   const certificationsList = (professional.certifications ?? []).filter((c) => c?.name?.trim());
   const hasCerts = certificationsList.length > 0;
+  // Group certifications by profession (legacy untagged → principal profession).
+  const principalProfession = professional.professions?.[0] ?? professional.categoryId ?? "";
+  const certGroups = (() => {
+    const map = new Map<string, typeof certificationsList>();
+    for (const c of certificationsList) {
+      const key = c.profession || principalProfession || "";
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(c);
+    }
+    return Array.from(map.entries());
+  })();
   // A pro viewing their OWN public profile cannot request a service from themselves.
   const isOwn = !!viewerId && viewerId === professional.profileId;
   // Calls use the SEPARATE call number when set, else the WhatsApp number.
@@ -542,19 +554,28 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                     <div>
                       <h2 className="text-lg font-semibold text-[#111827] mb-1">Certificaciones</h2>
                       <p className="text-sm text-[#9ca3af] mb-4">Cursos, títulos y certificados que indica el profesional. ContrataCR aún no verifica su autenticidad.</p>
-                      <div className="flex flex-col gap-2.5">
-                        {certificationsList.map((c, i) => (
-                          <div key={c.id ?? i} className="flex items-start gap-3 rounded-xl border border-[#e5e7eb] p-3.5">
-                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#EBF5FB] shrink-0">
-                              <Award className="h-4 w-4 text-[#009FD9]" />
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-sm font-semibold text-[#111827] break-words">{c.name}</p>
-                              {(c.institution || c.year) && (
-                                <p className="text-xs text-[#6b7280] mt-0.5 break-words">
-                                  {[c.institution, c.year].filter(Boolean).join(" · ")}
-                                </p>
-                              )}
+                      <div className="flex flex-col gap-5">
+                        {certGroups.map(([prof, certs]) => (
+                          <div key={prof || "general"}>
+                            {certGroups.length > 1 && prof && (
+                              <h3 className="text-xs font-bold uppercase tracking-wide text-[#0089bb] mb-2">{getCategoryLabel(prof)}</h3>
+                            )}
+                            <div className="flex flex-col gap-2.5">
+                              {certs.map((c, i) => (
+                                <div key={c.id ?? i} className="flex items-start gap-3 rounded-xl border border-[#e5e7eb] p-3.5">
+                                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#EBF5FB] shrink-0">
+                                    <Award className="h-4 w-4 text-[#009FD9]" />
+                                  </div>
+                                  <div className="min-w-0">
+                                    <p className="text-sm font-semibold text-[#111827] break-words">{c.name}</p>
+                                    {(c.institution || c.year) && (
+                                      <p className="text-xs text-[#6b7280] mt-0.5 break-words">
+                                        {[c.institution, c.year].filter(Boolean).join(" · ")}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
                             </div>
                           </div>
                         ))}

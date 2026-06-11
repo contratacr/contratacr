@@ -179,9 +179,11 @@ A professional is always **ONE card** (`rounded-2xl bg-white border`, never spli
 - **Always surface the SERVER's specific error** (size/format/Cloudinary-not-configured) to the user — never collapse it into a generic "no se pudo subir". Revert any optimistic preview on failure.
 - **The 5-photo limit is ONLY for "casos de éxito"** (`MAX_PORTFOLIO_PHOTOS`, on `portfolio_urls`/`portfolio_items`). The **profile photo (avatar) is a single, independent image** (`profiles.avatar_url`, `type=avatar`) and must NEVER be subject to that limit.
 
-### Certificaciones (professional, text-only)
-- **TEXT entries only — never image/document uploads** (avoids exposing IDs/personal data on certificates). Each entry = **nombre** (required) + **institución** (optional) + **año** (optional); add/edit/remove multiple in a collapsible profile section.
-- **Public profile:** a **"Certificaciones" tab** appears only when the pro has any (mirrors the "Casos de éxito" tab pattern), each row = `Award` icon + name + "institución · año". Include the honest note that authenticity isn't verified yet (future admin enhancement).
+### Certificaciones (professional, text-only, PER-PROFESSION)
+- **TEXT entries only — never image/document uploads** (avoids exposing IDs/personal data on certificates). Each entry = **nombre** (required) + **institución** (optional) + **año** (optional) + a **profession** tag; add/edit/remove multiple in a collapsible profile section **grouped by profession**.
+- **Per profession:** certifications belong to a specific profession (category id), not the whole account — a multi-profession pro adds/displays them under each profession separately (heading per profession when >1; legacy untagged certs default to the principal profession).
+- **Save independently:** persist certifications in their **own `update({ certifications })`** call, NOT bundled with other optional columns — otherwise one not-yet-migrated column makes a shared retry silently drop them (this was the "certs not saving" bug).
+- **Public profile:** a **"Certificaciones" tab** appears only when the pro has any (mirrors the "Casos de éxito" tab pattern), grouped by profession, each row = `Award` icon + name + "institución · año". Include the honest note that authenticity isn't verified yet (future admin enhancement).
 - **/buscar card:** **never list certificates on the card** (would grow it). Show a compact **"Ver certificaciones (N)"** link (Award icon) ONLY when there are any, **sharing the same bottom `flex-wrap` row as "Ver casos de éxito"** so the card height stays uniform. It deep-links to `?tab=certificaciones`. Same rule for any future "extra detail" surfaced from a card: a compact link in the shared bottom row, not inline content.
 
 ### No self-service (a pro can't hire themselves)
