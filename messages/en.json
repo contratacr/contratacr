@@ -355,8 +355,10 @@
   },
   "notFound": {
     "title": "Page not found",
-    "desc": "The page you're looking for doesn't exist or was moved.",
-    "home": "Back to home"
+    "desc": "The page you're looking for doesn't exist or was moved. From here you can go back home or search for professionals.",
+    "home": "Back to home",
+    "search": "Find professionals",
+    "code": "Error 404"
   },
   "booking": {
     "title": "Request service",

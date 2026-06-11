@@ -471,3 +471,14 @@ When an action can't work because an external provider owns the data (OAuth emai
 - **Name the provider** correctly (Google / Facebook), detected from `user.app_metadata.provider` / `identities`.
 - **Responsive:** `break-words` + wrapping steps so it stays readable at ~360px (no overflow/cut-off).
 - Reusable as `OAuthGuide({ title, intro, steps?, linkLabel, linkHref })`. Keep the normal working flow for accounts that DO own the credential (email/password users).
+
+---
+
+## 13. Error / empty-state pages (branded)
+
+All error surfaces use one on-brand pattern via `ErrorScreen` (`src/components/error/error-screen.tsx`) — never a bare/system error:
+- **Brand visual:** ContrataCR logo at top (links home), white background, the bold navy `#1a2744` heading, optional UPPERCASE blue eyebrow code (e.g. "Error 404"), and a **restrained** icon in a soft slate tile (`bg-[#f1f5f9]`, navy icon — not colorful/alarming, per the serious-tone rule).
+- **Tone:** calm, friendly, honest Costa Rican Spanish (no voseo, no scary wording); reassure ("tus datos están a salvo") where relevant.
+- **Recovery actions:** `errorPrimaryBtn` (filled brand) + `errorSecondaryBtn` (outline) — Reintentar / Ir al inicio / Buscar profesionales. Stack full-width on mobile, inline on desktop.
+- **Responsive & centered** down to ~360px; self-contained (no heavy navbar import) so it stays light in the error bundle.
+- Variants: generic error (`error.tsx`, with an **offline** branch via `navigator.onLine`), 404 (`not-found.tsx`, i18n), root/500 (`global-error.tsx`, inline-styled since the stylesheet may not have loaded).

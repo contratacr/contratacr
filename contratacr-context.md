@@ -1769,3 +1769,12 @@ GRACEFUL FIX:
 - Middleware: now validates/refreshes the session for any request carrying an `sb-*-auth-token` cookie (incognito/anon skip it — fast path). getUser wrapped in try/catch; on a stale/invalid token it CLEARS the auth cookies (`maxAge:0`) so the browser becomes cleanly logged out and stops re-triggering on every visit, and redirects keep those cookie changes. Anonymous users on protected routes still redirect to login.
 - `useAuth` (client): `getSession()` wrapped with `.catch` → on a corrupt/stale local session it `signOut()`s and treats the user as logged out instead of surfacing a broken UI.
 - The generic error boundary stays for truly unexpected errors only.
+
+---
+
+## Custom branded error pages
+
+Replaced the generic error screens with on-brand pages built on a shared `src/components/error/error-screen.tsx` (`ErrorScreen` + `errorPrimaryBtn`/`errorSecondaryBtn`). Self-contained (no navbar import) — brand logo (navy #1a2744 + blue #009FD9), restrained icon tile, calm friendly Spanish (no voseo), clear recovery actions; centered + responsive to ~360px.
+- **Generic error** (`[locale]/error.tsx`): "Algo salió mal" with Reintentar + Ir al inicio; also detects offline (`navigator.onLine === false`) → "Sin conexión a internet" variant.
+- **404** (`[locale]/not-found.tsx`): branded "Página no encontrada" (Error 404) with Volver al inicio + Buscar profesionales; i18n via `notFound` namespace (added `search`, `code` keys, es/en).
+- **Root/500** (`app/global-error.tsx`): on-brand via inline styles (CSS may not have loaded), logo + Reintentar + Ir al inicio. Root `app/not-found.tsx` still redirects locale-less paths to `/es`.

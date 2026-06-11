@@ -355,8 +355,10 @@
   },
   "notFound": {
     "title": "Página no encontrada",
-    "desc": "La página que buscas no existe o fue movida.",
-    "home": "Volver al inicio"
+    "desc": "La página que buscas no existe o fue movida. Desde aquí puedes volver al inicio o buscar profesionales.",
+    "home": "Volver al inicio",
+    "search": "Buscar profesionales",
+    "code": "Error 404"
   },
   "booking": {
     "title": "Solicitar servicio",

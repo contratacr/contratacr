@@ -1,21 +1,42 @@
 "use client";
 
 // Root-level boundary (catches errors in the root layout itself). Must render
-// its own <html>/<body>. Kept intentionally minimal — the localized error.tsx
-// handles the common case with full branding.
+// its own <html>/<body> and can't rely on the app stylesheet having loaded —
+// so it's on-brand via inline styles (navy #1a2744 + blue #009FD9 + logo).
 export default function GlobalError({ reset }: { error: Error; reset: () => void }) {
   return (
     <html lang="es">
-      <body style={{ fontFamily: "Arial, sans-serif", display: "flex", minHeight: "100vh", alignItems: "center", justifyContent: "center", margin: 0, background: "#f4f7fa" }}>
-        <div style={{ textAlign: "center", padding: 24 }}>
-          <h1 style={{ fontSize: 24, color: "#111827" }}>Servicio temporalmente fuera de línea</h1>
-          <p style={{ color: "#6b7280", marginTop: 8 }}>Estamos trabajando para restablecerlo. Intenta de nuevo en unos minutos.</p>
-          <button
-            onClick={reset}
-            style={{ marginTop: 20, background: "#009FD9", color: "white", border: "none", borderRadius: 12, padding: "12px 20px", fontWeight: 700, cursor: "pointer" }}
-          >
-            Reintentar
-          </button>
+      <body style={{ margin: 0, fontFamily: "system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif", background: "#ffffff" }}>
+        <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "48px 16px", textAlign: "center", boxSizing: "border-box" }}>
+          <a href="/" aria-label="ContrataCR inicio" style={{ display: "inline-flex", alignItems: "center", gap: 10, marginBottom: 36, textDecoration: "none" }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-mark.png" alt="ContrataCR" width={34} height={34} style={{ height: 34, width: 34 }} />
+            <span style={{ fontSize: 22, fontWeight: 800, letterSpacing: "-0.02em" }}>
+              <span style={{ color: "#1a2744" }}>Contrata</span><span style={{ color: "#009FD9" }}>CR</span>
+            </span>
+          </a>
+
+          <h1 style={{ fontSize: 26, fontWeight: 800, color: "#1a2744", margin: 0, lineHeight: 1.2 }}>
+            Servicio temporalmente fuera de línea
+          </h1>
+          <p style={{ color: "#6b7280", marginTop: 12, maxWidth: 420, fontSize: 15, lineHeight: 1.6 }}>
+            Estamos trabajando para restablecerlo. Intenta de nuevo en unos minutos; tus datos están a salvo.
+          </p>
+
+          <div style={{ marginTop: 28, display: "flex", flexWrap: "wrap", gap: 12, justifyContent: "center" }}>
+            <button
+              onClick={reset}
+              style={{ background: "#009FD9", color: "white", border: "none", borderRadius: 12, padding: "12px 22px", fontWeight: 700, fontSize: 14, cursor: "pointer" }}
+            >
+              Reintentar
+            </button>
+            <a
+              href="/"
+              style={{ border: "1px solid #e5e7eb", color: "#374151", background: "white", borderRadius: 12, padding: "12px 22px", fontWeight: 700, fontSize: 14, textDecoration: "none" }}
+            >
+              Ir al inicio
+            </a>
+          </div>
         </div>
       </body>
     </html>
