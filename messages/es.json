@@ -928,6 +928,15 @@
     "ctaRegister": "Registra tu perfil gratis",
     "ctaPanel": "Ir a mi panel"
   },
+  "statusTabs": {
+    "activas": "Activas",
+    "finalizadas": "Finalizadas",
+    "canceladas": "Canceladas",
+    "abiertos": "Abiertos",
+    "encurso": "En curso",
+    "finalizados": "Finalizados",
+    "cancelados": "Cancelados"
+  },
   "soporte": {
     "headerTitle": "Centro de soporte",
     "headerSubtitle": "Abre un ticket y le damos seguimiento por correo y en tu panel — así no se pierde ninguna consulta.",

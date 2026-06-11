@@ -1,10 +1,12 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 
 // Shared pill status-filter tabs — used identically in the client and professional
 // panels for solicitudes and proyectos so both feel the same.
-export type FilterTab = { id: string; label: string };
+// `id` doubles as the statusTabs i18n key, so labels translate per locale.
+export type FilterTab = { id: string };
 
 export function StatusFilterTabs({
   tabs,
@@ -15,19 +17,20 @@ export function StatusFilterTabs({
   value: string;
   onChange: (id: string) => void;
 }) {
+  const tr = useTranslations("statusTabs");
   return (
     <div className="flex gap-1.5 flex-wrap">
-      {tabs.map((t) => (
+      {tabs.map((tab) => (
         <button
-          key={t.id}
+          key={tab.id}
           type="button"
-          onClick={() => onChange(t.id)}
+          onClick={() => onChange(tab.id)}
           className={cn(
             "px-3 py-1 rounded-full text-xs font-medium transition-colors",
-            value === t.id ? "bg-[#009FD9] text-white" : "bg-[#f3f4f6] text-[#374151] hover:bg-[#e5e7eb]"
+            value === tab.id ? "bg-[#009FD9] text-white" : "bg-[#f3f4f6] text-[#374151] hover:bg-[#e5e7eb]"
           )}
         >
-          {t.label}
+          {tr(tab.id)}
         </button>
       ))}
     </div>
@@ -38,16 +41,16 @@ export function StatusFilterTabs({
 // status tabs already cover every lifecycle state, so an all-bucket only added
 // noise. Default to the most relevant ACTIVE tab in each consumer.
 export const SOLICITUD_TABS: readonly FilterTab[] = [
-  { id: "activas", label: "Activas" },
-  { id: "finalizadas", label: "Finalizadas" },
-  { id: "canceladas", label: "Canceladas" },
+  { id: "activas" },
+  { id: "finalizadas" },
+  { id: "canceladas" },
 ];
 
 export const PROYECTO_TABS: readonly FilterTab[] = [
-  { id: "abiertos", label: "Abiertos" },
-  { id: "encurso", label: "En curso" },
-  { id: "finalizados", label: "Finalizados" },
-  { id: "cancelados", label: "Cancelados" },
+  { id: "abiertos" },
+  { id: "encurso" },
+  { id: "finalizados" },
+  { id: "cancelados" },
 ];
 
 // Status → group helpers (one source of truth for both panels).
