@@ -482,3 +482,11 @@ All error surfaces use one on-brand pattern via `ErrorScreen` (`src/components/e
 - **Recovery actions:** `errorPrimaryBtn` (filled brand) + `errorSecondaryBtn` (outline) — Reintentar / Ir al inicio / Buscar profesionales. Stack full-width on mobile, inline on desktop.
 - **Responsive & centered** down to ~360px; self-contained (no heavy navbar import) so it stays light in the error bundle.
 - Variants: generic error (`error.tsx`, with an **offline** branch via `navigator.onLine`), 404 (`not-found.tsx`, i18n), root/500 (`global-error.tsx`, inline-styled since the stylesheet may not have loaded).
+
+---
+
+## 14. Taxonomy translation + language switcher
+
+**Taxonomy/DB values need per-language labels.** Fixed lists sourced from the DB or a constants file (categories, category groups, and similar — e.g. future service-name presets) must NOT render a single hardcoded label. Provide an `_EN` map (Spanish stays the source of truth) and a locale-aware getter — e.g. `getCategoryLabel(id, locale)` / `getCategoryGroupLabel(groupId, locale)` backed by `CATEGORY_LABELS_EN` / `CATEGORY_GROUP_LABELS_EN`. Pass `locale` (`useLocale()` in client, `getLocale()`/`await getTranslations` in server) at EVERY render site so the value translates consistently (carousel, megamenu, filters, /buscar, profiles, project creation, dashboards). For server API routes that emit labels, accept `?locale=` and translate there.
+
+**Language switcher pattern.** The control must read instantly as a *language* switcher: a pill with a **globe icon** (`Globe`, grey — serious tone) + a segmented **ES | EN** toggle where the active locale is filled brand-blue and the other is a clearly-tappable grey button (never collapse to a single ambiguous label). Wrap in `role="group"` with an `aria-label` ("Cambiar idioma / Change language") and per-button `aria-pressed` + `aria-label` (Español/English). Compact + responsive (fits ~360px). Behavior: persists via locale-in-URL + `NEXT_LOCALE` cookie. Use the SAME component in the header and the mobile drawer (the drawer also keeps its "Idioma / Language" label).

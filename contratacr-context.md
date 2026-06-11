@@ -1831,3 +1831,18 @@ Second focused pass confirming the items below; new fixes in migration **048** (
 5. **Service-role key — SAFE.** `createAdminClient()` uses `SUPABASE_SERVICE_ROLE_KEY` (NOT `NEXT_PUBLIC_*`); no client component imports it; only `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` reach the browser (anon key is public by design).
 
 **Manual action:** apply migrations **047 and 048** in Supabase (plus pending `043`–`046`). Until 047 runs, the profiles cédula exposure is still live.
+
+---
+
+## i18n completion — category/DB taxonomy + home sections + language switcher
+
+The EN gaps were mostly DB-sourced taxonomy + un-wired home sections. Fixed:
+
+- **Category taxonomy (the big one):** `getCategoryLabel(id, locale)` + `getCategoryGroupLabel(groupId, locale)` are now locale-aware via `CATEGORY_LABELS_EN` (all ~95 categories) + `CATEGORY_GROUP_LABELS_EN` (12 groups) in `src/lib/data/categories.ts`. Spanish (in `CATEGORY_GROUPS`) stays the source of truth; EN is an added map. Threaded `locale` (useLocale/getLocale) through EVERY category render: home carousel, navbar megamenu (desktop + mobile drawer) + navbar search suggestions + CategoryAutocomplete, professional profile (`/profesionales/[slug]`), the category picker (`category-search.tsx`), pro dashboards (services/profile/availability/booking/photo editors), pro registration, and the public `/api/search/suggestions` (hero autocomplete reads `?locale=`). `/buscar` + professional cards already used the complete `categories` next-intl namespace.
+- **Home sections (were hardcoded ES):** carousel title/subtitle/CTA → `landing.carousel`; "Así funciona ContrataCR" → `landing.howItWorks` (eyebrow, heading, 4 points, pro pitch); "Encuentra profesionales en tu zona" → `landing.zones` (incl. ICU-plural coverage counts, geolocation, disclaimer); global **footer** → `footer` namespace (made it a client component so it works in both server + client pages).
+- **Legal content** (`/terminos`, `/privacidad`) intentionally NOT machine-translated — static Spanish, flagged for human review.
+- **Language switcher** redesigned for recognizability — see design guide §14.
+
+**Pattern for taxonomy:** any fixed DB/taxonomy list (categories, groups; future: service names) must expose per-language labels via an `_EN` map + a locale-aware getter, NOT a hardcoded label, so it translates everywhere it renders.
+
+**Still ES-only (remaining, larger follow-up):** general form chrome/labels/buttons inside the pro dashboards, registration flows, booking modal, and some standalone pages (ayuda/como-funciona/etc.) — these have many strings beyond the taxonomy and are a separate incremental sweep. The taxonomy + all home/nav/footer surfaces (the reported gaps) are done.
