@@ -105,9 +105,14 @@ export function AdminReports() {
                         </a>
                       )}
                       {r.professional_id && (
-                        <Link href={`/admin/proveedores/${r.professional_id}`} className="text-xs text-[#009FD9] hover:underline">
-                          Abrir caso (moderar)
-                        </Link>
+                        <>
+                          <Link href={`/admin/proveedores/${r.professional_id}`} className="text-xs text-[#009FD9] hover:underline">
+                            Abrir caso (moderar)
+                          </Link>
+                          <Link href={`/admin/usuarios/${r.professional_id}`} className="text-xs text-[#009FD9] hover:underline">
+                            Ver perfil del usuario
+                          </Link>
+                        </>
                       )}
                     </div>
                   </div>

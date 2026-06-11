@@ -449,3 +449,14 @@ Auto-scrolling carousels (e.g. the home "Profesionales para cada proyecto" categ
 ## 10. i18n
 
 Infra: next-intl, `[locale]` (`es`/`en`), default **es**, `localePrefix: "always"`, `localeDetection: false`. Persistence = locale in URL (navigation/reload) **plus** a `NEXT_LOCALE` cookie written by the toggle; middleware honors that cookie for unprefixed URLs only (first-time visitors still get ES — Accept-Language is deliberately ignored). The ES|EN pill highlights the active locale. **Never auto-translate legal content** (`/terminos`, `/privacidad`) — they stay authoritative static Spanish.
+
+---
+
+## 11. Admin — consolidated user profile + user search
+
+The admin panel is section-based (one tab per operational queue) and that stays. When you need to investigate ONE person end-to-end, use the person-centric layer instead of breaking the sections into per-user folders:
+
+- **User search** (`AdminUserSearch`): a debounced box (name / cédula / correo) with a dropdown of results → `/admin/usuarios/[id]`. Reuse it as the main tool on the Usuarios tab AND embedded in section views (e.g. Soporte) where triaging a record benefits from a quick jump. Cédula is always **masked** in search + profile (`maskId`); the full value lives only in the verification case file.
+- **Consolidated profile** (`AdminUserProfile`): identity header (avatar, name, role pill, verification/banned/disabled badges, contact, registro date, account-status reason block) followed by clearly-titled `Section` cards — support tickets, verification history + appeals, reports, projects, requests. Each section is a bordered white card with an icon heading + count; empty states are a muted one-liner. Status pills reuse the amber/blue/emerald/gray scale.
+- **Reachable from anywhere a user appears**: link with either the user id (tickets) or the professional id (reports, verification case) — the profile route resolves a professional id to its owner.
+- Keep every section view + its per-status filters/badges intact; the user layer is additive. Admin tab bar scrolls horizontally on mobile.

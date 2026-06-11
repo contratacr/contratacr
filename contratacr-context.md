@@ -1735,3 +1735,15 @@ No migration needed (storage format unchanged: clean digits).
 **i18n status:** infra + persistence + toggle COMPLETE. String extraction is partial (~18/128 files use `useTranslations`; message namespaces in `messages/{es,en}.json`). Remaining components (navbar mega-menu/drawer, most dashboard editors, support) still have hardcoded Spanish — extract incrementally, area-by-area, adding matching EN keys.
 
 **Pending Supabase SQL to run:** migrations `043`, `044`, `045`, `046`.
+
+---
+
+## Admin: consolidated user profile + search (sections unchanged)
+
+The section-based admin views (Verificación, Reportes, Aseguradoras, Categorías, Cuentas, Soporte) are UNCHANGED — they remain the daily operational tool (all pending tickets/verifications across users, with per-status filters/badges). ADDED a person-centric layer on top:
+
+- **New "Usuarios" tab** (`/admin/usuarios`) — central search by **name / cédula / correo** (`AdminUserSearch`, debounced, dropdown → profile). Cédula shown masked.
+- **Consolidated profile view** (`/admin/usuarios/[id]`, `AdminUserProfile`) — everything about one person: account (name, masked cédula, role client/pro, email/phone, registro date, status), verification status + quick links (open verification case `/admin/proveedores/[proId]`, public profile), support tickets, verification history + appeals, reports received, projects published (as client), requests/bookings sent. The `[id]` accepts a profile/user id OR a professional id (resolved to its owner), so it's reachable from anywhere a user appears.
+- **API** `GET /api/admin/users` — `?q=` search (profiles by name/email/cédula, with isPro/verification/banned flags); `?id=` consolidated detail. Admin-only (`getApiAdmin`); cédula masked in responses (`maskId`).
+- **Cross-links added:** Soporte (thread header "Ver perfil completo del usuario" via ticket.user_id + a user-search box atop the list), Reportes ("Ver perfil del usuario" via professional_id). Verificación already had a name/email/cédula filter (kept).
+- AdminShell tab bar is now horizontally scrollable on mobile (7 tabs).

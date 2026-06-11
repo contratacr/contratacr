@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { LifeBuoy, ArrowLeft, Send, User, Shield } from "lucide-react";
+import { LifeBuoy, ArrowLeft, Send, User, Shield, UserSearch } from "lucide-react";
+import { Link } from "@/i18n/navigation";
+import { AdminUserSearch } from "@/components/admin/admin-user-search";
 
 type Ticket = {
   id: string;
@@ -129,6 +131,11 @@ export function AdminSupport() {
                 {ticket.handled_by_name && (
                   <p className="text-[11px] text-[#9ca3af] mt-0.5">Atendido por {ticket.handled_by_name}{ticket.handled_at ? ` · ${fmt(ticket.handled_at)}` : ""}</p>
                 )}
+                {ticket.user_id && (
+                  <Link href={`/admin/usuarios/${ticket.user_id}`} className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-[#009FD9] hover:underline">
+                    <UserSearch className="h-3.5 w-3.5" /> Ver perfil completo del usuario
+                  </Link>
+                )}
               </div>
               {/* Forward-only: open→en proceso→resuelto. No moving back to pendiente
                   (a resolved ticket reopens only when someone replies). */}
@@ -185,6 +192,12 @@ export function AdminSupport() {
   // ── List view ──
   return (
     <div>
+      {/* Find any user (by name/cédula/correo) and jump to their full profile —
+          handy while triaging a ticket. The section + filters below are unchanged. */}
+      <div className="mb-4 max-w-md">
+        <AdminUserSearch placeholder="Buscar usuario por nombre, cédula o correo" />
+      </div>
+
       <div className="flex items-center gap-2 mb-4 flex-wrap">
         {STATUSES.map((s) => {
           // Badge: "Pendientes" → all pending; "En proceso" → only those awaiting

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ShieldCheck, LogOut, Flag, Shield, Tag, UserX, LifeBuoy } from "lucide-react";
+import { ShieldCheck, LogOut, Flag, Shield, Tag, UserX, LifeBuoy, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
@@ -17,7 +17,7 @@ export function AdminShell({
   children,
 }: {
   adminName: string;
-  active?: "verificacion" | "reportes" | "aseguradoras" | "categorias" | "cuentas" | "soporte";
+  active?: "verificacion" | "reportes" | "aseguradoras" | "categorias" | "cuentas" | "soporte" | "usuarios";
   children: React.ReactNode;
 }) {
   const [supportCount, setSupportCount] = useState(0);
@@ -46,6 +46,7 @@ export function AdminShell({
 
   const tabs = [
     { id: "verificacion", label: "Verificación", icon: ShieldCheck, href: "/admin" as const, badge: 0 },
+    { id: "usuarios", label: "Usuarios", icon: Users, href: "/admin/usuarios" as const, badge: 0 },
     { id: "reportes", label: "Reportes", icon: Flag, href: "/admin/reportes" as const, badge: 0 },
     { id: "aseguradoras", label: "Aseguradoras", icon: Shield, href: "/admin/aseguradoras" as const, badge: 0 },
     { id: "categorias", label: "Categorías", icon: Tag, href: "/admin/categorias" as const, badge: 0 },
@@ -71,13 +72,13 @@ export function AdminShell({
             </button>
           </div>
         </div>
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 flex gap-1">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 flex gap-1 overflow-x-auto">
           {tabs.map((t) => (
             <Link
               key={t.id}
               href={t.href}
               className={cn(
-                "flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium border-b-2 transition-colors",
+                "flex items-center gap-1.5 px-3 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap shrink-0",
                 active === t.id ? "border-[#38bdf8] text-white" : "border-transparent text-white/60 hover:text-white"
               )}
             >
