@@ -1757,3 +1757,15 @@ The section-based admin views (Verificación, Reportes, Aseguradoras, Categoría
 - **Password:** "Tu acceso lo administra {provider}" — no ContrataCR password; manage sign-in security in the provider, with a link to the provider's security page.
 - Provider is detected and named correctly (Google / Facebook); links in `PROVIDER_LINKS`.
 Email/password (non-OAuth) accounts keep the full working flows (change email with confirmation; change password requiring current password + "¿Olvidaste tu contraseña?" reset link). Info-style (sky), responsive down to ~360px (`break-words`, wrapping steps).
+
+---
+
+## Stale-session crash fix (normal browser showed "Algo salió mal", incognito worked)
+
+ROOT CAUSE: a saved-but-stale/invalid Supabase refresh token. `supabase.auth.getUser()` called unguarded during SSR (e.g. the public `/buscar` page, `getAdminUser`, middleware) would THROW an `AuthApiError` during the silent refresh instead of returning a null user; in a Server Component that thrown error bubbled to the `[locale]/error.tsx` boundary → generic error screen. Incognito has no token, so the refresh never happened.
+
+GRACEFUL FIX:
+- `src/lib/supabase/get-user.ts` → `safeGetUser(supabase)`: getUser that never throws (returns null on any auth error). Used in `/buscar` page SSR and `getAdminUser` (so `getApiAdmin`/`requireAdmin` are covered too).
+- Middleware: now validates/refreshes the session for any request carrying an `sb-*-auth-token` cookie (incognito/anon skip it — fast path). getUser wrapped in try/catch; on a stale/invalid token it CLEARS the auth cookies (`maxAge:0`) so the browser becomes cleanly logged out and stops re-triggering on every visit, and redirects keep those cookie changes. Anonymous users on protected routes still redirect to login.
+- `useAuth` (client): `getSession()` wrapped with `.catch` → on a corrupt/stale local session it `signOut()`s and treats the user as logged out instead of surfacing a broken UI.
+- The generic error boundary stays for truly unexpected errors only.

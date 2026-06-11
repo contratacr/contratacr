@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { safeGetUser } from "@/lib/supabase/get-user";
 
 export type AdminUser = {
   id: string;
@@ -15,9 +16,8 @@ export type AdminUser = {
  */
 export async function getAdminUser(): Promise<AdminUser | null> {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Never throw on a stale/invalid session — treat it as logged-out.
+  const user = await safeGetUser(supabase);
   if (!user) return null;
 
   const admin = createAdminClient();

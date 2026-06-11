@@ -11,6 +11,7 @@ import { searchProfessionals } from "@/lib/queries/professionals";
 import { PROVINCES } from "@/lib/data/cr-geography";
 import { SearchResultsLayout } from "@/components/search/search-results-layout";
 import { createClient } from "@/lib/supabase/server";
+import { safeGetUser } from "@/lib/supabase/get-user";
 import type { ScheduleSlot } from "@/components/professionals/professional-schedule";
 
 const PAGE_SIZE = 9;
@@ -41,8 +42,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const currentPage = Math.max(1, parseInt(params.page ?? "1", 10) || 1);
 
   // Who is viewing — so we can hide self-service actions on a pro's OWN card.
+  // safeGetUser never throws on a stale session (would otherwise crash this
+  // public page for returning users with an expired token).
   const supabaseViewer = await createClient();
-  const { data: { user: viewer } } = await supabaseViewer.auth.getUser();
+  const viewer = await safeGetUser(supabaseViewer);
   const viewerProfileId = viewer?.id;
 
   const allResults = await searchProfessionals({

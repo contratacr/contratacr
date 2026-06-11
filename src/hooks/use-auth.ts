@@ -32,12 +32,20 @@ export function useAuth() {
   useEffect(() => {
     const supabase = createClient();
 
-    supabase.auth.getSession().then(({ data }) => {
-      const u = data.session?.user ?? null;
-      setUser(u);
-      if (u) syncAvatar(u);
-      setLoading(false);
-    });
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        const u = data.session?.user ?? null;
+        setUser(u);
+        if (u) syncAvatar(u);
+      })
+      .catch(async () => {
+        // Corrupt/stale local session — clear it and treat the user as logged
+        // out instead of letting the error surface as a broken UI.
+        try { await supabase.auth.signOut(); } catch { /* ignore */ }
+        setUser(null);
+      })
+      .finally(() => setLoading(false));
 
     const {
       data: { subscription },

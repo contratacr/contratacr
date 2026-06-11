@@ -50,15 +50,28 @@ export async function middleware(request: NextRequest) {
   const isPublic = PUBLIC_PREFIXES.some(
     (p) => withoutLocale === p || withoutLocale.startsWith(p + "/")
   );
+  const needsAuthGate = isProtected && !isPublic;
 
-  // Only run Supabase checks on protected routes
-  if (!isProtected || isPublic) {
-    return handleI18n(request);
+  // Base response carries i18n rewrites/headers; we attach any cookie changes.
+  const response = handleI18n(request);
+  const locale = pathname.split("/")[1] || "es";
+
+  // Anonymous visitors (incognito or simply logged out) have NO Supabase cookie
+  // — skip all auth work (same fast path as before). Protected routes still go
+  // to login.
+  const hasAuthCookie = request.cookies
+    .getAll()
+    .some((c) => c.name.startsWith("sb-") && c.name.includes("-auth-token"));
+
+  if (!hasAuthCookie) {
+    if (needsAuthGate) return redirectKeepingCookies(`/${locale}/login`, request, response);
+    return response;
   }
 
-  // For protected routes: validate session and onboarding status
-  let response = NextResponse.next({ request });
-
+  // A session cookie exists → validate / silently refresh it. If the token is
+  // stale/invalid we recover gracefully: clear the bad cookie so the browser is
+  // cleanly logged out (instead of crashing SSR with an AuthApiError on every
+  // visit — the reason a normal browser failed where incognito worked).
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -68,10 +81,6 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          );
-          response = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, options)
           );
@@ -80,24 +89,45 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const locale = pathname.split("/")[1] || "es";
-
-  // Not logged in → login page
-  if (!user) {
-    return NextResponse.redirect(new URL(`/${locale}/login`, request.url));
+  let user = null;
+  try {
+    const { data, error } = await supabase.auth.getUser();
+    if (!error) user = data.user ?? null;
+  } catch {
+    user = null;
   }
 
-  // Logged in but hasn't chosen a role yet → onboarding
-  const onboardingDone = user.user_metadata?.onboarding_completed === true;
-  if (!onboardingDone) {
-    return NextResponse.redirect(new URL(`/${locale}/onboarding`, request.url));
+  if (!user) {
+    clearAuthCookies(request, response);
+    if (needsAuthGate) return redirectKeepingCookies(`/${locale}/login`, request, response);
+    return response;
+  }
+
+  // Logged in but hasn't chosen a role yet → onboarding (protected routes only).
+  if (needsAuthGate) {
+    const onboardingDone = user.user_metadata?.onboarding_completed === true;
+    if (!onboardingDone) return redirectKeepingCookies(`/${locale}/onboarding`, request, response);
   }
 
   return response;
+}
+
+// Expire the Supabase auth cookies on the response so a stale/invalid session
+// stops re-triggering errors on every visit.
+function clearAuthCookies(request: NextRequest, response: NextResponse) {
+  for (const c of request.cookies.getAll()) {
+    if (c.name.startsWith("sb-") && c.name.includes("-auth-token")) {
+      response.cookies.set(c.name, "", { maxAge: 0, path: "/" });
+    }
+  }
+}
+
+// Redirect while preserving any cookie changes already staged on `response`
+// (refreshed or cleared session cookies).
+function redirectKeepingCookies(path: string, request: NextRequest, response: NextResponse) {
+  const redirectRes = NextResponse.redirect(new URL(path, request.url));
+  response.cookies.getAll().forEach((c) => redirectRes.cookies.set(c));
+  return redirectRes;
 }
 
 export const config = {
