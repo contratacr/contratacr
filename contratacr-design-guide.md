@@ -161,6 +161,11 @@ A professional is always **ONE card** (`rounded-2xl bg-white border`, never spli
 - **Health (es_salud) bookings require the patient's DOB** — for **myself** (manual input; the padrón has no birth date) and for **another person** (beneficiary DOB, not optional). Block the step's Continue/Submit until it's provided. Non-health bookings never ask DOB (data minimization).
 - **No double-booking:** the booking API rejects (409) a slot already held by an active booking; the modal surfaces it inline ("Ese horario acaba de ser reservado…"). Cancelling/completing frees the slot again.
 
+### Image uploads (avatars + casos de éxito)
+- **Accept any image, including iPhone HEIC/HEIF** (Cloudinary converts). Don't whitelist only jpeg/png/webp — mobile photos are often HEIC and some browsers send an **empty MIME type**, so allow `type === "" || type.startsWith("image/")` and use `image/*` on the `<input accept>`. Size cap **10 MB** (phone photos exceed 5 MB; images are downscaled server-side anyway).
+- **Always surface the SERVER's specific error** (size/format/Cloudinary-not-configured) to the user — never collapse it into a generic "no se pudo subir". Revert any optimistic preview on failure.
+- **The 5-photo limit is ONLY for "casos de éxito"** (`MAX_PORTFOLIO_PHOTOS`, on `portfolio_urls`/`portfolio_items`). The **profile photo (avatar) is a single, independent image** (`profiles.avatar_url`, `type=avatar`) and must NEVER be subject to that limit.
+
 ### Certificaciones (professional, text-only)
 - **TEXT entries only — never image/document uploads** (avoids exposing IDs/personal data on certificates). Each entry = **nombre** (required) + **institución** (optional) + **año** (optional); add/edit/remove multiple in a collapsible profile section.
 - **Public profile:** a **"Certificaciones" tab** appears only when the pro has any (mirrors the "Casos de éxito" tab pattern), each row = `Award` icon + name + "institución · año". Include the honest note that authenticity isn't verified yet (future admin enhancement).

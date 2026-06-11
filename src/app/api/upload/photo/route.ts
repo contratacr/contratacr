@@ -23,17 +23,24 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "No se recibió ningún archivo" }, { status: 400 });
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      return NextResponse.json({ error: "El archivo excede el límite de 5 MB" }, { status: 400 });
+    // 10 MB cap — modern phone photos routinely exceed 5 MB, and Cloudinary
+    // downscales anyway (avatars to 400px), so a low cap only caused failures.
+    if (file.size > 10 * 1024 * 1024) {
+      return NextResponse.json({ error: "La imagen pesa más de 10 MB. Usa una más liviana." }, { status: 400 });
     }
 
-    const allowed = ["image/jpeg", "image/png", "image/webp"];
-    if (!allowed.includes(file.type)) {
-      return NextResponse.json({ error: "Formato no permitido. Usa JPG, PNG o WebP." }, { status: 400 });
+    // Accept any image — including iPhone HEIC/HEIF (Cloudinary converts them).
+    // Some mobile browsers send an EMPTY type for HEIC, so allow that too; a true
+    // non-image still fails at Cloudinary with a clear message.
+    const type = file.type || "";
+    const isImage = type === "" || type.startsWith("image/");
+    if (!isImage) {
+      return NextResponse.json({ error: "El archivo no es una imagen. Usa JPG, PNG, WebP o HEIC." }, { status: 400 });
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const dataUri = `data:${file.type};base64,${buffer.toString("base64")}`;
+    // Empty type (some mobile HEIC) → use a sensible default so the data URI is valid.
+    const dataUri = `data:${type || "image/heic"};base64,${buffer.toString("base64")}`;
 
     // "avatar" → square face crop (profile photo). "portfolio" (default) →
     // store ONE optimized original (max 1600px, auto format/quality); thumbnails

@@ -168,15 +168,21 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
       fd.append("file", file);
       fd.append("type", "avatar");
       const res = await fetch("/api/upload/photo", { method: "POST", body: fd });
-      if (!res.ok) throw new Error();
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        throw new Error(j.error || "No se pudo subir la foto. Intenta de nuevo.");
+      }
       const { url } = await res.json();
       const supabase = createClient();
-      await supabase.from("profiles").update({ avatar_url: url }).eq("id", profileId);
+      const { error: upErr } = await supabase.from("profiles").update({ avatar_url: url }).eq("id", profileId);
+      if (upErr) throw new Error("No se pudo guardar la foto. Intenta de nuevo.");
       await supabase.auth.updateUser({ data: { avatar_url: url } });
       setAvatarPreview(url);
       onSaved?.();
-    } catch {
-      setError("No se pudo subir la foto. Intenta de nuevo.");
+    } catch (e) {
+      // Revert the optimistic preview and show the specific reason (size/format).
+      setAvatarPreview(initial.profiles?.avatar_url ?? null);
+      setError(e instanceof Error && e.message ? e.message : "No se pudo subir la foto. Intenta de nuevo.");
     } finally {
       setPhotoUploading(false);
     }
@@ -326,7 +332,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
           <input
             ref={photoInputRef}
             type="file"
-            accept="image/jpeg,image/png,image/webp"
+            accept="image/*"
             className="hidden"
             onChange={(e) => { const f = e.target.files?.[0]; if (f) handlePhotoSelect(f); }}
           />

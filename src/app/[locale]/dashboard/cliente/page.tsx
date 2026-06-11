@@ -135,17 +135,26 @@ export default function ClientDashboardPage() {
     const file = e.target.files?.[0];
     if (!file || !user) return;
     setPhotoUploading(true);
-    const fd = new FormData();
-    fd.append("file", file);
-    const res = await fetch("/api/upload/photo", { method: "POST", body: fd });
-    if (res.ok) {
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("type", "avatar");
+      const res = await fetch("/api/upload/photo", { method: "POST", body: fd });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        alert(j.error || "No se pudo subir la foto. Intenta de nuevo.");
+        return;
+      }
       const { url } = await res.json();
       const supabase = createClient();
       await supabase.from("profiles").update({ avatar_url: url }).eq("id", user.id);
       await supabase.auth.updateUser({ data: { avatar_url: url } });
       setProfileAvatar(url);
+    } catch {
+      alert("No se pudo subir la foto. Intenta de nuevo.");
+    } finally {
+      setPhotoUploading(false);
     }
-    setPhotoUploading(false);
   }
 
   if (authLoading) {
