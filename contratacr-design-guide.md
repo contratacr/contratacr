@@ -168,7 +168,7 @@ A professional is always **ONE card** (`rounded-2xl bg-white border`, never spli
 ### Mobile menu (left drawer) — grouped sections, both auth states
 - **Always grouped under uppercase section headers** (`text-[10px] font-bold text-gray-400 uppercase tracking-widest`), never a flat list. Keep the left slide-in drawer + swipe-to-close + scrim.
 - **Logged-in order:** search → **MI CUENTA** (avatar + name/email header, then Mi panel [bold + brand icon], Mis solicitudes, Mis proyectos, Mis favoritos, Ofrecer mis servicios [client-only], Cuenta y seguridad — all **role-aware**, with icons) → CATEGORÍAS → RECURSOS → Idioma ES/EN → **Cerrar sesión** (red, bottom). Surface the account area **right after the search** so the panel is one tap away.
-- **Logged-out order:** search → CATEGORÍAS → RECURSOS → Idioma → **"Ingresar"** (outline) + "Registrarse como profesional" (brand pill). No account area.
+- **Logged-out order:** search → **CATEGORÍAS** (+ "Ver todas") → **CUENTA** (Ingresar [outline] + Registrarse como profesional [brand pill]) → RECURSOS → Idioma ES/EN. Rationale: clients **register at booking time, not upfront**, so there is **no "register as client"** option — a new client only needs to **search/browse**, then requesting a service creates their account. The two account actions are surfaced **right after browse** (clearly visible, but not first since clients won't register upfront); Recursos + Idioma are utility, last. No "Mi cuenta" area when logged out.
 - **Auth label is "Ingresar"** (not "Iniciar sesión" — friendlier, and not "Mis citas"/medical wording since not all services are appointments). Use it consistently on the **mobile drawer AND the desktop nav trigger**.
 
 ### Never strand the user — "Volver a mi panel"

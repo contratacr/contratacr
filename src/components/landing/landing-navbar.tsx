@@ -1022,6 +1022,27 @@ export function LandingNavbar() {
               </Link>
             </div>
 
+            {/* CUENTA (logged-OUT) — account actions sit right after browse, clearly
+                visible but not first: new clients register when they REQUEST a
+                service (no "register as client" here), so only Ingresar (returning)
+                + Registrarse como profesional (people who offer services). */}
+            {!user && (
+              <div className="mb-5">
+                <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Cuenta</p>
+                <div className="flex flex-col gap-2 px-1 pt-1">
+                  <button onClick={() => { setShowLogin(true); setMobileOpen(false); }}
+                    className="w-full px-4 py-3 rounded-xl text-sm font-semibold text-[#374151] border border-gray-200 hover:bg-gray-50 text-center transition-colors">
+                    Ingresar
+                  </button>
+                  <Link href="/registro/profesional" onClick={() => setMobileOpen(false)}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-full bg-[#009FD9] text-white text-sm font-bold text-center hover:bg-[#0089bb] transition-colors">
+                    <UserPlus className="h-4 w-4" />
+                    Registrarse como profesional
+                  </Link>
+                </div>
+              </div>
+            )}
+
             {/* RECURSOS */}
             <div className="mb-5">
               <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Recursos</p>
@@ -1045,27 +1066,15 @@ export function LandingNavbar() {
               </div>
             </div>
 
-            {/* Auth actions — Cerrar sesión (in) / Ingresar + Registrarse (out) */}
-            <div className="mt-4 flex flex-col gap-2">
-              {user ? (
+            {/* Cerrar sesión — logged-in only, at the very bottom */}
+            {user && (
+              <div className="mt-4">
                 <button onClick={handleSignOut}
                   className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium text-red-600 border border-red-100 hover:bg-red-50 transition-colors">
                   <LogOut className="h-4 w-4" /> Cerrar sesión
                 </button>
-              ) : (
-                <>
-                  <button onClick={() => { setShowLogin(true); setMobileOpen(false); }}
-                    className="w-full px-4 py-3 rounded-xl text-sm font-semibold text-[#374151] border border-gray-200 hover:bg-gray-50 text-center transition-colors">
-                    Ingresar
-                  </button>
-                  <Link href="/registro/profesional" onClick={() => setMobileOpen(false)}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-full bg-[#009FD9] text-white text-sm font-bold text-center hover:bg-[#0089bb] transition-colors">
-                    <UserPlus className="h-4 w-4" />
-                    Registrarse como profesional
-                  </Link>
-                </>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
 
