@@ -136,11 +136,16 @@ export async function notifyBookingStatusChange(
     }
 
     // 2. Outbound delivery — WhatsApp first, email as fallback.
+    // Proactive messages (client never wrote us first → outside the 24h service
+    // window) MUST use a pre-approved Utility TEMPLATE. Template body in Meta:
+    //   "Hola {{1}} 👋\n\n{{2}}\n\nIngresa a tu panel de ContrataCR para ver los detalles."
+    // params: {{1}} = first name, {{2}} = the status sentence.
     const clientFirst = (booking.client_name as string | null)?.split(" ")[0] ?? "";
-    const greeting = clientFirst ? `Hola ${clientFirst}, ` : "Hola, ";
-    const waBody = `${greeting}${message} — ContrataCR`;
 
-    const wa = await sendWhatsAppText(booking.client_phone as string | undefined, waBody);
+    const wa = await sendWhatsAppTemplate(booking.client_phone as string | undefined, [
+      clientFirst || "cliente",
+      message,
+    ]);
     await recordDelivery(admin, bookingId, "whatsapp", wa.status, wa.detail);
 
     if (wa.status !== "sent") {
@@ -187,14 +192,22 @@ async function recordDelivery(
 // Generic senders — return delivery status (sent | failed | skipped)
 // ---------------------------------------------------------------------------
 
-async function sendWhatsAppText(
+// Sends a pre-approved Utility template — required to message a client who has
+// not written to us in the last 24h (every booking notification). Template name
+// and language are env-configurable so the approved template can change in Meta
+// without a redeploy. Falls back to "skipped" when not configured, so email
+// still goes out.
+async function sendWhatsAppTemplate(
   toPhone: string | undefined,
-  body: string
+  bodyParams: string[]
 ): Promise<{ status: DeliveryStatus; detail: string | null }> {
   const token = process.env.WHATSAPP_CLOUD_TOKEN;
   const phoneId = process.env.WHATSAPP_PHONE_NUMBER_ID;
   if (!token || !phoneId) return { status: "skipped", detail: "WhatsApp Cloud API not configured" };
   if (!toPhone) return { status: "skipped", detail: "No client phone on file" };
+
+  const templateName = process.env.WHATSAPP_TEMPLATE_NAME ?? "booking_update_v1";
+  const templateLang = process.env.WHATSAPP_TEMPLATE_LANG ?? "es";
 
   const digits = toPhone.replace(/\D/g, "");
   const to = digits.length === 8 ? `506${digits}` : digits;
@@ -203,7 +216,18 @@ async function sendWhatsAppText(
     const res = await fetch(`https://graph.facebook.com/v21.0/${phoneId}/messages`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ messaging_product: "whatsapp", to, type: "text", text: { body } }),
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        to,
+        type: "template",
+        template: {
+          name: templateName,
+          language: { code: templateLang },
+          components: [
+            { type: "body", parameters: bodyParams.map((text) => ({ type: "text", text })) },
+          ],
+        },
+      }),
     });
     if (!res.ok) {
       const txt = await res.text().catch(() => "");
