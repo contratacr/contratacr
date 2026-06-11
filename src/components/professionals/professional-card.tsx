@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { MapPin, ShieldCheck, ShieldAlert, Truck, Image as ImageIcon, Lock, Star, Phone } from "lucide-react";
+import { MapPin, ShieldCheck, ShieldAlert, Truck, Image as ImageIcon, Lock, Star, Phone, Award } from "lucide-react";
 import { ProfessionalSchedule, type ScheduleSlot } from "@/components/professionals/professional-schedule";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Link } from "@/i18n/navigation";
@@ -21,6 +21,10 @@ function prettyPlace(name?: string): string {
   if (readable && !isPlusCode(readable)) return readable;
   return "";
 }
+
+// A certification is a plain TEXT entry (no images): the certificate name, and
+// optionally the issuing institution + year. Authenticity isn't verified yet.
+export type Certification = { id?: string; name: string; institution?: string; year?: string };
 
 export type ProfessionalCardData = {
   id: string;
@@ -53,6 +57,8 @@ export type ProfessionalCardData = {
   serviceType?: string | null;
   /** Count of "casos de éxito" (portfolio photos) — drives the preview link. */
   portfolioCount?: number;
+  /** Count of certifications — drives the compact "Ver certificaciones (N)" link. */
+  certificationCount?: number;
   /** Insurance networks (aseguradoras) the pro belongs to. */
   insuranceNetworks?: string[];
   /** Real travel-coverage summary (item 16): country-wide, provinces, cantones. */
@@ -263,15 +269,29 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
                 )}
               </div>
 
-              {/* Casos de éxito — pinned to the bottom of the column */}
-              {professional.portfolioCount ? (
-                <Link
-                  href={`/profesionales/${professional.slug}?tab=casos`}
-                  className="mt-auto pt-0.5 inline-flex items-center gap-1.5 text-[11px] font-medium text-[#009FD9] hover:underline w-fit"
-                >
-                  <ImageIcon className="h-3.5 w-3.5" />
-                  Ver casos de éxito ({professional.portfolioCount})
-                </Link>
+              {/* Casos de éxito + Certificaciones — compact links sharing ONE bottom
+                  row so the card height stays uniform (they don't each add a line). */}
+              {(professional.portfolioCount || professional.certificationCount) ? (
+                <div className="mt-auto pt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5">
+                  {professional.portfolioCount ? (
+                    <Link
+                      href={`/profesionales/${professional.slug}?tab=casos`}
+                      className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[#009FD9] hover:underline w-fit"
+                    >
+                      <ImageIcon className="h-3.5 w-3.5" />
+                      Ver casos de éxito ({professional.portfolioCount})
+                    </Link>
+                  ) : null}
+                  {professional.certificationCount ? (
+                    <Link
+                      href={`/profesionales/${professional.slug}?tab=certificaciones`}
+                      className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[#009FD9] hover:underline w-fit"
+                    >
+                      <Award className="h-3.5 w-3.5" />
+                      Ver certificaciones ({professional.certificationCount})
+                    </Link>
+                  ) : null}
+                </div>
               ) : null}
             </div>
           </div>

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import {
   MapPin, Shield, ShieldCheck, ShieldAlert, ArrowLeft,
-  Share2, Flag, ChevronDown, Lock, Phone, Building2,
+  Share2, Flag, ChevronDown, Lock, Phone, Building2, Award,
 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Navbar } from "@/components/layout/navbar";
@@ -54,12 +54,12 @@ function SubRating({ label, value }: { label: string; value: number }) {
 }
 
 // ─── Tab types ────────────────────────────────────────────────────────────────
-type Tab = "servicios" | "disponibilidad" | "casos" | "resenas" | "sobre";
+type Tab = "servicios" | "disponibilidad" | "casos" | "certificaciones" | "resenas" | "sobre";
 
 function initialTabFromUrl(): Tab {
   if (typeof window === "undefined") return "servicios";
   const tab = new URLSearchParams(window.location.search).get("tab");
-  return (["servicios", "disponibilidad", "casos", "resenas", "sobre"] as const).includes(tab as Tab)
+  return (["servicios", "disponibilidad", "casos", "certificaciones", "resenas", "sobre"] as const).includes(tab as Tab)
     ? (tab as Tab)
     : "servicios";
 }
@@ -154,10 +154,13 @@ export default function ProfilePage({ params }: ProfilePageProps) {
   const locationText = [professional.cantonName, professional.provinceName].filter(Boolean).join(", ");
 
   const hasCasos = !!professional.portfolioUrls && professional.portfolioUrls.length > 0;
+  const certificationsList = (professional.certifications ?? []).filter((c) => c?.name?.trim());
+  const hasCerts = certificationsList.length > 0;
   const TABS: Array<{ id: Tab; label: string }> = [
     { id: "servicios",      label: "Servicios" },
     { id: "disponibilidad", label: "Disponibilidad" },
     ...(hasCasos ? [{ id: "casos" as Tab, label: "Casos de éxito" }] : []),
+    ...(hasCerts ? [{ id: "certificaciones" as Tab, label: "Certificaciones" }] : []),
     { id: "resenas",        label: "Reseñas" },
     { id: "sobre",          label: "Sobre mí" },
   ];
@@ -491,6 +494,31 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                       ) : (
                         <p className="text-sm text-[#9ca3af]">Este profesional todavía no agregó casos de éxito.</p>
                       )}
+                    </div>
+                  )}
+
+                  {/* ── TAB: Certificaciones (text only, no images) ── */}
+                  {activeTab === "certificaciones" && (
+                    <div>
+                      <h2 className="text-lg font-semibold text-[#111827] mb-1">Certificaciones</h2>
+                      <p className="text-sm text-[#9ca3af] mb-4">Cursos, títulos y certificados que indica el profesional. ContrataCR aún no verifica su autenticidad.</p>
+                      <div className="flex flex-col gap-2.5">
+                        {certificationsList.map((c, i) => (
+                          <div key={c.id ?? i} className="flex items-start gap-3 rounded-xl border border-[#e5e7eb] p-3.5">
+                            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#EBF5FB] shrink-0">
+                              <Award className="h-4 w-4 text-[#009FD9]" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-sm font-semibold text-[#111827] break-words">{c.name}</p>
+                              {(c.institution || c.year) && (
+                                <p className="text-xs text-[#6b7280] mt-0.5 break-words">
+                                  {[c.institution, c.year].filter(Boolean).join(" · ")}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
 

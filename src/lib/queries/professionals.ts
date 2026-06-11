@@ -1,4 +1,4 @@
-import type { ProfessionalCardData } from "@/components/professionals/professional-card";
+import type { ProfessionalCardData, Certification } from "@/components/professionals/professional-card";
 import { getMatchingCategoryIds } from "@/lib/data/categories";
 import { getProvinceById, PROVINCE_CENTROIDS, haversineKm } from "@/lib/data/cr-geography";
 
@@ -62,6 +62,7 @@ export type ProfessionalDetail = ProfessionalCardData & {
   reviews: Review[];
   services: ProService[];
   availabilityPublic: boolean;
+  certifications: Certification[];
 };
 
 export type Review = {
@@ -98,7 +99,7 @@ export async function searchProfessionals(
             `id, slug, hourly_rate, is_verified, is_featured, is_available,
              rating_avg, review_count, bio, whatsapp, years_experience, portfolio_urls,
              category_id, professions, pricing, lat, lng, service_type, availability_public, contact_preference,
-             business_name, workplaces, verification_status${modern ? ", no_cr_id, insurance_networks, coverage_areas, coverage_provincias, coverage_country, allow_phone_call" : ""},
+             business_name, workplaces, verification_status${modern ? ", no_cr_id, insurance_networks, coverage_areas, coverage_provincias, coverage_country, allow_phone_call, certifications" : ""},
              profiles(full_name, avatar_url${modern ? ", is_disabled" : ""}),
              provincias(id, name),
              cantones(id, name)`
@@ -182,7 +183,7 @@ export async function searchProfessionals(
       };
 
       let { data, error } = await build(true);
-      if (error && /is_banned|search_provincias|search_cantones|coverage_|no_cr_id|column/i.test(error.message)) {
+      if (error && /is_banned|search_provincias|search_cantones|coverage_|no_cr_id|certifications|column/i.test(error.message)) {
         ({ data, error } = await build(false)); // pre-migration fallback
       }
       if (error) throw error;
@@ -221,6 +222,7 @@ export async function searchProfessionals(
         lng: row.lng ?? null,
         serviceType: row.service_type ?? null,
         portfolioCount: Array.isArray(row.portfolio_urls) ? row.portfolio_urls.length : 0,
+        certificationCount: Array.isArray(row.certifications) ? row.certifications.length : 0,
         insuranceNetworks: (row.insurance_networks as string[]) ?? [],
         coverage: buildCoverage(row),
         allowPhoneCall: row.allow_phone_call ?? false,
@@ -378,6 +380,8 @@ export async function getProfessionalBySlug(
       } catch { /* column not migrated yet */ }
       let allowPhoneCall = false;
       let coverage = { country: false, provincias: [] as string[], cantones: [] as string[] };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let certifications: any[] = [];
       try {
         const { data: extra } = await supabase
           .from("professionals")
@@ -389,6 +393,12 @@ export async function getProfessionalBySlug(
           coverage = buildCoverage(extra);
         }
       } catch { /* columns not migrated yet */ }
+      try {
+        const { data: certRow } = await supabase.from("professionals").select("certifications").eq("id", pro.id).maybeSingle();
+        if (certRow && Array.isArray((certRow as { certifications?: unknown[] }).certifications)) {
+          certifications = (certRow as { certifications: unknown[] }).certifications;
+        }
+      } catch { /* column not migrated yet */ }
       if (portfolioItems.length === 0) {
         portfolioItems = (pro.portfolio_urls ?? []).map((url: string) => ({ url }));
       }
@@ -458,6 +468,7 @@ export async function getProfessionalBySlug(
         verificationStatus: ((pro as any).verification_status as ProfessionalCardData["verificationStatus"]) ?? "pending",
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         insuranceNetworks: ((pro as any).insurance_networks as string[]) ?? [],
+        certifications: certifications as Certification[],
       };
     } catch (err) {
       console.error("[getProfessionalBySlug] Supabase error:", err);

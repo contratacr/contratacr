@@ -10,13 +10,14 @@ import { PriceInput } from "@/components/ui/price-input";
 import { WorkplacesPicker, type Workplace } from "@/components/maps/workplaces-picker";
 import { CoverageAreaSelector } from "@/components/maps/coverage-area-selector";
 import { createClient } from "@/lib/supabase/client";
-import { Camera, Check, X, Plus, Truck, MapPin, ChevronDown, Globe, ShieldCheck, Lock } from "lucide-react";
+import { Camera, Check, X, Plus, Truck, MapPin, ChevronDown, Globe, ShieldCheck, Lock, Award } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { computeSearchAreas, primaryArea, type CoverageArea } from "@/lib/location";
 import { AseguradorasInput } from "@/components/ui/aseguradoras-input";
 import { CloseAccountSection } from "@/components/account/close-account-section";
 import { CategorySearch } from "@/components/ui/category-search";
 import { getCategoryLabel, anyHealthCategory } from "@/lib/data/categories";
+import type { Certification } from "@/components/professionals/professional-card";
 import { cn } from "@/lib/utils";
 import { PRICING_TYPES, type PricingTier, type PricingType } from "@/lib/pricing";
 
@@ -87,6 +88,10 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
     Array.isArray(initial.languages) && initial.languages.length > 0 ? initial.languages : ["Español"]
   );
   const [insurers, setInsurers] = useState<string[]>(Array.isArray(initial.insurance_networks) ? initial.insurance_networks : []);
+  // Certifications — TEXT entries only (no images): nombre + institución + año.
+  const [certifications, setCertifications] = useState<Certification[]>(
+    Array.isArray(initial.certifications) ? initial.certifications : []
+  );
   // Work mode — BOTH can be selected (travels AND has fixed locations).
   const initialTypes = String(initial.service_type ?? "mobile");
   const [serviceMobile, setServiceMobile] = useState(initialTypes.includes("mobile") || initialTypes === "");
@@ -137,6 +142,18 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
   }
   function removeTier(id: string) {
     setPricing((prev) => prev.filter((p) => p.id !== id));
+    touch();
+  }
+  function addCertification() {
+    setCertifications((prev) => [...prev, { id: `ct_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, name: "", institution: "", year: "" }]);
+    touch();
+  }
+  function updateCertification(id: string, patch: Partial<Certification>) {
+    setCertifications((prev) => prev.map((c) => (c.id === id ? { ...c, ...patch } : c)));
+    touch();
+  }
+  function removeCertification(id: string) {
+    setCertifications((prev) => prev.filter((c) => c.id !== id));
     touch();
   }
 
@@ -221,6 +238,10 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         coverage_provincias: coverageProvincias,
         coverage_country: coverageCountry,
         insurance_networks: insurers,
+        // Drop blank rows; keep only entries with a name (institución/año optional).
+        certifications: certifications
+          .filter((c) => c.name?.trim())
+          .map((c) => ({ id: c.id, name: c.name.trim(), institution: c.institution?.trim() || undefined, year: c.year?.trim() || undefined })),
       };
 
       let { error: proError } = await supabase
@@ -228,7 +249,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         .update({ ...baseUpdate, ...identityFields })
         .eq("id", professionalId);
       // Retry without the optional identity columns if the DB isn't migrated yet.
-      if (proError && /business_name|workplaces|coverage_areas|search_provincias|search_cantones|insurance_networks|affiliations|schema cache|could not find|PGRST204/i.test(proError.message)) {
+      if (proError && /business_name|workplaces|coverage_areas|search_provincias|search_cantones|insurance_networks|certifications|affiliations|schema cache|could not find|PGRST204/i.test(proError.message)) {
         ({ error: proError } = await supabase.from("professionals").update(baseUpdate).eq("id", professionalId));
       }
 
@@ -386,6 +407,55 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
             placeholder="Agrega una profesión… ej. plomero, fotógrafo"
           />
         </div>
+      </Section>
+
+      {/* ── Certificaciones (texto, sin imágenes) ─────────────────────── */}
+      <Section title="Certificaciones" desc="Cursos, títulos o certificados (texto, sin imágenes)">
+        <p className="text-xs text-[#9ca3af]">
+          Agrega tus certificaciones como texto. El nombre es obligatorio; la institución y el año son opcionales. No subas imágenes ni documentos.
+        </p>
+        {certifications.length > 0 && (
+          <div className="flex flex-col gap-3">
+            {certifications.map((c) => (
+              <div key={c.id} className="rounded-xl border border-[#e5e7eb] p-3 flex flex-col gap-2">
+                <div className="flex items-start gap-2">
+                  <Award className="h-4 w-4 text-[#009FD9] mt-2.5 shrink-0" />
+                  <input
+                    type="text"
+                    value={c.name}
+                    onChange={(e) => updateCertification(c.id!, { name: e.target.value })}
+                    placeholder="Nombre del certificado (ej. Técnico en Refrigeración)"
+                    className="flex-1 h-10 rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+                  />
+                  <button type="button" onClick={() => removeCertification(c.id!)} className="h-9 w-9 rounded-lg flex items-center justify-center text-[#9ca3af] hover:text-red-500 hover:bg-red-50 transition-colors shrink-0" aria-label="Quitar certificación">
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-[1fr,7rem] gap-2 pl-6">
+                  <input
+                    type="text"
+                    value={c.institution ?? ""}
+                    onChange={(e) => updateCertification(c.id!, { institution: e.target.value })}
+                    placeholder="Institución (opcional)"
+                    className="h-10 rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+                  />
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={4}
+                    value={c.year ?? ""}
+                    onChange={(e) => updateCertification(c.id!, { year: e.target.value.replace(/\D/g, "").slice(0, 4) })}
+                    placeholder="Año"
+                    className="h-10 rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+        <button type="button" onClick={addCertification} className="inline-flex items-center gap-1.5 text-sm font-medium text-[#009FD9] hover:underline self-start">
+          <Plus className="h-4 w-4" /> Agregar certificación
+        </button>
       </Section>
 
       {/* ── Ubicación y cobertura ─────────────────────────────────────── */}
