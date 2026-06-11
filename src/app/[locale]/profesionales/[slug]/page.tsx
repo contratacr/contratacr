@@ -554,7 +554,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                   {activeTab === "certificaciones" && (
                     <div>
                       <h2 className="text-lg font-semibold text-[#111827] mb-1">Certificaciones</h2>
-                      <p className="text-sm text-[#9ca3af] mb-4">Cursos, títulos y certificados que indica el profesional. ContrataCR aún no verifica su autenticidad.</p>
+                      <p className="text-sm text-[#9ca3af] mb-4">Cursos, títulos y certificados que indica el profesional.</p>
                       <div className="flex flex-col gap-5">
                         {certGroups.map(([prof, certs]) => (
                           <div key={prof || "general"}>

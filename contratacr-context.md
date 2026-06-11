@@ -1856,3 +1856,9 @@ SYMPTOM: "Error: cannot add `postgres_changes` callbacks for realtime:notificati
 ROOT CAUSE: `NotificationBell` (`src/components/notifications/notification-bell.tsx`) used a STATIC channel topic `supabase.channel("notifications")`. The navbar mounts the bell in BOTH header rows (default + compact), and dashboards mount one too — so multiple instances requested the same topic. Supabase returns the CACHED channel by topic name, so the 2nd instance's `.on('postgres_changes', …)` ran on an already-subscribed channel and threw. (The `.on()`→`.subscribe()` order within a single instance was already correct.)
 
 FIX: each instance now uses a UNIQUE channel name `notifications-${user.id}-${instanceId}` (instanceId = a per-mount `useRef` random). Handlers are registered before `.subscribe()` (once), and `removeChannel` cleans up on unmount/user-change. This is the ONLY Realtime channel in the app (verified). RULE: never share a static Realtime channel topic across components that may mount more than once — make the topic unique per instance, and always register all `.on(...)` before `.subscribe()`.
+
+---
+
+## Certifications copy — removed unverified-authenticity line
+
+The public profile Certificaciones tab description previously read "Cursos, títulos y certificados que indica el profesional. ContrataCR aún no verifica su autenticidad." The 2nd sentence was removed (reduced trust / could be misread as the pro opting out of verification). Now just: "Cursos, títulos y certificados que indica el profesional." (`profesionales/[slug]` page; string is hardcoded — no separate EN key existed).
