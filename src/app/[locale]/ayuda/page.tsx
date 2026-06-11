@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { FadeInUp } from "@/components/landing/fade-in-up";
@@ -9,64 +10,28 @@ import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { SUPPORT_WHATSAPP_URL } from "@/lib/constants";
 import { ChevronDown, MessageSquare, Search, UserCheck, CalendarDays, Star, ShieldCheck, HelpCircle } from "lucide-react";
 
-/* ── FAQ ── */
-const FAQ_ITEMS = [
-  {
-    icon: <HelpCircle className="h-4 w-4" />,
-    q: "¿ContrataCR cobra alguna comisión o cargo?",
-    a: "No. ContrataCR es completamente gratuito para clientes y para profesionales. No cobramos comisiones, no cobramos mensualidades, no cobramos ningún tipo de cargo. Crear un perfil, buscar profesionales, publicar proyectos y recibir contactos es gratis sin excepción.",
-  },
-  {
-    icon: <UserCheck className="h-4 w-4" />,
-    q: "¿Cómo me registro como profesional?",
-    a: "Haz clic en 'Registrarse como profesional' en la barra de navegación. Puedes registrarte con tu correo o con Google/Facebook. El proceso tiene 2 pasos: primero seleccionas tu tipo de servicio y zona, luego subes una foto y describes tu experiencia. Toma menos de 5 minutos.",
-  },
-  {
-    icon: <ShieldCheck className="h-4 w-4" />,
-    q: "¿Cómo se verifica la cédula de un profesional?",
-    a: "Comparamos la cédula con el padrón del Registro Civil (TSE). Cuando coincide, el perfil muestra el sello 'Identidad verificada' y aparece primero en los resultados. Es una verificación de identidad (confirma que la persona es real y verificable), no una calificación de la calidad del trabajo. Los profesionales sin verificar también pueden aparecer, marcados como 'Identidad sin verificar'.",
-  },
-  {
-    icon: <Search className="h-4 w-4" />,
-    q: "¿Cómo busco un profesional?",
-    a: "Usa la barra de búsqueda en la página principal o la página de búsqueda de profesionales. Puedes buscar por tipo de servicio (plomero, psicólogo, diseñador, etc.), por provincia y cantón, y ordenar por calificación. El buscador entiende sinónimos — si escribes 'niñera' también va a encontrar profesionales de cuidado infantil.",
-  },
-  {
-    icon: <CalendarDays className="h-4 w-4" />,
-    q: "¿Cómo coordino el servicio con el profesional?",
-    a: "Una vez que encuentras el profesional que quieres, haces clic en su perfil y te conectamos directamente por WhatsApp. Desde ahí coordinas precio, fecha y todo lo necesario sin intermediarios.",
-  },
-  {
-    icon: <Star className="h-4 w-4" />,
-    q: "¿Cómo dejo una reseña?",
-    a: "Después de completar un servicio, puedes dejar una reseña desde tu panel de cliente en la sección 'Solicitudes'. Solo clientes que realmente contrataron ese servicio pueden dejar reseñas — así se garantiza que son auténticas.",
-  },
-  {
-    icon: <HelpCircle className="h-4 w-4" />,
-    q: "¿Qué es publicar un proyecto?",
-    a: "Publicar un proyecto es una alternativa a buscar directamente. Describes lo que necesitas (por ejemplo: 'pintura de sala 4x4m, presupuesto ₡80.000'), y los profesionales de tu zona que tienen esa especialidad te envían propuestas con su precio. Tú eliges con quién trabajar.",
-  },
-  {
-    icon: <UserCheck className="h-4 w-4" />,
-    q: "¿Mi información personal está segura?",
-    a: "Sí. Tu número de teléfono y correo nunca son visibles públicamente en la plataforma. Cuando haces contacto con un profesional, lo haces vía WhatsApp de forma directa. Cumplimos con la Ley 8968 de Protección de Datos de Costa Rica.",
-  },
+const FAQ_ICONS = [
+  <HelpCircle key="0" className="h-4 w-4" />, <UserCheck key="1" className="h-4 w-4" />,
+  <ShieldCheck key="2" className="h-4 w-4" />, <Search key="3" className="h-4 w-4" />,
+  <CalendarDays key="4" className="h-4 w-4" />, <Star key="5" className="h-4 w-4" />,
+  <HelpCircle key="6" className="h-4 w-4" />, <UserCheck key="7" className="h-4 w-4" />,
 ];
 
 function FaqAccordion() {
+  const t = useTranslations("ayuda");
   const [open, setOpen] = useState<number | null>(null);
   return (
     <div className="divide-y divide-gray-100">
-      {FAQ_ITEMS.map((item, i) => (
+      {FAQ_ICONS.map((icon, i) => (
         <div key={i}>
           <button
             onClick={() => setOpen(open === i ? null : i)}
             className="w-full flex items-center justify-between py-5 text-left gap-4 group"
           >
             <div className="flex items-center gap-3 flex-1">
-              <span className="text-[#009FD9] shrink-0">{item.icon}</span>
+              <span className="text-[#009FD9] shrink-0">{icon}</span>
               <span className="text-base font-semibold text-[#1a2744] group-hover:text-[#009FD9] transition-colors">
-                {item.q}
+                {t(`faq${i}Q`)}
               </span>
             </div>
             <ChevronDown
@@ -74,7 +39,7 @@ function FaqAccordion() {
             />
           </button>
           {open === i && (
-            <p className="pb-5 text-sm text-gray-500 leading-relaxed pl-7">{item.a}</p>
+            <p className="pb-5 text-sm text-gray-500 leading-relaxed pl-7">{t(`faq${i}A`)}</p>
           )}
         </div>
       ))}
@@ -82,47 +47,18 @@ function FaqAccordion() {
   );
 }
 
-/* ── Help Categories ── */
+/* ── Help Categories (icons + href in code; text from i18n) ── */
 const HELP_CATEGORIES = [
-  {
-    icon: <UserCheck className="h-6 w-6 text-[#009FD9]" />,
-    title: "Crear tu cuenta",
-    description: "Regístrate con correo, Google o Facebook. El proceso toma menos de 2 minutos.",
-    href: null,
-  },
-  {
-    icon: <Search className="h-6 w-6 text-[#009FD9]" />,
-    title: "Buscar profesionales",
-    description: "Busca por servicio, provincia y cantón. El buscador entiende sinónimos.",
-    href: "/buscar",
-  },
-  {
-    icon: <ShieldCheck className="h-6 w-6 text-[#009FD9]" />,
-    title: "Verificación de identidad",
-    description: "Cómo confirmamos la identidad de los profesionales con el padrón del TSE.",
-    href: null,
-  },
-  {
-    icon: <CalendarDays className="h-6 w-6 text-[#009FD9]" />,
-    title: "Solicitudes y proyectos",
-    description: "Cómo solicitar un servicio, publicar un proyecto y gestionar propuestas.",
-    href: "/publicar-proyecto",
-  },
-  {
-    icon: <Star className="h-6 w-6 text-[#009FD9]" />,
-    title: "Reseñas y calificaciones",
-    description: "Cómo dejar y gestionar reseñas verificadas de servicios.",
-    href: null,
-  },
-  {
-    icon: <MessageSquare className="h-6 w-6 text-[#009FD9]" />,
-    title: "Contactar soporte",
-    description: "¿No encontraste lo que buscas? Nuestro equipo responde en menos de 24 horas.",
-    href: "/soporte",
-  },
+  { icon: <UserCheck className="h-6 w-6 text-[#009FD9]" />, href: null },
+  { icon: <Search className="h-6 w-6 text-[#009FD9]" />, href: "/buscar" as const },
+  { icon: <ShieldCheck className="h-6 w-6 text-[#009FD9]" />, href: null },
+  { icon: <CalendarDays className="h-6 w-6 text-[#009FD9]" />, href: "/publicar-proyecto" as const },
+  { icon: <Star className="h-6 w-6 text-[#009FD9]" />, href: null },
+  { icon: <MessageSquare className="h-6 w-6 text-[#009FD9]" />, href: "/soporte" as const },
 ];
 
 export default function AyudaPage() {
+  const t = useTranslations("ayuda");
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <LandingNavbar />
@@ -131,13 +67,13 @@ export default function AyudaPage() {
       <section className="pt-32 pb-14 bg-white text-center px-4">
         <FadeInUp>
           <span className="inline-block text-xs font-bold uppercase tracking-widest text-[#009FD9] bg-[#EBF5FB] px-4 py-1.5 rounded-full mb-4">
-            Centro de ayuda
+            {t("eyebrow")}
           </span>
           <h1 className="text-4xl sm:text-5xl font-extrabold text-[#1a2744] mb-4 leading-tight">
-            ¿En qué te podemos ayudar?
+            {t("title")}
           </h1>
           <p className="text-lg text-gray-500 max-w-lg mx-auto">
-            Encuentra respuestas rápidas o contáctanos directamente.
+            {t("subtitle")}
           </p>
         </FadeInUp>
       </section>
@@ -151,12 +87,12 @@ export default function AyudaPage() {
                 const card = (
                   <div className="bg-white border border-gray-100 rounded-2xl p-6 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 h-full">
                     <div className="mb-3">{cat.icon}</div>
-                    <h3 className="text-sm font-bold text-[#1a2744] mb-1">{cat.title}</h3>
-                    <p className="text-sm text-gray-400 leading-relaxed">{cat.description}</p>
+                    <h3 className="text-sm font-bold text-[#1a2744] mb-1">{t(`cat${i}Title`)}</h3>
+                    <p className="text-sm text-gray-400 leading-relaxed">{t(`cat${i}Desc`)}</p>
                   </div>
                 );
                 return (
-                  <FadeInUp key={cat.title} delay={i * 50}>
+                  <FadeInUp key={i} delay={i * 50}>
                     {cat.href ? (
                       <Link href={cat.href} className="block h-full">{card}</Link>
                     ) : (
@@ -174,8 +110,8 @@ export default function AyudaPage() {
       <section className="py-16 px-4 bg-white">
         <div className="mx-auto max-w-4xl">
           <FadeInUp>
-            <h2 className="text-2xl font-extrabold text-[#1a2744] mb-1">Preguntas frecuentes</h2>
-            <p className="text-gray-500 mb-8 text-sm">Las consultas más comunes de nuestra comunidad.</p>
+            <h2 className="text-2xl font-extrabold text-[#1a2744] mb-1">{t("faqTitle")}</h2>
+            <p className="text-gray-500 mb-8 text-sm">{t("faqSubtitle")}</p>
             <FaqAccordion />
           </FadeInUp>
         </div>
@@ -187,8 +123,8 @@ export default function AyudaPage() {
           <FadeInUp>
             <div className="bg-white rounded-3xl border border-gray-100 p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
               <div>
-                <h2 className="text-xl font-bold text-[#1a2744] mb-1">¿No encontraste lo que buscas?</h2>
-                <p className="text-sm text-gray-500">Nuestro equipo responde rápido.</p>
+                <h2 className="text-xl font-bold text-[#1a2744] mb-1">{t("contactTitle")}</h2>
+                <p className="text-sm text-gray-500">{t("contactSubtitle")}</p>
               </div>
               <div className="shrink-0 flex flex-col items-stretch sm:items-end gap-2">
                 <Link
@@ -196,7 +132,7 @@ export default function AyudaPage() {
                   className="inline-flex items-center justify-center gap-2 bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold px-6 py-3 rounded-full transition-all text-sm whitespace-nowrap"
                 >
                   <MessageSquare className="h-4 w-4" />
-                  Abrir ticket de soporte
+                  {t("contactCta")}
                 </Link>
                 <a
                   href={SUPPORT_WHATSAPP_URL}
@@ -204,7 +140,7 @@ export default function AyudaPage() {
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center gap-1.5 text-xs text-[#9ca3af] hover:text-[#1ebe5d] transition-colors"
                 >
-                  <WhatsAppIcon className="h-3.5 w-3.5" /> ¿Prefieres WhatsApp? Escríbenos
+                  <WhatsAppIcon className="h-3.5 w-3.5" /> {t("contactWhatsapp")}
                 </a>
               </div>
             </div>
