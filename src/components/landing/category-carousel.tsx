@@ -38,8 +38,9 @@ function Card({ id, lifted }: { id: string; lifted: boolean }) {
   const label = getCategoryLabel(id);
   return (
     <div
-      className="shrink-0 mr-4 sm:mr-5 py-2"
-      style={{ transform: `translateY(${lifted ? "-20px" : "20px"})` }}
+      // Zigzag offset only from sm+ (desktop); on mobile the row is flat —
+      // a single straight strip the user swipes with a finger.
+      className={`shrink-0 mr-4 sm:mr-5 py-2 ${lifted ? "sm:-translate-y-5" : "sm:translate-y-5"}`}
     >
       <Link
         href={`/buscar?categoria=${id}`}
@@ -78,6 +79,9 @@ export function CategoryCarousel() {
   const pos = useRef(0);        // float translateX (px, ≤ 0 as it drifts left).
   const half = useRef(0);       // width of ONE set = scrollWidth / 2.
   const paused = useRef(false);
+  // On mobile we never auto-scroll — the user swipes the single flat row by
+  // hand (arrows are hidden on mobile too). Desktop keeps the auto glide.
+  const autoEnabled = useRef(true);
   const tween = useRef<{ from: number; to: number; start: number } | null>(null);
   const drag = useRef({ active: false, startX: 0, startPos: 0, moved: false });
 
@@ -91,6 +95,12 @@ export function CategoryCarousel() {
     const ro = new ResizeObserver(measure);
     ro.observe(tr);
     window.addEventListener("resize", measure);
+
+    // Auto-scroll on desktop only; mobile is swipe-driven (no auto-move).
+    const mq = window.matchMedia("(min-width: 640px)");
+    const syncAuto = () => { autoEnabled.current = mq.matches; };
+    syncAuto();
+    mq.addEventListener("change", syncAuto);
 
     const wrap = (p: number) => {
       const h = half.current;
@@ -116,8 +126,9 @@ export function CategoryCarousel() {
           const t = Math.min(1, (now - start) / NUDGE_MS);
           pos.current = from + (to - from) * easeInOut(t);
           if (t >= 1) tween.current = null;
-        } else if (!paused.current && !drag.current.active) {
-          // Home carousel always animates (reduced-motion intentionally ignored).
+        } else if (autoEnabled.current && !paused.current && !drag.current.active) {
+          // Desktop auto glide (reduced-motion intentionally ignored). On mobile
+          // autoEnabled is false → the track only moves when the user swipes.
           pos.current -= AUTO_SPEED * dt;
         }
         pos.current = wrap(pos.current);
@@ -131,6 +142,7 @@ export function CategoryCarousel() {
       cancelAnimationFrame(raf);
       ro.disconnect();
       window.removeEventListener("resize", measure);
+      mq.removeEventListener("change", syncAuto);
     };
   }, []);
 
