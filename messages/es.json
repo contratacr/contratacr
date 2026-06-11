@@ -776,6 +776,23 @@
       "subtitle": "Explora los servicios más solicitados en Costa Rica.",
       "viewAll": "Ver todas las categorías"
     },
+    "howItWorks": {
+      "eyebrow": "Cómo funciona",
+      "heading": "Así funciona ContrataCR",
+      "subtitle": "Para quienes buscan un profesional y para quienes ofrecen sus servicios. Simple, transparente y seguro.",
+      "point0Title": "Describe tu proyecto",
+      "point0Desc": "Cuéntanos qué necesitas y dónde, en tus palabras. Sin llamadas a ciegas.",
+      "point1Title": "Profesionales verificados",
+      "point1Desc": "Identidad confirmada contra los registros oficiales y reseñas reales de clientes.",
+      "point2Title": "Coordina por WhatsApp",
+      "point2Desc": "Hablas directo con el profesional para acordar fecha y precio, sin intermediarios.",
+      "point3Title": "Con soporte cuando lo necesites",
+      "point3Desc": "Deja tu reseña al terminar y, si algo no sale bien, te ayudamos.",
+      "pitchTitle": "¿Ofreces servicios?",
+      "pitchDesc": "Crea tu perfil gratis y recibe solicitudes de clientes de tu zona. Sin comisiones, y los perfiles verificados aparecen primero.",
+      "pitchCta": "Registrarse como profesional",
+      "pitchHow": "Cómo funciona"
+    },
     "why": {
       "heading": "Por qué los clientes eligen ContrataCR.",
       "subtitle": "Cada día, miles de ticos confían en ContrataCR para encontrar el profesional que necesitan — y los respaldamos en cada proyecto.",
