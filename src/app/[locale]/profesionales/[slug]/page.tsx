@@ -106,15 +106,22 @@ export default function ProfilePage({ params }: ProfilePageProps) {
     load();
   }, [params]);
 
-  // Close dropdown on outside click
+  // Close dropdown on outside click / tap / Escape
   useEffect(() => {
-    function onClickOutside(e: MouseEvent) {
+    function onClickOutside(e: Event) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setDropdownOpen(false);
       }
     }
+    function onEsc(e: KeyboardEvent) { if (e.key === "Escape") setDropdownOpen(false); }
     document.addEventListener("mousedown", onClickOutside);
-    return () => document.removeEventListener("mousedown", onClickOutside);
+    document.addEventListener("touchstart", onClickOutside);
+    document.addEventListener("keydown", onEsc);
+    return () => {
+      document.removeEventListener("mousedown", onClickOutside);
+      document.removeEventListener("touchstart", onClickOutside);
+      document.removeEventListener("keydown", onEsc);
+    };
   }, []);
 
   if (loading) {

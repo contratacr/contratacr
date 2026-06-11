@@ -469,13 +469,18 @@ export function LandingNavbar() {
   const compactSuggestions = useMemo(() => matchCategories(searchQuery), [searchQuery]);
 
   useEffect(() => {
-    function onClickOutside(e: MouseEvent) {
+    function onClickOutside(e: Event) {
       if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
         setUserMenuOpen(false);
       }
     }
+    // Listen to BOTH mouse and touch so tapping away closes the menu on mobile too.
     document.addEventListener("mousedown", onClickOutside);
-    return () => document.removeEventListener("mousedown", onClickOutside);
+    document.addEventListener("touchstart", onClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", onClickOutside);
+      document.removeEventListener("touchstart", onClickOutside);
+    };
   }, []);
 
   // Track small screens so the compact search placeholder can shorten to fit.

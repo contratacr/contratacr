@@ -179,6 +179,14 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, initi
   const [savingVisibility, setSavingVisibility] = useState(false);
   const [showPrivateConfirm, setShowPrivateConfirm] = useState(false);
 
+  // Close the "hacer privada" confirm on Escape (it already closes on scrim tap).
+  useEffect(() => {
+    if (!showPrivateConfirm) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setShowPrivateConfirm(false); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [showPrivateConfirm]);
+
   // Generator form. For TODAY the start defaults to the next rounded full hour
   // (e.g. 12:49 → 13:00). "Hora puntual" uses puntualDefault (next full hour today,
   // 8:00 a.m. for a future date) and resets when the date changes.
