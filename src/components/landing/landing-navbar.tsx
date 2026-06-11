@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import {
   X, Menu, Mail, Lock, Eye, EyeOff, AlertCircle, ChevronDown, Search, MapPin,
-  LayoutDashboard, LogOut, Bookmark, CalendarDays, FolderOpen, UserPlus, Briefcase, Compass, Settings, Bell,
+  LayoutDashboard, LogOut, Bookmark, CalendarDays, FolderOpen, UserPlus, Briefcase, Compass, Settings, Bell, Globe,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -72,23 +72,35 @@ function LanguageTogglePill() {
   }
 
   return (
-    <div className="inline-flex border border-gray-200 rounded-full overflow-hidden text-[13px] font-medium shrink-0">
-      {["es", "en"].map((lang) => {
-        const active = locale === lang;
-        return (
-          <button
-            key={lang}
-            onClick={() => switchLang(lang)}
-            className="px-2.5 py-1 transition-colors"
-            style={{
-              background: active ? "#009FD9" : "transparent",
-              color: active ? "#fff" : "#6b7280",
-            }}
-          >
-            {lang.toUpperCase()}
-          </button>
-        );
-      })}
+    // Globe icon makes it instantly readable as a LANGUAGE control; both
+    // languages stay visible with the active one highlighted (brand) and the
+    // other clearly tappable. Compact + responsive (fits ~360px).
+    <div
+      role="group"
+      aria-label="Cambiar idioma / Change language"
+      className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white pl-2 pr-0.5 py-0.5 shrink-0"
+    >
+      <Globe className="h-3.5 w-3.5 text-gray-400 shrink-0" aria-hidden />
+      <div className="inline-flex rounded-full overflow-hidden text-[12px] font-semibold">
+        {["es", "en"].map((lang) => {
+          const active = locale === lang;
+          return (
+            <button
+              key={lang}
+              onClick={() => switchLang(lang)}
+              aria-pressed={active}
+              aria-label={lang === "es" ? "Español" : "English"}
+              title={lang === "es" ? "Español" : "English"}
+              className={cn(
+                "px-2 py-0.5 rounded-full transition-colors",
+                active ? "bg-[#009FD9] text-white" : "text-gray-500 hover:text-[#1a2744]"
+              )}
+            >
+              {lang.toUpperCase()}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
