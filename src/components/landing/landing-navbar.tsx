@@ -6,7 +6,7 @@ import {
   LayoutDashboard, LogOut, Bookmark, CalendarDays, FolderOpen, UserPlus, Briefcase, Compass, Settings, Bell,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -99,9 +99,12 @@ function LanguageTogglePill() {
    so each link lands on the correct /buscar?categoria=<id> filter. The full
    taxonomy is reachable via the autocomplete search + "Ver todas". */
 type CatLink = { label: string; id: string };
-const CATEGORY_COLUMNS: { heading: string; links: CatLink[] }[] = [
+// `groupKey` resolves to header.catGroups.<groupKey> for the (translated)
+// column heading. The per-link `label` stays in Spanish for now — the category
+// taxonomy is translated app-wide in its own pass (getCategoryLabel).
+const CATEGORY_COLUMNS: { groupKey: string; links: CatLink[] }[] = [
   {
-    heading: "Hogar e interior",
+    groupKey: "home",
     links: [
       { label: "Plomería",            id: "plomeria" },
       { label: "Electricidad",        id: "electricidad" },
@@ -112,7 +115,7 @@ const CATEGORY_COLUMNS: { heading: string; links: CatLink[] }[] = [
     ],
   },
   {
-    heading: "Exterior y jardín",
+    groupKey: "outdoor",
     links: [
       { label: "Jardinería",            id: "jardineria" },
       { label: "Construcción",          id: "construccion" },
@@ -123,7 +126,7 @@ const CATEGORY_COLUMNS: { heading: string; links: CatLink[] }[] = [
     ],
   },
   {
-    heading: "Más servicios",
+    groupKey: "more",
     links: [
       { label: "Soporte técnico",          id: "soporte_tecnico" },
       { label: "Cámaras de seguridad",     id: "camaras_seguridad" },
@@ -135,11 +138,12 @@ const CATEGORY_COLUMNS: { heading: string; links: CatLink[] }[] = [
   },
 ];
 
-const RESOURCES_LINKS: { label: string; href: string }[] = [
-  { label: "Cómo funciona",                 href: "/como-funciona" },
-  { label: "Centro de ayuda",               href: "/ayuda" },
-  { label: "Consejos para profesionales",   href: "/atraer-clientes" },
-  { label: "Soporte",                       href: "/soporte" },
+// `key` resolves to header.resourceLinks.<key> for the translated label.
+const RESOURCES_LINKS: { key: string; href: string }[] = [
+  { key: "howItWorks", href: "/como-funciona" },
+  { key: "helpCenter", href: "/ayuda" },
+  { key: "proTips",    href: "/atraer-clientes" },
+  { key: "support",    href: "/soporte" },
 ];
 
 /* ─── Accent- and typo-tolerant category matcher ───
@@ -198,6 +202,7 @@ function CategoryAutocomplete({
   onNavigate?: () => void;
   size?: "md" | "lg";
 }) {
+  const t = useTranslations("header");
   const router = useRouter();
   const [q, setQ] = useState("");
   const [active, setActive] = useState(0);
@@ -254,7 +259,7 @@ function CategoryAutocomplete({
           onBlur={() => { blurTimer.current = setTimeout(() => setFocused(false), 150); }}
           onKeyDown={onKeyDown}
           placeholder={placeholder}
-          aria-label="Buscar un servicio"
+          aria-label={t("searchServiceAria")}
           className="flex-1 min-w-0 bg-transparent text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none"
         />
       </form>
@@ -266,7 +271,7 @@ function CategoryAutocomplete({
               onMouseDown={(e) => { e.preventDefault(); go(); }}
               className="w-full text-left px-4 py-2.5 text-sm text-gray-500 hover:bg-gray-50"
             >
-              No encontramos ese servicio. <span className="text-[#009FD9] font-medium">Ver todos los profesionales</span>
+              {t("noServiceFound")} <span className="text-[#009FD9] font-medium">{t("viewAllProfessionals")}</span>
             </button>
           ) : (
             suggestions.map((s, i) => (
@@ -292,6 +297,8 @@ function CategoryAutocomplete({
 
 /* ─── Login Modal ─── */
 function LoginModal({ onClose }: { onClose: () => void }) {
+  const t = useTranslations("header.loginModal");
+  const locale = useLocale();
   const [showPw, setShowPw] = useState(false);
   const [mode, setMode] = useState<"login" | "register">("login");
   const [email, setEmail] = useState("");
@@ -319,17 +326,17 @@ function LoginModal({ onClose }: { onClose: () => void }) {
 
   async function handleEmailAuth(e: React.FormEvent) {
     e.preventDefault();
-    if (!email || !password) { setError("Completa todos los campos."); return; }
+    if (!email || !password) { setError(t("fillAllFields")); return; }
     setLoading(true); setError(null);
     const supabase = createClient();
     if (mode === "login") {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) { setError("Correo o contraseña incorrectos."); setLoading(false); return; }
+      if (error) { setError(t("wrongCredentials")); setLoading(false); return; }
       onClose();
     } else {
       const { error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: callbackUrl } });
       if (error) { setError(error.message); setLoading(false); return; }
-      setSuccess("¡Revisa tu correo para confirmar tu cuenta!");
+      setSuccess(t("checkEmailConfirm"));
       setLoading(false);
     }
   }
@@ -348,17 +355,17 @@ function LoginModal({ onClose }: { onClose: () => void }) {
         <div className="mb-6">
           <ContrataCRLogo className="mb-4" />
           <h2 className="text-2xl font-bold text-[#1a2744]">
-            {mode === "login" ? "Bienvenido de vuelta" : "Crear cuenta gratis"}
+            {mode === "login" ? t("welcomeBack") : t("createAccount")}
           </h2>
-          <p className="text-sm text-gray-400 mt-1">{mode === "login" ? "Inicia sesión para continuar" : "Regístrate en segundos"}</p>
+          <p className="text-sm text-gray-400 mt-1">{mode === "login" ? t("loginToContinue") : t("registerSeconds")}</p>
         </div>
 
         {success ? (
           <div className="text-center py-6">
             <div className="text-4xl mb-3">📧</div>
-            <p className="font-semibold text-[#1a2744] mb-2">¡Revisa tu correo!</p>
+            <p className="font-semibold text-[#1a2744] mb-2">{t("checkEmailTitle")}</p>
             <p className="text-sm text-gray-400">{success}</p>
-            <button onClick={onClose} className="mt-6 text-sm text-[#009FD9] hover:underline">Cerrar</button>
+            <button onClick={onClose} className="mt-6 text-sm text-[#009FD9] hover:underline">{t("close")}</button>
           </div>
         ) : (
           <>
@@ -371,19 +378,19 @@ function LoginModal({ onClose }: { onClose: () => void }) {
                   <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
                   <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
                 </svg>
-                Continuar con Google
+                {t("continueGoogle")}
               </button>
               <button onClick={() => handleOAuth("facebook")} disabled={loading}
                 className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-200 hover:bg-gray-50 transition-all text-sm font-medium text-gray-700 active:scale-[0.98] disabled:opacity-60">
                 <svg className="h-5 w-5 shrink-0 text-[#1877F2]" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
                 </svg>
-                Continuar con Facebook
+                {t("continueFacebook")}
               </button>
             </div>
 
             <div className="flex items-center gap-3 mb-5">
-              <div className="flex-1 h-px bg-gray-100" /><span className="text-xs text-gray-400 font-medium">o</span><div className="flex-1 h-px bg-gray-100" />
+              <div className="flex-1 h-px bg-gray-100" /><span className="text-xs text-gray-400 font-medium">{t("or")}</span><div className="flex-1 h-px bg-gray-100" />
             </div>
 
             <form onSubmit={handleEmailAuth} className="space-y-3 mb-4">
@@ -394,12 +401,12 @@ function LoginModal({ onClose }: { onClose: () => void }) {
               )}
               <div className="relative">
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Correo electrónico"
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t("email")}
                   className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30 focus:border-[#009FD9] transition-all bg-gray-50/50 placeholder:text-gray-400" />
               </div>
               <div className="relative">
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
-                <input type={showPw ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Contraseña"
+                <input type={showPw ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t("password")}
                   className="w-full pl-10 pr-10 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30 focus:border-[#009FD9] transition-all bg-gray-50/50 placeholder:text-gray-400" />
                 <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500">
                   {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -408,18 +415,18 @@ function LoginModal({ onClose }: { onClose: () => void }) {
               <button type="submit" disabled={loading}
                 className="w-full py-3 rounded-xl bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold text-sm transition-all active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2">
                 {loading && <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />}
-                {mode === "login" ? "Iniciar sesión" : "Crear cuenta"}
+                {mode === "login" ? t("loginBtn") : t("createBtn")}
               </button>
             </form>
 
             <p className="text-center text-sm text-gray-400">
               {mode === "login" ? (
-                <>¿No tienes cuenta?{" "}
-                  <button onClick={() => { onClose(); window.location.assign("/es/registro"); }} className="text-[#009FD9] font-semibold hover:underline">Regístrate gratis</button>
+                <>{t("noAccount")}{" "}
+                  <button onClick={() => { onClose(); window.location.assign(`/${locale}/registro`); }} className="text-[#009FD9] font-semibold hover:underline">{t("registerFree")}</button>
                 </>
               ) : (
-                <>¿Ya tienes cuenta?{" "}
-                  <button onClick={() => { setMode("login"); setError(null); }} className="text-[#009FD9] font-semibold hover:underline">Inicia sesión</button>
+                <>{t("haveAccount")}{" "}
+                  <button onClick={() => { setMode("login"); setError(null); }} className="text-[#009FD9] font-semibold hover:underline">{t("loginLink")}</button>
                 </>
               )}
             </p>
@@ -457,6 +464,7 @@ function AccountMenu({
   proPanelHref, clientPanelHref, sentBookingsHref, sentProjectsHref,
   savedHref, notificationsHref, accountHref, notifUnread, onSignOut, onOpen,
 }: AccountMenuProps) {
+  const t = useTranslations("header");
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -507,12 +515,12 @@ function AccountMenu({
               className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
             >
               <LayoutDashboard className="h-4 w-4 text-[#009FD9]" />
-              Mi panel
+              {t("myPanel")}
             </a>
           )}
 
           <p className="px-3 pt-2 pb-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-            {isPro ? "Contratar servicios" : "Mi cuenta"}
+            {isPro ? t("hireServices") : t("myAccount")}
           </p>
           {!isPro && (
             <a
@@ -521,7 +529,7 @@ function AccountMenu({
               className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
             >
               <LayoutDashboard className="h-4 w-4 text-[#009FD9]" />
-              Mi panel
+              {t("myPanel")}
             </a>
           )}
           <a
@@ -530,7 +538,7 @@ function AccountMenu({
             className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
           >
             <CalendarDays className="h-4 w-4 text-gray-400" />
-            {isPro ? "Mis solicitudes enviadas" : "Mis solicitudes"}
+            {isPro ? t("sentRequests") : t("myRequests")}
           </a>
           <a
             href={sentProjectsHref}
@@ -538,7 +546,7 @@ function AccountMenu({
             className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
           >
             <FolderOpen className="h-4 w-4 text-gray-400" />
-            {isPro ? "Mis proyectos publicados" : "Mis proyectos"}
+            {isPro ? t("publishedProjects") : t("myProjects")}
           </a>
           <a
             href={savedHref}
@@ -546,7 +554,7 @@ function AccountMenu({
             className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
           >
             <Bookmark className="h-4 w-4 text-gray-400" />
-            Mis favoritos
+            {t("favorites")}
           </a>
           <a
             href={notificationsHref}
@@ -554,7 +562,7 @@ function AccountMenu({
             className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
           >
             <Bell className="h-4 w-4 text-gray-400" />
-            <span className="flex-1">Notificaciones</span>
+            <span className="flex-1">{t("notifications")}</span>
             {notifUnread > 0 && (
               <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">{notifUnread > 9 ? "9+" : notifUnread}</span>
             )}
@@ -565,7 +573,7 @@ function AccountMenu({
             className="flex items-center gap-2.5 px-3 py-2 mt-1 border-t border-gray-50 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
           >
             <Settings className="h-4 w-4 text-gray-400" />
-            Cuenta y seguridad
+            {t("accountSecurity")}
           </a>
 
           {!isPro && (
@@ -575,7 +583,7 @@ function AccountMenu({
               className="flex items-center gap-2.5 px-3 py-2 mt-1 border-t border-gray-50 text-sm text-[#009FD9] hover:bg-[#EBF5FB] transition-colors"
             >
               <Briefcase className="h-4 w-4" />
-              Ofrecer mis servicios
+              {t("offerServices")}
             </Link>
           )}
 
@@ -584,7 +592,7 @@ function AccountMenu({
             className="w-full flex items-center gap-2.5 px-3 py-2 mt-1 border-t border-gray-50 text-sm text-red-600 hover:bg-red-50 transition-colors"
           >
             <LogOut className="h-4 w-4" />
-            Cerrar sesión
+            {t("signOut")}
           </button>
         </div>
       )}
@@ -615,6 +623,8 @@ export function LandingNavbar() {
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const drawerTouchX = useRef<number | null>(null);
   const router = useRouter();
+  const t = useTranslations("header");
+  const locale = useLocale();
   const { user, avatarUrl } = useAuth();
 
   const role = user?.user_metadata?.role as string | undefined;
@@ -625,14 +635,14 @@ export function LandingNavbar() {
   // A professional is a superset of a client. For a professional the client
   // ("Contratar servicios") sections live INSIDE the unified pro dashboard, so a
   // pro never switches panels; a plain client uses the client dashboard.
-  const proPanelHref = "/es/dashboard/profesional";
-  const clientPanelHref = "/es/dashboard/cliente";
+  const proPanelHref = `/${locale}/dashboard/profesional`;
+  const clientPanelHref = `/${locale}/dashboard/cliente`;
   const primaryPanelHref = isPro ? proPanelHref : clientPanelHref;
-  const sentBookingsHref = isPro ? "/es/dashboard/profesional?tab=sent_bookings" : "/es/dashboard/cliente?tab=bookings";
-  const sentProjectsHref = isPro ? "/es/dashboard/profesional?tab=sent_projects" : "/es/dashboard/cliente?tab=projects";
-  const savedHref = isPro ? "/es/dashboard/profesional?tab=saved" : "/es/dashboard/cliente?tab=saved";
-  const accountHref = isPro ? "/es/dashboard/profesional?tab=cuenta" : "/es/dashboard/cliente?tab=profile";
-  const notificationsHref = isPro ? "/es/dashboard/profesional?tab=notifications" : "/es/dashboard/cliente?tab=notifications";
+  const sentBookingsHref = isPro ? `${proPanelHref}?tab=sent_bookings` : `${clientPanelHref}?tab=bookings`;
+  const sentProjectsHref = isPro ? `${proPanelHref}?tab=sent_projects` : `${clientPanelHref}?tab=projects`;
+  const savedHref = isPro ? `${proPanelHref}?tab=saved` : `${clientPanelHref}?tab=saved`;
+  const accountHref = isPro ? `${proPanelHref}?tab=cuenta` : `${clientPanelHref}?tab=profile`;
+  const notificationsHref = isPro ? `${proPanelHref}?tab=notifications` : `${clientPanelHref}?tab=notifications`;
   // Unread notifications count for the account menu + mobile drawer link badges
   // (the bell handles its own live updates; this refreshes when those open).
   const [notifUnread, setNotifUnread] = useState(0);
@@ -671,7 +681,7 @@ export function LandingNavbar() {
   async function handleSignOut() {
     const supabase = createClient();
     await supabase.auth.signOut();
-    window.location.href = "/es";
+    window.location.href = `/${locale}`;
   }
 
   useEffect(() => {
@@ -827,7 +837,7 @@ export function LandingNavbar() {
                       openMenu === "categorias" ? "text-[#1a2744] bg-gray-50" : "text-[#374151] hover:text-[#1a2744] hover:bg-gray-50"
                     )}
                   >
-                    Categorías
+                    {t("categories")}
                     <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", openMenu === "categorias" && "rotate-180")} />
                   </button>
 
@@ -838,14 +848,14 @@ export function LandingNavbar() {
                     >
                       <div className="mb-4">
                         <CategoryAutocomplete
-                          placeholder="Busca un servicio… ej. plomería, niñera"
+                          placeholder={t("searchServicePlaceholder")}
                           onNavigate={() => setOpenMenu(null)}
                         />
                       </div>
                       <div className="grid grid-cols-3 gap-6">
                         {CATEGORY_COLUMNS.map((col) => (
-                          <div key={col.heading}>
-                            <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">{col.heading}</h4>
+                          <div key={col.groupKey}>
+                            <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">{t(`catGroups.${col.groupKey}`)}</h4>
                             <ul className="space-y-2.5">
                               {col.links.map((link) => (
                                 <li key={link.id}>
@@ -868,7 +878,7 @@ export function LandingNavbar() {
                           className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#009FD9] hover:underline"
                         >
                           <Compass className="h-4 w-4" />
-                          Ver todas las categorías
+                          {t("viewAllCategories")}
                         </Link>
                       </div>
                     </div>
@@ -880,7 +890,7 @@ export function LandingNavbar() {
                   href="/como-funciona"
                   className="px-4 py-2 rounded-xl text-sm font-medium text-[#374151] hover:text-[#1a2744] hover:bg-gray-50 transition-colors"
                 >
-                  Cómo funciona
+                  {t("howItWorks")}
                 </Link>
 
                 {/* Recursos — simple dropdown */}
@@ -895,7 +905,7 @@ export function LandingNavbar() {
                       openMenu === "recursos" ? "text-[#1a2744] bg-gray-50" : "text-[#374151] hover:text-[#1a2744] hover:bg-gray-50"
                     )}
                   >
-                    Recursos
+                    {t("resources")}
                     <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", openMenu === "recursos" && "rotate-180")} />
                   </button>
                   {openMenu === "recursos" && (
@@ -911,7 +921,7 @@ export function LandingNavbar() {
                               onClick={() => setOpenMenu(null)}
                               className="block px-3 py-2 rounded-lg text-sm text-gray-600 hover:text-[#009FD9] hover:bg-gray-50 transition-colors"
                             >
-                              {link.label}
+                              {t(`resourceLinks.${link.key}`)}
                             </Link>
                           </li>
                         ))}
@@ -933,14 +943,14 @@ export function LandingNavbar() {
                         className="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-xl text-[#009FD9] hover:bg-[#EBF5FB] transition-colors whitespace-nowrap"
                       >
                         <Briefcase className="h-4 w-4" />
-                        Ofrecer mis servicios
+                        {t("offerServices")}
                       </Link>
                     )}
                     <a
                       href={primaryPanelHref}
                       className="text-sm font-medium px-3 py-2 text-[#374151] hover:text-[#1a2744] transition-colors whitespace-nowrap"
                     >
-                      Mi panel
+                      {t("myPanel")}
                     </a>
                     <NotificationBell />
                     <AccountMenu
@@ -967,13 +977,13 @@ export function LandingNavbar() {
                       href="/registro/profesional"
                       className="ml-1 inline-flex items-center bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 rounded-full transition-all duration-150 active:scale-[0.97] shadow-sm hover:shadow-[0_4px_20px_rgba(0,159,217,0.35)] whitespace-nowrap"
                     >
-                      Registrarse como profesional
+                      {t("registerPro")}
                     </Link>
                     <button
                       onClick={() => setShowLogin(true)}
                       className="text-sm font-medium px-3 py-2 rounded-xl text-[#374151] hover:bg-gray-50 transition-colors"
                     >
-                      Ingresar
+                      {t("login")}
                     </button>
                   </>
                 )}
@@ -984,7 +994,7 @@ export function LandingNavbar() {
               <button
                 onClick={() => setMobileOpen(true)}
                 className="lg:hidden ml-auto p-2 rounded-xl text-[#1a2744] hover:bg-gray-50 transition-colors"
-                aria-label="Abrir menú"
+                aria-label={t("openMenu")}
               >
                 <Menu className="h-5 w-5" />
               </button>
@@ -1014,7 +1024,7 @@ export function LandingNavbar() {
                         onKeyDown={handleCompactSearchKeyDown}
                         onFocus={() => { if (searchBlurTimer.current) clearTimeout(searchBlurTimer.current); setSearchFocused(true); }}
                         onBlur={() => { searchBlurTimer.current = setTimeout(() => setSearchFocused(false), 150); }}
-                        placeholder={isSmallScreen ? "¿Qué necesitas?" : "¿Qué servicio estás buscando?"}
+                        placeholder={isSmallScreen ? t("servicePlaceholderShort") : t("servicePlaceholder")}
                         className="flex-1 text-sm sm:text-base text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-none min-w-0"
                         role="combobox"
                         aria-expanded={searchFocused && searchQuery.trim().length > 0}
@@ -1031,7 +1041,7 @@ export function LandingNavbar() {
                         onKeyDown={handleNavLocKeyDown}
                         onFocus={() => { if (navLocBlurTimer.current) clearTimeout(navLocBlurTimer.current); if (navLocSug.length > 0) setNavLocOpen(true); }}
                         onBlur={() => { navLocBlurTimer.current = setTimeout(() => setNavLocOpen(false), 150); }}
-                        placeholder="Ubicación"
+                        placeholder={t("location")}
                         className="flex-1 w-full text-base text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-none min-w-0"
                         role="combobox"
                         aria-expanded={navLocOpen}
@@ -1040,11 +1050,11 @@ export function LandingNavbar() {
                     </div>
                     <button
                       type="submit"
-                      aria-label="Buscar"
+                      aria-label={t("search")}
                       className="ml-1.5 sm:ml-2 h-9 px-3 sm:px-8 bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm sm:text-base font-bold rounded-[4px] transition-colors whitespace-nowrap shrink-0 inline-flex items-center justify-center gap-1.5"
                     >
                       <Search className="h-4 w-4 sm:hidden" />
-                      <span className="hidden sm:inline">Buscar</span>
+                      <span className="hidden sm:inline">{t("search")}</span>
                     </button>
                   </div>
 
@@ -1058,7 +1068,7 @@ export function LandingNavbar() {
                           onMouseDown={(e) => { e.preventDefault(); runCompactSearch(); }}
                           className="w-full text-left px-4 py-2.5 text-sm text-gray-500 hover:bg-gray-50"
                         >
-                          Buscar “{searchQuery.trim()}” en todos los profesionales
+                          {t("searchAll", { q: searchQuery.trim() })}
                         </button>
                       ) : (
                         compactSuggestions.map((s, i) => (
@@ -1097,7 +1107,7 @@ export function LandingNavbar() {
                             <span className="block text-sm font-medium text-[#1a2744] truncate">{s.label}</span>
                             {s.type === "canton" && <span className="block text-[11px] text-gray-400 truncate">{s.sublabel}</span>}
                           </span>
-                          <span className="text-[10px] uppercase tracking-wide text-gray-300 shrink-0">{s.type === "province" ? "Provincia" : "Cantón"}</span>
+                          <span className="text-[10px] uppercase tracking-wide text-gray-300 shrink-0">{s.type === "province" ? t("province") : t("canton")}</span>
                         </button>
                       ))}
                     </div>
@@ -1150,7 +1160,7 @@ export function LandingNavbar() {
         <div
           role="dialog"
           aria-modal="true"
-          aria-label="Menú"
+          aria-label={t("menu")}
           onTouchStart={(e) => { drawerTouchX.current = e.touches[0].clientX; }}
           onTouchEnd={(e) => {
             if (drawerTouchX.current == null) return;
@@ -1170,7 +1180,7 @@ export function LandingNavbar() {
             </Link>
             <button
               onClick={() => setMobileOpen(false)}
-              aria-label="Cerrar menú"
+              aria-label={t("closeMenu")}
               className="p-2 rounded-xl text-[#1a2744] hover:bg-gray-50 transition-colors"
             >
               <X className="h-5 w-5" />
@@ -1182,7 +1192,7 @@ export function LandingNavbar() {
             {/* Smart search on mobile */}
             <div className="mb-5">
               <CategoryAutocomplete
-                placeholder="Busca un servicio…"
+                placeholder={t("searchServicePlaceholderShort")}
                 size="lg"
                 onNavigate={() => setMobileOpen(false)}
               />
@@ -1202,40 +1212,40 @@ export function LandingNavbar() {
                     <p className="text-xs text-gray-400 truncate">{user.email}</p>
                   </div>
                 </div>
-                <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Mi cuenta</p>
+                <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t("myAccount")}</p>
                 <a href={primaryPanelHref} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-2 py-2.5 rounded-lg text-sm font-semibold text-[#111827] hover:bg-gray-50 transition-colors">
-                  <LayoutDashboard className="h-4 w-4 text-[#009FD9] shrink-0" /> Mi panel
+                  <LayoutDashboard className="h-4 w-4 text-[#009FD9] shrink-0" /> {t("myPanel")}
                 </a>
                 <a href={sentBookingsHref} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-2 py-2.5 rounded-lg text-sm text-[#374151] hover:bg-gray-50 transition-colors">
-                  <CalendarDays className="h-4 w-4 text-gray-400 shrink-0" /> {isPro ? "Mis solicitudes enviadas" : "Mis solicitudes"}
+                  <CalendarDays className="h-4 w-4 text-gray-400 shrink-0" /> {isPro ? t("sentRequests") : t("myRequests")}
                 </a>
                 <a href={sentProjectsHref} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-2 py-2.5 rounded-lg text-sm text-[#374151] hover:bg-gray-50 transition-colors">
-                  <FolderOpen className="h-4 w-4 text-gray-400 shrink-0" /> {isPro ? "Mis proyectos publicados" : "Mis proyectos"}
+                  <FolderOpen className="h-4 w-4 text-gray-400 shrink-0" /> {isPro ? t("publishedProjects") : t("myProjects")}
                 </a>
                 <a href={savedHref} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-2 py-2.5 rounded-lg text-sm text-[#374151] hover:bg-gray-50 transition-colors">
-                  <Bookmark className="h-4 w-4 text-gray-400 shrink-0" /> Mis favoritos
+                  <Bookmark className="h-4 w-4 text-gray-400 shrink-0" /> {t("favorites")}
                 </a>
                 <a href={notificationsHref} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-2 py-2.5 rounded-lg text-sm text-[#374151] hover:bg-gray-50 transition-colors">
                   <Bell className="h-4 w-4 text-gray-400 shrink-0" />
-                  <span className="flex-1">Notificaciones</span>
+                  <span className="flex-1">{t("notifications")}</span>
                   {notifUnread > 0 && (
                     <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white shrink-0">{notifUnread > 9 ? "9+" : notifUnread}</span>
                   )}
                 </a>
                 {!isPro && (
                   <Link href="/registro/profesional" onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-2 py-2.5 rounded-lg text-sm font-medium text-[#009FD9] hover:bg-[#EBF5FB] transition-colors">
-                    <Briefcase className="h-4 w-4 shrink-0" /> Ofrecer mis servicios
+                    <Briefcase className="h-4 w-4 shrink-0" /> {t("offerServices")}
                   </Link>
                 )}
                 <a href={accountHref} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-2 py-2.5 rounded-lg text-sm text-[#374151] hover:bg-gray-50 transition-colors">
-                  <Settings className="h-4 w-4 text-gray-400 shrink-0" /> Cuenta y seguridad
+                  <Settings className="h-4 w-4 text-gray-400 shrink-0" /> {t("accountSecurity")}
                 </a>
               </div>
             )}
 
             {/* CATEGORÍAS */}
             <div className="mb-5">
-              <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Categorías</p>
+              <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t("categories")}</p>
               {CATEGORY_COLUMNS.flatMap((col) => col.links).slice(0, 9).map((link) => (
                 <button
                   key={link.id}
@@ -1250,7 +1260,7 @@ export function LandingNavbar() {
                 onClick={() => setMobileOpen(false)}
                 className="flex items-center gap-1.5 px-2 py-2 text-sm font-semibold text-[#009FD9]"
               >
-                <Compass className="h-4 w-4" /> Ver todas las categorías
+                <Compass className="h-4 w-4" /> {t("viewAllCategories")}
               </Link>
             </div>
 
@@ -1260,16 +1270,16 @@ export function LandingNavbar() {
                 + Registrarse como profesional (people who offer services). */}
             {!user && (
               <div className="mb-5">
-                <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Cuenta</p>
+                <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t("account")}</p>
                 <div className="flex flex-col gap-2 px-1 pt-1">
                   <button onClick={() => { setShowLogin(true); setMobileOpen(false); }}
                     className="w-full px-4 py-3 rounded-xl text-sm font-semibold text-[#374151] border border-gray-200 hover:bg-gray-50 text-center transition-colors">
-                    Ingresar
+                    {t("login")}
                   </button>
                   <Link href="/registro/profesional" onClick={() => setMobileOpen(false)}
                     className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-full bg-[#009FD9] text-white text-sm font-bold text-center hover:bg-[#0089bb] transition-colors">
                     <UserPlus className="h-4 w-4" />
-                    Registrarse como profesional
+                    {t("registerPro")}
                   </Link>
                 </div>
               </div>
@@ -1277,7 +1287,7 @@ export function LandingNavbar() {
 
             {/* RECURSOS */}
             <div className="mb-5">
-              <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">Recursos</p>
+              <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t("resources")}</p>
               {RESOURCES_LINKS.map((link) => (
                 <Link
                   key={link.href}
@@ -1285,7 +1295,7 @@ export function LandingNavbar() {
                   onClick={() => setMobileOpen(false)}
                   className="block px-2 py-2 text-sm text-gray-600 hover:text-[#009FD9] transition-colors leading-tight"
                 >
-                  {link.label}
+                  {t(`resourceLinks.${link.key}`)}
                 </Link>
               ))}
             </div>
@@ -1293,7 +1303,7 @@ export function LandingNavbar() {
             {/* Idioma */}
             <div className="border-t border-gray-100 pt-4">
               <div className="flex items-center justify-between px-1">
-                <span className="text-xs text-gray-400 font-medium">Idioma / Language</span>
+                <span className="text-xs text-gray-400 font-medium">{t("language")}</span>
                 <LanguageTogglePill />
               </div>
             </div>
@@ -1303,7 +1313,7 @@ export function LandingNavbar() {
               <div className="mt-4">
                 <button onClick={handleSignOut}
                   className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium text-red-600 border border-red-100 hover:bg-red-50 transition-colors">
-                  <LogOut className="h-4 w-4" /> Cerrar sesión
+                  <LogOut className="h-4 w-4" /> {t("signOut")}
                 </button>
               </div>
             )}
