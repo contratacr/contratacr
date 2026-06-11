@@ -135,8 +135,12 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
   // in-app scheduling), so the contact icon shows whenever a number exists.
   // A pro viewing their OWN card cannot request a service from themselves.
   const isOwn = !!viewerProfileId && viewerProfileId === professional.profileId;
+  // WhatsApp + call are independent of the privada toggle. WhatsApp shows here as
+  // a top icon on BOOKABLE cards (contact-only cards render it as the full-width
+  // primary instead, so it isn't duplicated). Call shows whenever the pro enabled
+  // "Permitir contacto por llamada" and has a reachable number — in BOTH states.
   const showTopWhatsApp = !isOwn && !contactOnly && !!professional.whatsapp;
-  const showTopCall = !isOwn && !!professional.allowPhoneCall && !!professional.whatsapp;
+  const showTopCall = !isOwn && !!professional.allowPhoneCall && !!(professional.callPhone || professional.whatsapp);
   const waHref = professional.whatsapp
     ? getWhatsAppLink(professional.whatsapp, `Hola ${professional.fullName.split(" ")[0]}, vi tu perfil en ContrataCR y me gustaría coordinar un servicio.`)
     : "#";

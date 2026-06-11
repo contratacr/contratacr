@@ -937,6 +937,7 @@ No new migrations. Behavioural/UX fixes + a few API/data-flow corrections.
 
 ### Availability structure
 - One top-level decision **"¿Cómo recibís clientes?"** (Solo WhatsApp / Citas en la app / Ambas). Visibility is no longer a separate question: when scheduling is enabled a **"Disponibilidad privada" toggle** appears (ON ⇒ hidden in /buscar + published slots cleared) (fix 15).
+- **WhatsApp + call are independent of the "Disponibilidad privada" toggle.** Privada only controls the **published schedule + videoconsulta**; it must NOT hide contact options. WhatsApp shows in BOTH states (any pro with a number); **"Llamar"** shows in BOTH states whenever **`allow_phone_call`** is on (number = `callPhone ?? whatsapp`); **booking** ("Solicitar servicio") is the only action gated by `availability_public`. Fixed a bug where the profile used `availabilityPublic ? <Booking/> : <Llamar/>`, which hid the call option whenever the schedule was public — booking and Llamar are now separate conditionals on their own gates (`professional-card.tsx` + `profesionales/[slug]/page.tsx`).
 - Schedules are **per-location only** — the "general/all locations" option was removed; guidance shown when the pro has no workplace and no videoconsulta (fix 16).
 
 ### Photos / booking

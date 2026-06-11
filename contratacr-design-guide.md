@@ -200,6 +200,13 @@ A professional is always **ONE card** (`rounded-2xl bg-white border`, never spli
 ### Separate call vs WhatsApp numbers
 - A pro may set an **optional separate "Número para llamadas"** distinct from their **"Número de WhatsApp"** (`professionals.call_phone`). **If the call number is empty, use the WhatsApp number for calls.** The **WhatsApp** button always uses `whatsapp`; the **"Llamar"/call** action uses `callPhone ?? whatsapp`. Validate both as phone numbers (`PhoneInput`).
 
+### Contact visibility is INDEPENDENT of "Disponibilidad privada"
+- **WhatsApp and call are NOT gated by the privada toggle.** The privada toggle controls only the **published schedule + videoconsulta** (privada ON ⇒ no booking slots / no videoconsulta shown; privada OFF ⇒ schedule + videoconsulta shown). Both states keep WhatsApp + call.
+  - **WhatsApp** shows whenever the pro has a WhatsApp number — in BOTH states. On the /buscar card it renders as a small top-row icon on **bookable** cards and as the full-width primary button on **contact-only** cards (so it's never duplicated); on the profile it's always the green "Contactar por WhatsApp" CTA.
+  - **"Llamar"** shows whenever **`allow_phone_call`** is enabled (and a reachable number exists: `callPhone ?? whatsapp`) — in BOTH states, never tied to privada being ON.
+  - **"Solicitar servicio" / booking** is the only action gated by `availability_public` (privada OFF).
+- **Bug to never reintroduce:** do NOT write `availabilityPublic ? <Booking/> : <Llamar/>` — that hid the call option whenever the schedule was public. Booking and Llamar are independent conditionals, each on its own gate.
+
 ### Dismiss standard — tap-away + Escape (always)
 - **Every** dropdown, menu, autocomplete, popover, modal, and date/time picker MUST close on **click/tap outside** AND on **Escape**, and return focus sensibly. Prefer **Radix** primitives (Dialog/Select/Popover) — they handle this for free. For a CUSTOM outside-click handler, **listen to `mousedown` AND `touchstart`** (mousedown alone can miss touch taps) and add a `keydown`/Escape handler. The content node should `stopPropagation` (or be ref-excluded) so taps inside don't self-close.
 - A modal scrim (`absolute inset-0` / overlay) gets `onClick={onClose}`; the dialog body stops propagation. Never trap the user in an overlay with no tap-away exit.

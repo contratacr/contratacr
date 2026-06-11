@@ -324,8 +324,8 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                   </button>
                 )}
 
-                {/* Solicitar servicio CTA — only when schedule is public */}
-                {professional.availabilityPublic ? (
+                {/* Solicitar servicio CTA — only when the schedule is public. */}
+                {professional.availabilityPublic && (
                   <BookingButton
                     professional={professional}
                     categoryName={professional.categoryId ? tCat(professional.categoryId as Parameters<typeof tCat>[0]) : ""}
@@ -333,7 +333,11 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                     size="md"
                     className="w-full"
                   />
-                ) : (
+                )}
+
+                {/* Llamar — driven by "Permitir contacto por llamada", independent of
+                    the privada toggle: shows in BOTH public and private modes. */}
+                {professional.allowPhoneCall && callDigits && (
                   <a
                     href={`tel:+506${callDigits}`}
                     className="flex items-center justify-center gap-2 w-full border border-[#009FD9] text-[#009FD9] hover:bg-[#EBF5FB] font-semibold py-3 rounded-xl transition-colors text-sm"
@@ -465,6 +469,16 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                             categoryName={professional.categoryId ? tCat(professional.categoryId as Parameters<typeof tCat>[0]) : ""}
                             size="md"
                           />
+                          {/* Llamar — when enabled, available alongside booking (independent of privada). */}
+                          {professional.allowPhoneCall && callDigits && (
+                            <a
+                              href={`tel:+506${callDigits}`}
+                              className="flex items-center justify-center gap-2 border border-[#009FD9] text-[#009FD9] hover:bg-[#EBF5FB] font-semibold py-2.5 px-5 rounded-xl transition-colors text-sm"
+                            >
+                              <Phone className="h-4 w-4" />
+                              Llamar
+                            </a>
+                          )}
                         </div>
                       ) : (
                         <div className="flex flex-col items-center text-center gap-4 py-6">
@@ -497,13 +511,16 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                                 WhatsApp
                               </button>
                             )}
-                            <a
-                              href={`tel:+506${callDigits}`}
-                              className="flex-1 flex items-center justify-center gap-2 border border-[#009FD9] text-[#009FD9] hover:bg-[#EBF5FB] font-semibold py-2.5 rounded-xl transition-colors text-sm"
-                            >
-                              <Phone className="h-4 w-4" />
-                              Llamar
-                            </a>
+                            {/* Llamar — only when the pro enabled phone-call contact. */}
+                            {professional.allowPhoneCall && callDigits && (
+                              <a
+                                href={`tel:+506${callDigits}`}
+                                className="flex-1 flex items-center justify-center gap-2 border border-[#009FD9] text-[#009FD9] hover:bg-[#EBF5FB] font-semibold py-2.5 rounded-xl transition-colors text-sm"
+                              >
+                                <Phone className="h-4 w-4" />
+                                Llamar
+                              </a>
+                            )}
                           </div>
                         </div>
                       )}
