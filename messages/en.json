@@ -756,6 +756,19 @@
     "seguridad": "Security",
     "automotriz": "Automotive"
   },
+  "categoriesPage": {
+    "eyebrow": "Services",
+    "title": "All services on ContrataCR.",
+    "subtitle": "Find professionals for any project, organized by category.",
+    "searchPlaceholder": "Search for a service… e.g. electrician, plumber, nanny",
+    "searchAria": "Search for a service",
+    "noResults": "We couldn't find that service.",
+    "viewAll": "See all professionals",
+    "ctaTitle": "Can't find your category?",
+    "ctaDesc": "We have 90+ specialties available. Message us and we'll help you find the professional you need.",
+    "ctaSearch": "Search professionals",
+    "ctaContact": "Contact us"
+  },
   "landing": {
     "hero": {
       "headline2": "made easy.",

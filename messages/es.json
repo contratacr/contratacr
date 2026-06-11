@@ -756,6 +756,19 @@
     "seguridad": "Seguridad",
     "automotriz": "Automotriz"
   },
+  "categoriesPage": {
+    "eyebrow": "Servicios",
+    "title": "Todos los servicios en ContrataCR.",
+    "subtitle": "Encuentra profesionales para cualquier proyecto, organizados por categoría.",
+    "searchPlaceholder": "Busca un servicio… ej. electricista, plomero, niñera",
+    "searchAria": "Buscar un servicio",
+    "noResults": "No encontramos ese servicio.",
+    "viewAll": "Ver todos los profesionales",
+    "ctaTitle": "¿No encuentras tu categoría?",
+    "ctaDesc": "Tenemos más de 90 especialidades disponibles. Escríbenos y te ayudamos a encontrar el profesional que necesitas.",
+    "ctaSearch": "Buscar profesionales",
+    "ctaContact": "Contactarnos"
+  },
   "landing": {
     "hero": {
       "headline2": "sin complicaciones.",

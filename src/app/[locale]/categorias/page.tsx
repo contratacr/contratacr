@@ -118,6 +118,7 @@ const GROUPS = [
 export default function CategoriasPage() {
   const t = useTranslations("categories");
   const tg = useTranslations("categoryGroups");
+  const tp = useTranslations("categoriesPage");
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -129,13 +130,13 @@ export default function CategoriasPage() {
       <section className="relative z-30 pt-32 pb-12 bg-white text-center px-4">
         <FadeInUp>
           <span className="inline-block text-xs font-bold uppercase tracking-widest text-[#009FD9] bg-[#EBF5FB] px-4 py-1.5 rounded-full mb-4">
-            Servicios
+            {tp("eyebrow")}
           </span>
           <h1 className="text-4xl sm:text-5xl font-extrabold text-[#1a2744] mb-4 leading-tight">
-            Todos los servicios en ContrataCR.
+            {tp("title")}
           </h1>
           <p className="text-lg text-gray-500 max-w-xl mx-auto mb-7">
-            Encuentra profesionales para cualquier proyecto, organizados por categoría.
+            {tp("subtitle")}
           </p>
           {/* Smart search — autocomplete over the full taxonomy, jumps to /buscar */}
           <CategorySearchBox />
@@ -180,22 +181,22 @@ export default function CategoriasPage() {
       {/* CTA Bottom */}
       <section className="py-16 bg-[#1a2744] text-white text-center px-4">
         <FadeInUp>
-          <h2 className="text-3xl font-extrabold mb-3">¿No encuentras tu categoría?</h2>
+          <h2 className="text-3xl font-extrabold mb-3">{tp("ctaTitle")}</h2>
           <p className="text-gray-300 mb-8 max-w-md mx-auto">
-            Tenemos más de 90 especialidades disponibles. Escríbenos y te ayudamos a encontrar el profesional que necesitas.
+            {tp("ctaDesc")}
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/buscar"
               className="inline-flex items-center justify-center bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold px-7 py-3 rounded-full transition-all"
             >
-              Buscar profesionales
+              {tp("ctaSearch")}
             </Link>
             <Link
               href="/contacto"
               className="inline-flex items-center justify-center bg-white/10 hover:bg-white/20 text-white font-semibold px-7 py-3 rounded-full transition-all border border-white/20"
             >
-              Contactarnos
+              {tp("ctaContact")}
             </Link>
           </div>
         </FadeInUp>

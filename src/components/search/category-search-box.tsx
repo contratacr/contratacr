@@ -2,9 +2,10 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Search } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
-import { ALL_CATEGORIES, searchCategories, normalizeText } from "@/lib/data/categories";
+import { ALL_CATEGORIES, searchCategories, normalizeText, getCategoryLabel, getCategoryGroupLabel } from "@/lib/data/categories";
 
 /**
  * Smart category search with autocomplete — accent-insensitive (via
@@ -43,13 +44,15 @@ function matchCategories(query: string, limit = 8): CatMatch[] {
 }
 
 export function CategorySearchBox({
-  placeholder = "Busca un servicio… ej. electricista, plomero, niñera",
+  placeholder,
   autoFocus = false,
 }: {
   placeholder?: string;
   autoFocus?: boolean;
 }) {
   const router = useRouter();
+  const locale = useLocale();
+  const tp = useTranslations("categoriesPage");
   const [q, setQ] = useState("");
   const [active, setActive] = useState(0);
   const [focused, setFocused] = useState(false);
@@ -94,8 +97,8 @@ export function CategorySearchBox({
           onFocus={() => { if (blurTimer.current) clearTimeout(blurTimer.current); setFocused(true); }}
           onBlur={() => { blurTimer.current = setTimeout(() => setFocused(false), 150); }}
           onKeyDown={onKeyDown}
-          placeholder={placeholder}
-          aria-label="Buscar un servicio"
+          placeholder={placeholder ?? tp("searchPlaceholder")}
+          aria-label={tp("searchAria")}
           className="flex-1 min-w-0 h-[52px] bg-transparent text-base text-gray-700 placeholder:text-gray-400 focus:outline-none"
         />
       </form>
@@ -107,7 +110,7 @@ export function CategorySearchBox({
               onMouseDown={(e) => { e.preventDefault(); go(); }}
               className="w-full text-left px-4 py-3 text-sm text-gray-500 hover:bg-gray-50"
             >
-              No encontramos ese servicio. <span className="text-[#009FD9] font-medium">Ver todos los profesionales</span>
+              {tp("noResults")} <span className="text-[#009FD9] font-medium">{tp("viewAll")}</span>
             </button>
           ) : (
             suggestions.map((s, i) => (
@@ -120,8 +123,8 @@ export function CategorySearchBox({
                   active === i ? "bg-[#EBF5FB]" : "hover:bg-gray-50"
                 )}
               >
-                <span className="text-sm font-medium text-[#1a2744]">{s.label}</span>
-                <span className="text-[11px] text-gray-400 shrink-0">{s.groupLabel}</span>
+                <span className="text-sm font-medium text-[#1a2744]">{getCategoryLabel(s.id, locale)}</span>
+                <span className="text-[11px] text-gray-400 shrink-0">{getCategoryGroupLabel(s.groupId, locale)}</span>
               </button>
             ))
           )}
