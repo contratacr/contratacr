@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import { Plus, X, CalendarPlus, Globe, Lock, Loader2, Video, MapPin, AlertCircle } from "lucide-react";
+import { Plus, X, Lock, Loader2, MapPin, AlertCircle } from "lucide-react";
 import { type ContactPreference } from "@/lib/constants";
 import { crTodayISO, isPastDateTimeCR, isTooSoonCR, nextFullHourCR, crDatePretty, LEAD_MINUTES } from "@/lib/time-cr";
 import { getCategoryLabel } from "@/lib/data/categories";
@@ -390,18 +390,13 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
 
         {/* "Disponibilidad privada" (ON = private; hides + clears slots) */}
         <div className="flex items-start justify-between gap-4">
-          <div className="flex items-start gap-3">
-            <div className={cn("flex h-9 w-9 items-center justify-center rounded-full shrink-0", !isPublic ? "bg-[#fef3c7] text-[#b45309]" : "bg-[#f3f4f6] text-[#6b7280]")}>
-              {!isPublic ? <Lock className="h-4 w-4" /> : <Globe className="h-4 w-4" />}
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-[#111827]">Disponibilidad privada</p>
-              <p className="text-xs text-[#6b7280] mt-0.5 max-w-md">
-                {!isPublic
-                  ? "Activada: no muestras agenda. Los clientes te contactan por WhatsApp para coordinar. Desactívala para publicar tus horarios."
-                  : "Actívala para ocultar tu agenda: los clientes te contactarán por WhatsApp para coordinar. (Se eliminan los horarios publicados.)"}
-              </p>
-            </div>
+          <div>
+            <p className="text-sm font-semibold text-[#111827]">Disponibilidad privada</p>
+            <p className="text-xs text-[#6b7280] mt-0.5 max-w-md">
+              {!isPublic
+                ? "Activada: no muestras agenda. Los clientes te contactan por WhatsApp para coordinar. Desactívala para publicar tus horarios."
+                : "Actívala para ocultar tu agenda: los clientes te contactarán por WhatsApp para coordinar. (Se eliminan los horarios publicados.)"}
+            </p>
           </div>
           <button
             type="button"
@@ -437,14 +432,9 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
         {/* Videoconsulta — only relevant when the agenda is PUBLIC (hidden in private) */}
         {isPublic && (
           <div className="flex items-center justify-between gap-4 mt-4 pt-4 border-t border-[#f3f4f6]">
-            <div className="flex items-center gap-3">
-              <div className={cn("flex h-9 w-9 items-center justify-center rounded-full shrink-0", videoconsulta ? "bg-[#EBF5FB] text-[#009FD9]" : "bg-[#f3f4f6] text-[#6b7280]")}>
-                <Video className="h-4 w-4" />
-              </div>
-              <div>
-                <p className="text-sm font-semibold text-[#111827]">Ofreces videoconsulta</p>
-                <p className="text-xs text-[#6b7280]">Atiendes en línea. Puedes crear horarios específicos para videoconsulta.</p>
-              </div>
+            <div>
+              <p className="text-sm font-semibold text-[#111827]">Ofreces videoconsulta</p>
+              <p className="text-xs text-[#6b7280]">Atiendes en línea. Puedes crear horarios específicos para videoconsulta.</p>
             </div>
             <button
               type="button"
@@ -464,7 +454,6 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
       <div className="rounded-xl border border-[#e5e7eb] p-4">
         <div className="flex items-center gap-2.5 mb-4">
           <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#009FD9] text-white text-xs font-bold shrink-0">2</span>
-          <CalendarPlus className="h-4 w-4 text-[#009FD9]" />
           <h3 className="text-sm font-semibold text-[#111827]">Agregar horarios disponibles</h3>
         </div>
 
@@ -607,13 +596,14 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                               const partSlots = sg.filter((s) => partOfDay(s.slot_time) === part);
                               if (partSlots.length === 0) return null;
                               return (
-                                <div key={part} className="flex items-start gap-2">
-                                  <span className="text-[10px] font-semibold uppercase tracking-wide text-[#9ca3af] w-12 shrink-0 pt-2">{part}</span>
-                                  {/* Even grid → every time chip is the SAME width regardless of text */}
-                                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 flex-1 min-w-0">
+                                <div key={part}>
+                                  <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9ca3af] mb-1.5">{part}</p>
+                                  {/* Even grid → every chip is the SAME width; 2 cols on
+                                      mobile so the FULL time fits (no truncation). */}
+                                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                                     {partSlots.map((s) => (
-                                      <span key={s.id ?? `${s.slot_time}-${s.location_id ?? ""}-${s.category_id ?? ""}`} className="group inline-flex items-center justify-between gap-1 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium tabular-nums pl-2.5 pr-1 py-1.5">
-                                        <span className="truncate">{to12h(s.slot_time)}</span>
+                                      <span key={s.id ?? `${s.slot_time}-${s.location_id ?? ""}-${s.category_id ?? ""}`} className="group inline-flex items-center justify-between gap-1 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-[13px] font-medium tabular-nums whitespace-nowrap pl-2.5 pr-1 py-1.5">
+                                        {to12h(s.slot_time)}
                                         <button onClick={() => removeSlot(s)} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors cursor-pointer shrink-0" aria-label="Quitar">
                                           <X className="h-3.5 w-3.5" />
                                         </button>
