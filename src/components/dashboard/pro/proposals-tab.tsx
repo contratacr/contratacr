@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { FolderOpen, Send, ChevronDown, ChevronUp, MapPin, Clock, Coins, User, Briefcase, CheckCircle2, Phone } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Button } from "@/components/ui/button";
@@ -48,22 +49,6 @@ const STATUS_VARIANT: Record<ProposalStatus, "warning" | "success" | "error"> = 
   declined: "error",
 };
 
-const STATUS_LABEL: Record<ProposalStatus, string> = {
-  pending: "Pendiente",
-  accepted: "Aceptada",
-  declined: "Rechazada",
-};
-
-// Project lifecycle (mirrors solicitudes) shown for an ACCEPTED proposal.
-function projStatusLabel(status?: string): string {
-  switch (status) {
-    case "in_progress": return "Asignado · En curso";
-    case "awaiting_confirmation": return "Trabajo realizado · esperando confirmación";
-    case "completed": return "Finalizado";
-    case "cancelled": return "Cancelado por el cliente";
-    default: return "Aceptada";
-  }
-}
 function projStatusVariant(status?: string): "warning" | "success" | "error" | "default" {
   switch (status) {
     case "completed": return "success";
@@ -78,6 +63,14 @@ interface ProposalsTabProps {
 }
 
 export function ProposalsTab({ categoryId }: ProposalsTabProps) {
+  const t = useTranslations("proposalsTab");
+  const locale = useLocale();
+  const dateLocale = locale === "en" ? "en-US" : "es-CR";
+  // Project lifecycle label (mirrors solicitudes) shown for an ACCEPTED proposal.
+  const projStatusLabel = (status?: string): string => {
+    const k = ["in_progress", "awaiting_confirmation", "completed", "cancelled"].includes(status ?? "") ? status! : "accepted";
+    return t(`projStatus.${k}`);
+  };
   const [view, setView] = useState<"browse" | "mine">("browse");
   const [openProjects, setOpenProjects] = useState<OpenProject[]>([]);
   const [myProposals, setMyProposals] = useState<MyProposal[]>([]);
@@ -176,7 +169,7 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
   }
 
   async function cancelProposal(id: string) {
-    if (!confirm("¿Cancelar esta propuesta?")) return;
+    if (!confirm(t("cancelConfirm"))) return;
     const res = await fetch(`/api/proposals?id=${id}`, { method: "DELETE" });
     if (res.ok) setMyProposals((prev) => prev.filter((p) => p.id !== id));
   }
@@ -193,7 +186,7 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
       );
     } else {
       const j = await res.json().catch(() => ({}));
-      alert(j.error ?? "No se pudo marcar el trabajo como realizado. Intenta de nuevo.");
+      alert(j.error ?? t("markWorkDoneError"));
     }
   }
 
@@ -228,7 +221,7 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
               view === v ? "bg-white text-[#009FD9] shadow-sm" : "text-[#6b7280] hover:text-[#374151]"
             )}
           >
-            {v === "browse" ? "Proyectos disponibles" : "Mis propuestas"}
+            {v === "browse" ? t("browse") : t("mine")}
           </button>
         ))}
       </div>
@@ -239,8 +232,8 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
           {openProjects.length === 0 ? (
             <div className="text-center py-16">
               <FolderOpen className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
-              <p className="font-medium text-[#374151]">No hay proyectos disponibles en tu zona</p>
-              <p className="text-sm text-[#9ca3af] mt-1">Los proyectos de clientes aparecerán aquí.</p>
+              <p className="font-medium text-[#374151]">{t("emptyBrowse")}</p>
+              <p className="text-sm text-[#9ca3af] mt-1">{t("emptyBrowseSub")}</p>
             </div>
           ) : (
             <div className="flex flex-col gap-4">
@@ -288,13 +281,13 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                               <span className="flex items-center gap-1">
                                 <Coins className="h-3 w-3" />
                                 {project.budget_min && project.budget_max
-                                  ? `₡${project.budget_min.toLocaleString("es-CR")} – ₡${project.budget_max.toLocaleString("es-CR")}`
+                                  ? t("range", { min: `₡${project.budget_min.toLocaleString("es-CR")}`, max: `₡${project.budget_max.toLocaleString("es-CR")}` })
                                   : project.budget_min
-                                  ? `Desde ₡${project.budget_min.toLocaleString("es-CR")}`
-                                  : `Hasta ₡${project.budget_max!.toLocaleString("es-CR")}`}
+                                  ? t("from", { amount: `₡${project.budget_min.toLocaleString("es-CR")}` })
+                                  : t("upTo", { amount: `₡${project.budget_max!.toLocaleString("es-CR")}` })}
                               </span>
                             )}
-                            <span>{proposalCount} propuesta{proposalCount !== 1 ? "s" : ""}</span>
+                            <span>{t("proposalsCount", { count: proposalCount })}</span>
                           </div>
                         </div>
                         {!alreadySubmitted && (
@@ -303,14 +296,14 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                             className="flex items-center gap-1 text-sm font-medium text-[#009FD9] hover:underline shrink-0"
                           >
                             {isExpanded ? (
-                              <>Cerrar <ChevronUp className="h-4 w-4" /></>
+                              <>{t("close")} <ChevronUp className="h-4 w-4" /></>
                             ) : (
-                              <>Proponer <ChevronDown className="h-4 w-4" /></>
+                              <>{t("propose")} <ChevronDown className="h-4 w-4" /></>
                             )}
                           </button>
                         )}
                         {alreadySubmitted && (
-                          <Badge variant="success">Ya hiciste una propuesta</Badge>
+                          <Badge variant="success">{t("alreadyProposed")}</Badge>
                         )}
                       </div>
 
@@ -318,20 +311,20 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                         <div className="mt-4 pt-4 border-t border-[#f3f4f6] flex flex-col gap-3">
                           <div>
                             <label className="text-xs font-medium text-[#374151] block mb-1.5">
-                              Tu precio (₡) <span className="text-[#9ca3af] font-normal">(opcional)</span>
+                              {t("yourPrice")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
                             </label>
                             <PriceInput
-                              placeholder="Ej: 50000"
+                              placeholder={t("pricePlaceholder")}
                               value={form.price}
                               onChange={(v) => updateForm(project.id, "price", v)}
                             />
                           </div>
                           <div>
                             <label className="text-xs font-medium text-[#374151] block mb-1.5">
-                              Tu mensaje <span className="text-red-500">*</span>
+                              {t("yourMessage")} <span className="text-red-500">*</span>
                             </label>
                             <textarea
-                              placeholder="Describe cómo puedes ayudar, tu experiencia, y por qué elegirte..."
+                              placeholder={t("messagePlaceholder")}
                               value={form.message}
                               onChange={(e) => updateForm(project.id, "message", e.target.value)}
                               className={`${inputClass} min-h-[100px] resize-none`}
@@ -345,7 +338,7 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                             className="w-full"
                           >
                             <Send className="h-4 w-4" />
-                            Enviar propuesta
+                            {t("sendProposal")}
                           </Button>
                         </div>
                       )}
@@ -364,22 +357,22 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
           {myProposals.length === 0 ? (
             <div className="text-center py-16">
               <Send className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
-              <p className="font-medium text-[#374151]">No enviaste propuestas todavía</p>
-              <p className="text-sm text-[#9ca3af] mt-1">Explora proyectos disponibles y envía tu primera propuesta.</p>
+              <p className="font-medium text-[#374151]">{t("emptyMine")}</p>
+              <p className="text-sm text-[#9ca3af] mt-1">{t("emptyMineSub")}</p>
             </div>
           ) : (
             <div className="flex flex-col gap-4">
               <StatusFilterTabs tabs={PROYECTO_TABS} value={projectFilter} onChange={setProjectFilter} />
               {(() => {
                 const shown = myProposals.filter((p) => proyectoMatches(projectFilter, p.projects?.status ?? "open"));
-                if (shown.length === 0) return <p className="text-sm text-[#9ca3af] text-center py-8">No hay proyectos en esta vista.</p>;
+                if (shown.length === 0) return <p className="text-sm text-[#9ca3af] text-center py-8">{t("noneInView")}</p>;
                 return shown.map((p) => (
                 <Card key={p.id}>
                   <CardContent className="p-5">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-sm text-[#111827] mb-1">
-                          {p.projects?.title ?? "Proyecto"}
+                          {p.projects?.title ?? t("projectFallback")}
                         </p>
                         {p.projects?.profiles?.full_name && (
                           <div className="flex items-center gap-2 mb-2">
@@ -401,11 +394,11 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                         <p className="text-xs text-[#6b7280] line-clamp-2 mb-2">{p.message}</p>
                         {p.price && (
                           <p className="text-xs text-[#374151]">
-                            Tu precio: <span className="font-medium">₡{p.price.toLocaleString("es-CR")}</span>
+                            {t("yourPriceLabel")} <span className="font-medium">₡{p.price.toLocaleString("es-CR")}</span>
                           </p>
                         )}
                         <p className="text-xs text-[#9ca3af] mt-1">
-                          {new Date(p.created_at).toLocaleDateString("es-CR")}
+                          {new Date(p.created_at).toLocaleDateString(dateLocale)}
                         </p>
                       </div>
                       <div className="flex flex-col items-end gap-2 shrink-0">
@@ -414,13 +407,13 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                         {p.status === "accepted" ? (
                           <Badge variant={projStatusVariant(p.projects?.status)}>{projStatusLabel(p.projects?.status)}</Badge>
                         ) : (
-                          <Badge variant={STATUS_VARIANT[p.status]}>{STATUS_LABEL[p.status]}</Badge>
+                          <Badge variant={STATUS_VARIANT[p.status]}>{t(`status.${p.status}`)}</Badge>
                         )}
 
                         {p.status === "pending" && (
                           <div className="flex gap-1.5">
-                            <Button size="sm" variant="outline" onClick={() => startEdit(p)}>Editar</Button>
-                            <Button size="sm" variant="ghost" className="text-red-500 hover:bg-red-50" onClick={() => cancelProposal(p.id)}>Cancelar</Button>
+                            <Button size="sm" variant="outline" onClick={() => startEdit(p)}>{t("edit")}</Button>
+                            <Button size="sm" variant="ghost" className="text-red-500 hover:bg-red-50" onClick={() => cancelProposal(p.id)}>{t("cancel")}</Button>
                           </div>
                         )}
 
@@ -431,23 +424,23 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                             <a
                               href={getWhatsAppLink(
                                 p.projects.profiles.phone,
-                                `Hola ${p.projects.profiles.full_name.split(" ")[0]}, soy el profesional cuya propuesta aceptaste en ContrataCR para "${p.projects.title}".`
+                                t("waMessage", { name: p.projects.profiles.full_name.split(" ")[0], title: p.projects.title })
                               )}
                               target="_blank"
                               rel="noopener noreferrer"
                             >
                               <WhatsAppIcon className="h-3.5 w-3.5" />
-                              WhatsApp
+                              {t("whatsapp")}
                             </a>
                           </Button>
                         )}
                         {p.status === "accepted" && p.projects?.status === "in_progress" && (
                           <Button size="sm" onClick={() => markWorkDone(p.project_id)}>
-                            <CheckCircle2 className="h-3.5 w-3.5" /> Marcar como completado
+                            <CheckCircle2 className="h-3.5 w-3.5" /> {t("markCompleted")}
                           </Button>
                         )}
                         {p.status === "accepted" && p.projects?.status === "cancelled" && (
-                          <span className="text-xs text-red-500">El cliente canceló este proyecto.</span>
+                          <span className="text-xs text-red-500">{t("clientCancelled")}</span>
                         )}
                       </div>
                     </div>
@@ -455,11 +448,11 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                     {editing === p.id && (
                       <div className="mt-4 pt-4 border-t border-[#f3f4f6] flex flex-col gap-3">
                         <div>
-                          <label className="text-xs font-medium text-[#374151] block mb-1.5">Tu precio (₡) <span className="text-[#9ca3af] font-normal">(opcional)</span></label>
-                          <PriceInput placeholder="Ej: 50000" value={editForm.price} onChange={(v) => setEditForm((f) => ({ ...f, price: v }))} />
+                          <label className="text-xs font-medium text-[#374151] block mb-1.5">{t("yourPrice")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span></label>
+                          <PriceInput placeholder={t("pricePlaceholder")} value={editForm.price} onChange={(v) => setEditForm((f) => ({ ...f, price: v }))} />
                         </div>
                         <div>
-                          <label className="text-xs font-medium text-[#374151] block mb-1.5">Tu mensaje <span className="text-red-500">*</span></label>
+                          <label className="text-xs font-medium text-[#374151] block mb-1.5">{t("yourMessage")} <span className="text-red-500">*</span></label>
                           <textarea
                             value={editForm.message}
                             onChange={(e) => setEditForm((f) => ({ ...f, message: e.target.value }))}
@@ -467,8 +460,8 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                           />
                         </div>
                         <div className="flex gap-2">
-                          <Button size="sm" onClick={() => saveEdit(p.id)} disabled={!editForm.message.trim()}>Guardar</Button>
-                          <Button size="sm" variant="ghost" onClick={() => setEditing(null)}>Cancelar</Button>
+                          <Button size="sm" onClick={() => saveEdit(p.id)} disabled={!editForm.message.trim()}>{t("save")}</Button>
+                          <Button size="sm" variant="ghost" onClick={() => setEditing(null)}>{t("cancel")}</Button>
                         </div>
                       </div>
                     )}
