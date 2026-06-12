@@ -399,7 +399,7 @@ export function ClientRegistrationModal({
                     <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
                     <div>
                       <p className="font-semibold text-amber-800">Ya existe una cuenta con este correo</p>
-                      <p className="text-amber-700 mt-0.5">Ingresa tu contraseña para continuar.</p>
+                      <p className="text-amber-700 mt-0.5">Ingresa tu contraseña para continuar, o usa Google o Facebook si así te registraste.</p>
                     </div>
                   </div>
                 )}

@@ -74,8 +74,9 @@
       "haveAccount": "Already have an account?",
       "loginLink": "Log in",
       "fillAllFields": "Please fill in all fields.",
-      "wrongCredentials": "Incorrect email or password.",
-      "checkEmailConfirm": "Check your email to confirm your account!"
+      "wrongCredentials": "Incorrect email or password. If you signed up with Google or Facebook, use that button to log in.",
+      "checkEmailConfirm": "Check your email to confirm your account!",
+      "emailAlreadyExists": "An account with this email already exists. Log in with your password, or with Google or Facebook if that's how you signed up."
     }
   },
   "home": {

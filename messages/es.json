@@ -74,8 +74,9 @@
       "haveAccount": "¿Ya tienes cuenta?",
       "loginLink": "Inicia sesión",
       "fillAllFields": "Completa todos los campos.",
-      "wrongCredentials": "Correo o contraseña incorrectos.",
-      "checkEmailConfirm": "¡Revisa tu correo para confirmar tu cuenta!"
+      "wrongCredentials": "Correo o contraseña incorrectos. Si te registraste con Google o Facebook, entra con ese botón.",
+      "checkEmailConfirm": "¡Revisa tu correo para confirmar tu cuenta!",
+      "emailAlreadyExists": "Ya existe una cuenta con este correo. Inicia sesión con tu contraseña, o con Google o Facebook si así te registraste."
     }
   },
   "home": {

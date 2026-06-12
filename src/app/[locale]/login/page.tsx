@@ -45,7 +45,10 @@ export default function LoginPage() {
     });
     setSubmitting(false);
     if (authError) {
-      setError("Correo o contraseña incorrectos.");
+      // A common lockout: the email belongs to an account created with Google/
+      // Facebook (no password set). Guide the user to the right method instead of
+      // a dead-end "wrong password".
+      setError("Correo o contraseña incorrectos. Si te registraste con Google o Facebook, entra con ese botón. ¿Olvidaste tu contraseña? Puedes restablecerla abajo.");
       return;
     }
     const role = authData.user?.user_metadata?.role;

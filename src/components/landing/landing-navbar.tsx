@@ -347,8 +347,19 @@ function LoginModal({ onClose }: { onClose: () => void }) {
       if (error) { setError(t("wrongCredentials")); setLoading(false); return; }
       onClose();
     } else {
-      const { error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: callbackUrl } });
-      if (error) { setError(error.message); setLoading(false); return; }
+      const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: callbackUrl } });
+      if (error) {
+        setError(error.message.toLowerCase().includes("already") ? t("emailAlreadyExists") : error.message);
+        setLoading(false);
+        return;
+      }
+      // Supabase anti-enumeration: an existing email returns a user with an EMPTY
+      // identities array (no error) — surface the same guidance, don't show success.
+      if (Array.isArray(data.user?.identities) && data.user!.identities!.length === 0) {
+        setError(t("emailAlreadyExists"));
+        setLoading(false);
+        return;
+      }
       setSuccess(t("checkEmailConfirm"));
       setLoading(false);
     }

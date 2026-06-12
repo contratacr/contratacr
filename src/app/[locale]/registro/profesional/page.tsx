@@ -687,7 +687,7 @@ export default function RegisterProfessionalPage() {
         // Supabase anti-enumeration: an already-registered email returns a user
         // object with an EMPTY identities array (no error). Detect it explicitly.
         if (Array.isArray(signUpData.user.identities) && signUpData.user.identities.length === 0) {
-          throw new Error("Este correo ya está registrado. Inicia sesión.");
+          throw new Error("Ya existe una cuenta con este correo. Inicia sesión con tu contraseña, o con Google o Facebook si así te registraste.");
         }
         userId = signUpData.user.id;
         userEmail = step1Data.email;
@@ -775,9 +775,10 @@ export default function RegisterProfessionalPage() {
         msg.includes("already registered") ||
         msg.includes("already been registered") ||
         msg.includes("already exists") ||
-        msg.includes("ya está registrado")
+        msg.includes("ya está registrado") ||
+        msg.includes("Ya existe una cuenta")
       ) {
-        setError("Este correo ya está registrado. Inicia sesión.");
+        setError("Ya existe una cuenta con este correo. Inicia sesión con tu contraseña, o con Google o Facebook si así te registraste.");
       } else {
         setError(msg);
       }

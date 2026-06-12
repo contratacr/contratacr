@@ -103,7 +103,7 @@ export default function RegisterClientPage() {
 
         if (signUpError) {
           if (signUpError.message.toLowerCase().includes("already registered")) {
-            setError("Ya existe una cuenta con ese correo. Inicia sesión.");
+            setError("Ya existe una cuenta con este correo. Inicia sesión con tu contraseña, o con Google o Facebook si así te registraste.");
           } else {
             setError(signUpError.message);
           }
@@ -113,7 +113,7 @@ export default function RegisterClientPage() {
 
         // Supabase anti-enumeration: existing email → user with empty identities.
         if (Array.isArray(data.user?.identities) && data.user!.identities!.length === 0) {
-          setError("Este correo ya está registrado. Inicia sesión.");
+          setError("Ya existe una cuenta con este correo. Inicia sesión con tu contraseña, o con Google o Facebook si así te registraste.");
           setSubmitting(false);
           return;
         }
