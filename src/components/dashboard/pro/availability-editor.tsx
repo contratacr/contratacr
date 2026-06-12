@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { Plus, X, Lock, Loader2, MapPin, AlertCircle } from "lucide-react";
 import { type ContactPreference } from "@/lib/constants";
-import { crTodayISO, isPastDateTimeCR, isTooSoonCR, nextFullHourCR, crDatePretty, LEAD_MINUTES } from "@/lib/time-cr";
+import { crTodayISO, isPastDateTimeCR, isTooSoonCR, nextFullHourCR, LEAD_MINUTES } from "@/lib/time-cr";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { TimeSelect, to12h } from "@/components/ui/time-select";
 
@@ -16,12 +16,7 @@ type Slot = { id?: string; slot_date: string; slot_time: string; location_id?: s
 const GENERAL_LOC = "general";
 const VIDEO_LOC = "videoconsulta";
 
-const INTERVAL_OPTIONS = [
-  { value: 30, label: "Cada 30 min" },
-  { value: 60, label: "Cada hora" },
-  { value: 120, label: "Cada 2 horas" },
-  { value: 0, label: "Personalizado" },
-];
+const INTERVAL_VALUES = [30, 60, 120, 0];
 
 function hhmm(mins: number): string {
   return `${String(Math.floor(mins / 60)).padStart(2, "0")}:${String(mins % 60).padStart(2, "0")}`;
@@ -33,22 +28,21 @@ function toMins(t: string): number {
 }
 
 // Part of the day a slot falls in — used to visually group the chips so a long
-// list (5:00, 5:15, 5:30…) is easy to scan. Mañana <12h · Tarde 12–18h · Noche ≥18h.
-const DAY_PARTS = ["Mañana", "Tarde", "Noche"] as const;
+// list (5:00, 5:15, 5:30…) is easy to scan. morning <12h · afternoon 12–18h · evening ≥18h.
+const DAY_PARTS = ["morning", "afternoon", "evening"] as const;
 type DayPart = (typeof DAY_PARTS)[number];
 function partOfDay(time: string): DayPart {
   const h = Math.floor(toMins(time) / 60);
-  if (h < 12) return "Mañana";
-  if (h < 18) return "Tarde";
-  return "Noche";
+  if (h < 12) return "morning";
+  if (h < 18) return "afternoon";
+  return "evening";
 }
 
-function prettyDate(iso: string): string {
+function prettyDate(iso: string, dateLocale: string): string {
   const [y, m, d] = iso.split("-").map(Number);
-  const date = new Date(y, m - 1, d);
-  const weekday = ["dom", "lun", "mar", "mié", "jue", "vie", "sáb"][date.getDay()];
-  // Costa Rica style dd/mm/aaaa.
-  return `${weekday} ${crDatePretty(iso)}`;
+  return new Date(y, m - 1, d).toLocaleDateString(dateLocale, {
+    weekday: "short", day: "numeric", month: "short",
+  });
 }
 
 // All "today" comparisons use Costa Rica time so past slots are rejected
@@ -85,6 +79,10 @@ interface AvailabilityEditorProps {
 
 export function AvailabilityEditor({ professionalId, initialPublic = true, workplaces = [], coverageAreas = [], professions = [], initialVideoconsulta = false, initialAllowPhoneCall = false, onSaved }: AvailabilityEditorProps) {
   const locale = useLocale();
+  const t = useTranslations("availabilityEditor");
+  const dateLocale = locale === "en" ? "en-US" : "es-CR";
+  const intervalLabel = (v: number) => t(v === 0 ? "intervalCustom" : (`interval${v}` as "interval30" | "interval60" | "interval120"));
+  const rich = { strong: (c: React.ReactNode) => <strong>{c}</strong> };
   const [isPublic, setIsPublic] = useState(initialPublic);
   const [videoconsulta, setVideoconsulta] = useState(initialVideoconsulta);
   const [allowPhoneCall, setAllowPhoneCall] = useState(initialAllowPhoneCall);
@@ -109,15 +107,15 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
       const key = c.cantonId ?? c.provinciaId ?? `pais${i}`;
       const label =
         level === "country"
-          ? "Todo el país (a domicilio)"
+          ? t("covCountry")
           : level === "provincia"
-          ? `${c.provinceName ?? "Provincia"} (a domicilio)`
-          : `${c.cantonName ?? "Zona"}${c.provinceName ? `, ${c.provinceName}` : ""} (a domicilio)`;
+          ? t("covProvincia", { province: c.provinceName ?? "Provincia" })
+          : t("covCanton", { canton: `${c.cantonName ?? "Zona"}${c.provinceName ? `, ${c.provinceName}` : ""}` });
       opts.push({ id: `cov_${key}`, label });
     });
-    if (videoconsulta) opts.push({ id: VIDEO_LOC, label: "Videoconsulta" });
+    if (videoconsulta) opts.push({ id: VIDEO_LOC, label: t("videoconsulta") });
     return opts;
-  }, [workplaces, coverageAreas, videoconsulta]);
+  }, [workplaces, coverageAreas, videoconsulta, t]);
   const [genLocation, setGenLocation] = useState("");
 
   // Profession this schedule is for (item 1). Each schedule belongs to a
@@ -146,9 +144,9 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
     return m;
   }, [locationOptions]);
   function locationLabel(id?: string | null): string {
-    if (!id || id === GENERAL_LOC) return "General";
-    if (id === VIDEO_LOC) return "Videoconsulta";
-    return locLabelById.get(id) ?? workplaces.find((w) => w.id === id)?.name ?? "Ubicación";
+    if (!id || id === GENERAL_LOC) return t("general");
+    if (id === VIDEO_LOC) return t("videoconsulta");
+    return locLabelById.get(id) ?? workplaces.find((w) => w.id === id)?.name ?? t("locationFallback");
   }
 
   async function toggleVideoconsulta() {
@@ -261,7 +259,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
     setPastError(null);
     // Reject past dates outright (CR time).
     if (isPastDateTimeCR(genDate)) {
-      setPastError("No puedes agregar horarios en una fecha pasada.");
+      setPastError(t("errPastDate"));
       return;
     }
     // Enforce a 15-minute lead time (CR): drop any time less than 15 min ahead.
@@ -269,7 +267,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
     // and it fires every time (not just once).
     const valid = times.filter((t) => !isTooSoonCR(genDate, t));
     if (valid.length === 0) {
-      setPastError(`Esa hora ya pasó o es muy pronto (hora de Costa Rica). Elige una hora al menos ${LEAD_MINUTES} minutos en el futuro.`);
+      setPastError(t("errTooSoon", { min: LEAD_MINUTES }));
       return;
     }
     times = valid;
@@ -299,7 +297,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
     setBusy(false);
     if (error) {
       console.error("[availability] insert", error);
-      if (/pasado|past/i.test(error.message)) setPastError("No puedes agregar horarios en el pasado (hora de Costa Rica).");
+      if (/pasado|past/i.test(error.message)) setPastError(t("errPast"));
       return;
     }
     setSlots((prev) => [
@@ -321,7 +319,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
     const end = toMins(genEnd);
     // Explicit, friendly validation — never a silent no-op (item 1).
     if (end <= start) {
-      setPastError("La hora de fin debe ser posterior a la de inicio.");
+      setPastError(t("errEndBeforeStart"));
       return;
     }
     const times: string[] = [];
@@ -385,18 +383,16 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
              WhatsApp is always available. Soft surface, no hard border. ── */}
       <div className="rounded-2xl bg-[#f9fafb] p-4 sm:p-5">
         <div className="flex items-center gap-2 mb-4">
-          <h3 className="text-sm font-semibold text-[#111827]">Cómo te contactan los clientes</h3>
+          <h3 className="text-sm font-semibold text-[#111827]">{t("contactHeading")}</h3>
           {savingVisibility && <Loader2 className="h-4 w-4 animate-spin text-[#009FD9] ml-auto" />}
         </div>
 
         {/* "Disponibilidad privada" (ON = private; hides + clears slots) */}
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-sm font-semibold text-[#111827]">Disponibilidad privada</p>
+            <p className="text-sm font-semibold text-[#111827]">{t("privateLabel")}</p>
             <p className="text-xs text-[#6b7280] mt-0.5 max-w-md">
-              {!isPublic
-                ? "Activada: no muestras agenda. Los clientes te contactan por WhatsApp para coordinar. Desactívala para publicar tus horarios."
-                : "Actívala para ocultar tu agenda: los clientes te contactarán por WhatsApp para coordinar. (Se eliminan los horarios publicados.)"}
+              {!isPublic ? t("privateOnDesc") : t("privateOffDesc")}
             </p>
           </div>
           <button
@@ -407,7 +403,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
               "relative h-6 w-11 rounded-full transition-all duration-200 shrink-0 cursor-pointer mt-1",
               !isPublic ? "bg-[#b45309]" : "bg-[#d1d5db]"
             )}
-            aria-label={isPublic ? "Hacer privada" : "Hacer pública"}
+            aria-label={isPublic ? t("makePrivate") : t("makePublic")}
           >
             <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all duration-200", !isPublic ? "left-5" : "left-0.5")} />
           </button>
@@ -417,14 +413,14 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
             (WhatsApp is always available; this adds a phone-call option). */}
         <div className="flex items-center justify-between gap-4 mt-4 pt-4 border-t border-[#f3f4f6]">
           <div>
-            <p className="text-sm font-medium text-[#111827]">Permitir contacto por llamada</p>
-            <p className="text-xs text-[#9ca3af]">Si lo activas, los clientes verán la opción “Contáctanos por llamada” a tu número.</p>
+            <p className="text-sm font-medium text-[#111827]">{t("allowCallLabel")}</p>
+            <p className="text-xs text-[#9ca3af]">{t("allowCallDesc")}</p>
           </div>
           <button
             type="button"
             onClick={toggleAllowPhoneCall}
             className={cn("relative h-6 w-11 rounded-full transition-all shrink-0", allowPhoneCall ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
-            aria-label="Permitir llamada"
+            aria-label={t("allowCallAria")}
           >
             <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", allowPhoneCall ? "left-5" : "left-0.5")} />
           </button>
@@ -434,14 +430,14 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
         {isPublic && (
           <div className="flex items-center justify-between gap-4 mt-4 pt-4 border-t border-[#f3f4f6]">
             <div>
-              <p className="text-sm font-semibold text-[#111827]">Ofreces videoconsulta</p>
-              <p className="text-xs text-[#6b7280]">Atiendes en línea. Puedes crear horarios específicos para videoconsulta.</p>
+              <p className="text-sm font-semibold text-[#111827]">{t("videoLabel")}</p>
+              <p className="text-xs text-[#6b7280]">{t("videoDesc")}</p>
             </div>
             <button
               type="button"
               onClick={toggleVideoconsulta}
               className={cn("relative h-6 w-11 rounded-full transition-all shrink-0", videoconsulta ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
-              aria-label="Videoconsulta"
+              aria-label={t("videoconsulta")}
             >
               <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", videoconsulta ? "left-5" : "left-0.5")} />
             </button>
@@ -453,13 +449,12 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
       {isPublic ? (<>
       {/* ── Slot generator (public agenda only) — soft surface, no hard border ── */}
       <div className="rounded-2xl bg-[#f9fafb] p-4 sm:p-5">
-        <h3 className="text-sm font-semibold text-[#111827] mb-1">Agrega tus horarios</h3>
-        <p className="text-xs text-[#6b7280] mb-4">Elige el rango y el intervalo, y generamos los espacios. El horario estándar es de 8:00 a.m. a 5:00 p.m. — ajústalo a tu gusto.</p>
+        <h3 className="text-sm font-semibold text-[#111827] mb-1">{t("addHeading")}</h3>
+        <p className="text-xs text-[#6b7280] mb-4">{t("addSub")}</p>
 
         {locationOptions.length === 0 ? (
           <div className="rounded-xl bg-[#fffbeb] border border-[#fde68a] p-4 text-sm text-[#92400e]">
-            Para crear horarios necesitas al menos una ubicación. Agrega un <strong>lugar de trabajo</strong> en
-            tu perfil o activa <strong>videoconsulta</strong> arriba. Los horarios se definen por ubicación.
+            {t.rich("needLocation", rich)}
           </div>
         ) : (
         <div className="flex flex-col gap-4">
@@ -467,14 +462,14 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {professionOptions.length > 1 && (
               <div className="flex flex-col gap-1">
-                <label className="text-xs font-medium text-[#6b7280]">Profesión / servicio</label>
+                <label className="text-xs font-medium text-[#6b7280]">{t("professionService")}</label>
                 <select value={genCategory} onChange={(e) => setGenCategory(e.target.value)} className={cn(inputCls, "cursor-pointer w-full")}>
                   {professionOptions.map((p) => <option key={p} value={p}>{getCategoryLabel(p, locale)}</option>)}
                 </select>
               </div>
             )}
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-[#6b7280] flex items-center gap-1"><MapPin className="h-3 w-3" /> Ubicación de este horario</label>
+              <label className="text-xs font-medium text-[#6b7280] flex items-center gap-1"><MapPin className="h-3 w-3" /> {t("scheduleLocation")}</label>
               <select value={genLocation} onChange={(e) => setGenLocation(e.target.value)} className={cn(inputCls, "cursor-pointer w-full")}>
                 {locationOptions.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
               </select>
@@ -484,24 +479,24 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
           {/* Paso 2 — el rango horario. */}
           <div className="flex flex-wrap items-end gap-3">
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-[#6b7280]">Fecha</label>
+              <label className="text-xs font-medium text-[#6b7280]">{t("date")}</label>
               <input type="date" min={todayISO()} value={genDate} onChange={(e) => { setGenDate(e.target.value); setPastError(null); setSingleTime(puntualDefault(e.target.value)); }} className={cn(inputCls, "h-10")} />
             </div>
-            <TimeSelect label="Desde" min={startMin} value={genStart} onChange={setDesde} className="w-32" />
+            <TimeSelect label={t("from")} min={startMin} value={genStart} onChange={setDesde} className="w-32" />
             {/* Visual "→" between the two pickers. */}
             <span className="text-[#9ca3af] mb-2.5 hidden sm:inline">→</span>
-            <TimeSelect label="Hasta" min={hastaMin} value={genEnd} onChange={(v) => { setGenEnd(v); setPastError(null); }} className="w-32" error={rangeInvalid ? "Debe ser posterior a “Desde”." : undefined} />
+            <TimeSelect label={t("to")} min={hastaMin} value={genEnd} onChange={(v) => { setGenEnd(v); setPastError(null); }} className="w-32" error={rangeInvalid ? t("toAfterFrom") : undefined} />
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-[#6b7280]">Intervalo</label>
+              <label className="text-xs font-medium text-[#6b7280]">{t("interval")}</label>
               <select value={interval} onChange={(e) => setInterval(Number(e.target.value))} className={cn(inputCls, "h-10 cursor-pointer")}>
-                {INTERVAL_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
+                {INTERVAL_VALUES.map((v) => (
+                  <option key={v} value={v}>{intervalLabel(v)}</option>
                 ))}
               </select>
             </div>
             {interval === 0 && (
               <div className="flex flex-col gap-1">
-                <label className="text-xs font-medium text-[#6b7280]">Minutos</label>
+                <label className="text-xs font-medium text-[#6b7280]">{t("minutes")}</label>
                 <input type="number" min={5} step={5} value={customInterval} onChange={(e) => setCustomInterval(Number(e.target.value))} className={cn(inputCls, "h-10 w-24")} />
               </div>
             )}
@@ -517,11 +512,11 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
             className={cn("w-full sm:w-auto sm:self-start", rangeInvalid && "bg-[#d1d5db] text-white shadow-none hover:bg-[#d1d5db] hover:shadow-none")}
           >
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-            Generar horarios
+            {t("generate")}
           </Button>
 
           <div className="flex flex-wrap items-end gap-2 pt-3 border-t border-[#f3f4f6]">
-            <span className="text-xs text-[#9ca3af] mb-2.5">o agrega una hora puntual:</span>
+            <span className="text-xs text-[#9ca3af] mb-2.5">{t("orSingle")}</span>
             <TimeSelect min={startMin} value={singleTime} onChange={setSingleTime} className="w-36" />
             <button
               type="button"
@@ -529,7 +524,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
               disabled={busy}
               className="text-xs font-medium text-[#009FD9] hover:underline cursor-pointer mb-2.5"
             >
-              + Agregar {to12h(singleTime)}
+              {t("addTime", { time: to12h(singleTime) })}
             </button>
           </div>
 
@@ -544,13 +539,13 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
 
       {/* ── Slot list ───────────────────────────────────────────── */}
       <div>
-        <h3 className="text-sm font-semibold text-[#111827] mb-3">Tus horarios próximos</h3>
+        <h3 className="text-sm font-semibold text-[#111827] mb-3">{t("upcomingTitle")}</h3>
         {loading ? (
           <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin text-[#009FD9]" /></div>
         ) : grouped.length === 0 ? (
           <div className="text-center py-10 rounded-xl bg-[#f4f7fa] border border-dashed border-[#d1d5db]">
-            <p className="text-sm text-[#6b7280]">Todavía no agregaste horarios.</p>
-            <p className="text-xs text-[#9ca3af] mt-1">Usa el generador de arriba para crear tus espacios disponibles.</p>
+            <p className="text-sm text-[#6b7280]">{t("noSlots")}</p>
+            <p className="text-xs text-[#9ca3af] mt-1">{t("noSlotsSub")}</p>
           </div>
         ) : (
           <div className="flex flex-col gap-3">
@@ -567,9 +562,9 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
               return (
                 <div key={date} className="rounded-xl border border-[#e5e7eb] p-4">
                   <div className="flex items-center justify-between mb-2.5">
-                    <span className="text-sm font-semibold text-[#111827] capitalize">{prettyDate(date)}</span>
+                    <span className="text-sm font-semibold text-[#111827] capitalize">{prettyDate(date, dateLocale)}</span>
                     <button onClick={() => removeDate(date)} className="text-xs text-[#9ca3af] hover:text-red-500 transition-colors cursor-pointer">
-                      Quitar día
+                      {t("removeDay")}
                     </button>
                   </div>
                   <div className="flex flex-col gap-2.5">
@@ -596,14 +591,14 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                               if (partSlots.length === 0) return null;
                               return (
                                 <div key={part}>
-                                  <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9ca3af] mb-1.5">{part}</p>
+                                  <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9ca3af] mb-1.5">{t(part)}</p>
                                   {/* Even grid → every chip is the SAME width; 2 cols on
                                       mobile so the FULL time fits (no truncation). */}
                                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
                                     {partSlots.map((s) => (
                                       <span key={s.id ?? `${s.slot_time}-${s.location_id ?? ""}-${s.category_id ?? ""}`} className="group inline-flex items-center justify-between gap-1 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-[13px] font-medium tabular-nums whitespace-nowrap pl-2.5 pr-1 py-1.5">
                                         {to12h(s.slot_time)}
-                                        <button onClick={() => removeSlot(s)} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors cursor-pointer shrink-0" aria-label="Quitar">
+                                        <button onClick={() => removeSlot(s)} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors cursor-pointer shrink-0" aria-label={t("remove")}>
                                           <X className="h-3.5 w-3.5" />
                                         </button>
                                       </span>
@@ -627,7 +622,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
         <div className="rounded-xl bg-[#fffbeb] border border-[#fde68a] p-4 text-sm text-[#92400e] flex items-start gap-2">
           <Lock className="h-4 w-4 shrink-0 mt-0.5" />
           <span>
-            Tu disponibilidad está en <strong>privado</strong>: tu agenda y tus horarios están ocultos. Los clientes te contactarán por WhatsApp{allowPhoneCall ? " o llamada" : ""} para coordinar. Desactiva <strong>Disponibilidad privada</strong> para publicar tus horarios.
+            {t.rich("privateNote", { ...rich, call: allowPhoneCall ? t("orCall") : "" })}
           </span>
         </div>
       )}
@@ -640,11 +635,11 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-50 mb-4">
               <Lock className="h-5 w-5 text-red-500" />
             </div>
-            <h3 className="text-lg font-bold text-[#111827] mb-1">¿Estás seguro?</h3>
-            <p className="text-sm text-[#6b7280] mb-5">Tus horarios serán eliminados.</p>
+            <h3 className="text-lg font-bold text-[#111827] mb-1">{t("confirmTitle")}</h3>
+            <p className="text-sm text-[#6b7280] mb-5">{t("confirmBody")}</p>
             <div className="flex gap-3">
               <Button variant="outline" size="md" className="flex-1" onClick={() => setShowPrivateConfirm(false)} disabled={savingVisibility}>
-                Cancelar
+                {t("cancel")}
               </Button>
               <Button
                 size="md"
@@ -652,7 +647,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                 onClick={confirmMakePrivate}
                 loading={savingVisibility}
               >
-                Sí, hacer privada
+                {t("confirmPrivate")}
               </Button>
             </div>
           </div>
