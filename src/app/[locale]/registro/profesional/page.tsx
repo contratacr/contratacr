@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import {
   CheckCircle2, ArrowRight, ArrowLeft, Loader2, AlertCircle,
-  Eye, EyeOff, Circle, Camera, MapPin, Truck, X,
+  Eye, EyeOff, Circle, Camera, MapPin, Truck, X, Plus,
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -453,6 +453,9 @@ export default function RegisterProfessionalPage() {
   // Additional categories (multi-category support). Primary = step2 `category`.
   const [extraCategories, setExtraCategories] = useState<string[]>([]);
   const [extraCatInput, setExtraCatInput] = useState("");
+  // The "add another profession" search is revealed on demand (a clear action),
+  // not shown as a second always-visible dropdown that confused people.
+  const [showExtraProf, setShowExtraProf] = useState(false);
   // Optional brand/business name (workplaces are captured via the map below).
   const [businessName, setBusinessName] = useState("");
 
@@ -1018,12 +1021,13 @@ export default function RegisterProfessionalPage() {
               />
 
               {/* Profession — searchable combobox (a profesión groups the servicios
-                  the pro later adds in their panel). */}
+                  the pro later adds in their panel). Multi-profession: the primary
+                  profession + an on-demand "Agregar profesión" action. */}
               <div>
                 <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                  {t("category")} <span className="text-red-500">*</span>
+                  Tu profesión principal <span className="text-red-500">*</span>
                 </label>
-                <p className="text-xs text-[#9ca3af] mb-1.5">Tu profesión (ej. Nutricionista). Luego agregas los servicios que ofreces en cada una.</p>
+                <p className="text-xs text-[#9ca3af] mb-1.5">Ej. Nutricionista, Electricista. Después agregas los servicios de cada profesión en tu panel.</p>
                 <CategorySearch
                   value={form2.watch("category") ?? ""}
                   onChange={(v) => form2.setValue("category", v, { shouldValidate: true })}
@@ -1031,38 +1035,55 @@ export default function RegisterProfessionalPage() {
                   error={form2.formState.errors.category?.message}
                 />
 
-                {/* Additional professions (optional, multi-profession) */}
-                <div className="mt-2">
-                  {extraCategories.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-2">
-                      {extraCategories.map((c) => (
-                        <span key={c} className="inline-flex items-center gap-1.5 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium pl-3 pr-1.5 py-1.5">
-                          {getCategoryLabel(c, locale)}
-                          <button type="button" onClick={() => setExtraCategories((prev) => prev.filter((x) => x !== c))} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors" aria-label="Quitar">
-                            <X className="h-3.5 w-3.5" />
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  <CategorySearch
-                    value={extraCatInput}
-                    onChange={(v) => {
-                      const primary = form2.watch("category");
-                      if (v && v !== primary && !extraCategories.includes(v)) {
-                        setExtraCategories((prev) => [...prev, v]);
-                      }
-                      setExtraCatInput("");
-                    }}
-                    placeholder="Agrega otra profesión (opcional)"
-                  />
-                </div>
+                {/* Additional professions — chips + a clear on-demand action */}
+                {extraCategories.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {extraCategories.map((c) => (
+                      <span key={c} className="inline-flex items-center gap-1.5 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium pl-3 pr-1.5 py-1.5">
+                        {getCategoryLabel(c, locale)}
+                        <button type="button" onClick={() => setExtraCategories((prev) => prev.filter((x) => x !== c))} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors" aria-label="Quitar">
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {showExtraProf ? (
+                  <div className="mt-2 flex flex-col gap-1.5">
+                    <CategorySearch
+                      value={extraCatInput}
+                      onChange={(v) => {
+                        const primary = form2.watch("category");
+                        if (v && v !== primary && !extraCategories.includes(v)) {
+                          setExtraCategories((prev) => [...prev, v]);
+                        }
+                        setExtraCatInput("");
+                        setShowExtraProf(false);
+                      }}
+                      placeholder="Busca otra profesión…"
+                    />
+                    <button type="button" onClick={() => { setShowExtraProf(false); setExtraCatInput(""); }} className="self-start text-xs text-[#9ca3af] hover:text-[#374151]">
+                      Cancelar
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setShowExtraProf(true)}
+                    className="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-[#009FD9] hover:underline"
+                  >
+                    <Plus className="h-4 w-4" />
+                    {extraCategories.length > 0 ? "Agregar otra profesión" : "¿Tienes más de una profesión? Agrégala"}
+                  </button>
+                )}
               </div>
 
-              {/* Service type */}
+              {/* How you offer services + WHERE — grouped together so the choice and
+                  its location stay visually connected (no "where do I go now?"). */}
               <div>
                 <label className="text-sm font-medium text-[#374151] block mb-2">
-                  ¿Cómo ofreces tus servicios? <span className="text-red-500">*</span>
+                  ¿Cómo ofreces tus servicios? <span className="text-red-500">*</span> <span className="text-[#9ca3af] font-normal">(puedes elegir las dos)</span>
                 </label>
                 <div className="flex flex-col gap-2">
                   <label className={cn(
@@ -1128,33 +1149,34 @@ export default function RegisterProfessionalPage() {
                 {serviceTypeError && (
                   <p className="text-xs text-red-500 mt-1">{serviceTypeError}</p>
                 )}
+
+                {/* The matching location block(s) appear right under the choice, in a
+                    soft grouped panel (no extra hard borders). */}
+                {(serviceFixed || serviceMobile) && (
+                  <div className="mt-3 rounded-xl bg-[#f9fafb] p-3.5 flex flex-col gap-4">
+                    {serviceFixed && (
+                      <div className="flex flex-col gap-2">
+                        <label className="text-sm font-semibold text-[#111827] flex items-center gap-1.5"><MapPin className="h-4 w-4 text-[#009FD9]" /> Tus lugares de trabajo</label>
+                        <p className="text-xs text-[#9ca3af]">
+                          Marca tu ubicación en el mapa o elige la provincia y el cantón: definen dónde apareces
+                          cuando los clientes buscan profesionales.
+                        </p>
+                        <WorkplacesPicker value={workplaces} onChange={(n) => { setWorkplaces(n); setLocationError(null); }} />
+                      </div>
+                    )}
+                    {serviceMobile && (
+                      <div className="flex flex-col gap-2">
+                        <label className="text-sm font-semibold text-[#111827] flex items-center gap-1.5"><Truck className="h-4 w-4 text-[#009FD9]" /> Zonas a las que te desplazas</label>
+                        <p className="text-xs text-[#9ca3af]">
+                          Elige las provincias y cantones donde atiendes. Apareces en los resultados de búsqueda de cada una.
+                        </p>
+                        <CoverageAreaSelector value={coverageAreas} onChange={(n) => { setCoverageAreas(n); setLocationError(null); }} />
+                      </div>
+                    )}
+                    {locationError && <p className="text-xs text-red-500">{locationError}</p>}
+                  </div>
+                )}
               </div>
-
-              {/* Fixed location — pin (reverse-geocoded) or manual provincia/cantón;
-                  both define where the pro appears in search results. */}
-              {serviceFixed && (
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-medium text-[#374151]">Tus lugares de trabajo</label>
-                  <p className="text-xs text-[#9ca3af]">
-                    Marca tu ubicación en el mapa o elige la provincia y el cantón: definen dónde apareces
-                    cuando los clientes buscan profesionales.
-                  </p>
-                  <WorkplacesPicker value={workplaces} onChange={(n) => { setWorkplaces(n); setLocationError(null); }} />
-                </div>
-              )}
-
-              {/* Coverage areas — for "me desplazo": provincia+cantón pairs traveled to */}
-              {serviceMobile && (
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-medium text-[#374151]">Zonas a las que te desplazas</label>
-                  <p className="text-xs text-[#9ca3af]">
-                    Elige las provincias y cantones donde atiendes. Apareces en los resultados de búsqueda de cada una.
-                  </p>
-                  <CoverageAreaSelector value={coverageAreas} onChange={(n) => { setCoverageAreas(n); setLocationError(null); }} />
-                </div>
-              )}
-
-              {locationError && <p className="text-xs text-red-500">{locationError}</p>}
 
               {/* WhatsApp */}
               <PhoneInput

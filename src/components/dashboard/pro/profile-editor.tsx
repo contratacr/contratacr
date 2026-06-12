@@ -76,6 +76,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
   // Aseguradoras only apply to health (es_salud) professionals.
   const isHealthPro = anyHealthCategory(professions);
   const [addCat, setAddCat] = useState("");
+  const [addingProf, setAddingProf] = useState(false);
   const [coverageAreas, setCoverageAreas] = useState<CoverageArea[]>(
     Array.isArray(initial.coverage_areas) ? initial.coverage_areas : []
   );
@@ -388,13 +389,14 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
       </Section>
 
       {/* ── Profesión ─────────────────────────────────────────────────── */}
-      <Section title="Profesión" desc="Las profesiones bajo las que apareces" defaultOpen>
+      <Section title="Profesiones" desc="Una o varias — cada una con sus propios servicios" defaultOpen>
         {/* Professions — multi-select (first is the primary/principal). Each profesión
-            groups the servicios managed in the Servicios tab. */}
+            groups the servicios managed in the Servicios tab. The "add" search is
+            revealed on demand so the principal profession reads cleanly. */}
         <div>
-          <p className="text-xs text-[#9ca3af] mb-2">Tus profesiones (ej. Nutricionista). Los servicios de cada una se gestionan en la pestaña <strong>Servicios</strong>.</p>
+          <p className="text-xs text-[#9ca3af] mb-2">Tu profesión principal aparece primero. Los servicios de cada profesión se gestionan en la pestaña <strong>Servicios</strong>.</p>
           {professions.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-2">
+            <div className="flex flex-wrap gap-2 mb-3">
               {professions.map((p, i) => (
                 <span key={p} className="inline-flex items-center gap-1.5 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium pl-3 pr-1.5 py-1.5">
                   {getCategoryLabel(p, locale)}
@@ -408,11 +410,20 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
               ))}
             </div>
           )}
-          <CategorySearch
-            value={addCat}
-            onChange={(v) => addProfession(v)}
-            placeholder="Agrega una profesión… ej. plomero, fotógrafo"
-          />
+          {addingProf ? (
+            <div className="flex flex-col gap-1.5">
+              <CategorySearch
+                value={addCat}
+                onChange={(v) => { addProfession(v); setAddingProf(false); }}
+                placeholder="Busca otra profesión… ej. plomero, fotógrafo"
+              />
+              <button type="button" onClick={() => setAddingProf(false)} className="self-start text-xs text-[#9ca3af] hover:text-[#374151]">Cancelar</button>
+            </div>
+          ) : (
+            <button type="button" onClick={() => setAddingProf(true)} className="inline-flex items-center gap-1.5 text-sm font-medium text-[#009FD9] hover:underline">
+              <Plus className="h-4 w-4" /> Agregar otra profesión
+            </button>
+          )}
         </div>
       </Section>
 
@@ -500,37 +511,40 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
           </div>
         </div>
 
-        {/* Fixed locations — ONE flow: search/tap the map or pick provincia+cantón,
-            then "Agregar lugar". (The picker holds both inputs.) */}
-        {serviceFixed && (
-          <div>
-            <label className="text-sm font-medium text-[#374151] block mb-1">
-              Lugares de trabajo
-            </label>
-            <p className="text-xs text-[#9ca3af] mb-2">
-              Busca el lugar en el mapa o elige la provincia y el cantón, y toca <strong>Agregar lugar</strong>.
-              Cada lugar define dónde apareces en las búsquedas.
-            </p>
-            <WorkplacesPicker value={workplaces} onChange={(next) => { setWorkplaces(next); touch(); }} mapHeight={168} />
-          </div>
-        )}
-
-        {/* Coverage areas — only for "me desplazo": provincia+cantón pairs traveled to */}
-        {serviceMobile && (
-          <div>
-            <label className="text-sm font-medium text-[#374151] block mb-1">
-              Zonas a las que te desplazas
-            </label>
-            <p className="text-xs text-[#9ca3af] mb-2">
-              Elige las zonas donde atiendes. Apareces en las búsquedas de cada una.
-            </p>
-            {hasCountryCoverage && hasNarrowerCoverage && (
-              <div className="flex items-start gap-2 rounded-lg bg-[#fffbeb] border border-[#fde68a] px-3 py-2 mb-2 text-xs text-[#92400e]">
-                <Globe className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                <span>Ya cubres <strong>todo el país</strong>, así que las zonas más específicas no agregan nada. Puedes quitarlas para simplificar.</span>
+        {/* The matching location block(s) live in one soft grouped panel right
+            under the work-mode choice — connected, no extra hard borders. */}
+        {(serviceFixed || serviceMobile) && (
+          <div className="rounded-xl bg-[#f9fafb] p-3.5 flex flex-col gap-4">
+            {serviceFixed && (
+              <div>
+                <label className="text-sm font-semibold text-[#111827] flex items-center gap-1.5 mb-1">
+                  <MapPin className="h-4 w-4 text-[#009FD9]" /> Lugares de trabajo
+                </label>
+                <p className="text-xs text-[#9ca3af] mb-2">
+                  Busca el lugar en el mapa o elige la provincia y el cantón, y toca <strong>Agregar lugar</strong>.
+                  Cada lugar define dónde apareces en las búsquedas.
+                </p>
+                <WorkplacesPicker value={workplaces} onChange={(next) => { setWorkplaces(next); touch(); }} mapHeight={168} />
               </div>
             )}
-            <CoverageAreaSelector value={coverageAreas} onChange={(next) => { setCoverageAreas(next); touch(); }} />
+
+            {serviceMobile && (
+              <div>
+                <label className="text-sm font-semibold text-[#111827] flex items-center gap-1.5 mb-1">
+                  <Truck className="h-4 w-4 text-[#009FD9]" /> Zonas a las que te desplazas
+                </label>
+                <p className="text-xs text-[#9ca3af] mb-2">
+                  Elige las zonas donde atiendes. Apareces en las búsquedas de cada una.
+                </p>
+                {hasCountryCoverage && hasNarrowerCoverage && (
+                  <div className="flex items-start gap-2 rounded-lg bg-[#fffbeb] border border-[#fde68a] px-3 py-2 mb-2 text-xs text-[#92400e]">
+                    <Globe className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                    <span>Ya cubres <strong>todo el país</strong>, así que las zonas más específicas no agregan nada. Puedes quitarlas para simplificar.</span>
+                  </div>
+                )}
+                <CoverageAreaSelector value={coverageAreas} onChange={(next) => { setCoverageAreas(next); touch(); }} />
+              </div>
+            )}
           </div>
         )}
 
