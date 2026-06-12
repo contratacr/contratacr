@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Input } from "@/components/ui/input";
 import { cleanId, formatId, detectIdType, idTypeLabel } from "@/lib/cedula";
 
@@ -17,8 +18,6 @@ interface CedulaInputProps {
   disabled?: boolean;
 }
 
-const DEFAULT_HINT = "CR: 9 dígitos · DIMEX: 11-12 · NITE: 10";
-
 /**
  * Shared Costa Rican identification field — masks as the user types, stores
  * clean digits, auto-detects the document type, and validates by length only.
@@ -34,15 +33,16 @@ export function CedulaInput({
   hint,
   disabled,
 }: CedulaInputProps) {
+  const t = useTranslations("identity");
   const type = detectIdType(value);
   const label = (
     <span className="flex items-center justify-between gap-2">
       <span>
-        Número de identificación
+        {t("idLabel")}
         {required ? (
           <span className="text-red-500"> *</span>
         ) : (
-          <span className="text-[#9ca3af] font-normal"> (opcional)</span>
+          <span className="text-[#9ca3af] font-normal"> {t("optional")}</span>
         )}
       </span>
       {type && (
@@ -65,7 +65,7 @@ export function CedulaInput({
       autoComplete="off"
       maxLength={14}
       placeholder="1-0000-0000"
-      hint={hint ?? DEFAULT_HINT}
+      hint={hint ?? t("idHint")}
       error={error}
       autoFocus={autoFocus}
       disabled={disabled}

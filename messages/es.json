@@ -286,6 +286,21 @@
     "sending": "Enviando…",
     "submit": "Enviar reporte"
   },
+  "identity": {
+    "idLabel": "Número de identificación",
+    "idHint": "CR: 9 dígitos · DIMEX: 11-12 · NITE: 10",
+    "optional": "(opcional)",
+    "confirmed": "Identidad confirmada",
+    "cedulaLabel": "Cédula:",
+    "dobLabel": "Nacimiento:",
+    "notYourInfo": "¿No es tu información?",
+    "searching": "Buscando en el padrón…",
+    "mismatchNotice": "Indicaste que la información del padrón no es tuya. Ingresa tu nombre completo: tu identidad quedará <b>pendiente de revisión</b> y la confirmaremos manualmente.",
+    "notFoundNotice": "No encontramos tu cédula en el padrón (puede ser DIMEX/NITE, extranjero o recién emitida). Ingresa tu nombre completo: tu identidad quedará <b>pendiente de revisión</b> y la confirmaremos manualmente.",
+    "fullName": "Nombre completo",
+    "namePlaceholder": "Juan Pérez González",
+    "nameHint": "tal como aparece en tu documento"
+  },
   "profile": {
     "back": "Volver a resultados",
     "featuredBadge": "PERFIL DESTACADO",

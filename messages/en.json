@@ -286,6 +286,21 @@
     "sending": "Sending…",
     "submit": "Send report"
   },
+  "identity": {
+    "idLabel": "ID number",
+    "idHint": "CR: 9 digits · DIMEX: 11-12 · NITE: 10",
+    "optional": "(optional)",
+    "confirmed": "Identity confirmed",
+    "cedulaLabel": "ID:",
+    "dobLabel": "Date of birth:",
+    "notYourInfo": "Not your information?",
+    "searching": "Searching the registry…",
+    "mismatchNotice": "You indicated the registry info isn't yours. Enter your full name: your identity will be <b>pending review</b> and we'll confirm it manually.",
+    "notFoundNotice": "We couldn't find your ID in the registry (it may be DIMEX/NITE, foreign or recently issued). Enter your full name: your identity will be <b>pending review</b> and we'll confirm it manually.",
+    "fullName": "Full name",
+    "namePlaceholder": "John Doe Smith",
+    "nameHint": "exactly as it appears on your document"
+  },
   "profile": {
     "back": "Back to results",
     "featuredBadge": "FEATURED PROFILE",

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Loader2, AlertCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { CedulaInput } from "@/components/ui/cedula-input";
@@ -43,6 +44,7 @@ export function IdentityField({
   nameError,
   cedulaReadOnly,
 }: Props) {
+  const t = useTranslations("identity");
   const [status, setStatus] = useState<IdentityStatus>("idle");
   const [officialName, setOfficialName] = useState<string>("");
   const [dob, setDob] = useState<string | null>(null);
@@ -106,7 +108,7 @@ export function IdentityField({
 
       {status === "loading" && (
         <div className="flex items-center gap-2 text-sm text-[#6b7280]">
-          <Loader2 className="h-4 w-4 animate-spin" /> Buscando en el padrón…
+          <Loader2 className="h-4 w-4 animate-spin" /> {t("searching")}
         </div>
       )}
 
@@ -137,21 +139,14 @@ export function IdentityField({
             <div className="flex items-start gap-2 rounded-xl border border-[#fde68a] bg-[#fffbeb] p-3 text-xs text-[#92400e]">
               <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
               <span>
-                {manualOverride ? (
-                  <>Indicaste que la información del padrón no es tuya. Ingresa tu nombre completo: tu identidad
-                  quedará <strong>pendiente de revisión</strong> y la confirmaremos manualmente.</>
-                ) : (
-                  <>No encontramos tu cédula en el padrón (puede ser DIMEX/NITE, extranjero o recién emitida).
-                  Ingresa tu nombre completo: tu identidad quedará <strong>pendiente de revisión</strong> y la
-                  confirmaremos manualmente.</>
-                )}
+                {t.rich(manualOverride ? "mismatchNotice" : "notFoundNotice", { b: (c) => <strong>{c}</strong> })}
               </span>
             </div>
           )}
           <Input
-            label={<>Nombre completo <span className="text-red-500">*</span></>}
-            placeholder="Juan Pérez González"
-            hint="tal como aparece en tu documento"
+            label={<>{t("fullName")} <span className="text-red-500">*</span></>}
+            placeholder={t("namePlaceholder")}
+            hint={t("nameHint")}
             value={fullName}
             onChange={(e) => onFullNameChange(e.target.value)}
             error={nameError}
