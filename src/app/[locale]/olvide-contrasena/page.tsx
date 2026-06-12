@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -22,6 +22,7 @@ type FormData = z.infer<typeof schema>;
 
 export default function OlvideContrasenaPage() {
   const locale = useLocale();
+  const t = useTranslations("forgotPassword");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -41,7 +42,7 @@ export default function OlvideContrasenaPage() {
     });
     setSubmitting(false);
     if (resetError) {
-      setError("Ocurrió un error. Verifica el correo e intenta de nuevo.");
+      setError(t("error"));
       return;
     }
     setSuccess(true);
@@ -54,9 +55,9 @@ export default function OlvideContrasenaPage() {
         <div className="w-full max-w-sm">
           <div className="text-center mb-8">
             <ContrataCRLogo className="justify-center mb-4" />
-            <h1 className="text-2xl font-bold text-[#111827]">Olvidé mi contraseña</h1>
+            <h1 className="text-2xl font-bold text-[#111827]">{t("title")}</h1>
             <p className="text-[#6b7280] text-sm mt-1">
-              Ingresa tu correo y te enviamos un enlace para restablecer tu contraseña.
+              {t("subtitle")}
             </p>
           </div>
 
@@ -71,25 +72,25 @@ export default function OlvideContrasenaPage() {
             <div className="flex items-start gap-3 p-4 bg-[#EBF5FB] border border-[#bfdbfe] rounded-xl text-sm text-[#0089bb]">
               <CheckCircle2 className="h-5 w-5 shrink-0 mt-0.5 text-[#009FD9]" />
               <div>
-                <p className="font-semibold text-[#1a2744]">Correo enviado</p>
+                <p className="font-semibold text-[#1a2744]">{t("sentTitle")}</p>
                 <p className="mt-0.5 text-[#374151]">
-                  Revisa tu bandeja de entrada y sigue el enlace para crear una nueva contraseña. Revisa también la carpeta de spam.
+                  {t("sentBody")}
                 </p>
               </div>
             </div>
           ) : (
             <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
               <Input
-                label="Correo electrónico"
+                label={t("emailLabel")}
                 type="email"
-                placeholder="tu@email.com"
+                placeholder={t("emailPlaceholder")}
                 error={errors.email?.message}
                 {...register("email")}
               />
               <Button type="submit" size="lg" loading={submitting} className="mt-2">
-                {submitting ? "Enviando…" : (
+                {submitting ? t("sending") : (
                   <>
-                    Enviar enlace <ArrowRight className="h-4 w-4" />
+                    {t("sendLink")} <ArrowRight className="h-4 w-4" />
                   </>
                 )}
               </Button>
@@ -98,7 +99,7 @@ export default function OlvideContrasenaPage() {
 
           <p className="text-center text-sm text-[#6b7280] mt-6">
             <Link href="/login" className="text-[#009FD9] font-medium hover:underline">
-              Volver al inicio de sesión
+              {t("backToLogin")}
             </Link>
           </p>
         </div>

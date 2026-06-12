@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Bell, CheckCheck, X } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -24,6 +25,7 @@ type Notification = {
 // BOTH clients and professionals. Lists the full history.
 export default function NotificationsPage() {
   const { user, loading } = useAuth();
+  const t = useTranslations("notifications");
   const router = useRouter();
   const [items, setItems] = useState<Notification[]>([]);
   const [busy, setBusy] = useState(true);
@@ -74,10 +76,10 @@ export default function NotificationsPage() {
       <main className="flex-1">
         <div className="mx-auto max-w-2xl px-4 sm:px-6 py-8">
           <div className="flex items-center justify-between mb-5">
-            <h1 className="text-xl font-bold text-[#111827]">Notificaciones</h1>
+            <h1 className="text-xl font-bold text-[#111827]">{t("title")}</h1>
             {unread > 0 && (
               <button onClick={markAllRead} className="flex items-center gap-1.5 text-sm text-[#009FD9] hover:underline">
-                <CheckCheck className="h-4 w-4" /> Marcar todo leído
+                <CheckCheck className="h-4 w-4" /> {t("markAllRead")}
               </button>
             )}
           </div>
@@ -88,7 +90,7 @@ export default function NotificationsPage() {
             ) : items.length === 0 ? (
               <div className="text-center py-16">
                 <Bell className="h-10 w-10 text-[#e5e7eb] mx-auto mb-3" />
-                <p className="text-sm text-[#6b7280]">No tienes notificaciones.</p>
+                <p className="text-sm text-[#6b7280]">{t("noneList")}</p>
               </div>
             ) : (
               <ul>
@@ -104,7 +106,7 @@ export default function NotificationsPage() {
                         </div>
                       </div>
                     </button>
-                    <button onClick={(e) => dismiss(e, n.id)} className="absolute top-2.5 right-2.5 p-1 rounded-md text-[#9ca3af] hover:bg-[#e5e7eb] hover:text-[#374151] transition-colors" aria-label="Descartar">
+                    <button onClick={(e) => dismiss(e, n.id)} className="absolute top-2.5 right-2.5 p-1 rounded-md text-[#9ca3af] hover:bg-[#e5e7eb] hover:text-[#374151] transition-colors" aria-label={t("delete")}>
                       <X className="h-3.5 w-3.5" />
                     </button>
                   </li>

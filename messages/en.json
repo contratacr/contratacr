@@ -1106,6 +1106,29 @@
     "searchPros": "Find professionals",
     "count": "{count, plural, one {# saved professional} other {# saved professionals}}"
   },
+  "registerChoice": {
+    "title": "Create a free account",
+    "subtitle": "How do you want to use ContrataCR?",
+    "clientTitle": "I'm looking for professionals",
+    "clientDesc": "I need to hire services: plumbing, electrical, cleaning, design and more.",
+    "continue": "Continue",
+    "proTitle": "I'm a professional",
+    "proDesc": "I offer my services and want to connect with clients in Costa Rica.",
+    "haveAccount": "Already have an account?",
+    "signIn": "Sign in"
+  },
+  "forgotPassword": {
+    "title": "Forgot my password",
+    "subtitle": "Enter your email and we'll send you a link to reset your password.",
+    "error": "Something went wrong. Check the email and try again.",
+    "sentTitle": "Email sent",
+    "sentBody": "Check your inbox and follow the link to create a new password. Check your spam folder too.",
+    "emailLabel": "Email",
+    "emailPlaceholder": "you@email.com",
+    "sending": "Sending…",
+    "sendLink": "Send link",
+    "backToLogin": "Back to sign in"
+  },
   "notifications": {
     "title": "Notifications",
     "empty": "No notifications",

@@ -1106,6 +1106,29 @@
     "searchPros": "Buscar profesionales",
     "count": "{count, plural, one {# profesional guardado} other {# profesionales guardados}}"
   },
+  "registerChoice": {
+    "title": "Crear cuenta gratis",
+    "subtitle": "¿Cómo quieres usar ContrataCR?",
+    "clientTitle": "Busco profesionales",
+    "clientDesc": "Necesito contratar servicios: plomería, electricidad, limpieza, diseño y más.",
+    "continue": "Continuar",
+    "proTitle": "Soy profesional",
+    "proDesc": "Ofrezco mis servicios y quiero conectar con clientes en Costa Rica.",
+    "haveAccount": "¿Ya tienes cuenta?",
+    "signIn": "Inicia sesión"
+  },
+  "forgotPassword": {
+    "title": "Olvidé mi contraseña",
+    "subtitle": "Ingresa tu correo y te enviamos un enlace para restablecer tu contraseña.",
+    "error": "Ocurrió un error. Verifica el correo e intenta de nuevo.",
+    "sentTitle": "Correo enviado",
+    "sentBody": "Revisa tu bandeja de entrada y sigue el enlace para crear una nueva contraseña. Revisa también la carpeta de spam.",
+    "emailLabel": "Correo electrónico",
+    "emailPlaceholder": "tu@email.com",
+    "sending": "Enviando…",
+    "sendLink": "Enviar enlace",
+    "backToLogin": "Volver al inicio de sesión"
+  },
   "notifications": {
     "title": "Notificaciones",
     "empty": "No tienes notificaciones",

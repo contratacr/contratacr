@@ -1,19 +1,21 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Search, Briefcase, ArrowRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 
 export default function RegisterPage() {
+  const t = useTranslations("registerChoice");
   return (
     <div className="min-h-screen flex flex-col bg-[#f4f7fa]">
       <Navbar />
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-12">
         <div className="w-full max-w-xl">
           <div className="text-center mb-10">
-            <h1 className="text-3xl font-bold text-[#111827] mb-2">Crear cuenta gratis</h1>
-            <p className="text-[#6b7280] text-base">¿Cómo quieres usar ContrataCR?</p>
+            <h1 className="text-3xl font-bold text-[#111827] mb-2">{t("title")}</h1>
+            <p className="text-[#6b7280] text-base">{t("subtitle")}</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -26,13 +28,13 @@ export default function RegisterPage() {
                 <Search className="h-8 w-8 text-[#009FD9] group-hover:text-white transition-colors duration-200" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-[#111827] mb-2">Busco profesionales</h2>
+                <h2 className="text-xl font-bold text-[#111827] mb-2">{t("clientTitle")}</h2>
                 <p className="text-sm text-[#6b7280] leading-relaxed">
-                  Necesito contratar servicios: plomería, electricidad, limpieza, diseño y más.
+                  {t("clientDesc")}
                 </p>
               </div>
               <span className="flex items-center gap-1.5 text-sm font-semibold text-[#009FD9] opacity-0 group-hover:opacity-100 transition-opacity">
-                Continuar <ArrowRight className="h-4 w-4" />
+                {t("continue")} <ArrowRight className="h-4 w-4" />
               </span>
             </Link>
 
@@ -45,21 +47,21 @@ export default function RegisterPage() {
                 <Briefcase className="h-8 w-8 text-[#009FD9] group-hover:text-white transition-colors duration-200" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-[#111827] mb-2">Soy profesional</h2>
+                <h2 className="text-xl font-bold text-[#111827] mb-2">{t("proTitle")}</h2>
                 <p className="text-sm text-[#6b7280] leading-relaxed">
-                  Ofrezco mis servicios y quiero conectar con clientes en Costa Rica.
+                  {t("proDesc")}
                 </p>
               </div>
               <span className="flex items-center gap-1.5 text-sm font-semibold text-[#009FD9] opacity-0 group-hover:opacity-100 transition-opacity">
-                Continuar <ArrowRight className="h-4 w-4" />
+                {t("continue")} <ArrowRight className="h-4 w-4" />
               </span>
             </Link>
           </div>
 
           <p className="text-center text-sm text-[#6b7280] mt-8">
-            ¿Ya tienes cuenta?{" "}
+            {t("haveAccount")}{" "}
             <Link href="/login" className="text-[#009FD9] font-medium hover:underline">
-              Inicia sesión
+              {t("signIn")}
             </Link>
           </p>
         </div>
