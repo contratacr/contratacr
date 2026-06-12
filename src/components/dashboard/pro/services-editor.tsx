@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useLocale } from "next-intl";
-import { Plus, Trash2, Check, Pencil, X } from "lucide-react";
+import { Plus, Trash2, Check, Pencil, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PriceInput } from "@/components/ui/price-input";
@@ -409,11 +409,22 @@ export function ServicesEditor({
         );
       })}
 
-      {saved && (
-        <span className="flex items-center gap-1 text-sm text-emerald-600 font-medium">
-          <Check className="h-4 w-4" /> Guardado
-        </span>
-      )}
+      {/* Persistent save status — every change (add / edit / delete) autosaves;
+          this line always tells the pro the current state, so there's never a
+          "did it save?" ambiguity. */}
+      <div className="flex items-center gap-1.5 text-sm pt-1 border-t border-[#f3f4f6] mt-1">
+        {saving ? (
+          <span className="flex items-center gap-1.5 text-[#6b7280] font-medium">
+            <Loader2 className="h-4 w-4 animate-spin" /> Guardando…
+          </span>
+        ) : saved ? (
+          <span className="flex items-center gap-1 text-emerald-600 font-medium">
+            <Check className="h-4 w-4" /> Guardado
+          </span>
+        ) : (
+          <span className="text-[#9ca3af]">Los cambios se guardan automáticamente.</span>
+        )}
+      </div>
     </div>
   );
 }

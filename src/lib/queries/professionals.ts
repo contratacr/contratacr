@@ -422,6 +422,13 @@ export async function getProfessionalBySlug(
         const { data: cpRow } = await supabase.from("professionals").select("call_phone").eq("id", pro.id).maybeSingle();
         callPhone = (cpRow as { call_phone?: string } | null)?.call_phone ?? undefined;
       } catch { /* column not migrated yet */ }
+      // Optional public contact email (the pro opts in to show it). Best-effort so
+      // an unmigrated DB doesn't 500 the whole profile.
+      let contactEmail: string | undefined;
+      try {
+        const { data: ceRow } = await supabase.from("professionals").select("contact_email").eq("id", pro.id).maybeSingle();
+        contactEmail = (ceRow as { contact_email?: string } | null)?.contact_email ?? undefined;
+      } catch { /* column not migrated yet */ }
       if (portfolioItems.length === 0) {
         portfolioItems = (pro.portfolio_urls ?? []).map((url: string) => ({ url }));
       }
@@ -496,6 +503,7 @@ export async function getProfessionalBySlug(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         profileId: (pro as any).profile_id ?? undefined,
         callPhone,
+        contactEmail,
       };
     } catch (err) {
       console.error("[getProfessionalBySlug] Supabase error:", err);

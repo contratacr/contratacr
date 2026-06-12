@@ -53,5 +53,6 @@ export const SELF_MSG = {
   request: "No puedes solicitarte un servicio a ti mismo. Así es como los clientes te encuentran y reservan tus servicios.",
   whatsapp: "No puedes contactarte por WhatsApp a ti mismo. Así es como los clientes te escriben para coordinar.",
   call: "No puedes llamarte a ti mismo. Así es como los clientes te contactan por teléfono.",
+  email: "No puedes escribirte a ti mismo. Así es como los clientes te contactan por correo.",
   proposal: "No puedes enviarte una propuesta a tu propio proyecto.",
 } as const;

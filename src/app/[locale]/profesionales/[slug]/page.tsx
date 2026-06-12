@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import {
   MapPin, Shield, ShieldCheck, ShieldAlert, ArrowLeft,
-  Share2, Flag, ChevronDown, Lock, Phone, Building2, Award,
+  Share2, Flag, ChevronDown, Lock, Phone, Building2, Award, Mail,
 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Navbar } from "@/components/layout/navbar";
@@ -359,6 +359,27 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                     >
                       <Phone className="h-4 w-4" />
                       Llamar
+                    </a>
+                  )
+                )}
+
+                {/* Correo — only when the pro opted in to show a contact email. */}
+                {professional.contactEmail && (
+                  isOwn ? (
+                    <button
+                      onClick={() => setSelfMsg(SELF_MSG.email)}
+                      className="flex items-center justify-center gap-2 w-full border border-[#009FD9] text-[#009FD9] hover:bg-[#EBF5FB] font-semibold py-3 rounded-xl transition-colors text-sm"
+                    >
+                      <Mail className="h-4 w-4" />
+                      Escribir por correo
+                    </button>
+                  ) : (
+                    <a
+                      href={`mailto:${professional.contactEmail}`}
+                      className="flex items-center justify-center gap-2 w-full border border-[#009FD9] text-[#009FD9] hover:bg-[#EBF5FB] font-semibold py-3 rounded-xl transition-colors text-sm"
+                    >
+                      <Mail className="h-4 w-4" />
+                      Escribir por correo
                     </a>
                   )
                 )}

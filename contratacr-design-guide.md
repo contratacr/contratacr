@@ -204,6 +204,15 @@ A professional is always **ONE card** (`rounded-2xl bg-white border`, never spli
 - **Price lives ONLY in the Servicios tab** (per-service: amount + type). "Mi perfil" no longer asks for price — it shows a short note pointing to Servicios. The /buscar card + profile "Desde" price is **derived from the services** via `deriveDisplayPricing(services, legacyPricing, hourlyRate)` (cheapest priced service; "a consultar" if services exist but none priced; legacy `pricing`/`hourly_rate` as fallback so no existing pro loses a displayed price). Do not re-add a profile-level price input.
 - **Label:** the `a_convenir` type now displays as **"Precio a consultar"** everywhere (clearer than "a convenir" for all CR users). Keep the internal type id `a_convenir` — only the display string changed.
 
+### Save feedback — autosave + always-visible status
+- Editors **autosave** (profile-editor debounces 1.5s; services/availability persist on each action). Always show a **persistent status line** so the user never wonders "did it save?": `Guardando…` (spinner) / `Guardado` (check) / `Cambios sin guardar` (amber) / a muted "Los cambios se guardan automáticamente." when idle. Keep a manual "Guardar cambios" affordance where a debounce window exists (profile-editor), backed by the `UnsavedChangesGuard`.
+
+### Optional public contact email
+- Pros can opt in to a **public contact email** (`professionals.contact_email`, migration 049 — nullable). Validate the email in the editor; only render the **"Escribir por correo"** option on the profile when it's non-empty. It joins WhatsApp/Llamar as a contact channel and follows the same self-block (own profile → `SELF_MSG.email` modal).
+
+### "Ver horario completo" opens Solicitar
+- On /buscar cards the **"Ver horario completo"** control opens the **Solicitar servicio** booking flow (`openBooking()`), not the profile page — the client lands directly in booking (and it self-blocks on the pro's own card).
+
 ### Servicios + casos de éxito (per service instance)
 - **Servicios** is a two-step flow with numbered badges: **1 Tus profesiones**, **2 Tus servicios** (each service has name + price + optional description/years). Keep it flat — hairline-divided sections, no nested boxes; only the add/edit form gets an accent box.
 - **Casos de éxito attach to a SERVICE INSTANCE by `serviceId`, never by name or profession.** Several services with the same name (e.g. three "Otro servicio") must NOT share photos. `PortfolioItem = { url, serviceId?, profession? }` (`profession` kept for legacy back-compat). Photos not tied to a current service fall into an **"Otros trabajos"** bucket (never lost).

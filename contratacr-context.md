@@ -935,6 +935,11 @@ No new migrations. Behavioural/UX fixes + a few API/data-flow corrections.
 - `WorkplacesPicker`: **"Usar mi ubicación actual"** (geolocation + reverse geocode) and **re-inits the map on every mount** (the Script `onLoad` only fires once) — fixes the blank map after fixed→mobile→fixed (fixes 13–14).
 - Profile **work mode allows BOTH** ("me desplazo" + "lugar fijo" are independent toggles); `service_type` stored as a comma list.
 
+### Smaller fixes — save clarity, optional email, ver-horario-completo
+- **Save feedback:** profile-editor already autosaves + shows explicit status; services-editor now has a **persistent save status line** (Guardando… / Guardado / "Los cambios se guardan automáticamente.") so deletes/edits never leave a "did it save?" ambiguity.
+- **Optional public contact email:** new nullable `professionals.contact_email` (**migration 049_pro_contact_email.sql — must be applied in Supabase**). Opt-in field in profile-editor (validated); the profile shows an **"Escribir por correo"** (mailto) option only when set, with self-block on the owner's view. Read best-effort in the detail query (like call_phone), mapped to `contactEmail`.
+- **"Ver horario completo"** on /buscar cards now opens the **Solicitar servicio** flow (`openBooking()`) instead of linking to the profile.
+
 ### Servicios clarity + casos de éxito by service instance
 - **Servicios** reorganized into a clear two-step flow (numbered badges: 1 Tus profesiones, 2 Tus servicios), lighter containers.
 - **Casos de éxito now attach to a SERVICE INSTANCE (`serviceId`), not profession** — fixes duplicate names (e.g. three "Otro servicio") sharing photos. `PortfolioItem` gained `serviceId` (`profession` kept for legacy). New `lib/services.ts` `serviceLabelMap()` builds unique labels (description snippet or ordinal for repeats), used in `PhotoGallery` (editor) and the profile casos tab. Photos with no current service fall into an "Otros trabajos" bucket. PhotoGallery now takes `services`; uploads tag `{ serviceId, profession }`.

@@ -62,6 +62,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
   const [whatsapp, setWhatsapp] = useState<string>(initial.whatsapp ?? "");
   // Optional SEPARATE number for calls. Empty → the WhatsApp number is used for calls.
   const [callPhone, setCallPhone] = useState<string>(initial.call_phone ?? "");
+  const [contactEmail, setContactEmail] = useState<string>(initial.contact_email ?? "");
   const [fullName, setFullName] = useState<string>(initial.profiles?.full_name ?? "");
   // The official name is locked once verified — it's what backs the "Identidad
   // verificada" badge (the guarantee it matches the padrón). Corrections go
@@ -228,6 +229,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         coverage_country: coverageCountry,
         insurance_networks: insurers,
         call_phone: callPhone.trim() || null,
+        contact_email: contactEmail.trim() || null,
       };
 
       let { error: proError } = await supabase
@@ -235,7 +237,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         .update({ ...baseUpdate, ...identityFields })
         .eq("id", professionalId);
       // Retry without the optional identity columns if the DB isn't migrated yet.
-      if (proError && /business_name|workplaces|coverage_areas|search_provincias|search_cantones|insurance_networks|call_phone|affiliations|schema cache|could not find|PGRST204/i.test(proError.message)) {
+      if (proError && /business_name|workplaces|coverage_areas|search_provincias|search_cantones|insurance_networks|call_phone|contact_email|affiliations|schema cache|could not find|PGRST204/i.test(proError.message)) {
         ({ error: proError } = await supabase.from("professionals").update(baseUpdate).eq("id", professionalId));
       }
 
@@ -559,6 +561,27 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
             onChange={(digits) => { setCallPhone(digits); touch(); }}
           />
           <p className="text-xs text-[#9ca3af] mt-1">Si lo dejas vacío, usamos tu número de WhatsApp también para las llamadas.</p>
+        </div>
+
+        {/* Optional public contact email — opt-in; shown to clients who prefer
+            email. Hidden on the profile when empty. */}
+        <div>
+          <label className="text-sm font-medium text-[#374151] block mb-1.5">
+            Correo de contacto <span className="text-[#9ca3af] font-normal">(opcional)</span>
+          </label>
+          <input
+            type="email"
+            inputMode="email"
+            placeholder="tucorreo@ejemplo.com"
+            value={contactEmail}
+            onChange={(e) => { setContactEmail(e.target.value); touch(); }}
+            className="w-full h-11 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+          />
+          {contactEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail.trim()) ? (
+            <p className="text-xs text-red-500 mt-1">Ingresa un correo válido.</p>
+          ) : (
+            <p className="text-xs text-[#9ca3af] mt-1">Si lo agregas, los clientes verán la opción de escribirte por correo. Déjalo vacío para no mostrarlo.</p>
+          )}
         </div>
 
         {/* Price lives in Servicios now — one place only, to avoid confusion. */}

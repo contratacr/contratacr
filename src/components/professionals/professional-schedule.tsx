@@ -5,7 +5,6 @@ import { ChevronLeft, ChevronRight, ChevronDown, MapPin } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { BookingModal } from "@/components/booking/booking-modal";
 import { ClientRegistrationModal } from "@/components/auth/client-registration-modal";
-import { Link } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { getWhatsAppLink } from "@/lib/utils";
 import { isTooSoonCR } from "@/lib/time-cr";
@@ -298,13 +297,15 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
         )}
       </div>
 
-      <Link
-        href={`/profesionales/${professional.slug}`}
-        onClick={(e) => e.stopPropagation()}
-        className="block text-center text-[10px] font-medium text-[#009FD9] hover:underline"
+      {/* Opens the Solicitar servicio flow (full schedule + request), not just
+          the profile — so the client lands directly in booking. */}
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); openBooking(); }}
+        className="block w-full text-center text-[10px] font-medium text-[#009FD9] hover:underline"
       >
         Ver horario completo
-      </Link>
+      </button>
 
       {/* Full-width primary — identical on every card. The WhatsApp/call
           contact icons live in the card's top row (next to the name), so this

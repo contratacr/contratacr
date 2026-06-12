@@ -73,6 +73,8 @@ export type ProfessionalCardData = {
   /** Optional SEPARATE number for calls. When unset, the WhatsApp number is used
    *  for calls too. WhatsApp button always uses `whatsapp`. */
   callPhone?: string;
+  /** Optional public contact email the pro opted in to show clients. */
+  contactEmail?: string;
 };
 
 // Human label for the pro's actual travel coverage, e.g. "Atiende en todo el país",
