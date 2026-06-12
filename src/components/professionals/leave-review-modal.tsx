@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { AlertCircle, CheckCircle2, Star, X } from "lucide-react";
 
 interface LeaveReviewModalProps {
@@ -21,6 +22,7 @@ export function LeaveReviewModal({
   onClose,
   onSuccess,
 }: LeaveReviewModalProps) {
+  const t = useTranslations("reviewModal");
   const [rating, setRating] = useState(0);
   const [hovered, setHovered] = useState(0);
   const [comment, setComment] = useState("");
@@ -65,11 +67,11 @@ export function LeaveReviewModal({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (rating === 0) {
-      setError("Por favor selecciona una calificación.");
+      setError(t("errRating"));
       return;
     }
     if (!comment.trim()) {
-      setError("Por favor escribe un comentario.");
+      setError(t("errComment"));
       return;
     }
     setError(null);
@@ -82,7 +84,7 @@ export function LeaveReviewModal({
       });
       const json = await res.json();
       if (!res.ok) {
-        setError(json.error ?? "Error al enviar la reseña.");
+        setError(json.error ?? t("errSubmit"));
         return;
       }
       setSuccess(true);
@@ -91,7 +93,7 @@ export function LeaveReviewModal({
         onClose();
       }, 1500);
     } catch {
-      setError("Error de conexión. Intenta de nuevo.");
+      setError(t("errConnection"));
     } finally {
       setLoading(false);
     }
@@ -118,7 +120,7 @@ export function LeaveReviewModal({
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-[#f3f4f6]">
           <div>
-            <h2 className="text-lg font-bold text-[#111827]">{isEditing ? "Editar tu reseña" : "Dejar una reseña"}</h2>
+            <h2 className="text-lg font-bold text-[#111827]">{isEditing ? t("titleEdit") : t("titleNew")}</h2>
             <p className="text-sm text-[#6b7280] mt-0.5">{professionalName}</p>
           </div>
           <button
@@ -133,20 +135,20 @@ export function LeaveReviewModal({
         {success ? (
           <div className="flex flex-col items-center gap-3 px-6 py-10">
             <CheckCircle2 className="h-14 w-14 text-emerald-500" />
-            <p className="text-lg font-semibold text-[#111827]">¡Gracias por tu reseña!</p>
+            <p className="text-lg font-semibold text-[#111827]">{t("thanks")}</p>
             {/* Filled stars so the user can see their submitted rating. */}
             <div className="flex gap-1">
               {[1, 2, 3, 4, 5].map((star) => (
                 <Star key={star} className={`h-7 w-7 ${star <= rating ? "text-yellow-400 fill-yellow-400" : "text-[#d1d5db] fill-[#d1d5db]"}`} />
               ))}
             </div>
-            <p className="text-sm text-[#6b7280] text-center">Tu opinión ayuda a otros clientes a elegir mejor.</p>
+            <p className="text-sm text-[#6b7280] text-center">{t("thanksSub")}</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="px-6 py-5 flex flex-col gap-5">
             {/* Star rating */}
             <div>
-              <p className="text-sm font-medium text-[#374151] mb-3">Calificación</p>
+              <p className="text-sm font-medium text-[#374151] mb-3">{t("ratingLabel")}</p>
               <div className="flex gap-2">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <button
@@ -172,7 +174,7 @@ export function LeaveReviewModal({
             {/* Comment */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <p className="text-sm font-medium text-[#374151]">Comentario</p>
+                <p className="text-sm font-medium text-[#374151]">{t("commentLabel")}</p>
                 <span
                   className={`text-xs tabular-nums ${
                     comment.length > 300 ? "text-red-500" : "text-[#9ca3af]"
@@ -186,7 +188,7 @@ export function LeaveReviewModal({
                 onChange={(e) => setComment(e.target.value)}
                 maxLength={300}
                 rows={4}
-                placeholder="Cuéntanos sobre tu experiencia con este profesional..."
+                placeholder={t("commentPlaceholder")}
                 className="w-full resize-none rounded-xl border border-[#e5e7eb] bg-[#fafafa] px-3.5 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:border-[#009FD9] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20 transition"
               />
             </div>
@@ -208,10 +210,10 @@ export function LeaveReviewModal({
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
                   <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  Enviando...
+                  {t("sending")}
                 </span>
               ) : (
-                isEditing ? "Actualizar reseña" : "Enviar reseña"
+                isEditing ? t("submitUpdate") : t("submitNew")
               )}
             </button>
           </form>

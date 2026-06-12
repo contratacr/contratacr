@@ -225,6 +225,22 @@
     "viewCases": "Ver casos de éxito ({count})",
     "viewCertifications": "Ver certificaciones ({count})"
   },
+  "reviewModal": {
+    "titleEdit": "Editar tu reseña",
+    "titleNew": "Dejar una reseña",
+    "thanks": "¡Gracias por tu reseña!",
+    "thanksSub": "Tu opinión ayuda a otros clientes a elegir mejor.",
+    "ratingLabel": "Calificación",
+    "commentLabel": "Comentario",
+    "commentPlaceholder": "Cuéntanos sobre tu experiencia con este profesional…",
+    "sending": "Enviando…",
+    "submitUpdate": "Actualizar reseña",
+    "submitNew": "Enviar reseña",
+    "errRating": "Por favor selecciona una calificación.",
+    "errComment": "Por favor escribe un comentario.",
+    "errSubmit": "Error al enviar la reseña.",
+    "errConnection": "Error de conexión. Intenta de nuevo."
+  },
   "schedule": {
     "today": "Hoy",
     "tomorrow": "Mañana",

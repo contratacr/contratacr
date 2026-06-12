@@ -225,6 +225,22 @@
     "viewCases": "View success stories ({count})",
     "viewCertifications": "View certifications ({count})"
   },
+  "reviewModal": {
+    "titleEdit": "Edit your review",
+    "titleNew": "Leave a review",
+    "thanks": "Thanks for your review!",
+    "thanksSub": "Your feedback helps other clients choose better.",
+    "ratingLabel": "Rating",
+    "commentLabel": "Comment",
+    "commentPlaceholder": "Tell us about your experience with this professional…",
+    "sending": "Sending…",
+    "submitUpdate": "Update review",
+    "submitNew": "Submit review",
+    "errRating": "Please select a rating.",
+    "errComment": "Please write a comment.",
+    "errSubmit": "Couldn't submit the review.",
+    "errConnection": "Connection error. Please try again."
+  },
   "schedule": {
     "today": "Today",
     "tomorrow": "Tomorrow",
