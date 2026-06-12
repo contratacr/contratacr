@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import {
   CalendarDays, Star, FolderOpen, CheckCircle2, Clock, XCircle,
   ChevronDown, ChevronUp, MapPin, Plus, Briefcase, Trash2, Flag, Search,
@@ -92,20 +93,10 @@ const STATUS_VARIANT: Record<BookingStatus, "warning" | "success" | "error" | "d
   rescheduled: "warning",
 };
 
-const STATUS_LABEL: Record<BookingStatus, string> = {
-  pending: "Pendiente",
-  confirmed: "Confirmada",
-  in_progress: "En progreso",
-  awaiting_confirmation: "Confirma la finalización",
-  completed: "Finalizada",
-  cancelled: "Cancelada",
-  rescheduled: "Reprogramada",
-};
-
-function formatBookingDate(b: Booking) {
+function formatBookingDate(b: Booking, dateLocale: string) {
   if (b.scheduled_date) {
     const [y, m, d] = b.scheduled_date.split("-").map(Number);
-    const label = new Date(y, m - 1, d).toLocaleDateString("es-CR", {
+    const label = new Date(y, m - 1, d).toLocaleDateString(dateLocale, {
       weekday: "short", day: "numeric", month: "short",
     });
     return b.scheduled_time ? `${label} · ${b.scheduled_time}` : label;
@@ -115,6 +106,9 @@ function formatBookingDate(b: Booking) {
 
 export function ClientActivity({ section }: { section: ClientActivitySection }) {
   const { user } = useAuth();
+  const t = useTranslations("clientActivity");
+  const locale = useLocale();
+  const dateLocale = locale === "en" ? "en-US" : "es-CR";
 
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -161,7 +155,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   }
 
   async function cancelBooking(id: string) {
-    const reason = window.prompt("¿Por qué quieres cancelar? (se le avisa al profesional)") ?? "";
+    const reason = window.prompt(t("cancelPrompt")) ?? "";
     await fetch("/api/bookings", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -180,14 +174,14 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   }
 
   async function reportProfessional(bookingId: string) {
-    const reason = window.prompt("¿Qué pasó? (no se presentó / servicio no realizado / otro). Tu reporte ayuda a la moderación.");
+    const reason = window.prompt(t("reportProPrompt"));
     if (!reason || !reason.trim()) return;
     const res = await fetch("/api/report-professional", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ bookingId, reason: reason.trim() }),
     });
-    alert(res.ok ? "Gracias. Tu reporte fue enviado al equipo de moderación." : "No se pudo enviar el reporte.");
+    alert(res.ok ? t("reportThanks") : t("reportError"));
   }
 
   async function refreshProjects() {
@@ -204,7 +198,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id: projectId, status }),
     });
-    if (!res.ok) { alert("No se pudo actualizar el proyecto. Intenta de nuevo."); return; }
+    if (!res.ok) { alert(t("projectUpdateError")); return; }
     setProjects((prev) => prev.map((p) => (p.id === projectId ? { ...p, status } : p)));
     refreshProjects();
   }
@@ -215,17 +209,17 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id: projectId, action: "confirm" }),
     });
-    if (!res.ok) { alert("No se pudo confirmar. Intenta de nuevo."); return; }
+    if (!res.ok) { alert(t("confirmError")); return; }
     setProjects((prev) => prev.map((p) => (p.id === projectId ? { ...p, status: "completed" } : p)));
     refreshProjects();
   }
 
   async function deleteProject(projectId: string) {
-    if (!confirm("¿Eliminar este proyecto? Esta acción no se puede deshacer.")) return;
+    if (!confirm(t("deleteProjectConfirm"))) return;
     const res = await fetch(`/api/projects?id=${projectId}`, { method: "DELETE" });
     if (!res.ok) {
       const j = await res.json().catch(() => ({}));
-      alert(j.error ?? "No se pudo eliminar el proyecto. Intenta de nuevo.");
+      alert(j.error ?? t("deleteProjectError"));
       return;
     }
     setProjects((prev) => prev.filter((p) => p.id !== projectId));
@@ -249,9 +243,9 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
     const accepted = (list ?? []).find((p) => p.status === "accepted");
     const pro = accepted?.professionals;
     if (pro?.id) {
-      setReviewModal({ professionalId: pro.id, professionalName: pro.profiles?.full_name ?? "Profesional", projectId });
+      setReviewModal({ professionalId: pro.id, professionalName: pro.profiles?.full_name ?? t("professional"), projectId });
     } else {
-      alert("No encontramos al profesional asignado para reseñar.");
+      alert(t("noAssignedPro"));
     }
   }
 
@@ -317,17 +311,17 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
           {bookings.length === 0 ? (
             <div className="text-center py-14 rounded-2xl border border-dashed border-[#e5e7eb] bg-white">
               <CalendarDays className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
-              <p className="font-semibold text-[#374151]">Todavía no tienes solicitudes</p>
-              <p className="text-sm text-[#9ca3af] mt-1">Busca un profesional y solicita tu primer servicio.</p>
+              <p className="font-semibold text-[#374151]">{t("bEmpty")}</p>
+              <p className="text-sm text-[#9ca3af] mt-1">{t("bEmptySub")}</p>
               <Button className="mt-5" asChild>
-                <a href="/buscar"><Search className="h-4 w-4" /> Buscar profesionales</a>
+                <a href="/buscar"><Search className="h-4 w-4" /> {t("searchPros")}</a>
               </Button>
             </div>
           ) : (
             <>
               <StatusFilterTabs tabs={SOLICITUD_TABS} value={bookingFilter} onChange={setBookingFilter} />
               {filteredBookings.length === 0 ? (
-                <p className="text-sm text-[#9ca3af] text-center py-8">No hay solicitudes en esta vista.</p>
+                <p className="text-sm text-[#9ca3af] text-center py-8">{t("noBookingsView")}</p>
               ) : (
                 <div className="flex flex-col gap-3">
                   {filteredBookings.map((b) => {
@@ -347,49 +341,49 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                 <div className="flex items-center gap-2 flex-wrap mb-1">
                                   {b.professionals?.slug ? (
                                     <Link href={`/profesionales/${b.professionals.slug}`} className="text-sm font-semibold text-[#111827] hover:text-[#009FD9] hover:underline">
-                                      {b.professionals?.categories?.icon} {b.professionals?.profiles?.full_name ?? "Profesional"}
+                                      {b.professionals?.categories?.icon} {b.professionals?.profiles?.full_name ?? t("professional")}
                                     </Link>
                                   ) : (
                                     <span className="text-sm font-semibold text-[#111827]">
-                                      {b.professionals?.categories?.icon} {b.professionals?.profiles?.full_name ?? "Profesional"}
+                                      {b.professionals?.categories?.icon} {b.professionals?.profiles?.full_name ?? t("professional")}
                                     </span>
                                   )}
                                   <Badge variant={STATUS_VARIANT[b.status]}>
-                                    <span className="flex items-center gap-1">{STATUS_ICON[b.status]}{STATUS_LABEL[b.status]}</span>
+                                    <span className="flex items-center gap-1">{STATUS_ICON[b.status]}{t(`bStatus.${b.status}`)}</span>
                                   </Badge>
                                 </div>
                                 <p className="text-sm text-[#374151] line-clamp-2 mb-1">{b.service_description}</p>
-                                {formatBookingDate(b) && (
-                                  <p className="text-xs text-[#6b7280]">📅 {formatBookingDate(b)}</p>
+                                {formatBookingDate(b, dateLocale) && (
+                                  <p className="text-xs text-[#6b7280]">📅 {formatBookingDate(b, dateLocale)}</p>
                                 )}
                               </div>
                             </div>
                             <div className="flex flex-col gap-2 shrink-0">
                               {b.status === "awaiting_confirmation" && (
                                 <Button size="sm" onClick={() => confirmBookingDone(b.id)}>
-                                  <CheckCircle2 className="h-3.5 w-3.5" /> Confirmar finalización
+                                  <CheckCircle2 className="h-3.5 w-3.5" /> {t("confirmCompletion")}
                                 </Button>
                               )}
                               {b.status === "completed" && (
-                                <Button variant="outline" size="sm" onClick={() => setReviewModal({ professionalId: b.professional_id, professionalName: b.professionals?.profiles?.full_name ?? "Profesional", bookingId: b.id })}>
+                                <Button variant="outline" size="sm" onClick={() => setReviewModal({ professionalId: b.professional_id, professionalName: b.professionals?.profiles?.full_name ?? t("professional"), bookingId: b.id })}>
                                   <Star className={cn("h-3.5 w-3.5", rev && "fill-yellow-400 text-yellow-400")} />
-                                  {rev ? "Ver/Editar reseña" : "Dejar reseña"}
+                                  {rev ? t("editReview") : t("leaveReview")}
                                 </Button>
                               )}
                               {["pending", "confirmed", "in_progress"].includes(b.status) && (
-                                <Button size="sm" variant="outline" onClick={() => cancelBooking(b.id)}>Cancelar</Button>
+                                <Button size="sm" variant="outline" onClick={() => cancelBooking(b.id)}>{t("cancel")}</Button>
                               )}
                               {b.professionals?.whatsapp && b.status !== "cancelled" && b.status !== "completed" && (
                                 <Button size="sm" variant="whatsapp" asChild>
-                                  <a href={getWhatsAppLink(b.professionals.whatsapp, `Hola, te contacto por mi solicitud en ContrataCR.`)} target="_blank" rel="noopener noreferrer">
-                                    <WhatsAppIcon className="h-3.5 w-3.5" /> Contactar
+                                  <a href={getWhatsAppLink(b.professionals.whatsapp, t("waBooking"))} target="_blank" rel="noopener noreferrer">
+                                    <WhatsAppIcon className="h-3.5 w-3.5" /> {t("contact")}
                                   </a>
                                 </Button>
                               )}
                               {/* Reporting available in every state — a no-show or
                                   abusive professional can happen before confirmation too. */}
                               <button onClick={() => reportProfessional(b.id)} className="inline-flex items-center justify-center gap-1.5 text-xs text-[#9ca3af] hover:text-red-500 transition-colors">
-                                <Flag className="h-3.5 w-3.5" /> Reportar
+                                <Flag className="h-3.5 w-3.5" /> {t("report")}
                               </button>
                             </div>
                           </div>
@@ -410,12 +404,12 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
           {projects.length === 0 ? (
             <div className="text-center py-14 rounded-2xl border border-dashed border-[#e5e7eb] bg-white">
               <FolderOpen className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
-              <p className="font-semibold text-[#374151]">Todavía no publicaste proyectos</p>
+              <p className="font-semibold text-[#374151]">{t("pEmpty")}</p>
               <p className="text-sm text-[#9ca3af] mt-1">
-                Publica lo que necesitas y recibe propuestas de varios profesionales.
+                {t("pEmptySub")}
               </p>
               <Button className="mt-5" asChild>
-                <a href="/publicar-proyecto"><Plus className="h-4 w-4" /> Publicar proyecto</a>
+                <a href="/publicar-proyecto"><Plus className="h-4 w-4" /> {t("publishProject")}</a>
               </Button>
             </div>
           ) : (
@@ -423,11 +417,11 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <StatusFilterTabs tabs={PROYECTO_TABS} value={projectFilter} onChange={setProjectFilter} />
                 <Button size="sm" asChild>
-                  <a href="/publicar-proyecto"><Plus className="h-4 w-4" /> Publicar proyecto</a>
+                  <a href="/publicar-proyecto"><Plus className="h-4 w-4" /> {t("publishProject")}</a>
                 </Button>
               </div>
               {filteredProjects.length === 0 && (
-                <p className="text-sm text-[#9ca3af] text-center py-8">No hay proyectos en esta vista.</p>
+                <p className="text-sm text-[#9ca3af] text-center py-8">{t("noProjectsView")}</p>
               )}
               {filteredProjects.map((project) => {
                 const isExpanded = expandedProject === project.id;
@@ -453,11 +447,11 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                   : "success"
                               }
                             >
-                              {project.status === "in_progress" ? "En curso · Asignado"
-                                : project.status === "awaiting_confirmation" ? "Esperando tu confirmación"
-                                : project.status === "completed" ? "Finalizado"
-                                : project.status === "cancelled" ? "Cancelado"
-                                : "Abierto"}
+                              {project.status === "in_progress" ? t("projAssigned")
+                                : project.status === "awaiting_confirmation" ? t("projAwaiting")
+                                : project.status === "completed" ? t("projCompleted")
+                                : project.status === "cancelled" ? t("projCancelled")
+                                : t("projOpen")}
                             </Badge>
                             {project.categories?.name && (
                               <Badge variant="muted" className="text-[11px]">{project.categories.name}</Badge>
@@ -471,7 +465,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                 {[project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ")}
                               </span>
                             )}
-                            <span>{proposalCount} propuesta{proposalCount !== 1 ? "s" : ""}</span>
+                            <span>{t("proposalsCount", { count: proposalCount })}</span>
                           </div>
                         </div>
                         {proposalCount > 0 && (
@@ -483,9 +477,9 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                             className="flex items-center gap-1 text-sm font-medium text-[#009FD9] hover:underline shrink-0"
                           >
                             {isExpanded ? (
-                              <>Ver menos <ChevronUp className="h-4 w-4" /></>
+                              <>{t("seeLess")} <ChevronUp className="h-4 w-4" /></>
                             ) : (
-                              <>Ver propuestas <ChevronDown className="h-4 w-4" /></>
+                              <>{t("seeProposals")} <ChevronDown className="h-4 w-4" /></>
                             )}
                           </button>
                         )}
@@ -494,35 +488,35 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                       <div className="mt-3 flex flex-wrap gap-2">
                         {project.status === "open" && (
                           <Button size="sm" variant="outline" onClick={() => updateProjectStatus(project.id, "cancelled")}>
-                            Cancelar proyecto
+                            {t("cancelProject")}
                           </Button>
                         )}
                         {project.status === "cancelled" && (
                           <Button size="sm" variant="outline" onClick={() => updateProjectStatus(project.id, "open")}>
-                            Reabrir proyecto
+                            {t("reopenProject")}
                           </Button>
                         )}
                         {project.status === "awaiting_confirmation" && (
                           <Button size="sm" onClick={() => confirmProjectCompletion(project.id)}>
-                            <CheckCircle2 className="h-4 w-4" /> Confirmar finalización
+                            <CheckCircle2 className="h-4 w-4" /> {t("confirmCompletion")}
                           </Button>
                         )}
                         {(project.status === "in_progress" || project.status === "awaiting_confirmation") && (
                           <Button size="sm" variant="outline" className="text-red-500 hover:bg-red-50" onClick={() => updateProjectStatus(project.id, "cancelled")}>
-                            Cancelar proyecto
+                            {t("cancelProject")}
                           </Button>
                         )}
                         {project.status === "completed" && (() => {
                           const rev = projectReview(project.id);
                           return (
                             <Button size="sm" variant="outline" onClick={() => reviewProjectPro(project.id)}>
-                              <Star className={cn("h-3.5 w-3.5", rev && "fill-yellow-400 text-yellow-400")} /> {rev ? "Ver/Editar reseña" : "Dejar reseña"}
+                              <Star className={cn("h-3.5 w-3.5", rev && "fill-yellow-400 text-yellow-400")} /> {rev ? t("editReview") : t("leaveReview")}
                             </Button>
                           );
                         })()}
                         {project.status !== "in_progress" && project.status !== "awaiting_confirmation" && (
                           <Button size="sm" variant="ghost" className="text-red-500 hover:bg-red-50" onClick={() => deleteProject(project.id)}>
-                            <Trash2 className="h-4 w-4" /> Eliminar
+                            <Trash2 className="h-4 w-4" /> {t("delete")}
                           </Button>
                         )}
                       </div>
@@ -562,24 +556,24 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                             <div className="flex flex-col gap-1.5 shrink-0">
                               {proposal.status === "pending" && !locked && (
                                 <>
-                                  <Button size="sm" onClick={() => acceptProposal(proposal.id, project.id)}>Aceptar</Button>
-                                  <Button size="sm" variant="outline" onClick={() => declineProposal(proposal.id, project.id)}>Rechazar</Button>
+                                  <Button size="sm" onClick={() => acceptProposal(proposal.id, project.id)}>{t("accept")}</Button>
+                                  <Button size="sm" variant="outline" onClick={() => declineProposal(proposal.id, project.id)}>{t("decline")}</Button>
                                 </>
                               )}
                               {proposal.status === "accepted" && (
                                 <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold px-2.5 py-1">
                                   <CheckCircle2 className="h-3.5 w-3.5" />
-                                  {finalized ? "Finalizada" : "Aceptada"}
+                                  {finalized ? t("finalized") : t("accepted")}
                                 </span>
                               )}
-                              {proposal.status === "declined" && <Badge variant="error">Rechazada</Badge>}
+                              {proposal.status === "declined" && <Badge variant="error">{t("declined")}</Badge>}
                               {!locked && (proposal.status === "accepted" || proposal.status === "declined") && (
-                                <Button size="sm" variant="outline" onClick={() => revertProposal(proposal.id, project.id)}>Cambiar decisión</Button>
+                                <Button size="sm" variant="outline" onClick={() => revertProposal(proposal.id, project.id)}>{t("changeDecision")}</Button>
                               )}
                               {proposal.professionals?.whatsapp && (
                                 <Button size="sm" variant="whatsapp" asChild>
-                                  <a href={getWhatsAppLink(proposal.professionals.whatsapp, `Hola, te escribo por tu propuesta en ContrataCR para el proyecto "${project.title}".`)} target="_blank" rel="noopener noreferrer">
-                                    <WhatsAppIcon className="h-3.5 w-3.5" /> WhatsApp
+                                  <a href={getWhatsAppLink(proposal.professionals.whatsapp, t("waProposal", { title: project.title }))} target="_blank" rel="noopener noreferrer">
+                                    <WhatsAppIcon className="h-3.5 w-3.5" /> {t("whatsapp")}
                                   </a>
                                 </Button>
                               )}
@@ -590,13 +584,13 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                         return (
                           <div className="mt-4 pt-4 border-t border-[#f3f4f6] flex flex-col gap-3">
                             {proposalList.length === 0 ? (
-                              <p className="text-sm text-[#9ca3af] text-center py-2">Sin propuestas todavía.</p>
+                              <p className="text-sm text-[#9ca3af] text-center py-2">{t("noProposalsYet")}</p>
                             ) : (
                               <>
                                 {primary.map(renderProposal)}
                                 {finalized && others.length > 0 && (
                                   <details className="text-xs">
-                                    <summary className="cursor-pointer text-[#6b7280] hover:text-[#374151]">Ver propuestas no elegidas ({others.length})</summary>
+                                    <summary className="cursor-pointer text-[#6b7280] hover:text-[#374151]">{t("seeUnchosen", { count: others.length })}</summary>
                                     <div className="flex flex-col gap-3 mt-2 opacity-70">{others.map(renderProposal)}</div>
                                   </details>
                                 )}

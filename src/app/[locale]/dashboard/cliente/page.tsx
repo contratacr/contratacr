@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import {
   CalendarDays, Bookmark, LogOut, Bell, User, FolderOpen, Briefcase, Search, LifeBuoy,
@@ -26,6 +27,7 @@ type Tab = "bookings" | "projects" | "saved" | "notifications" | "soporte" | "pr
 
 export default function ClientDashboardPage() {
   const { user, loading: authLoading } = useAuth();
+  const t = useTranslations("clientPage");
   const router = useRouter();
   const searchParams = useSearchParams();
   // Post-login lands on the panel HOME (Mi perfil), not a deep sub-section.
@@ -195,9 +197,9 @@ export default function ClientDashboardPage() {
   const cedulaVerified = hasCedula && detectIdType(savedCedula) === "cedula";
 
   const TABS: { key: Tab; icon: React.ReactNode; label: string }[] = [
-    { key: "bookings", icon: <CalendarDays className="h-4 w-4" />, label: "Solicitudes" },
-    { key: "projects", icon: <FolderOpen className="h-4 w-4" />, label: "Proyectos" },
-    { key: "saved", icon: <Bookmark className="h-4 w-4" />, label: "Guardados" },
+    { key: "bookings", icon: <CalendarDays className="h-4 w-4" />, label: t("tabBookings") },
+    { key: "projects", icon: <FolderOpen className="h-4 w-4" />, label: t("tabProjects") },
+    { key: "saved", icon: <Bookmark className="h-4 w-4" />, label: t("tabSaved") },
     {
       key: "notifications",
       icon: (
@@ -210,7 +212,7 @@ export default function ClientDashboardPage() {
           )}
         </div>
       ),
-      label: "Notificaciones",
+      label: t("tabNotifications"),
     },
     {
       key: "soporte",
@@ -224,9 +226,9 @@ export default function ClientDashboardPage() {
           )}
         </div>
       ),
-      label: "Soporte",
+      label: t("tabSupport"),
     },
-    { key: "profile", icon: <User className="h-4 w-4" />, label: "Mi perfil" },
+    { key: "profile", icon: <User className="h-4 w-4" />, label: t("tabProfile") },
   ];
 
   const inputClass =
@@ -257,9 +259,9 @@ export default function ClientDashboardPage() {
               </div>
               <div className="min-w-0">
                 <h1 className="text-lg font-bold text-[#111827] truncate">
-                  Hola, {displayName.split(" ")[0]} 👋
+                  {t("greeting", { name: displayName.split(" ")[0] })}
                 </h1>
-                <p className="text-xs text-[#9ca3af]">Tu panel en ContrataCR</p>
+                <p className="text-xs text-[#9ca3af]">{t("subtitle")}</p>
               </div>
               <Button variant="ghost" size="sm" onClick={handleSignOut} className="ml-auto shrink-0 text-[#6b7280] hover:text-red-500 sm:hidden">
                 <LogOut className="h-4 w-4" />
@@ -267,11 +269,11 @@ export default function ClientDashboardPage() {
             </div>
             <div className="flex items-center gap-1.5 w-full sm:w-auto shrink-0">
               <Button size="sm" asChild className="flex-1 sm:flex-none justify-center">
-                <a href="/buscar"><Search className="h-4 w-4" /> Buscar profesionales</a>
+                <a href="/buscar"><Search className="h-4 w-4" /> {t("searchPros")}</a>
               </Button>
               <Button variant="ghost" size="sm" onClick={handleSignOut} className="hidden sm:inline-flex text-[#6b7280] hover:text-red-500">
                 <LogOut className="h-4 w-4" />
-                <span>Salir</span>
+                <span>{t("signOut")}</span>
               </Button>
             </div>
           </div>
@@ -300,7 +302,7 @@ export default function ClientDashboardPage() {
           {activeTab === "projects" && <ClientActivity section="projects" />}
           {activeTab === "saved" && (
             <div>
-              <h2 className="text-lg font-semibold text-[#111827] mb-4">Profesionales guardados</h2>
+              <h2 className="text-lg font-semibold text-[#111827] mb-4">{t("savedHeading")}</h2>
               <ClientActivity section="saved" />
             </div>
           )}
@@ -308,7 +310,7 @@ export default function ClientDashboardPage() {
           {/* NOTIFICATIONS TAB */}
           {activeTab === "notifications" && (
             <div>
-              <h2 className="text-lg font-semibold text-[#111827] mb-4">Notificaciones</h2>
+              <h2 className="text-lg font-semibold text-[#111827] mb-4">{t("notificationsHeading")}</h2>
               <NotificationsList />
             </div>
           )}
@@ -316,7 +318,7 @@ export default function ClientDashboardPage() {
           {/* SOPORTE TAB */}
           {activeTab === "soporte" && (
             <div>
-              <h2 className="text-lg font-semibold text-[#111827] mb-4">Soporte</h2>
+              <h2 className="text-lg font-semibold text-[#111827] mb-4">{t("supportHeading")}</h2>
               <SupportTickets onUnreadChange={setSupportUnread} />
             </div>
           )}
@@ -337,20 +339,20 @@ export default function ClientDashboardPage() {
                   <div>
                     <label className="cursor-pointer inline-flex items-center gap-2 text-sm font-medium text-[#009FD9] border border-[#009FD9] rounded-xl px-4 py-2 hover:bg-[#EBF5FB] transition-colors">
                       {photoUploading ? (
-                        <><span className="h-4 w-4 rounded-full border-2 border-[#009FD9] border-t-transparent animate-spin" />Subiendo...</>
-                      ) : "Cambiar foto"}
+                        <><span className="h-4 w-4 rounded-full border-2 border-[#009FD9] border-t-transparent animate-spin" />{t("uploading")}</>
+                      ) : t("changePhoto")}
                       <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={photoUploading} />
                     </label>
-                    <p className="text-xs text-[#9ca3af] mt-1">JPG, PNG o WebP — máx 5MB</p>
+                    <p className="text-xs text-[#9ca3af] mt-1">{t("photoHint")}</p>
                   </div>
                 </div>
 
                 <div className="border-t border-[#f3f4f6] pt-4 flex flex-col gap-4">
                   <div>
                     <label className="text-sm font-medium text-[#374151] mb-1.5 flex items-center gap-1.5">
-                      Nombre completo <span className="text-red-500">*</span>
+                      {t("fullName")} <span className="text-red-500">*</span>
                       {cedulaVerified && (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#16a34a]"><ShieldCheck className="h-3.5 w-3.5" /> Verificado</span>
+                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#16a34a]"><ShieldCheck className="h-3.5 w-3.5" /> {t("verified")}</span>
                       )}
                     </label>
                     <div className="relative">
@@ -365,21 +367,20 @@ export default function ClientDashboardPage() {
                     </div>
                     {cedulaVerified && (
                       <p className="text-xs text-[#6b7280] mt-1.5">
-                        Tu nombre está verificado con tu cédula del padrón. ¿Un error o cambio legal?{" "}
-                        <Link href="/dashboard/cliente?tab=soporte" className="text-[#009FD9] font-medium hover:underline">Solicítalo a soporte</Link>.
+                        {t.rich("nameLockedHelp", { link: (c) => <Link href="/dashboard/cliente?tab=soporte" className="text-[#009FD9] font-medium hover:underline">{c}</Link> })}
                       </p>
                     )}
                   </div>
                   <PhoneInput
-                    label={<>Teléfono <span className="text-[#9ca3af] font-normal">(opcional)</span></>}
+                    label={<>{t("phone")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span></>}
                     value={profileForm.phone}
                     onChange={(digits) => setProfileForm((f) => ({ ...f, phone: digits }))}
                   />
                   <div className="flex items-center gap-3">
                     <Button onClick={saveProfile} loading={profileSaving} disabled={profileSaving}>
-                      Guardar cambios
+                      {t("saveChanges")}
                     </Button>
-                    {profileSaved && <span className="text-sm text-emerald-600 font-medium">✓ ¡Cambios guardados!</span>}
+                    {profileSaved && <span className="text-sm text-emerald-600 font-medium">{t("saved")}</span>}
                   </div>
                 </div>
               </div>
@@ -388,26 +389,24 @@ export default function ClientDashboardPage() {
                   privacy; verified (national + padrón) vs registered (DIMEX/NITE). */}
               {hasCedula && (
                 <div className="bg-white rounded-2xl border border-[#e5e7eb] p-5">
-                  <h3 className="text-sm font-semibold text-[#111827] mb-3">Identidad</h3>
+                  <h3 className="text-sm font-semibold text-[#111827] mb-3">{t("identity")}</h3>
                   <div className="flex items-center justify-between gap-3 flex-wrap">
                     <div>
-                      <p className="text-xs text-[#9ca3af]">Cédula registrada</p>
+                      <p className="text-xs text-[#9ca3af]">{t("registeredId")}</p>
                       <p className="text-sm font-semibold text-[#111827] tracking-wider">{maskId(savedCedula)}</p>
                     </div>
                     {cedulaVerified ? (
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-[#dcfce7] text-[#15803d] text-xs font-semibold px-3 py-1.5">
-                        <ShieldCheck className="h-4 w-4" /> Identidad verificada
+                        <ShieldCheck className="h-4 w-4" /> {t("identityVerified")}
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-[#fffbeb] text-[#b45309] text-xs font-semibold px-3 py-1.5">
-                        <ShieldAlert className="h-4 w-4" /> Pendiente de revisión
+                        <ShieldAlert className="h-4 w-4" /> {t("pendingReview")}
                       </span>
                     )}
                   </div>
                   <p className="text-xs text-[#9ca3af] mt-3">
-                    {cedulaVerified
-                      ? "Tu identidad fue confirmada con el padrón a partir de tu cédula. Solo mostramos los últimos dígitos."
-                      : "Registramos tu identificación. Las cédulas que no están en el padrón (DIMEX/NITE) se revisan manualmente."}
+                    {cedulaVerified ? t("identityVerifiedHelp") : t("identityPendingHelp")}
                   </p>
                 </div>
               )}
@@ -415,12 +414,12 @@ export default function ClientDashboardPage() {
               {/* Offer my services — same account, adds the pro role + onboarding.
                   No leading icon, so the content aligns flush with the cards above. */}
               <div className="bg-white rounded-2xl border border-[#e5e7eb] p-5">
-                <h3 className="text-sm font-semibold text-[#111827]">¿Ofreces servicios?</h3>
+                <h3 className="text-sm font-semibold text-[#111827]">{t("offerTitle")}</h3>
                 <p className="text-xs text-[#6b7280] mt-0.5 mb-3">
-                  Convierte tu cuenta en profesional sin crear una nueva. Completas tu cédula y datos de servicio una sola vez, y conservas todo lo que ya tienes como cliente.
+                  {t("offerBody")}
                 </p>
                 <Button size="sm" onClick={() => router.push("/registro/profesional")}>
-                  <Briefcase className="h-4 w-4" /> Ofrecer mis servicios
+                  <Briefcase className="h-4 w-4" /> {t("offerCta")}
                 </Button>
               </div>
 
