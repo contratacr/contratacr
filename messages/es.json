@@ -241,6 +241,20 @@
       "favorite": "No puedes guardarte a ti mismo en favoritos. Aquí es donde los clientes guardan tu perfil para contratarte después."
     }
   },
+  "categorySearch": {
+    "placeholderDefault": "Escribe tu especialidad o busca…",
+    "searchPlaceholder": "Escribe tu servicio… ej. psicólogo, plomero, niñera",
+    "noResults": "No encontramos esa categoría",
+    "noResultsHint": "Elige \"Otro servicio\" y describe tu especialidad en tu perfil.",
+    "otherGroup": "Otro",
+    "otherOption": "Otro servicio — describirlo en mi perfil",
+    "suggestThanks": "Gracias. Enviamos tu sugerencia al equipo para revisión.",
+    "suggestNamePlaceholder": "Nombre de la categoría",
+    "sending": "Enviando…",
+    "send": "Enviar",
+    "cancel": "Cancelar",
+    "notListed": "¿No ves tu categoría?"
+  },
   "profile": {
     "back": "Volver a resultados",
     "featuredBadge": "PERFIL DESTACADO",

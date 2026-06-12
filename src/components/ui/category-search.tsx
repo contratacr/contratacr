@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Search, X, ChevronDown, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -25,10 +25,11 @@ interface CategorySearchProps {
 export function CategorySearch({
   value,
   onChange,
-  placeholder = "Escribe tu especialidad o busca…",
+  placeholder,
   error,
   className,
 }: CategorySearchProps) {
+  const t = useTranslations("categorySearch");
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -169,7 +170,7 @@ export function CategorySearch({
         {selectedLabel ? (
           <span className="text-[#111827] truncate flex-1">{selectedLabel}</span>
         ) : (
-          <span className="text-[#9ca3af] truncate flex-1">{placeholder}</span>
+          <span className="text-[#9ca3af] truncate flex-1">{placeholder ?? t("placeholderDefault")}</span>
         )}
         <div className="flex items-center gap-1 shrink-0 ml-2">
           {value && (
@@ -209,7 +210,7 @@ export function CategorySearch({
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Escribe tu servicio… ej. psicólogo, plomero, niñera"
+                placeholder={t("searchPlaceholder")}
                 className="w-full pl-9 pr-3 py-2 text-sm text-[#111827] placeholder:text-[#9ca3af] bg-[#f9fafb] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20"
               />
               {query && (
@@ -224,8 +225,8 @@ export function CategorySearch({
           <div className="overflow-y-auto flex-1">
             {query && results.length === 0 ? (
               <div className="px-3 py-4 text-center">
-                <p className="text-sm text-[#374151] font-medium mb-1">No encontramos esa categoría</p>
-                <p className="text-xs text-[#9ca3af]">Selecciona "Otro servicio" y describe tu especialidad en tu perfil.</p>
+                <p className="text-sm text-[#374151] font-medium mb-1">{t("noResults")}</p>
+                <p className="text-xs text-[#9ca3af]">{t("noResultsHint")}</p>
               </div>
             ) : (
               grouped.map(([groupLabel, items]) => (
@@ -259,7 +260,7 @@ export function CategorySearch({
             {/* Otro option always at bottom */}
             <div className="border-t border-[#f3f4f6] mt-1">
               <p className="px-3 pt-3 pb-1 text-[10px] font-bold text-[#9ca3af] uppercase tracking-widest">
-                Otro
+                {t("otherGroup")}
               </p>
               <button
                 type="button"
@@ -271,7 +272,7 @@ export function CategorySearch({
                     : "text-[#374151] hover:bg-[#f9fafb]"
                 )}
               >
-                Otro servicio — describirlo en mi perfil
+                {t("otherOption")}
               </button>
 
               {/* "¿No ves tu categoría?" → tracked suggestion ticket (admin reviews;
@@ -279,7 +280,7 @@ export function CategorySearch({
               <div className="px-3 py-2.5 border-t border-[#f3f4f6]">
                 {suggestSent ? (
                   <p className="inline-flex items-center gap-1.5 text-xs text-[#15803d]">
-                    <Check className="h-3.5 w-3.5" /> Gracias. Enviamos tu sugerencia al equipo para revisión.
+                    <Check className="h-3.5 w-3.5" /> {t("suggestThanks")}
                   </p>
                 ) : suggesting ? (
                   <div className="flex items-center gap-2">
@@ -287,17 +288,17 @@ export function CategorySearch({
                       value={suggestName}
                       onChange={(e) => setSuggestName(e.target.value)}
                       onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); sendSuggestion(); } }}
-                      placeholder="Nombre de la categoría"
+                      placeholder={t("suggestNamePlaceholder")}
                       className="flex-1 h-9 px-3 rounded-lg border border-[#e5e7eb] text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20"
                     />
                     <button type="button" disabled={!suggestName.trim() || sending} onClick={sendSuggestion} className="h-9 px-3 rounded-lg bg-[#009FD9] text-white text-sm font-medium disabled:opacity-50">
-                      {sending ? "Enviando…" : "Enviar"}
+                      {sending ? t("sending") : t("send")}
                     </button>
-                    <button type="button" onClick={() => setSuggesting(false)} className="h-9 px-2 text-sm text-[#9ca3af] hover:text-[#374151]">Cancelar</button>
+                    <button type="button" onClick={() => setSuggesting(false)} className="h-9 px-2 text-sm text-[#9ca3af] hover:text-[#374151]">{t("cancel")}</button>
                   </div>
                 ) : (
                   <button type="button" onClick={() => setSuggesting(true)} className="text-xs text-[#009FD9] hover:underline">
-                    ¿No ves tu categoría?
+                    {t("notListed")}
                   </button>
                 )}
               </div>

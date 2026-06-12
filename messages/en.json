@@ -241,6 +241,20 @@
       "favorite": "You can't save yourself to favorites. This is where clients save your profile to hire you later."
     }
   },
+  "categorySearch": {
+    "placeholderDefault": "Type your specialty or search…",
+    "searchPlaceholder": "Type your service… e.g. psychologist, plumber, nanny",
+    "noResults": "We couldn't find that category",
+    "noResultsHint": "Choose \"Other service\" and describe your specialty on your profile.",
+    "otherGroup": "Other",
+    "otherOption": "Other service — describe it on my profile",
+    "suggestThanks": "Thanks. We sent your suggestion to the team for review.",
+    "suggestNamePlaceholder": "Category name",
+    "sending": "Sending…",
+    "send": "Send",
+    "cancel": "Cancel",
+    "notListed": "Don't see your category?"
+  },
   "profile": {
     "back": "Back to results",
     "featuredBadge": "FEATURED PROFILE",
