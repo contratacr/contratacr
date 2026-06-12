@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { X } from "lucide-react";
 import { LANGUAGES, languageLabel } from "@/lib/data/languages";
 
@@ -16,6 +17,7 @@ function normalize(s: string): string {
 }
 
 export function LanguagesInput({ value, onChange }: Props) {
+  const t = useTranslations("inputs");
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [highlight, setHighlight] = useState(0);
@@ -44,7 +46,7 @@ export function LanguagesInput({ value, onChange }: Props) {
         {value.map((id) => (
           <span key={id} className="inline-flex items-center gap-1.5 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium pl-2.5 pr-1.5 py-1">
             {languageLabel(id)}
-            <button type="button" onClick={() => remove(id)} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors" aria-label="Quitar">
+            <button type="button" onClick={() => remove(id)} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors" aria-label={t("remove")}>
               <X className="h-3.5 w-3.5" />
             </button>
           </span>
@@ -61,7 +63,7 @@ export function LanguagesInput({ value, onChange }: Props) {
             else if (e.key === "Enter" && suggestions[highlight]) { e.preventDefault(); add(suggestions[highlight].id); }
             else if (e.key === "Backspace" && query === "" && value.length > 0) { remove(value[value.length - 1]); }
           }}
-          placeholder={value.length === 0 ? "Escribe un idioma… ej. Inglés" : "Agregar otro…"}
+          placeholder={value.length === 0 ? t("languagePlaceholder") : t("addAnotherLanguage")}
           className="flex-1 min-w-[120px] bg-transparent text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus-visible:outline-none py-1"
         />
       </div>

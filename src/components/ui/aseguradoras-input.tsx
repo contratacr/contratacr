@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { X, Check } from "lucide-react";
 import { INSURERS } from "@/lib/data/insurers";
 import { createClient } from "@/lib/supabase/client";
@@ -26,6 +27,7 @@ function normalize(s: string): string {
 type Option = { id: string; label: string };
 
 export function AseguradorasInput({ value, onChange }: Props) {
+  const t = useTranslations("inputs");
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [highlight, setHighlight] = useState(0);
@@ -104,7 +106,7 @@ export function AseguradorasInput({ value, onChange }: Props) {
           {chipValues.map((id) => (
             <span key={id} className="inline-flex items-center gap-1.5 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium pl-2.5 pr-1.5 py-1">
               {labelFor(id)}
-              <button type="button" onClick={() => remove(id)} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors" aria-label="Quitar">
+              <button type="button" onClick={() => remove(id)} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors" aria-label={t("remove")}>
                 <X className="h-3.5 w-3.5" />
               </button>
             </span>
@@ -121,7 +123,7 @@ export function AseguradorasInput({ value, onChange }: Props) {
               else if (e.key === "Enter" && suggestions[highlight]) { e.preventDefault(); add(suggestions[highlight].id); }
               else if (e.key === "Backspace" && query === "" && value.length > 0) { remove(value[value.length - 1]); }
             }}
-            placeholder={value.length === 0 ? "Escribe una aseguradora… ej. INS" : "Agregar otra…"}
+            placeholder={value.length === 0 ? t("insurerPlaceholder") : t("addAnotherInsurer")}
             className="flex-1 min-w-[140px] bg-transparent text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus-visible:outline-none py-1"
           />
         </div>
@@ -147,24 +149,24 @@ export function AseguradorasInput({ value, onChange }: Props) {
       {/* Discreet "¿No ves tu aseguradora?" — opens a suggestion form (admin ticket). */}
       {suggestSent ? (
         <p className="inline-flex items-center gap-1.5 text-xs text-[#15803d]">
-          <Check className="h-3.5 w-3.5" /> Gracias. Enviamos tu sugerencia al equipo para revisión.
+          <Check className="h-3.5 w-3.5" /> {t("suggestThanks")}
         </p>
       ) : suggesting ? (
         <div className="flex items-center gap-2">
           <input
             value={suggestName}
             onChange={(e) => setSuggestName(e.target.value)}
-            placeholder="Nombre de la aseguradora"
+            placeholder={t("insurerSuggestName")}
             className="flex-1 h-9 px-3 rounded-lg border border-[#e5e7eb] text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent"
           />
           <button type="button" disabled={!suggestName.trim() || sending} onClick={sendSuggestion} className="h-9 px-3 rounded-lg bg-[#009FD9] text-white text-sm font-medium disabled:opacity-50">
-            {sending ? "Enviando…" : "Enviar"}
+            {sending ? t("sending") : t("send")}
           </button>
-          <button type="button" onClick={() => setSuggesting(false)} className="h-9 px-2 text-sm text-[#9ca3af] hover:text-[#374151]">Cancelar</button>
+          <button type="button" onClick={() => setSuggesting(false)} className="h-9 px-2 text-sm text-[#9ca3af] hover:text-[#374151]">{t("cancel")}</button>
         </div>
       ) : (
         <button type="button" onClick={() => setSuggesting(true)} className="self-start text-xs text-[#009FD9] hover:underline">
-          ¿No ves tu aseguradora?
+          {t("insurerNotListed")}
         </button>
       )}
       </>)}
@@ -177,7 +179,7 @@ export function AseguradorasInput({ value, onChange }: Props) {
           onChange={(e) => onChange(e.target.checked ? [NO_INSURERS] : [])}
           className="h-4 w-4 rounded border-[#d1d5db] text-[#009FD9] focus:ring-[#009FD9]"
         />
-        No trabajo con seguros
+        {t("noInsurers")}
       </label>
     </div>
   );

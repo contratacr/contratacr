@@ -342,6 +342,20 @@
     "noAccount": "Don't have an account?",
     "signUpFree": "Sign up free"
   },
+  "inputs": {
+    "remove": "Remove",
+    "languagePlaceholder": "Type a language… e.g. English",
+    "addAnotherLanguage": "Add another…",
+    "insurerPlaceholder": "Type an insurer… e.g. INS",
+    "addAnotherInsurer": "Add another…",
+    "insurerSuggestName": "Insurer name",
+    "insurerNotListed": "Don't see your insurer?",
+    "noInsurers": "I don't work with insurers",
+    "suggestThanks": "Thanks. We sent your suggestion to the team for review.",
+    "sending": "Sending…",
+    "send": "Send",
+    "cancel": "Cancel"
+  },
   "profile": {
     "back": "Back to results",
     "featuredBadge": "FEATURED PROFILE",
