@@ -1,39 +1,43 @@
 // Languages a professional can declare they speak. IDs are stable (English),
-// labels are Spanish-first UI copy. Used by the profile languages chip input.
+// `label` is Spanish-first UI copy, `labelEn` the English rendering. Used by the
+// profile languages chip input and the public profile. Resolve with
+// languageLabel(id, locale) so the value follows the active locale.
 export const LANGUAGES = [
-  { id: "es", label: "Español" },
-  { id: "en", label: "Inglés" },
-  { id: "fr", label: "Francés" },
-  { id: "pt", label: "Portugués" },
-  { id: "it", label: "Italiano" },
-  { id: "de", label: "Alemán" },
-  { id: "zh", label: "Mandarín" },
-  { id: "ja", label: "Japonés" },
-  { id: "ko", label: "Coreano" },
-  { id: "ru", label: "Ruso" },
-  { id: "ar", label: "Árabe" },
-  { id: "hi", label: "Hindi" },
-  { id: "nl", label: "Neerlandés" },
-  { id: "sv", label: "Sueco" },
-  { id: "no", label: "Noruego" },
-  { id: "da", label: "Danés" },
-  { id: "fi", label: "Finés" },
-  { id: "pl", label: "Polaco" },
-  { id: "tr", label: "Turco" },
-  { id: "el", label: "Griego" },
-  { id: "he", label: "Hebreo" },
-  { id: "th", label: "Tailandés" },
-  { id: "vi", label: "Vietnamita" },
-  { id: "id", label: "Indonesio" },
-  { id: "tl", label: "Tagalo" },
-  { id: "uk", label: "Ucraniano" },
-  { id: "cs", label: "Checo" },
-  { id: "ro", label: "Rumano" },
-  { id: "hu", label: "Húngaro" },
-  { id: "ca", label: "Catalán" },
-  { id: "lsr", label: "LESCO (Lengua de Señas Costarricense)" },
+  { id: "es", label: "Español", labelEn: "Spanish" },
+  { id: "en", label: "Inglés", labelEn: "English" },
+  { id: "fr", label: "Francés", labelEn: "French" },
+  { id: "pt", label: "Portugués", labelEn: "Portuguese" },
+  { id: "it", label: "Italiano", labelEn: "Italian" },
+  { id: "de", label: "Alemán", labelEn: "German" },
+  { id: "zh", label: "Mandarín", labelEn: "Mandarin" },
+  { id: "ja", label: "Japonés", labelEn: "Japanese" },
+  { id: "ko", label: "Coreano", labelEn: "Korean" },
+  { id: "ru", label: "Ruso", labelEn: "Russian" },
+  { id: "ar", label: "Árabe", labelEn: "Arabic" },
+  { id: "hi", label: "Hindi", labelEn: "Hindi" },
+  { id: "nl", label: "Neerlandés", labelEn: "Dutch" },
+  { id: "sv", label: "Sueco", labelEn: "Swedish" },
+  { id: "no", label: "Noruego", labelEn: "Norwegian" },
+  { id: "da", label: "Danés", labelEn: "Danish" },
+  { id: "fi", label: "Finés", labelEn: "Finnish" },
+  { id: "pl", label: "Polaco", labelEn: "Polish" },
+  { id: "tr", label: "Turco", labelEn: "Turkish" },
+  { id: "el", label: "Griego", labelEn: "Greek" },
+  { id: "he", label: "Hebreo", labelEn: "Hebrew" },
+  { id: "th", label: "Tailandés", labelEn: "Thai" },
+  { id: "vi", label: "Vietnamita", labelEn: "Vietnamese" },
+  { id: "id", label: "Indonesio", labelEn: "Indonesian" },
+  { id: "tl", label: "Tagalo", labelEn: "Tagalog" },
+  { id: "uk", label: "Ucraniano", labelEn: "Ukrainian" },
+  { id: "cs", label: "Checo", labelEn: "Czech" },
+  { id: "ro", label: "Rumano", labelEn: "Romanian" },
+  { id: "hu", label: "Húngaro", labelEn: "Hungarian" },
+  { id: "ca", label: "Catalán", labelEn: "Catalan" },
+  { id: "lsr", label: "LESCO (Lengua de Señas Costarricense)", labelEn: "LESCO (Costa Rican Sign Language)" },
 ] as const;
 
-export function languageLabel(id: string): string {
-  return LANGUAGES.find((l) => l.id === id)?.label ?? id;
+export function languageLabel(id: string, locale?: string): string {
+  const l = LANGUAGES.find((x) => x.id === id);
+  if (!l) return id;
+  return locale === "en" ? l.labelEn : l.label;
 }

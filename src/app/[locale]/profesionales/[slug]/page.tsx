@@ -768,7 +768,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                           <div className="flex flex-wrap gap-2">
                             {professional.languages.map((l) => (
                               <span key={l} className="inline-flex items-center rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium px-3 py-1.5">
-                                {languageLabel(l)}
+                                {languageLabel(l, locale)}
                               </span>
                             ))}
                           </div>

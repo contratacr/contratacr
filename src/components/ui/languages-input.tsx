@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { X } from "lucide-react";
 import { LANGUAGES, languageLabel } from "@/lib/data/languages";
 
@@ -18,6 +18,7 @@ function normalize(s: string): string {
 
 export function LanguagesInput({ value, onChange }: Props) {
   const t = useTranslations("inputs");
+  const locale = useLocale();
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [highlight, setHighlight] = useState(0);
@@ -25,7 +26,9 @@ export function LanguagesInput({ value, onChange }: Props) {
 
   const suggestions = useMemo(() => {
     const q = normalize(query.trim());
-    return LANGUAGES.filter((l) => !value.includes(l.id) && (q === "" || normalize(l.label).includes(q))).slice(0, 8);
+    return LANGUAGES.filter(
+      (l) => !value.includes(l.id) && (q === "" || normalize(l.label).includes(q) || normalize(l.labelEn).includes(q))
+    ).slice(0, 8);
   }, [query, value]);
 
   function add(id: string) {
@@ -45,7 +48,7 @@ export function LanguagesInput({ value, onChange }: Props) {
       <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[#e5e7eb] bg-white p-2 overflow-hidden transition-all focus-within:ring-2 focus-within:ring-[#009FD9] focus-within:border-transparent">
         {value.map((id) => (
           <span key={id} className="inline-flex items-center gap-1.5 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium pl-2.5 pr-1.5 py-1">
-            {languageLabel(id)}
+            {languageLabel(id, locale)}
             <button type="button" onClick={() => remove(id)} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors" aria-label={t("remove")}>
               <X className="h-3.5 w-3.5" />
             </button>
@@ -78,7 +81,7 @@ export function LanguagesInput({ value, onChange }: Props) {
                 onClick={() => add(s.id)}
                 className={`w-full text-left px-3 py-2 text-sm transition-colors ${i === highlight ? "bg-[#EBF5FB] text-[#0089bb]" : "text-[#374151] hover:bg-[#f9fafb]"}`}
               >
-                {s.label}
+                {languageLabel(s.id, locale)}
               </button>
             </li>
           ))}
