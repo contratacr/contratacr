@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { MapPin, X, Plus } from "lucide-react";
 import { loadGoogleMaps, MAP_ID } from "@/lib/maps/loader";
 import { PROVINCES, getCantonsByProvince, getCantonById, getProvinceById, matchProvinceCanton } from "@/lib/data/cr-geography";
@@ -59,6 +60,7 @@ function deriveAdmin(components: any[]): { provinciaId?: string; cantonId?: stri
  * Every added location is listed and removable. Multiple locations are supported.
  */
 export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 220 }: WorkplacesPickerProps) {
+  const t = useTranslations("workplacesPicker");
   const mapRef = useRef<HTMLDivElement>(null);
   const pacContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<GMaps>(null);
@@ -182,7 +184,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 220 }: W
     if (pacContainerRef.current && maps.places?.PlaceAutocompleteElement && pacContainerRef.current.childElementCount === 0) {
       const pac = new maps.places.PlaceAutocompleteElement({ includedRegionCodes: ["cr"] });
       pac.style.width = "100%";
-      pac.setAttribute("placeholder", "Busca un lugar o toca el mapa para marcar tu ubicación");
+      pac.setAttribute("placeholder", t("searchPlaceholder"));
       pacContainerRef.current.appendChild(pac);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       pac.addEventListener("gmp-select", async (e: any) => {
@@ -219,7 +221,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 220 }: W
 
   function useMyLocation() {
     setGeoError(null);
-    if (!navigator.geolocation) { setGeoError("Tu navegador no permite geolocalización."); return; }
+    if (!navigator.geolocation) { setGeoError(t("geoUnsupported")); return; }
     setLocating(true);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -235,7 +237,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 220 }: W
           });
         } else { onPinPlaced(lat, lng, "", {}); setLocating(false); }
       },
-      () => { setGeoError("No pudimos obtener tu ubicación. Revisa los permisos."); setLocating(false); },
+      () => { setGeoError(t("geoFailed")); setLocating(false); },
       { enableHighAccuracy: true, timeout: 10000 }
     );
   }
@@ -264,7 +266,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 220 }: W
             <div ref={pacContainerRef} className="cr-pac w-full" />
             <button type="button" onClick={useMyLocation} disabled={locating} className="self-start inline-flex items-center gap-1.5 text-sm font-medium text-[#009FD9] hover:underline disabled:opacity-60">
               <MapPin className="h-4 w-4" />
-              {locating ? "Obteniendo tu ubicación…" : "Usar mi ubicación actual"}
+              {locating ? t("locating") : t("useMyLocation")}
             </button>
             {geoError && <p className="text-xs text-amber-600">{geoError}</p>}
             <div className="relative rounded-xl overflow-hidden border border-[#e5e7eb]" style={{ height: mapHeight }}>
@@ -272,27 +274,27 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 220 }: W
             </div>
           </>
         ) : (
-          <p className="text-xs text-[#9ca3af]">Mapa no disponible — configura NEXT_PUBLIC_GOOGLE_MAPS_API_KEY. Puedes agregar el lugar igual con provincia y cantón.</p>
+          <p className="text-xs text-[#9ca3af]">{t("mapUnavailable")}</p>
         )}
 
         {/* Provincia + cantón for the CURRENT location. The cantón field is disabled
             until a provincia is chosen (the disabled state communicates the
             dependency — no instructional text). */}
-        <p className="text-[11px] text-[#9ca3af] mt-1">{draftPin ? "Confirma la provincia y el cantón de tu punto marcado:" : "Agrega un lugar por provincia y cantón (o márcalo en el mapa):"}</p>
+        <p className="text-[11px] text-[#9ca3af] mt-1">{draftPin ? t("confirmMarked") : t("addByProvinceCanton")}</p>
         <input
           type="text"
           value={label}
           onChange={(e) => setLabel(e.target.value)}
-          placeholder="Nombre del lugar (opcional)… ej. Clínica Bíblica"
+          placeholder={t("namePlaceholder")}
           className="h-10 px-3 rounded-xl border border-[#e5e7eb] bg-white text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
         />
         <div className="grid grid-cols-2 gap-2">
           <select value={province} onChange={(e) => { setProvince(e.target.value); setCanton(""); }} className={selectCls}>
-            <option value="">Provincia</option>
+            <option value="">{t("provincePlaceholder")}</option>
             {PROVINCES.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
           <select value={canton} onChange={(e) => setCanton(e.target.value)} disabled={!province} className={cn(selectCls, !province && "opacity-50 cursor-not-allowed")}>
-            <option value="">Cantón</option>
+            <option value="">{t("cantonPlaceholder")}</option>
             {cantons.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </div>
@@ -305,20 +307,18 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 220 }: W
           disabled={!province || !canton}
           className="self-start inline-flex items-center gap-1.5 rounded-xl bg-[#009FD9] text-white text-sm font-semibold px-4 py-2 hover:bg-[#0089bb] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          <Plus className="h-4 w-4" /> Agregar lugar
+          <Plus className="h-4 w-4" /> {t("addPlace")}
         </button>
         {(draftPin || province) && (!province || !canton) && (
           <p className="text-[11px] text-amber-600 -mt-1">
-            {!province
-              ? "Elige la provincia y el cantón para guardar este lugar."
-              : "Elige el cantón para guardar este lugar."}
+            {!province ? t("hintProvinceCanton") : t("hintCanton")}
           </p>
         )}
 
         {/* Added workplaces */}
         {value.length > 0 && (
           <div className="flex flex-col gap-2 mt-1">
-            <p className="text-xs font-medium text-[#374151]">Lugares agregados ({value.length})</p>
+            <p className="text-xs font-medium text-[#374151]">{t("addedPlaces", { count: value.length })}</p>
             {value.map((wp) => (
               <div key={wp.id} className="flex items-center gap-2 bg-[#EBF5FB] rounded-xl px-3 py-2">
                 <MapPin className="h-4 w-4 text-[#009FD9] shrink-0" />
@@ -328,7 +328,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 220 }: W
                     {[getCantonById(wp.cantonId ?? "")?.name, getProvinceById(wp.provinciaId ?? "")?.name].filter(Boolean).join(", ")}
                   </p>
                 </div>
-                <button type="button" onClick={() => removeWorkplace(wp.id)} className="rounded-md p-0.5 text-[#9ca3af] hover:text-red-500 transition-colors shrink-0" aria-label="Quitar lugar">
+                <button type="button" onClick={() => removeWorkplace(wp.id)} className="rounded-md p-0.5 text-[#9ca3af] hover:text-red-500 transition-colors shrink-0" aria-label={t("removePlace")}>
                   <X className="h-4 w-4" />
                 </button>
               </div>

@@ -225,6 +225,24 @@
     "viewCases": "View success stories ({count})",
     "viewCertifications": "View certifications ({count})"
   },
+  "workplacesPicker": {
+    "searchPlaceholder": "Search a place or tap the map to mark your location",
+    "geoUnsupported": "Your browser doesn't allow geolocation.",
+    "geoFailed": "We couldn't get your location. Check your permissions.",
+    "locating": "Getting your location…",
+    "useMyLocation": "Use my current location",
+    "mapUnavailable": "Map unavailable — set NEXT_PUBLIC_GOOGLE_MAPS_API_KEY. You can still add the place with province and canton.",
+    "confirmMarked": "Confirm the province and canton of your marked point:",
+    "addByProvinceCanton": "Add a place by province and canton (or mark it on the map):",
+    "namePlaceholder": "Place name (optional)… e.g. Clínica Bíblica",
+    "provincePlaceholder": "Province",
+    "cantonPlaceholder": "Canton",
+    "addPlace": "Add place",
+    "hintProvinceCanton": "Choose the province and canton to save this place.",
+    "hintCanton": "Choose the canton to save this place.",
+    "addedPlaces": "Added places ({count})",
+    "removePlace": "Remove place"
+  },
   "reviewModal": {
     "titleEdit": "Edit your review",
     "titleNew": "Leave a review",

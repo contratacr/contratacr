@@ -225,6 +225,24 @@
     "viewCases": "Ver casos de éxito ({count})",
     "viewCertifications": "Ver certificaciones ({count})"
   },
+  "workplacesPicker": {
+    "searchPlaceholder": "Busca un lugar o toca el mapa para marcar tu ubicación",
+    "geoUnsupported": "Tu navegador no permite geolocalización.",
+    "geoFailed": "No pudimos obtener tu ubicación. Revisa los permisos.",
+    "locating": "Obteniendo tu ubicación…",
+    "useMyLocation": "Usar mi ubicación actual",
+    "mapUnavailable": "Mapa no disponible — configura NEXT_PUBLIC_GOOGLE_MAPS_API_KEY. Puedes agregar el lugar igual con provincia y cantón.",
+    "confirmMarked": "Confirma la provincia y el cantón de tu punto marcado:",
+    "addByProvinceCanton": "Agrega un lugar por provincia y cantón (o márcalo en el mapa):",
+    "namePlaceholder": "Nombre del lugar (opcional)… ej. Clínica Bíblica",
+    "provincePlaceholder": "Provincia",
+    "cantonPlaceholder": "Cantón",
+    "addPlace": "Agregar lugar",
+    "hintProvinceCanton": "Elige la provincia y el cantón para guardar este lugar.",
+    "hintCanton": "Elige el cantón para guardar este lugar.",
+    "addedPlaces": "Lugares agregados ({count})",
+    "removePlace": "Quitar lugar"
+  },
   "reviewModal": {
     "titleEdit": "Editar tu reseña",
     "titleNew": "Dejar una reseña",
