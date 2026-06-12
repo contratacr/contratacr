@@ -171,13 +171,19 @@ function PhotoPicker({
 // ─── "No tengo identificación costarricense" (foreigners) ─────────────────────
 // Routes the account to the admin EXCEPTIONS queue ("pendiente de revisión") where
 // the admin reviews whatever document they have (passport, DIMEX in progress).
-function NoCrIdToggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
+// Exception path is progressive-disclosure: a subtle text link directly below the
+// identity block reveals the foreigner fields (and offers a way back), so the main
+// cédula → nombre flow reads clean and uninterrupted.
+function NoCrIdDisclosure({ active, onToggle }: { active: boolean; onToggle: (v: boolean) => void }) {
   const t = useTranslations("registration.pro");
   return (
-    <label className="flex items-start gap-2.5 cursor-pointer text-sm text-[#374151]">
-      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[#009FD9]" />
-      <span>{t("noCrId")} <span className="text-[#9ca3af]">{t("noCrIdSub")}</span></span>
-    </label>
+    <button
+      type="button"
+      onClick={() => onToggle(!active)}
+      className="self-start text-sm text-[#009FD9] hover:underline"
+    >
+      {active ? t("hasCrIdLink") : t("noCrIdLink")}
+    </button>
   );
 }
 
@@ -758,6 +764,9 @@ export default function RegisterProfessionalPage() {
                 />
               )}
 
+              {/* Exception path — subtle disclosure link below the identity block. */}
+              <NoCrIdDisclosure active={noCrId} onToggle={setNoCrId} />
+
               <div className="border-t border-[#f3f4f6] pt-4">
                 <Input
                   label={<>{t("email")} <span className="text-red-500">*</span></>}
@@ -804,12 +813,6 @@ export default function RegisterProfessionalPage() {
                   </button>
                 }
               />
-
-              {/* Exception case — kept out of the main cédula→nombre flow, as a
-                  muted option below the form. */}
-              <div className="border-t border-[#f3f4f6] pt-4">
-                <NoCrIdToggle checked={noCrId} onChange={setNoCrId} />
-              </div>
 
               <Button type="submit" size="lg" className="mt-2">
                 {t("continue")} <ArrowRight className="h-4 w-4" />
@@ -859,6 +862,11 @@ export default function RegisterProfessionalPage() {
                   onNote={setIdDocNote}
                   nameError={oauthNameError ?? undefined}
                 />
+              )}
+              {/* Exception path — subtle disclosure link below the identity block.
+                  Hidden when the account already carries a verified cédula. */}
+              {currentUser && !accountCedula && (
+                <NoCrIdDisclosure active={noCrId} onToggle={setNoCrId} />
               )}
 
               {/* Profession — searchable combobox (a profesión groups the servicios
@@ -1028,13 +1036,6 @@ export default function RegisterProfessionalPage() {
                 onChange={(digits) => { setWhatsappValue(digits); form2.setValue("whatsapp", digits, { shouldValidate: true }); }}
                 error={form2.formState.errors.whatsapp?.message}
               />
-
-              {/* Exception case — muted, below the main flow. */}
-              {currentUser && !accountCedula && (
-                <div className="border-t border-[#f3f4f6] pt-4">
-                  <NoCrIdToggle checked={noCrId} onChange={setNoCrId} />
-                </div>
-              )}
 
               <div className="flex gap-3 mt-2">
                 {!currentUser && (

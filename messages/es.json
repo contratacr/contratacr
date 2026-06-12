@@ -534,6 +534,8 @@
       "photoAlt": "Foto de perfil",
       "noCrId": "No tengo identificación costarricense",
       "noCrIdSub": "(extranjero/a, pasaporte o DIMEX en trámite)",
+      "noCrIdLink": "¿No tienes identificación costarricense?",
+      "hasCrIdLink": "Tengo identificación costarricense",
       "pendingReview": "pendiente de revisión",
       "manualName": "Nombre completo",
       "manualNameHint": "Tal como aparece en tu pasaporte / documento",

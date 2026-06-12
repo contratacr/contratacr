@@ -28,6 +28,11 @@ _Earlier: 2026-06-07 (sprint 24 — fully automatic identity verification: self-
 
 ---
 
+## Sprint 82 (2026-06-12) — registration "no CR ID" exception → progressive-disclosure link
+
+- The "No tengo identificación costarricense" exception in `/registro/profesional` is no longer a checkbox sitting in the form. It's now a **subtle text link** ("¿No tienes identificación costarricense?") placed **directly below the identity block** (both the email/password step-0 path and the OAuth step-1 path); clicking it reveals the foreigner fields and offers a way back ("Tengo identificación costarricense"). New `registration.pro.noCrIdLink` / `hasCrIdLink` keys (ES+EN). `NoCrIdToggle` → `NoCrIdDisclosure`.
+- **Presentation only** — the `noCrId` state wiring and the cédula/padrón verification logic were untouched (that flow is off-limits to UI passes; see the WARNING under "URGENT FIX #2").
+
 ## Sprint 81 (2026-06-09) — search bar: short placeholder + responsive clipping fix
 
 - **`messages/{es,en}.json`** `landing.hero.searchPlaceholder` → "Describe tu proyecto…" / "Describe your project…".
