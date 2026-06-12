@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { ShieldCheck, Clock, XCircle, AlertCircle, CheckCircle2, Send, RefreshCw } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Link } from "@/i18n/navigation";
@@ -17,6 +18,8 @@ interface Props {
 }
 
 export function VerificationPanel({ professionalId, status, reason, noCrId = false, onSaved }: Props) {
+  const t = useTranslations("verificationPanel");
+  const rich = { strong: (c: React.ReactNode) => <strong>{c}</strong> };
   const [appeal, setAppeal] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +30,7 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
   const [cedulaBusy, setCedulaBusy] = useState(false);
 
   const ref = caseRef(professionalId);
-  const waMsg = encodeURIComponent(`Hola, necesito ayuda con mi verificación de identidad en ContrataCR (Caso #${ref}).`);
+  const waMsg = encodeURIComponent(t("waHelp", { ref }));
   const waUrl = `https://wa.me/${SUPPORT_WHATSAPP_NUMBER}?text=${waMsg}`;
 
   // Re-run automatic verification against the padrón (also used by the appeal).
@@ -35,7 +38,7 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
     setError(null);
     setNote(null);
     if (appealMode && appeal.trim().length < 10) {
-      setError("Cuéntanos qué corregiste (mínimo 10 caracteres).");
+      setError(t("appealMinError"));
       return;
     }
     setBusy(true);
@@ -47,12 +50,12 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "Error");
-      if (json.outcome === "verified") setNote("¡Listo! Tu identidad fue verificada.");
-      else if (json.outcome === "ticket") setNote("No pudimos confirmarla automáticamente. Abrimos un caso de soporte para revisión manual.");
-      else setNote("No pudimos confirmarla automáticamente. Tu caso quedó en revisión.");
+      if (json.outcome === "verified") setNote(t("noteVerified"));
+      else if (json.outcome === "ticket") setNote(t("noteTicket"));
+      else setNote(t("noteReview"));
       onSaved?.();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "No se pudo procesar. Intenta de nuevo.");
+      setError(e instanceof Error ? e.message : t("processError"));
     } finally {
       setBusy(false);
     }
@@ -70,12 +73,12 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "Error");
-      if (json.outcome === "verified") setNote("¡Listo! Verificamos tu cédula. Ahora tienes la insignia “Identidad verificada” y subes en los resultados.");
-      else setNote("Guardamos tu cédula. Si no se verificó automáticamente, quedó en revisión.");
+      if (json.outcome === "verified") setNote(t("cedulaVerified"));
+      else setNote(t("cedulaSaved"));
       setNewCedula("");
       onSaved?.();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "No se pudo procesar. Intenta de nuevo.");
+      setError(e instanceof Error ? e.message : t("processError"));
     } finally {
       setCedulaBusy(false);
     }
@@ -86,23 +89,21 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
     return (
       <div className="space-y-5">
         {status === "rejected" ? (
-          <Banner tone="red" icon={<XCircle className="h-5 w-5" />} title="Tu verificación no fue aprobada">
-            {reason ? <span className="block">Motivo: <strong>{reason}</strong></span> : "No se especificó un motivo."}
-            <span className="block mt-1">Tu cuenta sigue activa, pero no apareces en los resultados de búsqueda hasta ser aprobado.</span>
+          <Banner tone="red" icon={<XCircle className="h-5 w-5" />} title={t("rejectedTitle")}>
+            {reason ? <span className="block">{t("reason", { reason })}</span> : t("noReason")}
+            <span className="block mt-1">{t("rejectedNoCrBody")}</span>
           </Banner>
         ) : status === "under_appeal" ? (
-          <Banner tone="amber" icon={<Clock className="h-5 w-5" />} title="Caso en revisión manual">
-            Abrimos un caso de soporte con tu solicitud. Un agente revisará tu documento y te avisaremos el resultado.
+          <Banner tone="amber" icon={<Clock className="h-5 w-5" />} title={t("underAppealTitle")}>
+            {t("underAppealNoCrBody")}
           </Banner>
         ) : (
-          <Banner tone="amber" icon={<AlertCircle className="h-5 w-5" />} title="Identidad sin verificar">
-            Como no tienes identificación costarricense, un agente revisará tu documento. Mientras tanto
-            <strong> ya apareces en los resultados de búsqueda con la etiqueta “Identidad sin verificar”</strong>,
-            por debajo de los profesionales verificados. Tu cuenta está activa — verifica tu identidad para obtener la insignia y subir en los resultados.
+          <Banner tone="amber" icon={<AlertCircle className="h-5 w-5" />} title={t("unverifiedTitle")}>
+            {t.rich("noCrUnverifiedBody", rich)}
           </Banner>
         )}
 
-        {note && <Banner tone="green" icon={<CheckCircle2 className="h-5 w-5" />} title="Resultado">{note}</Banner>}
+        {note && <Banner tone="green" icon={<CheckCircle2 className="h-5 w-5" />} title={t("resultTitle")}>{note}</Banner>}
         {error && (
           <div className="flex items-center gap-2 p-2.5 bg-red-50 border border-red-100 rounded-lg text-xs text-red-600">
             <AlertCircle className="h-3.5 w-3.5 shrink-0" /> {error}
@@ -111,40 +112,40 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
 
         {/* WhatsApp follow-up to track the case */}
         <a href={waUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-[#25D366] hover:bg-[#1eb456] text-white text-sm font-bold px-4 py-2.5">
-          <WhatsAppIcon className="h-4 w-4" /> Dar seguimiento por WhatsApp (Caso #{ref})
+          <WhatsAppIcon className="h-4 w-4" /> {t("waFollowUp", { ref })}
         </a>
 
         {/* Appeal → straight to support (no padrón re-run for no-ID cases) */}
         {status !== "under_appeal" && (
           <div className="bg-white rounded-xl border border-[#e5e7eb] p-5">
-            <h3 className="font-semibold text-[#111827] text-sm mb-1">Solicitar revisión manual</h3>
-            <p className="text-xs text-[#6b7280] mb-3">Cuéntanos sobre tu documento (pasaporte, DIMEX en trámite). Tu solicitud queda registrada como un caso de soporte.</p>
+            <h3 className="font-semibold text-[#111827] text-sm mb-1">{t("manualReviewTitle")}</h3>
+            <p className="text-xs text-[#6b7280] mb-3">{t("manualReviewBody")}</p>
             <textarea
               value={appeal}
               onChange={(e) => setAppeal(e.target.value)}
               rows={3}
-              placeholder="Ej: Tengo pasaporte de Nicaragua N°…, o DIMEX en trámite N°…"
+              placeholder={t("manualReviewPlaceholder")}
               className="w-full rounded-lg border border-[#e5e7eb] p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
             />
             <button onClick={() => runCheck(true)} disabled={busy} className="mt-3 inline-flex items-center gap-2 rounded-xl bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-4 py-2.5 disabled:opacity-60">
-              <Send className="h-4 w-4" /> {busy ? "Enviando…" : "Enviar a revisión"}
+              <Send className="h-4 w-4" /> {busy ? t("sending") : t("sendToReview")}
             </button>
           </div>
         )}
 
         {/* Add-cédula-later — runs the normal padrón verification automatically */}
         <div className="bg-white rounded-xl border border-[#e5e7eb] p-5">
-          <h3 className="font-semibold text-[#111827] text-sm mb-1">¿Ya tienes cédula costarricense?</h3>
-          <p className="text-xs text-[#6b7280] mb-3">Agrégala acá y verificamos tu identidad automáticamente contra el padrón. No necesitas abrir un caso.</p>
+          <h3 className="font-semibold text-[#111827] text-sm mb-1">{t("hasCedulaTitle")}</h3>
+          <p className="text-xs text-[#6b7280] mb-3">{t("hasCedulaBody")}</p>
           <div className="flex flex-wrap items-center gap-2">
             <input
               value={newCedula}
               onChange={(e) => setNewCedula(e.target.value)}
-              placeholder="Número de cédula (DIMEX/NITE también)"
+              placeholder={t("cedulaPlaceholder")}
               className="flex-1 min-w-[200px] h-10 px-3 rounded-lg border border-[#e5e7eb] text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
             />
             <button onClick={addCedula} disabled={cedulaBusy || newCedula.replace(/\D/g, "").length < 9} className="inline-flex items-center gap-2 rounded-xl bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-4 py-2.5 disabled:opacity-50">
-              <ShieldCheck className="h-4 w-4" /> {cedulaBusy ? "Verificando…" : "Agregar y verificar"}
+              <ShieldCheck className="h-4 w-4" /> {cedulaBusy ? t("verifying") : t("addAndVerify")}
             </button>
           </div>
         </div>
@@ -156,34 +157,29 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
     <div className="space-y-5">
       {/* Status banner */}
       {status === "verified" && (
-        <Banner tone="green" icon={<ShieldCheck className="h-5 w-5" />} title="Tu identidad está verificada">
-          Confirmamos que tu cédula es real y coincide con los registros oficiales. La insignia
-          <strong> Identidad verificada</strong> aparece en tu perfil y en los resultados de búsqueda. Recuerda: verificamos tu identidad,
-          no la calidad ni el resultado de los trabajos.
+        <Banner tone="green" icon={<ShieldCheck className="h-5 w-5" />} title={t("verifiedTitle")}>
+          {t.rich("verifiedBody", rich)}
         </Banner>
       )}
       {status === "pending" && (
-        <Banner tone="amber" icon={<AlertCircle className="h-5 w-5" />} title="Identidad sin verificar">
-          No pudimos confirmar tu identidad automáticamente (cédula no encontrada o el nombre no coincide).
-          <strong> Apareces en los resultados con la etiqueta “Identidad sin verificar”</strong>, por debajo de los verificados.
-          Verifica que tu nombre coincida con tu cédula y vuelve a intentar para obtener la insignia y subir en los resultados. Tu cuenta sigue activa.
+        <Banner tone="amber" icon={<AlertCircle className="h-5 w-5" />} title={t("unverifiedTitle")}>
+          {t.rich("pendingBody", rich)}
         </Banner>
       )}
       {status === "under_appeal" && (
-        <Banner tone="amber" icon={<Clock className="h-5 w-5" />} title="Caso en revisión manual">
-          Tu apelación se volvió a verificar automáticamente y aún no coincidió, así que abrimos un caso de soporte.
-          Te avisaremos el resultado por correo y aquí.
+        <Banner tone="amber" icon={<Clock className="h-5 w-5" />} title={t("underAppealTitle")}>
+          {t("underAppealBody")}
         </Banner>
       )}
       {status === "rejected" && (
-        <Banner tone="red" icon={<XCircle className="h-5 w-5" />} title="Tu verificación no fue aprobada">
-          {reason ? <span className="block">Motivo: <strong>{reason}</strong></span> : "No se especificó un motivo."}
-          <span className="block mt-1">Tu cuenta sigue activa. Corrige lo indicado y apela para una nueva revisión.</span>
+        <Banner tone="red" icon={<XCircle className="h-5 w-5" />} title={t("rejectedTitle")}>
+          {reason ? <span className="block">{t("reason", { reason })}</span> : t("noReason")}
+          <span className="block mt-1">{t("rejectedBody")}</span>
         </Banner>
       )}
 
       {note && (
-        <Banner tone="green" icon={<CheckCircle2 className="h-5 w-5" />} title="Resultado">{note}</Banner>
+        <Banner tone="green" icon={<CheckCircle2 className="h-5 w-5" />} title={t("resultTitle")}>{note}</Banner>
       )}
       {error && (
         <div className="flex items-center gap-2 p-2.5 bg-red-50 border border-red-100 rounded-lg text-xs text-red-600">
@@ -192,10 +188,7 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
       )}
 
       <p className="text-sm text-[#6b7280]">
-        ¿Quieres saber cómo funciona?{" "}
-        <Link href="/proveedores-autorizados" className="text-[#009FD9] font-medium hover:underline">
-          ¿Qué es la verificación de identidad?
-        </Link>
+        {t.rich("howItWorks", { link: (c) => <Link href="/proveedores-autorizados" className="text-[#009FD9] font-medium hover:underline">{c}</Link> })}
       </p>
 
       {/* Pending → re-run automatic check */}
@@ -205,23 +198,22 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
           disabled={busy}
           className="inline-flex items-center gap-2 rounded-xl bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-4 py-2.5 disabled:opacity-60"
         >
-          <RefreshCw className="h-4 w-4" /> {busy ? "Verificando…" : "Verificar mi identidad ahora"}
+          <RefreshCw className="h-4 w-4" /> {busy ? t("verifying") : t("verifyNow")}
         </button>
       )}
 
       {/* Rejected → appeal (re-runs automatically; if it still fails → support ticket) */}
       {status === "rejected" && (
         <div className="bg-white rounded-xl border border-[#e5e7eb] p-5">
-          <h3 className="font-semibold text-[#111827] text-sm mb-1">Apelar esta decisión</h3>
+          <h3 className="font-semibold text-[#111827] text-sm mb-1">{t("appealTitle")}</h3>
           <p className="text-xs text-[#6b7280] mb-3">
-            Al apelar, volvemos a verificar tu identidad automáticamente. Si aún no coincide, abrimos un caso de soporte
-            (queda registrado). También puedes escribirnos por WhatsApp.
+            {t("appealBody")}
           </p>
           <textarea
             value={appeal}
             onChange={(e) => setAppeal(e.target.value)}
             rows={4}
-            placeholder="Explica qué corregiste o por qué deberíamos revisar de nuevo…"
+            placeholder={t("appealPlaceholder")}
             className="w-full rounded-lg border border-[#e5e7eb] p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
           />
           <div className="flex flex-wrap gap-2 mt-3">
@@ -230,7 +222,7 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
               disabled={busy}
               className="inline-flex items-center gap-2 rounded-xl bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-4 py-2.5 disabled:opacity-60"
             >
-              <Send className="h-4 w-4" /> {busy ? "Enviando…" : "Apelar y reverificar"}
+              <Send className="h-4 w-4" /> {busy ? t("sending") : t("appealReverify")}
             </button>
             <a
               href={waUrl}
@@ -238,7 +230,7 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-xl bg-[#25D366] hover:bg-[#1eb456] text-white text-sm font-bold px-4 py-2.5"
             >
-              <WhatsAppIcon className="h-4 w-4" /> Soporte por WhatsApp
+              <WhatsAppIcon className="h-4 w-4" /> {t("supportWhatsapp")}
             </a>
           </div>
         </div>
@@ -251,7 +243,7 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 rounded-xl bg-[#25D366] hover:bg-[#1eb456] text-white text-sm font-bold px-4 py-2.5"
         >
-          <WhatsAppIcon className="h-4 w-4" /> Soporte por WhatsApp (Caso #{ref})
+          <WhatsAppIcon className="h-4 w-4" /> {t("supportWhatsappCase", { ref })}
         </a>
       )}
     </div>
