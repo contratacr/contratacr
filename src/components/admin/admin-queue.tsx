@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { ChevronRight, Search } from "lucide-react";
+import { ChevronRight, Search, Loader2 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { getCategoryLabel } from "@/lib/data/categories";
 import {
@@ -110,7 +110,7 @@ export function AdminQueue() {
       <div className="bg-white rounded-xl border border-[#e5e7eb] overflow-hidden">
         {loading ? (
           <div className="py-16 flex justify-center">
-            <div className="h-7 w-7 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
+            <Loader2 className="h-7 w-7 animate-spin text-[#009FD9]" />
           </div>
         ) : filtered.length === 0 ? (
           <div className="py-16 text-center text-sm text-[#6b7280]">No hay proveedores en esta vista.</div>

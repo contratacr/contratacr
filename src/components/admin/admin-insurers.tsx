@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, X, Shield } from "lucide-react";
+import { Check, X, Shield, Loader2 } from "lucide-react";
 
 type Insurer = {
   id: string;
@@ -49,7 +49,7 @@ export function AdminInsurers() {
           <button
             key={s.id}
             onClick={() => setStatus(s.id)}
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${status === s.id ? "bg-[#0f172a] text-white" : "bg-white text-[#374151] border border-[#e5e7eb] hover:bg-gray-50"}`}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${status === s.id ? "bg-[#009FD9] text-white border-[#009FD9]" : "bg-white text-[#374151] border-[#e5e7eb] hover:border-[#009FD9]"}`}
           >
             {s.label}
           </button>
@@ -57,7 +57,7 @@ export function AdminInsurers() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-12"><div className="h-7 w-7 animate-spin rounded-full border-2 border-[#0f172a] border-t-transparent" /></div>
+        <div className="flex justify-center py-12"><Loader2 className="h-7 w-7 animate-spin text-[#009FD9]" /></div>
       ) : items.length === 0 ? (
         <div className="text-center py-16 text-[#9ca3af]">
           <Shield className="h-10 w-10 mx-auto mb-2 text-[#cbd5e1]" />

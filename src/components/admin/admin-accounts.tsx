@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { UserX } from "lucide-react";
+import { UserX, Loader2 } from "lucide-react";
 
 type Account = {
   id: string;
@@ -24,7 +24,7 @@ export function AdminAccounts() {
   }, []);
 
   if (loading) {
-    return <div className="flex justify-center py-12"><div className="h-7 w-7 animate-spin rounded-full border-2 border-[#0f172a] border-t-transparent" /></div>;
+    return <div className="flex justify-center py-12"><Loader2 className="h-7 w-7 animate-spin text-[#009FD9]" /></div>;
   }
 
   if (items.length === 0) {

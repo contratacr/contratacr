@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { LifeBuoy, ArrowLeft, Send, User, Shield, UserSearch } from "lucide-react";
+import { LifeBuoy, ArrowLeft, Send, User, Shield, UserSearch, Loader2 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { AdminUserSearch } from "@/components/admin/admin-user-search";
 
@@ -115,7 +115,7 @@ export function AdminSupport() {
         </button>
 
         {threadLoading || !ticket ? (
-          <div className="flex justify-center py-12"><div className="h-7 w-7 animate-spin rounded-full border-2 border-[#0f172a] border-t-transparent" /></div>
+          <div className="flex justify-center py-12"><Loader2 className="h-7 w-7 animate-spin text-[#009FD9]" /></div>
         ) : (
           <div className="bg-white rounded-xl border border-[#e5e7eb] overflow-hidden">
             {/* Header */}
@@ -207,11 +207,11 @@ export function AdminSupport() {
             <button
               key={s.id}
               onClick={() => setStatus(s.id)}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${status === s.id ? "bg-[#0f172a] text-white" : "bg-white text-[#374151] border border-[#e5e7eb] hover:bg-gray-50"}`}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${status === s.id ? "bg-[#009FD9] text-white border-[#009FD9]" : "bg-white text-[#374151] border-[#e5e7eb] hover:border-[#009FD9]"}`}
             >
               {s.label}
               {badge > 0 && (
-                <span className={`inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-bold ${status === s.id ? "bg-white text-[#0f172a]" : "bg-red-500 text-white"}`}>
+                <span className={`inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-bold ${status === s.id ? "bg-white text-[#009FD9]" : "bg-red-500 text-white"}`}>
                   {badge > 9 ? "9+" : badge}
                 </span>
               )}
@@ -221,7 +221,7 @@ export function AdminSupport() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-12"><div className="h-7 w-7 animate-spin rounded-full border-2 border-[#0f172a] border-t-transparent" /></div>
+        <div className="flex justify-center py-12"><Loader2 className="h-7 w-7 animate-spin text-[#009FD9]" /></div>
       ) : items.length === 0 ? (
         <div className="text-center py-16 text-[#9ca3af]">
           <LifeBuoy className="h-10 w-10 mx-auto mb-2 text-[#cbd5e1]" />
