@@ -935,6 +935,11 @@ No new migrations. Behavioural/UX fixes + a few API/data-flow corrections.
 - `WorkplacesPicker`: **"Usar mi ubicación actual"** (geolocation + reverse geocode) and **re-inits the map on every mount** (the Script `onLoad` only fires once) — fixes the blank map after fixed→mobile→fixed (fixes 13–14).
 - Profile **work mode allows BOTH** ("me desplazo" + "lugar fijo" are independent toggles); `service_type` stored as a comma list.
 
+### URGENT FIX — padrón identity verification ("not found" for valid cédulas)
+- **Cause:** `padron` is RLS-enabled with **no policies** (server-only by design). The verifier read it with the service-role client, which **bypasses RLS but still needs a table-level `SELECT` privilege**. The RLS/security hardening's broad REVOKEs left the service role without that grant on `padron`, so every lookup returned nothing → all cédulas reported "not found" → everyone sent to manual review. (RLS being *on* wasn't new — it's been on since 027 — the missing **grant** was.)
+- **Fix (keeps padrón private):** migration **050_padron_lookup_rpc.sql** adds a `SECURITY DEFINER` function `padron_lookup(p_cedula text)` that runs as the table **owner** (always can read the padrón, independent of service-role grants); `EXECUTE` is granted to **service_role only** (revoked from anon/authenticated) so the padrón is never exposed to the public/client. Also re-grants `SELECT` on `padron`/`padron_staging` to `service_role` (belt-and-suspenders; RLS stays ON). The verifier (`identity-verifier.ts` `lookup()` + `verify()`) now calls `admin.rpc("padron_lookup", { p_cedula })` instead of a direct table read.
+- **⚠️ Must apply migration 050 in Supabase** for the fix to take effect (the RPC must exist). Lesson: a service-role read of an RLS table still needs the table GRANT; for server-only private tables prefer a SECURITY DEFINER RPC granted to service_role only. Found → auto-fills official name + auto-verifies; not found → manual review (unchanged).
+
 ### Google Maps → NEW Places API migration (fixes ApiTargetBlockedMapError)
 - **Why:** the legacy `google.maps.places.Autocomplete` and `google.maps.Marker` require the old "Places API", which our key doesn't enable — causing `ApiTargetBlockedMapError`. Migrated to the new components so the key needs only **Places API (New) + Maps JavaScript API + Geocoding API**.
 - **What changed:**

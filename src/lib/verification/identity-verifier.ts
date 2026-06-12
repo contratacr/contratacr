@@ -123,15 +123,15 @@ export class SelfHostedPadronVerifier implements IdentityVerifier {
     const id = cleanId(cedula);
     if (!id) return { found: false, fullName: null, dob: null, isAdult: false, provider: this.name };
     const admin = createAdminClient();
-    const { data, error } = await admin
-      .from("padron")
-      .select("nombre, papellido, sapellido")
-      .eq("cedula", id)
-      .maybeSingle();
+    // Read via the SECURITY DEFINER RPC (migration 050): it runs as the table
+    // owner, so it reads the padrón regardless of service-role table grants, and
+    // the padrón stays private (EXECUTE granted to service_role only).
+    const { data, error } = await admin.rpc("padron_lookup", { p_cedula: id });
+    const row = Array.isArray(data) ? data[0] : data;
     // Not found / error → found:false. NO permissive fallback (integrity guard).
-    if (error || !data) return { found: false, fullName: null, dob: null, isAdult: false, provider: this.name };
+    if (error || !row) return { found: false, fullName: null, dob: null, isAdult: false, provider: this.name };
     const official = titleCaseName(
-      [data.nombre, data.papellido, data.sapellido].filter(Boolean).join(" ")
+      [row.nombre, row.papellido, row.sapellido].filter(Boolean).join(" ")
     );
     // Found in the electoral roll ⇒ the person is 18+ (our adult gate). The roll
     // has no birth date, so dob stays null.
@@ -142,17 +142,14 @@ export class SelfHostedPadronVerifier implements IdentityVerifier {
     const id = cleanId(cedula);
     const admin = createAdminClient();
 
-    const { data, error } = await admin
-      .from("padron")
-      .select("nombre, papellido, sapellido")
-      .eq("cedula", id)
-      .maybeSingle();
+    const { data, error } = await admin.rpc("padron_lookup", { p_cedula: id });
+    const row = Array.isArray(data) ? data[0] : data;
 
-    if (error || !data) {
+    if (error || !row) {
       return { matched: false, found: false, score: 0, provider: this.name };
     }
 
-    const padronName = [data.nombre, data.papellido, data.sapellido].filter(Boolean).join(" ");
+    const padronName = [row.nombre, row.papellido, row.sapellido].filter(Boolean).join(" ");
     const score = nameSimilarity(fullName, padronName);
     return { matched: score >= NAME_MATCH_THRESHOLD, found: true, score, provider: this.name };
   }
