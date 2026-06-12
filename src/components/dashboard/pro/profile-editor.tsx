@@ -302,7 +302,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
             {avatarPreview ? (
               <img
                 src={avatarPreview}
-                alt="Foto de perfil"
+                alt={t("photoAlt")}
                 className="h-20 w-20 rounded-full object-cover border-2 border-[#e5e7eb]"
               />
             ) : (
@@ -406,7 +406,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
                   {getCategoryLabel(p, locale)}
                   {i === 0 && <span className="text-[10px] font-bold uppercase tracking-wide text-[#009FD9]/70">{t("principal")}</span>}
                   {professions.length > 1 && (
-                    <button type="button" onClick={() => removeProfession(p)} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors" aria-label="Quitar">
+                    <button type="button" onClick={() => removeProfession(p)} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors" aria-label={t("remove")}>
                       <X className="h-3.5 w-3.5" />
                     </button>
                   )}

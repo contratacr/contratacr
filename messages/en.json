@@ -1061,7 +1061,10 @@
     "saveChanges": "Save changes",
     "addServiceBtn": "Add service",
     "savedAuto": "Changes are saved automatically.",
-    "saved": "Saved"
+    "saved": "Saved",
+    "removeProfession": "Remove profession",
+    "edit": "Edit",
+    "delete": "Delete"
   },
   "availabilityEditor": {
     "interval30": "Every 30 min",
@@ -1116,7 +1119,12 @@
     "confirmTitle": "Are you sure?",
     "confirmBody": "Your hours will be deleted.",
     "cancel": "Cancel",
-    "confirmPrivate": "Yes, make private"
+    "confirmPrivate": "Yes, make private",
+    "blockedDatesTitle": "Blocked dates",
+    "blockedDatesHelp": "Mark specific days when you're not available (vacations, holidays, etc.)",
+    "blockedAdd": "Add",
+    "noBlockedDates": "No blocked dates",
+    "blockedRemove": "Remove"
   },
   "profileEditor": {
     "secBasic": "Basic info",
@@ -1188,7 +1196,8 @@
     "unsaved": "Unsaved changes",
     "saved": "Saved",
     "saveError": "Error saving",
-    "photoError": "Couldn't upload the photo. Try again."
+    "photoError": "Couldn't upload the photo. Try again.",
+    "photoAlt": "Profile photo"
   },
   "verificationPanel": {
     "appealMinError": "Tell us what you corrected (at least 10 characters).",

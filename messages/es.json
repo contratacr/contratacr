@@ -1061,7 +1061,10 @@
     "saveChanges": "Guardar cambios",
     "addServiceBtn": "Agregar servicio",
     "savedAuto": "Los cambios se guardan automáticamente.",
-    "saved": "Guardado"
+    "saved": "Guardado",
+    "removeProfession": "Quitar profesión",
+    "edit": "Editar",
+    "delete": "Eliminar"
   },
   "availabilityEditor": {
     "interval30": "Cada 30 min",
@@ -1116,7 +1119,12 @@
     "confirmTitle": "¿Estás seguro?",
     "confirmBody": "Tus horarios serán eliminados.",
     "cancel": "Cancelar",
-    "confirmPrivate": "Sí, hacer privada"
+    "confirmPrivate": "Sí, hacer privada",
+    "blockedDatesTitle": "Fechas bloqueadas",
+    "blockedDatesHelp": "Marca días específicos en los que no estás disponible (vacaciones, feriados, etc.)",
+    "blockedAdd": "Agregar",
+    "noBlockedDates": "Sin fechas bloqueadas",
+    "blockedRemove": "Eliminar"
   },
   "profileEditor": {
     "secBasic": "Datos básicos",
@@ -1188,7 +1196,8 @@
     "unsaved": "Cambios sin guardar",
     "saved": "Guardado",
     "saveError": "Error al guardar",
-    "photoError": "No se pudo subir la foto. Intenta de nuevo."
+    "photoError": "No se pudo subir la foto. Intenta de nuevo.",
+    "photoAlt": "Foto de perfil"
   },
   "verificationPanel": {
     "appealMinError": "Cuéntanos qué corregiste (mínimo 10 caracteres).",

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import { CalendarOff, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
@@ -11,6 +12,8 @@ interface BlockedDatesEditorProps {
 }
 
 export function BlockedDatesEditor({ professionalId }: BlockedDatesEditorProps) {
+  const t = useTranslations("availabilityEditor");
+  const locale = useLocale();
   const [blockedDates, setBlockedDates] = useState<string[]>([]);
   const [newDate, setNewDate] = useState("");
   const [loading, setLoading] = useState(true);
@@ -58,7 +61,7 @@ export function BlockedDatesEditor({ professionalId }: BlockedDatesEditorProps) 
 
   function formatDisplay(dateStr: string) {
     const [y, m, d] = dateStr.split("-").map(Number);
-    return new Date(y, m - 1, d).toLocaleDateString("es-CR", {
+    return new Date(y, m - 1, d).toLocaleDateString(locale === "en" ? "en-US" : "es-CR", {
       weekday: "short",
       day: "numeric",
       month: "short",
@@ -72,10 +75,10 @@ export function BlockedDatesEditor({ professionalId }: BlockedDatesEditorProps) 
     <div className="mt-6 pt-6 border-t border-[#e5e7eb]">
       <div className="flex items-center gap-2 mb-3">
         <CalendarOff className="h-4 w-4 text-[#6b7280]" />
-        <h3 className="text-sm font-semibold text-[#374151]">Fechas bloqueadas</h3>
+        <h3 className="text-sm font-semibold text-[#374151]">{t("blockedDatesTitle")}</h3>
       </div>
       <p className="text-xs text-[#9ca3af] mb-4">
-        Marca días específicos en los que no estás disponible (vacaciones, feriados, etc.)
+        {t("blockedDatesHelp")}
       </p>
 
       <div className="flex gap-2 mb-4">
@@ -93,12 +96,12 @@ export function BlockedDatesEditor({ professionalId }: BlockedDatesEditorProps) 
           className="shrink-0"
         >
           <Plus className="h-4 w-4" />
-          Agregar
+          {t("blockedAdd")}
         </Button>
       </div>
 
       {blockedDates.length === 0 ? (
-        <p className="text-xs text-[#9ca3af] text-center py-3">Sin fechas bloqueadas</p>
+        <p className="text-xs text-[#9ca3af] text-center py-3">{t("noBlockedDates")}</p>
       ) : (
         <div className="flex flex-col gap-2">
           {blockedDates.map((date) => (
@@ -112,7 +115,7 @@ export function BlockedDatesEditor({ professionalId }: BlockedDatesEditorProps) 
               <button
                 onClick={() => removeDate(date)}
                 className="text-[#ef4444] hover:text-red-700 transition-colors ml-3"
-                aria-label="Eliminar"
+                aria-label={t("blockedRemove")}
               >
                 <X className="h-4 w-4" />
               </button>

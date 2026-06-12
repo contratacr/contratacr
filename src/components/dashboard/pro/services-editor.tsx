@@ -252,7 +252,7 @@ export function ServicesEditor({
               {getCategoryLabel(p, locale)}
               {i === 0 && <span className="text-[10px] font-bold uppercase tracking-wide text-[#009FD9]/70">{t("principal")}</span>}
               {professions.length > 1 && (
-                <button onClick={() => removeProfession(p)} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors" aria-label="Quitar profesión">
+                <button onClick={() => removeProfession(p)} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors" aria-label={t("removeProfession")}>
                   <X className="h-3.5 w-3.5" />
                 </button>
               )}
@@ -315,10 +315,10 @@ export function ServicesEditor({
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
                       {svc.price && <span className="text-sm font-semibold text-[#009FD9] whitespace-nowrap">{svc.price}</span>}
-                      <button onClick={() => openEdit(svc)} className="h-7 w-7 rounded-lg flex items-center justify-center text-[#9ca3af] hover:text-[#009FD9] hover:bg-[#EBF5FB] transition-colors" title="Editar">
+                      <button onClick={() => openEdit(svc)} className="h-7 w-7 rounded-lg flex items-center justify-center text-[#9ca3af] hover:text-[#009FD9] hover:bg-[#EBF5FB] transition-colors" title={t("edit")}>
                         <Pencil className="h-3.5 w-3.5" />
                       </button>
-                      <button onClick={() => handleDelete(svc.id)} className="h-7 w-7 rounded-lg flex items-center justify-center text-[#9ca3af] hover:text-red-500 hover:bg-red-50 transition-colors" title="Eliminar">
+                      <button onClick={() => handleDelete(svc.id)} className="h-7 w-7 rounded-lg flex items-center justify-center text-[#9ca3af] hover:text-red-500 hover:bg-red-50 transition-colors" title={t("delete")}>
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
