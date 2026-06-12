@@ -1975,3 +1975,13 @@ PATTERNS used throughout: module-level constant label maps (STATUS_LABEL, TIMELI
 **Verified** (dev server, all green): every unprefixed path → 307 `/es/<same path>` (or `/en/…` with the EN cookie); localized targets render 200 (es + en); auth gate restored (`/es/dashboard/*` → `/es/login` when logged out); no redirect loops on already-prefixed paths. `tsc` + `next build` pass.
 
 **Gotcha for future routing work:** Next 16 + Turbopack dev does **not** hot-reload proxy edits, and clearing `.next` is not always enough — fully **restart `next dev`** after touching `src/proxy.ts`, and confirm behavior with `curl -s -o /dev/null -w "%{http_code} %{redirect_url}"` against unprefixed + prefixed paths.
+
+---
+
+## App-wide design-quality initiative — Pass 1: foundation (review outcome)
+
+A multi-pass design-quality sweep is underway (foundation → public pages → auth/registration → pro dashboard → client dashboard → admin). **Pass 1 (foundation)** verified the shared layer rather than rebuilding it:
+- **Finding: the unified design system + shared components were already in place** from prior passes. `contratacr-design-guide.md` (now anchored at the top as the authoritative standard) fully documents tokens, primitives, and patterns; the shared primitives (`Button`, `Input`/`Select`, `Badge`, `Card`, `Avatar`), the single app-wide `LandingNavbar` + `LandingFooter`, the mobile drawer, language toggle, account menu, modals (`LoginModal`/`SelfActionModal`), and `NotificationBell` already conform. **No toast library exists by design** — feedback is inline (error/success blocks + the autosave status line).
+- **Home (`/`) review (protect-only):** strong and conformant — Hero (rotating headline + search) · `ProsSection` carousel · `WhyContratacr` · `FindByZone` · footer. No redesign; left intact.
+- **Changes made:** added the authoritative "unified design system" anchor to the top of the design guide (home = quality bar; canonical kit; inline feedback); fixed a stale `middleware`→`src/proxy.ts` comment in `landing-navbar`.
+- **Conclusion driving the next passes:** the real inconsistency is at the **page level** (public pages, auth, dashboards, admin), not the shared kit. Each subsequent pass aligns those screens to the already-established standard — reuse the primitives, kill nested bordered boxes, keep one primary action per screen.

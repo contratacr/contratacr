@@ -65,7 +65,7 @@ function LanguageTogglePill() {
     if (typeof window !== "undefined") {
       localStorage.setItem("contratacr_lang", lang);
       // Persist as the NEXT_LOCALE cookie so the choice survives a fresh visit
-      // to an unprefixed URL (the middleware reads it). 1-year, site-wide.
+      // to an unprefixed URL (the proxy in src/proxy.ts reads it). 1-year, site-wide.
       document.cookie = `NEXT_LOCALE=${lang}; path=/; max-age=31536000; samesite=lax`;
     }
     router.replace(pathname, { locale: lang });
