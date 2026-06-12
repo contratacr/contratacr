@@ -255,6 +255,37 @@
     "cancel": "Cancelar",
     "notListed": "¿No ves tu categoría?"
   },
+  "gallery": {
+    "workAlt": "Trabajo {n}",
+    "close": "Cerrar",
+    "prev": "Anterior",
+    "next": "Siguiente"
+  },
+  "report": {
+    "title": "Reportar perfil",
+    "sentTitle": "Reporte enviado",
+    "sentBody": "Gracias. Nuestro equipo de soporte revisará este perfil y tomará las medidas necesarias.",
+    "ok": "Entendido",
+    "confidential": "Tu reporte se enviará de forma confidencial al equipo de soporte de ContrataCR (soporte@contratacr.com). Revisamos cada reporte manualmente.",
+    "reasonLabel": "Motivo del reporte",
+    "reasons": {
+      "impersonation": "Suplantación de identidad (se hace pasar por otra persona)",
+      "falseInfo": "Información falsa o engañosa",
+      "scam": "Estafa o fraude",
+      "inappropriate": "Contenido inapropiado",
+      "notReal": "No es un profesional real",
+      "other": "Otro"
+    },
+    "impersonationWarning": "Si alguien usa <b>tu identidad</b> sin permiso, esto crea un caso de <b>prioridad alta</b>. El equipo puede suspender la cuenta y revocar la verificación mientras se investiga. Cuéntanos los detalles abajo.",
+    "detail": "Detalle",
+    "optional": "(opcional)",
+    "detailPlaceholder": "Cuéntanos qué pasó…",
+    "errNoReason": "Selecciona un motivo.",
+    "errSend": "No se pudo enviar el reporte. Intenta de nuevo.",
+    "errConnection": "Error de conexión. Intenta de nuevo.",
+    "sending": "Enviando…",
+    "submit": "Enviar reporte"
+  },
   "profile": {
     "back": "Volver a resultados",
     "featuredBadge": "PERFIL DESTACADO",
@@ -335,7 +366,10 @@
     "baseRate": "Tarifa base",
     "workplaces": "Lugares de trabajo",
     "languages": "Idiomas",
-    "insurers": "Aseguradoras"
+    "insurers": "Aseguradoras",
+    "reviewsHeading": "Reseñas ({count})",
+    "reviewOf": "Reseña de “{title}”",
+    "noReviews": "Aún no hay reseñas. Solo los clientes que completaron un servicio pueden dejar una."
   },
   "auth": {
     "login": {

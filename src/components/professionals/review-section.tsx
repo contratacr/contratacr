@@ -1,6 +1,7 @@
 "use client";
 
 import { Star } from "lucide-react";
+import { useTranslations, useLocale } from "next-intl";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { StarRating } from "@/components/ui/star-rating";
 import { getInitials } from "@/lib/utils";
@@ -15,15 +16,14 @@ interface ReviewSectionProps {
   isAuthenticated: boolean;
 }
 
-function timeAgo(isoDate: string): string {
-  const diff = Date.now() - new Date(isoDate).getTime();
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  if (days === 0) return "hoy";
-  if (days === 1) return "hace 1 día";
-  if (days < 7) return `hace ${days} días`;
-  if (days < 14) return "hace 1 semana";
-  if (days < 30) return `hace ${Math.floor(days / 7)} semanas`;
-  return `hace ${Math.floor(days / 30)} mes(es)`;
+// Locale-aware relative time via Intl (no hardcoded "hace … días" strings).
+function timeAgo(isoDate: string, locale: string): string {
+  const rtf = new Intl.RelativeTimeFormat(locale === "en" ? "en" : "es", { numeric: "auto" });
+  const days = Math.floor((Date.now() - new Date(isoDate).getTime()) / 86400000);
+  if (days < 1) return rtf.format(0, "day");
+  if (days < 7) return rtf.format(-days, "day");
+  if (days < 30) return rtf.format(-Math.floor(days / 7), "week");
+  return rtf.format(-Math.floor(days / 30), "month");
 }
 
 export function ReviewSection({
@@ -31,11 +31,13 @@ export function ReviewSection({
   ratingAvg,
   reviews,
 }: ReviewSectionProps) {
+  const t = useTranslations("profile");
+  const locale = useLocale();
   return (
     <>
       <div className="flex items-center justify-between mb-5">
         <h2 className="text-lg font-semibold text-[#111827]">
-          Reseñas ({reviewCount})
+          {t("reviewsHeading", { count: reviewCount })}
         </h2>
         <div className="flex items-center gap-1">
           <Star className="h-5 w-5 text-[#ff9b32] fill-[#ff9b32]" />
@@ -54,11 +56,11 @@ export function ReviewSection({
               <div className="flex items-center justify-between gap-2">
                 <span className="text-sm font-medium text-[#111827]">{review.clientName}</span>
                 {/* "editada" is intentionally NOT shown publicly (item 4). */}
-                <span className="text-xs text-[#9ca3af]">{timeAgo(review.createdAt)}</span>
+                <span className="text-xs text-[#9ca3af]">{timeAgo(review.createdAt, locale)}</span>
               </div>
               <StarRating rating={review.rating} size="sm" className="my-1" />
               {review.jobTitle && (
-                <p className="text-xs text-[#9ca3af] mt-0.5">Reseña de “{review.jobTitle}”</p>
+                <p className="text-xs text-[#9ca3af] mt-0.5">{t("reviewOf", { title: review.jobTitle })}</p>
               )}
               <p className="text-sm text-[#374151] leading-relaxed mt-1">{review.comment}</p>
             </div>
@@ -67,7 +69,7 @@ export function ReviewSection({
 
         {reviews.length === 0 && (
           <p className="text-sm text-[#9ca3af] text-center py-6">
-            Aún no hay reseñas. Solo los clientes que completaron un servicio pueden dejar una.
+            {t("noReviews")}
           </p>
         )}
       </div>

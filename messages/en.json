@@ -255,6 +255,37 @@
     "cancel": "Cancel",
     "notListed": "Don't see your category?"
   },
+  "gallery": {
+    "workAlt": "Work {n}",
+    "close": "Close",
+    "prev": "Previous",
+    "next": "Next"
+  },
+  "report": {
+    "title": "Report profile",
+    "sentTitle": "Report sent",
+    "sentBody": "Thanks. Our support team will review this profile and take any necessary action.",
+    "ok": "Got it",
+    "confidential": "Your report is sent confidentially to the ContrataCR support team (soporte@contratacr.com). We review every report manually.",
+    "reasonLabel": "Reason for the report",
+    "reasons": {
+      "impersonation": "Identity impersonation (pretending to be someone else)",
+      "falseInfo": "False or misleading information",
+      "scam": "Scam or fraud",
+      "inappropriate": "Inappropriate content",
+      "notReal": "Not a real professional",
+      "other": "Other"
+    },
+    "impersonationWarning": "If someone is using <b>your identity</b> without permission, this creates a <b>high-priority</b> case. The team may suspend the account and revoke verification while it's investigated. Tell us the details below.",
+    "detail": "Details",
+    "optional": "(optional)",
+    "detailPlaceholder": "Tell us what happened…",
+    "errNoReason": "Select a reason.",
+    "errSend": "We couldn't send the report. Please try again.",
+    "errConnection": "Connection error. Please try again.",
+    "sending": "Sending…",
+    "submit": "Send report"
+  },
   "profile": {
     "back": "Back to results",
     "featuredBadge": "FEATURED PROFILE",
@@ -335,7 +366,10 @@
     "baseRate": "Base rate",
     "workplaces": "Workplaces",
     "languages": "Languages",
-    "insurers": "Insurers"
+    "insurers": "Insurers",
+    "reviewsHeading": "Reviews ({count})",
+    "reviewOf": "Review of “{title}”",
+    "noReviews": "No reviews yet. Only clients who completed a service can leave one."
   },
   "auth": {
     "login": {
