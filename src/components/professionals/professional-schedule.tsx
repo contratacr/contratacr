@@ -9,6 +9,7 @@ import { Link } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { getWhatsAppLink } from "@/lib/utils";
 import { isTooSoonCR } from "@/lib/time-cr";
+import { SelfActionModal, SELF_MSG } from "./self-action-modal";
 import type { ProfessionalCardData } from "@/lib/data/mock-professionals";
 
 export type ScheduleSlot = { date: string; time: string; locationId?: string | null; categoryId?: string | null };
@@ -65,6 +66,9 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const [showBooking, setShowBooking] = useState(false);
   const [preset, setPreset] = useState<ScheduleSlot | null>(null);
   const [offset, setOffset] = useState(0);
+  // When the pro acts on their OWN card we block the action with a friendly modal
+  // instead of hiding the buttons (the card looks identical to a client's view).
+  const [selfMsg, setSelfMsg] = useState<string | null>(null);
 
   // What the professional accepts. Booking needs public availability AND a
   // preference that isn't WhatsApp-only; WhatsApp shows unless they chose
@@ -127,12 +131,14 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   }, [filteredSlots]);
 
   function pick(slot: ScheduleSlot) {
+    if (isOwn) { setSelfMsg(SELF_MSG.request); return; }
     setPreset(slot);
     if (user) setShowBooking(true);
     else setShowRegistration(true);
   }
 
   function openBooking() {
+    if (isOwn) { setSelfMsg(SELF_MSG.request); return; }
     setPreset(null);
     if (user) setShowBooking(true);
     else setShowRegistration(true);
@@ -161,39 +167,32 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     </>
   );
 
-  // ── Own profile — no self-service. Show a clear state + a shortcut to edit. ──
-  if (isOwn) {
-    return (
-      <div className="flex h-full flex-col justify-end">
-        <Link
-          href="/dashboard/profesional"
-          onClick={(e) => e.stopPropagation()}
-          className="w-full inline-flex items-center justify-center gap-1.5 bg-[#EBF5FB] text-[#0089bb] text-sm font-semibold py-2 rounded-lg hover:bg-[#d8edf9] transition-colors"
-        >
-          Este es tu perfil
-        </Link>
-      </div>
-    );
-  }
+  // Self-action notice — rendered in every branch so the pro's own card shows the
+  // same buttons as a client's but blocks the action with a friendly explanation.
+  const selfModal = (
+    <SelfActionModal open={!!selfMsg} onClose={() => setSelfMsg(null)} message={selfMsg ?? ""} />
+  );
 
   // ── Contact-only (private availability OR WhatsApp-only preference) ────
   // The reason is shown as a flush top band on the card; here we only render the
   // compact contact actions so every card stays the same tidy height.
   if (!canBook) {
     // Contact-only: a single FULL-WIDTH WhatsApp primary. The call icon (when
-    // enabled) lives in the card's top row, so this stays one tidy line.
+    // enabled) lives in the card's top row, so this stays one tidy line. On the
+    // pro's OWN card the WhatsApp action is blocked with the self-action modal.
     return (
       <div className="flex h-full flex-col justify-end">
         <a
-          href={getWhatsAppLink(professional.whatsapp, `Hola ${professional.fullName.split(" ")[0]}, vi tu perfil en ContrataCR y me gustaría coordinar un servicio.`)}
-          target="_blank"
+          href={isOwn ? undefined : getWhatsAppLink(professional.whatsapp, `Hola ${professional.fullName.split(" ")[0]}, vi tu perfil en ContrataCR y me gustaría coordinar un servicio.`)}
+          target={isOwn ? undefined : "_blank"}
           rel="noopener noreferrer"
-          onClick={(e) => e.stopPropagation()}
+          onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.whatsapp); } : (e) => e.stopPropagation()}
           className="w-full inline-flex items-center justify-center gap-1.5 bg-[#25D366] hover:bg-[#1ebe5d] text-white text-sm font-semibold py-2 rounded-lg transition-colors"
         >
           <WhatsAppIcon className="h-4 w-4" />
           Solicitar por WhatsApp
         </a>
+        {selfModal}
       </div>
     );
   }
@@ -319,6 +318,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       </button>
 
       {bookingModals}
+      {selfModal}
     </div>
   );
 }

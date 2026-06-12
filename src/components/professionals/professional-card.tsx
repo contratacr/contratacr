@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
-import { MapPin, ShieldCheck, ShieldAlert, Truck, Image as ImageIcon, Star, Phone, Award } from "lucide-react";
+import { MapPin, ShieldCheck, ShieldAlert, Truck, Image as ImageIcon, Star, Award } from "lucide-react";
 import { ProfessionalSchedule, type ScheduleSlot } from "@/components/professionals/professional-schedule";
-import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
+import { TopContactIcons } from "@/components/professionals/top-contact-icons";
 import { Link } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials, getWhatsAppLink } from "@/lib/utils";
@@ -130,9 +130,10 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
   // WhatsApp + call are INDEPENDENT of the "Disponibilidad privada" toggle and
   // appear consistently on every card when their own condition is met: WhatsApp
   // whenever a number exists; call whenever "Permitir contacto por llamada" is on
-  // and a reachable number exists. (The primary action button below is separate.)
-  const showTopWhatsApp = !isOwn && !!professional.whatsapp;
-  const showTopCall = !isOwn && !!professional.allowPhoneCall && !!(professional.callPhone || professional.whatsapp);
+  // and a reachable number exists. They show on the pro's OWN card too (so it
+  // looks identical to a client's view); the self-action is blocked in a modal.
+  const showTopWhatsApp = !!professional.whatsapp;
+  const showTopCall = !!professional.allowPhoneCall && !!(professional.callPhone || professional.whatsapp);
   const waHref = professional.whatsapp
     ? getWhatsAppLink(professional.whatsapp, `Hola ${professional.fullName.split(" ")[0]}, vi tu perfil en ContrataCR y me gustaría coordinar un servicio.`)
     : "#";
@@ -193,31 +194,16 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
                 {/* Verified mark — inline beside the name on desktop only */}
                 <span className="hidden md:inline-flex shrink-0 mt-0.5">{verifiedBadge}</span>
 
-                {/* Direct-contact icons — compact, right-aligned (no extra row) */}
-                {(showTopWhatsApp || showTopCall) && (
-                  <span className="flex shrink-0 items-center gap-0.5 -mt-0.5">
-                    {showTopWhatsApp && (
-                      <a
-                        href={waHref}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        aria-label="Contactar por WhatsApp"
-                        className="grid h-7 w-7 place-items-center rounded-full text-[#1ebe5d] hover:bg-[#25D366]/10 transition-colors"
-                      >
-                        <WhatsAppIcon className="h-[18px] w-[18px]" />
-                      </a>
-                    )}
-                    {showTopCall && (
-                      <a
-                        href={telHref}
-                        aria-label="Llamar"
-                        className="grid h-7 w-7 place-items-center rounded-full text-[#6b7280] hover:bg-[#EBF5FB] hover:text-[#009FD9] transition-colors"
-                      >
-                        <Phone className="h-[18px] w-[18px]" />
-                      </a>
-                    )}
-                  </span>
-                )}
+                {/* Direct-contact icons — compact, right-aligned (no extra row).
+                    Client wrapper so the pro's OWN card shows the same icons but
+                    blocks the self-action with a friendly modal. */}
+                <TopContactIcons
+                  isOwn={isOwn}
+                  waHref={waHref}
+                  telHref={telHref}
+                  showWhatsApp={showTopWhatsApp}
+                  showCall={showTopCall}
+                />
               </div>
 
               {/* Verified mark — under the name on mobile only (frees the top line) */}

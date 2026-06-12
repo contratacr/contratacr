@@ -24,6 +24,7 @@ import { ReportProfileModal } from "@/components/professionals/report-profile-mo
 import { createClient } from "@/lib/supabase/client";
 import { BookingButton } from "@/components/booking/booking-button";
 import { ClientRegistrationModal } from "@/components/auth/client-registration-modal";
+import { SelfActionModal, SELF_MSG } from "@/components/professionals/self-action-modal";
 import type { ProfessionalDetail } from "@/lib/queries/professionals";
 
 interface ProfilePageProps {
@@ -89,6 +90,8 @@ export default function ProfilePage({ params }: ProfilePageProps) {
   const [showRegistration, setShowRegistration] = useState(false);
   const [slug, setSlug] = useState("");
   const [reportOpen, setReportOpen] = useState(false);
+  // Own-profile self-actions are blocked with a friendly modal (buttons stay visible).
+  const [selfMsg, setSelfMsg] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -293,18 +296,18 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                 {/* Casos de éxito images live ONLY in the "Casos de éxito" tab — no
                     duplicate thumbnail strip here under the profile summary. */}
 
-                {isOwn ? (
-                  /* Own profile — no self-service; offer a shortcut to edit instead. */
-                  <a
-                    href="/es/dashboard/profesional"
-                    className="flex items-center justify-center gap-2 w-full border border-[#009FD9] text-[#009FD9] hover:bg-[#EBF5FB] font-semibold py-3 rounded-xl transition-colors text-sm"
-                  >
-                    Este es tu perfil · Editar
-                  </a>
-                ) : (
-                  <>
+                {/* The pro's OWN profile shows the SAME buttons a client sees; the
+                    action is blocked with a friendly modal (handled per button). */}
                 {/* WhatsApp CTA */}
-                {isAuthenticated ? (
+                {isOwn ? (
+                  <button
+                    onClick={() => setSelfMsg(SELF_MSG.whatsapp)}
+                    className="flex items-center justify-center gap-2 w-full bg-[#25D366] hover:bg-[#1ebe5d] text-white font-bold py-3 rounded-xl transition-colors text-sm"
+                  >
+                    <WhatsAppIcon className="h-4 w-4" />
+                    Contactar por WhatsApp
+                  </button>
+                ) : isAuthenticated ? (
                   <a
                     href={waLink}
                     target="_blank"
@@ -324,7 +327,8 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                   </button>
                 )}
 
-                {/* Solicitar servicio CTA — only when the schedule is public. */}
+                {/* Solicitar servicio CTA — only when the schedule is public.
+                    BookingButton blocks the self-request on the pro's own profile. */}
                 {professional.availabilityPublic && (
                   <BookingButton
                     professional={professional}
@@ -338,15 +342,23 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                 {/* Llamar — driven by "Permitir contacto por llamada", independent of
                     the privada toggle: shows in BOTH public and private modes. */}
                 {professional.allowPhoneCall && callDigits && (
-                  <a
-                    href={`tel:+506${callDigits}`}
-                    className="flex items-center justify-center gap-2 w-full border border-[#009FD9] text-[#009FD9] hover:bg-[#EBF5FB] font-semibold py-3 rounded-xl transition-colors text-sm"
-                  >
-                    <Phone className="h-4 w-4" />
-                    Llamar
-                  </a>
-                )}
-                  </>
+                  isOwn ? (
+                    <button
+                      onClick={() => setSelfMsg(SELF_MSG.call)}
+                      className="flex items-center justify-center gap-2 w-full border border-[#009FD9] text-[#009FD9] hover:bg-[#EBF5FB] font-semibold py-3 rounded-xl transition-colors text-sm"
+                    >
+                      <Phone className="h-4 w-4" />
+                      Llamar
+                    </button>
+                  ) : (
+                    <a
+                      href={`tel:+506${callDigits}`}
+                      className="flex items-center justify-center gap-2 w-full border border-[#009FD9] text-[#009FD9] hover:bg-[#EBF5FB] font-semibold py-3 rounded-xl transition-colors text-sm"
+                    >
+                      <Phone className="h-4 w-4" />
+                      Llamar
+                    </a>
+                  )
                 )}
 
                 <ClientRegistrationModal
@@ -355,6 +367,9 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                   onSuccess={() => { setShowRegistration(false); window.open(waLink, "_blank"); }}
                   professionalName={professional.fullName}
                 />
+
+                {/* Own-profile self-action notice (shared across the page's actions). */}
+                <SelfActionModal open={!!selfMsg} onClose={() => setSelfMsg(null)} message={selfMsg ?? ""} />
 
                 {/* More options dropdown */}
                 <div ref={dropdownRef} className="border-t border-[#f3f4f6] pt-3 relative">

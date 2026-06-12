@@ -6,6 +6,7 @@ import { CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BookingModal } from "./booking-modal";
 import { ClientRegistrationModal } from "@/components/auth/client-registration-modal";
+import { SelfActionModal, SELF_MSG } from "@/components/professionals/self-action-modal";
 import { useAuth } from "@/hooks/use-auth";
 import type { ProfessionalCardData } from "@/lib/data/mock-professionals";
 
@@ -27,25 +28,22 @@ export function BookingButton({
   const { user } = useAuth();
   const [showRegistration, setShowRegistration] = useState(false);
   const [showBooking, setShowBooking] = useState(false);
+  const [showSelf, setShowSelf] = useState(false);
   const t = useTranslations("booking");
 
-  // A pro cannot request a service from themselves — show a clear state instead.
+  // A pro cannot request a service from themselves. We still SHOW the normal
+  // button (so their profile looks identical to a client's), but block the
+  // action with a friendly modal instead of booking.
   const isOwn = !!user && !!professional.profileId && user.id === professional.profileId;
 
   function handleClick() {
-    if (user) {
+    if (isOwn) {
+      setShowSelf(true);
+    } else if (user) {
       setShowBooking(true);
     } else {
       setShowRegistration(true);
     }
-  }
-
-  if (isOwn) {
-    return (
-      <Button variant="outline" size={size} className={className} asChild>
-        <a href="/es/dashboard/profesional">Este es tu perfil</a>
-      </Button>
-    );
   }
 
   return (
@@ -73,6 +71,9 @@ export function BookingButton({
         open={showBooking}
         onClose={() => setShowBooking(false)}
       />
+
+      {/* Own profile — block the self-request with an explanation. */}
+      <SelfActionModal open={showSelf} onClose={() => setShowSelf(false)} message={SELF_MSG.request} />
     </>
   );
 }
