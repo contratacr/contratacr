@@ -172,10 +172,10 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
     return () => document.removeEventListener("keydown", onKey);
   }, [showPrivateConfirm]);
 
-  // Generator form. For TODAY the start defaults to the next rounded full hour
-  // (e.g. 12:49 → 13:00). "Hora puntual" uses puntualDefault (next full hour today,
-  // 8:00 a.m. for a future date) and resets when the date changes.
-  const initialStart = nextFullHourCR(todayISO());
+  // Generator form. Defaults to a standard 8:00 a.m. – 5:00 p.m. workday that the
+  // pro can adjust freely. For TODAY, the start floor (next rounded full hour) is
+  // applied by the effect below so a past hour is never offered.
+  const initialStart = "08:00";
   const [genDate, setGenDate] = useState(todayISO());
   const [genStart, setGenStart] = useState(initialStart);
   const [genEnd, setGenEnd] = useState("17:00");
@@ -379,14 +379,13 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
   }, [startMin]);
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* ── STEP 1 — Tu disponibilidad: ONE control (privada vs pública) decides
-             everything below. Private = WhatsApp-only (no agenda); pública =
-             agenda publicada. WhatsApp is always available. ── */}
-      <div className="rounded-xl border border-[#e5e7eb] p-4">
-        <div className="flex items-center gap-2.5 mb-3">
-          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#009FD9] text-white text-xs font-bold shrink-0">1</span>
-          <h3 className="text-sm font-semibold text-[#111827]">Tu disponibilidad</h3>
+    <div className="flex flex-col gap-6">
+      {/* ── Cómo te contactan: ONE control (privada vs pública) decides everything
+             below. Private = WhatsApp-only (no agenda); pública = agenda publicada.
+             WhatsApp is always available. Soft surface, no hard border. ── */}
+      <div className="rounded-2xl bg-[#f9fafb] p-4 sm:p-5">
+        <div className="flex items-center gap-2 mb-4">
+          <h3 className="text-sm font-semibold text-[#111827]">Cómo te contactan los clientes</h3>
           {savingVisibility && <Loader2 className="h-4 w-4 animate-spin text-[#009FD9] ml-auto" />}
         </div>
 
@@ -450,14 +449,12 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
         )}
       </div>
 
-      {/* Public agenda → STEP 2 (add schedules) + the list. Private → a short note. */}
+      {/* Public agenda → add schedules + the list. Private → a short note. */}
       {isPublic ? (<>
-      {/* ── STEP 2 — Slot generator (public agenda only) ──────────── */}
-      <div className="rounded-xl border border-[#e5e7eb] p-4">
-        <div className="flex items-center gap-2.5 mb-4">
-          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#009FD9] text-white text-xs font-bold shrink-0">2</span>
-          <h3 className="text-sm font-semibold text-[#111827]">Agregar horarios disponibles</h3>
-        </div>
+      {/* ── Slot generator (public agenda only) — soft surface, no hard border ── */}
+      <div className="rounded-2xl bg-[#f9fafb] p-4 sm:p-5">
+        <h3 className="text-sm font-semibold text-[#111827] mb-1">Agrega tus horarios</h3>
+        <p className="text-xs text-[#6b7280] mb-4">Elige el rango y el intervalo, y generamos los espacios. El horario estándar es de 8:00 a.m. a 5:00 p.m. — ajústalo a tu gusto.</p>
 
         {locationOptions.length === 0 ? (
           <div className="rounded-xl bg-[#fffbeb] border border-[#fde68a] p-4 text-sm text-[#92400e]">

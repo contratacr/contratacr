@@ -64,6 +64,8 @@ export async function POST(req: Request) {
       coverage_country: coverageCountry,
       no_cr_id: noCrId,
       id_document_note: idDocNote,
+      // Public agenda by default → contact via both WhatsApp + schedule.
+      contact_preference: "ambas",
       ...(noCrId ? { verification_status: "pending" } : {}),
     };
     const isUnknownColumn = (msg?: string) =>
@@ -215,8 +217,10 @@ export async function POST(req: Request) {
       profile_id: userId,
       category_id: category,
       professions,
-      // Private until the pro publishes a schedule (then it auto-flips public).
-      availability_public: false,
+      // Availability is PUBLIC by default (privada OFF): a new pro is reachable and
+      // can publish hours right away. They can turn "Disponibilidad privada" on
+      // anytime to hide the agenda and go WhatsApp-only.
+      availability_public: true,
       bio: safeBio,
       whatsapp,
       years_experience: yearsExperience ? parseInt(yearsExperience, 10) : null,
