@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { Navbar } from "@/components/layout/navbar";
@@ -13,17 +14,18 @@ import { PROVINCES } from "@/lib/data/cr-geography";
 import { cn } from "@/lib/utils";
 
 
-const TIMELINES = [
-  { value: "Urgente (esta semana)", label: "Urgente — esta semana" },
-  { value: "Pronto (este mes)", label: "Pronto — este mes" },
-  { value: "Flexible", label: "Soy flexible" },
-  { value: "Estoy planificando", label: "Estoy planificando" },
-];
-
 export default function PublicarProyectoPage() {
   const router = useRouter();
+  const t = useTranslations("publicarProyecto");
   const { user, loading: authLoading } = useAuth();
   const isPro = user?.user_metadata?.role === "professional";
+
+  const TIMELINES = [
+    { value: "Urgente (esta semana)", label: t("tlUrgent") },
+    { value: "Pronto (este mes)", label: t("tlSoon") },
+    { value: "Flexible", label: t("tlFlexible") },
+    { value: "Estoy planificando", label: t("tlPlanning") },
+  ];
 
   const [form, setForm] = useState({
     categoryId: "",
@@ -55,9 +57,9 @@ export default function PublicarProyectoPage() {
     setError(null);
 
     // Category is REQUIRED — it's what routes the project to the right pros.
-    if (!form.categoryId) { setError("Elige una categoría para que tu proyecto llegue a los profesionales correctos."); return; }
-    if (!form.title.trim()) { setError("El título es requerido."); return; }
-    if (!form.description.trim()) { setError("La descripción es requerida."); return; }
+    if (!form.categoryId) { setError(t("errCategory")); return; }
+    if (!form.title.trim()) { setError(t("errTitle")); return; }
+    if (!form.description.trim()) { setError(t("errDescription")); return; }
 
     setSubmitting(true);
     try {
@@ -79,13 +81,13 @@ export default function PublicarProyectoPage() {
       const data = await res.json();
       if (!res.ok) {
         console.error("[publicar-proyecto] error:", data.error);
-        setError(data.error ?? "Error al publicar el proyecto. Intenta de nuevo.");
+        setError(data.error ?? t("errPublish"));
         return;
       }
 
       setSuccess(true);
     } catch {
-      setError("Error inesperado. Intenta de nuevo.");
+      setError(t("errUnexpected"));
     } finally {
       setSubmitting(false);
     }
@@ -100,18 +102,18 @@ export default function PublicarProyectoPage() {
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#EBF5FB] mx-auto mb-5">
               <CheckCircle2 className="h-10 w-10 text-[#009FD9]" />
             </div>
-            <h1 className="text-2xl font-bold text-[#111827] mb-2">¡Proyecto publicado!</h1>
+            <h1 className="text-2xl font-bold text-[#111827] mb-2">{t("successTitle")}</h1>
             <p className="text-[#6b7280] mb-8">
-              Los profesionales de tu zona verán tu proyecto y podrán enviarte propuestas.
+              {t("successBody")}
             </p>
             <div className="flex flex-col gap-2">
               {/* Professionals manage projects inside their unified "Mi panel"
                   ("Contratar servicios"); plain clients use the client panel. */}
               <Button size="lg" className="w-full" onClick={() => router.push(isPro ? "/dashboard/profesional?tab=sent_projects" : "/dashboard/cliente?tab=projects")}>
-                Ver mis proyectos
+                {t("viewProjects")}
               </Button>
               <Button size="lg" variant="outline" className="w-full" onClick={() => router.push(isPro ? "/dashboard/profesional" : "/dashboard/cliente")}>
-                Ir a mi panel
+                {t("goToPanel")}
               </Button>
             </div>
           </div>
@@ -130,9 +132,9 @@ export default function PublicarProyectoPage() {
       <main className="flex-1 py-10 px-4">
         <div className="max-w-2xl mx-auto">
           <div className="mb-8">
-            <h1 className="text-2xl font-bold text-[#111827]">Publicar proyecto</h1>
+            <h1 className="text-2xl font-bold text-[#111827]">{t("title")}</h1>
             <p className="text-[#6b7280] mt-1">
-              Describe tu proyecto y recibe propuestas de profesionales cercanos.
+              {t("subtitle")}
             </p>
           </div>
 
@@ -141,25 +143,25 @@ export default function PublicarProyectoPage() {
               {/* Category */}
               <div>
                 <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                  Categoría <span className="text-red-500">*</span>
+                  {t("category")} <span className="text-red-500">*</span>
                 </label>
-                <p className="text-xs text-[#9ca3af] mb-1.5">Así dirigimos tu proyecto a los profesionales de ese servicio.</p>
+                <p className="text-xs text-[#9ca3af] mb-1.5">{t("categoryHelp")}</p>
                 <CategorySearch
                   value={form.categoryId}
                   onChange={(id) => update("categoryId", id)}
-                  placeholder="Escribe o elige una categoría"
+                  placeholder={t("categoryPlaceholder")}
                 />
               </div>
 
               {/* Title */}
               <div>
                 <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                  Título del proyecto <span className="text-red-500">*</span>
+                  {t("projectTitle")} <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
                   className={inputClass}
-                  placeholder="Ej: Pintura de sala y comedor, 50m²"
+                  placeholder={t("titlePlaceholder")}
                   value={form.title}
                   onChange={(e) => update("title", e.target.value)}
                   required
@@ -169,11 +171,11 @@ export default function PublicarProyectoPage() {
               {/* Description */}
               <div>
                 <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                  Descripción detallada <span className="text-red-500">*</span>
+                  {t("description")} <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] min-h-[120px] resize-none focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
-                  placeholder="Describe el trabajo que necesitas, materiales, dimensiones, condiciones especiales, etc."
+                  placeholder={t("descriptionPlaceholder")}
                   value={form.description}
                   onChange={(e) => update("description", e.target.value)}
                   required
@@ -184,14 +186,14 @@ export default function PublicarProyectoPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                    Provincia <span className="text-[#9ca3af] font-normal">(opcional)</span>
+                    {t("provincia")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
                   </label>
                   <select
                     className={cn(inputClass, "cursor-pointer")}
                     value={form.provinciaId}
                     onChange={(e) => update("provinciaId", e.target.value)}
                   >
-                    <option value="">Todas</option>
+                    <option value="">{t("allF")}</option>
                     {PROVINCES.map((p) => (
                       <option key={p.id} value={p.id}>{p.name}</option>
                     ))}
@@ -199,7 +201,7 @@ export default function PublicarProyectoPage() {
                 </div>
                 <div>
                   <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                    Cantón <span className="text-[#9ca3af] font-normal">(opcional)</span>
+                    {t("canton")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
                   </label>
                   <select
                     className={cn(inputClass, "cursor-pointer", !form.provinciaId && "opacity-50")}
@@ -207,7 +209,7 @@ export default function PublicarProyectoPage() {
                     onChange={(e) => update("cantonId", e.target.value)}
                     disabled={!form.provinciaId}
                   >
-                    <option value="">Todos</option>
+                    <option value="">{t("allM")}</option>
                     {cantons.map((c) => (
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
@@ -218,18 +220,18 @@ export default function PublicarProyectoPage() {
               {/* Budget */}
               <div>
                 <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                  Presupuesto estimado (₡) <span className="text-[#9ca3af] font-normal">(opcional)</span>
+                  {t("budget")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
                 </label>
                 <div className="grid grid-cols-2 gap-3">
-                  <PriceInput placeholder="Mínimo" value={form.budgetMin} onChange={(v) => update("budgetMin", v)} />
-                  <PriceInput placeholder="Máximo" value={form.budgetMax} onChange={(v) => update("budgetMax", v)} />
+                  <PriceInput placeholder={t("budgetMin")} value={form.budgetMin} onChange={(v) => update("budgetMin", v)} />
+                  <PriceInput placeholder={t("budgetMax")} value={form.budgetMax} onChange={(v) => update("budgetMax", v)} />
                 </div>
               </div>
 
               {/* Timeline */}
               <div>
                 <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                  ¿Cuándo lo necesitas? <span className="text-[#9ca3af] font-normal">(opcional)</span>
+                  {t("whenNeeded")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {TIMELINES.map(({ value, label }) => (
@@ -258,10 +260,10 @@ export default function PublicarProyectoPage() {
 
               <div className="flex gap-3 mt-2">
                 <Button type="button" variant="outline" size="lg" onClick={() => router.back()}>
-                  Cancelar
+                  {t("cancel")}
                 </Button>
                 <Button type="submit" size="lg" className="flex-1" loading={submitting} disabled={submitting}>
-                  {submitting ? "Publicando..." : "Publicar proyecto"}
+                  {submitting ? t("publishing") : t("publish")}
                 </Button>
               </div>
             </form>
