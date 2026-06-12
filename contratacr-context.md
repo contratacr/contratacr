@@ -2005,3 +2005,14 @@ A multi-pass design-quality sweep is underway (foundation → public pages → a
 - **Deferred to Pass 4 (auth):** `client-registration-modal` (612 lines, a mini registration form triggered from profile/buscar) — translate it with the registration flow.
 
 New i18n namespaces added this pass: `search.pagination`, extended `search.filters`/`search.sort`/`search.list/map/...`, `card.coverage*`/`card.save/unsave`, `schedule`, `selfAction`, `categorySearch`, `gallery`, `report`, and a large extension of `profile`.
+
+**Pass 4 (auth + registration) — IN PROGRESS.** Done so far:
+- **`/login`**: zod messages moved into the component (useMemo) so they localize; OAuth-lockout error + OAuth button labels → `auth.login.*`; post-login redirect uses the active locale (was hardcoded `/es/`).
+- **`/reset-password`**: same zod-into-component pattern, reusing the existing `resetPassword.rule*` labels + new `passwordsDontMatch`.
+- **`/registro/cliente`**: wired the already-existing `registerClient.errAlreadyRegistered` (was hardcoded). **`/completar-perfil`**: avatar alt → key.
+- **Identity step** (shared across registration + booking + profile editor): new `identity` namespace wires `CedulaInput`, `IdentityInfoBlock`, `IdentityField` (label/hint/optional, "Identidad confirmada", Cédula/Nacimiento, "¿No es tu información?", "Buscando en el padrón…", the two manual-name notices via t.rich, full-name field).
+- **PATTERN for zod + i18n:** module-level `z.object(...)` with hardcoded messages → move the schema **inside** the component in a `useMemo([t])` and use `t(...)` for each message; type the form as a plain `type FormData = {...}` (drop `z.infer`).
+- **STILL TODO in Pass 4:**
+  - **`/registro/profesional`** (1253 lines) — the centerpiece. It has its **OWN hardcoded category list (~80 entries) duplicating `categories.ts`** — a single-source-of-truth violation. Needs: replace that list with the `categories.ts` taxonomy via `getCategoryLabel(id, locale)` (locale-aware) AND translate the ~80 remaining UI strings. Deserves a dedicated, careful pass (it's the most important conversion flow — don't rush it).
+  - **`client-registration-modal`** (612 lines, ~42 strings) — the mini registration prompt triggered from /buscar + profile.
+  - **`languages-input`** ("Quitar", language placeholder, "Agregar otro…") and **`aseguradoras-input`** ("¿No ves tu aseguradora?", "No trabajo con seguros" [currently a stray English "I don't work with insurers"], "Quitar", suggestion flow). `phone-input`'s ~23 literals are mostly **country names** (data, not UI) — verify before translating. `price-input` is clean.
