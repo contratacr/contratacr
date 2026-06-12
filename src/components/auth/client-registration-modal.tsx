@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
   X, Eye, EyeOff, CheckCircle2, Circle,
@@ -32,12 +33,13 @@ export interface ClientRegistrationModalProps {
 // ─── Password checklist ───────────────────────────────────────────────────────
 
 function PasswordChecklist({ password }: { password: string }) {
+  const t = useTranslations("resetPassword");
   const rules = [
-    { label: "Mínimo 8 caracteres", ok: password.length >= 8 },
-    { label: "Una letra mayúscula", ok: /[A-Z]/.test(password) },
-    { label: "Una letra minúscula", ok: /[a-z]/.test(password) },
-    { label: "Un número", ok: /[0-9]/.test(password) },
-    { label: "Un carácter especial (!@#$%^&*)", ok: /[!@#$%^&*]/.test(password) },
+    { label: t("rule8"), ok: password.length >= 8 },
+    { label: t("ruleUpper"), ok: /[A-Z]/.test(password) },
+    { label: t("ruleLower"), ok: /[a-z]/.test(password) },
+    { label: t("ruleNumber"), ok: /[0-9]/.test(password) },
+    { label: t("ruleSpecial"), ok: /[!@#$%^&*]/.test(password) },
   ];
   if (!password) return null;
   return (
@@ -59,6 +61,7 @@ function PasswordChecklist({ password }: { password: string }) {
 // ─── Inline OTP ───────────────────────────────────────────────────────────────
 
 function OtpStep({ email, onVerified }: { email: string; onVerified: () => void }) {
+  const t = useTranslations("clientRegModal");
   const [digits, setDigits] = useState(["", "", "", "", "", ""]);
   const [verifying, setVerifying] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -80,7 +83,7 @@ function OtpStep({ email, onVerified }: { email: string; onVerified: () => void 
     const { error: e } = await supabase.auth.verifyOtp({ email, token, type: "signup" });
     setVerifying(false);
     if (e) {
-      setError("Código incorrecto o expirado. Solicita uno nuevo.");
+      setError(t("otpError"));
       setDigits(["", "", "", "", "", ""]);
       setTimeout(() => refs.current[0]?.focus(), 50);
     } else {
@@ -123,7 +126,7 @@ function OtpStep({ email, onVerified }: { email: string; onVerified: () => void 
   return (
     <div className="flex flex-col gap-5">
       <div>
-        <p className="text-sm text-[#6b7280] mb-1">Código enviado a</p>
+        <p className="text-sm text-[#6b7280] mb-1">{t("codeSentTo")}</p>
         <p className="font-semibold text-[#1a2744] text-sm truncate">{email}</p>
       </div>
 
@@ -154,13 +157,13 @@ function OtpStep({ email, onVerified }: { email: string; onVerified: () => void 
 
       {verifying && (
         <div className="flex items-center justify-center gap-2 text-sm text-[#009FD9]">
-          <Loader2 className="h-4 w-4 animate-spin" /> Verificando…
+          <Loader2 className="h-4 w-4 animate-spin" /> {t("verifying")}
         </div>
       )}
 
       <p className="text-sm text-center text-[#6b7280]">
         {countdown > 0 ? (
-          <>Reenviar en <strong className="text-[#374151]">{countdown}s</strong></>
+          t.rich("resendIn", { seconds: countdown, strong: (c) => <strong className="text-[#374151]">{c}</strong> })
         ) : (
           <button
             type="button"
@@ -169,11 +172,11 @@ function OtpStep({ email, onVerified }: { email: string; onVerified: () => void 
             className="inline-flex items-center gap-1.5 text-[#009FD9] font-medium hover:underline disabled:opacity-60"
           >
             <RotateCcw className="h-3.5 w-3.5" />
-            {resending ? "Reenviando…" : "Reenviar código"}
+            {resending ? t("resending") : t("resendCode")}
           </button>
         )}
       </p>
-      <p className="text-xs text-center text-[#9ca3af]">Revisa también tu carpeta de spam.</p>
+      <p className="text-xs text-center text-[#9ca3af]">{t("checkSpam")}</p>
     </div>
   );
 }
@@ -186,6 +189,8 @@ export function ClientRegistrationModal({
   onSuccess,
   professionalName,
 }: ClientRegistrationModalProps) {
+  const t = useTranslations("clientRegModal");
+  const tRp = useTranslations("resetPassword");
   const [view, setView] = useState<ModalView>("register");
   const [step, setStep] = useState<RegisterStep>("email");
 
@@ -246,7 +251,7 @@ export function ClientRegistrationModal({
   async function handleSignUp() {
     if (!isPasswordValid()) return;
     if (password !== confirmPassword) {
-      setError("Las contraseñas no coinciden.");
+      setError(tRp("passwordsDontMatch"));
       return;
     }
     setSubmitting(true);
@@ -313,7 +318,7 @@ export function ClientRegistrationModal({
     });
     setSubmitting(false);
     if (e) {
-      setError("Correo o contraseña incorrectos.");
+      setError(t("loginError"));
       return;
     }
     handleClose();
@@ -321,13 +326,6 @@ export function ClientRegistrationModal({
   }
 
   // ── Step labels ────────────────────────────────────────────────────────────
-
-  const stepLabels: Record<RegisterStep, string> = {
-    email:    "Correo",
-    name:     "Nombre",
-    password: "Contraseña",
-    otp:      "Verificar",
-  };
 
   const currentStepNum = STEP_NUM[step];
 
@@ -376,7 +374,7 @@ export function ClientRegistrationModal({
           {/* Professional context */}
           {professionalName && (
             <div className="px-6 py-3 bg-[#f9fafb] border-b border-[#f3f4f6] shrink-0">
-              <p className="text-xs text-[#9ca3af]">Para contactar a</p>
+              <p className="text-xs text-[#9ca3af]">{t("toContact")}</p>
               <p className="text-sm font-semibold text-[#1a2744]">{professionalName}</p>
             </div>
           )}
@@ -388,9 +386,9 @@ export function ClientRegistrationModal({
             {view === "login" && (
               <div className="flex flex-col gap-5">
                 <div>
-                  <h2 className="text-xl font-bold text-[#111827]">Inicia sesión</h2>
+                  <h2 className="text-xl font-bold text-[#111827]">{t("loginTitle")}</h2>
                   <p className="text-sm text-[#6b7280] mt-1">
-                    Usa tu correo y contraseña de ContrataCR.
+                    {t("loginSubtitle")}
                   </p>
                 </div>
 
@@ -398,8 +396,8 @@ export function ClientRegistrationModal({
                   <div className="flex items-start gap-3 p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-sm">
                     <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
                     <div>
-                      <p className="font-semibold text-amber-800">Ya existe una cuenta con este correo</p>
-                      <p className="text-amber-700 mt-0.5">Ingresa tu contraseña para continuar, o usa Google o Facebook si así te registraste.</p>
+                      <p className="font-semibold text-amber-800">{t("dupTitle")}</p>
+                      <p className="text-amber-700 mt-0.5">{t("dupBody")}</p>
                     </div>
                   </div>
                 )}
@@ -410,14 +408,14 @@ export function ClientRegistrationModal({
                   </div>
                 )}
                 <Input
-                  label="Correo electrónico"
+                  label={t("emailLabel")}
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="tu@email.com"
                 />
                 <Input
-                  label="Contraseña"
+                  label={t("passwordLabel")}
                   type={showLoginPw ? "text" : "password"}
                   value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
@@ -429,7 +427,7 @@ export function ClientRegistrationModal({
                   }
                 />
                 <Button size="lg" loading={submitting} className="w-full" onClick={handleLogin}>
-                  {submitting ? "Iniciando sesión…" : "Iniciar sesión"}
+                  {submitting ? t("signingIn") : t("signIn")}
                 </Button>
               </div>
             )}
@@ -441,16 +439,16 @@ export function ClientRegistrationModal({
                 {/* Step titles */}
                 <div>
                   <h2 className="text-xl font-bold text-[#111827]">
-                    {step === "email" && "Tu correo electrónico"}
-                    {step === "name" && "Tu nombre"}
-                    {step === "password" && "Crea tu contraseña"}
-                    {step === "otp" && "Código de verificación"}
+                    {step === "email" && t("titleEmail")}
+                    {step === "name" && t("titleName")}
+                    {step === "password" && t("titlePassword")}
+                    {step === "otp" && t("titleOtp")}
                   </h2>
                   <p className="text-sm text-[#6b7280] mt-1">
-                    {step === "email" && "Ingresa el correo que usarás para tu cuenta."}
-                    {step === "name" && "¿Cómo te llamas? Tu cédula te la pediremos solo al solicitar un servicio."}
-                    {step === "password" && "Elige una contraseña segura para tu cuenta."}
-                    {step === "otp" && "Ingresa el código de 6 dígitos enviado a tu correo."}
+                    {step === "email" && t("subEmail")}
+                    {step === "name" && t("subName")}
+                    {step === "password" && t("subPassword")}
+                    {step === "otp" && t("subOtp")}
                   </p>
                 </div>
 
@@ -463,7 +461,7 @@ export function ClientRegistrationModal({
                 {/* STEP: email */}
                 {step === "email" && (
                   <Input
-                    label="Correo electrónico"
+                    label={t("emailLabel")}
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -475,8 +473,8 @@ export function ClientRegistrationModal({
                 {/* STEP: name — full name only (cédula is collected at booking) */}
                 {step === "name" && (
                   <Input
-                    label="Nombre completo *"
-                    placeholder="Juan Carlos Pérez González"
+                    label={`${t("nameLabel")} *`}
+                    placeholder={t("namePlaceholder")}
                     value={manualName}
                     onChange={(e) => setManualName(e.target.value)}
                     autoFocus
@@ -488,7 +486,7 @@ export function ClientRegistrationModal({
                   <div className="flex flex-col gap-4">
                     <div>
                       <Input
-                        label="Contraseña"
+                        label={t("passwordLabel")}
                         type={showPassword ? "text" : "password"}
                         placeholder="••••••••"
                         value={password}
@@ -502,12 +500,12 @@ export function ClientRegistrationModal({
                       <PasswordChecklist password={password} />
                     </div>
                     <Input
-                      label="Confirmar contraseña"
+                      label={t("confirmPassword")}
                       type={showConfirm ? "text" : "password"}
                       placeholder="••••••••"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      error={confirmPassword && password !== confirmPassword ? "Las contraseñas no coinciden" : undefined}
+                      error={confirmPassword && password !== confirmPassword ? tRp("passwordsDontMatch") : undefined}
                       rightIcon={
                         <button type="button" onClick={() => setShowConfirm((v) => !v)} className="text-gray-400 hover:text-gray-600">
                           {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -562,8 +560,8 @@ export function ClientRegistrationModal({
                     }}
                   >
                     {step === "password"
-                      ? submitting ? "Creando cuenta…" : "Crear cuenta"
-                      : <>Continuar <ArrowRight className="h-4 w-4" /></>}
+                      ? submitting ? t("creatingAccount") : t("createAccount")
+                      : <>{t("continue")} <ArrowRight className="h-4 w-4" /></>}
                   </Button>
                 </div>
               ) : (
@@ -572,7 +570,7 @@ export function ClientRegistrationModal({
                     <ArrowLeft className="h-4 w-4" />
                   </Button>
                   <Button size="md" className="flex-1" loading={submitting} onClick={handleLogin}>
-                    {submitting ? "Iniciando sesión…" : "Iniciar sesión"}
+                    {submitting ? t("signingIn") : t("signIn")}
                   </Button>
                 </div>
               )}
@@ -581,24 +579,24 @@ export function ClientRegistrationModal({
               <p className="text-center text-sm text-[#6b7280]">
                 {view === "register" ? (
                   <>
-                    ¿Ya tienes cuenta?{" "}
+                    {t("haveAccount")}{" "}
                     <button
                       type="button"
                       onClick={() => { setView("login"); setError(null); setDuplicateEmailDetected(false); }}
                       className="text-[#009FD9] font-semibold hover:underline"
                     >
-                      Inicia sesión
+                      {t("signInLink")}
                     </button>
                   </>
                 ) : (
                   <>
-                    ¿No tienes cuenta?{" "}
+                    {t("noAccount")}{" "}
                     <button
                       type="button"
                       onClick={() => { setView("register"); setError(null); }}
                       className="text-[#009FD9] font-semibold hover:underline"
                     >
-                      Regístrate gratis
+                      {t("signUpFree")}
                     </button>
                   </>
                 )}
