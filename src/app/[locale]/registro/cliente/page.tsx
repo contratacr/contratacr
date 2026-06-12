@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
@@ -18,6 +19,7 @@ import { cleanId, detectIdType, isValidId } from "@/lib/cedula";
 
 export default function RegisterClientPage() {
   const router = useRouter();
+  const t = useTranslations("registerClient");
   const { user, loading: authLoading } = useAuth();
 
   const [fullName, setFullName] = useState("");
@@ -58,15 +60,15 @@ export default function RegisterClientPage() {
     setError(null);
     setPhoneError(null);
 
-    if (!fullName.trim()) { setError("El nombre es requerido."); return; }
-    if (!user && !email.trim()) { setError("El correo es requerido."); return; }
-    if (!user && password.length < 8) { setError("La contraseña debe tener al menos 8 caracteres."); return; }
-    if (!user && password !== confirmPassword) { setError("Las contraseñas no coinciden."); return; }
+    if (!fullName.trim()) { setError(t("errName")); return; }
+    if (!user && !email.trim()) { setError(t("errEmail")); return; }
+    if (!user && password.length < 8) { setError(t("errPasswordLen")); return; }
+    if (!user && password !== confirmPassword) { setError(t("errPasswordMismatch")); return; }
 
     // The account holder's phone is REQUIRED — client↔professional coordination
     // happens by WhatsApp/call, so without it they can't reach each other.
     if (!isPhoneComplete(phone)) {
-      setPhoneError("Ingresa un número de teléfono válido — lo usamos para que los profesionales te contacten.");
+      setPhoneError(t("errPhone"));
       return;
     }
 
@@ -75,11 +77,11 @@ export default function RegisterClientPage() {
     // DIMEX/NITE can't be age-checked here, so it's accepted on format.
     const cleanCedula = cleanId(cedula);
     if (!isValidId(cleanCedula)) {
-      setError("Ingresa un número de identificación válido (CR: 9 dígitos · DIMEX: 11-12 · NITE: 10).");
+      setError(t("errIdInvalid"));
       return;
     }
     if (detectIdType(cleanCedula) === "cedula" && (!identity || !identity.found)) {
-      setError("No pudimos confirmar tu identidad ni tu mayoría de edad con esa cédula. Si tu cédula es nueva o eres extranjero, abre un ticket en el Centro de soporte.");
+      setError(t("errIdentity"));
       return;
     }
 
@@ -103,7 +105,7 @@ export default function RegisterClientPage() {
 
         if (signUpError) {
           if (signUpError.message.toLowerCase().includes("already registered")) {
-            setError("Ya existe una cuenta con este correo. Inicia sesión con tu contraseña, o con Google o Facebook si así te registraste.");
+            setError(t("errAlreadyRegistered"));
           } else {
             setError(signUpError.message);
           }
@@ -139,7 +141,7 @@ export default function RegisterClientPage() {
 
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "Error al crear cuenta.");
+        setError(data.error ?? t("errCreate"));
         setSubmitting(false);
         return;
       }
@@ -152,7 +154,7 @@ export default function RegisterClientPage() {
         setSuccess(true);
       }
     } catch {
-      setError("Error inesperado. Intenta de nuevo.");
+      setError(t("errUnexpected"));
     } finally {
       setSubmitting(false);
     }
@@ -182,15 +184,15 @@ export default function RegisterClientPage() {
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#EBF5FB] mx-auto mb-5">
               <CheckCircle2 className="h-10 w-10 text-[#009FD9]" />
             </div>
-            <h1 className="text-2xl font-bold text-[#111827] mb-2">¡Bienvenido a ContrataCR!</h1>
+            <h1 className="text-2xl font-bold text-[#111827] mb-2">{t("successTitle")}</h1>
             <p className="text-[#6b7280] mb-8">
-              Tu cuenta está lista. Ahora puedes buscar y contratar profesionales cerca de ti.
+              {t("successBody")}
             </p>
             <Button size="lg" className="w-full" onClick={() => router.push("/dashboard/cliente")}>
-              Ir a mi panel
+              {t("goToPanel")}
             </Button>
             <Button variant="outline" size="lg" className="w-full mt-3" onClick={() => router.push("/buscar")}>
-              Buscar profesionales
+              {t("searchPros")}
             </Button>
           </div>
         </main>
@@ -211,8 +213,8 @@ export default function RegisterClientPage() {
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#EBF5FB] mx-auto mb-3">
                 <User className="h-6 w-6 text-[#009FD9]" />
               </div>
-              <h1 className="text-2xl font-bold text-[#111827]">Crear cuenta de cliente</h1>
-              <p className="text-sm text-[#6b7280] mt-1">Encuentra profesionales cerca de ti. Gratis.</p>
+              <h1 className="text-2xl font-bold text-[#111827]">{t("title")}</h1>
+              <p className="text-sm text-[#6b7280] mt-1">{t("subtitle")}</p>
             </div>
 
             {/* OAuth banner */}
@@ -228,7 +230,7 @@ export default function RegisterClientPage() {
                   </Avatar>
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs text-[#009FD9] font-semibold">Identidad confirmada</p>
+                  <p className="text-xs text-[#009FD9] font-semibold">{t("identityConfirmed")}</p>
                   <p className="text-sm font-bold text-[#111827] truncate">{fullName || user.email}</p>
                 </div>
                 <CheckCircle2 className="h-5 w-5 text-[#009FD9] shrink-0" />
@@ -249,11 +251,11 @@ export default function RegisterClientPage() {
               {!user && (
                 <>
                   <div>
-                    <label className="text-sm font-medium text-[#374151] block mb-1.5">Correo electrónico <span className="text-red-500">*</span></label>
+                    <label className="text-sm font-medium text-[#374151] block mb-1.5">{t("email")} <span className="text-red-500">*</span></label>
                     <input
                       type="email"
                       className={inputClass}
-                      placeholder="tu@email.com"
+                      placeholder={t("emailPlaceholder")}
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
@@ -261,12 +263,12 @@ export default function RegisterClientPage() {
                   </div>
 
                   <div>
-                    <label className="text-sm font-medium text-[#374151] block mb-1.5">Contraseña <span className="text-red-500">*</span></label>
+                    <label className="text-sm font-medium text-[#374151] block mb-1.5">{t("password")} <span className="text-red-500">*</span></label>
                     <div className="relative">
                       <input
                         type={showPassword ? "text" : "password"}
                         className={cn(inputClass, "pr-11")}
-                        placeholder="Mínimo 8 caracteres"
+                        placeholder={t("passwordPlaceholder")}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
@@ -283,12 +285,12 @@ export default function RegisterClientPage() {
                   </div>
 
                   <div>
-                    <label className="text-sm font-medium text-[#374151] block mb-1.5">Confirmar contraseña <span className="text-red-500">*</span></label>
+                    <label className="text-sm font-medium text-[#374151] block mb-1.5">{t("confirmPassword")} <span className="text-red-500">*</span></label>
                     <div className="relative">
                       <input
                         type={showConfirm ? "text" : "password"}
                         className={cn(inputClass, "pr-11", confirmPassword && password !== confirmPassword && "border-red-400 focus:ring-red-400")}
-                        placeholder="Repite tu contraseña"
+                        placeholder={t("confirmPlaceholder")}
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         required
@@ -303,14 +305,14 @@ export default function RegisterClientPage() {
                       </button>
                     </div>
                     {confirmPassword && password !== confirmPassword && (
-                      <p className="text-xs text-red-500 mt-1">Las contraseñas no coinciden.</p>
+                      <p className="text-xs text-red-500 mt-1">{t("errPasswordMismatch")}</p>
                     )}
                   </div>
                 </>
               )}
 
               <PhoneInput
-                label="Teléfono"
+                label={t("phone")}
                 required
                 value={phone}
                 onChange={(v) => { setPhone(v); setPhoneError(null); }}
@@ -320,14 +322,14 @@ export default function RegisterClientPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                    Provincia <span className="text-[#9ca3af] font-normal">(opcional)</span>
+                    {t("provincia")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
                   </label>
                   <select
                     className={cn(inputClass, "cursor-pointer")}
                     value={provinciaId}
                     onChange={(e) => { setProvinciaId(e.target.value); setCantonId(""); }}
                   >
-                    <option value="">Selecciona</option>
+                    <option value="">{t("select")}</option>
                     {PROVINCES.map((p) => (
                       <option key={p.id} value={p.id}>{p.name}</option>
                     ))}
@@ -335,7 +337,7 @@ export default function RegisterClientPage() {
                 </div>
                 <div>
                   <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                    Cantón <span className="text-[#9ca3af] font-normal">(opcional)</span>
+                    {t("canton")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
                   </label>
                   <select
                     className={cn(inputClass, "cursor-pointer", !provinciaId && "opacity-50")}
@@ -343,7 +345,7 @@ export default function RegisterClientPage() {
                     onChange={(e) => setCantonId(e.target.value)}
                     disabled={!provinciaId}
                   >
-                    <option value="">Selecciona</option>
+                    <option value="">{t("select")}</option>
                     {cantons.map((c) => (
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
@@ -358,18 +360,17 @@ export default function RegisterClientPage() {
               )}
 
               <Button type="submit" size="lg" className="w-full mt-1" loading={submitting} disabled={submitting}>
-                {submitting ? "Creando cuenta..." : user ? "Guardar y continuar" : "Crear cuenta gratis"}
+                {submitting ? t("creating") : user ? t("saveContinue") : t("createFree")}
               </Button>
 
               <p className="text-center text-xs text-[#9ca3af]">
-                Al registrarte aceptas nuestros{" "}
-                <a href="/terminos" className="underline hover:text-[#374151]">Términos de uso</a>.
+                {t.rich("terms", { link: (c) => <a href="/terminos" className="underline hover:text-[#374151]">{c}</a> })}
               </p>
 
               <div className="text-center text-sm text-[#6b7280]">
-                ¿Ya tienes cuenta?{" "}
+                {t("haveAccount")}{" "}
                 <a href="/login" className="text-[#009FD9] font-medium hover:underline">
-                  Inicia sesión
+                  {t("signIn")}
                 </a>
               </div>
             </form>
