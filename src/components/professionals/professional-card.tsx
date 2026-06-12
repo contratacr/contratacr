@@ -154,14 +154,14 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
   // Verified trust mark — rendered inline beside the name on desktop, but BELOW
   // the name on mobile so the name keeps the full top line and never truncates first.
   const verifiedBadge = isVerified ? (
-    <span title="Identidad verificada por ContrataCR" className="inline-flex shrink-0 items-center gap-1 text-[#16a34a]">
+    <span title={tCard("verifiedTitle")} className="inline-flex shrink-0 items-center gap-1 text-[#16a34a]">
       <ShieldCheck className="h-4 w-4" />
-      <span className="text-[11px] font-semibold">Identidad verificada</span>
+      <span className="text-[11px] font-semibold">{tCard("verified")}</span>
     </span>
   ) : (
-    <span title="Identidad sin verificar" className="inline-flex shrink-0 items-center gap-1 text-[#b45309]">
+    <span title={tCard("unverifiedTitle")} className="inline-flex shrink-0 items-center gap-1 text-[#b45309]">
       <ShieldAlert className="h-4 w-4" />
-      <span className="text-[11px] font-medium">Sin verificar</span>
+      <span className="text-[11px] font-medium">{tCard("unverified")}</span>
     </span>
   );
 
@@ -249,11 +249,11 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
                 <div className="flex items-center gap-1.5">
                   <Star className="h-3.5 w-3.5 fill-[#ff9b32] text-[#ff9b32]" />
                   <span className="text-[13px] font-bold text-[#111827]">{professional.ratingAvg.toFixed(1)}</span>
-                  <span className="text-[11px] text-[#6b7280]">· {professional.reviewCount} {professional.reviewCount === 1 ? "reseña" : "reseñas"}</span>
+                  <span className="text-[11px] text-[#6b7280]">· {tCard("reviewsCount", { count: professional.reviewCount })}</span>
                 </div>
               ) : (
                 <span className="inline-flex items-center gap-1.5 text-[11px] text-[#9ca3af]">
-                  <Star className="h-3.5 w-3.5 fill-[#e5e7eb] text-[#e5e7eb]" /> Sin reseñas todavía
+                  <Star className="h-3.5 w-3.5 fill-[#e5e7eb] text-[#e5e7eb]" /> {tCard("noReviews")}
                 </span>
               )}
 
@@ -283,7 +283,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
                       className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[#009FD9] hover:underline w-fit"
                     >
                       <ImageIcon className="h-3.5 w-3.5" />
-                      Ver casos de éxito ({professional.portfolioCount})
+                      {tCard("viewCases", { count: professional.portfolioCount })}
                     </Link>
                   ) : null}
                   {professional.certificationCount ? (
@@ -292,7 +292,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
                       className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[#009FD9] hover:underline w-fit"
                     >
                       <Award className="h-3.5 w-3.5" />
-                      Ver certificaciones ({professional.certificationCount})
+                      {tCard("viewCertifications", { count: professional.certificationCount })}
                     </Link>
                   ) : null}
                 </div>
@@ -303,7 +303,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
           {/* ── Action zone: price + availability ── */}
           <div className="md:w-[232px] md:shrink-0 md:border-l md:border-[#f3f4f6] md:pl-4 pt-3 md:pt-0 border-t border-[#f3f4f6] md:border-t-0 flex flex-col">
             <div className="flex items-baseline justify-between gap-2 mb-1.5 pr-9 md:pr-10">
-              <span className="text-[10px] font-bold uppercase tracking-wide text-[#9ca3af]">{hasNumericPrice ? "Desde" : "Tarifa"}</span>
+              <span className="text-[10px] font-bold uppercase tracking-wide text-[#9ca3af]">{hasNumericPrice ? tCard("from") : tCard("rate")}</span>
               <span className="font-bold text-[#111827] text-[15px] whitespace-nowrap truncate">{priceLabel}</span>
             </div>
             <div className="flex-1 min-h-0">

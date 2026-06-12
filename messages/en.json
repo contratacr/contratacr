@@ -214,7 +214,16 @@
     "coverageYourLocation": "Travels to your location",
     "coverageAreas": "Travels in {areas}",
     "save": "Save professional",
-    "unsave": "Remove from saved"
+    "unsave": "Remove from saved",
+    "verified": "Verified identity",
+    "verifiedTitle": "Identity verified by ContrataCR",
+    "unverified": "Unverified",
+    "unverifiedTitle": "Identity not verified",
+    "rate": "Rate",
+    "noReviews": "No reviews yet",
+    "reviewsCount": "{count, plural, one {# review} other {# reviews}}",
+    "viewCases": "View success stories ({count})",
+    "viewCertifications": "View certifications ({count})"
   },
   "schedule": {
     "today": "Today",

@@ -214,7 +214,16 @@
     "coverageYourLocation": "Se desplaza a tu ubicación",
     "coverageAreas": "Se desplaza en {areas}",
     "save": "Guardar profesional",
-    "unsave": "Quitar de guardados"
+    "unsave": "Quitar de guardados",
+    "verified": "Identidad verificada",
+    "verifiedTitle": "Identidad verificada por ContrataCR",
+    "unverified": "Sin verificar",
+    "unverifiedTitle": "Identidad sin verificar",
+    "rate": "Tarifa",
+    "noReviews": "Sin reseñas todavía",
+    "reviewsCount": "{count, plural, one {# reseña} other {# reseñas}}",
+    "viewCases": "Ver casos de éxito ({count})",
+    "viewCertifications": "Ver certificaciones ({count})"
   },
   "schedule": {
     "today": "Hoy",
