@@ -515,7 +515,7 @@ Auto-scrolling carousels (e.g. the home "Profesionales para cada proyecto" categ
 
 ## 10. i18n
 
-Infra: next-intl, `[locale]` (`es`/`en`), default **es**, `localePrefix: "always"`, `localeDetection: false`. Persistence = locale in URL (navigation/reload) **plus** a `NEXT_LOCALE` cookie written by the toggle; middleware honors that cookie for unprefixed URLs only (first-time visitors still get ES — Accept-Language is deliberately ignored). The ES|EN pill highlights the active locale. **Never auto-translate legal content** (`/terminos`, `/privacidad`) — they stay authoritative static Spanish.
+Infra: next-intl, `[locale]` (`es`/`en`), default **es**, `localePrefix: "always"`, `localeDetection: false`. Persistence = locale in URL (navigation/reload) **plus** a `NEXT_LOCALE` cookie written by the toggle. The **proxy** (`src/proxy.ts` — Next 16's renamed `middleware`; see context.md) redirects **every** unprefixed URL to its locale-prefixed canonical path (cookie → `/en`, else `/es`; params preserved), so old/bookmarked non-localized links never 404. First-time visitors still get ES — Accept-Language is deliberately ignored. The ES|EN pill highlights the active locale. **Never auto-translate legal content** (`/terminos`, `/privacidad`) — they stay authoritative static Spanish. **Routing/auth lives in `src/proxy.ts`, NOT a root `middleware.ts`** (the root file is silently ignored on Next 16) — the build must list `ƒ Proxy (Middleware)`.
 
 ---
 
