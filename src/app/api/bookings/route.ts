@@ -100,9 +100,14 @@ export async function POST(req: NextRequest) {
       slot_location_label: slotLocationLabel ?? null,
     };
 
-    let { data, error } = await supabase.from("bookings").insert({ ...baseBooking, ...beneficiaryFields }).select("id").single();
+    // Insert via the service-role client: the API has already validated the
+    // payload and the self-request guard, and client_id is set from the session
+    // (or null for a guest). This makes the save resilient to any INSERT
+    // row-policy regression on `bookings` (core flow must never silently fail).
+    const adminInsert = createAdminClient();
+    let { data, error } = await adminInsert.from("bookings").insert({ ...baseBooking, ...beneficiaryFields }).select("id").single();
     if (error && /for_someone_else|beneficiary_|client_dob|category_id|slot_location|column|schema cache|PGRST204|could not find/i.test(error.message)) {
-      ({ data, error } = await supabase.from("bookings").insert(baseBooking).select("id").single());
+      ({ data, error } = await adminInsert.from("bookings").insert(baseBooking).select("id").single());
     }
 
     if (error) {
@@ -176,23 +181,36 @@ export async function GET(req: NextRequest) {
 
     if (!pro) return NextResponse.json({ bookings: [] });
 
-    await autoConfirmStale(createAdminClient(), { professional_id: pro.id });
+    const adminPro = createAdminClient();
+    await autoConfirmStale(adminPro, { professional_id: pro.id });
 
-    const { data } = await supabase
+    // Read via the service-role client (authorized above by pro.id). The embedded
+    // client profile needs `is_flagged` (a moderation column) which migration 047
+    // removed from the anon/authenticated column grants — selecting it with the
+    // RLS client now errors and silently returns NO bookings. Admin bypasses the
+    // column grant; the query is still scoped to THIS pro's bookings only.
+    const { data, error } = await adminPro
       .from("bookings")
       .select("*, profiles:client_id(full_name, avatar_url, is_flagged)")
       .eq("professional_id", pro.id)
       .order("created_at", { ascending: false });
 
+    if (error) {
+      console.error("[GET /api/bookings] professional error:", error.message);
+      return NextResponse.json({ error: error.message, bookings: [] }, { status: 500 });
+    }
     return NextResponse.json({ bookings: data ?? [] });
   }
 
-  // Client role.
-  await autoConfirmStale(createAdminClient(), { client_id: session.user.id });
+  // Client role. Read via the service-role client, scoped to THIS client's id
+  // (authorized by the session above). RLS row-policy changes on `bookings` would
+  // otherwise silently filter the client's own sent requests to an empty list.
+  const adminClient = createAdminClient();
+  await autoConfirmStale(adminClient, { client_id: session.user.id });
   // NOTE: professionals↔categories has no FK (category_id is plain text), so an
   // embedded categories(...) join 500s and silently drops every booking. Select
   // category_id as a column instead.
-  const { data, error } = await supabase
+  const { data, error } = await adminClient
     .from("bookings")
     .select("*, professionals(slug, category_id, profiles(full_name, avatar_url))")
     .eq("client_id", session.user.id)
