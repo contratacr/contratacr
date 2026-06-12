@@ -86,7 +86,7 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
   const [proposalForms, setProposalForms] = useState<Record<string, { price: string; message: string }>>({});
   const [submitting, setSubmitting] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState<Set<string>>(new Set());
-  const [projectFilter, setProjectFilter] = useState("abiertos");
+  const [projectFilter, setProjectFilter] = useState("activos");
 
   async function fetchOpenProjects() {
     setLoading(true);
@@ -269,7 +269,7 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                             {project.profiles?.full_name && (
                               <span className="flex items-center gap-1">
                                 <User className="h-3 w-3" />
-                                {project.profiles.full_name.split(" ")[0]}
+                                {project.profiles.full_name}
                               </span>
                             )}
                             {(project.provincias?.name || project.cantones?.name) && (

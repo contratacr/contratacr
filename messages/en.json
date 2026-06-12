@@ -933,8 +933,7 @@
     "activas": "Active",
     "finalizadas": "Completed",
     "canceladas": "Cancelled",
-    "abiertos": "Open",
-    "encurso": "In progress",
+    "activos": "Active",
     "finalizados": "Completed",
     "cancelados": "Cancelled"
   },

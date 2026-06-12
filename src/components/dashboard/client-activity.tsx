@@ -122,7 +122,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   const [reviewModal, setReviewModal] = useState<{ professionalId: string; professionalName: string; bookingId?: string; projectId?: string } | null>(null);
   const [myReviews, setMyReviews] = useState<{ professional_id: string; booking_id?: string | null; project_id?: string | null; rating: number }[]>([]);
   const [bookingFilter, setBookingFilter] = useState("activas");
-  const [projectFilter, setProjectFilter] = useState("abiertos");
+  const [projectFilter, setProjectFilter] = useState("activos");
   const [expandedProject, setExpandedProject] = useState<string | null>(null);
   const [projectProposals, setProjectProposals] = useState<Record<string, Proposal[]>>({});
 
@@ -386,11 +386,11 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                   </a>
                                 </Button>
                               )}
-                              {["confirmed", "in_progress", "awaiting_confirmation", "completed", "cancelled"].includes(b.status) && (
-                                <button onClick={() => reportProfessional(b.id)} className="inline-flex items-center justify-center gap-1.5 text-xs text-[#9ca3af] hover:text-red-500 transition-colors">
-                                  <Flag className="h-3.5 w-3.5" /> Reportar
-                                </button>
-                              )}
+                              {/* Reporting available in every state — a no-show or
+                                  abusive professional can happen before confirmation too. */}
+                              <button onClick={() => reportProfessional(b.id)} className="inline-flex items-center justify-center gap-1.5 text-xs text-[#9ca3af] hover:text-red-500 transition-colors">
+                                <Flag className="h-3.5 w-3.5" /> Reportar
+                              </button>
                             </div>
                           </div>
                         </CardContent>

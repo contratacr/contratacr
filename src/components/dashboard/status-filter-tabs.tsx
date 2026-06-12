@@ -46,9 +46,13 @@ export const SOLICITUD_TABS: readonly FilterTab[] = [
   { id: "canceladas" },
 ];
 
+// Projects use the SAME three-bucket scheme as solicitudes (Activos / Finalizados
+// / Cancelados) so both panels read identically. "Activos" covers every live
+// state — open (receiving proposals), assigned, and awaiting confirmation — and
+// the per-card status badge ("Abierto" vs "En curso · Asignado") keeps the
+// finer distinction visible without an extra confusing tab.
 export const PROYECTO_TABS: readonly FilterTab[] = [
-  { id: "abiertos" },
-  { id: "encurso" },
+  { id: "activos" },
   { id: "finalizados" },
   { id: "cancelados" },
 ];
@@ -61,9 +65,9 @@ export function solicitudMatches(filter: string, status: string): boolean {
   if (filter === "canceladas") return status === "cancelled" || status === "rescheduled";
   return true; // todas
 }
+const PROYECTO_ACTIVE = ["open", "in_progress", "awaiting_confirmation"];
 export function proyectoMatches(filter: string, status: string): boolean {
-  if (filter === "abiertos") return status === "open";
-  if (filter === "encurso") return status === "in_progress" || status === "awaiting_confirmation";
+  if (filter === "activos") return PROYECTO_ACTIVE.includes(status);
   if (filter === "finalizados") return status === "completed";
   if (filter === "cancelados") return status === "cancelled";
   return true; // todos

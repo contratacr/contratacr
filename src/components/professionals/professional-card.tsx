@@ -245,7 +245,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
                 <div className="flex items-center gap-1.5">
                   <Star className="h-3.5 w-3.5 fill-[#ff9b32] text-[#ff9b32]" />
                   <span className="text-[13px] font-bold text-[#111827]">{professional.ratingAvg.toFixed(1)}</span>
-                  <span className="text-[11px] text-[#6b7280]">· {professional.reviewCount} reseñas</span>
+                  <span className="text-[11px] text-[#6b7280]">· {professional.reviewCount} {professional.reviewCount === 1 ? "reseña" : "reseñas"}</span>
                 </div>
               ) : (
                 <span className="inline-flex items-center gap-1.5 text-[11px] text-[#9ca3af]">

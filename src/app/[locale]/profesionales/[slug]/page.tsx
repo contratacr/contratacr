@@ -283,7 +283,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                 <div className="flex flex-col items-center gap-1">
                   <StarRating rating={professional.ratingAvg} showValue reviewCount={professional.reviewCount} size="md" />
                   <button onClick={() => setActiveTab("resenas")} className="text-xs text-[#009FD9] hover:underline">
-                    Ver {professional.reviewCount} reseñas
+                    Ver {professional.reviewCount} {professional.reviewCount === 1 ? "reseña" : "reseñas"}
                   </button>
                 </div>
 
@@ -658,7 +658,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                         <div className="flex flex-col items-center">
                           <span className="text-4xl font-extrabold text-[#111827]">{professional.ratingAvg.toFixed(1)}</span>
                           <StarRating rating={professional.ratingAvg} size="sm" className="mt-1" />
-                          <span className="text-xs text-[#9ca3af] mt-1">{professional.reviewCount} reseñas</span>
+                          <span className="text-xs text-[#9ca3af] mt-1">{professional.reviewCount} {professional.reviewCount === 1 ? "reseña" : "reseñas"}</span>
                         </div>
                         <div className="flex-1 flex flex-col gap-2">
                           <SubRating label="Precio" value={4.8} />
