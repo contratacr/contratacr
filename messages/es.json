@@ -588,6 +588,7 @@
       "photoChange": "Cambiar foto",
       "photoRemove": "Eliminar",
       "photoAdd": "Agregar foto",
+      "photoCaption": "Una buena foto genera más confianza. Es opcional — puedes agregarla después desde tu panel.",
       "noCrIdNotice": "Sin cédula costarricense tu cuenta queda <b>pendiente de revisión</b>. Un agente revisará tu documento (pasaporte, DIMEX en trámite) y aprobará tu identidad. Puedes usar la plataforma mientras tanto.",
       "yourDocument": "Tu documento",
       "optionalParen": "(opcional)",

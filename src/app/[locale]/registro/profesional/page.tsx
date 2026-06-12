@@ -1058,7 +1058,7 @@ export default function RegisterProfessionalPage() {
               <PhotoPicker preview={photoPreview} onFile={handlePhotoSelect} onRemove={() => { setPhotoFile(null); setPhotoPreview(null); }} />
 
               <p className="text-sm text-[#6b7280] text-center">
-                Una buena foto genera más confianza. Es opcional — puedes agregarla después desde tu panel.
+                {t("photoCaption")}
               </p>
 
               <div className="flex gap-3 mt-2">

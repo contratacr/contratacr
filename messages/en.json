@@ -588,6 +588,7 @@
       "photoChange": "Change photo",
       "photoRemove": "Remove",
       "photoAdd": "Add photo",
+      "photoCaption": "A good photo builds trust. It's optional — you can add it later from your panel.",
       "noCrIdNotice": "Without a Costa Rican ID your account stays <b>pending review</b>. An agent will review your document (passport, DIMEX in process) and approve your identity. You can use the platform in the meantime.",
       "yourDocument": "Your document",
       "optionalParen": "(optional)",
