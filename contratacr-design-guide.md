@@ -24,6 +24,25 @@ When in doubt, remove. If a block doesn't help the user complete their task, cut
 
 ---
 
+## 1.5 Usability hard rules (R1–R10) — non-negotiable
+
+These are **enforceable acceptance criteria**, not suggestions. Every screen must pass all ten; a violation is a bug to fix, not a style preference. Audit any screen you touch against this list.
+
+- **R1 — No nested bordered containers.** Max ONE level of bordered card per content block. A bordered card inside a bordered card (inside a bordered card) is forbidden. For inner structure use spacing, dividers (`border-t border-[#f3f4f6]`), or typography — not another box. (Tinted callouts like the amber notice count as a border level.)
+- **R2 — No truncation/overflow at 360px.** Names, labels, placeholders, buttons, and chips must show fully at ~360px: wrap, shrink, or reflow. Never `…`/cut-off on critical info (a person's name, a price, a primary button label). `truncate` is allowed only on genuinely secondary, repeated metadata — never on the one thing the user needs.
+- **R3 — One obvious primary action.** Every screen answers "what do I do here" with exactly ONE visually dominant primary (filled brand) button, reachable in ≤2 clicks from its section. Everything else is secondary/quiet.
+- **R4 — No dead ends.** Every screen/state has an obvious way back/forward (back to panel, continue, cancel). Every empty state = a message + a next action (button/link), never a blank area.
+- **R5 — No unexplained controls.** Every toggle/checkbox/icon-button has a visible label or immediate explanation. No mystery icons (a lone check/x/lock without text or an `aria-label` + tooltip).
+- **R6 — Forms.** Required fields marked (`*`); correct mobile keyboards (`inputMode`/`type`/`autoComplete`); errors shown inline next to the field in friendly Costa Rican Spanish (no voseo); submit button always visible/reachable on mobile (never off-screen or behind overflow).
+- **R7 — Consistency.** The same element looks and behaves the same everywhere — one button set, one chip style, one card pattern, one filter-tab pattern. Same-purpose sections across the two dashboards share the same layout pattern.
+- **R8 — Feedback.** Every action gives immediate feedback (saving/saved, sent, error). No silent saves, no ambiguity about success. Use inline blocks + the autosave status line — never leave the user guessing.
+- **R9 — Dismissal & selection.** Click-outside closes dropdowns/popovers/autocompletes; ESC closes modals; tapping a suggestion fills the field (it never auto-executes a search or submit).
+- **R10 — English parity.** Anything you touch must be fully bilingual: no Spanish leaking into EN, no layout breaking with longer English strings. (Admin panel is the sole Spanish-only exception.)
+
+**Off-limits to UI/usability passes:** the cédula/padrón verification flow (`/api/cedula/[id]`, `identity-verifier.ts`, `run-verification.ts`, the `IdentityField` fetch/branching), auth, booking, and payment logic. If a usability fix would require touching those, **flag it — do not change it.**
+
+---
+
 ## 2. Design tokens
 
 These are the **canonical** values. Use them via the existing primitives (`Button`, `Input`, `Badge`, `Card`, `Select`) wherever possible instead of re-deriving styles. Tailwind arbitrary values (`bg-[#009FD9]`) are how the codebase expresses these today — match the surrounding code.
