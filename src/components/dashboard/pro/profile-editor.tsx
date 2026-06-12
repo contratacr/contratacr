@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
 import { Input } from "@/components/ui/input";
@@ -56,6 +56,8 @@ function Section({ title, desc, defaultOpen = false, children }: { title: string
 
 export function ProfileEditor({ professionalId, profileId, initial, onSaved }: ProfileEditorProps) {
   const locale = useLocale();
+  const t = useTranslations("profileEditor");
+  const rich = { strong: (c: React.ReactNode) => <strong>{c}</strong> };
   const photoInputRef = useRef<HTMLInputElement>(null);
 
   const [bio, setBio] = useState<string>(initial.bio ?? "");
@@ -159,19 +161,19 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
       const res = await fetch("/api/upload/photo", { method: "POST", body: fd });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
-        throw new Error(j.error || "No se pudo subir la foto. Intenta de nuevo.");
+        throw new Error(j.error || t("photoError"));
       }
       const { url } = await res.json();
       const supabase = createClient();
       const { error: upErr } = await supabase.from("profiles").update({ avatar_url: url }).eq("id", profileId);
-      if (upErr) throw new Error("No se pudo guardar la foto. Intenta de nuevo.");
+      if (upErr) throw new Error(t("photoError"));
       await supabase.auth.updateUser({ data: { avatar_url: url } });
       setAvatarPreview(url);
       onSaved?.();
     } catch (e) {
       // Revert the optimistic preview and show the specific reason (size/format).
       setAvatarPreview(initial.profiles?.avatar_url ?? null);
-      setError(e instanceof Error && e.message ? e.message : "No se pudo subir la foto. Intenta de nuevo.");
+      setError(e instanceof Error && e.message ? e.message : t("photoError"));
     } finally {
       setPhotoUploading(false);
     }
@@ -274,7 +276,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
       setTimeout(() => setSaved((_p) => false), 3000);
       onSaved?.();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Error al guardar");
+      setError(err instanceof Error ? err.message : t("saveError"));
     } finally {
       setSaving(false);
       setAutoSaving(false);
@@ -293,7 +295,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
       )}
 
       {/* ── Datos básicos ─────────────────────────────────────────────── */}
-      <Section title="Datos básicos" desc="Foto, nombre y descripción" defaultOpen>
+      <Section title={t("secBasic")} desc={t("secBasicDesc")} defaultOpen>
         {/* Photo — explicit buttons, no hover-to-change */}
         <div className="flex items-center gap-4">
           <div className="relative h-20 w-20 rounded-full shrink-0">
@@ -315,19 +317,19 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
             )}
           </div>
           <div className="flex flex-col gap-2">
-            <p className="text-sm font-medium text-[#374151]">Foto de perfil</p>
+            <p className="text-sm font-medium text-[#374151]">{t("profilePhoto")}</p>
             {avatarPreview ? (
               <div className="flex items-center gap-2">
                 <Button type="button" variant="outline" size="sm" onClick={() => photoInputRef.current?.click()}>
-                  <Camera className="h-4 w-4" /> Cambiar foto
+                  <Camera className="h-4 w-4" /> {t("changePhoto")}
                 </Button>
                 <Button type="button" variant="outline" size="sm" onClick={handlePhotoRemove} className="border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600">
-                  <X className="h-4 w-4" /> Eliminar
+                  <X className="h-4 w-4" /> {t("remove")}
                 </Button>
               </div>
             ) : (
               <Button type="button" variant="outline" size="sm" onClick={() => photoInputRef.current?.click()}>
-                <Camera className="h-4 w-4" /> Agregar foto
+                <Camera className="h-4 w-4" /> {t("addPhoto")}
               </Button>
             )}
           </div>
@@ -346,8 +348,8 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
             <Input
               label={
                 <span className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
-                  Nombre completo
-                  <span className="inline-flex items-center gap-1 whitespace-nowrap shrink-0 text-[11px] font-semibold text-[#16a34a]"><ShieldCheck className="h-3.5 w-3.5 shrink-0" /> Identidad verificada</span>
+                  {t("fullName")}
+                  <span className="inline-flex items-center gap-1 whitespace-nowrap shrink-0 text-[11px] font-semibold text-[#16a34a]"><ShieldCheck className="h-3.5 w-3.5 shrink-0" /> {t("identityVerified")}</span>
                 </span>
               }
               value={fullName}
@@ -355,36 +357,35 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
               rightIcon={<Lock className="h-4 w-4" />}
             />
             <p className="text-xs text-[#6b7280] mt-1.5">
-              Tu nombre oficial está verificado con el padrón y respalda tu insignia <strong>Identidad verificada</strong>, por eso no se edita aquí. ¿Un error o un cambio legal?{" "}
-              <Link href="/soporte" className="text-[#009FD9] font-medium hover:underline">Solicita la corrección a soporte</Link> para revisión.
+              {t.rich("nameLockedHelp", { ...rich, link: (c) => <Link href="/soporte" className="text-[#009FD9] font-medium hover:underline">{c}</Link> })}
             </p>
           </div>
         ) : (
           <Input
-            label={<>Nombre completo <span className="text-red-500">*</span></>}
+            label={<>{t("fullName")} <span className="text-red-500">*</span></>}
             value={fullName}
             onChange={(e) => { setFullName(e.target.value); touch(); }}
-            placeholder="Juan Pérez González"
+            placeholder={t("fullNamePlaceholder")}
           />
         )}
 
         {/* Brand / business name — optional */}
         <div>
           <Input
-            label={<>Nombre comercial o de tu empresa <span className="text-[#9ca3af] font-normal">(opcional)</span></>}
+            label={<>{t("businessName")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span></>}
             value={businessName}
             onChange={(e) => { setBusinessName(e.target.value); touch(); }}
-            placeholder="Ej: Servicios Eléctricos GAM"
+            placeholder={t("businessPlaceholder")}
           />
-          <p className="text-xs text-[#9ca3af] mt-1.5">El nombre de tu empresa, marca o negocio, si trabajas bajo uno. Aparece junto a tu nombre en tu perfil.</p>
+          <p className="text-xs text-[#9ca3af] mt-1.5">{t("businessHelp")}</p>
         </div>
 
         {/* Description */}
         <div>
-          <label className="text-sm font-medium text-[#374151] block mb-1.5">Descripción <span className="text-[#9ca3af] font-normal">(opcional)</span></label>
+          <label className="text-sm font-medium text-[#374151] block mb-1.5">{t("description")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span></label>
           <textarea
             className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] min-h-[110px] resize-none focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
-            placeholder="Describe tu experiencia, especialidades y qué te diferencia…"
+            placeholder={t("descPlaceholder")}
             value={bio}
             onChange={(e) => { setBio(e.target.value); touch(); }}
           />
@@ -392,18 +393,18 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
       </Section>
 
       {/* ── Profesión ─────────────────────────────────────────────────── */}
-      <Section title="Profesiones" desc="Una o varias — cada una con sus propios servicios" defaultOpen>
+      <Section title={t("secProfessions")} desc={t("secProfessionsDesc")} defaultOpen>
         {/* Professions — multi-select (first is the primary/principal). Each profesión
             groups the servicios managed in the Servicios tab. The "add" search is
             revealed on demand so the principal profession reads cleanly. */}
         <div>
-          <p className="text-xs text-[#9ca3af] mb-2">Tu profesión principal aparece primero. Los servicios de cada profesión se gestionan en la pestaña <strong>Servicios</strong>.</p>
+          <p className="text-xs text-[#9ca3af] mb-2">{t.rich("professionsHelp", rich)}</p>
           {professions.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-3">
               {professions.map((p, i) => (
                 <span key={p} className="inline-flex items-center gap-1.5 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium pl-3 pr-1.5 py-1.5">
                   {getCategoryLabel(p, locale)}
-                  {i === 0 && <span className="text-[10px] font-bold uppercase tracking-wide text-[#009FD9]/70">Principal</span>}
+                  {i === 0 && <span className="text-[10px] font-bold uppercase tracking-wide text-[#009FD9]/70">{t("principal")}</span>}
                   {professions.length > 1 && (
                     <button type="button" onClick={() => removeProfession(p)} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors" aria-label="Quitar">
                       <X className="h-3.5 w-3.5" />
@@ -418,22 +419,22 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
               <CategorySearch
                 value={addCat}
                 onChange={(v) => { addProfession(v); setAddingProf(false); }}
-                placeholder="Busca otra profesión… ej. plomero, fotógrafo"
+                placeholder={t("searchProfession")}
               />
-              <button type="button" onClick={() => setAddingProf(false)} className="self-start text-xs text-[#9ca3af] hover:text-[#374151]">Cancelar</button>
+              <button type="button" onClick={() => setAddingProf(false)} className="self-start text-xs text-[#9ca3af] hover:text-[#374151]">{t("cancel")}</button>
             </div>
           ) : (
             <button type="button" onClick={() => setAddingProf(true)} className="inline-flex items-center gap-1.5 text-sm font-medium text-[#009FD9] hover:underline">
-              <Plus className="h-4 w-4" /> Agregar otra profesión
+              <Plus className="h-4 w-4" /> {t("addAnotherProfession")}
             </button>
           )}
         </div>
       </Section>
 
       {/* ── Certificaciones (texto, sin imágenes) — POR PROFESIÓN ─────── */}
-      <Section title="Certificaciones" desc="Cursos, títulos o certificados (texto, sin imágenes)">
+      <Section title={t("secCerts")} desc={t("secCertsDesc")}>
         <p className="text-xs text-[#9ca3af]">
-          Agrega tus certificaciones <strong>por profesión</strong>. El nombre es obligatorio; la institución y el año son opcionales. No subas imágenes ni documentos.
+          {t.rich("certsHelp", rich)}
         </p>
         {(professions.length > 0 ? professions : [""]).map((prof) => {
           // A cert belongs to `prof` when tagged so; legacy untagged certs fall
@@ -452,10 +453,10 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
                       type="text"
                       value={c.name}
                       onChange={(e) => updateCertification(c.id!, { name: e.target.value })}
-                      placeholder="Nombre del certificado (ej. Técnico en Refrigeración)"
+                      placeholder={t("certNamePlaceholder")}
                       className="flex-1 h-10 rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
                     />
-                    <button type="button" onClick={() => removeCertification(c.id!)} className="h-9 w-9 rounded-lg flex items-center justify-center text-[#9ca3af] hover:text-red-500 hover:bg-red-50 transition-colors shrink-0" aria-label="Quitar certificación">
+                    <button type="button" onClick={() => removeCertification(c.id!)} className="h-9 w-9 rounded-lg flex items-center justify-center text-[#9ca3af] hover:text-red-500 hover:bg-red-50 transition-colors shrink-0" aria-label={t("certRemove")}>
                       <X className="h-4 w-4" />
                     </button>
                   </div>
@@ -464,7 +465,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
                       type="text"
                       value={c.institution ?? ""}
                       onChange={(e) => updateCertification(c.id!, { institution: e.target.value })}
-                      placeholder="Institución (opcional)"
+                      placeholder={t("certInstitution")}
                       className="h-10 rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
                     />
                     <input
@@ -473,14 +474,14 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
                       maxLength={4}
                       value={c.year ?? ""}
                       onChange={(e) => updateCertification(c.id!, { year: e.target.value.replace(/\D/g, "").slice(0, 4) })}
-                      placeholder="Año"
+                      placeholder={t("certYear")}
                       className="h-10 rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
                     />
                   </div>
                 </div>
               ))}
               <button type="button" onClick={() => addCertification(prof || undefined)} className="inline-flex items-center gap-1.5 text-sm font-medium text-[#009FD9] hover:underline self-start">
-                <Plus className="h-4 w-4" /> Agregar certificación{professions.length > 1 && prof ? ` a ${getCategoryLabel(prof, locale)}` : ""}
+                <Plus className="h-4 w-4" /> {professions.length > 1 && prof ? t("addCertTo", { profession: getCategoryLabel(prof, locale) }) : t("addCert")}
               </button>
             </div>
           );
@@ -488,14 +489,14 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
       </Section>
 
       {/* ── Ubicación y cobertura ─────────────────────────────────────── */}
-      <Section title="Ubicación y cobertura" desc="Dónde trabajas y a dónde te desplazas">
+      <Section title={t("secLocation")} desc={t("secLocationDesc")}>
         {/* Work mode — both can be selected (travels AND has fixed locations) */}
         <div>
-          <label className="text-sm font-medium text-[#374151] block mb-2">¿Cómo ofreces tus servicios? <span className="text-red-500">*</span> <span className="text-[#9ca3af] font-normal">(puedes elegir ambas)</span></label>
+          <label className="text-sm font-medium text-[#374151] block mb-2">{t("howOffer")} <span className="text-red-500">*</span> <span className="text-[#9ca3af] font-normal">{t("chooseBoth")}</span></label>
           <div className="grid grid-cols-2 gap-2">
             {([
-              { id: "mobile", icon: Truck, title: "Me desplazo donde el cliente", desc: "Vas al lugar del cliente", active: serviceMobile, toggle: () => { setServiceMobile((v) => !v); touch(); } },
-              { id: "fixed", icon: MapPin, title: "Trabajo desde un lugar fijo", desc: "Taller, consultorio, local", active: serviceFixed, toggle: () => { setServiceFixed((v) => !v); touch(); } },
+              { id: "mobile", icon: Truck, title: t("mobileTitle"), desc: t("mobileDesc"), active: serviceMobile, toggle: () => { setServiceMobile((v) => !v); touch(); } },
+              { id: "fixed", icon: MapPin, title: t("fixedTitle"), desc: t("fixedDesc"), active: serviceFixed, toggle: () => { setServiceFixed((v) => !v); touch(); } },
             ] as const).map((opt) => (
               <button
                 key={opt.id}
@@ -521,11 +522,10 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
             {serviceFixed && (
               <div>
                 <label className="text-sm font-semibold text-[#111827] flex items-center gap-1.5 mb-1">
-                  <MapPin className="h-4 w-4 text-[#009FD9]" /> Lugares de trabajo
+                  <MapPin className="h-4 w-4 text-[#009FD9]" /> {t("workplaces")}
                 </label>
                 <p className="text-xs text-[#9ca3af] mb-2">
-                  Busca el lugar en el mapa o elige la provincia y el cantón, y toca <strong>Agregar lugar</strong>.
-                  Cada lugar define dónde apareces en las búsquedas.
+                  {t.rich("workplacesHelp", rich)}
                 </p>
                 <WorkplacesPicker value={workplaces} onChange={(next) => { setWorkplaces(next); touch(); }} mapHeight={168} />
               </div>
@@ -534,15 +534,15 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
             {serviceMobile && (
               <div>
                 <label className="text-sm font-semibold text-[#111827] flex items-center gap-1.5 mb-1">
-                  <Truck className="h-4 w-4 text-[#009FD9]" /> Zonas a las que te desplazas
+                  <Truck className="h-4 w-4 text-[#009FD9]" /> {t("coverageAreas")}
                 </label>
                 <p className="text-xs text-[#9ca3af] mb-2">
-                  Elige las zonas donde atiendes. Apareces en las búsquedas de cada una.
+                  {t("coverageHelp")}
                 </p>
                 {hasCountryCoverage && hasNarrowerCoverage && (
                   <div className="flex items-start gap-2 rounded-lg bg-[#fffbeb] border border-[#fde68a] px-3 py-2 mb-2 text-xs text-[#92400e]">
                     <Globe className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                    <span>Ya cubres <strong>todo el país</strong>, así que las zonas más específicas no agregan nada. Puedes quitarlas para simplificar.</span>
+                    <span>{t.rich("countryCoverageWarn", rich)}</span>
                   </div>
                 )}
                 <CoverageAreaSelector value={coverageAreas} onChange={(next) => { setCoverageAreas(next); touch(); }} />
@@ -552,18 +552,18 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         )}
 
         <Input
-          label={<>Dirección <span className="text-[#9ca3af] font-normal">(opcional)</span></>}
-          placeholder="Ej: Barrio Escalante, San José"
+          label={<>{t("address")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span></>}
+          placeholder={t("addressPlaceholder")}
           value={address}
           onChange={(e) => { setAddress(e.target.value); touch(); }}
         />
       </Section>
 
       {/* ── Contacto y precios ────────────────────────────────────────── */}
-      <Section title="Contacto y precios" desc="WhatsApp y tus tarifas">
+      <Section title={t("secContact")} desc={t("secContactDesc")}>
         {/* WhatsApp — required contact channel */}
         <PhoneInput
-          label="Número de WhatsApp"
+          label={t("whatsapp")}
           required
           value={whatsapp}
           onChange={(digits) => { setWhatsapp(digits); touch(); }}
@@ -573,31 +573,31 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
             calls. Empty → the WhatsApp number is used for calls too. */}
         <div>
           <PhoneInput
-            label={<>Número para llamadas <span className="text-[#9ca3af] font-normal">(opcional)</span></>}
+            label={<>{t("callNumber")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span></>}
             value={callPhone}
             onChange={(digits) => { setCallPhone(digits); touch(); }}
           />
-          <p className="text-xs text-[#9ca3af] mt-1">Si lo dejas vacío, usamos tu número de WhatsApp también para las llamadas.</p>
+          <p className="text-xs text-[#9ca3af] mt-1">{t("callHelp")}</p>
         </div>
 
         {/* Optional public contact email — opt-in; shown to clients who prefer
             email. Hidden on the profile when empty. */}
         <div>
           <label className="text-sm font-medium text-[#374151] block mb-1.5">
-            Correo de contacto <span className="text-[#9ca3af] font-normal">(opcional)</span>
+            {t("contactEmail")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
           </label>
           <input
             type="email"
             inputMode="email"
-            placeholder="tucorreo@ejemplo.com"
+            placeholder={t("emailPlaceholder")}
             value={contactEmail}
             onChange={(e) => { setContactEmail(e.target.value); touch(); }}
             className="w-full h-11 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
           />
           {contactEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail.trim()) ? (
-            <p className="text-xs text-red-500 mt-1">Ingresa un correo válido.</p>
+            <p className="text-xs text-red-500 mt-1">{t("emailInvalid")}</p>
           ) : (
-            <p className="text-xs text-[#9ca3af] mt-1">Si lo agregas, los clientes verán la opción de escribirte por correo. Déjalo vacío para no mostrarlo.</p>
+            <p className="text-xs text-[#9ca3af] mt-1">{t("emailHelp")}</p>
           )}
         </div>
 
@@ -605,9 +605,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         <div className="rounded-xl bg-[#f4f7fa] border border-[#e5e7eb] p-3.5 flex items-start gap-2.5">
           <Info className="h-4 w-4 text-[#009FD9] shrink-0 mt-0.5" />
           <p className="text-xs text-[#6b7280] leading-relaxed">
-            Los precios se definen por servicio en la pestaña <strong>Servicios</strong>.
-            Así cada uno de tus servicios puede tener su propia tarifa, y los clientes ven
-            el precio correcto de cada uno.
+            {t.rich("priceNote", rich)}
           </p>
         </div>
         {/* Experience is captured per service (in the Servicios tab), not globally. */}
@@ -617,11 +615,11 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
           Aseguradoras only apply to HEALTH categories (es_salud) — a plumber
           has nothing to do with insurance, so we hide the field entirely for
           non-health pros (it isn't part of their profile at all). */}
-      <Section title={isHealthPro ? "Idiomas y aseguradoras" : "Idiomas"} desc="Opcional — ayudan a los clientes a filtrar">
+      <Section title={isHealthPro ? t("secLangInsurers") : t("secLang")} desc={t("secLangDesc")}>
         {/* Languages — defaults to Español; extra languages are an optional bonus */}
         <div>
           <label className="text-sm font-medium text-[#374151] block mb-1.5">
-            Idiomas que hablas <span className="text-[#9ca3af] font-normal">(opcional)</span>
+            {t("languagesSpoken")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
           </label>
           <LanguagesInput value={languages} onChange={(next) => { setLanguages(next); touch(); }} />
         </div>
@@ -630,9 +628,9 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         {isHealthPro && (
           <div>
             <label className="text-sm font-medium text-[#374151] block mb-1.5">
-              Aseguradoras <span className="text-[#9ca3af] font-normal">(opcional)</span>
+              {t("insurers")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
             </label>
-            <p className="text-xs text-[#9ca3af] mb-2">Marca las redes de seguros con las que trabajas, o indica que no trabajas con seguros. Los clientes pueden filtrar por aseguradora.</p>
+            <p className="text-xs text-[#9ca3af] mb-2">{t("insurersHelp")}</p>
             <AseguradorasInput value={insurers} onChange={(next) => { setInsurers(next); touch(); }} />
           </div>
         )}
@@ -643,17 +641,17 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
       {/* Save bar — always visible (auto-save also runs 1.5s after each edit) */}
       <div className="flex items-center gap-3 pt-1">
         <Button onClick={() => handleSave(false)} loading={saving}>
-          {saving ? "Guardando…" : "Guardar cambios"}
+          {saving ? t("saving") : t("save")}
         </Button>
         {autoSaving && (
-          <span className="text-sm text-[#6b7280] font-medium">Guardando automáticamente…</span>
+          <span className="text-sm text-[#6b7280] font-medium">{t("savingAuto")}</span>
         )}
         {!autoSaving && dirty && !saved && (
-          <span className="text-sm text-amber-600 font-medium">Cambios sin guardar</span>
+          <span className="text-sm text-amber-600 font-medium">{t("unsaved")}</span>
         )}
         {saved && (
           <span className="flex items-center gap-1 text-sm text-emerald-600 font-medium">
-            <Check className="h-4 w-4" /> Guardado
+            <Check className="h-4 w-4" /> {t("saved")}
           </span>
         )}
       </div>
