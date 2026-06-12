@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -19,6 +20,7 @@ type FormData = {
 };
 
 function ContactForm() {
+  const t = useTranslations("contacto");
   const { user } = useAuth();
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -41,7 +43,7 @@ function ContactForm() {
       });
       setSubmitted(true);
     } catch {
-      setServerError("Hubo un error al enviar el mensaje. Por favor intenta de nuevo.");
+      setServerError(t("sendError"));
     } finally {
       setLoading(false);
     }
@@ -53,21 +55,21 @@ function ContactForm() {
         <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center text-3xl mb-4">
           ✅
         </div>
-        <h3 className="text-2xl font-bold text-[#1a2744] mb-2">¡Ticket creado!</h3>
+        <h3 className="text-2xl font-bold text-[#1a2744] mb-2">{t("ticketCreated")}</h3>
         {user ? (
           <>
-            <p className="text-gray-500 mb-5">Recibimos tu consulta. Te respondemos por correo y puedes seguir la conversación en tus tickets.</p>
+            <p className="text-gray-500 mb-5">{t("ticketBodyUser")}</p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Link href="/dashboard/cliente?tab=soporte" className="inline-flex items-center justify-center gap-2 bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold px-6 py-3 rounded-full transition-all text-sm">
-                <LifeBuoy className="h-4 w-4" /> Ver mis tickets
+                <LifeBuoy className="h-4 w-4" /> {t("viewMyTickets")}
               </Link>
               <Link href="/dashboard/cliente" className="inline-flex items-center justify-center gap-2 bg-white border border-gray-200 text-[#374151] font-bold px-6 py-3 rounded-full transition-all text-sm hover:bg-gray-50">
-                Ir a mi panel
+                {t("goToPanel")}
               </Link>
             </div>
           </>
         ) : (
-          <p className="text-gray-500">Recibimos tu consulta y te responderemos por correo. <Link href="/login" className="text-[#009FD9] font-semibold hover:underline">Inicia sesión</Link> con ese correo para seguir tus tickets en la plataforma.</p>
+          <p className="text-gray-500">{t("ticketBodyGuestPre")}<Link href="/login" className="text-[#009FD9] font-semibold hover:underline">{t("login")}</Link>{t("ticketBodyGuestPost")}</p>
         )}
       </div>
     );
@@ -84,12 +86,12 @@ function ContactForm() {
       {/* Name */}
       <div>
         <label className="block text-sm font-semibold text-[#1a2744] mb-1.5">
-          Nombre <span className="text-red-400">*</span>
+          {t("name")} <span className="text-red-400">*</span>
         </label>
         <input
-          {...register("name", { required: "El nombre es obligatorio." })}
+          {...register("name", { required: t("errName") })}
           type="text"
-          placeholder="Tu nombre completo"
+          placeholder={t("namePlaceholder")}
           className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30 focus:border-[#009FD9] transition-all bg-gray-50/50 placeholder:text-gray-400"
         />
         {errors.name && (
@@ -100,18 +102,18 @@ function ContactForm() {
       {/* Email */}
       <div>
         <label className="block text-sm font-semibold text-[#1a2744] mb-1.5">
-          Correo electrónico <span className="text-red-400">*</span>
+          {t("email")} <span className="text-red-400">*</span>
         </label>
         <input
           {...register("email", {
-            required: "El correo es obligatorio.",
+            required: t("errEmail"),
             pattern: {
               value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-              message: "Ingresa un correo válido.",
+              message: t("errEmailInvalid"),
             },
           })}
           type="email"
-          placeholder="tucorreo@ejemplo.com"
+          placeholder={t("emailPlaceholder")}
           className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30 focus:border-[#009FD9] transition-all bg-gray-50/50 placeholder:text-gray-400"
         />
         {errors.email && (
@@ -122,17 +124,17 @@ function ContactForm() {
       {/* Subject */}
       <div>
         <label className="block text-sm font-semibold text-[#1a2744] mb-1.5">
-          Asunto <span className="text-red-400">*</span>
+          {t("subject")} <span className="text-red-400">*</span>
         </label>
         <select
-          {...register("subject", { required: "Selecciona un asunto." })}
+          {...register("subject", { required: t("errSubject") })}
           className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30 focus:border-[#009FD9] transition-all bg-gray-50/50 text-gray-700"
         >
-          <option value="">Selecciona una opción</option>
-          <option value="problema">Tengo un problema</option>
-          <option value="profesional">Soy profesional y necesito ayuda</option>
-          <option value="reporte">Quiero reportar un usuario</option>
-          <option value="otro">Otro</option>
+          <option value="">{t("selectOption")}</option>
+          <option value="problema">{t("subjProblem")}</option>
+          <option value="profesional">{t("subjPro")}</option>
+          <option value="reporte">{t("subjReport")}</option>
+          <option value="otro">{t("subjOther")}</option>
         </select>
         {errors.subject && (
           <p className="text-xs text-red-500 mt-1">{errors.subject.message}</p>
@@ -142,18 +144,18 @@ function ContactForm() {
       {/* Message */}
       <div>
         <label className="block text-sm font-semibold text-[#1a2744] mb-1.5">
-          Mensaje <span className="text-red-400">*</span>
+          {t("message")} <span className="text-red-400">*</span>
         </label>
         <textarea
           {...register("message", {
-            required: "El mensaje es obligatorio.",
+            required: t("errMessage"),
             minLength: {
               value: 20,
-              message: "El mensaje debe tener al menos 20 caracteres.",
+              message: t("errMessageMin"),
             },
           })}
           rows={5}
-          placeholder="Describe tu consulta con el mayor detalle posible..."
+          placeholder={t("messagePlaceholder")}
           className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30 focus:border-[#009FD9] transition-all bg-gray-50/50 placeholder:text-gray-400 resize-none"
         />
         {errors.message && (
@@ -169,13 +171,14 @@ function ContactForm() {
         {loading && (
           <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
         )}
-        Enviar mensaje
+        {t("send")}
       </button>
     </form>
   );
 }
 
 export default function ContactoPage() {
+  const t = useTranslations("contacto");
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <LandingNavbar />
@@ -184,13 +187,13 @@ export default function ContactoPage() {
       <section className="pt-32 pb-12 bg-white text-center px-4">
         <FadeInUp>
           <span className="inline-block text-xs font-bold uppercase tracking-widest text-[#009FD9] bg-[#EBF5FB] px-4 py-1.5 rounded-full mb-4">
-            Contacto
+            {t("badge")}
           </span>
           <h1 className="text-4xl sm:text-5xl font-extrabold text-[#1a2744] mb-4 leading-tight">
-            Hablemos.
+            {t("h1")}
           </h1>
           <p className="text-lg text-gray-500 max-w-xl mx-auto">
-            Estamos para ayudarte. Envía un ticket y te respondemos por correo y en tu panel.
+            {t("heroSub")}
           </p>
         </FadeInUp>
       </section>
@@ -203,9 +206,9 @@ export default function ContactoPage() {
             {/* Left: Form */}
             <FadeInUp>
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
-                <h2 className="text-xl font-bold text-[#1a2744] mb-1">Envianos un mensaje</h2>
+                <h2 className="text-xl font-bold text-[#1a2744] mb-1">{t("formTitle")}</h2>
                 <p className="text-sm text-gray-400 mb-6">
-                  Completa el formulario y te respondemos pronto.
+                  {t("formSub")}
                 </p>
                 <ContactForm />
               </div>
@@ -223,24 +226,24 @@ export default function ContactoPage() {
                       </svg>
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-sm font-bold text-[#1a2744] mb-0.5">Abre un ticket de soporte</h3>
-                      <p className="text-xs text-gray-400 mb-3">La mejor forma de que demos seguimiento — te respondemos por correo y en tu panel.</p>
+                      <h3 className="text-sm font-bold text-[#1a2744] mb-0.5">{t("ticketCardTitle")}</h3>
+                      <p className="text-xs text-gray-400 mb-3">{t("ticketCardBody")}</p>
                       <a
                         href="/soporte"
                         className="inline-flex items-center justify-center gap-1.5 bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 rounded-full transition-all"
                       >
-                        Abrir ticket →
+                        {t("openTicket")}
                       </a>
                       {/* Secondary, discreet: WhatsApp */}
                       <p className="mt-3 text-xs text-[#9ca3af]">
-                        ¿Prefieres WhatsApp?{" "}
+                        {t("preferWhatsapp")}{" "}
                         <a
                           href={SUPPORT_WHATSAPP_URL}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 font-medium text-[#1ebe5d] hover:underline"
                         >
-                          <WhatsAppIcon className="h-3.5 w-3.5" /> Escríbenos
+                          <WhatsAppIcon className="h-3.5 w-3.5" /> {t("writeUs")}
                         </a>
                       </p>
                     </div>
@@ -257,9 +260,9 @@ export default function ContactoPage() {
                       </svg>
                     </div>
                     <div>
-                      <h3 className="text-sm font-bold text-[#1a2744] mb-0.5">Horario de atención</h3>
-                      <p className="text-sm text-gray-500">Lunes a Viernes</p>
-                      <p className="text-sm font-semibold text-[#1a2744]">8:00 AM – 6:00 PM</p>
+                      <h3 className="text-sm font-bold text-[#1a2744] mb-0.5">{t("hoursTitle")}</h3>
+                      <p className="text-sm text-gray-500">{t("hoursDays")}</p>
+                      <p className="text-sm font-semibold text-[#1a2744]">{t("hoursRange")}</p>
                     </div>
                   </div>
                 </div>
@@ -274,9 +277,9 @@ export default function ContactoPage() {
                       </svg>
                     </div>
                     <div>
-                      <h3 className="text-sm font-bold text-[#1a2744] mb-0.5">Ubicación</h3>
-                      <p className="text-sm text-gray-500">San José, Costa Rica</p>
-                      <p className="text-xs text-gray-400 mt-0.5">🇨🇷 Empresa 100% costarricense</p>
+                      <h3 className="text-sm font-bold text-[#1a2744] mb-0.5">{t("locationTitle")}</h3>
+                      <p className="text-sm text-gray-500">{t("locationCity")}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{t("locationNote")}</p>
                     </div>
                   </div>
                 </div>
