@@ -200,6 +200,19 @@ A professional is always **ONE card** (`rounded-2xl bg-white border`, never spli
   - **Do NOT** revert to hiding the actions or showing a bare "Este es tu perfil" link in place of the buttons — that made the profile look broken to its owner.
 - The pro's own projects are still **excluded from the "propose" feed** (a project simply not being listed doesn't look broken, unlike missing profile buttons). Always keep the **server guard** too (booking + proposals APIs reject self-actions) — UI blocking is not enough.
 
+### Price — ONE place (Servicios), clearer label
+- **Price lives ONLY in the Servicios tab** (per-service: amount + type). "Mi perfil" no longer asks for price — it shows a short note pointing to Servicios. The /buscar card + profile "Desde" price is **derived from the services** via `deriveDisplayPricing(services, legacyPricing, hourlyRate)` (cheapest priced service; "a consultar" if services exist but none priced; legacy `pricing`/`hourly_rate` as fallback so no existing pro loses a displayed price). Do not re-add a profile-level price input.
+- **Label:** the `a_convenir` type now displays as **"Precio a consultar"** everywhere (clearer than "a convenir" for all CR users). Keep the internal type id `a_convenir` — only the display string changed.
+
+### Company / brand vs personal name hierarchy
+- When a pro has a **business/brand name** (`business_name`), it **leads** as the prominent title (clients recognize the brand) and the **personal name becomes a muted subtitle** (`text-[#6b7280]`) directly below — on both the /buscar card and the profile header. No business name → the personal name is the prominent title and there's no subtitle. Keeps cards uniform height. Helper vars on the card: `brandPrimary` / `brandSecondary`.
+
+### Profile completion (professional)
+- The pro dashboard's **Mi perfil** tab shows a `ProfileCompletion` card (progress ring + % + benefit-framed missing items that deep-link to the right tab). Computed by `computeCompletion(pro)` — **context-aware**: counts only fields that APPLY. Aseguradoras count **only for health pros** (`anyHealthCategory`); Spanish-only languages and "I have none" are **never penalized** (excluded, not marked missing). Items: photo, bio (≥30 chars), ≥1 service, location/coverage, WhatsApp, identity verification (+ aseguradoras for health). 100% shows a celebratory complete state. Frame each prompt by its benefit, never as nagging.
+
+### No self-report
+- A professional must **not** be able to **Reportar** their own profile. On their own profile the "Reportar perfil" item is replaced by a muted **"Este es tu perfil"** row (with a lock), consistent with the show-but-block self-service pattern.
+
 ### Separate call vs WhatsApp numbers
 - A pro may set an **optional separate "Número para llamadas"** distinct from their **"Número de WhatsApp"** (`professionals.call_phone`). **If the call number is empty, use the WhatsApp number for calls.** The **WhatsApp** button always uses `whatsapp`; the **"Llamar"/call** action uses `callPhone ?? whatsapp`. Validate both as phone numbers (`PhoneInput`).
 

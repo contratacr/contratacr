@@ -7,11 +7,10 @@ import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guar
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { LanguagesInput } from "@/components/ui/languages-input";
-import { PriceInput } from "@/components/ui/price-input";
 import { WorkplacesPicker, type Workplace } from "@/components/maps/workplaces-picker";
 import { CoverageAreaSelector } from "@/components/maps/coverage-area-selector";
 import { createClient } from "@/lib/supabase/client";
-import { Camera, Check, X, Plus, Truck, MapPin, ChevronDown, Globe, ShieldCheck, Lock, Award } from "lucide-react";
+import { Camera, Check, X, Plus, Truck, MapPin, ChevronDown, Globe, ShieldCheck, Lock, Award, Info } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { computeSearchAreas, primaryArea, type CoverageArea } from "@/lib/location";
 import { AseguradorasInput } from "@/components/ui/aseguradoras-input";
@@ -20,7 +19,6 @@ import { CategorySearch } from "@/components/ui/category-search";
 import { getCategoryLabel, anyHealthCategory } from "@/lib/data/categories";
 import type { Certification } from "@/components/professionals/professional-card";
 import { cn } from "@/lib/utils";
-import { PRICING_TYPES, type PricingTier, type PricingType } from "@/lib/pricing";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ProData = Record<string, any>;
@@ -77,9 +75,6 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
   // Aseguradoras only apply to health (es_salud) professionals.
   const isHealthPro = anyHealthCategory(professions);
   const [addCat, setAddCat] = useState("");
-  const [pricing, setPricing] = useState<PricingTier[]>(
-    Array.isArray(initial.pricing) ? initial.pricing : []
-  );
   const [coverageAreas, setCoverageAreas] = useState<CoverageArea[]>(
     Array.isArray(initial.coverage_areas) ? initial.coverage_areas : []
   );
@@ -134,18 +129,6 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
   }
   function removeProfession(id: string) {
     setProfessions((prev) => (prev.length > 1 ? prev.filter((p) => p !== id) : prev));
-    touch();
-  }
-  function addTier() {
-    setPricing((prev) => [...prev, { id: `pr_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, type: "por_hora", amount: undefined }]);
-    touch();
-  }
-  function updateTier(id: string, patch: Partial<PricingTier>) {
-    setPricing((prev) => prev.map((p) => (p.id === id ? { ...p, ...patch } : p)));
-    touch();
-  }
-  function removeTier(id: string) {
-    setPricing((prev) => prev.filter((p) => p.id !== id));
     touch();
   }
   function addCertification(profession?: string) {
@@ -207,11 +190,9 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
     const supabase = createClient();
 
     try {
-      // Keep legacy hourly_rate in sync with a "por_hora" tier for back-compat.
-      const hourTier = pricing.find((p) => p.type === "por_hora" && p.amount);
-      const cleanPricing = pricing
-        .filter((p) => p.type === "a_convenir" || p.amount != null)
-        .map((p) => ({ ...p, amount: p.type === "a_convenir" ? undefined : p.amount }));
+      // Price is set per-service in the Servicios tab now (single source of truth).
+      // Mi perfil no longer writes `pricing`/`hourly_rate` — existing DB values are
+      // left untouched as a display fallback for pros who haven't moved over yet.
 
       // Only keep workplaces when "fixed" is selected; coverage when "mobile".
       const effectiveWorkplaces = serviceFixed ? workplaces : [];
@@ -227,8 +208,6 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
       const baseUpdate: Record<string, unknown> = {
         bio,
         whatsapp,
-        hourly_rate: hourTier?.amount ?? null,
-        pricing: cleanPricing,
         professions,
         languages,
         service_type: serviceType,
@@ -582,39 +561,14 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
           <p className="text-xs text-[#9ca3af] mt-1">Si lo dejas vacío, usamos tu número de WhatsApp también para las llamadas.</p>
         </div>
 
-        {/* Pricing tiers */}
-        <div>
-          <label className="text-sm font-medium text-[#374151] block mb-1.5">Precios <span className="text-[#9ca3af] font-normal">(opcional)</span></label>
-          <div className="flex flex-col gap-2">
-            {pricing.map((tier) => (
-              <div key={tier.id} className="flex items-center gap-2">
-                <select
-                  value={tier.type}
-                  onChange={(e) => updateTier(tier.id, { type: e.target.value as PricingType })}
-                  className="h-10 px-3 rounded-xl border border-[#e5e7eb] bg-white text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
-                >
-                  {PRICING_TYPES.map((pt) => (
-                    <option key={pt.value} value={pt.value}>{pt.label}</option>
-                  ))}
-                </select>
-                {tier.type !== "a_convenir" && (
-                  <div className="flex-1">
-                    <PriceInput
-                      placeholder="10000"
-                      value={tier.amount != null ? String(tier.amount) : ""}
-                      onChange={(v) => updateTier(tier.id, { amount: v ? Number(v) : undefined })}
-                    />
-                  </div>
-                )}
-                <button type="button" onClick={() => removeTier(tier.id)} className="h-9 w-9 rounded-lg flex items-center justify-center text-[#9ca3af] hover:text-red-500 hover:bg-red-50 transition-colors shrink-0" aria-label="Quitar tarifa">
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            ))}
-            <button type="button" onClick={addTier} className="inline-flex items-center gap-1.5 text-sm font-medium text-[#009FD9] hover:underline self-start">
-              <Plus className="h-4 w-4" /> Agregar tarifa
-            </button>
-          </div>
+        {/* Price lives in Servicios now — one place only, to avoid confusion. */}
+        <div className="rounded-xl bg-[#f4f7fa] border border-[#e5e7eb] p-3.5 flex items-start gap-2.5">
+          <Info className="h-4 w-4 text-[#009FD9] shrink-0 mt-0.5" />
+          <p className="text-xs text-[#6b7280] leading-relaxed">
+            Los precios se definen por servicio en la pestaña <strong>Servicios</strong>.
+            Así cada uno de tus servicios puede tener su propia tarifa, y los clientes ven
+            el precio correcto de cada uno.
+          </p>
         </div>
         {/* Experience is captured per service (in the Servicios tab), not globally. */}
       </Section>

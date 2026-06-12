@@ -244,9 +244,10 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                   </Avatar>
 
                   <div>
-                    <h1 className="text-xl font-bold text-[#111827]">{professional.fullName}</h1>
-                    {professional.businessName && (
-                      <p className="text-sm font-medium text-[#009FD9] mt-0.5">{professional.businessName}</p>
+                    {/* Brand leads when present; personal name as muted subtitle. */}
+                    <h1 className="text-xl font-bold text-[#111827]">{professional.businessName?.trim() || professional.fullName}</h1>
+                    {professional.businessName?.trim() && (
+                      <p className="text-sm font-medium text-[#6b7280] mt-0.5">{professional.fullName}</p>
                     )}
                     <div className="flex flex-wrap gap-1 justify-center mt-1">
                       {(professional.professions && professional.professions.length > 0
@@ -388,13 +389,21 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                         <Share2 className="h-4 w-4" />
                         Compartir perfil
                       </button>
-                      <button
-                        className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors"
-                        onClick={() => { setDropdownOpen(false); setReportOpen(true); }}
-                      >
-                        <Flag className="h-4 w-4" />
-                        Reportar perfil
-                      </button>
+                      {/* No self-report: a pro can't report their own profile. */}
+                      {isOwn ? (
+                        <div className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-[#9ca3af]">
+                          <Lock className="h-4 w-4" />
+                          Este es tu perfil
+                        </div>
+                      ) : (
+                        <button
+                          className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors"
+                          onClick={() => { setDropdownOpen(false); setReportOpen(true); }}
+                        >
+                          <Flag className="h-4 w-4" />
+                          Reportar perfil
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>

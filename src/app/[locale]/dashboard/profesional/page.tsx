@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ProfileEditor } from "@/components/dashboard/pro/profile-editor";
+import { ProfileCompletion } from "@/components/dashboard/pro/profile-completion";
 import { PhotoGallery } from "@/components/dashboard/pro/photo-gallery";
 import { AvailabilityEditor } from "@/components/dashboard/pro/availability-editor";
 import { ServicesEditor } from "@/components/dashboard/pro/services-editor";
@@ -309,12 +310,15 @@ export default function ProDashboardPage() {
                 </CardHeader>
                 <CardContent className="px-6 pb-6">
                   {activeTab === "profile" && (
-                    <ProfileEditor
-                      professionalId={pro.id}
-                      profileId={user!.id}
-                      initial={pro}
-                      onSaved={handleSaved}
-                    />
+                    <>
+                      <ProfileCompletion pro={pro} onGo={(tab) => setTab(tab as Tab)} />
+                      <ProfileEditor
+                        professionalId={pro.id}
+                        profileId={user!.id}
+                        initial={pro}
+                        onSaved={handleSaved}
+                      />
+                    </>
                   )}
                   {activeTab === "services" && (
                     <ServicesEditor

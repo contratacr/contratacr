@@ -1,4 +1,5 @@
 import type { ProfessionalCardData, Certification } from "@/components/professionals/professional-card";
+import { deriveDisplayPricing } from "@/lib/pricing";
 import { getMatchingCategoryIds } from "@/lib/data/categories";
 import { getProvinceById, PROVINCE_CENTROIDS, haversineKm } from "@/lib/data/cr-geography";
 
@@ -98,7 +99,7 @@ export async function searchProfessionals(
           .select(
             `id, profile_id, slug, hourly_rate, is_verified, is_featured, is_available,
              rating_avg, review_count, bio, whatsapp, years_experience, portfolio_urls,
-             category_id, professions, pricing, lat, lng, service_type, availability_public, contact_preference,
+             category_id, professions, pricing, services, lat, lng, service_type, availability_public, contact_preference,
              business_name, workplaces, verification_status${modern ? ", no_cr_id, insurance_networks, coverage_areas, coverage_provincias, coverage_country, allow_phone_call, certifications, call_phone" : ""},
              profiles(full_name, avatar_url${modern ? ", is_disabled" : ""}),
              provincias(id, name),
@@ -212,7 +213,9 @@ export async function searchProfessionals(
         categoryId: row.category_id ?? "",
         categoryIcon: "",
         professions: (row.professions as string[]) ?? (row.category_id ? [row.category_id] : []),
-        pricing: (row.pricing as ProfessionalCardData["pricing"]) ?? [],
+        // Price now lives ONLY in Servicios — derive the card "Desde" from the
+        // services (legacy profile-level pricing/hourly_rate kept as fallback).
+        pricing: deriveDisplayPricing(row.services, row.pricing as ProfessionalCardData["pricing"], row.hourly_rate),
         bio: row.bio,
         whatsapp: row.whatsapp,
         provinceName: row.provincias?.name ?? "",
@@ -451,8 +454,9 @@ export async function getProfessionalBySlug(
         categoryIcon: "",
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         professions: ((pro as any).professions as string[]) ?? ((pro as any).category_id ? [(pro as any).category_id] : []),
+        // Price derived from Servicios (single source), legacy fields as fallback.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        pricing: ((pro as any).pricing as ProfessionalCardData["pricing"]) ?? [],
+        pricing: deriveDisplayPricing((pro as any).services, (pro as any).pricing as ProfessionalCardData["pricing"], (pro as any).hourly_rate),
         bio: pro.bio,
         whatsapp: pro.whatsapp,
         provinceName: (pro.provincias as any)?.name ?? "",

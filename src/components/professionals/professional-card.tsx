@@ -108,6 +108,11 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
     return l.startsWith("categories.") ? getCategoryLabel(id) : l;
   };
   const isPrivate = professional.availabilityPublic === false;
+  // Brand hierarchy: company name leads (clients recognize the brand), personal
+  // name becomes the muted subtitle. No company → personal name leads, no subtitle.
+  const businessName = professional.businessName?.trim();
+  const brandPrimary = businessName || professional.fullName;
+  const brandSecondary = businessName ? professional.fullName : "";
   const categoryName = catLabel(professional.categoryId);
   const allProfessions = (professional.professions && professional.professions.length > 0
     ? professional.professions
@@ -188,7 +193,10 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
                   name on mobile (see badge under the name) to free the space. */}
               <div className="flex items-start gap-2 min-w-0 pr-9 md:pr-0">
                 <Link href={`/profesionales/${professional.slug}`} className="min-w-0 flex-1">
-                  <h3 className="font-bold text-[#111827] text-[15px] leading-tight hover:text-[#009FD9] transition-colors line-clamp-2 md:line-clamp-1">{professional.fullName}</h3>
+                  {/* Company/brand on top (what clients recognize) when present;
+                      else the personal name. The person's name moves to a muted
+                      subtitle below so the brand leads but the pro is still clear. */}
+                  <h3 className="font-bold text-[#111827] text-[15px] leading-tight hover:text-[#009FD9] transition-colors line-clamp-2 md:line-clamp-1">{brandPrimary}</h3>
                 </Link>
 
                 {/* Verified mark — inline beside the name on desktop only */}
@@ -209,8 +217,8 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
               {/* Verified mark — under the name on mobile only (frees the top line) */}
               <div className="md:hidden -mt-0.5">{verifiedBadge}</div>
 
-              {professional.businessName && (
-                <p className="text-[11px] font-medium text-[#009FD9] truncate -mt-0.5">{professional.businessName}</p>
+              {brandSecondary && (
+                <p className="text-[11px] font-medium text-[#6b7280] truncate -mt-0.5">{brandSecondary}</p>
               )}
 
               {/* Profession tags — soft, muted, few (categories, not trust). */}
