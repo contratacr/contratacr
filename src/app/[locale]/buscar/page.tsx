@@ -264,16 +264,20 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                           href={buildPageUrl(safePage - 1)}
                           className="flex items-center gap-1 px-4 py-2 rounded-xl border border-[#e5e7eb] bg-white text-sm font-medium text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] transition-colors"
                         >
-                          <ChevronLeft className="h-4 w-4" /> Anterior
+                          <ChevronLeft className="h-4 w-4" /> {t("pagination.prev")}
                         </Link>
                       ) : (
                         <span className="flex items-center gap-1 px-4 py-2 rounded-xl border border-[#e5e7eb] bg-[#f9fafb] text-sm font-medium text-[#d1d5db] cursor-not-allowed">
-                          <ChevronLeft className="h-4 w-4" /> Anterior
+                          <ChevronLeft className="h-4 w-4" /> {t("pagination.prev")}
                         </span>
                       )}
 
                       <span className="text-sm text-[#6b7280] px-2">
-                        Página <strong className="text-[#111827]">{safePage}</strong> de <strong className="text-[#111827]">{totalPages}</strong>
+                        {t.rich("pagination.pageOf", {
+                          page: safePage,
+                          total: totalPages,
+                          b: (c) => <strong className="text-[#111827]">{c}</strong>,
+                        })}
                       </span>
 
                       {safePage < totalPages ? (
@@ -281,11 +285,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                           href={buildPageUrl(safePage + 1)}
                           className="flex items-center gap-1 px-4 py-2 rounded-xl border border-[#e5e7eb] bg-white text-sm font-medium text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] transition-colors"
                         >
-                          Siguiente <ChevronRight className="h-4 w-4" />
+                          {t("pagination.next")} <ChevronRight className="h-4 w-4" />
                         </Link>
                       ) : (
                         <span className="flex items-center gap-1 px-4 py-2 rounded-xl border border-[#e5e7eb] bg-[#f9fafb] text-sm font-medium text-[#d1d5db] cursor-not-allowed">
-                          Siguiente <ChevronRight className="h-4 w-4" />
+                          {t("pagination.next")} <ChevronRight className="h-4 w-4" />
                         </span>
                       )}
                     </div>

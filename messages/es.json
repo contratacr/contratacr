@@ -152,7 +152,12 @@
     "resultsInCR": "{count} profesionales en Costa Rica",
     "noResults": {
       "title": "No encontramos resultados",
-      "desc": "Intenta con otra categoría o expandí la zona de búsqueda."
+      "desc": "Intenta con otra categoría o amplía la zona de búsqueda."
+    },
+    "pagination": {
+      "prev": "Anterior",
+      "next": "Siguiente",
+      "pageOf": "Página <b>{page}</b> de <b>{total}</b>"
     },
     "filters": {
       "title": "Filtros",
@@ -164,7 +169,17 @@
       "canton": "Cantón",
       "allCantons": "Todos los cantones",
       "selectProvince": "Selecciona provincia",
-      "sortBy": "Ordenar por"
+      "sortBy": "Ordenar por",
+      "searchPlaceholder": "Busca un servicio…",
+      "clearSearch": "Limpiar búsqueda",
+      "insurer": "Aseguradora",
+      "anyInsurer": "Cualquiera",
+      "removeInsurer": "Quitar filtro de aseguradora",
+      "nearMe": "Buscar profesionales cerca de mí",
+      "nearMeActive": "Cerca de mí (activo)",
+      "verifiedOnly": "Solo identidad verificada",
+      "geoUnsupported": "Tu navegador no permite ubicación. Usa la búsqueda por provincia o cantón.",
+      "geoFailed": "No pudimos obtener tu ubicación. Puedes buscar por provincia y cantón."
     },
     "sort": {
       "rating": "Mejor calificados",
@@ -172,7 +187,8 @@
       "priceAsc": "Precio (de menor a mayor)",
       "priceDesc": "Precio: mayor a menor",
       "newest": "Más recientes",
-      "availability": "Disponibilidad inmediata"
+      "availability": "Disponibilidad inmediata",
+      "cercania": "Cercanía"
     }
   },
   "hero": {
@@ -189,7 +205,10 @@
     "viewProfile": "Ver perfil",
     "whatsapp": "WhatsApp",
     "featured": "DESTACADO",
-    "available": "Disponible"
+    "available": "Disponible",
+    "coverageCountry": "Atiende en todo el país",
+    "coverageYourLocation": "Se desplaza a tu ubicación",
+    "coverageAreas": "Se desplaza en {areas}"
   },
   "profile": {
     "back": "Volver a resultados",

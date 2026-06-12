@@ -77,7 +77,7 @@ export function SearchFilters() {
       return;
     }
     if (typeof navigator === "undefined" || !navigator.geolocation) {
-      setGeoError("Tu navegador no permite ubicación. Usa la búsqueda por provincia/cantón.");
+      setGeoError(t("filters.geoUnsupported"));
       return;
     }
     setGeoLoading(true);
@@ -93,7 +93,7 @@ export function SearchFilters() {
       },
       () => {
         setGeoLoading(false);
-        setGeoError("No pudimos obtener tu ubicación. Puedes buscar por provincia y cantón.");
+        setGeoError(t("filters.geoFailed"));
       },
       { enableHighAccuracy: false, timeout: 8000, maximumAge: 300000 }
     );
@@ -143,11 +143,11 @@ export function SearchFilters() {
             value={query}
             onChange={(e) => handleQueryChange(e.target.value)}
             onKeyDown={handleQueryKeyDown}
-            placeholder="Busca un servicio…"
+            placeholder={t("filters.searchPlaceholder")}
             className="w-full rounded-xl border border-[#e5e7eb] bg-white py-2 pl-9 pr-9 text-sm text-[#111827] placeholder-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition"
           />
           {query && (
-            <button onClick={clearQuery} className="absolute right-3 text-[#9ca3af] hover:text-[#374151] transition-colors" aria-label="Limpiar búsqueda">
+            <button onClick={clearQuery} className="absolute right-3 text-[#9ca3af] hover:text-[#374151] transition-colors" aria-label={t("filters.clearSearch")}>
               <X className="h-4 w-4" />
             </button>
           )}
@@ -206,19 +206,19 @@ export function SearchFilters() {
               <SelectItem value="rating">{t("sort.rating")}</SelectItem>
               <SelectItem value="priceAsc">{t("sort.priceAsc")}</SelectItem>
               <SelectItem value="availability">{t("sort.availability")}</SelectItem>
-              <SelectItem value="cercania">Cercanía</SelectItem>
+              <SelectItem value="cercania">{t("sort.cercania")}</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         <div>
-          <label className="text-xs font-medium text-[#6b7280] mb-1 block">Aseguradora</label>
+          <label className="text-xs font-medium text-[#6b7280] mb-1 block">{t("filters.insurer")}</label>
           {/* No "Todas" option: by default NONE is selected (no insurance filter).
               Pick an insurer to filter; tap the X to clear it again. */}
           <div className="flex items-center gap-1.5">
             <Select value={aseguradora || undefined} onValueChange={(v) => { setAseguradora(v); applyFilters({ aseguradora: v }); }}>
               <SelectTrigger className="text-sm flex-1">
-                <SelectValue placeholder="Cualquiera">{aseguradora ? insurerOptions.find((i) => i.id === aseguradora)?.label : "Cualquiera"}</SelectValue>
+                <SelectValue placeholder={t("filters.anyInsurer")}>{aseguradora ? insurerOptions.find((i) => i.id === aseguradora)?.label : t("filters.anyInsurer")}</SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {insurerOptions.map((i) => <SelectItem key={i.id} value={i.id}>{i.label}</SelectItem>)}
@@ -229,7 +229,7 @@ export function SearchFilters() {
                 type="button"
                 onClick={() => { setAseguradora(""); applyFilters({ aseguradora: "" }); }}
                 className="shrink-0 rounded-lg border border-[#e5e7eb] p-2 text-[#9ca3af] hover:text-[#374151] hover:border-[#009FD9] transition-colors"
-                aria-label="Quitar filtro de aseguradora"
+                aria-label={t("filters.removeInsurer")}
               >
                 <X className="h-4 w-4" />
               </button>
@@ -251,7 +251,7 @@ export function SearchFilters() {
           }`}
         >
           {geoLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MapPin className="h-3.5 w-3.5" />}
-          {geoActive ? "Cerca de mí (activo)" : "Buscar profesionales cerca de mí"}
+          {geoActive ? t("filters.nearMeActive") : t("filters.nearMe")}
         </button>
 
         <button
@@ -267,7 +267,7 @@ export function SearchFilters() {
             <span className={`h-2.5 w-2.5 rounded-full bg-white transition-transform ${verifiedOnly ? "translate-x-3" : "translate-x-0.5"}`} />
           </span>
           <ShieldCheck className="h-3.5 w-3.5" />
-          Solo identidad verificada
+          {t("filters.verifiedOnly")}
         </button>
 
         {geoError && <span className="text-xs text-[#b45309]">{geoError}</span>}

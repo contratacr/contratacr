@@ -78,14 +78,18 @@ export type ProfessionalCardData = {
 };
 
 // Human label for the pro's actual travel coverage, e.g. "Atiende en todo el país",
-// "Se desplaza en Alajuela", "Se desplaza en Atenas, Escazú".
-function coverageLabel(c?: ProfessionalCardData["coverage"]): string {
-  if (c?.country) return "Atiende en todo el país";
+// "Se desplaza en Alajuela", "Se desplaza en Atenas, Escazú". Locale-aware via the
+// `card` translator passed from the (async) ProfessionalCard.
+function coverageLabel(
+  c: ProfessionalCardData["coverage"] | undefined,
+  tCard: (key: string, values?: Record<string, string>) => string
+): string {
+  if (c?.country) return tCard("coverageCountry");
   const areas = [...(c?.provincias ?? []), ...(c?.cantones ?? [])];
-  if (areas.length === 0) return "Se desplaza a tu ubicación";
+  if (areas.length === 0) return tCard("coverageYourLocation");
   const shown = areas.slice(0, 3).join(", ");
   const extra = areas.length > 3 ? ` +${areas.length - 3}` : "";
-  return `Se desplaza en ${shown}${extra}`;
+  return tCard("coverageAreas", { areas: `${shown}${extra}` });
 }
 
 interface ProfessionalCardProps {
@@ -170,7 +174,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
   const fixedText = placeLabels.length > 0
     ? `${placeLabels[0]}${placeLabels.length > 1 ? ` +${placeLabels.length - 1}` : ""}`
     : [professional.provinceName, professional.cantonName].filter(Boolean).join(", ");
-  const mobileText = professional.serviceType?.includes("mobile") ? coverageLabel(professional.coverage) : "";
+  const mobileText = professional.serviceType?.includes("mobile") ? coverageLabel(professional.coverage, tCard) : "";
 
   return (
     // Content-driven height with a floor (md:min-h): simple cards stay compact,

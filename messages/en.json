@@ -154,6 +154,11 @@
       "title": "No results found",
       "desc": "Try a different category or expand your search area."
     },
+    "pagination": {
+      "prev": "Previous",
+      "next": "Next",
+      "pageOf": "Page <b>{page}</b> of <b>{total}</b>"
+    },
     "filters": {
       "title": "Filters",
       "clear": "Clear",
@@ -164,7 +169,17 @@
       "canton": "Canton",
       "allCantons": "All cantons",
       "selectProvince": "Select province first",
-      "sortBy": "Sort by"
+      "sortBy": "Sort by",
+      "searchPlaceholder": "Search for a service…",
+      "clearSearch": "Clear search",
+      "insurer": "Insurer",
+      "anyInsurer": "Any",
+      "removeInsurer": "Remove insurer filter",
+      "nearMe": "Find professionals near me",
+      "nearMeActive": "Near me (on)",
+      "verifiedOnly": "Verified identity only",
+      "geoUnsupported": "Your browser doesn't allow location. Use the province or cantón search.",
+      "geoFailed": "We couldn't get your location. You can search by province and cantón."
     },
     "sort": {
       "rating": "Best rated",
@@ -172,7 +187,8 @@
       "priceAsc": "Price: low to high",
       "priceDesc": "Price: high to low",
       "newest": "Newest",
-      "availability": "Immediate availability"
+      "availability": "Immediate availability",
+      "cercania": "Proximity"
     }
   },
   "hero": {
@@ -189,7 +205,10 @@
     "viewProfile": "View profile",
     "whatsapp": "WhatsApp",
     "featured": "FEATURED",
-    "available": "Available"
+    "available": "Available",
+    "coverageCountry": "Serves the whole country",
+    "coverageYourLocation": "Travels to your location",
+    "coverageAreas": "Travels in {areas}"
   },
   "profile": {
     "back": "Back to results",
