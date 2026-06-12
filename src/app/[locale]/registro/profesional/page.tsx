@@ -123,13 +123,14 @@ function PhotoPicker({
   onFile: (f: File) => void;
   onRemove: () => void;
 }) {
+  const t = useTranslations("registration.pro");
   const ref = useRef<HTMLInputElement>(null);
   return (
     <div className="flex flex-col items-center gap-3 mb-4">
       {preview ? (
         <img
           src={preview}
-          alt="Foto de perfil"
+          alt={t("photoAlt")}
           className="h-24 w-24 rounded-full object-cover border-2 border-[#e5e7eb]"
         />
       ) : (
@@ -141,15 +142,15 @@ function PhotoPicker({
       {preview ? (
         <div className="flex items-center gap-2">
           <Button type="button" variant="outline" size="sm" onClick={() => ref.current?.click()}>
-            <Camera className="h-4 w-4" /> Cambiar foto
+            <Camera className="h-4 w-4" /> {t("photoChange")}
           </Button>
           <Button type="button" variant="outline" size="sm" onClick={onRemove} className="border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600">
-            <X className="h-4 w-4" /> Eliminar
+            <X className="h-4 w-4" /> {t("photoRemove")}
           </Button>
         </div>
       ) : (
         <Button type="button" variant="outline" size="sm" onClick={() => ref.current?.click()}>
-          <Camera className="h-4 w-4" /> Agregar foto
+          <Camera className="h-4 w-4" /> {t("photoAdd")}
         </Button>
       )}
 
@@ -171,10 +172,11 @@ function PhotoPicker({
 // Routes the account to the admin EXCEPTIONS queue ("pendiente de revisión") where
 // the admin reviews whatever document they have (passport, DIMEX in progress).
 function NoCrIdToggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
+  const t = useTranslations("registration.pro");
   return (
     <label className="flex items-start gap-2.5 cursor-pointer text-sm text-[#374151]">
       <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[#009FD9]" />
-      <span>No tengo identificación costarricense <span className="text-[#9ca3af]">(extranjero/a, pasaporte o DIMEX en trámite)</span></span>
+      <span>{t("noCrId")} <span className="text-[#9ca3af]">{t("noCrIdSub")}</span></span>
     </label>
   );
 }
@@ -184,31 +186,31 @@ function NoCrIdFields({
 }: {
   fullName: string; onFullName: (v: string) => void; note: string; onNote: (v: string) => void; nameError?: string;
 }) {
+  const t = useTranslations("registration.pro");
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-start gap-2 rounded-xl border border-[#fde68a] bg-[#fffbeb] p-3 text-xs text-[#92400e]">
         <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
         <span>
-          Sin cédula costarricense tu cuenta queda <strong>pendiente de revisión</strong>. Un agente revisará tu
-          documento (pasaporte, DIMEX en trámite) y aprobará tu identidad. Puedes usar la plataforma mientras tanto.
+          {t.rich("noCrIdNotice", { b: (c) => <strong>{c}</strong> })}
         </span>
       </div>
       <Input
-        label={<>Nombre completo <span className="text-red-500">*</span></>}
-        placeholder="Tal como aparece en tu pasaporte / documento"
+        label={<>{t("manualName")} <span className="text-red-500">*</span></>}
+        placeholder={t("manualNameHint")}
         value={fullName}
         onChange={(e) => onFullName(e.target.value)}
         error={nameError}
       />
       <div>
         <label className="text-sm font-medium text-[#374151] block mb-1.5">
-          Tu documento <span className="text-[#9ca3af] font-normal">(opcional)</span>
+          {t("yourDocument")} <span className="text-[#9ca3af] font-normal">{t("optionalParen")}</span>
         </label>
         <textarea
           value={note}
           onChange={(e) => onNote(e.target.value)}
           rows={2}
-          placeholder="Ej: Pasaporte de Nicaragua N° ..., o DIMEX en trámite N° ..."
+          placeholder={t("idDocNotePlaceholder")}
           className="w-full rounded-xl border border-[#e5e7eb] bg-white px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
         />
       </div>
@@ -420,22 +422,22 @@ export default function RegisterProfessionalPage() {
 
   function onStep1(data: Step1Data) {
     if (emailCheck.taken) {
-      form1.setError("email", { message: "Este correo ya está registrado. Inicia sesión." });
+      form1.setError("email", { message: t("errEmailTaken") });
       return;
     }
     // Cédula format required UNLESS the pro has no CR identification OR flagged the
     // padrón match as "not mine" (both → manual review; the cédula isn't stored).
     if (!noCrId && !identityMismatch && !validateCedulaFormat(data.cedula ?? "")) {
-      form1.setError("cedula", { message: "Formato inválido. CR: 9 dígitos · DIMEX: 11-12 · NITE: 10." });
+      form1.setError("cedula", { message: t("errIdFormat") });
       return;
     }
     if (!noCrId && !identityMismatch && cedulaCheck.taken) {
-      form1.setError("cedula", { message: "Esta cédula ya está registrada en ContrataCR." });
+      form1.setError("cedula", { message: t("errIdTaken") });
       return;
     }
     // Manual-review cases still need a typed name.
     if ((noCrId || identityMismatch) && (data.fullName ?? "").trim().length < 3) {
-      form1.setError("fullName", { message: "Ingresa tu nombre completo." });
+      form1.setError("fullName", { message: t("errNameRequired") });
       return;
     }
     setStep1Data(data);
@@ -445,35 +447,35 @@ export default function RegisterProfessionalPage() {
   function onStep2(data: Step2Data) {
     // The WhatsApp number must match the exact digit length of its country.
     if (!isPhoneComplete(data.whatsapp)) {
-      form2.setError("whatsapp", { message: "Ingresa un número de teléfono completo para el país seleccionado." });
+      form2.setError("whatsapp", { message: t("errPhoneIncomplete") });
       return;
     }
     if (!serviceMobile && !serviceFixed) {
-      setServiceTypeError("Selecciona al menos un tipo de servicio");
+      setServiceTypeError(t("errServiceType"));
       return;
     }
     // Location must come from at least one pin (fixed) or coverage area (mobile).
     if (serviceFixed && workplaces.length === 0) {
-      setLocationError("Agrega al menos un lugar de trabajo en el mapa.");
+      setLocationError(t("errWorkplace"));
       return;
     }
     if (serviceMobile && coverageAreas.length === 0) {
-      setLocationError("Agrega al menos una zona a la que te desplazas.");
+      setLocationError(t("errCoverage"));
       return;
     }
     setLocationError(null);
     // OAuth professionals must provide a cédula UNLESS they have no CR ID (→ review)
     // or already have one on file (converting client — reuse it, never re-ask).
     if (currentUser && !noCrId && !identityMismatch && !accountCedula && !validateCedulaFormat(oauthCedula)) {
-      setOauthCedulaError("Cédula requerida. CR: 9 dígitos · DIMEX: 11-12 · NITE: 10.");
+      setOauthCedulaError(t("errIdRequired"));
       return;
     }
     if (currentUser && !noCrId && !identityMismatch && !accountCedula && oauthCedulaCheck.taken) {
-      setOauthCedulaError("Esta cédula ya está registrada en ContrataCR.");
+      setOauthCedulaError(t("errIdTaken"));
       return;
     }
     if (currentUser && oauthFullName.trim().length < 3) {
-      setOauthNameError("Ingresa tu nombre completo.");
+      setOauthNameError(t("errNameRequired"));
       return;
     }
     setOauthNameError(null);
@@ -532,11 +534,11 @@ export default function RegisterProfessionalPage() {
           },
         });
         if (signUpError) throw signUpError;
-        if (!signUpData.user?.id) throw new Error("No se pudo crear la cuenta.");
+        if (!signUpData.user?.id) throw new Error(t("errCreateAccount"));
         // Supabase anti-enumeration: an already-registered email returns a user
         // object with an EMPTY identities array (no error). Detect it explicitly.
         if (Array.isArray(signUpData.user.identities) && signUpData.user.identities.length === 0) {
-          throw new Error("Ya existe una cuenta con este correo. Inicia sesión con tu contraseña, o con Google o Facebook si así te registraste.");
+          throw new Error(t("errAccountExists"));
         }
         userId = signUpData.user.id;
         userEmail = step1Data.email;
@@ -600,7 +602,7 @@ export default function RegisterProfessionalPage() {
 
       if (!proRes.ok) {
         const { error: proErr } = await proRes.json();
-        throw new Error(proErr ?? "Error al crear tu perfil de profesional.");
+        throw new Error(proErr ?? t("errCreateProfile"));
       }
 
       if (currentUser) {
@@ -613,13 +615,13 @@ export default function RegisterProfessionalPage() {
         // Show the full-screen loader BEFORE navigating so the photo step never
         // flashes back. Hard navigation so the refreshed session (new role) is read.
         setRedirecting(true);
-        window.location.href = "/es/dashboard/profesional";
+        window.location.href = `/${locale}/dashboard/profesional`;
         return;
       } else {
         setOtpEmail(step1Data!.email);
       }
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Error al registrarse";
+      const msg = err instanceof Error ? err.message : t("errTitle");
       if (
         msg.includes("already registered") ||
         msg.includes("already been registered") ||
@@ -627,7 +629,7 @@ export default function RegisterProfessionalPage() {
         msg.includes("ya está registrado") ||
         msg.includes("Ya existe una cuenta")
       ) {
-        setError("Ya existe una cuenta con este correo. Inicia sesión con tu contraseña, o con Google o Facebook si así te registraste.");
+        setError(t("errAccountExists"));
       } else {
         setError(msg);
       }
@@ -666,14 +668,14 @@ export default function RegisterProfessionalPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-3">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
-        <p className="text-sm text-[#6b7280]">Creando tu cuenta…</p>
+        <p className="text-sm text-[#6b7280]">{t("creatingAccount")}</p>
       </div>
     );
   }
 
   const stepLabels = currentUser
-    ? ["Servicio", "Perfil"]
-    : ["Identidad", "Servicio", "Perfil"];
+    ? [t("steps.service"), t("steps.profile")]
+    : [t("steps.identity"), t("steps.service"), t("steps.profile")];
   const indicatorStep = currentUser ? step - 1 : step;
 
   return (
@@ -683,12 +685,10 @@ export default function RegisterProfessionalPage() {
         <div className="mx-auto max-w-lg">
           <div className="text-center mb-2">
             <h1 className="text-2xl font-bold text-[#111827]">
-              {currentUser ? "Completa tu perfil profesional" : t("title")}
+              {currentUser ? t("completeProfileTitle") : t("title")}
             </h1>
             <p className="text-[#6b7280] text-sm mt-1">
-              {currentUser
-                ? "Cuéntanos sobre tu servicio para que los clientes te encuentren."
-                : t("subtitle")}
+              {currentUser ? t("completeProfileSubtitle") : t("subtitle")}
             </p>
           </div>
           <StepIndicator current={indicatorStep} labels={stepLabels} />
@@ -699,12 +699,12 @@ export default function RegisterProfessionalPage() {
                 <AlertCircle className="h-4 w-4 text-red-500 mt-0.5 shrink-0" />
                 <p className="text-sm text-red-700">{error}</p>
               </div>
-              {(error.includes("sesión") || error.includes("cuenta con este correo")) && (
+              {error === t("errAccountExists") && (
                 <Link
                   href="/login"
                   className="self-start ml-7 text-sm font-semibold text-[#009FD9] hover:underline"
                 >
-                  Ir a iniciar sesión →
+                  {t("goToLogin")}
                 </Link>
               )}
             </div>
@@ -717,7 +717,7 @@ export default function RegisterProfessionalPage() {
                 <img src={photoPreview} alt="" className="h-10 w-10 rounded-full object-cover shrink-0" />
               )}
               <div className="flex-1 min-w-0">
-                <p className="text-xs text-[#009FD9] font-semibold">Identidad confirmada por Google / Facebook</p>
+                <p className="text-xs text-[#009FD9] font-semibold">{t("oauthConfirmed")}</p>
                 <p className="text-sm font-bold text-[#111827] truncate">
                   {(currentUser.user_metadata?.full_name as string) ||
                    (currentUser.user_metadata?.name as string) ||
@@ -744,7 +744,7 @@ export default function RegisterProfessionalPage() {
                     onFullNameChange={(n) => form1.setValue("fullName", n, { shouldValidate: true })}
                     onResult={(r) => { if (r.found) setIdentityMismatch(false); }}
                     onMismatch={() => setIdentityMismatch(true)}
-                    cedulaError={form1.formState.errors.cedula?.message ?? (!identityMismatch && cedulaCheck.taken ? "Esta identificación ya está registrada en ContrataCR." : undefined)}
+                    cedulaError={form1.formState.errors.cedula?.message ?? (!identityMismatch && cedulaCheck.taken ? t("errIdentificationTaken") : undefined)}
                     nameError={form1.formState.errors.fullName?.message}
                   />
                 </>
@@ -763,7 +763,7 @@ export default function RegisterProfessionalPage() {
                   label={<>{t("email")} <span className="text-red-500">*</span></>}
                   type="email"
                   placeholder={t("emailPlaceholder")}
-                  error={form1.formState.errors.email?.message ?? (emailCheck.taken ? "Este correo ya está registrado. Inicia sesión." : undefined)}
+                  error={form1.formState.errors.email?.message ?? (emailCheck.taken ? t("errEmailTaken") : undefined)}
                   {...form1.register("email")}
                 />
               </div>
@@ -789,7 +789,7 @@ export default function RegisterProfessionalPage() {
               </div>
 
               <Input
-                label={<>Confirmar contraseña <span className="text-red-500">*</span></>}
+                label={<>{t("confirmPassword")} <span className="text-red-500">*</span></>}
                 type={showConfirm ? "text" : "password"}
                 placeholder="••••••••"
                 error={form1.formState.errors.confirmPassword?.message}
@@ -815,11 +815,10 @@ export default function RegisterProfessionalPage() {
                 {t("continue")} <ArrowRight className="h-4 w-4" />
               </Button>
               <p className="text-center text-xs text-[#9ca3af]">
-                Al crear una cuenta, aceptas los{" "}
-                <Link href="/terminos" className="text-[#009FD9] hover:underline">Términos</Link>{" "}
-                y la{" "}
-                <Link href="/privacidad" className="text-[#009FD9] hover:underline">Política de Privacidad</Link>{" "}
-                de ContrataCR.
+                {t.rich("termsAgree", {
+                  terms: (c) => <Link href="/terminos" className="text-[#009FD9] hover:underline">{c}</Link>,
+                  privacy: (c) => <Link href="/privacidad" className="text-[#009FD9] hover:underline">{c}</Link>,
+                })}
               </p>
             </form>
             </div>
@@ -836,8 +835,8 @@ export default function RegisterProfessionalPage() {
                 <div className="flex items-center gap-3 bg-[#f0fdf4] border border-[#bbf7d0] rounded-xl px-4 py-3">
                   <CheckCircle2 className="h-5 w-5 text-[#16a34a] shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-[#15803d]">Identidad ya registrada</p>
-                    <p className="text-sm text-[#111827] truncate">{oauthFullName || "Tu cuenta"} · usamos la identificación de tu cuenta</p>
+                    <p className="text-xs font-semibold text-[#15803d]">{t("identityAlreadyRegistered")}</p>
+                    <p className="text-sm text-[#111827] truncate">{t("usesAccountId", { name: oauthFullName || t("yourAccount") })}</p>
                   </div>
                 </div>
               ) : currentUser && !noCrId ? (
@@ -848,7 +847,7 @@ export default function RegisterProfessionalPage() {
                   onFullNameChange={(n) => { setOauthFullName(n); setOauthNameError(null); }}
                   onResult={(r) => { if (r.found) setIdentityMismatch(false); }}
                   onMismatch={() => setIdentityMismatch(true)}
-                  cedulaError={oauthCedulaError ?? (!identityMismatch && oauthCedulaCheck.taken ? "Esta identificación ya está registrada en ContrataCR." : undefined)}
+                  cedulaError={oauthCedulaError ?? (!identityMismatch && oauthCedulaCheck.taken ? t("errIdentificationTaken") : undefined)}
                   nameError={oauthNameError ?? undefined}
                 />
               ) : null}
@@ -869,13 +868,13 @@ export default function RegisterProfessionalPage() {
                   keeps only the essentials.) */}
               <div>
                 <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                  Tu profesión principal <span className="text-red-500">*</span>
+                  {t("professionPrincipal")} <span className="text-red-500">*</span>
                 </label>
-                <p className="text-xs text-[#9ca3af] mb-1.5">Ej. Nutricionista, Electricista. Después agregas los servicios de cada profesión en tu panel.</p>
+                <p className="text-xs text-[#9ca3af] mb-1.5">{t("professionHelp")}</p>
                 <CategorySearch
                   value={form2.watch("category") ?? ""}
                   onChange={(v) => form2.setValue("category", v, { shouldValidate: true })}
-                  placeholder="Busca tu profesión"
+                  placeholder={t("searchProfession")}
                   error={form2.formState.errors.category?.message}
                 />
 
@@ -885,7 +884,7 @@ export default function RegisterProfessionalPage() {
                     {extraCategories.map((c) => (
                       <span key={c} className="inline-flex items-center gap-1.5 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium pl-3 pr-1.5 py-1.5">
                         {getCategoryLabel(c, locale)}
-                        <button type="button" onClick={() => setExtraCategories((prev) => prev.filter((x) => x !== c))} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors" aria-label="Quitar">
+                        <button type="button" onClick={() => setExtraCategories((prev) => prev.filter((x) => x !== c))} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors" aria-label={t("remove")}>
                           <X className="h-3.5 w-3.5" />
                         </button>
                       </span>
@@ -905,10 +904,10 @@ export default function RegisterProfessionalPage() {
                         setExtraCatInput("");
                         setShowExtraProf(false);
                       }}
-                      placeholder="Busca otra profesión…"
+                      placeholder={t("searchAnotherProfession")}
                     />
                     <button type="button" onClick={() => { setShowExtraProf(false); setExtraCatInput(""); }} className="self-start text-xs text-[#9ca3af] hover:text-[#374151]">
-                      Cancelar
+                      {t("cancel")}
                     </button>
                   </div>
                 ) : (
@@ -918,7 +917,7 @@ export default function RegisterProfessionalPage() {
                     className="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-[#009FD9] hover:underline"
                   >
                     <Plus className="h-4 w-4" />
-                    {extraCategories.length > 0 ? "Agregar otra profesión" : "¿Tienes más de una profesión? Agrégala"}
+                    {extraCategories.length > 0 ? t("addAnotherProfession") : t("addProfessionPrompt")}
                   </button>
                 )}
               </div>
@@ -927,7 +926,7 @@ export default function RegisterProfessionalPage() {
                   its location stay visually connected (no "where do I go now?"). */}
               <div>
                 <label className="text-sm font-medium text-[#374151] block mb-2">
-                  ¿Cómo ofreces tus servicios? <span className="text-red-500">*</span> <span className="text-[#9ca3af] font-normal">(puedes elegir las dos)</span>
+                  {t("howOffer")} <span className="text-red-500">*</span> <span className="text-[#9ca3af] font-normal">{t("chooseBoth")}</span>
                 </label>
                 <div className="flex flex-col gap-2">
                   <label className={cn(
@@ -955,8 +954,8 @@ export default function RegisterProfessionalPage() {
                     </div>
                     <Truck className="h-4 w-4 text-[#009FD9] shrink-0" />
                     <div>
-                      <p className="text-sm font-medium text-[#111827]">Me desplazo donde el cliente</p>
-                      <p className="text-xs text-[#9ca3af]">Vas al domicilio o lugar del cliente</p>
+                      <p className="text-sm font-medium text-[#111827]">{t("mobileMode")}</p>
+                      <p className="text-xs text-[#9ca3af]">{t("mobileModeSub")}</p>
                     </div>
                   </label>
 
@@ -985,8 +984,8 @@ export default function RegisterProfessionalPage() {
                     </div>
                     <MapPin className="h-4 w-4 text-[#009FD9] shrink-0" />
                     <div>
-                      <p className="text-sm font-medium text-[#111827]">Trabajo desde un lugar fijo</p>
-                      <p className="text-xs text-[#9ca3af]">Taller, consultorio, local o estudio</p>
+                      <p className="text-sm font-medium text-[#111827]">{t("fixedMode")}</p>
+                      <p className="text-xs text-[#9ca3af]">{t("fixedModeSub")}</p>
                     </div>
                   </label>
                 </div>
@@ -1000,19 +999,18 @@ export default function RegisterProfessionalPage() {
                   <div className="mt-3 rounded-xl bg-[#f9fafb] p-3.5 flex flex-col gap-4">
                     {serviceFixed && (
                       <div className="flex flex-col gap-2">
-                        <label className="text-sm font-semibold text-[#111827] flex items-center gap-1.5"><MapPin className="h-4 w-4 text-[#009FD9]" /> Tus lugares de trabajo</label>
+                        <label className="text-sm font-semibold text-[#111827] flex items-center gap-1.5"><MapPin className="h-4 w-4 text-[#009FD9]" /> {t("workplacesLabel")}</label>
                         <p className="text-xs text-[#9ca3af]">
-                          Marca tu ubicación en el mapa o elige la provincia y el cantón: definen dónde apareces
-                          cuando los clientes buscan profesionales.
+                          {t("workplacesHelp")}
                         </p>
                         <WorkplacesPicker value={workplaces} onChange={(n) => { setWorkplaces(n); setLocationError(null); }} />
                       </div>
                     )}
                     {serviceMobile && (
                       <div className="flex flex-col gap-2">
-                        <label className="text-sm font-semibold text-[#111827] flex items-center gap-1.5"><Truck className="h-4 w-4 text-[#009FD9]" /> Zonas a las que te desplazas</label>
+                        <label className="text-sm font-semibold text-[#111827] flex items-center gap-1.5"><Truck className="h-4 w-4 text-[#009FD9]" /> {t("coverageLabel")}</label>
                         <p className="text-xs text-[#9ca3af]">
-                          Elige las provincias y cantones donde atiendes. Apareces en los resultados de búsqueda de cada una.
+                          {t("coverageHelp")}
                         </p>
                         <CoverageAreaSelector value={coverageAreas} onChange={(n) => { setCoverageAreas(n); setLocationError(null); }} />
                       </div>
@@ -1073,7 +1071,7 @@ export default function RegisterProfessionalPage() {
                   loading={submitting || uploadingPhoto}
                 >
                   {uploadingPhoto
-                    ? "Subiendo foto…"
+                    ? t("uploadingPhoto")
                     : submitting
                     ? t("creating")
                     : t("create")}
