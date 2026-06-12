@@ -168,9 +168,13 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   const [benDob, setBenDob] = useState("");
   const [benPhone, setBenPhone] = useState("");
   const [benLookupName, setBenLookupName] = useState<string | null>(null);
+  // True while a cédula lookup is in flight — used to suppress a premature
+  // "not found" flash before the lookup resolves.
+  const [benCedulaLoading, setBenCedulaLoading] = useState(false);
   // Live padrón name (+ DOB when a source provides it) for the client's OWN cédula.
   const [selfCedulaName, setSelfCedulaName] = useState<string | null>(null);
   const [selfDob, setSelfDob] = useState<string | null>(null);
+  const [selfCedulaLoading, setSelfCedulaLoading] = useState(false);
   // The padrón has no birth date, so for HEALTH bookings "for myself" we must ask
   // it manually. Effective self DOB = padrón DOB (future provider) ?? this input.
   const [selfDobInput, setSelfDobInput] = useState("");
@@ -262,10 +266,11 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
 
   // Beneficiary cédula → padrón name auto-fill (debounced). Optional; never blocks.
   useEffect(() => {
-    if (!forSomeoneElse || benHasCedula !== true) { setBenLookupName(null); return; }
+    if (!forSomeoneElse || benHasCedula !== true) { setBenLookupName(null); setBenCedulaLoading(false); return; }
     const clean = cleanId(benCedula);
-    if (!isValidId(clean) || detectIdType(clean) !== "cedula") { setBenLookupName(null); return; }
+    if (!isValidId(clean) || detectIdType(clean) !== "cedula") { setBenLookupName(null); setBenCedulaLoading(false); return; }
     let active = true;
+    setBenCedulaLoading(true);
     const t = setTimeout(async () => {
       try {
         const res = await fetch(`/api/cedula/${clean}`);
@@ -281,6 +286,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
           setBenLookupName(null);
         }
       } catch { if (active) setBenLookupName(null); }
+      finally { if (active) setBenCedulaLoading(false); }
     }, 500);
     return () => { active = false; clearTimeout(t); };
   }, [benCedula, benHasCedula, forSomeoneElse]);
@@ -288,8 +294,9 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   // Live padrón name for the client's own cédula (guest/needs-cédula flows).
   useEffect(() => {
     const clean = cleanId(profileCedula);
-    if (!isValidId(clean) || detectIdType(clean) !== "cedula") { setSelfCedulaName(null); return; }
+    if (!isValidId(clean) || detectIdType(clean) !== "cedula") { setSelfCedulaName(null); setSelfCedulaLoading(false); return; }
     let active = true;
+    setSelfCedulaLoading(true);
     const t = setTimeout(async () => {
       try {
         const res = await fetch(`/api/cedula/${clean}`);
@@ -298,9 +305,36 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
         setSelfCedulaName(res.ok ? (j.fullName ?? null) : null);
         setSelfDob(res.ok ? (j.dob ?? null) : null);
       } catch { if (active) { setSelfCedulaName(null); setSelfDob(null); } }
+      finally { if (active) setSelfCedulaLoading(false); }
     }, 500);
     return () => { active = false; clearTimeout(t); };
   }, [profileCedula]);
+
+  // Self-heal: a logged-in account whose STORED cédula's official name differs
+  // from the saved name (e.g. saved fast, before the lookup applied the official
+  // name) gets corrected on open — so future bookings show name + cédula
+  // consistently. Runs once per modal open.
+  const healedRef = useRef(false);
+  useEffect(() => { if (!open) healedRef.current = false; }, [open]);
+  useEffect(() => {
+    if (!isLoggedIn || !profileLoaded || !hasStoredCedula || healedRef.current) return;
+    const clean = cleanId(profileCedula);
+    if (!isValidId(clean) || detectIdType(clean) !== "cedula") return;
+    healedRef.current = true;
+    let active = true;
+    (async () => {
+      const j = await fetch(`/api/cedula/${clean}`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+      if (!active || !j?.fullName || sameName(j.fullName, clientName)) return;
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase.from("profiles").update({ full_name: j.fullName }).eq("id", user.id);
+        await supabase.auth.updateUser({ data: { full_name: j.fullName } });
+      }
+      if (active) setClientName(j.fullName);
+    })();
+    return () => { active = false; };
+  }, [isLoggedIn, profileLoaded, hasStoredCedula, profileCedula, clientName]);
 
   // Professionals using the new date-based model have explicit slots.
   const usesExplicitSlots = Object.keys(dateSlots).length > 0;
@@ -432,14 +466,21 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     if (cleanPhone.length < 8) { setProfileError("Ingresa un teléfono válido (8 dígitos)."); return; }
     if (needsProfile && !clientName.trim()) { setProfileError("Ingresa tu nombre completo."); return; }
     // Validate the cédula (format + padrón existence) — recoverable inline error.
-    if (needsCedula && !(await validateClientCedula())) return;
+    // Capture the official name from the SAME call (avoids the debounce race).
+    let validatedOfficialName: string | null = null;
+    if (needsCedula) {
+      const v = await validateClientCedula();
+      if (!v.ok) return;
+      validatedOfficialName = v.officialName;
+    }
 
     setSavingProfile(true);
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     // "For myself" + national cédula found → the OFFICIAL name prevails and the
     // account adopts it. "For another person" never changes the account name.
-    const officialName = selfOfficialName; // null when booking for someone else
+    // Prefer the freshly-validated name; fall back to the debounced state.
+    const officialName = (validatedOfficialName ?? selfOfficialName) || null; // null when booking for someone else
     const finalName = officialName || clientName.trim();
     if (user) {
       // Only write the fields we actually collected on this step.
@@ -518,29 +559,34 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   // Validate the client's cédula: format always; existence in the padrón for
   // national cédulas (DIMEX/NITE aren't in the TSE roll). Returns true if OK and
   // sets a recoverable inline error otherwise. Never drops the booking.
-  async function validateClientCedula(): Promise<boolean> {
+  async function validateClientCedula(): Promise<{ ok: boolean; officialName: string | null }> {
     setCedulaError(null);
     const clean = cleanId(profileCedula);
     if (!isValidId(clean)) {
       setCedulaError("El número de identificación no es válido (CR: 9 dígitos · DIMEX: 11-12 · NITE: 10). Revísalo e intenta de nuevo.");
-      return false;
+      return { ok: false, officialName: null };
     }
-    // Only national cédulas exist in the TSE padrón — verify to reject fakes.
+    // Only national cédulas exist in the TSE padrón — verify to reject fakes AND
+    // capture the official name synchronously here, so a fast submit (before the
+    // debounced lookup resolves) still applies the official name to the booking
+    // + account. For a beneficiary booking we never adopt the cédula's name.
     if (detectIdType(clean) === "cedula") {
       setCheckingCedula(true);
       try {
         const res = await fetch(`/api/cedula/${clean}`);
         if (!res.ok) {
-          setCedulaError("No encontramos esa cédula en el padrón. Revisa el número e intenta de nuevo.");
-          return false;
+          setCedulaError("No encontramos esa cédula. Revisa el número e intenta de nuevo.");
+          return { ok: false, officialName: null };
         }
+        const j = await res.json().catch(() => ({}));
+        return { ok: true, officialName: forSomeoneElse ? null : (j.fullName ?? null) };
       } catch {
         // Network/lookup down — don't block the client over our own outage.
       } finally {
         setCheckingCedula(false);
       }
     }
-    return true;
+    return { ok: true, officialName: null };
   }
 
   return (
@@ -909,11 +955,15 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                           {benLookupName && (
                             <div className="rounded-lg bg-[#f0fdf4] border border-[#bbf7d0] px-3 py-2 -mt-1">
                               <p className="text-xs text-[#15803d]">Persona: <strong>{benLookupName}</strong></p>
-                              <p className="text-[11px] text-[#16a34a]">Datos confirmados con el padrón.</p>
                             </div>
                           )}
-                          {benCedula && isValidId(cleanId(benCedula)) && detectIdType(cleanId(benCedula)) === "cedula" && !benLookupName && (
-                            <p className="text-xs text-[#b45309] -mt-1">No encontramos esa cédula en el padrón. Escribe el nombre abajo.</p>
+                          {/* Only show "not found" AFTER the lookup finishes — never while
+                              it's still in flight (otherwise it flashes for valid cédulas). */}
+                          {benCedula && isValidId(cleanId(benCedula)) && detectIdType(cleanId(benCedula)) === "cedula" && benCedulaLoading && (
+                            <p className="text-xs text-[#9ca3af] -mt-1">Buscando…</p>
+                          )}
+                          {benCedula && isValidId(cleanId(benCedula)) && detectIdType(cleanId(benCedula)) === "cedula" && !benCedulaLoading && !benLookupName && (
+                            <p className="text-xs text-[#b45309] -mt-1">No encontramos esa cédula. Escribe el nombre abajo.</p>
                           )}
                         </>
                       )}
@@ -1031,7 +1081,8 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     error={cedulaError ?? undefined}
                     hint="Solo para tu solicitud — no es una verificación de identidad."
                   />
-                  {selfCedulaName && !nameWillChange && (
+                  {selfCedulaLoading && <p className="text-xs text-[#9ca3af] -mt-1">Buscando…</p>}
+                  {!selfCedulaLoading && selfCedulaName && !nameWillChange && (
                     <p className="text-xs text-[#15803d] -mt-1 break-words">Encontramos: <strong>{selfCedulaName}</strong></p>
                   )}
                   {nameWillChange && (
@@ -1225,7 +1276,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     className="flex-1"
                     loading={submitting || checkingCedula}
                     disabled={profilePhone.replace(/\D/g, "").length < 8 || guestEmailCheck.taken || !profileCedula}
-                    onClick={async () => { if (await validateClientCedula()) await handleSubmit(); }}
+                    onClick={async () => { const v = await validateClientCedula(); if (v.ok) await handleSubmit(undefined, undefined, v.officialName || undefined); }}
                   >
                     {submitting || checkingCedula ? "Enviando…" : t("step4.submit")}
                   </Button>
