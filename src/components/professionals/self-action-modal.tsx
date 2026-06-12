@@ -55,4 +55,5 @@ export const SELF_MSG = {
   call: "No puedes llamarte a ti mismo. Así es como los clientes te contactan por teléfono.",
   email: "No puedes escribirte a ti mismo. Así es como los clientes te contactan por correo.",
   proposal: "No puedes enviarte una propuesta a tu propio proyecto.",
+  favorite: "No puedes guardarte a ti mismo en favoritos. Aquí es donde los clientes guardan tu perfil para contratarte después.",
 } as const;

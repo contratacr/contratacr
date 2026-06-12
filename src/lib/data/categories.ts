@@ -108,7 +108,13 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
       { id: "psicologia", label: "Psicología y terapia", keywords: ["psicologo", "terapeuta", "salud mental", "terapia", "counseling", "ansiedad", "depresion", "bienestar emocional"] },
       { id: "fisioterapia", label: "Fisioterapia", keywords: ["fisioterapeuta", "rehabilitacion", "terapia fisica", "kinesiologia", "dolor de espalda"] },
       { id: "enfermeria", label: "Enfermería a domicilio", keywords: ["enfermero", "enfermera", "cuidados a domicilio", "inyecciones", "curaciones", "sondas"] },
+      { id: "medicina_domicilio", label: "Medicina general a domicilio", keywords: ["doctor", "medico", "medico general", "consulta medica", "medico a domicilio", "visita medica"] },
+      { id: "terapia_lenguaje", label: "Terapia del lenguaje", keywords: ["terapeuta del lenguaje", "logopeda", "fonoaudiologo", "lenguaje", "habla", "tartamudez"] },
+      { id: "terapia_ocupacional", label: "Terapia ocupacional", keywords: ["terapeuta ocupacional", "terapia ocupacional", "rehabilitacion", "estimulacion", "motora fina"] },
+      { id: "podologia", label: "Podología", keywords: ["podologo", "pies", "unas de los pies", "callos", "cuidado de pies", "pie diabetico"] },
+      { id: "acupuntura", label: "Acupuntura y medicina alternativa", keywords: ["acupuntura", "medicina alternativa", "medicina china", "agujas", "terapias alternativas", "homeopatia"] },
       { id: "cuidado_adultos", label: "Cuidado de adultos mayores", keywords: ["cuidado de adultos mayores", "anciano", "tercera edad", "acompanante", "cuidador"] },
+      { id: "cuidado_discapacidad", label: "Cuidado de personas con discapacidad", keywords: ["cuidador", "discapacidad", "asistente personal", "cuido especial", "necesidades especiales"] },
       { id: "cuidado_infantil", label: "Cuidado infantil / Niñera", keywords: ["ninera", "babysitter", "nanny", "canguro", "cuido de ninos", "guarderia en casa"] },
       { id: "veterinaria", label: "Veterinaria", keywords: ["veterinario", "animales", "mascotas", "perros", "gatos", "clinica veterinaria", "consulta veterinaria"] },
       { id: "peluqueria_canina", label: "Peluquería canina / Grooming", keywords: ["groomer", "grooming", "bano de mascotas", "estetica canina", "perros", "peluqueria de perros"] },
@@ -260,7 +266,11 @@ export const CATEGORY_LABELS_EN: Record<string, string> = {
   // Salud y bienestar
   entrenamiento_personal: "Personal training", nutricion: "Nutrition & dietetics",
   masajes: "Therapeutic massage", psicologia: "Psychology & therapy", fisioterapia: "Physical therapy",
-  enfermeria: "Home nursing", cuidado_adultos: "Elderly care", cuidado_infantil: "Childcare / Nanny",
+  enfermeria: "Home nursing", medicina_domicilio: "Home doctor visits",
+  terapia_lenguaje: "Speech therapy", terapia_ocupacional: "Occupational therapy",
+  podologia: "Podiatry", acupuntura: "Acupuncture & alternative medicine",
+  cuidado_adultos: "Elderly care", cuidado_discapacidad: "Disability care",
+  cuidado_infantil: "Childcare / Nanny",
   veterinaria: "Veterinary", peluqueria_canina: "Dog grooming",
   // Belleza y estética
   peluqueria: "Hair & barber", maquillaje: "Makeup", unhas: "Nails / Manicure",
@@ -314,7 +324,8 @@ export function getCategoryGroupLabel(groupId: string, locale?: string): string 
    Only HEALTH/medical services where the patient's age matters. ─── */
 export const HEALTH_CATEGORY_IDS = new Set<string>([
   "entrenamiento_personal", "nutricion", "masajes", "psicologia", "fisioterapia",
-  "enfermeria", "cuidado_adultos", "cuidado_infantil",
+  "enfermeria", "medicina_domicilio", "terapia_lenguaje", "terapia_ocupacional",
+  "podologia", "acupuntura", "cuidado_adultos", "cuidado_discapacidad", "cuidado_infantil",
 ]);
 
 /** True if the category is a health/medical category (DOB relevant). */

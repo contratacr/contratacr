@@ -249,7 +249,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                         <span className="absolute top-2.5 left-2.5 z-20 flex h-6 w-6 items-center justify-center rounded-full bg-[#009FD9] text-white text-[11px] font-bold shadow ring-2 ring-white">
                           {i + 1}
                         </span>
-                        <SaveableCard pro={pro}>
+                        <SaveableCard pro={pro} isOwn={!!viewerProfileId && viewerProfileId === pro.profileId}>
                           <ProfessionalCard professional={pro} slots={slotsByPro[pro.id] ?? []} activeCategory={activeCategoryId} viewerProfileId={viewerProfileId} />
                         </SaveableCard>
                       </div>
