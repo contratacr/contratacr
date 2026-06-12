@@ -150,6 +150,10 @@
     },
     "resultsIn": "{count} profesionales en {location}",
     "resultsInCR": "{count} profesionales en Costa Rica",
+    "list": "Lista",
+    "map": "Mapa",
+    "viewResults": "Ver resultados",
+    "close": "Cerrar",
     "noResults": {
       "title": "No encontramos resultados",
       "desc": "Intenta con otra categoría o amplía la zona de búsqueda."
@@ -209,6 +213,19 @@
     "coverageCountry": "Atiende en todo el país",
     "coverageYourLocation": "Se desplaza a tu ubicación",
     "coverageAreas": "Se desplaza en {areas}"
+  },
+  "schedule": {
+    "today": "Hoy",
+    "tomorrow": "Mañana",
+    "upcomingTimes": "Próximos horarios",
+    "noUpcoming": "Sin horarios próximos. Solicita el servicio para coordinar.",
+    "prevDays": "Días anteriores",
+    "nextDays": "Días siguientes",
+    "viewFullSchedule": "Ver horario completo",
+    "requestService": "Solicitar servicio",
+    "location": "Ubicación",
+    "videoconsulta": "Videoconsulta",
+    "atHome": "A domicilio"
   },
   "profile": {
     "back": "Volver a resultados",

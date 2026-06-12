@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import { ChevronLeft, ChevronRight, ChevronDown, MapPin } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { BookingModal } from "@/components/booking/booking-modal";
@@ -25,9 +26,6 @@ interface ProfessionalScheduleProps {
   isOwn?: boolean;
 }
 
-const DAY_SHORT = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
-const MONTH_SHORT = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
-
 // How many day-columns are shown at once, and how far ahead the arrows page.
 const COLS = 3;
 const WINDOW_DAYS = 21;
@@ -39,11 +37,14 @@ function toKey(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-function dayLabel(d: Date, offset: number, today: Date): string {
-  if (offset === 0) return "Hoy";
-  if (offset === 1) return "Mañana";
-  if (d.getMonth() !== today.getMonth()) return `${d.getDate()} ${MONTH_SHORT[d.getMonth()].toLowerCase()}`;
-  return `${DAY_SHORT[d.getDay()]} ${d.getDate()}`;
+// Date portion of a day column header, locale-aware (the label row is CSS-
+// uppercased, so casing/period differences don't matter). "Hoy"/"Mañana" are
+// handled by the caller via the schedule translator.
+function dateLabel(d: Date, today: Date, locale: string): string {
+  const loc = locale === "en" ? "en-US" : "es-CR";
+  if (d.getMonth() !== today.getMonth())
+    return `${d.getDate()} ${d.toLocaleDateString(loc, { month: "short" }).replace(".", "")}`;
+  return `${d.toLocaleDateString(loc, { weekday: "short" }).replace(".", "")} ${d.getDate()}`;
 }
 
 /**
@@ -54,6 +55,8 @@ function dayLabel(d: Date, offset: number, today: Date): string {
  *  - Private: lock state with "Contáctanos por Whatsapp" + "por llamada".
  */
 export function ProfessionalSchedule({ professional, categoryName, availabilityPublic, contactPreference = "ambas", slots: allSlots, activeCategory, isOwn = false }: ProfessionalScheduleProps) {
+  const t = useTranslations("schedule");
+  const locale = useLocale();
   // When a specific profession was searched, only show that profession's hours
   // (item 1). Slots with no category (legacy/pre-migration) always show.
   const slots = useMemo(
@@ -79,9 +82,9 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   // zones (cov_*) and videoconsulta are labeled too, never a bare "Ubicación".
   function locLabel(id: string | null): string {
     if (!id || id === "general") return "General";
-    if (id === "videoconsulta") return "Videoconsulta";
-    if (id.startsWith("cov_")) return "A domicilio";
-    return professional.workplaces?.find((w) => w.id === id)?.name ?? "Ubicación";
+    if (id === "videoconsulta") return t("videoconsulta");
+    if (id.startsWith("cov_")) return t("atHome");
+    return professional.workplaces?.find((w) => w.id === id)?.name ?? t("location");
   }
   // Group by LABEL so two coverage zones that both read "A domicilio" collapse to
   // a single chip (no confusing duplicates); each group keeps its underlying ids.
@@ -125,9 +128,10 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       // Hide any slot within the 15-minute lead time (today only) — it's no longer
       // bookable, so it must stop showing in search.
       const items = (byDate.get(key) ?? []).filter((s) => !isTooSoonCR(key, s.time)).sort((a, b) => a.time.localeCompare(b.time));
-      return { key, label: dayLabel(d, i, today), soon: i <= 1, items };
+      const label = i === 0 ? t("today") : i === 1 ? t("tomorrow") : dateLabel(d, today, locale);
+      return { key, label, soon: i <= 1, items };
     });
-  }, [filteredSlots]);
+  }, [filteredSlots, t, locale]);
 
   function pick(slot: ScheduleSlot) {
     if (isOwn) { setSelfMsg(SELF_MSG.request); return; }
@@ -218,7 +222,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
             value={effectiveLabel ?? ""}
             onClick={(e) => e.stopPropagation()}
             onChange={(e) => { e.stopPropagation(); setSelectedLoc(e.target.value); setOffset(0); }}
-            aria-label="Ubicación"
+            aria-label={t("location")}
             className="w-full appearance-none rounded-lg border border-[#bfdbfe] bg-[#EBF5FB] pl-6 pr-6 py-1 text-[11px] font-semibold text-[#0089bb] focus:outline-none focus:ring-2 focus:ring-[#009FD9] cursor-pointer truncate"
           >
             {locationGroups.map((g) => <option key={g.label} value={g.label}>{g.label}</option>)}
@@ -233,7 +237,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
               <span className="truncate font-medium text-[#374151]">{effectiveLabel}</span>
             </>
           ) : (
-            <span className="text-[#6b7280]">Próximos horarios</span>
+            <span className="text-[#6b7280]">{t("upcomingTimes")}</span>
           )}
         </p>
       )}
@@ -241,7 +245,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       <div className="flex-1 min-h-0 flex items-center">
         {!hasUpcoming ? (
           <div className="w-full rounded-lg bg-[#f9fafb] border border-[#f3f4f6] px-2.5 py-2">
-            <p className="text-[11px] text-[#9ca3af] leading-snug">Sin horarios próximos. Solicita el servicio para coordinar.</p>
+            <p className="text-[11px] text-[#9ca3af] leading-snug">{t("noUpcoming")}</p>
           </div>
         ) : (
           <div className="flex w-full items-start gap-1">
@@ -249,7 +253,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
               type="button"
               disabled={!canPrev}
               onClick={(e) => { e.stopPropagation(); setOffset(() => Math.max(0, effOffset - COLS)); }}
-              aria-label="Días anteriores"
+              aria-label={t("prevDays")}
               className="flex w-4 shrink-0 self-center items-center justify-center rounded text-[#9ca3af] enabled:hover:text-[#009FD9] disabled:opacity-25"
             >
               <ChevronLeft className="h-[15px] w-[15px]" />
@@ -273,7 +277,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
                     {extra > 0 && (
                       <button
                         onClick={(e) => { e.stopPropagation(); pick(day.items[2]); }}
-                        title="Ver horario completo"
+                        title={t("viewFullSchedule")}
                         className="w-full rounded-md py-0.5 text-[10px] font-bold leading-none text-[#0089bb] border border-dashed border-[#bfdbfe] hover:bg-[#EBF5FB] transition-colors"
                       >
                         +{extra}
@@ -288,7 +292,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
               type="button"
               disabled={!canNext}
               onClick={(e) => { e.stopPropagation(); setOffset(() => Math.min(maxOffset, effOffset + COLS)); }}
-              aria-label="Días siguientes"
+              aria-label={t("nextDays")}
               className="flex w-4 shrink-0 self-center items-center justify-center rounded text-[#9ca3af] enabled:hover:text-[#009FD9] disabled:opacity-25"
             >
               <ChevronRight className="h-[15px] w-[15px]" />
@@ -304,7 +308,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
         onClick={(e) => { e.stopPropagation(); openBooking(); }}
         className="block w-full text-center text-[10px] font-medium text-[#009FD9] hover:underline"
       >
-        Ver horario completo
+        {t("viewFullSchedule")}
       </button>
 
       {/* Full-width primary — identical on every card. The WhatsApp/call
@@ -315,7 +319,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
         onClick={(e) => { e.stopPropagation(); openBooking(); }}
         className="w-full bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-semibold py-2 rounded-lg transition-colors"
       >
-        Solicitar servicio
+        {t("requestService")}
       </button>
 
       {bookingModals}

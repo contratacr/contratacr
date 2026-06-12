@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { List, Map as MapIcon, SlidersHorizontal, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { GoogleMapPanel, type MapProfessional } from "@/components/maps/google-map-panel";
@@ -25,6 +26,7 @@ interface SearchResultsLayoutProps {
  *    List/Map toggle swaps the results and the map.
  */
 export function SearchResultsLayout({ children, filters, mapData, apiKey, locale, numbering }: SearchResultsLayoutProps) {
+  const t = useTranslations("search");
   const [mobileView, setMobileView] = useState<"list" | "map">("list");
   const [showFilters, setShowFilters] = useState(false);
 
@@ -37,7 +39,7 @@ export function SearchResultsLayout({ children, filters, mapData, apiKey, locale
           onClick={() => setShowFilters(true)}
           className="inline-flex items-center gap-1.5 rounded-full border border-[#e5e7eb] bg-white px-4 py-1.5 text-sm font-medium text-[#374151] shadow-sm"
         >
-          <SlidersHorizontal className="h-4 w-4" /> Filtros
+          <SlidersHorizontal className="h-4 w-4" /> {t("filters.title")}
         </button>
         <div className="lg:hidden inline-flex bg-white border border-[#e5e7eb] rounded-full p-1 shadow-sm">
           <button
@@ -49,7 +51,7 @@ export function SearchResultsLayout({ children, filters, mapData, apiKey, locale
               mobileView === "list" ? "bg-[#009FD9] text-white" : "text-[#6b7280]"
             )}
           >
-            <List className="h-4 w-4" /> Lista
+            <List className="h-4 w-4" /> {t("list")}
           </button>
           <button
             type="button"
@@ -60,7 +62,7 @@ export function SearchResultsLayout({ children, filters, mapData, apiKey, locale
               mobileView === "map" ? "bg-[#009FD9] text-white" : "text-[#6b7280]"
             )}
           >
-            <MapIcon className="h-4 w-4" /> Mapa
+            <MapIcon className="h-4 w-4" /> {t("map")}
           </button>
         </div>
       </div>
@@ -71,8 +73,8 @@ export function SearchResultsLayout({ children, filters, mapData, apiKey, locale
           <div className="absolute inset-0 bg-black/40" onClick={() => setShowFilters(false)} />
           <div className="absolute inset-y-0 left-0 w-[88%] max-w-xs bg-[#f4f7fa] shadow-xl overflow-y-auto p-4">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-semibold text-[#111827]">Filtros</span>
-              <button onClick={() => setShowFilters(false)} aria-label="Cerrar" className="rounded-full p-1.5 text-[#9ca3af] hover:bg-[#e5e7eb]">
+              <span className="text-sm font-semibold text-[#111827]">{t("filters.title")}</span>
+              <button onClick={() => setShowFilters(false)} aria-label={t("close")} className="rounded-full p-1.5 text-[#9ca3af] hover:bg-[#e5e7eb]">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -81,7 +83,7 @@ export function SearchResultsLayout({ children, filters, mapData, apiKey, locale
               onClick={() => setShowFilters(false)}
               className="mt-4 w-full rounded-xl bg-[#009FD9] py-2.5 text-sm font-semibold text-white"
             >
-              Ver resultados
+              {t("viewResults")}
             </button>
           </div>
         </div>
