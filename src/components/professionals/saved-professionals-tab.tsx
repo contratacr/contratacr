@@ -9,6 +9,7 @@ import { useTranslations } from "next-intl";
 
 function SavedProCard({ pro, onUnsave }: { pro: SavedPro; onUnsave: (id: string) => void }) {
   const tCat = useTranslations("categories");
+  const tSaved = useTranslations("savedPros");
 
   return (
     <div className="bg-white rounded-2xl border border-[#e5e7eb] p-4 flex items-center gap-4 hover:shadow-md transition-shadow">
@@ -62,12 +63,12 @@ function SavedProCard({ pro, onUnsave }: { pro: SavedPro; onUnsave: (id: string)
         <Button variant="outline" size="sm" asChild>
           <Link href={`/profesionales/${pro.slug}`}>
             <ExternalLink className="h-3.5 w-3.5" />
-            Ver perfil
+            {tSaved("viewProfile")}
           </Link>
         </Button>
         <button
           onClick={() => onUnsave(pro.id)}
-          aria-label="Quitar de guardados"
+          aria-label={tSaved("unsave")}
           className="p-2 rounded-xl text-[#9ca3af] hover:text-red-500 hover:bg-red-50 transition-colors"
         >
           <Bookmark className="h-4 w-4 fill-current" />
@@ -78,6 +79,7 @@ function SavedProCard({ pro, onUnsave }: { pro: SavedPro; onUnsave: (id: string)
 }
 
 export function SavedProfessionalsTab() {
+  const t = useTranslations("savedPros");
   const [saved, setSaved] = useState<SavedPro[]>([]);
   const [mounted, setMounted] = useState(false);
 
@@ -109,12 +111,12 @@ export function SavedProfessionalsTab() {
     return (
       <div className="text-center py-16">
         <Bookmark className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
-        <p className="font-semibold text-[#374151]">No tienes profesionales guardados</p>
+        <p className="font-semibold text-[#374151]">{t("empty")}</p>
         <p className="text-sm text-[#9ca3af] mt-1 max-w-xs mx-auto">
-          Guarda profesionales que te interesan con el ícono de marcador en sus tarjetas.
+          {t("emptySub")}
         </p>
         <Button className="mt-5" asChild>
-          <Link href="/buscar">Buscar profesionales</Link>
+          <Link href="/buscar">{t("searchPros")}</Link>
         </Button>
       </div>
     );
@@ -122,7 +124,7 @@ export function SavedProfessionalsTab() {
 
   return (
     <div>
-      <p className="text-sm text-[#6b7280] mb-4">{saved.length} profesional{saved.length !== 1 ? "es" : ""} guardado{saved.length !== 1 ? "s" : ""}</p>
+      <p className="text-sm text-[#6b7280] mb-4">{t("count", { count: saved.length })}</p>
       <div className="flex flex-col gap-3">
         {saved.map((pro) => (
           <SavedProCard key={pro.id} pro={pro} onUnsave={handleUnsave} />

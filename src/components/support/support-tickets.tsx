@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { LifeBuoy, ArrowLeft, Send, User, Shield, Plus } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
@@ -26,27 +27,24 @@ type Message = {
   created_at: string;
 };
 
-const STATUS_LABEL: Record<string, string> = {
-  open: "Pendiente", in_progress: "En proceso", resolved: "Resuelto",
-};
 const STATUS_COLOR: Record<string, string> = {
   open: "bg-amber-100 text-amber-700",
   in_progress: "bg-blue-100 text-blue-700",
   resolved: "bg-emerald-100 text-emerald-700",
 };
-const FILTERS = [
-  { id: "todas", label: "Todas" },
-  { id: "open", label: "Pendiente" },
-  { id: "in_progress", label: "En proceso" },
-  { id: "resolved", label: "Resuelto" },
-] as const;
-
-function fmt(d: string) {
-  return new Date(d).toLocaleString("es-CR", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
-}
+const FILTER_IDS = ["todas", "open", "in_progress", "resolved"] as const;
 
 export function SupportTickets({ onUnreadChange }: { onUnreadChange?: (n: number) => void }) {
   const { user } = useAuth();
+  const t = useTranslations("supportTickets");
+  const locale = useLocale();
+  const dateLocale = locale === "en" ? "en-US" : "es-CR";
+  const statusLabel = (s: string) => {
+    const keys = ["open", "in_progress", "resolved"];
+    return keys.includes(s) ? t(`status.${s}` as "status.open" | "status.in_progress" | "status.resolved") : s;
+  };
+  const filterLabel = (id: string) => (id === "todas" ? t("filterAll") : statusLabel(id));
+  const fmt = (d: string) => new Date(d).toLocaleString(dateLocale, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
   const [items, setItems] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("todas");
@@ -124,7 +122,7 @@ export function SupportTickets({ onUnreadChange }: { onUnreadChange?: (n: number
     });
     setSending(false);
     if (res.ok) { setReply(""); openTicket(openId); }
-    else alert("No se pudo enviar el mensaje.");
+    else alert(t("sendError"));
   }
 
   async function ticketAction(action: "confirm" | "reopen") {
@@ -137,7 +135,7 @@ export function SupportTickets({ onUnreadChange }: { onUnreadChange?: (n: number
     });
     setSending(false);
     if (res.ok) openTicket(openId);
-    else alert("No se pudo procesar. Intenta de nuevo.");
+    else alert(t("actionError"));
   }
 
   const filtered = useMemo(
@@ -155,7 +153,7 @@ export function SupportTickets({ onUnreadChange }: { onUnreadChange?: (n: number
     return (
       <div>
         <button onClick={() => { setOpenId(null); setTicket(null); setMessages([]); }} className="inline-flex items-center gap-1.5 text-sm text-[#374151] hover:text-[#009FD9] mb-4">
-          <ArrowLeft className="h-4 w-4" /> Volver a mis tickets
+          <ArrowLeft className="h-4 w-4" /> {t("backToTickets")}
         </button>
 
         {threadLoading || !ticket ? (
@@ -164,7 +162,7 @@ export function SupportTickets({ onUnreadChange }: { onUnreadChange?: (n: number
           <div className="bg-white rounded-2xl border border-[#e5e7eb] overflow-hidden">
             <div className="px-5 py-4 border-b border-[#e5e7eb] flex items-center justify-between gap-3">
               <p className="font-semibold text-[#111827] min-w-0 truncate">{ticket.subject}</p>
-              <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${STATUS_COLOR[ticket.status] ?? ""}`}>{STATUS_LABEL[ticket.status] ?? ticket.status}</span>
+              <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${STATUS_COLOR[ticket.status] ?? ""}`}>{statusLabel(ticket.status)}</span>
             </div>
 
             <div className="p-5 flex flex-col gap-3 max-h-[460px] overflow-y-auto bg-[#f9fafb]">
@@ -173,7 +171,7 @@ export function SupportTickets({ onUnreadChange }: { onUnreadChange?: (n: number
                   <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 ${m.sender_role === "user" ? "bg-[#009FD9] text-white" : "bg-white border border-[#e5e7eb] text-[#374151]"}`}>
                     <div className="flex items-center gap-1.5 mb-1 text-[11px] opacity-70">
                       {m.sender_role === "admin" ? <Shield className="h-3 w-3" /> : <User className="h-3 w-3" />}
-                      {m.sender_role === "admin" ? "Soporte ContrataCR" : "Tú"} · {fmt(m.created_at)}
+                      {m.sender_role === "admin" ? t("supportName") : t("you")} · {fmt(m.created_at)}
                     </div>
                     <p className="text-sm leading-relaxed whitespace-pre-wrap">{m.body}</p>
                   </div>
@@ -184,20 +182,20 @@ export function SupportTickets({ onUnreadChange }: { onUnreadChange?: (n: number
             {/* Resolved → user confirms the fix or asks to reopen */}
             {ticket.status === "resolved" && !ticket.user_confirmed && (
               <div className="px-4 py-3 border-t border-[#e5e7eb] bg-[#f0fdf4]">
-                <p className="text-sm font-medium text-[#166534] mb-2">Marcamos este ticket como resuelto. ¿Se solucionó tu problema?</p>
+                <p className="text-sm font-medium text-[#166534] mb-2">{t("resolvedAsk")}</p>
                 <div className="flex flex-wrap gap-2">
                   <button onClick={() => ticketAction("confirm")} disabled={sending} className="inline-flex items-center gap-1.5 rounded-lg bg-[#16a34a] text-white text-sm font-medium px-3 py-1.5 hover:bg-[#15803d] disabled:opacity-50">
-                    Sí, está resuelto
+                    {t("yesResolved")}
                   </button>
                   <button onClick={() => ticketAction("reopen")} disabled={sending} className="inline-flex items-center gap-1.5 rounded-lg bg-white border border-[#e5e7eb] text-[#374151] text-sm font-medium px-3 py-1.5 hover:bg-gray-50 disabled:opacity-50">
-                    No, sigo con el problema
+                    {t("noStillIssue")}
                   </button>
                 </div>
               </div>
             )}
             {ticket.status === "resolved" && ticket.user_confirmed && (
               <div className="px-4 py-2.5 border-t border-[#e5e7eb] bg-[#f0fdf4] text-sm text-[#166534]">
-                ✓ Confirmaste que este ticket quedó resuelto.
+                {t("confirmedResolved")}
               </div>
             )}
 
@@ -206,12 +204,12 @@ export function SupportTickets({ onUnreadChange }: { onUnreadChange?: (n: number
                 value={reply}
                 onChange={(e) => setReply(e.target.value)}
                 rows={3}
-                placeholder="Escribe tu mensaje…"
+                placeholder={t("messagePlaceholder")}
                 className="w-full rounded-xl border border-[#e5e7eb] px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30"
               />
               <div className="flex justify-end mt-2">
                 <button onClick={sendReply} disabled={sending || !reply.trim()} className="inline-flex items-center gap-1.5 rounded-lg bg-[#009FD9] text-white text-sm font-medium px-4 py-2 hover:bg-[#0089bb] disabled:opacity-50">
-                  <Send className="h-4 w-4" /> {sending ? "Enviando…" : "Enviar"}
+                  <Send className="h-4 w-4" /> {sending ? t("sending") : t("send")}
                 </button>
               </div>
             </div>
@@ -225,26 +223,26 @@ export function SupportTickets({ onUnreadChange }: { onUnreadChange?: (n: number
   return (
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-        <p className="text-sm text-[#6b7280]">Tus conversaciones con soporte.</p>
+        <p className="text-sm text-[#6b7280]">{t("yourConversations")}</p>
         <Link href="/soporte" className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#009FD9] text-white text-sm font-semibold px-4 py-2.5 hover:bg-[#0089bb] shrink-0 w-full sm:w-auto">
-          <Plus className="h-4 w-4" /> Nuevo ticket
+          <Plus className="h-4 w-4" /> {t("newTicket")}
         </Link>
       </div>
 
       {/* Status filter — like the admin inbox, with a "new" badge per status */}
       {items.length > 0 && (
         <div className="flex items-center gap-1.5 mb-4 flex-wrap">
-          {FILTERS.map((f) => {
-            const badge = f.id === "todas" ? unread.size : (unreadByStatus[f.id] ?? 0);
+          {FILTER_IDS.map((fid) => {
+            const badge = fid === "todas" ? unread.size : (unreadByStatus[fid] ?? 0);
             return (
               <button
-                key={f.id}
-                onClick={() => setFilter(f.id)}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${filter === f.id ? "bg-[#0f172a] text-white" : "bg-white text-[#374151] border border-[#e5e7eb] hover:bg-gray-50"}`}
+                key={fid}
+                onClick={() => setFilter(fid)}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${filter === fid ? "bg-[#0f172a] text-white" : "bg-white text-[#374151] border border-[#e5e7eb] hover:bg-gray-50"}`}
               >
-                {f.label}
+                {filterLabel(fid)}
                 {badge > 0 && (
-                  <span className={`inline-flex h-[16px] min-w-[16px] items-center justify-center rounded-full px-1 text-[9px] font-bold ${filter === f.id ? "bg-white text-[#0f172a]" : "bg-red-500 text-white"}`}>
+                  <span className={`inline-flex h-[16px] min-w-[16px] items-center justify-center rounded-full px-1 text-[9px] font-bold ${filter === fid ? "bg-white text-[#0f172a]" : "bg-red-500 text-white"}`}>
                     {badge > 9 ? "9+" : badge}
                   </span>
                 )}
@@ -259,30 +257,30 @@ export function SupportTickets({ onUnreadChange }: { onUnreadChange?: (n: number
       ) : items.length === 0 ? (
         <div className="text-center py-14 rounded-2xl border border-dashed border-[#e5e7eb] bg-white">
           <LifeBuoy className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
-          <p className="font-semibold text-[#374151]">Todavía no tienes tickets</p>
-          <p className="text-sm text-[#9ca3af] mt-1">Si necesitas ayuda, abre un ticket y te respondemos por aquí y por correo.</p>
+          <p className="font-semibold text-[#374151]">{t("empty")}</p>
+          <p className="text-sm text-[#9ca3af] mt-1">{t("emptySub")}</p>
           <Link href="/soporte" className="mt-5 inline-flex items-center gap-1.5 rounded-lg bg-[#009FD9] text-white text-sm font-semibold px-4 py-2 hover:bg-[#0089bb]">
-            <Plus className="h-4 w-4" /> Abrir un ticket
+            <Plus className="h-4 w-4" /> {t("openTicket")}
           </Link>
         </div>
       ) : filtered.length === 0 ? (
-        <p className="text-sm text-[#9ca3af] text-center py-8">No hay tickets en esta vista.</p>
+        <p className="text-sm text-[#9ca3af] text-center py-8">{t("noneInView")}</p>
       ) : (
         <div className="flex flex-col gap-2">
-          {filtered.map((t) => {
-            const hasNew = unread.has(t.id);
+          {filtered.map((tk) => {
+            const hasNew = unread.has(tk.id);
             return (
-              <button key={t.id} onClick={() => openTicket(t.id)} className={`text-left bg-white rounded-2xl border p-4 hover:shadow-sm transition-all ${hasNew ? "border-[#bfe3f5] ring-1 ring-[#EBF5FB]" : "border-[#e5e7eb] hover:border-[#bfe3f5]"}`}>
+              <button key={tk.id} onClick={() => openTicket(tk.id)} className={`text-left bg-white rounded-2xl border p-4 hover:shadow-sm transition-all ${hasNew ? "border-[#bfe3f5] ring-1 ring-[#EBF5FB]" : "border-[#e5e7eb] hover:border-[#bfe3f5]"}`}>
                 <div className="flex items-center gap-2 flex-wrap">
                   {hasNew && <span className="h-2 w-2 rounded-full bg-[#009FD9] shrink-0" />}
-                  <p className="text-sm font-semibold text-[#111827]">{t.subject}</p>
-                  <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${STATUS_COLOR[t.status] ?? ""}`}>{STATUS_LABEL[t.status] ?? t.status}</span>
+                  <p className="text-sm font-semibold text-[#111827]">{tk.subject}</p>
+                  <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${STATUS_COLOR[tk.status] ?? ""}`}>{statusLabel(tk.status)}</span>
                   {hasNew && (
-                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#EBF5FB] text-[#0077a8]">Nueva respuesta</span>
+                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#EBF5FB] text-[#0077a8]">{t("newReply")}</span>
                   )}
                 </div>
-                <p className="text-xs text-[#9ca3af] mt-0.5">Actualizado {fmt(t.last_reply_at || t.created_at)}</p>
-                <p className="text-sm text-[#6b7280] line-clamp-1 mt-1">{t.message}</p>
+                <p className="text-xs text-[#9ca3af] mt-0.5">{t("updated", { date: fmt(tk.last_reply_at || tk.created_at) })}</p>
+                <p className="text-sm text-[#6b7280] line-clamp-1 mt-1">{tk.message}</p>
               </button>
             );
           })}

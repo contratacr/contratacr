@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { AlertTriangle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -8,6 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 // Recoverable (the user can reactivate by logging back in). The reason is stored
 // and surfaced to admins.
 export function CloseAccountSection({ initialDisabled = false }: { initialDisabled?: boolean }) {
+  const t = useTranslations("closeAccount");
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
@@ -20,7 +22,7 @@ export function CloseAccountSection({ initialDisabled = false }: { initialDisabl
   }, []);
 
   async function disableAccount() {
-    if (!reason.trim()) { setError("Cuéntanos el motivo."); return; }
+    if (!reason.trim()) { setError(t("reasonRequired")); return; }
     setBusy(true);
     setError(null);
     try {
@@ -30,13 +32,13 @@ export function CloseAccountSection({ initialDisabled = false }: { initialDisabl
         body: JSON.stringify({ action: "disable", reason: reason.trim() }),
       });
       const json = await res.json();
-      if (!res.ok) { setError(json.error ?? "No se pudo procesar."); return; }
+      if (!res.ok) { setError(json.error ?? t("processError")); return; }
       // Sign out — the account is now hidden; logging back in reactivates options.
       const supabase = createClient();
       await supabase.auth.signOut();
       window.location.assign("/es");
     } catch {
-      setError("Error de conexión. Intenta de nuevo.");
+      setError(t("connError"));
     } finally {
       setBusy(false);
     }
@@ -57,10 +59,10 @@ export function CloseAccountSection({ initialDisabled = false }: { initialDisabl
   if (disabled) {
     return (
       <div className="rounded-xl border border-[#fde68a] bg-[#fffbeb] p-4">
-        <p className="text-sm font-semibold text-[#92400e]">Tu cuenta está deshabilitada</p>
-        <p className="text-xs text-[#92400e] mt-0.5">No apareces en los resultados de búsqueda. Puedes reactivarla cuando quieras.</p>
+        <p className="text-sm font-semibold text-[#92400e]">{t("disabledTitle")}</p>
+        <p className="text-xs text-[#92400e] mt-0.5">{t("disabledBody")}</p>
         <button onClick={reactivate} disabled={busy} className="mt-3 rounded-lg bg-[#009FD9] text-white text-sm font-semibold px-4 py-2 hover:bg-[#0089bb] disabled:opacity-60">
-          {busy ? "Reactivando…" : "Reactivar mi cuenta"}
+          {busy ? t("reactivating") : t("reactivate")}
         </button>
       </div>
     );
@@ -71,28 +73,28 @@ export function CloseAccountSection({ initialDisabled = false }: { initialDisabl
       <div className="flex items-start gap-2">
         <AlertTriangle className="h-4 w-4 text-[#b91c1c] shrink-0 mt-0.5" />
         <div className="flex-1">
-          <p className="text-sm font-semibold text-[#b91c1c]">Cerrar / deshabilitar mi cuenta</p>
-          <p className="text-xs text-[#7f1d1d] mt-0.5">Tu perfil deja de mostrarse. Es recuperable: puedes reactivarla iniciando sesión.</p>
+          <p className="text-sm font-semibold text-[#b91c1c]">{t("closeTitle")}</p>
+          <p className="text-xs text-[#7f1d1d] mt-0.5">{t("closeBody")}</p>
           {!open ? (
             <button onClick={() => setOpen(true)} className="mt-3 rounded-lg border border-[#b91c1c] text-[#b91c1c] text-sm font-semibold px-4 py-2 hover:bg-red-50">
-              Cerrar mi cuenta
+              {t("closeCta")}
             </button>
           ) : (
             <div className="mt-3 flex flex-col gap-2">
-              <label className="text-sm font-medium text-[#374151]">Motivo <span className="text-red-500">*</span></label>
+              <label className="text-sm font-medium text-[#374151]">{t("reason")} <span className="text-red-500">*</span></label>
               <textarea
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 rows={2}
-                placeholder="Ej. ya no necesito el servicio"
+                placeholder={t("reasonPlaceholder")}
                 className="w-full rounded-lg border border-[#e5e7eb] p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30"
               />
               {error && <p className="text-xs text-red-600">{error}</p>}
               <div className="flex gap-2">
                 <button onClick={disableAccount} disabled={busy} className="rounded-lg bg-[#b91c1c] text-white text-sm font-semibold px-4 py-2 hover:bg-[#991b1b] disabled:opacity-60">
-                  {busy ? "Cerrando…" : "Confirmar cierre"}
+                  {busy ? t("closing") : t("confirmClose")}
                 </button>
-                <button onClick={() => { setOpen(false); setError(null); }} className="rounded-lg text-sm text-[#6b7280] px-3 py-2 hover:text-[#374151]">Cancelar</button>
+                <button onClick={() => { setOpen(false); setError(null); }} className="rounded-lg text-sm text-[#6b7280] px-3 py-2 hover:text-[#374151]">{t("cancel")}</button>
               </div>
             </div>
           )}

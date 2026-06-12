@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Mail, Lock, ShieldCheck, Eye, EyeOff, Info, ExternalLink } from "lucide-react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -72,6 +72,7 @@ const inputClass =
 export function AccountSecuritySection({ showHeading = true }: { showHeading?: boolean }) {
   const { user } = useAuth();
   const locale = useLocale();
+  const t = useTranslations("accountSecurity");
 
   // Email change
   const [emailMode, setEmailMode] = useState(false);
@@ -114,16 +115,16 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
 
   async function savePassword() {
     setPwError(null);
-    if (!currentPw) { setPwError("Ingresa tu contraseña actual."); return; }
-    if (newPw.length < 8) { setPwError("La nueva contraseña debe tener al menos 8 caracteres."); return; }
-    if (newPw !== confirmPw) { setPwError("Las contraseñas nuevas no coinciden."); return; }
-    if (!user?.email) { setPwError("No pudimos validar tu cuenta. Vuelve a iniciar sesión."); return; }
+    if (!currentPw) { setPwError(t("errCurrentPassword")); return; }
+    if (newPw.length < 8) { setPwError(t("errNewLength")); return; }
+    if (newPw !== confirmPw) { setPwError(t("errMismatch")); return; }
+    if (!user?.email) { setPwError(t("errValidate")); return; }
     setPwSaving(true);
     const supabase = createClient();
     // Verify the CURRENT password by re-authenticating — Supabase validates the
     // hash for us (we never read/decrypt it). Same session, no emailed code.
     const { error: signInErr } = await supabase.auth.signInWithPassword({ email: user.email, password: currentPw });
-    if (signInErr) { setPwSaving(false); setPwError("Tu contraseña actual no es correcta."); return; }
+    if (signInErr) { setPwSaving(false); setPwError(t("errWrongPassword")); return; }
     const { error } = await supabase.auth.updateUser({ password: newPw });
     setPwSaving(false);
     if (error) { setPwError(error.message); return; }
@@ -149,7 +150,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
       {showHeading && (
         <div className="flex items-center gap-2">
           <ShieldCheck className="h-5 w-5 text-[#009FD9]" />
-          <h2 className="text-lg font-semibold text-[#111827]">Cuenta y seguridad</h2>
+          <h2 className="text-lg font-semibold text-[#111827]">{t("heading")}</h2>
         </div>
       )}
 
@@ -157,47 +158,47 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
       <div className="bg-white rounded-2xl border border-[#e5e7eb] p-5">
         <div className="flex items-center gap-2 mb-2">
           <Mail className="h-4 w-4 text-[#6b7280]" />
-          <h3 className="text-sm font-semibold text-[#374151]">Correo electrónico</h3>
+          <h3 className="text-sm font-semibold text-[#374151]">{t("email")}</h3>
         </div>
         {isOAuthAccount ? (
           <div className="flex flex-col gap-3">
             <span className="text-sm text-[#111827] font-medium break-words">{user?.email}</span>
             <OAuthGuide
-              title={`Tu correo lo administra ${providerLabel}`}
-              intro={`Iniciaste sesión con ${providerLabel}, así que tu correo se gestiona desde esa cuenta y no puede cambiarse aquí. Para cambiarlo:`}
+              title={t("emailProviderTitle", { provider: providerLabel })}
+              intro={t("emailProviderIntro", { provider: providerLabel })}
               steps={[
-                `Cambia el correo principal de tu cuenta de ${providerLabel}.`,
-                `Vuelve a iniciar sesión en ContrataCR con el correo actualizado.`,
+                t("emailStep1", { provider: providerLabel }),
+                t("emailStep2"),
               ]}
-              linkLabel={`Administrar mi cuenta de ${providerLabel}`}
+              linkLabel={t("manageAccount", { provider: providerLabel })}
               linkHref={providerLinks.account}
             />
           </div>
         ) : emailSent ? (
           <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-700">
-            ✓ Revisa tu bandeja — enviamos un correo de confirmación al nuevo email. El cambio se aplica al confirmarlo.
+            {t("emailSent")}
           </div>
         ) : emailMode ? (
           <div className="flex flex-col gap-3">
             <input
               type="email"
               className={inputClass}
-              placeholder="nuevo@correo.com"
+              placeholder={t("newEmailPlaceholder")}
               value={newEmail}
               onChange={(e) => setNewEmail(e.target.value)}
             />
             {emailError && <p className="text-xs text-red-500">{emailError}</p>}
             <div className="flex gap-2">
-              <Button size="sm" onClick={sendEmailChange} disabled={!newEmail.trim()}>Enviar confirmación</Button>
-              <Button size="sm" variant="outline" onClick={() => { setEmailMode(false); setNewEmail(""); setEmailError(null); }}>Cancelar</Button>
+              <Button size="sm" onClick={sendEmailChange} disabled={!newEmail.trim()}>{t("sendConfirmation")}</Button>
+              <Button size="sm" variant="outline" onClick={() => { setEmailMode(false); setNewEmail(""); setEmailError(null); }}>{t("cancel")}</Button>
             </div>
-            <p className="text-xs text-[#9ca3af]">Te enviaremos un correo de confirmación al nuevo email.</p>
+            <p className="text-xs text-[#9ca3af]">{t("emailConfirmHelp")}</p>
           </div>
         ) : (
           <div className="flex items-center justify-between gap-3">
             <span className="text-sm text-[#111827] font-medium">{user?.email}</span>
             <button onClick={() => setEmailMode(true)} className="text-sm text-[#009FD9] hover:underline whitespace-nowrap">
-              Cambiar email
+              {t("changeEmail")}
             </button>
           </div>
         )}
@@ -207,25 +208,25 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
       <div className="bg-white rounded-2xl border border-[#e5e7eb] p-5">
         <div className="flex items-center gap-2 mb-2">
           <Lock className="h-4 w-4 text-[#6b7280]" />
-          <h3 className="text-sm font-semibold text-[#374151]">Contraseña</h3>
+          <h3 className="text-sm font-semibold text-[#374151]">{t("password")}</h3>
         </div>
         {isOAuthAccount ? (
           <OAuthGuide
-            title={`Tu acceso lo administra ${providerLabel}`}
-            intro={`Como iniciaste sesión con ${providerLabel}, no usas una contraseña en ContrataCR. La seguridad de tu inicio de sesión —contraseña y verificación en dos pasos— se administra en tu cuenta de ${providerLabel}.`}
-            linkLabel={`Administrar seguridad en ${providerLabel}`}
+            title={t("passwordProviderTitle", { provider: providerLabel })}
+            intro={t("passwordProviderIntro", { provider: providerLabel })}
+            linkLabel={t("manageSecurity", { provider: providerLabel })}
             linkHref={providerLinks.security}
           />
         ) : pwSaved ? (
           <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-700">
-            ✓ Tu contraseña fue actualizada.
+            {t("passwordUpdated")}
           </div>
         ) : pwMode ? (
           <div className="flex flex-col gap-3">
             <input
               type={showPw ? "text" : "password"}
               className={inputClass}
-              placeholder="Contraseña actual"
+              placeholder={t("currentPassword")}
               autoComplete="current-password"
               value={currentPw}
               onChange={(e) => setCurrentPw(e.target.value)}
@@ -234,7 +235,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
               <input
                 type={showPw ? "text" : "password"}
                 className={inputClass}
-                placeholder="Nueva contraseña (mínimo 8 caracteres)"
+                placeholder={t("newPassword")}
                 autoComplete="new-password"
                 value={newPw}
                 onChange={(e) => setNewPw(e.target.value)}
@@ -246,22 +247,22 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
             <input
               type={showPw ? "text" : "password"}
               className={inputClass}
-              placeholder="Repite la nueva contraseña"
+              placeholder={t("repeatPassword")}
               autoComplete="new-password"
               value={confirmPw}
               onChange={(e) => setConfirmPw(e.target.value)}
             />
             {pwError && <p className="text-xs text-red-500">{pwError}</p>}
             <div className="flex gap-2">
-              <Button size="sm" onClick={savePassword} loading={pwSaving} disabled={pwSaving || !currentPw || !newPw || !confirmPw}>Guardar contraseña</Button>
-              <Button size="sm" variant="outline" onClick={() => { setPwMode(false); setCurrentPw(""); setNewPw(""); setConfirmPw(""); setPwError(null); }}>Cancelar</Button>
+              <Button size="sm" onClick={savePassword} loading={pwSaving} disabled={pwSaving || !currentPw || !newPw || !confirmPw}>{t("savePassword")}</Button>
+              <Button size="sm" variant="outline" onClick={() => { setPwMode(false); setCurrentPw(""); setNewPw(""); setConfirmPw(""); setPwError(null); }}>{t("cancel")}</Button>
             </div>
             {/* Forgot-password escape hatch — sends the reset email. */}
             {resetSent ? (
-              <p className="text-xs text-emerald-600">✓ Te enviamos un enlace a {user?.email} para restablecer tu contraseña.</p>
+              <p className="text-xs text-emerald-600">{t("resetSent", { email: user?.email ?? "" })}</p>
             ) : (
               <button type="button" onClick={sendReset} disabled={resetBusy} className="self-start text-xs text-[#009FD9] hover:underline disabled:opacity-60">
-                {resetBusy ? "Enviando…" : "¿Olvidaste tu contraseña actual? Te enviamos un enlace por correo"}
+                {resetBusy ? t("sending") : t("forgotPassword")}
               </button>
             )}
           </div>
@@ -269,7 +270,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
           <div className="flex items-center justify-between gap-3">
             <span className="text-sm text-[#9ca3af]">••••••••</span>
             <button onClick={() => setPwMode(true)} className="text-sm text-[#009FD9] hover:underline whitespace-nowrap">
-              Cambiar contraseña
+              {t("changePassword")}
             </button>
           </div>
         )}

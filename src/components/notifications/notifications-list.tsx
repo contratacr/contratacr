@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Bell, CheckCheck, Check, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -21,6 +22,7 @@ type Notification = {
 // professional panel tab so both roles get the same notifications experience.
 export function NotificationsList() {
   const { user } = useAuth();
+  const t = useTranslations("notifications");
   const [items, setItems] = useState<Notification[]>([]);
   const [busy, setBusy] = useState(true);
 
@@ -75,7 +77,7 @@ export function NotificationsList() {
 
   async function deleteAll() {
     if (!user || items.length === 0) return;
-    if (!window.confirm("¿Eliminar todas tus notificaciones?")) return;
+    if (!window.confirm(t("deleteAllConfirm"))) return;
     setItems([]);
     window.dispatchEvent(new CustomEvent("notificationsChanged"));
     const supabase = createClient();
@@ -88,11 +90,11 @@ export function NotificationsList() {
         <div className="flex justify-end items-center gap-4 mb-3">
           {unread > 0 && (
             <button onClick={markAllRead} className="flex items-center gap-1.5 text-sm text-[#009FD9] hover:underline">
-              <CheckCheck className="h-4 w-4" /> Marcar todo leído
+              <CheckCheck className="h-4 w-4" /> {t("markAllRead")}
             </button>
           )}
           <button onClick={deleteAll} className="flex items-center gap-1.5 text-sm text-red-500 hover:underline">
-            <Trash2 className="h-4 w-4" /> Eliminar todas
+            <Trash2 className="h-4 w-4" /> {t("deleteAll")}
           </button>
         </div>
       )}
@@ -102,7 +104,7 @@ export function NotificationsList() {
         ) : items.length === 0 ? (
           <div className="text-center py-16">
             <Bell className="h-10 w-10 text-[#e5e7eb] mx-auto mb-3" />
-            <p className="text-sm text-[#6b7280]">No tienes notificaciones.</p>
+            <p className="text-sm text-[#6b7280]">{t("noneList")}</p>
           </div>
         ) : (
           <ul>
@@ -134,11 +136,11 @@ export function NotificationsList() {
                     never read as accept/reject: ✓ = mark as read, 🗑 = delete. */}
                 <div className="absolute top-2.5 right-2.5 flex items-center gap-0.5">
                   {!n.read && (
-                    <button onClick={(e) => markOneRead(e, n.id)} className="p-1 rounded-md text-[#9ca3af] hover:bg-[#dcfce7] hover:text-[#15803d] transition-colors" aria-label="Marcar como leída" title="Marcar como leída">
+                    <button onClick={(e) => markOneRead(e, n.id)} className="p-1 rounded-md text-[#9ca3af] hover:bg-[#dcfce7] hover:text-[#15803d] transition-colors" aria-label={t("markRead")} title={t("markRead")}>
                       <Check className="h-3.5 w-3.5" />
                     </button>
                   )}
-                  <button onClick={(e) => dismiss(e, n.id)} className="p-1 rounded-md text-[#9ca3af] hover:bg-red-50 hover:text-red-500 transition-colors" aria-label="Eliminar" title="Eliminar">
+                  <button onClick={(e) => dismiss(e, n.id)} className="p-1 rounded-md text-[#9ca3af] hover:bg-red-50 hover:text-red-500 transition-colors" aria-label={t("delete")} title={t("delete")}>
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 </div>
