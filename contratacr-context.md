@@ -28,6 +28,26 @@ _Earlier: 2026-06-07 (sprint 24 — fully automatic identity verification: self-
 
 ---
 
+## Sprint 83 (2026-06-12) — usability audit + fix pass (R1–R10)
+
+Hard usability rules **R1–R10** were codified as permanent standards in `contratacr-design-guide.md` §1.5 (no nested borders, no 360px truncation, one obvious primary, no dead ends, no unexplained controls, form rules, consistency, feedback, dismissal/selection, English parity) + an explicit **off-limits list** (verification/auth/booking/payment).
+
+**Method:** audited the listed screens against R1–R10, prioritizing high-traffic surfaces. The dominant concrete violation class was **R10 (Spanish leaking into EN)** in components the earlier i18n passes had missed — the structural rules (R1–R9) largely already passed after the 7 prior design passes (dashboards spot-checked R10-clean; admin already unified in the prior consistency pass).
+
+**Fixed (committed):**
+- **R10 · professional card** (`professional-card.tsx`, high-traffic /buscar): verified/unverified badge + tooltips, rating "reseña/reseñas" + "Sin reseñas todavía", "Desde/Tarifa" price label, "Ver casos de éxito / Ver certificaciones" → new `card.*` keys (incl. `reviewsCount` ICU plural).
+- **R10 · registro/profesional**: hardcoded step-2 photo caption → `registration.pro.photoCaption`.
+- **R10 · error boundary** (`[locale]/error.tsx`): offline + generic error screens, bilingual via an inline URL-keyed map (NOT next-intl — an error boundary must not depend on the provider it may be catching).
+- **R10 · leave-review modal** (`leave-review-modal.tsx`): full `reviewModal` namespace.
+- **R10 · WorkplacesPicker + LocationPicker** (`maps/*`, used in registration + profile + booking-address): fully translated → new `workplacesPicker` / `locationPicker` namespaces.
+
+**Flagged (NOT changed — needs a decision or is off-limits):**
+- **`booking-modal.tsx`** has a leftover Spanish placeholder ("Tu nombre como aparece en tu cédula"), but **booking is on the off-limits list** → flagged, not touched.
+- **`phone-input.tsx`** country names ("México", "España"…) + the "País" aria-label are Spanish in EN — this is the **deferred taxonomy-DATA category** (same as the languages/insurers data), would need an `_EN`-style map; left as a known gap, not half-fixed.
+- **Home phone-mockup** (`phone-screens.tsx` "Plomería · San José") is decorative and the **home is excluded** from the audit.
+
+**Where I stopped / not exhaustively audited:** the pass concentrated on R10 across shared/high-traffic components; it did NOT line-by-line re-audit every one of the ~25 screens for R1–R9 (e.g. each admin sub-page, every dashboard tab, /publicar-proyecto, /ayuda, /soporte form `inputMode`/`autoComplete` coverage). Those rely on the prior design passes' structural conformance; a deeper R6 (mobile-keyboard/autocomplete) sweep is the natural next pass.
+
 ## Sprint 82 (2026-06-12) — registration "no CR ID" exception → progressive-disclosure link
 
 - The "No tengo identificación costarricense" exception in `/registro/profesional` is no longer a checkbox sitting in the form. It's now a **subtle text link** ("¿No tienes identificación costarricense?") placed **directly below the identity block** (both the email/password step-0 path and the OAuth step-1 path); clicking it reveals the foreigner fields and offers a way back ("Tengo identificación costarricense"). New `registration.pro.noCrIdLink` / `hasCrIdLink` keys (ES+EN). `NoCrIdToggle` → `NoCrIdDisclosure`.
