@@ -1,7 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import createIntlMiddleware from "next-intl/middleware";
 import { type NextRequest, NextResponse } from "next/server";
-import { routing } from "./src/i18n/routing";
+import { routing } from "./i18n/routing";
 
 const handleI18n = createIntlMiddleware(routing);
 
@@ -24,21 +24,31 @@ const PUBLIC_PREFIXES = [
   "/privacidad",
 ];
 
-export async function middleware(request: NextRequest) {
+// Next.js 16 renamed the `middleware` file convention to `proxy`. For a `src/`
+// project the file must live at `src/proxy.ts` (same level as `src/app`) — the
+// previous `middleware.ts` at the repo root silently stopped running on the
+// Next 16 upgrade, which disabled the auth gate + locale redirect. This runs
+// before every matched route: i18n locale routing + the Supabase auth gate.
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Honor a stored language preference (NEXT_LOCALE cookie set by the toggle)
-  // for unprefixed URLs only. First-time visitors (no cookie) still default to
-  // Spanish — we deliberately do NOT use Accept-Language, so an English browser
-  // does not silently flip the site to English.
+  // EVERY unprefixed path redirects to its locale-prefixed canonical URL. This
+  // single redirect makes the `[locale]` routes the source of truth, so old
+  // non-localized bookmarks/links (/buscar, /login, /registro, /profesionales/…,
+  // and any other path) never 404 — they land on the real localized page.
+  // Locale = the stored preference (NEXT_LOCALE cookie) when it's "en", else the
+  // default "es". First-time visitors (no cookie) still get Spanish — we
+  // deliberately do NOT use Accept-Language, so an English browser does not
+  // silently flip the site to English. Temporary (307) because the target
+  // depends on the cookie (a user can switch locale anytime); SEO canonical-
+  // ization is handled by the page metadata, not the redirect status.
   const hasLocalePrefix = /^\/(?:es|en)(?:\/|$)/.test(pathname);
   if (!hasLocalePrefix) {
     const cookieLocale = request.cookies.get("NEXT_LOCALE")?.value;
-    if (cookieLocale === "en") {
-      const url = request.nextUrl.clone();
-      url.pathname = `/en${pathname === "/" ? "" : pathname}`;
-      return NextResponse.redirect(url);
-    }
+    const target = cookieLocale === "en" ? "en" : "es";
+    const url = request.nextUrl.clone();
+    url.pathname = `/${target}${pathname === "/" ? "" : pathname}`;
+    return NextResponse.redirect(url);
   }
 
   // Strip locale prefix to get the base path for matching
@@ -132,7 +142,7 @@ function redirectKeepingCookies(path: string, request: NextRequest, response: Ne
 
 export const config = {
   // Skip API routes, Next internals, static files, and /auth/* (OAuth callbacks must
-  // reach the route handler directly — the i18n middleware would redirect /auth/callback
+  // reach the route handler directly — the i18n proxy would redirect /auth/callback
   // to /es/auth/callback, losing the PKCE code before it can be exchanged).
   matcher: ["/((?!api|_next|_vercel|auth|.*\\..*).*)"],
 };
