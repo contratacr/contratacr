@@ -151,12 +151,12 @@ export default function ProfilePage({ params }: ProfilePageProps) {
           <div className="h-16 w-16 rounded-full bg-[#EBF5FB] flex items-center justify-center">
             <span className="text-3xl">🔍</span>
           </div>
-          <h1 className="text-2xl font-bold text-[#111827]">Profesional no encontrado</h1>
+          <h1 className="text-2xl font-bold text-[#111827]">{t("notFoundTitle")}</h1>
           <p className="text-[#6b7280] text-sm max-w-sm">
-            El perfil que buscas no existe o fue eliminado.
+            {t("notFoundDesc")}
           </p>
           <Link href="/buscar" className="mt-2 inline-flex items-center gap-2 bg-[#009FD9] hover:bg-[#0089bb] text-white font-semibold px-6 py-3 rounded-full transition-colors text-sm">
-            Buscar profesionales
+            {t("searchProfessionals")}
           </Link>
         </main>
         <LandingFooter />
@@ -167,7 +167,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
   const expYears = professional.yearsExperience ?? 0;
   const waLink = getWhatsAppLink(
     professional.whatsapp,
-    `Hola ${professional.fullName.split(" ")[0]}, vi tu perfil en ContrataCR y me gustaría consultarte sobre tus servicios.`
+    t("waPrefill", { name: professional.fullName.split(" ")[0] })
   );
 
   const services = professional.services ?? [];
@@ -193,12 +193,12 @@ export default function ProfilePage({ params }: ProfilePageProps) {
   // Calls use the SEPARATE call number when set, else the WhatsApp number.
   const callDigits = (professional.callPhone || professional.whatsapp || "").replace(/\D/g, "");
   const TABS: Array<{ id: Tab; label: string }> = [
-    { id: "servicios",      label: "Servicios" },
-    { id: "disponibilidad", label: "Disponibilidad" },
-    ...(hasCasos ? [{ id: "casos" as Tab, label: "Casos de éxito" }] : []),
-    ...(hasCerts ? [{ id: "certificaciones" as Tab, label: "Certificaciones" }] : []),
-    { id: "resenas",        label: "Reseñas" },
-    { id: "sobre",          label: "Sobre mí" },
+    { id: "servicios",      label: t("tabs.servicios") },
+    { id: "disponibilidad", label: t("tabs.disponibilidad") },
+    ...(hasCasos ? [{ id: "casos" as Tab, label: t("tabs.casos") }] : []),
+    ...(hasCerts ? [{ id: "certificaciones" as Tab, label: t("tabs.certificaciones") }] : []),
+    { id: "resenas",        label: t("tabs.resenas") },
+    { id: "sobre",          label: t("tabs.sobre") },
   ];
 
   return (
@@ -211,9 +211,9 @@ export default function ProfilePage({ params }: ProfilePageProps) {
           {/* Preview mode → a clear way back to the panel. Otherwise, back to search. */}
           {previewMode ? (
             <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-[#bfdbfe] bg-[#EBF5FB] px-4 py-3">
-              <p className="text-sm text-[#0089bb] font-medium">Estás viendo tu perfil como lo ven los clientes.</p>
+              <p className="text-sm text-[#0089bb] font-medium">{t("previewNote")}</p>
               <Link href="/dashboard/profesional" className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-semibold px-4 py-2 transition-colors shrink-0">
-                <ArrowLeft className="h-4 w-4" /> Volver a mi panel
+                <ArrowLeft className="h-4 w-4" /> {t("backToPanel")}
               </Link>
             </div>
           ) : (
@@ -264,17 +264,17 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                   </div>
 
                   {professional.verificationStatus === "verified" ? (
-                    <a
-                      href="/es/proveedores-autorizados"
+                    <Link
+                      href="/proveedores-autorizados"
                       className="flex items-center gap-1.5 text-xs rounded-full bg-[#dcfce7] px-2.5 py-1 text-[#15803d] font-semibold hover:bg-[#bbf7d0] transition-colors"
                     >
                       <ShieldCheck className="h-3.5 w-3.5" />
-                      <span>Identidad verificada</span>
-                    </a>
+                      <span>{t("identityVerified")}</span>
+                    </Link>
                   ) : (
                     <span className="flex items-center gap-1.5 text-xs rounded-full bg-[#fef3c7] border border-[#fde68a] px-2.5 py-1 text-[#92400e] font-semibold">
                       <ShieldAlert className="h-3.5 w-3.5" />
-                      <span>Identidad sin verificar</span>
+                      <span>{t("identityUnverified")}</span>
                     </span>
                   )}
                 </div>
@@ -283,7 +283,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                 <div className="flex flex-col items-center gap-1">
                   <StarRating rating={professional.ratingAvg} showValue reviewCount={professional.reviewCount} size="md" />
                   <button onClick={() => setActiveTab("resenas")} className="text-xs text-[#009FD9] hover:underline">
-                    Ver {professional.reviewCount} {professional.reviewCount === 1 ? "reseña" : "reseñas"}
+                    {t("viewReviewsCount", { count: professional.reviewCount })}
                   </button>
                 </div>
 
@@ -307,7 +307,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                     className="flex items-center justify-center gap-2 w-full bg-[#25D366] hover:bg-[#1ebe5d] text-white font-bold py-3 rounded-xl transition-colors text-sm"
                   >
                     <WhatsAppIcon className="h-4 w-4" />
-                    Contactar por WhatsApp
+                    {t("contact.whatsapp")}
                   </button>
                 ) : isAuthenticated ? (
                   <a
@@ -317,7 +317,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                     className="flex items-center justify-center gap-2 w-full bg-[#25D366] hover:bg-[#1ebe5d] text-white font-bold py-3 rounded-xl transition-colors text-sm"
                   >
                     <WhatsAppIcon className="h-4 w-4" />
-                    Contactar por WhatsApp
+                    {t("contact.whatsapp")}
                   </a>
                 ) : (
                   <button
@@ -325,7 +325,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                     className="flex items-center justify-center gap-2 w-full bg-[#25D366] hover:bg-[#1ebe5d] text-white font-bold py-3 rounded-xl transition-colors text-sm"
                   >
                     <WhatsAppIcon className="h-4 w-4" />
-                    Contactar por WhatsApp
+                    {t("contact.whatsapp")}
                   </button>
                 )}
 
@@ -350,7 +350,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                       className="flex items-center justify-center gap-2 w-full border border-[#009FD9] text-[#009FD9] hover:bg-[#EBF5FB] font-semibold py-3 rounded-xl transition-colors text-sm"
                     >
                       <Phone className="h-4 w-4" />
-                      Llamar
+                      {t("contact.call")}
                     </button>
                   ) : (
                     <a
@@ -358,7 +358,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                       className="flex items-center justify-center gap-2 w-full border border-[#009FD9] text-[#009FD9] hover:bg-[#EBF5FB] font-semibold py-3 rounded-xl transition-colors text-sm"
                     >
                       <Phone className="h-4 w-4" />
-                      Llamar
+                      {t("contact.call")}
                     </a>
                   )
                 )}
@@ -371,7 +371,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                       className="flex items-center justify-center gap-2 w-full border border-[#009FD9] text-[#009FD9] hover:bg-[#EBF5FB] font-semibold py-3 rounded-xl transition-colors text-sm"
                     >
                       <Mail className="h-4 w-4" />
-                      Escribir por correo
+                      {t("email")}
                     </button>
                   ) : (
                     <a
@@ -379,7 +379,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                       className="flex items-center justify-center gap-2 w-full border border-[#009FD9] text-[#009FD9] hover:bg-[#EBF5FB] font-semibold py-3 rounded-xl transition-colors text-sm"
                     >
                       <Mail className="h-4 w-4" />
-                      Escribir por correo
+                      {t("email")}
                     </a>
                   )
                 )}
@@ -400,7 +400,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                     onClick={() => setDropdownOpen(v => !v)}
                     className="flex items-center gap-1.5 text-xs text-[#6b7280] hover:text-[#374151] transition-colors mx-auto"
                   >
-                    Más opciones <ChevronDown className={`h-3.5 w-3.5 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
+                    {t("moreOptions")} <ChevronDown className={`h-3.5 w-3.5 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
                   </button>
                   {dropdownOpen && (
                     <div className="absolute bottom-full left-0 right-0 bg-white border border-[#e5e7eb] rounded-xl shadow-lg py-1 z-10 mb-1">
@@ -409,13 +409,13 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                         onClick={() => { navigator.share?.({ title: professional.fullName, url: window.location.href }); setDropdownOpen(false); }}
                       >
                         <Share2 className="h-4 w-4" />
-                        Compartir perfil
+                        {t("shareProfile")}
                       </button>
                       {/* No self-report: a pro can't report their own profile. */}
                       {isOwn ? (
                         <div className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-[#9ca3af]">
                           <Lock className="h-4 w-4" />
-                          Este es tu perfil
+                          {t("thisIsYourProfile")}
                         </div>
                       ) : (
                         <button
@@ -423,7 +423,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                           onClick={() => { setDropdownOpen(false); setReportOpen(true); }}
                         >
                           <Flag className="h-4 w-4" />
-                          Reportar perfil
+                          {t("reportProfile")}
                         </button>
                       )}
                     </div>
@@ -459,10 +459,10 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                   {/* ── TAB: Servicios ── */}
                   {activeTab === "servicios" && (
                     <div>
-                      <h2 className="text-lg font-semibold text-[#111827] mb-5">Servicios ofrecidos</h2>
+                      <h2 className="text-lg font-semibold text-[#111827] mb-5">{t("servicesOffered")}</h2>
                       {services.length === 0 ? (
                         <p className="text-sm text-[#9ca3af] py-4 text-center">
-                          Este profesional no ha agregado servicios específicos todavía.
+                          {t("noServices")}
                         </p>
                       ) : (
                         <>
@@ -480,7 +480,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                                     <span className="text-sm font-semibold text-[#009FD9] whitespace-nowrap shrink-0">{svc.price}</span>
                                   ) : (
                                     <button className="text-xs font-semibold text-[#009FD9] hover:underline shrink-0">
-                                      Consultar
+                                      {t("consult")}
                                     </button>
                                   )}
                                 </div>
@@ -489,7 +489,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                           </div>
                           {services.length > 5 && (
                             <Button variant="outline" size="sm" className="mt-4" onClick={() => setShowAllServices(v => !v)}>
-                              {showAllServices ? "Ver menos" : `Ver más (${services.length - 5} más)`}
+                              {showAllServices ? t("viewLess") : t("viewMore", { count: services.length - 5 })}
                             </Button>
                           )}
                         </>
@@ -500,15 +500,14 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                   {/* ── TAB: Disponibilidad ── */}
                   {activeTab === "disponibilidad" && (
                     <div>
-                      <h2 className="text-lg font-semibold text-[#111827] mb-5">Disponibilidad</h2>
+                      <h2 className="text-lg font-semibold text-[#111827] mb-5">{t("tabs.disponibilidad")}</h2>
                       {professional.availabilityPublic ? (
                         <div className="flex flex-col items-center text-center gap-4 py-6">
                           <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#EBF5FB]">
                             <MapPin className="h-6 w-6 text-[#009FD9]" />
                           </div>
                           <p className="text-sm text-[#374151] max-w-sm">
-                            Este profesional tiene horarios disponibles. Usa <strong>Solicitar servicio</strong> para
-                            elegir una fecha y hora y reservar directamente.
+                            {t.rich("availPublicNote", { b: (c) => <strong>{c}</strong> })}
                           </p>
                           <BookingButton
                             professional={professional}
@@ -522,7 +521,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                               className="flex items-center justify-center gap-2 border border-[#009FD9] text-[#009FD9] hover:bg-[#EBF5FB] font-semibold py-2.5 px-5 rounded-xl transition-colors text-sm"
                             >
                               <Phone className="h-4 w-4" />
-                              Llamar
+                              {t("contact.call")}
                             </a>
                           )}
                         </div>
@@ -532,10 +531,10 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                             <Lock className="h-6 w-6 text-[#6b7280]" />
                           </div>
                           <p className="text-sm font-medium text-[#374151] max-w-sm">
-                            La disponibilidad de este profesional no es pública.
+                            {t("availPrivateTitle")}
                           </p>
                           <p className="text-xs text-[#9ca3af] max-w-sm -mt-2">
-                            Contactalo directamente y conoce sus horarios.
+                            {t("availPrivateDesc")}
                           </p>
                           <div className="flex flex-col sm:flex-row gap-2.5 w-full max-w-xs">
                             {isAuthenticated ? (
@@ -564,7 +563,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                                 className="flex-1 flex items-center justify-center gap-2 border border-[#009FD9] text-[#009FD9] hover:bg-[#EBF5FB] font-semibold py-2.5 rounded-xl transition-colors text-sm"
                               >
                                 <Phone className="h-4 w-4" />
-                                Llamar
+                                {t("contact.call")}
                               </a>
                             )}
                           </div>
@@ -577,8 +576,8 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                   {activeTab === "casos" && (
                     <div className="flex flex-col gap-6">
                       <div>
-                        <h2 className="text-lg font-semibold text-[#111827] mb-1">Casos de éxito</h2>
-                        <p className="text-sm text-[#6b7280]">Fotos de trabajos anteriores de {professional.fullName.split(" ")[0]}.</p>
+                        <h2 className="text-lg font-semibold text-[#111827] mb-1">{t("tabs.casos")}</h2>
+                        <p className="text-sm text-[#6b7280]">{t("casosSubtitle", { name: professional.fullName.split(" ")[0] })}</p>
                       </div>
                       {hasCasos ? (
                         (() => {
@@ -604,7 +603,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                               ))}
                               {other.length > 0 && (
                                 <div>
-                                  <h3 className="text-sm font-semibold text-[#111827] mb-2">Otros trabajos</h3>
+                                  <h3 className="text-sm font-semibold text-[#111827] mb-2">{t("otherWorks")}</h3>
                                   <ProfileGallery urls={other.map((it) => it.url)} />
                                 </div>
                               )}
@@ -612,7 +611,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                           );
                         })()
                       ) : (
-                        <p className="text-sm text-[#9ca3af]">Este profesional todavía no agregó casos de éxito.</p>
+                        <p className="text-sm text-[#9ca3af]">{t("noCasos")}</p>
                       )}
                     </div>
                   )}
@@ -620,8 +619,8 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                   {/* ── TAB: Certificaciones (text only, no images) ── */}
                   {activeTab === "certificaciones" && (
                     <div>
-                      <h2 className="text-lg font-semibold text-[#111827] mb-1">Certificaciones</h2>
-                      <p className="text-sm text-[#9ca3af] mb-4">Cursos, títulos y certificados que indica el profesional.</p>
+                      <h2 className="text-lg font-semibold text-[#111827] mb-1">{t("tabs.certificaciones")}</h2>
+                      <p className="text-sm text-[#9ca3af] mb-4">{t("certsSubtitle")}</p>
                       <div className="flex flex-col gap-5">
                         {certGroups.map(([prof, certs]) => (
                           <div key={prof || "general"}>
@@ -659,13 +658,13 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                         <div className="flex flex-col items-center">
                           <span className="text-4xl font-extrabold text-[#111827]">{professional.ratingAvg.toFixed(1)}</span>
                           <StarRating rating={professional.ratingAvg} size="sm" className="mt-1" />
-                          <span className="text-xs text-[#9ca3af] mt-1">{professional.reviewCount} {professional.reviewCount === 1 ? "reseña" : "reseñas"}</span>
+                          <span className="text-xs text-[#9ca3af] mt-1">{t("reviewCountLabel", { count: professional.reviewCount })}</span>
                         </div>
                         <div className="flex-1 flex flex-col gap-2">
-                          <SubRating label="Precio" value={4.8} />
-                          <SubRating label="Puntualidad" value={4.9} />
-                          <SubRating label="Calidad" value={5.0} />
-                          <SubRating label="Comunicación" value={4.7} />
+                          <SubRating label={t("subRating.price")} value={4.8} />
+                          <SubRating label={t("subRating.punctuality")} value={4.9} />
+                          <SubRating label={t("subRating.quality")} value={5.0} />
+                          <SubRating label={t("subRating.communication")} value={4.7} />
                         </div>
                       </div>
 
@@ -673,7 +672,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                       <div className="flex items-start gap-2 bg-[#EBF5FB] rounded-xl px-4 py-3 mb-5">
                         <Shield className="h-4 w-4 text-[#009FD9] shrink-0 mt-0.5" />
                         <p className="text-xs text-[#0089bb] font-medium">
-                          Solo clientes que recibieron un servicio de este profesional pueden dejar una reseña.
+                          {t("reviewsGate")}
                         </p>
                       </div>
 
@@ -693,7 +692,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                     <div className="flex flex-col gap-5">
                       {professional.bio && (
                         <div>
-                          <h2 className="text-lg font-semibold text-[#111827] mb-3">Descripción</h2>
+                          <h2 className="text-lg font-semibold text-[#111827] mb-3">{t("description")}</h2>
                           <p className="text-sm text-[#374151] leading-relaxed">{professional.bio}</p>
                         </div>
                       )}
@@ -702,24 +701,24 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         {expYears > 0 && (
                           <div className="bg-[#f3f4f6] rounded-xl p-4">
-                            <p className="text-xs text-[#9ca3af] font-medium mb-1">Experiencia</p>
-                            <p className="text-base font-bold text-[#111827]">{expYears} {expYears === 1 ? "año" : "años"}</p>
+                            <p className="text-xs text-[#9ca3af] font-medium mb-1">{t("experienceLabel")}</p>
+                            <p className="text-base font-bold text-[#111827]">{t("yearsValue", { years: expYears })}</p>
                           </div>
                         )}
                         {professional.verificationStatus === "verified" ? (
                           <div className="bg-[#f0fdf4] rounded-xl p-4 flex items-center gap-3">
                             <ShieldCheck className="h-5 w-5 text-[#16a34a] shrink-0" />
                             <div>
-                              <p className="text-xs text-[#6b7280] font-medium">Verificación</p>
-                              <p className="text-sm font-bold text-[#15803d]">Identidad verificada</p>
+                              <p className="text-xs text-[#6b7280] font-medium">{t("verification")}</p>
+                              <p className="text-sm font-bold text-[#15803d]">{t("identityVerified")}</p>
                             </div>
                           </div>
                         ) : (
                           <div className="bg-[#fffbeb] border border-[#fde68a] rounded-xl p-4 flex items-center gap-3">
                             <ShieldAlert className="h-5 w-5 text-[#d97706] shrink-0" />
                             <div>
-                              <p className="text-xs text-[#6b7280] font-medium">Verificación</p>
-                              <p className="text-sm font-bold text-[#92400e]">Identidad sin verificar</p>
+                              <p className="text-xs text-[#6b7280] font-medium">{t("verification")}</p>
+                              <p className="text-sm font-bold text-[#92400e]">{t("identityUnverified")}</p>
                             </div>
                           </div>
                         )}
@@ -727,14 +726,14 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                           <div className="bg-[#f3f4f6] rounded-xl p-4 flex items-center gap-3">
                             <MapPin className="h-5 w-5 text-[#6b7280] shrink-0" />
                             <div>
-                              <p className="text-xs text-[#9ca3af] font-medium">Ubicación</p>
+                              <p className="text-xs text-[#9ca3af] font-medium">{t("location")}</p>
                               <p className="text-sm font-bold text-[#111827]">{locationText}</p>
                             </div>
                           </div>
                         )}
                         {professional.pricing && professional.pricing.length > 0 ? (
                           <div className="bg-[#f3f4f6] rounded-xl p-4 sm:col-span-2">
-                            <p className="text-xs text-[#9ca3af] font-medium mb-2">Precios</p>
+                            <p className="text-xs text-[#9ca3af] font-medium mb-2">{t("prices")}</p>
                             <div className="flex flex-col gap-1">
                               {professional.pricing.map((tier) => (
                                 <p key={tier.id} className="text-sm font-semibold text-[#111827]">{formatPricingTier(tier)}</p>
@@ -743,15 +742,15 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                           </div>
                         ) : professional.hourlyRate ? (
                           <div className="bg-[#f3f4f6] rounded-xl p-4">
-                            <p className="text-xs text-[#9ca3af] font-medium mb-1">Tarifa base</p>
-                            <p className="text-base font-bold text-[#111827]">₡{professional.hourlyRate.toLocaleString("es-CR")}/hora</p>
+                            <p className="text-xs text-[#9ca3af] font-medium mb-1">{t("baseRate")}</p>
+                            <p className="text-base font-bold text-[#111827]">₡{professional.hourlyRate.toLocaleString(locale === "en" ? "en-US" : "es-CR")}{t("perHour")}</p>
                           </div>
                         ) : null}
                       </div>
 
                       {professional.workplaces && professional.workplaces.length > 0 && (
                         <div>
-                          <h2 className="text-lg font-semibold text-[#111827] mb-3">Lugares de trabajo</h2>
+                          <h2 className="text-lg font-semibold text-[#111827] mb-3">{t("workplaces")}</h2>
                           <div className="flex flex-col gap-2">
                             {professional.workplaces.map((w, i) => (
                               <div key={w.id ?? i} className="text-sm text-[#374151]">
@@ -765,7 +764,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
 
                       {professional.languages && professional.languages.length > 0 && (
                         <div>
-                          <h2 className="text-lg font-semibold text-[#111827] mb-3">Idiomas</h2>
+                          <h2 className="text-lg font-semibold text-[#111827] mb-3">{t("languages")}</h2>
                           <div className="flex flex-wrap gap-2">
                             {professional.languages.map((l) => (
                               <span key={l} className="inline-flex items-center rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium px-3 py-1.5">
@@ -778,7 +777,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
 
                       {professional.insuranceNetworks && professional.insuranceNetworks.length > 0 && (
                         <div>
-                          <h2 className="text-lg font-semibold text-[#111827] mb-3">Aseguradoras</h2>
+                          <h2 className="text-lg font-semibold text-[#111827] mb-3">{t("insurers")}</h2>
                           <div className="flex flex-wrap gap-2">
                             {professional.insuranceNetworks.map((id) => (
                               <span key={id} className="inline-flex items-center gap-1.5 rounded-lg bg-[#f0fdf4] text-[#15803d] text-sm font-medium px-3 py-1.5">
