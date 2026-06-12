@@ -335,6 +335,7 @@ export default function ProDashboardPage() {
                       initialUrls={pro.portfolio_urls ?? []}
                       initialItems={pro.portfolio_items ?? undefined}
                       professions={(pro.professions && pro.professions.length > 0) ? pro.professions : (pro.category_id ? [pro.category_id] : [])}
+                      services={pro.services ?? []}
                       onSaved={handleSaved}
                     />
                   )}

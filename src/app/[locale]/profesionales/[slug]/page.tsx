@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { StarRating } from "@/components/ui/star-rating";
 import { getInitials, getWhatsAppLink } from "@/lib/utils";
 import { getCategoryLabel } from "@/lib/data/categories";
+import { serviceLabelMap } from "@/lib/services";
 import { formatPricingTier } from "@/lib/pricing";
 import { languageLabel } from "@/lib/data/languages";
 import { insurerLabel } from "@/lib/data/insurers";
@@ -562,24 +563,28 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                         (() => {
                           const items = professional.portfolioItems && professional.portfolioItems.length > 0
                             ? professional.portfolioItems
-                            : professional.portfolioUrls!.map((url) => ({ url, profession: undefined as string | undefined }));
-                          const profs = professional.professions ?? [];
-                          const tagged = profs.filter((p) => items.some((it) => it.profession === p));
-                          const untagged = items.filter((it) => !it.profession || !profs.includes(it.profession));
-                          // No per-profession tags → single gallery (back-compat).
+                            : professional.portfolioUrls!.map((url) => ({ url, serviceId: undefined as string | undefined, profession: undefined as string | undefined }));
+                          // Group by SERVICE INSTANCE (id) so repeated service names
+                          // (e.g. several "Otro servicio") never share photos.
+                          const svcs = professional.services ?? [];
+                          const labels = serviceLabelMap(svcs);
+                          const svcIds = new Set(svcs.map((s) => s.id));
+                          const tagged = svcs.filter((s) => items.some((it) => it.serviceId === s.id));
+                          const other = items.filter((it) => !it.serviceId || !svcIds.has(it.serviceId));
+                          // No service tags at all → single gallery (back-compat).
                           if (tagged.length === 0) return <ProfileGallery urls={items.map((it) => it.url)} />;
                           return (
                             <>
-                              {tagged.map((p) => (
-                                <div key={p}>
-                                  <h3 className="text-sm font-semibold text-[#111827] mb-2">{tCat(p as Parameters<typeof tCat>[0])}</h3>
-                                  <ProfileGallery urls={items.filter((it) => it.profession === p).map((it) => it.url)} />
+                              {tagged.map((s) => (
+                                <div key={s.id}>
+                                  <h3 className="text-sm font-semibold text-[#111827] mb-2">{labels.get(s.id) ?? s.name}</h3>
+                                  <ProfileGallery urls={items.filter((it) => it.serviceId === s.id).map((it) => it.url)} />
                                 </div>
                               ))}
-                              {untagged.length > 0 && (
+                              {other.length > 0 && (
                                 <div>
                                   <h3 className="text-sm font-semibold text-[#111827] mb-2">Otros trabajos</h3>
-                                  <ProfileGallery urls={untagged.map((it) => it.url)} />
+                                  <ProfileGallery urls={other.map((it) => it.url)} />
                                 </div>
                               )}
                             </>

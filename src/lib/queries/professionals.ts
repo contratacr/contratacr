@@ -53,9 +53,11 @@ export type ProService = {
   name: string;
   description?: string;
   price?: string;
+  category?: string;
 };
 
-export type PortfolioItem = { url: string; profession?: string };
+// Photos attach to a SERVICE INSTANCE (serviceId); `profession` kept for legacy.
+export type PortfolioItem = { url: string; serviceId?: string; profession?: string };
 
 export type ProfessionalDetail = ProfessionalCardData & {
   portfolioUrls: string[];

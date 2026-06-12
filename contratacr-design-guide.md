@@ -204,6 +204,11 @@ A professional is always **ONE card** (`rounded-2xl bg-white border`, never spli
 - **Price lives ONLY in the Servicios tab** (per-service: amount + type). "Mi perfil" no longer asks for price — it shows a short note pointing to Servicios. The /buscar card + profile "Desde" price is **derived from the services** via `deriveDisplayPricing(services, legacyPricing, hourlyRate)` (cheapest priced service; "a consultar" if services exist but none priced; legacy `pricing`/`hourly_rate` as fallback so no existing pro loses a displayed price). Do not re-add a profile-level price input.
 - **Label:** the `a_convenir` type now displays as **"Precio a consultar"** everywhere (clearer than "a convenir" for all CR users). Keep the internal type id `a_convenir` — only the display string changed.
 
+### Servicios + casos de éxito (per service instance)
+- **Servicios** is a two-step flow with numbered badges: **1 Tus profesiones**, **2 Tus servicios** (each service has name + price + optional description/years). Keep it flat — hairline-divided sections, no nested boxes; only the add/edit form gets an accent box.
+- **Casos de éxito attach to a SERVICE INSTANCE by `serviceId`, never by name or profession.** Several services with the same name (e.g. three "Otro servicio") must NOT share photos. `PortfolioItem = { url, serviceId?, profession? }` (`profession` kept for legacy back-compat). Photos not tied to a current service fall into an **"Otros trabajos"** bucket (never lost).
+- **Disambiguate duplicate names** with `serviceLabelMap(services)` (`lib/services.ts`): when a name repeats it appends the description snippet, else an ordinal "(2)", "(3)". Use this label both in the editor (PhotoGallery) and the public profile casos tab so repeated services are always tellable apart.
+
 ### Company / brand vs personal name hierarchy
 - When a pro has a **business/brand name** (`business_name`), it **leads** as the prominent title (clients recognize the brand) and the **personal name becomes a muted subtitle** (`text-[#6b7280]`) directly below — on both the /buscar card and the profile header. No business name → the personal name is the prominent title and there's no subtitle. Keeps cards uniform height. Helper vars on the card: `brandPrimary` / `brandSecondary`.
 

@@ -935,6 +935,10 @@ No new migrations. Behavioural/UX fixes + a few API/data-flow corrections.
 - `WorkplacesPicker`: **"Usar mi ubicación actual"** (geolocation + reverse geocode) and **re-inits the map on every mount** (the Script `onLoad` only fires once) — fixes the blank map after fixed→mobile→fixed (fixes 13–14).
 - Profile **work mode allows BOTH** ("me desplazo" + "lugar fijo" are independent toggles); `service_type` stored as a comma list.
 
+### Servicios clarity + casos de éxito by service instance
+- **Servicios** reorganized into a clear two-step flow (numbered badges: 1 Tus profesiones, 2 Tus servicios), lighter containers.
+- **Casos de éxito now attach to a SERVICE INSTANCE (`serviceId`), not profession** — fixes duplicate names (e.g. three "Otro servicio") sharing photos. `PortfolioItem` gained `serviceId` (`profession` kept for legacy). New `lib/services.ts` `serviceLabelMap()` builds unique labels (description snippet or ordinal for repeats), used in `PhotoGallery` (editor) and the profile casos tab. Photos with no current service fall into an "Otros trabajos" bucket. PhotoGallery now takes `services`; uploads tag `{ serviceId, profession }`.
+
 ### Profile improvements (price/label/brand/completion/self-report)
 - **Unified price → Servicios only.** Removed the duplicate profile-level "Precios" tiers from Mi perfil (profile-editor no longer writes `pricing`/`hourly_rate`; existing DB values left intact as fallback). The card/profile "Desde" now derives from services via `deriveDisplayPricing()` in `lib/pricing.ts` (used in `queries/professionals.ts`; the buscar select now includes `services`).
 - **Label:** `a_convenir` displays as **"Precio a consultar"** (was "Precio a convenir"); internal id unchanged.

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useLocale } from "next-intl";
-import { Plus, Trash2, Check, Pencil, X, Briefcase } from "lucide-react";
+import { Plus, Trash2, Check, Pencil, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PriceInput } from "@/components/ui/price-input";
@@ -224,15 +224,15 @@ export function ServicesEditor({
   return (
     <div className="flex flex-col gap-6">
       <p className="text-sm text-[#6b7280]">
-        Organiza tus servicios por profesión. Puedes ofrecer más de una profesión —
-        cada servicio se agrega bajo la profesión a la que pertenece.
+        Primero elige <strong>tus profesiones</strong>; luego agrega <strong>los servicios</strong> de cada una con su
+        precio. Cada servicio guarda sus propias fotos de casos de éxito.
       </p>
 
-      {/* ── Professions manager ─────────────────────────────────────────── */}
-      <div className="rounded-2xl border border-[#e5e7eb] p-4">
+      {/* ── STEP 1 — Professions manager ────────────────────────────────── */}
+      <div className="rounded-xl border border-[#e5e7eb] p-4">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <Briefcase className="h-4 w-4 text-[#009FD9]" />
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#009FD9] text-white text-xs font-bold shrink-0">1</span>
             <h3 className="text-sm font-semibold text-[#111827]">Tus profesiones</h3>
           </div>
           {!addingProfession && (
@@ -277,10 +277,14 @@ export function ServicesEditor({
         )}
       </div>
 
-      {/* ── Services grouped by profession ──────────────────────────────────
+      {/* ── STEP 2 — Services grouped by profession ─────────────────────────
           Flat layout: each profession is a plain section divided by a hairline
           (no nested boxes); services are a simple divided list (no surrounding
           border). Only the add/edit form keeps an accent box so it stands out. */}
+      <div className="flex items-center gap-2">
+        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#009FD9] text-white text-xs font-bold shrink-0">2</span>
+        <h3 className="text-sm font-semibold text-[#111827]">Tus servicios</h3>
+      </div>
       {professions.map((prof, idx) => {
         const profServices = services.filter((s) => effectiveCategory(s) === prof);
         return (
