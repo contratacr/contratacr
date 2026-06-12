@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { MapPin, Navigation, RotateCcw } from "lucide-react";
 import { loadGoogleMaps, MAP_ID } from "@/lib/maps/loader";
 
@@ -48,6 +49,7 @@ function toLatLng(v: GMaps): { lat: number; lng: number } {
 }
 
 export function LocationPicker({ value, onChange, apiKey }: LocationPickerProps) {
+  const t = useTranslations("locationPicker");
   const mapRef = useRef<HTMLDivElement>(null);
   const pacContainerRef = useRef<HTMLDivElement>(null);
   const markerRef = useRef<GMaps>(null);
@@ -87,7 +89,7 @@ export function LocationPicker({ value, onChange, apiKey }: LocationPickerProps)
     if (pacContainerRef.current && maps.places?.PlaceAutocompleteElement && pacContainerRef.current.childElementCount === 0) {
       const pac = new maps.places.PlaceAutocompleteElement({ includedRegionCodes: ["cr"] });
       pac.style.width = "100%";
-      pac.setAttribute("placeholder", "Busca la dirección de tu local… ej. Escazú Centro");
+      pac.setAttribute("placeholder", t("searchPlaceholder"));
       pacContainerRef.current.appendChild(pac);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       pac.addEventListener("gmp-select", async (e: any) => {
@@ -188,7 +190,7 @@ export function LocationPicker({ value, onChange, apiKey }: LocationPickerProps)
     return (
       <div className="rounded-xl border border-[#e5e7eb] p-4 bg-[#f9fafb] text-center">
         <MapPin className="h-6 w-6 text-[#9ca3af] mx-auto mb-2" />
-        <p className="text-sm text-[#9ca3af]">Mapa no disponible — configura NEXT_PUBLIC_GOOGLE_MAPS_API_KEY</p>
+        <p className="text-sm text-[#9ca3af]">{t("mapUnavailable")}</p>
       </div>
     );
   }
@@ -203,7 +205,7 @@ export function LocationPicker({ value, onChange, apiKey }: LocationPickerProps)
         <div ref={mapRef} className="w-full h-full" />
         {!value && (
           <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm rounded-xl px-3 py-1.5 text-xs text-[#374151] shadow border border-[#e5e7eb] whitespace-nowrap pointer-events-none">
-            Busca una dirección arriba o haz clic en el mapa
+            {t("searchOrClick")}
           </div>
         )}
       </div>
@@ -217,7 +219,7 @@ export function LocationPicker({ value, onChange, apiKey }: LocationPickerProps)
           className="flex items-center gap-1.5 text-xs font-medium text-[#009FD9] hover:underline disabled:opacity-50"
         >
           <Navigation className="h-3.5 w-3.5" />
-          {locating ? "Localizando…" : "Usar mi ubicación"}
+          {locating ? t("locating") : t("useMyLocation")}
         </button>
         {value && (
           <button
@@ -226,7 +228,7 @@ export function LocationPicker({ value, onChange, apiKey }: LocationPickerProps)
             className="flex items-center gap-1.5 text-xs font-medium text-[#9ca3af] hover:text-red-500 ml-auto"
           >
             <RotateCcw className="h-3.5 w-3.5" />
-            Borrar
+            {t("clear")}
           </button>
         )}
       </div>

@@ -225,6 +225,14 @@
     "viewCases": "Ver casos de éxito ({count})",
     "viewCertifications": "Ver certificaciones ({count})"
   },
+  "locationPicker": {
+    "searchPlaceholder": "Busca la dirección de tu local… ej. Escazú Centro",
+    "mapUnavailable": "Mapa no disponible — configura NEXT_PUBLIC_GOOGLE_MAPS_API_KEY",
+    "searchOrClick": "Busca una dirección arriba o haz clic en el mapa",
+    "locating": "Localizando…",
+    "useMyLocation": "Usar mi ubicación",
+    "clear": "Borrar"
+  },
   "workplacesPicker": {
     "searchPlaceholder": "Busca un lugar o toca el mapa para marcar tu ubicación",
     "geoUnsupported": "Tu navegador no permite geolocalización.",
