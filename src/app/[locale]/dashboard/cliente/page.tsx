@@ -150,7 +150,7 @@ export default function ClientDashboardPage() {
       const res = await fetch("/api/upload/photo", { method: "POST", body: fd });
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
-        alert(j.error || "No se pudo subir la foto. Intenta de nuevo.");
+        alert(j.error || t("photoError"));
         return;
       }
       const { url } = await res.json();
@@ -159,7 +159,7 @@ export default function ClientDashboardPage() {
       await supabase.auth.updateUser({ data: { avatar_url: url } });
       setProfileAvatar(url);
     } catch {
-      alert("No se pudo subir la foto. Intenta de nuevo.");
+      alert(t("photoError"));
     } finally {
       setPhotoUploading(false);
     }
@@ -181,7 +181,7 @@ export default function ClientDashboardPage() {
     (user?.user_metadata?.full_name as string) ||
     (user?.user_metadata?.name as string) ||
     user?.email?.split("@")[0] ||
-    "Cliente";
+    t("clientFallback");
 
   const headerAvatar =
     profileAvatar ||
@@ -248,7 +248,7 @@ export default function ClientDashboardPage() {
                 {headerAvatar ? (
                   <img
                     src={headerAvatar}
-                    alt="Foto de perfil"
+                    alt={t("photoAlt")}
                     className="h-11 w-11 rounded-full object-cover border-2 border-white shadow-sm"
                   />
                 ) : (

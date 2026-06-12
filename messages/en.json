@@ -1323,7 +1323,10 @@
     "identityPendingHelp": "We registered your ID. IDs not in the padrón (DIMEX/NITE) are reviewed manually.",
     "offerTitle": "Do you offer services?",
     "offerBody": "Turn your account into a professional one without creating a new one. You complete your ID and service details once, and keep everything you already have as a client.",
-    "offerCta": "Offer my services"
+    "offerCta": "Offer my services",
+    "photoError": "Couldn't upload the photo. Try again.",
+    "photoAlt": "Profile photo",
+    "clientFallback": "Client"
   },
   "accountSecurity": {
     "heading": "Account & security",

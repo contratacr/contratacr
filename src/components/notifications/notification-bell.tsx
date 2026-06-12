@@ -233,8 +233,8 @@ export function NotificationBell() {
                     <button
                       onClick={(e) => dismiss(e, n.id)}
                       className="absolute top-2 right-2 p-1 rounded-md text-[#9ca3af] hover:bg-[#e5e7eb] hover:text-red-500 transition-colors"
-                      aria-label="Eliminar"
-                      title="Eliminar"
+                      aria-label={t("delete")}
+                      title={t("delete")}
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>

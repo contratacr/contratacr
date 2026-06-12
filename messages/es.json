@@ -1323,7 +1323,10 @@
     "identityPendingHelp": "Registramos tu identificación. Las cédulas que no están en el padrón (DIMEX/NITE) se revisan manualmente.",
     "offerTitle": "¿Ofreces servicios?",
     "offerBody": "Convierte tu cuenta en profesional sin crear una nueva. Completas tu cédula y datos de servicio una sola vez, y conservas todo lo que ya tienes como cliente.",
-    "offerCta": "Ofrecer mis servicios"
+    "offerCta": "Ofrecer mis servicios",
+    "photoError": "No se pudo subir la foto. Intenta de nuevo.",
+    "photoAlt": "Foto de perfil",
+    "clientFallback": "Cliente"
   },
   "accountSecurity": {
     "heading": "Cuenta y seguridad",
