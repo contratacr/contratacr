@@ -212,7 +212,9 @@
     "available": "Disponible",
     "coverageCountry": "Atiende en todo el país",
     "coverageYourLocation": "Se desplaza a tu ubicación",
-    "coverageAreas": "Se desplaza en {areas}"
+    "coverageAreas": "Se desplaza en {areas}",
+    "save": "Guardar profesional",
+    "unsave": "Quitar de guardados"
   },
   "schedule": {
     "today": "Hoy",
@@ -226,6 +228,18 @@
     "location": "Ubicación",
     "videoconsulta": "Videoconsulta",
     "atHome": "A domicilio"
+  },
+  "selfAction": {
+    "title": "Este es tu perfil",
+    "ok": "Entendido",
+    "messages": {
+      "request": "No puedes solicitarte un servicio a ti mismo. Así es como los clientes te encuentran y reservan tus servicios.",
+      "whatsapp": "No puedes contactarte por WhatsApp a ti mismo. Así es como los clientes te escriben para coordinar.",
+      "call": "No puedes llamarte a ti mismo. Así es como los clientes te contactan por teléfono.",
+      "email": "No puedes escribirte a ti mismo. Así es como los clientes te contactan por correo.",
+      "proposal": "No puedes enviarte una propuesta a tu propio proyecto.",
+      "favorite": "No puedes guardarte a ti mismo en favoritos. Aquí es donde los clientes guardan tu perfil para contratarte después."
+    }
   },
   "profile": {
     "back": "Volver a resultados",

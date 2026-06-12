@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Bookmark } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SelfActionModal, SELF_MSG } from "@/components/professionals/self-action-modal";
@@ -88,6 +89,7 @@ interface SaveButtonProps {
 }
 
 export function SaveButton({ pro, className, isOwn = false }: SaveButtonProps) {
+  const t = useTranslations("card");
   const [saved, setSaved] = useState(false);
   const [selfMsg, setSelfMsg] = useState<string | null>(null);
 
@@ -117,7 +119,7 @@ export function SaveButton({ pro, className, isOwn = false }: SaveButtonProps) {
     <>
       <button
         onClick={toggle}
-        aria-label={saved ? "Quitar de guardados" : "Guardar profesional"}
+        aria-label={saved ? t("unsave") : t("save")}
         className={cn(
           "flex items-center justify-center w-7 h-7 rounded-full border bg-white/90 backdrop-blur transition-colors duration-200",
           saved

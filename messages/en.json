@@ -212,7 +212,9 @@
     "available": "Available",
     "coverageCountry": "Serves the whole country",
     "coverageYourLocation": "Travels to your location",
-    "coverageAreas": "Travels in {areas}"
+    "coverageAreas": "Travels in {areas}",
+    "save": "Save professional",
+    "unsave": "Remove from saved"
   },
   "schedule": {
     "today": "Today",
@@ -226,6 +228,18 @@
     "location": "Location",
     "videoconsulta": "Video consultation",
     "atHome": "At your location"
+  },
+  "selfAction": {
+    "title": "This is your profile",
+    "ok": "Got it",
+    "messages": {
+      "request": "You can't request a service from yourself. This is how clients find you and book your services.",
+      "whatsapp": "You can't message yourself on WhatsApp. This is how clients message you to coordinate.",
+      "call": "You can't call yourself. This is how clients reach you by phone.",
+      "email": "You can't email yourself. This is how clients reach you by email.",
+      "proposal": "You can't send a proposal to your own project.",
+      "favorite": "You can't save yourself to favorites. This is where clients save your profile to hire you later."
+    }
   },
   "profile": {
     "back": "Back to results",
