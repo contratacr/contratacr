@@ -530,6 +530,13 @@ The admin panel is section-based (one tab per operational queue) and that stays.
 - **Reachable from anywhere a user appears**: link with either the user id (tickets) or the professional id (reports, verification case) — the profile route resolves a professional id to its owner.
 - Keep every section view + its per-status filters/badges intact; the user layer is additive. Admin tab bar scrolls horizontally on mobile.
 
+**Unified admin color system (apply to every section/component):**
+- **Brand blue `#009FD9`** — segment/filter tabs (active: `bg-[#009FD9] text-white border-[#009FD9]`; inactive: `bg-white text-[#374151] border-[#e5e7eb] hover:border-[#009FD9]`, always with a `border` on both states so there's no 1px shift), loading spinners (`<Loader2 className="h-7 w-7 animate-spin text-[#009FD9]" />` — never a hand-rolled `border-t-transparent` div), links, input focus rings, and the icon in section/`Section` headings.
+- **Navy `#0f172a`** — chrome only: the shell header, neutral-**primary** action buttons (e.g. "Responder", "Abrir caso de verificación"), and the admin side of chat bubbles. Not for tabs.
+- **Green `#16a34a` / red `#dc2626`** — approve·verify / reject·danger actions.
+- **Status pills** — amber/blue/emerald/gray-100 scale; **verification** pills always via the shared `verificationPillClasses` helper.
+- **Every section gets a title header**: `flex items-center gap-2 mb-5` → tab icon (`h-5 w-5 text-[#009FD9]`) + `<h1 className="text-xl font-bold text-[#111827]">`. List sections render the header in every state (loading/empty/populated), not only when populated.
+
 ---
 
 ## 12. OAuth guidance blocks (Cuenta y seguridad)
