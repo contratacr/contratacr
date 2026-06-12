@@ -204,6 +204,12 @@ A professional is always **ONE card** (`rounded-2xl bg-white border`, never spli
 - **Price lives ONLY in the Servicios tab** (per-service: amount + type). "Mi perfil" no longer asks for price — it shows a short note pointing to Servicios. The /buscar card + profile "Desde" price is **derived from the services** via `deriveDisplayPricing(services, legacyPricing, hourlyRate)` (cheapest priced service; "a consultar" if services exist but none priced; legacy `pricing`/`hourly_rate` as fallback so no existing pro loses a displayed price). Do not re-add a profile-level price input.
 - **Label:** the `a_convenir` type now displays as **"Precio a consultar"** everywhere (clearer than "a convenir" for all CR users). Keep the internal type id `a_convenir` — only the display string changed.
 
+### Google Maps — use the NEW Places API components only
+- Always load Maps via the shared async loader `lib/maps/loader.ts` (`loadGoogleMaps(key)`); never add a raw `<script src=.../maps/api/js>` or `&libraries=places` tag (those trip the loading warning and pull legacy libs).
+- **Address autocomplete:** use `places.PlaceAutocompleteElement` (web component, `includedRegionCodes:["cr"]`, `gmp-select`). Do NOT use the legacy `places.Autocomplete` (needs the old Places API → `ApiTargetBlockedMapError`).
+- **Markers:** use `marker.AdvancedMarkerElement` with HTML `content` (remove via `marker.map = null`). Do NOT use `maps.Marker`. AdvancedMarkers require the map to have a `mapId` (`MAP_ID` from the loader) — and a `mapId` disables JSON map styles, so brand styling must come from a **cloud Map ID** (`NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID`).
+- The key only needs **Places API (New) + Maps JavaScript API + Geocoding API**.
+
 ### Save feedback — autosave + always-visible status
 - Editors **autosave** (profile-editor debounces 1.5s; services/availability persist on each action). Always show a **persistent status line** so the user never wonders "did it save?": `Guardando…` (spinner) / `Guardado` (check) / `Cambios sin guardar` (amber) / a muted "Los cambios se guardan automáticamente." when idle. Keep a manual "Guardar cambios" affordance where a debounce window exists (profile-editor), backed by the `UnsavedChangesGuard`.
 

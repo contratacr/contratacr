@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Script from "next/script";
-import { MapPin, Navigation, RotateCcw, Search } from "lucide-react";
-import { BRAND_MAP_STYLE } from "@/lib/maps/map-style";
+import { MapPin, Navigation, RotateCcw } from "lucide-react";
+import { loadGoogleMaps, MAP_ID } from "@/lib/maps/loader";
 
 export type PickedLocation = {
   lat: number;
@@ -14,22 +13,21 @@ export type PickedLocation = {
   cantonName?: string;
 };
 
+// Works with BOTH shapes: legacy geocoder components (long_name) and the new
+// Place.addressComponents (longText).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function extractAdmin(components: any[]): { provinceName?: string; cantonName?: string } {
   if (!Array.isArray(components)) return {};
-  const find = (type: string) =>
-    components.find((c) => Array.isArray(c.types) && c.types.includes(type))?.long_name as string | undefined;
-  // In Costa Rica the canton is usually administrative_area_level_2, but Google
-  // sometimes returns it as the locality or admin_area_level_3 — try each.
+  const find = (type: string) => {
+    const c = components.find((x) => Array.isArray(x.types) && x.types.includes(type));
+    return (c?.long_name ?? c?.longText) as string | undefined;
+  };
   const cantonName =
     find("administrative_area_level_2") ||
     find("administrative_area_level_3") ||
     find("locality") ||
     find("postal_town");
-  return {
-    provinceName: find("administrative_area_level_1"),
-    cantonName,
-  };
+  return { provinceName: find("administrative_area_level_1"), cantonName };
 }
 
 interface LocationPickerProps {
@@ -43,15 +41,19 @@ type GMaps = any;
 
 const COSTA_RICA_CENTER = { lat: 9.7489, lng: -83.7534 };
 
+// Normalize a LatLng (object with lat()/lng()) or a literal to plain numbers.
+function toLatLng(v: GMaps): { lat: number; lng: number } {
+  if (!v) return { lat: 0, lng: 0 };
+  return { lat: typeof v.lat === "function" ? v.lat() : v.lat, lng: typeof v.lng === "function" ? v.lng() : v.lng };
+}
+
 export function LocationPicker({ value, onChange, apiKey }: LocationPickerProps) {
   const mapRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const pacContainerRef = useRef<HTMLDivElement>(null);
   const markerRef = useRef<GMaps>(null);
   const mapInstanceRef = useRef<GMaps>(null);
   const geocoderRef = useRef<GMaps>(null);
-  const autocompleteRef = useRef<GMaps>(null);
   const [locating, setLocating] = useState(false);
-  const [addressInput, setAddressInput] = useState(value?.formattedAddress ?? "");
   const effectiveKey = apiKey ?? process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -71,42 +73,40 @@ export function LocationPicker({ value, onChange, apiKey }: LocationPickerProps)
     const map = new maps.Map(mapRef.current, {
       center,
       zoom,
+      mapId: MAP_ID,
       mapTypeControl: false,
       streetViewControl: false,
-      // Expand control + natural wheel zoom (no Ctrl), matching the search map.
       fullscreenControl: true,
       gestureHandling: "greedy",
-      styles: BRAND_MAP_STYLE,
     });
     mapInstanceRef.current = map;
     geocoderRef.current = new maps.Geocoder();
 
-    // Initialize Places Autocomplete on the address input
-    if (inputRef.current && maps.places?.Autocomplete) {
-      const autocomplete = new maps.places.Autocomplete(inputRef.current, {
-        componentRestrictions: { country: "cr" },
-        fields: ["geometry", "formatted_address", "address_components"],
+    // NEW Places Autocomplete — a web component that renders its own input. We
+    // append it into the container so it inherits our layout. CR-restricted.
+    if (pacContainerRef.current && maps.places?.PlaceAutocompleteElement && pacContainerRef.current.childElementCount === 0) {
+      const pac = new maps.places.PlaceAutocompleteElement({ includedRegionCodes: ["cr"] });
+      pac.style.width = "100%";
+      pac.setAttribute("placeholder", "Busca la dirección de tu local… ej. Escazú Centro");
+      pacContainerRef.current.appendChild(pac);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      pac.addEventListener("gmp-select", async (e: any) => {
+        const prediction = e.placePrediction ?? e.place;
+        if (!prediction) return;
+        const place = typeof prediction.toPlace === "function" ? prediction.toPlace() : prediction;
+        await place.fetchFields({ fields: ["location", "formattedAddress", "addressComponents"] });
+        if (!place.location) return;
+        placeMarker(place.location);
+        map.setCenter(place.location);
+        map.setZoom(16);
+        const address = place.formattedAddress ?? "";
+        const { lat, lng } = toLatLng(place.location);
+        onChange({ lat, lng, formattedAddress: address, ...extractAdmin(place.addressComponents) });
       });
-      autocomplete.addListener("place_changed", () => {
-        const place = autocomplete.getPlace();
-        if (place.geometry?.location) {
-          const loc = place.geometry.location;
-          placeMarker(loc);
-          map.setCenter(loc);
-          map.setZoom(16);
-          const address = place.formatted_address ?? "";
-          setAddressInput(address);
-          onChange({ lat: loc.lat(), lng: loc.lng(), formattedAddress: address, ...extractAdmin(place.address_components) });
-        }
-      });
-      autocompleteRef.current = autocomplete;
     }
 
-    if (value) {
-      placeMarker(new maps.LatLng(value.lat, value.lng));
-    }
+    if (value) placeMarker(new maps.LatLng(value.lat, value.lng));
 
-    // Click on map to pick location
     map.addListener("click", (e: { latLng: GMaps }) => {
       if (!e.latLng) return;
       placeMarker(e.latLng);
@@ -118,16 +118,15 @@ export function LocationPicker({ value, onChange, apiKey }: LocationPickerProps)
     const maps = getMaps();
     if (!maps || !mapInstanceRef.current) return;
 
-    if (markerRef.current) markerRef.current.setMap(null);
+    if (markerRef.current) markerRef.current.map = null;
 
-    const marker = new maps.Marker({
+    const marker = new maps.marker.AdvancedMarkerElement({
       position: latLng,
       map: mapInstanceRef.current,
-      draggable: true,
-      animation: maps.Animation.DROP,
+      gmpDraggable: true,
     });
-    marker.addListener("dragend", (e: { latLng: GMaps }) => {
-      if (e.latLng) reverseGeocode(e.latLng);
+    marker.addListener("dragend", () => {
+      reverseGeocode(marker.position);
     });
     markerRef.current = marker;
     mapInstanceRef.current.panTo(latLng);
@@ -135,38 +134,18 @@ export function LocationPicker({ value, onChange, apiKey }: LocationPickerProps)
 
   function reverseGeocode(latLng: GMaps) {
     if (!geocoderRef.current) return;
+    const { lat, lng } = toLatLng(latLng);
     geocoderRef.current.geocode(
-      { location: latLng },
+      { location: { lat, lng } },
       (results: GMaps, status: string) => {
         const ok = status === "OK" && results?.[0];
-        const address = ok
-          ? results[0].formatted_address
-          : `${latLng.lat().toFixed(6)}, ${latLng.lng().toFixed(6)}`;
-        setAddressInput(address);
+        const address = ok ? results[0].formatted_address : `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
         onChange({
-          lat: latLng.lat(),
-          lng: latLng.lng(),
+          lat,
+          lng,
           formattedAddress: address,
           ...(ok ? extractAdmin(results[0].address_components) : {}),
         });
-      }
-    );
-  }
-
-  function geocodeManual() {
-    if (!addressInput.trim() || !geocoderRef.current) return;
-    geocoderRef.current.geocode(
-      { address: addressInput + ", Costa Rica" },
-      (results: GMaps, status: string) => {
-        if (status === "OK" && results?.[0]) {
-          const loc = results[0].geometry.location;
-          placeMarker(loc);
-          mapInstanceRef.current?.setCenter(loc);
-          mapInstanceRef.current?.setZoom(15);
-          const address = results[0].formatted_address;
-          setAddressInput(address);
-          onChange({ lat: loc.lat(), lng: loc.lng(), formattedAddress: address, ...extractAdmin(results[0].address_components) });
-        }
       }
     );
   }
@@ -191,17 +170,17 @@ export function LocationPicker({ value, onChange, apiKey }: LocationPickerProps)
 
   function clearLocation() {
     if (markerRef.current) {
-      markerRef.current.setMap(null);
+      markerRef.current.map = null;
       markerRef.current = null;
     }
-    setAddressInput("");
     onChange(null);
     mapInstanceRef.current?.setCenter(COSTA_RICA_CENTER);
     mapInstanceRef.current?.setZoom(8);
   }
 
   useEffect(() => {
-    if (getMaps()) initMap();
+    if (!effectiveKey) return;
+    loadGoogleMaps(effectiveKey).then(initMap).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -215,72 +194,52 @@ export function LocationPicker({ value, onChange, apiKey }: LocationPickerProps)
   }
 
   return (
-    <>
-      {/* Load Maps JS API with Places library for address autocomplete */}
-      <Script
-        src={`https://maps.googleapis.com/maps/api/js?key=${effectiveKey}&libraries=places`}
-        strategy="lazyOnload"
-        onLoad={initMap}
-      />
+    <div className="flex flex-col gap-2">
+      {/* New PlaceAutocompleteElement renders its own input here */}
+      <div ref={pacContainerRef} className="cr-pac w-full" />
 
-      <div className="flex flex-col gap-2">
-        {/* Address input with autocomplete */}
-        <div className="relative flex items-center">
-          <Search className="absolute left-3 h-4 w-4 text-[#9ca3af] pointer-events-none" />
-          <input
-            ref={inputRef}
-            type="text"
-            value={addressInput}
-            onChange={(e) => setAddressInput(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); geocodeManual(); } }}
-            placeholder="Busca la dirección de tu local… ej. Escazú Centro"
-            className="w-full pl-9 pr-4 h-10 rounded-xl border border-[#e5e7eb] text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
-          />
-        </div>
-
-        {/* Map */}
-        <div className="relative rounded-xl overflow-hidden border border-[#e5e7eb]" style={{ height: 260 }}>
-          <div ref={mapRef} className="w-full h-full" />
-          {!value && (
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm rounded-xl px-3 py-1.5 text-xs text-[#374151] shadow border border-[#e5e7eb] whitespace-nowrap pointer-events-none">
-              Busca una dirección arriba o haz clic en el mapa
-            </div>
-          )}
-        </div>
-
-        {/* Controls */}
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={useMyLocation}
-            disabled={locating}
-            className="flex items-center gap-1.5 text-xs font-medium text-[#009FD9] hover:underline disabled:opacity-50"
-          >
-            <Navigation className="h-3.5 w-3.5" />
-            {locating ? "Localizando…" : "Usar mi ubicación"}
-          </button>
-          {value && (
-            <button
-              type="button"
-              onClick={clearLocation}
-              className="flex items-center gap-1.5 text-xs font-medium text-[#9ca3af] hover:text-red-500 ml-auto"
-            >
-              <RotateCcw className="h-3.5 w-3.5" />
-              Borrar
-            </button>
-          )}
-        </div>
-
-        {/* Coordinates display */}
-        {value && (
-          <div className="flex items-center gap-2 bg-[#EBF5FB] rounded-xl px-3 py-2">
-            <MapPin className="h-4 w-4 text-[#009FD9] shrink-0" />
-            <p className="text-xs text-[#374151] truncate">
-              {value.formattedAddress || `${value.lat.toFixed(6)}, ${value.lng.toFixed(6)}`}
-            </p>
+      {/* Map */}
+      <div className="relative rounded-xl overflow-hidden border border-[#e5e7eb]" style={{ height: 260 }}>
+        <div ref={mapRef} className="w-full h-full" />
+        {!value && (
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur-sm rounded-xl px-3 py-1.5 text-xs text-[#374151] shadow border border-[#e5e7eb] whitespace-nowrap pointer-events-none">
+            Busca una dirección arriba o haz clic en el mapa
           </div>
         )}
       </div>
-    </>
+
+      {/* Controls */}
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={useMyLocation}
+          disabled={locating}
+          className="flex items-center gap-1.5 text-xs font-medium text-[#009FD9] hover:underline disabled:opacity-50"
+        >
+          <Navigation className="h-3.5 w-3.5" />
+          {locating ? "Localizando…" : "Usar mi ubicación"}
+        </button>
+        {value && (
+          <button
+            type="button"
+            onClick={clearLocation}
+            className="flex items-center gap-1.5 text-xs font-medium text-[#9ca3af] hover:text-red-500 ml-auto"
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+            Borrar
+          </button>
+        )}
+      </div>
+
+      {/* Coordinates display */}
+      {value && (
+        <div className="flex items-center gap-2 bg-[#EBF5FB] rounded-xl px-3 py-2">
+          <MapPin className="h-4 w-4 text-[#009FD9] shrink-0" />
+          <p className="text-xs text-[#374151] truncate">
+            {value.formattedAddress || `${value.lat.toFixed(6)}, ${value.lng.toFixed(6)}`}
+          </p>
+        </div>
+      )}
+    </div>
   );
 }

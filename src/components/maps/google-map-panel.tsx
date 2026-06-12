@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import Script from "next/script";
 import { MapPin } from "lucide-react";
-import { BRAND_MAP_STYLE } from "@/lib/maps/map-style";
+import { loadGoogleMaps, MAP_ID } from "@/lib/maps/loader";
 
 export interface MapProfessional {
   id: string;
@@ -66,8 +66,28 @@ function starsHtml(rating: number): string {
   return `<span style="color:#ff9b32;font-weight:700;">★ ${rating.toFixed(1)}</span>`;
 }
 
-// Cross-component highlight: on pin hover, ring + scroll the matching list card
-// (cards are server-rendered with data-pro-id; we reach them via the DOM).
+// AdvancedMarkerElement content: a brand teardrop pin with the card number.
+function makePinContent(num?: number): HTMLElement {
+  const el = document.createElement("div");
+  el.style.cssText = "position:relative;width:30px;height:40px;cursor:pointer;";
+  el.innerHTML = `
+    <svg width="30" height="40" viewBox="0 0 24 32" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 0C7.03 0 3 4.03 3 9c0 6.75 9 23 9 23s9-16.25 9-23c0-4.97-4.03-9-9-9z" fill="#009FD9" stroke="#ffffff" stroke-width="1.5"/>
+    </svg>
+    ${num ? `<span style="position:absolute;top:5px;left:0;width:30px;text-align:center;color:#fff;font-size:11px;font-weight:700;font-family:Inter,Arial,sans-serif;">${num}</span>` : ""}`;
+  return el;
+}
+
+// Cluster bubble content.
+function makeClusterContent(count: number): HTMLElement {
+  const size = 32 + Math.min(count, 30) * 0.8;
+  const el = document.createElement("div");
+  el.style.cssText = `display:flex;align-items:center;justify-content:center;width:${size}px;height:${size}px;border-radius:9999px;background:#009FD9;border:2px solid #fff;color:#fff;font-weight:700;font-size:12px;font-family:Inter,Arial,sans-serif;box-shadow:0 1px 4px rgba(0,0,0,0.3);`;
+  el.textContent = String(count);
+  return el;
+}
+
+// Cross-component highlight: on pin hover, ring + scroll the matching list card.
 function setCardHighlight(proId: string | undefined, on: boolean) {
   if (!proId || typeof document === "undefined") return;
   const el = document.getElementById(`pro-card-${proId}`);
@@ -82,7 +102,6 @@ function setCardHighlight(proId: string | undefined, on: boolean) {
 
 export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering }: GoogleMapPanelProps) {
   const mapRef = useRef<HTMLDivElement>(null);
-  const initialized = useRef(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapInstanceRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -94,8 +113,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const infoRef = useRef<any>(null);
 
-  // Single location → center + zoom in on it. Multiple → fit all markers so every
-  // result is visible at once.
+  // Single location → center + zoom. Multiple → fit all markers.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function fitToMarkers(map: any, g: any, bounds: any, count: number) {
     if (count === 0) return;
@@ -105,60 +123,42 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
       return;
     }
     map.fitBounds(bounds, 48);
-    const listener = g.event.addListenerOnce(map, "idle", () => {
+    g.event.addListenerOnce(map, "idle", () => {
       if (map.getZoom() > 15) map.setZoom(15);
     });
-    void listener;
   }
 
-  // Create the map exactly once.
   function ensureMap() {
     if (mapInstanceRef.current || !mapRef.current) return null;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const g = (window as any).google?.maps;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const clusterer = (window as any).markerClusterer;
-    if (!g || !clusterer) return null;
-    initialized.current = true;
+    if (!g) return null;
     const map = new g.Map(mapRef.current, {
       center: CR_CENTER,
       zoom: 9,
+      mapId: MAP_ID,
       mapTypeControl: false,
       streetViewControl: false,
       fullscreenControl: true,
       zoomControl: true,
       gestureHandling: "greedy",
-      styles: BRAND_MAP_STYLE,
     });
     mapInstanceRef.current = map;
     infoRef.current = new g.InfoWindow();
     return map;
   }
 
-  // (Re)build markers from the current `professionals` — called on every change
-  // so the map refreshes in sync with the filtered results (no full reload).
   function renderMarkers() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const g = (window as any).google?.maps;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const clusterer = (window as any).markerClusterer;
-    if (!g || !clusterer) return; // wait for both scripts
+    if (!g?.marker?.AdvancedMarkerElement || !clusterer) return; // wait for both
     const map = mapInstanceRef.current ?? ensureMap();
     if (!map) return;
 
     const info = infoRef.current;
     const bounds = new g.LatLngBounds();
-
-    const pinIcon = {
-      path: "M12 0C7.03 0 3 4.03 3 9c0 6.75 9 15 9 15s9-8.25 9-15c0-4.97-4.03-9-9-9z",
-      fillColor: "#009FD9",
-      fillOpacity: 1,
-      strokeColor: "#ffffff",
-      strokeWeight: 2,
-      scale: 1.6,
-      anchor: new g.Point(12, 24),
-      labelOrigin: new g.Point(12, 9),
-    };
 
     const markers = professionals
       .map((pro) => {
@@ -166,15 +166,13 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
         if (!pos) return null;
         bounds.extend(pos);
         const num = numbering?.[pro.proId ?? pro.id];
-        const marker = new g.Marker({
+        const content = makePinContent(num);
+        const marker = new g.marker.AdvancedMarkerElement({
           position: pos,
-          icon: pinIcon,
-          // Mirror the card number on the pin (item 9).
-          label: num ? { text: String(num), color: "#ffffff", fontSize: "11px", fontWeight: "700" } : undefined,
+          content,
           zIndex: num ? 500 - num : 1,
         });
-        // Mini profile preview — opens the info window (photo, name, rating) and
-        // highlights the matching card. On hover AND click (click also navigates).
+
         const openPreview = () => {
           const href = `/${locale}/profesionales/${pro.slug}`;
           const avatar = pro.avatarUrl
@@ -183,7 +181,6 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
           info.setContent(`
             <div style="font-family:Inter,Arial,sans-serif;max-width:240px;padding:4px;">
               <div style="display:flex;gap:10px;align-items:center;">
-                ${num ? `<div style="position:absolute;top:6px;left:6px;background:#009FD9;color:#fff;font-weight:700;font-size:11px;width:20px;height:20px;border-radius:9999px;display:flex;align-items:center;justify-content:center;">${num}</div>` : ""}
                 ${avatar}
                 <div style="min-width:0;">
                   <div style="font-weight:700;color:#111827;font-size:14px;line-height:1.2;">${pro.fullName}</div>
@@ -195,28 +192,21 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
             </div>`);
           info.open({ map, anchor: marker });
         };
-        marker.addListener("mouseover", () => { openPreview(); setCardHighlight(pro.proId ?? pro.id, true); });
-        marker.addListener("mouseout", () => setCardHighlight(pro.proId ?? pro.id, false));
-        marker.addListener("click", openPreview);
+        // AdvancedMarkerElement: attach DOM listeners to its content element.
+        content.addEventListener("mouseenter", () => { openPreview(); setCardHighlight(pro.proId ?? pro.id, true); });
+        content.addEventListener("mouseleave", () => setCardHighlight(pro.proId ?? pro.id, false));
+        content.addEventListener("click", openPreview);
         return marker;
       })
       .filter(Boolean);
 
-    // Brand-colored numbered cluster bubbles
+    // Brand-colored cluster bubbles (AdvancedMarkerElement renderer).
     const renderer = {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       render: ({ count, position }: any) =>
-        new g.Marker({
+        new g.marker.AdvancedMarkerElement({
           position,
-          icon: {
-            path: g.SymbolPath.CIRCLE,
-            fillColor: "#009FD9",
-            fillOpacity: 1,
-            strokeColor: "#ffffff",
-            strokeWeight: 2,
-            scale: 16 + Math.min(count, 30) * 0.4,
-          },
-          label: { text: String(count), color: "#ffffff", fontSize: "12px", fontWeight: "700" },
+          content: makeClusterContent(count),
           zIndex: 1000 + count,
         }),
     };
@@ -234,15 +224,14 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     fitToMarkers(map, g, bounds, markers.length);
   }
 
+  // Load the Maps JS API (async) once, then render whenever inputs change.
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if ((window as any).google?.maps && (window as any).markerClusterer) renderMarkers();
+    if (!apiKey) return;
+    loadGoogleMaps(apiKey).then(renderMarkers).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [professionals, numbering]);
 
-  // When the container becomes visible (e.g. mobile list→map toggle) or resizes,
-  // tell Google Maps to relayout and re-fit the pins — otherwise a map first
-  // rendered inside a hidden panel paints blank/grey.
+  // Relayout + re-fit when the container becomes visible / resizes.
   useEffect(() => {
     const el = mapRef.current;
     if (!el || typeof ResizeObserver === "undefined") return;
@@ -278,13 +267,10 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
 
   return (
     <>
+      {/* MarkerClusterer is a separate (non-Google) lib; the Maps JS API itself
+          loads via the async loader. */}
       <Script
         src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"
-        strategy="afterInteractive"
-        onLoad={renderMarkers}
-      />
-      <Script
-        src={`https://maps.googleapis.com/maps/api/js?key=${apiKey}`}
         strategy="afterInteractive"
         onLoad={renderMarkers}
       />

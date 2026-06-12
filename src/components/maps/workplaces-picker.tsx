@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Script from "next/script";
-import { MapPin, Search, X, Plus } from "lucide-react";
-import { BRAND_MAP_STYLE } from "@/lib/maps/map-style";
+import { MapPin, X, Plus } from "lucide-react";
+import { loadGoogleMaps, MAP_ID } from "@/lib/maps/loader";
 import { PROVINCES, getCantonsByProvince, getCantonById, getProvinceById, matchProvinceCanton } from "@/lib/data/cr-geography";
 import { cn } from "@/lib/utils";
 
@@ -40,8 +39,11 @@ function genId() {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function deriveAdmin(components: any[]): { provinciaId?: string; cantonId?: string } {
   if (!Array.isArray(components)) return {};
-  const find = (type: string) =>
-    components.find((c) => Array.isArray(c.types) && c.types.includes(type))?.long_name as string | undefined;
+  // Handles legacy geocoder (long_name) AND new Place.addressComponents (longText).
+  const find = (type: string) => {
+    const c = components.find((x) => Array.isArray(x.types) && x.types.includes(type));
+    return (c?.long_name ?? c?.longText) as string | undefined;
+  };
   const provinceName = find("administrative_area_level_1");
   const cantonName = find("administrative_area_level_2") || find("locality");
   const { provinceId, cantonId } = matchProvinceCanton(provinceName, cantonName);
@@ -58,7 +60,7 @@ function deriveAdmin(components: any[]): { provinciaId?: string; cantonId?: stri
  */
 export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 220 }: WorkplacesPickerProps) {
   const mapRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const pacContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<GMaps>(null);
   const geocoderRef = useRef<GMaps>(null);
   const markersRef = useRef<GMaps[]>([]);
@@ -72,7 +74,6 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 220 }: W
   const [draftPin, setDraftPin] = useState<{ lat: number; lng: number; address: string } | null>(null);
   const draftPinRef = useRef<typeof draftPin>(null);
   draftPinRef.current = draftPin;
-  const [search, setSearch] = useState("");
   const [locating, setLocating] = useState(false);
   const [geoError, setGeoError] = useState<string | null>(null);
   const cantons = getCantonsByProvince(province);
@@ -107,7 +108,6 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 220 }: W
     setCanton("");
     setLabel("");
     setDraftPin(null);
-    setSearch("");
   }
 
   // Called when a pin is placed via search / map click / current location. The pin
@@ -139,7 +139,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 220 }: W
     const maps = getMaps();
     const map = mapInstanceRef.current;
     if (!maps || !map) return;
-    markersRef.current.forEach((m) => m.setMap(null));
+    markersRef.current.forEach((m) => { m.map = null; });
     markersRef.current = [];
     const bounds = new maps.LatLngBounds();
     let count = 0;
@@ -148,7 +148,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 220 }: W
       ...(draftPinRef.current ? [{ lat: draftPinRef.current.lat, lng: draftPinRef.current.lng, title: "Nuevo lugar" }] : []),
     ];
     for (const p of pins) {
-      markersRef.current.push(new maps.Marker({ position: { lat: p.lat, lng: p.lng }, map, title: p.title }));
+      markersRef.current.push(new maps.marker.AdvancedMarkerElement({ position: { lat: p.lat, lng: p.lng }, map, title: p.title }));
       bounds.extend({ lat: p.lat, lng: p.lng });
       count++;
     }
@@ -169,28 +169,34 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 220 }: W
     const map = new maps.Map(mapRef.current, {
       center: first ? { lat: first.lat, lng: first.lng } : COSTA_RICA_CENTER,
       zoom: first ? 14 : 8,
+      mapId: MAP_ID,
       mapTypeControl: false,
       streetViewControl: false,
       fullscreenControl: true,
       gestureHandling: "greedy",
-      styles: BRAND_MAP_STYLE,
     });
     mapInstanceRef.current = map;
     geocoderRef.current = new maps.Geocoder();
 
-    if (inputRef.current && maps.places?.Autocomplete) {
-      const autocomplete = new maps.places.Autocomplete(inputRef.current, {
-        componentRestrictions: { country: "cr" },
-        fields: ["geometry", "formatted_address", "name", "address_components"],
-      });
-      autocomplete.addListener("place_changed", () => {
-        const place = autocomplete.getPlace();
-        if (place.geometry?.location) {
-          const loc = place.geometry.location;
-          map.setCenter(loc);
-          map.setZoom(15);
-          onPinPlaced(loc.lat(), loc.lng(), place.formatted_address || place.name || "", deriveAdmin(place.address_components));
-        }
+    // NEW Places Autocomplete (web component), CR-restricted.
+    if (pacContainerRef.current && maps.places?.PlaceAutocompleteElement && pacContainerRef.current.childElementCount === 0) {
+      const pac = new maps.places.PlaceAutocompleteElement({ includedRegionCodes: ["cr"] });
+      pac.style.width = "100%";
+      pac.setAttribute("placeholder", "Busca un lugar o toca el mapa para marcar tu ubicación");
+      pacContainerRef.current.appendChild(pac);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      pac.addEventListener("gmp-select", async (e: any) => {
+        const prediction = e.placePrediction ?? e.place;
+        if (!prediction) return;
+        const place = typeof prediction.toPlace === "function" ? prediction.toPlace() : prediction;
+        await place.fetchFields({ fields: ["location", "formattedAddress", "addressComponents"] });
+        if (!place.location) return;
+        const loc = place.location;
+        map.setCenter(loc);
+        map.setZoom(15);
+        const lat = typeof loc.lat === "function" ? loc.lat() : loc.lat;
+        const lng = typeof loc.lng === "function" ? loc.lng() : loc.lng;
+        onPinPlaced(lat, lng, place.formattedAddress || "", deriveAdmin(place.addressComponents));
       });
     }
 
@@ -235,9 +241,8 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 220 }: W
   }
 
   useEffect(() => {
-    if (getMaps()) { initMap(); return; }
-    const t = setInterval(() => { if (getMaps()) { clearInterval(t); initMap(); } }, 200);
-    return () => clearInterval(t);
+    if (!effectiveKey) return;
+    loadGoogleMaps(effectiveKey).then(initMap).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -251,29 +256,12 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 220 }: W
 
   return (
     <>
-      {effectiveKey && (
-        <Script
-          src={`https://maps.googleapis.com/maps/api/js?key=${effectiveKey}&libraries=places`}
-          strategy="lazyOnload"
-          onLoad={initMap}
-        />
-      )}
-
       <div className="flex flex-col gap-2">
         {/* Map — search / click / current location places ONE draft pin at a time. */}
         {effectiveKey ? (
           <>
-            <div className="relative flex items-center">
-              <Search className="absolute left-3 h-4 w-4 text-[#9ca3af] pointer-events-none" />
-              <input
-                ref={inputRef}
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Busca un lugar o toca el mapa para marcar tu ubicación"
-                className="w-full pl-9 pr-4 h-10 rounded-xl border border-[#e5e7eb] text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
-              />
-            </div>
+            {/* New PlaceAutocompleteElement renders its own input here */}
+            <div ref={pacContainerRef} className="cr-pac w-full" />
             <button type="button" onClick={useMyLocation} disabled={locating} className="self-start inline-flex items-center gap-1.5 text-sm font-medium text-[#009FD9] hover:underline disabled:opacity-60">
               <MapPin className="h-4 w-4" />
               {locating ? "Obteniendo tu ubicación…" : "Usar mi ubicación actual"}
