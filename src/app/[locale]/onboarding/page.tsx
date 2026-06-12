@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { Search, Briefcase, ArrowRight } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
@@ -10,6 +11,8 @@ import { LandingFooter } from "@/components/landing/landing-footer";
 
 export default function OnboardingPage() {
   const { user, avatarUrl, loading: authLoading } = useAuth();
+  const t = useTranslations("onboarding");
+  const tc = useTranslations("registerChoice");
   const router = useRouter();
   const [selecting, setSelecting] = useState<"client" | "professional" | null>(null);
   // Prevents the "already done" useEffect from competing with selectRole's navigation
@@ -125,16 +128,16 @@ export default function OnboardingPage() {
 
             {displayName && (
               <p className="text-sm text-[#009FD9] font-semibold mb-1 uppercase tracking-wide">
-                Hola, {displayName.split(" ")[0]}
+                {t("greeting", { name: displayName.split(" ")[0] })}
               </p>
             )}
             <p className="text-xs text-gray-400">{user.email}</p>
 
             <h1 className="text-3xl font-bold text-[#111827] mt-6 mb-2 text-center">
-              ¿Para qué usarás ContrataCR?
+              {t("title")}
             </h1>
             <p className="text-[#6b7280] text-base text-center">
-              Elige cómo quieres usar la plataforma. Puedes cambiar esto más adelante.
+              {t("subtitle")}
             </p>
           </div>
 
@@ -154,13 +157,13 @@ export default function OnboardingPage() {
                 )}
               </div>
               <div>
-                <h2 className="text-xl font-bold text-[#111827] mb-2">Busco profesionales</h2>
+                <h2 className="text-xl font-bold text-[#111827] mb-2">{tc("clientTitle")}</h2>
                 <p className="text-sm text-[#6b7280] leading-relaxed">
-                  Necesito contratar servicios: plomería, electricidad, limpieza, diseño y más.
+                  {tc("clientDesc")}
                 </p>
               </div>
               <span className="flex items-center gap-1.5 text-sm font-semibold text-[#009FD9] opacity-0 group-hover:opacity-100 transition-opacity">
-                Continuar <ArrowRight className="h-4 w-4" />
+                {tc("continue")} <ArrowRight className="h-4 w-4" />
               </span>
             </button>
 
@@ -178,13 +181,13 @@ export default function OnboardingPage() {
                 )}
               </div>
               <div>
-                <h2 className="text-xl font-bold text-[#111827] mb-2">Soy profesional</h2>
+                <h2 className="text-xl font-bold text-[#111827] mb-2">{tc("proTitle")}</h2>
                 <p className="text-sm text-[#6b7280] leading-relaxed">
-                  Ofrezco mis servicios y quiero conectar con clientes en Costa Rica.
+                  {tc("proDesc")}
                 </p>
               </div>
               <span className="flex items-center gap-1.5 text-sm font-semibold text-[#009FD9] opacity-0 group-hover:opacity-100 transition-opacity">
-                Continuar <ArrowRight className="h-4 w-4" />
+                {tc("continue")} <ArrowRight className="h-4 w-4" />
               </span>
             </button>
 

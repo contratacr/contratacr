@@ -1117,6 +1117,30 @@
     "haveAccount": "Already have an account?",
     "signIn": "Sign in"
   },
+  "onboarding": {
+    "greeting": "Hi, {name}",
+    "title": "What will you use ContrataCR for?",
+    "subtitle": "Choose how you want to use the platform. You can change this later."
+  },
+  "completeProfile": {
+    "photoError": "Couldn't upload the photo. You can continue without it.",
+    "errName": "Enter your full name.",
+    "errPhone": "Enter a valid phone number (8 digits).",
+    "errCedula": "Enter a valid ID number (9 digits).",
+    "errDupCedula": "That ID is already registered to another account.",
+    "errSave": "Couldn't save. Try again.",
+    "title": "Complete your profile",
+    "subtitle": "We need a few more details so you can hire professionals with confidence.",
+    "photoLabel": "Profile photo",
+    "optional": "(optional)",
+    "photoHelp": "Builds more trust with professionals.",
+    "fullName": "Full name",
+    "namePlaceholder": "Your name as it appears on your ID",
+    "nameOAuthHelp": "Confirm it matches your ID.",
+    "phone": "Phone",
+    "saving": "Saving…",
+    "saveContinue": "Save and continue"
+  },
   "forgotPassword": {
     "title": "Forgot my password",
     "subtitle": "Enter your email and we'll send you a link to reset your password.",

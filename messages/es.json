@@ -1117,6 +1117,30 @@
     "haveAccount": "¿Ya tienes cuenta?",
     "signIn": "Inicia sesión"
   },
+  "onboarding": {
+    "greeting": "Hola, {name}",
+    "title": "¿Para qué usarás ContrataCR?",
+    "subtitle": "Elige cómo quieres usar la plataforma. Puedes cambiar esto más adelante."
+  },
+  "completeProfile": {
+    "photoError": "No se pudo subir la foto. Puedes continuar sin ella.",
+    "errName": "Ingresa tu nombre completo.",
+    "errPhone": "Ingresa un número de teléfono válido (8 dígitos).",
+    "errCedula": "Ingresa un número de cédula válido (9 dígitos).",
+    "errDupCedula": "Esa cédula ya está registrada en otra cuenta.",
+    "errSave": "No se pudo guardar. Intenta de nuevo.",
+    "title": "Completa tu perfil",
+    "subtitle": "Necesitamos unos datos más para que puedas contratar profesionales con confianza.",
+    "photoLabel": "Foto de perfil",
+    "optional": "(opcional)",
+    "photoHelp": "Genera más confianza con los profesionales.",
+    "fullName": "Nombre completo",
+    "namePlaceholder": "Tu nombre como aparece en tu cédula",
+    "nameOAuthHelp": "Confirma que coincide con tu cédula.",
+    "phone": "Teléfono",
+    "saving": "Guardando…",
+    "saveContinue": "Guardar y continuar"
+  },
   "forgotPassword": {
     "title": "Olvidé mi contraseña",
     "subtitle": "Ingresa tu correo y te enviamos un enlace para restablecer tu contraseña.",

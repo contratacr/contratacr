@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { User as UserIcon, AlertCircle, Camera } from "lucide-react";
 import { PhoneInput } from "@/components/ui/phone-input";
@@ -15,6 +16,7 @@ import { LandingFooter } from "@/components/landing/landing-footer";
 // provided a cédula. Required before they can book.
 export default function CompleteProfilePage() {
   const { user, loading: authLoading } = useAuth();
+  const t = useTranslations("completeProfile");
   const router = useRouter();
   const params = useSearchParams();
   const next = params.get("next") || "/dashboard/cliente";
@@ -83,7 +85,7 @@ export default function CompleteProfilePage() {
       await supabase.auth.updateUser({ data: { avatar_url: url } });
       setAvatarUrl(url);
     } catch {
-      setError("No se pudo subir la foto. Puedes continuar sin ella.");
+      setError(t("photoError"));
     } finally {
       setPhotoUploading(false);
     }
@@ -96,9 +98,9 @@ export default function CompleteProfilePage() {
 
     const cleanCedula = cedula.replace(/\D/g, "");
     const cleanPhone = phone.replace(/\D/g, "");
-    if (!fullName.trim()) return setError("Ingresa tu nombre completo.");
-    if (cleanPhone.length < 8) return setError("Ingresa un número de teléfono válido (8 dígitos).");
-    if (cleanCedula.length < 9) return setError("Ingresa un número de cédula válido (9 dígitos).");
+    if (!fullName.trim()) return setError(t("errName"));
+    if (cleanPhone.length < 8) return setError(t("errPhone"));
+    if (cleanCedula.length < 9) return setError(t("errCedula"));
 
     setSaving(true);
     const supabase = createClient();
@@ -109,11 +111,7 @@ export default function CompleteProfilePage() {
 
     if (upErr) {
       setSaving(false);
-      setError(
-        upErr.code === "23505"
-          ? "Esa cédula ya está registrada en otra cuenta."
-          : "No se pudo guardar. Intenta de nuevo."
-      );
+      setError(upErr.code === "23505" ? t("errDupCedula") : t("errSave"));
       return;
     }
 
@@ -144,9 +142,9 @@ export default function CompleteProfilePage() {
 
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-12">
         <div className="w-full max-w-md bg-white rounded-2xl border border-[#e5e7eb] shadow-sm p-8">
-          <h1 className="text-2xl font-bold text-[#111827] mb-1">Completa tu perfil</h1>
+          <h1 className="text-2xl font-bold text-[#111827] mb-1">{t("title")}</h1>
           <p className="text-sm text-[#6b7280] mb-6">
-            Necesitamos unos datos más para que puedas contratar profesionales con confianza.
+            {t("subtitle")}
           </p>
 
           {error && (
@@ -178,8 +176,8 @@ export default function CompleteProfilePage() {
                 )}
               </div>
               <div>
-                <p className="text-sm font-medium text-[#374151]">Foto de perfil <span className="text-[#9ca3af] font-normal">(opcional)</span></p>
-                <p className="text-xs text-[#9ca3af]">Genera más confianza con los profesionales.</p>
+                <p className="text-sm font-medium text-[#374151]">{t("photoLabel")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span></p>
+                <p className="text-xs text-[#9ca3af]">{t("photoHelp")}</p>
               </div>
               <input
                 ref={photoInputRef}
@@ -191,23 +189,23 @@ export default function CompleteProfilePage() {
             </div>
 
             <div>
-              <label className="text-sm font-medium text-[#374151] block mb-1.5">Nombre completo <span className="text-red-500">*</span></label>
+              <label className="text-sm font-medium text-[#374151] block mb-1.5">{t("fullName")} <span className="text-red-500">*</span></label>
               <div className="relative">
                 <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
                 <input
                   type="text"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Tu nombre como aparece en tu cédula"
+                  placeholder={t("namePlaceholder")}
                   className={inputClass}
                 />
               </div>
               {nameFromOAuth && (
-                <p className="text-xs text-[#9ca3af] mt-1">Confirma que coincide con tu cédula.</p>
+                <p className="text-xs text-[#9ca3af] mt-1">{t("nameOAuthHelp")}</p>
               )}
             </div>
 
-            <PhoneInput label="Teléfono" required value={phone} onChange={setPhone} />
+            <PhoneInput label={t("phone")} required value={phone} onChange={setPhone} />
 
             <CedulaInput
               required
@@ -221,7 +219,7 @@ export default function CompleteProfilePage() {
               className="mt-2 w-full h-11 rounded-xl bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold text-sm transition-all active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2"
             >
               {saving && <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />}
-              {saving ? "Guardando…" : "Guardar y continuar"}
+              {saving ? t("saving") : t("saveContinue")}
             </button>
           </form>
         </div>
