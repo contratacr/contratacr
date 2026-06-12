@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Bell, CheckCheck, Check, X, Trash2 } from "lucide-react";
+import { Bell, CheckCheck, Check, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { cn, formatRelativeTime } from "@/lib/utils";
@@ -43,11 +43,13 @@ export function NotificationsList() {
     const supabase = createClient();
     await supabase.from("notifications").update({ read: true }).eq("user_id", user.id).eq("read", false);
     setItems((prev) => prev.map((n) => ({ ...n, read: true })));
+    window.dispatchEvent(new CustomEvent("notificationsChanged"));
   }
 
   async function markOneRead(e: React.MouseEvent, id: string) {
     e.stopPropagation();
     setItems((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+    window.dispatchEvent(new CustomEvent("notificationsChanged"));
     const supabase = createClient();
     await supabase.from("notifications").update({ read: true }).eq("id", id);
   }
@@ -58,6 +60,7 @@ export function NotificationsList() {
     if (!n.read) {
       const supabase = createClient();
       supabase.from("notifications").update({ read: true }).eq("id", n.id).then(() => {});
+      window.dispatchEvent(new CustomEvent("notificationsChanged"));
     }
     window.location.assign(notificationHref(n, role));
   }
@@ -65,6 +68,7 @@ export function NotificationsList() {
   async function dismiss(e: React.MouseEvent, id: string) {
     e.stopPropagation();
     setItems((prev) => prev.filter((n) => n.id !== id));
+    window.dispatchEvent(new CustomEvent("notificationsChanged"));
     const supabase = createClient();
     await supabase.from("notifications").delete().eq("id", id);
   }
@@ -73,6 +77,7 @@ export function NotificationsList() {
     if (!user || items.length === 0) return;
     if (!window.confirm("¿Eliminar todas tus notificaciones?")) return;
     setItems([]);
+    window.dispatchEvent(new CustomEvent("notificationsChanged"));
     const supabase = createClient();
     await supabase.from("notifications").delete().eq("user_id", user.id);
   }
@@ -125,14 +130,16 @@ export function NotificationsList() {
                     </div>
                   </div>
                 </button>
+                {/* Two distinct actions, intentionally different icons so they're
+                    never read as accept/reject: ✓ = mark as read, 🗑 = delete. */}
                 <div className="absolute top-2.5 right-2.5 flex items-center gap-0.5">
                   {!n.read && (
-                    <button onClick={(e) => markOneRead(e, n.id)} className="p-1 rounded-md text-[#9ca3af] hover:bg-[#e5e7eb] hover:text-[#15803d] transition-colors" aria-label="Marcar leído" title="Marcar leído">
+                    <button onClick={(e) => markOneRead(e, n.id)} className="p-1 rounded-md text-[#9ca3af] hover:bg-[#dcfce7] hover:text-[#15803d] transition-colors" aria-label="Marcar como leída" title="Marcar como leída">
                       <Check className="h-3.5 w-3.5" />
                     </button>
                   )}
-                  <button onClick={(e) => dismiss(e, n.id)} className="p-1 rounded-md text-[#9ca3af] hover:bg-[#e5e7eb] hover:text-[#374151] transition-colors" aria-label="Eliminar" title="Eliminar">
-                    <X className="h-3.5 w-3.5" />
+                  <button onClick={(e) => dismiss(e, n.id)} className="p-1 rounded-md text-[#9ca3af] hover:bg-red-50 hover:text-red-500 transition-colors" aria-label="Eliminar" title="Eliminar">
+                    <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 </div>
               </li>

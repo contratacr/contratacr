@@ -57,9 +57,13 @@ function remapClientLinkForPro(link: string): string {
 export function notificationHref(n: NotificationLinkInput, role?: string): string {
   const isPro = role === "professional";
 
-  // An explicit link stored at creation time wins — but for a professional we
-  // route client-context deep links into the unified dashboard's client group.
-  if (n.data?.link) return isPro ? remapClientLinkForPro(n.data.link) : n.data.link;
+  // An explicit link stored at creation time wins — but only if it's a well-formed
+  // internal path. Anything stale/garbage falls through to the type-based routing
+  // below (always a live dashboard tab), so a click never dead-ends. For a
+  // professional we route client-context deep links into the unified dashboard.
+  if (n.data?.link && n.data.link.startsWith("/")) {
+    return isPro ? remapClientLinkForPro(n.data.link) : n.data.link;
+  }
 
   switch (n.type) {
     // Professional context

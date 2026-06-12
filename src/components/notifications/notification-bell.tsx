@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Bell, CheckCheck, X } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Bell, CheckCheck, Trash2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { cn, formatRelativeTime } from "@/lib/utils";
@@ -37,10 +37,11 @@ export function NotificationBell() {
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  useEffect(() => {
+  // Re-pullable so the badge can refresh whenever notifications change anywhere
+  // (the in-panel list marks read / deletes, another tab, etc.).
+  const fetchNotifications = useCallback(() => {
     if (!user) return;
     const supabase = createClient();
-
     supabase
       .from("notifications")
       .select("*")
@@ -48,10 +49,19 @@ export function NotificationBell() {
       .order("created_at", { ascending: false })
       .limit(20)
       .then(({ data }) => setNotifications(data ?? []));
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    const supabase = createClient();
+
+    fetchNotifications();
 
     // Real-time subscription. ALL `.on(...)` handlers are registered FIRST and
     // `.subscribe()` is called LAST, exactly once, on a per-instance unique
-    // channel (so no other mounted bell shares/reuses this channel).
+    // channel (so no other mounted bell shares/reuses this channel). We listen to
+    // INSERT (new notification) AND UPDATE (read flag flipped elsewhere) so the
+    // unread badge stays correct without a manual refresh.
     const channel = supabase
       .channel(`notifications-${user.id}-${instanceIdRef.current}`)
       .on(
@@ -61,12 +71,28 @@ export function NotificationBell() {
           setNotifications((prev) => [payload.new as Notification, ...prev]);
         }
       )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
+        (payload) => {
+          const updated = payload.new as Notification;
+          setNotifications((prev) => prev.map((n) => (n.id === updated.id ? updated : n)));
+        }
+      )
       .subscribe();
 
     // Clean up on unmount / user change so the channel is removed exactly once
     // and never re-subscribed with stale handlers.
     return () => { supabase.removeChannel(channel); };
-  }, [user]);
+  }, [user, fetchNotifications]);
+
+  // Same-tab sync: other notification surfaces (the in-panel list) broadcast this
+  // event after marking read / deleting; re-pull so the bell badge matches.
+  useEffect(() => {
+    function onChanged() { fetchNotifications(); }
+    window.addEventListener("notificationsChanged", onChanged);
+    return () => window.removeEventListener("notificationsChanged", onChanged);
+  }, [fetchNotifications]);
 
   useEffect(() => {
     function handleClickOutside(e: Event) {
@@ -96,6 +122,7 @@ export function NotificationBell() {
       .eq("user_id", user.id)
       .eq("read", false);
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    window.dispatchEvent(new CustomEvent("notificationsChanged"));
   }
 
   function openNotification(n: Notification) {
@@ -103,6 +130,8 @@ export function NotificationBell() {
     if (!n.read) {
       const supabase = createClient();
       supabase.from("notifications").update({ read: true }).eq("id", n.id).then(() => {});
+      setNotifications((prev) => prev.map((x) => (x.id === n.id ? { ...x, read: true } : x)));
+      window.dispatchEvent(new CustomEvent("notificationsChanged"));
     }
     const role = user?.user_metadata?.role as string | undefined;
     window.location.assign(notificationHref(n, role));
@@ -111,6 +140,7 @@ export function NotificationBell() {
   async function dismiss(e: React.MouseEvent, id: string) {
     e.stopPropagation();
     setNotifications((prev) => prev.filter((n) => n.id !== id));
+    window.dispatchEvent(new CustomEvent("notificationsChanged"));
     const supabase = createClient();
     await supabase.from("notifications").delete().eq("id", id);
   }
@@ -202,10 +232,11 @@ export function NotificationBell() {
                     </button>
                     <button
                       onClick={(e) => dismiss(e, n.id)}
-                      className="absolute top-2 right-2 p-1 rounded-md text-[#9ca3af] hover:bg-[#e5e7eb] hover:text-[#374151] transition-colors"
-                      aria-label="Descartar"
+                      className="absolute top-2 right-2 p-1 rounded-md text-[#9ca3af] hover:bg-[#e5e7eb] hover:text-red-500 transition-colors"
+                      aria-label="Eliminar"
+                      title="Eliminar"
                     >
-                      <X className="h-3.5 w-3.5" />
+                      <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </li>
                 ))}
