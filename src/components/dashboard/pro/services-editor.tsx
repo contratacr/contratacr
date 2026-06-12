@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Plus, Trash2, Check, Pencil, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,6 +54,8 @@ export function ServicesEditor({
   onSaved,
 }: ServicesEditorProps) {
   const locale = useLocale();
+  const t = useTranslations("servicesEditor");
+  const rich = { strong: (c: React.ReactNode) => <strong>{c}</strong> };
   const seedProfessions =
     initialProfessions.length > 0
       ? initialProfessions
@@ -103,11 +105,11 @@ export function ServicesEditor({
 
   function confirmAddProfession() {
     if (!newProfession) {
-      setProfessionError("Elige una profesión.");
+      setProfessionError(t("chooseProfession"));
       return;
     }
     if (professions.includes(newProfession)) {
-      setProfessionError("Ya agregaste esa profesión.");
+      setProfessionError(t("alreadyAdded"));
       return;
     }
     const next = [...professions, newProfession];
@@ -161,7 +163,7 @@ export function ServicesEditor({
 
   async function handleFormSave() {
     if (!form.name.trim()) {
-      setFormError("El nombre del servicio es requerido.");
+      setFormError(t("nameRequired"));
       return;
     }
     setFormError(null);
@@ -216,7 +218,7 @@ export function ServicesEditor({
   if (professions.length === 0) {
     return (
       <div className="text-center py-8 rounded-xl border-2 border-dashed border-[#e5e7eb]">
-        <p className="text-sm text-[#6b7280]">Primero elige tu profesión principal en la pestaña <strong>Mi perfil</strong>.</p>
+        <p className="text-sm text-[#6b7280]">{t.rich("noProfession", rich)}</p>
       </div>
     );
   }
@@ -224,8 +226,7 @@ export function ServicesEditor({
   return (
     <div className="flex flex-col gap-6">
       <p className="text-sm text-[#6b7280]">
-        Primero elige <strong>tus profesiones</strong>; luego agrega <strong>los servicios</strong> de cada una con su
-        precio. Cada servicio guarda sus propias fotos de casos de éxito.
+        {t.rich("intro", rich)}
       </p>
 
       {/* ── STEP 1 — Professions manager ────────────────────────────────── */}
@@ -233,14 +234,14 @@ export function ServicesEditor({
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#009FD9] text-white text-xs font-bold shrink-0">1</span>
-            <h3 className="text-sm font-semibold text-[#111827]">Tus profesiones</h3>
+            <h3 className="text-sm font-semibold text-[#111827]">{t("step1Title")}</h3>
           </div>
           {!addingProfession && (
             <button
               onClick={() => { setAddingProfession(true); setProfessionError(null); }}
               className="flex items-center gap-1 text-xs font-medium text-[#009FD9] hover:underline"
             >
-              <Plus className="h-3.5 w-3.5" /> Agregar profesión
+              <Plus className="h-3.5 w-3.5" /> {t("addProfession")}
             </button>
           )}
         </div>
@@ -249,7 +250,7 @@ export function ServicesEditor({
           {professions.map((p, i) => (
             <span key={p} className="inline-flex items-center gap-1.5 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium pl-3 pr-1.5 py-1.5">
               {getCategoryLabel(p, locale)}
-              {i === 0 && <span className="text-[10px] font-bold uppercase tracking-wide text-[#009FD9]/70">Principal</span>}
+              {i === 0 && <span className="text-[10px] font-bold uppercase tracking-wide text-[#009FD9]/70">{t("principal")}</span>}
               {professions.length > 1 && (
                 <button onClick={() => removeProfession(p)} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors" aria-label="Quitar profesión">
                   <X className="h-3.5 w-3.5" />
@@ -264,13 +265,13 @@ export function ServicesEditor({
             <CategorySearch
               value={newProfession}
               onChange={(v) => { setNewProfession(v); setProfessionError(null); }}
-              placeholder="Busca otra profesión… ej. fotógrafo, electricista"
+              placeholder={t("searchProfession")}
               error={professionError ?? undefined}
             />
             <div className="flex gap-2">
-              <Button size="sm" onClick={confirmAddProfession}>Agregar</Button>
+              <Button size="sm" onClick={confirmAddProfession}>{t("add")}</Button>
               <Button size="sm" variant="ghost" onClick={() => { setAddingProfession(false); setNewProfession(""); setProfessionError(null); }}>
-                Cancelar
+                {t("cancel")}
               </Button>
             </div>
           </div>
@@ -283,7 +284,7 @@ export function ServicesEditor({
           border). Only the add/edit form keeps an accent box so it stands out. */}
       <div className="flex items-center gap-2">
         <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#009FD9] text-white text-xs font-bold shrink-0">2</span>
-        <h3 className="text-sm font-semibold text-[#111827]">Tus servicios</h3>
+        <h3 className="text-sm font-semibold text-[#111827]">{t("step2Title")}</h3>
       </div>
       {professions.map((prof, idx) => {
         const profServices = services.filter((s) => effectiveCategory(s) === prof);
@@ -295,12 +296,12 @@ export function ServicesEditor({
                 onClick={() => openAdd(prof)}
                 className="flex items-center gap-1 text-xs font-medium text-[#009FD9] hover:underline"
               >
-                <Plus className="h-3.5 w-3.5" /> Agregar servicio
+                <Plus className="h-3.5 w-3.5" /> {t("addService")}
               </button>
             </div>
 
             {profServices.length === 0 && (editingId !== null || formCategory !== prof) && (
-              <p className="text-xs text-[#9ca3af] py-2">Todavía no agregaste servicios bajo esta profesión.</p>
+              <p className="text-xs text-[#9ca3af] py-2">{t("emptyUnderProfession")}</p>
             )}
 
             {profServices.length > 0 && (
@@ -310,7 +311,7 @@ export function ServicesEditor({
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-[#111827] truncate">{svc.name}</p>
                       {svc.description && <p className="text-xs text-[#6b7280] mt-0.5 line-clamp-1">{svc.description}</p>}
-                      {svc.years != null && <p className="text-xs text-[#9ca3af] mt-0.5">{svc.years} {svc.years === 1 ? "año" : "años"} de experiencia</p>}
+                      {svc.years != null && <p className="text-xs text-[#9ca3af] mt-0.5">{t("experience", { years: svc.years })}</p>}
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
                       {svc.price && <span className="text-sm font-semibold text-[#009FD9] whitespace-nowrap">{svc.price}</span>}
@@ -331,7 +332,7 @@ export function ServicesEditor({
               <div className="border border-[#009FD9]/30 bg-[#EBF5FB]/30 rounded-xl p-4 mt-3 flex flex-col gap-3">
                 <div className="flex items-center justify-between">
                   <p className="text-sm font-semibold text-[#111827]">
-                    {editingId ? "Editar servicio" : `Nuevo servicio · ${getCategoryLabel(prof, locale)}`}
+                    {editingId ? t("editService") : t("newService", { profession: getCategoryLabel(prof, locale) })}
                   </p>
                   <button onClick={cancelForm} className="text-[#9ca3af] hover:text-[#374151] transition-colors">
                     <X className="h-4 w-4" />
@@ -343,26 +344,26 @@ export function ServicesEditor({
                 )}
 
                 <Input
-                  label="Nombre del servicio *"
-                  placeholder="Ej: Instalación eléctrica residencial"
+                  label={t("nameLabel")}
+                  placeholder={t("namePlaceholder")}
                   value={form.name}
                   onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                   autoFocus
                 />
                 <div>
                   <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                    Descripción <span className="text-[#9ca3af] font-normal">(opcional)</span>
+                    {t("description")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
                   </label>
                   <textarea
                     className="w-full rounded-xl border border-[#e5e7eb] bg-white px-3.5 py-2.5 text-sm text-[#111827] placeholder:text-[#9ca3af] min-h-[72px] resize-none focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
-                    placeholder="Describe brevemente en qué consiste este servicio..."
+                    placeholder={t("descPlaceholder")}
                     value={form.description}
                     onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                   />
                 </div>
                 <div>
                   <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                    Precio <span className="text-[#9ca3af] font-normal">(opcional)</span>
+                    {t("price")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
                   </label>
                   <div className="flex items-center gap-2">
                     <select
@@ -385,23 +386,23 @@ export function ServicesEditor({
                     )}
                   </div>
                   {form.priceType !== "a_convenir" && form.priceAmount && (
-                    <p className="text-xs text-emerald-600 mt-1">Se mostrará como: {formatServicePrice(Number(form.priceAmount.replace(/\D/g, "")), form.priceType)}</p>
+                    <p className="text-xs text-emerald-600 mt-1">{t("willShowAs", { price: formatServicePrice(Number(form.priceAmount.replace(/\D/g, "")), form.priceType) ?? "" })}</p>
                   )}
                 </div>
 
                 <Input
-                  label={<>Años de experiencia en este servicio <span className="text-[#9ca3af] font-normal">(opcional)</span></>}
+                  label={<>{t("yearsLabel")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span></>}
                   type="number"
                   inputMode="numeric"
-                  placeholder="Ej: 5"
+                  placeholder={t("yearsPlaceholder")}
                   value={form.years}
                   onChange={(e) => setForm((f) => ({ ...f, years: e.target.value }))}
                 />
                 <div className="flex gap-2 pt-1">
                   <Button onClick={handleFormSave} loading={saving} size="sm">
-                    {saving ? "Guardando…" : editingId ? "Guardar cambios" : "Agregar servicio"}
+                    {saving ? t("saving") : editingId ? t("saveChanges") : t("addServiceBtn")}
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={cancelForm}>Cancelar</Button>
+                  <Button variant="ghost" size="sm" onClick={cancelForm}>{t("cancel")}</Button>
                 </div>
               </div>
             )}
@@ -415,14 +416,14 @@ export function ServicesEditor({
       <div className="flex items-center gap-1.5 text-sm pt-1 border-t border-[#f3f4f6] mt-1">
         {saving ? (
           <span className="flex items-center gap-1.5 text-[#6b7280] font-medium">
-            <Loader2 className="h-4 w-4 animate-spin" /> Guardando…
+            <Loader2 className="h-4 w-4 animate-spin" /> {t("saving")}
           </span>
         ) : saved ? (
           <span className="flex items-center gap-1 text-emerald-600 font-medium">
-            <Check className="h-4 w-4" /> Guardado
+            <Check className="h-4 w-4" /> {t("saved")}
           </span>
         ) : (
-          <span className="text-[#9ca3af]">Los cambios se guardan automáticamente.</span>
+          <span className="text-[#9ca3af]">{t("savedAuto")}</span>
         )}
       </div>
     </div>
