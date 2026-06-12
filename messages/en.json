@@ -1129,6 +1129,23 @@
     "sendLink": "Send link",
     "backToLogin": "Back to sign in"
   },
+  "resetPassword": {
+    "doneTitle": "Password updated",
+    "doneBody": "Your password was reset successfully. Redirecting to your dashboard…",
+    "title": "New password",
+    "subtitle": "Create a secure password for your ContrataCR account.",
+    "error": "Couldn't update the password. The link may have expired — request a new one.",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "updating": "Updating…",
+    "updatePassword": "Update password",
+    "backToLogin": "Back to sign in",
+    "rule8": "At least 8 characters",
+    "ruleUpper": "One uppercase letter",
+    "ruleLower": "One lowercase letter",
+    "ruleNumber": "One number",
+    "ruleSpecial": "One special character (!@#$%^&*)"
+  },
   "notifications": {
     "title": "Notifications",
     "empty": "No notifications",

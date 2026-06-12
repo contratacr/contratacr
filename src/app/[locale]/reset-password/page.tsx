@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -32,12 +33,13 @@ const schema = z
 type FormData = z.infer<typeof schema>;
 
 function PasswordChecklist({ password }: { password: string }) {
+  const t = useTranslations("resetPassword");
   const rules = [
-    { label: "Mínimo 8 caracteres", ok: password.length >= 8 },
-    { label: "Una letra mayúscula", ok: /[A-Z]/.test(password) },
-    { label: "Una letra minúscula", ok: /[a-z]/.test(password) },
-    { label: "Un número", ok: /[0-9]/.test(password) },
-    { label: "Un carácter especial (!@#$%^&*)", ok: /[!@#$%^&*]/.test(password) },
+    { label: t("rule8"), ok: password.length >= 8 },
+    { label: t("ruleUpper"), ok: /[A-Z]/.test(password) },
+    { label: t("ruleLower"), ok: /[a-z]/.test(password) },
+    { label: t("ruleNumber"), ok: /[0-9]/.test(password) },
+    { label: t("ruleSpecial"), ok: /[!@#$%^&*]/.test(password) },
   ];
   if (!password) return null;
   return (
@@ -60,6 +62,7 @@ function PasswordChecklist({ password }: { password: string }) {
 
 export default function ResetPasswordPage() {
   const router = useRouter();
+  const t = useTranslations("resetPassword");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
@@ -84,9 +87,7 @@ export default function ResetPasswordPage() {
     });
     setSubmitting(false);
     if (updateError) {
-      setError(
-        "No se pudo actualizar la contraseña. El enlace puede haber expirado — solicita uno nuevo."
-      );
+      setError(t("error"));
       return;
     }
     setDone(true);
@@ -102,9 +103,9 @@ export default function ResetPasswordPage() {
             <div className="flex h-20 w-20 mx-auto items-center justify-center rounded-full bg-[#EBF5FB] mb-5">
               <CheckCircle2 className="h-10 w-10 text-[#009FD9]" />
             </div>
-            <h1 className="text-2xl font-bold text-[#111827] mb-2">Contraseña actualizada</h1>
+            <h1 className="text-2xl font-bold text-[#111827] mb-2">{t("doneTitle")}</h1>
             <p className="text-[#6b7280] text-sm">
-              Tu contraseña fue restablecida correctamente. Redirigiendo a tu panel…
+              {t("doneBody")}
             </p>
           </div>
         </main>
@@ -123,9 +124,9 @@ export default function ResetPasswordPage() {
               <Lock className="h-7 w-7 text-[#009FD9]" />
             </div>
             <ContrataCRLogo className="justify-center mb-4" />
-            <h1 className="text-2xl font-bold text-[#111827]">Nueva contraseña</h1>
+            <h1 className="text-2xl font-bold text-[#111827]">{t("title")}</h1>
             <p className="text-[#6b7280] text-sm mt-1">
-              Crea una contraseña segura para tu cuenta ContrataCR.
+              {t("subtitle")}
             </p>
           </div>
 
@@ -139,7 +140,7 @@ export default function ResetPasswordPage() {
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
             <div>
               <Input
-                label="Nueva contraseña"
+                label={t("newPassword")}
                 type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
                 error={errors.password?.message}
@@ -161,7 +162,7 @@ export default function ResetPasswordPage() {
               <PasswordChecklist password={watchedPassword} />
             </div>
             <Input
-              label="Confirmar contraseña"
+              label={t("confirmPassword")}
               type={showConfirm ? "text" : "password"}
               placeholder="••••••••"
               error={errors.confirmPassword?.message}
@@ -182,10 +183,10 @@ export default function ResetPasswordPage() {
             />
             <Button type="submit" size="lg" loading={submitting} className="mt-2">
               {submitting ? (
-                "Actualizando…"
+                t("updating")
               ) : (
                 <>
-                  Actualizar contraseña <ArrowRight className="h-4 w-4" />
+                  {t("updatePassword")} <ArrowRight className="h-4 w-4" />
                 </>
               )}
             </Button>
@@ -193,7 +194,7 @@ export default function ResetPasswordPage() {
 
           <p className="text-center text-sm text-[#6b7280] mt-6">
             <Link href="/login" className="text-[#009FD9] font-medium hover:underline">
-              Volver al inicio de sesión
+              {t("backToLogin")}
             </Link>
           </p>
         </div>

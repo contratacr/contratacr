@@ -1129,6 +1129,23 @@
     "sendLink": "Enviar enlace",
     "backToLogin": "Volver al inicio de sesión"
   },
+  "resetPassword": {
+    "doneTitle": "Contraseña actualizada",
+    "doneBody": "Tu contraseña fue restablecida correctamente. Redirigiendo a tu panel…",
+    "title": "Nueva contraseña",
+    "subtitle": "Crea una contraseña segura para tu cuenta ContrataCR.",
+    "error": "No se pudo actualizar la contraseña. El enlace puede haber expirado — solicita uno nuevo.",
+    "newPassword": "Nueva contraseña",
+    "confirmPassword": "Confirmar contraseña",
+    "updating": "Actualizando…",
+    "updatePassword": "Actualizar contraseña",
+    "backToLogin": "Volver al inicio de sesión",
+    "rule8": "Mínimo 8 caracteres",
+    "ruleUpper": "Una letra mayúscula",
+    "ruleLower": "Una letra minúscula",
+    "ruleNumber": "Un número",
+    "ruleSpecial": "Un carácter especial (!@#$%^&*)"
+  },
   "notifications": {
     "title": "Notificaciones",
     "empty": "No tienes notificaciones",
