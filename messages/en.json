@@ -1206,6 +1206,23 @@
     "haveAccount": "Already have an account?",
     "signIn": "Sign in"
   },
+  "proveedoresPage": {
+    "metaTitle": "What is identity verification? — ContrataCR",
+    "metaDesc": "How ContrataCR's identity verification works: we confirm the ID is real and the name matches official records. We verify identity, not the quality or outcome of the work.",
+    "badge": "Identity verified",
+    "h1": "What is identity verification?",
+    "intro": "It's a confirmation that the <strong>provider's ID is real</strong> and that their <strong>name matches official records</strong>. It's automatic and earned: it gives more visibility to clients seeking extra trust, without blocking anyone.",
+    "howWorks": "How does it work?",
+    "step1Title": "Real ID",
+    "step1Body": "We automatically confirm that the ID number (cédula, DIMEX or NITE) exists in the official TSE records.",
+    "step2Title": "The name matches",
+    "step2Body": "We compare the registered name with the padrón. If it matches, verification is granted instantly, no waiting.",
+    "step3Title": "Always up to date",
+    "step3Body": "The padrón is updated periodically. If your case doesn't pass automatically, you can appeal and it's re-verified.",
+    "disclaimerTitle": "Important notice",
+    "disclaimer": "ContrataCR is an <strong>intermediary platform</strong> that connects clients with service providers; it is not the service provider. The <strong>“Identity verified”</strong> badge only confirms the ID is real and the name matches official records. <strong>It does not guarantee or ensure the quality, outcome or completion of any work</strong>, and does not by itself prove that the person who registered is physically that person. Hiring happens directly between the client and the provider.",
+    "ctaVerified": "See providers with verified identity"
+  },
   "publicarProyecto": {
     "tlUrgent": "Urgent — this week",
     "tlSoon": "Soon — this month",
