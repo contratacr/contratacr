@@ -935,6 +935,11 @@ No new migrations. Behavioural/UX fixes + a few API/data-flow corrections.
 - `WorkplacesPicker`: **"Usar mi ubicación actual"** (geolocation + reverse geocode) and **re-inits the map on every mount** (the Script `onLoad` only fires once) — fixes the blank map after fixed→mobile→fixed (fixes 13–14).
 - Profile **work mode allows BOTH** ("me desplazo" + "lugar fijo" are independent toggles); `service_type` stored as a comma list.
 
+### Booking FOR ANOTHER PERSON (third-party) logic
+- **No duplicate account-holder data.** When `forSomeoneElse`, the account holder's OWN cédula and WhatsApp are NO longer required (`needsCedula`/`needsPhone` gated on `!forSomeoneElse`). Only self-bookings link/require the holder's cédula. Beneficiary cédula stays **optional and never linked to the account** (unchanged).
+- **Appointment contact = the beneficiary's number.** The beneficiary phone is now **required** for third-party bookings ("Teléfono de contacto para la cita") — it's the number the professional uses to coordinate. Validated (≥8 digits) in the details step.
+- **Pro contacts the right person.** In `booking-requests`, the WhatsApp button uses the **beneficiary phone** when `for_someone_else` (labelled "WhatsApp a [nombre]"), else the client's; the card shows "Reservado por [responsable]" + "Coordina la cita al contacto de la persona." Status notifications still go to the responsible party (they booked it).
+
 ### Booking cédula/name fixes (booking-modal)
 - **Name now follows the linked cédula.** Cause: applying the official name relied on the debounced `selfCedulaName` state, so a fast submit saved the cédula but kept the old name (and future bookings showed the mismatch since the account already had a cédula → never re-prompted). Fix: `validateClientCedula()` now fetches + returns the official name **synchronously** at submit, used for both the booking name and the account update; plus a **self-heal effect** on modal open — a logged-in account whose stored national cédula's official name differs is corrected (profiles + auth metadata + display) once per open. So name + cédula stay consistent.
 - **"No encontramos esa cédula" flicker fixed.** Added `benCedulaLoading`/`selfCedulaLoading`; the "not found" line only renders AFTER the lookup resolves (shows "Buscando…" while in flight), never prematurely for valid cédulas.

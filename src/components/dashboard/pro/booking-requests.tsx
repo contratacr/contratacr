@@ -180,9 +180,12 @@ export function BookingRequests() {
                     <p className="text-[#374151] mt-0.5">
                       {booking.beneficiary_dob ? `Nac.: ${booking.beneficiary_dob}` : ""}
                       {booking.beneficiary_cedula ? `${booking.beneficiary_dob ? " · " : ""}Cédula: ${booking.beneficiary_cedula}` : ""}
-                      {booking.beneficiary_phone ? ` · Tel: ${booking.beneficiary_phone}` : ""}
+                      {booking.beneficiary_phone ? ` · Contacto: ${booking.beneficiary_phone}` : ""}
                     </p>
-                    <p className="text-[10px] text-[#6b7280] mt-0.5">Reservado por {booking.client_name} (responsable)</p>
+                    <p className="text-[10px] text-[#6b7280] mt-0.5">
+                      Reservado por {booking.client_name} (responsable).
+                      {booking.beneficiary_phone ? " Coordina la cita al contacto de la persona." : ""}
+                    </p>
                   </div>
                 )}
                 {booking.service_description && (
@@ -255,21 +258,29 @@ export function BookingRequests() {
                   </Button>
                 </>
               )}
-              {booking.client_phone && (
-                <Button size="sm" variant="whatsapp" asChild className="w-full sm:w-auto">
-                  <a
-                    href={getWhatsAppLink(
-                      booking.client_phone,
-                      `Hola ${booking.client_name ?? ""}, te contacto por tu solicitud en ContrataCR.`
-                    )}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <WhatsAppIcon className="h-3.5 w-3.5" />
-                    WhatsApp
-                  </a>
-                </Button>
-              )}
+              {/* WhatsApp contact: for a third-party booking the appointment contact
+                  is the BENEFICIARY's number (that's who the service is for); else
+                  the client's. The label makes whose contact it is explicit. */}
+              {(() => {
+                const beneficiaryContact = !!booking.for_someone_else && !!booking.beneficiary_phone;
+                const contactPhone = beneficiaryContact ? booking.beneficiary_phone! : booking.client_phone;
+                if (!contactPhone) return null;
+                const contactName = beneficiaryContact
+                  ? (booking.beneficiary_name || "la persona de la cita")
+                  : (booking.client_name || "");
+                return (
+                  <Button size="sm" variant="whatsapp" asChild className="w-full sm:w-auto">
+                    <a
+                      href={getWhatsAppLink(contactPhone, `Hola ${contactName}, te contacto por la solicitud en ContrataCR.`)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <WhatsAppIcon className="h-3.5 w-3.5" />
+                      {beneficiaryContact ? `WhatsApp a ${(booking.beneficiary_name || "la persona").split(" ")[0]}` : "WhatsApp"}
+                    </a>
+                  </Button>
+                );
+              })()}
             </div>
             <button
               onClick={() => reportClient(booking)}

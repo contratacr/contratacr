@@ -542,8 +542,11 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   // "Needs cédula" depends on whether the account had one ON FILE (stable), NOT on
   // the live input value — otherwise typing fills profileCedula and the field
   // vanishes mid-keystroke. Gated on profileLoaded so it never flashes either.
-  const needsCedula = isLoggedIn && profileLoaded && !hasStoredCedula;
-  const needsPhone = isLoggedIn && !profilePhone;
+  // Booking FOR ANOTHER PERSON: we don't require the account holder's OWN cédula
+  // or WhatsApp again — the appointment contact is the beneficiary's number
+  // (collected + required below). Only self-bookings require the holder's cédula.
+  const needsCedula = isLoggedIn && profileLoaded && !hasStoredCedula && !forSomeoneElse;
+  const needsPhone = isLoggedIn && !profilePhone && !forSomeoneElse;
 
   // Effective DOB for the account holder (padrón has none → manual input).
   const effectiveSelfDob = selfDob || selfDobInput || null;
@@ -1005,12 +1008,14 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                           </div>
                           )}
                           <PhoneInput
-                            label={<>Teléfono de contacto <span className="text-[#9ca3af] font-normal">(opcional)</span></>}
+                            label={<>Teléfono de contacto para la cita <span className="text-red-500">*</span></>}
+                            required
                             value={benPhone}
                             onChange={setBenPhone}
                           />
                           <p className="text-[11px] text-[#9ca3af]">
-                            La cédula de la persona es opcional — nunca bloquea la cita. La identidad la respaldas tú como responsable.
+                            Es el número que el profesional usará para coordinar esta cita (el de la persona que recibe el servicio).
+                            La cédula de la persona es opcional — nunca bloquea la cita; la identidad la respaldas tú como responsable.
                           </p>
                         </>
                       )}
@@ -1241,16 +1246,16 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     className="flex-1"
                     disabled={
                       !description.trim()
-                      || (forSomeoneElse && (benHasCedula === null || !benName.trim()))
+                      || (forSomeoneElse && (benHasCedula === null || !benName.trim() || benPhone.replace(/\D/g, "").length < 8))
                       || (proIsHealth && !forSomeoneElse && !effectiveSelfDob)
                       || (proIsHealth && forSomeoneElse && !benDob)
                     }
                     loading={submitting}
                     onClick={async () => {
                       if (!description.trim()) return;
-                      // Booking for someone else needs at least the beneficiary's name
-                      // (cédula stays optional) so the professional knows who it's for.
-                      if (forSomeoneElse && (benHasCedula === null || !benName.trim())) return;
+                      // Booking for someone else needs the beneficiary's name + a contact
+                      // number for the cita (cédula stays optional).
+                      if (forSomeoneElse && (benHasCedula === null || !benName.trim() || benPhone.replace(/\D/g, "").length < 8)) return;
                       // Health services require the patient's DOB (self or beneficiary).
                       if (proIsHealth && !forSomeoneElse && !effectiveSelfDob) return;
                       if (proIsHealth && forSomeoneElse && !benDob) return;
