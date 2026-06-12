@@ -1944,3 +1944,18 @@ Translated these previously Spanish-hardcoded pages to full ES/EN (new message n
 - **Status filter tabs** (`StatusFilterTabs`) — now translate via `statusTabs` namespace (`id` doubles as the i18n key); reused in BOTH dashboards' Solicitudes/Proyectos filters.
 
 **STILL Spanish (remaining major sweep, NOT done this pass):** the CLIENT and PROFESSIONAL dashboards and all their sections (Mi perfil, Servicios, Casos de éxito, Disponibilidad, Solicitudes, Proyectos, Verificación, Notificaciones, Soporte, Cuenta y seguridad, Contratar servicios, the "ver cómo me ven los clientes" preview) are 0% i18n (~2×400-line pages + ~15 child components, hundreds of strings) — a large dedicated effort. `/buscar` is mostly translated but a few hardcoded strings remain in `search-filters.tsx` ("Limpiar búsqueda", "Cercanía"), `professional-card.tsx` ("Atiende en todo el país"), and `buscar/page.tsx` ("Disponibilidad inmediata"). Legal pages (`/terminos`, `/privacidad`) intentionally untranslated (flagged for human review).
+
+---
+
+## Full app i18n sweep — dashboards + auth/flow pages now bilingual (COMPLETES the above)
+
+The "STILL Spanish" sweep noted above is now DONE. Everything below was translated to full ES/EN (paired namespaces in `messages/es.json` + `en.json`, each component wired with `useTranslations`/`getTranslations`; `tsc` + `next build` green per commit; pushed to main).
+
+- **Professional dashboard** (`dashboard/profesional` + children): shell/header, `profile-completion`, `profile-editor`, `services-editor`, `availability-editor`, `photo-gallery`, `booking-requests`, `proposals-tab`, `verification-panel`, `unsaved-guard`. Namespaces: `proPanel`, `profileEditor`, `servicesEditor`, `availabilityEditor`, `photoGallery`, `bookingRequests`, `proposalsTab`, `verificationPanel`, `unsavedGuard`.
+- **Client dashboard** (`dashboard/cliente` + `client-activity`): `clientPage`, `clientActivity`, `savedPros` (saved-professionals-tab).
+- **Account / support**: `account-security` (`accountSecurity`), `close-account-section` (`closeAccount`), `support-tickets` (`supportTickets`), `notifications-list` (extended `notifications` with seeAll/markRead/delete/deleteAll/deleteAllConfirm/noneList).
+- **Auth/flow pages**: `registro` (role choice — `registerChoice`), `registro/cliente` (`registerClient`), `onboarding` (`onboarding`, reuses `registerChoice` cards), `completar-perfil` (`completeProfile`), `olvide-contrasena` (`forgotPassword`), `reset-password` (`resetPassword`), `publicar-proyecto` (`publicarProyecto`), `notificaciones` (`notifications`), `proveedores-autorizados` (`proveedoresPage` — converted to server component with `generateMetadata` + `getTranslations`, `t.rich` for bold), `contacto` (`contacto` — hero, react-hook-form validation messages, ticket-success user/guest states, support/hours/location cards).
+
+PATTERNS used throughout: module-level constant label maps (STATUS_LABEL, TIMELINES, FILTERS) moved INSIDE components and converted to `t()` helpers (they need locale context); list-loop variables renamed off `t` to avoid shadowing the translation fn (e.g. `tk` in support-tickets); locale-aware dates via `locale === "en" ? "en-US" : "es-CR"`; taxonomy via `getCategoryLabel(id, locale)`.
+
+**Minor items still Spanish (intentional / low-value, NOT blocking):** a few zod schema validation messages defined at module scope (no locale context); `notificationContextLabel` tags ("Como profesional/cliente"); the `/buscar` strings noted above. Legal pages (`/terminos`, `/privacidad`) and the entire `admin/*` panel remain Spanish by design.
