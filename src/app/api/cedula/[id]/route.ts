@@ -1,19 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getIdentityVerifier } from "@/lib/verification/identity-verifier";
 import { isValidId } from "@/lib/cedula";
-import { createClient } from "@/lib/supabase/server";
-import { safeGetUser } from "@/lib/supabase/get-user";
 import { enforceRateLimit } from "@/lib/rate-limit";
 
 // GET /api/cedula/[id]
 // Looks up a cédula in the self-hosted TSE padrón (the source of truth) and
-// returns the OFFICIAL full name for the user to confirm. This powers the
+// returns the OFFICIAL full name for the user to CONFIRM. Powers the
 // auto-fill + confirm verification flow.
 //
-// PRIVACY: this returns a person's official name, so it is gated to
-// AUTHENTICATED users only and rate-limited per IP — it must not be an open
-// name-by-cédula lookup that anyone can scrape/enumerate. All callers (booking
-// + registration identity confirm) already have a session.
+// AUTH — intentionally NOT session-gated. The primary caller is professional
+// registration (email/password): the lookup runs at step 0, BEFORE the account
+// exists, so there is no session yet. A prior RLS-hardening pass gated this
+// route to authenticated users, which made EVERY registration lookup return 401
+// and showed valid people "cédula no encontrada" — the exact regression this
+// reverts. (Do NOT re-add an auth gate here; see WARNING in contratacr-context.md.)
+//
+// PRIVACY is preserved a different way: the padrón TABLE stays private — it is
+// read ONLY server-side via the SECURITY DEFINER `padron_lookup` RPC
+// (service-role), never exposed to the client. Abuse is bounded by a per-IP rate
+// limit; the endpoint returns at most ONE name for ONE valid-format cédula (no
+// bulk/enumerable listing), and that name is the same public datum the TSE's own
+// consulta returns.
 //
 // INTEGRITY GUARD: there is NO permissive fallback. A cédula that is not in the
 // padrón returns { found: false } (404) — it must never resolve to a name and so
@@ -24,9 +31,6 @@ export async function GET(
 ) {
   const rl = enforceRateLimit(req, "cedula", 20, 60_000);
   if (rl) return rl;
-
-  const user = await safeGetUser(await createClient());
-  if (!user) return NextResponse.json({ found: false, error: "No autorizado" }, { status: 401 });
 
   const { id } = await params;
   const cedula = id.replace(/\D/g, "");
