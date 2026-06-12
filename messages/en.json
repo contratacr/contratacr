@@ -382,7 +382,13 @@
       "submitting": "Signing in...",
       "noAccount": "Don't have an account?",
       "signUp": "Sign up free",
-      "or": "or"
+      "or": "or",
+      "emailInvalid": "Invalid email",
+      "passwordRequired": "Enter your password",
+      "loginError": "Incorrect email or password. If you signed up with Google or Facebook, use that button. Forgot your password? You can reset it below.",
+      "redirecting": "Redirecting…",
+      "continueGoogle": "Continue with Google",
+      "continueFacebook": "Continue with Facebook"
     },
     "register": {
       "title": "Create account",
