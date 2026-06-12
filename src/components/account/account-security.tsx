@@ -27,7 +27,7 @@ function OAuthGuide({
   linkHref: string;
 }) {
   return (
-    <div className="rounded-xl bg-[#f0f9ff] border border-[#bae6fd] p-4">
+    <div className="rounded-xl bg-[#f0f9ff] p-4">
       <div className="flex items-start gap-2.5">
         <Info className="h-4 w-4 text-[#0284c7] shrink-0 mt-0.5" />
         <div className="min-w-0 flex-1">

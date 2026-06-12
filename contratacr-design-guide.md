@@ -184,6 +184,14 @@ A professional is always **ONE card** (`rounded-2xl bg-white border`, never spli
 ### Never strand the user — "Volver a mi panel"
 - Any **full-view preview or deep flow** a logged-in user can enter must offer a **clear way back to their dashboard**. The professional "Ver cómo me ven los clientes" preview opens **same-tab with `?preview=1`**, and the public profile shows a prominent **"Volver a mi panel"** bar (→ `/dashboard/profesional`) in that mode instead of the generic "back to search". Standalone pages that keep the global `Navbar` (logo→home + account menu) already satisfy this; full-bleed views do not — add an explicit back action.
 
+### Professional registration — essentials only
+- Registration collects ONLY what's needed to create a searchable pro: **identity (cédula→nombre, or the "no CR ID" exception), email + password (email signup), profession(s), "¿cómo ofreces tus servicios?" + location, WhatsApp, and an optional photo.** Everything else (brand/business name, services + prices, years, certifications, languages, aseguradoras, casos de éxito, schedule) is completed later in the panel via the **profile-completion flow** — never crammed into signup. Do not re-add moved fields to registration.
+- **The "No tengo identificación costarricense" exception is NOT under the cédula field.** It's a muted toggle placed **below the main flow** (under a light divider, near the submit) so the primary cédula→nombre path reads cleanly.
+- **Photo step:** "Cambiar foto" and "Eliminar" are BOTH proper outlined buttons (Eliminar in red), visually matched. No paragraphs here about "later you add services / casos de éxito" — that guidance lives in the panel's completion flow, not signup.
+
+### OAuth guidance blocks (account & security)
+- Notes shown to Google/Facebook users (email/password are provider-managed) use a **light info style** (`bg-[#f0f9ff]`, **no border** — they already sit inside a card, so no box-in-box), an `Info` icon, optional numbered steps, and a single link out to the provider. Never a heavy/clunky bordered box.
+
 ### Image uploads (avatars + casos de éxito)
 - **Accept any image, including iPhone HEIC/HEIF** (Cloudinary converts). Don't whitelist only jpeg/png/webp — mobile photos are often HEIC and some browsers send an **empty MIME type**, so allow `type === "" || type.startsWith("image/")` and use `image/*` on the `<input accept>`. Size cap **10 MB** (phone photos exceed 5 MB; images are downscaled server-side anyway).
 - **Always surface the SERVER's specific error** (size/format/Cloudinary-not-configured) to the user — never collapse it into a generic "no se pudo subir". Revert any optimistic preview on failure.

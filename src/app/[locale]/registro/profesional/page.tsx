@@ -331,7 +331,7 @@ function PhotoPicker({
           <Button type="button" variant="outline" size="sm" onClick={() => ref.current?.click()}>
             <Camera className="h-4 w-4" /> Cambiar foto
           </Button>
-          <Button type="button" variant="ghost" size="sm" onClick={onRemove} className="text-red-500 hover:text-red-600">
+          <Button type="button" variant="outline" size="sm" onClick={onRemove} className="border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600">
             <X className="h-4 w-4" /> Eliminar
           </Button>
         </div>
@@ -456,8 +456,9 @@ export default function RegisterProfessionalPage() {
   // The "add another profession" search is revealed on demand (a clear action),
   // not shown as a second always-visible dropdown that confused people.
   const [showExtraProf, setShowExtraProf] = useState(false);
-  // Optional brand/business name (workplaces are captured via the map below).
-  const [businessName, setBusinessName] = useState("");
+  // Optional brand/business name is now collected in the panel (not registration);
+  // kept empty here so the create payload still sends a (null) value cleanly.
+  const businessName = "";
 
   const form1 = useForm<Step1Data>({
     resolver: zodResolver(step1Schema),
@@ -911,7 +912,6 @@ export default function RegisterProfessionalPage() {
                   nameError={form1.formState.errors.fullName?.message}
                 />
               )}
-              <NoCrIdToggle checked={noCrId} onChange={setNoCrId} />
 
               <div className="border-t border-[#f3f4f6] pt-4">
                 <Input
@@ -959,6 +959,12 @@ export default function RegisterProfessionalPage() {
                   </button>
                 }
               />
+
+              {/* Exception case — kept out of the main cédula→nombre flow, as a
+                  muted option below the form. */}
+              <div className="border-t border-[#f3f4f6] pt-4">
+                <NoCrIdToggle checked={noCrId} onChange={setNoCrId} />
+              </div>
 
               <Button type="submit" size="lg" className="mt-2">
                 {t("continue")} <ArrowRight className="h-4 w-4" />
@@ -1010,19 +1016,12 @@ export default function RegisterProfessionalPage() {
                   nameError={oauthNameError ?? undefined}
                 />
               )}
-              {currentUser && !accountCedula && <NoCrIdToggle checked={noCrId} onChange={setNoCrId} />}
-
-              {/* Optional brand / business name */}
-              <Input
-                label={<>Nombre comercial o marca <span className="text-[#9ca3af] font-normal">(opcional)</span></>}
-                placeholder="Ej: Servicios Eléctricos GAM"
-                value={businessName}
-                onChange={(e) => setBusinessName(e.target.value)}
-              />
 
               {/* Profession — searchable combobox (a profesión groups the servicios
                   the pro later adds in their panel). Multi-profession: the primary
-                  profession + an on-demand "Agregar profesión" action. */}
+                  profession + an on-demand "Agregar profesión" action.
+                  (Optional brand/business name moved to the panel — registration
+                  keeps only the essentials.) */}
               <div>
                 <label className="text-sm font-medium text-[#374151] block mb-1.5">
                   Tu profesión principal <span className="text-red-500">*</span>
@@ -1187,6 +1186,13 @@ export default function RegisterProfessionalPage() {
                 error={form2.formState.errors.whatsapp?.message}
               />
 
+              {/* Exception case — muted, below the main flow. */}
+              {currentUser && !accountCedula && (
+                <div className="border-t border-[#f3f4f6] pt-4">
+                  <NoCrIdToggle checked={noCrId} onChange={setNoCrId} />
+                </div>
+              )}
+
               <div className="flex gap-3 mt-2">
                 {!currentUser && (
                   <Button variant="outline" size="lg" type="button" onClick={() => setStep(0)}>
@@ -1203,20 +1209,13 @@ export default function RegisterProfessionalPage() {
           {/* ── Step 2: Profile + Photo ──────────────────────────────────── */}
           {step === 2 && (
             <form noValidate onSubmit={form3.handleSubmit(onStep3, scrollToFirstError)} className="flex flex-col gap-4">
-              {/* Photo upload */}
+              {/* Photo upload — the only step-3 field. Guidance about services /
+                  casos de éxito now lives in the panel's profile-completion flow. */}
               <PhotoPicker preview={photoPreview} onFile={handlePhotoSelect} onRemove={() => { setPhotoFile(null); setPhotoPreview(null); }} />
 
               <p className="text-sm text-[#6b7280] text-center">
-                Después agregas tus servicios con su precio y años de experiencia desde tu panel.
+                Una buena foto genera más confianza. Es opcional — puedes agregarla después desde tu panel.
               </p>
-
-              <div className="rounded-xl bg-[#f0fdf4] border border-[#bbf7d0] p-3 text-center">
-                <p className="text-xs text-[#15803d] leading-relaxed">
-                  <strong>Tip:</strong> desde tu panel puedes subir <strong>casos de éxito</strong> (fotos de trabajos
-                  anteriores) <strong>en cada uno de tus servicios</strong>. Generan más confianza con los clientes.
-                  <strong> No son necesarias para verificar tu identidad</strong> — es opcional.
-                </p>
-              </div>
 
               <div className="flex gap-3 mt-2">
                 <Button variant="outline" size="lg" type="button" onClick={() => setStep(1)}>

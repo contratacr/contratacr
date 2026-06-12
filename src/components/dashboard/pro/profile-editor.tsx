@@ -321,7 +321,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
                 <Button type="button" variant="outline" size="sm" onClick={() => photoInputRef.current?.click()}>
                   <Camera className="h-4 w-4" /> Cambiar foto
                 </Button>
-                <Button type="button" variant="ghost" size="sm" onClick={handlePhotoRemove} className="text-red-500 hover:text-red-600">
+                <Button type="button" variant="outline" size="sm" onClick={handlePhotoRemove} className="border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600">
                   <X className="h-4 w-4" /> Eliminar
                 </Button>
               </div>
@@ -369,12 +369,15 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         )}
 
         {/* Brand / business name — optional */}
-        <Input
-          label={<>Nombre comercial o marca <span className="text-[#9ca3af] font-normal">(opcional)</span></>}
-          value={businessName}
-          onChange={(e) => { setBusinessName(e.target.value); touch(); }}
-          placeholder="Ej: Servicios Eléctricos GAM"
-        />
+        <div>
+          <Input
+            label={<>Nombre comercial o de tu empresa <span className="text-[#9ca3af] font-normal">(opcional)</span></>}
+            value={businessName}
+            onChange={(e) => { setBusinessName(e.target.value); touch(); }}
+            placeholder="Ej: Servicios Eléctricos GAM"
+          />
+          <p className="text-xs text-[#9ca3af] mt-1.5">El nombre de tu empresa, marca o negocio, si trabajas bajo uno. Aparece junto a tu nombre en tu perfil.</p>
+        </div>
 
         {/* Description */}
         <div>

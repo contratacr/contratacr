@@ -238,9 +238,10 @@ export default function ClientDashboardPage() {
       <main className="flex-1">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
-          {/* Header */}
-          <div className="flex items-center justify-between gap-3 mb-5">
-            <div className="flex items-center gap-3 min-w-0">
+          {/* Header — greeting on top; on mobile the actions drop to their own
+              full-width row so "Buscar profesionales" always fits and is tappable. */}
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
               <div className="relative h-11 w-11 shrink-0">
                 {headerAvatar ? (
                   <img
@@ -260,14 +261,17 @@ export default function ClientDashboardPage() {
                 </h1>
                 <p className="text-xs text-[#9ca3af]">Tu panel en ContrataCR</p>
               </div>
-            </div>
-            <div className="flex items-center gap-1.5 shrink-0">
-              <Button size="sm" asChild>
-                <a href="/buscar"><Search className="h-4 w-4" /> <span className="hidden sm:inline">Buscar profesionales</span><span className="sm:hidden">Buscar</span></a>
-              </Button>
-              <Button variant="ghost" size="sm" onClick={handleSignOut} className="text-[#6b7280] hover:text-red-500">
+              <Button variant="ghost" size="sm" onClick={handleSignOut} className="ml-auto shrink-0 text-[#6b7280] hover:text-red-500 sm:hidden">
                 <LogOut className="h-4 w-4" />
-                <span className="hidden sm:inline">Salir</span>
+              </Button>
+            </div>
+            <div className="flex items-center gap-1.5 w-full sm:w-auto shrink-0">
+              <Button size="sm" asChild className="flex-1 sm:flex-none justify-center">
+                <a href="/buscar"><Search className="h-4 w-4" /> Buscar profesionales</a>
+              </Button>
+              <Button variant="ghost" size="sm" onClick={handleSignOut} className="hidden sm:inline-flex text-[#6b7280] hover:text-red-500">
+                <LogOut className="h-4 w-4" />
+                <span>Salir</span>
               </Button>
             </div>
           </div>
@@ -408,22 +412,16 @@ export default function ClientDashboardPage() {
                 </div>
               )}
 
-              {/* Offer my services — same account, adds the pro role + onboarding */}
+              {/* Offer my services — same account, adds the pro role + onboarding.
+                  No leading icon, so the content aligns flush with the cards above. */}
               <div className="bg-white rounded-2xl border border-[#e5e7eb] p-5">
-                <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#EBF5FB] shrink-0">
-                    <Briefcase className="h-5 w-5 text-[#009FD9]" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-sm font-semibold text-[#111827]">¿Ofreces servicios?</h3>
-                    <p className="text-xs text-[#6b7280] mt-0.5 mb-3">
-                      Convierte tu cuenta en profesional sin crear una nueva. Completas tu cédula y datos de servicio una sola vez, y conservas todo lo que ya tienes como cliente.
-                    </p>
-                    <Button size="sm" onClick={() => router.push("/registro/profesional")}>
-                      <Briefcase className="h-4 w-4" /> Ofrecer mis servicios
-                    </Button>
-                  </div>
-                </div>
+                <h3 className="text-sm font-semibold text-[#111827]">¿Ofreces servicios?</h3>
+                <p className="text-xs text-[#6b7280] mt-0.5 mb-3">
+                  Convierte tu cuenta en profesional sin crear una nueva. Completas tu cédula y datos de servicio una sola vez, y conservas todo lo que ya tienes como cliente.
+                </p>
+                <Button size="sm" onClick={() => router.push("/registro/profesional")}>
+                  <Briefcase className="h-4 w-4" /> Ofrecer mis servicios
+                </Button>
               </div>
 
               {/* Cuenta y seguridad — change email/password, OAuth-aware */}
