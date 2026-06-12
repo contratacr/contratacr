@@ -1,12 +1,15 @@
 "use client";
 
-import { CheckCircle2, Circle, ChevronRight, Sparkles } from "lucide-react";
+import { CheckCircle2, ChevronRight, Sparkles, ShieldCheck } from "lucide-react";
 import { anyHealthCategory } from "@/lib/data/categories";
 
 // Context-aware profile-completion checklist. Goal: minimal signup, then guide
-// the pro to finish. Only counts fields that APPLY (aseguradoras only for health;
-// Spanish-only and "I have none" are never penalized). Each item is benefit-framed
-// so the pro understands WHY it helps, and links to the tab that completes it.
+// the pro to finish. The PERCENTAGE counts only content the pro fully controls
+// (so completing the list always reaches 100%); identity verification is
+// approval-gated (and impossible to auto-pass for non-padrón IDs), so it's shown
+// as a separate recommended action and never blocks 100%. Only counts fields that
+// APPLY (aseguradoras only for health; Spanish-only and "I have none" are never
+// penalized). Each item is benefit-framed and links to the tab that completes it.
 
 type ProRecord = Record<string, unknown>;
 
@@ -22,18 +25,23 @@ function hasLen(v: unknown): boolean {
   return Array.isArray(v) && v.length > 0;
 }
 
-export function computeCompletion(pro: ProRecord): { percent: number; items: CompletionItem[] } {
+export function computeCompletion(pro: ProRecord): {
+  percent: number;
+  items: CompletionItem[];
+  verified: boolean;
+} {
   const profiles = (pro.profiles ?? {}) as { avatar_url?: string | null };
   const professions = (pro.professions as string[]) ?? [];
-  const serviceType = String(pro.service_type ?? "");
-  const isMobile = serviceType.includes("mobile");
-  const isFixed = serviceType.includes("fixed");
 
+  // Location is "done" as soon as ANY location signal exists — independent of how
+  // service_type is stored, so it never gets stuck for a pro who clearly set a zone.
   const hasLocation =
-    (isFixed && hasLen(pro.workplaces)) ||
-    (isMobile && (hasLen(pro.coverage_areas) || hasLen(pro.coverage_provincias) || !!pro.coverage_country)) ||
-    // Legacy/simple: a primary provincia is enough.
-    !!pro.provincia_id;
+    hasLen(pro.workplaces) ||
+    hasLen(pro.coverage_areas) ||
+    hasLen(pro.coverage_provincias) ||
+    !!pro.coverage_country ||
+    !!pro.provincia_id ||
+    !!pro.canton_id;
 
   const items: CompletionItem[] = [
     {
@@ -62,7 +70,7 @@ export function computeCompletion(pro: ProRecord): { percent: number; items: Com
       label: "Indica tu ubicación o cobertura",
       benefit: "Así te encuentran los clientes de tu zona.",
       done: hasLocation,
-      tab: "profile",
+      tab: "availability",
     },
     {
       key: "whatsapp",
@@ -70,13 +78,6 @@ export function computeCompletion(pro: ProRecord): { percent: number; items: Com
       benefit: "Es la vía principal por la que los clientes te contactan.",
       done: typeof pro.whatsapp === "string" && pro.whatsapp.trim().length > 0,
       tab: "profile",
-    },
-    {
-      key: "verification",
-      label: "Verifica tu identidad",
-      benefit: "El distintivo de identidad verificada hace que más clientes te elijan.",
-      done: pro.verification_status === "verified",
-      tab: "verificacion",
     },
   ];
 
@@ -94,51 +95,54 @@ export function computeCompletion(pro: ProRecord): { percent: number; items: Com
 
   const done = items.filter((i) => i.done).length;
   const percent = Math.round((done / items.length) * 100);
-  return { percent, items };
+  return { percent, items, verified: pro.verification_status === "verified" };
 }
 
 export function ProfileCompletion({ pro, onGo }: { pro: ProRecord; onGo: (tab: string) => void }) {
-  const { percent, items } = computeCompletion(pro);
+  const { percent, items, verified } = computeCompletion(pro);
   const missing = items.filter((i) => !i.done);
+  const doneItems = items.filter((i) => i.done);
   const complete = percent === 100;
 
+  // Fully done AND verified → nothing to nudge; keep the dashboard clean.
+  if (complete && verified) return null;
+
   return (
-    <div className="rounded-2xl border border-[#e5e7eb] bg-white p-5 mb-6">
-      <div className="flex items-center gap-4">
-        {/* Progress ring */}
-        <div className="relative h-14 w-14 shrink-0">
-          <svg viewBox="0 0 36 36" className="h-14 w-14 -rotate-90">
-            <circle cx="18" cy="18" r="15.5" fill="none" stroke="#f3f4f6" strokeWidth="4" />
-            <circle
-              cx="18" cy="18" r="15.5" fill="none"
-              stroke={complete ? "#16a34a" : "#009FD9"} strokeWidth="4" strokeLinecap="round"
-              strokeDasharray={`${(percent / 100) * 97.4} 97.4`}
-            />
-          </svg>
-          <span className="absolute inset-0 grid place-items-center text-sm font-bold text-[#111827]">{percent}%</span>
-        </div>
-        <div className="min-w-0">
-          <h3 className="text-sm font-semibold text-[#111827] flex items-center gap-1.5">
-            {complete ? (<><Sparkles className="h-4 w-4 text-[#16a34a]" /> ¡Tu perfil está completo!</>) : "Completa tu perfil"}
-          </h3>
-          <p className="text-xs text-[#6b7280] mt-0.5">
-            {complete
-              ? "Excelente. Un perfil completo recibe muchas más solicitudes."
-              : "Un perfil completo genera más confianza y te trae más clientes."}
-          </p>
-        </div>
+    <div className="rounded-2xl border border-[#e5e7eb] bg-white p-5 sm:p-6 mb-6">
+      {/* Header: title + linear progress */}
+      <div className="flex items-center justify-between gap-4 mb-1">
+        <h3 className="text-base font-semibold text-[#111827] flex items-center gap-1.5">
+          {complete
+            ? <><Sparkles className="h-4 w-4 text-[#16a34a]" /> ¡Tu perfil está completo!</>
+            : "Completa tu perfil"}
+        </h3>
+        <span className={cnPct(complete)}>{percent}%</span>
+      </div>
+      <p className="text-sm text-[#6b7280] mb-4">
+        {complete
+          ? "Excelente. Solo te falta la insignia de identidad verificada."
+          : "Un perfil completo genera más confianza y te trae más clientes."}
+      </p>
+
+      {/* Linear progress bar */}
+      <div className="h-2 w-full rounded-full bg-[#f3f4f6] overflow-hidden mb-5">
+        <div
+          className="h-full rounded-full transition-all duration-500"
+          style={{ width: `${percent}%`, backgroundColor: complete ? "#16a34a" : "#009FD9" }}
+        />
       </div>
 
-      {!complete && (
-        <ul className="mt-4 flex flex-col gap-1.5">
+      {/* Pending items — flat rows (no nested boxes), separated by light hover only. */}
+      {missing.length > 0 && (
+        <ul className="flex flex-col -mx-2 mb-1">
           {missing.map((item) => (
             <li key={item.key}>
               <button
                 type="button"
                 onClick={() => onGo(item.tab)}
-                className="group flex w-full items-start gap-2.5 rounded-xl border border-[#f3f4f6] hover:border-[#bfdbfe] hover:bg-[#f9fbff] px-3 py-2.5 text-left transition-colors"
+                className="group flex w-full items-start gap-3 rounded-xl hover:bg-[#f9fafb] px-2 py-2.5 text-left transition-colors"
               >
-                <Circle className="h-4 w-4 text-[#cbd5e1] shrink-0 mt-0.5" />
+                <span className="mt-0.5 h-4 w-4 rounded-full border-2 border-[#cbd5e1] shrink-0 group-hover:border-[#009FD9] transition-colors" />
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm font-medium text-[#111827]">{item.label}</span>
                   <span className="block text-xs text-[#6b7280] mt-0.5">{item.benefit}</span>
@@ -150,10 +154,26 @@ export function ProfileCompletion({ pro, onGo }: { pro: ProRecord; onGo: (tab: s
         </ul>
       )}
 
-      {/* Done items — compact, reassuring summary when partially complete. */}
-      {!complete && items.some((i) => i.done) && (
-        <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1">
-          {items.filter((i) => i.done).map((i) => (
+      {/* Verification — a separate recommended action, not part of the %. */}
+      {!verified && (
+        <button
+          type="button"
+          onClick={() => onGo("verificacion")}
+          className="group mt-2 flex w-full items-center gap-3 rounded-xl bg-[#EBF5FB] hover:bg-[#dcefff] px-3 py-3 text-left transition-colors"
+        >
+          <ShieldCheck className="h-5 w-5 text-[#009FD9] shrink-0" />
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold text-[#0077a8]">Verifica tu identidad</span>
+            <span className="block text-xs text-[#0077a8]/80 mt-0.5">La insignia de identidad verificada hace que más clientes te elijan.</span>
+          </span>
+          <ChevronRight className="h-4 w-4 text-[#0077a8] shrink-0 transition-transform group-hover:translate-x-0.5" />
+        </button>
+      )}
+
+      {/* Done items — compact reassurance. */}
+      {doneItems.length > 0 && !complete && (
+        <div className="mt-4 pt-4 border-t border-[#f3f4f6] flex flex-wrap gap-x-3 gap-y-1.5">
+          {doneItems.map((i) => (
             <span key={i.key} className="inline-flex items-center gap-1 text-[11px] text-[#16a34a]">
               <CheckCircle2 className="h-3.5 w-3.5" /> {i.label}
             </span>
@@ -162,4 +182,8 @@ export function ProfileCompletion({ pro, onGo }: { pro: ProRecord; onGo: (tab: s
       )}
     </div>
   );
+}
+
+function cnPct(complete: boolean): string {
+  return `text-lg font-bold ${complete ? "text-[#16a34a]" : "text-[#009FD9]"}`;
 }
