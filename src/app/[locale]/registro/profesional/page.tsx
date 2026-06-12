@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import {
@@ -40,53 +40,22 @@ function validateCedulaFormat(v: string): boolean {
   return /^[1-9]\d{8}$/.test(d) || /^\d{11,12}$/.test(d) || /^\d{10}$/.test(d);
 }
 
-const step1Schema = z
-  .object({
-    fullName: z.string().min(3, "El nombre completo es requerido"),
-    // Cédula format is validated in onStep1 (so it can be skipped when the pro
-    // selects "No tengo identificación costarricense" → manual review).
-    cedula: z.string(),
-    email: z.string().min(1, "El correo es requerido").email("Ingresa un correo válido"),
-    password: z
-      .string()
-      .min(8, "La contraseña debe tener al menos 8 caracteres")
-      .regex(/[A-Z]/, "Al menos una mayúscula")
-      .regex(/[a-z]/, "Al menos una minúscula")
-      .regex(/[0-9]/, "Al menos un número")
-      .regex(/[!@#$%^&*]/, "Al menos un carácter especial (!@#$%^&*)"),
-    confirmPassword: z.string(),
-  })
-  .refine((d) => d.password === d.confirmPassword, {
-    message: "Las contraseñas no coinciden",
-    path: ["confirmPassword"],
-  });
-
-const step2Schema = z.object({
-  category: z.string().min(1, "Selecciona una categoría"),
-  // Location is derived from map pins (fixed) and coverage areas (mobile) — not
-  // manual province/canton fields anymore.
-  whatsapp: z.string().min(8, "El número de WhatsApp es requerido").max(15, "Número inválido"),
-  address: z.string().optional(),
-});
-
-const step3Schema = z.object({
-  yearsExperience: z.string().optional(),
-  hourlyRate: z.string().optional(),
-});
-
-type Step1Data = z.infer<typeof step1Schema>;
-type Step2Data = z.infer<typeof step2Schema>;
-type Step3Data = z.infer<typeof step3Schema>;
+// Schemas are built INSIDE the component (useMemo) so their messages localize —
+// see `makeSchemas` near the top of RegisterProfessionalPage.
+type Step1Data = { fullName: string; cedula: string; email: string; password: string; confirmPassword: string };
+type Step2Data = { category: string; whatsapp: string; address?: string };
+type Step3Data = { yearsExperience?: string; hourlyRate?: string };
 
 // ─── Helper components ────────────────────────────────────────────────────────
 
 function PasswordChecklist({ password }: { password: string }) {
+  const t = useTranslations("resetPassword");
   const rules = [
-    { label: "Mínimo 8 caracteres", ok: password.length >= 8 },
-    { label: "Una letra mayúscula", ok: /[A-Z]/.test(password) },
-    { label: "Una letra minúscula", ok: /[a-z]/.test(password) },
-    { label: "Un número", ok: /[0-9]/.test(password) },
-    { label: "Un carácter especial (!@#$%^&*)", ok: /[!@#$%^&*]/.test(password) },
+    { label: t("rule8"), ok: password.length >= 8 },
+    { label: t("ruleUpper"), ok: /[A-Z]/.test(password) },
+    { label: t("ruleLower"), ok: /[a-z]/.test(password) },
+    { label: t("ruleNumber"), ok: /[0-9]/.test(password) },
+    { label: t("ruleSpecial"), ok: /[!@#$%^&*]/.test(password) },
   ];
   if (!password) return null;
   return (
@@ -251,8 +220,41 @@ function NoCrIdFields({
 
 export default function RegisterProfessionalPage() {
   const t = useTranslations("registration.pro");
+  const tRp = useTranslations("resetPassword");
   const locale = useLocale();
   const router = useRouter();
+
+  // Schemas built here so the validation messages localize. Password rules +
+  // "passwords don't match" reuse the shared resetPassword labels.
+  const { step1Schema, step2Schema, step3Schema } = useMemo(() => ({
+    step1Schema: z
+      .object({
+        fullName: z.string().min(3, t("valNameRequired")),
+        cedula: z.string(),
+        email: z.string().min(1, t("valEmailRequired")).email(t("valEmailInvalid")),
+        password: z
+          .string()
+          .min(8, tRp("rule8"))
+          .regex(/[A-Z]/, tRp("ruleUpper"))
+          .regex(/[a-z]/, tRp("ruleLower"))
+          .regex(/[0-9]/, tRp("ruleNumber"))
+          .regex(/[!@#$%^&*]/, tRp("ruleSpecial")),
+        confirmPassword: z.string(),
+      })
+      .refine((d) => d.password === d.confirmPassword, {
+        message: tRp("passwordsDontMatch"),
+        path: ["confirmPassword"],
+      }),
+    step2Schema: z.object({
+      category: z.string().min(1, t("valCategoryRequired")),
+      whatsapp: z.string().min(8, t("valWhatsappRequired")).max(15, t("valWhatsappInvalid")),
+      address: z.string().optional(),
+    }),
+    step3Schema: z.object({
+      yearsExperience: z.string().optional(),
+      hourlyRate: z.string().optional(),
+    }),
+  }), [t, tRp]);
   const { user: currentUser, loading: authLoading } = useAuth();
 
   // step: -1=loading, 0=identity (email/pw users), 1=service+location, 2=profile+photo

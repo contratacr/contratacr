@@ -421,6 +421,12 @@
     "pro": {
       "title": "Create my professional profile",
       "subtitle": "Free. 3 steps. No credit card.",
+      "valNameRequired": "Full name is required",
+      "valEmailRequired": "Email is required",
+      "valEmailInvalid": "Enter a valid email",
+      "valCategoryRequired": "Select a category",
+      "valWhatsappRequired": "WhatsApp number is required",
+      "valWhatsappInvalid": "Invalid number",
       "steps": {
         "identity": "Identity",
         "service": "Service",

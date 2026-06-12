@@ -421,6 +421,12 @@
     "pro": {
       "title": "Registrar mi perfil profesional",
       "subtitle": "Gratis. En 3 pasos. Sin tarjeta de crédito.",
+      "valNameRequired": "El nombre completo es requerido",
+      "valEmailRequired": "El correo es requerido",
+      "valEmailInvalid": "Ingresa un correo válido",
+      "valCategoryRequired": "Selecciona una categoría",
+      "valWhatsappRequired": "El número de WhatsApp es requerido",
+      "valWhatsappInvalid": "Número inválido",
       "steps": {
         "identity": "Identidad",
         "service": "Servicio",
