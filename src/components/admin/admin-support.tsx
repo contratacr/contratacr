@@ -192,6 +192,11 @@ export function AdminSupport() {
   // ── List view ──
   return (
     <div>
+      <div className="flex items-center gap-2 mb-5">
+        <LifeBuoy className="h-5 w-5 text-[#009FD9]" />
+        <h1 className="text-xl font-bold text-[#111827]">Soporte</h1>
+      </div>
+
       {/* Find any user (by name/cédula/correo) and jump to their full profile —
           handy while triaging a ticket. The section + filters below are unchanged. */}
       <div className="mb-4 max-w-md">

@@ -43,6 +43,11 @@ export function AdminCategories() {
 
   return (
     <div>
+      <div className="flex items-center gap-2 mb-5">
+        <Tag className="h-5 w-5 text-[#009FD9]" />
+        <h1 className="text-xl font-bold text-[#111827]">Categorías sugeridas</h1>
+      </div>
+
       <div className="flex items-center gap-2 mb-4">
         {STATUSES.map((s) => (
           <button

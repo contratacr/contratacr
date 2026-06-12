@@ -44,6 +44,11 @@ export function AdminInsurers() {
 
   return (
     <div>
+      <div className="flex items-center gap-2 mb-5">
+        <Shield className="h-5 w-5 text-[#009FD9]" />
+        <h1 className="text-xl font-bold text-[#111827]">Aseguradoras sugeridas</h1>
+      </div>
+
       <div className="flex items-center gap-2 mb-4">
         {STATUSES.map((s) => (
           <button
