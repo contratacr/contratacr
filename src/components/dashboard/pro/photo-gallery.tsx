@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Upload, X, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -30,6 +30,8 @@ interface PhotoGalleryProps {
 // for back-compat and the 5-photo DB CHECK.
 export function PhotoGallery({ professionalId, initialUrls = [], initialItems, services = [], onSaved }: PhotoGalleryProps) {
   const locale = useLocale();
+  const t = useTranslations("photoGallery");
+  const rich = { strong: (c: React.ReactNode) => <strong>{c}</strong> };
   // Seed items from the tagged column, falling back to untagged flat urls.
   const seed: PortfolioItem[] = Array.isArray(initialItems) && initialItems.length > 0
     ? initialItems
@@ -52,7 +54,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, s
     sub: s.category ? getCategoryLabel(s.category, locale) : undefined,
   }));
   const hasOther = items.some((it) => !it.serviceId || !serviceIds.has(it.serviceId));
-  if (hasOther) groups.push({ id: "__other__", label: "Otros trabajos" });
+  if (hasOther) groups.push({ id: "__other__", label: t("otherWorks") });
 
   function itemsFor(groupId: string): PortfolioItem[] {
     if (groupId === "__other__") return items.filter((it) => !it.serviceId || !serviceIds.has(it.serviceId));
@@ -78,7 +80,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, s
     const remaining = MAX_PORTFOLIO_PHOTOS - items.length;
     const toUpload = Array.from(files).slice(0, Math.max(0, remaining));
     if (toUpload.length === 0) {
-      alert(`Puedes subir un máximo de ${MAX_PORTFOLIO_PHOTOS} fotos en total.`);
+      alert(t("maxAlert", { max: MAX_PORTFOLIO_PHOTOS }));
       return;
     }
     // Carry the service's profession too (context for the public profile grouping).
@@ -93,11 +95,11 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, s
         const res = await fetch("/api/upload/photo", { method: "POST", body: formData });
         const data = await res.json();
         if (data.url) uploaded.push({ url: data.url, serviceId, profession });
-        else alert(data.error ?? "No se pudo subir la foto.");
+        else alert(data.error ?? t("uploadError"));
       }
       if (uploaded.length > 0) await persist([...items, ...uploaded]);
     } catch {
-      alert("No se pudo subir la foto.");
+      alert(t("uploadError"));
     } finally {
       setUploadingFor(null);
     }
@@ -110,13 +112,12 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, s
   return (
     <div className="flex flex-col gap-6">
       <p className="text-sm text-[#6b7280]">
-        Sube tus <strong>casos de éxito</strong> (trabajos anteriores) <strong>en cada servicio</strong> para generar
-        confianza. Aparecen en tu perfil y en los resultados de búsqueda. Máximo {MAX_PORTFOLIO_PHOTOS} fotos en total.
+        {t.rich("intro", { ...rich, max: MAX_PORTFOLIO_PHOTOS })}
       </p>
 
       {services.length === 0 && (
         <div className="rounded-xl bg-[#fffbeb] border border-[#fde68a] p-4 text-sm text-[#92400e]">
-          Primero agrega tus servicios en la pestaña <strong>Servicios</strong>. Luego podrás subir fotos de casos de éxito en cada uno.
+          {t.rich("noServices", rich)}
         </div>
       )}
 
@@ -150,7 +151,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, s
                   <button
                     onClick={() => removePhoto(it.url)}
                     className="absolute top-2 right-2 h-7 w-7 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                    aria-label="Eliminar"
+                    aria-label={t("remove")}
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>
@@ -172,7 +173,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, s
                   ) : (
                     <>
                       <Upload className="h-6 w-6 text-[#9ca3af]" />
-                      <span className="text-xs text-[#6b7280]">Agregar foto</span>
+                      <span className="text-xs text-[#6b7280]">{t("addPhoto")}</span>
                     </>
                   )}
                 </button>

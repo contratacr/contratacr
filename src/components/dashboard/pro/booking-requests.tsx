@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { CalendarDays, User, FileText, Phone, Flag, MapPin } from "lucide-react";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
@@ -49,18 +49,10 @@ const STATUS_VARIANT: Record<BookingStatus, "warning" | "success" | "error" | "d
   completed: "default",
 };
 
-const STATUS_LABEL: Record<BookingStatus, string> = {
-  pending: "Pendiente",
-  confirmed: "Confirmada",
-  in_progress: "En progreso",
-  awaiting_confirmation: "Esperando confirmación",
-  completed: "Finalizada",
-  cancelled: "Cancelada",
-  rescheduled: "Reprogramada",
-};
-
 export function BookingRequests() {
   const locale = useLocale();
+  const t = useTranslations("bookingRequests");
+  const dateLocale = locale === "en" ? "en-US" : "es-CR";
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("activas");
@@ -82,15 +74,15 @@ export function BookingRequests() {
   }
 
   async function reportClient(booking: Booking) {
-    const reason = window.prompt("¿Por qué reportas a este cliente? (no se presentó, datos falsos, trato irrespetuoso, etc.)");
+    const reason = window.prompt(t("reportPrompt"));
     if (!reason || !reason.trim()) return;
     const res = await fetch("/api/report-client", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ bookingId: booking.id, clientId: booking.client_id ?? null, reason: reason.trim() }),
     });
-    if (res.ok) alert("Gracias. Tu reporte fue enviado al equipo de moderación.");
-    else alert("No se pudo enviar el reporte. Intenta de nuevo.");
+    if (res.ok) alert(t("reportThanks"));
+    else alert(t("reportError"));
   }
 
   if (loading) {
@@ -105,8 +97,8 @@ export function BookingRequests() {
     return (
       <div className="text-center py-16">
         <CalendarDays className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
-        <h3 className="font-semibold text-[#374151] mb-1">No tienes solicitudes todavía</h3>
-        <p className="text-sm text-[#9ca3af]">Cuando los clientes te contacten, aparecerán aquí.</p>
+        <h3 className="font-semibold text-[#374151] mb-1">{t("empty")}</h3>
+        <p className="text-sm text-[#9ca3af]">{t("emptySub")}</p>
       </div>
     );
   }
@@ -121,7 +113,7 @@ export function BookingRequests() {
     const dateStr = booking.scheduled_date
       ? (() => {
           const [y, m, d] = booking.scheduled_date.split("-").map(Number);
-          const label = new Date(y, m - 1, d).toLocaleDateString("es-CR", {
+          const label = new Date(y, m - 1, d).toLocaleDateString(dateLocale, {
             weekday: "short", day: "numeric", month: "short",
           });
           return booking.scheduled_time ? `${label} · ${booking.scheduled_time}` : label;
@@ -134,10 +126,10 @@ export function BookingRequests() {
           {/* Header — status + created date */}
           <div className="flex items-center justify-between gap-2 mb-3">
             <Badge variant={STATUS_VARIANT[booking.status]}>
-              {STATUS_LABEL[booking.status]}
+              {t(`status.${booking.status}`)}
             </Badge>
             <span className="text-xs text-[#9ca3af] shrink-0">
-              {new Date(booking.created_at).toLocaleDateString("es-CR")}
+              {new Date(booking.created_at).toLocaleDateString(dateLocale)}
             </span>
           </div>
 
@@ -149,7 +141,7 @@ export function BookingRequests() {
                     <span className="font-medium text-[#111827]">{booking.client_name}</span>
                     {booking.profiles?.is_flagged && (
                       <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#b45309] bg-[#fef3c7] px-1.5 py-0.5 rounded-md">
-                        ⚠ Cliente reportado
+                        ⚠ {t("flagged")}
                       </span>
                     )}
                   </div>
@@ -164,7 +156,7 @@ export function BookingRequests() {
                 {booking.client_dob && (
                   <div className="flex items-center gap-2 text-sm">
                     <CalendarDays className="h-4 w-4 text-[#6b7280] shrink-0" />
-                    <span className="text-[#374151]">Nacimiento: {booking.client_dob}</span>
+                    <span className="text-[#374151]">{t("birth", { date: booking.client_dob })}</span>
                   </div>
                 )}
 
@@ -172,19 +164,21 @@ export function BookingRequests() {
                 {booking.for_someone_else && (
                   <div className="rounded-lg bg-[#EBF5FB] border border-[#bfdbfe] p-2.5 text-xs">
                     <p className="font-semibold text-[#0089bb] flex items-center gap-1.5 flex-wrap">
-                      Para: {booking.beneficiary_name || "otra persona"}
+                      {t("forPerson", { name: booking.beneficiary_name || t("otherPerson") })}
                       {booking.beneficiary_is_minor && (
-                        <span className="text-[10px] font-semibold text-[#b45309] bg-[#fef3c7] px-1.5 py-0.5 rounded-md">Menor de edad</span>
+                        <span className="text-[10px] font-semibold text-[#b45309] bg-[#fef3c7] px-1.5 py-0.5 rounded-md">{t("minor")}</span>
                       )}
                     </p>
                     <p className="text-[#374151] mt-0.5">
-                      {booking.beneficiary_dob ? `Nac.: ${booking.beneficiary_dob}` : ""}
-                      {booking.beneficiary_cedula ? `${booking.beneficiary_dob ? " · " : ""}Cédula: ${booking.beneficiary_cedula}` : ""}
-                      {booking.beneficiary_phone ? ` · Contacto: ${booking.beneficiary_phone}` : ""}
+                      {[
+                        booking.beneficiary_dob ? t("benDob", { date: booking.beneficiary_dob }) : null,
+                        booking.beneficiary_cedula ? t("benCedula", { cedula: booking.beneficiary_cedula }) : null,
+                        booking.beneficiary_phone ? t("benContact", { phone: booking.beneficiary_phone }) : null,
+                      ].filter(Boolean).join(" · ")}
                     </p>
                     <p className="text-[10px] text-[#6b7280] mt-0.5">
-                      Reservado por {booking.client_name} (responsable).
-                      {booking.beneficiary_phone ? " Coordina la cita al contacto de la persona." : ""}
+                      {t("bookedBy", { name: booking.client_name ?? "" })}
+                      {booking.beneficiary_phone ? ` ${t("coordinateContact")}` : ""}
                     </p>
                   </div>
                 )}
@@ -218,17 +212,17 @@ export function BookingRequests() {
           <div className="mt-4 pt-4 border-t border-[#f3f4f6] flex flex-col gap-2">
             {booking.status === "awaiting_confirmation" && (
               <p className="text-xs text-[#b45309] bg-[#fffbeb] border border-[#fde68a] rounded-lg px-2.5 py-2">
-                Esperando que el cliente confirme la finalización. Se confirma sola en 7 días.
+                {t("awaitingConfirmNote")}
               </p>
             )}
             <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
               {booking.status === "pending" && (
                 <>
                   <Button size="sm" className="w-full sm:w-auto" onClick={() => updateStatus(booking.id, "confirmed")}>
-                    Confirmar
+                    {t("confirm")}
                   </Button>
                   <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => updateStatus(booking.id, "cancelled")}>
-                    Cancelar
+                    {t("cancel")}
                   </Button>
                 </>
               )}
@@ -236,25 +230,25 @@ export function BookingRequests() {
                 <>
                   {datePassed ? (
                     <Button size="sm" className="w-full sm:w-auto" onClick={() => updateStatus(booking.id, "awaiting_confirmation")}>
-                      Marcar como completado
+                      {t("markCompleted")}
                     </Button>
                   ) : (
                     <Button size="sm" variant="secondary" className="w-full sm:w-auto" onClick={() => updateStatus(booking.id, "in_progress")}>
-                      En progreso
+                      {t("inProgress")}
                     </Button>
                   )}
                   <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => updateStatus(booking.id, "cancelled")}>
-                    Cancelar
+                    {t("cancel")}
                   </Button>
                 </>
               )}
               {booking.status === "in_progress" && (
                 <>
                   <Button size="sm" className="w-full sm:w-auto" onClick={() => updateStatus(booking.id, "awaiting_confirmation")}>
-                    Marcar trabajo realizado
+                    {t("markWorkDone")}
                   </Button>
                   <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => updateStatus(booking.id, "cancelled")}>
-                    Cancelar
+                    {t("cancel")}
                   </Button>
                 </>
               )}
@@ -266,17 +260,17 @@ export function BookingRequests() {
                 const contactPhone = beneficiaryContact ? booking.beneficiary_phone! : booking.client_phone;
                 if (!contactPhone) return null;
                 const contactName = beneficiaryContact
-                  ? (booking.beneficiary_name || "la persona de la cita")
+                  ? (booking.beneficiary_name || t("appointmentPerson"))
                   : (booking.client_name || "");
                 return (
                   <Button size="sm" variant="whatsapp" asChild className="w-full sm:w-auto">
                     <a
-                      href={getWhatsAppLink(contactPhone, `Hola ${contactName}, te contacto por la solicitud en ContrataCR.`)}
+                      href={getWhatsAppLink(contactPhone, t("waMessage", { name: contactName }))}
                       target="_blank"
                       rel="noopener noreferrer"
                     >
                       <WhatsAppIcon className="h-3.5 w-3.5" />
-                      {beneficiaryContact ? `WhatsApp a ${(booking.beneficiary_name || "la persona").split(" ")[0]}` : "WhatsApp"}
+                      {beneficiaryContact ? t("whatsappTo", { name: (booking.beneficiary_name || t("thePerson")).split(" ")[0] }) : t("whatsapp")}
                     </a>
                   </Button>
                 );
@@ -286,7 +280,7 @@ export function BookingRequests() {
               onClick={() => reportClient(booking)}
               className="inline-flex items-center gap-1.5 text-xs text-[#9ca3af] hover:text-red-500 transition-colors self-start mt-1"
             >
-              <Flag className="h-3.5 w-3.5" /> Reportar cliente
+              <Flag className="h-3.5 w-3.5" /> {t("reportClient")}
             </button>
           </div>
         </CardContent>
@@ -298,7 +292,7 @@ export function BookingRequests() {
     <div className="space-y-4">
       <StatusFilterTabs tabs={SOLICITUD_TABS} value={filter} onChange={setFilter} />
       {filtered.length === 0 ? (
-        <p className="text-sm text-[#9ca3af] text-center py-8">No hay solicitudes en esta vista.</p>
+        <p className="text-sm text-[#9ca3af] text-center py-8">{t("noneInView")}</p>
       ) : (
         <div className="flex flex-col gap-3">
           {filtered.map((b) => <BookingCard key={b.id} booking={b} />)}

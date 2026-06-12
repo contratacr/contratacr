@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import * as Dialog from "@radix-ui/react-dialog";
 import { AlertTriangle, Loader2, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ export function UnsavedChangesGuard({
   dirty: boolean;
   onSave?: () => Promise<void> | void;
 }) {
+  const t = useTranslations("unsavedGuard");
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const pendingAnchor = useRef<HTMLAnchorElement | null>(null);
@@ -92,10 +94,10 @@ export function UnsavedChangesGuard({
               </div>
               <div className="min-w-0">
                 <Dialog.Title className="text-base font-bold text-[#111827]">
-                  Tienes cambios sin guardar
+                  {t("title")}
                 </Dialog.Title>
                 <Dialog.Description className="text-sm text-[#6b7280] mt-1">
-                  Si sales ahora, se perderán los cambios que hiciste en tu perfil. ¿Qué quieres hacer?
+                  {t("body")}
                 </Dialog.Description>
               </div>
             </div>
@@ -103,7 +105,7 @@ export function UnsavedChangesGuard({
             <div className="flex flex-col gap-2 mt-5">
               {onSave && (
                 <Button onClick={saveAndLeave} loading={saving} className="w-full">
-                  {saving ? "Guardando…" : <><Save className="h-4 w-4" /> Guardar y salir</>}
+                  {saving ? t("saving") : <><Save className="h-4 w-4" /> {t("saveAndLeave")}</>}
                 </Button>
               )}
               <button
@@ -112,7 +114,7 @@ export function UnsavedChangesGuard({
                 disabled={saving}
                 className="w-full h-10 rounded-xl border border-[#e5e7eb] text-sm font-semibold text-[#b91c1c] hover:bg-red-50 transition-colors disabled:opacity-50"
               >
-                Salir sin guardar
+                {t("leaveWithout")}
               </button>
               <button
                 type="button"
@@ -120,7 +122,7 @@ export function UnsavedChangesGuard({
                 disabled={saving}
                 className="w-full h-10 rounded-xl text-sm font-medium text-[#6b7280] hover:bg-[#f9fafb] transition-colors disabled:opacity-50"
               >
-                Seguir editando
+                {t("keepEditing")}
               </button>
             </div>
           </div>

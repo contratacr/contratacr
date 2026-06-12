@@ -641,6 +641,62 @@
       "insurersBenefit": "Los pacientes filtran por su seguro: aparecer ahí te trae más citas."
     }
   },
+  "bookingRequests": {
+    "empty": "No tienes solicitudes todavía",
+    "emptySub": "Cuando los clientes te contacten, aparecerán aquí.",
+    "noneInView": "No hay solicitudes en esta vista.",
+    "status": {
+      "pending": "Pendiente",
+      "confirmed": "Confirmada",
+      "in_progress": "En progreso",
+      "awaiting_confirmation": "Esperando confirmación",
+      "completed": "Finalizada",
+      "cancelled": "Cancelada",
+      "rescheduled": "Reprogramada"
+    },
+    "flagged": "Cliente reportado",
+    "birth": "Nacimiento: {date}",
+    "forPerson": "Para: {name}",
+    "otherPerson": "otra persona",
+    "minor": "Menor de edad",
+    "benDob": "Nac.: {date}",
+    "benCedula": "Cédula: {cedula}",
+    "benContact": "Contacto: {phone}",
+    "bookedBy": "Reservado por {name} (responsable).",
+    "coordinateContact": "Coordina la cita al contacto de la persona.",
+    "awaitingConfirmNote": "Esperando que el cliente confirme la finalización. Se confirma sola en 7 días.",
+    "confirm": "Confirmar",
+    "cancel": "Cancelar",
+    "markCompleted": "Marcar como completado",
+    "inProgress": "En progreso",
+    "markWorkDone": "Marcar trabajo realizado",
+    "whatsapp": "WhatsApp",
+    "whatsappTo": "WhatsApp a {name}",
+    "reportClient": "Reportar cliente",
+    "reportPrompt": "¿Por qué reportas a este cliente? (no se presentó, datos falsos, trato irrespetuoso, etc.)",
+    "reportThanks": "Gracias. Tu reporte fue enviado al equipo de moderación.",
+    "reportError": "No se pudo enviar el reporte. Intenta de nuevo.",
+    "waMessage": "Hola {name}, te contacto por la solicitud en ContrataCR.",
+    "appointmentPerson": "la persona de la cita",
+    "thePerson": "la persona"
+  },
+  "photoGallery": {
+    "intro": "Sube tus <strong>casos de éxito</strong> (trabajos anteriores) <strong>en cada servicio</strong> para generar confianza. Aparecen en tu perfil y en los resultados de búsqueda. Máximo {max} fotos en total.",
+    "noServices": "Primero agrega tus servicios en la pestaña <strong>Servicios</strong>. Luego podrás subir fotos de casos de éxito en cada uno.",
+    "otherWorks": "Otros trabajos",
+    "addPhoto": "Agregar foto",
+    "remove": "Eliminar",
+    "maxAlert": "Puedes subir un máximo de {max} fotos en total.",
+    "uploadError": "No se pudo subir la foto."
+  },
+  "unsavedGuard": {
+    "title": "Tienes cambios sin guardar",
+    "body": "Si sales ahora, se perderán los cambios que hiciste en tu perfil. ¿Qué quieres hacer?",
+    "saving": "Guardando…",
+    "saveAndLeave": "Guardar y salir",
+    "leaveWithout": "Salir sin guardar",
+    "keepEditing": "Seguir editando"
+  },
   "notifications": {
     "title": "Notificaciones",
     "empty": "No tienes notificaciones",

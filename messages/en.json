@@ -641,6 +641,62 @@
       "insurersBenefit": "Patients filter by their insurance: showing up there brings more appointments."
     }
   },
+  "bookingRequests": {
+    "empty": "You don't have any requests yet",
+    "emptySub": "When clients contact you, they'll appear here.",
+    "noneInView": "No requests in this view.",
+    "status": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "in_progress": "In progress",
+      "awaiting_confirmation": "Awaiting confirmation",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "rescheduled": "Rescheduled"
+    },
+    "flagged": "Reported client",
+    "birth": "Birth date: {date}",
+    "forPerson": "For: {name}",
+    "otherPerson": "another person",
+    "minor": "Minor",
+    "benDob": "DOB: {date}",
+    "benCedula": "ID: {cedula}",
+    "benContact": "Contact: {phone}",
+    "bookedBy": "Booked by {name} (responsible).",
+    "coordinateContact": "Coordinate the appointment with the person's contact.",
+    "awaitingConfirmNote": "Waiting for the client to confirm completion. It auto-confirms in 7 days.",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "markCompleted": "Mark as completed",
+    "inProgress": "In progress",
+    "markWorkDone": "Mark work done",
+    "whatsapp": "WhatsApp",
+    "whatsappTo": "WhatsApp {name}",
+    "reportClient": "Report client",
+    "reportPrompt": "Why are you reporting this client? (no-show, false information, disrespectful, etc.)",
+    "reportThanks": "Thanks. Your report was sent to the moderation team.",
+    "reportError": "Couldn't send the report. Try again.",
+    "waMessage": "Hi {name}, I'm contacting you about the request on ContrataCR.",
+    "appointmentPerson": "the appointment person",
+    "thePerson": "the person"
+  },
+  "photoGallery": {
+    "intro": "Upload your <strong>success stories</strong> (past work) <strong>for each service</strong> to build trust. They appear on your profile and in search results. Up to {max} photos total.",
+    "noServices": "First add your services in the <strong>Services</strong> tab. Then you can upload success-story photos for each one.",
+    "otherWorks": "Other work",
+    "addPhoto": "Add photo",
+    "remove": "Remove",
+    "maxAlert": "You can upload a maximum of {max} photos total.",
+    "uploadError": "Couldn't upload the photo."
+  },
+  "unsavedGuard": {
+    "title": "You have unsaved changes",
+    "body": "If you leave now, the changes you made to your profile will be lost. What would you like to do?",
+    "saving": "Saving…",
+    "saveAndLeave": "Save and leave",
+    "leaveWithout": "Leave without saving",
+    "keepEditing": "Keep editing"
+  },
   "notifications": {
     "title": "Notifications",
     "empty": "No notifications",
