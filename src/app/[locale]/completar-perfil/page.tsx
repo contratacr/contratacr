@@ -163,7 +163,7 @@ export default function CompleteProfilePage() {
               >
                 {avatarUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={avatarUrl} alt="Foto de perfil" className="h-16 w-16 rounded-full object-cover border-2 border-[#e5e7eb]" />
+                  <img src={avatarUrl} alt={t("photoLabel")} className="h-16 w-16 rounded-full object-cover border-2 border-[#e5e7eb]" />
                 ) : (
                   <div className="h-16 w-16 rounded-full bg-[#EBF5FB] border-2 border-dashed border-[#bfdbfe] flex items-center justify-center">
                     <Camera className="h-6 w-6 text-[#009FD9]" />

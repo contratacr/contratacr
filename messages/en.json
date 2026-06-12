@@ -1324,7 +1324,8 @@
     "ruleUpper": "One uppercase letter",
     "ruleLower": "One lowercase letter",
     "ruleNumber": "One number",
-    "ruleSpecial": "One special character (!@#$%^&*)"
+    "ruleSpecial": "One special character (!@#$%^&*)",
+    "passwordsDontMatch": "Passwords don't match"
   },
   "registerClient": {
     "errName": "Name is required.",

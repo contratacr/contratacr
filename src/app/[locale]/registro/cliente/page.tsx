@@ -115,7 +115,7 @@ export default function RegisterClientPage() {
 
         // Supabase anti-enumeration: existing email → user with empty identities.
         if (Array.isArray(data.user?.identities) && data.user!.identities!.length === 0) {
-          setError("Ya existe una cuenta con este correo. Inicia sesión con tu contraseña, o con Google o Facebook si así te registraste.");
+          setError(t("errAlreadyRegistered"));
           setSubmitting(false);
           return;
         }

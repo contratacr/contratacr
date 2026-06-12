@@ -1324,7 +1324,8 @@
     "ruleUpper": "Una letra mayúscula",
     "ruleLower": "Una letra minúscula",
     "ruleNumber": "Un número",
-    "ruleSpecial": "Un carácter especial (!@#$%^&*)"
+    "ruleSpecial": "Un carácter especial (!@#$%^&*)",
+    "passwordsDontMatch": "Las contraseñas no coinciden"
   },
   "registerClient": {
     "errName": "El nombre es requerido.",

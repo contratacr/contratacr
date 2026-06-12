@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,23 +14,7 @@ import { ContrataCRLogo } from "@/components/landing/landing-navbar";
 import { Link, useRouter } from "@/i18n/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-const schema = z
-  .object({
-    password: z
-      .string()
-      .min(8, "Mínimo 8 caracteres")
-      .regex(/[A-Z]/, "Al menos una mayúscula")
-      .regex(/[a-z]/, "Al menos una minúscula")
-      .regex(/[0-9]/, "Al menos un número")
-      .regex(/[!@#$%^&*]/, "Al menos un carácter especial (!@#$%^&*)"),
-    confirmPassword: z.string(),
-  })
-  .refine((d) => d.password === d.confirmPassword, {
-    message: "Las contraseñas no coinciden",
-    path: ["confirmPassword"],
-  });
-
-type FormData = z.infer<typeof schema>;
+type FormData = { password: string; confirmPassword: string };
 
 function PasswordChecklist({ password }: { password: string }) {
   const t = useTranslations("resetPassword");
@@ -68,6 +52,28 @@ export default function ResetPasswordPage() {
   const [done, setDone] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+
+  // Built inside the component so validation messages localize (and reuse the
+  // same rule labels shown in the live checklist).
+  const schema = useMemo(
+    () =>
+      z
+        .object({
+          password: z
+            .string()
+            .min(8, t("rule8"))
+            .regex(/[A-Z]/, t("ruleUpper"))
+            .regex(/[a-z]/, t("ruleLower"))
+            .regex(/[0-9]/, t("ruleNumber"))
+            .regex(/[!@#$%^&*]/, t("ruleSpecial")),
+          confirmPassword: z.string(),
+        })
+        .refine((d) => d.password === d.confirmPassword, {
+          message: t("passwordsDontMatch"),
+          path: ["confirmPassword"],
+        }),
+    [t]
+  );
 
   const {
     register,
