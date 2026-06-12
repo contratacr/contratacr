@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { CheckCircle2, ChevronRight, Sparkles, ShieldCheck } from "lucide-react";
 import { anyHealthCategory } from "@/lib/data/categories";
 
@@ -14,9 +15,8 @@ import { anyHealthCategory } from "@/lib/data/categories";
 type ProRecord = Record<string, unknown>;
 
 export type CompletionItem = {
+  // `key` doubles as the i18n key (proPanel.completion.<key> / <key>Benefit).
   key: string;
-  label: string;
-  benefit: string;
   done: boolean;
   tab: string;
 };
@@ -44,53 +44,17 @@ export function computeCompletion(pro: ProRecord): {
     !!pro.canton_id;
 
   const items: CompletionItem[] = [
-    {
-      key: "photo",
-      label: "Agrega tu foto de perfil",
-      benefit: "Los perfiles con foto generan más confianza y reciben más solicitudes.",
-      done: !!profiles.avatar_url,
-      tab: "profile",
-    },
-    {
-      key: "bio",
-      label: "Escribe una descripción",
-      benefit: "Cuéntales a los clientes quién eres y por qué elegirte.",
-      done: typeof pro.bio === "string" && pro.bio.trim().length >= 30,
-      tab: "profile",
-    },
-    {
-      key: "services",
-      label: "Agrega al menos un servicio",
-      benefit: "Los clientes buscan por servicio: sin servicios casi no apareces.",
-      done: hasLen(pro.services),
-      tab: "services",
-    },
-    {
-      key: "location",
-      label: "Indica tu ubicación o cobertura",
-      benefit: "Así te encuentran los clientes de tu zona.",
-      done: hasLocation,
-      tab: "availability",
-    },
-    {
-      key: "whatsapp",
-      label: "Confirma tu número de WhatsApp",
-      benefit: "Es la vía principal por la que los clientes te contactan.",
-      done: typeof pro.whatsapp === "string" && pro.whatsapp.trim().length > 0,
-      tab: "profile",
-    },
+    { key: "photo", done: !!profiles.avatar_url, tab: "profile" },
+    { key: "bio", done: typeof pro.bio === "string" && pro.bio.trim().length >= 30, tab: "profile" },
+    { key: "services", done: hasLen(pro.services), tab: "services" },
+    { key: "location", done: hasLocation, tab: "availability" },
+    { key: "whatsapp", done: typeof pro.whatsapp === "string" && pro.whatsapp.trim().length > 0, tab: "profile" },
   ];
 
   // Aseguradoras apply ONLY to health pros; for everyone else it doesn't exist,
   // so it's never counted as "missing".
   if (anyHealthCategory(professions)) {
-    items.push({
-      key: "insurers",
-      label: "Indica tus aseguradoras",
-      benefit: "Los pacientes filtran por su seguro: aparecer ahí te trae más citas.",
-      done: hasLen(pro.insurance_networks),
-      tab: "profile",
-    });
+    items.push({ key: "insurers", done: hasLen(pro.insurance_networks), tab: "profile" });
   }
 
   const done = items.filter((i) => i.done).length;
@@ -99,6 +63,7 @@ export function computeCompletion(pro: ProRecord): {
 }
 
 export function ProfileCompletion({ pro, onGo }: { pro: ProRecord; onGo: (tab: string) => void }) {
+  const t = useTranslations("proPanel.completion");
   const { percent, items, verified } = computeCompletion(pro);
   const missing = items.filter((i) => !i.done);
   const doneItems = items.filter((i) => i.done);
@@ -113,15 +78,13 @@ export function ProfileCompletion({ pro, onGo }: { pro: ProRecord; onGo: (tab: s
       <div className="flex items-center justify-between gap-4 mb-1">
         <h3 className="text-base font-semibold text-[#111827] flex items-center gap-1.5">
           {complete
-            ? <><Sparkles className="h-4 w-4 text-[#16a34a]" /> ¡Tu perfil está completo!</>
-            : "Completa tu perfil"}
+            ? <><Sparkles className="h-4 w-4 text-[#16a34a]" /> {t("completeTitle")}</>
+            : t("title")}
         </h3>
         <span className={cnPct(complete)}>{percent}%</span>
       </div>
       <p className="text-sm text-[#6b7280] mb-4">
-        {complete
-          ? "Excelente. Solo te falta la insignia de identidad verificada."
-          : "Un perfil completo genera más confianza y te trae más clientes."}
+        {complete ? t("completeSubtitle") : t("subtitle")}
       </p>
 
       {/* Linear progress bar */}
@@ -144,8 +107,8 @@ export function ProfileCompletion({ pro, onGo }: { pro: ProRecord; onGo: (tab: s
               >
                 <span className="mt-0.5 h-4 w-4 rounded-full border-2 border-[#cbd5e1] shrink-0 group-hover:border-[#009FD9] transition-colors" />
                 <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-medium text-[#111827]">{item.label}</span>
-                  <span className="block text-xs text-[#6b7280] mt-0.5">{item.benefit}</span>
+                  <span className="block text-sm font-medium text-[#111827]">{t(item.key)}</span>
+                  <span className="block text-xs text-[#6b7280] mt-0.5">{t(`${item.key}Benefit`)}</span>
                 </span>
                 <ChevronRight className="h-4 w-4 text-[#9ca3af] group-hover:text-[#009FD9] shrink-0 mt-0.5 transition-colors" />
               </button>
@@ -163,8 +126,8 @@ export function ProfileCompletion({ pro, onGo }: { pro: ProRecord; onGo: (tab: s
         >
           <ShieldCheck className="h-5 w-5 text-[#009FD9] shrink-0" />
           <span className="min-w-0 flex-1">
-            <span className="block text-sm font-semibold text-[#0077a8]">Verifica tu identidad</span>
-            <span className="block text-xs text-[#0077a8]/80 mt-0.5">La insignia de identidad verificada hace que más clientes te elijan.</span>
+            <span className="block text-sm font-semibold text-[#0077a8]">{t("verifyTitle")}</span>
+            <span className="block text-xs text-[#0077a8]/80 mt-0.5">{t("verifyBenefit")}</span>
           </span>
           <ChevronRight className="h-4 w-4 text-[#0077a8] shrink-0 transition-transform group-hover:translate-x-0.5" />
         </button>
@@ -175,7 +138,7 @@ export function ProfileCompletion({ pro, onGo }: { pro: ProRecord; onGo: (tab: s
         <div className="mt-4 pt-4 border-t border-[#f3f4f6] flex flex-wrap gap-x-3 gap-y-1.5">
           {doneItems.map((i) => (
             <span key={i.key} className="inline-flex items-center gap-1 text-[11px] text-[#16a34a]">
-              <CheckCircle2 className="h-3.5 w-3.5" /> {i.label}
+              <CheckCircle2 className="h-3.5 w-3.5" /> {t(i.key)}
             </span>
           ))}
         </div>

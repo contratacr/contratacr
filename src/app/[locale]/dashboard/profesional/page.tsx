@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import {
   User, Image as ImageIcon, CalendarDays, Inbox, LogOut, ExternalLink, Wrench,
@@ -58,31 +59,9 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
   cuenta: <Settings className="h-4 w-4" />,
 };
 
-const TAB_LABELS: Record<Tab, string> = {
-  profile: "Mi perfil",
-  services: "Servicios",
-  photos: "Casos de éxito",
-  availability: "Disponibilidad",
-  bookings: "Solicitudes recibidas",
-  proposals: "Proyectos recibidos",
-  verificacion: "Verificación",
-  sent_bookings: "Mis solicitudes enviadas",
-  sent_projects: "Mis proyectos publicados",
-  saved: "Mis favoritos",
-  notifications: "Notificaciones",
-  soporte: "Soporte",
-  cuenta: "Cuenta y seguridad",
-};
-
-// One-line context note shown under the section title, so it's always obvious
-// which role a section belongs to.
-const TAB_SUBTITLE: Partial<Record<Tab, string>> = {
-  bookings: "Solicitudes que te enviaron tus clientes.",
-  proposals: "Proyectos publicados a los que puedes enviar propuestas.",
-  sent_bookings: "Servicios que tú solicitaste a otros profesionales.",
-  sent_projects: "Proyectos que tú publicaste para recibir propuestas.",
-  saved: "Profesionales que guardaste para contratar más adelante.",
-};
+// Tabs that show a one-line context note under the section title (translated via
+// proPanel.subtitles.<tab>), so it's always obvious which role a section belongs to.
+const TABS_WITH_SUBTITLE = new Set<Tab>(["bookings", "proposals", "sent_bookings", "sent_projects", "saved"]);
 
 // Sidebar layout — two labeled groups + a standalone notifications entry.
 const GROUP_PRO: Tab[] = ["profile", "services", "photos", "availability", "bookings", "proposals", "verificacion"];
@@ -92,6 +71,7 @@ export default function ProDashboardPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations("proPanel");
   const activeTab = (searchParams.get("tab") as Tab) ?? "profile";
 
   const [pro, setPro] = useState<ProData | null>(null);
@@ -223,7 +203,7 @@ export default function ProDashboardPage() {
             </span>
           )}
         </span>
-        {TAB_LABELS[tab]}
+        {t(`tabs.${tab}`)}
       </button>
     );
   }
@@ -246,13 +226,13 @@ export default function ProDashboardPage() {
                 <h1 className="text-xl font-bold text-[#111827]">{pro.profiles?.full_name}</h1>
                 <div className="flex items-center gap-2 mt-1 flex-wrap">
                   {pro.verification_status === "verified" && (
-                    <Badge variant="verified" className="gap-1"><ShieldCheck className="h-3 w-3" />Identidad verificada · visible para clientes</Badge>
+                    <Badge variant="verified" className="gap-1"><ShieldCheck className="h-3 w-3" />{t("identityVerified")}</Badge>
                   )}
                   {(pro.verification_status === "pending" || pro.verification_status === "under_appeal") && (
-                    <Badge variant="warning">Identidad sin verificar · visible para clientes</Badge>
+                    <Badge variant="warning">{t("identityUnverified")}</Badge>
                   )}
                   {pro.verification_status === "rejected" && (
-                    <Badge variant="error">Verificación rechazada</Badge>
+                    <Badge variant="error">{t("verificationRejected")}</Badge>
                   )}
                 </div>
               </div>
@@ -262,13 +242,13 @@ export default function ProDashboardPage() {
                 <Button variant="outline" size="sm" asChild>
                   <a href={`/es/profesionales/${pro.slug}?preview=1`}>
                     <ExternalLink className="h-4 w-4" />
-                    Ver cómo me ven los clientes
+                    {t("viewAsClient")}
                   </a>
                 </Button>
               )}
               <Button variant="ghost" size="sm" onClick={handleSignOut}>
                 <LogOut className="h-4 w-4" />
-                Salir
+                {t("signOut")}
               </Button>
             </div>
           </div>
@@ -286,13 +266,13 @@ export default function ProDashboardPage() {
                 <CardContent className="p-2 space-y-3">
                   <div>
                     <p className="px-3 pt-1 pb-1.5 text-[10px] font-bold text-[#9ca3af] uppercase tracking-widest">
-                      Mi perfil profesional
+                      {t("groupPro")}
                     </p>
                     {GROUP_PRO.map(navButton)}
                   </div>
                   <div className="border-t border-[#f3f4f6] pt-2">
                     <p className="px-3 pt-1 pb-1.5 text-[10px] font-bold text-[#9ca3af] uppercase tracking-widest">
-                      Contratar servicios
+                      {t("groupClient")}
                     </p>
                     {GROUP_CLIENT.map(navButton)}
                   </div>
@@ -309,9 +289,9 @@ export default function ProDashboardPage() {
                 the page and each section brings only the light containers it needs. */}
             <div ref={contentRef} className="flex-1 min-w-0 scroll-mt-20 lg:scroll-mt-0">
               <div className="mb-5">
-                <h2 className="text-lg font-semibold text-[#111827]">{TAB_LABELS[activeTab]}</h2>
-                {TAB_SUBTITLE[activeTab] && (
-                  <p className="text-sm text-[#6b7280] mt-0.5">{TAB_SUBTITLE[activeTab]}</p>
+                <h2 className="text-lg font-semibold text-[#111827]">{t(`tabs.${activeTab}`)}</h2>
+                {TABS_WITH_SUBTITLE.has(activeTab) && (
+                  <p className="text-sm text-[#6b7280] mt-0.5">{t(`subtitles.${activeTab}`)}</p>
                 )}
               </div>
               <div>

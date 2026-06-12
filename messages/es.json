@@ -590,6 +590,57 @@
       }
     }
   },
+  "proPanel": {
+    "viewAsClient": "Ver cómo me ven los clientes",
+    "signOut": "Salir",
+    "identityVerified": "Identidad verificada · visible para clientes",
+    "identityUnverified": "Identidad sin verificar · visible para clientes",
+    "verificationRejected": "Verificación rechazada",
+    "groupPro": "Mi perfil profesional",
+    "groupClient": "Contratar servicios",
+    "tabs": {
+      "profile": "Mi perfil",
+      "services": "Servicios",
+      "photos": "Casos de éxito",
+      "availability": "Disponibilidad",
+      "bookings": "Solicitudes recibidas",
+      "proposals": "Proyectos recibidos",
+      "verificacion": "Verificación",
+      "sent_bookings": "Mis solicitudes enviadas",
+      "sent_projects": "Mis proyectos publicados",
+      "saved": "Mis favoritos",
+      "notifications": "Notificaciones",
+      "soporte": "Soporte",
+      "cuenta": "Cuenta y seguridad"
+    },
+    "subtitles": {
+      "bookings": "Solicitudes que te enviaron tus clientes.",
+      "proposals": "Proyectos publicados a los que puedes enviar propuestas.",
+      "sent_bookings": "Servicios que tú solicitaste a otros profesionales.",
+      "sent_projects": "Proyectos que tú publicaste para recibir propuestas.",
+      "saved": "Profesionales que guardaste para contratar más adelante."
+    },
+    "completion": {
+      "completeTitle": "¡Tu perfil está completo!",
+      "title": "Completa tu perfil",
+      "completeSubtitle": "Excelente. Solo te falta la insignia de identidad verificada.",
+      "subtitle": "Un perfil completo genera más confianza y te trae más clientes.",
+      "verifyTitle": "Verifica tu identidad",
+      "verifyBenefit": "La insignia de identidad verificada hace que más clientes te elijan.",
+      "photo": "Agrega tu foto de perfil",
+      "photoBenefit": "Los perfiles con foto generan más confianza y reciben más solicitudes.",
+      "bio": "Escribe una descripción",
+      "bioBenefit": "Cuéntales a los clientes quién eres y por qué elegirte.",
+      "services": "Agrega al menos un servicio",
+      "servicesBenefit": "Los clientes buscan por servicio: sin servicios casi no apareces.",
+      "location": "Indica tu ubicación o cobertura",
+      "locationBenefit": "Así te encuentran los clientes de tu zona.",
+      "whatsapp": "Confirma tu número de WhatsApp",
+      "whatsappBenefit": "Es la vía principal por la que los clientes te contactan.",
+      "insurers": "Indica tus aseguradoras",
+      "insurersBenefit": "Los pacientes filtran por su seguro: aparecer ahí te trae más citas."
+    }
+  },
   "notifications": {
     "title": "Notificaciones",
     "empty": "No tienes notificaciones",

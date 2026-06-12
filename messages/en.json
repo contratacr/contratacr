@@ -590,6 +590,57 @@
       }
     }
   },
+  "proPanel": {
+    "viewAsClient": "See how clients see me",
+    "signOut": "Sign out",
+    "identityVerified": "Identity verified · visible to clients",
+    "identityUnverified": "Identity unverified · visible to clients",
+    "verificationRejected": "Verification rejected",
+    "groupPro": "My professional profile",
+    "groupClient": "Hire services",
+    "tabs": {
+      "profile": "My profile",
+      "services": "Services",
+      "photos": "Success stories",
+      "availability": "Availability",
+      "bookings": "Requests received",
+      "proposals": "Projects received",
+      "verificacion": "Verification",
+      "sent_bookings": "My sent requests",
+      "sent_projects": "My published projects",
+      "saved": "My favorites",
+      "notifications": "Notifications",
+      "soporte": "Support",
+      "cuenta": "Account & security"
+    },
+    "subtitles": {
+      "bookings": "Requests your clients sent you.",
+      "proposals": "Published projects you can send proposals to.",
+      "sent_bookings": "Services you requested from other professionals.",
+      "sent_projects": "Projects you published to receive proposals.",
+      "saved": "Professionals you saved to hire later."
+    },
+    "completion": {
+      "completeTitle": "Your profile is complete!",
+      "title": "Complete your profile",
+      "completeSubtitle": "Great. All that's left is the verified-identity badge.",
+      "subtitle": "A complete profile builds trust and brings you more clients.",
+      "verifyTitle": "Verify your identity",
+      "verifyBenefit": "The verified-identity badge makes more clients choose you.",
+      "photo": "Add your profile photo",
+      "photoBenefit": "Profiles with a photo build more trust and get more requests.",
+      "bio": "Write a description",
+      "bioBenefit": "Tell clients who you are and why to choose you.",
+      "services": "Add at least one service",
+      "servicesBenefit": "Clients search by service: without services you barely show up.",
+      "location": "Set your location or coverage",
+      "locationBenefit": "So clients in your area can find you.",
+      "whatsapp": "Confirm your WhatsApp number",
+      "whatsappBenefit": "It's the main way clients contact you.",
+      "insurers": "List your insurers",
+      "insurersBenefit": "Patients filter by their insurance: showing up there brings more appointments."
+    }
+  },
   "notifications": {
     "title": "Notifications",
     "empty": "No notifications",
