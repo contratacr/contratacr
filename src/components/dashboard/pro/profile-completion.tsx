@@ -126,10 +126,10 @@ export function ProfileCompletion({ pro, onGo }: { pro: ProRecord; onGo: (tab: s
         >
           <ShieldCheck className="h-5 w-5 text-[#009FD9] shrink-0" />
           <span className="min-w-0 flex-1">
-            <span className="block text-sm font-semibold text-[#0077a8]">{t("verifyTitle")}</span>
-            <span className="block text-xs text-[#0077a8]/80 mt-0.5">{t("verifyBenefit")}</span>
+            <span className="block text-sm font-semibold text-[#111827]">{t("verifyTitle")}</span>
+            <span className="block text-xs text-[#6b7280] mt-0.5">{t("verifyBenefit")}</span>
           </span>
-          <ChevronRight className="h-4 w-4 text-[#0077a8] shrink-0 transition-transform group-hover:translate-x-0.5" />
+          <ChevronRight className="h-4 w-4 text-[#009FD9] shrink-0 transition-transform group-hover:translate-x-0.5" />
         </button>
       )}
 

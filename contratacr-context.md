@@ -28,6 +28,11 @@ _Earlier: 2026-06-07 (sprint 24 — fully automatic identity verification: self-
 
 ---
 
+## Sprint 86 (2026-06-12) — "Completa tu perfil" navigates to the section
+
+- **Bug:** clicking a checklist item changed the tab but `setTab` only scrolled to the section on **mobile**; on desktop the completion widget (which sits above the sidebar+content row) vanished on navigate and nothing scrolled, so it felt like "nothing happened." Fix: `setTab` now **always** `scrollIntoView`s the content section (`contentRef`), so selecting any nav OR completion item lands you on the section.
+- **Design:** the verification CTA inside the widget used blue text on a blue tint (same low-contrast issue as Cuenta y seguridad) → dark readable title/benefit text, brand-blue kept only on the shield icon + chevron.
+
 ## Sprint 85 (2026-06-12) — login lands on the right panel + clean map info-window
 
 - **Login redirect is now authoritative.** `login/page.tsx` resolved the panel from `user_metadata.role` only, which is often missing/stale → professionals were dumped on the client panel. Now it falls back to `profiles.role`, then to the existence of a `professionals` row, before routing to `/dashboard/profesional` vs `/dashboard/cliente`.

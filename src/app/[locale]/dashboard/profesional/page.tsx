@@ -149,12 +149,11 @@ export default function ProDashboardPage() {
     // `scroll: false` stops Next's default jump-to-top on navigation — otherwise
     // it fires AFTER our scroll-to-section and bounces the user back up.
     router.push(`/dashboard/profesional?${params}`, { scroll: false });
-    // On mobile the sidebar sits ABOVE the content (stacked), so after tapping a
-    // menu item, smooth-scroll down to the section the user chose instead of
-    // leaving them on the menu. `scroll-mt` on the content clears the fixed header.
-    if (typeof window !== "undefined" && window.matchMedia("(max-width: 1023px)").matches) {
-      requestAnimationFrame(() => contentRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
-    }
+    // Always bring the chosen section into view. On mobile the menu sits ABOVE the
+    // content; on desktop the "Completa tu perfil" widget sits above the row and
+    // vanishes on navigate (shifting the layout up) — without this, selecting an
+    // item felt like nothing happened. `scroll-mt` on the content clears the header.
+    requestAnimationFrame(() => contentRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
   }
 
   function handleSaved() {
