@@ -10,7 +10,7 @@ import { LanguagesInput } from "@/components/ui/languages-input";
 import { WorkplacesPicker, type Workplace } from "@/components/maps/workplaces-picker";
 import { CoverageAreaSelector } from "@/components/maps/coverage-area-selector";
 import { createClient } from "@/lib/supabase/client";
-import { Camera, Check, X, Plus, Truck, MapPin, ChevronDown, Globe, ShieldCheck, Lock, Award, Info } from "lucide-react";
+import { Camera, Check, X, Plus, Truck, MapPin, ChevronDown, Globe, ShieldCheck, Lock, Award, Info, User, Briefcase, Phone, Languages } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { computeSearchAreas, primaryArea, type CoverageArea } from "@/lib/location";
 import { AseguradorasInput } from "@/components/ui/aseguradoras-input";
@@ -33,17 +33,22 @@ interface ProfileEditorProps {
 // Collapsible section — groups the long profile form into digestible blocks so
 // it's quick to scan and edit. Presentation only; all fields still live in the
 // same form/state and save identically.
-function Section({ title, desc, defaultOpen = false, children }: { title: string; desc?: string; defaultOpen?: boolean; children: React.ReactNode }) {
+function Section({ title, desc, icon: Icon, defaultOpen = false, children }: { title: string; desc?: string; icon?: React.ElementType; defaultOpen?: boolean; children: React.ReactNode }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div className="rounded-2xl border border-[#e5e7eb] bg-white overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-[#fafafa] transition-colors"
+        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[#fafafa] transition-colors"
         aria-expanded={open}
       >
-        <div className="min-w-0">
+        {Icon && (
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#EBF5FB] text-[#009FD9]">
+            <Icon className="h-4 w-4" />
+          </span>
+        )}
+        <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-[#111827]">{title}</p>
           {desc && <p className="text-xs text-[#9ca3af] mt-0.5">{desc}</p>}
         </div>
@@ -295,7 +300,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
       )}
 
       {/* ── Datos básicos ─────────────────────────────────────────────── */}
-      <Section title={t("secBasic")} desc={t("secBasicDesc")} defaultOpen>
+      <Section title={t("secBasic")} desc={t("secBasicDesc")} icon={User} defaultOpen>
         {/* Photo — explicit buttons, no hover-to-change */}
         <div className="flex items-center gap-4">
           <div className="relative h-20 w-20 rounded-full shrink-0">
@@ -393,7 +398,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
       </Section>
 
       {/* ── Profesión ─────────────────────────────────────────────────── */}
-      <Section title={t("secProfessions")} desc={t("secProfessionsDesc")} defaultOpen>
+      <Section title={t("secProfessions")} desc={t("secProfessionsDesc")} icon={Briefcase} defaultOpen>
         {/* Professions — multi-select (first is the primary/principal). Each profesión
             groups the servicios managed in the Servicios tab. The "add" search is
             revealed on demand so the principal profession reads cleanly. */}
@@ -432,7 +437,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
       </Section>
 
       {/* ── Certificaciones (texto, sin imágenes) — POR PROFESIÓN ─────── */}
-      <Section title={t("secCerts")} desc={t("secCertsDesc")}>
+      <Section title={t("secCerts")} desc={t("secCertsDesc")} icon={Award}>
         <p className="text-xs text-[#9ca3af]">
           {t.rich("certsHelp", rich)}
         </p>
@@ -489,7 +494,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
       </Section>
 
       {/* ── Ubicación y cobertura ─────────────────────────────────────── */}
-      <Section title={t("secLocation")} desc={t("secLocationDesc")}>
+      <Section title={t("secLocation")} desc={t("secLocationDesc")} icon={MapPin}>
         {/* Work mode — both can be selected (travels AND has fixed locations) */}
         <div>
           <label className="text-sm font-medium text-[#374151] block mb-2">{t("howOffer")} <span className="text-red-500">*</span> <span className="text-[#9ca3af] font-normal">{t("chooseBoth")}</span></label>
@@ -554,7 +559,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
       </Section>
 
       {/* ── Contacto y precios ────────────────────────────────────────── */}
-      <Section title={t("secContact")} desc={t("secContactDesc")}>
+      <Section title={t("secContact")} desc={t("secContactDesc")} icon={Phone}>
         {/* WhatsApp — required contact channel */}
         <PhoneInput
           label={t("whatsapp")}
@@ -609,7 +614,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
           Aseguradoras only apply to HEALTH categories (es_salud) — a plumber
           has nothing to do with insurance, so we hide the field entirely for
           non-health pros (it isn't part of their profile at all). */}
-      <Section title={isHealthPro ? t("secLangInsurers") : t("secLang")} desc={t("secLangDesc")}>
+      <Section title={isHealthPro ? t("secLangInsurers") : t("secLang")} desc={t("secLangDesc")} icon={Languages}>
         {/* Languages — defaults to Español; extra languages are an optional bonus */}
         <div>
           <label className="text-sm font-medium text-[#374151] block mb-1.5">
