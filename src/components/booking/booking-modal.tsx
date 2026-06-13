@@ -157,6 +157,9 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   // the client (no TSE name confirmation); national cédulas are also checked to
   // EXIST in the padrón to reject invented numbers. Recoverable inline error.
   const [cedulaError, setCedulaError] = useState<string | null>(null);
+  // True when the entered cédula is already linked to ANOTHER account — flagged the
+  // moment it validates so the user sees it BEFORE the mismatch/confirm step.
+  const [cedulaTaken, setCedulaTaken] = useState(false);
   const [checkingCedula, setCheckingCedula] = useState(false);
   // Booking for someone else: responsible party (the account holder) vs beneficiary.
   // The beneficiary's cédula is ALWAYS optional; a minor may be a beneficiary but
@@ -291,13 +294,30 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     return () => { active = false; clearTimeout(t); };
   }, [benCedula, benHasCedula, forSomeoneElse]);
 
-  // Live padrón name for the client's own cédula (guest/needs-cédula flows).
+  // Live checks for the client's own ID (guest/needs-cédula flows):
+  //  1) Whether it's ALREADY linked to another account — flagged immediately so the
+  //     user is told up front, never after pressing confirm (any ID type).
+  //  2) The padrón name (national cédulas only) for the match/mismatch confirm.
   useEffect(() => {
     const clean = cleanId(profileCedula);
-    if (!isValidId(clean) || detectIdType(clean) !== "cedula") { setSelfCedulaName(null); setSelfCedulaLoading(false); return; }
+    if (!isValidId(clean)) { setSelfCedulaName(null); setSelfCedulaLoading(false); setCedulaTaken(false); return; }
+    const isCedula = detectIdType(clean) === "cedula";
+    if (!isCedula) { setSelfCedulaName(null); setSelfCedulaLoading(false); }
     let active = true;
-    setSelfCedulaLoading(true);
+    if (isCedula) setSelfCedulaLoading(true);
     const t = setTimeout(async () => {
+      // Already-registered check first (the message that must show up front).
+      try {
+        const a = await fetch(`/api/cedula-available?cedula=${clean}`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+        if (!active) return;
+        if (a?.taken) {
+          setCedulaTaken(true);
+          setCedulaError("Esa cédula ya está registrada en otra cuenta. Inicia sesión en esa cuenta o usa una cédula diferente.");
+        } else {
+          setCedulaTaken(false);
+        }
+      } catch { /* don't block over our own outage */ }
+      if (!isCedula) return;
       try {
         const res = await fetch(`/api/cedula/${clean}`);
         if (!active) return;
@@ -554,7 +574,9 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   // it differs from the account name we warn, then let it prevail on confirm.
   // (Beneficiary cédulas never touch the account, so this is gated on !forSomeoneElse.)
   const selfOfficialName = !forSomeoneElse ? selfCedulaName : null;
-  const nameWillChange = !!selfOfficialName && !sameName(selfOfficialName, clientName);
+  // When the cédula is already taken, the "already registered" message takes over —
+  // don't also show the name-mismatch warning (it's moot; they can't use it).
+  const nameWillChange = !cedulaTaken && !!selfOfficialName && !sameName(selfOfficialName, clientName);
   const needsCompleteStep = needsProfile || needsCedula || needsPhone;
   const totalSteps = isLoggedIn ? (needsCompleteStep ? 3 : 2) : 3;
   const stepIndex = { calendar: 0, details: 1, contact: 2, complete: 2, success: 3 };
@@ -569,6 +591,16 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
       setCedulaError("El número de identificación no es válido (CR: 9 dígitos · DIMEX: 11-12 · NITE: 10). Revísalo e intenta de nuevo.");
       return { ok: false, officialName: null };
     }
+    // Block early if it's already linked to another account (safety net for a fast
+    // submit before the live check resolves).
+    try {
+      const a = await fetch(`/api/cedula-available?cedula=${clean}`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+      if (a?.taken) {
+        setCedulaTaken(true);
+        setCedulaError("Esa cédula ya está registrada en otra cuenta. Inicia sesión en esa cuenta o usa una cédula diferente.");
+        return { ok: false, officialName: null };
+      }
+    } catch { /* don't block over our own outage */ }
     // Only national cédulas exist in the TSE padrón — verify to reject fakes AND
     // capture the official name synchronously here, so a fast submit (before the
     // debounced lookup resolves) still applies the official name to the booking
@@ -1082,7 +1114,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                   <CedulaInput
                     required
                     value={profileCedula}
-                    onChange={(c) => { setProfileCedula(c); setCedulaError(null); }}
+                    onChange={(c) => { setProfileCedula(c); setCedulaError(null); setCedulaTaken(false); }}
                     error={cedulaError ?? undefined}
                     hint="Solo para tu solicitud — no es una verificación de identidad."
                   />
@@ -1145,7 +1177,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                       <CedulaInput
                         required
                         value={profileCedula}
-                        onChange={(c) => { setProfileCedula(c); setCedulaError(null); }}
+                        onChange={(c) => { setProfileCedula(c); setCedulaError(null); setCedulaTaken(false); }}
                         error={cedulaError ?? undefined}
                         hint="Solo para tu solicitud — no es una verificación de identidad."
                       />

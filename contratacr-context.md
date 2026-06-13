@@ -28,6 +28,11 @@ _Earlier: 2026-06-07 (sprint 24 — fully automatic identity verification: self-
 
 ---
 
+## Sprint 93 (2026-06-13) — Two bug fixes: early cédula-taken check + no fake ratings
+
+1. **Cédula already-registered, validated EARLY (booking).** Before, the "ya está registrada en otra cuenta" message only appeared on the DB unique-constraint failure AFTER pressing confirm (and the name-mismatch warning showed first). New endpoint **`GET /api/cedula-available?cedula=…` → `{ taken }`** (server session + admin client, excludes the requester's own account, returns only the boolean — no account info leaked). In `booking-modal.tsx` the live self-ID effect now checks availability the moment the ID validates (any type), sets `cedulaTaken` + a friendly inline error, and **takes precedence over the name-mismatch warning** (`nameWillChange` gated on `!cedulaTaken`); `validateClientCedula` re-checks as a confirm-time safety net; both `CedulaInput` onChanges reset the flag. Message: "Esa cédula ya está registrada en otra cuenta. Inicia sesión en esa cuenta o usa una cédula diferente."
+2. **No fake ratings for pros with 0 reviews.** The public profile Reseñas tab hardcoded per-category scores (`4.8/4.9/5.0/4.7` via `SubRating`) and a `0.0` aggregate. **Removed the fake per-category breakdown + `SubRating` entirely** (no real per-category data exists). The aggregate (big number + stars + count) now renders **only when `reviewCount > 0`**; zero reviews → honest empty state (ReviewSection's "sé el primero"). **`StarRating` fixed globally:** never prints the numeric value when `reviewCount === 0` (stars render empty, only the `(0)` count shows) — fixes every card/profile, not just this page. Build green, `tsc` clean.
+
 ## Sprint 92 (2026-06-13) — Soporte: drop the "Todas" filter tab
 
 `support-tickets.tsx`: removed the **"Todas"** filter — `FILTER_IDS` is now just `["open", "in_progress", "resolved"]` (Pendiente / En proceso / Resuelto) and the default tab is **"open" (Pendiente)**. `filtered` always filters by the selected status; the per-tab unread badge uses `unreadByStatus` only; `filterLabel` drops the all-bucket branch. A filtered-but-empty status still shows `noneInView`. Matches the no-all-bucket convention already used by solicitudes/proyectos. (`filterAll` i18n key now unused.) Build green.

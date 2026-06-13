@@ -42,20 +42,6 @@ function WhatsAppIcon({ className }: { className?: string }) {
 }
 
 // ─── Sub-rating row ───────────────────────────────────────────────────────────
-function SubRating({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="flex items-center justify-between">
-      <span className="text-sm text-[#6b7280]">{label}</span>
-      <div className="flex items-center gap-2">
-        <div className="w-24 h-1.5 rounded-full bg-[#e5e7eb] overflow-hidden">
-          <div className="h-full rounded-full bg-[#ff9b32]" style={{ width: `${(value / 5) * 100}%` }} />
-        </div>
-        <span className="text-xs font-semibold text-[#111827] w-6">{value.toFixed(1)}</span>
-      </div>
-    </div>
-  );
-}
-
 // ─── Tab types ────────────────────────────────────────────────────────────────
 type Tab = "servicios" | "disponibilidad" | "casos" | "certificaciones" | "resenas" | "sobre";
 
@@ -653,19 +639,18 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                   {/* ── TAB: Reseñas ── */}
                   {activeTab === "resenas" && (
                     <div>
-                      <div className="flex items-center gap-4 mb-5">
-                        <div className="flex flex-col items-center">
+                      {/* Real aggregate ONLY when real reviews exist. Zero reviews →
+                          honest empty state; never a fabricated score or per-category
+                          breakdown (those were hardcoded fakes and were removed). */}
+                      {professional.reviewCount > 0 && (
+                        <div className="flex items-center gap-3 mb-5">
                           <span className="text-4xl font-extrabold text-[#111827]">{professional.ratingAvg.toFixed(1)}</span>
-                          <StarRating rating={professional.ratingAvg} size="sm" className="mt-1" />
-                          <span className="text-xs text-[#9ca3af] mt-1">{t("reviewCountLabel", { count: professional.reviewCount })}</span>
+                          <div className="flex flex-col">
+                            <StarRating rating={professional.ratingAvg} size="sm" />
+                            <span className="text-xs text-[#9ca3af] mt-0.5">{t("reviewCountLabel", { count: professional.reviewCount })}</span>
+                          </div>
                         </div>
-                        <div className="flex-1 flex flex-col gap-2">
-                          <SubRating label={t("subRating.price")} value={4.8} />
-                          <SubRating label={t("subRating.punctuality")} value={4.9} />
-                          <SubRating label={t("subRating.quality")} value={5.0} />
-                          <SubRating label={t("subRating.communication")} value={4.7} />
-                        </div>
-                      </div>
+                      )}
 
                       <div className="flex items-start gap-2 bg-[#EBF5FB] border border-[#bfdbfe] rounded-xl px-4 py-3 mb-5">
                         <Shield className="h-4 w-4 text-[#009FD9] shrink-0 mt-0.5" />
