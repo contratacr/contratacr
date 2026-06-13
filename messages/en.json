@@ -1108,6 +1108,7 @@
     "step2Title": "Your services",
     "addService": "Add service",
     "emptyUnderProfession": "You haven't added any services under this profession yet.",
+    "addFirstService": "Add your first service",
     "experience": "{years, plural, one {# year} other {# years}} of experience",
     "editService": "Edit service",
     "newService": "New service · {profession}",
