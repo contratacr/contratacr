@@ -35,7 +35,7 @@ Contained parts of the visual-cleanup pass:
 - **De-boxed** (text + icon only, no colored container): the public-profile **reviews-gate** note (`reviewsGate`, now neutral grey) and the **OAuth guidance blocks** in Cuenta y seguridad (`OAuthGuide` — removed bg/border, neutral dark text, brand-blue link only, grey step badges).
 - **Client photo control** matches the pro panel: removed the "JPG, PNG o WebP — máx 5MB" hint (`photoHint` <p>).
 - **Projects "Aceptada" chip** centered properly (`justify-center`, `leading-none`, wrapped label).
-- Still pending in this pass: unify dashboards to a sidebar, redesign "Sobre mí", favoritos one-container, de-box the client "Identidad verificada" badge. Build green, `tsc` clean.
+Follow-ups (same pass, committed after): **favoritos** → one container with divider rows + "Sin reseñas" for 0-review pros; **"Sobre mí"** quick facts → one bordered container with label→value rows (no per-fact colored boxes, verification accent only); **dashboards unified** — the **client panel now uses the same vertical left sidebar** as the professional panel (was a horizontal tab strip): `max-w-5xl` + `flex lg:flex-row gap-6`, nav buttons in a bordered `lg:sticky` rail (`bg-[#EBF5FB] text-[#009FD9]` active), content in `flex-1 min-w-0`. The client "Identidad verificada" boxed card was already removed in Sprint 99, so nothing boxed remains there. Build green, `tsc` clean.
 
 ## Sprint 103 (2026-06-13) — "Profesiones" section: naming, consolidation, principal, project matching
 

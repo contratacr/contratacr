@@ -238,7 +238,7 @@ export default function ClientDashboardPage() {
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
       <Navbar />
       <main className="flex-1">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
           {/* Header — greeting on top; on mobile the actions drop to their own
               full-width row so "Buscar profesionales" always fits and is tappable. */}
@@ -278,24 +278,27 @@ export default function ClientDashboardPage() {
             </div>
           </div>
 
-          {/* Tab nav — scrollable on mobile */}
-          <div className="flex gap-1 bg-[#f3f4f6] rounded-xl p-1 mb-5 overflow-x-auto">
-            {TABS.map(({ key, icon, label }) => (
-              <button
-                key={key}
-                onClick={() => setTab(key)}
-                className={cn(
-                  "flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all whitespace-nowrap shrink-0",
-                  activeTab === key
-                    ? "bg-white text-[#009FD9] shadow-sm"
-                    : "text-[#6b7280] hover:text-[#374151]"
-                )}
-              >
-                {icon}
-                {label}
-              </button>
-            ))}
-          </div>
+          {/* Two-column layout — vertical sidebar, consistent with the professional panel. */}
+          <div className="flex flex-col lg:flex-row gap-6">
+            <nav className="lg:w-60 shrink-0">
+              <div className="rounded-2xl border border-[#e5e7eb] bg-white p-2 flex flex-col gap-0.5 lg:sticky lg:top-20">
+                {TABS.map(({ key, icon, label }) => (
+                  <button
+                    key={key}
+                    onClick={() => setTab(key)}
+                    className={cn(
+                      "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors text-left",
+                      activeTab === key ? "bg-[#EBF5FB] text-[#009FD9]" : "text-[#374151] hover:bg-[#f3f4f6]"
+                    )}
+                  >
+                    {icon}
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </nav>
+
+            <div className="flex-1 min-w-0">
 
           {/* SENT SOLICITUDES / PUBLISHED PROJECTS / SAVED — shared client activity */}
           {activeTab === "bookings" && <ClientActivity section="bookings" />}
@@ -406,6 +409,8 @@ export default function ClientDashboardPage() {
               <CloseAccountSection />
             </div>
           )}
+            </div>
+          </div>
         </div>
       </main>
 

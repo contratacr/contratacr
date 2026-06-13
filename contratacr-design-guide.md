@@ -204,6 +204,9 @@ A professional is always **ONE card** (`rounded-2xl bg-white border`, never spli
 - **Verified mark reads "Identidad verificada"** (not "Verificado") next to the locked Nombre completo; keep the label row `flex-wrap` with the chip `whitespace-nowrap shrink-0` so it wraps (never truncates to "Identidad veri…") on mobile.
 - **Auth label is "Ingresar"** (not "Iniciar sesión" — friendlier, and not "Mis citas"/medical wording since not all services are appointments). Use it consistently on the **mobile drawer AND the desktop nav trigger**.
 
+### Dashboards use ONE nav pattern (vertical left sidebar)
+- **Both** the professional and client dashboards use a **vertical left sidebar** (`flex flex-col lg:flex-row gap-6`, `max-w-5xl`, nav in a bordered `lg:sticky lg:top-20` rail; active item `bg-[#EBF5FB] text-[#009FD9]`, others `hover:bg-[#f3f4f6]`; content in `flex-1 min-w-0`). The client panel's old horizontal tab strip was replaced for consistency. New nav items go in the rail, not a top row.
+
 ### Never strand the user — "Volver a mi panel"
 - Any **full-view preview or deep flow** a logged-in user can enter must offer a **clear way back to their dashboard**. The professional "Ver cómo me ven los clientes" preview opens **same-tab with `?preview=1`**, and the public profile shows a prominent **"Volver a mi panel"** bar (→ `/dashboard/profesional`) in that mode instead of the generic "back to search". Standalone pages that keep the global `Navbar` (logo→home + account menu) already satisfy this; full-bleed views do not — add an explicit back action.
 
