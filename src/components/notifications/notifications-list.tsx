@@ -2,11 +2,22 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Bell, CheckCheck, Check, Trash2 } from "lucide-react";
+import { Bell, CheckCheck, Check, Trash2, Briefcase, ShoppingBag, LifeBuoy } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { cn, formatRelativeTime } from "@/lib/utils";
-import { notificationHref, notificationContext, notificationContextLabel } from "@/lib/notification-link";
+import { notificationHref, notificationContext } from "@/lib/notification-link";
+
+// Distinguish the TWO sides an account can act on — offering services
+// (professional) vs contracting (client) — plus support, with a quiet ICON cue,
+// NOT a literal "Como cliente/profesional" label. The title/message carry the rest.
+function contextMeta(type: string): { Icon: typeof Briefcase; cls: string } {
+  const ctx = notificationContext(type);
+  if (ctx === "professional") return { Icon: Briefcase, cls: "bg-[#EBF5FB] text-[#0077a8]" };
+  if (ctx === "client") return { Icon: ShoppingBag, cls: "bg-[#f3e8ff] text-[#7c3aed]" };
+  if (ctx === "support") return { Icon: LifeBuoy, cls: "bg-[#dcfce7] text-[#15803d]" };
+  return { Icon: Bell, cls: "bg-[#f3f4f6] text-[#6b7280]" };
+}
 
 type Notification = {
   id: string;
@@ -111,21 +122,14 @@ export function NotificationsList() {
             {items.map((n) => (
               <li key={n.id} className={cn("relative group border-b border-[#f3f4f6] last:border-0", !n.read && "bg-[#f0f9f6]")}>
                 <button onClick={() => open(n)} className="w-full text-left px-4 py-3 pr-16 hover:bg-[#f9fafb] transition-colors">
-                  <div className="flex items-start gap-2">
-                    {!n.read && <span className="mt-1.5 h-2 w-2 rounded-full bg-[#319278] shrink-0" />}
-                    <div className={cn("min-w-0", !n.read ? "" : "ml-4")}>
-                      {notificationContextLabel(n.type) && (
-                        <span className={cn(
-                          "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold mb-1",
-                          notificationContext(n.type) === "professional"
-                            ? "bg-[#EBF5FB] text-[#0077a8]"
-                            : notificationContext(n.type) === "support"
-                            ? "bg-[#dcfce7] text-[#15803d]"
-                            : "bg-[#f3e8ff] text-[#7c3aed]"
-                        )}>
-                          {notificationContextLabel(n.type)}
-                        </span>
-                      )}
+                  <div className="flex items-start gap-3">
+                    {(() => { const { Icon, cls } = contextMeta(n.type); return (
+                      <span className={cn("relative flex h-8 w-8 shrink-0 items-center justify-center rounded-lg", cls)}>
+                        <Icon className="h-4 w-4" />
+                        {!n.read && <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-[#319278] ring-2 ring-white" />}
+                      </span>
+                    ); })()}
+                    <div className="min-w-0">
                       <p className="text-sm font-medium text-[#111827]">{n.title}</p>
                       <p className="text-xs text-[#6b7280] mt-0.5">{n.message}</p>
                       <p className="text-xs text-[#9ca3af] mt-1">{formatRelativeTime(n.created_at)}</p>

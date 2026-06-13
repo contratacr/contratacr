@@ -5,10 +5,10 @@ import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import {
   CalendarDays, Bookmark, LogOut, Bell, User, FolderOpen, Briefcase, Search, LifeBuoy,
-  ShieldCheck, ShieldAlert, Lock,
+  ShieldCheck, Lock,
 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
-import { maskId, detectIdType } from "@/lib/cedula";
+import { detectIdType } from "@/lib/cedula";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { Button } from "@/components/ui/button";
@@ -385,31 +385,8 @@ export default function ClientDashboardPage() {
                 </div>
               </div>
 
-              {/* Identidad — shown once the client has a saved cédula. Masked for
-                  privacy; verified (national + padrón) vs registered (DIMEX/NITE). */}
-              {hasCedula && (
-                <div className="bg-white rounded-2xl border border-[#e5e7eb] p-5">
-                  <h3 className="text-sm font-semibold text-[#111827] mb-3">{t("identity")}</h3>
-                  <div className="flex items-center justify-between gap-3 flex-wrap">
-                    <div>
-                      <p className="text-xs text-[#9ca3af]">{t("registeredId")}</p>
-                      <p className="text-sm font-semibold text-[#111827] tracking-wider">{maskId(savedCedula)}</p>
-                    </div>
-                    {cedulaVerified ? (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-[#dcfce7] text-[#15803d] text-xs font-semibold px-3 py-1.5">
-                        <ShieldCheck className="h-4 w-4" /> {t("identityVerified")}
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-[#fffbeb] text-[#b45309] text-xs font-semibold px-3 py-1.5">
-                        <ShieldAlert className="h-4 w-4" /> {t("pendingReview")}
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-[#9ca3af] mt-3">
-                    {cedulaVerified ? t("identityVerifiedHelp") : t("identityPendingHelp")}
-                  </p>
-                </div>
-              )}
+              {/* (Identity/cédula display block removed — we don't surface the
+                  registered cédula in the panel.) */}
 
               {/* Offer my services — same account, adds the pro role + onboarding.
                   No leading icon, so the content aligns flush with the cards above. */}

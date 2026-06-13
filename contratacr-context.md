@@ -28,6 +28,13 @@ _Earlier: 2026-06-07 (sprint 24 — fully automatic identity verification: self-
 
 ---
 
+## Sprint 99 (2026-06-13) — Identity display removed, Soporte "Abrir ticket", notifications role cue
+
+- **Identity/cédula display block removed** from the **client panel** (`dashboard/cliente/page.tsx` — the "Identidad / cédula enmascarada / verificada / Solo mostramos los últimos dígitos" card; dropped unused `maskId`/`ShieldAlert`). The **professional panel has no such block** (only the verified badge next to the locked name) — nothing to remove there.
+- **Soporte button:** `supportTickets.newTicket` "Nuevo ticket" → **"Abrir ticket"** / "Open ticket".
+- **Notifications role distinction WITHOUT literal labels** (`notifications-list.tsx`): replaced the "Como profesional / Como cliente / Soporte" text chips with a quiet **context ICON badge** — Briefcase (offering services / professional), ShoppingBag (contracting / client), LifeBuoy (support), each with its own tint; the unread dot now rides the badge corner. `notificationContext()` still drives it; `notificationContextLabel` no longer used in the list.
+- **Client panel: no "completa tu perfil %"** — confirmed none exists (a client only needs a phone); none added. Build green, `tsc` clean.
+
 ## Sprint 98 (2026-06-13) — Close-account moved to Cuenta y seguridad
 
 Removed `<CloseAccountSection/>` (Cerrar/deshabilitar cuenta) from **Mi perfil** (`profile-editor.tsx`) — it already renders in the **Cuenta y seguridad** tab (`dashboard/profesional/page.tsx`, cuenta tab, alongside `AccountSecuritySection`), where account-level actions belong. Same functionality (deactivate/recoverable). Build green.

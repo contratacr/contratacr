@@ -1476,7 +1476,7 @@
     "sendError": "Couldn't send the message.",
     "actionError": "Couldn't process it. Try again.",
     "yourConversations": "Your conversations with support.",
-    "newTicket": "New ticket",
+    "newTicket": "Open ticket",
     "empty": "You don't have any tickets yet",
     "emptySub": "If you need help, open a ticket and we'll reply here and by email.",
     "openTicket": "Open a ticket",
