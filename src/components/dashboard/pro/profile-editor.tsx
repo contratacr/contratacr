@@ -14,7 +14,6 @@ import { Link } from "@/i18n/navigation";
 import { computeSearchAreas, primaryArea } from "@/lib/location";
 import { getProvinceById, getCantonById } from "@/lib/data/cr-geography";
 import { AseguradorasInput } from "@/components/ui/aseguradoras-input";
-import { CategorySearch } from "@/components/ui/category-search";
 import { getCategoryLabel, anyHealthCategory } from "@/lib/data/categories";
 import type { Certification } from "@/components/professionals/professional-card";
 import { cn } from "@/lib/utils";
@@ -106,10 +105,10 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
     Array.isArray(initial.professions) && initial.professions.length > 0
       ? initial.professions
       : initial.category_id ? [initial.category_id] : [];
-  const [professions, setProfessions] = useState<string[]>(seedProfessions);
+  // Read-only here — professions are managed in the "Profesiones" tab now.
+  const professions = seedProfessions;
   // Aseguradoras only apply to health (es_salud) professionals.
   const isHealthPro = anyHealthCategory(professions);
-  const [addCat, setAddCat] = useState("");
   // Address free-text field removed (provincia/cantón + optional pin cover it).
   // Keep the stored value so an existing address column isn't wiped on save.
   const address = (initial.address as string) ?? "";
@@ -157,16 +156,6 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoNonce]);
 
-  function addProfession(id: string) {
-    if (!id || professions.includes(id)) { setAddCat(""); return; }
-    setProfessions((prev) => [...prev, id]);
-    setAddCat("");
-    touch();
-  }
-  function removeProfession(id: string) {
-    setProfessions((prev) => (prev.length > 1 ? prev.filter((p) => p !== id) : prev));
-    touch();
-  }
   function openCertForm(profession?: string) {
     setCertError(null);
     setCertDraft({ profession, name: "", institution: "", year: "" });
@@ -430,34 +419,8 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         </div>
       </Section>
 
-      {/* ── Profesión ─────────────────────────────────────────────────── */}
-      <Section title={t("secProfessions")} desc={t("secProfessionsDesc")} defaultOpen>
-        {/* Professions — multi-select (first is the primary/principal). Each profesión
-            groups the servicios managed in the Servicios tab. */}
-        <div>
-          <p className="text-xs text-[#9ca3af] mb-2">{t.rich("professionsHelp", rich)}</p>
-          {professions.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-2">
-              {professions.map((p, i) => (
-                <span key={p} className="inline-flex items-center gap-1.5 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium pl-3 pr-1.5 py-1.5">
-                  {getCategoryLabel(p, locale)}
-                  {i === 0 && <span className="text-[10px] font-bold uppercase tracking-wide text-[#009FD9]/70">{t("principal")}</span>}
-                  {professions.length > 1 && (
-                    <button type="button" onClick={() => removeProfession(p)} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors" aria-label={t("remove")}>
-                      <X className="h-3.5 w-3.5" />
-                    </button>
-                  )}
-                </span>
-              ))}
-            </div>
-          )}
-          <CategorySearch
-            value={addCat}
-            onChange={(v) => addProfession(v)}
-            placeholder={t("searchProfession")}
-          />
-        </div>
-      </Section>
+      {/* Profesiones + servicios are managed in the "Profesiones" tab (consolidated
+          there so they're not edited in two places). */}
 
       {/* ── Certificaciones — POR PROFESIÓN. Saved certs are read-only rows; a
              cert is ADDED via an explicit form whose "Guardar certificación"

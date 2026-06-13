@@ -28,6 +28,14 @@ _Earlier: 2026-06-07 (sprint 24 — fully automatic identity verification: self-
 
 ---
 
+## Sprint 103 (2026-06-13) — "Profesiones" section: naming, consolidation, principal, project matching
+
+- **Naming:** the dashboard tab `proPanel.tabs.services` is now **"Profesiones"** ("Professions") — professions are the group, services nest under each (per the Servicios redesign).
+- **Consolidated:** removed the duplicate **Profesiones** block from **Mi perfil** (`profile-editor.tsx`) — professions are managed only in the Profesiones tab now. Dropped `addProfession`/`removeProfession`/`addCat`/`CategorySearch`; `professions` is read-only there (still saved unchanged; the editor remounts per tab so it's never stale).
+- **No icon:** removed the Briefcase chip from each profession card header (`services-editor.tsx`).
+- **Mark principal:** non-principal profession cards get a **"Hacer principal"** action (`makePrincipal` moves it to index 0 = principal everywhere). New `servicesEditor.makePrincipal` key.
+- **Project matching — surfacing, NOT auto-routing (recommended + implemented):** `ProposalsTab` now receives the pro's `services`; in "Buscar proyectos" it flags projects whose title/description match the pro's **service keywords** (≥4-char tokens) with a **"Coincide con tus servicios"** badge and **sorts those first**. Open projects are still category-filtered server-side; this is a lightweight client-side relevance cue — no notifications/auto-assignment (avoids spam/false matches at this scale). New `proposalsTab.matchesServices` key. Build green, `tsc` clean.
+
 ## Sprint 102 (2026-06-13) — Disponibilidad restructured (one flow), call toggle → Mi perfil
 
 `availability-editor.tsx` + `profile-editor.tsx` + dashboard + i18n:

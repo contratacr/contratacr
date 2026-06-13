@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { FolderOpen, Send, ChevronDown, ChevronUp, MapPin, Clock, Coins, User, Briefcase, CheckCircle2, Phone } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
@@ -60,11 +60,31 @@ function projStatusVariant(status?: string): "warning" | "success" | "error" | "
 
 interface ProposalsTabProps {
   categoryId?: string;
+  /** The pro's services — used to SURFACE projects whose text matches them. */
+  services?: { name?: string }[];
 }
 
-export function ProposalsTab({ categoryId }: ProposalsTabProps) {
+export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
   const t = useTranslations("proposalsTab");
   const locale = useLocale();
+
+  // Significant words (≥4 chars) from the pro's service names — used to flag
+  // projects whose title/description mention what the pro actually offers, and to
+  // surface those first. Simple keyword overlap (no auto-routing/notifications).
+  const serviceTerms = useMemo(() => {
+    const terms = new Set<string>();
+    for (const s of services) {
+      for (const w of String(s?.name ?? "").toLowerCase().split(/[^a-záéíóúñü0-9]+/i)) {
+        if (w.length >= 4) terms.add(w);
+      }
+    }
+    return [...terms];
+  }, [services]);
+  function matchesServices(p: { title?: string; description?: string }): boolean {
+    if (serviceTerms.length === 0) return false;
+    const text = `${p.title ?? ""} ${p.description ?? ""}`.toLowerCase();
+    return serviceTerms.some((term) => text.includes(term));
+  }
   const dateLocale = locale === "en" ? "en-US" : "es-CR";
   // Project lifecycle label (mirrors solicitudes) shown for an ACCEPTED proposal.
   const projStatusLabel = (status?: string): string => {
@@ -237,7 +257,9 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
             </div>
           ) : (
             <div className="flex flex-col gap-4">
-              {openProjects.map((project) => {
+              {/* Surface projects that match the pro's services first (stable sort). */}
+              {[...openProjects].sort((a, b) => Number(matchesServices(b)) - Number(matchesServices(a))).map((project) => {
+                const isMatch = matchesServices(project);
                 const isExpanded = expandedProject === project.id;
                 const alreadySubmitted = submitted.has(project.id);
                 const form = proposalForms[project.id] ?? { price: "", message: "" };
@@ -255,6 +277,11 @@ export function ProposalsTab({ categoryId }: ProposalsTabProps) {
                             <span className="font-semibold text-[#111827] text-sm">{project.title}</span>
                             {project.categories?.name && (
                               <Badge variant="muted" className="text-[11px]">{project.categories.name}</Badge>
+                            )}
+                            {isMatch && (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-[#dcfce7] text-[#15803d] text-[11px] font-semibold px-2 py-0.5">
+                                <CheckCircle2 className="h-3 w-3" /> {t("matchesServices")}
+                              </span>
                             )}
                           </div>
                           <p className="text-sm text-[#6b7280] line-clamp-2 mb-2">{project.description}</p>

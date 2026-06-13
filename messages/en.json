@@ -946,7 +946,7 @@
     "groupClient": "Hire services",
     "tabs": {
       "profile": "My profile",
-      "services": "Services",
+      "services": "Professions",
       "photos": "Success stories",
       "availability": "Availability",
       "bookings": "Requests received",
@@ -1091,7 +1091,8 @@
     "save": "Save",
     "from": "From {amount}",
     "upTo": "Up to {amount}",
-    "range": "{min} – {max}"
+    "range": "{min} – {max}",
+    "matchesServices": "Matches your services"
   },
   "servicesEditor": {
     "intro": "Each <strong>profession</strong> has its own <strong>services</strong>. Add the ones you offer under each, with their price. Each service keeps its own success-story photos.",
@@ -1129,7 +1130,8 @@
     "saved": "Saved",
     "removeProfession": "Remove profession",
     "edit": "Edit",
-    "delete": "Delete"
+    "delete": "Delete",
+    "makePrincipal": "Make main"
   },
   "availabilityEditor": {
     "interval30": "Every 30 min",

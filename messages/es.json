@@ -946,7 +946,7 @@
     "groupClient": "Contratar servicios",
     "tabs": {
       "profile": "Mi perfil",
-      "services": "Servicios",
+      "services": "Profesiones",
       "photos": "Casos de éxito",
       "availability": "Disponibilidad",
       "bookings": "Solicitudes recibidas",
@@ -1091,7 +1091,8 @@
     "save": "Guardar",
     "from": "Desde {amount}",
     "upTo": "Hasta {amount}",
-    "range": "{min} – {max}"
+    "range": "{min} – {max}",
+    "matchesServices": "Coincide con tus servicios"
   },
   "servicesEditor": {
     "intro": "Cada <strong>profesión</strong> tiene sus propios <strong>servicios</strong>. Agrega los que ofreces en cada una, con su precio. Cada servicio guarda sus fotos de casos de éxito.",
@@ -1129,7 +1130,8 @@
     "saved": "Guardado",
     "removeProfession": "Quitar profesión",
     "edit": "Editar",
-    "delete": "Eliminar"
+    "delete": "Eliminar",
+    "makePrincipal": "Hacer principal"
   },
   "availabilityEditor": {
     "interval30": "Cada 30 min",

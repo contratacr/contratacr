@@ -332,7 +332,7 @@ export default function ProDashboardPage() {
                   )}
                   {activeTab === "bookings" && <BookingRequests />}
                   {activeTab === "proposals" && (
-                    <ProposalsTab categoryId={pro.category_id} />
+                    <ProposalsTab categoryId={pro.category_id} services={pro.services ?? []} />
                   )}
                   {activeTab === "verificacion" && (
                     <VerificationPanel

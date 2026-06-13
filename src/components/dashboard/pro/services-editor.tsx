@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Plus, Trash2, Check, Pencil, X, Loader2, Briefcase } from "lucide-react";
+import { Plus, Trash2, Check, Pencil, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PriceInput } from "@/components/ui/price-input";
@@ -117,6 +117,14 @@ export function ServicesEditor({
     setNewProfession("");
     setAddingProfession(false);
     setProfessionError(null);
+    persist(next, services);
+  }
+
+  // Make a profession the PRINCIPAL one (index 0 = principal everywhere).
+  function makePrincipal(id: string) {
+    if (professions[0] === id) return;
+    const next = [id, ...professions.filter((p) => p !== id)];
+    setProfessions(next);
     persist(next, services);
   }
 
@@ -238,11 +246,8 @@ export function ServicesEditor({
         const formHere = formOpen && formCategory === prof;
         return (
           <section key={prof} className="rounded-2xl border border-[#e5e7eb] bg-white overflow-hidden">
-            {/* Profession header */}
+            {/* Profession header (no icon) */}
             <div className="flex items-center gap-3 px-4 sm:px-5 py-3 bg-[#f9fafb] border-b border-[#eef2f5]">
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#EBF5FB] text-[#009FD9]">
-                <Briefcase className="h-4 w-4" />
-              </span>
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-[#111827] flex items-center gap-2">
                   <span className="truncate">{getCategoryLabel(prof, locale)}</span>
@@ -250,6 +255,12 @@ export function ServicesEditor({
                 </p>
                 <p className="text-[11px] text-[#9ca3af]">{t("servicesCount", { count: profServices.length })}</p>
               </div>
+              {/* Mark a non-principal profession as the MAIN one (moves it first). */}
+              {i > 0 && (
+                <button onClick={() => makePrincipal(prof)} className="shrink-0 text-xs font-medium text-[#009FD9] hover:underline" aria-label={t("makePrincipal")}>
+                  {t("makePrincipal")}
+                </button>
+              )}
               {professions.length > 1 && (
                 <button onClick={() => removeProfession(prof)} className="h-7 w-7 shrink-0 rounded-lg flex items-center justify-center text-[#9ca3af] hover:text-red-500 hover:bg-red-50 transition-colors" aria-label={t("removeProfession")}>
                   <X className="h-4 w-4" />
