@@ -1175,6 +1175,7 @@
     "errPastDate": "You can't add hours on a past date.",
     "errTooSoon": "That time has passed or is too soon (Costa Rica time). Choose a time at least {min} minutes in the future.",
     "errEndBeforeStart": "The end time must be after the start time.",
+    "errLocationConflict": "You can't add the same time in two locations. You already have {time} at {location} that day.",
     "errPast": "You can't add hours in the past (Costa Rica time).",
     "upcomingTitle": "Your upcoming hours",
     "noSlots": "You haven't added any hours yet.",

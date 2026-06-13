@@ -260,6 +260,19 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
       return;
     }
     times = valid;
+    // A pro can't be in two places at once: any time already scheduled THIS date
+    // at a DIFFERENT location (any profession) is a conflict. Skip those times and
+    // surface a clear inline error naming the first one + the other location.
+    const conflicting = times.filter((time) =>
+      slots.some((s) => s.slot_date === genDate && s.slot_time === time && (s.location_id ?? null) !== genLocation)
+    );
+    if (conflicting.length > 0) {
+      const c = conflicting[0];
+      const other = slots.find((s) => s.slot_date === genDate && s.slot_time === c && (s.location_id ?? null) !== genLocation);
+      setPastError(t("errLocationConflict", { time: to12h(c), location: locationLabel(other?.location_id ?? null) }));
+      times = times.filter((time) => !conflicting.includes(time));
+      if (times.length === 0) return;
+    }
     setBusy(true);
     const supabase = createClient();
     const locId = genLocation;

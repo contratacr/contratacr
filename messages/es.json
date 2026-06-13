@@ -1175,6 +1175,7 @@
     "errPastDate": "No puedes agregar horarios en una fecha pasada.",
     "errTooSoon": "Esa hora ya pasó o es muy pronto (hora de Costa Rica). Elige una hora al menos {min} minutos en el futuro.",
     "errEndBeforeStart": "La hora de fin debe ser posterior a la de inicio.",
+    "errLocationConflict": "No puedes agregar la misma hora en dos ubicaciones. Ya tienes las {time} en {location} ese día.",
     "errPast": "No puedes agregar horarios en el pasado (hora de Costa Rica).",
     "upcomingTitle": "Tus horarios próximos",
     "noSlots": "Todavía no agregaste horarios.",
