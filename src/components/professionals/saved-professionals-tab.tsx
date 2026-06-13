@@ -12,7 +12,7 @@ function SavedProCard({ pro, onUnsave }: { pro: SavedPro; onUnsave: (id: string)
   const tSaved = useTranslations("savedPros");
 
   return (
-    <div className="bg-white rounded-2xl border border-[#e5e7eb] p-4 flex items-center gap-4 hover:shadow-md transition-shadow">
+    <div className="p-4 flex items-center gap-4 hover:bg-[#fafafa] transition-colors">
       {/* Avatar */}
       <div className="relative shrink-0">
         <div
@@ -47,9 +47,15 @@ function SavedProCard({ pro, onUnsave }: { pro: SavedPro; onUnsave: (id: string)
           </span>
         </div>
         <div className="flex items-center gap-1 mt-1">
-          <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-          <span className="text-xs text-[#374151] font-medium">{pro.ratingAvg.toFixed(1)}</span>
-          <span className="text-xs text-[#9ca3af]">({pro.reviewCount})</span>
+          {pro.reviewCount > 0 ? (
+            <>
+              <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+              <span className="text-xs text-[#374151] font-medium">{pro.ratingAvg.toFixed(1)}</span>
+              <span className="text-xs text-[#9ca3af]">({pro.reviewCount})</span>
+            </>
+          ) : (
+            <span className="text-xs text-[#9ca3af]">{tSaved("noReviews")}</span>
+          )}
           {pro.hourlyRate && (
             <span className="text-xs text-[#9ca3af] ml-2">
               · ₡{pro.hourlyRate.toLocaleString("es-CR")}/hr
@@ -125,7 +131,8 @@ export function SavedProfessionalsTab() {
   return (
     <div>
       <p className="text-sm text-[#6b7280] mb-4">{t("count", { count: saved.length })}</p>
-      <div className="flex flex-col gap-3">
+      {/* One container; saved pros are divider-separated rows inside it. */}
+      <div className="rounded-2xl border border-[#e5e7eb] bg-white overflow-hidden divide-y divide-[#f3f4f6]">
         {saved.map((pro) => (
           <SavedProCard key={pro.id} pro={pro} onUnsave={handleUnsave} />
         ))}

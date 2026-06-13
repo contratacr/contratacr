@@ -1494,7 +1494,8 @@
     "empty": "You don't have any saved professionals",
     "emptySub": "Save professionals you're interested in with the bookmark icon on their cards.",
     "searchPros": "Find professionals",
-    "count": "{count, plural, one {# saved professional} other {# saved professionals}}"
+    "count": "{count, plural, one {# saved professional} other {# saved professionals}}",
+    "noReviews": "No reviews"
   },
   "registerChoice": {
     "title": "Create a free account",

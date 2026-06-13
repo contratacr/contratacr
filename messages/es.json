@@ -1494,7 +1494,8 @@
     "empty": "No tienes profesionales guardados",
     "emptySub": "Guarda profesionales que te interesan con el ícono de marcador en sus tarjetas.",
     "searchPros": "Buscar profesionales",
-    "count": "{count, plural, one {# profesional guardado} other {# profesionales guardados}}"
+    "count": "{count, plural, one {# profesional guardado} other {# profesionales guardados}}",
+    "noReviews": "Sin reseñas"
   },
   "registerChoice": {
     "title": "Crear cuenta gratis",
