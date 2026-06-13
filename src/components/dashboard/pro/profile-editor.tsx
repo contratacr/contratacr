@@ -9,7 +9,7 @@ import { PhoneInput } from "@/components/ui/phone-input";
 import { LanguagesInput } from "@/components/ui/languages-input";
 import { WorkplacesPicker, type Workplace } from "@/components/maps/workplaces-picker";
 import { createClient } from "@/lib/supabase/client";
-import { Camera, Check, X, Plus, ChevronDown, ShieldCheck, Lock, Award, Info } from "lucide-react";
+import { Camera, Check, X, Plus, ChevronDown, ShieldCheck, Lock, Award } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { computeSearchAreas, primaryArea } from "@/lib/location";
 import { getProvinceById, getCantonById } from "@/lib/data/cr-geography";
@@ -107,7 +107,9 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
   // Aseguradoras only apply to health (es_salud) professionals.
   const isHealthPro = anyHealthCategory(professions);
   const [addCat, setAddCat] = useState("");
-  const [address, setAddress] = useState<string>(initial.address ?? "");
+  // Address free-text field removed (provincia/cantón + optional pin cover it).
+  // Keep the stored value so an existing address column isn't wiped on save.
+  const address = (initial.address as string) ?? "";
   const [businessName, setBusinessName] = useState<string>(initial.business_name ?? "");
   const [workplaces, setWorkplaces] = useState<Workplace[]>(() => seedZones(initial));
   // Default to "Español" (most professionals) so a Spanish-only pro is never
@@ -330,7 +332,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
       )}
 
       {/* ── Datos básicos ─────────────────────────────────────────────── */}
-      <Section title={t("secBasic")} desc={t("secBasicDesc")} defaultOpen>
+      <Section title={t("secBasic")} desc={t("secBasicDesc")}>
         {/* Photo — explicit buttons, no hover-to-change */}
         <div className="flex items-center gap-4">
           <div className="relative h-20 w-20 rounded-full shrink-0">
@@ -405,15 +407,12 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         )}
 
         {/* Brand / business name — optional */}
-        <div>
-          <Input
-            label={<>{t("businessName")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span></>}
-            value={businessName}
-            onChange={(e) => { setBusinessName(e.target.value); touch(); }}
-            placeholder={t("businessPlaceholder")}
-          />
-          <p className="text-xs text-[#9ca3af] mt-1.5">{t("businessHelp")}</p>
-        </div>
+        <Input
+          label={<>{t("businessName")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span></>}
+          value={businessName}
+          onChange={(e) => { setBusinessName(e.target.value); touch(); }}
+          placeholder={t("businessPlaceholder")}
+        />
 
         {/* Description */}
         <div>
@@ -513,12 +512,9 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
       <Section title={t("secLocation")} desc={t("secLocationDesc")}>
         {/* Work zones — provincia/cantón first (drives /buscar), optional exact pin. */}
         <div>
-          <label className="text-sm font-medium text-[#374151] block mb-1">
+          <label className="text-sm font-medium text-[#374151] block mb-2">
             {t("workplaces")} <span className="text-red-500">*</span>
           </label>
-          <p className="text-xs text-[#9ca3af] mb-2">
-            {t.rich("workplacesHelp", rich)}
-          </p>
           <WorkplacesPicker value={workplaces} onChange={(next) => { setWorkplaces(next); touch(); }} mapHeight={168} />
         </div>
 
@@ -538,13 +534,6 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
             <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", travels ? "left-5" : "left-0.5")} />
           </button>
         </div>
-
-        <Input
-          label={<>{t("address")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span></>}
-          placeholder={t("addressPlaceholder")}
-          value={address}
-          onChange={(e) => { setAddress(e.target.value); touch(); }}
-        />
       </Section>
 
       {/* ── Contacto y precios ────────────────────────────────────────── */}
@@ -592,15 +581,6 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
             <p className="text-xs text-[#9ca3af] mt-1">{t("emailHelp")}</p>
           )}
         </div>
-
-        {/* Price lives in Servicios now — one place only, to avoid confusion. */}
-        <div className="rounded-xl bg-[#f4f7fa] border border-[#e5e7eb] p-3.5 flex items-start gap-2.5">
-          <Info className="h-4 w-4 text-[#009FD9] shrink-0 mt-0.5" />
-          <p className="text-xs text-[#6b7280] leading-relaxed">
-            {t.rich("priceNote", rich)}
-          </p>
-        </div>
-        {/* Experience is captured per service (in the Servicios tab), not globally. */}
       </Section>
 
       {/* ── Idiomas (+ aseguradoras only for health pros) ─────────────────

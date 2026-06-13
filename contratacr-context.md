@@ -28,6 +28,16 @@ _Earlier: 2026-06-07 (sprint 24 — fully automatic identity verification: self-
 
 ---
 
+## Sprint 101 (2026-06-13) — Mi perfil trimmed: fewer labels, no Dirección, collapsed Datos básicos
+
+`profile-editor.tsx` + i18n:
+- **"Datos básicos" collapsed by default** (removed `defaultOpen`) so the panel isn't overwhelming on entry; the completion meter sits above.
+- **Removed the free-text "Dirección (opcional)" field** (provincia/cantón + optional pin already capture location). `address` is now a non-editable const so an existing value isn't wiped. (The optional **map pin is already off-by-default** in `WorkplacesPicker`.)
+- **Trimmed verbose helpers:** removed the business-name helper (`businessHelp` <p>), the `workplacesHelp` <p>, and the `priceNote` box (+ unused `Info` import); shortened `nameLockedHelp` ("Tu nombre oficial proviene del padrón y no se edita aquí. ¿Error o cambio legal? Escríbele a soporte."), `travelsDesc` (dropped the "detalles del traslado…" sentence), and `secLangDesc` ("Idiomas en los que atiendes").
+- **"Contacto y precios" → "Contacto"** (`secContact`/`secContactDesc`).
+- **Verificación:** dropped "Recuerda: verificamos tu identidad, no la calidad…" from `verifiedBody`.
+- **Visibility wording:** `proPanel.identityVerified` is now just "Identidad verificada" (removed "· visible para clientes"); the **unverified** badge keeps "· visible para clientes". Build green, `tsc` clean.
+
 ## Sprint 100 (2026-06-13) — "Ej."→"Ejemplo:" app-wide + GAM→SG Solutions
 
 App-wide i18n sweep (both `messages/es.json` + `messages/en.json`, all namespaces): replaced the abbreviation **`Ej.` / `Ej:` / `ej.` → `Ejemplo:` / `ejemplo:`** and **`e.g.` / `E.g.` → `example:` / `Example:`** in every placeholder/helper/example; and the sample company name **"Servicios Eléctricos GAM" → "SG Solutions"** (so `businessPlaceholder` = "Ejemplo: SG Solutions"). No hardcoded `Ej.` user-facing strings remain in `.tsx` (only code comments use "e.g."). Build green.
