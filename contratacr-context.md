@@ -28,6 +28,10 @@ _Earlier: 2026-06-07 (sprint 24 — fully automatic identity verification: self-
 
 ---
 
+## Sprint 97 (2026-06-13) — Certifications: required fields + explicit save
+
+`profile-editor.tsx` certifications section (per profession): (1) **no image mentions** — removed "No subas imágenes ni documentos" + "(texto, sin imágenes)" from `certsHelp`/`secCertsDesc` (image upload simply isn't offered). (2) **All three fields required** — replaced the always-editable inline rows with a **read-only list of SAVED certs** + an explicit **add FORM** (`certDraft`) whose **"Guardar certificación"** button validates nombre + institución + año(4 dígitos) (`certAllRequired`); an incomplete cert can't be saved. (3) **Clear SAVE vs ADD-ANOTHER:** "Agregar certificación" opens the form; "Guardar certificación" commits THIS one; saved certs then render as read-only rows with remove. Dropped `updateCertification`/`addCertification`; `institution` no longer "(opcional)". Build green, `tsc` clean.
+
 ## Sprint 96 (2026-06-13) — "Completa tu perfil" refinements
 
 `profile-completion.tsx` + i18n: (1) **bio minimum raised to 40 chars** so junk like "test" never counts as a real description. (2) **Show ONLY pending items** — removed the green "done items" chip summary (and `doneItems`/`Check`); the card now lists just what's left + the verification CTA. (3) **Clearer services wording:** `services` label → "Agrega los servicios que ofreces en tu profesión" / "Add the services you offer in your profession". Build green.

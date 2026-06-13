@@ -1066,7 +1066,11 @@
     "emptyMine": "You haven't sent any proposals yet",
     "emptyMineSub": "Browse available projects and send your first proposal.",
     "noneInView": "No projects in this view.",
-    "status": { "pending": "Pending", "accepted": "Accepted", "declined": "Declined" },
+    "status": {
+      "pending": "Pending",
+      "accepted": "Accepted",
+      "declined": "Declined"
+    },
     "projStatus": {
       "in_progress": "Assigned · In progress",
       "awaiting_confirmation": "Work done · awaiting confirmation",
@@ -1193,7 +1197,7 @@
     "secProfessions": "Professions",
     "secProfessionsDesc": "One or several — each with its own services",
     "secCerts": "Certifications",
-    "secCertsDesc": "Courses, degrees or certificates (text, no images)",
+    "secCertsDesc": "Courses, degrees or certificates",
     "secLocation": "Location & coverage",
     "secLocationDesc": "Where you work and where you travel",
     "secContact": "Contact & pricing",
@@ -1220,10 +1224,10 @@
     "addAnotherProfession": "Add another profession",
     "cancel": "Cancel",
     "searchProfession": "Search another profession… e.g. plumber, photographer",
-    "certsHelp": "Add your certifications <strong>per profession</strong>. The name is required; the institution and year are optional. Don't upload images or documents.",
-    "certNamePlaceholder": "Certificate name (e.g. Refrigeration Technician)",
+    "certsHelp": "Add your certifications <strong>by profession</strong>. Enter the name, the institution and the year.",
+    "certNamePlaceholder": "Certificate name (example: Refrigeration Technician)",
     "certRemove": "Remove certification",
-    "certInstitution": "Institution (optional)",
+    "certInstitution": "Institution",
     "certYear": "Year",
     "addCert": "Add certification",
     "addCertTo": "Add certification to {profession}",
@@ -1261,7 +1265,9 @@
     "saved": "Saved",
     "saveError": "Error saving",
     "photoError": "Couldn't upload the photo. Try again.",
-    "photoAlt": "Profile photo"
+    "photoAlt": "Profile photo",
+    "certSave": "Save certification",
+    "certAllRequired": "Fill in the name, institution and year (4 digits)."
   },
   "verificationPanel": {
     "appealMinError": "Tell us what you corrected (at least 10 characters).",
@@ -1307,7 +1313,15 @@
     "supportWhatsappCase": "Support on WhatsApp (Case #{ref})"
   },
   "clientActivity": {
-    "bStatus": { "pending": "Pending", "confirmed": "Confirmed", "in_progress": "In progress", "awaiting_confirmation": "Confirm completion", "completed": "Completed", "cancelled": "Cancelled", "rescheduled": "Rescheduled" },
+    "bStatus": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "in_progress": "In progress",
+      "awaiting_confirmation": "Confirm completion",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "rescheduled": "Rescheduled"
+    },
     "cancelPrompt": "Why do you want to cancel? (the professional is notified)",
     "reportProPrompt": "What happened? (no-show / service not done / other). Your report helps moderation.",
     "reportThanks": "Thanks. Your report was sent to the moderation team.",
@@ -1443,7 +1457,11 @@
     "cancel": "Cancel"
   },
   "supportTickets": {
-    "status": { "open": "Pending", "in_progress": "In progress", "resolved": "Resolved" },
+    "status": {
+      "open": "Pending",
+      "in_progress": "In progress",
+      "resolved": "Resolved"
+    },
     "filterAll": "All",
     "backToTickets": "Back to my tickets",
     "supportName": "ContrataCR Support",

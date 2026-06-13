@@ -117,10 +117,13 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
     Array.isArray(initial.languages) && initial.languages.length > 0 ? initial.languages : ["Español"]
   );
   const [insurers, setInsurers] = useState<string[]>(Array.isArray(initial.insurance_networks) ? initial.insurance_networks : []);
-  // Certifications — TEXT entries only (no images): nombre + institución + año.
+  // Certifications — text entries: nombre + institución + año (all required).
   const [certifications, setCertifications] = useState<Certification[]>(
     Array.isArray(initial.certifications) ? initial.certifications : []
   );
+  // Draft being added (one at a time, per profession). null = no form open.
+  const [certDraft, setCertDraft] = useState<{ profession?: string; name: string; institution: string; year: string } | null>(null);
+  const [certError, setCertError] = useState<string | null>(null);
   // "Me desplazo a donde está el cliente" — a simple yes/no. Their coverage is the
   // zone(s) above; exact travel is coordinated with the client directly.
   const [travels, setTravels] = useState(String(initial.service_type ?? "").includes("mobile"));
@@ -160,12 +163,24 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
     setProfessions((prev) => (prev.length > 1 ? prev.filter((p) => p !== id) : prev));
     touch();
   }
-  function addCertification(profession?: string) {
-    setCertifications((prev) => [...prev, { id: `ct_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, name: "", institution: "", year: "", profession }]);
-    touch();
+  function openCertForm(profession?: string) {
+    setCertError(null);
+    setCertDraft({ profession, name: "", institution: "", year: "" });
   }
-  function updateCertification(id: string, patch: Partial<Certification>) {
-    setCertifications((prev) => prev.map((c) => (c.id === id ? { ...c, ...patch } : c)));
+  // Save the cert being typed — all three fields are REQUIRED, so an incomplete
+  // certification can never be added (the button explicitly SAVES this one).
+  function saveCert() {
+    if (!certDraft) return;
+    const name = certDraft.name.trim();
+    const institution = certDraft.institution.trim();
+    const year = certDraft.year.trim();
+    if (!name || !institution || year.length !== 4) {
+      setCertError(t("certAllRequired"));
+      return;
+    }
+    setCertifications((prev) => [...prev, { id: `ct_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`, name, institution, year, profession: certDraft.profession }]);
+    setCertDraft(null);
+    setCertError(null);
     touch();
   }
   function removeCertification(id: string) {
@@ -442,58 +457,54 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         </div>
       </Section>
 
-      {/* ── Certificaciones (texto, sin imágenes) — POR PROFESIÓN ─────── */}
+      {/* ── Certificaciones — POR PROFESIÓN. Saved certs are read-only rows; a
+             cert is ADDED via an explicit form whose "Guardar certificación"
+             button requires all three fields. ─────── */}
       <Section title={t("secCerts")} desc={t("secCertsDesc")}>
         <p className="text-xs text-[#9ca3af]">
           {t.rich("certsHelp", rich)}
         </p>
         {(professions.length > 0 ? professions : [""]).map((prof) => {
-          // A cert belongs to `prof` when tagged so; legacy untagged certs fall
-          // under the principal profession.
           const certsForProf = certifications.filter((c) => (c.profession || professions[0] || "") === prof);
+          const draftHere = !!certDraft && (certDraft.profession ?? "") === (prof || "");
+          const inputCls = "h-10 w-full rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
           return (
             <div key={prof || "general"} className="flex flex-col gap-2.5 border-t border-[#f3f4f6] pt-3 first:border-t-0 first:pt-0">
               {professions.length > 1 && prof && (
                 <p className="text-xs font-bold uppercase tracking-wide text-[#0089bb]">{getCategoryLabel(prof, locale)}</p>
               )}
+              {/* Saved certs — read-only */}
               {certsForProf.map((c) => (
-                <div key={c.id} className="rounded-xl border border-[#e5e7eb] p-3 flex flex-col gap-2">
-                  <div className="flex items-start gap-2">
-                    <Award className="h-4 w-4 text-[#009FD9] mt-2.5 shrink-0" />
-                    <input
-                      type="text"
-                      value={c.name}
-                      onChange={(e) => updateCertification(c.id!, { name: e.target.value })}
-                      placeholder={t("certNamePlaceholder")}
-                      className="flex-1 h-10 rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
-                    />
-                    <button type="button" onClick={() => removeCertification(c.id!)} className="h-9 w-9 rounded-lg flex items-center justify-center text-[#9ca3af] hover:text-red-500 hover:bg-red-50 transition-colors shrink-0" aria-label={t("certRemove")}>
-                      <X className="h-4 w-4" />
-                    </button>
+                <div key={c.id} className="flex items-center gap-2 rounded-xl bg-[#f9fafb] px-3 py-2">
+                  <Award className="h-4 w-4 text-[#009FD9] shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-[#111827] truncate">{c.name}</p>
+                    <p className="text-xs text-[#6b7280] truncate">{[c.institution, c.year].filter(Boolean).join(" · ")}</p>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-[1fr,7rem] gap-2 pl-6">
-                    <input
-                      type="text"
-                      value={c.institution ?? ""}
-                      onChange={(e) => updateCertification(c.id!, { institution: e.target.value })}
-                      placeholder={t("certInstitution")}
-                      className="h-10 rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
-                    />
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      maxLength={4}
-                      value={c.year ?? ""}
-                      onChange={(e) => updateCertification(c.id!, { year: e.target.value.replace(/\D/g, "").slice(0, 4) })}
-                      placeholder={t("certYear")}
-                      className="h-10 rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
-                    />
-                  </div>
+                  <button type="button" onClick={() => removeCertification(c.id!)} className="h-8 w-8 rounded-lg flex items-center justify-center text-[#9ca3af] hover:text-red-500 hover:bg-red-50 transition-colors shrink-0" aria-label={t("certRemove")}>
+                    <X className="h-4 w-4" />
+                  </button>
                 </div>
               ))}
-              <button type="button" onClick={() => addCertification(prof || undefined)} className="inline-flex items-center gap-1.5 text-sm font-medium text-[#009FD9] hover:underline self-start">
-                <Plus className="h-4 w-4" /> {professions.length > 1 && prof ? t("addCertTo", { profession: getCategoryLabel(prof, locale) }) : t("addCert")}
-              </button>
+              {/* Add form (all fields required) OR the add-another action */}
+              {draftHere ? (
+                <div className="rounded-xl bg-[#f9fafb] p-3 flex flex-col gap-2">
+                  <input type="text" value={certDraft!.name} onChange={(e) => setCertDraft((d) => d && { ...d, name: e.target.value })} placeholder={t("certNamePlaceholder")} className={inputCls} autoFocus />
+                  <div className="grid grid-cols-1 sm:grid-cols-[1fr,7rem] gap-2">
+                    <input type="text" value={certDraft!.institution} onChange={(e) => setCertDraft((d) => d && { ...d, institution: e.target.value })} placeholder={t("certInstitution")} className={inputCls} />
+                    <input type="text" inputMode="numeric" maxLength={4} value={certDraft!.year} onChange={(e) => setCertDraft((d) => d && { ...d, year: e.target.value.replace(/\D/g, "").slice(0, 4) })} placeholder={t("certYear")} className={inputCls} />
+                  </div>
+                  {certError && <p className="text-xs text-red-600">{certError}</p>}
+                  <div className="flex gap-2 pt-0.5">
+                    <Button type="button" size="sm" onClick={saveCert}>{t("certSave")}</Button>
+                    <Button type="button" size="sm" variant="ghost" onClick={() => { setCertDraft(null); setCertError(null); }}>{t("cancel")}</Button>
+                  </div>
+                </div>
+              ) : (
+                <button type="button" onClick={() => openCertForm(prof || undefined)} className="inline-flex items-center gap-1.5 text-sm font-medium text-[#009FD9] hover:underline self-start">
+                  <Plus className="h-4 w-4" /> {professions.length > 1 && prof ? t("addCertTo", { profession: getCategoryLabel(prof, locale) }) : t("addCert")}
+                </button>
+              )}
             </div>
           );
         })}
