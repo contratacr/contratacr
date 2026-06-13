@@ -241,7 +241,7 @@
     "locating": "Getting your location…",
     "useMyLocation": "Use my current location",
     "mapUnavailable": "Map unavailable — set NEXT_PUBLIC_GOOGLE_MAPS_API_KEY. You can still add the place with province and canton.",
-    "markOnMap": "Pin the exact spot on the map (optional)",
+    "markOnMap": "Search the address and pin the spot on the map (optional)",
     "pinPlaced": "Spot pinned on the map",
     "clearPin": "Remove",
     "pinnedTag": "pinned on map",
@@ -249,6 +249,8 @@
     "provincePlaceholder": "Province",
     "cantonPlaceholder": "Canton",
     "addPlace": "Add place",
+    "addThisPlace": "Add this location",
+    "addAnotherPlace": "Add another location",
     "hintCanton": "Choose the canton to save this place.",
     "addedPlaces": "Added places ({count})",
     "removePlace": "Remove place"

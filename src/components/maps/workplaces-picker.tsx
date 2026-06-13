@@ -54,11 +54,14 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200 }: W
   const valueRef = useRef<Workplace[]>(value);
   valueRef.current = value;
 
-  // Draft for the zone being added: provincia/cantón (+ optional name + optional pin).
+  // Draft for the zone being added: provincia/cantón (+ optional pin). The exact
+  // place SEARCH now lives inside the map option (no separate "name" field).
   const [province, setProvince] = useState("");
   const [canton, setCanton] = useState("");
-  const [label, setLabel] = useState("");
   const [showMap, setShowMap] = useState(false);
+  // The draft form is shown while adding; once a zone is committed it collapses
+  // behind an explicit "+ Agregar otra ubicación" action so the flow is clear.
+  const [adding, setAdding] = useState(value.length === 0);
   const [draftPin, setDraftPin] = useState<{ lat: number; lng: number; address: string } | null>(null);
   const draftPinRef = useRef<typeof draftPin>(null);
   draftPinRef.current = draftPin;
@@ -78,9 +81,9 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200 }: W
     const pin = draftPinRef.current;
     const cantonName = getCantonById(canton)?.name ?? "";
     const provinceName = getProvinceById(province)?.name ?? "";
-    // `name` is the READABLE label shown in listings: the pro's chosen label, else
-    // the cantón, provincia. `address` keeps the exact geocoded string for the pin.
-    const readable = label.trim() || [cantonName, provinceName].filter(Boolean).join(", ") || "Ubicación";
+    // `name` is the READABLE label shown in listings: cantón, provincia.
+    // `address` keeps the exact geocoded string for the optional pin.
+    const readable = [cantonName, provinceName].filter(Boolean).join(", ") || "Ubicación";
     onChange([
       ...valueRef.current,
       {
@@ -95,9 +98,9 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200 }: W
     ]);
     setProvince("");
     setCanton("");
-    setLabel("");
     setDraftPin(null);
     setShowMap(false);
+    setAdding(false);
   }
 
   // A pin placed via search / map click / current location → just stores lat/lng.
@@ -266,6 +269,9 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200 }: W
 
   return (
     <div className="flex flex-col gap-2.5">
+      {/* Draft form for ONE zone — shown while adding; collapses after a commit. */}
+      {adding && (
+      <div className="flex flex-col gap-2.5">
       {/* 1 — Structured field FIRST: provincia → cantón (authoritative for search). */}
       <div className="grid grid-cols-2 gap-2">
         <select value={province} onChange={(e) => { setProvince(e.target.value); setCanton(""); }} className={selectCls}>
@@ -277,15 +283,9 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200 }: W
           {cantons.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
       </div>
-      <input
-        type="text"
-        value={label}
-        onChange={(e) => setLabel(e.target.value)}
-        placeholder={t("namePlaceholder")}
-        className="h-11 px-3 rounded-xl border border-[#e5e7eb] bg-white text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
-      />
 
-      {/* 2 — OPTIONAL exact pin (refinement), collapsed by default to stay tidy. */}
+      {/* 2 — OPTIONAL exact pin (refinement). The address SEARCH lives here: turn it
+             on to search an address and drop the pin. Collapsed by default. */}
       {effectiveKey ? (
         <div className="rounded-xl border border-[#eef2f5]">
           <button
@@ -300,6 +300,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200 }: W
           </button>
           {showMap && (
             <div className="flex flex-col gap-2 px-3 pb-3">
+              {/* Address search → drops the pin. */}
               <div ref={pacContainerRef} className="cr-pac w-full" />
               <button type="button" onClick={useMyLocation} disabled={locating} className="self-start inline-flex items-center gap-1.5 text-sm font-medium text-[#009FD9] hover:underline disabled:opacity-60">
                 <MapPin className="h-4 w-4" />
@@ -323,16 +324,19 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200 }: W
         <p className="text-xs text-[#9ca3af]">{t("mapUnavailable")}</p>
       )}
 
-      {/* 3 — Add the zone (enabled once provincia + cantón are chosen). */}
+      {/* 3 — Add THIS zone (the one selected above). Enabled once provincia + cantón
+             are chosen, so it's clear it commits the current selection. */}
       <button
         type="button"
         onClick={commitWorkplace}
         disabled={!province || !canton}
         className="self-start inline-flex items-center gap-1.5 rounded-xl bg-[#009FD9] text-white text-sm font-semibold px-4 py-2.5 hover:bg-[#0089bb] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
       >
-        <Plus className="h-4 w-4" /> {t("addPlace")}
+        <Plus className="h-4 w-4" /> {t("addThisPlace")}
       </button>
       {province && !canton && <p className="text-[11px] text-amber-600 -mt-1">{t("hintCanton")}</p>}
+      </div>
+      )}
 
       {/* Added zones */}
       {value.length > 0 && (
@@ -354,6 +358,17 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200 }: W
             </div>
           ))}
         </div>
+      )}
+
+      {/* Separate, explicit way to add ANOTHER zone (only when the draft is closed). */}
+      {!adding && (
+        <button
+          type="button"
+          onClick={() => setAdding(true)}
+          className="self-start inline-flex items-center gap-1.5 text-sm font-medium text-[#009FD9] hover:underline cursor-pointer"
+        >
+          <Plus className="h-4 w-4" /> {t("addAnotherPlace")}
+        </button>
       )}
     </div>
   );
