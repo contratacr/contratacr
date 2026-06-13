@@ -620,3 +620,14 @@ Booking/project status uses the shared `Badge` variants (all are bordered + tint
 ## 17. Photo controls are identical client ↔ pro
 
 The avatar control is the SAME in both panels: an avatar circle (with an upload spinner overlay) + a **Cambiar foto** button and a **Quitar foto** ghost button (red) when a photo exists, or a single **Agregar foto** button when none. Use a hidden `<input type="file">` driven by a ref; remove clears `avatar_url` in `profiles` + auth metadata. No format/size hint text under the control (the picker enforces it). Don't ship one panel with change-only and the other with change+remove.
+
+## 18. Dashboards share ONE content shell (client = professional)
+
+Both dashboards use the same two-part frame: a left vertical nav rail + a right content column where **each list/activity tab renders inside a `Card` with a titled `CardHeader`** (`<h2>` section title, optional `text-[#6b7280]` subtitle) and a `CardContent` body. The client and professional panels render the SAME `ClientActivity` component for the user's own Solicitudes (`section="bookings"`) and Proyectos (`section="projects"`), so those sections must look identical across panels — never wrap one in a titled Card and leave the other as bare content with a lone `h2`. Resolve the per-tab title/subtitle from a small `SECTION_TITLE`/`SECTION_SUBTITLE` map keyed by the active tab. A settings-style tab (Mi perfil) may keep its own multi-card layout instead of the single shell, since it's a stack of sub-cards rather than one list.
+
+## 19. De-box by default — plain over pills/containers
+
+The serious-tone rule extends to layout: **prefer plain text + a small icon over colored pills, and divider/spacing over bordered containers.** Concretely, across the public profile and "Sobre mí":
+- **Status/most metadata = plain text.** Profession tags render as muted text joined by " · " (not `Badge` pills); "Identidad verificada" is green text + `ShieldCheck` icon (no filled pill); spoken languages and insurers are plain " · " text (no tinted chips). Reserve filled/colored badges for genuinely scannable states (e.g. an active booking status), not for every label.
+- **One treatment per group — no odd boxes among plain rows.** When a section lists several facts (experience, verification, location, prices), present them as borderless `flex justify-between` label→value rows (`flex-col gap-2.5`), NOT a bordered/`divide-y` container sitting next to plain headed sections. If one item in a list is boxed and the rest aren't, that's the bug — make them all plain.
+- **Informational banners aren't always boxes.** The "viewing as a client" preview banner is plain `text-[#6b7280]` + its action button — no tinted container. Use a colored container only when the message is a genuine alert/warning that must interrupt.
