@@ -28,6 +28,17 @@ _Earlier: 2026-06-07 (sprint 24 — fully automatic identity verification: self-
 
 ---
 
+## Sprint 89 (2026-06-13) — Location & coverage simplified (work zones first, travel = toggle)
+
+Made location effortless for non-technical pros (Uber/Airbnb: structured field first, map optional). Touches `workplaces-picker.tsx`, `profile-editor.tsx`, `registro/profesional/page.tsx` + i18n.
+
+- **WorkplacesPicker rebuilt:** provincia → cantón selects FIRST (authoritative for `/buscar`) + optional name, then a **collapsed-by-default "Marcar el punto exacto en el mapa (opcional)"**. A pin stores **lat/lng only** — the reverse-geocode admin derivation/confirmation was **removed** (the selects always win; no duplicate question). Multiple zones, each removable (shows "· con punto en el mapa" when pinned). Dropped `deriveAdmin`/`matchProvinceCanton`.
+- **Travel/coverage → panel toggle:** "Me desplazo a donde está el cliente" sets `service_type` `mobile` and adds **no separate coverage zones** — coverage = the listed zone(s); exact travel coordinated with the client. **`CoverageAreaSelector` retired** from panel + registration.
+- **Registration simplified:** only the zone picker (≥1 zone required, `errWorkplace`); travel enabled later in the panel. `serviceType` defaults to `"fixed"`.
+- **Search intact:** zones' provincia/cantón → `computeSearchAreas(workplaces, [])` → `search_provincias`/`search_cantones`; `/buscar` cantón/provincia filtering unchanged. New flow writes `coverage_areas`/`coverage_provincias`/`coverage_country` **empty**.
+- **Back-compat:** profile-editor `seedZones(initial)` seeds the zone list from `workplaces`, else legacy canton-level `coverage_areas`, else primary `provincia_id`+`canton_id` — so existing pros never lose search presence on re-save. (Whole-province/country legacy coverage isn't a zone and isn't seeded.)
+- **i18n (ES/EN):** workplacesPicker `lead`/`markOnMap`/`pinPlaced`/`clearPin`/`pinnedTag`; profileEditor `travelsLabel`/`travelsDesc`; reframed `workplaces`/`workplacesHelp`/`errWorkplace`. Build green, `tsc` clean.
+
 ## Sprint 88 (2026-06-13) — "Completa tu perfil" redesigned (strength meter + actionable checklist)
 
 Rebuilt `ProfileCompletion` (`src/components/dashboard/pro/profile-completion.tsx`) as a best-in-class profile-completion, inspired by **Airbnb's "complete your listing" checklist + LinkedIn's profile-strength meter**.
