@@ -39,14 +39,15 @@ type Booking = {
   beneficiary_is_minor?: boolean;
 };
 
-const STATUS_VARIANT: Record<BookingStatus, "warning" | "success" | "error" | "default"> = {
+const STATUS_VARIANT: Record<BookingStatus, "warning" | "success" | "error" | "default" | "muted"> = {
   pending: "warning",
   confirmed: "success",
   in_progress: "success",
   awaiting_confirmation: "warning",
   cancelled: "error",
   rescheduled: "warning",
-  completed: "default",
+  // Finalizada = settled/terminal → neutral badge, no prominent brand-blue box.
+  completed: "muted",
 };
 
 export function BookingRequests() {

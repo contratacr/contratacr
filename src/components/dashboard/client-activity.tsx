@@ -83,12 +83,14 @@ const STATUS_ICON: Record<BookingStatus, React.ReactNode> = {
   rescheduled: <Clock className="h-3.5 w-3.5" />,
 };
 
-const STATUS_VARIANT: Record<BookingStatus, "warning" | "success" | "error" | "default"> = {
+const STATUS_VARIANT: Record<BookingStatus, "warning" | "success" | "error" | "default" | "muted"> = {
   pending: "warning",
   confirmed: "success",
   in_progress: "success",
   awaiting_confirmation: "warning",
-  completed: "default",
+  // Finalizada is a settled/terminal state → neutral badge, consistent with the
+  // other statuses (no prominent brand-blue box).
+  completed: "muted",
   cancelled: "error",
   rescheduled: "warning",
 };

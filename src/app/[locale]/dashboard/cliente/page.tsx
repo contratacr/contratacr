@@ -1,11 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import {
   CalendarDays, Bookmark, LogOut, Bell, User, FolderOpen, Briefcase, Search, LifeBuoy,
-  ShieldCheck, Lock,
+  ShieldCheck, Lock, Camera, X,
 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { detectIdType } from "@/lib/cedula";
@@ -39,6 +39,7 @@ export default function ClientDashboardPage() {
   const [profileSaved, setProfileSaved] = useState(false);
   const [photoUploading, setPhotoUploading] = useState(false);
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
+  const photoInputRef = useRef<HTMLInputElement>(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const [supportUnread, setSupportUnread] = useState(0);
 
@@ -137,6 +138,14 @@ export default function ClientDashboardPage() {
     setProfileSaving(false);
     setProfileSaved(true);
     setTimeout(() => setProfileSaved(false), 3000);
+  }
+
+  async function handlePhotoRemove() {
+    if (!user) return;
+    const supabase = createClient();
+    await supabase.from("profiles").update({ avatar_url: null }).eq("id", user.id);
+    await supabase.auth.updateUser({ data: { avatar_url: null } });
+    setProfileAvatar(null);
   }
 
   async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -332,21 +341,34 @@ export default function ClientDashboardPage() {
               {/* Photo + name + phone — one card */}
               <div className="bg-white rounded-2xl border border-[#e5e7eb] p-5 flex flex-col gap-4">
                 <div className="flex items-center gap-4">
-                  <div className="h-16 w-16 rounded-full overflow-hidden bg-[#EBF5FB] flex items-center justify-center shrink-0">
+                  <div className="relative h-16 w-16 rounded-full overflow-hidden bg-[#EBF5FB] flex items-center justify-center shrink-0">
                     {profileAvatar ? (
                       <img src={profileAvatar} alt="Foto" className="h-full w-full object-cover" />
                     ) : (
                       <span className="text-[#009FD9] font-bold text-xl">{getInitials(displayName)}</span>
                     )}
+                    {photoUploading && (
+                      <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center">
+                        <span className="h-5 w-5 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+                      </div>
+                    )}
                   </div>
-                  <div>
-                    <label className="cursor-pointer inline-flex items-center gap-2 text-sm font-medium text-[#009FD9] border border-[#009FD9] rounded-xl px-4 py-2 hover:bg-[#EBF5FB] transition-colors">
-                      {photoUploading ? (
-                        <><span className="h-4 w-4 rounded-full border-2 border-[#009FD9] border-t-transparent animate-spin" />{t("uploading")}</>
-                      ) : t("changePhoto")}
-                      <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={photoUploading} />
-                    </label>
-                  </div>
+                  {/* Change + remove — same control as the professional panel. */}
+                  {profileAvatar ? (
+                    <div className="flex items-center gap-2">
+                      <Button type="button" variant="outline" size="sm" onClick={() => photoInputRef.current?.click()} disabled={photoUploading}>
+                        <Camera className="h-4 w-4" /> {t("changePhoto")}
+                      </Button>
+                      <Button type="button" variant="ghost" size="sm" onClick={handlePhotoRemove} disabled={photoUploading} className="text-red-500 hover:text-red-600">
+                        <X className="h-4 w-4" /> {t("removePhoto")}
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button type="button" variant="outline" size="sm" onClick={() => photoInputRef.current?.click()} disabled={photoUploading}>
+                      <Camera className="h-4 w-4" /> {t("addPhoto")}
+                    </Button>
+                  )}
+                  <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={photoUploading} />
                 </div>
 
                 <div className="border-t border-[#f3f4f6] pt-4 flex flex-col gap-4">

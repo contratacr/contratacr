@@ -1393,6 +1393,8 @@
     "notificationsHeading": "Notificaciones",
     "supportHeading": "Soporte",
     "changePhoto": "Cambiar foto",
+    "addPhoto": "Agregar foto",
+    "removePhoto": "Quitar foto",
     "uploading": "Subiendo...",
     "photoHint": "JPG, PNG o WebP — máx 5MB",
     "fullName": "Nombre completo",
