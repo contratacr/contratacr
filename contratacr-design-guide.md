@@ -187,6 +187,7 @@ A professional is always **ONE card** (`rounded-2xl bg-white border`, never spli
 ### Status filter tabs — no "Todas/Todos"
 - The shared `SOLICITUD_TABS` / `PROYECTO_TABS` (in `status-filter-tabs.tsx`) have **no all-bucket** — the status tabs already cover every lifecycle state, so "Todas/Todos" only added noise. **Both use the SAME three-bucket scheme** so the two panels read identically. **Default to the ACTIVE tab**: solicitudes → **"Activas"**; proyectos → **"Activos"**.
 - Canonical labels (must match the real lifecycle): **solicitudes** = Activas (`pending/confirmed/in_progress/awaiting_confirmation`) · Finalizadas (`completed`) · Canceladas (`cancelled/rescheduled`). **proyectos** = Activos (`open/in_progress/awaiting_confirmation`) · Finalizados (`completed`) · Cancelados (`cancelled`). The finer open-vs-assigned distinction stays visible on each card's status **badge** ("Abierto" vs "En curso · Asignado") rather than as a separate confusing tab.
+- **Soporte (tickets) follows the same rule:** `SupportTickets` shows only the three status tabs **Pendiente / En proceso / Resuelto** (`open` / `in_progress` / `resolved`) — **no "Todas"** — and **defaults to "Pendiente"** (`open`). A filtered-but-empty status shows the `noneInView` line.
 
 ### Request/list cards with actions (e.g. "Solicitudes recibidas")
 - **Vertical hierarchy, not a left/right split:** header (status badge + date) → details → a **footer separated by `border-top`** holding the actions. Never put the action buttons in a `shrink-0` right column — it cramps them on mobile.

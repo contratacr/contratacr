@@ -28,6 +28,10 @@ _Earlier: 2026-06-07 (sprint 24 — fully automatic identity verification: self-
 
 ---
 
+## Sprint 92 (2026-06-13) — Soporte: drop the "Todas" filter tab
+
+`support-tickets.tsx`: removed the **"Todas"** filter — `FILTER_IDS` is now just `["open", "in_progress", "resolved"]` (Pendiente / En proceso / Resuelto) and the default tab is **"open" (Pendiente)**. `filtered` always filters by the selected status; the per-tab unread badge uses `unreadByStatus` only; `filterLabel` drops the all-bucket branch. A filtered-but-empty status still shows `noneInView`. Matches the no-all-bucket convention already used by solicitudes/proyectos. (`filterAll` i18n key now unused.) Build green.
+
 ## Sprint 91 (2026-06-13) — Disponibilidad simplified (no videoconsulta, robust defaults, tidy schedule)
 
 `availability-editor.tsx` (+ dashboard prop, design guide):

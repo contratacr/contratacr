@@ -32,7 +32,9 @@ const STATUS_COLOR: Record<string, string> = {
   in_progress: "bg-blue-100 text-blue-700",
   resolved: "bg-emerald-100 text-emerald-700",
 };
-const FILTER_IDS = ["todas", "open", "in_progress", "resolved"] as const;
+// Status tabs only — no "Todas"; the three statuses cover every ticket and read
+// cleaner. Defaults to "open" (Pendiente).
+const FILTER_IDS = ["open", "in_progress", "resolved"] as const;
 
 export function SupportTickets({ onUnreadChange }: { onUnreadChange?: (n: number) => void }) {
   const { user } = useAuth();
@@ -43,11 +45,11 @@ export function SupportTickets({ onUnreadChange }: { onUnreadChange?: (n: number
     const keys = ["open", "in_progress", "resolved"];
     return keys.includes(s) ? t(`status.${s}` as "status.open" | "status.in_progress" | "status.resolved") : s;
   };
-  const filterLabel = (id: string) => (id === "todas" ? t("filterAll") : statusLabel(id));
+  const filterLabel = (id: string) => statusLabel(id);
   const fmt = (d: string) => new Date(d).toLocaleString(dateLocale, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
   const [items, setItems] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<string>("todas");
+  const [filter, setFilter] = useState<string>("open");
   // Ticket ids with an UNREAD admin reply (from the notifications table) → drives
   // the per-ticket "Nueva respuesta" marker, the per-status badges, and the
   // dashboard Soporte badge (via onUnreadChange).
@@ -139,7 +141,7 @@ export function SupportTickets({ onUnreadChange }: { onUnreadChange?: (n: number
   }
 
   const filtered = useMemo(
-    () => (filter === "todas" ? items : items.filter((t) => t.status === filter)),
+    () => items.filter((t) => t.status === filter),
     [items, filter]
   );
   const unreadByStatus = useMemo(() => {
@@ -233,7 +235,7 @@ export function SupportTickets({ onUnreadChange }: { onUnreadChange?: (n: number
       {items.length > 0 && (
         <div className="flex items-center gap-1.5 mb-4 flex-wrap">
           {FILTER_IDS.map((fid) => {
-            const badge = fid === "todas" ? unread.size : (unreadByStatus[fid] ?? 0);
+            const badge = unreadByStatus[fid] ?? 0;
             return (
               <button
                 key={fid}
