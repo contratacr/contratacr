@@ -681,52 +681,46 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                       )}
 
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* Quick facts — one clean container, divider rows (no per-fact
+                          colored boxes); only the verification status keeps a tint. */}
+                      <div className="rounded-2xl border border-[#e5e7eb] divide-y divide-[#f3f4f6]">
                         {expYears > 0 && (
-                          <div className="bg-[#f3f4f6] rounded-xl p-4">
-                            <p className="text-xs text-[#9ca3af] font-medium mb-1">{t("experienceLabel")}</p>
-                            <p className="text-base font-bold text-[#111827]">{t("yearsValue", { years: expYears })}</p>
+                          <div className="flex items-center justify-between gap-3 px-4 py-3">
+                            <span className="text-sm text-[#6b7280]">{t("experienceLabel")}</span>
+                            <span className="text-sm font-semibold text-[#111827]">{t("yearsValue", { years: expYears })}</span>
                           </div>
                         )}
-                        {professional.verificationStatus === "verified" ? (
-                          <div className="bg-[#f0fdf4] rounded-xl p-4 flex items-center gap-3">
-                            <ShieldCheck className="h-5 w-5 text-[#16a34a] shrink-0" />
-                            <div>
-                              <p className="text-xs text-[#6b7280] font-medium">{t("verification")}</p>
-                              <p className="text-sm font-bold text-[#15803d]">{t("identityVerified")}</p>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="bg-[#fffbeb] border border-[#fde68a] rounded-xl p-4 flex items-center gap-3">
-                            <ShieldAlert className="h-5 w-5 text-[#d97706] shrink-0" />
-                            <div>
-                              <p className="text-xs text-[#6b7280] font-medium">{t("verification")}</p>
-                              <p className="text-sm font-bold text-[#92400e]">{t("identityUnverified")}</p>
-                            </div>
-                          </div>
-                        )}
+                        <div className="flex items-center justify-between gap-3 px-4 py-3">
+                          <span className="text-sm text-[#6b7280]">{t("verification")}</span>
+                          {professional.verificationStatus === "verified" ? (
+                            <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#15803d]">
+                              <ShieldCheck className="h-4 w-4 shrink-0" /> {t("identityVerified")}
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#b45309]">
+                              <ShieldAlert className="h-4 w-4 shrink-0" /> {t("identityUnverified")}
+                            </span>
+                          )}
+                        </div>
                         {locationText && (
-                          <div className="bg-[#f3f4f6] rounded-xl p-4 flex items-center gap-3">
-                            <MapPin className="h-5 w-5 text-[#6b7280] shrink-0" />
-                            <div>
-                              <p className="text-xs text-[#9ca3af] font-medium">{t("location")}</p>
-                              <p className="text-sm font-bold text-[#111827]">{locationText}</p>
-                            </div>
+                          <div className="flex items-center justify-between gap-3 px-4 py-3">
+                            <span className="text-sm text-[#6b7280]">{t("location")}</span>
+                            <span className="text-sm font-medium text-[#111827] text-right">{locationText}</span>
                           </div>
                         )}
                         {professional.pricing && professional.pricing.length > 0 ? (
-                          <div className="bg-[#f3f4f6] rounded-xl p-4 sm:col-span-2">
-                            <p className="text-xs text-[#9ca3af] font-medium mb-2">{t("prices")}</p>
-                            <div className="flex flex-col gap-1">
+                          <div className="px-4 py-3">
+                            <p className="text-sm text-[#6b7280] mb-1">{t("prices")}</p>
+                            <div className="flex flex-col gap-0.5">
                               {professional.pricing.map((tier) => (
                                 <p key={tier.id} className="text-sm font-semibold text-[#111827]">{formatPricingTier(tier)}</p>
                               ))}
                             </div>
                           </div>
                         ) : professional.hourlyRate ? (
-                          <div className="bg-[#f3f4f6] rounded-xl p-4">
-                            <p className="text-xs text-[#9ca3af] font-medium mb-1">{t("baseRate")}</p>
-                            <p className="text-base font-bold text-[#111827]">₡{professional.hourlyRate.toLocaleString(locale === "en" ? "en-US" : "es-CR")}{t("perHour")}</p>
+                          <div className="flex items-center justify-between gap-3 px-4 py-3">
+                            <span className="text-sm text-[#6b7280]">{t("baseRate")}</span>
+                            <span className="text-sm font-semibold text-[#111827]">₡{professional.hourlyRate.toLocaleString(locale === "en" ? "en-US" : "es-CR")}{t("perHour")}</span>
                           </div>
                         ) : null}
                       </div>
