@@ -937,36 +937,7 @@ export default function RegisterProfessionalPage() {
                   {t("howOffer")} <span className="text-red-500">*</span> <span className="text-[#9ca3af] font-normal">{t("chooseBoth")}</span>
                 </label>
                 <div className="flex flex-col gap-2">
-                  <label className={cn(
-                    "flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all",
-                    serviceMobile ? "border-[#009FD9] bg-[#EBF5FB]" : "border-[#e5e7eb] hover:border-[#009FD9]/40"
-                  )}>
-                    <input
-                      type="checkbox"
-                      checked={serviceMobile}
-                      onChange={(e) => {
-                        setServiceMobile(e.target.checked);
-                        setServiceTypeError(null);
-                      }}
-                      className="sr-only"
-                    />
-                    <div className={cn(
-                      "h-5 w-5 rounded border-2 flex items-center justify-center shrink-0 transition-all",
-                      serviceMobile ? "bg-[#009FD9] border-[#009FD9]" : "border-[#d1d5db]"
-                    )}>
-                      {serviceMobile && (
-                        <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
-                    </div>
-                    <Truck className="h-4 w-4 text-[#009FD9] shrink-0" />
-                    <div>
-                      <p className="text-sm font-medium text-[#111827]">{t("mobileMode")}</p>
-                      <p className="text-xs text-[#9ca3af]">{t("mobileModeSub")}</p>
-                    </div>
-                  </label>
-
+                  {/* Fixed-location mode (Panel 1 below) */}
                   <label className={cn(
                     "flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all",
                     serviceFixed ? "border-[#009FD9] bg-[#EBF5FB]" : "border-[#e5e7eb] hover:border-[#009FD9]/40"
@@ -996,36 +967,62 @@ export default function RegisterProfessionalPage() {
                       <p className="text-xs text-[#9ca3af]">{t("fixedModeSub")}</p>
                     </div>
                   </label>
+
+                  {/* Travel/coverage mode (Panel 2 below) */}
+                  <label className={cn(
+                    "flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all",
+                    serviceMobile ? "border-[#009FD9] bg-[#EBF5FB]" : "border-[#e5e7eb] hover:border-[#009FD9]/40"
+                  )}>
+                    <input
+                      type="checkbox"
+                      checked={serviceMobile}
+                      onChange={(e) => {
+                        setServiceMobile(e.target.checked);
+                        setServiceTypeError(null);
+                      }}
+                      className="sr-only"
+                    />
+                    <div className={cn(
+                      "h-5 w-5 rounded border-2 flex items-center justify-center shrink-0 transition-all",
+                      serviceMobile ? "bg-[#009FD9] border-[#009FD9]" : "border-[#d1d5db]"
+                    )}>
+                      {serviceMobile && (
+                        <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </div>
+                    <Truck className="h-4 w-4 text-[#009FD9] shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium text-[#111827]">{t("mobileMode")}</p>
+                      <p className="text-xs text-[#9ca3af]">{t("mobileModeSub")}</p>
+                    </div>
+                  </label>
                 </div>
                 {serviceTypeError && (
                   <p className="text-xs text-red-500 mt-1">{serviceTypeError}</p>
                 )}
 
-                {/* The matching location block(s) appear right under the choice, in a
-                    soft grouped panel (no extra hard borders). */}
-                {(serviceFixed || serviceMobile) && (
-                  <div className="mt-3 rounded-xl bg-[#f9fafb] p-3.5 flex flex-col gap-4">
-                    {serviceFixed && (
-                      <div className="flex flex-col gap-2">
-                        <label className="text-sm font-semibold text-[#111827] flex items-center gap-1.5"><MapPin className="h-4 w-4 text-[#009FD9]" /> {t("workplacesLabel")}</label>
-                        <p className="text-xs text-[#9ca3af]">
-                          {t("workplacesHelp")}
-                        </p>
-                        <WorkplacesPicker value={workplaces} onChange={(n) => { setWorkplaces(n); setLocationError(null); }} />
-                      </div>
-                    )}
-                    {serviceMobile && (
-                      <div className="flex flex-col gap-2">
-                        <label className="text-sm font-semibold text-[#111827] flex items-center gap-1.5"><Truck className="h-4 w-4 text-[#009FD9]" /> {t("coverageLabel")}</label>
-                        <p className="text-xs text-[#9ca3af]">
-                          {t("coverageHelp")}
-                        </p>
-                        <CoverageAreaSelector value={coverageAreas} onChange={(n) => { setCoverageAreas(n); setLocationError(null); }} />
-                      </div>
-                    )}
-                    {locationError && <p className="text-xs text-red-500">{locationError}</p>}
+                {/* PANEL 1 — Fixed location: provincia→cantón first, optional pin.
+                    Its OWN delimited panel, separate from travel coverage. */}
+                {serviceFixed && (
+                  <div className="mt-3 rounded-xl bg-[#f9fafb] p-3.5 flex flex-col gap-2">
+                    <label className="text-sm font-semibold text-[#111827] flex items-center gap-1.5"><MapPin className="h-4 w-4 text-[#009FD9]" /> {t("workplacesLabel")}</label>
+                    <p className="text-xs text-[#9ca3af]">{t("workplacesHelp")}</p>
+                    <WorkplacesPicker value={workplaces} onChange={(n) => { setWorkplaces(n); setLocationError(null); }} />
                   </div>
                 )}
+
+                {/* PANEL 2 — Travel/coverage: its OWN delimited panel, never mixed
+                    with the fixed-location map. */}
+                {serviceMobile && (
+                  <div className="mt-3 rounded-xl bg-[#f9fafb] p-3.5 flex flex-col gap-2">
+                    <label className="text-sm font-semibold text-[#111827] flex items-center gap-1.5"><Truck className="h-4 w-4 text-[#009FD9]" /> {t("coverageLabel")}</label>
+                    <p className="text-xs text-[#9ca3af]">{t("coverageHelp")}</p>
+                    <CoverageAreaSelector value={coverageAreas} onChange={(n) => { setCoverageAreas(n); setLocationError(null); }} />
+                  </div>
+                )}
+                {locationError && <p className="text-xs text-red-500 mt-1">{locationError}</p>}
               </div>
 
               {/* WhatsApp */}

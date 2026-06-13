@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { MapPin, Plus, X, Globe } from "lucide-react";
 import { PROVINCES, getCantonsByProvince, getProvinceById, getCantonById } from "@/lib/data/cr-geography";
 import type { CoverageArea, CoverageLevel } from "@/lib/location";
@@ -17,6 +18,7 @@ export function CoverageAreaSelector({
   value: CoverageArea[];
   onChange: (next: CoverageArea[]) => void;
 }) {
+  const t = useTranslations("coverageSelector");
   const [level, setLevel] = useState<CoverageLevel>("canton");
   const [province, setProvince] = useState("");
   const [canton, setCanton] = useState("");
@@ -53,8 +55,8 @@ export function CoverageAreaSelector({
 
   function labelFor(a: CoverageArea): { icon: React.ReactNode; text: string } {
     const lvl = a.level ?? (a.cantonId ? "canton" : "provincia");
-    if (lvl === "country") return { icon: <Globe className="h-3.5 w-3.5" />, text: "Todo el país" };
-    if (lvl === "provincia") return { icon: <MapPin className="h-3.5 w-3.5" />, text: `Toda ${a.provinceName ?? getProvinceById(a.provinciaId ?? "")?.name}` };
+    if (lvl === "country") return { icon: <Globe className="h-3.5 w-3.5" />, text: t("allCountry") };
+    if (lvl === "provincia") return { icon: <MapPin className="h-3.5 w-3.5" />, text: t("allProvince", { province: a.provinceName ?? getProvinceById(a.provinciaId ?? "")?.name ?? "" }) };
     return { icon: <MapPin className="h-3.5 w-3.5" />, text: `${a.cantonName ?? getCantonById(a.cantonId ?? "")?.name}, ${a.provinceName ?? getProvinceById(a.provinciaId ?? "")?.name}` };
   }
 
@@ -66,9 +68,9 @@ export function CoverageAreaSelector({
       {/* Level selector */}
       <div className="grid grid-cols-3 gap-2">
         {([
-          { id: "canton", label: "Un cantón" },
-          { id: "provincia", label: "Toda una provincia" },
-          { id: "country", label: "Todo el país" },
+          { id: "canton", label: t("levelCanton") },
+          { id: "provincia", label: t("levelProvince") },
+          { id: "country", label: t("levelCountry") },
         ] as const).map((opt) => (
           <button
             key={opt.id}
@@ -86,13 +88,13 @@ export function CoverageAreaSelector({
 
       {level !== "country" && (
         <div className={cn("grid gap-2", level === "canton" ? "grid-cols-2" : "grid-cols-1")}>
-          <select value={province} onChange={(e) => { setProvince(e.target.value); setCanton(""); }} className={selectCls}>
-            <option value="">Provincia</option>
+          <select value={province} onChange={(e) => { setProvince(e.target.value); setCanton(""); }} className={selectCls} aria-label={t("provincePlaceholder")}>
+            <option value="">{t("provincePlaceholder")}</option>
             {PROVINCES.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
           {level === "canton" && (
-            <select value={canton} onChange={(e) => setCanton(e.target.value)} disabled={!province} className={cn(selectCls, !province && "opacity-50 cursor-not-allowed")}>
-              <option value="">Cantón</option>
+            <select value={canton} onChange={(e) => setCanton(e.target.value)} disabled={!province} className={cn(selectCls, !province && "opacity-50 cursor-not-allowed")} aria-label={t("cantonPlaceholder")}>
+              <option value="">{t("cantonPlaceholder")}</option>
               {cantons.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           )}
@@ -105,7 +107,7 @@ export function CoverageAreaSelector({
         disabled={(level === "canton" && (!province || !canton)) || (level === "provincia" && !province) || (level === "country" && hasCountry)}
         className="self-start inline-flex items-center gap-1.5 text-sm font-medium text-[#009FD9] hover:underline disabled:opacity-40"
       >
-        <Plus className="h-4 w-4" /> Agregar zona de cobertura
+        <Plus className="h-4 w-4" /> {t("addZone")}
       </button>
 
       {value.length > 0 && (
@@ -116,7 +118,7 @@ export function CoverageAreaSelector({
               <span key={idx} className="inline-flex items-center gap-1.5 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium pl-2.5 pr-1.5 py-1">
                 {icon}
                 {text}
-                <button type="button" onClick={() => remove(idx)} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors" aria-label="Quitar">
+                <button type="button" onClick={() => remove(idx)} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors" aria-label={t("remove")}>
                   <X className="h-3.5 w-3.5" />
                 </button>
               </span>

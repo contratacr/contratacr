@@ -495,8 +495,8 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
           <label className="text-sm font-medium text-[#374151] block mb-2">{t("howOffer")} <span className="text-red-500">*</span> <span className="text-[#9ca3af] font-normal">{t("chooseBoth")}</span></label>
           <div className="grid grid-cols-2 gap-2">
             {([
-              { id: "mobile", icon: Truck, title: t("mobileTitle"), desc: t("mobileDesc"), active: serviceMobile, toggle: () => { setServiceMobile((v) => !v); touch(); } },
               { id: "fixed", icon: MapPin, title: t("fixedTitle"), desc: t("fixedDesc"), active: serviceFixed, toggle: () => { setServiceFixed((v) => !v); touch(); } },
+              { id: "mobile", icon: Truck, title: t("mobileTitle"), desc: t("mobileDesc"), active: serviceMobile, toggle: () => { setServiceMobile((v) => !v); touch(); } },
             ] as const).map((opt) => (
               <button
                 key={opt.id}
@@ -515,39 +515,33 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
           </div>
         </div>
 
-        {/* The matching location block(s) live in one soft grouped panel right
-            under the work-mode choice — connected, no extra hard borders. */}
-        {(serviceFixed || serviceMobile) && (
-          <div className="rounded-xl bg-[#f9fafb] p-3.5 flex flex-col gap-4">
-            {serviceFixed && (
-              <div>
-                <label className="text-sm font-semibold text-[#111827] flex items-center gap-1.5 mb-1">
-                  <MapPin className="h-4 w-4 text-[#009FD9]" /> {t("workplaces")}
-                </label>
-                <p className="text-xs text-[#9ca3af] mb-2">
-                  {t.rich("workplacesHelp", rich)}
-                </p>
-                <WorkplacesPicker value={workplaces} onChange={(next) => { setWorkplaces(next); touch(); }} mapHeight={168} />
-              </div>
-            )}
+        {/* PANEL 1 — Fixed location: provincia→cantón first, optional pin. Its own
+            delimited panel, separate from travel coverage. */}
+        {serviceFixed && (
+          <div className="rounded-xl bg-[#f9fafb] p-3.5 flex flex-col gap-2">
+            <label className="text-sm font-semibold text-[#111827] flex items-center gap-1.5">
+              <MapPin className="h-4 w-4 text-[#009FD9]" /> {t("workplaces")}
+            </label>
+            <p className="text-xs text-[#9ca3af]">{t.rich("workplacesHelp", rich)}</p>
+            <WorkplacesPicker value={workplaces} onChange={(next) => { setWorkplaces(next); touch(); }} mapHeight={168} />
+          </div>
+        )}
 
-            {serviceMobile && (
-              <div>
-                <label className="text-sm font-semibold text-[#111827] flex items-center gap-1.5 mb-1">
-                  <Truck className="h-4 w-4 text-[#009FD9]" /> {t("coverageAreas")}
-                </label>
-                <p className="text-xs text-[#9ca3af] mb-2">
-                  {t("coverageHelp")}
-                </p>
-                {hasCountryCoverage && hasNarrowerCoverage && (
-                  <div className="flex items-start gap-2 rounded-lg bg-[#fffbeb] border border-[#fde68a] px-3 py-2 mb-2 text-xs text-[#92400e]">
-                    <Globe className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                    <span>{t.rich("countryCoverageWarn", rich)}</span>
-                  </div>
-                )}
-                <CoverageAreaSelector value={coverageAreas} onChange={(next) => { setCoverageAreas(next); touch(); }} />
+        {/* PANEL 2 — Travel/coverage: its own delimited panel, never mixed with
+            the fixed-location map. */}
+        {serviceMobile && (
+          <div className="rounded-xl bg-[#f9fafb] p-3.5 flex flex-col gap-2">
+            <label className="text-sm font-semibold text-[#111827] flex items-center gap-1.5">
+              <Truck className="h-4 w-4 text-[#009FD9]" /> {t("coverageAreas")}
+            </label>
+            <p className="text-xs text-[#9ca3af]">{t("coverageHelp")}</p>
+            {hasCountryCoverage && hasNarrowerCoverage && (
+              <div className="flex items-start gap-2 rounded-lg bg-[#fffbeb] border border-[#fde68a] px-3 py-2 text-xs text-[#92400e]">
+                <Globe className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                <span>{t.rich("countryCoverageWarn", rich)}</span>
               </div>
             )}
+            <CoverageAreaSelector value={coverageAreas} onChange={(next) => { setCoverageAreas(next); touch(); }} />
           </div>
         )}
 

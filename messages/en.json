@@ -225,6 +225,17 @@
     "viewCases": "View success stories ({count})",
     "viewCertifications": "View certifications ({count})"
   },
+  "coverageSelector": {
+    "levelCanton": "A canton",
+    "levelProvince": "A whole province",
+    "levelCountry": "The whole country",
+    "provincePlaceholder": "Province",
+    "cantonPlaceholder": "Canton",
+    "addZone": "Add coverage area",
+    "remove": "Remove",
+    "allCountry": "The whole country",
+    "allProvince": "All of {province}"
+  },
   "locationPicker": {
     "searchPlaceholder": "Search your place's address… e.g. Escazú Centro",
     "mapUnavailable": "Map unavailable — set NEXT_PUBLIC_GOOGLE_MAPS_API_KEY",
@@ -240,14 +251,13 @@
     "locating": "Getting your location…",
     "useMyLocation": "Use my current location",
     "mapUnavailable": "Map unavailable — set NEXT_PUBLIC_GOOGLE_MAPS_API_KEY. You can still add the place with province and canton.",
-    "confirmMarked": "Confirm the province and canton of your marked point:",
-    "addByProvinceCanton": "Add a place by province and canton (or mark it on the map):",
+    "lead": "Choose the province and canton. Optionally, mark the exact spot on the map.",
+    "mapOptional": "Exact spot on the map (optional)",
     "namePlaceholder": "Place name (optional)… e.g. Clínica Bíblica",
     "provincePlaceholder": "Province",
     "cantonPlaceholder": "Canton",
     "addPlace": "Add place",
-    "hintProvinceCanton": "Choose the province and canton to save this place.",
-    "hintCanton": "Choose the canton to save this place.",
+    "hintSelectArea": "Choose the province and canton to add this place.",
     "addedPlaces": "Added places ({count})",
     "removePlace": "Remove place"
   },
