@@ -1487,10 +1487,10 @@
     "sendError": "No se pudo enviar el mensaje.",
     "actionError": "No se pudo procesar. Intenta de nuevo.",
     "yourConversations": "Tus conversaciones con soporte.",
-    "newTicket": "Abrir ticket",
+    "newTicket": "Contactar soporte",
     "empty": "Todavía no tienes tickets",
-    "emptySub": "Si necesitas ayuda, abre un ticket y te respondemos por aquí y por correo.",
-    "openTicket": "Abrir un ticket",
+    "emptySub": "Si necesitas ayuda, contáctanos y te respondemos por aquí y por correo.",
+    "openTicket": "Contactar soporte",
     "noneInView": "No hay tickets en esta vista.",
     "newReply": "Nueva respuesta",
     "updated": "Actualizado {date}"
@@ -1657,7 +1657,7 @@
     "formSub": "Completa el formulario y te respondemos pronto.",
     "ticketCardTitle": "Abre un ticket de soporte",
     "ticketCardBody": "La mejor forma de que demos seguimiento — te respondemos por correo y en tu panel.",
-    "openTicket": "Abrir ticket →",
+    "openTicket": "Contactar soporte →",
     "preferWhatsapp": "¿Prefieres WhatsApp?",
     "writeUs": "Escríbenos",
     "hoursTitle": "Horario de atención",
@@ -1982,7 +1982,7 @@
     "faq7A": "Sí. Tu número de teléfono y correo nunca son visibles públicamente en la plataforma. Cuando haces contacto con un profesional, lo haces vía WhatsApp de forma directa. Cumplimos con la Ley 8968 de Protección de Datos de Costa Rica.",
     "contactTitle": "¿No encontraste lo que buscas?",
     "contactSubtitle": "Nuestro equipo responde rápido.",
-    "contactCta": "Abrir ticket de soporte",
+    "contactCta": "Contactar soporte",
     "contactWhatsapp": "¿Prefieres WhatsApp? Escríbenos"
   },
   "atraerClientes": {

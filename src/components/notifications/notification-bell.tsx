@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { cn, formatRelativeTime } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
-import { notificationHref, notificationContext, notificationContextLabel } from "@/lib/notification-link";
+import { notificationHref } from "@/lib/notification-link";
 
 type Notification = {
   id: string;
@@ -210,18 +210,8 @@ export function NotificationBell() {
                           <span className="mt-1.5 h-2 w-2 rounded-full bg-[#319278] shrink-0" />
                         )}
                         <div className={cn("min-w-0", !n.read ? "" : "ml-4")}>
-                          {notificationContextLabel(n.type) && (
-                            <span className={cn(
-                              "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold mb-1",
-                              notificationContext(n.type) === "professional"
-                                ? "bg-[#EBF5FB] text-[#0077a8]"
-                                : notificationContext(n.type) === "support"
-                                ? "bg-[#dcfce7] text-[#15803d]"
-                                : "bg-[#f3e8ff] text-[#7c3aed]"
-                            )}>
-                              {notificationContextLabel(n.type)}
-                            </span>
-                          )}
+                          {/* No role tag — the title/message already make the
+                              context clear; clicking still routes correctly. */}
                           <p className="text-sm font-medium text-[#111827]">{n.title}</p>
                           <p className="text-xs text-[#6b7280] mt-0.5">{n.message}</p>
                           <p className="text-xs text-[#9ca3af] mt-1">
