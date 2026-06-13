@@ -27,17 +27,6 @@ function toMins(t: string): number {
   return h * 60 + m;
 }
 
-// Part of the day a slot falls in — used to visually group the chips so a long
-// list (5:00, 5:15, 5:30…) is easy to scan. morning <12h · afternoon 12–18h · evening ≥18h.
-const DAY_PARTS = ["morning", "afternoon", "evening"] as const;
-type DayPart = (typeof DAY_PARTS)[number];
-function partOfDay(time: string): DayPart {
-  const h = Math.floor(toMins(time) / 60);
-  if (h < 12) return "morning";
-  if (h < 18) return "afternoon";
-  return "evening";
-}
-
 function prettyDate(iso: string, dateLocale: string): string {
   const [y, m, d] = iso.split("-").map(Number);
   return new Date(y, m - 1, d).toLocaleDateString(dateLocale, {
@@ -51,12 +40,32 @@ function todayISO(): string {
   return crTodayISO();
 }
 
+const DAY_END_MIN = 23 * 60 + 30; // last selectable time on the 30-min grid
+
 // Sensible default for the "hora puntual" picker: today → the next rounded full
 // hour (same logic as "Desde"); a future date → 8:00 a.m. (its next full hour would
 // be midnight). The picker's `min` + the insert check still enforce the CR 15-min lead.
 function puntualDefault(dateISO: string): string {
   const t = nextFullHourCR(dateISO);
   return t === "00:00" ? "08:00" : t;
+}
+
+// Default "Desde": a future day starts at 8:00 a.m.; today starts at the next
+// valid rounded full hour (CR, respects the lead). Never returns midnight.
+function defaultStartFor(dateISO: string): string {
+  const floor = nextFullHourCR(dateISO); // future → "00:00"; today → next full hour
+  return floor === "00:00" ? "08:00" : floor;
+}
+
+// Default "Hasta" for a given start — ALWAYS strictly after it, so the auto-defaults
+// can never trip the "Hasta debe ser después de Desde" validation. Aims at the 5:00
+// p.m. workday end, but for a late start it's at least one hour later (capped to the
+// end of the grid).
+function defaultEndFor(start: string): string {
+  const s = toMins(start);
+  const end = Math.min(Math.max(17 * 60, s + 60), DAY_END_MIN);
+  // Near midnight there may be no room left after `s`; keep it valid by one step.
+  return hhmm(end > s ? end : Math.min(s + 30, DAY_END_MIN));
 }
 
 type Place = { id?: string; name: string };
@@ -72,19 +81,17 @@ interface AvailabilityEditorProps {
   coverageAreas?: Coverage[];
   /** The pro's professions (category ids). Schedules are tied to a profession. */
   professions?: string[];
-  initialVideoconsulta?: boolean;
   initialAllowPhoneCall?: boolean;
   onSaved?: () => void;
 }
 
-export function AvailabilityEditor({ professionalId, initialPublic = true, workplaces = [], coverageAreas = [], professions = [], initialVideoconsulta = false, initialAllowPhoneCall = false, onSaved }: AvailabilityEditorProps) {
+export function AvailabilityEditor({ professionalId, initialPublic = true, workplaces = [], coverageAreas = [], professions = [], initialAllowPhoneCall = false, onSaved }: AvailabilityEditorProps) {
   const locale = useLocale();
   const t = useTranslations("availabilityEditor");
   const dateLocale = locale === "en" ? "en-US" : "es-CR";
   const intervalLabel = (v: number) => t(v === 0 ? "intervalCustom" : (`interval${v}` as "interval30" | "interval60" | "interval120"));
   const rich = { strong: (c: React.ReactNode) => <strong>{c}</strong> };
   const [isPublic, setIsPublic] = useState(initialPublic);
-  const [videoconsulta, setVideoconsulta] = useState(initialVideoconsulta);
   const [allowPhoneCall, setAllowPhoneCall] = useState(initialAllowPhoneCall);
 
   async function toggleAllowPhoneCall() {
@@ -113,9 +120,8 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
           : t("covCanton", { canton: `${c.cantonName ?? "Zona"}${c.provinceName ? `, ${c.provinceName}` : ""}` });
       opts.push({ id: `cov_${key}`, label });
     });
-    if (videoconsulta) opts.push({ id: VIDEO_LOC, label: t("videoconsulta") });
     return opts;
-  }, [workplaces, coverageAreas, videoconsulta, t]);
+  }, [workplaces, coverageAreas, t]);
   const [genLocation, setGenLocation] = useState("");
 
   // Profession this schedule is for (item 1). Each schedule belongs to a
@@ -149,14 +155,6 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
     return locLabelById.get(id) ?? workplaces.find((w) => w.id === id)?.name ?? t("locationFallback");
   }
 
-  async function toggleVideoconsulta() {
-    const next = !videoconsulta;
-    setVideoconsulta(next);
-    if (!next && genLocation === VIDEO_LOC) setGenLocation(GENERAL_LOC);
-    const supabase = createClient();
-    await supabase.from("professionals").update({ videoconsulta: next }).eq("id", professionalId);
-    onSaved?.();
-  }
   const [slots, setSlots] = useState<Slot[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingVisibility, setSavingVisibility] = useState(false);
@@ -170,13 +168,12 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
     return () => document.removeEventListener("keydown", onKey);
   }, [showPrivateConfirm]);
 
-  // Generator form. Defaults to a standard 8:00 a.m. – 5:00 p.m. workday that the
-  // pro can adjust freely. For TODAY, the start floor (next rounded full hour) is
-  // applied by the effect below so a past hour is never offered.
-  const initialStart = "08:00";
+  // Generator form. Future day → 8:00 a.m.–5:00 p.m.; today → next valid time with a
+  // sensible later end. `defaultEndFor` guarantees the end is ALWAYS after the start,
+  // so the auto-defaults can never trip the "Hasta debe ser después" validation.
   const [genDate, setGenDate] = useState(todayISO());
-  const [genStart, setGenStart] = useState(initialStart);
-  const [genEnd, setGenEnd] = useState("17:00");
+  const [genStart, setGenStart] = useState(() => defaultStartFor(todayISO()));
+  const [genEnd, setGenEnd] = useState(() => defaultEndFor(defaultStartFor(todayISO())));
   const [interval, setInterval] = useState(60);
   const [customInterval, setCustomInterval] = useState(45);
   const [singleTime, setSingleTime] = useState(puntualDefault(todayISO()));
@@ -353,37 +350,40 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
   const isToday = genDate === todayISO();
   const startMin = isToday ? nextFullHourCR(genDate) : undefined; // Desde / hora puntual floor
   const startMinMins = startMin ? toMins(startMin) : 0;
-  const DAY_END = 23 * 60 + 30; // last selectable start on a 30-min grid
 
   // "Hasta" can NEVER be ≤ "Desde": its options start one grid step after "Desde"
   // (and never before today's lead floor). The invalid combo can't be picked.
   const hastaMin = hhmm(Math.min(Math.max(toMins(genStart) + 30, startMinMins), 24 * 60 - 30));
 
-  // Picking "Desde" auto-bumps "Hasta" to stay valid (default span = 1 hour).
+  // Picking "Desde" auto-bumps "Hasta" so the range stays valid.
   function setDesde(v: string) {
     setPastError(null);
     setGenStart(v);
-    if (toMins(genEnd) <= toMins(v)) setGenEnd(hhmm(Math.min(toMins(v) + 60, DAY_END + 30)));
+    if (toMins(genEnd) <= toMins(v)) setGenEnd(defaultEndFor(v));
   }
 
   // Range validity drives the single inline "Hasta" error + the disabled "Generar".
   const rangeInvalid = toMins(genEnd) <= toMins(genStart);
-  // Keep the fields at valid values so the pro never hits an error. Bump anything
-  // below the next full hour (covers time passing + switching back to today).
+  // Keep the fields valid as time passes / on switching back to today: bump "Desde"
+  // up to the next full hour AND bump "Hasta" with it so the defaults never go stale
+  // into an invalid range (this was the false-error bug).
   useEffect(() => {
-    if (startMin && toMins(genStart) < toMins(startMin)) setGenStart(startMin);
-    if (startMin && toMins(singleTime) < toMins(startMin)) setSingleTime(startMin);
+    if (!startMin) return;
+    if (toMins(genStart) < toMins(startMin)) {
+      setGenStart(startMin);
+      if (toMins(genEnd) <= toMins(startMin)) setGenEnd(defaultEndFor(startMin));
+    }
+    if (toMins(singleTime) < toMins(startMin)) setSingleTime(startMin);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startMin]);
 
   return (
     <div className="flex flex-col gap-4">
-      {/* ── STEP 1 — ONE control (privada vs pública) decides everything below.
-             Private = WhatsApp-only (no agenda); pública = agenda publicada.
-             WhatsApp is always available. ── */}
-      <div className="rounded-xl border border-[#e5e7eb] p-4">
-        <div className="flex items-center gap-2.5 mb-3">
-          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#009FD9] text-white text-xs font-bold shrink-0">1</span>
+      {/* ── ONE control (privada vs pública) decides everything below. Private =
+             WhatsApp-only (no agenda); pública = agenda publicada. WhatsApp is
+             always available. ── */}
+      <div className="rounded-2xl border border-[#e5e7eb] p-4 sm:p-5">
+        <div className="flex items-center gap-2 mb-3">
           <h3 className="text-sm font-semibold text-[#111827]">{t("contactHeading")}</h3>
           {savingVisibility && <Loader2 className="h-4 w-4 animate-spin text-[#009FD9] ml-auto" />}
         </div>
@@ -426,34 +426,14 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
             <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", allowPhoneCall ? "left-5" : "left-0.5")} />
           </button>
         </div>
-
-        {/* Videoconsulta — only relevant when the agenda is PUBLIC (hidden in private) */}
-        {isPublic && (
-          <div className="flex items-center justify-between gap-4 mt-4 pt-4 border-t border-[#f3f4f6]">
-            <div>
-              <p className="text-sm font-semibold text-[#111827]">{t("videoLabel")}</p>
-              <p className="text-xs text-[#6b7280]">{t("videoDesc")}</p>
-            </div>
-            <button
-              type="button"
-              onClick={toggleVideoconsulta}
-              className={cn("relative h-6 w-11 rounded-full transition-all shrink-0", videoconsulta ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
-              aria-label={t("videoconsulta")}
-            >
-              <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", videoconsulta ? "left-5" : "left-0.5")} />
-            </button>
-          </div>
-        )}
       </div>
 
       {/* Public agenda → add schedules + the list. Private → a short note. */}
       {isPublic ? (<>
-      {/* ── STEP 2 — Slot generator (public agenda only) ──────────── */}
-      <div className="rounded-xl border border-[#e5e7eb] p-4">
-        <div className="flex items-center gap-2.5 mb-4">
-          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#009FD9] text-white text-xs font-bold shrink-0">2</span>
-          <h3 className="text-sm font-semibold text-[#111827]">{t("addHeading")}</h3>
-        </div>
+      {/* ── Slot generator (public agenda only) ──────────── */}
+      <div className="rounded-2xl border border-[#e5e7eb] p-4 sm:p-5">
+        <h3 className="text-sm font-semibold text-[#111827] mb-1">{t("addHeading")}</h3>
+        <p className="text-xs text-[#6b7280] mb-4">{t("addSub")}</p>
 
         {locationOptions.length === 0 ? (
           <div className="rounded-xl bg-[#fffbeb] border border-[#fde68a] p-4 text-sm text-[#92400e]">
@@ -483,7 +463,17 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
           <div className="flex flex-wrap items-end gap-3">
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-[#6b7280]">{t("date")}</label>
-              <input type="date" min={todayISO()} value={genDate} onChange={(e) => { setGenDate(e.target.value); setPastError(null); setSingleTime(puntualDefault(e.target.value)); }} className={cn(inputCls, "h-10")} />
+              <input type="date" min={todayISO()} value={genDate} onChange={(e) => {
+                const d = e.target.value;
+                setGenDate(d);
+                setPastError(null);
+                // Reset to valid defaults for the chosen day (future 8–5; today next
+                // valid time + sensible later end) so the range is never invalid.
+                const s = defaultStartFor(d);
+                setGenStart(s);
+                setGenEnd(defaultEndFor(s));
+                setSingleTime(puntualDefault(d));
+              }} className={cn(inputCls, "h-10")} />
             </div>
             <TimeSelect label={t("from")} min={startMin} value={genStart} onChange={setDesde} className="w-32" />
             {/* Visual "→" between the two pickers. */}
@@ -554,7 +544,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
           <div className="flex flex-col gap-3">
             {grouped.map(([date, list]) => {
               // Within a day, group by (profesión + ubicación) so a pro with several
-              // professions/locations can tell each block apart (item 2).
+              // professions/locations can tell each block apart.
               const subMap = new Map<string, Slot[]>();
               for (const s of list) {
                 const key = `${s.category_id ?? ""}|${s.location_id ?? ""}`;
@@ -563,53 +553,37 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
               }
               const subgroups = Array.from(subMap.entries());
               return (
-                <div key={date} className="rounded-xl border border-[#e5e7eb] p-4">
-                  <div className="flex items-center justify-between mb-2.5">
+                <div key={date} className="rounded-2xl border border-[#e5e7eb] overflow-hidden">
+                  {/* Day header */}
+                  <div className="flex items-center justify-between gap-3 px-4 py-2.5 bg-[#f9fafb] border-b border-[#eef2f5]">
                     <span className="text-sm font-semibold text-[#111827] capitalize">{prettyDate(date, dateLocale)}</span>
-                    <button onClick={() => removeDate(date)} className="text-xs text-[#9ca3af] hover:text-red-500 transition-colors cursor-pointer">
+                    <button onClick={() => removeDate(date)} className="text-xs font-medium text-[#9ca3af] hover:text-red-500 transition-colors cursor-pointer">
                       {t("removeDay")}
                     </button>
                   </div>
-                  <div className="flex flex-col gap-2.5">
+                  <div className="p-3 sm:p-4 flex flex-col gap-3">
                     {subgroups.map(([key, sg]) => {
                       const cat = sg[0].category_id;
                       const loc = sg[0].location_id ?? null;
-                      const tags = [
-                        cat ? getCategoryLabel(cat, locale) : null,
-                        loc ? locationLabel(loc) : null,
-                      ].filter(Boolean);
                       return (
-                        <div key={key}>
-                          {tags.length > 0 && (
-                            <p className="text-xs font-medium text-[#374151] mb-1.5 flex items-center gap-1">
-                              {cat && <span className="rounded bg-[#EBF5FB] text-[#0089bb] px-1.5 py-0.5">{getCategoryLabel(cat, locale)}</span>}
-                              {loc && <span className="inline-flex items-center gap-1 rounded bg-[#f3f4f6] text-[#374151] px-1.5 py-0.5"><MapPin className="h-3 w-3" />{locationLabel(loc)}</span>}
-                            </p>
+                        <div key={key} className="flex flex-col gap-2">
+                          {(cat || loc) && (
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              {cat && <span className="rounded-md bg-[#EBF5FB] text-[#0089bb] text-[11px] font-medium px-1.5 py-0.5">{getCategoryLabel(cat, locale)}</span>}
+                              {loc && <span className="inline-flex items-center gap-1 rounded-md bg-[#f3f4f6] text-[#374151] text-[11px] font-medium px-1.5 py-0.5"><MapPin className="h-3 w-3" />{locationLabel(loc)}</span>}
+                            </div>
                           )}
-                          {/* Slots grouped by Mañana / Tarde / Noche so a long list is
-                              easy to scan; each block only renders when it has slots. */}
-                          <div className="flex flex-col gap-1.5">
-                            {DAY_PARTS.map((part) => {
-                              const partSlots = sg.filter((s) => partOfDay(s.slot_time) === part);
-                              if (partSlots.length === 0) return null;
-                              return (
-                                <div key={part}>
-                                  <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9ca3af] mb-1.5">{t(part)}</p>
-                                  {/* Even grid → every chip is the SAME width; 2 cols on
-                                      mobile so the FULL time fits (no truncation). */}
-                                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                                    {partSlots.map((s) => (
-                                      <span key={s.id ?? `${s.slot_time}-${s.location_id ?? ""}-${s.category_id ?? ""}`} className="group inline-flex items-center justify-between gap-1 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-[13px] font-medium tabular-nums whitespace-nowrap pl-2.5 pr-1 py-1.5">
-                                        {to12h(s.slot_time)}
-                                        <button onClick={() => removeSlot(s)} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors cursor-pointer shrink-0" aria-label={t("remove")}>
-                                          <X className="h-3.5 w-3.5" />
-                                        </button>
-                                      </span>
-                                    ))}
-                                  </div>
-                                </div>
-                              );
-                            })}
+                          {/* Uniform time chips: an even grid → every chip is the SAME
+                              width; the full time always fits (no truncation). */}
+                          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+                            {sg.map((s) => (
+                              <span key={s.id ?? `${s.slot_time}-${s.location_id ?? ""}-${s.category_id ?? ""}`} className="group inline-flex items-center justify-center gap-1 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-[13px] font-medium tabular-nums whitespace-nowrap pl-2 pr-1 py-1.5">
+                                {to12h(s.slot_time)}
+                                <button onClick={() => removeSlot(s)} className="rounded-md p-0.5 text-[#0089bb]/60 hover:text-[#0089bb] hover:bg-[#009FD9]/20 transition-colors cursor-pointer shrink-0" aria-label={t("remove")}>
+                                  <X className="h-3.5 w-3.5" />
+                                </button>
+                              </span>
+                            ))}
                           </div>
                         </div>
                       );

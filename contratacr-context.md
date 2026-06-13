@@ -28,6 +28,14 @@ _Earlier: 2026-06-07 (sprint 24 — fully automatic identity verification: self-
 
 ---
 
+## Sprint 91 (2026-06-13) — Disponibilidad simplified (no videoconsulta, robust defaults, tidy schedule)
+
+`availability-editor.tsx` (+ dashboard prop, design guide):
+- **Removed "Ofreces videoconsulta" entirely** — toggle, state, `toggleVideoconsulta`, the location option, and the `initialVideoconsulta` prop. **Back-compat kept:** old slots with `location_id = "videoconsulta"` still render with a label in the editor (`VIDEO_LOC` branch in `locationLabel`) and on the public schedule; the `professionals.videoconsulta` column is left untouched (no migration, no data loss).
+- **Robust default times (never a false validation error):** added `defaultStartFor(date)` (future → 08:00; today → next valid rounded full hour) and `defaultEndFor(start)` (**always strictly after** start; aims at 17:00, ≥ start+1h for a late start, capped 23:30). Wired into initial state, the date-change handler, the today-floor effect, and `setDesde`. **Fixed bug:** today's floor used to push "Desde" past the fixed 17:00 "Hasta" → false "Hasta debe ser después" error; now "Hasta" bumps with "Desde" everywhere. The `end <= start` check still exists and fires only on real invalid user input.
+- **Cleaner UI:** dropped the numbered STEP 1/STEP 2 badges (plain headings, `rounded-2xl` cards). **Upcoming schedule redesigned** — tidy per-day cards (soft `bg-[#f9fafb]` header bar with date + "Quitar día"), optional profession/location tags, and **uniform same-width time chips** in an even grid; removed the Mañana/Tarde/Noche sub-grouping (and `DAY_PARTS`/`partOfDay`) for simplicity.
+- Privada logic unchanged (off by default; controls only the published schedule; WhatsApp/call independent). Build green, `tsc` clean.
+
 ## Sprint 90 (2026-06-13) — Servicios redesigned (one card per profession)
 
 Made the profession → services structure instantly clear (`services-editor.tsx` + i18n). Replaced the numbered **STEP 1 (profesiones) / STEP 2 (servicios)** layout with **one card per profession**:
