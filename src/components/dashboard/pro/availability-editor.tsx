@@ -459,6 +459,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
         ) : (
         <div className="flex flex-col gap-4">
           {/* Paso 1 — ¿para qué servicio y en qué ubicación? */}
+          <p className="text-[11px] font-bold uppercase tracking-wide text-[#9ca3af]">{t("genStep1")}</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {professionOptions.length > 1 && (
               <div className="flex flex-col gap-1">
@@ -477,6 +478,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
           </div>
 
           {/* Paso 2 — el rango horario. */}
+          <p className="text-[11px] font-bold uppercase tracking-wide text-[#9ca3af] pt-3 border-t border-[#f3f4f6]">{t("genStep2")}</p>
           <div className="flex flex-wrap items-end gap-3">
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-[#6b7280]">{t("date")}</label>

@@ -1160,6 +1160,8 @@
     "needLocation": "To create hours you need at least one location. Add a <strong>workplace</strong> in your profile or enable <strong>video consultations</strong> above. Hours are defined per location.",
     "professionService": "Profession / service",
     "scheduleLocation": "Location for this schedule",
+    "genStep1": "1. Service and location",
+    "genStep2": "2. Day and time",
     "date": "Date",
     "from": "From",
     "to": "To",

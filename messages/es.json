@@ -1160,6 +1160,8 @@
     "needLocation": "Para crear horarios necesitas al menos una ubicación. Agrega un <strong>lugar de trabajo</strong> en tu perfil o activa <strong>videoconsulta</strong> arriba. Los horarios se definen por ubicación.",
     "professionService": "Profesión / servicio",
     "scheduleLocation": "Ubicación de este horario",
+    "genStep1": "1. Servicio y ubicación",
+    "genStep2": "2. Día y horario",
     "date": "Fecha",
     "from": "Desde",
     "to": "Hasta",
