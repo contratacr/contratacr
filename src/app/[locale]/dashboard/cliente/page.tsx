@@ -12,6 +12,7 @@ import { detectIdType } from "@/lib/cedula";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
@@ -243,6 +244,21 @@ export default function ClientDashboardPage() {
   const inputClass =
     "w-full h-10 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
 
+  // Titled Card shell (same as the professional panel) for the list/activity tabs
+  // so projects/solicitudes look identical across both panels. Profile keeps its
+  // own multi-card settings layout.
+  const SECTION_TITLE: Partial<Record<Tab, string>> = {
+    bookings: t("bookingsHeading"),
+    projects: t("projectsHeading"),
+    saved: t("savedHeading"),
+    notifications: t("notificationsHeading"),
+    soporte: t("supportHeading"),
+  };
+  const SECTION_SUBTITLE: Partial<Record<Tab, string>> = {
+    bookings: t("bookingsSubtitle"),
+    projects: t("projectsSubtitle"),
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
       <Navbar />
@@ -309,30 +325,24 @@ export default function ClientDashboardPage() {
 
             <div className="flex-1 min-w-0">
 
-          {/* SENT SOLICITUDES / PUBLISHED PROJECTS / SAVED — shared client activity */}
-          {activeTab === "bookings" && <ClientActivity section="bookings" />}
-          {activeTab === "projects" && <ClientActivity section="projects" />}
-          {activeTab === "saved" && (
-            <div>
-              <h2 className="text-lg font-semibold text-[#111827] mb-4">{t("savedHeading")}</h2>
-              <ClientActivity section="saved" />
-            </div>
-          )}
-
-          {/* NOTIFICATIONS TAB */}
-          {activeTab === "notifications" && (
-            <div>
-              <h2 className="text-lg font-semibold text-[#111827] mb-4">{t("notificationsHeading")}</h2>
-              <NotificationsList />
-            </div>
-          )}
-
-          {/* SOPORTE TAB */}
-          {activeTab === "soporte" && (
-            <div>
-              <h2 className="text-lg font-semibold text-[#111827] mb-4">{t("supportHeading")}</h2>
-              <SupportTickets onUnreadChange={setSupportUnread} />
-            </div>
+          {/* List/activity tabs share ONE titled Card shell — identical to the
+              professional panel, so Proyectos/Solicitudes match across both. */}
+          {activeTab !== "profile" && (
+            <Card>
+              <CardHeader className="px-6 pt-6 pb-4">
+                <h2 className="text-lg font-semibold text-[#111827]">{SECTION_TITLE[activeTab]}</h2>
+                {SECTION_SUBTITLE[activeTab] && (
+                  <p className="text-sm text-[#6b7280] mt-0.5">{SECTION_SUBTITLE[activeTab]}</p>
+                )}
+              </CardHeader>
+              <CardContent className="px-6 pb-6">
+                {activeTab === "bookings" && <ClientActivity section="bookings" />}
+                {activeTab === "projects" && <ClientActivity section="projects" />}
+                {activeTab === "saved" && <ClientActivity section="saved" />}
+                {activeTab === "notifications" && <NotificationsList />}
+                {activeTab === "soporte" && <SupportTickets onUnreadChange={setSupportUnread} />}
+              </CardContent>
+            </Card>
           )}
 
           {/* PROFILE TAB */}
