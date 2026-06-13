@@ -1,13 +1,17 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { CheckCircle2, Circle, ChevronRight, Sparkles } from "lucide-react";
+import { Check, ChevronRight, ShieldCheck } from "lucide-react";
 import { anyHealthCategory } from "@/lib/data/categories";
 
-// Context-aware profile-completion checklist. Goal: minimal signup, then guide
-// the pro to finish. Only counts fields that APPLY (aseguradoras only for health;
-// Spanish-only and "I have none" are never penalized). Each item is benefit-framed
-// so the pro understands WHY it helps, and links to the tab that completes it.
+// Context-aware profile-completion (inspired by Airbnb's "complete your listing"
+// checklist + LinkedIn's profile-strength meter). The PERCENT counts only the
+// content the pro fully controls, so finishing the checklist always reaches 100%.
+// Identity verification is approval-gated (and can't auto-pass for non-padrón IDs),
+// so it's surfaced as a SEPARATE recommended action and never blocks 100%. Only
+// fields that APPLY are listed (aseguradoras only for health; Spanish-only and
+// "I have none" are never penalized). Each item is benefit-framed and jumps to the
+// exact tab that completes it.
 
 type ProRecord = Record<string, unknown>;
 
@@ -22,18 +26,23 @@ function hasLen(v: unknown): boolean {
   return Array.isArray(v) && v.length > 0;
 }
 
-export function computeCompletion(pro: ProRecord): { percent: number; items: CompletionItem[] } {
+export function computeCompletion(pro: ProRecord): {
+  percent: number;
+  items: CompletionItem[];
+  verified: boolean;
+} {
   const profiles = (pro.profiles ?? {}) as { avatar_url?: string | null };
   const professions = (pro.professions as string[]) ?? [];
-  const serviceType = String(pro.service_type ?? "");
-  const isMobile = serviceType.includes("mobile");
-  const isFixed = serviceType.includes("fixed");
 
+  // Location is "done" as soon as ANY location signal exists — independent of how
+  // service_type is stored, so it never sticks for a pro who clearly set a zone.
   const hasLocation =
-    (isFixed && hasLen(pro.workplaces)) ||
-    (isMobile && (hasLen(pro.coverage_areas) || hasLen(pro.coverage_provincias) || !!pro.coverage_country)) ||
-    // Legacy/simple: a primary provincia is enough.
-    !!pro.provincia_id;
+    hasLen(pro.workplaces) ||
+    hasLen(pro.coverage_areas) ||
+    hasLen(pro.coverage_provincias) ||
+    !!pro.coverage_country ||
+    !!pro.provincia_id ||
+    !!pro.canton_id;
 
   const items: CompletionItem[] = [
     { key: "photo", done: !!profiles.avatar_url, tab: "profile" },
@@ -41,7 +50,6 @@ export function computeCompletion(pro: ProRecord): { percent: number; items: Com
     { key: "services", done: hasLen(pro.services), tab: "services" },
     { key: "location", done: hasLocation, tab: "profile" },
     { key: "whatsapp", done: typeof pro.whatsapp === "string" && pro.whatsapp.trim().length > 0, tab: "profile" },
-    { key: "verification", done: pro.verification_status === "verified", tab: "verificacion" },
   ];
 
   // Aseguradoras apply ONLY to health pros; for everyone else it doesn't exist,
@@ -52,71 +60,112 @@ export function computeCompletion(pro: ProRecord): { percent: number; items: Com
 
   const done = items.filter((i) => i.done).length;
   const percent = Math.round((done / items.length) * 100);
-  return { percent, items };
+  return { percent, items, verified: pro.verification_status === "verified" };
 }
 
 export function ProfileCompletion({ pro, onGo }: { pro: ProRecord; onGo: (tab: string) => void }) {
   const t = useTranslations("proPanel.completion");
-  const { percent, items } = computeCompletion(pro);
+  const { percent, items, verified } = computeCompletion(pro);
   const missing = items.filter((i) => !i.done);
+  const doneItems = items.filter((i) => i.done);
   const complete = percent === 100;
 
+  // Everything controllable is done AND identity is verified → nothing to nudge.
+  if (complete && verified) return null;
+
   return (
-    <div className="rounded-2xl border border-[#e5e7eb] bg-white p-5 mb-6">
-      <div className="flex items-center gap-4">
-        {/* Progress ring */}
-        <div className="relative h-14 w-14 shrink-0">
-          <svg viewBox="0 0 36 36" className="h-14 w-14 -rotate-90">
-            <circle cx="18" cy="18" r="15.5" fill="none" stroke="#f3f4f6" strokeWidth="4" />
-            <circle
-              cx="18" cy="18" r="15.5" fill="none"
-              stroke={complete ? "#16a34a" : "#009FD9"} strokeWidth="4" strokeLinecap="round"
-              strokeDasharray={`${(percent / 100) * 97.4} 97.4`}
-            />
-          </svg>
-          <span className="absolute inset-0 grid place-items-center text-sm font-bold text-[#111827]">{percent}%</span>
+    <section className="rounded-2xl border border-[#e5e7eb] bg-white overflow-hidden mb-6">
+      {/* Header — motivating headline, big live percent, linear strength meter. */}
+      <div className="p-4 sm:p-6">
+        <div className="flex items-end justify-between gap-3">
+          <div className="min-w-0">
+            <h2 className="text-base sm:text-lg font-semibold text-[#111827]">
+              {complete ? t("completeTitle") : t("title")}
+            </h2>
+            <p className="text-xs sm:text-sm text-[#6b7280] mt-0.5 leading-snug">
+              {complete ? t("completeSubtitle") : t("subtitle")}
+            </p>
+          </div>
+          <div className="shrink-0 leading-none">
+            <span className="text-2xl sm:text-3xl font-bold tabular-nums text-[#111827]">{percent}</span>
+            <span className="text-sm font-semibold text-[#9ca3af]">%</span>
+          </div>
         </div>
-        <div className="min-w-0">
-          <h3 className="text-sm font-semibold text-[#111827] flex items-center gap-1.5">
-            {complete ? (<><Sparkles className="h-4 w-4 text-[#16a34a]" /> {t("completeTitle")}</>) : t("title")}
-          </h3>
-          <p className="text-xs text-[#6b7280] mt-0.5">
-            {complete ? t("completeSubtitle") : t("subtitle")}
-          </p>
+
+        <div className="mt-3 h-2 w-full rounded-full bg-[#eef2f5] overflow-hidden">
+          <div
+            className="h-full rounded-full transition-[width] duration-700 ease-out"
+            style={{
+              width: `${Math.max(percent, 4)}%`,
+              background: complete ? "#16a34a" : "linear-gradient(90deg,#009FD9,#33b4e0)",
+            }}
+          />
         </div>
+        {!complete && (
+          <p className="mt-2 text-xs font-medium text-[#009FD9]">{t("stepsLeft", { count: missing.length })}</p>
+        )}
       </div>
 
-      {!complete && (
-        <ul className="mt-4 flex flex-col gap-1.5">
+      {/* Pending steps — flat rows split by light dividers (no nested boxes). Each
+          row is a ≥44px tap target that jumps straight to the section to finish. */}
+      {missing.length > 0 && (
+        <ul className="border-t border-[#f3f4f6]">
           {missing.map((item) => (
-            <li key={item.key}>
+            <li key={item.key} className="border-b border-[#f3f4f6] last:border-b-0">
               <button
                 type="button"
                 onClick={() => onGo(item.tab)}
-                className="group flex w-full items-start gap-2.5 rounded-xl border border-[#f3f4f6] hover:border-[#bfdbfe] hover:bg-[#f9fbff] px-3 py-2.5 text-left transition-colors"
+                className="group flex w-full items-center gap-3 px-4 sm:px-6 py-3 text-left transition-colors hover:bg-[#f9fbfd] min-h-[56px]"
               >
-                <Circle className="h-4 w-4 text-[#cbd5e1] shrink-0 mt-0.5" />
+                <span className="h-4 w-4 shrink-0 rounded-full border-2 border-[#d1d5db] transition-colors group-hover:border-[#009FD9]" />
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm font-medium text-[#111827]">{t(item.key)}</span>
-                  <span className="block text-xs text-[#6b7280] mt-0.5">{t(`${item.key}Benefit`)}</span>
+                  <span className="block text-xs text-[#6b7280] mt-0.5 leading-snug">{t(`${item.key}Benefit`)}</span>
                 </span>
-                <ChevronRight className="h-4 w-4 text-[#9ca3af] group-hover:text-[#009FD9] shrink-0 mt-0.5 transition-colors" />
+                <span className="hidden sm:inline-flex items-center gap-1 text-xs font-semibold text-[#009FD9] shrink-0">
+                  {t("completeAction")}
+                  <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                </span>
+                <ChevronRight className="h-5 w-5 text-[#cbd5e1] shrink-0 sm:hidden" />
               </button>
             </li>
           ))}
         </ul>
       )}
 
-      {/* Done items — compact, reassuring summary when partially complete. */}
-      {!complete && items.some((i) => i.done) && (
-        <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1">
-          {items.filter((i) => i.done).map((i) => (
-            <span key={i.key} className="inline-flex items-center gap-1 text-[11px] text-[#16a34a]">
-              <CheckCircle2 className="h-3.5 w-3.5" /> {t(i.key)}
+      {/* Identity verification — a separate recommended action, never part of the %. */}
+      {!verified && (
+        <button
+          type="button"
+          onClick={() => onGo("verificacion")}
+          className="group flex w-full items-center gap-3 border-t border-[#f3f4f6] bg-[#f8fafc] px-4 sm:px-6 py-3 text-left transition-colors hover:bg-[#EBF5FB] min-h-[56px]"
+        >
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#EBF5FB] text-[#009FD9]">
+            <ShieldCheck className="h-4 w-4" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-medium text-[#111827]">
+              {t("verifyTitle")}
+              <span className="rounded-full bg-[#e5e7eb] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#6b7280]">
+                {t("recommended")}
+              </span>
+            </span>
+            <span className="block text-xs text-[#6b7280] mt-0.5 leading-snug">{t("verifyBenefit")}</span>
+          </span>
+          <ChevronRight className="h-5 w-5 shrink-0 text-[#9ca3af] transition-transform group-hover:translate-x-0.5" />
+        </button>
+      )}
+
+      {/* Quiet reassurance of progress already made. */}
+      {doneItems.length > 0 && !complete && (
+        <div className="flex flex-wrap gap-x-3 gap-y-1.5 border-t border-[#f3f4f6] px-4 sm:px-6 py-3">
+          {doneItems.map((i) => (
+            <span key={i.key} className="inline-flex items-center gap-1 text-[11px] font-medium text-[#16a34a]">
+              <Check className="h-3.5 w-3.5" /> {t(i.key)}
             </span>
           ))}
         </div>
       )}
-    </div>
+    </section>
   );
 }

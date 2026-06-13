@@ -252,6 +252,10 @@ export default function ProDashboardPage() {
             </div>
           </div>
 
+          {/* Profile-completion — prominent, full-width at the TOP of the dashboard.
+              The component hides itself once everything is done + verified. */}
+          <ProfileCompletion pro={pro} onGo={(tab) => setTab(tab as Tab)} />
+
           <div className="flex flex-col lg:flex-row gap-6">
             {/* Sidebar nav — two clearly-labeled role groups */}
             <nav className="lg:w-60 shrink-0">
@@ -289,15 +293,12 @@ export default function ProDashboardPage() {
                 </CardHeader>
                 <CardContent className="px-6 pb-6">
                   {activeTab === "profile" && (
-                    <>
-                      <ProfileCompletion pro={pro} onGo={(tab) => setTab(tab as Tab)} />
-                      <ProfileEditor
-                        professionalId={pro.id}
-                        profileId={user!.id}
-                        initial={pro}
-                        onSaved={handleSaved}
-                      />
-                    </>
+                    <ProfileEditor
+                      professionalId={pro.id}
+                      profileId={user!.id}
+                      initial={pro}
+                      onSaved={handleSaved}
+                    />
                   )}
                   {activeTab === "services" && (
                     <ServicesEditor
