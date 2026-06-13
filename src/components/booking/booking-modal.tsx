@@ -659,7 +659,6 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
               <div className="md:mt-4 md:text-center md:w-full">
                 <div className="flex items-center gap-1.5 md:justify-center flex-wrap">
                   <span className="font-bold text-base md:text-lg leading-tight">{professional.fullName}</span>
-                  {professional.isVerified && <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />}
                 </div>
                 <p className="text-sm text-white/70 mt-1 md:text-center">{categoryName}</p>
               </div>

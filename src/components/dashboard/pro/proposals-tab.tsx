@@ -257,9 +257,9 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
             </div>
           ) : (
             <div className="flex flex-col gap-4">
-              {/* Surface projects that match the pro's services first (stable sort). */}
+              {/* Surface projects that match the pro's services first (stable sort,
+                  no visible badge). */}
               {[...openProjects].sort((a, b) => Number(matchesServices(b)) - Number(matchesServices(a))).map((project) => {
-                const isMatch = matchesServices(project);
                 const isExpanded = expandedProject === project.id;
                 const alreadySubmitted = submitted.has(project.id);
                 const form = proposalForms[project.id] ?? { price: "", message: "" };
@@ -277,11 +277,6 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
                             <span className="font-semibold text-[#111827] text-sm">{project.title}</span>
                             {project.categories?.name && (
                               <Badge variant="muted" className="text-[11px]">{project.categories.name}</Badge>
-                            )}
-                            {isMatch && (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-[#dcfce7] text-[#15803d] text-[11px] font-semibold px-2 py-0.5">
-                                <CheckCircle2 className="h-3 w-3" /> {t("matchesServices")}
-                              </span>
                             )}
                           </div>
                           <p className="text-sm text-[#6b7280] line-clamp-2 mb-2">{project.description}</p>
