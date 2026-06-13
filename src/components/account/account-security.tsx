@@ -27,18 +27,20 @@ function OAuthGuide({
   linkHref: string;
 }) {
   return (
-    <div className="rounded-xl bg-[#f0f9ff] p-4">
+    // Neutral info block (no blue-on-blue, no border-in-card): dark readable text
+    // on a soft grey tint; the ONLY accent is the brand-blue link (an action).
+    <div className="rounded-xl bg-[#f9fafb] p-4">
       <div className="flex items-start gap-2.5">
-        <Info className="h-4 w-4 text-[#0284c7] shrink-0 mt-0.5" />
+        <Info className="h-4 w-4 text-[#6b7280] shrink-0 mt-0.5" />
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-semibold text-[#0c4a6e]">{title}</p>
-          <p className="text-xs leading-relaxed text-[#0369a1] mt-1 break-words">{intro}</p>
+          <p className="text-sm font-semibold text-[#111827]">{title}</p>
+          <p className="text-xs leading-relaxed text-[#6b7280] mt-1 break-words">{intro}</p>
           {steps && steps.length > 0 && (
             <ol className="mt-2.5 space-y-2">
               {steps.map((s, i) => (
                 <li key={i} className="flex items-start gap-2.5">
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#0284c7] text-[10px] font-bold text-white">{i + 1}</span>
-                  <span className="text-xs leading-relaxed text-[#0c4a6e] break-words">{s}</span>
+                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#e5e7eb] text-[10px] font-bold text-[#374151]">{i + 1}</span>
+                  <span className="text-xs leading-relaxed text-[#374151] break-words">{s}</span>
                 </li>
               ))}
             </ol>
@@ -47,7 +49,7 @@ function OAuthGuide({
             href={linkHref}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-[#0284c7] hover:underline break-words"
+            className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-[#009FD9] hover:underline break-words"
           >
             {linkLabel} <ExternalLink className="h-3.5 w-3.5 shrink-0" />
           </a>

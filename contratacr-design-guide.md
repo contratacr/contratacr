@@ -219,7 +219,7 @@ The two work modes are **two separate, clearly-delimited panels**, never one mix
 - Each panel is a single soft tinted block (`rounded-xl bg-[#f9fafb]`, **no border** — R1: the map/selects have their own functional frames, don't wrap them in another card). Data semantics are unchanged: provincia/cantón + coverage zones feed `computeSearchAreas` → search filtering.
 
 ### OAuth guidance blocks (account & security)
-- Notes shown to Google/Facebook users (email/password are provider-managed) use a **light info style** (`bg-[#f0f9ff]`, **no border** — they already sit inside a card, so no box-in-box), an `Info` icon, optional numbered steps, and a single link out to the provider. Never a heavy/clunky bordered box.
+- Notes shown to Google/Facebook users (email/password are provider-managed) use a **neutral info style** (`bg-[#f9fafb]`, **no border** — they already sit inside a card, so no box-in-box), an `Info` icon, optional numbered steps, and a single link out to the provider. **Dark readable text** (`text-[#111827]` title, `text-[#6b7280]`/`text-[#374151]` body, grey `#e5e7eb` step badges) — **NOT blue text on a blue tint** (that low-contrast monochrome-blue look was removed). The **only** color accent is the brand-blue link (`text-[#009FD9]`), because it's an action. Never a heavy/clunky bordered box.
 
 ### Image uploads (avatars + casos de éxito)
 - **Accept any image, including iPhone HEIC/HEIF** (Cloudinary converts). Don't whitelist only jpeg/png/webp — mobile photos are often HEIC and some browsers send an **empty MIME type**, so allow `type === "" || type.startsWith("image/")` and use `image/*` on the `<input accept>`. Size cap **10 MB** (phone photos exceed 5 MB; images are downscaled server-side anyway).
