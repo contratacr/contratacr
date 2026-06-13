@@ -284,22 +284,25 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200 }: W
         </select>
       </div>
 
-      {/* 2 — OPTIONAL exact pin (refinement). The address SEARCH lives here: turn it
-             on to search an address and drop the pin. Collapsed by default. */}
+      {/* 2 — OPTIONAL exact pin (refinement), HIDDEN by default. A clean expandable
+             link (no bordered box) reveals the address search + map only when the
+             pro chooses to pin the exact spot. Same control in registration + panel. */}
       {effectiveKey ? (
-        <div className="rounded-xl border border-[#eef2f5]">
+        <div className="flex flex-col gap-2">
           <button
             type="button"
             onClick={() => setShowMap((v) => !v)}
-            className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm font-medium text-[#374151]"
+            aria-expanded={showMap}
+            className="self-start inline-flex items-center gap-1.5 text-sm font-medium text-[#009FD9] hover:underline cursor-pointer"
           >
-            <MapPin className="h-4 w-4 text-[#009FD9]" />
-            <span className="flex-1">{t("markOnMap")}</span>
-            {draftPin && <Check className="h-4 w-4 text-[#16a34a]" />}
-            <ChevronDown className={cn("h-4 w-4 text-[#9ca3af] transition-transform", showMap && "rotate-180")} />
+            <MapPin className="h-4 w-4" />
+            <span>{t("markOnMap")}</span>
+            {/* When collapsed, a check confirms a pin is already set. */}
+            {draftPin && !showMap && <Check className="h-3.5 w-3.5 text-[#16a34a]" />}
+            <ChevronDown className={cn("h-4 w-4 transition-transform", showMap && "rotate-180")} />
           </button>
           {showMap && (
-            <div className="flex flex-col gap-2 px-3 pb-3">
+            <div className="flex flex-col gap-2">
               {/* Address search → drops the pin. */}
               <div ref={pacContainerRef} className="cr-pac w-full" />
               <button type="button" onClick={useMyLocation} disabled={locating} className="self-start inline-flex items-center gap-1.5 text-sm font-medium text-[#009FD9] hover:underline disabled:opacity-60">
