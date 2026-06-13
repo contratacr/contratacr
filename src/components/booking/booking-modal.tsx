@@ -255,7 +255,14 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
             const hasCedula = !!data?.cedula && String(data.cedula).trim() !== "";
             setHasStoredCedula(hasCedula);
             if (hasCedula) setProfileCedula(String(data!.cedula));
-            if (data?.phone) setProfilePhone(String(data.phone));
+            if (data?.phone) {
+              setProfilePhone(String(data.phone));
+            } else {
+              // A professional's number lives in professionals.whatsapp — prefill
+              // the booking phone from it so a pro booking someone never re-enters it.
+              supabase.from("professionals").select("whatsapp").eq("profile_id", user.id).maybeSingle()
+                .then(({ data: pro }) => { if (pro?.whatsapp) setProfilePhone(String(pro.whatsapp)); });
+            }
             if (data?.full_name) setClientName((prev) => prev || String(data.full_name));
             setNeedsProfile(isOAuth && !hasCedula);
             setProfileLoaded(true);

@@ -28,6 +28,11 @@ _Earlier: 2026-06-07 (sprint 24 — fully automatic identity verification: self-
 
 ---
 
+## Sprint 95 (2026-06-13) — Phone: explicit one-vs-two + booking prefill
+
+- **One number = both; two = split.** Added an explicit `whatsappHelp` line under the WhatsApp field ("También se usa para las llamadas, salvo que agregues un número aparte abajo"). Logic unchanged: WhatsApp button → `whatsapp`; Llamar → `callPhone ?? whatsapp`.
+- **Booking prefills the phone** (`booking-modal.tsx`): already loaded `profiles.phone` via `get_my_profile`; now if that's empty it falls back to the booker's `professionals.whatsapp` (a pro's number lives there), so a professional booking someone never re-enters it. `needsPhone` stays `isLoggedIn && !profilePhone` → the prompt is skipped when a number is on file. Build green, `tsc` clean.
+
 ## Sprint 94 (2026-06-13) — Places autocomplete: robust + legacy fallback + dropdown visibility
 
 Address/place search ("Clínica Bíblica") returned no suggestions. Hardened the shared Places setup in BOTH `workplaces-picker.tsx` (registration + panel) and `location-picker.tsx` (booking):

@@ -1243,6 +1243,7 @@
     "address": "Address",
     "addressPlaceholder": "e.g. Barrio Escalante, San José",
     "whatsapp": "WhatsApp number",
+    "whatsappHelp": "Also used for calls, unless you add a separate number below.",
     "callNumber": "Call number",
     "callHelp": "If you leave it empty, we use your WhatsApp number for calls too.",
     "contactEmail": "Contact email",

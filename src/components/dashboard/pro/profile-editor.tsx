@@ -539,13 +539,17 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
 
       {/* ── Contacto y precios ────────────────────────────────────────── */}
       <Section title={t("secContact")} desc={t("secContactDesc")}>
-        {/* WhatsApp — required contact channel */}
-        <PhoneInput
-          label={t("whatsapp")}
-          required
-          value={whatsapp}
-          onChange={(digits) => { setWhatsapp(digits); touch(); }}
-        />
+        {/* WhatsApp — required contact channel; also used for calls unless a
+            separate call number is set below (one number → both; two → split). */}
+        <div>
+          <PhoneInput
+            label={t("whatsapp")}
+            required
+            value={whatsapp}
+            onChange={(digits) => { setWhatsapp(digits); touch(); }}
+          />
+          <p className="text-xs text-[#9ca3af] mt-1">{t("whatsappHelp")}</p>
+        </div>
 
         {/* Optional SEPARATE call number — for pros who use a different line for
             calls. Empty → the WhatsApp number is used for calls too. */}

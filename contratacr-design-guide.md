@@ -280,8 +280,9 @@ Simplified for non-technical pros (Uber/Airbnb pattern: **structured field first
 ### No self-report
 - A professional must **not** be able to **Reportar** their own profile. On their own profile the "Reportar perfil" item is replaced by a muted **"Este es tu perfil"** row (with a lock), consistent with the show-but-block self-service pattern.
 
-### Separate call vs WhatsApp numbers
-- A pro may set an **optional separate "Número para llamadas"** distinct from their **"Número de WhatsApp"** (`professionals.call_phone`). **If the call number is empty, use the WhatsApp number for calls.** The **WhatsApp** button always uses `whatsapp`; the **"Llamar"/call** action uses `callPhone ?? whatsapp`. Validate both as phone numbers (`PhoneInput`).
+### Phone: one number vs two (WhatsApp + calls)
+- **One number → both; two → split.** The pro's **"Número de WhatsApp"** (`professionals.whatsapp`, required) is used for WhatsApp **and** for calls — UNLESS they add an **optional separate "Número para llamadas"** (`professionals.call_phone`). This is stated explicitly under the WhatsApp field (`whatsappHelp`) and the call field (`callHelp`). The **WhatsApp** button always uses `whatsapp`; the **"Llamar"/call** action uses `callPhone ?? whatsapp`. Validate both as phone numbers (`PhoneInput`).
+- **Booking PREFILLS the phone** from the user's profile, never asked from scratch: from `profiles.phone`, and if empty, falls back to the booker's `professionals.whatsapp` (a pro's number lives there). When a number is on file the contact step's phone prompt is skipped (`needsPhone = isLoggedIn && !profilePhone`); editing happens in the profile.
 
 ### Disponibilidad editor — simple scheduling UX
 - **Privada is OFF by default.** A new pro is registered with `availability_public = true` (+ `contact_preference = "ambas"`) so they're reachable and can publish hours right away; they can switch "Disponibilidad privada" ON anytime to hide the agenda and go WhatsApp-only.
