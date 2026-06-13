@@ -28,6 +28,14 @@ _Earlier: 2026-06-07 (sprint 24 — fully automatic identity verification: self-
 
 ---
 
+## Sprint 90 (2026-06-13) — Servicios redesigned (one card per profession)
+
+Made the profession → services structure instantly clear (`services-editor.tsx` + i18n). Replaced the numbered **STEP 1 (profesiones) / STEP 2 (servicios)** layout with **one card per profession**:
+- Each profession is a bordered group: header = icon chip + name + "Principal" tag (first) + "N servicios" count + remove ✕ (when >1); its services are a hairline-divided list inside (name, optional desc/years, price, edit/delete).
+- **Empty profession → clickable dashed prompt "Agrega tu primer servicio en {profesión}".** With services, a quiet "+ Agregar servicio" sits under the list.
+- **"+ Agregar profesión"** is a subtle action at the bottom (replaces the STEP 1 box). The inline add/edit form opens on a **tinted surface (no border)** — no box-in-box (R1).
+- Logic unchanged: services still tie to a profession via `category`, autosave via `persist`, price/experience as before. New i18n keys `servicesCount` (plural, =0/one/other) + `addFirstInProfession` (ES/EN); reframed `intro`. Build green, `tsc` clean.
+
 ## Sprint 89 (2026-06-13) — Location & coverage simplified (work zones first, travel = toggle)
 
 Made location effortless for non-technical pros (Uber/Airbnb: structured field first, map optional). Touches `workplaces-picker.tsx`, `profile-editor.tsx`, `registro/profesional/page.tsx` + i18n.

@@ -1090,7 +1090,9 @@
     "range": "{min} – {max}"
   },
   "servicesEditor": {
-    "intro": "First choose <strong>your professions</strong>; then add <strong>the services</strong> for each with their price. Each service keeps its own success-story photos.",
+    "intro": "Each <strong>profession</strong> has its own <strong>services</strong>. Add the ones you offer under each, with their price. Each service keeps its own success-story photos.",
+    "servicesCount": "{count, plural, =0 {No services yet} one {# service} other {# services}}",
+    "addFirstInProfession": "Add your first service in {profession}",
     "noProfession": "First choose your main profession in the <strong>My profile</strong> tab.",
     "step1Title": "Your professions",
     "addProfession": "Add profession",

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Plus, Trash2, Check, Pencil, X, Loader2 } from "lucide-react";
+import { Plus, Trash2, Check, Pencil, X, Loader2, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PriceInput } from "@/components/ui/price-input";
@@ -224,191 +224,194 @@ export function ServicesEditor({
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-4">
       <p className="text-sm text-[#6b7280]">
         {t.rich("intro", rich)}
       </p>
 
-      {/* ── STEP 1 — Professions manager ────────────────────────────────── */}
-      <div className="rounded-xl border border-[#e5e7eb] p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#009FD9] text-white text-xs font-bold shrink-0">1</span>
-            <h3 className="text-sm font-semibold text-[#111827]">{t("step1Title")}</h3>
-          </div>
-          {!addingProfession && (
-            <button
-              onClick={() => { setAddingProfession(true); setProfessionError(null); }}
-              className="flex items-center gap-1 text-xs font-medium text-[#009FD9] hover:underline"
-            >
-              <Plus className="h-3.5 w-3.5" /> {t("addProfession")}
-            </button>
-          )}
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          {professions.map((p, i) => (
-            <span key={p} className="inline-flex items-center gap-1.5 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium pl-3 pr-1.5 py-1.5">
-              {getCategoryLabel(p, locale)}
-              {i === 0 && <span className="text-[10px] font-bold uppercase tracking-wide text-[#009FD9]/70">{t("principal")}</span>}
+      {/* One CARD per PROFESSION — the profession is the group header and its
+          services live inside it, so the profession → services structure is
+          obvious. Single border per card (R1: no nested bordered boxes; the form
+          and list use tinted/hairline surfaces, not extra borders). */}
+      {professions.map((prof, i) => {
+        const profServices = services.filter((s) => effectiveCategory(s) === prof);
+        const formHere = formOpen && formCategory === prof;
+        return (
+          <section key={prof} className="rounded-2xl border border-[#e5e7eb] bg-white overflow-hidden">
+            {/* Profession header */}
+            <div className="flex items-center gap-3 px-4 sm:px-5 py-3 bg-[#f9fafb] border-b border-[#eef2f5]">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#EBF5FB] text-[#009FD9]">
+                <Briefcase className="h-4 w-4" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-[#111827] flex items-center gap-2">
+                  <span className="truncate">{getCategoryLabel(prof, locale)}</span>
+                  {i === 0 && <span className="shrink-0 rounded-full bg-[#EBF5FB] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#0089bb]">{t("principal")}</span>}
+                </p>
+                <p className="text-[11px] text-[#9ca3af]">{t("servicesCount", { count: profServices.length })}</p>
+              </div>
               {professions.length > 1 && (
-                <button onClick={() => removeProfession(p)} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors" aria-label={t("removeProfession")}>
-                  <X className="h-3.5 w-3.5" />
+                <button onClick={() => removeProfession(prof)} className="h-7 w-7 shrink-0 rounded-lg flex items-center justify-center text-[#9ca3af] hover:text-red-500 hover:bg-red-50 transition-colors" aria-label={t("removeProfession")}>
+                  <X className="h-4 w-4" />
                 </button>
               )}
-            </span>
-          ))}
-        </div>
-
-        {addingProfession && (
-          <div className="mt-3 flex flex-col gap-2">
-            <CategorySearch
-              value={newProfession}
-              onChange={(v) => { setNewProfession(v); setProfessionError(null); }}
-              placeholder={t("searchProfession")}
-              error={professionError ?? undefined}
-            />
-            <div className="flex gap-2">
-              <Button size="sm" onClick={confirmAddProfession}>{t("add")}</Button>
-              <Button size="sm" variant="ghost" onClick={() => { setAddingProfession(false); setNewProfession(""); setProfessionError(null); }}>
-                {t("cancel")}
-              </Button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* ── STEP 2 — Services grouped by profession ─────────────────────────
-          Flat layout: each profession is a plain section divided by a hairline
-          (no nested boxes); services are a simple divided list (no surrounding
-          border). Only the add/edit form keeps an accent box so it stands out. */}
-      <div className="flex items-center gap-2">
-        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#009FD9] text-white text-xs font-bold shrink-0">2</span>
-        <h3 className="text-sm font-semibold text-[#111827]">{t("step2Title")}</h3>
-      </div>
-      {professions.map((prof, idx) => {
-        const profServices = services.filter((s) => effectiveCategory(s) === prof);
-        return (
-          <div key={prof} className={idx > 0 ? "pt-6 border-t border-[#f3f4f6]" : ""}>
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-semibold text-[#111827]">{getCategoryLabel(prof, locale)}</h3>
-              <button
-                onClick={() => openAdd(prof)}
-                className="flex items-center gap-1 text-xs font-medium text-[#009FD9] hover:underline"
-              >
-                <Plus className="h-3.5 w-3.5" /> {t("addService")}
-              </button>
             </div>
 
-            {profServices.length === 0 && (editingId !== null || formCategory !== prof) && (
-              <p className="text-xs text-[#9ca3af] py-2">{t("emptyUnderProfession")}</p>
-            )}
-
-            {profServices.length > 0 && (
-              <div className="flex flex-col divide-y divide-[#f3f4f6]">
-                {profServices.map((svc) => (
-                  <div key={svc.id} className="flex items-center justify-between gap-3 py-3 hover:bg-[#fafafa] transition-colors -mx-2 px-2 rounded-lg">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-[#111827] truncate">{svc.name}</p>
-                      {svc.description && <p className="text-xs text-[#6b7280] mt-0.5 line-clamp-1">{svc.description}</p>}
-                      {svc.years != null && <p className="text-xs text-[#9ca3af] mt-0.5">{t("experience", { years: svc.years })}</p>}
-                    </div>
-                    <div className="flex items-center gap-3 shrink-0">
-                      {svc.price && <span className="text-sm font-semibold text-[#009FD9] whitespace-nowrap">{svc.price}</span>}
-                      <button onClick={() => openEdit(svc)} className="h-7 w-7 rounded-lg flex items-center justify-center text-[#9ca3af] hover:text-[#009FD9] hover:bg-[#EBF5FB] transition-colors" title={t("edit")}>
-                        <Pencil className="h-3.5 w-3.5" />
-                      </button>
-                      <button onClick={() => handleDelete(svc.id)} className="h-7 w-7 rounded-lg flex items-center justify-center text-[#9ca3af] hover:text-red-500 hover:bg-red-50 transition-colors" title={t("delete")}>
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Inline form for this profession */}
-            {formOpen && formCategory === prof && (
-              <div className="border border-[#009FD9]/30 bg-[#EBF5FB]/30 rounded-xl p-4 mt-3 flex flex-col gap-3">
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-[#111827]">
-                    {editingId ? t("editService") : t("newService", { profession: getCategoryLabel(prof, locale) })}
-                  </p>
-                  <button onClick={cancelForm} className="text-[#9ca3af] hover:text-[#374151] transition-colors">
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-
-                {formError && (
-                  <p className="text-xs text-red-600 bg-red-50 border border-red-100 px-3 py-2 rounded-lg">{formError}</p>
-                )}
-
-                <Input
-                  label={t("nameLabel")}
-                  placeholder={t("namePlaceholder")}
-                  value={form.name}
-                  onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                  autoFocus
-                />
-                <div>
-                  <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                    {t("description")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
-                  </label>
-                  <textarea
-                    className="w-full rounded-xl border border-[#e5e7eb] bg-white px-3.5 py-2.5 text-sm text-[#111827] placeholder:text-[#9ca3af] min-h-[72px] resize-none focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
-                    placeholder={t("descPlaceholder")}
-                    value={form.description}
-                    onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                    {t("price")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <select
-                      value={form.priceType}
-                      onChange={(e) => setForm((f) => ({ ...f, priceType: e.target.value as PricingType }))}
-                      className="h-10 px-3 rounded-xl border border-[#e5e7eb] bg-white text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
-                    >
-                      {PRICING_TYPES.map((pt) => (
-                        <option key={pt.value} value={pt.value}>{pt.label}</option>
-                      ))}
-                    </select>
-                    {form.priceType !== "a_convenir" && (
-                      <div className="flex-1">
-                        <PriceInput
-                          placeholder="15000"
-                          value={form.priceAmount}
-                          onChange={(v) => setForm((f) => ({ ...f, priceAmount: v }))}
-                        />
+            <div className="p-3 sm:p-4 flex flex-col gap-2">
+              {/* Services for this profession */}
+              {profServices.length > 0 && (
+                <div className="flex flex-col divide-y divide-[#f3f4f6]">
+                  {profServices.map((svc) => (
+                    <div key={svc.id} className="flex items-center justify-between gap-3 py-2.5 hover:bg-[#fafafa] transition-colors -mx-2 px-2 rounded-lg">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-[#111827] truncate">{svc.name}</p>
+                        {svc.description && <p className="text-xs text-[#6b7280] mt-0.5 line-clamp-1">{svc.description}</p>}
+                        {svc.years != null && <p className="text-xs text-[#9ca3af] mt-0.5">{t("experience", { years: svc.years })}</p>}
                       </div>
+                      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                        {svc.price && <span className="text-sm font-semibold text-[#009FD9] whitespace-nowrap">{svc.price}</span>}
+                        <button onClick={() => openEdit(svc)} className="h-8 w-8 rounded-lg flex items-center justify-center text-[#9ca3af] hover:text-[#009FD9] hover:bg-[#EBF5FB] transition-colors" title={t("edit")}>
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                        <button onClick={() => handleDelete(svc.id)} className="h-8 w-8 rounded-lg flex items-center justify-center text-[#9ca3af] hover:text-red-500 hover:bg-red-50 transition-colors" title={t("delete")}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Empty state — inviting, clickable prompt to add the first service. */}
+              {profServices.length === 0 && !formHere && (
+                <button
+                  onClick={() => openAdd(prof)}
+                  className="w-full rounded-xl border-2 border-dashed border-[#d1d5db] py-4 px-3 flex flex-col items-center justify-center gap-1.5 text-center hover:border-[#009FD9] hover:bg-[#EBF5FB] transition-all"
+                >
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#EBF5FB] text-[#009FD9]"><Plus className="h-4 w-4" /></span>
+                  <span className="text-sm font-medium text-[#374151]">{t("addFirstInProfession", { profession: getCategoryLabel(prof, locale) })}</span>
+                </button>
+              )}
+
+              {/* Inline add/edit form (tinted surface, no border → no box-in-box). */}
+              {formHere && (
+                <div className="rounded-xl bg-[#f9fafb] p-4 flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-semibold text-[#111827]">
+                      {editingId ? t("editService") : t("newService", { profession: getCategoryLabel(prof, locale) })}
+                    </p>
+                    <button onClick={cancelForm} className="text-[#9ca3af] hover:text-[#374151] transition-colors">
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  {formError && (
+                    <p className="text-xs text-red-600 bg-red-50 border border-red-100 px-3 py-2 rounded-lg">{formError}</p>
+                  )}
+
+                  <Input
+                    label={t("nameLabel")}
+                    placeholder={t("namePlaceholder")}
+                    value={form.name}
+                    onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                    autoFocus
+                  />
+                  <div>
+                    <label className="text-sm font-medium text-[#374151] block mb-1.5">
+                      {t("description")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
+                    </label>
+                    <textarea
+                      className="w-full rounded-xl border border-[#e5e7eb] bg-white px-3.5 py-2.5 text-sm text-[#111827] placeholder:text-[#9ca3af] min-h-[72px] resize-none focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+                      placeholder={t("descPlaceholder")}
+                      value={form.description}
+                      onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-[#374151] block mb-1.5">
+                      {t("price")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={form.priceType}
+                        onChange={(e) => setForm((f) => ({ ...f, priceType: e.target.value as PricingType }))}
+                        className="h-10 px-3 rounded-xl border border-[#e5e7eb] bg-white text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+                      >
+                        {PRICING_TYPES.map((pt) => (
+                          <option key={pt.value} value={pt.value}>{pt.label}</option>
+                        ))}
+                      </select>
+                      {form.priceType !== "a_convenir" && (
+                        <div className="flex-1">
+                          <PriceInput
+                            placeholder="15000"
+                            value={form.priceAmount}
+                            onChange={(v) => setForm((f) => ({ ...f, priceAmount: v }))}
+                          />
+                        </div>
+                      )}
+                    </div>
+                    {form.priceType !== "a_convenir" && form.priceAmount && (
+                      <p className="text-xs text-emerald-600 mt-1">{t("willShowAs", { price: formatServicePrice(Number(form.priceAmount.replace(/\D/g, "")), form.priceType) ?? "" })}</p>
                     )}
                   </div>
-                  {form.priceType !== "a_convenir" && form.priceAmount && (
-                    <p className="text-xs text-emerald-600 mt-1">{t("willShowAs", { price: formatServicePrice(Number(form.priceAmount.replace(/\D/g, "")), form.priceType) ?? "" })}</p>
-                  )}
-                </div>
 
-                <Input
-                  label={<>{t("yearsLabel")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span></>}
-                  type="number"
-                  inputMode="numeric"
-                  placeholder={t("yearsPlaceholder")}
-                  value={form.years}
-                  onChange={(e) => setForm((f) => ({ ...f, years: e.target.value }))}
-                />
-                <div className="flex gap-2 pt-1">
-                  <Button onClick={handleFormSave} loading={saving} size="sm">
-                    {saving ? t("saving") : editingId ? t("saveChanges") : t("addServiceBtn")}
-                  </Button>
-                  <Button variant="ghost" size="sm" onClick={cancelForm}>{t("cancel")}</Button>
+                  <Input
+                    label={<>{t("yearsLabel")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span></>}
+                    type="number"
+                    inputMode="numeric"
+                    placeholder={t("yearsPlaceholder")}
+                    value={form.years}
+                    onChange={(e) => setForm((f) => ({ ...f, years: e.target.value }))}
+                  />
+                  <div className="flex gap-2 pt-1">
+                    <Button onClick={handleFormSave} loading={saving} size="sm">
+                      {saving ? t("saving") : editingId ? t("saveChanges") : t("addServiceBtn")}
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={cancelForm}>{t("cancel")}</Button>
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+
+              {/* Add another service — shown when there are already services and the
+                  form isn't open here. */}
+              {profServices.length > 0 && !formHere && (
+                <button
+                  onClick={() => openAdd(prof)}
+                  className="self-start inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-[#009FD9] hover:bg-[#EBF5FB] transition-colors"
+                >
+                  <Plus className="h-4 w-4" /> {t("addService")}
+                </button>
+              )}
+            </div>
+          </section>
         );
       })}
+
+      {/* Add another profession — a profession groups its own services. */}
+      {addingProfession ? (
+        <div className="rounded-2xl border border-dashed border-[#d1d5db] p-4 flex flex-col gap-2">
+          <CategorySearch
+            value={newProfession}
+            onChange={(v) => { setNewProfession(v); setProfessionError(null); }}
+            placeholder={t("searchProfession")}
+            error={professionError ?? undefined}
+          />
+          <div className="flex gap-2">
+            <Button size="sm" onClick={confirmAddProfession}>{t("add")}</Button>
+            <Button size="sm" variant="ghost" onClick={() => { setAddingProfession(false); setNewProfession(""); setProfessionError(null); }}>
+              {t("cancel")}
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <button
+          onClick={() => { setAddingProfession(true); setProfessionError(null); }}
+          className="self-start inline-flex items-center gap-1.5 text-sm font-medium text-[#009FD9] hover:underline"
+        >
+          <Plus className="h-4 w-4" /> {t("addProfession")}
+        </button>
+      )}
 
       {/* Persistent save status — every change (add / edit / delete) autosaves;
           this line always tells the pro the current state, so there's never a
