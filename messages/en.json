@@ -587,6 +587,8 @@
       "photoAlt": "Profile photo",
       "noCrId": "I don't have Costa Rican ID",
       "noCrIdSub": "(foreigner, passport or DIMEX in process)",
+      "noCrIdLink": "Don't have a Costa Rican ID?",
+      "hasCrIdLink": "I do have a Costa Rican ID",
       "pendingReview": "pending review",
       "manualName": "Full name",
       "manualNameHint": "Exactly as it appears on your passport / document",

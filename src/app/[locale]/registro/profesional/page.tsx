@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import {
   CheckCircle2, ArrowRight, ArrowLeft, Loader2, AlertCircle,
-  Eye, EyeOff, Circle, Camera, X,
+  Eye, EyeOff, Circle, Camera, X, Plus,
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -170,13 +170,18 @@ function PhotoPicker({
 // ─── "No tengo identificación costarricense" (foreigners) ─────────────────────
 // Routes the account to the admin EXCEPTIONS queue ("pendiente de revisión") where
 // the admin reviews whatever document they have (passport, DIMEX in progress).
+// Subtle disclosure anchored directly under the "Número de identificación" field —
+// it's the option that belongs to that field, not a stray checkbox at the end.
 function NoCrIdToggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
   const t = useTranslations("registration.pro");
   return (
-    <label className="flex items-start gap-2.5 cursor-pointer text-sm text-[#374151]">
-      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[#009FD9]" />
-      <span>{t("noCrId")} <span className="text-[#9ca3af]">{t("noCrIdSub")}</span></span>
-    </label>
+    <button
+      type="button"
+      onClick={() => onChange(!checked)}
+      className="self-start text-sm font-medium text-[#009FD9] hover:underline cursor-pointer"
+    >
+      {checked ? t("hasCrIdLink") : t("noCrIdLink")}
+    </button>
   );
 }
 
@@ -295,6 +300,9 @@ export default function RegisterProfessionalPage() {
   // Additional categories (multi-category support). Primary = step2 `category`.
   const [extraCategories, setExtraCategories] = useState<string[]>([]);
   const [extraCatInput, setExtraCatInput] = useState("");
+  // The extra-profession picker stays hidden behind a clear "+ Agregar otra
+  // profesión" action so it never reads as a stray second dropdown.
+  const [showExtraProf, setShowExtraProf] = useState(false);
   // Optional brand/business name is now collected in the panel (not registration);
   // kept empty here so the create payload still sends a (null) value cleanly.
   const businessName = "";
@@ -735,6 +743,10 @@ export default function RegisterProfessionalPage() {
                 />
               )}
 
+              {/* Belongs to the identification field — a subtle disclosure right
+                  under it, not a floating checkbox at the end of the form. */}
+              <NoCrIdToggle checked={noCrId} onChange={setNoCrId} />
+
               <div className="border-t border-[#f3f4f6] pt-4">
                 <Input
                   label={<>{t("email")} <span className="text-red-500">*</span></>}
@@ -781,12 +793,6 @@ export default function RegisterProfessionalPage() {
                   </button>
                 }
               />
-
-              {/* Exception case — kept out of the main cédula→nombre flow, as a
-                  muted option below the form. */}
-              <div className="border-t border-[#f3f4f6] pt-4">
-                <NoCrIdToggle checked={noCrId} onChange={setNoCrId} />
-              </div>
 
               <Button type="submit" size="lg" className="mt-2">
                 {t("continue")} <ArrowRight className="h-4 w-4" />
@@ -838,6 +844,12 @@ export default function RegisterProfessionalPage() {
                 />
               )}
 
+              {/* Disclosure attached to the identity field (hidden once a stored,
+                  already-verified cédula is reused). */}
+              {currentUser && !accountCedula && (
+                <NoCrIdToggle checked={noCrId} onChange={setNoCrId} />
+              )}
+
               {/* Profession — searchable combobox (a profesión groups the servicios
                   the pro later adds in their panel). */}
               <div>
@@ -852,10 +864,12 @@ export default function RegisterProfessionalPage() {
                   error={form2.formState.errors.category?.message}
                 />
 
-                {/* Additional professions (optional, multi-profession) */}
-                <div className="mt-2">
+                {/* Additional professions (optional, multi-profession). The picker
+                    is revealed by an explicit "+ Agregar otra profesión" action so
+                    it reads as a clear ADD, not a second dropdown. */}
+                <div className="mt-2 flex flex-col gap-2">
                   {extraCategories.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mb-2">
+                    <div className="flex flex-wrap gap-2">
                       {extraCategories.map((c) => (
                         <span key={c} className="inline-flex items-center gap-1.5 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium pl-3 pr-1.5 py-1.5">
                           {getCategoryLabel(c, locale)}
@@ -866,17 +880,29 @@ export default function RegisterProfessionalPage() {
                       ))}
                     </div>
                   )}
-                  <CategorySearch
-                    value={extraCatInput}
-                    onChange={(v) => {
-                      const primary = form2.watch("category");
-                      if (v && v !== primary && !extraCategories.includes(v)) {
-                        setExtraCategories((prev) => [...prev, v]);
-                      }
-                      setExtraCatInput("");
-                    }}
-                    placeholder={t("searchAnotherProfession")}
-                  />
+                  {showExtraProf ? (
+                    <CategorySearch
+                      autoFocus
+                      value={extraCatInput}
+                      onChange={(v) => {
+                        const primary = form2.watch("category");
+                        if (v && v !== primary && !extraCategories.includes(v)) {
+                          setExtraCategories((prev) => [...prev, v]);
+                        }
+                        setExtraCatInput("");
+                        setShowExtraProf(false);
+                      }}
+                      placeholder={t("searchAnotherProfession")}
+                    />
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setShowExtraProf(true)}
+                      className="inline-flex items-center gap-1.5 self-start text-sm font-medium text-[#009FD9] hover:underline cursor-pointer"
+                    >
+                      <Plus className="h-4 w-4" /> {t("addAnotherProfession")}
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -900,13 +926,6 @@ export default function RegisterProfessionalPage() {
                 onChange={(digits) => { setWhatsappValue(digits); form2.setValue("whatsapp", digits, { shouldValidate: true }); }}
                 error={form2.formState.errors.whatsapp?.message}
               />
-
-              {/* Exception case — muted, below the main flow. */}
-              {currentUser && !accountCedula && (
-                <div className="border-t border-[#f3f4f6] pt-4">
-                  <NoCrIdToggle checked={noCrId} onChange={setNoCrId} />
-                </div>
-              )}
 
               <div className="flex gap-3 mt-2">
                 {!currentUser && (

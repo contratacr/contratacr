@@ -20,6 +20,8 @@ interface CategorySearchProps {
   placeholder?: string;
   error?: string;
   className?: string;
+  /** Open the picker immediately on mount (e.g. when revealed by an "add" action). */
+  autoFocus?: boolean;
 }
 
 export function CategorySearch({
@@ -28,6 +30,7 @@ export function CategorySearch({
   placeholder,
   error,
   className,
+  autoFocus = false,
 }: CategorySearchProps) {
   const t = useTranslations("categorySearch");
   const [open, setOpen] = useState(false);
@@ -133,6 +136,11 @@ export function CategorySearch({
   function openDropdown() {
     setOpen(true);
   }
+
+  // Open immediately when revealed by an explicit "add" action.
+  useEffect(() => {
+    if (autoFocus) setOpen(true);
+  }, [autoFocus]);
 
   // Focus the search input once the portaled panel has mounted.
   useEffect(() => {
