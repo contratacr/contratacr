@@ -327,7 +327,6 @@ export default function ProDashboardPage() {
                       workplaces={pro.workplaces ?? []}
                       coverageAreas={pro.coverage_areas ?? []}
                       professions={(pro.professions && pro.professions.length > 0) ? pro.professions : (pro.category_id ? [pro.category_id] : [])}
-                      initialAllowPhoneCall={pro.allow_phone_call ?? false}
                       onSaved={handleSaved}
                     />
                   )}

@@ -81,26 +81,18 @@ interface AvailabilityEditorProps {
   coverageAreas?: Coverage[];
   /** The pro's professions (category ids). Schedules are tied to a profession. */
   professions?: string[];
-  initialAllowPhoneCall?: boolean;
   onSaved?: () => void;
 }
 
-export function AvailabilityEditor({ professionalId, initialPublic = true, workplaces = [], coverageAreas = [], professions = [], initialAllowPhoneCall = false, onSaved }: AvailabilityEditorProps) {
+export function AvailabilityEditor({ professionalId, initialPublic = true, workplaces = [], coverageAreas = [], professions = [], onSaved }: AvailabilityEditorProps) {
   const locale = useLocale();
   const t = useTranslations("availabilityEditor");
   const dateLocale = locale === "en" ? "en-US" : "es-CR";
   const intervalLabel = (v: number) => t(v === 0 ? "intervalCustom" : (`interval${v}` as "interval30" | "interval60" | "interval120"));
   const rich = { strong: (c: React.ReactNode) => <strong>{c}</strong> };
   const [isPublic, setIsPublic] = useState(initialPublic);
-  const [allowPhoneCall, setAllowPhoneCall] = useState(initialAllowPhoneCall);
 
-  async function toggleAllowPhoneCall() {
-    const next = !allowPhoneCall;
-    setAllowPhoneCall(next);
-    const supabase = createClient();
-    await supabase.from("professionals").update({ allow_phone_call: next }).eq("id", professionalId);
-    onSaved?.();
-  }
+  // ("Permitir contacto por llamada" moved to Mi perfil → Contacto.)
 
   // Schedules belong to a specific location: each workplace, each travel-coverage
   // area (item 2 — cantón/provincia/país ALL schedulable), and Videoconsulta.
@@ -389,19 +381,14 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
         </div>
 
         {/* "Disponibilidad privada" (ON = private; hides + clears slots) */}
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-sm font-semibold text-[#111827]">{t("privateLabel")}</p>
-            <p className="text-xs text-[#6b7280] mt-0.5 max-w-md">
-              {!isPublic ? t("privateOnDesc") : t("privateOffDesc")}
-            </p>
-          </div>
+        <div className="flex items-center justify-between gap-4">
+          <p className="text-sm font-semibold text-[#111827]">{t("privateLabel")}</p>
           <button
             type="button"
             onClick={toggleVisibility}
             disabled={savingVisibility}
             className={cn(
-              "relative h-6 w-11 rounded-full transition-all duration-200 shrink-0 cursor-pointer mt-1",
+              "relative h-6 w-11 rounded-full transition-all duration-200 shrink-0 cursor-pointer",
               !isPublic ? "bg-[#b45309]" : "bg-[#d1d5db]"
             )}
             aria-label={isPublic ? t("makePrivate") : t("makePublic")}
@@ -410,28 +397,10 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
           </button>
         </div>
 
-        {/* Permitir contacto por llamada — independent; applies in BOTH modes
-            (WhatsApp is always available; this adds a phone-call option). */}
-        <div className="flex items-center justify-between gap-4 mt-4 pt-4 border-t border-[#f3f4f6]">
-          <div>
-            <p className="text-sm font-medium text-[#111827]">{t("allowCallLabel")}</p>
-            <p className="text-xs text-[#9ca3af]">{t("allowCallDesc")}</p>
-          </div>
-          <button
-            type="button"
-            onClick={toggleAllowPhoneCall}
-            className={cn("relative h-6 w-11 rounded-full transition-all shrink-0", allowPhoneCall ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
-            aria-label={t("allowCallAria")}
-          >
-            <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", allowPhoneCall ? "left-5" : "left-0.5")} />
-          </button>
-        </div>
-      </div>
-
-      {/* Public agenda → add schedules + the list. Private → a short note. */}
-      {isPublic ? (<>
-      {/* ── Slot generator (public agenda only) ──────────── */}
-      <div className="rounded-2xl border border-[#e5e7eb] p-4 sm:p-5">
+        {/* Public agenda → the slot generator lives in the SAME card, under a
+            divider (one cohesive flow, fewer borders). */}
+        {isPublic && (
+        <div className="mt-4 pt-4 border-t border-[#f3f4f6]">
         <h3 className="text-sm font-semibold text-[#111827] mb-1">{t("addHeading")}</h3>
         <p className="text-xs text-[#6b7280] mb-4">{t("addSub")}</p>
 
@@ -528,9 +497,12 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
           )}
         </div>
         )}
+        </div>
+        )}
       </div>
 
-      {/* ── Slot list ───────────────────────────────────────────── */}
+      {/* ── Slot list (public agenda only) ───────────────────────── */}
+      {isPublic && (
       <div>
         <h3 className="text-sm font-semibold text-[#111827] mb-3">{t("upcomingTitle")}</h3>
         {loading ? (
@@ -595,11 +567,14 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
           </div>
         )}
       </div>
-      </>) : (
+      )}
+
+      {/* Private → a short note instead of the agenda. */}
+      {!isPublic && (
         <div className="rounded-xl bg-[#fffbeb] border border-[#fde68a] p-4 text-sm text-[#92400e] flex items-start gap-2">
           <Lock className="h-4 w-4 shrink-0 mt-0.5" />
           <span>
-            {t.rich("privateNote", { ...rich, call: allowPhoneCall ? t("orCall") : "" })}
+            {t.rich("privateNote", { ...rich, call: "" })}
           </span>
         </div>
       )}

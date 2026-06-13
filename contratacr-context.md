@@ -28,6 +28,13 @@ _Earlier: 2026-06-07 (sprint 24 — fully automatic identity verification: self-
 
 ---
 
+## Sprint 102 (2026-06-13) — Disponibilidad restructured (one flow), call toggle → Mi perfil
+
+`availability-editor.tsx` + `profile-editor.tsx` + dashboard + i18n:
+- **Removed the privada explanatory paragraph** (`privateOnDesc`/`privateOffDesc` no longer rendered — just the "Disponibilidad privada" label + toggle).
+- **Merged into ONE cohesive card:** the privada toggle + (when pública) the slot generator under a **divider in the same card** (was two bordered cards). The slot **list** is now a sibling below, gated on `isPublic`; the private note is its own `{!isPublic && …}`.
+- **"Permitir contacto por llamada" moved to Mi perfil → Contacto** (`profile-editor.tsx`): new `allowPhoneCall` state seeded from `initial.allow_phone_call`, saved in `identityFields` (`allow_phone_call`); a toggle row under the call-number field. Removed it (and `toggleAllowPhoneCall`/`allowPhoneCall` state/`initialAllowPhoneCall` prop) from the availability editor + dashboard. Copied `allowCallLabel`/`allowCallDesc` into the `profileEditor` namespace. Default stays **público** (privada OFF). Build green, `tsc` clean.
+
 ## Sprint 101 (2026-06-13) — Mi perfil trimmed: fewer labels, no Dirección, collapsed Datos básicos
 
 `profile-editor.tsx` + i18n:

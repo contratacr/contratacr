@@ -1267,7 +1267,9 @@
     "photoError": "Couldn't upload the photo. Try again.",
     "photoAlt": "Profile photo",
     "certSave": "Save certification",
-    "certAllRequired": "Fill in the name, institution and year (4 digits)."
+    "certAllRequired": "Fill in the name, institution and year (4 digits).",
+    "allowCallLabel": "Allow contact by phone call",
+    "allowCallDesc": "If you enable it, clients will see the “Call us” option to your number."
   },
   "verificationPanel": {
     "appealMinError": "Tell us what you corrected (at least 10 characters).",

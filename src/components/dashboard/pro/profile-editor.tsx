@@ -93,6 +93,9 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
   const [whatsapp, setWhatsapp] = useState<string>(initial.whatsapp ?? "");
   // Optional SEPARATE number for calls. Empty → the WhatsApp number is used for calls.
   const [callPhone, setCallPhone] = useState<string>(initial.call_phone ?? "");
+  // "Permitir contacto por llamada" — moved here from Disponibilidad (it's a
+  // contact setting). Saved with the rest of the profile.
+  const [allowPhoneCall, setAllowPhoneCall] = useState<boolean>(!!initial.allow_phone_call);
   const [contactEmail, setContactEmail] = useState<string>(initial.contact_email ?? "");
   const [fullName, setFullName] = useState<string>(initial.profiles?.full_name ?? "");
   // The official name is locked once verified — it's what backs the "Identidad
@@ -271,6 +274,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         coverage_country: false,
         insurance_networks: insurers,
         call_phone: callPhone.trim() || null,
+        allow_phone_call: allowPhoneCall,
         contact_email: contactEmail.trim() || null,
       };
 
@@ -559,6 +563,23 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
             onChange={(digits) => { setCallPhone(digits); touch(); }}
           />
           <p className="text-xs text-[#9ca3af] mt-1">{t("callHelp")}</p>
+        </div>
+
+        {/* Permitir contacto por llamada — moved from Disponibilidad; a contact
+            setting. Adds a "Llamar" action for clients (uses callPhone ?? whatsapp). */}
+        <div className="flex items-center justify-between gap-4 rounded-xl bg-[#f9fafb] p-3.5">
+          <div>
+            <p className="text-sm font-medium text-[#111827]">{t("allowCallLabel")}</p>
+            <p className="text-xs text-[#6b7280] mt-0.5">{t("allowCallDesc")}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => { setAllowPhoneCall((v) => !v); touch(); }}
+            className={cn("relative h-6 w-11 rounded-full transition-all shrink-0", allowPhoneCall ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
+            aria-label={t("allowCallLabel")}
+          >
+            <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", allowPhoneCall ? "left-5" : "left-0.5")} />
+          </button>
         </div>
 
         {/* Optional public contact email — opt-in; shown to clients who prefer

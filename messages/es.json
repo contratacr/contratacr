@@ -1267,7 +1267,9 @@
     "photoError": "No se pudo subir la foto. Intenta de nuevo.",
     "photoAlt": "Foto de perfil",
     "certSave": "Guardar certificación",
-    "certAllRequired": "Completa el nombre, la institución y el año (4 dígitos)."
+    "certAllRequired": "Completa el nombre, la institución y el año (4 dígitos).",
+    "allowCallLabel": "Permitir contacto por llamada",
+    "allowCallDesc": "Si lo activas, los clientes verán la opción “Contáctanos por llamada” a tu número."
   },
   "verificationPanel": {
     "appealMinError": "Cuéntanos qué corregiste (mínimo 10 caracteres).",
