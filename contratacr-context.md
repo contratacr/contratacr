@@ -28,6 +28,14 @@ _Earlier: 2026-06-07 (sprint 24 — fully automatic identity verification: self-
 
 ---
 
+## Sprint 84 (2026-06-12) — locations step restructured (area-first, separate panels)
+
+Fixed the cluttered/redundant "¿Cómo ofreces tus servicios?" locations step in BOTH registration (`registro/profesional`) and the panel editor (`profile-editor`) — same pattern in both.
+- **New order in `WorkplacesPicker`:** **provincia → cantón FIRST** (authoritative, drives `/buscar`), optional place name, THEN an **optional** map pin for precision. The pin is coordinates ONLY now — removed the reverse-geocode prefill of provincia/cantón (`onPinPlaced` no longer takes/uses admin areas; deleted `deriveAdmin` + the `matchProvinceCanton` import). **No more "confirm the provincia/cantón of your pin" double question.**
+- **Two separate panels:** Fixed location (Panel 1) and Travel/coverage (Panel 2) are now distinct `bg-[#f9fafb]` blocks (fixed listed first), not one mixed block. Both modes still combinable; multiple fixed places preserved.
+- **EN parity:** `CoverageAreaSelector` fully translated (new `coverageSelector` namespace); `workplacesPicker` keys updated (`lead`/`mapOptional`/`hintSelectArea`; dropped obsolete `confirmMarked`/`addByProvinceCanton`/`hintProvinceCanton`/`hintCanton`).
+- **Data model unchanged** — workplace `provinciaId`/`cantonId` (from the selects) + coverage zones still feed `computeSearchAreas`; `/buscar` filtering by cantón/provincia/coverage works as before. Pattern documented in design-guide ("Locations step").
+
 ## Sprint 83 (2026-06-12) — usability audit + fix pass (R1–R10)
 
 Hard usability rules **R1–R10** were codified as permanent standards in `contratacr-design-guide.md` §1.5 (no nested borders, no 360px truncation, one obvious primary, no dead ends, no unexplained controls, form rules, consistency, feedback, dismissal/selection, English parity) + an explicit **off-limits list** (verification/auth/booking/payment).
