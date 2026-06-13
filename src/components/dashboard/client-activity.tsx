@@ -561,9 +561,9 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                 </>
                               )}
                               {proposal.status === "accepted" && (
-                                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold px-2.5 py-1">
-                                  <CheckCircle2 className="h-3.5 w-3.5" />
-                                  {finalized ? t("finalized") : t("accepted")}
+                                <span className="inline-flex items-center justify-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold px-3 py-1 leading-none">
+                                  <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                                  <span>{finalized ? t("finalized") : t("accepted")}</span>
                                 </span>
                               )}
                               {proposal.status === "declined" && <Badge variant="error">{t("declined")}</Badge>}

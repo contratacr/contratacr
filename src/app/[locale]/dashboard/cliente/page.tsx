@@ -343,7 +343,6 @@ export default function ClientDashboardPage() {
                       ) : t("changePhoto")}
                       <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={photoUploading} />
                     </label>
-                    <p className="text-xs text-[#9ca3af] mt-1">{t("photoHint")}</p>
                   </div>
                 </div>
 

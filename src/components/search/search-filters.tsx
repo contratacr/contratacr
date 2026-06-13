@@ -3,7 +3,7 @@
 import { useRouter, usePathname } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Search, X, ShieldCheck, MapPin, Loader2 } from "lucide-react";
+import { Search, X, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PROVINCES, getCantonsByProvince, nearestProvinceId } from "@/lib/data/cr-geography";
@@ -240,34 +240,32 @@ export function SearchFilters() {
 
       {/* Geolocation + verified toggles + clear */}
       <div className="mt-2.5 pt-2.5 border-t border-[#f3f4f6] flex flex-col gap-2">
+        {/* Consistent toggle rows (label + on/off switch, no icons). */}
         <button
           type="button"
           onClick={useMyLocation}
           disabled={geoLoading}
-          className={`w-full inline-flex items-center justify-center gap-1.5 rounded-lg border px-2.5 py-2 text-xs font-medium transition-colors ${
-            geoActive
-              ? "bg-[#EBF5FB] border-[#bfdbfe] text-[#0089bb]"
-              : "bg-white border-[#e5e7eb] text-[#374151] hover:border-[#009FD9]"
-          }`}
+          className="w-full inline-flex items-center justify-between gap-2 rounded-lg border border-[#e5e7eb] bg-white px-3 py-2 text-xs font-medium text-[#374151] hover:border-[#009FD9] transition-colors"
         >
-          {geoLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MapPin className="h-3.5 w-3.5" />}
-          {geoActive ? t("filters.nearMeActive") : t("filters.nearMe")}
+          <span>{geoActive ? t("filters.nearMeActive") : t("filters.nearMe")}</span>
+          {geoLoading ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
+          ) : (
+            <span className={`flex h-4 w-7 shrink-0 items-center rounded-full transition-colors ${geoActive ? "bg-[#009FD9]" : "bg-[#d1d5db]"}`}>
+              <span className={`h-3 w-3 rounded-full bg-white transition-transform ${geoActive ? "translate-x-3.5" : "translate-x-0.5"}`} />
+            </span>
+          )}
         </button>
 
         <button
           type="button"
           onClick={() => { const v = !verifiedOnly; setVerifiedOnly(v); applyFilters({ verificados: v ? "1" : "" }); }}
-          className={`w-full inline-flex items-center justify-center gap-1.5 rounded-lg border px-2.5 py-2 text-xs font-medium transition-colors ${
-            verifiedOnly
-              ? "bg-[#dcfce7] border-[#bbf7d0] text-[#15803d]"
-              : "bg-white border-[#e5e7eb] text-[#374151] hover:border-[#16a34a]"
-          }`}
+          className="w-full inline-flex items-center justify-between gap-2 rounded-lg border border-[#e5e7eb] bg-white px-3 py-2 text-xs font-medium text-[#374151] hover:border-[#009FD9] transition-colors"
         >
-          <span className={`flex h-3.5 w-6 items-center rounded-full transition-colors ${verifiedOnly ? "bg-[#16a34a]" : "bg-[#d1d5db]"}`}>
-            <span className={`h-2.5 w-2.5 rounded-full bg-white transition-transform ${verifiedOnly ? "translate-x-3" : "translate-x-0.5"}`} />
+          <span>{t("filters.verifiedOnly")}</span>
+          <span className={`flex h-4 w-7 shrink-0 items-center rounded-full transition-colors ${verifiedOnly ? "bg-[#009FD9]" : "bg-[#d1d5db]"}`}>
+            <span className={`h-3 w-3 rounded-full bg-white transition-transform ${verifiedOnly ? "translate-x-3.5" : "translate-x-0.5"}`} />
           </span>
-          <ShieldCheck className="h-3.5 w-3.5" />
-          {t("filters.verifiedOnly")}
         </button>
 
         {geoError && <span className="text-xs text-[#b45309]">{geoError}</span>}

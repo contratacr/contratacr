@@ -652,9 +652,9 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                         </div>
                       )}
 
-                      <div className="flex items-start gap-2 bg-[#EBF5FB] border border-[#bfdbfe] rounded-xl px-4 py-3 mb-5">
-                        <Shield className="h-4 w-4 text-[#009FD9] shrink-0 mt-0.5" />
-                        <p className="text-xs text-[#0089bb] font-medium">
+                      <div className="flex items-start gap-2 mb-5">
+                        <Shield className="h-4 w-4 text-[#9ca3af] shrink-0 mt-0.5" />
+                        <p className="text-xs text-[#6b7280]">
                           {t("reviewsGate")}
                         </p>
                       </div>

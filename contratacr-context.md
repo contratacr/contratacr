@@ -28,6 +28,15 @@ _Earlier: 2026-06-07 (sprint 24 — fully automatic identity verification: self-
 
 ---
 
+## Sprint 104 (2026-06-13) — Visual cleanup (part 1): de-box + filter toggles + photo hint
+
+Contained parts of the visual-cleanup pass:
+- **/buscar filters** (`search-filters.tsx`): "cerca de mí" and "Solo identidad verificada" are now **consistent toggle rows** (label + on/off switch, brand-blue when on), **icons removed** (dropped `MapPin`/`ShieldCheck` imports). Don't touch the rest of /buscar.
+- **De-boxed** (text + icon only, no colored container): the public-profile **reviews-gate** note (`reviewsGate`, now neutral grey) and the **OAuth guidance blocks** in Cuenta y seguridad (`OAuthGuide` — removed bg/border, neutral dark text, brand-blue link only, grey step badges).
+- **Client photo control** matches the pro panel: removed the "JPG, PNG o WebP — máx 5MB" hint (`photoHint` <p>).
+- **Projects "Aceptada" chip** centered properly (`justify-center`, `leading-none`, wrapped label).
+- Still pending in this pass: unify dashboards to a sidebar, redesign "Sobre mí", favoritos one-container, de-box the client "Identidad verificada" badge. Build green, `tsc` clean.
+
 ## Sprint 103 (2026-06-13) — "Profesiones" section: naming, consolidation, principal, project matching
 
 - **Naming:** the dashboard tab `proPanel.tabs.services` is now **"Profesiones"** ("Professions") — professions are the group, services nest under each (per the Servicios redesign).
