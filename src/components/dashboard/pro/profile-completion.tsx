@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Check, ChevronRight, ShieldCheck } from "lucide-react";
+import { ChevronRight, ShieldCheck } from "lucide-react";
 import { anyHealthCategory } from "@/lib/data/categories";
 
 // Context-aware profile-completion (inspired by Airbnb's "complete your listing"
@@ -46,7 +46,8 @@ export function computeCompletion(pro: ProRecord): {
 
   const items: CompletionItem[] = [
     { key: "photo", done: !!profiles.avatar_url, tab: "profile" },
-    { key: "bio", done: typeof pro.bio === "string" && pro.bio.trim().length >= 30, tab: "profile" },
+    // Require a real description (not "test") — a sensible minimum length.
+    { key: "bio", done: typeof pro.bio === "string" && pro.bio.trim().length >= 40, tab: "profile" },
     { key: "services", done: hasLen(pro.services), tab: "services" },
     { key: "location", done: hasLocation, tab: "profile" },
     { key: "whatsapp", done: typeof pro.whatsapp === "string" && pro.whatsapp.trim().length > 0, tab: "profile" },
@@ -67,7 +68,6 @@ export function ProfileCompletion({ pro, onGo }: { pro: ProRecord; onGo: (tab: s
   const t = useTranslations("proPanel.completion");
   const { percent, items, verified } = computeCompletion(pro);
   const missing = items.filter((i) => !i.done);
-  const doneItems = items.filter((i) => i.done);
   const complete = percent === 100;
 
   // Everything controllable is done AND identity is verified → nothing to nudge.
@@ -154,17 +154,6 @@ export function ProfileCompletion({ pro, onGo }: { pro: ProRecord; onGo: (tab: s
           </span>
           <ChevronRight className="h-5 w-5 shrink-0 text-[#9ca3af] transition-transform group-hover:translate-x-0.5" />
         </button>
-      )}
-
-      {/* Quiet reassurance of progress already made. */}
-      {doneItems.length > 0 && !complete && (
-        <div className="flex flex-wrap gap-x-3 gap-y-1.5 border-t border-[#f3f4f6] px-4 sm:px-6 py-3">
-          {doneItems.map((i) => (
-            <span key={i.key} className="inline-flex items-center gap-1 text-[11px] font-medium text-[#16a34a]">
-              <Check className="h-3.5 w-3.5" /> {t(i.key)}
-            </span>
-          ))}
-        </div>
       )}
     </section>
   );

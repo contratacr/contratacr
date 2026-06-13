@@ -28,6 +28,10 @@ _Earlier: 2026-06-07 (sprint 24 — fully automatic identity verification: self-
 
 ---
 
+## Sprint 96 (2026-06-13) — "Completa tu perfil" refinements
+
+`profile-completion.tsx` + i18n: (1) **bio minimum raised to 40 chars** so junk like "test" never counts as a real description. (2) **Show ONLY pending items** — removed the green "done items" chip summary (and `doneItems`/`Check`); the card now lists just what's left + the verification CTA. (3) **Clearer services wording:** `services` label → "Agrega los servicios que ofreces en tu profesión" / "Add the services you offer in your profession". Build green.
+
 ## Sprint 95 (2026-06-13) — Phone: explicit one-vs-two + booking prefill
 
 - **One number = both; two = split.** Added an explicit `whatsappHelp` line under the WhatsApp field ("También se usa para las llamadas, salvo que agregues un número aparte abajo"). Logic unchanged: WhatsApp button → `whatsapp`; Llamar → `callPhone ?? whatsapp`.
