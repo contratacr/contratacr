@@ -84,27 +84,51 @@ export function LocationPicker({ value, onChange, apiKey }: LocationPickerProps)
     mapInstanceRef.current = map;
     geocoderRef.current = new maps.Geocoder();
 
-    // NEW Places Autocomplete — a web component that renders its own input. We
-    // append it into the container so it inherits our layout. CR-restricted.
-    if (pacContainerRef.current && maps.places?.PlaceAutocompleteElement && pacContainerRef.current.childElementCount === 0) {
-      const pac = new maps.places.PlaceAutocompleteElement({ includedRegionCodes: ["cr"] });
-      pac.style.width = "100%";
-      pac.setAttribute("placeholder", t("searchPlaceholder"));
-      pacContainerRef.current.appendChild(pac);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      pac.addEventListener("gmp-select", async (e: any) => {
-        const prediction = e.placePrediction ?? e.place;
-        if (!prediction) return;
-        const place = typeof prediction.toPlace === "function" ? prediction.toPlace() : prediction;
-        await place.fetchFields({ fields: ["location", "formattedAddress", "addressComponents"] });
-        if (!place.location) return;
-        placeMarker(place.location);
-        map.setCenter(place.location);
-        map.setZoom(16);
-        const address = place.formattedAddress ?? "";
-        const { lat, lng } = toLatLng(place.location);
-        onChange({ lat, lng, formattedAddress: address, ...extractAdmin(place.addressComponents) });
-      });
+    // Place search — prefer the new PlaceAutocompleteElement; fall back to the
+    // legacy Autocomplete widget if it's unavailable or its backend errors (e.g.
+    // "Places API (New)" not enabled while the legacy Places API is).
+    const pacEl = pacContainerRef.current;
+    if (pacEl && maps.places && pacEl.childElementCount === 0) {
+      const mountLegacy = () => {
+        if (!maps.places?.Autocomplete || pacEl.childElementCount > 0) return;
+        const input = document.createElement("input");
+        input.type = "text";
+        input.placeholder = t("searchPlaceholder");
+        input.className = "h-11 w-full rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent";
+        pacEl.appendChild(input);
+        const ac = new maps.places.Autocomplete(input, { componentRestrictions: { country: "cr" }, fields: ["geometry", "formatted_address", "address_components"] });
+        ac.addListener("place_changed", () => {
+          const place = ac.getPlace();
+          const loc = place.geometry?.location;
+          if (!loc) return;
+          placeMarker(loc); map.setCenter(loc); map.setZoom(16);
+          const { lat, lng } = toLatLng(loc);
+          onChange({ lat, lng, formattedAddress: place.formatted_address ?? "", ...extractAdmin(place.address_components) });
+        });
+      };
+      if (maps.places.PlaceAutocompleteElement) {
+        const pac = new maps.places.PlaceAutocompleteElement({ includedRegionCodes: ["cr"], requestedRegion: "cr" });
+        pac.style.width = "100%";
+        pac.setAttribute("placeholder", t("searchPlaceholder"));
+        pacEl.appendChild(pac);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        pac.addEventListener("gmp-select", async (e: any) => {
+          const prediction = e.placePrediction ?? e.place;
+          if (!prediction) return;
+          const place = typeof prediction.toPlace === "function" ? prediction.toPlace() : prediction;
+          await place.fetchFields({ fields: ["location", "formattedAddress", "addressComponents"] });
+          if (!place.location) return;
+          placeMarker(place.location);
+          map.setCenter(place.location);
+          map.setZoom(16);
+          const address = place.formattedAddress ?? "";
+          const { lat, lng } = toLatLng(place.location);
+          onChange({ lat, lng, formattedAddress: address, ...extractAdmin(place.addressComponents) });
+        });
+        pac.addEventListener("gmp-error", () => { try { pac.remove(); } catch {} mountLegacy(); });
+      } else {
+        mountLegacy();
+      }
     }
 
     if (value) placeMarker(new maps.LatLng(value.lat, value.lng));

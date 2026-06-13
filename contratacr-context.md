@@ -28,6 +28,14 @@ _Earlier: 2026-06-07 (sprint 24 — fully automatic identity verification: self-
 
 ---
 
+## Sprint 94 (2026-06-13) — Places autocomplete: robust + legacy fallback + dropdown visibility
+
+Address/place search ("Clínica Bíblica") returned no suggestions. Hardened the shared Places setup in BOTH `workplaces-picker.tsx` (registration + panel) and `location-picker.tsx` (booking):
+- **Legacy fallback:** prefer the new `PlaceAutocompleteElement`; on `gmp-error` (e.g. **"Places API (New)" not enabled** on the key while the legacy Places API is) or if the element is unavailable, mount the legacy `google.maps.places.Autocomplete` widget (`componentRestrictions: { country: "cr" }`) so search keeps working either way. Selecting a result still drops the draft pin.
+- **Dropdown visibility (globals.css):** `.pac-container { z-index:100000 !important }` + `.cr-pac { position:relative; z-index:60 }` so the suggestions float ABOVE modals/cards and the host cell never clips them (a clipped dropdown reads as "no suggestions").
+- **Re-open fix (workplaces-picker):** the map lives behind the optional "Marcar en el mapa" toggle; closing it now resets `mapInstanceRef` so re-opening re-binds the map AND re-mounts the search box (previously the second open showed no search). Added `requestedRegion: "cr"`.
+- **If still empty in prod:** verify in Google Cloud the API key has **Places API (New)** (or legacy Places API for the fallback) enabled and the HTTP-referrer restriction allows the production domain. Build green, `tsc` clean.
+
 ## Sprint 93 (2026-06-13) — Two bug fixes: early cédula-taken check + no fake ratings
 
 1. **Cédula already-registered, validated EARLY (booking).** Before, the "ya está registrada en otra cuenta" message only appeared on the DB unique-constraint failure AFTER pressing confirm (and the name-mismatch warning showed first). New endpoint **`GET /api/cedula-available?cedula=…` → `{ taken }`** (server session + admin client, excludes the requester's own account, returns only the boolean — no account info leaked). In `booking-modal.tsx` the live self-ID effect now checks availability the moment the ID validates (any type), sets `cedulaTaken` + a friendly inline error, and **takes precedence over the name-mismatch warning** (`nameWillChange` gated on `!cedulaTaken`); `validateClientCedula` re-checks as a confirm-time safety net; both `CedulaInput` onChanges reset the flag. Message: "Esa cédula ya está registrada en otra cuenta. Inicia sesión en esa cuenta o usa una cédula diferente."

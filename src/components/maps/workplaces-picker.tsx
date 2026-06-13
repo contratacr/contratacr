@@ -136,6 +136,59 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200 }: W
     }
   }
 
+  // Mount a place-search box. Prefer the new PlaceAutocompleteElement; if it isn't
+  // available OR errors at runtime (e.g. "Places API (New)" not enabled on the key
+  // while the legacy Places API is), fall back to the legacy Autocomplete widget so
+  // search keeps working. Either way a pick becomes a draft pin.
+  function mountAutocomplete(map: GMaps, container: HTMLElement) {
+    const maps = getMaps();
+    if (!maps?.places) return;
+
+    function mountLegacy() {
+      if (!maps.places?.Autocomplete || container.childElementCount > 0) return;
+      const input = document.createElement("input");
+      input.type = "text";
+      input.placeholder = t("searchPlaceholder");
+      input.className = "h-11 w-full rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent";
+      container.appendChild(input);
+      const ac = new maps.places.Autocomplete(input, { componentRestrictions: { country: "cr" }, fields: ["geometry", "formatted_address"] });
+      ac.addListener("place_changed", () => {
+        const place = ac.getPlace();
+        const loc = place.geometry?.location;
+        if (!loc) return;
+        const lat = loc.lat(), lng = loc.lng();
+        map.setCenter({ lat, lng }); map.setZoom(15);
+        onPinPlaced(lat, lng, place.formatted_address || "");
+      });
+    }
+
+    if (maps.places.PlaceAutocompleteElement) {
+      try {
+        const pac = new maps.places.PlaceAutocompleteElement({ includedRegionCodes: ["cr"], requestedRegion: "cr" });
+        pac.style.width = "100%";
+        pac.setAttribute("placeholder", t("searchPlaceholder"));
+        container.appendChild(pac);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        pac.addEventListener("gmp-select", async (e: any) => {
+          const prediction = e.placePrediction ?? e.place;
+          if (!prediction) return;
+          const place = typeof prediction.toPlace === "function" ? prediction.toPlace() : prediction;
+          await place.fetchFields({ fields: ["location", "formattedAddress"] });
+          if (!place.location) return;
+          const loc = place.location;
+          map.setCenter(loc); map.setZoom(15);
+          const lat = typeof loc.lat === "function" ? loc.lat() : loc.lat;
+          const lng = typeof loc.lng === "function" ? loc.lng() : loc.lng;
+          onPinPlaced(lat, lng, place.formattedAddress || "");
+        });
+        // If the new backend is blocked, the element fires an error → use legacy.
+        pac.addEventListener("gmp-error", () => { try { pac.remove(); } catch {} mountLegacy(); });
+        return;
+      } catch { /* fall through to legacy */ }
+    }
+    mountLegacy();
+  }
+
   function initMap() {
     if (!mapRef.current || mapInstanceRef.current) return;
     const maps = getMaps();
@@ -154,26 +207,8 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200 }: W
     mapInstanceRef.current = map;
     geocoderRef.current = new maps.Geocoder();
 
-    // NEW Places Autocomplete (web component), CR-restricted.
-    if (pacContainerRef.current && maps.places?.PlaceAutocompleteElement && pacContainerRef.current.childElementCount === 0) {
-      const pac = new maps.places.PlaceAutocompleteElement({ includedRegionCodes: ["cr"] });
-      pac.style.width = "100%";
-      pac.setAttribute("placeholder", t("searchPlaceholder"));
-      pacContainerRef.current.appendChild(pac);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      pac.addEventListener("gmp-select", async (e: any) => {
-        const prediction = e.placePrediction ?? e.place;
-        if (!prediction) return;
-        const place = typeof prediction.toPlace === "function" ? prediction.toPlace() : prediction;
-        await place.fetchFields({ fields: ["location", "formattedAddress"] });
-        if (!place.location) return;
-        const loc = place.location;
-        map.setCenter(loc);
-        map.setZoom(15);
-        const lat = typeof loc.lat === "function" ? loc.lat() : loc.lat;
-        const lng = typeof loc.lng === "function" ? loc.lng() : loc.lng;
-        onPinPlaced(lat, lng, place.formattedAddress || "");
-      });
+    if (pacContainerRef.current && pacContainerRef.current.childElementCount === 0) {
+      mountAutocomplete(map, pacContainerRef.current);
     }
 
     map.addListener("click", (e: { latLng: GMaps }) => {
@@ -212,9 +247,11 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200 }: W
   }
 
   // Initialize the map only once the optional refinement is opened (the container
-  // doesn't exist until then).
+  // doesn't exist until then). On CLOSE, drop the map instance so the next open
+  // re-binds to the freshly-mounted container + re-mounts the search box.
   useEffect(() => {
-    if (!effectiveKey || !showMap) return;
+    if (!effectiveKey) return;
+    if (!showMap) { mapInstanceRef.current = null; return; }
     loadGoogleMaps(effectiveKey).then(initMap).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showMap]);

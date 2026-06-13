@@ -298,3 +298,19 @@ select:focus-visible {
 .resource-card:hover .resource-overlay {
   opacity: 1 !important;
 }
+
+/* ─── Google Places autocomplete ───
+   The new PlaceAutocompleteElement + the legacy `.pac-container` dropdown must
+   float ABOVE modals/cards (the booking modal sits at z-50+), and the host cell
+   must never clip the suggestions. Without this the dropdown can render hidden,
+   reading as "no suggestions". */
+.pac-container {
+  z-index: 100000 !important;
+}
+.cr-pac {
+  position: relative;
+  z-index: 60;
+}
+.cr-pac gmp-place-autocomplete {
+  width: 100%;
+}
