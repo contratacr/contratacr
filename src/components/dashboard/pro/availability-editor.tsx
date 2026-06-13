@@ -377,12 +377,13 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
   }, [startMin]);
 
   return (
-    <div className="flex flex-col gap-6">
-      {/* ── Cómo te contactan: ONE control (privada vs pública) decides everything
-             below. Private = WhatsApp-only (no agenda); pública = agenda publicada.
-             WhatsApp is always available. Soft surface, no hard border. ── */}
-      <div className="rounded-2xl bg-[#f9fafb] p-4 sm:p-5">
-        <div className="flex items-center gap-2 mb-4">
+    <div className="flex flex-col gap-4">
+      {/* ── STEP 1 — ONE control (privada vs pública) decides everything below.
+             Private = WhatsApp-only (no agenda); pública = agenda publicada.
+             WhatsApp is always available. ── */}
+      <div className="rounded-xl border border-[#e5e7eb] p-4">
+        <div className="flex items-center gap-2.5 mb-3">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#009FD9] text-white text-xs font-bold shrink-0">1</span>
           <h3 className="text-sm font-semibold text-[#111827]">{t("contactHeading")}</h3>
           {savingVisibility && <Loader2 className="h-4 w-4 animate-spin text-[#009FD9] ml-auto" />}
         </div>
@@ -447,10 +448,12 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
 
       {/* Public agenda → add schedules + the list. Private → a short note. */}
       {isPublic ? (<>
-      {/* ── Slot generator (public agenda only) — soft surface, no hard border ── */}
-      <div className="rounded-2xl bg-[#f9fafb] p-4 sm:p-5">
-        <h3 className="text-sm font-semibold text-[#111827] mb-1">{t("addHeading")}</h3>
-        <p className="text-xs text-[#6b7280] mb-4">{t("addSub")}</p>
+      {/* ── STEP 2 — Slot generator (public agenda only) ──────────── */}
+      <div className="rounded-xl border border-[#e5e7eb] p-4">
+        <div className="flex items-center gap-2.5 mb-4">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#009FD9] text-white text-xs font-bold shrink-0">2</span>
+          <h3 className="text-sm font-semibold text-[#111827]">{t("addHeading")}</h3>
+        </div>
 
         {locationOptions.length === 0 ? (
           <div className="rounded-xl bg-[#fffbeb] border border-[#fde68a] p-4 text-sm text-[#92400e]">
@@ -459,7 +462,6 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
         ) : (
         <div className="flex flex-col gap-4">
           {/* Paso 1 — ¿para qué servicio y en qué ubicación? */}
-          <p className="text-[11px] font-bold uppercase tracking-wide text-[#9ca3af]">{t("genStep1")}</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {professionOptions.length > 1 && (
               <div className="flex flex-col gap-1">
@@ -478,7 +480,6 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
           </div>
 
           {/* Paso 2 — el rango horario. */}
-          <p className="text-[11px] font-bold uppercase tracking-wide text-[#9ca3af] pt-3 border-t border-[#f3f4f6]">{t("genStep2")}</p>
           <div className="flex flex-wrap items-end gap-3">
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-[#6b7280]">{t("date")}</label>

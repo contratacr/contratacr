@@ -300,16 +300,8 @@ export function ServicesEditor({
               </button>
             </div>
 
-            {profServices.length === 0 && formCategory !== prof && (
-              <button
-                type="button"
-                onClick={() => openAdd(prof)}
-                className="w-full rounded-xl border border-dashed border-[#d1d5db] hover:border-[#009FD9] hover:bg-[#f9fafb] py-4 flex flex-col items-center justify-center gap-1.5 transition-colors"
-              >
-                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#EBF5FB] text-[#009FD9]"><Plus className="h-4 w-4" /></span>
-                <span className="text-sm font-medium text-[#374151]">{t("addFirstService")}</span>
-                <span className="text-xs text-[#9ca3af]">{t("emptyUnderProfession")}</span>
-              </button>
+            {profServices.length === 0 && (editingId !== null || formCategory !== prof) && (
+              <p className="text-xs text-[#9ca3af] py-2">{t("emptyUnderProfession")}</p>
             )}
 
             {profServices.length > 0 && (

@@ -627,10 +627,9 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                             {certGroups.length > 1 && prof && (
                               <h3 className="text-xs font-bold uppercase tracking-wide text-[#0089bb] mb-2">{getCategoryLabel(prof, locale)}</h3>
                             )}
-                            {/* Flat divided rows (no per-item border boxes inside the card). */}
-                            <div className="flex flex-col divide-y divide-[#f3f4f6]">
+                            <div className="flex flex-col gap-2.5">
                               {certs.map((c, i) => (
-                                <div key={c.id ?? i} className="flex items-start gap-3 py-3">
+                                <div key={c.id ?? i} className="flex items-start gap-3 rounded-xl border border-[#e5e7eb] p-3.5">
                                   <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#EBF5FB] shrink-0">
                                     <Award className="h-4 w-4 text-[#009FD9]" />
                                   </div>
@@ -668,8 +667,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                         </div>
                       </div>
 
-                      {/* Borderless info note (no box-in-box inside the tab card). */}
-                      <div className="flex items-start gap-2 bg-[#EBF5FB] rounded-xl px-4 py-3 mb-5">
+                      <div className="flex items-start gap-2 bg-[#EBF5FB] border border-[#bfdbfe] rounded-xl px-4 py-3 mb-5">
                         <Shield className="h-4 w-4 text-[#009FD9] shrink-0 mt-0.5" />
                         <p className="text-xs text-[#0089bb] font-medium">
                           {t("reviewsGate")}

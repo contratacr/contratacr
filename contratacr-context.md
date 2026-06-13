@@ -28,6 +28,15 @@ _Earlier: 2026-06-07 (sprint 24 — fully automatic identity verification: self-
 
 ---
 
+## Sprint 87 (2026-06-12) — DESIGN REVERT: pre-redesign visual baseline restored (logic + i18n kept)
+
+Reverted the recent **design-redesign** passes back to the pre-redesign look (boundary `8a2f6ac`, "sprint 128 bug-fix sweep") while **keeping every bug/logic fix and the full ES/EN i18n**. Done on a throwaway branch (selective `git revert`, then fast-forwarded to main).
+
+- **Pure-design commits reverted in full:** `67db0a6` (de-nest pro dashboard + profile-completion redesign → **bordered `Card` shell + progress-ring checklist restored**, verification back as a checklist item), `438eb63` (onboarding "simpler professions" + grouped "cómo ofreces" → **always-visible profession search + separate location blocks restored**), `dcfe495`, `53d58a3`/`1c7d712` (locations area-first restructure → **pre-restructure WorkplacesPicker/CoverageAreaSelector restored**), `2edad38` (no-CR-ID disclosure link → **checkbox toggle restored**), `14b1997` (account OAuth note), `d662f32`/`1f56f1f`/`a84389c`/`1bd4f98` (availability step labels / Mi-perfil icon chips / Servicios empty-state / Verificación icon accents).
+- **Mixed commits hand-split — design reverted, logic kept:** `5be8417` (reverted availability soft-panels → **bordered STEP 1/STEP 2 boxes**; **KEPT** `availability_public:true`, `contact_preference:"ambas"`, and the 8:00–17:00 generator default), `263f1d1` (reverted the Ver-perfil map info-window override; **KEPT** the authoritative login redirect), `7b69730` (restored the **OAuth box border** + ghost "Eliminar" photo buttons; **left** the responsive client header + lean-registration content to avoid reintroducing untranslated Spanish).
+- **Conflict rule applied (R10-safe):** where a design revert collided with a later i18n edit, the **old layout was restored but the current `t()` strings were kept** (registro location blocks, profile-editor professions/location, dashboard tab headings, profile-completion). Added `proPanel.completion.verification`/`verificationBenefit` keys (ES/EN) for the re-added verification checklist item.
+- **NOT touched (preserved):** padrón/cédula server-side lookup (`/api/cedula/[id]` still gateless), the Realtime NotificationBell crash fix, the Places API (New) migration, booking/cédula logic, filter/label fixes, and the entire i18n sweep. Build green (`ƒ Proxy (Middleware)`), `tsc` clean, ES/EN JSON valid.
+
 ## Sprint 86 (2026-06-12) — "Completa tu perfil" navigates to the section
 
 - **Bug:** clicking a checklist item changed the tab but `setTab` only scrolled to the section on **mobile**; on desktop the completion widget (which sits above the sidebar+content row) vanished on navigate and nothing scrolled, so it felt like "nothing happened." Fix: `setTab` now **always** `scrollIntoView`s the content section (`contentRef`), so selecting any nav OR completion item lands you on the section.

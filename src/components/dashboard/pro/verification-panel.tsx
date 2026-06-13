@@ -118,7 +118,7 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
         {/* Appeal → straight to support (no padrón re-run for no-ID cases) */}
         {status !== "under_appeal" && (
           <div className="bg-white rounded-xl border border-[#e5e7eb] p-5">
-            <h3 className="font-semibold text-[#111827] text-sm mb-1 flex items-center gap-1.5"><Send className="h-4 w-4 text-[#009FD9]" /> {t("manualReviewTitle")}</h3>
+            <h3 className="font-semibold text-[#111827] text-sm mb-1">{t("manualReviewTitle")}</h3>
             <p className="text-xs text-[#6b7280] mb-3">{t("manualReviewBody")}</p>
             <textarea
               value={appeal}
@@ -135,7 +135,7 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
 
         {/* Add-cédula-later — runs the normal padrón verification automatically */}
         <div className="bg-white rounded-xl border border-[#e5e7eb] p-5">
-          <h3 className="font-semibold text-[#111827] text-sm mb-1 flex items-center gap-1.5"><ShieldCheck className="h-4 w-4 text-[#009FD9]" /> {t("hasCedulaTitle")}</h3>
+          <h3 className="font-semibold text-[#111827] text-sm mb-1">{t("hasCedulaTitle")}</h3>
           <p className="text-xs text-[#6b7280] mb-3">{t("hasCedulaBody")}</p>
           <div className="flex flex-wrap items-center gap-2">
             <input
@@ -205,7 +205,7 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
       {/* Rejected → appeal (re-runs automatically; if it still fails → support ticket) */}
       {status === "rejected" && (
         <div className="bg-white rounded-xl border border-[#e5e7eb] p-5">
-          <h3 className="font-semibold text-[#111827] text-sm mb-1 flex items-center gap-1.5"><RefreshCw className="h-4 w-4 text-[#009FD9]" /> {t("appealTitle")}</h3>
+          <h3 className="font-semibold text-[#111827] text-sm mb-1">{t("appealTitle")}</h3>
           <p className="text-xs text-[#6b7280] mb-3">
             {t("appealBody")}
           </p>

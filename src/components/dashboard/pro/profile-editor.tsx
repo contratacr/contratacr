@@ -10,7 +10,7 @@ import { LanguagesInput } from "@/components/ui/languages-input";
 import { WorkplacesPicker, type Workplace } from "@/components/maps/workplaces-picker";
 import { CoverageAreaSelector } from "@/components/maps/coverage-area-selector";
 import { createClient } from "@/lib/supabase/client";
-import { Camera, Check, X, Plus, Truck, MapPin, ChevronDown, Globe, ShieldCheck, Lock, Award, Info, User, Briefcase, Phone, Languages } from "lucide-react";
+import { Camera, Check, X, Plus, Truck, MapPin, ChevronDown, Globe, ShieldCheck, Lock, Award, Info } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { computeSearchAreas, primaryArea, type CoverageArea } from "@/lib/location";
 import { AseguradorasInput } from "@/components/ui/aseguradoras-input";
@@ -33,22 +33,17 @@ interface ProfileEditorProps {
 // Collapsible section — groups the long profile form into digestible blocks so
 // it's quick to scan and edit. Presentation only; all fields still live in the
 // same form/state and save identically.
-function Section({ title, desc, icon: Icon, defaultOpen = false, children }: { title: string; desc?: string; icon?: React.ElementType; defaultOpen?: boolean; children: React.ReactNode }) {
+function Section({ title, desc, defaultOpen = false, children }: { title: string; desc?: string; defaultOpen?: boolean; children: React.ReactNode }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div className="rounded-2xl border border-[#e5e7eb] bg-white overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[#fafafa] transition-colors"
+        className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-[#fafafa] transition-colors"
         aria-expanded={open}
       >
-        {Icon && (
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#EBF5FB] text-[#009FD9]">
-            <Icon className="h-4 w-4" />
-          </span>
-        )}
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0">
           <p className="text-sm font-semibold text-[#111827]">{title}</p>
           {desc && <p className="text-xs text-[#9ca3af] mt-0.5">{desc}</p>}
         </div>
@@ -83,7 +78,6 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
   // Aseguradoras only apply to health (es_salud) professionals.
   const isHealthPro = anyHealthCategory(professions);
   const [addCat, setAddCat] = useState("");
-  const [addingProf, setAddingProf] = useState(false);
   const [coverageAreas, setCoverageAreas] = useState<CoverageArea[]>(
     Array.isArray(initial.coverage_areas) ? initial.coverage_areas : []
   );
@@ -300,7 +294,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
       )}
 
       {/* ── Datos básicos ─────────────────────────────────────────────── */}
-      <Section title={t("secBasic")} desc={t("secBasicDesc")} icon={User} defaultOpen>
+      <Section title={t("secBasic")} desc={t("secBasicDesc")} defaultOpen>
         {/* Photo — explicit buttons, no hover-to-change */}
         <div className="flex items-center gap-4">
           <div className="relative h-20 w-20 rounded-full shrink-0">
@@ -328,7 +322,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
                 <Button type="button" variant="outline" size="sm" onClick={() => photoInputRef.current?.click()}>
                   <Camera className="h-4 w-4" /> {t("changePhoto")}
                 </Button>
-                <Button type="button" variant="outline" size="sm" onClick={handlePhotoRemove} className="border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600">
+                <Button type="button" variant="ghost" size="sm" onClick={handlePhotoRemove} className="text-red-500 hover:text-red-600">
                   <X className="h-4 w-4" /> {t("remove")}
                 </Button>
               </div>
@@ -398,14 +392,13 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
       </Section>
 
       {/* ── Profesión ─────────────────────────────────────────────────── */}
-      <Section title={t("secProfessions")} desc={t("secProfessionsDesc")} icon={Briefcase} defaultOpen>
+      <Section title={t("secProfessions")} desc={t("secProfessionsDesc")} defaultOpen>
         {/* Professions — multi-select (first is the primary/principal). Each profesión
-            groups the servicios managed in the Servicios tab. The "add" search is
-            revealed on demand so the principal profession reads cleanly. */}
+            groups the servicios managed in the Servicios tab. */}
         <div>
           <p className="text-xs text-[#9ca3af] mb-2">{t.rich("professionsHelp", rich)}</p>
           {professions.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-3">
+            <div className="flex flex-wrap gap-2 mb-2">
               {professions.map((p, i) => (
                 <span key={p} className="inline-flex items-center gap-1.5 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium pl-3 pr-1.5 py-1.5">
                   {getCategoryLabel(p, locale)}
@@ -419,25 +412,16 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
               ))}
             </div>
           )}
-          {addingProf ? (
-            <div className="flex flex-col gap-1.5">
-              <CategorySearch
-                value={addCat}
-                onChange={(v) => { addProfession(v); setAddingProf(false); }}
-                placeholder={t("searchProfession")}
-              />
-              <button type="button" onClick={() => setAddingProf(false)} className="self-start text-xs text-[#9ca3af] hover:text-[#374151]">{t("cancel")}</button>
-            </div>
-          ) : (
-            <button type="button" onClick={() => setAddingProf(true)} className="inline-flex items-center gap-1.5 text-sm font-medium text-[#009FD9] hover:underline">
-              <Plus className="h-4 w-4" /> {t("addAnotherProfession")}
-            </button>
-          )}
+          <CategorySearch
+            value={addCat}
+            onChange={(v) => addProfession(v)}
+            placeholder={t("searchProfession")}
+          />
         </div>
       </Section>
 
       {/* ── Certificaciones (texto, sin imágenes) — POR PROFESIÓN ─────── */}
-      <Section title={t("secCerts")} desc={t("secCertsDesc")} icon={Award}>
+      <Section title={t("secCerts")} desc={t("secCertsDesc")}>
         <p className="text-xs text-[#9ca3af]">
           {t.rich("certsHelp", rich)}
         </p>
@@ -494,14 +478,14 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
       </Section>
 
       {/* ── Ubicación y cobertura ─────────────────────────────────────── */}
-      <Section title={t("secLocation")} desc={t("secLocationDesc")} icon={MapPin}>
+      <Section title={t("secLocation")} desc={t("secLocationDesc")}>
         {/* Work mode — both can be selected (travels AND has fixed locations) */}
         <div>
           <label className="text-sm font-medium text-[#374151] block mb-2">{t("howOffer")} <span className="text-red-500">*</span> <span className="text-[#9ca3af] font-normal">{t("chooseBoth")}</span></label>
           <div className="grid grid-cols-2 gap-2">
             {([
-              { id: "fixed", icon: MapPin, title: t("fixedTitle"), desc: t("fixedDesc"), active: serviceFixed, toggle: () => { setServiceFixed((v) => !v); touch(); } },
               { id: "mobile", icon: Truck, title: t("mobileTitle"), desc: t("mobileDesc"), active: serviceMobile, toggle: () => { setServiceMobile((v) => !v); touch(); } },
+              { id: "fixed", icon: MapPin, title: t("fixedTitle"), desc: t("fixedDesc"), active: serviceFixed, toggle: () => { setServiceFixed((v) => !v); touch(); } },
             ] as const).map((opt) => (
               <button
                 key={opt.id}
@@ -520,28 +504,31 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
           </div>
         </div>
 
-        {/* PANEL 1 — Fixed location: provincia→cantón first, optional pin. Its own
-            delimited panel, separate from travel coverage. */}
+        {/* Fixed locations — ONE flow: search/tap the map or pick provincia+cantón,
+            then "Agregar lugar". (The picker holds both inputs.) */}
         {serviceFixed && (
-          <div className="rounded-xl bg-[#f9fafb] p-3.5 flex flex-col gap-2">
-            <label className="text-sm font-semibold text-[#111827] flex items-center gap-1.5">
-              <MapPin className="h-4 w-4 text-[#009FD9]" /> {t("workplaces")}
+          <div>
+            <label className="text-sm font-medium text-[#374151] block mb-1">
+              {t("workplaces")}
             </label>
-            <p className="text-xs text-[#9ca3af]">{t.rich("workplacesHelp", rich)}</p>
+            <p className="text-xs text-[#9ca3af] mb-2">
+              {t.rich("workplacesHelp", rich)}
+            </p>
             <WorkplacesPicker value={workplaces} onChange={(next) => { setWorkplaces(next); touch(); }} mapHeight={168} />
           </div>
         )}
 
-        {/* PANEL 2 — Travel/coverage: its own delimited panel, never mixed with
-            the fixed-location map. */}
+        {/* Coverage areas — only for "me desplazo": provincia+cantón pairs traveled to */}
         {serviceMobile && (
-          <div className="rounded-xl bg-[#f9fafb] p-3.5 flex flex-col gap-2">
-            <label className="text-sm font-semibold text-[#111827] flex items-center gap-1.5">
-              <Truck className="h-4 w-4 text-[#009FD9]" /> {t("coverageAreas")}
+          <div>
+            <label className="text-sm font-medium text-[#374151] block mb-1">
+              {t("coverageAreas")}
             </label>
-            <p className="text-xs text-[#9ca3af]">{t("coverageHelp")}</p>
+            <p className="text-xs text-[#9ca3af] mb-2">
+              {t("coverageHelp")}
+            </p>
             {hasCountryCoverage && hasNarrowerCoverage && (
-              <div className="flex items-start gap-2 rounded-lg bg-[#fffbeb] border border-[#fde68a] px-3 py-2 text-xs text-[#92400e]">
+              <div className="flex items-start gap-2 rounded-lg bg-[#fffbeb] border border-[#fde68a] px-3 py-2 mb-2 text-xs text-[#92400e]">
                 <Globe className="h-3.5 w-3.5 shrink-0 mt-0.5" />
                 <span>{t.rich("countryCoverageWarn", rich)}</span>
               </div>
@@ -559,7 +546,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
       </Section>
 
       {/* ── Contacto y precios ────────────────────────────────────────── */}
-      <Section title={t("secContact")} desc={t("secContactDesc")} icon={Phone}>
+      <Section title={t("secContact")} desc={t("secContactDesc")}>
         {/* WhatsApp — required contact channel */}
         <PhoneInput
           label={t("whatsapp")}
@@ -614,7 +601,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
           Aseguradoras only apply to HEALTH categories (es_salud) — a plumber
           has nothing to do with insurance, so we hide the field entirely for
           non-health pros (it isn't part of their profile at all). */}
-      <Section title={isHealthPro ? t("secLangInsurers") : t("secLang")} desc={t("secLangDesc")} icon={Languages}>
+      <Section title={isHealthPro ? t("secLangInsurers") : t("secLang")} desc={t("secLangDesc")}>
         {/* Languages — defaults to Español; extra languages are an optional bonus */}
         <div>
           <label className="text-sm font-medium text-[#374151] block mb-1.5">

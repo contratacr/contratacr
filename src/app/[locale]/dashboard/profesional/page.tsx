@@ -11,7 +11,7 @@ import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ProfileEditor } from "@/components/dashboard/pro/profile-editor";
 import { ProfileCompletion } from "@/components/dashboard/pro/profile-completion";
@@ -252,12 +252,6 @@ export default function ProDashboardPage() {
             </div>
           </div>
 
-          {/* Profile-completion nudge — prominent, at the TOP of the dashboard
-              (above the section containers), only while there's something to finish. */}
-          {activeTab === "profile" && (
-            <ProfileCompletion pro={pro} onGo={(tab) => setTab(tab as Tab)} />
-          )}
-
           <div className="flex flex-col lg:flex-row gap-6">
             {/* Sidebar nav — two clearly-labeled role groups */}
             <nav className="lg:w-60 shrink-0">
@@ -284,23 +278,26 @@ export default function ProDashboardPage() {
               </Card>
             </nav>
 
-            {/* Main content — no outer bordered card; the section heading sits on
-                the page and each section brings only the light containers it needs. */}
-            <div ref={contentRef} className="flex-1 min-w-0 scroll-mt-20 lg:scroll-mt-0">
-              <div className="mb-5">
-                <h2 className="text-lg font-semibold text-[#111827]">{t(`tabs.${activeTab}`)}</h2>
-                {TABS_WITH_SUBTITLE.has(activeTab) && (
-                  <p className="text-sm text-[#6b7280] mt-0.5">{t(`subtitles.${activeTab}`)}</p>
-                )}
-              </div>
-              <div>
+            {/* Main content */}
+            <div ref={contentRef} className="flex-1 scroll-mt-20 lg:scroll-mt-0">
+              <Card>
+                <CardHeader className="px-6 pt-6 pb-4">
+                  <h2 className="text-lg font-semibold text-[#111827]">{t(`tabs.${activeTab}`)}</h2>
+                  {TABS_WITH_SUBTITLE.has(activeTab) && (
+                    <p className="text-sm text-[#6b7280] mt-0.5">{t(`subtitles.${activeTab}`)}</p>
+                  )}
+                </CardHeader>
+                <CardContent className="px-6 pb-6">
                   {activeTab === "profile" && (
-                    <ProfileEditor
-                      professionalId={pro.id}
-                      profileId={user!.id}
-                      initial={pro}
-                      onSaved={handleSaved}
-                    />
+                    <>
+                      <ProfileCompletion pro={pro} onGo={(tab) => setTab(tab as Tab)} />
+                      <ProfileEditor
+                        professionalId={pro.id}
+                        profileId={user!.id}
+                        initial={pro}
+                        onSaved={handleSaved}
+                      />
+                    </>
                   )}
                   {activeTab === "services" && (
                     <ServicesEditor
@@ -363,7 +360,8 @@ export default function ProDashboardPage() {
                       <CloseAccountSection />
                     </div>
                   )}
-              </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </div>

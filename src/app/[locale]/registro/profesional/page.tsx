@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import {
   CheckCircle2, ArrowRight, ArrowLeft, Loader2, AlertCircle,
-  Eye, EyeOff, Circle, Camera, MapPin, Truck, X, Plus,
+  Eye, EyeOff, Circle, Camera, MapPin, Truck, X,
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -144,7 +144,7 @@ function PhotoPicker({
           <Button type="button" variant="outline" size="sm" onClick={() => ref.current?.click()}>
             <Camera className="h-4 w-4" /> {t("photoChange")}
           </Button>
-          <Button type="button" variant="outline" size="sm" onClick={onRemove} className="border-red-200 text-red-500 hover:bg-red-50 hover:text-red-600">
+          <Button type="button" variant="ghost" size="sm" onClick={onRemove} className="text-red-500 hover:text-red-600">
             <X className="h-4 w-4" /> {t("photoRemove")}
           </Button>
         </div>
@@ -171,19 +171,13 @@ function PhotoPicker({
 // ─── "No tengo identificación costarricense" (foreigners) ─────────────────────
 // Routes the account to the admin EXCEPTIONS queue ("pendiente de revisión") where
 // the admin reviews whatever document they have (passport, DIMEX in progress).
-// Exception path is progressive-disclosure: a subtle text link directly below the
-// identity block reveals the foreigner fields (and offers a way back), so the main
-// cédula → nombre flow reads clean and uninterrupted.
-function NoCrIdDisclosure({ active, onToggle }: { active: boolean; onToggle: (v: boolean) => void }) {
+function NoCrIdToggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
   const t = useTranslations("registration.pro");
   return (
-    <button
-      type="button"
-      onClick={() => onToggle(!active)}
-      className="self-start text-sm text-[#009FD9] hover:underline"
-    >
-      {active ? t("hasCrIdLink") : t("noCrIdLink")}
-    </button>
+    <label className="flex items-start gap-2.5 cursor-pointer text-sm text-[#374151]">
+      <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} className="mt-0.5 h-4 w-4 accent-[#009FD9]" />
+      <span>{t("noCrId")} <span className="text-[#9ca3af]">{t("noCrIdSub")}</span></span>
+    </label>
   );
 }
 
@@ -306,9 +300,6 @@ export default function RegisterProfessionalPage() {
   // Additional categories (multi-category support). Primary = step2 `category`.
   const [extraCategories, setExtraCategories] = useState<string[]>([]);
   const [extraCatInput, setExtraCatInput] = useState("");
-  // The "add another profession" search is revealed on demand (a clear action),
-  // not shown as a second always-visible dropdown that confused people.
-  const [showExtraProf, setShowExtraProf] = useState(false);
   // Optional brand/business name is now collected in the panel (not registration);
   // kept empty here so the create payload still sends a (null) value cleanly.
   const businessName = "";
@@ -764,9 +755,6 @@ export default function RegisterProfessionalPage() {
                 />
               )}
 
-              {/* Exception path — subtle disclosure link below the identity block. */}
-              <NoCrIdDisclosure active={noCrId} onToggle={setNoCrId} />
-
               <div className="border-t border-[#f3f4f6] pt-4">
                 <Input
                   label={<>{t("email")} <span className="text-red-500">*</span></>}
@@ -813,6 +801,12 @@ export default function RegisterProfessionalPage() {
                   </button>
                 }
               />
+
+              {/* Exception case — kept out of the main cédula→nombre flow, as a
+                  muted option below the form. */}
+              <div className="border-t border-[#f3f4f6] pt-4">
+                <NoCrIdToggle checked={noCrId} onChange={setNoCrId} />
+              </div>
 
               <Button type="submit" size="lg" className="mt-2">
                 {t("continue")} <ArrowRight className="h-4 w-4" />
@@ -863,17 +857,9 @@ export default function RegisterProfessionalPage() {
                   nameError={oauthNameError ?? undefined}
                 />
               )}
-              {/* Exception path — subtle disclosure link below the identity block.
-                  Hidden when the account already carries a verified cédula. */}
-              {currentUser && !accountCedula && (
-                <NoCrIdDisclosure active={noCrId} onToggle={setNoCrId} />
-              )}
 
               {/* Profession — searchable combobox (a profesión groups the servicios
-                  the pro later adds in their panel). Multi-profession: the primary
-                  profession + an on-demand "Agregar profesión" action.
-                  (Optional brand/business name moved to the panel — registration
-                  keeps only the essentials.) */}
+                  the pro later adds in their panel). */}
               <div>
                 <label className="text-sm font-medium text-[#374151] block mb-1.5">
                   {t("professionPrincipal")} <span className="text-red-500">*</span>
@@ -886,89 +872,40 @@ export default function RegisterProfessionalPage() {
                   error={form2.formState.errors.category?.message}
                 />
 
-                {/* Additional professions — chips + a clear on-demand action */}
-                {extraCategories.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {extraCategories.map((c) => (
-                      <span key={c} className="inline-flex items-center gap-1.5 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium pl-3 pr-1.5 py-1.5">
-                        {getCategoryLabel(c, locale)}
-                        <button type="button" onClick={() => setExtraCategories((prev) => prev.filter((x) => x !== c))} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors" aria-label={t("remove")}>
-                          <X className="h-3.5 w-3.5" />
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                )}
-
-                {showExtraProf ? (
-                  <div className="mt-2 flex flex-col gap-1.5">
-                    <CategorySearch
-                      value={extraCatInput}
-                      onChange={(v) => {
-                        const primary = form2.watch("category");
-                        if (v && v !== primary && !extraCategories.includes(v)) {
-                          setExtraCategories((prev) => [...prev, v]);
-                        }
-                        setExtraCatInput("");
-                        setShowExtraProf(false);
-                      }}
-                      placeholder={t("searchAnotherProfession")}
-                    />
-                    <button type="button" onClick={() => { setShowExtraProf(false); setExtraCatInput(""); }} className="self-start text-xs text-[#9ca3af] hover:text-[#374151]">
-                      {t("cancel")}
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => setShowExtraProf(true)}
-                    className="mt-2 inline-flex items-center gap-1.5 text-sm font-medium text-[#009FD9] hover:underline"
-                  >
-                    <Plus className="h-4 w-4" />
-                    {extraCategories.length > 0 ? t("addAnotherProfession") : t("addProfessionPrompt")}
-                  </button>
-                )}
+                {/* Additional professions (optional, multi-profession) */}
+                <div className="mt-2">
+                  {extraCategories.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {extraCategories.map((c) => (
+                        <span key={c} className="inline-flex items-center gap-1.5 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium pl-3 pr-1.5 py-1.5">
+                          {getCategoryLabel(c, locale)}
+                          <button type="button" onClick={() => setExtraCategories((prev) => prev.filter((x) => x !== c))} className="rounded-md p-0.5 hover:bg-[#009FD9]/20 transition-colors" aria-label={t("remove")}>
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  <CategorySearch
+                    value={extraCatInput}
+                    onChange={(v) => {
+                      const primary = form2.watch("category");
+                      if (v && v !== primary && !extraCategories.includes(v)) {
+                        setExtraCategories((prev) => [...prev, v]);
+                      }
+                      setExtraCatInput("");
+                    }}
+                    placeholder={t("searchAnotherProfession")}
+                  />
+                </div>
               </div>
 
-              {/* How you offer services + WHERE — grouped together so the choice and
-                  its location stay visually connected (no "where do I go now?"). */}
+              {/* Service type */}
               <div>
                 <label className="text-sm font-medium text-[#374151] block mb-2">
-                  {t("howOffer")} <span className="text-red-500">*</span> <span className="text-[#9ca3af] font-normal">{t("chooseBoth")}</span>
+                  {t("howOffer")} <span className="text-red-500">*</span>
                 </label>
                 <div className="flex flex-col gap-2">
-                  {/* Fixed-location mode (Panel 1 below) */}
-                  <label className={cn(
-                    "flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all",
-                    serviceFixed ? "border-[#009FD9] bg-[#EBF5FB]" : "border-[#e5e7eb] hover:border-[#009FD9]/40"
-                  )}>
-                    <input
-                      type="checkbox"
-                      checked={serviceFixed}
-                      onChange={(e) => {
-                        setServiceFixed(e.target.checked);
-                        setServiceTypeError(null);
-                      }}
-                      className="sr-only"
-                    />
-                    <div className={cn(
-                      "h-5 w-5 rounded border-2 flex items-center justify-center shrink-0 transition-all",
-                      serviceFixed ? "bg-[#009FD9] border-[#009FD9]" : "border-[#d1d5db]"
-                    )}>
-                      {serviceFixed && (
-                        <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
-                    </div>
-                    <MapPin className="h-4 w-4 text-[#009FD9] shrink-0" />
-                    <div>
-                      <p className="text-sm font-medium text-[#111827]">{t("fixedMode")}</p>
-                      <p className="text-xs text-[#9ca3af]">{t("fixedModeSub")}</p>
-                    </div>
-                  </label>
-
-                  {/* Travel/coverage mode (Panel 2 below) */}
                   <label className={cn(
                     "flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all",
                     serviceMobile ? "border-[#009FD9] bg-[#EBF5FB]" : "border-[#e5e7eb] hover:border-[#009FD9]/40"
@@ -998,32 +935,66 @@ export default function RegisterProfessionalPage() {
                       <p className="text-xs text-[#9ca3af]">{t("mobileModeSub")}</p>
                     </div>
                   </label>
+
+                  <label className={cn(
+                    "flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all",
+                    serviceFixed ? "border-[#009FD9] bg-[#EBF5FB]" : "border-[#e5e7eb] hover:border-[#009FD9]/40"
+                  )}>
+                    <input
+                      type="checkbox"
+                      checked={serviceFixed}
+                      onChange={(e) => {
+                        setServiceFixed(e.target.checked);
+                        setServiceTypeError(null);
+                      }}
+                      className="sr-only"
+                    />
+                    <div className={cn(
+                      "h-5 w-5 rounded border-2 flex items-center justify-center shrink-0 transition-all",
+                      serviceFixed ? "bg-[#009FD9] border-[#009FD9]" : "border-[#d1d5db]"
+                    )}>
+                      {serviceFixed && (
+                        <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                      )}
+                    </div>
+                    <MapPin className="h-4 w-4 text-[#009FD9] shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium text-[#111827]">{t("fixedMode")}</p>
+                      <p className="text-xs text-[#9ca3af]">{t("fixedModeSub")}</p>
+                    </div>
+                  </label>
                 </div>
                 {serviceTypeError && (
                   <p className="text-xs text-red-500 mt-1">{serviceTypeError}</p>
                 )}
-
-                {/* PANEL 1 — Fixed location: provincia→cantón first, optional pin.
-                    Its OWN delimited panel, separate from travel coverage. */}
-                {serviceFixed && (
-                  <div className="mt-3 rounded-xl bg-[#f9fafb] p-3.5 flex flex-col gap-2">
-                    <label className="text-sm font-semibold text-[#111827] flex items-center gap-1.5"><MapPin className="h-4 w-4 text-[#009FD9]" /> {t("workplacesLabel")}</label>
-                    <p className="text-xs text-[#9ca3af]">{t("workplacesHelp")}</p>
-                    <WorkplacesPicker value={workplaces} onChange={(n) => { setWorkplaces(n); setLocationError(null); }} />
-                  </div>
-                )}
-
-                {/* PANEL 2 — Travel/coverage: its OWN delimited panel, never mixed
-                    with the fixed-location map. */}
-                {serviceMobile && (
-                  <div className="mt-3 rounded-xl bg-[#f9fafb] p-3.5 flex flex-col gap-2">
-                    <label className="text-sm font-semibold text-[#111827] flex items-center gap-1.5"><Truck className="h-4 w-4 text-[#009FD9]" /> {t("coverageLabel")}</label>
-                    <p className="text-xs text-[#9ca3af]">{t("coverageHelp")}</p>
-                    <CoverageAreaSelector value={coverageAreas} onChange={(n) => { setCoverageAreas(n); setLocationError(null); }} />
-                  </div>
-                )}
-                {locationError && <p className="text-xs text-red-500 mt-1">{locationError}</p>}
               </div>
+
+              {/* Fixed location — pin (reverse-geocoded) or manual provincia/cantón;
+                  both define where the pro appears in search results. */}
+              {serviceFixed && (
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-medium text-[#374151]">{t("workplacesLabel")}</label>
+                  <p className="text-xs text-[#9ca3af]">
+                    {t("workplacesHelp")}
+                  </p>
+                  <WorkplacesPicker value={workplaces} onChange={(n) => { setWorkplaces(n); setLocationError(null); }} />
+                </div>
+              )}
+
+              {/* Coverage areas — for "me desplazo": provincia+cantón pairs traveled to */}
+              {serviceMobile && (
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-medium text-[#374151]">{t("coverageLabel")}</label>
+                  <p className="text-xs text-[#9ca3af]">
+                    {t("coverageHelp")}
+                  </p>
+                  <CoverageAreaSelector value={coverageAreas} onChange={(n) => { setCoverageAreas(n); setLocationError(null); }} />
+                </div>
+              )}
+
+              {locationError && <p className="text-xs text-red-500">{locationError}</p>}
 
               {/* WhatsApp */}
               <PhoneInput
@@ -1033,6 +1004,13 @@ export default function RegisterProfessionalPage() {
                 onChange={(digits) => { setWhatsappValue(digits); form2.setValue("whatsapp", digits, { shouldValidate: true }); }}
                 error={form2.formState.errors.whatsapp?.message}
               />
+
+              {/* Exception case — muted, below the main flow. */}
+              {currentUser && !accountCedula && (
+                <div className="border-t border-[#f3f4f6] pt-4">
+                  <NoCrIdToggle checked={noCrId} onChange={setNoCrId} />
+                </div>
+              )}
 
               <div className="flex gap-3 mt-2">
                 {!currentUser && (
