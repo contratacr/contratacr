@@ -503,10 +503,9 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         </div>
       </Section>
 
-      {/* ── Contacto y precios ────────────────────────────────────────── */}
-      <Section title={t("secContact")} desc={t("secContactDesc")}>
-        {/* WhatsApp — required contact channel; also used for calls unless a
-            separate call number is set below (one number → both; two → split). */}
+      {/* ── Contacto ──────────────────────────────────────────────────── */}
+      <Section title={t("secContact")}>
+        {/* WhatsApp — required contact channel. */}
         <div>
           <PhoneInput
             label={t("whatsapp")}
@@ -514,27 +513,13 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
             value={whatsapp}
             onChange={(digits) => { setWhatsapp(digits); touch(); }}
           />
-          <p className="text-xs text-[#9ca3af] mt-1">{t("whatsappHelp")}</p>
         </div>
 
-        {/* Optional SEPARATE call number — for pros who use a different line for
-            calls. Empty → the WhatsApp number is used for calls too. */}
-        <div>
-          <PhoneInput
-            label={<>{t("callNumber")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span></>}
-            value={callPhone}
-            onChange={(digits) => { setCallPhone(digits); touch(); }}
-          />
-          <p className="text-xs text-[#9ca3af] mt-1">{t("callHelp")}</p>
-        </div>
-
-        {/* Permitir contacto por llamada — moved from Disponibilidad; a contact
-            setting. Adds a "Llamar" action for clients (uses callPhone ?? whatsapp). */}
+        {/* Progressive disclosure: turning on "Permitir contacto por llamada"
+            reveals the optional separate call line. Empty → the WhatsApp number
+            is used for calls too (so the toggle alone is self-explanatory). */}
         <div className="flex items-center justify-between gap-4 rounded-xl bg-[#f9fafb] p-3.5">
-          <div>
-            <p className="text-sm font-medium text-[#111827]">{t("allowCallLabel")}</p>
-            <p className="text-xs text-[#6b7280] mt-0.5">{t("allowCallDesc")}</p>
-          </div>
+          <p className="text-sm font-medium text-[#111827]">{t("allowCallLabel")}</p>
           <button
             type="button"
             onClick={() => { setAllowPhoneCall((v) => !v); touch(); }}
@@ -544,6 +529,17 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
             <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", allowPhoneCall ? "left-5" : "left-0.5")} />
           </button>
         </div>
+
+        {allowPhoneCall && (
+          <div>
+            <PhoneInput
+              label={<>{t("callNumber")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span></>}
+              value={callPhone}
+              onChange={(digits) => { setCallPhone(digits); touch(); }}
+            />
+            <p className="text-xs text-[#9ca3af] mt-1">{t("callHelp")}</p>
+          </div>
+        )}
 
         {/* Optional public contact email — opt-in; shown to clients who prefer
             email. Hidden on the profile when empty. */}
@@ -559,10 +555,8 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
             onChange={(e) => { setContactEmail(e.target.value); touch(); }}
             className="w-full h-11 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
           />
-          {contactEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail.trim()) ? (
+          {contactEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail.trim()) && (
             <p className="text-xs text-red-500 mt-1">{t("emailInvalid")}</p>
-          ) : (
-            <p className="text-xs text-[#9ca3af] mt-1">{t("emailHelp")}</p>
           )}
         </div>
       </Section>

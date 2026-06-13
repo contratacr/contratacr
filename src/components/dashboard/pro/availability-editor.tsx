@@ -414,8 +414,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
             divider (one cohesive flow, fewer borders). */}
         {isPublic && (
         <div className="mt-4 pt-4 border-t border-[#f3f4f6]">
-        <h3 className="text-sm font-semibold text-[#111827] mb-1">{t("addHeading")}</h3>
-        <p className="text-xs text-[#6b7280] mb-4">{t("addSub")}</p>
+        <h3 className="text-sm font-semibold text-[#111827] mb-4">{t("addHeading")}</h3>
 
         {locationOptions.length === 0 ? (
           <div className="rounded-xl bg-[#fffbeb] border border-[#fde68a] p-4 text-sm text-[#92400e]">
