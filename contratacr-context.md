@@ -28,6 +28,17 @@ _Earlier: 2026-06-07 (sprint 24 — fully automatic identity verification: self-
 
 ---
 
+## Sprint 88 (2026-06-13) — "Completa tu perfil" redesigned (strength meter + actionable checklist)
+
+Rebuilt `ProfileCompletion` (`src/components/dashboard/pro/profile-completion.tsx`) as a best-in-class profile-completion, inspired by **Airbnb's "complete your listing" checklist + LinkedIn's profile-strength meter**.
+
+- **Strength meter:** a linear bar (brand-blue gradient `#009FD9→#33b4e0`, flips green `#16a34a` at 100%) with a big live **percent** and a motivating **"Te faltan N pasos"** line (ICU plural `stepsLeft`).
+- **Actionable checklist:** ONLY the remaining steps, as flat divider-separated rows (no nested boxes) — each a ≥56px tap target with a one-line benefit, a **"Completar"** action + chevron, that jumps straight to the exact tab via `onGo→setTab` (+ `scrollIntoView`, works on mobile).
+- **% reaches 100% (fix):** identity verification is now a **separate "Recomendado" action excluded from the blocking %** (it's approval-gated and can't auto-pass for non-padrón IDs, which used to pin the bar below 100). **Location detection is signal-based** (`workplaces` / `coverage_areas` / `coverage_provincias` / `coverage_country` / `provincia_id` / `canton_id`), no longer tied to `service_type`, so it never sticks. Context-aware as before (aseguradoras only for `es_salud`; Spanish-only / "no aplica" never penalized).
+- **Live recompute:** `handleSaved → refreshKey → fetchPro` re-reads the pro on every save, so the % is never stale. Quiet green "done" summary gives a sense of progress; the whole card **hides once everything is done AND verified**.
+- **Placement:** moved to a prominent **full-width slot at the TOP of the dashboard** (above the sidebar+content row), compact/responsive from ~360px. Removed the in-tab copy.
+- **i18n:** new keys `stepsLeft` (plural), `completeAction`, `recommended` (ES/EN). Build green (`ƒ Proxy (Middleware)`), `tsc` clean, ICU plurals verified for count 1/2 in both locales.
+
 ## Sprint 87 (2026-06-12) — DESIGN REVERT: pre-redesign visual baseline restored (logic + i18n kept)
 
 Reverted the recent **design-redesign** passes back to the pre-redesign look (boundary `8a2f6ac`, "sprint 128 bug-fix sweep") while **keeping every bug/logic fix and the full ES/EN i18n**. Done on a throwaway branch (selective `git revert`, then fast-forwarded to main).
