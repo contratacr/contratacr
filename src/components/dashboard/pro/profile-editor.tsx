@@ -14,7 +14,6 @@ import { Link } from "@/i18n/navigation";
 import { computeSearchAreas, primaryArea } from "@/lib/location";
 import { getProvinceById, getCantonById } from "@/lib/data/cr-geography";
 import { AseguradorasInput } from "@/components/ui/aseguradoras-input";
-import { CloseAccountSection } from "@/components/account/close-account-section";
 import { CategorySearch } from "@/components/ui/category-search";
 import { getCategoryLabel, anyHealthCategory } from "@/lib/data/categories";
 import type { Certification } from "@/components/professionals/professional-card";
@@ -649,8 +648,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         )}
       </div>
 
-      {/* Cerrar / deshabilitar cuenta */}
-      <CloseAccountSection />
+      {/* (Cerrar / deshabilitar cuenta lives in "Cuenta y seguridad", not here.) */}
 
       {/* Designed unsaved-changes dialog (replaces the browser default) */}
       <UnsavedChangesGuard dirty={dirty} onSave={() => handleSave(false)} />

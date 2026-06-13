@@ -28,6 +28,10 @@ _Earlier: 2026-06-07 (sprint 24 — fully automatic identity verification: self-
 
 ---
 
+## Sprint 98 (2026-06-13) — Close-account moved to Cuenta y seguridad
+
+Removed `<CloseAccountSection/>` (Cerrar/deshabilitar cuenta) from **Mi perfil** (`profile-editor.tsx`) — it already renders in the **Cuenta y seguridad** tab (`dashboard/profesional/page.tsx`, cuenta tab, alongside `AccountSecuritySection`), where account-level actions belong. Same functionality (deactivate/recoverable). Build green.
+
 ## Sprint 97 (2026-06-13) — Certifications: required fields + explicit save
 
 `profile-editor.tsx` certifications section (per profession): (1) **no image mentions** — removed "No subas imágenes ni documentos" + "(texto, sin imágenes)" from `certsHelp`/`secCertsDesc` (image upload simply isn't offered). (2) **All three fields required** — replaced the always-editable inline rows with a **read-only list of SAVED certs** + an explicit **add FORM** (`certDraft`) whose **"Guardar certificación"** button validates nombre + institución + año(4 dígitos) (`certAllRequired`); an incomplete cert can't be saved. (3) **Clear SAVE vs ADD-ANOTHER:** "Agregar certificación" opens the form; "Guardar certificación" commits THIS one; saved certs then render as read-only rows with remove. Dropped `updateCertification`/`addCertification`; `institution` no longer "(opcional)". Build green, `tsc` clean.
