@@ -28,6 +28,11 @@ _Earlier: 2026-06-07 (sprint 24 — fully automatic identity verification: self-
 
 ---
 
+## Sprint 85 (2026-06-12) — login lands on the right panel + clean map info-window
+
+- **Login redirect is now authoritative.** `login/page.tsx` resolved the panel from `user_metadata.role` only, which is often missing/stale → professionals were dumped on the client panel. Now it falls back to `profiles.role`, then to the existence of a `professionals` row, before routing to `/dashboard/profesional` vs `/dashboard/cliente`.
+- **Map "Ver perfil" info-window:** removed the "double border" — Google auto-focuses the link when the InfoWindow opens, drawing a focus ring that read as a second border on the blue button. Added `outline/border/box-shadow:none` on the link + a scoped `.gm-style-iw*` override (flatten inner wrapper, kill focus ring) so only ONE clean rounded card shows.
+
 ## Sprint 84 (2026-06-12) — locations step restructured (area-first, separate panels)
 
 Fixed the cluttered/redundant "¿Cómo ofreces tus servicios?" locations step in BOTH registration (`registro/profesional`) and the panel editor (`profile-editor`) — same pattern in both.

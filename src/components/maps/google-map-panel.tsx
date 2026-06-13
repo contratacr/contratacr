@@ -188,7 +188,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
                   <div style="font-size:12px;margin-top:3px;">${starsHtml(pro.ratingAvg)} <span style="color:#9ca3af;">(${pro.reviewCount})</span></div>
                 </div>
               </div>
-              <a href="${href}" style="display:block;text-align:center;margin-top:12px;background:#009FD9;color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:11px 0;border-radius:8px;min-height:44px;box-sizing:border-box;line-height:22px;">Ver perfil</a>
+              <a href="${href}" style="display:block;text-align:center;margin-top:12px;background:#009FD9;color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:11px 0;border-radius:8px;min-height:44px;box-sizing:border-box;line-height:22px;outline:none;border:none;box-shadow:none;">Ver perfil</a>
             </div>`);
           info.open({ map, anchor: marker });
         };
@@ -274,6 +274,15 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
         strategy="afterInteractive"
         onLoad={renderMarkers}
       />
+      {/* Single clean info-window card: kill Google's default focus ring on the
+          auto-focused "Ver perfil" link (it read as a double border on the button)
+          and flatten the inner content wrapper so only ONE rounded card shows. */}
+      <style>{`
+        .gm-style-iw-c { padding: 0 !important; }
+        .gm-style-iw-d { overflow: hidden !important; }
+        .gm-style-iw, .gm-style-iw-d, .gm-style-iw a, .gm-style-iw a:focus, .gm-style-iw a:focus-visible { outline: none !important; box-shadow: none !important; }
+        .gm-style-iw-c a:focus-visible { outline: none !important; }
+      `}</style>
       <div ref={mapRef} className="w-full h-full" />
     </>
   );

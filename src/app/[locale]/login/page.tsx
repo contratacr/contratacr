@@ -57,7 +57,27 @@ export default function LoginPage() {
       setError(t("loginError"));
       return;
     }
-    const role = authData.user?.user_metadata?.role;
+    // Resolve the role AUTHORITATIVELY so every login lands on the right panel.
+    // user_metadata.role is often missing/stale (it isn't set for every account),
+    // which used to dump professionals onto the client panel — so fall back to the
+    // profiles table, and finally to the existence of a professionals row.
+    let role = authData.user?.user_metadata?.role as string | undefined;
+    if (role !== "professional" && role !== "client" && authData.user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", authData.user.id)
+        .maybeSingle();
+      role = (profile?.role as string | undefined) ?? role;
+      if (!role) {
+        const { data: pro } = await supabase
+          .from("professionals")
+          .select("id")
+          .eq("profile_id", authData.user.id)
+          .maybeSingle();
+        if (pro) role = "professional";
+      }
+    }
     // Hard redirect so the new page loads with the session already in cookies,
     // preventing the navbar from flashing logged-out state.
     window.location.href = `/${locale}/dashboard/${role === "professional" ? "profesional" : "cliente"}`;
