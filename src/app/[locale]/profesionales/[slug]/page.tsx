@@ -10,7 +10,6 @@ import { Link } from "@/i18n/navigation";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { StarRating } from "@/components/ui/star-rating";
 import { getInitials, getWhatsAppLink } from "@/lib/utils";
@@ -196,8 +195,8 @@ export default function ProfilePage({ params }: ProfilePageProps) {
 
           {/* Preview mode → a clear way back to the panel. Otherwise, back to search. */}
           {previewMode ? (
-            <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-[#bfdbfe] bg-[#EBF5FB] px-4 py-3">
-              <p className="text-sm text-[#0089bb] font-medium">{t("previewNote")}</p>
+            <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <p className="text-sm text-[#6b7280] font-medium">{t("previewNote")}</p>
               <Link href="/dashboard/profesional" className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-semibold px-4 py-2 transition-colors shrink-0">
                 <ArrowLeft className="h-4 w-4" /> {t("backToPanel")}
               </Link>
@@ -236,29 +235,28 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                     {professional.businessName?.trim() && (
                       <p className="text-sm font-medium text-[#6b7280] mt-0.5">{professional.fullName}</p>
                     )}
-                    <div className="flex flex-wrap gap-1 justify-center mt-1">
+                    {/* Professions as plain muted text, not colored chips. */}
+                    <p className="text-sm text-[#6b7280] mt-1">
                       {(professional.professions && professional.professions.length > 0
                         ? professional.professions
                         : [professional.categoryId]
-                      ).filter(Boolean).map((cat) => (
-                        <Badge key={cat} variant="default" className="text-xs">
-                          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                          {tCat(cat as any)}
-                        </Badge>
-                      ))}
-                    </div>
+                      ).filter(Boolean)
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        .map((cat) => tCat(cat as any)).join(" · ")}
+                    </p>
                   </div>
 
+                  {/* Verification as plain text + icon (no colored pill/box). */}
                   {professional.verificationStatus === "verified" ? (
                     <Link
                       href="/proveedores-autorizados"
-                      className="flex items-center gap-1.5 text-xs rounded-full bg-[#dcfce7] px-2.5 py-1 text-[#15803d] font-semibold hover:bg-[#bbf7d0] transition-colors"
+                      className="flex items-center gap-1.5 text-xs font-semibold text-[#15803d] hover:underline"
                     >
                       <ShieldCheck className="h-3.5 w-3.5" />
                       <span>{t("identityVerified")}</span>
                     </Link>
                   ) : (
-                    <span className="flex items-center gap-1.5 text-xs rounded-full bg-[#fef3c7] border border-[#fde68a] px-2.5 py-1 text-[#92400e] font-semibold">
+                    <span className="flex items-center gap-1.5 text-xs font-semibold text-[#92400e]">
                       <ShieldAlert className="h-3.5 w-3.5" />
                       <span>{t("identityUnverified")}</span>
                     </span>
@@ -681,16 +679,16 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                       )}
 
 
-                      {/* Quick facts — one clean container, divider rows (no per-fact
-                          colored boxes); only the verification status keeps a tint. */}
-                      <div className="rounded-2xl border border-[#e5e7eb] divide-y divide-[#f3f4f6]">
+                      {/* Quick facts — plain label/value rows, no bordered box, so
+                          every block in "Sobre mí" gets the same clean treatment. */}
+                      <div className="flex flex-col gap-2.5">
                         {expYears > 0 && (
-                          <div className="flex items-center justify-between gap-3 px-4 py-3">
+                          <div className="flex items-center justify-between gap-3">
                             <span className="text-sm text-[#6b7280]">{t("experienceLabel")}</span>
                             <span className="text-sm font-semibold text-[#111827]">{t("yearsValue", { years: expYears })}</span>
                           </div>
                         )}
-                        <div className="flex items-center justify-between gap-3 px-4 py-3">
+                        <div className="flex items-center justify-between gap-3">
                           <span className="text-sm text-[#6b7280]">{t("verification")}</span>
                           {professional.verificationStatus === "verified" ? (
                             <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#15803d]">
@@ -703,22 +701,22 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                           )}
                         </div>
                         {locationText && (
-                          <div className="flex items-center justify-between gap-3 px-4 py-3">
+                          <div className="flex items-center justify-between gap-3">
                             <span className="text-sm text-[#6b7280]">{t("location")}</span>
                             <span className="text-sm font-medium text-[#111827] text-right">{locationText}</span>
                           </div>
                         )}
                         {professional.pricing && professional.pricing.length > 0 ? (
-                          <div className="px-4 py-3">
-                            <p className="text-sm text-[#6b7280] mb-1">{t("prices")}</p>
-                            <div className="flex flex-col gap-0.5">
+                          <div className="flex items-start justify-between gap-3">
+                            <span className="text-sm text-[#6b7280]">{t("prices")}</span>
+                            <div className="flex flex-col gap-0.5 text-right">
                               {professional.pricing.map((tier) => (
                                 <p key={tier.id} className="text-sm font-semibold text-[#111827]">{formatPricingTier(tier)}</p>
                               ))}
                             </div>
                           </div>
                         ) : professional.hourlyRate ? (
-                          <div className="flex items-center justify-between gap-3 px-4 py-3">
+                          <div className="flex items-center justify-between gap-3">
                             <span className="text-sm text-[#6b7280]">{t("baseRate")}</span>
                             <span className="text-sm font-semibold text-[#111827]">₡{professional.hourlyRate.toLocaleString(locale === "en" ? "en-US" : "es-CR")}{t("perHour")}</span>
                           </div>
@@ -742,26 +740,18 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                       {professional.languages && professional.languages.length > 0 && (
                         <div>
                           <h2 className="text-lg font-semibold text-[#111827] mb-3">{t("languages")}</h2>
-                          <div className="flex flex-wrap gap-2">
-                            {professional.languages.map((l) => (
-                              <span key={l} className="inline-flex items-center rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium px-3 py-1.5">
-                                {languageLabel(l, locale)}
-                              </span>
-                            ))}
-                          </div>
+                          <p className="text-sm text-[#374151]">
+                            {professional.languages.map((l) => languageLabel(l, locale)).join(" · ")}
+                          </p>
                         </div>
                       )}
 
                       {professional.insuranceNetworks && professional.insuranceNetworks.length > 0 && (
                         <div>
                           <h2 className="text-lg font-semibold text-[#111827] mb-3">{t("insurers")}</h2>
-                          <div className="flex flex-wrap gap-2">
-                            {professional.insuranceNetworks.map((id) => (
-                              <span key={id} className="inline-flex items-center gap-1.5 rounded-lg bg-[#f0fdf4] text-[#15803d] text-sm font-medium px-3 py-1.5">
-                                <ShieldCheck className="h-3.5 w-3.5" /> {insurerLabel(id)}
-                              </span>
-                            ))}
-                          </div>
+                          <p className="text-sm text-[#374151]">
+                            {professional.insuranceNetworks.map((id) => insurerLabel(id)).join(" · ")}
+                          </p>
                         </div>
                       )}
                     </div>
