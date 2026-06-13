@@ -28,6 +28,10 @@ _Earlier: 2026-06-07 (sprint 24 — fully automatic identity verification: self-
 
 ---
 
+## Sprint 100 (2026-06-13) — "Ej."→"Ejemplo:" app-wide + GAM→SG Solutions
+
+App-wide i18n sweep (both `messages/es.json` + `messages/en.json`, all namespaces): replaced the abbreviation **`Ej.` / `Ej:` / `ej.` → `Ejemplo:` / `ejemplo:`** and **`e.g.` / `E.g.` → `example:` / `Example:`** in every placeholder/helper/example; and the sample company name **"Servicios Eléctricos GAM" → "SG Solutions"** (so `businessPlaceholder` = "Ejemplo: SG Solutions"). No hardcoded `Ej.` user-facing strings remain in `.tsx` (only code comments use "e.g."). Build green.
+
 ## Sprint 99 (2026-06-13) — Identity display removed, Soporte "Abrir ticket", notifications role cue
 
 - **Identity/cédula display block removed** from the **client panel** (`dashboard/cliente/page.tsx` — the "Identidad / cédula enmascarada / verificada / Solo mostramos los últimos dígitos" card; dropped unused `maskId`/`ShieldAlert`). The **professional panel has no such block** (only the verified badge next to the locked name) — nothing to remove there.
