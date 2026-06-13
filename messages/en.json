@@ -1245,7 +1245,7 @@
     "workplaces": "Where do you offer your services?",
     "workplacesHelp": "Pick the province and canton, then tap <strong>Add place</strong>. You can pin the exact spot on the map if you like. This defines where you appear in searches.",
     "travelsLabel": "I travel to the client",
-    "travelsDesc": "You serve within the areas you added above.",
+    "travelsDesc": "You serve in the areas you added.",
     "coverageAreas": "Areas you travel to",
     "coverageHelp": "Choose the areas you serve. You appear in searches for each one.",
     "countryCoverageWarn": "You already cover the <strong>whole country</strong>, so more specific areas add nothing. You can remove them to simplify.",

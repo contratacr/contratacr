@@ -1245,7 +1245,7 @@
     "workplaces": "¿En qué zonas ofreces tus servicios?",
     "workplacesHelp": "Elige la provincia y el cantón, y toca <strong>Agregar lugar</strong>. Puedes marcar el punto exacto en el mapa si quieres. Esto define dónde apareces en las búsquedas.",
     "travelsLabel": "Me desplazo a donde está el cliente",
-    "travelsDesc": "Atiendes dentro de las zonas que agregaste arriba.",
+    "travelsDesc": "Atiendes en las zonas que agregaste.",
     "coverageAreas": "Zonas a las que te desplazas",
     "coverageHelp": "Elige las zonas donde atiendes. Apareces en las búsquedas de cada una.",
     "countryCoverageWarn": "Ya cubres <strong>todo el país</strong>, así que las zonas más específicas no agregan nada. Puedes quitarlas para simplificar.",

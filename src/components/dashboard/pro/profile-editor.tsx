@@ -426,9 +426,6 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
              cert is ADDED via an explicit form whose "Guardar certificación"
              button requires all three fields. ─────── */}
       <Section title={t("secCerts")} desc={t("secCertsDesc")}>
-        <p className="text-xs text-[#9ca3af]">
-          {t.rich("certsHelp", rich)}
-        </p>
         {(professions.length > 0 ? professions : [""]).map((prof) => {
           const certsForProf = certifications.filter((c) => (c.profession || professions[0] || "") === prof);
           const draftHere = !!certDraft && (certDraft.profession ?? "") === (prof || "");

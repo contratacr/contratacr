@@ -267,7 +267,6 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200 }: W
   return (
     <div className="flex flex-col gap-2.5">
       {/* 1 — Structured field FIRST: provincia → cantón (authoritative for search). */}
-      <p className="text-xs text-[#6b7280]">{t("lead")}</p>
       <div className="grid grid-cols-2 gap-2">
         <select value={province} onChange={(e) => { setProvince(e.target.value); setCanton(""); }} className={selectCls}>
           <option value="">{t("provincePlaceholder")}</option>
