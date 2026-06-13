@@ -140,7 +140,10 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, s
         return (
           <div key={g.id}>
             <div className="mb-2">
-              <h4 className="text-sm font-semibold text-[#111827]">{g.label}</h4>
+              <h4 className="text-sm font-semibold text-[#111827]">
+                {g.label}
+                {list.length > 0 && <span className="ml-1.5 text-[11px] font-normal text-[#9ca3af]">({list.length})</span>}
+              </h4>
               {g.sub && <p className="text-[11px] text-[#9ca3af]">{g.sub}</p>}
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -150,7 +153,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, s
                   <img src={cldThumb(it.url, 400)} alt="" className="w-full h-full object-cover" />
                   <button
                     onClick={() => removePhoto(it.url)}
-                    className="absolute top-2 right-2 h-7 w-7 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                    className="absolute top-2 right-2 h-7 w-7 rounded-full bg-black/60 text-white flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:bg-red-600"
                     aria-label={t("remove")}
                   >
                     <X className="h-3.5 w-3.5" />
