@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import {
   CheckCircle2, ArrowRight, ArrowLeft, Loader2, AlertCircle,
-  Eye, EyeOff, Circle, Camera, MapPin, Truck, X,
+  Eye, EyeOff, Circle, Camera, X,
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,8 +23,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { CategorySearch } from "@/components/ui/category-search";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { WorkplacesPicker, type Workplace } from "@/components/maps/workplaces-picker";
-import { CoverageAreaSelector } from "@/components/maps/coverage-area-selector";
-import { computeSearchAreas, primaryArea, type CoverageArea } from "@/lib/location";
+import { computeSearchAreas, primaryArea } from "@/lib/location";
 import { useAvailabilityCheck } from "@/hooks/use-availability-check";
 
 // ─── Category data lives in src/lib/data/categories.ts (single source of truth) ─
@@ -261,9 +260,6 @@ export default function RegisterProfessionalPage() {
 
   // step: -1=loading, 0=identity (email/pw users), 1=service+location, 2=profile+photo
   const [step, setStep] = useState(-1);
-  const [serviceMobile, setServiceMobile] = useState(false);
-  const [serviceFixed, setServiceFixed] = useState(false);
-  const [serviceTypeError, setServiceTypeError] = useState<string | null>(null);
   const [whatsappValue, setWhatsappValue] = useState("");
   const [submitting, setSubmitting] = useState(false);
   // After a successful create we navigate to the panel. Render a full-screen
@@ -276,7 +272,6 @@ export default function RegisterProfessionalPage() {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [workplaces, setWorkplaces] = useState<Workplace[]>([]);
-  const [coverageAreas, setCoverageAreas] = useState<CoverageArea[]>([]);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [otpEmail, setOtpEmail] = useState<string | null>(null);
 
@@ -447,17 +442,9 @@ export default function RegisterProfessionalPage() {
       form2.setError("whatsapp", { message: t("errPhoneIncomplete") });
       return;
     }
-    if (!serviceMobile && !serviceFixed) {
-      setServiceTypeError(t("errServiceType"));
-      return;
-    }
-    // Location must come from at least one pin (fixed) or coverage area (mobile).
-    if (serviceFixed && workplaces.length === 0) {
+    // At least one work zone (provincia/cantón) is required — it drives /buscar.
+    if (workplaces.length === 0) {
       setLocationError(t("errWorkplace"));
-      return;
-    }
-    if (serviceMobile && coverageAreas.length === 0) {
-      setLocationError(t("errCoverage"));
       return;
     }
     setLocationError(null);
@@ -477,7 +464,6 @@ export default function RegisterProfessionalPage() {
     }
     setOauthNameError(null);
     setOauthCedulaError(null);
-    setServiceTypeError(null);
     setStep2Data(data);
     setStep(2);
   }
@@ -549,18 +535,12 @@ export default function RegisterProfessionalPage() {
           (currentUser.email?.split("@")[0] ?? "profesional"))
         : step1Data!.fullName.trim();
 
-      const serviceType = [
-        serviceMobile ? "mobile" : null,
-        serviceFixed ? "fixed" : null,
-      ]
-        .filter(Boolean)
-        .join(",");
-
-      // Location is derived from pins (fixed) + coverage areas (mobile).
-      const effWorkplaces = serviceFixed ? workplaces : [];
-      const effCoverage = serviceMobile ? coverageAreas : [];
-      const { provincias, cantones, coverageProvincias, coverageCountry } = computeSearchAreas(effWorkplaces, effCoverage);
-      const primary = primaryArea(effWorkplaces, effCoverage);
+      // Every pro lists their work zone(s); travel ("me desplazo") is enabled later
+      // in the panel. Coverage = the zones themselves (no separate travel areas).
+      const serviceType = "fixed";
+      const effWorkplaces = workplaces;
+      const { provincias, cantones } = computeSearchAreas(effWorkplaces, []);
+      const primary = primaryArea(effWorkplaces, []);
 
       // ── 4. Create/upsert profile + professional record ─────────────────────
       const proRes = await fetch("/api/register/professional", {
@@ -581,13 +561,13 @@ export default function RegisterProfessionalPage() {
           serviceType,
           province: primary.provinciaId ?? null,
           canton: primary.cantonId ?? null,
-          // Pins + coverage areas + denormalized search arrays (location-aware /buscar).
+          // Work zones (provincia/cantón + optional pin) + denormalized search arrays.
           workplaces: effWorkplaces,
-          coverageAreas: effCoverage,
+          coverageAreas: [],
           searchProvincias: provincias,
           searchCantones: cantones,
-          coverageProvincias,
-          coverageCountry,
+          coverageProvincias: [],
+          coverageCountry: false,
           address: workplaces[0]?.address || step2Data.address || null,
           lat: workplaces[0]?.lat ?? null,
           lng: workplaces[0]?.lng ?? null,
@@ -900,99 +880,15 @@ export default function RegisterProfessionalPage() {
                 </div>
               </div>
 
-              {/* Service type */}
-              <div>
-                <label className="text-sm font-medium text-[#374151] block mb-2">
-                  {t("howOffer")} <span className="text-red-500">*</span>
+              {/* Work zones — provincia/cantón FIRST (drives /buscar), optional exact
+                  pin. "Me desplazo" travel is enabled later in the panel. */}
+              <div className="flex flex-col gap-2">
+                <label className="text-sm font-medium text-[#374151]">
+                  {t("workplacesLabel")} <span className="text-red-500">*</span>
                 </label>
-                <div className="flex flex-col gap-2">
-                  <label className={cn(
-                    "flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all",
-                    serviceMobile ? "border-[#009FD9] bg-[#EBF5FB]" : "border-[#e5e7eb] hover:border-[#009FD9]/40"
-                  )}>
-                    <input
-                      type="checkbox"
-                      checked={serviceMobile}
-                      onChange={(e) => {
-                        setServiceMobile(e.target.checked);
-                        setServiceTypeError(null);
-                      }}
-                      className="sr-only"
-                    />
-                    <div className={cn(
-                      "h-5 w-5 rounded border-2 flex items-center justify-center shrink-0 transition-all",
-                      serviceMobile ? "bg-[#009FD9] border-[#009FD9]" : "border-[#d1d5db]"
-                    )}>
-                      {serviceMobile && (
-                        <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
-                    </div>
-                    <Truck className="h-4 w-4 text-[#009FD9] shrink-0" />
-                    <div>
-                      <p className="text-sm font-medium text-[#111827]">{t("mobileMode")}</p>
-                      <p className="text-xs text-[#9ca3af]">{t("mobileModeSub")}</p>
-                    </div>
-                  </label>
-
-                  <label className={cn(
-                    "flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all",
-                    serviceFixed ? "border-[#009FD9] bg-[#EBF5FB]" : "border-[#e5e7eb] hover:border-[#009FD9]/40"
-                  )}>
-                    <input
-                      type="checkbox"
-                      checked={serviceFixed}
-                      onChange={(e) => {
-                        setServiceFixed(e.target.checked);
-                        setServiceTypeError(null);
-                      }}
-                      className="sr-only"
-                    />
-                    <div className={cn(
-                      "h-5 w-5 rounded border-2 flex items-center justify-center shrink-0 transition-all",
-                      serviceFixed ? "bg-[#009FD9] border-[#009FD9]" : "border-[#d1d5db]"
-                    )}>
-                      {serviceFixed && (
-                        <svg className="h-3 w-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
-                    </div>
-                    <MapPin className="h-4 w-4 text-[#009FD9] shrink-0" />
-                    <div>
-                      <p className="text-sm font-medium text-[#111827]">{t("fixedMode")}</p>
-                      <p className="text-xs text-[#9ca3af]">{t("fixedModeSub")}</p>
-                    </div>
-                  </label>
-                </div>
-                {serviceTypeError && (
-                  <p className="text-xs text-red-500 mt-1">{serviceTypeError}</p>
-                )}
+                <p className="text-xs text-[#9ca3af]">{t("workplacesHelp")}</p>
+                <WorkplacesPicker value={workplaces} onChange={(n) => { setWorkplaces(n); setLocationError(null); }} />
               </div>
-
-              {/* Fixed location — pin (reverse-geocoded) or manual provincia/cantón;
-                  both define where the pro appears in search results. */}
-              {serviceFixed && (
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-medium text-[#374151]">{t("workplacesLabel")}</label>
-                  <p className="text-xs text-[#9ca3af]">
-                    {t("workplacesHelp")}
-                  </p>
-                  <WorkplacesPicker value={workplaces} onChange={(n) => { setWorkplaces(n); setLocationError(null); }} />
-                </div>
-              )}
-
-              {/* Coverage areas — for "me desplazo": provincia+cantón pairs traveled to */}
-              {serviceMobile && (
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-medium text-[#374151]">{t("coverageLabel")}</label>
-                  <p className="text-xs text-[#9ca3af]">
-                    {t("coverageHelp")}
-                  </p>
-                  <CoverageAreaSelector value={coverageAreas} onChange={(n) => { setCoverageAreas(n); setLocationError(null); }} />
-                </div>
-              )}
 
               {locationError && <p className="text-xs text-red-500">{locationError}</p>}
 

@@ -8,11 +8,11 @@ import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { LanguagesInput } from "@/components/ui/languages-input";
 import { WorkplacesPicker, type Workplace } from "@/components/maps/workplaces-picker";
-import { CoverageAreaSelector } from "@/components/maps/coverage-area-selector";
 import { createClient } from "@/lib/supabase/client";
-import { Camera, Check, X, Plus, Truck, MapPin, ChevronDown, Globe, ShieldCheck, Lock, Award, Info } from "lucide-react";
+import { Camera, Check, X, Plus, ChevronDown, ShieldCheck, Lock, Award, Info } from "lucide-react";
 import { Link } from "@/i18n/navigation";
-import { computeSearchAreas, primaryArea, type CoverageArea } from "@/lib/location";
+import { computeSearchAreas, primaryArea } from "@/lib/location";
+import { getProvinceById, getCantonById } from "@/lib/data/cr-geography";
 import { AseguradorasInput } from "@/components/ui/aseguradoras-input";
 import { CloseAccountSection } from "@/components/account/close-account-section";
 import { CategorySearch } from "@/components/ui/category-search";
@@ -54,6 +54,36 @@ function Section({ title, desc, defaultOpen = false, children }: { title: string
   );
 }
 
+// Back-compat: an existing pro's location may live in `workplaces` (current) or in
+// legacy `coverage_areas` / primary `provincia_id`/`canton_id`. Seed the zone list
+// from whatever exists so re-saving under the simplified model never drops their
+// search presence. (Whole-province / whole-country legacy coverage isn't a zone, so
+// it isn't seeded — the pro re-picks their cantón.)
+function seedZones(init: ProData): Workplace[] {
+  if (Array.isArray(init.workplaces) && init.workplaces.length > 0) return init.workplaces;
+  const out: Workplace[] = [];
+  const cov = Array.isArray(init.coverage_areas) ? init.coverage_areas : [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  for (const a of cov as any[]) {
+    const level = a.level ?? (a.cantonId ? "canton" : a.provinciaId ? "provincia" : "");
+    if (level === "canton" && a.provinciaId && a.cantonId) {
+      out.push({
+        id: `wp_seed_${a.cantonId}`,
+        name: [getCantonById(a.cantonId)?.name, getProvinceById(a.provinciaId)?.name].filter(Boolean).join(", "),
+        address: "", provinciaId: a.provinciaId, cantonId: a.cantonId,
+      });
+    }
+  }
+  if (out.length === 0 && init.provincia_id && init.canton_id) {
+    out.push({
+      id: "wp_seed_primary",
+      name: [getCantonById(init.canton_id)?.name, getProvinceById(init.provincia_id)?.name].filter(Boolean).join(", "),
+      address: "", provinciaId: init.provincia_id, cantonId: init.canton_id,
+    });
+  }
+  return out;
+}
+
 export function ProfileEditor({ professionalId, profileId, initial, onSaved }: ProfileEditorProps) {
   const locale = useLocale();
   const t = useTranslations("profileEditor");
@@ -78,12 +108,9 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
   // Aseguradoras only apply to health (es_salud) professionals.
   const isHealthPro = anyHealthCategory(professions);
   const [addCat, setAddCat] = useState("");
-  const [coverageAreas, setCoverageAreas] = useState<CoverageArea[]>(
-    Array.isArray(initial.coverage_areas) ? initial.coverage_areas : []
-  );
   const [address, setAddress] = useState<string>(initial.address ?? "");
   const [businessName, setBusinessName] = useState<string>(initial.business_name ?? "");
-  const [workplaces, setWorkplaces] = useState<Workplace[]>(Array.isArray(initial.workplaces) ? initial.workplaces : []);
+  const [workplaces, setWorkplaces] = useState<Workplace[]>(() => seedZones(initial));
   // Default to "Español" (most professionals) so a Spanish-only pro is never
   // treated as "missing" languages. Extra languages are an optional bonus.
   const [languages, setLanguages] = useState<string[]>(
@@ -94,10 +121,9 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
   const [certifications, setCertifications] = useState<Certification[]>(
     Array.isArray(initial.certifications) ? initial.certifications : []
   );
-  // Work mode — BOTH can be selected (travels AND has fixed locations).
-  const initialTypes = String(initial.service_type ?? "mobile");
-  const [serviceMobile, setServiceMobile] = useState(initialTypes.includes("mobile") || initialTypes === "");
-  const [serviceFixed, setServiceFixed] = useState(initialTypes.includes("fixed"));
+  // "Me desplazo a donde está el cliente" — a simple yes/no. Their coverage is the
+  // zone(s) above; exact travel is coordinated with the client directly.
+  const [travels, setTravels] = useState(String(initial.service_type ?? "").includes("mobile"));
   const [avatarPreview, setAvatarPreview] = useState<string | null>(
     initial.profiles?.avatar_url ?? null
   );
@@ -197,16 +223,14 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
       // Mi perfil no longer writes `pricing`/`hourly_rate` — existing DB values are
       // left untouched as a display fallback for pros who haven't moved over yet.
 
-      // Only keep workplaces when "fixed" is selected; coverage when "mobile".
-      const effectiveWorkplaces = serviceFixed ? workplaces : [];
-      const effectiveCoverage = serviceMobile ? coverageAreas : [];
-      const serviceType = [serviceMobile ? "mobile" : null, serviceFixed ? "fixed" : null].filter(Boolean).join(",") || "mobile";
-
-      // Location is derived from pins (fixed) + coverage areas (mobile) — the
-      // single source of truth. provincia_id/canton_id keep the PRIMARY area for
-      // back-compat display; search_* arrays drive location-aware /buscar.
-      const { provincias, cantones, coverageProvincias, coverageCountry } = computeSearchAreas(effectiveWorkplaces, effectiveCoverage);
-      const primary = primaryArea(effectiveWorkplaces, effectiveCoverage);
+      // Location = the work zones (provincia/cantón) the pro listed. `travels` is a
+      // simple flag (service_type "mobile") and adds NO separate coverage zones —
+      // their reach is the zones above. provincia_id/canton_id keep the PRIMARY area
+      // for back-compat display; search_* arrays drive location-aware /buscar.
+      const effectiveWorkplaces = workplaces;
+      const serviceType = [workplaces.length > 0 ? "fixed" : null, travels ? "mobile" : null].filter(Boolean).join(",") || "fixed";
+      const { provincias, cantones } = computeSearchAreas(effectiveWorkplaces, []);
+      const primary = primaryArea(effectiveWorkplaces, []);
 
       const baseUpdate: Record<string, unknown> = {
         bio,
@@ -224,11 +248,11 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
       const identityFields = {
         business_name: businessName.trim() || null,
         workplaces: effectiveWorkplaces,
-        coverage_areas: effectiveCoverage,
+        coverage_areas: [],
         search_provincias: provincias,
         search_cantones: cantones,
-        coverage_provincias: coverageProvincias,
-        coverage_country: coverageCountry,
+        coverage_provincias: [],
+        coverage_country: false,
         insurance_networks: insurers,
         call_phone: callPhone.trim() || null,
         contact_email: contactEmail.trim() || null,
@@ -282,8 +306,6 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
     }
   }
 
-  const hasCountryCoverage = coverageAreas.some((a) => (a.level ?? "canton") === "country");
-  const hasNarrowerCoverage = coverageAreas.some((a) => (a.level ?? "canton") !== "country");
 
   return (
     <div className="flex flex-col gap-3 max-w-lg">
@@ -479,63 +501,33 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
 
       {/* ── Ubicación y cobertura ─────────────────────────────────────── */}
       <Section title={t("secLocation")} desc={t("secLocationDesc")}>
-        {/* Work mode — both can be selected (travels AND has fixed locations) */}
+        {/* Work zones — provincia/cantón first (drives /buscar), optional exact pin. */}
         <div>
-          <label className="text-sm font-medium text-[#374151] block mb-2">{t("howOffer")} <span className="text-red-500">*</span> <span className="text-[#9ca3af] font-normal">{t("chooseBoth")}</span></label>
-          <div className="grid grid-cols-2 gap-2">
-            {([
-              { id: "mobile", icon: Truck, title: t("mobileTitle"), desc: t("mobileDesc"), active: serviceMobile, toggle: () => { setServiceMobile((v) => !v); touch(); } },
-              { id: "fixed", icon: MapPin, title: t("fixedTitle"), desc: t("fixedDesc"), active: serviceFixed, toggle: () => { setServiceFixed((v) => !v); touch(); } },
-            ] as const).map((opt) => (
-              <button
-                key={opt.id}
-                type="button"
-                onClick={opt.toggle}
-                className={cn(
-                  "flex flex-col items-start gap-1 p-3 rounded-xl border-2 text-left transition-all",
-                  opt.active ? "border-[#009FD9] bg-[#EBF5FB]" : "border-[#e5e7eb] hover:border-[#009FD9]/40"
-                )}
-              >
-                <opt.icon className="h-4 w-4 text-[#009FD9]" />
-                <p className="text-sm font-medium text-[#111827]">{opt.title}</p>
-                <p className="text-xs text-[#9ca3af]">{opt.desc}</p>
-              </button>
-            ))}
-          </div>
+          <label className="text-sm font-medium text-[#374151] block mb-1">
+            {t("workplaces")} <span className="text-red-500">*</span>
+          </label>
+          <p className="text-xs text-[#9ca3af] mb-2">
+            {t.rich("workplacesHelp", rich)}
+          </p>
+          <WorkplacesPicker value={workplaces} onChange={(next) => { setWorkplaces(next); touch(); }} mapHeight={168} />
         </div>
 
-        {/* Fixed locations — ONE flow: search/tap the map or pick provincia+cantón,
-            then "Agregar lugar". (The picker holds both inputs.) */}
-        {serviceFixed && (
+        {/* Travel — a simple yes/no; coverage is the zone(s) above, exact details
+            are coordinated with the client directly (no zone list to maintain). */}
+        <div className="flex items-start justify-between gap-4 rounded-xl bg-[#f9fafb] p-3.5">
           <div>
-            <label className="text-sm font-medium text-[#374151] block mb-1">
-              {t("workplaces")}
-            </label>
-            <p className="text-xs text-[#9ca3af] mb-2">
-              {t.rich("workplacesHelp", rich)}
-            </p>
-            <WorkplacesPicker value={workplaces} onChange={(next) => { setWorkplaces(next); touch(); }} mapHeight={168} />
+            <p className="text-sm font-medium text-[#111827]">{t("travelsLabel")}</p>
+            <p className="text-xs text-[#6b7280] mt-0.5 max-w-md">{t("travelsDesc")}</p>
           </div>
-        )}
-
-        {/* Coverage areas — only for "me desplazo": provincia+cantón pairs traveled to */}
-        {serviceMobile && (
-          <div>
-            <label className="text-sm font-medium text-[#374151] block mb-1">
-              {t("coverageAreas")}
-            </label>
-            <p className="text-xs text-[#9ca3af] mb-2">
-              {t("coverageHelp")}
-            </p>
-            {hasCountryCoverage && hasNarrowerCoverage && (
-              <div className="flex items-start gap-2 rounded-lg bg-[#fffbeb] border border-[#fde68a] px-3 py-2 mb-2 text-xs text-[#92400e]">
-                <Globe className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                <span>{t.rich("countryCoverageWarn", rich)}</span>
-              </div>
-            )}
-            <CoverageAreaSelector value={coverageAreas} onChange={(next) => { setCoverageAreas(next); touch(); }} />
-          </div>
-        )}
+          <button
+            type="button"
+            onClick={() => { setTravels((v) => !v); touch(); }}
+            className={cn("relative h-6 w-11 rounded-full transition-all shrink-0 mt-0.5", travels ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
+            aria-label={t("travelsLabel")}
+          >
+            <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", travels ? "left-5" : "left-0.5")} />
+          </button>
+        </div>
 
         <Input
           label={<>{t("address")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span></>}

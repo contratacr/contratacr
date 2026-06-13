@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { MapPin, X, Plus } from "lucide-react";
+import { MapPin, X, Plus, ChevronDown, Check } from "lucide-react";
 import { loadGoogleMaps, MAP_ID } from "@/lib/maps/loader";
-import { PROVINCES, getCantonsByProvince, getCantonById, getProvinceById, matchProvinceCanton } from "@/lib/data/cr-geography";
+import { PROVINCES, getCantonsByProvince, getCantonById, getProvinceById } from "@/lib/data/cr-geography";
 import { cn } from "@/lib/utils";
 
 export type Workplace = {
@@ -13,9 +13,9 @@ export type Workplace = {
   address: string;
   lat?: number;
   lng?: number;
-  // Authoritative administrative areas. These drive the search results. The pin
-  // (lat/lng) is the exact visual marker. When a pin is placed we PREFILL these
-  // from it (editable); the values in the selects always win.
+  // Authoritative administrative areas — chosen by the pro in the selects. These
+  // drive /buscar. The pin (lat/lng) is an OPTIONAL exact marker only; it never
+  // changes the provincia/cantón the pro picked.
   provinciaId?: string;
   cantonId?: string;
 };
@@ -24,7 +24,7 @@ interface WorkplacesPickerProps {
   value: Workplace[];
   onChange: (next: Workplace[]) => void;
   apiKey?: string;
-  /** Map viewport height in px (default 220). Lets callers render a more compact map. */
+  /** Map viewport height in px (default 200). */
   mapHeight?: number;
 }
 
@@ -37,29 +37,14 @@ function genId() {
   return `wp_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function deriveAdmin(components: any[]): { provinciaId?: string; cantonId?: string } {
-  if (!Array.isArray(components)) return {};
-  // Handles legacy geocoder (long_name) AND new Place.addressComponents (longText).
-  const find = (type: string) => {
-    const c = components.find((x) => Array.isArray(x.types) && x.types.includes(type));
-    return (c?.long_name ?? c?.longText) as string | undefined;
-  };
-  const provinceName = find("administrative_area_level_1");
-  const cantonName = find("administrative_area_level_2") || find("locality");
-  const { provinceId, cantonId } = matchProvinceCanton(provinceName, cantonName);
-  return { provinciaId: provinceId, cantonId };
-}
-
 /**
- * Add one or more fixed work locations. A pro can:
- *  - drop a pin (search a place / click the map / use current location) — we
- *    reverse-geocode it, prefill provincia + cantón, and add it to the list; or
- *  - pick provincia → cantón manually (cantón is disabled until a provincia is
- *    chosen) and add a location without a precise pin.
- * Every added location is listed and removable. Multiple locations are supported.
+ * Add one or more work zones — Uber/Airbnb style: the STRUCTURED field comes
+ * first (provincia → cantón, the authoritative data used by search), then an
+ * OPTIONAL map pin refines the exact spot. The pin only stores lat/lng; it never
+ * re-asks or overrides the provincia/cantón the pro already chose. Multiple zones
+ * are supported; each is listed and removable.
  */
-export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 220 }: WorkplacesPickerProps) {
+export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200 }: WorkplacesPickerProps) {
   const t = useTranslations("workplacesPicker");
   const mapRef = useRef<HTMLDivElement>(null);
   const pacContainerRef = useRef<HTMLDivElement>(null);
@@ -69,10 +54,11 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 220 }: W
   const valueRef = useRef<Workplace[]>(value);
   valueRef.current = value;
 
-  // Draft for the location being added (manual provincia/cantón + optional pin).
+  // Draft for the zone being added: provincia/cantón (+ optional name + optional pin).
   const [province, setProvince] = useState("");
   const [canton, setCanton] = useState("");
   const [label, setLabel] = useState("");
+  const [showMap, setShowMap] = useState(false);
   const [draftPin, setDraftPin] = useState<{ lat: number; lng: number; address: string } | null>(null);
   const draftPinRef = useRef<typeof draftPin>(null);
   draftPinRef.current = draftPin;
@@ -87,50 +73,38 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 220 }: W
     return (window as any).google?.maps;
   }
 
-  function commitWorkplace(wp: { provinciaId: string; cantonId: string; lat?: number; lng?: number; address?: string }) {
-    const cantonName = getCantonById(wp.cantonId)?.name ?? "";
-    const provinceName = getProvinceById(wp.provinciaId)?.name ?? "";
-    // `name` is the READABLE label shown in listings: the pro's chosen label, else a
-    // general locality (cantón, provincia) — never the raw Plus Code. `address`
-    // keeps the exact geocoded string for the MAP marker only.
+  function commitWorkplace() {
+    if (!province || !canton) return;
+    const pin = draftPinRef.current;
+    const cantonName = getCantonById(canton)?.name ?? "";
+    const provinceName = getProvinceById(province)?.name ?? "";
+    // `name` is the READABLE label shown in listings: the pro's chosen label, else
+    // the cantón, provincia. `address` keeps the exact geocoded string for the pin.
     const readable = label.trim() || [cantonName, provinceName].filter(Boolean).join(", ") || "Ubicación";
     onChange([
       ...valueRef.current,
       {
         id: genId(),
         name: readable,
-        address: wp.address || "",
-        lat: wp.lat,
-        lng: wp.lng,
-        provinciaId: wp.provinciaId,
-        cantonId: wp.cantonId,
+        address: pin?.address || "",
+        lat: pin?.lat,
+        lng: pin?.lng,
+        provinciaId: province,
+        cantonId: canton,
       },
     ]);
     setProvince("");
     setCanton("");
     setLabel("");
     setDraftPin(null);
+    setShowMap(false);
   }
 
-  // Called when a pin is placed via search / map click / current location. The pin
-  // becomes the CURRENT draft (only one at a time) and prefills provincia/cantón
-  // from reverse-geocoding (editable). It is NOT added until the pro confirms its
-  // provincia + cantón via "Agregar lugar" — so a second pin can't be added until
-  // the current one is confirmed and saved.
-  function onPinPlaced(lat: number, lng: number, address: string, admin: { provinciaId?: string; cantonId?: string }) {
+  // A pin placed via search / map click / current location → just stores lat/lng.
+  // It does NOT touch provincia/cantón (the selects are the source of truth).
+  function onPinPlaced(lat: number, lng: number, address: string) {
     setGeoError(null);
     setDraftPin({ lat, lng, address });
-    if (admin.provinciaId) {
-      setProvince(admin.provinciaId);
-      setCanton(admin.cantonId ?? "");
-    }
-  }
-
-  // Manual "Agregar lugar": uses the selected provincia + cantón (+ draft pin if any).
-  function addManual() {
-    if (!province || !canton) return;
-    const pin = draftPinRef.current;
-    commitWorkplace({ provinciaId: province, cantonId: canton, lat: pin?.lat, lng: pin?.lng, address: pin?.address });
   }
 
   function removeWorkplace(id: string) {
@@ -191,14 +165,14 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 220 }: W
         const prediction = e.placePrediction ?? e.place;
         if (!prediction) return;
         const place = typeof prediction.toPlace === "function" ? prediction.toPlace() : prediction;
-        await place.fetchFields({ fields: ["location", "formattedAddress", "addressComponents"] });
+        await place.fetchFields({ fields: ["location", "formattedAddress"] });
         if (!place.location) return;
         const loc = place.location;
         map.setCenter(loc);
         map.setZoom(15);
         const lat = typeof loc.lat === "function" ? loc.lat() : loc.lat;
         const lng = typeof loc.lng === "function" ? loc.lng() : loc.lng;
-        onPinPlaced(lat, lng, place.formattedAddress || "", deriveAdmin(place.addressComponents));
+        onPinPlaced(lat, lng, place.formattedAddress || "");
       });
     }
 
@@ -207,12 +181,7 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 220 }: W
       const latLng = e.latLng;
       geocoderRef.current?.geocode({ location: latLng }, (results: GMaps, status: string) => {
         const ok = status === "OK" && results?.[0];
-        onPinPlaced(
-          latLng.lat(),
-          latLng.lng(),
-          ok ? (results[0].formatted_address as string) : "",
-          ok ? deriveAdmin(results[0].address_components) : {}
-        );
+        onPinPlaced(latLng.lat(), latLng.lng(), ok ? (results[0].formatted_address as string) : "");
       });
     });
 
@@ -232,21 +201,23 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 220 }: W
         if (geocoderRef.current) {
           geocoderRef.current.geocode({ location: { lat, lng } }, (results: GMaps, status: string) => {
             const ok = status === "OK" && results?.[0];
-            onPinPlaced(lat, lng, ok ? (results[0].formatted_address as string) : "", ok ? deriveAdmin(results[0].address_components) : {});
+            onPinPlaced(lat, lng, ok ? (results[0].formatted_address as string) : "");
             setLocating(false);
           });
-        } else { onPinPlaced(lat, lng, "", {}); setLocating(false); }
+        } else { onPinPlaced(lat, lng, ""); setLocating(false); }
       },
       () => { setGeoError(t("geoFailed")); setLocating(false); },
       { enableHighAccuracy: true, timeout: 10000 }
     );
   }
 
+  // Initialize the map only once the optional refinement is opened (the container
+  // doesn't exist until then).
   useEffect(() => {
-    if (!effectiveKey) return;
+    if (!effectiveKey || !showMap) return;
     loadGoogleMaps(effectiveKey).then(initMap).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [showMap]);
 
   useEffect(() => {
     renderMarkers();
@@ -254,88 +225,100 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 220 }: W
   }, [value, draftPin]);
 
   const selectCls =
-    "h-10 px-3 rounded-xl border border-[#e5e7eb] bg-white text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all cursor-pointer";
+    "h-11 px-3 rounded-xl border border-[#e5e7eb] bg-white text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all cursor-pointer";
 
   return (
-    <>
-      <div className="flex flex-col gap-2">
-        {/* Map — search / click / current location places ONE draft pin at a time. */}
-        {effectiveKey ? (
-          <>
-            {/* New PlaceAutocompleteElement renders its own input here */}
-            <div ref={pacContainerRef} className="cr-pac w-full" />
-            <button type="button" onClick={useMyLocation} disabled={locating} className="self-start inline-flex items-center gap-1.5 text-sm font-medium text-[#009FD9] hover:underline disabled:opacity-60">
-              <MapPin className="h-4 w-4" />
-              {locating ? t("locating") : t("useMyLocation")}
-            </button>
-            {geoError && <p className="text-xs text-amber-600">{geoError}</p>}
-            <div className="relative rounded-xl overflow-hidden border border-[#e5e7eb]" style={{ height: mapHeight }}>
-              <div ref={mapRef} className="w-full h-full" />
-            </div>
-          </>
-        ) : (
-          <p className="text-xs text-[#9ca3af]">{t("mapUnavailable")}</p>
-        )}
-
-        {/* Provincia + cantón for the CURRENT location. The cantón field is disabled
-            until a provincia is chosen (the disabled state communicates the
-            dependency — no instructional text). */}
-        <p className="text-[11px] text-[#9ca3af] mt-1">{draftPin ? t("confirmMarked") : t("addByProvinceCanton")}</p>
-        <input
-          type="text"
-          value={label}
-          onChange={(e) => setLabel(e.target.value)}
-          placeholder={t("namePlaceholder")}
-          className="h-10 px-3 rounded-xl border border-[#e5e7eb] bg-white text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
-        />
-        <div className="grid grid-cols-2 gap-2">
-          <select value={province} onChange={(e) => { setProvince(e.target.value); setCanton(""); }} className={selectCls}>
-            <option value="">{t("provincePlaceholder")}</option>
-            {PROVINCES.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-          </select>
-          <select value={canton} onChange={(e) => setCanton(e.target.value)} disabled={!province} className={cn(selectCls, !province && "opacity-50 cursor-not-allowed")}>
-            <option value="">{t("cantonPlaceholder")}</option>
-            {cantons.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
-        </div>
-
-        {/* "Agregar lugar" is blocked until the current location's provincia AND
-            cantón are set — so a second pin can't be added until this one is saved. */}
-        <button
-          type="button"
-          onClick={addManual}
-          disabled={!province || !canton}
-          className="self-start inline-flex items-center gap-1.5 rounded-xl bg-[#009FD9] text-white text-sm font-semibold px-4 py-2 hover:bg-[#0089bb] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          <Plus className="h-4 w-4" /> {t("addPlace")}
-        </button>
-        {(draftPin || province) && (!province || !canton) && (
-          <p className="text-[11px] text-amber-600 -mt-1">
-            {!province ? t("hintProvinceCanton") : t("hintCanton")}
-          </p>
-        )}
-
-        {/* Added workplaces */}
-        {value.length > 0 && (
-          <div className="flex flex-col gap-2 mt-1">
-            <p className="text-xs font-medium text-[#374151]">{t("addedPlaces", { count: value.length })}</p>
-            {value.map((wp) => (
-              <div key={wp.id} className="flex items-center gap-2 bg-[#EBF5FB] rounded-xl px-3 py-2">
-                <MapPin className="h-4 w-4 text-[#009FD9] shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium text-[#0089bb] truncate">{wp.name}</p>
-                  <p className="text-[10px] text-[#6b7280] truncate">
-                    {[getCantonById(wp.cantonId ?? "")?.name, getProvinceById(wp.provinciaId ?? "")?.name].filter(Boolean).join(", ")}
-                  </p>
-                </div>
-                <button type="button" onClick={() => removeWorkplace(wp.id)} className="rounded-md p-0.5 text-[#9ca3af] hover:text-red-500 transition-colors shrink-0" aria-label={t("removePlace")}>
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
+    <div className="flex flex-col gap-2.5">
+      {/* 1 — Structured field FIRST: provincia → cantón (authoritative for search). */}
+      <p className="text-xs text-[#6b7280]">{t("lead")}</p>
+      <div className="grid grid-cols-2 gap-2">
+        <select value={province} onChange={(e) => { setProvince(e.target.value); setCanton(""); }} className={selectCls}>
+          <option value="">{t("provincePlaceholder")}</option>
+          {PROVINCES.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+        </select>
+        <select value={canton} onChange={(e) => setCanton(e.target.value)} disabled={!province} className={cn(selectCls, !province && "opacity-50 cursor-not-allowed")}>
+          <option value="">{t("cantonPlaceholder")}</option>
+          {cantons.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+        </select>
       </div>
-    </>
+      <input
+        type="text"
+        value={label}
+        onChange={(e) => setLabel(e.target.value)}
+        placeholder={t("namePlaceholder")}
+        className="h-11 px-3 rounded-xl border border-[#e5e7eb] bg-white text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+      />
+
+      {/* 2 — OPTIONAL exact pin (refinement), collapsed by default to stay tidy. */}
+      {effectiveKey ? (
+        <div className="rounded-xl border border-[#eef2f5]">
+          <button
+            type="button"
+            onClick={() => setShowMap((v) => !v)}
+            className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm font-medium text-[#374151]"
+          >
+            <MapPin className="h-4 w-4 text-[#009FD9]" />
+            <span className="flex-1">{t("markOnMap")}</span>
+            {draftPin && <Check className="h-4 w-4 text-[#16a34a]" />}
+            <ChevronDown className={cn("h-4 w-4 text-[#9ca3af] transition-transform", showMap && "rotate-180")} />
+          </button>
+          {showMap && (
+            <div className="flex flex-col gap-2 px-3 pb-3">
+              <div ref={pacContainerRef} className="cr-pac w-full" />
+              <button type="button" onClick={useMyLocation} disabled={locating} className="self-start inline-flex items-center gap-1.5 text-sm font-medium text-[#009FD9] hover:underline disabled:opacity-60">
+                <MapPin className="h-4 w-4" />
+                {locating ? t("locating") : t("useMyLocation")}
+              </button>
+              {geoError && <p className="text-xs text-amber-600">{geoError}</p>}
+              <div className="relative rounded-xl overflow-hidden border border-[#e5e7eb]" style={{ height: mapHeight }}>
+                <div ref={mapRef} className="w-full h-full" />
+              </div>
+              {draftPin && (
+                <div className="flex items-center gap-2 text-xs text-[#16a34a]">
+                  <Check className="h-3.5 w-3.5 shrink-0" />
+                  <span className="flex-1 min-w-0 truncate">{draftPin.address || t("pinPlaced")}</span>
+                  <button type="button" onClick={() => setDraftPin(null)} className="text-[#9ca3af] hover:text-red-500 shrink-0">{t("clearPin")}</button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      ) : (
+        <p className="text-xs text-[#9ca3af]">{t("mapUnavailable")}</p>
+      )}
+
+      {/* 3 — Add the zone (enabled once provincia + cantón are chosen). */}
+      <button
+        type="button"
+        onClick={commitWorkplace}
+        disabled={!province || !canton}
+        className="self-start inline-flex items-center gap-1.5 rounded-xl bg-[#009FD9] text-white text-sm font-semibold px-4 py-2.5 hover:bg-[#0089bb] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+      >
+        <Plus className="h-4 w-4" /> {t("addPlace")}
+      </button>
+      {province && !canton && <p className="text-[11px] text-amber-600 -mt-1">{t("hintCanton")}</p>}
+
+      {/* Added zones */}
+      {value.length > 0 && (
+        <div className="flex flex-col gap-2 mt-1">
+          <p className="text-xs font-medium text-[#374151]">{t("addedPlaces", { count: value.length })}</p>
+          {value.map((wp) => (
+            <div key={wp.id} className="flex items-center gap-2 bg-[#EBF5FB] rounded-xl px-3 py-2">
+              <MapPin className="h-4 w-4 text-[#009FD9] shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-[#0089bb] truncate">{wp.name}</p>
+                <p className="text-[10px] text-[#6b7280] truncate">
+                  {[getCantonById(wp.cantonId ?? "")?.name, getProvinceById(wp.provinciaId ?? "")?.name].filter(Boolean).join(", ")}
+                  {wp.lat != null && wp.lng != null ? ` · ${t("pinnedTag")}` : ""}
+                </p>
+              </div>
+              <button type="button" onClick={() => removeWorkplace(wp.id)} className="rounded-md p-0.5 text-[#9ca3af] hover:text-red-500 transition-colors shrink-0" aria-label={t("removePlace")}>
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
