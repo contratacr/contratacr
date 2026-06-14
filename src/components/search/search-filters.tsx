@@ -273,7 +273,7 @@ export function SearchFilters() {
           disabled={geoLoading}
           className="w-full inline-flex items-center justify-between gap-2 rounded-lg border border-[#e5e7eb] bg-white px-3 py-2 text-xs font-medium text-[#374151] hover:border-[#009FD9] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9] transition-colors"
         >
-          <span>{geoActive ? t("filters.nearMeActive") : t("filters.nearMe")}</span>
+          <span className="flex-1 text-left">{geoActive ? t("filters.nearMeActive") : t("filters.nearMe")}</span>
           {geoLoading ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
           ) : (
