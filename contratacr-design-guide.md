@@ -934,3 +934,22 @@ tab switches go through `router.push` from a `<button>`, so they are NOT caught 
 guard — they rely on flush-on-blur + flush-on-unmount above. That combination is what
 fixed the "edit a field, switch section, lose the change" bug. Any NEW editable section
 must follow this standard.
+
+## 50. /buscar card — name + price (company-first, person never dropped on mobile)
+
+The search card shows, in priority: **company/brand name (bold primary)** → person
+name (smaller secondary) → Verificado pill → price → location. A company/brand leads
+(clients recognize the brand) with the person's name beneath it (abbreviated form:
+first name + both surnames, `shortPersonName`); with no company the person's name is
+the primary and there's no secondary. **The personal name must NEVER disappear** —
+especially on mobile. Layout (`professional-card.tsx`), card height fixed
+(`h-[360px] md:h-[232px]`, never grows):
+- **Name line:** company/brand + Verificado pill beside it (both breakpoints).
+- **DESKTOP:** price sits far-right on the name line (`hidden md:inline-block
+  md:ml-auto`); the person name is the line just below (`hidden md:block`).
+- **MOBILE:** the name line is ONLY company + Verificado (so it never wraps
+  awkwardly); a dedicated `md:hidden` secondary line holds the **person name (left) +
+  price (right, `ml-auto`, `pr-9` to clear the bookmark button)**. Putting the price
+  here (not on the name line) is the intentional mobile placement.
+Don't move the price back onto the mobile name line, and don't gate the person name
+behind space (it always renders on the mobile secondary line when a company leads).
