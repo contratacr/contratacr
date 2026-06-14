@@ -2170,7 +2170,9 @@
       "pitchTitle": "¿Ofreces servicios?",
       "pitchDesc": "Crea tu perfil gratis y recibe solicitudes de clientes de tu zona. Sin comisiones, y los perfiles verificados aparecen primero.",
       "pitchCta": "Registrarse como profesional",
-      "pitchHow": "Cómo funciona"
+      "pitchHow": "Cómo funciona",
+      "mockResults": "128 profesionales en Costa Rica",
+      "mockSearch": "Plomería en San José"
     },
     "why": {
       "heading": "Por qué los clientes eligen ContrataCR.",

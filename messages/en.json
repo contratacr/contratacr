@@ -2170,7 +2170,9 @@
       "pitchTitle": "Do you offer services?",
       "pitchDesc": "Create your profile for free and receive requests from clients in your area. No commissions, and verified profiles appear first.",
       "pitchCta": "Register as a professional",
-      "pitchHow": "How it works"
+      "pitchHow": "How it works",
+      "mockResults": "128 professionals in Costa Rica",
+      "mockSearch": "Plumbing in San José"
     },
     "why": {
       "heading": "Why customers choose ContrataCR.",

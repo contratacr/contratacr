@@ -1,7 +1,7 @@
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getLocale } from "next-intl/server";
 import { Search, BadgeCheck, LifeBuoy, ArrowRight } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
-import { PhoneFrame, ResultsScreen } from "@/components/landing/phone-screens";
+import { PhoneFrame, ResultsScreen, type ResultsCopy } from "@/components/landing/phone-screens";
 import { SmartRegisterLink } from "@/components/layout/smart-register-link";
 import { Link } from "@/i18n/navigation";
 import { FadeInUp } from "@/components/landing/fade-in-up";
@@ -19,6 +19,38 @@ const POINTS = [
 
 export async function WhyContratacr() {
   const t = await getTranslations("landing.howItWorks");
+  const tCard = await getTranslations("card");
+  const tSched = await getTranslations("schedule");
+  const tCat = await getTranslations("categories");
+  const locale = await getLocale();
+
+  // Locale-aware copy for the in-phone /buscar preview. Reuses the SAME strings
+  // the real app shows (card/schedule namespaces) so the mockup stays faithful and
+  // correct in ES/EN. Day labels are real upcoming dates, localized.
+  const loc = locale === "en" ? "en-US" : "es-CR";
+  const today = new Date();
+  const days = [1, 2, 3].map((i) => {
+    const d = new Date(today);
+    d.setDate(today.getDate() + i);
+    const day = d.getDate();
+    const month = d.toLocaleDateString(loc, { month: "short" }).replace(".", "");
+    return {
+      label: locale === "en" ? `${month} ${day}` : `${day} ${month}`,
+      times: i === 3 ? ["10:00"] : ["9:00", "14:00"],
+    };
+  });
+  const resultsCopy: ResultsCopy = {
+    title: tCat("plomeria"),
+    results: t("mockResults"),
+    search: t("mockSearch"),
+    verified: tCard("verifiedShort"),
+    request: tSched("requestService"),
+    whatsapp: tSched("whatsapp"),
+    viewSchedule: tSched("viewFullSchedule"),
+    reviews: (n: number) => tCard("reviewsCount", { count: n }),
+    days,
+  };
+
   return (
     <section className="relative overflow-hidden py-20 sm:py-28 bg-white">
       <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
@@ -69,7 +101,7 @@ export async function WhyContratacr() {
             <div className="relative flex justify-center">
               {/* subtle ground shadow only — no container/box behind the phone */}
               <div aria-hidden className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 h-6 w-52 rounded-[50%] bg-[#1a2744]/15 blur-2xl" />
-              <PhoneFrame><ResultsScreen /></PhoneFrame>
+              <PhoneFrame><ResultsScreen copy={resultsCopy} /></PhoneFrame>
             </div>
           </FadeInUp>
         </div>
