@@ -632,6 +632,14 @@ The serious-tone rule extends to layout: **prefer plain text + a small icon over
 - **One treatment per group — no odd boxes among plain rows.** When a section lists several facts (experience, verification, location, prices), present them as borderless `flex justify-between` label→value rows (`flex-col gap-2.5`), NOT a bordered/`divide-y` container sitting next to plain headed sections. If one item in a list is boxed and the rest aren't, that's the bug — make them all plain.
 - **Informational banners aren't always boxes.** The "viewing as a client" preview banner is plain `text-[#6b7280]` + its action button — no tinted container. Use a colored container only when the message is a genuine alert/warning that must interrupt.
 
+## 23. Legal pages (Términos / Privacidad)
+
+Legal documents render through the shared `LegalDocument` component (`components/legal/legal-document.tsx`): content is **data** (`LegalSection[]` of typed blocks — `p` / `sub` heading / `ul` list / `note` callout), with a small inline renderer for `**bold**` and the support email auto-linked. It provides the title, "Última actualización", intro, a two-column TOC, hairline-separated sections, and the footer cross-link box. **These pages are Spanish-only** (the binding legal version) — never machine-translate the body; for EN visitors show the Spanish text plus a one-line English note that it's the binding version. No "borrador/draft" disclaimer on published legal text. Keep both linked from the footer AND every registration "acepto los términos…" step (pro registration, client registration page, client registration modal).
+
+## 24. The "Verificado" badge + its always-reachable meaning
+
+The identity badge label is **"Verificado"** (EN "Verified") everywhere it's the chip — cards, profile, panels, booking. For legal clarity, **wherever the badge shows there must be a reachable explanation of its LIMITED meaning**: a "¿Qué significa?" link beside the badge (public profile header + "Sobre mí" row) deep-links to `/proveedores-autorizados#que-significa`; on cards (no room for a link) the badge keeps a `title` tooltip and the card links through to the profile. The explainer states the badge ONLY confirms the cédula is real and the name matches official records — it does NOT guarantee quality, outcome, completion, permits, or that the registrant is physically that person. Verification is **optional**: a pro may register with a cédula (→ badge) or without ("Registrarme sin cédula por ahora" → unverified, no badge, verifiable later). A null cédula safely skips verification (status stays `pending`, never auto-rejected); registering without one is a normal unverified signup, not a review case. 18+ is enforced via Terms acceptance at registration (no age checkbox).
+
 ## 21. ONE save pattern: autosave everywhere + a shared status indicator
 
 The whole app **autosaves** — there are NO "Guardar cambios" buttons in editable sections. Every section gives consistent feedback through the shared `SaveStatus` component (`components/dashboard/save-status.tsx`, `saveStatus` i18n): **Guardando… / Guardado / Sin guardar**, placed right-aligned at the top of the section. Two implementation shapes, both ending in the same indicator:
@@ -649,7 +657,11 @@ Search cards are uniform (`md:min-h-[190px]` floor); reorganizing them must NOT 
   - **TYPE 2** — public + no call: `[WhatsApp]` then **Solicitar servicio**.
   - **TYPE 3** — private: only WhatsApp (plus Llamar if the pro enabled it); no schedule, no Solicitar. Here the contact buttons are the ONLY actions, so they **stack VERTICALLY** (WhatsApp above Llamar, each `w-full`), bottom-pinned in the action column. This stacked layout is private-only.
   In TYPE 1/2 WhatsApp + Llamar share a single row (`flex gap`, each `flex-1`) so enabling calls never adds a line above "Solicitar servicio". `contactButtons(stacked)` switches between column/`w-full` (private) and row/`flex-1` (public). Either way the card height is unchanged (the identity zone drives height; the `md:min-h-[190px]` floor keeps cards uniform). To make room for the contact row without growing the card, the price moved to the identity zone and the redundant "Ver horario completo" link was dropped.
-- **Filters:** the aseguradora filter never offers a "Ninguna / sin seguros" entry (that's a pro attribute, not a client filter) and defaults to no insurer selected (placeholder, not a pre-selected value).
+- **Filters:** the aseguradora filter never offers a "Ninguna / Todas / sin seguros" entry (excluded by id AND label — that's a pro attribute, not a client filter) and defaults to no insurer selected (neutral placeholder "Cualquiera", not a pre-selected value); the X clears back to unfiltered.
+- **Uniform height:** the action zone carries a mobile floor (`min-h-[150px] md:min-h-0`) so all 3 button-layout types line up on mobile; desktop uses the row layout + the card `md:min-h` floor.
+- **"Ver horario completo"** lives as a right-aligned link in the schedule's header row (shares the location row → no extra line); it opens the booking/full-schedule flow.
+- **Reviews are a link:** the rating + count links to `/profesionales/[slug]?tab=resenas` (count brand-blue + hover underline, like the casos/cert links; ICU plural). The 0-review state stays the honest, non-link "Sin reseñas todavía" — never a fake number or misleading link.
+- **Email action** wording is "Contactar por correo" (EN "Contact by email"), matching "Contactar por WhatsApp".
 
 ## 20. Optional map pin = opt-in disclosure (never shown by default)
 
