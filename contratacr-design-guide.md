@@ -862,13 +862,23 @@ the real ContrataCR Facebook/Instagram/TikTok accounts) spanning 2 cols, then th
 link columns — **Para clientes** (Buscar, Categorías, Cómo funciona, Publicar un
 proyecto), **Para profesionales** (Registra tu perfil via `SmartRegisterLink`, Cómo
 atraer clientes, Verificación de identidad → /proveedores-autorizados), **Ayuda y
-soporte** (Centro de ayuda → /ayuda, Centro de soporte → /soporte [the ticket
-system, primary support], Contacto → /contacto, and a `mailto:` to the official
-`SUPPORT_EMAIL` soporte@contratacr.com). Bottom bar = © year · Términos · Privacidad ·
-"Hecho en Costa Rica". Rules: every link must resolve to an EXISTING page (no dead
-links — re-verify when pages are renamed/removed); legal (Términos/Privacidad) always
-present in the bottom bar; keep copy honest (no "totalmente gratis / siempre gratis" —
-the tagline says creating an account is free and payment is arranged directly with the
-pro); use current naming ("Verificado", intermediary positioning). The link renderer
-handles three kinds: `SmartRegisterLink` (register), plain `<a>` for `mailto:`,
-internal `Link` otherwise. All labels come from the `footer` i18n namespace (ES+EN).
+soporte** (Centro de ayuda → /ayuda, Centro de soporte → /soporte). Bottom bar =
+© year · Términos · Privacidad · "Hecho en Costa Rica".
+
+**ONE support channel (no redundancy).** Support is centralized on the ticket system
+at **/soporte** (also the header-nav support link). The footer support column is just
+self-serve help (/ayuda) + the ticket center (/soporte) — do NOT add a separate
+"Contacto" link or a raw support `mailto:` in the footer/nav (they fragment the
+single-channel strategy). `/contacto` is a permanent redirect to `/soporte` (kept only
+so old links don't 404). **The legal contact email `soporte@contratacr.com` lives on
+Términos + Privacidad ONLY** (data-rights requirement) — never in the footer/nav.
+
+Rules: every link must resolve to an EXISTING page (no dead links — re-verify when
+pages are renamed/removed); legal (Términos/Privacidad) always present in the bottom
+bar; keep "Hecho en Costa Rica" (reinforces the exclusively-CR identity; single grey
+line, no colorful icon/flag). Keep the tagline short, appealing, and HONEST — no
+"gratis/siempre gratis/free forever" promise; it states the exclusively-CR marketplace
++ the intermediary positioning (payment arranged directly with the professional). Use
+current naming ("Verificado", intermediary positioning). The link renderer handles two
+kinds: `SmartRegisterLink` (register) and internal `Link` otherwise. All labels come
+from the `footer` i18n namespace (ES+EN).
