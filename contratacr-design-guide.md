@@ -906,3 +906,31 @@ preview of the CURRENT product, not a stylized fake. Rules:
   `categories.*`) so ES/EN stay correct and in sync with the product.
 - **Responsive:** fixed ~284px width, centered; fits ~360px; the section stacks with
   the phone on top on mobile.
+
+## 49. THE SAVE STANDARD — reliable autosave everywhere (no save buttons, no data loss)
+
+ONE save pattern app-wide. Do NOT mix autosave and save-buttons across sections.
+
+**Pattern = reliable autosave** with a single consistent `SaveStatus` indicator
+(`Guardando… / Guardado / Sin guardar` · `Saving… / Saved / Unsaved`), placed
+top-right of each editable section. NO per-section "Guardar" buttons.
+
+Two valid implementations, both guaranteeing NO silent data loss:
+- **Form-field editor (debounced autosave)** — e.g. `profile-editor.tsx`, client
+  profile. MUST implement all three: (1) `touch()` debounces a save (~1s); (2)
+  `flush()` saves immediately, bound to every text field's `onBlur` (clicking away —
+  to a tab, link, or button — blurs the field first, so it saves before navigating);
+  (3) **flush on unmount** — a cleanup effect fires the pending save when the
+  component unmounts (the fetch survives a same-page tab-switch unmount), using a
+  `saveRef` (latest closure) + `dirtyRef` so the latest values persist and non-text
+  changes (toggles, pickers) are covered too.
+- **Action-based editor** — e.g. Servicios, Disponibilidad, Photos. Each action
+  (add / remove / toggle / upload) calls `persist()` IMMEDIATELY (no debounce), so
+  nothing is ever pending. Show the same `SaveStatus` pulse.
+
+Always also mount `UnsavedChangesGuard` (dirty + onSave) as the safety net for HARD
+navigation (in-app `<a>` links + tab close/refresh `beforeunload`). Note: dashboard
+tab switches go through `router.push` from a `<button>`, so they are NOT caught by the
+guard — they rely on flush-on-blur + flush-on-unmount above. That combination is what
+fixed the "edit a field, switch section, lose the change" bug. Any NEW editable section
+must follow this standard.
