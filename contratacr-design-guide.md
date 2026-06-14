@@ -839,3 +839,15 @@ obvious to type just the handle. Be lenient on input (`cleanUsername` strips `@`
 builds the link with `buildSocialUrl` and shows icons only (open in a new tab),
 only for the networks filled in. All in `src/lib/social.ts`. No website field
 (not a username), no feeds/OAuth/Meta API — username → constructed link → icon.
+
+## 46. Labeled toggle buttons: left-align the label (button defaults to center)
+
+A `<button>` defaults to `text-align: center`, and a flex child `<span>` inside it
+INHERITS that. For a label+switch toggle row (`justify-between`), a short label fits
+on one line so the centering is invisible — but a longer label that WRAPS renders its
+lines centered, looking inconsistent with the left-aligned dropdown labels beside it.
+Always give the label span `flex-1 text-left` so wrapped text stays left-aligned and
+fills the available width (switch stays pinned right via `justify-between`). This bit
+the "Buscar profesionales cerca de mí" filter toggle (ES/EN both wrap); the shorter
+"Solo verificados" hid the same latent bug. Applies to any labeled toggle/segmented
+control built on a `<button>`.
