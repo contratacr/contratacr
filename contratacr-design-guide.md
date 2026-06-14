@@ -882,3 +882,27 @@ line, no colorful icon/flag). Keep the tagline short, appealing, and HONEST — 
 current naming ("Verificado", intermediary positioning). The link renderer handles two
 kinds: `SmartRegisterLink` (register) and internal `Link` otherwise. All labels come
 from the `footer` i18n namespace (ES+EN).
+
+## 48. Phone mockup ("Así funciona") = a FAITHFUL preview of the real app
+
+The "Así funciona ContrataCR" section (`why-contratacr.tsx`) shows ONE device:
+`PhoneFrame` + `ResultsScreen` from `phone-screens.tsx` (the live mockup;
+`phone-mockup.tsx`/`app-section.tsx` are dead, unused). The mockup must be an HONEST
+preview of the CURRENT product, not a stylized fake. Rules:
+- **Device frame:** modern flagship look — titanium rail, slim black bezel, squircle
+  screen, dynamic island, machined side buttons, layered shadow, subtle top glass
+  sheen. Premium but restrained (serious tone, no gimmicks).
+- **Inner content mirrors the REAL `/buscar` card** (`professional-card.tsx`): white
+  `rounded-2xl`+border, `EBF5FB`/`#009FD9` avatar, the SAME **solid brand-blue
+  "Verificado" pill** (`Badge variant="verified"` = `bg-[#009FD9] text-white`) — never
+  a green check/text, price on the right, grey profession chip, orange-star
+  (`#ff9b32`) rating with brand-blue reviews, brand-blue location pin, the inline
+  **availability schedule** (the hero feature), and WhatsApp (`#25D366`) + "Solicitar
+  servicio" (`#009FD9`) buttons. When the real card changes, update the mockup to match.
+- **Example name:** use **"SG Solutions"** (company) as the sample professional, the
+  standard example name across the app.
+- **i18n:** never hardcode the in-phone copy. Build a locale-aware `ResultsCopy` in the
+  (server) parent, reusing the real app's strings (`card.*`, `schedule.*`,
+  `categories.*`) so ES/EN stay correct and in sync with the product.
+- **Responsive:** fixed ~284px width, centered; fits ~360px; the section stacks with
+  the phone on top on mobile.
