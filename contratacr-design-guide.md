@@ -935,21 +935,43 @@ guard — they rely on flush-on-blur + flush-on-unmount above. That combination 
 fixed the "edit a field, switch section, lose the change" bug. Any NEW editable section
 must follow this standard.
 
-## 50. /buscar card — name + price (company-first, person never dropped on mobile)
+## 50. /buscar card = a SUMMARY (card decides "open or not"; detail lives on the profile)
 
-The search card shows, in priority: **company/brand name (bold primary)** → person
-name (smaller secondary) → Verificado pill → price → location. A company/brand leads
-(clients recognize the brand) with the person's name beneath it (abbreviated form:
-first name + both surnames, `shortPersonName`); with no company the person's name is
-the primary and there's no secondary. **The personal name must NEVER disappear** —
-especially on mobile. Layout (`professional-card.tsx`), card height fixed
-(`h-[360px] md:h-[232px]`, never grows):
-- **Name line:** company/brand + Verificado pill beside it (both breakpoints).
-- **DESKTOP:** price sits far-right on the name line (`hidden md:inline-block
-  md:ml-auto`); the person name is the line just below (`hidden md:block`).
-- **MOBILE:** the name line is ONLY company + Verificado (so it never wraps
-  awkwardly); a dedicated `md:hidden` secondary line holds the **person name (left) +
-  price (right, `ml-auto`, `pr-9` to clear the bookmark button)**. Putting the price
-  here (not on the name line) is the intentional mobile placement.
-Don't move the price back onto the mobile name line, and don't gate the person name
-behind space (it always renders on the mobile secondary line when a company leads).
+The search card is a scannable SUMMARY (Airbnb/Thumbtack model), NOT a mini-profile.
+After ~10 incremental patches the old "show everything" card kept overflowing; the fix
+was to cap/summarize content so minimal and maximal pros render identically in a FIXED
+uniform height. Files: `professional-card.tsx` + `professional-schedule.tsx`. Card
+height is FIXED `h-[330px] md:h-[216px]` (never grows), sized for the richest case so
+nothing is ever cut off.
+
+**Essential ON the card (and nothing more):**
+- Avatar; **company/brand (bold primary)** + person name (smaller secondary); Verificado
+  pill beside the name; price; PRIMARY profession + "+N"; rating (★ + count); PRIMARY
+  location + "+N" (+ a coverage line for mobile pros); a soonest-times schedule GLIMPSE
+  (up to 3 quick-book chips "Hoy 15:00") + **Solicitar servicio** (opens the full
+  calendar in `BookingModal`) + WhatsApp.
+
+**Lives ONLY on the profile / in the booking modal (do NOT add to the card):**
+- All addresses, all professions, the FULL multi-day scheduler + multi-location selector
+  + paging arrows, casos de éxito, certifications. New detail goes here, not the card.
+
+**Name + price rules** (company-first; person NEVER dropped, esp. mobile):
+- Name line = company/brand + Verificado pill (both breakpoints). With no company the
+  person's name is the primary (abbreviated `shortPersonName` = first + both surnames).
+- DESKTOP: price far-right on the name line (`hidden md:inline-block md:ml-auto`); person
+  name on the line below (`hidden md:block`).
+- MOBILE: name line is ONLY company + Verificado; a `md:hidden` secondary line holds the
+  **person name (left) + price (right, `ml-auto`, `pr-9`)**. Don't move price back onto
+  the mobile name line; don't gate the person name behind space.
+
+**Uniformity / no-overlap rules (keep these):**
+- Location/profession are single-line truncating SUMMARIES (primary "+N") — never
+  multi-line wrap that clips, never the full list.
+- The favorites bookmark is `absolute top-2.5 right-2.5`; any top content must clear it
+  (`pr-9` on the mobile name/secondary lines and on the desktop glimpse row). Do NOT put
+  a full-width control (e.g. a `<select>`) at the top of the right/action column — that
+  was what overlapped the bookmark.
+- Schedule on the card is a GLIMPSE only (flat soonest chips + "+N" → opens the modal);
+  no inline day-grid, no location `<select>`, no prev/next arrows on the card.
+- Custom selects use `appearance-none` + an absolute `ChevronDown` (never the native OS
+  arrow) so the chevron is aligned/consistent.
