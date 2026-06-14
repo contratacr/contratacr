@@ -16,11 +16,11 @@ export function AdminUsers() {
 
       <div className="bg-white rounded-xl border border-[#e5e7eb] p-5 sm:p-6">
         <p className="text-sm text-[#6b7280] mb-3">
-          Busca a una persona por <strong>nombre</strong>, <strong>cédula</strong> o <strong>correo</strong> para
-          abrir su perfil completo: cuenta, tickets, verificación, reportes, proyectos y solicitudes.
+          Busca por <strong>nombre</strong> o <strong>correo</strong>, o escribe una <strong>cédula completa</strong> para
+          encontrar a la persona y abrir su perfil: cuenta, tickets, verificación, reportes, proyectos y solicitudes.
         </p>
         <AdminUserSearch size="lg" autoFocus />
-        <p className="text-xs text-[#9ca3af] mt-3">La cédula se muestra enmascarada por privacidad. Escribe al menos 2 caracteres.</p>
+        <p className="text-xs text-[#9ca3af] mt-3">Por privacidad, la cédula siempre se muestra enmascarada (aunque puedas buscar con el número completo). Escribe al menos 2 caracteres.</p>
       </div>
     </div>
   );

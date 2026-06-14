@@ -1,9 +1,12 @@
-fix(text/spacing): drop registration photo caption, reword client name source, tighten client Mi perfil
+fix(admin user): show pro phone (WhatsApp + call), reword search helper; cédula stays masked
 
-- Remove the "Una buena foto genera más confianza…" caption from the
-  registration add-photo step (unnecessary).
-- Client account: "Tu nombre proviene de la cédula que ingresaste en tu última
-  solicitud de servicio…" (EN matched) — keeps the "solicítalo a soporte" path.
-- Client "Mi perfil" content gap 6 -> 4 so the title sits closer to the content.
+- Phone now resolves from the professional record (whatsapp / call_phone /
+  allow_phone_call added to the admin users API + type). A pro shows
+  "WhatsApp: … · Llamada: …"; a separate call line is shown when set, otherwise
+  the WhatsApp number is used for both. Clients still show profiles.phone.
+  Numbers are prettified (8888-8888, +506 stripped).
+- Search helper reworded so it no longer feels contradictory: search by name,
+  email, or a FULL cédula; note clarifies the cédula is always shown masked.
+- Cédula remains masked server-side via maskId (unchanged) — X-XXXX-1234.
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>

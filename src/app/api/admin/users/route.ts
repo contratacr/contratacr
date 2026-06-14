@@ -42,7 +42,7 @@ export async function GET(req: Request) {
 
     const { data: professional } = await db
       .from("professionals")
-      .select("id, slug, verification_status, verification_reason, verification_updated_at, is_banned, banned_reason, category_id, professions, business_name, created_at")
+      .select("id, slug, verification_status, verification_reason, verification_updated_at, is_banned, banned_reason, category_id, professions, business_name, whatsapp, call_phone, allow_phone_call, created_at")
       .eq("profile_id", profileId)
       .maybeSingle();
 

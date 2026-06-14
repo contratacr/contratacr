@@ -18,7 +18,8 @@ type Profile = {
 type Professional = {
   id: string; slug: string; verification_status: VerificationStatus; verification_reason: string | null;
   verification_updated_at: string | null; is_banned: boolean; banned_reason: string | null;
-  category_id: string | null; professions: string[] | null; business_name: string | null; created_at: string;
+  category_id: string | null; professions: string[] | null; business_name: string | null;
+  whatsapp: string | null; call_phone: string | null; allow_phone_call: boolean | null; created_at: string;
 };
 type Ticket = { id: string; subject: string; status: string; topic?: string | null; created_at: string; last_reply_role?: string | null };
 type Project = { id: string; title: string; status: string; category_id: string | null; created_at: string };
@@ -45,6 +46,13 @@ function fmt(d?: string | null) {
 function fmtDate(d?: string | null) {
   if (!d) return "";
   return new Date(d).toLocaleDateString("es-CR", { day: "numeric", month: "short", year: "numeric" });
+}
+// Pretty CR phone: drop the +506 prefix if present and group as 8888-8888.
+function fmtPhone(v?: string | null): string {
+  if (!v) return "";
+  const d = v.replace(/\D/g, "");
+  const local = d.length > 8 && d.startsWith("506") ? d.slice(-8) : d;
+  return local.length === 8 ? `${local.slice(0, 4)}-${local.slice(4)}` : v;
 }
 
 const STATUS_PILL: Record<string, string> = {
@@ -124,7 +132,26 @@ export function AdminUserProfile({ userId }: { userId: string }) {
             </div>
             <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 text-sm text-[#374151]">
               <p className="flex items-center gap-2 min-w-0"><Mail className="h-3.5 w-3.5 text-[#9ca3af] shrink-0" /> <span className="truncate">{profile.email ?? "—"}</span></p>
-              <p className="flex items-center gap-2"><Phone className="h-3.5 w-3.5 text-[#9ca3af] shrink-0" /> {profile.phone ?? "—"}</p>
+              <p className="flex items-start gap-2 min-w-0">
+                <Phone className="h-3.5 w-3.5 text-[#9ca3af] shrink-0 mt-0.5" />
+                {(() => {
+                  // Pro numbers live on the professional record (WhatsApp + optional
+                  // separate call line); a client's number is on the profile. When a
+                  // pro has no separate call line, the WhatsApp number is used for both.
+                  const wa = pro?.whatsapp || profile.phone || null;
+                  const call = pro?.call_phone || wa;
+                  if (pro) {
+                    if (!wa && !call) return <span>—</span>;
+                    return (
+                      <span>
+                        {wa && <>WhatsApp: {fmtPhone(wa)}</>}
+                        {call && <>{wa ? " · " : ""}Llamada: {fmtPhone(call)}</>}
+                      </span>
+                    );
+                  }
+                  return <span>{fmtPhone(profile.phone) || "—"}</span>;
+                })()}
+              </p>
               <p className="flex items-center gap-2"><IdCard className="h-3.5 w-3.5 text-[#9ca3af] shrink-0" /> {profile.cedula ?? "Sin cédula"} <span className="text-[10px] text-[#9ca3af]">(enmascarada)</span></p>
               <p className="flex items-center gap-2"><CalendarDays className="h-3.5 w-3.5 text-[#9ca3af] shrink-0" /> Registro: {fmtDate(profile.created_at)}</p>
             </div>
