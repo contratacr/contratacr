@@ -708,9 +708,7 @@
     "support": {
       "title": "Ayuda y soporte",
       "help": "Centro de ayuda",
-      "contact": "Centro de soporte",
-      "contactForm": "Contacto",
-      "email": "soporte@contratacr.com"
+      "contact": "Centro de soporte"
     },
     "rights": "© {year} ContrataCR. Todos los derechos reservados.",
     "terms": "Términos y Condiciones",

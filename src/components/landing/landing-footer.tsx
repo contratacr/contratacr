@@ -55,12 +55,14 @@ const COLUMNS = [
     ],
   },
   {
+    // ONE support channel: self-serve help (/ayuda) + the ticket-based support
+    // center (/soporte). No separate "Contacto" link or raw mailto — the platform
+    // centralizes everything through the ticket system (the legal contact email
+    // lives on Términos/Privacidad, not here).
     headingKey: "support.title",
     links: [
-      { key: "support.help",        href: "/ayuda" },
-      { key: "support.contact",     href: "/soporte" },
-      { key: "support.contactForm", href: "/contacto" },
-      { key: "support.email",       href: "mailto:soporte@contratacr.com" },
+      { key: "support.help",    href: "/ayuda" },
+      { key: "support.contact", href: "/soporte" },
     ],
   },
 ];
@@ -112,13 +114,6 @@ export function LandingFooter() {
                       <SmartRegisterLink className="text-sm text-white/60 hover:text-white transition-colors">
                         {t(key)}
                       </SmartRegisterLink>
-                    ) : href.startsWith("mailto:") ? (
-                      <a
-                        href={href}
-                        className="text-sm text-white/60 hover:text-white transition-colors break-all"
-                      >
-                        {t(key)}
-                      </a>
                     ) : (
                       <Link
                         href={href}

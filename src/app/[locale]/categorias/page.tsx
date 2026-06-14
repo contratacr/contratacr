@@ -193,7 +193,7 @@ export default function CategoriasPage() {
               {tp("ctaSearch")}
             </Link>
             <Link
-              href="/contacto"
+              href="/soporte"
               className="inline-flex items-center justify-center bg-white/10 hover:bg-white/20 text-white font-semibold px-7 py-3 rounded-full transition-all border border-white/20"
             >
               {tp("ctaContact")}
