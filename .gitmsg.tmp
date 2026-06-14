@@ -1,11 +1,10 @@
-refactor(perfil): cleaner "Sobre mí" facts grid, drop redundant Llamar in Disponibilidad tab
+fix(dashboard): tighten panel title-to-content spacing (client + pro)
 
-- Sobre mí: replace the right-aligned divided list with a left-aligned
-  label-over-value grid (2 cols on sm+), uppercase muted labels, no per-row
-  dividers/boxes; Precios and Lugares de trabajo span full width so multi-line
-  values read cleanly. One hairline separates the bio.
-- Remove the "Llamar" button from the Disponibilidad tab (both public and
-  private branches) — it already lives in the contact card (sidebar), so it was
-  redundant in the profile/availability preview.
+- CardContent kept its default pt-5 (the override only set px-6 pb-6), so the gap
+  between a panel title and its content was pb-4 (16px) + pt-5 (20px) = 36px.
+- Header pb-4 -> pb-3 and content pt -> pt-1 in both the client and professional
+  dashboards, for a consistent, tight ~16px title-to-content gap everywhere.
+- (Home category carousel already links each card to /buscar?categoria=<id> with
+  drag-vs-click guarding — navigation verified, no change needed.)
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>

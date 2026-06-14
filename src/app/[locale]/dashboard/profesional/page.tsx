@@ -285,13 +285,13 @@ export default function ProDashboardPage() {
             {/* Main content */}
             <div ref={contentRef} className="flex-1 scroll-mt-20 lg:scroll-mt-0">
               <Card>
-                <CardHeader className="px-6 pt-6 pb-4">
+                <CardHeader className="px-6 pt-6 pb-3">
                   <h2 className="text-lg font-semibold text-[#111827]">{t(`tabs.${activeTab}`)}</h2>
                   {TABS_WITH_SUBTITLE.has(activeTab) && (
                     <p className="text-sm text-[#6b7280] mt-0.5">{t(`subtitles.${activeTab}`)}</p>
                   )}
                 </CardHeader>
-                <CardContent className="px-6 pb-6">
+                <CardContent className="px-6 pt-1 pb-6">
                   {activeTab === "profile" && (
                     <ProfileEditor
                       professionalId={pro.id}

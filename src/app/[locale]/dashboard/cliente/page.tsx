@@ -348,13 +348,13 @@ export default function ClientDashboardPage() {
               panel. "Mi perfil" is the large container; its subsections live inside
               it (divider-separated), and "Cuenta y seguridad" is its OWN tab. */}
           <Card>
-            <CardHeader className="px-6 pt-6 pb-4">
+            <CardHeader className="px-6 pt-6 pb-3">
               <h2 className="text-lg font-semibold text-[#111827]">{SECTION_TITLE[activeTab]}</h2>
               {SECTION_SUBTITLE[activeTab] && (
                 <p className="text-sm text-[#6b7280] mt-0.5">{SECTION_SUBTITLE[activeTab]}</p>
               )}
             </CardHeader>
-            <CardContent className="px-6 pb-6">
+            <CardContent className="px-6 pt-1 pb-6">
               {activeTab === "bookings" && <ClientActivity section="bookings" />}
               {activeTab === "projects" && <ClientActivity section="projects" />}
               {activeTab === "saved" && <ClientActivity section="saved" />}
