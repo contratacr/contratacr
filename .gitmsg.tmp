@@ -1,0 +1,14 @@
+fix(buscar cards): move ver-horario below schedule (centered), reviews count-only link, drop casos/cert counts, mobile height floor
+
+- "Ver horario completo" now sits centered BELOW the schedule grid instead of
+  the top-right header row, so it no longer collides with the card bookmark on
+  desktop; location control becomes a conditional location-only row.
+- Reviews: only the "N reseñas" count is the link now; star + rating value are
+  plain text.
+- Casos de éxito / Certificaciones links drop the (N) count; certifications
+  link stays conditional on having certifications.
+- Card gets a mobile min-h floor (min-h-[320px]) for uniform height; desktop
+  keeps md:min-h-[190px].
+- card.email / profile.email -> "Contactar por correo" (EN "Contact by email").
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>

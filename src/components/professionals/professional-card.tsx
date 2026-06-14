@@ -167,7 +167,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
     // Content-driven height with a floor (md:min-h): simple cards stay compact,
     // rich ones (multi-location/profession + many slots) grow. The number badge
     // (page wrapper) sits at the top-left, so the content is padded `pl-10`.
-    <div className={`group relative rounded-2xl bg-white border border-[#e5e7eb] hover:border-[#cbd5e1] hover:shadow-md transition-all duration-200 md:min-h-[190px] ${className ?? ""}`}>
+    <div className={`group relative rounded-2xl bg-white border border-[#e5e7eb] hover:border-[#cbd5e1] hover:shadow-md transition-all duration-200 min-h-[320px] md:min-h-[190px] ${className ?? ""}`}>
       <div className="p-3.5 pl-10 h-full">
         <div className="flex flex-col md:flex-row gap-3 h-full">
           {/* ── Identity zone ── */}
@@ -225,18 +225,21 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
                 )}
               </div>
 
-              {/* Rating — star + value + count. With reviews it's a LINK to the
-                  reviews tab (count styled brand-blue to read as tappable, like the
-                  casos/certificaciones links). No reviews → honest, non-link state. */}
+              {/* Rating — star + value are plain text; ONLY the "N reseñas" count is
+                  the clickable link to the reviews tab (brand-blue + underline to read
+                  as tappable). No reviews → honest, fully non-link state. */}
               {professional.reviewCount > 0 ? (
-                <Link
-                  href={`/profesionales/${professional.slug}?tab=resenas`}
-                  className="inline-flex w-fit items-center gap-1.5 hover:underline"
-                >
+                <span className="inline-flex w-fit items-center gap-1.5">
                   <Star className="h-3.5 w-3.5 fill-[#ff9b32] text-[#ff9b32]" />
                   <span className="text-[13px] font-bold text-[#111827]">{professional.ratingAvg.toFixed(1)}</span>
-                  <span className="text-[11px] font-medium text-[#009FD9]">· {tCard("reviewsCount", { count: professional.reviewCount })}</span>
-                </Link>
+                  <span aria-hidden className="text-[11px] text-[#9ca3af]">·</span>
+                  <Link
+                    href={`/profesionales/${professional.slug}?tab=resenas`}
+                    className="text-[11px] font-medium text-[#009FD9] hover:underline"
+                  >
+                    {tCard("reviewsCount", { count: professional.reviewCount })}
+                  </Link>
+                </span>
               ) : (
                 <span className="inline-flex items-center gap-1.5 text-[11px] text-[#9ca3af]">
                   <Star className="h-3.5 w-3.5 fill-[#e5e7eb] text-[#e5e7eb]" /> {tCard("noReviews")}
@@ -269,7 +272,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
                       className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[#009FD9] hover:underline w-fit"
                     >
                       <ImageIcon className="h-3.5 w-3.5" />
-                      {tCard("viewCases", { count: professional.portfolioCount })}
+                      {tCard("viewCases")}
                     </Link>
                   ) : null}
                   {professional.certificationCount ? (
@@ -278,7 +281,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
                       className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[#009FD9] hover:underline w-fit"
                     >
                       <Award className="h-3.5 w-3.5" />
-                      {tCard("viewCertifications", { count: professional.certificationCount })}
+                      {tCard("viewCertifications")}
                     </Link>
                   ) : null}
                 </div>

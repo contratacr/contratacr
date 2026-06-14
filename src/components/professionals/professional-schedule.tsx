@@ -241,11 +241,12 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
 
   return (
     <div className="flex flex-col gap-1.5 h-full">
-      {/* Header row: location (selector for multi-place, else a label) on the left
-          and the "Ver horario completo" link on the right — sharing ONE row so the
-          link is restored without adding height. */}
-      <div className="flex items-center gap-2">
-        <div className="min-w-0 flex-1">
+      {/* Location control — selector for multi-place, else a plain label. Rendered
+          ONLY when there's something to show, so single-location cards don't keep an
+          empty top row. ("Ver horario completo" moved BELOW the grid — see further
+          down — so it no longer collides with the card's top-right bookmark.) */}
+      {(locationGroups.length > 1 || (!!effectiveLabel && effectiveLabel !== "General")) && (
+        <div className="min-w-0">
           {locationGroups.length > 1 ? (
             <div className="relative">
               <MapPin className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-[#009FD9] pointer-events-none" />
@@ -260,22 +261,15 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
               </select>
               <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-[#0089bb] pointer-events-none" />
             </div>
-          ) : effectiveLabel && effectiveLabel !== "General" ? (
+          ) : (
             // Only a real place name; the generic "Próximos horarios" label is removed.
             <p className="flex items-center gap-1 text-[11px] leading-tight truncate">
               <MapPin className="h-3 w-3 text-[#009FD9] shrink-0" />
               <span className="truncate font-medium text-[#374151]">{effectiveLabel}</span>
             </p>
-          ) : null}
+          )}
         </div>
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); openBooking(); }}
-          className="shrink-0 text-[10px] font-medium text-[#009FD9] hover:underline whitespace-nowrap"
-        >
-          {t("viewFullSchedule")}
-        </button>
-      </div>
+      )}
 
       <div className="flex-1 min-h-0 flex items-center">
         {!hasUpcoming ? (
@@ -335,6 +329,17 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           </div>
         )}
       </div>
+
+      {/* "Ver horario completo" — centered BELOW the schedule (was top-right, where it
+          collided with the card's bookmark button). Compact line; sits above the
+          contact/primary actions on every breakpoint. */}
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); openBooking(); }}
+        className="self-center text-[10px] font-medium text-[#009FD9] hover:underline whitespace-nowrap"
+      >
+        {t("viewFullSchedule")}
+      </button>
 
       {/* TYPE 1 / TYPE 2 — contact actions grouped ABOVE (WhatsApp always; "Llamar"
           when enabled), then the large "Solicitar servicio" primary BELOW. The
