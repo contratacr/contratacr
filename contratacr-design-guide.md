@@ -851,3 +851,24 @@ fills the available width (switch stays pinned right via `justify-between`). Thi
 the "Buscar profesionales cerca de mí" filter toggle (ES/EN both wrap); the shorter
 "Solo verificados" hid the same latent bug. Applies to any labeled toggle/segmented
 control built on a `<button>`.
+
+## 47. Footer = one component (`landing-footer.tsx`), links to current pages only
+
+There is ONE footer: `src/components/landing/landing-footer.tsx` (dark `bg-[#111827]`),
+rendered on every page. Do NOT reintroduce a second footer (the old light
+`layout/footer.tsx` was deleted — it was dead code with stale `/planes`,`/nosotros`
+links). Structure: a brand column (logo + tagline + the three brand social icons →
+the real ContrataCR Facebook/Instagram/TikTok accounts) spanning 2 cols, then three
+link columns — **Para clientes** (Buscar, Categorías, Cómo funciona, Publicar un
+proyecto), **Para profesionales** (Registra tu perfil via `SmartRegisterLink`, Cómo
+atraer clientes, Verificación de identidad → /proveedores-autorizados), **Ayuda y
+soporte** (Centro de ayuda → /ayuda, Centro de soporte → /soporte [the ticket
+system, primary support], Contacto → /contacto, and a `mailto:` to the official
+`SUPPORT_EMAIL` soporte@contratacr.com). Bottom bar = © year · Términos · Privacidad ·
+"Hecho en Costa Rica". Rules: every link must resolve to an EXISTING page (no dead
+links — re-verify when pages are renamed/removed); legal (Términos/Privacidad) always
+present in the bottom bar; keep copy honest (no "totalmente gratis / siempre gratis" —
+the tagline says creating an account is free and payment is arranged directly with the
+pro); use current naming ("Verificado", intermediary positioning). The link renderer
+handles three kinds: `SmartRegisterLink` (register), plain `<a>` for `mailto:`,
+internal `Link` otherwise. All labels come from the `footer` i18n namespace (ES+EN).
