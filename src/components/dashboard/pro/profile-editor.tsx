@@ -191,22 +191,38 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
   const [autoSaving, setAutoSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [dirty, setDirty] = useState(false);
-  const [autoNonce, setAutoNonce] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
-  // Single helper so every field marks the form dirty + clears the saved flag,
-  // and schedules an auto-save (the nonce drives the debounce effect below).
-  function touch() { setSaved((_p) => false); setDirty(true); setAutoNonce((n) => n + 1); }
+  // ── App-wide RELIABLE autosave (the "Save standard"; see contratacr-context.md) ──
+  // touch() marks dirty + debounces a save; flush() saves NOW (used on field blur);
+  // and any pending save is FLUSHED on unmount. The unmount flush is the key
+  // data-loss fix: switching dashboard tabs unmounts this editor, and firing the
+  // pending save in cleanup (the fetch survives a same-page tab-switch unmount)
+  // guarantees a change made right before leaving is never silently lost.
+  const autoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dirtyRef = useRef(false);
+  const saveRef = useRef<(auto?: boolean) => Promise<void>>(async () => {});
+  saveRef.current = handleSave;
 
-  // Auto-save: 1.5s after the last edit we persist silently, so leaving rarely
-  // needs the unsaved-changes dialog at all. The dialog is the safety net only
-  // for the brief window before the debounce fires (or if a save fails).
-  useEffect(() => {
-    if (autoNonce === 0 || !dirty) return;
-    const t = setTimeout(() => { handleSave(true); }, 1500);
-    return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoNonce]);
+  function touch() {
+    setSaved(false);
+    setDirty(true);
+    dirtyRef.current = true;
+    if (autoTimer.current) clearTimeout(autoTimer.current);
+    autoTimer.current = setTimeout(() => { void handleSave(true); }, 1000);
+  }
+
+  // Persist pending edits immediately (cancel the debounce). Bound to input blur
+  // and used by the unsaved-changes guard. No-op when nothing is pending.
+  function flush() {
+    if (autoTimer.current) { clearTimeout(autoTimer.current); autoTimer.current = null; }
+    if (dirtyRef.current) void handleSave(true);
+  }
+
+  useEffect(() => () => {
+    if (autoTimer.current) clearTimeout(autoTimer.current);
+    if (dirtyRef.current) void saveRef.current?.(true);
+  }, []);
 
   function openCertForm(profession?: string) {
     setCertError(null);
@@ -377,6 +393,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
 
       setSaved(true);
       setDirty(false);
+      dirtyRef.current = false;
       setTimeout(() => setSaved((_p) => false), 3000);
       onSaved?.();
     } catch (err: unknown) {
@@ -470,6 +487,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
             label={<>{t("fullName")} <span className="text-red-500">*</span></>}
             value={fullName}
             onChange={(e) => { setFullName(e.target.value); touch(); }}
+            onBlur={flush}
             placeholder={t("fullNamePlaceholder")}
           />
         )}
@@ -479,6 +497,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
           label={<>{t("businessName")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span></>}
           value={businessName}
           onChange={(e) => { setBusinessName(e.target.value); touch(); }}
+          onBlur={flush}
           placeholder={t("businessPlaceholder")}
         />
 
@@ -490,6 +509,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
             placeholder={t("descPlaceholder")}
             value={bio}
             onChange={(e) => { setBio(e.target.value); touch(); }}
+            onBlur={flush}
           />
         </div>
       </Section>
@@ -638,6 +658,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
               placeholder={t("emailPlaceholder")}
               value={contactEmail}
               onChange={(e) => { setContactEmail(e.target.value); touch(); }}
+              onBlur={flush}
               className="w-full h-11 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
             />
             {contactEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail.trim()) && (
@@ -671,6 +692,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
                     placeholder={t("socialUserPlaceholder")}
                     value={social[key]}
                     onChange={(e) => { setSocial((s) => ({ ...s, [key]: e.target.value })); touch(); }}
+                    onBlur={flush}
                     className="flex-1 min-w-0 px-3 text-sm text-[#111827] placeholder:text-[#9ca3af] outline-none bg-transparent"
                   />
                 </div>

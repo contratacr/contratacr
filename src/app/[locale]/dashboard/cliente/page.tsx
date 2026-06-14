@@ -40,10 +40,24 @@ export default function ClientDashboardPage() {
   const [profileForm, setProfileForm] = useState({ full_name: "", phone: "" });
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileSaved, setProfileSaved] = useState(false);
-  // App-wide autosave: edits mark the form dirty and debounce a save.
+  // App-wide RELIABLE autosave (the "Save standard"; see contratacr-context.md):
+  // debounce + flush on blur + flush on unmount, so switching tabs never silently
+  // loses a profile edit.
   const [profileDirty, setProfileDirty] = useState(false);
-  const [profileNonce, setProfileNonce] = useState(0);
-  function touchProfile() { setProfileSaved(false); setProfileDirty(true); setProfileNonce((n) => n + 1); }
+  const profileTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const profileDirtyRef = useRef(false);
+  const saveProfileRef = useRef<() => Promise<void>>(async () => {});
+  function touchProfile() {
+    setProfileSaved(false);
+    setProfileDirty(true);
+    profileDirtyRef.current = true;
+    if (profileTimer.current) clearTimeout(profileTimer.current);
+    profileTimer.current = setTimeout(() => { void saveProfile(); }, 1000);
+  }
+  function flushProfile() {
+    if (profileTimer.current) { clearTimeout(profileTimer.current); profileTimer.current = null; }
+    if (profileDirtyRef.current) void saveProfile();
+  }
   const [photoUploading, setPhotoUploading] = useState(false);
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
@@ -146,16 +160,18 @@ export default function ClientDashboardPage() {
     }
     setProfileSaving(false);
     setProfileSaved(true);
+    profileDirtyRef.current = false;
     setTimeout(() => setProfileSaved(false), 3000);
   }
+  saveProfileRef.current = saveProfile;
 
-  // Debounced autosave — saves 1.5s after the last edit (no save button).
-  useEffect(() => {
-    if (!profileDirty) return;
-    const id = setTimeout(() => { saveProfile(); }, 1500);
-    return () => clearTimeout(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profileNonce]);
+  // Flush a pending profile save on unmount (e.g. switching tabs) — the key
+  // data-loss fix: the fetch survives the unmount on a same-page tab switch, so an
+  // edit made right before leaving the section is never silently lost.
+  useEffect(() => () => {
+    if (profileTimer.current) clearTimeout(profileTimer.current);
+    if (profileDirtyRef.current) void saveProfileRef.current?.();
+  }, []);
 
   async function handlePhotoRemove() {
     if (!user) return;
@@ -414,6 +430,7 @@ export default function ClientDashboardPage() {
                           value={profileForm.full_name}
                           disabled={cedulaVerified}
                           onChange={(e) => { setProfileForm((f) => ({ ...f, full_name: e.target.value })); touchProfile(); }}
+                          onBlur={flushProfile}
                         />
                         {cedulaVerified && <Lock className="h-4 w-4 text-[#9ca3af] absolute right-3 top-1/2 -translate-y-1/2" />}
                       </div>
