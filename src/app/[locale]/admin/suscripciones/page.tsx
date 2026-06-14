@@ -1,6 +1,7 @@
 import { requireAdmin } from "@/lib/auth/admin";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { SubscriptionPanel } from "@/components/dashboard/pro/subscription-panel";
+import { AdminPaymentApprovals } from "@/components/admin/admin-payment-approvals";
 import { PAYMENTS_ENABLED, PRICES, formatColones } from "@/lib/payments/config";
 import { Info } from "lucide-react";
 
@@ -38,9 +39,18 @@ export default async function AdminSuscripcionesPage() {
         </div>
       </div>
 
+      {/* Payment-approval queue — visible/usable now (admin reviews SINPE/transfer
+          comprobantes and approves → the pro's paid period activates automatically). */}
+      <div className="mb-6">
+        <AdminPaymentApprovals />
+      </div>
+
       {/* The REAL pro-facing component, rendered here for preview. */}
-      <div className="max-w-xl rounded-2xl border border-[#e5e7eb] bg-white p-4">
-        <SubscriptionPanel />
+      <div>
+        <p className="text-sm font-semibold text-[#111827] mb-2">Vista previa de la página del profesional</p>
+        <div className="max-w-xl rounded-2xl border border-[#e5e7eb] bg-white p-4">
+          <SubscriptionPanel />
+        </div>
       </div>
     </AdminShell>
   );

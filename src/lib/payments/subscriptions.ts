@@ -175,6 +175,143 @@ export async function activatePaidPeriod(input: ActivateInput): Promise<Subscrip
   return data as SubscriptionRow;
 }
 
+// ── Manual SINPE/transfer review flow ─────────────────────────────────────────
+
+/**
+ * A professional submits a manual payment with a comprobante (receipt) for review.
+ * Creates a PENDING payment row — it grants nothing until an admin approves it.
+ * Replaces any prior still-pending submission so the queue never piles duplicates.
+ */
+export async function submitManualPayment(input: {
+  professionalId: string;
+  cycle: BillingCycle;
+  receiptUrl: string;
+  reference?: string | null;
+}): Promise<PaymentRow> {
+  const db = createAdminClient();
+  const sub = await ensureSubscription(input.professionalId);
+  // Clear a previous pending submission (re-upload supersedes it).
+  await db.from("subscription_payments")
+    .delete()
+    .eq("professional_id", input.professionalId)
+    .eq("status", "pending");
+  const { data } = await db
+    .from("subscription_payments")
+    .insert({
+      subscription_id: sub.id,
+      professional_id: input.professionalId,
+      amount: priceForCycle(input.cycle),
+      currency: "CRC",
+      method: "sinpe",
+      status: "pending",
+      billing_cycle: input.cycle,
+      reference: input.reference ?? null,
+      receipt_url: input.receiptUrl,
+    })
+    .select("*")
+    .single();
+  // Reflect "in review" on the subscription without granting access yet.
+  await db.from("subscriptions").update({ status: "pending", updated_at: new Date().toISOString() }).eq("id", sub.id);
+  return data as PaymentRow;
+}
+
+/** A pending payment + the professional's display info, for the admin queue. */
+export type PendingPaymentRow = PaymentRow & {
+  professional: { id: string; slug: string | null; fullName: string | null; email: string | null } | null;
+};
+
+/** All pending manual payments awaiting admin review (newest first). */
+export async function listPendingPayments(): Promise<PendingPaymentRow[]> {
+  const db = createAdminClient();
+  const { data: rows } = await db
+    .from("subscription_payments")
+    .select("*")
+    .eq("status", "pending")
+    .order("paid_at", { ascending: false });
+  const payments = (rows as PaymentRow[]) ?? [];
+  if (payments.length === 0) return [];
+
+  // Enrich with the professional's name/email (one round-trip each table).
+  const proIds = [...new Set(payments.map((p) => p.professional_id))];
+  const { data: pros } = await db.from("professionals").select("id, slug, profile_id").in("id", proIds);
+  const profileIds = [...new Set((pros ?? []).map((p) => p.profile_id as string))];
+  const { data: profiles } = await db.from("profiles").select("id, full_name, email").in("id", profileIds);
+  const proById = new Map((pros ?? []).map((p) => [p.id as string, p]));
+  const profById = new Map((profiles ?? []).map((p) => [p.id as string, p]));
+
+  return payments.map((p) => {
+    const pro = proById.get(p.professional_id);
+    const prof = pro ? profById.get(pro.profile_id as string) : null;
+    return {
+      ...p,
+      professional: pro
+        ? { id: pro.id as string, slug: (pro.slug as string) ?? null, fullName: prof?.full_name ?? null, email: prof?.email ?? null }
+        : null,
+    };
+  });
+}
+
+/**
+ * Admin approves a pending manual payment: marks the SAME payment row paid (with
+ * its period), and activates/extends the subscription — granting premium access
+ * automatically. Returns the updated subscription.
+ */
+export async function approveManualPayment(paymentId: string, adminId: string): Promise<SubscriptionRow | null> {
+  const db = createAdminClient();
+  const { data: pay } = await db.from("subscription_payments").select("*").eq("id", paymentId).maybeSingle();
+  const payment = pay as PaymentRow | null;
+  if (!payment || payment.status !== "pending") return null;
+
+  const sub = await ensureSubscription(payment.professional_id);
+  const cycle = (payment.billing_cycle ?? "monthly") as BillingCycle;
+  const now = new Date();
+  // Stack renewals onto an still-active period; otherwise start now.
+  const base = isSubscriptionActive(sub) && sub.current_period_end ? new Date(sub.current_period_end) : now;
+  const periodEnd = computePeriodEnd(base, cycle);
+
+  await db.from("subscription_payments").update({
+    status: "paid",
+    period_start: base.toISOString(),
+    period_end: periodEnd.toISOString(),
+    paid_at: now.toISOString(),
+    reviewed_by: adminId,
+    reviewed_at: now.toISOString(),
+  }).eq("id", paymentId);
+
+  const { data } = await db.from("subscriptions").update({
+    plan: "premium",
+    status: "active",
+    billing_cycle: cycle,
+    price_paid: payment.amount,
+    payment_method: "sinpe",
+    started_at: sub.started_at ?? now.toISOString(),
+    current_period_end: periodEnd.toISOString(),
+    cancel_at: null,
+    updated_at: now.toISOString(),
+  }).eq("id", sub.id).select("*").single();
+
+  return data as SubscriptionRow;
+}
+
+/** Admin rejects a pending manual payment (keeps it in history with a reason). */
+export async function rejectManualPayment(paymentId: string, adminId: string, note?: string): Promise<void> {
+  const db = createAdminClient();
+  const { data: pay } = await db.from("subscription_payments").select("professional_id, status").eq("id", paymentId).maybeSingle();
+  if (!pay || pay.status !== "pending") return;
+  const now = new Date().toISOString();
+  await db.from("subscription_payments").update({
+    status: "rejected",
+    reviewed_by: adminId,
+    reviewed_at: now,
+    note: note ?? null,
+  }).eq("id", paymentId);
+  // If the subscription isn't otherwise active, drop it back to inactive/free.
+  const sub = await getSubscription(pay.professional_id as string);
+  if (sub && !isSubscriptionActive(sub)) {
+    await db.from("subscriptions").update({ status: "inactive", plan: "free", updated_at: now }).eq("id", sub.id);
+  }
+}
+
 /**
  * Hard-delete a professional's subscription AND its payment ledger. Used by the
  * admin "reset" action so preview/testing never leaves rows on a real pro — after

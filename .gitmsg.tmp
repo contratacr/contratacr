@@ -1,20 +1,28 @@
-feat(subscriptions): admin-only /admin/suscripciones preview + reset action (still inactive behind PAYMENTS_ENABLED)
+feat(subscriptions): modern plans page + SINPE comprobante upload + admin approve/reject flow (still inactive)
 
-- New server-guarded route /admin/suscripciones (requireAdmin → non-admins
-  redirected to admin login; unreachable by URL for regular users). Renders the
-  REAL pro-facing SubscriptionPanel in preview, with a banner showing flag state +
-  plans, so admin can see the customer page before launch. Added a "Suscripciones"
-  tab to the admin nav.
-- Self-API /api/payments/subscription GET now treats an ADMIN caller as enabled
-  (preview) while PAYMENTS_ENABLED is off; non-admins still get { enabled:false }
-  with no data. Card checkout POST stays 404 while off for everyone (no real
-  checkout; gateway is still a stub).
-- Admin "Eliminar / reset" action: deleteSubscription() removes the subscription
-  row + its payment ledger so preview/testing leaves no rows on real pros
-  (/api/admin/subscriptions action:"reset" + button in the admin card).
+Builds the customer-facing plans page and the admin payment-approval flow on top of
+the existing infra; all behind PAYMENTS_ENABLED (default off) + admin-only preview.
 
-Flag OFF (default) unchanged for everyone: pros keep full free access, regular
-users see zero subscription/payment UI; the admin preview + the admin user-profile
-card are the only visible surfaces. No card data stored.
+- Plans page (subscription-panel.tsx) redesigned modern-SaaS style: two plan cards
+  (Anual ₡30.000 "2 meses gratis" highlighted, Mensual ₡3.000), benefits, then a
+  payment-method step — OPTION 1 Tarjeta (primary, behind gateway stub: shows
+  "disponible pronto" / falls back to SINPE), OPTION 2 SINPE Móvil o transferencia
+  (manual): SINPE instructions + amount + reference + comprobante upload (image/PDF)
+  → submit for review. Shows "en revisión" while pending and an active-plan summary
+  when premium. Responsive.
+- Comprobante upload: /api/payments/receipt → Cloudinary (contratacr/comprobantes,
+  resource_type auto for image+PDF); auth required, gated like the rest.
+- Manual submit: /api/payments/subscription/manual → submitManualPayment() creates a
+  PENDING payment (grants nothing) and supersedes any prior pending one.
+- Admin approval (visible now, admin-only) on /admin/suscripciones: AdminPaymentApprovals
+  lists pending payments with the comprobante link; Approve → approveManualPayment()
+  marks the payment paid + activates/extends the subscription automatically; Reject →
+  rejectManualPayment() (kept in history with reason). Plus the existing per-pro manual
+  activate + "Eliminar / reset" in the admin user-profile card.
+- DB migration 055 (apply after 054): adds receipt_url, reviewed_by, reviewed_at +
+  a 'rejected' payment status + a pending index.
+
+Flag OFF unchanged: pros keep full free access, regular users see zero subscription
+UI; plans page only via the admin preview. No card data stored (gateway-only).
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
