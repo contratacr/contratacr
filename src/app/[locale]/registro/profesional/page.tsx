@@ -167,11 +167,10 @@ function PhotoPicker({
   );
 }
 
-// ─── "No tengo identificación costarricense" (foreigners) ─────────────────────
-// Routes the account to the admin EXCEPTIONS queue ("pendiente de revisión") where
-// the admin reviews whatever document they have (passport, DIMEX in progress).
-// Subtle disclosure anchored directly under the "Número de identificación" field —
-// it's the option that belongs to that field, not a stray checkbox at the end.
+// ─── "Registrarme sin cédula" (skip identity verification) ────────────────────
+// A pro can register WITHOUT a cédula: they simply appear without the "Verificado"
+// badge and can verify later from their panel. This is a low-friction choice, not
+// an exceptions/review case. Subtle disclosure anchored under the cédula field.
 function NoCrIdToggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
   const t = useTranslations("registration.pro");
   return (
@@ -186,19 +185,13 @@ function NoCrIdToggle({ checked, onChange }: { checked: boolean; onChange: (v: b
 }
 
 function NoCrIdFields({
-  fullName, onFullName, note, onNote, nameError,
+  fullName, onFullName, nameError,
 }: {
-  fullName: string; onFullName: (v: string) => void; note: string; onNote: (v: string) => void; nameError?: string;
+  fullName: string; onFullName: (v: string) => void; nameError?: string;
 }) {
   const t = useTranslations("registration.pro");
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-start gap-2 rounded-xl border border-[#fde68a] bg-[#fffbeb] p-3 text-xs text-[#92400e]">
-        <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-        <span>
-          {t.rich("noCrIdNotice", { b: (c) => <strong>{c}</strong> })}
-        </span>
-      </div>
       <Input
         label={<>{t("manualName")} <span className="text-red-500">*</span></>}
         placeholder={t("manualNameHint")}
@@ -206,18 +199,10 @@ function NoCrIdFields({
         onChange={(e) => onFullName(e.target.value)}
         error={nameError}
       />
-      <div>
-        <label className="text-sm font-medium text-[#374151] block mb-1.5">
-          {t("yourDocument")} <span className="text-[#9ca3af] font-normal">{t("optionalParen")}</span>
-        </label>
-        <textarea
-          value={note}
-          onChange={(e) => onNote(e.target.value)}
-          rows={2}
-          placeholder={t("idDocNotePlaceholder")}
-          className="w-full rounded-xl border border-[#e5e7eb] bg-white px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
-        />
-      </div>
+      <p className="flex items-start gap-2 text-xs text-[#6b7280]">
+        <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-[#9ca3af]" />
+        <span>{t("skipCedulaNote")}</span>
+      </p>
     </div>
   );
 }
@@ -291,7 +276,6 @@ export default function RegisterProfessionalPage() {
   // "¿No es tu información?" — the padrón matched but the user says it's not theirs.
   // Routed to the SAME manual-review path as no_cr_id (never auto-verified).
   const [identityMismatch, setIdentityMismatch] = useState(false);
-  const [idDocNote, setIdDocNote] = useState("");
   const [oauthFullName, setOauthFullName] = useState("");
   const [oauthNameError, setOauthNameError] = useState<string | null>(null);
   // A converting client may already have a verified cédula on file — never re-ask
@@ -560,9 +544,11 @@ export default function RegisterProfessionalPage() {
           fullName,
           businessName: businessName.trim() || null,
           cedula: (noCrId || identityMismatch) ? null : (step1Data?.cedula?.replace(/\D/g, "") ?? (oauthCedula ? oauthCedula.replace(/\D/g, "") : null)),
-          // "not my info" reuses the no-CR-ID manual-review path (pending, no auto-verify).
-          noCrId: noCrId || identityMismatch,
-          idDocNote: ((identityMismatch ? "El usuario indicó que la información del padrón no es suya. " : "") + idDocNote.trim()).trim() || null,
+          // Skipping the cédula (noCrId) is a normal unverified registration — NOT a
+          // review case. Only "¿No es tu información?" (identityMismatch) routes to
+          // manual review; both simply mean no cédula is stored (so no auto-verify).
+          noCrId: identityMismatch,
+          idDocNote: identityMismatch ? "El usuario indicó que la información del padrón no es suya." : null,
           photoUrl,
           category: step2Data.category,
           professions: [step2Data.category, ...extraCategories],
@@ -737,8 +723,6 @@ export default function RegisterProfessionalPage() {
                 <NoCrIdFields
                   fullName={form1.watch("fullName") ?? ""}
                   onFullName={(n) => form1.setValue("fullName", n, { shouldValidate: true })}
-                  note={idDocNote}
-                  onNote={setIdDocNote}
                   nameError={form1.formState.errors.fullName?.message}
                 />
               )}
@@ -838,8 +822,6 @@ export default function RegisterProfessionalPage() {
                 <NoCrIdFields
                   fullName={oauthFullName}
                   onFullName={(n) => { setOauthFullName(n); setOauthNameError(null); }}
-                  note={idDocNote}
-                  onNote={setIdDocNote}
                   nameError={oauthNameError ?? undefined}
                 />
               )}

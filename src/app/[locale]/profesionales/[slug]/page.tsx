@@ -248,13 +248,15 @@ export default function ProfilePage({ params }: ProfilePageProps) {
 
                   {/* Verification as plain text + icon (no colored pill/box). */}
                   {professional.verificationStatus === "verified" ? (
-                    <Link
-                      href="/proveedores-autorizados"
-                      className="flex items-center gap-1.5 text-xs font-semibold text-[#15803d] hover:underline"
-                    >
-                      <ShieldCheck className="h-3.5 w-3.5" />
-                      <span>{t("identityVerified")}</span>
-                    </Link>
+                    <span className="inline-flex items-center gap-1.5 flex-wrap justify-center">
+                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#15803d]">
+                        <ShieldCheck className="h-3.5 w-3.5" />
+                        {t("identityVerified")}
+                      </span>
+                      <Link href="/proveedores-autorizados#que-significa" className="text-[11px] font-medium text-[#009FD9] hover:underline">
+                        {t("whatItMeans")}
+                      </Link>
+                    </span>
                   ) : (
                     <span className="flex items-center gap-1.5 text-xs font-semibold text-[#92400e]">
                       <ShieldAlert className="h-3.5 w-3.5" />
@@ -692,8 +694,13 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                           <dt className="text-sm text-[#6b7280] shrink-0">{t("verification")}</dt>
                           <dd className="text-right">
                             {professional.verificationStatus === "verified" ? (
-                              <span className="inline-flex items-center gap-1.5 text-sm font-medium text-[#15803d]">
-                                <ShieldCheck className="h-4 w-4 shrink-0" /> {t("identityVerified")}
+                              <span className="inline-flex items-center gap-1.5 flex-wrap justify-end">
+                                <span className="inline-flex items-center gap-1.5 text-sm font-medium text-[#15803d]">
+                                  <ShieldCheck className="h-4 w-4 shrink-0" /> {t("identityVerified")}
+                                </span>
+                                <Link href="/proveedores-autorizados#que-significa" className="text-xs font-medium text-[#009FD9] hover:underline">
+                                  {t("whatItMeans")}
+                                </Link>
                               </span>
                             ) : (
                               <span className="inline-flex items-center gap-1.5 text-sm font-medium text-[#b45309]">

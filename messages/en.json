@@ -215,8 +215,8 @@
     "coverageAreas": "Travels in {areas}",
     "save": "Save professional",
     "unsave": "Remove from saved",
-    "verified": "Verified identity",
-    "verifiedTitle": "Identity verified by ContrataCR",
+    "verified": "Verified",
+    "verifiedTitle": "Verified by ContrataCR",
     "unverified": "Unverified",
     "unverifiedTitle": "Identity not verified",
     "rate": "Rate",
@@ -430,7 +430,7 @@
       "responseTime": "Usually responds in under 2 hours",
       "whatsapp": "Contact via WhatsApp",
       "call": "Call",
-      "identityVerified": "Identity verified",
+      "identityVerified": "Verified",
       "directPayment": "Direct payment (SINPE / cash)",
       "noFees": "No middlemen"
     },
@@ -451,7 +451,7 @@
     "waPrefill": "Hi {name}, I saw your profile on ContrataCR and I'd like to ask about your services.",
     "previewNote": "You're viewing your profile as clients see it.",
     "backToPanel": "Back to my panel",
-    "identityVerified": "Identity verified",
+    "identityVerified": "Verified",
     "identityUnverified": "Identity not verified",
     "viewReviewsCount": "View {count, plural, one {# review} other {# reviews}}",
     "reviewCountLabel": "{count, plural, one {# review} other {# reviews}}",
@@ -499,7 +499,8 @@
     "insurers": "Insurers",
     "reviewsHeading": "Reviews ({count})",
     "reviewOf": "Review of “{title}”",
-    "noReviews": "No reviews yet. Only clients who completed a service can leave one."
+    "noReviews": "No reviews yet. Only clients who completed a service can leave one.",
+    "whatItMeans": "What does it mean?"
   },
   "auth": {
     "login": {
@@ -594,11 +595,11 @@
       "photoAlt": "Profile photo",
       "noCrId": "I don't have Costa Rican ID",
       "noCrIdSub": "(foreigner, passport or DIMEX in process)",
-      "noCrIdLink": "Don't have a Costa Rican ID?",
-      "hasCrIdLink": "I do have a Costa Rican ID",
+      "noCrIdLink": "Register without my ID for now",
+      "hasCrIdLink": "Verify with my ID",
       "pendingReview": "pending review",
       "manualName": "Full name",
-      "manualNameHint": "Exactly as it appears on your passport / document",
+      "manualNameHint": "Your full name",
       "idDocNotePlaceholder": "Example: Nicaragua passport No. ..., or DIMEX in process No. ...",
       "errEmailTaken": "This email is already registered. Sign in.",
       "errIdFormat": "Invalid format. CR: 9 digits · DIMEX: 11-12 · NITE: 10.",
@@ -653,7 +654,8 @@
       "yourDocument": "Your document",
       "optionalParen": "(optional)",
       "offerServices": "Offer my services",
-      "goToLogin": "Go to sign in →"
+      "goToLogin": "Go to sign in →",
+      "skipCedulaNote": "You will appear without the Verified badge. You can verify your identity later from your panel."
     },
     "client": {
       "title": "Create client account",
@@ -948,7 +950,7 @@
   "proPanel": {
     "viewAsClient": "See how clients see me",
     "signOut": "Sign out",
-    "identityVerified": "Identity verified",
+    "identityVerified": "Verified",
     "identityUnverified": "Identity unverified · visible to clients",
     "verificationRejected": "Verification rejected",
     "groupPro": "My professional profile",
@@ -1222,7 +1224,7 @@
     "remove": "Remove",
     "addPhoto": "Add photo",
     "fullName": "Full name",
-    "identityVerified": "Identity verified",
+    "identityVerified": "Verified",
     "nameLockedHelp": "Your official name comes from the padrón and is not edited here. A mistake or legal change? <link>Write to support</link>.",
     "fullNamePlaceholder": "Juan Pérez González",
     "businessName": "Business or company name",
@@ -1416,7 +1418,7 @@
     "saved": "✓ Changes saved!",
     "identity": "Identity",
     "registeredId": "Registered ID",
-    "identityVerified": "Identity verified",
+    "identityVerified": "Verified",
     "pendingReview": "Pending review",
     "identityVerifiedHelp": "Your identity was confirmed against the padrón from your ID. We only show the last digits.",
     "identityPendingHelp": "We registered your ID. IDs not in the padrón (DIMEX/NITE) are reviewed manually.",
@@ -1618,7 +1620,7 @@
   "proveedoresPage": {
     "metaTitle": "What is identity verification? — ContrataCR",
     "metaDesc": "How ContrataCR's identity verification works: we confirm the ID is real and the name matches official records. We verify identity, not the quality or outcome of the work.",
-    "badge": "Identity verified",
+    "badge": "Verified",
     "h1": "What is identity verification?",
     "intro": "It's a confirmation that the <strong>provider's ID is real</strong> and that their <strong>name matches official records</strong>. It's automatic and earned: it gives more visibility to clients seeking extra trust, without blocking anyone.",
     "howWorks": "How does it work?",

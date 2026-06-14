@@ -51,8 +51,9 @@ export default async function IdentityVerificationPage() {
             ))}
           </div>
 
-          {/* Disclaimer — intermediary framing, no "garantía" / "autorizado" */}
-          <div className="mt-8 rounded-xl border border-[#fde68a] bg-[#fffbeb] p-5">
+          {/* Disclaimer — intermediary framing, no "garantía" / "autorizado".
+              #que-significa is the deep-link target from every "Verificado" badge. */}
+          <div id="que-significa" className="mt-8 rounded-xl border border-[#fde68a] bg-[#fffbeb] p-5 scroll-mt-24">
             <h3 className="font-semibold text-[#92400e] text-sm">{t("disclaimerTitle")}</h3>
             <p className="text-sm text-[#92400e] mt-1.5 leading-relaxed">
               {t.rich("disclaimer", rich)}

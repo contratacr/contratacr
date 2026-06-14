@@ -215,8 +215,8 @@
     "coverageAreas": "Se desplaza en {areas}",
     "save": "Guardar profesional",
     "unsave": "Quitar de guardados",
-    "verified": "Identidad verificada",
-    "verifiedTitle": "Identidad verificada por ContrataCR",
+    "verified": "Verificado",
+    "verifiedTitle": "Verificado por ContrataCR",
     "unverified": "Sin verificar",
     "unverifiedTitle": "Identidad sin verificar",
     "rate": "Tarifa",
@@ -430,7 +430,7 @@
       "responseTime": "Responde normalmente en menos de 2 horas",
       "whatsapp": "Contactar por WhatsApp",
       "call": "Llamar",
-      "identityVerified": "Identidad verificada",
+      "identityVerified": "Verificado",
       "directPayment": "Pago directo (SINPE / efectivo)",
       "noFees": "Sin intermediarios"
     },
@@ -451,7 +451,7 @@
     "waPrefill": "Hola {name}, vi tu perfil en ContrataCR y me gustaría consultarte sobre tus servicios.",
     "previewNote": "Estás viendo tu perfil como lo ven los clientes.",
     "backToPanel": "Volver a mi panel",
-    "identityVerified": "Identidad verificada",
+    "identityVerified": "Verificado",
     "identityUnverified": "Identidad sin verificar",
     "viewReviewsCount": "Ver {count, plural, one {# reseña} other {# reseñas}}",
     "reviewCountLabel": "{count, plural, one {# reseña} other {# reseñas}}",
@@ -499,7 +499,8 @@
     "insurers": "Aseguradoras",
     "reviewsHeading": "Reseñas ({count})",
     "reviewOf": "Reseña de “{title}”",
-    "noReviews": "Aún no hay reseñas. Solo los clientes que completaron un servicio pueden dejar una."
+    "noReviews": "Aún no hay reseñas. Solo los clientes que completaron un servicio pueden dejar una.",
+    "whatItMeans": "¿Qué significa?"
   },
   "auth": {
     "login": {
@@ -594,11 +595,11 @@
       "photoAlt": "Foto de perfil",
       "noCrId": "No tengo identificación costarricense",
       "noCrIdSub": "(extranjero/a, pasaporte o DIMEX en trámite)",
-      "noCrIdLink": "¿No tienes identificación costarricense?",
-      "hasCrIdLink": "Sí tengo identificación costarricense",
+      "noCrIdLink": "Registrarme sin cédula por ahora",
+      "hasCrIdLink": "Verificar con mi cédula",
       "pendingReview": "pendiente de revisión",
       "manualName": "Nombre completo",
-      "manualNameHint": "Tal como aparece en tu pasaporte / documento",
+      "manualNameHint": "Tu nombre completo",
       "idDocNotePlaceholder": "Ejemplo: Pasaporte de Nicaragua N° ..., o DIMEX en trámite N° ...",
       "errEmailTaken": "Este correo ya está registrado. Inicia sesión.",
       "errIdFormat": "Formato inválido. CR: 9 dígitos · DIMEX: 11-12 · NITE: 10.",
@@ -653,7 +654,8 @@
       "yourDocument": "Tu documento",
       "optionalParen": "(opcional)",
       "offerServices": "Ofrecer mis servicios",
-      "goToLogin": "Ir a iniciar sesión →"
+      "goToLogin": "Ir a iniciar sesión →",
+      "skipCedulaNote": "Aparecerás sin la insignia Verificado. Podrás verificar tu identidad luego desde tu panel."
     },
     "client": {
       "title": "Crear cuenta de cliente",
@@ -948,7 +950,7 @@
   "proPanel": {
     "viewAsClient": "Ver cómo me ven los clientes",
     "signOut": "Salir",
-    "identityVerified": "Identidad verificada",
+    "identityVerified": "Verificado",
     "identityUnverified": "Identidad sin verificar · visible para clientes",
     "verificationRejected": "Verificación rechazada",
     "groupPro": "Mi perfil profesional",
@@ -1222,7 +1224,7 @@
     "remove": "Eliminar",
     "addPhoto": "Agregar foto",
     "fullName": "Nombre completo",
-    "identityVerified": "Identidad verificada",
+    "identityVerified": "Verificado",
     "nameLockedHelp": "Tu nombre oficial proviene del padrón y no se edita aquí. ¿Error o cambio legal? <link>Escríbele a soporte</link>.",
     "fullNamePlaceholder": "Juan Pérez González",
     "businessName": "Nombre comercial o de tu empresa",
@@ -1289,7 +1291,7 @@
     "noteTicket": "No pudimos confirmarla automáticamente. Abrimos un caso de soporte para revisión manual.",
     "noteReview": "No pudimos confirmarla automáticamente. Tu caso quedó en revisión.",
     "processError": "No se pudo procesar. Intenta de nuevo.",
-    "cedulaVerified": "¡Listo! Verificamos tu cédula. Ahora tienes la insignia “Identidad verificada” y subes en los resultados.",
+    "cedulaVerified": "¡Listo! Verificamos tu cédula. Ahora tienes la insignia “Verificado” y subes en los resultados.",
     "cedulaSaved": "Guardamos tu cédula. Si no se verificó automáticamente, quedó en revisión.",
     "waHelp": "Hola, necesito ayuda con mi verificación de identidad en ContrataCR (Caso #{ref}).",
     "rejectedTitle": "Tu verificación no fue aprobada",
@@ -1416,7 +1418,7 @@
     "saved": "✓ ¡Cambios guardados!",
     "identity": "Identidad",
     "registeredId": "Cédula registrada",
-    "identityVerified": "Identidad verificada",
+    "identityVerified": "Verificado",
     "pendingReview": "Pendiente de revisión",
     "identityVerifiedHelp": "Tu identidad fue confirmada con el padrón a partir de tu cédula. Solo mostramos los últimos dígitos.",
     "identityPendingHelp": "Registramos tu identificación. Las cédulas que no están en el padrón (DIMEX/NITE) se revisan manualmente.",
@@ -1618,7 +1620,7 @@
   "proveedoresPage": {
     "metaTitle": "¿Qué es la verificación de identidad? — ContrataCR",
     "metaDesc": "Cómo funciona la verificación de identidad de ContrataCR: confirmamos que la cédula es real y el nombre coincide con los registros oficiales. Verificamos identidad, no la calidad ni el resultado de los trabajos.",
-    "badge": "Identidad verificada",
+    "badge": "Verificado",
     "h1": "¿Qué es la verificación de identidad?",
     "intro": "Es un respaldo que confirma que la <strong>cédula del proveedor es real</strong> y que su <strong>nombre coincide con los registros oficiales</strong>. Es automática y se gana: da más visibilidad ante los clientes que buscan mayor confianza, sin bloquear a nadie.",
     "howWorks": "¿Cómo funciona?",
@@ -1629,7 +1631,7 @@
     "step3Title": "Datos siempre al día",
     "step3Body": "El padrón se actualiza periódicamente. Si tu caso no pasa automáticamente, puedes apelar y se vuelve a verificar.",
     "disclaimerTitle": "Aviso importante",
-    "disclaimer": "ContrataCR es una <strong>plataforma intermediaria</strong> que conecta a clientes con proveedores de servicios; no es la proveedora del servicio. La insignia <strong>“Identidad verificada”</strong> confirma únicamente que la cédula es real y el nombre coincide con los registros oficiales. <strong>No garantiza ni asegura la calidad, el resultado ni la finalización de ningún trabajo</strong>, y no prueba por sí sola que quien se registró sea físicamente esa persona. La contratación ocurre directamente entre el cliente y el proveedor.",
+    "disclaimer": "ContrataCR es una <strong>plataforma intermediaria</strong> que conecta a clientes con proveedores de servicios; no es la proveedora del servicio. La insignia <strong>“Verificado”</strong> confirma únicamente que la cédula es real y el nombre coincide con los registros oficiales. <strong>No garantiza ni asegura la calidad, el resultado ni la finalización de ningún trabajo</strong>, y no prueba por sí sola que quien se registró sea físicamente esa persona. La contratación ocurre directamente entre el cliente y el proveedor.",
     "ctaVerified": "Ver proveedores con identidad verificada"
   },
   "contacto": {
