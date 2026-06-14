@@ -802,3 +802,14 @@ override to the filters; leave the shared `ui/select.tsx` for other surfaces.)
 Show ALL filters directly — booleans (cerca de mí, Solo verificados) are toggles at
 the SAME level as the dropdowns, separated only by a thin divider; do NOT hide them
 behind a "Más filtros" heading/collapse. (Supersedes the §28/§35 grouping note.)
+
+## 42. Optional social links on the profile (URLs only, additive)
+
+Professionals can add OPTIONAL social links (Instagram, Facebook, TikTok, website)
+— URLs only (no storage cost), shown IN ADDITION to "casos de éxito" photos (never
+a replacement). Editor section "Redes sociales"; inputs normalize to full URLs
+(`socialUrl()` accepts a link, domain/path, or bare @handle). Store only the
+filled-in ones (`professionals.social_links` jsonb). On the public profile, render a
+compact row of recognizable icon buttons (only the set ones) that open in a new
+tab, in the contact sidebar. Brand glyphs live in `components/icons/social-icons.tsx`
+(lucide no longer ships Instagram/Facebook); website uses lucide `Globe`.
