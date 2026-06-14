@@ -225,7 +225,8 @@
     "viewCases": "View success stories ({count})",
     "viewCertifications": "View certifications ({count})",
     "verifiedShort": "Verified",
-    "unverifiedShort": "Unverified"
+    "unverifiedShort": "Unverified",
+    "email": "Contact by email"
   },
   "locationPicker": {
     "searchPlaceholder": "Search your place's address… example: Escazú Centro",

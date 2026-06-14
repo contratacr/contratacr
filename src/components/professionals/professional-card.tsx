@@ -281,8 +281,11 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
             </div>
           </div>
 
-          {/* ── Action zone: availability + contact/primary actions ── */}
-          <div className="md:w-[232px] md:shrink-0 md:border-l md:border-[#f3f4f6] md:pl-4 pt-3 md:pt-0 border-t border-[#f3f4f6] md:border-t-0 flex flex-col">
+          {/* ── Action zone: availability + contact/primary actions. A mobile
+                 min-height keeps every card the SAME height regardless of the
+                 button-layout type (private/with-call/without-call); on desktop the
+                 row layout + card min-h govern. ── */}
+          <div className="md:w-[232px] md:shrink-0 md:border-l md:border-[#f3f4f6] md:pl-4 pt-3 md:pt-0 border-t border-[#f3f4f6] md:border-t-0 flex flex-col min-h-[150px] md:min-h-0">
             <div className="flex-1 min-h-0">
               <ProfessionalSchedule
                 professional={professional}

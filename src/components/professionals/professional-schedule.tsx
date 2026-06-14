@@ -241,29 +241,41 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
 
   return (
     <div className="flex flex-col gap-1.5 h-full">
-      {/* Location — a selector when the pro publishes hours at more than one place
-          (item 3), else a single label. Defaults to the first place. */}
-      {locationGroups.length > 1 ? (
-        <div className="relative">
-          <MapPin className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-[#009FD9] pointer-events-none" />
-          <select
-            value={effectiveLabel ?? ""}
-            onClick={(e) => e.stopPropagation()}
-            onChange={(e) => { e.stopPropagation(); setSelectedLoc(e.target.value); setOffset(0); }}
-            aria-label={t("location")}
-            className="w-full appearance-none rounded-lg border border-[#bfdbfe] bg-[#EBF5FB] pl-6 pr-6 py-1 text-[11px] font-semibold text-[#0089bb] focus:outline-none focus:ring-2 focus:ring-[#009FD9] cursor-pointer truncate"
-          >
-            {locationGroups.map((g) => <option key={g.label} value={g.label}>{g.label}</option>)}
-          </select>
-          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-[#0089bb] pointer-events-none" />
+      {/* Header row: location (selector for multi-place, else a label) on the left
+          and the "Ver horario completo" link on the right — sharing ONE row so the
+          link is restored without adding height. */}
+      <div className="flex items-center gap-2">
+        <div className="min-w-0 flex-1">
+          {locationGroups.length > 1 ? (
+            <div className="relative">
+              <MapPin className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-[#009FD9] pointer-events-none" />
+              <select
+                value={effectiveLabel ?? ""}
+                onClick={(e) => e.stopPropagation()}
+                onChange={(e) => { e.stopPropagation(); setSelectedLoc(e.target.value); setOffset(0); }}
+                aria-label={t("location")}
+                className="w-full appearance-none rounded-lg border border-[#bfdbfe] bg-[#EBF5FB] pl-6 pr-6 py-1 text-[11px] font-semibold text-[#0089bb] focus:outline-none focus:ring-2 focus:ring-[#009FD9] cursor-pointer truncate"
+              >
+                {locationGroups.map((g) => <option key={g.label} value={g.label}>{g.label}</option>)}
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-[#0089bb] pointer-events-none" />
+            </div>
+          ) : effectiveLabel && effectiveLabel !== "General" ? (
+            // Only a real place name; the generic "Próximos horarios" label is removed.
+            <p className="flex items-center gap-1 text-[11px] leading-tight truncate">
+              <MapPin className="h-3 w-3 text-[#009FD9] shrink-0" />
+              <span className="truncate font-medium text-[#374151]">{effectiveLabel}</span>
+            </p>
+          ) : null}
         </div>
-      ) : effectiveLabel && effectiveLabel !== "General" ? (
-        // Only a real place name; the generic "Próximos horarios" label is removed.
-        <p className="flex items-center gap-1 text-[11px] leading-tight truncate">
-          <MapPin className="h-3 w-3 text-[#009FD9] shrink-0" />
-          <span className="truncate font-medium text-[#374151]">{effectiveLabel}</span>
-        </p>
-      ) : null}
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); openBooking(); }}
+          className="shrink-0 text-[10px] font-medium text-[#009FD9] hover:underline whitespace-nowrap"
+        >
+          {t("viewFullSchedule")}
+        </button>
+      </div>
 
       <div className="flex-1 min-h-0 flex items-center">
         {!hasUpcoming ? (

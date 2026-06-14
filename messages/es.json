@@ -225,7 +225,8 @@
     "viewCases": "Ver casos de éxito ({count})",
     "viewCertifications": "Ver certificaciones ({count})",
     "verifiedShort": "Verificado",
-    "unverifiedShort": "Sin verificar"
+    "unverifiedShort": "Sin verificar",
+    "email": "Contactar por correo"
   },
   "locationPicker": {
     "searchPlaceholder": "Busca la dirección de tu local… ejemplo: Escazú Centro",
