@@ -78,13 +78,10 @@ export function SearchResultsLayout({ children, filters, mapData, apiKey, locale
                 <X className="h-5 w-5" />
               </button>
             </div>
+            {/* Filters apply INSTANTLY (same as the desktop sidebar — no apply
+                button anywhere), so the drawer has no redundant "Ver resultados"
+                action; the X above and the backdrop both dismiss it. */}
             {filters}
-            <button
-              onClick={() => setShowFilters(false)}
-              className="mt-4 w-full rounded-xl bg-[#009FD9] py-2.5 text-sm font-semibold text-white"
-            >
-              {t("viewResults")}
-            </button>
           </div>
         </div>
       )}

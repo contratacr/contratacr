@@ -17,7 +17,10 @@ const SelectTrigger = React.forwardRef<
     ref={ref}
     className={cn(
       "flex h-10 w-full items-center justify-between rounded-xl border border-[#e5e7eb] bg-white px-4 py-2.5 text-sm text-[#111827]",
-      "transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-[#319278] focus:border-transparent",
+      // focus-VISIBLE only: a mouse click that returns focus to the trigger (Radix
+      // does this after picking an option) must NOT leave a stuck ring; keyboard
+      // users still get a clear brand-blue ring.
+      "transition-all duration-150 outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9] focus-visible:border-transparent",
       "disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer",
       "data-[placeholder]:text-[#9ca3af]",
       className

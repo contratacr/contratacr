@@ -1,14 +1,11 @@
-refactor(verificado badge): drop check icon from all badges, remove "¿Qué significa?" inline, sweep "identidad verificada" copy
+fix(buscar filters): neutral aseguradora placeholder, instant-apply only (no redundant button), no stuck focus ring
 
-- Remove ShieldCheck from every "Verificado" badge: search card, public
-  profile header + Sobre mí row, pro dashboard Badge, profile editor, client
-  account, proveedores-autorizados hero chip, landing phone-screen mockup.
-  Badge is now text-only "Verificado".
-- Remove the inline "¿Qué significa?" links beside the profile badges (the
-  explanation still lives on /proveedores-autorizados and in the Terms).
-- Sweep remaining "identidad verificada" / "Identity verified" copy to the new
-  "Verificado" / "Verified" wording (filters, FAQ/tips, verify benefit,
-  notifications, verificationLabel).
-- Drop now-unused ShieldCheck imports.
+- Aseguradora placeholder is now the neutral field label "Aseguradora" / "Insurer"
+  (was "Cualquiera" / "Any"); default stays unselected = unfiltered, X clears.
+- Single filter behavior: instant-apply everywhere (matches the desktop sidebar);
+  removed the redundant mobile drawer "Ver resultados" apply button — the X and
+  the backdrop dismiss the drawer.
+- Select trigger uses focus-visible (not focus) with a brand-blue ring, so a mouse
+  click that returns focus to the trigger no longer leaves a stuck border/outline.
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
