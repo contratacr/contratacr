@@ -10,8 +10,9 @@ import { PhoneInput } from "@/components/ui/phone-input";
 import { LanguagesInput } from "@/components/ui/languages-input";
 import { WorkplacesPicker, type Workplace } from "@/components/maps/workplaces-picker";
 import { createClient } from "@/lib/supabase/client";
-import { Camera, X, Plus, ChevronDown, Lock, Award, Globe } from "lucide-react";
+import { Camera, X, Plus, ChevronDown, Lock, Award } from "lucide-react";
 import { InstagramIcon, FacebookIcon, TikTokIcon } from "@/components/icons/social-icons";
+import { SOCIAL_NETWORKS, cleanUsername, isValidUsername, type SocialNetwork } from "@/lib/social";
 import { Link } from "@/i18n/navigation";
 import { computeSearchAreas, primaryArea } from "@/lib/location";
 import { getProvinceById, getCantonById } from "@/lib/data/cr-geography";
@@ -32,22 +33,6 @@ interface ProfileEditorProps {
    *  and scrolls to the field. `focusKey` changes on every click so repeats fire. */
   focusField?: string | null;
   focusKey?: number;
-}
-
-// Normalize a social input into a full URL (URLs only — no storage cost). Accepts
-// a full URL, a "domain/path", or a bare @handle/username (mapped to the platform).
-const SOCIAL_BASE: Record<string, string> = {
-  instagram: "https://instagram.com/",
-  facebook: "https://facebook.com/",
-  tiktok: "https://tiktok.com/@",
-  website: "https://",
-};
-function socialUrl(platform: string, value: string): string {
-  const s = (value ?? "").trim().replace(/^@/, "");
-  if (!s) return "";
-  if (/^https?:\/\//i.test(s)) return s;
-  if (s.includes(".") || s.includes("/")) return `https://${s.replace(/^\/+/, "")}`;
-  return `${SOCIAL_BASE[platform] ?? "https://"}${s}`;
 }
 
 // "Completa tu perfil" field → which collapsible section holds it.
@@ -155,13 +140,13 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
   const [contactEmail, setContactEmail] = useState<string>(initial.contact_email ?? "");
   // Optional public email is opt-in (toggle): on only if one is already saved.
   const [showContactEmail, setShowContactEmail] = useState<boolean>(!!initial.contact_email);
-  // Optional social links (URLs only). Shown on the public profile; additive to
-  // "casos de éxito" photos. Seeded from whatever URLs are already stored.
-  const [social, setSocial] = useState<{ instagram: string; facebook: string; tiktok: string; website: string }>({
-    instagram: initial.social_links?.instagram ?? "",
-    facebook: initial.social_links?.facebook ?? "",
-    tiktok: initial.social_links?.tiktok ?? "",
-    website: initial.social_links?.website ?? "",
+  // Optional social links — the pro types ONLY their username; we build the URL on
+  // display. Stored as clean usernames. Seeded (and any legacy URL value cleaned)
+  // from whatever is stored.
+  const [social, setSocial] = useState<Record<SocialNetwork, string>>({
+    instagram: cleanUsername(initial.social_links?.instagram),
+    facebook: cleanUsername(initial.social_links?.facebook),
+    tiktok: cleanUsername(initial.social_links?.tiktok),
   });
   const [fullName, setFullName] = useState<string>(initial.profiles?.full_name ?? "");
   // The official name is locked once verified — it's what backs the "Identidad
@@ -360,12 +345,12 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
         }));
       await supabase.from("professionals").update({ certifications: cleanCerts }).eq("id", professionalId);
 
-      // Social links in their OWN best-effort update (URLs only; non-fatal if the
-      // column isn't migrated). Only non-empty values are stored, normalized to URLs.
+      // Social links in their OWN best-effort update (non-fatal if the column isn't
+      // migrated). Store ONLY clean usernames, and only valid, non-empty ones.
       const social_links = Object.fromEntries(
-        (["instagram", "facebook", "tiktok", "website"] as const)
-          .map((k) => [k, socialUrl(k, social[k])])
-          .filter(([, v]) => v)
+        SOCIAL_NETWORKS
+          .map(({ key }) => [key, cleanUsername(social[key])] as const)
+          .filter(([, u]) => u && isValidUsername(u))
       );
       await supabase.from("professionals").update({ social_links }).eq("id", professionalId);
 
@@ -651,29 +636,37 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
         )}
       </Section>
 
-      {/* ── Redes sociales (optional, URLs only — additive to casos de éxito) ── */}
+      {/* ── Redes sociales — USERNAME only; we build the link (additive to casos). ── */}
       <Section id="social" title={t("secSocial")} desc={t("secSocialDesc")} open={openSections.has("social")} onToggle={toggleSection}>
         <div className="flex flex-col gap-3">
-          {([
-            { key: "instagram" as const, label: "Instagram", placeholder: "instagram.com/tu_usuario", Icon: InstagramIcon },
-            { key: "facebook" as const, label: "Facebook", placeholder: "facebook.com/tu_pagina", Icon: FacebookIcon },
-            { key: "tiktok" as const, label: "TikTok", placeholder: "tiktok.com/@tu_usuario", Icon: TikTokIcon },
-            { key: "website" as const, label: t("socialWebsite"), placeholder: "tusitio.com", Icon: Globe },
-          ]).map(({ key, label, placeholder, Icon }) => (
-            <div key={key}>
-              <label className="text-sm font-medium text-[#374151] mb-1.5 flex items-center gap-1.5">
-                <Icon className="h-4 w-4 text-[#6b7280]" /> {label} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
-              </label>
-              <input
-                type="text"
-                inputMode="url"
-                placeholder={placeholder}
-                value={social[key]}
-                onChange={(e) => { setSocial((s) => ({ ...s, [key]: e.target.value })); touch(); }}
-                className="w-full h-11 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
-              />
-            </div>
-          ))}
+          {SOCIAL_NETWORKS.map(({ key, label, prefix }) => {
+            const Icon = { instagram: InstagramIcon, facebook: FacebookIcon, tiktok: TikTokIcon }[key];
+            const cleaned = cleanUsername(social[key]);
+            const invalid = cleaned.length > 0 && !isValidUsername(cleaned);
+            return (
+              <div key={key}>
+                <label className="text-sm font-medium text-[#374151] mb-1.5 flex items-center gap-1.5">
+                  <Icon className="h-4 w-4 text-[#6b7280]" /> {label} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
+                </label>
+                {/* Prefix shows the network so the pro types ONLY their username. */}
+                <div className={`flex h-11 rounded-xl border bg-white overflow-hidden transition-all focus-within:ring-2 focus-within:ring-[#009FD9] ${invalid ? "border-red-300" : "border-[#e5e7eb]"}`}>
+                  <span className="flex items-center px-3 bg-[#f9fafb] text-xs text-[#6b7280] border-r border-[#e5e7eb] whitespace-nowrap">{prefix}</span>
+                  <input
+                    type="text"
+                    inputMode="text"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    placeholder={t("socialUserPlaceholder")}
+                    value={social[key]}
+                    onChange={(e) => { setSocial((s) => ({ ...s, [key]: e.target.value })); touch(); }}
+                    className="flex-1 min-w-0 px-3 text-sm text-[#111827] placeholder:text-[#9ca3af] outline-none bg-transparent"
+                  />
+                </div>
+                {invalid && <p className="text-xs text-red-500 mt-1">{t("socialInvalid")}</p>}
+              </div>
+            );
+          })}
           <p className="text-xs text-[#9ca3af]">{t("socialHelp")}</p>
         </div>
       </Section>

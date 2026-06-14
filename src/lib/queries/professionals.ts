@@ -59,8 +59,9 @@ export type ProService = {
 // Photos attach to a SERVICE INSTANCE (serviceId); `profession` kept for legacy.
 export type PortfolioItem = { url: string; serviceId?: string; profession?: string };
 
-// Optional social links (URLs only). Additive to "casos de éxito" photos.
-export type SocialLinks = { instagram?: string; facebook?: string; tiktok?: string; website?: string };
+// Optional social links — stored as USERNAMES only (the app builds the URL via
+// lib/social). Additive to "casos de éxito" photos.
+export type SocialLinks = { instagram?: string; facebook?: string; tiktok?: string };
 
 export type ProfessionalDetail = ProfessionalCardData & {
   portfolioUrls: string[];

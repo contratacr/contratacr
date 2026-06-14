@@ -4,9 +4,10 @@ import { useState, useEffect, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import {
   MapPin, Shield, ArrowLeft,
-  Share2, Flag, ChevronDown, Lock, Phone, Building2, Award, Mail, Globe,
+  Share2, Flag, ChevronDown, Lock, Phone, Building2, Award, Mail,
 } from "lucide-react";
 import { InstagramIcon, FacebookIcon, TikTokIcon } from "@/components/icons/social-icons";
+import { buildSocialUrl } from "@/lib/social";
 import { Link } from "@/i18n/navigation";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -361,15 +362,15 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                   )
                 )}
 
-                {/* Social links — optional, only the ones the pro filled in. Open in
-                    a new tab; recognizable icons. Additive to "casos de éxito". */}
+                {/* Social links — usernames the pro shared; we build the URL. Only
+                    the networks filled in show; icons only, open in a new tab.
+                    Additive to "casos de éxito". */}
                 {(() => {
                   const sl = professional.socialLinks;
                   const items = [
-                    { k: "instagram", href: sl?.instagram, Icon: InstagramIcon },
-                    { k: "facebook", href: sl?.facebook, Icon: FacebookIcon },
-                    { k: "tiktok", href: sl?.tiktok, Icon: TikTokIcon },
-                    { k: "website", href: sl?.website, Icon: Globe },
+                    { k: "instagram", href: buildSocialUrl("instagram", sl?.instagram), Icon: InstagramIcon },
+                    { k: "facebook", href: buildSocialUrl("facebook", sl?.facebook), Icon: FacebookIcon },
+                    { k: "tiktok", href: buildSocialUrl("tiktok", sl?.tiktok), Icon: TikTokIcon },
                   ].filter((x) => x.href);
                   if (items.length === 0) return null;
                   return (
