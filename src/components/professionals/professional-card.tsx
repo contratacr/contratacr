@@ -22,6 +22,18 @@ function prettyPlace(name?: string): string {
   return "";
 }
 
+// CARD-ONLY: shorten a PERSON's name to first name + both surnames, dropping any
+// middle name(s) — e.g. "Isaac Alberto Sanchez Monge" → "Isaac Sanchez Monge".
+// Saves space and avoids truncation on the card. Names with 3 or fewer parts
+// (one given name + up to two surnames) are left as-is. The FULL official name is
+// still shown on the professional's profile page; this never touches a company
+// /brand name (only the person's name).
+function shortPersonName(name?: string): string {
+  const parts = (name ?? "").trim().split(/\s+/).filter(Boolean);
+  if (parts.length <= 3) return parts.join(" ");
+  return [parts[0], parts[parts.length - 2], parts[parts.length - 1]].join(" ");
+}
+
 // A certification is a plain TEXT entry (no images): the certificate name, and
 // optionally the issuing institution + year. It belongs to a specific PROFESSION
 // (category id) so a multi-profession pro lists them per profession. Authenticity
@@ -117,8 +129,11 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
   // Brand hierarchy: company name leads (clients recognize the brand), personal
   // name becomes the muted subtitle. No company → personal name leads, no subtitle.
   const businessName = professional.businessName?.trim();
-  const brandPrimary = businessName || professional.fullName;
-  const brandSecondary = businessName ? professional.fullName : "";
+  // The PERSON's name is shortened for the card (first name + both surnames); a
+  // company/brand name is shown verbatim. The full official name stays on the profile.
+  const personName = shortPersonName(professional.fullName);
+  const brandPrimary = businessName || personName;
+  const brandSecondary = businessName ? personName : "";
   const categoryName = catLabel(professional.categoryId);
   const allProfessions = (professional.professions && professional.professions.length > 0
     ? professional.professions
