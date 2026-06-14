@@ -3,6 +3,7 @@ import { MapPin, Truck, Image as ImageIcon, Star, Award } from "lucide-react";
 import { ProfessionalSchedule, type ScheduleSlot } from "@/components/professionals/professional-schedule";
 import { Link } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { getInitials } from "@/lib/utils";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { primaryPricingLabel, type PricingTier } from "@/lib/pricing";
@@ -137,15 +138,13 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
   // ProfessionalSchedule), so the card no longer renders separate top-row icons.
   const isOwn = !!viewerProfileId && viewerProfileId === professional.profileId;
 
-  // Verified trust mark — rendered inline beside the name on desktop, but BELOW
-  // the name on mobile so the name keeps the full top line and never truncates first.
-  // Compact trust mark shown right next to the name (icon + short text, no box).
-  // Verified → plain-text "Verificado". Unverified shows NOTHING (no badge, no
-  // negative label) — only verified pros get a mark.
+  // Verified trust mark — the SAME visual as the professional dashboard (solid
+  // brand-blue pill, `Badge variant="verified"`), placed to the RIGHT of the name
+  // on the name line. Unverified shows NOTHING (no badge, no negative label).
   const verifiedBadge = isVerified ? (
-    <span title={tCard("verifiedTitle")} className="inline-flex shrink-0 items-center text-[#16a34a]">
-      <span className="text-[11px] font-semibold">{tCard("verifiedShort")}</span>
-    </span>
+    <Badge variant="verified" title={tCard("verifiedTitle")} className="shrink-0 px-2 py-0.5 text-[10px] font-semibold">
+      {tCard("verifiedShort")}
+    </Badge>
   ) : null;
 
   // ── ONE consolidated location line (keeps cards uniform): a fixed pro shows
@@ -176,27 +175,20 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
             </Link>
 
             <div className="flex-1 min-w-0 flex flex-col gap-1 overflow-hidden">
-              {/* Name has horizontal priority: it takes the full top line and
-                  may wrap to 2 lines on mobile rather than truncating with "…".
-                  The verified mark sits inline on desktop but drops BELOW the
-                  name on mobile (see badge under the name) to free the space. */}
-              <div className="flex items-start gap-2 min-w-0 pr-9 md:pr-0">
-                {/* Name + verified mark share the left side; verified sits right of
-                    the name (wraps under it on a very narrow card, never truncating
-                    the name). The PRICE moves to the top-right (where the contact
-                    icons used to be). */}
-                <div className="min-w-0 flex-1 flex items-start gap-1.5 flex-wrap">
-                  <Link href={`/profesionales/${professional.slug}`} className="min-w-0">
-                    <h3 className="font-bold text-[#111827] text-[15px] leading-tight hover:text-[#009FD9] transition-colors line-clamp-2 md:line-clamp-1">{brandPrimary}</h3>
-                  </Link>
-                  {verifiedBadge && <span className="shrink-0 mt-0.5">{verifiedBadge}</span>}
-                </div>
-
+              {/* Name line: name on the left (truncates to ONE line), "Verificado"
+                  pill aligned to the RIGHT of the name, then the optional price.
+                  Right-aligning the badge frees the space below so the location /
+                  "se desplaza" lines can show in full. `pr-9 md:pr-0` clears the
+                  absolute save button on mobile. */}
+              <div className="flex items-center gap-2 min-w-0 pr-9 md:pr-0">
+                <Link href={`/profesionales/${professional.slug}`} className="min-w-0 flex-1">
+                  <h3 className="font-bold text-[#111827] text-[15px] leading-tight hover:text-[#009FD9] transition-colors truncate">{brandPrimary}</h3>
+                </Link>
+                {verifiedBadge}
                 {/* Price — just the amount, no "Desde/Tarifa" word. Shown only when
-                    there's a real numeric price (avoids a prominent localized
-                    "price on request" string leaking on the top line). */}
+                    there's a real numeric price. */}
                 {priceLabel.includes("₡") && (
-                  <span className="shrink-0 font-bold text-[#111827] text-sm whitespace-nowrap mt-0.5">{priceLabel}</span>
+                  <span className="shrink-0 font-bold text-[#111827] text-sm whitespace-nowrap">{priceLabel}</span>
                 )}
               </div>
 
@@ -242,18 +234,19 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
                 </span>
               )}
 
-              {/* Location + coverage — two truncating lines */}
+              {/* Location + coverage — wrap in full (never truncated). The icon stays
+                  top-aligned when the text wraps to a second line on narrow mobile. */}
               <div className="flex flex-col gap-0.5 text-[11px] text-[#6b7280]">
                 {fixedText && (
-                  <span className="inline-flex items-center gap-1.5 min-w-0">
-                    <MapPin className="h-3 w-3 text-[#009FD9] shrink-0" />
-                    <span className="truncate">{fixedText}</span>
+                  <span className="flex items-start gap-1.5">
+                    <MapPin className="h-3 w-3 text-[#009FD9] shrink-0 mt-0.5" />
+                    <span className="leading-snug">{fixedText}</span>
                   </span>
                 )}
                 {mobileText && (
-                  <span className="inline-flex items-center gap-1.5 min-w-0">
-                    <Truck className="h-3 w-3 text-[#0089bb] shrink-0" />
-                    <span className="truncate">{mobileText}</span>
+                  <span className="flex items-start gap-1.5">
+                    <Truck className="h-3 w-3 text-[#0089bb] shrink-0 mt-0.5" />
+                    <span className="leading-snug">{mobileText}</span>
                   </span>
                 )}
               </div>
