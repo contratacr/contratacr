@@ -695,20 +695,22 @@
     "clients": {
       "title": "Para clientes",
       "search": "Buscar profesionales",
-      "publish": "Publicar un proyecto",
+      "categories": "Categorías",
       "howItWorks": "Cómo funciona",
-      "help": "Centro de ayuda"
+      "publish": "Publicar un proyecto"
     },
     "pros": {
       "title": "Para profesionales",
       "register": "Registra tu perfil",
       "attract": "Cómo atraer clientes",
-      "howItWorks": "Cómo funciona"
+      "verification": "Verificación de identidad"
     },
     "support": {
-      "title": "Soporte",
-      "contact": "Contactar soporte",
-      "help": "Centro de ayuda"
+      "title": "Ayuda y soporte",
+      "help": "Centro de ayuda",
+      "contact": "Centro de soporte",
+      "contactForm": "Contacto",
+      "email": "soporte@contratacr.com"
     },
     "rights": "© {year} ContrataCR. Todos los derechos reservados.",
     "terms": "Términos y Condiciones",

@@ -35,29 +35,32 @@ const SOCIAL_LINKS = [
 ];
 
 // Labels resolve to footer.<key> at render so they translate per locale.
+// Every href points to a CURRENT, existing page (verified against the app routes).
 const COLUMNS = [
   {
     headingKey: "clients.title",
     links: [
       { key: "clients.search",     href: "/buscar" },
-      { key: "clients.publish",    href: "/publicar-proyecto" },
+      { key: "clients.categories", href: "/categorias" },
       { key: "clients.howItWorks", href: "/como-funciona" },
-      { key: "clients.help",       href: "/ayuda" },
+      { key: "clients.publish",    href: "/publicar-proyecto" },
     ],
   },
   {
     headingKey: "pros.title",
     links: [
-      { key: "pros.register",   href: "/registro/profesional" },
-      { key: "pros.attract",    href: "/atraer-clientes" },
-      { key: "pros.howItWorks", href: "/como-funciona" },
+      { key: "pros.register",     href: "/registro/profesional" },
+      { key: "pros.attract",      href: "/atraer-clientes" },
+      { key: "pros.verification", href: "/proveedores-autorizados" },
     ],
   },
   {
     headingKey: "support.title",
     links: [
-      { key: "support.contact", href: "/soporte" },
-      { key: "support.help",    href: "/ayuda" },
+      { key: "support.help",        href: "/ayuda" },
+      { key: "support.contact",     href: "/soporte" },
+      { key: "support.contactForm", href: "/contacto" },
+      { key: "support.email",       href: "mailto:soporte@contratacr.com" },
     ],
   },
 ];
@@ -109,6 +112,13 @@ export function LandingFooter() {
                       <SmartRegisterLink className="text-sm text-white/60 hover:text-white transition-colors">
                         {t(key)}
                       </SmartRegisterLink>
+                    ) : href.startsWith("mailto:") ? (
+                      <a
+                        href={href}
+                        className="text-sm text-white/60 hover:text-white transition-colors break-all"
+                      >
+                        {t(key)}
+                      </a>
                     ) : (
                       <Link
                         href={href}
