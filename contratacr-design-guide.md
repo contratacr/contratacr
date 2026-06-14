@@ -789,3 +789,16 @@ WhatsApp/Llamar buttons, matched to the real reason:
 A WhatsApp-only-preference card shows just the buttons (no note). Keep the wording
 short so it fits the FIXED card height (never grow the card); both end pointing the
 client to message the pro (the buttons below are WhatsApp/Llamar).
+
+## 41. Filters: neutral select borders + all filters visible (no "Más filtros")
+
+The /buscar filter Select triggers keep a NEUTRAL border in every state via a
+filter-scoped `FILTER_TRIGGER` override (`focus-visible:ring-0
+focus-visible:border-[#e5e7eb]`) — the shared Select's brand-blue focus-visible ring
+otherwise "sticks" after selecting (Radix returns focus to the trigger) and reads
+as a stuck colored border. Don't reintroduce a colored focus/open border on filter
+triggers; the open dropdown + chevron rotation are the affordance. (Scope the
+override to the filters; leave the shared `ui/select.tsx` for other surfaces.)
+Show ALL filters directly — booleans (cerca de mí, Solo verificados) are toggles at
+the SAME level as the dropdowns, separated only by a thin divider; do NOT hide them
+behind a "Más filtros" heading/collapse. (Supersedes the §28/§35 grouping note.)
