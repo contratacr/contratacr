@@ -909,13 +909,9 @@ export function LandingNavbar() {
                   )}
                 </div>
 
-                {/* Cómo funciona — direct link */}
-                <Link
-                  href="/como-funciona"
-                  className="px-4 py-2 rounded-xl text-sm font-medium text-[#374151] hover:text-[#1a2744] hover:bg-gray-50 transition-colors"
-                >
-                  {t("howItWorks")}
-                </Link>
+                {/* "Cómo funciona" lives ONLY inside Recursos now (was also a
+                    standalone item here — redundant). Recursos shows it on desktop
+                    + mobile, so it stays accessible in one place. */}
 
                 {/* Recursos — simple dropdown */}
                 <div
