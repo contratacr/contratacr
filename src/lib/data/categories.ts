@@ -33,6 +33,8 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
       { id: "ventanas_puertas", label: "Ventanas y puertas", keywords: ["vidrio", "aluminio", "puertas corredizas", "ventaneria", "instalacion de ventanas"] },
       { id: "soldadura", label: "Soldadura", keywords: ["soldador", "hierro", "metal", "estructuras metalicas", "herreria", "rejas"] },
       { id: "gypsum", label: "Gypsum / Drywall", keywords: ["cielo raso", "tabiques", "divisiones", "drywall", "tablaroca", "plycem"] },
+      { id: "servicio_gas", label: "Servicio de gas", keywords: ["gas", "cilindro de gas", "tanque de gas", "recarga de gas", "instalacion de gas", "tropigas", "zeta gas", "gas licuado"] },
+      { id: "reparacion_electrodomesticos", label: "Reparación de electrodomésticos", keywords: ["electrodomesticos", "refrigeradora", "refri", "lavadora", "secadora", "microondas", "cocina electrica", "lavaplatos", "reparacion de linea blanca"] },
     ],
   },
   {
@@ -103,12 +105,16 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
     emoji: "🩺",
     items: [
       { id: "entrenamiento_personal", label: "Entrenamiento personal", keywords: ["entrenador", "personal trainer", "fitness", "gym", "ejercicio", "pesas", "crossfit", "fuerza"] },
+      { id: "entrenamiento_deportivo", label: "Entrenamiento deportivo", keywords: ["entrenador de futbol", "coach deportivo", "futbol", "natacion", "tenis", "baloncesto", "deporte", "preparador fisico", "atletismo"] },
       { id: "nutricion", label: "Nutrición y dietética", keywords: ["nutricionista", "dietista", "dieta", "alimentacion saludable", "plan de comida", "bajar de peso"] },
       { id: "masajes", label: "Masajes terapéuticos", keywords: ["masajista", "masaje terapeutico", "relajante", "deportivo", "descontracturante", "reflexologia"] },
       { id: "psicologia", label: "Psicología y terapia", keywords: ["psicologo", "terapeuta", "salud mental", "terapia", "counseling", "ansiedad", "depresion", "bienestar emocional"] },
       { id: "fisioterapia", label: "Fisioterapia", keywords: ["fisioterapeuta", "rehabilitacion", "terapia fisica", "kinesiologia", "dolor de espalda"] },
+      { id: "odontologia", label: "Odontología", keywords: ["dentista", "odontologo", "dientes", "muela", "limpieza dental", "ortodoncia", "endodoncia", "caries"] },
+      { id: "pediatria", label: "Pediatría", keywords: ["pediatra", "medico de ninos", "salud infantil", "control de nino sano", "vacunas", "bebe"] },
+      { id: "optometria", label: "Optometría", keywords: ["optometrista", "examen de la vista", "anteojos", "lentes", "graduacion de lentes", "vision"] },
       { id: "enfermeria", label: "Enfermería a domicilio", keywords: ["enfermero", "enfermera", "cuidados a domicilio", "inyecciones", "curaciones", "sondas"] },
-      { id: "medicina_domicilio", label: "Medicina general a domicilio", keywords: ["doctor", "medico", "medico general", "consulta medica", "medico a domicilio", "visita medica"] },
+      { id: "medicina_domicilio", label: "Medicina general", keywords: ["doctor", "medico", "medico general", "consulta medica", "medico a domicilio", "visita medica", "medicina general"] },
       { id: "terapia_lenguaje", label: "Terapia del lenguaje", keywords: ["terapeuta del lenguaje", "logopeda", "fonoaudiologo", "lenguaje", "habla", "tartamudez"] },
       { id: "terapia_ocupacional", label: "Terapia ocupacional", keywords: ["terapeuta ocupacional", "terapia ocupacional", "rehabilitacion", "estimulacion", "motora fina"] },
       { id: "podologia", label: "Podología", keywords: ["podologo", "pies", "unas de los pies", "callos", "cuidado de pies", "pie diabetico"] },
@@ -118,6 +124,7 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
       { id: "cuidado_infantil", label: "Cuidado infantil / Niñera", keywords: ["ninera", "babysitter", "nanny", "canguro", "cuido de ninos", "guarderia en casa"] },
       { id: "veterinaria", label: "Veterinaria", keywords: ["veterinario", "animales", "mascotas", "perros", "gatos", "clinica veterinaria", "consulta veterinaria"] },
       { id: "peluqueria_canina", label: "Peluquería canina / Grooming", keywords: ["groomer", "grooming", "bano de mascotas", "estetica canina", "perros", "peluqueria de perros"] },
+      { id: "cuido_mascotas", label: "Cuido y paseo de mascotas", keywords: ["pet sitting", "paseo de perros", "dog walker", "cuido de mascotas", "guarderia de perros", "cuidador de mascotas"] },
     ],
   },
   {
@@ -167,6 +174,7 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
       { id: "fotografia_eventos", label: "Fotografía de eventos", keywords: ["fotografo de bodas", "quinceaneras", "eventos", "fotografia social", "quinceañera"] },
       { id: "videografia", label: "Videografía de eventos", keywords: ["videografo de bodas", "filmacion de eventos", "video de boda", "video social"] },
       { id: "dj_sonido", label: "DJ y sonido", keywords: ["DJ", "musica para eventos", "sonido", "disc jockey", "equipo de sonido"] },
+      { id: "chef", label: "Chef privado y cocina", keywords: ["chef privado", "cocina para eventos", "comida por encargo", "cocinero", "gastronomia", "meal prep", "cena privada", "comida a domicilio"] },
       { id: "catering", label: "Catering y banquetes", keywords: ["comida para eventos", "banquetes", "servicio de alimentacion", "lunch", "buffet"] },
       { id: "decoracion", label: "Decoración de eventos", keywords: ["decorador de eventos", "flores", "globos", "ambientacion", "bodas", "decoracion"] },
       { id: "animacion_infantil", label: "Animación infantil", keywords: ["payaso", "show infantil", "mago", "pinata", "cumpleanos", "shows para ninos"] },
@@ -242,7 +250,8 @@ export const CATEGORY_LABELS_EN: Record<string, string> = {
   techos: "Roofing", pisos: "Flooring", impermeabilizacion: "Waterproofing",
   fumigacion: "Pest control", cerrajeria: "Locksmith", aire_acondicionado: "Air conditioning",
   calentadores: "Water heaters", ventanas_puertas: "Windows & doors", soldadura: "Welding",
-  gypsum: "Gypsum / Drywall",
+  gypsum: "Gypsum / Drywall", servicio_gas: "Gas service",
+  reparacion_electrodomesticos: "Appliance repair",
   // Jardín y exterior
   jardineria: "Gardening", poda_arboles: "Tree pruning", paisajismo: "Landscaping",
   limpieza_piscinas: "Pool cleaning", riego_automatizado: "Automated irrigation",
@@ -264,14 +273,16 @@ export const CATEGORY_LABELS_EN: Record<string, string> = {
   fotografia: "Professional photography", produccion_video: "Video production",
   bienes_raices: "Real estate",
   // Salud y bienestar
-  entrenamiento_personal: "Personal training", nutricion: "Nutrition & dietetics",
+  entrenamiento_personal: "Personal training", entrenamiento_deportivo: "Sports training",
+  nutricion: "Nutrition & dietetics",
   masajes: "Therapeutic massage", psicologia: "Psychology & therapy", fisioterapia: "Physical therapy",
-  enfermeria: "Home nursing", medicina_domicilio: "Home doctor visits",
+  odontologia: "Dentistry", pediatria: "Pediatrics", optometria: "Optometry",
+  enfermeria: "Home nursing", medicina_domicilio: "General medicine",
   terapia_lenguaje: "Speech therapy", terapia_ocupacional: "Occupational therapy",
   podologia: "Podiatry", acupuntura: "Acupuncture & alternative medicine",
   cuidado_adultos: "Elderly care", cuidado_discapacidad: "Disability care",
   cuidado_infantil: "Childcare / Nanny",
-  veterinaria: "Veterinary", peluqueria_canina: "Dog grooming",
+  veterinaria: "Veterinary", peluqueria_canina: "Dog grooming", cuido_mascotas: "Pet sitting & dog walking",
   // Belleza y estética
   peluqueria: "Hair & barber", maquillaje: "Makeup", unhas: "Nails / Manicure",
   pestanas: "Eyelashes", depilacion: "Hair removal", estetica_facial: "Facial aesthetics",
@@ -285,6 +296,7 @@ export const CATEGORY_LABELS_EN: Record<string, string> = {
   transporte_mascotas: "Pet transport",
   // Eventos
   fotografia_eventos: "Event photography", videografia: "Event videography",
+  chef: "Private chef & cooking",
   dj_sonido: "DJ & sound", catering: "Catering & banquets", decoracion: "Event decoration",
   animacion_infantil: "Kids entertainment", bartending: "Bartending",
   // Seguridad
@@ -324,6 +336,7 @@ export function getCategoryGroupLabel(groupId: string, locale?: string): string 
    Only HEALTH/medical services where the patient's age matters. ─── */
 export const HEALTH_CATEGORY_IDS = new Set<string>([
   "entrenamiento_personal", "nutricion", "masajes", "psicologia", "fisioterapia",
+  "odontologia", "pediatria", "optometria",
   "enfermeria", "medicina_domicilio", "terapia_lenguaje", "terapia_ocupacional",
   "podologia", "acupuntura", "cuidado_adultos", "cuidado_discapacidad", "cuidado_infantil",
 ]);
