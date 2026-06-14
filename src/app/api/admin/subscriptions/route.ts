@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getApiAdmin } from "@/lib/auth/admin";
 import {
-  getSubscription, getPayments, activatePaidPeriod, setSubscriptionStatus,
+  getSubscription, getPayments, activatePaidPeriod, setSubscriptionStatus, deleteSubscription,
 } from "@/lib/payments/subscriptions";
 import type { BillingCycle } from "@/lib/payments/config";
 
@@ -56,6 +56,12 @@ export async function POST(req: Request) {
   if (action === "deactivate" || action === "expire" || action === "cancel") {
     const status = action === "deactivate" ? "inactive" : action === "expire" ? "expired" : "cancelled";
     await setSubscriptionStatus(professionalId, status);
+    return NextResponse.json({ ok: true });
+  }
+
+  // Reset = hard-delete the subscription + its payments (no leftover preview data).
+  if (action === "reset") {
+    await deleteSubscription(professionalId);
     return NextResponse.json({ ok: true });
   }
 

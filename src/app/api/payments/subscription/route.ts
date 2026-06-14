@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { safeGetUser } from "@/lib/supabase/get-user";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { getApiAdmin } from "@/lib/auth/admin";
 import { getSubscription, getPayments } from "@/lib/payments/subscriptions";
 import { PAYMENTS_ENABLED } from "@/lib/payments/config";
 import { getPaymentGateway, isGatewayIntegrated } from "@/lib/payments/gateway";
@@ -20,18 +21,34 @@ async function resolveProfessional() {
   return { userId: user.id, professionalId: data.id as string };
 }
 
-// GET → the caller's own subscription + payment history (or enabled:false).
+// GET → the caller's own subscription + payment history.
+// While PAYMENTS_ENABLED is OFF this returns enabled:false and leaks nothing —
+// EXCEPT for an admin, who may preview the real pro-facing page from
+// /admin/suscripciones (admin is the only one who can see it before launch).
 export async function GET() {
-  if (!PAYMENTS_ENABLED) return NextResponse.json({ enabled: false, subscription: null, payments: [] });
+  const admin = await getApiAdmin(); // null when the caller is not an admin
+
+  // Non-admins, flag off → nothing (UI stays hidden, no data).
+  if (!PAYMENTS_ENABLED && !admin) {
+    return NextResponse.json({ enabled: false, subscription: null, payments: [] });
+  }
 
   const me = await resolveProfessional();
-  if (!me) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+  // A pro (or admin who is also a pro) sees their own data; an admin without a pro
+  // profile still gets the plans UI for preview, just with no subscription yet.
+  if (!me && !admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
 
-  const [subscription, payments] = await Promise.all([
-    getSubscription(me.professionalId),
-    getPayments(me.professionalId),
-  ]);
-  return NextResponse.json({ enabled: true, gatewayReady: isGatewayIntegrated(), subscription, payments });
+  const [subscription, payments] = me
+    ? await Promise.all([getSubscription(me.professionalId), getPayments(me.professionalId)])
+    : [null, []];
+
+  return NextResponse.json({
+    enabled: true,
+    preview: !PAYMENTS_ENABLED, // true = admin previewing before launch
+    gatewayReady: isGatewayIntegrated(),
+    subscription,
+    payments,
+  });
 }
 
 // POST → start a recurring CARD checkout (gateway-hosted). Inert until the flag is

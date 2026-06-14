@@ -175,6 +175,17 @@ export async function activatePaidPeriod(input: ActivateInput): Promise<Subscrip
   return data as SubscriptionRow;
 }
 
+/**
+ * Hard-delete a professional's subscription AND its payment ledger. Used by the
+ * admin "reset" action so preview/testing never leaves rows on a real pro — after
+ * this the pro is back to the default state (no row = full free access).
+ */
+export async function deleteSubscription(professionalId: string): Promise<void> {
+  const db = createAdminClient();
+  await db.from("subscription_payments").delete().eq("professional_id", professionalId);
+  await db.from("subscriptions").delete().eq("professional_id", professionalId);
+}
+
 /** Mark a subscription inactive/expired/cancelled (admin or expiry sweep). */
 export async function setSubscriptionStatus(
   professionalId: string,

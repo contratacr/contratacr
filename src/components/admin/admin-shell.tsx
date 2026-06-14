@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ShieldCheck, LogOut, Flag, Shield, Tag, UserX, LifeBuoy, Users } from "lucide-react";
+import { ShieldCheck, LogOut, Flag, Shield, Tag, UserX, LifeBuoy, Users, CreditCard } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
@@ -17,7 +17,7 @@ export function AdminShell({
   children,
 }: {
   adminName: string;
-  active?: "verificacion" | "reportes" | "aseguradoras" | "categorias" | "cuentas" | "soporte" | "usuarios";
+  active?: "verificacion" | "reportes" | "aseguradoras" | "categorias" | "cuentas" | "soporte" | "usuarios" | "suscripciones";
   children: React.ReactNode;
 }) {
   const [supportCount, setSupportCount] = useState(0);
@@ -51,6 +51,7 @@ export function AdminShell({
     { id: "aseguradoras", label: "Aseguradoras", icon: Shield, href: "/admin/aseguradoras" as const, badge: 0 },
     { id: "categorias", label: "Categorías", icon: Tag, href: "/admin/categorias" as const, badge: 0 },
     { id: "cuentas", label: "Cuentas", icon: UserX, href: "/admin/cuentas" as const, badge: 0 },
+    { id: "suscripciones", label: "Suscripciones", icon: CreditCard, href: "/admin/suscripciones" as const, badge: 0 },
     { id: "soporte", label: "Soporte", icon: LifeBuoy, href: "/admin/soporte" as const, badge: supportCount },
   ];
 

@@ -103,6 +103,17 @@ export function AdminSubscription({ professionalId }: { professionalId: string }
                   Desactivar
                 </button>
               )}
+              {sub && (
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => { if (confirm("¿Eliminar la suscripción y todo su historial de pagos? Esto deja al profesional sin ningún registro (acceso libre).")) act("reset"); }}
+                  className="rounded-lg border border-[#e5e7eb] text-[#9ca3af] text-xs font-semibold px-3 py-2 hover:border-red-300 hover:text-red-600 disabled:opacity-50"
+                  title="Borra la fila de suscripción y su historial — útil para no dejar datos de prueba"
+                >
+                  Eliminar / reset
+                </button>
+              )}
             </div>
           </div>
 
