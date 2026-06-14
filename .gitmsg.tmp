@@ -1,23 +1,32 @@
-fix(health booking DOB): autocomplete fecha de nacimiento from the padrón when available
+feat(subscriptions): complete pro-subscription infrastructure, INACTIVE behind PAYMENTS_ENABLED (admin-only)
 
-Root cause: the padrón data layer carried no birth date. The `padron` table has
-only cedula/nombre/papellido/sapellido, and `padron_lookup` returned only those,
-so the verifier always returned dob:null — the booking then always asked DOB
-manually. The route -> verifier -> booking auto-fill plumbing was already correct.
+Builds everything needed to charge professionals later (₡3.000/mes, ₡30.000/año
+= 2 meses gratis) WITHOUT activating or exposing it now. With the flag off
+(default) regular users see zero payment/subscription UI; admin management is the
+only visible surface (for testing the manual SINPE flow).
 
-Fix (server-side only, padrón stays private — no auth gate, verification flow
-untouched):
-- Migration 053: add padron.fecha_nacimiento (+ staging + swap fn) and return it
-  from the SECURITY DEFINER padron_lookup RPC (EXECUTE = service_role only).
-- Verifier lookup now returns the DOB (normalized YYYY-MM-DD) and derives isAdult
-  from it (falls back to true = electoral roll is 18+ when no DOB).
+- Feature flag: NEXT_PUBLIC_PAYMENTS_ENABLED (default false) in lib/payments/config.ts
+  (+ plans/prices/cycles, SINPE placeholder, formatColones).
+- DB (migration 054 — apply in Supabase): `subscriptions` (one per pro) +
+  `subscription_payments` ledger. RLS = owner-read only; all writes via
+  service-role (admin APIs / webhooks). NEVER stores card data (gateway refs only).
+- Backend (lib/payments/subscriptions.ts, server-only via admin client):
+  isSubscriptionActive, computePeriodEnd (monthly/annual), priceForCycle,
+  get/ensure subscription + payments, activatePaidPeriod (records payment + sets
+  active + extends), setSubscriptionStatus.
+- Gateway abstraction (lib/payments/gateway.ts): PaymentGateway interface + Stub
+  (throws "not integrated"); clear integration points for ONVO/Tilopay. Raw card
+  data never touches our server/DB.
+- APIs: /api/payments/subscription (pro self GET/POST — returns enabled:false &
+  refuses checkout while off), /api/payments/webhook (inert until wired),
+  /api/admin/subscriptions (admin-only: GET status+history, POST manual activate/
+  extend/deactivate — SINPE flow).
+- Pro UI (hidden): subscription-panel.tsx mounted only via a "Suscripción" tab
+  that exists ONLY when PAYMENTS_ENABLED; content branch double-guarded.
+- Admin UI (visible now, admin-only): AdminSubscription in the admin user profile
+  — status, manual SINPE activate/extend/deactivate, payment history.
 
-Behavior: when the padrón has a birth date for the cédula, health bookings
-autocomplete the DOB (self field locks; beneficiary field prefills) for both
-self and third-party. When the cédula isn't in the padrón, or the loaded roll
-has no DOB, the field is asked manually (unchanged fallback).
-
-NOTE: the bare TSE electoral roll has no birth date — DOB autocompletes only once
-a DOB-bearing dataset is loaded into padron.fecha_nacimiento.
+To activate later: apply migration 054, plug a gateway in gateway.ts, set the real
+SINPE number, update the legal pages, set NEXT_PUBLIC_PAYMENTS_ENABLED=true.
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>

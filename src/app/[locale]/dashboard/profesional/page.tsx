@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import {
   User, Image as ImageIcon, CalendarDays, Inbox, LogOut, ExternalLink, Wrench,
-  FolderOpen, ShieldCheck, Bell, Send, ClipboardList, Bookmark, Settings, LifeBuoy,
+  FolderOpen, ShieldCheck, Bell, Send, ClipboardList, Bookmark, Settings, LifeBuoy, CreditCard,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -26,6 +26,8 @@ import { NotificationsList } from "@/components/notifications/notifications-list
 import { AccountSecuritySection } from "@/components/account/account-security";
 import { CloseAccountSection } from "@/components/account/close-account-section";
 import { SupportTickets } from "@/components/support/support-tickets";
+import { SubscriptionPanel } from "@/components/dashboard/pro/subscription-panel";
+import { PAYMENTS_ENABLED } from "@/lib/payments/config";
 import { createClient } from "@/lib/supabase/client";
 import { getInitials } from "@/lib/utils";
 import { useRouter } from "@/i18n/navigation";
@@ -37,6 +39,7 @@ import { cn } from "@/lib/utils";
 // "Contratar servicios" (acting as a client) — plus a single notifications stream.
 type Tab =
   | "profile" | "services" | "photos" | "availability" | "bookings" | "proposals" | "verificacion"
+  | "suscripcion"
   | "sent_bookings" | "sent_projects" | "saved"
   | "notifications" | "soporte" | "cuenta";
 
@@ -51,6 +54,7 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
   bookings: <Inbox className="h-4 w-4" />,
   proposals: <FolderOpen className="h-4 w-4" />,
   verificacion: <ShieldCheck className="h-4 w-4" />,
+  suscripcion: <CreditCard className="h-4 w-4" />,
   sent_bookings: <Send className="h-4 w-4" />,
   sent_projects: <ClipboardList className="h-4 w-4" />,
   saved: <Bookmark className="h-4 w-4" />,
@@ -63,8 +67,13 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
 // proPanel.subtitles.<tab>), so it's always obvious which role a section belongs to.
 const TABS_WITH_SUBTITLE = new Set<Tab>(["bookings", "proposals", "sent_bookings", "sent_projects", "saved"]);
 
-// Sidebar layout — two labeled groups + a standalone notifications entry.
-const GROUP_PRO: Tab[] = ["profile", "services", "photos", "availability", "bookings", "proposals", "verificacion"];
+// Sidebar layout — two labeled groups + a standalone notifications entry. The
+// "Suscripción" tab only appears when PAYMENTS_ENABLED is on; with the flag off it
+// is never in the nav and its content branch never renders (invisible to users).
+const GROUP_PRO: Tab[] = [
+  "profile", "services", "photos", "availability", "bookings", "proposals", "verificacion",
+  ...(PAYMENTS_ENABLED ? (["suscripcion"] as Tab[]) : []),
+];
 const GROUP_CLIENT: Tab[] = ["sent_bookings", "sent_projects", "saved"];
 
 export default function ProDashboardPage() {
@@ -336,6 +345,8 @@ export default function ProDashboardPage() {
                       onSaved={handleSaved}
                     />
                   )}
+                  {/* Subscription — gated by the feature flag; never renders while off. */}
+                  {activeTab === "suscripcion" && PAYMENTS_ENABLED && <SubscriptionPanel />}
                   {activeTab === "bookings" && <BookingRequests />}
                   {activeTab === "proposals" && (
                     <ProposalsTab categoryId={pro.category_id} services={pro.services ?? []} />

@@ -9,6 +9,7 @@ import { Link } from "@/i18n/navigation";
 import { getInitials } from "@/lib/utils";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { verificationLabel, verificationPillClasses, type VerificationStatus } from "@/lib/verification";
+import { AdminSubscription } from "@/components/admin/admin-subscription";
 
 type Profile = {
   id: string; full_name: string | null; email: string | null; cedula: string | null;
@@ -201,6 +202,9 @@ export function AdminUserProfile({ userId }: { userId: string }) {
           </ul>
         )}
       </Section>
+
+      {/* ── Subscription (pro only) — admin-only management, incl. manual SINPE ── */}
+      {pro && <AdminSubscription professionalId={pro.id} />}
 
       {/* ── Verification history + appeals (pro only) ── */}
       {pro && (
