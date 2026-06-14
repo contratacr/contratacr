@@ -32,6 +32,10 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- RPC now also returns the birth date (server-side only; padrón stays private).
+-- DROP first: CREATE OR REPLACE cannot change a function's OUT/return type, so
+-- adding the fecha_nacimiento column to the result requires recreating it.
+DROP FUNCTION IF EXISTS public.padron_lookup(text);
+
 CREATE OR REPLACE FUNCTION public.padron_lookup(p_cedula text)
 RETURNS TABLE (nombre text, papellido text, sapellido text, fecha_nacimiento date)
 LANGUAGE sql
