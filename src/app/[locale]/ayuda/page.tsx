@@ -17,48 +17,30 @@ const FAQ_ICONS = [
   <HelpCircle key="6" className="h-4 w-4" />, <UserCheck key="7" className="h-4 w-4" />,
 ];
 
-function FaqAccordion() {
-  const t = useTranslations("ayuda");
-  const [open, setOpen] = useState<number | null>(null);
-  return (
-    <div className="divide-y divide-gray-100">
-      {FAQ_ICONS.map((icon, i) => (
-        <div key={i}>
-          <button
-            onClick={() => setOpen(open === i ? null : i)}
-            className="w-full flex items-center justify-between py-5 text-left gap-4 group"
-          >
-            <div className="flex items-center gap-3 flex-1">
-              <span className="text-[#009FD9] shrink-0">{icon}</span>
-              <span className="text-base font-semibold text-[#1a2744] group-hover:text-[#009FD9] transition-colors">
-                {t(`faq${i}Q`)}
-              </span>
-            </div>
-            <ChevronDown
-              className={`h-5 w-5 text-gray-400 shrink-0 transition-transform duration-200 ${open === i ? "rotate-180 text-[#009FD9]" : ""}`}
-            />
-          </button>
-          {open === i && (
-            <p className="pb-5 text-sm text-gray-500 leading-relaxed pl-7">{t(`faq${i}A`)}</p>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-/* ── Help Categories (icons + href in code; text from i18n) ── */
-const HELP_CATEGORIES = [
-  { icon: <UserCheck className="h-6 w-6 text-[#009FD9]" />, href: null },
-  { icon: <Search className="h-6 w-6 text-[#009FD9]" />, href: "/buscar" as const },
-  { icon: <ShieldCheck className="h-6 w-6 text-[#009FD9]" />, href: null },
-  { icon: <CalendarDays className="h-6 w-6 text-[#009FD9]" />, href: "/publicar-proyecto" as const },
-  { icon: <Star className="h-6 w-6 text-[#009FD9]" />, href: null },
-  { icon: <MessageSquare className="h-6 w-6 text-[#009FD9]" />, href: "/soporte" as const },
+/* ── Help categories. Each card leads to ITS ANSWER: most open + scroll to the
+   matching FAQ item below (`faq` index); the support card navigates to /soporte. ── */
+const HELP_CATEGORIES: { icon: React.ReactNode; faq?: number; href?: "/soporte" }[] = [
+  { icon: <UserCheck className="h-6 w-6 text-[#009FD9]" />, faq: 1 },       // Crear tu cuenta → registro
+  { icon: <Search className="h-6 w-6 text-[#009FD9]" />, faq: 3 },          // Buscar profesionales
+  { icon: <ShieldCheck className="h-6 w-6 text-[#009FD9]" />, faq: 2 },     // Verificación de identidad
+  { icon: <CalendarDays className="h-6 w-6 text-[#009FD9]" />, faq: 6 },    // Solicitudes y proyectos
+  { icon: <Star className="h-6 w-6 text-[#009FD9]" />, faq: 5 },            // Reseñas y calificaciones
+  { icon: <MessageSquare className="h-6 w-6 text-[#009FD9]" />, href: "/soporte" }, // Contactar soporte
 ];
 
 export default function AyudaPage() {
   const t = useTranslations("ayuda");
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  // Open the matching FAQ answer and scroll it into view (clears the fixed navbar
+  // via scroll-mt on each item). Used by the category cards above.
+  function goToFaq(i: number) {
+    setOpenFaq(i);
+    requestAnimationFrame(() => {
+      document.getElementById(`faq-${i}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-white">
       <LandingNavbar />
@@ -85,7 +67,7 @@ export default function AyudaPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-10">
               {HELP_CATEGORIES.map((cat, i) => {
                 const card = (
-                  <div className="bg-white border border-gray-100 rounded-2xl p-6 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 h-full">
+                  <div className="bg-white border border-gray-100 rounded-2xl p-6 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 h-full text-left">
                     <div className="mb-3">{cat.icon}</div>
                     <h3 className="text-sm font-bold text-[#1a2744] mb-1">{t(`cat${i}Title`)}</h3>
                     <p className="text-sm text-gray-400 leading-relaxed">{t(`cat${i}Desc`)}</p>
@@ -96,7 +78,14 @@ export default function AyudaPage() {
                     {cat.href ? (
                       <Link href={cat.href} className="block h-full">{card}</Link>
                     ) : (
-                      card
+                      <button
+                        type="button"
+                        onClick={() => goToFaq(cat.faq!)}
+                        className="block h-full w-full"
+                        aria-label={t(`cat${i}Title`)}
+                      >
+                        {card}
+                      </button>
                     )}
                   </FadeInUp>
                 );
@@ -112,7 +101,30 @@ export default function AyudaPage() {
           <FadeInUp>
             <h2 className="text-2xl font-extrabold text-[#1a2744] mb-1">{t("faqTitle")}</h2>
             <p className="text-gray-500 mb-8 text-sm">{t("faqSubtitle")}</p>
-            <FaqAccordion />
+            <div className="divide-y divide-gray-100">
+              {FAQ_ICONS.map((icon, i) => (
+                <div key={i} id={`faq-${i}`} className="scroll-mt-24">
+                  <button
+                    onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                    aria-expanded={openFaq === i}
+                    className="w-full flex items-center justify-between py-5 text-left gap-4 group"
+                  >
+                    <div className="flex items-center gap-3 flex-1">
+                      <span className="text-[#009FD9] shrink-0">{icon}</span>
+                      <span className="text-base font-semibold text-[#1a2744] group-hover:text-[#009FD9] transition-colors">
+                        {t(`faq${i}Q`)}
+                      </span>
+                    </div>
+                    <ChevronDown
+                      className={`h-5 w-5 text-gray-400 shrink-0 transition-transform duration-200 ${openFaq === i ? "rotate-180 text-[#009FD9]" : ""}`}
+                    />
+                  </button>
+                  {openFaq === i && (
+                    <p className="pb-5 text-sm text-gray-500 leading-relaxed pl-7">{t(`faq${i}A`)}</p>
+                  )}
+                </div>
+              ))}
+            </div>
           </FadeInUp>
         </div>
       </section>
