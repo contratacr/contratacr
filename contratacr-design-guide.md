@@ -828,3 +828,14 @@ App copy must match the model: verified pros show "Verificado"; unverified ones
 simply don't show it — never describe a public "Identidad sin verificar" label.
 Keep the meaning accurate (identity is real/verifiable via the TSE padrón; NOT a
 quality rating). Prefer commas over em-dashes "—" in Spanish UI copy.
+
+## 45. Social links: username in, app builds the URL, icons out (updates §42)
+
+The pro enters ONLY a username per network (Instagram, Facebook, TikTok), shown
+with a visible prefix (`instagram.com/`, `facebook.com/`, `tiktok.com/@`) so it's
+obvious to type just the handle. Be lenient on input (`cleanUsername` strips `@`,
+`www.`, or a pasted full URL to the handle); validate plausibility
+(`isValidUsername`); store ONLY the clean username (no URLs). The public profile
+builds the link with `buildSocialUrl` and shows icons only (open in a new tab),
+only for the networks filled in. All in `src/lib/social.ts`. No website field
+(not a username), no feeds/OAuth/Meta API — username → constructed link → icon.
