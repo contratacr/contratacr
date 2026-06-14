@@ -10,6 +10,7 @@ import { type ContactPreference } from "@/lib/constants";
 import { crTodayISO, isPastDateTimeCR, isTooSoonCR, nextFullHourCR, LEAD_MINUTES } from "@/lib/time-cr";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { TimeSelect, to12h } from "@/components/ui/time-select";
+import { SaveStatus } from "@/components/dashboard/save-status";
 
 type Slot = { id?: string; slot_date: string; slot_time: string; location_id?: string | null; category_id?: string | null };
 
@@ -151,6 +152,9 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
   const [loading, setLoading] = useState(true);
   const [savingVisibility, setSavingVisibility] = useState(false);
   const [showPrivateConfirm, setShowPrivateConfirm] = useState(false);
+  // App-wide autosave feedback: a brief "Guardado" pulse after each persisted action.
+  const [justSaved, setJustSaved] = useState(false);
+  function pulseSaved() { setJustSaved(true); setTimeout(() => setJustSaved(false), 2500); }
 
   // Close the "hacer privada" confirm on Escape (it already closes on scrim tap).
   useEffect(() => {
@@ -230,6 +234,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
     // /buscar card + schedule logic stay correct now that this is the only control.
     await supabase.from("professionals").update({ availability_public: true, contact_preference: "ambas" }).eq("id", professionalId);
     setSavingVisibility(false);
+    pulseSaved();
     onSaved?.();
   }
 
@@ -311,6 +316,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
       setIsPublic(true);
       await supabase.from("professionals").update({ availability_public: true, contact_preference: "ambas" }).eq("id", professionalId);
     }
+    pulseSaved();
     onSaved?.();
   }
 
@@ -336,6 +342,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
     setSlots((prev) => prev.filter((s) => s.id !== slot.id));
     const supabase = createClient();
     await supabase.from("availability_slots").delete().eq("id", slot.id);
+    pulseSaved();
     onSaved?.();
   }
 
@@ -344,6 +351,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
     setSlots((prev) => prev.filter((s) => s.slot_date !== date));
     const supabase = createClient();
     await supabase.from("availability_slots").delete().in("id", ids);
+    pulseSaved();
     onSaved?.();
   }
 
@@ -384,6 +392,8 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
 
   return (
     <div className="flex flex-col gap-4">
+      {/* App-wide autosave: each action persists immediately; consistent status. */}
+      <SaveStatus saving={savingVisibility || busy} saved={justSaved} />
       {/* ── ONE control (privada vs pública) decides everything below. Private =
              WhatsApp-only (no agenda); pública = agenda publicada. WhatsApp is
              always available. ── */}

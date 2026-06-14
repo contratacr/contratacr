@@ -4,12 +4,13 @@ import { useState, useRef, useEffect } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
+import { SaveStatus } from "@/components/dashboard/save-status";
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { LanguagesInput } from "@/components/ui/languages-input";
 import { WorkplacesPicker, type Workplace } from "@/components/maps/workplaces-picker";
 import { createClient } from "@/lib/supabase/client";
-import { Camera, Check, X, Plus, ChevronDown, ShieldCheck, Lock, Award } from "lucide-react";
+import { Camera, X, Plus, ChevronDown, ShieldCheck, Lock, Award } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { computeSearchAreas, primaryArea } from "@/lib/location";
 import { getProvinceById, getCantonById } from "@/lib/data/cr-geography";
@@ -320,6 +321,9 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
 
   return (
     <div className="flex flex-col gap-3 max-w-lg">
+      {/* App-wide autosave: one consistent status indicator (no save button). */}
+      <SaveStatus saving={saving || autoSaving} saved={saved} dirty={dirty} />
+
       {error && (
         <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-600">
           {error}
@@ -601,25 +605,8 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
 
       {/* Contact preference lives in the Disponibilidad tab now. */}
 
-      {/* Save bar — always visible (auto-save also runs 1.5s after each edit) */}
-      <div className="flex items-center gap-3 pt-1">
-        <Button onClick={() => handleSave(false)} loading={saving}>
-          {saving ? t("saving") : t("save")}
-        </Button>
-        {autoSaving && (
-          <span className="text-sm text-[#6b7280] font-medium">{t("savingAuto")}</span>
-        )}
-        {!autoSaving && dirty && !saved && (
-          <span className="text-sm text-amber-600 font-medium">{t("unsaved")}</span>
-        )}
-        {saved && (
-          <span className="flex items-center gap-1 text-sm text-emerald-600 font-medium">
-            <Check className="h-4 w-4" /> {t("saved")}
-          </span>
-        )}
-      </div>
-
-      {/* (Cerrar / deshabilitar cuenta lives in "Cuenta y seguridad", not here.) */}
+      {/* No save button — changes autosave (debounced) and the SaveStatus at the
+          top reflects the state. The guard still flushes pending edits on nav. */}
 
       {/* Designed unsaved-changes dialog (replaces the browser default) */}
       <UnsavedChangesGuard dirty={dirty} onSave={() => handleSave(false)} />

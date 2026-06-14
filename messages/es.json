@@ -2184,5 +2184,10 @@
       "feature1": "Presupuestos en tiempo real",
       "feature2": "Historial de contrataciones"
     }
+  },
+  "saveStatus": {
+    "saving": "Guardando…",
+    "saved": "Guardado",
+    "unsaved": "Sin guardar"
   }
 }

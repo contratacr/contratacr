@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Upload, X, Loader2 } from "lucide-react";
+import { SaveStatus } from "@/components/dashboard/save-status";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { MAX_PORTFOLIO_PHOTOS, cldThumb } from "@/lib/cloudinary";
@@ -38,6 +39,9 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, s
     : initialUrls.map((url) => ({ url, profession: undefined }));
   const [items, setItems] = useState<PortfolioItem[]>(seed);
   const [uploadingFor, setUploadingFor] = useState<string | null>(null);
+  // App-wide autosave feedback.
+  const [saving, setSaving] = useState(false);
+  const [justSaved, setJustSaved] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const pendingServiceRef = useRef<string | undefined>(undefined);
 
@@ -63,6 +67,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, s
 
   async function persist(next: PortfolioItem[]) {
     setItems(next);
+    setSaving(true);
     const supabase = createClient();
     const urls = next.map((it) => it.url);
     let { error } = await supabase
@@ -73,6 +78,9 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, s
     if (error && /portfolio_items|column|schema cache|PGRST204|could not find/i.test(error.message)) {
       ({ error } = await supabase.from("professionals").update({ portfolio_urls: urls }).eq("id", professionalId));
     }
+    setSaving(false);
+    setJustSaved(true);
+    setTimeout(() => setJustSaved(false), 2500);
     onSaved?.();
   }
 
@@ -111,6 +119,8 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, s
 
   return (
     <div className="flex flex-col gap-6">
+      {/* App-wide autosave: uploads/changes persist immediately; consistent status. */}
+      <SaveStatus saving={saving || !!uploadingFor} saved={justSaved} />
       <p className="text-sm text-[#6b7280]">
         {t.rich("intro", { ...rich, max: MAX_PORTFOLIO_PHOTOS })}
       </p>

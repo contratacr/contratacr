@@ -9,6 +9,7 @@ import { PriceInput } from "@/components/ui/price-input";
 import { CategorySearch } from "@/components/ui/category-search";
 import { createClient } from "@/lib/supabase/client";
 import { getCategoryLabel } from "@/lib/data/categories";
+import { SaveStatus } from "@/components/dashboard/save-status";
 import { PRICING_TYPES, formatServicePrice, type PricingType } from "@/lib/pricing";
 
 export type ProService = {
@@ -233,6 +234,8 @@ export function ServicesEditor({
 
   return (
     <div className="flex flex-col gap-4">
+      {/* App-wide autosave: changes persist per action; consistent status. */}
+      <SaveStatus saving={saving} saved={saved} />
       <p className="text-sm text-[#6b7280]">
         {t.rich("intro", rich)}
       </p>

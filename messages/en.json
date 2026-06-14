@@ -2184,5 +2184,10 @@
       "feature1": "Real-time estimates",
       "feature2": "Hiring history"
     }
+  },
+  "saveStatus": {
+    "saving": "Saving…",
+    "saved": "Saved",
+    "unsaved": "Unsaved"
   }
 }

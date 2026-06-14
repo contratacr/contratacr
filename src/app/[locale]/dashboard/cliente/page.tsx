@@ -21,6 +21,8 @@ import { NotificationsList } from "@/components/notifications/notifications-list
 import { PhoneInput } from "@/components/ui/phone-input";
 import { CloseAccountSection } from "@/components/account/close-account-section";
 import { AccountSecuritySection } from "@/components/account/account-security";
+import { SaveStatus } from "@/components/dashboard/save-status";
+import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
 import { SupportTickets } from "@/components/support/support-tickets";
 import { ClientActivity } from "@/components/dashboard/client-activity";
 
@@ -38,6 +40,10 @@ export default function ClientDashboardPage() {
   const [profileForm, setProfileForm] = useState({ full_name: "", phone: "" });
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileSaved, setProfileSaved] = useState(false);
+  // App-wide autosave: edits mark the form dirty and debounce a save.
+  const [profileDirty, setProfileDirty] = useState(false);
+  const [profileNonce, setProfileNonce] = useState(0);
+  function touchProfile() { setProfileSaved(false); setProfileDirty(true); setProfileNonce((n) => n + 1); }
   const [photoUploading, setPhotoUploading] = useState(false);
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
@@ -123,6 +129,7 @@ export default function ClientDashboardPage() {
 
   async function saveProfile() {
     if (!user) return;
+    setProfileDirty(false);
     setProfileSaving(true);
     const supabase = createClient();
     // Never overwrite a verified official name (it's locked; corrections go
@@ -141,6 +148,14 @@ export default function ClientDashboardPage() {
     setProfileSaved(true);
     setTimeout(() => setProfileSaved(false), 3000);
   }
+
+  // Debounced autosave — saves 1.5s after the last edit (no save button).
+  useEffect(() => {
+    if (!profileDirty) return;
+    const id = setTimeout(() => { saveProfile(); }, 1500);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profileNonce]);
 
   async function handlePhotoRemove() {
     if (!user) return;
@@ -349,6 +364,8 @@ export default function ClientDashboardPage() {
               {/* MI PERFIL — one container, divider-separated subsections inside. */}
               {activeTab === "profile" && (
                 <div className="flex flex-col gap-6">
+                  {/* App-wide autosave — consistent status, no save button. */}
+                  <SaveStatus saving={profileSaving} saved={profileSaved} dirty={profileDirty} />
                   {/* Foto */}
                   <div className="flex items-center gap-4">
                     <div className="relative h-16 w-16 rounded-full overflow-hidden bg-[#EBF5FB] flex items-center justify-center shrink-0">
@@ -396,7 +413,7 @@ export default function ClientDashboardPage() {
                           className={cn(inputClass, cedulaVerified && "bg-[#f3f4f6] cursor-not-allowed pr-10")}
                           value={profileForm.full_name}
                           disabled={cedulaVerified}
-                          onChange={(e) => setProfileForm((f) => ({ ...f, full_name: e.target.value }))}
+                          onChange={(e) => { setProfileForm((f) => ({ ...f, full_name: e.target.value })); touchProfile(); }}
                         />
                         {cedulaVerified && <Lock className="h-4 w-4 text-[#9ca3af] absolute right-3 top-1/2 -translate-y-1/2" />}
                       </div>
@@ -409,14 +426,8 @@ export default function ClientDashboardPage() {
                     <PhoneInput
                       label={<>{t("phone")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span></>}
                       value={profileForm.phone}
-                      onChange={(digits) => setProfileForm((f) => ({ ...f, phone: digits }))}
+                      onChange={(digits) => { setProfileForm((f) => ({ ...f, phone: digits })); touchProfile(); }}
                     />
-                    <div className="flex items-center gap-3">
-                      <Button onClick={saveProfile} loading={profileSaving} disabled={profileSaving}>
-                        {t("saveChanges")}
-                      </Button>
-                      {profileSaved && <span className="text-sm text-emerald-600 font-medium">{t("saved")}</span>}
-                    </div>
                   </div>
 
                   {/* Ofrecer mis servicios — same account, adds the pro role. */}
@@ -445,6 +456,9 @@ export default function ClientDashboardPage() {
           </div>
         </div>
       </main>
+
+      {/* Flush any pending autosave if the user navigates away mid-debounce. */}
+      <UnsavedChangesGuard dirty={profileDirty} onSave={saveProfile} />
 
       <LandingFooter />
     </div>
