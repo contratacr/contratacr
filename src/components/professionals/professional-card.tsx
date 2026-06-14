@@ -201,15 +201,31 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
                   <h3 className="font-bold text-[#111827] text-[15px] leading-tight hover:text-[#009FD9] transition-colors line-clamp-2 md:line-clamp-1">{brandPrimary}</h3>
                 </Link>
                 {verifiedBadge}
-                {/* Price — just the amount, no "Desde/Tarifa" word. Shown only when
-                    there's a real numeric price. */}
+                {/* Price — just the amount, no "Desde/Tarifa" word. On DESKTOP it sits
+                    far right on the name line; on MOBILE it moves to the secondary line
+                    below (so the name line stays clean and never wraps awkwardly). */}
                 {priceLabel.includes("₡") && (
-                  <span className="shrink-0 font-bold text-[#111827] text-sm whitespace-nowrap md:ml-auto">{priceLabel}</span>
+                  <span className="hidden md:inline-block shrink-0 font-bold text-[#111827] text-sm whitespace-nowrap md:ml-auto">{priceLabel}</span>
                 )}
               </div>
 
+              {/* DESKTOP secondary: the PERSON's name (shown only when a company leads). */}
               {brandSecondary && (
-                <p className="text-[11px] font-medium text-[#6b7280] truncate -mt-0.5">{brandSecondary}</p>
+                <p className="hidden md:block text-[11px] font-medium text-[#6b7280] truncate -mt-0.5">{brandSecondary}</p>
+              )}
+
+              {/* MOBILE secondary line: the PERSON's name (left) + price (right). The
+                  person name ALWAYS shows here when there's a company, so it can never
+                  disappear on mobile; the price is right-aligned and tidy. */}
+              {(brandSecondary || priceLabel.includes("₡")) && (
+                <div className="md:hidden flex items-center gap-2 -mt-0.5 pr-9">
+                  {brandSecondary && (
+                    <p className="min-w-0 truncate text-[11px] font-medium text-[#6b7280]">{brandSecondary}</p>
+                  )}
+                  {priceLabel.includes("₡") && (
+                    <span className="ml-auto shrink-0 font-bold text-[#111827] text-sm whitespace-nowrap">{priceLabel}</span>
+                  )}
+                </div>
               )}
 
               {/* Profession tags — soft, muted, few (categories, not trust). */}
