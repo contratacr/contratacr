@@ -1,16 +1,23 @@
-feat(categories): complete health set + add chef, gas, sports training, appliance repair, pet care
+fix(health booking DOB): autocomplete fecha de nacimiento from the padrón when available
 
-- Health: add Odontología, Pediatría, Optometría (es_salud), relabel
-  medicina_domicilio -> "Medicina general"; all flagged for the booking DOB step.
-- New hireable services: Chef privado y cocina (eventos), Servicio de gas +
-  Reparación de electrodomésticos (hogar), Entrenamiento deportivo + Cuido y
-  paseo de mascotas (salud group, NOT es_salud — no DOB).
-- EN labels added for every new id. Taxonomy is centralized in categories.ts, so
-  the megamenu, /categorias, the /buscar filter, project + profession selectors
-  and the "¿no ves tu categoría?" flow all pick them up automatically.
-- Migration 052 inserts the new categories into the DB table and sets es_salud
-  for the new health ones (must be applied in Supabase). category_id FK was
-  already dropped (013), so existing data is unaffected.
-- Home carousel left as its curated image-backed subset (new ids have no image).
+Root cause: the padrón data layer carried no birth date. The `padron` table has
+only cedula/nombre/papellido/sapellido, and `padron_lookup` returned only those,
+so the verifier always returned dob:null — the booking then always asked DOB
+manually. The route -> verifier -> booking auto-fill plumbing was already correct.
+
+Fix (server-side only, padrón stays private — no auth gate, verification flow
+untouched):
+- Migration 053: add padron.fecha_nacimiento (+ staging + swap fn) and return it
+  from the SECURITY DEFINER padron_lookup RPC (EXECUTE = service_role only).
+- Verifier lookup now returns the DOB (normalized YYYY-MM-DD) and derives isAdult
+  from it (falls back to true = electoral roll is 18+ when no DOB).
+
+Behavior: when the padrón has a birth date for the cédula, health bookings
+autocomplete the DOB (self field locks; beneficiary field prefills) for both
+self and third-party. When the cédula isn't in the padrón, or the loaded roll
+has no DOB, the field is asked manually (unchanged fallback).
+
+NOTE: the bare TSE electoral roll has no birth date — DOB autocompletes only once
+a DOB-bearing dataset is loaded into padron.fecha_nacimiento.
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>

@@ -52,8 +52,9 @@ export async function GET(
   const result = await getIdentityVerifier().lookup(cedula);
 
   if (result.found && result.fullName) {
-    // dob is null for the padrón (electoral roll has no birth date); isAdult is
-    // true because the roll only contains citizens 18+.
+    // dob is the padrón birth date when present (migration 053) so health bookings
+    // can autocomplete it; null when the loaded roll has none (then asked manually).
+    // isAdult derives from dob when known, else true (electoral roll = citizens 18+).
     return NextResponse.json({
       found: true,
       fullName: result.fullName,
