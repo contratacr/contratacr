@@ -94,36 +94,71 @@ export async function GET(req: Request) {
   }
 
   // ── Search ──────────────────────────────────────────────────────────────
+  // Smart, word-based matching: EVERY word in the query must appear somewhere in
+  // the full name (any order, partial) — so "Isaac Sanchez" finds "Isaac Alberto
+  // Sanchez Monge". Email matches the whole query; cédula matches partially.
   const q = (url.searchParams.get("q") ?? "").trim();
   if (q.length < 2) return NextResponse.json({ users: [] });
 
-  const like = `%${q}%`;
+  // Strip chars that have meaning in the PostgREST or()/and() grammar.
+  const safe = (s: string) => s.replace(/[(),.*:%]/g, " ").trim();
+  const tokens = safe(q).split(/\s+/).filter((t) => t.length > 0);
   const ced = cleanId(q);
-  const ors = [`full_name.ilike.${like}`, `email.ilike.${like}`];
+
+  const ors: string[] = [];
+  if (tokens.length > 1) {
+    // AND across words so every word must be present in the name (order-free).
+    ors.push(`and(${tokens.map((t) => `full_name.ilike.%${t}%`).join(",")})`);
+  } else if (tokens.length === 1) {
+    ors.push(`full_name.ilike.%${tokens[0]}%`);
+  }
+  const safeQ = safe(q);
+  if (safeQ) ors.push(`email.ilike.%${safeQ}%`);
   if (ced) ors.push(`cedula.ilike.%${ced}%`);
+  if (ors.length === 0) return NextResponse.json({ users: [] });
 
   const { data } = await db
     .from("profiles")
     .select("id, full_name, email, cedula, role, avatar_url, is_disabled, professionals(verification_status, is_banned)")
     .or(ors.join(","))
-    .limit(25);
+    .limit(50);
 
-  const users = (data ?? []).map((u) => {
+  // Rank in JS (accent-insensitive): full-string + word-start matches score higher.
+  const norm = (s: string | null) => (s ?? "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  const nq = norm(q);
+  const nTokens = tokens.map(norm);
+  const score = (u: { full_name: string | null; email: string | null }) => {
+    const name = norm(u.full_name);
+    const words = name.split(/\s+/).filter(Boolean);
+    let s = 0;
+    if (nq && name.includes(nq)) s += 5;                       // contiguous full match
+    for (const t of nTokens) {
+      if (words.some((w) => w.startsWith(t))) s += 2;          // matches a name word start
+      else if (name.includes(t)) s += 1;                       // partial anywhere
+    }
+    if (nq && norm(u.email).includes(nq)) s += 1;
+    return s;
+  };
+
+  const users = (data ?? [])
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const pro = Array.isArray((u as any).professionals) ? (u as any).professionals[0] : (u as any).professionals;
-    return {
-      id: u.id,
-      full_name: u.full_name,
-      email: u.email,
-      cedula: u.cedula ? maskId(u.cedula) : null,
-      role: u.role,
-      avatar_url: u.avatar_url,
-      is_disabled: u.is_disabled,
-      isPro: !!pro,
-      verification_status: pro?.verification_status ?? null,
-      is_banned: pro?.is_banned ?? false,
-    };
-  });
+    .sort((a: any, b: any) => score(b) - score(a) || norm(a.full_name).localeCompare(norm(b.full_name)))
+    .map((u) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const pro = Array.isArray((u as any).professionals) ? (u as any).professionals[0] : (u as any).professionals;
+      return {
+        id: u.id,
+        full_name: u.full_name,
+        email: u.email,
+        cedula: u.cedula ? maskId(u.cedula) : null,
+        role: u.role,
+        avatar_url: u.avatar_url,
+        is_disabled: u.is_disabled,
+        isPro: !!pro,
+        verification_status: pro?.verification_status ?? null,
+        is_banned: pro?.is_banned ?? false,
+      };
+    });
 
   return NextResponse.json({ users });
 }
