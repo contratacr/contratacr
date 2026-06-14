@@ -217,11 +217,17 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   // The reason is shown as a flush top band on the card; here we only render the
   // compact contact actions so every card stays the same tidy height.
   if (!canBook) {
-    // TYPE 3 — private availability: no schedule, no "Solicitar servicio". The
-    // contact actions are the ONLY buttons here, so they STACK vertically
-    // (WhatsApp above Llamar). Pinned to the bottom so the card height is unchanged.
+    // TYPE 3 — no public schedule. Contact actions are the ONLY buttons, stacked
+    // (WhatsApp above Llamar), bottom-pinned so the card height is unchanged. When
+    // availability was hidden ON PURPOSE (private), say so; a WhatsApp-only pref
+    // just shows the buttons. Note fills the empty space — it doesn't grow the card.
     return (
-      <div className="flex h-full flex-col justify-end">
+      <div className="flex h-full flex-col justify-end gap-1.5">
+        {!availabilityPublic && (
+          <div className="rounded-lg bg-[#f9fafb] border border-[#f3f4f6] px-2.5 py-2">
+            <p className="text-[11px] text-[#6b7280] leading-snug">{t("availabilityHiddenNote")}</p>
+          </div>
+        )}
         {contactButtons(true)}
         {selfModal}
       </div>
@@ -249,7 +255,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     return (
       <div className="flex h-full flex-col justify-end gap-1.5">
         <div className="rounded-lg bg-[#f9fafb] border border-[#f3f4f6] px-2.5 py-2">
-          <p className="text-[11px] text-[#6b7280] leading-snug">{t("coordinateWhatsApp")}</p>
+          <p className="text-[11px] text-[#6b7280] leading-snug">{t("noScheduleNote")}</p>
         </div>
         {contactButtons(true)}
         {selfModal}
