@@ -35,7 +35,7 @@ const AUTO_SPEED = 0.019;     // px/ms (~19px/s) — slow, relaxed glide.
 const NUDGE_MS = 480;         // arrow-tween duration.
 const easeInOut = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
 
-function Card({ id, lifted }: { id: string; lifted: boolean }) {
+function Card({ id, lifted, onLinkClick }: { id: string; lifted: boolean; onLinkClick: (e: React.MouseEvent) => void }) {
   const locale = useLocale();
   const label = getCategoryLabel(id, locale);
   return (
@@ -46,6 +46,9 @@ function Card({ id, lifted }: { id: string; lifted: boolean }) {
     >
       <Link
         href={`/buscar?categoria=${id}`}
+        // Navigates to /buscar pre-filtered by this category. A clean tap/click
+        // navigates; only the click that ENDS a real drag is cancelled (guard).
+        onClick={onLinkClick}
         draggable={false}
         // No per-card will-change/3d here — that promoted all 38 cards to their
         // own GPU layers and choked mobile. They now paint into the single track
@@ -159,20 +162,30 @@ export function CategoryCarousel() {
   const onPointerMove = (e: React.PointerEvent) => {
     if (!drag.current.active) return;
     const dx = e.clientX - drag.current.startX;
-    if (Math.abs(dx) > 4) drag.current.moved = true;
+    // 10px threshold so a finger tap (which wobbles a few px) still counts as a
+    // tap, not a drag — taps must navigate, especially on mobile.
+    if (Math.abs(dx) > 10) drag.current.moved = true;
     pos.current = drag.current.startPos + dx; // wrapped in the next frame
   };
   const endDrag = (e: React.PointerEvent) => {
     if (!drag.current.active) return;
     viewport.current?.classList.remove("is-dragging");
     viewport.current?.releasePointerCapture?.(e.pointerId);
-    if (drag.current.moved) {
-      // Swallow the click that follows a real drag so it doesn't navigate.
-      const stop = (ev: Event) => { ev.preventDefault(); ev.stopPropagation(); };
-      track.current?.addEventListener("click", stop, { capture: true, once: true });
-    }
+    // NOTE: we do NOT swallow clicks via a lingering listener here. A real drag
+    // is cancelled by the card's onClick guard (checks drag.current.moved, which
+    // resets on every pointerdown) — so a tap that follows a swipe still works.
     drag.current.active = false;
     paused.current = false;
+  };
+
+  // Card click guard: cancel navigation ONLY when this gesture was a real drag.
+  // `moved` is reset on each pointerdown, so a prior swipe can never block a
+  // later clean tap/click (the bug where the old lingering swallower ate taps).
+  const onLinkClick = (e: React.MouseEvent) => {
+    if (drag.current.moved) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
   };
 
   const nudge = (dir: 1 | -1) => {
@@ -217,7 +230,7 @@ export function CategoryCarousel() {
         {/* Extra vertical padding so the zigzag offset + hover lift never clip. */}
         <div ref={track} className="cat-track px-6 py-8 will-change-transform">
           {loop.map((id, i) => (
-            <Card key={`${id}-${i}`} id={id} lifted={i % 2 === 0} />
+            <Card key={`${id}-${i}`} id={id} lifted={i % 2 === 0} onLinkClick={onLinkClick} />
           ))}
         </div>
       </div>
