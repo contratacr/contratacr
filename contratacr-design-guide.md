@@ -754,3 +754,15 @@ are `shrink-0` after it. Do NOT let the badge wrap below the name (it pushed the
 layout and truncated the lines beneath). With the badge on the name line, the
 location + coverage ("se desplaza") lines WRAP in full (no `truncate`; icon
 `mt-0.5` top-aligned) and are never cut off at ~360px. Keep the card's fixed height.
+
+## 38. /buscar card name line is responsive (badge beside name vs full name)
+
+The name + "Verificado" pill line behaves differently per breakpoint, on purpose:
+- DESKTOP (`md:flex-nowrap items-center`): name is content-width (`min-w-0`,
+  `md:line-clamp-1`) so the pill sits IMMEDIATELY beside the name (not pushed to the
+  far edge). Optional price is pushed right with `md:ml-auto`.
+- MOBILE (`flex-wrap items-start`): the FULL name shows (up to 2 lines via
+  `line-clamp-2` — never truncated to 1 line) and the pill wraps below when there's
+  no room. Keeping the whole name visible beats keeping the pill on the name line.
+Do NOT give the name `flex-1` (that pushes the badge to the far right) and do NOT
+use single-line `truncate` (that cut off mobile names). Card height stays fixed.
