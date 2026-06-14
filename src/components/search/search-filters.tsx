@@ -139,7 +139,10 @@ export function SearchFilters() {
 
   const activeCount =
     (query ? 1 : 0) +
-    [category, province, canton].filter((v) => v && v !== "todas" && v !== "todos").length;
+    [category, province, canton].filter((v) => v && v !== "todas" && v !== "todos").length +
+    (aseguradora ? 1 : 0) +
+    (verifiedOnly ? 1 : 0) +
+    (geoActive ? 1 : 0);
 
   return (
     <div className="bg-white rounded-2xl border border-[#e5e7eb] p-3">
@@ -222,12 +225,17 @@ export function SearchFilters() {
 
         <div>
           <label className="text-xs font-medium text-[#6b7280] mb-1 block">{t("filters.insurer")}</label>
-          {/* No "Todas" option: by default NONE is selected (no insurance filter).
-              Pick an insurer to filter; tap the X to clear it again. */}
+          {/* Non-filtering default: nothing selected shows "Cualquier aseguradora"
+              (greyed, like a placeholder, so it reads as NOT an active filter — most
+              pros don't work with insurers). Pick one to filter; X clears it. */}
           <div className="flex items-center gap-1.5">
             <Select value={aseguradora || undefined} onValueChange={(v) => { setAseguradora(v); applyFilters({ aseguradora: v }); }}>
               <SelectTrigger className="text-sm flex-1">
-                <SelectValue placeholder={t("filters.anyInsurer")}>{aseguradora ? insurerOptions.find((i) => i.id === aseguradora)?.label : t("filters.anyInsurer")}</SelectValue>
+                <SelectValue placeholder={t("filters.anyInsurer")}>
+                  {aseguradora
+                    ? insurerOptions.find((i) => i.id === aseguradora)?.label
+                    : <span className="text-[#9ca3af]">{t("filters.anyInsurer")}</span>}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {insurerOptions.map((i) => <SelectItem key={i.id} value={i.id}>{i.label}</SelectItem>)}
@@ -247,14 +255,17 @@ export function SearchFilters() {
         </div>
       </div>
 
-      {/* Geolocation + verified toggles + clear */}
+      {/* On/off filters → TOGGLES (booleans), distinct from the multi-choice
+          dropdowns above. A small heading groups them so the panel reads as two
+          coherent kinds: "choose a value" (dropdowns) vs "turn on/off" (toggles). */}
       <div className="mt-2.5 pt-2.5 border-t border-[#f3f4f6] flex flex-col gap-2">
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9ca3af] mb-0.5">{t("filters.moreFilters")}</p>
         {/* Consistent toggle rows (label + on/off switch, no icons). */}
         <button
           type="button"
           onClick={useMyLocation}
           disabled={geoLoading}
-          className="w-full inline-flex items-center justify-between gap-2 rounded-lg border border-[#e5e7eb] bg-white px-3 py-2 text-xs font-medium text-[#374151] hover:border-[#009FD9] transition-colors"
+          className="w-full inline-flex items-center justify-between gap-2 rounded-lg border border-[#e5e7eb] bg-white px-3 py-2 text-xs font-medium text-[#374151] hover:border-[#009FD9] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9] transition-colors"
         >
           <span>{geoActive ? t("filters.nearMeActive") : t("filters.nearMe")}</span>
           {geoLoading ? (
@@ -269,7 +280,7 @@ export function SearchFilters() {
         <button
           type="button"
           onClick={() => { const v = !verifiedOnly; setVerifiedOnly(v); applyFilters({ verificados: v ? "1" : "" }); }}
-          className="w-full inline-flex items-center justify-between gap-2 rounded-lg border border-[#e5e7eb] bg-white px-3 py-2 text-xs font-medium text-[#374151] hover:border-[#009FD9] transition-colors"
+          className="w-full inline-flex items-center justify-between gap-2 rounded-lg border border-[#e5e7eb] bg-white px-3 py-2 text-xs font-medium text-[#374151] hover:border-[#009FD9] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9] transition-colors"
         >
           <span>{t("filters.verifiedOnly")}</span>
           <span className={`flex h-4 w-7 shrink-0 items-center rounded-full transition-colors ${verifiedOnly ? "bg-[#009FD9]" : "bg-[#d1d5db]"}`}>
@@ -279,7 +290,7 @@ export function SearchFilters() {
 
         {geoError && <span className="text-xs text-[#b45309]">{geoError}</span>}
         {activeCount > 0 && (
-          <button onClick={clearAll} className="inline-flex items-center justify-center gap-1 text-xs text-[#6b7280] hover:text-red-500 transition-colors pt-0.5">
+          <button onClick={clearAll} className="inline-flex items-center justify-center gap-1 text-xs text-[#6b7280] hover:text-red-500 focus:outline-none focus-visible:underline transition-colors pt-0.5">
             <X className="h-3 w-3" /> {t("filters.clear")} ({activeCount})
           </button>
         )}
