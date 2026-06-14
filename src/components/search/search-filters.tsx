@@ -11,6 +11,13 @@ import { CategorySearch } from "@/components/ui/category-search";
 import { INSURERS } from "@/lib/data/insurers";
 import { createClient } from "@/lib/supabase/client";
 
+// Filter Select triggers keep a NEUTRAL border in every state. The shared Select
+// shows a brand-blue focus-visible ring; after picking an option Radix returns
+// focus to the trigger and that ring can "stick", looking like a colored/stuck
+// border. We override it here (filters only) so selecting never leaves an ugly
+// outline — the open dropdown + chevron are the affordance.
+const FILTER_TRIGGER = "text-sm focus-visible:ring-0 focus-visible:border-[#e5e7eb]";
+
 export function SearchFilters() {
   const router = useRouter();
   const pathname = usePathname();
@@ -181,7 +188,7 @@ export function SearchFilters() {
         <div>
           <label className="text-xs font-medium text-[#6b7280] mb-1 block">{t("filters.province")}</label>
           <Select value={province} onValueChange={(v) => { setProvince(v); setCanton(""); applyFilters({ provincia: v, canton: "" }); }}>
-            <SelectTrigger className="text-sm">
+            <SelectTrigger className={FILTER_TRIGGER}>
               <SelectValue placeholder={t("filters.allProvinces")} />
             </SelectTrigger>
             <SelectContent>
@@ -194,7 +201,7 @@ export function SearchFilters() {
         <div>
           <label className="text-xs font-medium text-[#6b7280] mb-1 block">{t("filters.canton")}</label>
           <Select value={canton} onValueChange={(v) => { setCanton(v); applyFilters({ canton: v }); }} disabled={!province || cantons.length === 0}>
-            <SelectTrigger className="text-sm">
+            <SelectTrigger className={FILTER_TRIGGER}>
               <SelectValue placeholder={t("filters.allCantons")} />
             </SelectTrigger>
             <SelectContent>
@@ -213,7 +220,7 @@ export function SearchFilters() {
             if (v === "cercania" && !geoActive) { useMyLocation(); return; }
             applyFilters({ sortBy: v });
           }}>
-            <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
+            <SelectTrigger className={FILTER_TRIGGER}><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="rating">{t("sort.rating")}</SelectItem>
               <SelectItem value="priceAsc">{t("sort.priceAsc")}</SelectItem>
@@ -230,7 +237,7 @@ export function SearchFilters() {
               pros don't work with insurers). Pick one to filter; X clears it. */}
           <div className="flex items-center gap-1.5">
             <Select value={aseguradora || undefined} onValueChange={(v) => { setAseguradora(v); applyFilters({ aseguradora: v }); }}>
-              <SelectTrigger className="text-sm flex-1">
+              <SelectTrigger className={`${FILTER_TRIGGER} flex-1`}>
                 <SelectValue placeholder={t("filters.anyInsurer")}>
                   {aseguradora
                     ? insurerOptions.find((i) => i.id === aseguradora)?.label
@@ -255,11 +262,10 @@ export function SearchFilters() {
         </div>
       </div>
 
-      {/* On/off filters → TOGGLES (booleans), distinct from the multi-choice
-          dropdowns above. A small heading groups them so the panel reads as two
-          coherent kinds: "choose a value" (dropdowns) vs "turn on/off" (toggles). */}
+      {/* On/off filters → TOGGLES (booleans), shown DIRECTLY (no "Más filtros"
+          collapse/heading) at the same level as the dropdowns above. A thin divider
+          is the only separation. */}
       <div className="mt-2.5 pt-2.5 border-t border-[#f3f4f6] flex flex-col gap-2">
-        <p className="text-[10px] font-semibold uppercase tracking-wide text-[#9ca3af] mb-0.5">{t("filters.moreFilters")}</p>
         {/* Consistent toggle rows (label + on/off switch, no icons). */}
         <button
           type="button"
