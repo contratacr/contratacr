@@ -666,3 +666,26 @@ Search cards are uniform (`md:min-h-[190px]` floor); reorganizing them must NOT 
 ## 20. Optional map pin = opt-in disclosure (never shown by default)
 
 Location is captured as **provincia → cantón first** (the authoritative data that drives `/buscar`); marking the exact spot on a map is an OPTIONAL precision refinement and must NOT be visible by default — a map shown upfront clutters the form and, on mobile, pushes everything down. The control is a **lightweight expandable link** (`MapPin` + "Buscar la dirección y marcar el punto en el mapa" + `ChevronDown`, brand-blue, `aria-expanded`), de-boxed (no bordered row) per §19, that reveals the Places address search + map only when the pro opts in. Default `showMap=false`; the map instance is created lazily on expand and torn down on collapse. When collapsed, show a small `Check` if a pin is already set. Use the SAME picker component in BOTH registration and the panel so the control behaves identically — never let the two flows diverge. The pin stores only `lat`/`lng`; it never overrides the chosen provincia/cantón, so a professional saved with or without a pin filters identically in search.
+
+## 25. The "Verificado" badge is text-only (no icon, no inline explainer)
+
+Every "Verificado" trust mark renders as the plain word "Verificado" (green) — NO check/shield icon anywhere (search card, public profile header + Sobre mí, pro dashboard, profile editor, client account, the /proveedores-autorizados hero chip, landing mockups). Do NOT re-add an icon. The badge's limited meaning is NOT explained inline next to it (no "¿Qué significa?" link); the explanation lives once on `/proveedores-autorizados#que-significa` and in the Terms. App copy says "Verificado"/"Verified" — never "Identidad verificada".
+
+## 26. /buscar card grammar (refinements)
+
+Within the uniform card (mobile floor `min-h-[320px]`, desktop `md:min-h-[190px]`):
+- "Ver horario completo" sits CENTERED below the schedule grid (`self-center`), never in a top corner — it must not collide with the absolute top-right bookmark button.
+- Reviews: star + rating value are plain text; ONLY the "N reseñas" count is the link (brand-blue, to the reviews tab). 0 reviews → honest non-link "Sin reseñas todavía".
+- Casos de éxito / Certificaciones are count-LESS links; certifications only renders when the pro has any.
+
+## 27. Dashboard panel spacing (title → content)
+
+Panels use `<CardHeader className="px-6 pt-6 pb-3">` + `<CardContent className="px-6 pt-1 pb-6">`. NOTE: `CardContent`'s default is `p-5`, so an override that omits the top padding silently keeps `pt-5` (20px) and, with the header's bottom padding, produced a ~36px gap. Always set the content's top padding explicitly (`pt-1`) to keep a tight, consistent ~16px title-to-content gap across every section.
+
+## 28. Filters: one behavior + no stuck focus ring
+
+`/buscar` filters apply INSTANTLY (the desktop sidebar has no apply button, so the mobile drawer must not either — dismiss via X/backdrop). The aseguradora default is unselected = unfiltered, with the neutral field-label placeholder "Aseguradora" (never "Cualquiera/Ninguna/Todas"); X clears. The shared `Select` trigger uses `focus-visible:` (not `focus:`) so a mouse selection that returns focus to the trigger leaves no stuck border — keyboard users still get a brand-blue ring.
+
+## 29. "Completa tu perfil" leads to the exact field
+
+Each completion item opens the matching collapsed section in the profile editor and smooth-scrolls to the field, flashing it (`.field-flash`, globals.css). ProfileEditor sections are CONTROLLED (open state lifted; `focusField`/`focusKey` props; `FIELD_SECTION` map; `data-field` anchors). Any non-empty description counts as complete (no minimum length).
