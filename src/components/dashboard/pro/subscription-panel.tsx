@@ -23,12 +23,14 @@ type Payment = {
 const fmtDate = (d?: string | null) =>
   d ? new Date(d).toLocaleDateString("es-CR", { day: "numeric", month: "long", year: "numeric" }) : "";
 
-// Benefits are intentionally aspirational/neutral — gating is decided at launch.
+// The subscription is what keeps a professional ACTIVE and able to receive
+// clients — NOT cosmetic extras. No featured placement (search is filter-based)
+// and no extra badge (the only badge is "Verificado"). Honest, model-accurate list.
 const BENEFITS = [
-  "Apareces destacado en los resultados de búsqueda",
-  "Insignia de plan profesional en tu perfil",
-  "Estadísticas de tu perfil y solicitudes",
-  "Soporte prioritario",
+  "Tu perfil aparece en las búsquedas y los clientes pueden encontrarte",
+  "Recibe solicitudes de servicio de tus clientes",
+  "Recibe y responde proyectos publicados por clientes",
+  "Mantén tu perfil profesional activo para seguir recibiendo clientes",
 ];
 
 export function SubscriptionPanel() {
@@ -131,8 +133,8 @@ export function SubscriptionPanel() {
 
       {/* Hero */}
       <div>
-        <h3 className="text-lg font-bold text-[#111827]">Hazte profesional destacado</h3>
-        <p className="text-sm text-[#6b7280] mt-0.5">Más visibilidad y herramientas para conseguir más clientes.</p>
+        <h3 className="text-lg font-bold text-[#111827]">Mantén tu perfil profesional activo</h3>
+        <p className="text-sm text-[#6b7280] mt-0.5">La suscripción mantiene tu perfil activo para aparecer en las búsquedas y recibir clientes.</p>
       </div>
 
       {/* Plan cards */}
