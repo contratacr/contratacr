@@ -1,6 +1,6 @@
 // Shared identity-verification lifecycle — used by the admin panel, the
 // provider dashboard, search and the public profile. The badge is
-// "Identidad verificada" (identity only — never job quality/authorization).
+// "Verificado" (identity only — never job quality/authorization).
 
 export type VerificationStatus = "pending" | "verified" | "rejected" | "under_appeal";
 
@@ -14,7 +14,7 @@ export const VERIFICATION_STATUSES: VerificationStatus[] = [
 export function verificationLabel(status: VerificationStatus): string {
   switch (status) {
     case "verified":
-      return "Identidad verificada";
+      return "Verificado";
     case "rejected":
       return "No verificada";
     case "under_appeal":

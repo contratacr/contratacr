@@ -225,7 +225,7 @@ export default function ProDashboardPage() {
                 <h1 className="text-xl font-bold text-[#111827]">{pro.profiles?.full_name}</h1>
                 <div className="flex items-center gap-2 mt-1 flex-wrap">
                   {pro.verification_status === "verified" && (
-                    <Badge variant="verified" className="gap-1"><ShieldCheck className="h-3 w-3" />{t("identityVerified")}</Badge>
+                    <Badge variant="verified">{t("identityVerified")}</Badge>
                   )}
                   {(pro.verification_status === "pending" || pro.verification_status === "under_appeal") && (
                     <Badge variant="warning">{t("identityUnverified")}</Badge>

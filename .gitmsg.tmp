@@ -1,14 +1,14 @@
-fix(buscar cards): move ver-horario below schedule (centered), reviews count-only link, drop casos/cert counts, mobile height floor
+refactor(verificado badge): drop check icon from all badges, remove "¿Qué significa?" inline, sweep "identidad verificada" copy
 
-- "Ver horario completo" now sits centered BELOW the schedule grid instead of
-  the top-right header row, so it no longer collides with the card bookmark on
-  desktop; location control becomes a conditional location-only row.
-- Reviews: only the "N reseñas" count is the link now; star + rating value are
-  plain text.
-- Casos de éxito / Certificaciones links drop the (N) count; certifications
-  link stays conditional on having certifications.
-- Card gets a mobile min-h floor (min-h-[320px]) for uniform height; desktop
-  keeps md:min-h-[190px].
-- card.email / profile.email -> "Contactar por correo" (EN "Contact by email").
+- Remove ShieldCheck from every "Verificado" badge: search card, public
+  profile header + Sobre mí row, pro dashboard Badge, profile editor, client
+  account, proveedores-autorizados hero chip, landing phone-screen mockup.
+  Badge is now text-only "Verificado".
+- Remove the inline "¿Qué significa?" links beside the profile badges (the
+  explanation still lives on /proveedores-autorizados and in the Terms).
+- Sweep remaining "identidad verificada" / "Identity verified" copy to the new
+  "Verificado" / "Verified" wording (filters, FAQ/tips, verify benefit,
+  notifications, verificationLabel).
+- Drop now-unused ShieldCheck imports.
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>

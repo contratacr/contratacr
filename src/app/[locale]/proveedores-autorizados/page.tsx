@@ -1,4 +1,4 @@
-import { ShieldCheck, IdCard, ScanFace, RefreshCw, Search } from "lucide-react";
+import { IdCard, ScanFace, RefreshCw, Search } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -26,8 +26,8 @@ export default async function IdentityVerificationPage() {
         {/* Hero */}
         <section className="bg-white border-b border-[#e5e7eb]">
           <div className="mx-auto max-w-3xl px-4 sm:px-6 py-12 text-center">
-            <div className="inline-flex items-center gap-2 rounded-full bg-[#dcfce7] px-3 py-1 text-sm font-semibold text-[#15803d]">
-              <ShieldCheck className="h-4 w-4" /> {t("badge")}
+            <div className="inline-flex items-center rounded-full bg-[#dcfce7] px-3 py-1 text-sm font-semibold text-[#15803d]">
+              {t("badge")}
             </div>
             <h1 className="mt-4 text-3xl font-bold text-[#111827]">{t("h1")}</h1>
             <p className="mt-3 text-[#6b7280] leading-relaxed">

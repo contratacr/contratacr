@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import {
   CalendarDays, Bookmark, LogOut, Bell, User, FolderOpen, Briefcase, Search, LifeBuoy,
-  ShieldCheck, Lock, Camera, X, Settings,
+  Lock, Camera, X, Settings,
 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { detectIdType } from "@/lib/cedula";
@@ -404,7 +404,7 @@ export default function ClientDashboardPage() {
                       <label className="text-sm font-medium text-[#374151] mb-1.5 flex items-center gap-1.5">
                         {t("fullName")} <span className="text-red-500">*</span>
                         {cedulaVerified && (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#16a34a]"><ShieldCheck className="h-3.5 w-3.5" /> {t("verified")}</span>
+                          <span className="inline-flex items-center text-[11px] font-semibold text-[#16a34a]">{t("verified")}</span>
                         )}
                       </label>
                       <div className="relative">

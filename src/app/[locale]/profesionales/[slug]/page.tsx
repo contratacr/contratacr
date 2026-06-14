@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import {
-  MapPin, Shield, ShieldCheck, ShieldAlert, ArrowLeft,
+  MapPin, Shield, ShieldAlert, ArrowLeft,
   Share2, Flag, ChevronDown, Lock, Phone, Building2, Award, Mail,
 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
@@ -246,16 +246,10 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                     </p>
                   </div>
 
-                  {/* Verification as plain text + icon (no colored pill/box). */}
+                  {/* Verification as plain text (no icon, no pill/box). */}
                   {professional.verificationStatus === "verified" ? (
-                    <span className="inline-flex items-center gap-1.5 flex-wrap justify-center">
-                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#15803d]">
-                        <ShieldCheck className="h-3.5 w-3.5" />
-                        {t("identityVerified")}
-                      </span>
-                      <Link href="/proveedores-autorizados#que-significa" className="text-[11px] font-medium text-[#009FD9] hover:underline">
-                        {t("whatItMeans")}
-                      </Link>
+                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#15803d]">
+                      {t("identityVerified")}
                     </span>
                   ) : (
                     <span className="flex items-center gap-1.5 text-xs font-semibold text-[#92400e]">
@@ -694,13 +688,8 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                           <dt className="text-sm text-[#6b7280] shrink-0">{t("verification")}</dt>
                           <dd className="text-right">
                             {professional.verificationStatus === "verified" ? (
-                              <span className="inline-flex items-center gap-1.5 flex-wrap justify-end">
-                                <span className="inline-flex items-center gap-1.5 text-sm font-medium text-[#15803d]">
-                                  <ShieldCheck className="h-4 w-4 shrink-0" /> {t("identityVerified")}
-                                </span>
-                                <Link href="/proveedores-autorizados#que-significa" className="text-xs font-medium text-[#009FD9] hover:underline">
-                                  {t("whatItMeans")}
-                                </Link>
+                              <span className="inline-flex items-center gap-1.5 text-sm font-medium text-[#15803d]">
+                                {t("identityVerified")}
                               </span>
                             ) : (
                               <span className="inline-flex items-center gap-1.5 text-sm font-medium text-[#b45309]">

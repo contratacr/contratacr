@@ -104,7 +104,7 @@ function MiniCard({ initials, name, profession, place, rating, reviews, price }:
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1">
             <span className="text-[12px] font-bold text-[#111827] truncate">{name}</span>
-            <span className="inline-flex items-center gap-0.5 text-[#16a34a]"><ShieldCheck className="h-3 w-3" /><span className="text-[8px] font-semibold">Verificado</span></span>
+            <span className="inline-flex items-center text-[#16a34a]"><span className="text-[8px] font-semibold">Verificado</span></span>
           </div>
           <span className="mt-0.5 inline-block rounded-full bg-[#f3f4f6] px-1.5 py-0.5 text-[8px] font-medium text-[#6b7280]">{profession}</span>
           <div className="mt-1 flex items-center gap-1 text-[9px] text-[#6b7280]">

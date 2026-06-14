@@ -10,7 +10,7 @@ import { PhoneInput } from "@/components/ui/phone-input";
 import { LanguagesInput } from "@/components/ui/languages-input";
 import { WorkplacesPicker, type Workplace } from "@/components/maps/workplaces-picker";
 import { createClient } from "@/lib/supabase/client";
-import { Camera, X, Plus, ChevronDown, ShieldCheck, Lock, Award } from "lucide-react";
+import { Camera, X, Plus, ChevronDown, Lock, Award } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { computeSearchAreas, primaryArea } from "@/lib/location";
 import { getProvinceById, getCantonById } from "@/lib/data/cr-geography";
@@ -385,7 +385,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
               label={
                 <span className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
                   {t("fullName")}
-                  <span className="inline-flex items-center gap-1 whitespace-nowrap shrink-0 text-[11px] font-semibold text-[#16a34a]"><ShieldCheck className="h-3.5 w-3.5 shrink-0" /> {t("identityVerified")}</span>
+                  <span className="inline-flex items-center whitespace-nowrap shrink-0 text-[11px] font-semibold text-[#16a34a]">{t("identityVerified")}</span>
                 </span>
               }
               value={fullName}
