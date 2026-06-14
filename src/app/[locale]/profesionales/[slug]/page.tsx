@@ -4,8 +4,9 @@ import { useState, useEffect, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import {
   MapPin, Shield, ArrowLeft,
-  Share2, Flag, ChevronDown, Lock, Phone, Building2, Award, Mail,
+  Share2, Flag, ChevronDown, Lock, Phone, Building2, Award, Mail, Globe,
 } from "lucide-react";
+import { InstagramIcon, FacebookIcon, TikTokIcon } from "@/components/icons/social-icons";
 import { Link } from "@/i18n/navigation";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -359,6 +360,35 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                     </a>
                   )
                 )}
+
+                {/* Social links — optional, only the ones the pro filled in. Open in
+                    a new tab; recognizable icons. Additive to "casos de éxito". */}
+                {(() => {
+                  const sl = professional.socialLinks;
+                  const items = [
+                    { k: "instagram", href: sl?.instagram, Icon: InstagramIcon },
+                    { k: "facebook", href: sl?.facebook, Icon: FacebookIcon },
+                    { k: "tiktok", href: sl?.tiktok, Icon: TikTokIcon },
+                    { k: "website", href: sl?.website, Icon: Globe },
+                  ].filter((x) => x.href);
+                  if (items.length === 0) return null;
+                  return (
+                    <div className="flex items-center justify-center gap-2 pt-1">
+                      {items.map(({ k, href, Icon }) => (
+                        <a
+                          key={k}
+                          href={href as string}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          aria-label={k}
+                          className="flex h-9 w-9 items-center justify-center rounded-full border border-[#e5e7eb] text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] transition-colors"
+                        >
+                          <Icon className="h-4 w-4" />
+                        </a>
+                      ))}
+                    </div>
+                  );
+                })()}
 
                 <ClientRegistrationModal
                   open={showRegistration}

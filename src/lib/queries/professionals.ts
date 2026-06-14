@@ -59,6 +59,9 @@ export type ProService = {
 // Photos attach to a SERVICE INSTANCE (serviceId); `profession` kept for legacy.
 export type PortfolioItem = { url: string; serviceId?: string; profession?: string };
 
+// Optional social links (URLs only). Additive to "casos de éxito" photos.
+export type SocialLinks = { instagram?: string; facebook?: string; tiktok?: string; website?: string };
+
 export type ProfessionalDetail = ProfessionalCardData & {
   portfolioUrls: string[];
   portfolioItems: PortfolioItem[];
@@ -66,6 +69,7 @@ export type ProfessionalDetail = ProfessionalCardData & {
   services: ProService[];
   availabilityPublic: boolean;
   certifications: Certification[];
+  socialLinks?: SocialLinks;
 };
 
 export type Review = {
@@ -429,6 +433,13 @@ export async function getProfessionalBySlug(
         const { data: ceRow } = await supabase.from("professionals").select("contact_email").eq("id", pro.id).maybeSingle();
         contactEmail = (ceRow as { contact_email?: string } | null)?.contact_email ?? undefined;
       } catch { /* column not migrated yet */ }
+      // Optional social links (URLs only). Best-effort so an unmigrated DB doesn't 500.
+      let socialLinks: SocialLinks | undefined;
+      try {
+        const { data: slRow } = await supabase.from("professionals").select("social_links").eq("id", pro.id).maybeSingle();
+        const raw = (slRow as { social_links?: SocialLinks } | null)?.social_links;
+        if (raw && typeof raw === "object") socialLinks = raw;
+      } catch { /* column not migrated yet */ }
       if (portfolioItems.length === 0) {
         portfolioItems = (pro.portfolio_urls ?? []).map((url: string) => ({ url }));
       }
@@ -504,6 +515,7 @@ export async function getProfessionalBySlug(
         profileId: (pro as any).profile_id ?? undefined,
         callPhone,
         contactEmail,
+        socialLinks,
       };
     } catch (err) {
       console.error("[getProfessionalBySlug] Supabase error:", err);
