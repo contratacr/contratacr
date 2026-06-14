@@ -689,3 +689,11 @@ Panels use `<CardHeader className="px-6 pt-6 pb-3">` + `<CardContent className="
 ## 29. "Completa tu perfil" leads to the exact field
 
 Each completion item opens the matching collapsed section in the profile editor and smooth-scrolls to the field, flashing it (`.field-flash`, globals.css). ProfileEditor sections are CONTROLLED (open state lifted; `focusField`/`focusKey` props; `FIELD_SECTION` map; `data-field` anchors). Any non-empty description counts as complete (no minimum length).
+
+## 30. Free copy: honest present-tense, never "free forever"
+
+Describe the app as free in the PRESENT tense and for specific actions ("Crear tu cuenta y empezar es gratis", "Registrarte es gratis", "No cobramos comisiones por los servicios"). NEVER promise permanence or totality ("gratis para siempre", "totalmente/completamente gratuito", "sin cargos de ningún tipo", "sin excepción") — paid professional subscriptions may arrive later. Don't announce future paid plans either; just avoid the perpetual-free promise.
+
+## 31. Payments are behind PAYMENTS_ENABLED (default OFF)
+
+All subscription/payment surfaces are gated by `PAYMENTS_ENABLED` (`lib/payments/config.ts`, from `NEXT_PUBLIC_PAYMENTS_ENABLED`). With it OFF: regular users see ZERO payment UI (no "Suscripción" tab, no links), the self APIs report `enabled:false`/refuse checkout, and the app is identical to the free version. Admin subscription management is the only payment surface visible while off (admin-only, for the manual SINPE flow). Raw card data must NEVER touch our server or DB — card billing goes through the gateway abstraction (`lib/payments/gateway.ts`); we keep only gateway references. To activate: apply migration 054, plug a gateway, set the SINPE number, update legal pages, flip the flag.
