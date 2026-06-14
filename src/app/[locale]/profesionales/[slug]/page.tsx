@@ -494,16 +494,8 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                             categoryName={professional.categoryId ? tCat(professional.categoryId as Parameters<typeof tCat>[0]) : ""}
                             size="md"
                           />
-                          {/* Llamar — when enabled, available alongside booking (independent of privada). */}
-                          {professional.allowPhoneCall && callDigits && (
-                            <a
-                              href={`tel:+506${callDigits}`}
-                              className="flex items-center justify-center gap-2 border border-[#009FD9] text-[#009FD9] hover:bg-[#EBF5FB] font-semibold py-2.5 px-5 rounded-xl transition-colors text-sm"
-                            >
-                              <Phone className="h-4 w-4" />
-                              {t("contact.call")}
-                            </a>
-                          )}
+                          {/* No "Llamar" here — it already lives in the contact card
+                              (sidebar); repeating it in this tab is redundant. */}
                         </div>
                       ) : (
                         <div className="flex flex-col items-center text-center gap-4 py-6">
@@ -536,16 +528,8 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                                 WhatsApp
                               </button>
                             )}
-                            {/* Llamar — only when the pro enabled phone-call contact. */}
-                            {professional.allowPhoneCall && callDigits && (
-                              <a
-                                href={`tel:+506${callDigits}`}
-                                className="flex-1 flex items-center justify-center gap-2 border border-[#009FD9] text-[#009FD9] hover:bg-[#EBF5FB] font-semibold py-2.5 rounded-xl transition-colors text-sm"
-                              >
-                                <Phone className="h-4 w-4" />
-                                {t("contact.call")}
-                              </a>
-                            )}
+                            {/* No "Llamar" here — the contact card (sidebar) already
+                                offers it; repeating it in this tab is redundant. */}
                           </div>
                         </div>
                       )}
@@ -672,23 +656,17 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                         <p className="text-[15px] text-[#374151] leading-relaxed whitespace-pre-line">{professional.bio}</p>
                       )}
 
-                      {/* Every fact gets the SAME treatment: a muted label + value on
-                          one row, separated by hairline dividers — uniform, clean, and
-                          readable, with multi-value rows (precios, lugares) stacked
-                          on the right. No per-item boxes. */}
-                      <dl className="border-t border-[#f3f4f6] divide-y divide-[#f3f4f6]">
-                        {expYears > 0 && (
-                          <div className="flex items-start justify-between gap-4 py-3">
-                            <dt className="text-sm text-[#6b7280] shrink-0">{t("experienceLabel")}</dt>
-                            <dd className="text-sm font-medium text-[#111827] text-right">{t("yearsValue", { years: expYears })}</dd>
-                          </div>
-                        )}
-
-                        <div className="flex items-start justify-between gap-4 py-3">
-                          <dt className="text-sm text-[#6b7280] shrink-0">{t("verification")}</dt>
-                          <dd className="text-right">
+                      {/* Facts grid: each is a small uppercase muted LABEL with the
+                          value left-aligned beneath it — uniform, left-reading, no
+                          per-row dividers or boxes (only one hairline separating the
+                          bio). Long/multi-value facts (lugares, precios) span the full
+                          width so they never crowd against the right edge. */}
+                      <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-5 border-t border-[#f3f4f6] pt-5">
+                        <div className="flex flex-col gap-1">
+                          <dt className="text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">{t("verification")}</dt>
+                          <dd>
                             {professional.verificationStatus === "verified" ? (
-                              <span className="inline-flex items-center gap-1.5 text-sm font-medium text-[#15803d]">
+                              <span className="inline-flex items-center text-sm font-semibold text-[#15803d]">
                                 {t("identityVerified")}
                               </span>
                             ) : (
@@ -699,33 +677,58 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                           </dd>
                         </div>
 
+                        {expYears > 0 && (
+                          <div className="flex flex-col gap-1">
+                            <dt className="text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">{t("experienceLabel")}</dt>
+                            <dd className="text-sm font-medium text-[#111827]">{t("yearsValue", { years: expYears })}</dd>
+                          </div>
+                        )}
+
                         {locationText && (
-                          <div className="flex items-start justify-between gap-4 py-3">
-                            <dt className="text-sm text-[#6b7280] shrink-0">{t("location")}</dt>
-                            <dd className="text-sm font-medium text-[#111827] text-right">{locationText}</dd>
+                          <div className="flex flex-col gap-1">
+                            <dt className="text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">{t("location")}</dt>
+                            <dd className="text-sm font-medium text-[#111827]">{locationText}</dd>
+                          </div>
+                        )}
+
+                        {professional.languages && professional.languages.length > 0 && (
+                          <div className="flex flex-col gap-1">
+                            <dt className="text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">{t("languages")}</dt>
+                            <dd className="text-sm font-medium text-[#111827]">
+                              {professional.languages.map((l) => languageLabel(l, locale)).join(" · ")}
+                            </dd>
+                          </div>
+                        )}
+
+                        {professional.insuranceNetworks && professional.insuranceNetworks.length > 0 && (
+                          <div className="flex flex-col gap-1">
+                            <dt className="text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">{t("insurers")}</dt>
+                            <dd className="text-sm font-medium text-[#111827]">
+                              {professional.insuranceNetworks.map((id) => insurerLabel(id)).join(" · ")}
+                            </dd>
                           </div>
                         )}
 
                         {professional.pricing && professional.pricing.length > 0 ? (
-                          <div className="flex items-start justify-between gap-4 py-3">
-                            <dt className="text-sm text-[#6b7280] shrink-0">{t("prices")}</dt>
-                            <dd className="flex flex-col gap-0.5 text-right">
+                          <div className="flex flex-col gap-1 sm:col-span-2">
+                            <dt className="text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">{t("prices")}</dt>
+                            <dd className="flex flex-col gap-0.5">
                               {professional.pricing.map((tier) => (
                                 <span key={tier.id} className="text-sm font-medium text-[#111827]">{formatPricingTier(tier)}</span>
                               ))}
                             </dd>
                           </div>
                         ) : professional.hourlyRate ? (
-                          <div className="flex items-start justify-between gap-4 py-3">
-                            <dt className="text-sm text-[#6b7280] shrink-0">{t("baseRate")}</dt>
-                            <dd className="text-sm font-medium text-[#111827] text-right">₡{professional.hourlyRate.toLocaleString(locale === "en" ? "en-US" : "es-CR")}{t("perHour")}</dd>
+                          <div className="flex flex-col gap-1">
+                            <dt className="text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">{t("baseRate")}</dt>
+                            <dd className="text-sm font-medium text-[#111827]">₡{professional.hourlyRate.toLocaleString(locale === "en" ? "en-US" : "es-CR")}{t("perHour")}</dd>
                           </div>
                         ) : null}
 
                         {professional.workplaces && professional.workplaces.length > 0 && (
-                          <div className="flex items-start justify-between gap-4 py-3">
-                            <dt className="text-sm text-[#6b7280] shrink-0">{t("workplaces")}</dt>
-                            <dd className="flex flex-col gap-1.5 text-right">
+                          <div className="flex flex-col gap-1 sm:col-span-2">
+                            <dt className="text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">{t("workplaces")}</dt>
+                            <dd className="flex flex-col gap-1.5">
                               {professional.workplaces.map((w, i) => (
                                 <span key={w.id ?? i} className="text-sm">
                                   <span className="font-medium text-[#111827]">{w.name}</span>
@@ -734,24 +737,6 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                                   )}
                                 </span>
                               ))}
-                            </dd>
-                          </div>
-                        )}
-
-                        {professional.languages && professional.languages.length > 0 && (
-                          <div className="flex items-start justify-between gap-4 py-3">
-                            <dt className="text-sm text-[#6b7280] shrink-0">{t("languages")}</dt>
-                            <dd className="text-sm font-medium text-[#111827] text-right">
-                              {professional.languages.map((l) => languageLabel(l, locale)).join(" · ")}
-                            </dd>
-                          </div>
-                        )}
-
-                        {professional.insuranceNetworks && professional.insuranceNetworks.length > 0 && (
-                          <div className="flex items-start justify-between gap-4 py-3">
-                            <dt className="text-sm text-[#6b7280] shrink-0">{t("insurers")}</dt>
-                            <dd className="text-sm font-medium text-[#111827] text-right">
-                              {professional.insuranceNetworks.map((id) => insurerLabel(id)).join(" · ")}
                             </dd>
                           </div>
                         )}

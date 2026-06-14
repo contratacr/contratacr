@@ -1,11 +1,11 @@
-fix(soporte): ticket-only support line, broader attach wording, require ticket name
+refactor(perfil): cleaner "Sobre mí" facts grid, drop redundant Llamar in Disponibilidad tab
 
-- Terms footer: support is offered only via the Soporte ticket channel
-  ("Contáctanos desde Soporte.") — dropped the raw mailto; kept the Privacy
-  Policy link. Removed the now-unused SUPPORT_EMAIL import.
-- Attach button: "Adjuntar imagen o PDF" -> "Adjuntar imagen o documento"
-  (EN "Attach image or document").
-- Support ticket name field is now REQUIRED (we need to know who we're talking
-  to; it auto-fills for logged-in users) — asterisk + client-side validation.
+- Sobre mí: replace the right-aligned divided list with a left-aligned
+  label-over-value grid (2 cols on sm+), uppercase muted labels, no per-row
+  dividers/boxes; Precios and Lugares de trabajo span full width so multi-line
+  values read cleanly. One hairline separates the bio.
+- Remove the "Llamar" button from the Disponibilidad tab (both public and
+  private branches) — it already lives in the contact card (sidebar), so it was
+  redundant in the profile/availability preview.
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
