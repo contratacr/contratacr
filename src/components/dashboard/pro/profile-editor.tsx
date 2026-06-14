@@ -345,14 +345,25 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
         }));
       await supabase.from("professionals").update({ certifications: cleanCerts }).eq("id", professionalId);
 
-      // Social links in their OWN best-effort update (non-fatal if the column isn't
-      // migrated). Store ONLY clean usernames, and only valid, non-empty ones.
+      // Social links — store ONLY clean usernames, valid + non-empty. The write
+      // result is CHECKED so "Guardado" is never shown on a silent failure: if the
+      // pro is actually saving usernames and the write fails (e.g. the social_links
+      // column isn't migrated → PGRST204, or RLS), we surface a real error instead
+      // of a false confirmation. (When there's nothing to save we ignore a missing
+      // column so non-social pros aren't blocked.)
       const social_links = Object.fromEntries(
         SOCIAL_NETWORKS
           .map(({ key }) => [key, cleanUsername(social[key])] as const)
           .filter(([, u]) => u && isValidUsername(u))
       );
-      await supabase.from("professionals").update({ social_links }).eq("id", professionalId);
+      const { error: socialError } = await supabase
+        .from("professionals")
+        .update({ social_links })
+        .eq("id", professionalId);
+      if (socialError && Object.keys(social_links).length > 0) {
+        console.error("[profile-editor] social_links save failed:", socialError.message);
+        throw new Error(t("socialSaveError"));
+      }
 
       // Persist the personal/display name — but NEVER overwrite a verified
       // official name (it's locked; corrections go through admin review).

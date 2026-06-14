@@ -1224,6 +1224,7 @@
     "secSocialDesc": "Optional. Enter just your username, we build the link.",
     "socialUserPlaceholder": "your_username",
     "socialInvalid": "Invalid username.",
+    "socialSaveError": "We couldn't save your social media. Please try again.",
     "socialHelp": "Only the networks you fill in are shown. Type just your username, not the link.",
     "secLangInsurers": "Languages & insurers",
     "secLang": "Languages",
