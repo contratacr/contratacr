@@ -1,11 +1,11 @@
-fix(buscar filters): neutral aseguradora placeholder, instant-apply only (no redundant button), no stuck focus ring
+fix(soporte): ticket-only support line, broader attach wording, require ticket name
 
-- Aseguradora placeholder is now the neutral field label "Aseguradora" / "Insurer"
-  (was "Cualquiera" / "Any"); default stays unselected = unfiltered, X clears.
-- Single filter behavior: instant-apply everywhere (matches the desktop sidebar);
-  removed the redundant mobile drawer "Ver resultados" apply button — the X and
-  the backdrop dismiss the drawer.
-- Select trigger uses focus-visible (not focus) with a brand-blue ring, so a mouse
-  click that returns focus to the trigger no longer leaves a stuck border/outline.
+- Terms footer: support is offered only via the Soporte ticket channel
+  ("Contáctanos desde Soporte.") — dropped the raw mailto; kept the Privacy
+  Policy link. Removed the now-unused SUPPORT_EMAIL import.
+- Attach button: "Adjuntar imagen o PDF" -> "Adjuntar imagen o documento"
+  (EN "Attach image or document").
+- Support ticket name field is now REQUIRED (we need to know who we're talking
+  to; it auto-fills for logged-in users) — asterisk + client-side validation.
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>

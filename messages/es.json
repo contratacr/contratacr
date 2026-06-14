@@ -2097,7 +2097,7 @@
     "messagePlaceholder": "Describe tu consulta con el mayor detalle posible. Si es un problema técnico, describe qué pasó y en qué pantalla estás.",
     "attachmentsLabel": "Adjuntos",
     "attachmentsHint": "(opcional, máx. {max} archivos · {mb}MB c/u)",
-    "attachBtn": "Adjuntar imagen o PDF",
+    "attachBtn": "Adjuntar imagen o documento",
     "addAnother": "Agregar otro archivo",
     "formats": "Formatos aceptados: JPG, PNG, WebP, PDF",
     "errRequired": "Por favor completa todos los campos requeridos.",

@@ -2097,7 +2097,7 @@
     "messagePlaceholder": "Describe your inquiry in as much detail as possible. If it's a technical problem, describe what happened and which screen you're on.",
     "attachmentsLabel": "Attachments",
     "attachmentsHint": "(optional, max {max} files · {mb}MB each)",
-    "attachBtn": "Attach image or PDF",
+    "attachBtn": "Attach image or document",
     "addAnother": "Add another file",
     "formats": "Accepted formats: JPG, PNG, WebP, PDF",
     "errRequired": "Please complete all required fields.",

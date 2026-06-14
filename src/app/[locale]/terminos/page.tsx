@@ -1,5 +1,4 @@
 import { Link } from "@/i18n/navigation";
-import { SUPPORT_EMAIL } from "@/lib/constants";
 import { LegalDocument, type LegalSection } from "@/components/legal/legal-document";
 
 export const metadata = {
@@ -167,9 +166,8 @@ export default function TerminosPage() {
       sections={SECTIONS}
       footer={
         <>
-          ¿Dudas sobre estos Términos? Escríbenos a{" "}
-          <a href={`mailto:${SUPPORT_EMAIL}`} className="font-semibold text-[#009FD9] hover:underline">{SUPPORT_EMAIL}</a>{" "}
-          o desde <Link href="/soporte" className="font-semibold text-[#009FD9] hover:underline">Contactar soporte</Link>. Revisa también nuestra{" "}
+          ¿Dudas sobre estos Términos? Contáctanos desde{" "}
+          <Link href="/soporte" className="font-semibold text-[#009FD9] hover:underline">Soporte</Link>. Revisa también nuestra{" "}
           <Link href="/privacidad" className="font-semibold text-[#009FD9] hover:underline">Política de Privacidad</Link>.
         </>
       }

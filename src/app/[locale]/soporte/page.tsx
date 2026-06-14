@@ -75,7 +75,7 @@ export default function SoportePage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (!form.email || !form.subject || !form.message) {
+    if (!form.name.trim() || !form.email || !form.subject || !form.message) {
       setError(t("errRequired"));
       return;
     }
@@ -179,10 +179,10 @@ export default function SoportePage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                        {t("nameLabel")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
+                        {t("nameLabel")} <span className="text-red-500">*</span>
                       </label>
                       <input type="text" className={inputClass} placeholder={t("namePlaceholder")}
-                        value={form.name} onChange={(e) => update("name", e.target.value)} />
+                        value={form.name} onChange={(e) => update("name", e.target.value)} required />
                     </div>
                     <div>
                       <label className="text-sm font-medium text-[#374151] block mb-1.5">
