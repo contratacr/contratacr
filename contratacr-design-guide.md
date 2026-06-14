@@ -744,3 +744,13 @@ invent a second badge (the only badge is "Verificado", identity). Valid benefit
 themes: appearing in searches / being found, receiving solicitudes, receiving &
 responding to projects, keeping the profile active. Keep it accurate — no premium
 cosmetic claims the product doesn't deliver.
+
+## 37. /buscar card name line: Verificado pill right-aligned, dashboard style
+
+On the search card, the "Verificado" mark reuses the dashboard's `Badge
+variant="verified"` (solid brand-blue pill) and is placed to the RIGHT of the name
+on the name line — name is `flex-1 truncate` (one line), the pill + optional price
+are `shrink-0` after it. Do NOT let the badge wrap below the name (it pushed the
+layout and truncated the lines beneath). With the badge on the name line, the
+location + coverage ("se desplaza") lines WRAP in full (no `truncate`; icon
+`mt-0.5` top-aligned) and are never cut off at ~360px. Keep the card's fixed height.
