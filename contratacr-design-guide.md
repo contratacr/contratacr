@@ -813,3 +813,18 @@ filled-in ones (`professionals.social_links` jsonb). On the public profile, rend
 compact row of recognizable icon buttons (only the set ones) that open in a new
 tab, in the contact sidebar. Brand glyphs live in `components/icons/social-icons.tsx`
 (lucide no longer ships Instagram/Facebook); website uses lucide `Globe`.
+
+## 43. Auth-gated pages: check on the server (no flash)
+
+For pages that require login (e.g. /publicar-proyecto), do the auth check in a
+SERVER component and `redirect()` to /login BEFORE rendering — never render the
+page then redirect in a client `useEffect` (that flashes the gated screen). Pattern:
+`page.tsx` (server) calls `safeGetUser`; if absent `redirect(\`/${locale}/login\`)`;
+otherwise render a client child form.
+
+## 44. Verification copy = "Verificado"-only (no unverified label)
+
+App copy must match the model: verified pros show "Verificado"; unverified ones
+simply don't show it — never describe a public "Identidad sin verificar" label.
+Keep the meaning accurate (identity is real/verifiable via the TSE padrón; NOT a
+quality rating). Prefer commas over em-dashes "—" in Spanish UI copy.
