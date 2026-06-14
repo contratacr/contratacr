@@ -1,28 +1,15 @@
-feat(subscriptions): modern plans page + SINPE comprobante upload + admin approve/reject flow (still inactive)
+fix(verification): unverified pros show nothing — remove inline warning + "Sin verificar" label
 
-Builds the customer-facing plans page and the admin payment-approval flow on top of
-the existing infra; all behind PAYMENTS_ENABLED (default off) + admin-only preview.
-
-- Plans page (subscription-panel.tsx) redesigned modern-SaaS style: two plan cards
-  (Anual ₡30.000 "2 meses gratis" highlighted, Mensual ₡3.000), benefits, then a
-  payment-method step — OPTION 1 Tarjeta (primary, behind gateway stub: shows
-  "disponible pronto" / falls back to SINPE), OPTION 2 SINPE Móvil o transferencia
-  (manual): SINPE instructions + amount + reference + comprobante upload (image/PDF)
-  → submit for review. Shows "en revisión" while pending and an active-plan summary
-  when premium. Responsive.
-- Comprobante upload: /api/payments/receipt → Cloudinary (contratacr/comprobantes,
-  resource_type auto for image+PDF); auth required, gated like the rest.
-- Manual submit: /api/payments/subscription/manual → submitManualPayment() creates a
-  PENDING payment (grants nothing) and supersedes any prior pending one.
-- Admin approval (visible now, admin-only) on /admin/suscripciones: AdminPaymentApprovals
-  lists pending payments with the comprobante link; Approve → approveManualPayment()
-  marks the payment paid + activates/extends the subscription automatically; Reject →
-  rejectManualPayment() (kept in history with reason). Plus the existing per-pro manual
-  activate + "Eliminar / reset" in the admin user-profile card.
-- DB migration 055 (apply after 054): adds receipt_url, reviewed_by, reviewed_at +
-  a 'rejected' payment status + a pending index.
-
-Flag OFF unchanged: pros keep full free access, regular users see zero subscription
-UI; plans page only via the admin preview. No card data stored (gateway-only).
+Client-facing surfaces only (documented explanation on /proveedores-autorizados +
+Terms kept intact):
+- Search card: unverified badge removed (verifiedBadge → null; only "Verificado"
+  shows). Dropped the now-unused ShieldAlert import.
+- Public profile: header shows the "Verificado" text only when verified (no
+  negative label otherwise); the "Sobre mí" Verificación row now renders only for
+  verified pros. Dropped unused ShieldAlert import.
+- Booking modal: removed the "Este profesional aún no ha verificado su identidad.
+  Coordina con cuidado." notice.
+Pro's own dashboard/verification panel (their actionable status + how to verify)
+is unchanged.
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>

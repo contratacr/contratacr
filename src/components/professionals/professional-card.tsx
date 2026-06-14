@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { MapPin, ShieldAlert, Truck, Image as ImageIcon, Star, Award } from "lucide-react";
+import { MapPin, Truck, Image as ImageIcon, Star, Award } from "lucide-react";
 import { ProfessionalSchedule, type ScheduleSlot } from "@/components/professionals/professional-schedule";
 import { Link } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -140,16 +140,13 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
   // Verified trust mark — rendered inline beside the name on desktop, but BELOW
   // the name on mobile so the name keeps the full top line and never truncates first.
   // Compact trust mark shown right next to the name (icon + short text, no box).
+  // Verified → plain-text "Verificado". Unverified shows NOTHING (no badge, no
+  // negative label) — only verified pros get a mark.
   const verifiedBadge = isVerified ? (
     <span title={tCard("verifiedTitle")} className="inline-flex shrink-0 items-center text-[#16a34a]">
       <span className="text-[11px] font-semibold">{tCard("verifiedShort")}</span>
     </span>
-  ) : (
-    <span title={tCard("unverifiedTitle")} className="inline-flex shrink-0 items-center gap-0.5 text-[#b45309]">
-      <ShieldAlert className="h-3.5 w-3.5" />
-      <span className="text-[11px] font-medium">{tCard("unverifiedShort")}</span>
-    </span>
-  );
+  ) : null;
 
   // ── ONE consolidated location line (keeps cards uniform): a fixed pro shows
   // their first readable workplace (+N), else province/cantón; a mobile pro shows
@@ -192,7 +189,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
                   <Link href={`/profesionales/${professional.slug}`} className="min-w-0">
                     <h3 className="font-bold text-[#111827] text-[15px] leading-tight hover:text-[#009FD9] transition-colors line-clamp-2 md:line-clamp-1">{brandPrimary}</h3>
                   </Link>
-                  <span className="shrink-0 mt-0.5">{verifiedBadge}</span>
+                  {verifiedBadge && <span className="shrink-0 mt-0.5">{verifiedBadge}</span>}
                 </div>
 
                 {/* Price — just the amount, no "Desde/Tarifa" word. Shown only when
