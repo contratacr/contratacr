@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { ChevronLeft, ChevronRight, ChevronDown, MapPin, Phone } from "lucide-react";
+import { Phone } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { BookingModal } from "@/components/booking/booking-modal";
 import { ClientRegistrationModal } from "@/components/auth/client-registration-modal";
@@ -26,9 +26,11 @@ interface ProfessionalScheduleProps {
   isOwn?: boolean;
 }
 
-// How many day-columns are shown at once, and how far ahead the arrows page.
-const COLS = 3;
+// How far ahead we look for "next available" slots.
 const WINDOW_DAYS = 21;
+// How many soonest slots to show as quick-book chips on the card (a GLIMPSE — the
+// full calendar lives in the booking modal). Capped so every card stays uniform.
+const GLIMPSE = 3;
 
 function toKey(d: Date): string {
   const y = d.getFullYear();
@@ -37,9 +39,7 @@ function toKey(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-// Full, CONSISTENT date label for every day column: day number + short month
-// (e.g. "15 mar" / "Mar 15"), never a weekday-only "lun 15". The label row is
-// CSS-uppercased, so casing/period differences don't matter.
+// Short month-day label (e.g. "15 mar" / "Mar 15"); today/tomorrow get words.
 function dateLabel(d: Date, locale: string): string {
   const loc = locale === "en" ? "en-US" : "es-CR";
   const day = d.getDate();
@@ -48,17 +48,19 @@ function dateLabel(d: Date, locale: string): string {
 }
 
 /**
- * Right-hand availability panel for search cards (HuliHealth-style).
- *  - Public: a 3-day column carousel with tappable time chips that open the
- *    booking flow pre-selected, plus arrows to page further out and a
- *    "Ver horario completo" link to the full profile.
- *  - Private: lock state with "Contáctanos por Whatsapp" + "por llamada".
+ * Card availability + actions — a COMPACT SUMMARY (the card is a glimpse; the full
+ * scheduler lives on the profile / in the booking modal).
+ *  - Public + slots: the SOONEST few times as quick-book chips ("Hoy 15:00", "Mié
+ *    9:00") + "Solicitar servicio" (opens the full calendar) + WhatsApp.
+ *  - Private / no upcoming slots: a short note + contact buttons.
+ * No inline multi-day grid, no location selector, no paging arrows on the card —
+ * those crowded it, collided with the bookmark, and only fit ~2–3 slots.
  */
 export function ProfessionalSchedule({ professional, categoryName, availabilityPublic, contactPreference = "ambas", slots: allSlots, activeCategory, isOwn = false }: ProfessionalScheduleProps) {
   const t = useTranslations("schedule");
   const locale = useLocale();
   // When a specific profession was searched, only show that profession's hours
-  // (item 1). Slots with no category (legacy/pre-migration) always show.
+  // (slots with no category — legacy/pre-migration — always show).
   const slots = useMemo(
     () => (activeCategory ? allSlots.filter((s) => !s.categoryId || s.categoryId === activeCategory) : allSlots),
     [allSlots, activeCategory]
@@ -67,72 +69,45 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const [showRegistration, setShowRegistration] = useState(false);
   const [showBooking, setShowBooking] = useState(false);
   const [preset, setPreset] = useState<ScheduleSlot | null>(null);
-  const [offset, setOffset] = useState(0);
-  // When the pro acts on their OWN card we block the action with a friendly modal
-  // instead of hiding the buttons (the card looks identical to a client's view).
+  // When the pro acts on their OWN card we block with a friendly modal instead of
+  // hiding the buttons (the card looks identical to a client's view).
   const [selfMsg, setSelfMsg] = useState<string | null>(null);
 
-  // What the professional accepts. Booking needs public availability AND a
-  // preference that isn't WhatsApp-only; WhatsApp shows unless they chose
-  // appointments-only.
+  // Booking needs public availability AND a preference that isn't WhatsApp-only.
   const canBook = availabilityPublic && contactPreference !== "solo_whatsapp";
 
-  // Distinct locations present in the published slots. Chips let the client choose
-  // WHICH place a slot is for before booking (item 3) — a traveling pro's coverage
-  // zones (cov_*) and videoconsulta are labeled too, never a bare "Ubicación".
-  function locLabel(id: string | null): string {
+  // Friendly label for a slot's location (used only to pre-fill the booking modal).
+  function locLabel(id: string | null | undefined): string {
     if (!id || id === "general") return "General";
     if (id === "videoconsulta") return t("videoconsulta");
     if (id.startsWith("cov_")) return t("atHome");
     return professional.workplaces?.find((w) => w.id === id)?.name ?? t("location");
   }
-  // Group by LABEL so two coverage zones that both read "A domicilio" collapse to
-  // a single chip (no confusing duplicates); each group keeps its underlying ids.
-  const locationGroups = useMemo(() => {
-    const map = new Map<string, string[]>();
-    for (const s of slots) {
-      const id = s.locationId ?? "general";
-      const label = locLabel(id);
-      const ids = map.get(label) ?? [];
-      if (!ids.includes(id)) ids.push(id);
-      map.set(label, ids);
-    }
-    return Array.from(map.entries()).map(([label, ids]) => ({ label, ids }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [slots]);
-  // Default to the FIRST location group when there's more than one, so hours are
-  // never shown as an undifferentiated mix; the chips switch between them.
-  const [selectedLoc, setSelectedLoc] = useState<string | null>(null);
-  const effectiveLabel = selectedLoc ?? (locationGroups.length > 1 ? locationGroups[0].label : null);
-  const effectiveIds = locationGroups.find((g) => g.label === effectiveLabel)?.ids ?? null;
-  const filteredSlots = useMemo(
-    () => (effectiveLabel === null ? slots : slots.filter((s) => locLabel(s.locationId ?? "general") === effectiveLabel)),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [slots, effectiveLabel]
-  );
 
-  // Rolling window of upcoming days, keyed to the FULL slot so picking carries the
-  // (service + location) context into the booking.
-  const days = useMemo(() => {
+  // Soonest-first list of bookable slots across the whole window (all locations).
+  // Past/too-soon slots are dropped; the card shows the first few, the modal the rest.
+  const upcoming = useMemo(() => {
     const byDate = new Map<string, ScheduleSlot[]>();
-    for (const s of filteredSlots) {
-      if (!byDate.has(s.date)) byDate.set(s.date, []);
-      byDate.get(s.date)!.push(s);
+    for (const s of slots) {
+      const arr = byDate.get(s.date);
+      if (arr) arr.push(s); else byDate.set(s.date, [s]);
     }
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    return Array.from({ length: WINDOW_DAYS }, (_, i) => {
+    const out: { slot: ScheduleSlot; label: string }[] = [];
+    for (let i = 0; i < WINDOW_DAYS; i++) {
       const d = new Date(today);
       d.setDate(today.getDate() + i);
       const key = toKey(d);
-      // Hide any slot within the 15-minute lead time (today only) — it's no longer
-      // bookable, so it must stop showing in search.
-      const items = (byDate.get(key) ?? []).filter((s) => !isTooSoonCR(key, s.time)).sort((a, b) => a.time.localeCompare(b.time));
-      // Always the full date (no "Hoy"/"Mañana"/weekday-only) so columns are consistent.
-      const label = dateLabel(d, locale);
-      return { key, label, soon: i <= 1, items };
-    });
-  }, [filteredSlots, t, locale]);
+      const items = (byDate.get(key) ?? [])
+        .filter((s) => !isTooSoonCR(key, s.time))
+        .sort((a, b) => a.time.localeCompare(b.time));
+      const day = i === 0 ? t("today") : i === 1 ? t("tomorrow") : dateLabel(d, locale);
+      for (const s of items) out.push({ slot: s, label: `${day} ${s.time}` });
+    }
+    return out;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slots, locale]);
 
   function pick(slot: ScheduleSlot) {
     if (isOwn) { setSelfMsg(SELF_MSG.request); return; }
@@ -148,7 +123,6 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     else setShowRegistration(true);
   }
 
-  // Shared booking modals — rendered in every branch that can book.
   const bookingModals = (
     <>
       <ClientRegistrationModal
@@ -165,23 +139,18 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
         initialDate={preset?.date}
         initialTime={preset?.time}
         initialCategoryId={preset?.categoryId ?? activeCategory ?? professional.categoryId ?? null}
-        initialLocationId={preset?.locationId ?? (effectiveIds && effectiveIds[0] !== "general" ? effectiveIds[0] : null)}
-        initialLocationLabel={preset?.locationId ? locLabel(preset.locationId) : (effectiveLabel && effectiveLabel !== "General" ? effectiveLabel : null)}
+        initialLocationId={preset?.locationId ?? null}
+        initialLocationLabel={preset?.locationId ? locLabel(preset.locationId) : null}
       />
     </>
   );
 
-  // Self-action notice — rendered in every branch so the pro's own card shows the
-  // same buttons as a client's but blocks the action with a friendly explanation.
   const selfModal = (
     <SelfActionModal open={!!selfMsg} onClose={() => setSelfMsg(null)} message={selfMsg ?? ""} />
   );
 
   // Direct-contact actions. WhatsApp shows whenever a number exists; "Llamar" only
-  // when the pro enabled phone contact. Both are blocked on the pro's OWN card.
-  // `stacked` = vertical (one above the other) — used for the PRIVATE case where
-  // these are the only actions; otherwise they share ONE compact row so adding
-  // "Llamar" above "Solicitar servicio" never adds a line.
+  // when the pro enabled phone contact. Both blocked on the pro's OWN card.
   const showWa = !!professional.whatsapp;
   const showCall = !!professional.allowPhoneCall && !!(professional.callPhone || professional.whatsapp);
   const waHref = getWhatsAppLink(professional.whatsapp, `Hola ${professional.fullName.split(" ")[0]}, vi tu perfil en ContrataCR y me gustaría coordinar un servicio.`);
@@ -214,13 +183,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     ) : null;
 
   // ── Contact-only (private availability OR WhatsApp-only preference) ────
-  // The reason is shown as a flush top band on the card; here we only render the
-  // compact contact actions so every card stays the same tidy height.
   if (!canBook) {
-    // TYPE 3 — no public schedule. Contact actions are the ONLY buttons, stacked
-    // (WhatsApp above Llamar), bottom-pinned so the card height is unchanged. When
-    // availability was hidden ON PURPOSE (private), say so; a WhatsApp-only pref
-    // just shows the buttons. Note fills the empty space — it doesn't grow the card.
     return (
       <div className="flex h-full flex-col justify-end gap-1.5">
         {!availabilityPublic && (
@@ -234,24 +197,8 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     );
   }
 
-  // ── Public availability — packed date columns (skip empty days) ───────
-  // Show only the upcoming days that actually have bookable slots (no "—"
-  // filler columns), paged 3 at a time — matches the redesign.
-  const daysWithSlots = days.filter((d) => d.items.length > 0);
-  const hasUpcoming = daysWithSlots.length > 0;
-  const maxOffset = Math.max(0, daysWithSlots.length - COLS);
-  const effOffset = Math.min(offset, maxOffset);
-  const windowDays = daysWithSlots.slice(effOffset, effOffset + COLS);
-  const canPrev = effOffset > 0;
-  const canNext = effOffset + COLS < daysWithSlots.length;
-
-  // ── No published slots → coordinate via WhatsApp ──────────────────────────
-  // "Solicitar servicio" books a time slot, which makes no sense when there are
-  // none to book (it would open an empty calendar). So instead of a dead booking
-  // CTA, guide the client to coordinate by WhatsApp (+ Llamar if enabled), the
-  // realistic path until the pro publishes availability. Bottom-pinned so the card
-  // keeps the same height as the others.
-  if (!hasUpcoming) {
+  // ── Public but no upcoming slots → coordinate via WhatsApp ──────────────────
+  if (upcoming.length === 0) {
     return (
       <div className="flex h-full flex-col justify-end gap-1.5">
         <div className="rounded-lg bg-[#f9fafb] border border-[#f3f4f6] px-2.5 py-2">
@@ -263,119 +210,51 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     );
   }
 
+  // ── Public + has slots — compact glimpse + actions ──────────────────────────
+  const glimpse = upcoming.slice(0, GLIMPSE);
+  const moreCount = upcoming.length - glimpse.length;
+
   return (
-    <div className="flex flex-col gap-1.5 h-full">
-      {/* Location control — selector for multi-place, else a plain label. Rendered
-          ONLY when there's something to show, so single-location cards don't keep an
-          empty top row. ("Ver horario completo" moved BELOW the grid — see further
-          down — so it no longer collides with the card's top-right bookmark.) */}
-      {(locationGroups.length > 1 || (!!effectiveLabel && effectiveLabel !== "General")) && (
-        <div className="min-w-0">
-          {locationGroups.length > 1 ? (
-            <div className="relative">
-              <MapPin className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-[#009FD9] pointer-events-none" />
-              <select
-                value={effectiveLabel ?? ""}
-                onClick={(e) => e.stopPropagation()}
-                onChange={(e) => { e.stopPropagation(); setSelectedLoc(e.target.value); setOffset(0); }}
-                aria-label={t("location")}
-                className="w-full appearance-none rounded-lg border border-[#bfdbfe] bg-[#EBF5FB] pl-6 pr-6 py-1 text-[11px] font-semibold text-[#0089bb] focus:outline-none focus:ring-2 focus:ring-[#009FD9] cursor-pointer truncate"
-              >
-                {locationGroups.map((g) => <option key={g.label} value={g.label}>{g.label}</option>)}
-              </select>
-              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-[#0089bb] pointer-events-none" />
-            </div>
-          ) : (
-            // Only a real place name; the generic "Próximos horarios" label is removed.
-            <p className="flex items-center gap-1 text-[11px] leading-tight truncate">
-              <MapPin className="h-3 w-3 text-[#009FD9] shrink-0" />
-              <span className="truncate font-medium text-[#374151]">{effectiveLabel}</span>
-            </p>
+    <div className="flex h-full flex-col gap-2">
+      {/* Soonest times as quick-book chips. `md:pr-9` keeps the first row clear of
+          the card's top-right bookmark on desktop. */}
+      <div className="flex-1 min-h-0 md:pr-9">
+        <p className="text-[11px] font-semibold text-[#374151] mb-1.5">{t("upcomingTimes")}</p>
+        <div className="flex flex-wrap gap-1.5">
+          {glimpse.map(({ slot, label }) => (
+            <button
+              key={`${slot.date}-${slot.time}-${slot.locationId ?? ""}`}
+              type="button"
+              onClick={(e) => { e.stopPropagation(); pick(slot); }}
+              className="rounded-lg bg-[#EBF5FB] px-2 py-1 text-[11px] font-semibold leading-none text-[#0089bb] hover:bg-[#009FD9] hover:text-white transition-colors"
+            >
+              {label}
+            </button>
+          ))}
+          {moreCount > 0 && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); openBooking(); }}
+              title={t("viewFullSchedule")}
+              className="rounded-lg border border-dashed border-[#bfdbfe] px-2 py-1 text-[11px] font-semibold leading-none text-[#0089bb] hover:bg-[#EBF5FB] transition-colors"
+            >
+              +{moreCount}
+            </button>
           )}
         </div>
-      )}
-
-      <div className="flex-1 min-h-0 flex items-center">
-        {!hasUpcoming ? (
-          <div className="w-full rounded-lg bg-[#f9fafb] border border-[#f3f4f6] px-2.5 py-2">
-            <p className="text-[11px] text-[#9ca3af] leading-snug">{t("noUpcoming")}</p>
-          </div>
-        ) : (
-          <div className="flex w-full items-start gap-1">
-            <button
-              type="button"
-              disabled={!canPrev}
-              onClick={(e) => { e.stopPropagation(); setOffset(() => Math.max(0, effOffset - COLS)); }}
-              aria-label={t("prevDays")}
-              className="flex w-4 shrink-0 self-center items-center justify-center rounded text-[#9ca3af] enabled:hover:text-[#009FD9] disabled:opacity-25"
-            >
-              <ChevronLeft className="h-[15px] w-[15px]" />
-            </button>
-
-            <div className="grid flex-1 grid-cols-3 gap-1.5">
-              {windowDays.map((day) => {
-                const extra = day.items.length - 2;
-                return (
-                  <div key={day.key} className="flex flex-col gap-1 min-w-0">
-                    <p className={`text-center text-[10px] font-bold uppercase tracking-wide leading-tight truncate ${day.soon ? "text-[#009FD9]" : "text-[#9ca3af]"}`}>{day.label}</p>
-                    {day.items.slice(0, 2).map((slot) => (
-                      <button
-                        key={`${slot.time}-${slot.locationId ?? ""}`}
-                        onClick={(e) => { e.stopPropagation(); pick(slot); }}
-                        className="w-full rounded-md py-0.5 text-[11px] font-semibold text-[#0089bb] bg-[#EBF5FB] hover:bg-[#009FD9] hover:text-white transition-colors leading-none"
-                      >
-                        {slot.time}
-                      </button>
-                    ))}
-                    {extra > 0 && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); pick(day.items[2]); }}
-                        title={t("viewFullSchedule")}
-                        className="w-full rounded-md py-0.5 text-[10px] font-bold leading-none text-[#0089bb] border border-dashed border-[#bfdbfe] hover:bg-[#EBF5FB] transition-colors"
-                      >
-                        +{extra}
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            <button
-              type="button"
-              disabled={!canNext}
-              onClick={(e) => { e.stopPropagation(); setOffset(() => Math.min(maxOffset, effOffset + COLS)); }}
-              aria-label={t("nextDays")}
-              className="flex w-4 shrink-0 self-center items-center justify-center rounded text-[#9ca3af] enabled:hover:text-[#009FD9] disabled:opacity-25"
-            >
-              <ChevronRight className="h-[15px] w-[15px]" />
-            </button>
-          </div>
-        )}
       </div>
 
-      {/* "Ver horario completo" — centered BELOW the schedule (was top-right, where it
-          collided with the card's bookmark button). Compact line; sits above the
-          contact/primary actions on every breakpoint. */}
-      <button
-        type="button"
-        onClick={(e) => { e.stopPropagation(); openBooking(); }}
-        className="self-center text-[10px] font-medium text-[#009FD9] hover:underline whitespace-nowrap"
-      >
-        {t("viewFullSchedule")}
-      </button>
-
-      {/* TYPE 1 / TYPE 2 — contact actions grouped ABOVE (WhatsApp always; "Llamar"
-          when enabled), then the large "Solicitar servicio" primary BELOW. The
-          grouped contact row is a single line, so the card never grows taller. */}
-      {contactButtons(false)}
-      <button
-        type="button"
-        onClick={(e) => { e.stopPropagation(); openBooking(); }}
-        className="w-full bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-semibold py-2 rounded-lg transition-colors"
-      >
-        {t("requestService")}
-      </button>
+      {/* Actions — bottom-pinned so every card aligns. */}
+      <div className="flex flex-col gap-1.5">
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); openBooking(); }}
+          className="w-full rounded-lg bg-[#009FD9] py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0089bb]"
+        >
+          {t("requestService")}
+        </button>
+        {contactButtons(false)}
+      </div>
 
       {bookingModals}
       {selfModal}

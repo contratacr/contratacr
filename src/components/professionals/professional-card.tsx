@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { MapPin, Truck, Image as ImageIcon, Star, Award } from "lucide-react";
+import { MapPin, Truck, Star } from "lucide-react";
 import { ProfessionalSchedule, type ScheduleSlot } from "@/components/professionals/professional-schedule";
 import { Link } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -174,10 +174,12 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
   const mobileText = professional.serviceType?.includes("mobile") ? coverageLabel(professional.coverage, tCard) : "";
 
   return (
-    // Content-driven height with a floor (md:min-h): simple cards stay compact,
-    // rich ones (multi-location/profession + many slots) grow. The number badge
-    // (page wrapper) sits at the top-left, so the content is padded `pl-10`.
-    <div className={`group relative rounded-2xl bg-white border border-[#e5e7eb] hover:border-[#cbd5e1] hover:shadow-md transition-all duration-200 h-[360px] md:h-[232px] overflow-hidden ${className ?? ""}`}>
+    // FIXED, uniform height — the card is a SUMMARY, so content is capped/summarized
+    // (primary location "+N", primary professions "+N", a soonest-times glimpse) and
+    // everything fits whether a pro has minimal or maximal info. Sized for the richest
+    // case so nothing is ever cut off; slightly smaller than the old card. The number
+    // badge (page wrapper) sits top-left, so the content is padded `pl-10`.
+    <div className={`group relative rounded-2xl bg-white border border-[#e5e7eb] hover:border-[#cbd5e1] hover:shadow-md transition-all duration-200 h-[330px] md:h-[216px] overflow-hidden ${className ?? ""}`}>
       <div className="p-3.5 pl-10 h-full">
         <div className="flex flex-col md:flex-row gap-3 h-full">
           {/* ── Identity zone ── */}
@@ -266,47 +268,23 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
                 </span>
               )}
 
-              {/* Location + coverage — wrap in full (never truncated). The icon stays
-                  top-aligned when the text wraps to a second line on narrow mobile. */}
-              <div className="flex flex-col gap-0.5 text-[11px] text-[#6b7280]">
+              {/* Location SUMMARY — ONE primary place "+N" and the coverage line, each
+                  a SINGLE truncating line so they never wrap-clip or get cut off. The
+                  full address list lives on the profile. */}
+              <div className="flex flex-col gap-0.5 text-[11px] text-[#6b7280] min-w-0">
                 {fixedText && (
-                  <span className="flex items-start gap-1.5">
-                    <MapPin className="h-3 w-3 text-[#009FD9] shrink-0 mt-0.5" />
-                    <span className="leading-snug">{fixedText}</span>
+                  <span className="flex items-center gap-1.5 min-w-0">
+                    <MapPin className="h-3 w-3 text-[#009FD9] shrink-0" />
+                    <span className="truncate">{fixedText}</span>
                   </span>
                 )}
                 {mobileText && (
-                  <span className="flex items-start gap-1.5">
-                    <Truck className="h-3 w-3 text-[#0089bb] shrink-0 mt-0.5" />
-                    <span className="leading-snug">{mobileText}</span>
+                  <span className="flex items-center gap-1.5 min-w-0">
+                    <Truck className="h-3 w-3 text-[#0089bb] shrink-0" />
+                    <span className="truncate">{mobileText}</span>
                   </span>
                 )}
               </div>
-
-              {/* Casos de éxito + Certificaciones — compact links sharing ONE bottom
-                  row so the card height stays uniform (they don't each add a line). */}
-              {(professional.portfolioCount || professional.certificationCount) ? (
-                <div className="mt-auto pt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5">
-                  {professional.portfolioCount ? (
-                    <Link
-                      href={`/profesionales/${professional.slug}?tab=casos`}
-                      className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[#009FD9] hover:underline w-fit"
-                    >
-                      <ImageIcon className="h-3.5 w-3.5" />
-                      {tCard("viewCases")}
-                    </Link>
-                  ) : null}
-                  {professional.certificationCount ? (
-                    <Link
-                      href={`/profesionales/${professional.slug}?tab=certificaciones`}
-                      className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[#009FD9] hover:underline w-fit"
-                    >
-                      <Award className="h-3.5 w-3.5" />
-                      {tCard("viewCertifications")}
-                    </Link>
-                  ) : null}
-                </div>
-              ) : null}
             </div>
           </div>
 

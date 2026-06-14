@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import { Plus, X, Lock, Loader2, MapPin, AlertCircle } from "lucide-react";
+import { Plus, X, Lock, Loader2, MapPin, AlertCircle, ChevronDown } from "lucide-react";
 import { type ContactPreference } from "@/lib/constants";
 import { crTodayISO, isPastDateTimeCR, isTooSoonCR, nextFullHourCR, LEAD_MINUTES } from "@/lib/time-cr";
 import { getCategoryLabel } from "@/lib/data/categories";
@@ -470,11 +470,16 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
             <TimeSelect label={t("to")} min={hastaMin} value={genEnd} onChange={(v) => { setGenEnd(v); setPastError(null); }} className="w-32" error={rangeInvalid ? t("toAfterFrom") : undefined} />
             <div className="flex flex-col gap-1">
               <label className="text-xs font-medium text-[#6b7280]">{t("interval")}</label>
-              <select value={interval} onChange={(e) => setInterval(Number(e.target.value))} className={cn(inputCls, "h-10 cursor-pointer")}>
-                {INTERVAL_VALUES.map((v) => (
-                  <option key={v} value={v}>{intervalLabel(v)}</option>
-                ))}
-              </select>
+              {/* appearance-none + custom chevron so the arrow is consistent and
+                  aligned (the native OS arrow looked misaligned/cramped). */}
+              <div className="relative">
+                <select value={interval} onChange={(e) => setInterval(Number(e.target.value))} className={cn(inputCls, "h-10 w-full appearance-none pr-9 cursor-pointer")}>
+                  {INTERVAL_VALUES.map((v) => (
+                    <option key={v} value={v}>{intervalLabel(v)}</option>
+                  ))}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9ca3af]" />
+              </div>
             </div>
             {interval === 0 && (
               <div className="flex flex-col gap-1">
