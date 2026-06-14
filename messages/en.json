@@ -1221,7 +1221,7 @@
     "secContact": "Contact",
     "secContactDesc": "How clients reach you",
     "secSocial": "Social media",
-    "secSocialDesc": "Optional. Enter just your username, we build the link.",
+    "secSocialDesc": "Share your social media with your clients.",
     "socialUserPlaceholder": "your_username",
     "socialInvalid": "Invalid username.",
     "socialSaveError": "We couldn't save your social media. Please try again.",

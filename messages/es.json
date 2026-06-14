@@ -1221,7 +1221,7 @@
     "secContact": "Contacto",
     "secContactDesc": "Cómo te contactan los clientes",
     "secSocial": "Redes sociales",
-    "secSocialDesc": "Opcional. Escribe solo tu usuario; nosotros armamos el enlace.",
+    "secSocialDesc": "Comparte tus redes sociales con tus clientes.",
     "socialUserPlaceholder": "tu_usuario",
     "socialInvalid": "Usuario no válido.",
     "socialSaveError": "No pudimos guardar tus redes sociales. Intenta de nuevo.",
