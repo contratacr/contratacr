@@ -671,89 +671,95 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                   {/* ── TAB: Sobre mí ── */}
                   {activeTab === "sobre" && (
                     <div className="flex flex-col gap-5">
+                      {/* Lead: the bio reads as the intro paragraph. */}
                       {professional.bio && (
-                        <div>
-                          <h2 className="text-lg font-semibold text-[#111827] mb-3">{t("description")}</h2>
-                          <p className="text-sm text-[#374151] leading-relaxed">{professional.bio}</p>
-                        </div>
+                        <p className="text-[15px] text-[#374151] leading-relaxed whitespace-pre-line">{professional.bio}</p>
                       )}
 
-
-                      {/* Quick facts — plain label/value rows, no bordered box, so
-                          every block in "Sobre mí" gets the same clean treatment. */}
-                      <div className="flex flex-col gap-2.5">
+                      {/* Every fact gets the SAME treatment: a muted label + value on
+                          one row, separated by hairline dividers — uniform, clean, and
+                          readable, with multi-value rows (precios, lugares) stacked
+                          on the right. No per-item boxes. */}
+                      <dl className="border-t border-[#f3f4f6] divide-y divide-[#f3f4f6]">
                         {expYears > 0 && (
-                          <div className="flex items-center justify-between gap-3">
-                            <span className="text-sm text-[#6b7280]">{t("experienceLabel")}</span>
-                            <span className="text-sm font-semibold text-[#111827]">{t("yearsValue", { years: expYears })}</span>
+                          <div className="flex items-start justify-between gap-4 py-3">
+                            <dt className="text-sm text-[#6b7280] shrink-0">{t("experienceLabel")}</dt>
+                            <dd className="text-sm font-medium text-[#111827] text-right">{t("yearsValue", { years: expYears })}</dd>
                           </div>
                         )}
-                        <div className="flex items-center justify-between gap-3">
-                          <span className="text-sm text-[#6b7280]">{t("verification")}</span>
-                          {professional.verificationStatus === "verified" ? (
-                            <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#15803d]">
-                              <ShieldCheck className="h-4 w-4 shrink-0" /> {t("identityVerified")}
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#b45309]">
-                              <ShieldAlert className="h-4 w-4 shrink-0" /> {t("identityUnverified")}
-                            </span>
-                          )}
+
+                        <div className="flex items-start justify-between gap-4 py-3">
+                          <dt className="text-sm text-[#6b7280] shrink-0">{t("verification")}</dt>
+                          <dd className="text-right">
+                            {professional.verificationStatus === "verified" ? (
+                              <span className="inline-flex items-center gap-1.5 text-sm font-medium text-[#15803d]">
+                                <ShieldCheck className="h-4 w-4 shrink-0" /> {t("identityVerified")}
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 text-sm font-medium text-[#b45309]">
+                                <ShieldAlert className="h-4 w-4 shrink-0" /> {t("identityUnverified")}
+                              </span>
+                            )}
+                          </dd>
                         </div>
+
                         {locationText && (
-                          <div className="flex items-center justify-between gap-3">
-                            <span className="text-sm text-[#6b7280]">{t("location")}</span>
-                            <span className="text-sm font-medium text-[#111827] text-right">{locationText}</span>
+                          <div className="flex items-start justify-between gap-4 py-3">
+                            <dt className="text-sm text-[#6b7280] shrink-0">{t("location")}</dt>
+                            <dd className="text-sm font-medium text-[#111827] text-right">{locationText}</dd>
                           </div>
                         )}
+
                         {professional.pricing && professional.pricing.length > 0 ? (
-                          <div className="flex items-start justify-between gap-3">
-                            <span className="text-sm text-[#6b7280]">{t("prices")}</span>
-                            <div className="flex flex-col gap-0.5 text-right">
+                          <div className="flex items-start justify-between gap-4 py-3">
+                            <dt className="text-sm text-[#6b7280] shrink-0">{t("prices")}</dt>
+                            <dd className="flex flex-col gap-0.5 text-right">
                               {professional.pricing.map((tier) => (
-                                <p key={tier.id} className="text-sm font-semibold text-[#111827]">{formatPricingTier(tier)}</p>
+                                <span key={tier.id} className="text-sm font-medium text-[#111827]">{formatPricingTier(tier)}</span>
                               ))}
-                            </div>
+                            </dd>
                           </div>
                         ) : professional.hourlyRate ? (
-                          <div className="flex items-center justify-between gap-3">
-                            <span className="text-sm text-[#6b7280]">{t("baseRate")}</span>
-                            <span className="text-sm font-semibold text-[#111827]">₡{professional.hourlyRate.toLocaleString(locale === "en" ? "en-US" : "es-CR")}{t("perHour")}</span>
+                          <div className="flex items-start justify-between gap-4 py-3">
+                            <dt className="text-sm text-[#6b7280] shrink-0">{t("baseRate")}</dt>
+                            <dd className="text-sm font-medium text-[#111827] text-right">₡{professional.hourlyRate.toLocaleString(locale === "en" ? "en-US" : "es-CR")}{t("perHour")}</dd>
                           </div>
                         ) : null}
-                      </div>
 
-                      {professional.workplaces && professional.workplaces.length > 0 && (
-                        <div>
-                          <h2 className="text-lg font-semibold text-[#111827] mb-3">{t("workplaces")}</h2>
-                          <div className="flex flex-col gap-2">
-                            {professional.workplaces.map((w, i) => (
-                              <div key={w.id ?? i} className="text-sm text-[#374151]">
-                                <p className="font-medium">{w.name}</p>
-                                {w.address && w.address !== w.name && <p className="text-xs text-[#9ca3af]">{w.address}</p>}
-                              </div>
-                            ))}
+                        {professional.workplaces && professional.workplaces.length > 0 && (
+                          <div className="flex items-start justify-between gap-4 py-3">
+                            <dt className="text-sm text-[#6b7280] shrink-0">{t("workplaces")}</dt>
+                            <dd className="flex flex-col gap-1.5 text-right">
+                              {professional.workplaces.map((w, i) => (
+                                <span key={w.id ?? i} className="text-sm">
+                                  <span className="font-medium text-[#111827]">{w.name}</span>
+                                  {w.address && w.address !== w.name && (
+                                    <span className="block text-xs text-[#9ca3af]">{w.address}</span>
+                                  )}
+                                </span>
+                              ))}
+                            </dd>
                           </div>
-                        </div>
-                      )}
+                        )}
 
-                      {professional.languages && professional.languages.length > 0 && (
-                        <div>
-                          <h2 className="text-lg font-semibold text-[#111827] mb-3">{t("languages")}</h2>
-                          <p className="text-sm text-[#374151]">
-                            {professional.languages.map((l) => languageLabel(l, locale)).join(" · ")}
-                          </p>
-                        </div>
-                      )}
+                        {professional.languages && professional.languages.length > 0 && (
+                          <div className="flex items-start justify-between gap-4 py-3">
+                            <dt className="text-sm text-[#6b7280] shrink-0">{t("languages")}</dt>
+                            <dd className="text-sm font-medium text-[#111827] text-right">
+                              {professional.languages.map((l) => languageLabel(l, locale)).join(" · ")}
+                            </dd>
+                          </div>
+                        )}
 
-                      {professional.insuranceNetworks && professional.insuranceNetworks.length > 0 && (
-                        <div>
-                          <h2 className="text-lg font-semibold text-[#111827] mb-3">{t("insurers")}</h2>
-                          <p className="text-sm text-[#374151]">
-                            {professional.insuranceNetworks.map((id) => insurerLabel(id)).join(" · ")}
-                          </p>
-                        </div>
-                      )}
+                        {professional.insuranceNetworks && professional.insuranceNetworks.length > 0 && (
+                          <div className="flex items-start justify-between gap-4 py-3">
+                            <dt className="text-sm text-[#6b7280] shrink-0">{t("insurers")}</dt>
+                            <dd className="text-sm font-medium text-[#111827] text-right">
+                              {professional.insuranceNetworks.map((id) => insurerLabel(id)).join(" · ")}
+                            </dd>
+                          </div>
+                        )}
+                      </dl>
                     </div>
                   )}
 
