@@ -632,6 +632,25 @@ The serious-tone rule extends to layout: **prefer plain text + a small icon over
 - **One treatment per group — no odd boxes among plain rows.** When a section lists several facts (experience, verification, location, prices), present them as borderless `flex justify-between` label→value rows (`flex-col gap-2.5`), NOT a bordered/`divide-y` container sitting next to plain headed sections. If one item in a list is boxed and the rest aren't, that's the bug — make them all plain.
 - **Informational banners aren't always boxes.** The "viewing as a client" preview banner is plain `text-[#6b7280]` + its action button — no tinted container. Use a colored container only when the message is a genuine alert/warning that must interrupt.
 
+## 21. ONE save pattern: autosave everywhere + a shared status indicator
+
+The whole app **autosaves** — there are NO "Guardar cambios" buttons in editable sections. Every section gives consistent feedback through the shared `SaveStatus` component (`components/dashboard/save-status.tsx`, `saveStatus` i18n): **Guardando… / Guardado / Sin guardar**, placed right-aligned at the top of the section. Two implementation shapes, both ending in the same indicator:
+- **Form-based** (Pro Mi perfil, Client profile): edits call a `touch()` that marks dirty + bumps a nonce; a `useEffect` debounces the save ~1.5s after the last edit. Keep an `UnsavedChangesGuard` mounted so a pending edit is flushed if the user navigates away mid-debounce.
+- **Action-based** (Servicios, Disponibilidad, Photos): each action (add/remove/toggle/upload) persists immediately; surface a brief "Guardado" pulse via the same `SaveStatus`.
+
+Rules: never add a save button to one section while another autosaves; never autosave without showing the status (no silent persistence); validate before persisting so autosave can't write invalid data (e.g. a locked verified name is never overwritten). When adding a new editable section, wire it to autosave + `SaveStatus` — do not introduce a button.
+
+## 22. /buscar card — fixed height, 3 action layouts
+
+Search cards are uniform (`md:min-h-[190px]` floor); reorganizing them must NOT increase height. Layout grammar:
+- **Identity zone (left):** name (priority — wraps to 2 lines on mobile, never truncates first), the compact **"Verificado"** trust mark (icon + short text, no box) right beside the name, and the **price** at the top-right as just the amount ("₡X/hora" — no "Desde/Tarifa", hidden when non-numeric). No separate top-row contact icons.
+- **Action zone (right):** the schedule columns (always the full date "15 mar"/"Mar 15", never weekday-only "lun 15"; no "Próximos horarios" label) followed by the contact/primary actions in **3 layouts** driven by real data (`availabilityPublic`, `allowPhoneCall`, `whatsapp`):
+  - **TYPE 1** — public + call enabled: `[WhatsApp · Llamar]` on ONE row, then the full-width **Solicitar servicio** primary below.
+  - **TYPE 2** — public + no call: `[WhatsApp]` then **Solicitar servicio**.
+  - **TYPE 3** — private: only WhatsApp (plus Llamar if the pro enabled it); no schedule, no Solicitar.
+  WhatsApp + Llamar always share a single row (`flex gap`, each `flex-1`) so enabling calls never adds a line. To make room for the contact row without growing the card, the price moved to the identity zone and the redundant "Ver horario completo" link was dropped.
+- **Filters:** the aseguradora filter never offers a "Ninguna / sin seguros" entry (that's a pro attribute, not a client filter) and defaults to no insurer selected (placeholder, not a pre-selected value).
+
 ## 20. Optional map pin = opt-in disclosure (never shown by default)
 
 Location is captured as **provincia → cantón first** (the authoritative data that drives `/buscar`); marking the exact spot on a map is an OPTIONAL precision refinement and must NOT be visible by default — a map shown upfront clutters the form and, on mobile, pushes everything down. The control is a **lightweight expandable link** (`MapPin` + "Buscar la dirección y marcar el punto en el mapa" + `ChevronDown`, brand-blue, `aria-expanded`), de-boxed (no bordered row) per §19, that reveals the Places address search + map only when the pro opts in. Default `showMap=false`; the map instance is created lazily on expand and torn down on collapse. When collapsed, show a small `Check` if a pin is already set. Use the SAME picker component in BOTH registration and the panel so the control behaves identically — never let the two flows diverge. The pin stores only `lat`/`lng`; it never overrides the chosen provincia/cantón, so a professional saved with or without a pin filters identically in search.
