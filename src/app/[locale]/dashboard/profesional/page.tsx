@@ -79,6 +79,10 @@ export default function ProDashboardPage() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
   const [supportUnread, setSupportUnread] = useState(0);
+  // A "Completa tu perfil" item the user clicked — drives the profile editor to
+  // open the right section + scroll to the field. `key` changes per click so
+  // re-clicking the same item re-triggers the scroll.
+  const [profileFocus, setProfileFocus] = useState<{ field: string; key: number } | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   // Count of consecutive "no pro row" fetches. A freshly-created account can lag
   // (replication/RLS) — we retry a few times before bouncing to registration so
@@ -254,7 +258,7 @@ export default function ProDashboardPage() {
 
           {/* Profile-completion — prominent, full-width at the TOP of the dashboard.
               The component hides itself once everything is done + verified. */}
-          <ProfileCompletion pro={pro} onGo={(tab) => setTab(tab as Tab)} />
+          <ProfileCompletion pro={pro} onGo={(tab, field) => { setTab(tab as Tab); if (field) setProfileFocus({ field, key: Date.now() }); }} />
 
           <div className="flex flex-col lg:flex-row gap-6">
             {/* Sidebar nav — two clearly-labeled role groups */}
@@ -298,6 +302,8 @@ export default function ProDashboardPage() {
                       profileId={user!.id}
                       initial={pro}
                       onSaved={handleSaved}
+                      focusField={profileFocus?.field ?? null}
+                      focusKey={profileFocus?.key}
                     />
                   )}
                   {activeTab === "services" && (

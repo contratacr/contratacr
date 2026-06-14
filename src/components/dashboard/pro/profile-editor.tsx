@@ -27,18 +27,31 @@ interface ProfileEditorProps {
   profileId: string;
   initial: ProData;
   onSaved?: () => void;
+  /** A "Completa tu perfil" item the user clicked — opens the matching section
+   *  and scrolls to the field. `focusKey` changes on every click so repeats fire. */
+  focusField?: string | null;
+  focusKey?: number;
 }
+
+// "Completa tu perfil" field → which collapsible section holds it.
+const FIELD_SECTION: Record<string, string> = {
+  photo: "basic",
+  bio: "basic",
+  location: "location",
+  whatsapp: "contact",
+  insurers: "lang",
+};
 
 // Collapsible section — groups the long profile form into digestible blocks so
 // it's quick to scan and edit. Presentation only; all fields still live in the
-// same form/state and save identically.
-function Section({ title, desc, defaultOpen = false, children }: { title: string; desc?: string; defaultOpen?: boolean; children: React.ReactNode }) {
-  const [open, setOpen] = useState(defaultOpen);
+// same form/state and save identically. CONTROLLED by the editor so a
+// "Completa tu perfil" item can open the right section and scroll to its field.
+function Section({ id, title, desc, open, onToggle, children }: { id: string; title: string; desc?: string; open: boolean; onToggle: (id: string) => void; children: React.ReactNode }) {
   return (
-    <div className="rounded-2xl border border-[#e5e7eb] bg-white overflow-hidden">
+    <div id={`sec-${id}`} className="rounded-2xl border border-[#e5e7eb] bg-white overflow-hidden scroll-mt-24">
       <button
         type="button"
-        onClick={() => setOpen((o) => !o)}
+        onClick={() => onToggle(id)}
         className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-[#fafafa] transition-colors"
         aria-expanded={open}
       >
@@ -83,9 +96,35 @@ function seedZones(init: ProData): Workplace[] {
   return out;
 }
 
-export function ProfileEditor({ professionalId, profileId, initial, onSaved }: ProfileEditorProps) {
+export function ProfileEditor({ professionalId, profileId, initial, onSaved, focusField, focusKey }: ProfileEditorProps) {
   const locale = useLocale();
   const t = useTranslations("profileEditor");
+  // Which collapsible sections are open. Empty = all collapsed (default), so a
+  // pro lands on a tidy, scannable list and opens what they want.
+  const [openSections, setOpenSections] = useState<Set<string>>(new Set());
+  const toggleSection = (id: string) =>
+    setOpenSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+
+  // A "Completa tu perfil" item was clicked → open its section, then scroll to
+  // the exact field and flash it. focusKey changes per click so repeats re-fire.
+  useEffect(() => {
+    if (!focusField) return;
+    const sec = FIELD_SECTION[focusField];
+    if (sec) setOpenSections((prev) => new Set(prev).add(sec));
+    const tmr = setTimeout(() => {
+      const el = document.querySelector(`[data-field="${focusField}"]`);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.classList.add("field-flash");
+        setTimeout(() => el.classList.remove("field-flash"), 1600);
+      }
+    }, 160);
+    return () => clearTimeout(tmr);
+  }, [focusField, focusKey]);
   const rich = { strong: (c: React.ReactNode) => <strong>{c}</strong> };
   const photoInputRef = useRef<HTMLInputElement>(null);
 
@@ -331,9 +370,9 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
       )}
 
       {/* ── Datos básicos ─────────────────────────────────────────────── */}
-      <Section title={t("secBasic")} desc={t("secBasicDesc")}>
+      <Section id="basic" title={t("secBasic")} desc={t("secBasicDesc")} open={openSections.has("basic")} onToggle={toggleSection}>
         {/* Photo — explicit buttons, no hover-to-change */}
-        <div className="flex items-center gap-4">
+        <div data-field="photo" className="flex items-center gap-4">
           <div className="relative h-20 w-20 rounded-full shrink-0">
             {avatarPreview ? (
               <img
@@ -414,7 +453,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
         />
 
         {/* Description */}
-        <div>
+        <div data-field="bio">
           <label className="text-sm font-medium text-[#374151] block mb-1.5">{t("description")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span></label>
           <textarea
             className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] min-h-[110px] resize-none focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
@@ -431,7 +470,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
       {/* ── Certificaciones — POR PROFESIÓN. Saved certs are read-only rows; a
              cert is ADDED via an explicit form whose "Guardar certificación"
              button requires all three fields. ─────── */}
-      <Section title={t("secCerts")} desc={t("secCertsDesc")}>
+      <Section id="certs" title={t("secCerts")} desc={t("secCertsDesc")} open={openSections.has("certs")} onToggle={toggleSection}>
         {(professions.length > 0 ? professions : [""]).map((prof) => {
           const certsForProf = certifications.filter((c) => (c.profession || professions[0] || "") === prof);
           const draftHere = !!certDraft && (certDraft.profession ?? "") === (prof || "");
@@ -479,9 +518,9 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
       </Section>
 
       {/* ── Ubicación y cobertura ─────────────────────────────────────── */}
-      <Section title={t("secLocation")} desc={t("secLocationDesc")}>
+      <Section id="location" title={t("secLocation")} desc={t("secLocationDesc")} open={openSections.has("location")} onToggle={toggleSection}>
         {/* Work zones — provincia/cantón first (drives /buscar), optional exact pin. */}
-        <div>
+        <div data-field="location">
           <label className="text-sm font-medium text-[#374151] block mb-2">
             {t("workplaces")} <span className="text-red-500">*</span>
           </label>
@@ -507,9 +546,9 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
       </Section>
 
       {/* ── Contacto ──────────────────────────────────────────────────── */}
-      <Section title={t("secContact")} desc={t("secContactDesc")}>
+      <Section id="contact" title={t("secContact")} desc={t("secContactDesc")} open={openSections.has("contact")} onToggle={toggleSection}>
         {/* WhatsApp — required contact channel. */}
-        <div>
+        <div data-field="whatsapp">
           <PhoneInput
             label={t("whatsapp")}
             required
@@ -582,7 +621,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
           Aseguradoras only apply to HEALTH categories (es_salud) — a plumber
           has nothing to do with insurance, so we hide the field entirely for
           non-health pros (it isn't part of their profile at all). */}
-      <Section title={isHealthPro ? t("secLangInsurers") : t("secLang")} desc={t("secLangDesc")}>
+      <Section id="lang" title={isHealthPro ? t("secLangInsurers") : t("secLang")} desc={t("secLangDesc")} open={openSections.has("lang")} onToggle={toggleSection}>
         {/* Languages — defaults to Español; extra languages are an optional bonus */}
         <div>
           <label className="text-sm font-medium text-[#374151] block mb-1.5">
@@ -593,7 +632,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
 
         {/* Aseguradoras — ONLY for health (es_salud) professionals */}
         {isHealthPro && (
-          <div>
+          <div data-field="insurers">
             <label className="text-sm font-medium text-[#374151] block mb-1.5">
               {t("insurers")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
             </label>

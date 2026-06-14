@@ -46,8 +46,8 @@ export function computeCompletion(pro: ProRecord): {
 
   const items: CompletionItem[] = [
     { key: "photo", done: !!profiles.avatar_url, tab: "profile" },
-    // Require a real description (not "test") — a sensible minimum length.
-    { key: "bio", done: typeof pro.bio === "string" && pro.bio.trim().length >= 40, tab: "profile" },
+    // Any non-empty description counts as done (no minimum length).
+    { key: "bio", done: typeof pro.bio === "string" && pro.bio.trim().length > 0, tab: "profile" },
     { key: "services", done: hasLen(pro.services), tab: "services" },
     { key: "location", done: hasLocation, tab: "profile" },
     { key: "whatsapp", done: typeof pro.whatsapp === "string" && pro.whatsapp.trim().length > 0, tab: "profile" },
@@ -64,7 +64,7 @@ export function computeCompletion(pro: ProRecord): {
   return { percent, items, verified: pro.verification_status === "verified" };
 }
 
-export function ProfileCompletion({ pro, onGo }: { pro: ProRecord; onGo: (tab: string) => void }) {
+export function ProfileCompletion({ pro, onGo }: { pro: ProRecord; onGo: (tab: string, field?: string) => void }) {
   const t = useTranslations("proPanel.completion");
   const { percent, items, verified } = computeCompletion(pro);
   const missing = items.filter((i) => !i.done);
@@ -114,7 +114,7 @@ export function ProfileCompletion({ pro, onGo }: { pro: ProRecord; onGo: (tab: s
             <li key={item.key} className="border-b border-[#f3f4f6] last:border-b-0">
               <button
                 type="button"
-                onClick={() => onGo(item.tab)}
+                onClick={() => onGo(item.tab, item.key)}
                 className="group flex w-full items-center gap-3 px-4 sm:px-6 py-3 text-left transition-colors hover:bg-[#f9fbfd] min-h-[56px]"
               >
                 <span className="h-4 w-4 shrink-0 rounded-full border-2 border-[#d1d5db] transition-colors group-hover:border-[#009FD9]" />

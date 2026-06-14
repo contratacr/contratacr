@@ -1,10 +1,12 @@
-fix(dashboard): tighten panel title-to-content spacing (client + pro)
+feat(completa tu perfil): jump to the exact field (opens its section) + count any description
 
-- CardContent kept its default pt-5 (the override only set px-6 pb-6), so the gap
-  between a panel title and its content was pb-4 (16px) + pt-5 (20px) = 36px.
-- Header pb-4 -> pb-3 and content pt -> pt-1 in both the client and professional
-  dashboards, for a consistent, tight ~16px title-to-content gap everywhere.
-- (Home category carousel already links each card to /buscar?categoria=<id> with
-  drag-vs-click guarding — navigation verified, no change needed.)
+- Each completion item now opens the matching collapsed section in the profile
+  editor AND smooth-scrolls to the exact field, with a brief brand-blue flash.
+  Sections in ProfileEditor are now controlled (open state lifted), and the
+  editor takes focusField/focusKey props; field→section map drives the open.
+  data-field anchors added (photo, bio, location, whatsapp, insurers). Works on
+  mobile (scroll-mt + smooth scrollIntoView).
+- Description completion: any non-empty bio now counts (removed the >=40 char
+  gate, so "test" marks it done).
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
