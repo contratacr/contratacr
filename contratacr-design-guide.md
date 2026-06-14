@@ -766,3 +766,14 @@ The name + "Verificado" pill line behaves differently per breakpoint, on purpose
   no room. Keeping the whole name visible beats keeping the pill on the name line.
 Do NOT give the name `flex-1` (that pushes the badge to the far right) and do NOT
 use single-line `truncate` (that cut off mobile names). Card height stays fixed.
+
+## 39. /buscar cards shorten the PERSON name (first + both surnames)
+
+On the search card, a person's name is shortened to first name + both surnames,
+dropping middle name(s) — `shortPersonName()` in professional-card.tsx
+(`parts.length <= 3 ? full : [first, secondLast, last]`). It applies to the person
+name in BOTH layouts (primary line when there's no company, or the subtitle under a
+company). A company/nombre-comercial is shown verbatim — shortening is for the
+person only. The COMPLETE official name (incl. middle names) still shows on the
+profile page; never shorten there. Card height + the responsive name/Verificado
+line (see §37–38) are unchanged.
