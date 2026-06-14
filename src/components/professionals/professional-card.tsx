@@ -1,10 +1,9 @@
 import { getTranslations } from "next-intl/server";
 import { MapPin, ShieldCheck, ShieldAlert, Truck, Image as ImageIcon, Star, Award } from "lucide-react";
 import { ProfessionalSchedule, type ScheduleSlot } from "@/components/professionals/professional-schedule";
-import { TopContactIcons } from "@/components/professionals/top-contact-icons";
 import { Link } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getInitials, getWhatsAppLink } from "@/lib/utils";
+import { getInitials } from "@/lib/utils";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { primaryPricingLabel, type PricingTier } from "@/lib/pricing";
 
@@ -131,37 +130,25 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
       ? [activeCategory]
       : allProfessions.slice(0, 2);
   const priceLabel = primaryPricingLabel(professional.pricing, professional.hourlyRate);
-  const hasNumericPrice = priceLabel.includes("₡");
   const isVerified = professional.verificationStatus === "verified";
   const extraProfessions = allProfessions.length - professionList.length;
-  // Direct-contact icons live in the TOP row (next to the name) so the action
-  // area keeps a single full-width primary button and the card never grows.
-  // A pro viewing their OWN card cannot request a service from themselves.
+  // A pro viewing their OWN card cannot request a service from themselves. The
+  // WhatsApp/Llamar/Solicitar actions now live together in the action zone (see
+  // ProfessionalSchedule), so the card no longer renders separate top-row icons.
   const isOwn = !!viewerProfileId && viewerProfileId === professional.profileId;
-  // WhatsApp + call are INDEPENDENT of the "Disponibilidad privada" toggle and
-  // appear consistently on every card when their own condition is met: WhatsApp
-  // whenever a number exists; call whenever "Permitir contacto por llamada" is on
-  // and a reachable number exists. They show on the pro's OWN card too (so it
-  // looks identical to a client's view); the self-action is blocked in a modal.
-  const showTopWhatsApp = !!professional.whatsapp;
-  const showTopCall = !!professional.allowPhoneCall && !!(professional.callPhone || professional.whatsapp);
-  const waHref = professional.whatsapp
-    ? getWhatsAppLink(professional.whatsapp, `Hola ${professional.fullName.split(" ")[0]}, vi tu perfil en ContrataCR y me gustaría coordinar un servicio.`)
-    : "#";
-  // Calls use the SEPARATE call number when set, else the WhatsApp number.
-  const telHref = `tel:+${((professional.callPhone || professional.whatsapp) || "").replace(/\D/g, "")}`;
 
   // Verified trust mark — rendered inline beside the name on desktop, but BELOW
   // the name on mobile so the name keeps the full top line and never truncates first.
+  // Compact trust mark shown right next to the name (icon + short text, no box).
   const verifiedBadge = isVerified ? (
-    <span title={tCard("verifiedTitle")} className="inline-flex shrink-0 items-center gap-1 text-[#16a34a]">
-      <ShieldCheck className="h-4 w-4" />
-      <span className="text-[11px] font-semibold">{tCard("verified")}</span>
+    <span title={tCard("verifiedTitle")} className="inline-flex shrink-0 items-center gap-0.5 text-[#16a34a]">
+      <ShieldCheck className="h-3.5 w-3.5" />
+      <span className="text-[11px] font-semibold">{tCard("verifiedShort")}</span>
     </span>
   ) : (
-    <span title={tCard("unverifiedTitle")} className="inline-flex shrink-0 items-center gap-1 text-[#b45309]">
-      <ShieldAlert className="h-4 w-4" />
-      <span className="text-[11px] font-medium">{tCard("unverified")}</span>
+    <span title={tCard("unverifiedTitle")} className="inline-flex shrink-0 items-center gap-0.5 text-[#b45309]">
+      <ShieldAlert className="h-3.5 w-3.5" />
+      <span className="text-[11px] font-medium">{tCard("unverifiedShort")}</span>
     </span>
   );
 
@@ -198,30 +185,24 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
                   The verified mark sits inline on desktop but drops BELOW the
                   name on mobile (see badge under the name) to free the space. */}
               <div className="flex items-start gap-2 min-w-0 pr-9 md:pr-0">
-                <Link href={`/profesionales/${professional.slug}`} className="min-w-0 flex-1">
-                  {/* Company/brand on top (what clients recognize) when present;
-                      else the personal name. The person's name moves to a muted
-                      subtitle below so the brand leads but the pro is still clear. */}
-                  <h3 className="font-bold text-[#111827] text-[15px] leading-tight hover:text-[#009FD9] transition-colors line-clamp-2 md:line-clamp-1">{brandPrimary}</h3>
-                </Link>
+                {/* Name + verified mark share the left side; verified sits right of
+                    the name (wraps under it on a very narrow card, never truncating
+                    the name). The PRICE moves to the top-right (where the contact
+                    icons used to be). */}
+                <div className="min-w-0 flex-1 flex items-start gap-1.5 flex-wrap">
+                  <Link href={`/profesionales/${professional.slug}`} className="min-w-0">
+                    <h3 className="font-bold text-[#111827] text-[15px] leading-tight hover:text-[#009FD9] transition-colors line-clamp-2 md:line-clamp-1">{brandPrimary}</h3>
+                  </Link>
+                  <span className="shrink-0 mt-0.5">{verifiedBadge}</span>
+                </div>
 
-                {/* Verified mark — inline beside the name on desktop only */}
-                <span className="hidden md:inline-flex shrink-0 mt-0.5">{verifiedBadge}</span>
-
-                {/* Direct-contact icons — compact, right-aligned (no extra row).
-                    Client wrapper so the pro's OWN card shows the same icons but
-                    blocks the self-action with a friendly modal. */}
-                <TopContactIcons
-                  isOwn={isOwn}
-                  waHref={waHref}
-                  telHref={telHref}
-                  showWhatsApp={showTopWhatsApp}
-                  showCall={showTopCall}
-                />
+                {/* Price — just the amount, no "Desde/Tarifa" word. Shown only when
+                    there's a real numeric price (avoids a prominent localized
+                    "price on request" string leaking on the top line). */}
+                {priceLabel.includes("₡") && (
+                  <span className="shrink-0 font-bold text-[#111827] text-sm whitespace-nowrap mt-0.5">{priceLabel}</span>
+                )}
               </div>
-
-              {/* Verified mark — under the name on mobile only (frees the top line) */}
-              <div className="md:hidden -mt-0.5">{verifiedBadge}</div>
 
               {brandSecondary && (
                 <p className="text-[11px] font-medium text-[#6b7280] truncate -mt-0.5">{brandSecondary}</p>
@@ -300,12 +281,8 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
             </div>
           </div>
 
-          {/* ── Action zone: price + availability ── */}
+          {/* ── Action zone: availability + contact/primary actions ── */}
           <div className="md:w-[232px] md:shrink-0 md:border-l md:border-[#f3f4f6] md:pl-4 pt-3 md:pt-0 border-t border-[#f3f4f6] md:border-t-0 flex flex-col">
-            <div className="flex items-baseline justify-between gap-2 mb-1.5 pr-9 md:pr-10">
-              <span className="text-[10px] font-bold uppercase tracking-wide text-[#9ca3af]">{hasNumericPrice ? tCard("from") : tCard("rate")}</span>
-              <span className="font-bold text-[#111827] text-[15px] whitespace-nowrap truncate">{priceLabel}</span>
-            </div>
             <div className="flex-1 min-h-0">
               <ProfessionalSchedule
                 professional={professional}

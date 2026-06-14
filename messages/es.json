@@ -223,7 +223,9 @@
     "noReviews": "Sin reseñas todavía",
     "reviewsCount": "{count, plural, one {# reseña} other {# reseñas}}",
     "viewCases": "Ver casos de éxito ({count})",
-    "viewCertifications": "Ver certificaciones ({count})"
+    "viewCertifications": "Ver certificaciones ({count})",
+    "verifiedShort": "Verificado",
+    "unverifiedShort": "Sin verificar"
   },
   "locationPicker": {
     "searchPlaceholder": "Busca la dirección de tu local… ejemplo: Escazú Centro",
@@ -282,7 +284,9 @@
     "requestService": "Solicitar servicio",
     "location": "Ubicación",
     "videoconsulta": "Videoconsulta",
-    "atHome": "A domicilio"
+    "atHome": "A domicilio",
+    "whatsapp": "WhatsApp",
+    "call": "Llamar"
   },
   "selfAction": {
     "title": "Este es tu perfil",

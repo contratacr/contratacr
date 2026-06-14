@@ -223,7 +223,9 @@
     "noReviews": "No reviews yet",
     "reviewsCount": "{count, plural, one {# review} other {# reviews}}",
     "viewCases": "View success stories ({count})",
-    "viewCertifications": "View certifications ({count})"
+    "viewCertifications": "View certifications ({count})",
+    "verifiedShort": "Verified",
+    "unverifiedShort": "Unverified"
   },
   "locationPicker": {
     "searchPlaceholder": "Search your place's address… example: Escazú Centro",
@@ -282,7 +284,9 @@
     "requestService": "Request service",
     "location": "Location",
     "videoconsulta": "Video consultation",
-    "atHome": "At your location"
+    "atHome": "At your location",
+    "whatsapp": "WhatsApp",
+    "call": "Call"
   },
   "selfAction": {
     "title": "This is your profile",

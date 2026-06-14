@@ -31,7 +31,12 @@ export function SearchFilters() {
   const geoActive = !!params.get("lat") && params.get("sortBy") === "cercania";
 
   // Official list = static INSURERS + admin-approved additions from the DB.
-  const [insurerOptions, setInsurerOptions] = useState<{ id: string; label: string }[]>(INSURERS);
+  // The filter never offers a "Ninguna / sin seguros" entry — that's a pro
+  // attribute, not a way to filter clients. Default is no insurer selected.
+  const NON_INSURER = new Set(["ninguna", "none", "sin_seguros", "sin_seguro", "no_insurance"]);
+  const [insurerOptions, setInsurerOptions] = useState<{ id: string; label: string }[]>(
+    INSURERS.filter((i) => !NON_INSURER.has(i.id))
+  );
   useEffect(() => {
     (async () => {
       try {
@@ -40,7 +45,7 @@ export function SearchFilters() {
         if (Array.isArray(data) && data.length) {
           const map = new Map(INSURERS.map((i) => [i.id, { id: i.id, label: i.label }]));
           for (const d of data) map.set(d.id as string, { id: d.id as string, label: d.label as string });
-          setInsurerOptions(Array.from(map.values()));
+          setInsurerOptions(Array.from(map.values()).filter((i) => !NON_INSURER.has(i.id)));
         }
       } catch { /* static list still works */ }
     })();

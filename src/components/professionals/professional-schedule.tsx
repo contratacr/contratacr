@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { ChevronLeft, ChevronRight, ChevronDown, MapPin } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, MapPin, Phone } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { BookingModal } from "@/components/booking/booking-modal";
 import { ClientRegistrationModal } from "@/components/auth/client-registration-modal";
@@ -37,14 +37,14 @@ function toKey(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-// Date portion of a day column header, locale-aware (the label row is CSS-
-// uppercased, so casing/period differences don't matter). "Hoy"/"Mañana" are
-// handled by the caller via the schedule translator.
-function dateLabel(d: Date, today: Date, locale: string): string {
+// Full, CONSISTENT date label for every day column: day number + short month
+// (e.g. "15 mar" / "Mar 15"), never a weekday-only "lun 15". The label row is
+// CSS-uppercased, so casing/period differences don't matter.
+function dateLabel(d: Date, locale: string): string {
   const loc = locale === "en" ? "en-US" : "es-CR";
-  if (d.getMonth() !== today.getMonth())
-    return `${d.getDate()} ${d.toLocaleDateString(loc, { month: "short" }).replace(".", "")}`;
-  return `${d.toLocaleDateString(loc, { weekday: "short" }).replace(".", "")} ${d.getDate()}`;
+  const day = d.getDate();
+  const month = d.toLocaleDateString(loc, { month: "short" }).replace(".", "");
+  return locale === "en" ? `${month} ${day}` : `${day} ${month}`;
 }
 
 /**
@@ -128,7 +128,8 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       // Hide any slot within the 15-minute lead time (today only) — it's no longer
       // bookable, so it must stop showing in search.
       const items = (byDate.get(key) ?? []).filter((s) => !isTooSoonCR(key, s.time)).sort((a, b) => a.time.localeCompare(b.time));
-      const label = i === 0 ? t("today") : i === 1 ? t("tomorrow") : dateLabel(d, today, locale);
+      // Always the full date (no "Hoy"/"Mañana"/weekday-only) so columns are consistent.
+      const label = dateLabel(d, locale);
       return { key, label, soon: i <= 1, items };
     });
   }, [filteredSlots, t, locale]);
@@ -176,25 +177,48 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     <SelfActionModal open={!!selfMsg} onClose={() => setSelfMsg(null)} message={selfMsg ?? ""} />
   );
 
+  // Direct-contact actions, grouped in ONE compact row (so adding "Llamar" never
+  // adds a line). WhatsApp shows whenever a number exists; "Llamar" only when the
+  // pro enabled phone contact. Both are blocked on the pro's OWN card.
+  const showWa = !!professional.whatsapp;
+  const showCall = !!professional.allowPhoneCall && !!(professional.callPhone || professional.whatsapp);
+  const waHref = getWhatsAppLink(professional.whatsapp, `Hola ${professional.fullName.split(" ")[0]}, vi tu perfil en ContrataCR y me gustaría coordinar un servicio.`);
+  const telHref = `tel:+${((professional.callPhone || professional.whatsapp) || "").replace(/\D/g, "")}`;
+  const contactButtons = (showWa || showCall) ? (
+    <div className="flex gap-1.5">
+      {showWa && (
+        <a
+          href={isOwn ? undefined : waHref}
+          target={isOwn ? undefined : "_blank"}
+          rel="noopener noreferrer"
+          onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.whatsapp); } : (e) => e.stopPropagation()}
+          className="flex-1 inline-flex items-center justify-center gap-1.5 bg-[#25D366] hover:bg-[#1ebe5d] text-white text-[13px] font-semibold py-1.5 rounded-lg transition-colors"
+        >
+          <WhatsAppIcon className="h-4 w-4" /> {t("whatsapp")}
+        </a>
+      )}
+      {showCall && (
+        <a
+          href={isOwn ? undefined : telHref}
+          onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.call); } : (e) => e.stopPropagation()}
+          className="flex-1 inline-flex items-center justify-center gap-1.5 border border-[#e5e7eb] text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] text-[13px] font-semibold py-1.5 rounded-lg transition-colors"
+        >
+          <Phone className="h-4 w-4" /> {t("call")}
+        </a>
+      )}
+    </div>
+  ) : null;
+
   // ── Contact-only (private availability OR WhatsApp-only preference) ────
   // The reason is shown as a flush top band on the card; here we only render the
   // compact contact actions so every card stays the same tidy height.
   if (!canBook) {
-    // Contact-only: a single FULL-WIDTH WhatsApp primary. The call icon (when
-    // enabled) lives in the card's top row, so this stays one tidy line. On the
-    // pro's OWN card the WhatsApp action is blocked with the self-action modal.
+    // TYPE 3 — private availability: no schedule, no "Solicitar servicio". Just the
+    // grouped contact actions (WhatsApp always; "Llamar" if the pro enabled it),
+    // pinned to the bottom so every card stays the same height.
     return (
       <div className="flex h-full flex-col justify-end">
-        <a
-          href={isOwn ? undefined : getWhatsAppLink(professional.whatsapp, `Hola ${professional.fullName.split(" ")[0]}, vi tu perfil en ContrataCR y me gustaría coordinar un servicio.`)}
-          target={isOwn ? undefined : "_blank"}
-          rel="noopener noreferrer"
-          onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.whatsapp); } : (e) => e.stopPropagation()}
-          className="w-full inline-flex items-center justify-center gap-1.5 bg-[#25D366] hover:bg-[#1ebe5d] text-white text-sm font-semibold py-2 rounded-lg transition-colors"
-        >
-          <WhatsAppIcon className="h-4 w-4" />
-          Solicitar por WhatsApp
-        </a>
+        {contactButtons}
         {selfModal}
       </div>
     );
@@ -229,18 +253,13 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           </select>
           <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-[#0089bb] pointer-events-none" />
         </div>
-      ) : (
+      ) : effectiveLabel && effectiveLabel !== "General" ? (
+        // Only a real place name; the generic "Próximos horarios" label is removed.
         <p className="flex items-center gap-1 text-[11px] leading-tight truncate">
-          {effectiveLabel && effectiveLabel !== "General" ? (
-            <>
-              <MapPin className="h-3 w-3 text-[#009FD9] shrink-0" />
-              <span className="truncate font-medium text-[#374151]">{effectiveLabel}</span>
-            </>
-          ) : (
-            <span className="text-[#6b7280]">{t("upcomingTimes")}</span>
-          )}
+          <MapPin className="h-3 w-3 text-[#009FD9] shrink-0" />
+          <span className="truncate font-medium text-[#374151]">{effectiveLabel}</span>
         </p>
-      )}
+      ) : null}
 
       <div className="flex-1 min-h-0 flex items-center">
         {!hasUpcoming ? (
@@ -301,19 +320,10 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
         )}
       </div>
 
-      {/* Opens the Solicitar servicio flow (full schedule + request), not just
-          the profile — so the client lands directly in booking. */}
-      <button
-        type="button"
-        onClick={(e) => { e.stopPropagation(); openBooking(); }}
-        className="block w-full text-center text-[10px] font-medium text-[#009FD9] hover:underline"
-      >
-        {t("viewFullSchedule")}
-      </button>
-
-      {/* Full-width primary — identical on every card. The WhatsApp/call
-          contact icons live in the card's top row (next to the name), so this
-          stays a single full-width button and the card never grows taller. */}
+      {/* TYPE 1 / TYPE 2 — contact actions grouped ABOVE (WhatsApp always; "Llamar"
+          when enabled), then the large "Solicitar servicio" primary BELOW. The
+          grouped contact row is a single line, so the card never grows taller. */}
+      {contactButtons}
       <button
         type="button"
         onClick={(e) => { e.stopPropagation(); openBooking(); }}
