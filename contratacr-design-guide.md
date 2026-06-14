@@ -697,3 +697,40 @@ Describe the app as free in the PRESENT tense and for specific actions ("Crear t
 ## 31. Payments are behind PAYMENTS_ENABLED (default OFF)
 
 All subscription/payment surfaces are gated by `PAYMENTS_ENABLED` (`lib/payments/config.ts`, from `NEXT_PUBLIC_PAYMENTS_ENABLED`). With it OFF: regular users see ZERO payment UI (no "Suscripción" tab, no links), the self APIs report `enabled:false`/refuse checkout, and the app is identical to the free version. Admin subscription management is the only payment surface visible while off (admin-only, for the manual SINPE flow). Raw card data must NEVER touch our server or DB — card billing goes through the gateway abstraction (`lib/payments/gateway.ts`); we keep only gateway references. To activate: apply migration 054, plug a gateway, set the SINPE number, update legal pages, flip the flag.
+
+## 32. /buscar cards = FIXED height, buttons bottom-anchored
+
+To guarantee identical card heights across every button-layout type (WhatsApp-only,
+WhatsApp+Llamar, schedule, no-slots), the card uses a FIXED height — `h-[360px]`
+mobile, `md:h-[232px]` desktop — with `overflow-hidden`, NOT a min-height floor (a
+floor lets richer cards grow and breaks uniformity). Identity content is top-aligned
+(`flex-1`); the contact/primary actions are bottom-anchored so all cards line up on
+the same baseline. The name clamps (1 line desktop / 2 mobile) and is never
+truncated mid-flow. If a future change adds card content, bump these two heights
+together rather than reverting to min-h.
+
+## 33. Verified badge: only verified pros are marked
+
+Only verified professionals show the text-only "Verificado" mark. Unverified pros
+show NOTHING — no badge, no "Sin verificar"/"Identidad sin verificar" label, no
+inline "coordina con cuidado" warning on cards/profiles/booking. The meaning of
+verification still lives in full on /proveedores-autorizados and the Terms; the
+pro's OWN dashboard still shows their verification status + how to verify.
+
+## 34. No published schedule → coordinate via WhatsApp (never a dead booking)
+
+"Solicitar servicio" books a time slot, so it must not appear when a public pro has
+no upcoming slots (it would open an empty calendar). In that case the card shows
+"Este profesional coordina por WhatsApp." + the WhatsApp/Llamar actions, and the
+booking modal's no-availability state offers a "Coordinar por WhatsApp" button.
+Private-availability pros already follow this contact-only pattern.
+
+## 35. Filters: dropdowns for choices, toggles for booleans
+
+Keep the two kinds distinct and coherent: multi-value filters (categoría, provincia,
+cantón, aseguradora, orden) are DROPDOWNS; on/off filters (cerca de mí, Solo
+verificados) are TOGGLES, grouped under a small "Más filtros" heading. Default
+dropdown labels read as inclusive "Todas/Todos …"; aseguradora's default
+"Cualquier aseguradora" is greyed like a placeholder to signal it is NOT an active
+filter (most pros have no insurer). Triggers/toggles use focus-visible (no stuck
+ring); filters apply instantly (no apply button anywhere).
