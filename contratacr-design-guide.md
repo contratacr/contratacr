@@ -734,3 +734,13 @@ dropdown labels read as inclusive "Todas/Todos …"; aseguradora's default
 "Cualquier aseguradora" is greyed like a placeholder to signal it is NOT an active
 filter (most pros have no insurer). Triggers/toggles use focus-visible (no stuck
 ring); filters apply instantly (no apply button anywhere).
+
+## 36. Subscription benefits = "operate & receive clients", not cosmetic extras
+
+The paid subscription is what keeps a professional ACTIVE and able to receive
+clients — frame benefits around that, honestly. Do NOT promise featured/highlighted
+search placement (search is filter-based: categoría/provincia/cantón) and do NOT
+invent a second badge (the only badge is "Verificado", identity). Valid benefit
+themes: appearing in searches / being found, receiving solicitudes, receiving &
+responding to projects, keeping the profile active. Keep it accurate — no premium
+cosmetic claims the product doesn't deliver.
