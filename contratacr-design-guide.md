@@ -777,3 +777,15 @@ company). A company/nombre-comercial is shown verbatim — shortening is for the
 person only. The COMPLETE official name (incl. middle names) still shows on the
 profile page; never shorten there. Card height + the responsive name/Verificado
 line (see §37–38) are unchanged.
+
+## 40. No-schedule card message is per-case (accurate, not card-growing)
+
+When a /buscar card has no bookable schedule, show a concise note ABOVE the stacked
+WhatsApp/Llamar buttons, matched to the real reason:
+- Private availability (pro hid it, `!availabilityPublic`): `schedule.availabilityHiddenNote`
+  — "Su disponibilidad no es pública. Escríbele para conocer sus horarios."
+- No slots posted (public but none): `schedule.noScheduleNote` — "Aún no publica sus
+  horarios. Escríbele para coordinar."
+A WhatsApp-only-preference card shows just the buttons (no note). Keep the wording
+short so it fits the FIXED card height (never grow the card); both end pointing the
+client to message the pro (the buttons below are WhatsApp/Llamar).
