@@ -647,8 +647,8 @@ Search cards are uniform (`md:min-h-[190px]` floor); reorganizing them must NOT 
 - **Action zone (right):** the schedule columns (always the full date "15 mar"/"Mar 15", never weekday-only "lun 15"; no "Próximos horarios" label) followed by the contact/primary actions in **3 layouts** driven by real data (`availabilityPublic`, `allowPhoneCall`, `whatsapp`):
   - **TYPE 1** — public + call enabled: `[WhatsApp · Llamar]` on ONE row, then the full-width **Solicitar servicio** primary below.
   - **TYPE 2** — public + no call: `[WhatsApp]` then **Solicitar servicio**.
-  - **TYPE 3** — private: only WhatsApp (plus Llamar if the pro enabled it); no schedule, no Solicitar.
-  WhatsApp + Llamar always share a single row (`flex gap`, each `flex-1`) so enabling calls never adds a line. To make room for the contact row without growing the card, the price moved to the identity zone and the redundant "Ver horario completo" link was dropped.
+  - **TYPE 3** — private: only WhatsApp (plus Llamar if the pro enabled it); no schedule, no Solicitar. Here the contact buttons are the ONLY actions, so they **stack VERTICALLY** (WhatsApp above Llamar, each `w-full`), bottom-pinned in the action column. This stacked layout is private-only.
+  In TYPE 1/2 WhatsApp + Llamar share a single row (`flex gap`, each `flex-1`) so enabling calls never adds a line above "Solicitar servicio". `contactButtons(stacked)` switches between column/`w-full` (private) and row/`flex-1` (public). Either way the card height is unchanged (the identity zone drives height; the `md:min-h-[190px]` floor keeps cards uniform). To make room for the contact row without growing the card, the price moved to the identity zone and the redundant "Ver horario completo" link was dropped.
 - **Filters:** the aseguradora filter never offers a "Ninguna / sin seguros" entry (that's a pro attribute, not a client filter) and defaults to no insurer selected (placeholder, not a pre-selected value).
 
 ## 20. Optional map pin = opt-in disclosure (never shown by default)
