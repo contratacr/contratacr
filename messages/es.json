@@ -689,7 +689,7 @@
     }
   },
   "footer": {
-    "tagline": "El mercado de servicios profesionales exclusivo para Costa Rica. Gratuito para clientes y profesionales, sin comisiones ni cargos de ningún tipo.",
+    "tagline": "El mercado de servicios profesionales exclusivo para Costa Rica. Crear tu cuenta y empezar es gratis; el pago del servicio lo acuerdas directamente con el profesional.",
     "clients": {
       "title": "Para clientes",
       "search": "Buscar profesionales",
@@ -1945,7 +1945,7 @@
     "faqTitle": "Preguntas frecuentes",
     "faqSubtitle": "Respondemos las dudas más comunes sobre ContrataCR.",
     "faq0Q": "¿Es gratis usar ContrataCR?",
-    "faq0A": "Sí. Es completamente gratuito tanto para clientes como para profesionales: no cobramos comisiones ni mensualidades. ContrataCR conecta a las dos partes; el pago del servicio lo acuerdas directamente con el profesional, fuera de la plataforma.",
+    "faq0A": "Sí. Hoy crear tu cuenta y empezar a usar ContrataCR es gratis, tanto para clientes como para profesionales. ContrataCR conecta a las dos partes; el pago del servicio lo acuerdas directamente con el profesional, fuera de la plataforma.",
     "faq1Q": "¿Qué significa que un profesional esté verificado?",
     "faq1A": "Confirmamos su identidad comparando la cédula con el padrón del Registro Civil (TSE). El sello 'Verificado' indica que es una persona real y verificable — no es una calificación de la calidad de su trabajo. Los perfiles verificados aparecen primero en los resultados; los no verificados también pueden aparecer, claramente marcados como 'Identidad sin verificar'.",
     "faq2Q": "¿Cómo coordino el servicio?",
@@ -1978,7 +1978,7 @@
     "faqTitle": "Preguntas frecuentes",
     "faqSubtitle": "Las consultas más comunes de nuestra comunidad.",
     "faq0Q": "¿ContrataCR cobra alguna comisión o cargo?",
-    "faq0A": "No. ContrataCR es completamente gratuito para clientes y para profesionales. No cobramos comisiones, no cobramos mensualidades, no cobramos ningún tipo de cargo. Crear un perfil, buscar profesionales, publicar proyectos y recibir contactos es gratis sin excepción.",
+    "faq0A": "No cobramos comisiones por los servicios que contratas: el pago lo acuerdas directamente con el profesional, fuera de la plataforma. Hoy crear un perfil, buscar profesionales, publicar proyectos y recibir contactos es gratis.",
     "faq1Q": "¿Cómo me registro como profesional?",
     "faq1A": "Haz clic en 'Registrarse como profesional' en la barra de navegación. Puedes registrarte con tu correo o con Google/Facebook. El proceso tiene 2 pasos: primero seleccionas tu tipo de servicio y zona, luego subes una foto y describes tu experiencia. Toma menos de 5 minutos.",
     "faq2Q": "¿Cómo se verifica la cédula de un profesional?",

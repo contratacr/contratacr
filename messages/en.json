@@ -689,7 +689,7 @@
     }
   },
   "footer": {
-    "tagline": "The professional services marketplace exclusively for Costa Rica. Free for clients and professionals — no commissions or fees of any kind.",
+    "tagline": "The professional services marketplace exclusively for Costa Rica. Creating your account and getting started is free; you arrange payment for the service directly with the professional.",
     "clients": {
       "title": "For clients",
       "search": "Search professionals",
@@ -1945,7 +1945,7 @@
     "faqTitle": "Frequently asked questions",
     "faqSubtitle": "We answer the most common questions about ContrataCR.",
     "faq0Q": "Is ContrataCR free to use?",
-    "faq0A": "Yes. It's completely free for both clients and professionals: we charge no commissions or monthly fees. ContrataCR connects the two parties; you arrange payment for the service directly with the professional, off the platform.",
+    "faq0A": "Yes. Today, creating your account and getting started on ContrataCR is free, for both clients and professionals. ContrataCR connects the two parties; you arrange payment for the service directly with the professional, off the platform.",
     "faq1Q": "What does it mean for a professional to be verified?",
     "faq1A": "We confirm their identity by comparing their ID against the Civil Registry (TSE) records. The 'Verified' badge indicates they are a real, verifiable person — it is not a rating of their work quality. Verified profiles appear first in results; unverified ones can also appear, clearly marked as 'Identity not verified'.",
     "faq2Q": "How do I coordinate the service?",
@@ -1978,7 +1978,7 @@
     "faqTitle": "Frequently asked questions",
     "faqSubtitle": "The most common questions from our community.",
     "faq0Q": "Does ContrataCR charge any commission or fee?",
-    "faq0A": "No. ContrataCR is completely free for clients and professionals. We charge no commissions, no monthly fees, no charges of any kind. Creating a profile, searching for professionals, posting projects, and receiving contacts is free without exception.",
+    "faq0A": "We don't charge commissions on the services you hire: you arrange payment directly with the professional, off the platform. Today, creating a profile, searching for professionals, posting projects, and receiving contacts is free.",
     "faq1Q": "How do I register as a professional?",
     "faq1A": "Click 'Register as a professional' in the navigation bar. You can sign up with your email or with Google/Facebook. The process has 2 steps: first you select your service type and area, then you upload a photo and describe your experience. It takes less than 5 minutes.",
     "faq2Q": "How is a professional's ID verified?",
