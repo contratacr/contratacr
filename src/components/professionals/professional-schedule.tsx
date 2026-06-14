@@ -177,48 +177,52 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     <SelfActionModal open={!!selfMsg} onClose={() => setSelfMsg(null)} message={selfMsg ?? ""} />
   );
 
-  // Direct-contact actions, grouped in ONE compact row (so adding "Llamar" never
-  // adds a line). WhatsApp shows whenever a number exists; "Llamar" only when the
-  // pro enabled phone contact. Both are blocked on the pro's OWN card.
+  // Direct-contact actions. WhatsApp shows whenever a number exists; "Llamar" only
+  // when the pro enabled phone contact. Both are blocked on the pro's OWN card.
+  // `stacked` = vertical (one above the other) — used for the PRIVATE case where
+  // these are the only actions; otherwise they share ONE compact row so adding
+  // "Llamar" above "Solicitar servicio" never adds a line.
   const showWa = !!professional.whatsapp;
   const showCall = !!professional.allowPhoneCall && !!(professional.callPhone || professional.whatsapp);
   const waHref = getWhatsAppLink(professional.whatsapp, `Hola ${professional.fullName.split(" ")[0]}, vi tu perfil en ContrataCR y me gustaría coordinar un servicio.`);
   const telHref = `tel:+${((professional.callPhone || professional.whatsapp) || "").replace(/\D/g, "")}`;
-  const contactButtons = (showWa || showCall) ? (
-    <div className="flex gap-1.5">
-      {showWa && (
-        <a
-          href={isOwn ? undefined : waHref}
-          target={isOwn ? undefined : "_blank"}
-          rel="noopener noreferrer"
-          onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.whatsapp); } : (e) => e.stopPropagation()}
-          className="flex-1 inline-flex items-center justify-center gap-1.5 bg-[#25D366] hover:bg-[#1ebe5d] text-white text-[13px] font-semibold py-1.5 rounded-lg transition-colors"
-        >
-          <WhatsAppIcon className="h-4 w-4" /> {t("whatsapp")}
-        </a>
-      )}
-      {showCall && (
-        <a
-          href={isOwn ? undefined : telHref}
-          onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.call); } : (e) => e.stopPropagation()}
-          className="flex-1 inline-flex items-center justify-center gap-1.5 border border-[#e5e7eb] text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] text-[13px] font-semibold py-1.5 rounded-lg transition-colors"
-        >
-          <Phone className="h-4 w-4" /> {t("call")}
-        </a>
-      )}
-    </div>
-  ) : null;
+  const btnWidth = (stacked: boolean) => (stacked ? "w-full" : "flex-1");
+  const contactButtons = (stacked = false) =>
+    (showWa || showCall) ? (
+      <div className={stacked ? "flex flex-col gap-1.5" : "flex gap-1.5"}>
+        {showWa && (
+          <a
+            href={isOwn ? undefined : waHref}
+            target={isOwn ? undefined : "_blank"}
+            rel="noopener noreferrer"
+            onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.whatsapp); } : (e) => e.stopPropagation()}
+            className={`${btnWidth(stacked)} inline-flex items-center justify-center gap-1.5 bg-[#25D366] hover:bg-[#1ebe5d] text-white text-[13px] font-semibold py-1.5 rounded-lg transition-colors`}
+          >
+            <WhatsAppIcon className="h-4 w-4" /> {t("whatsapp")}
+          </a>
+        )}
+        {showCall && (
+          <a
+            href={isOwn ? undefined : telHref}
+            onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.call); } : (e) => e.stopPropagation()}
+            className={`${btnWidth(stacked)} inline-flex items-center justify-center gap-1.5 border border-[#e5e7eb] text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] text-[13px] font-semibold py-1.5 rounded-lg transition-colors`}
+          >
+            <Phone className="h-4 w-4" /> {t("call")}
+          </a>
+        )}
+      </div>
+    ) : null;
 
   // ── Contact-only (private availability OR WhatsApp-only preference) ────
   // The reason is shown as a flush top band on the card; here we only render the
   // compact contact actions so every card stays the same tidy height.
   if (!canBook) {
-    // TYPE 3 — private availability: no schedule, no "Solicitar servicio". Just the
-    // grouped contact actions (WhatsApp always; "Llamar" if the pro enabled it),
-    // pinned to the bottom so every card stays the same height.
+    // TYPE 3 — private availability: no schedule, no "Solicitar servicio". The
+    // contact actions are the ONLY buttons here, so they STACK vertically
+    // (WhatsApp above Llamar). Pinned to the bottom so the card height is unchanged.
     return (
       <div className="flex h-full flex-col justify-end">
-        {contactButtons}
+        {contactButtons(true)}
         {selfModal}
       </div>
     );
@@ -323,7 +327,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       {/* TYPE 1 / TYPE 2 — contact actions grouped ABOVE (WhatsApp always; "Llamar"
           when enabled), then the large "Solicitar servicio" primary BELOW. The
           grouped contact row is a single line, so the card never grows taller. */}
-      {contactButtons}
+      {contactButtons(false)}
       <button
         type="button"
         onClick={(e) => { e.stopPropagation(); openBooking(); }}
