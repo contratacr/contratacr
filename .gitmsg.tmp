@@ -1,15 +1,13 @@
-fix(verification): unverified pros show nothing — remove inline warning + "Sin verificar" label
+fix(no schedule): coordinate via WhatsApp instead of a dead "Solicitar servicio"
 
-Client-facing surfaces only (documented explanation on /proveedores-autorizados +
-Terms kept intact):
-- Search card: unverified badge removed (verifiedBadge → null; only "Verificado"
-  shows). Dropped the now-unused ShieldAlert import.
-- Public profile: header shows the "Verificado" text only when verified (no
-  negative label otherwise); the "Sobre mí" Verificación row now renders only for
-  verified pros. Dropped unused ShieldAlert import.
-- Booking modal: removed the "Este profesional aún no ha verificado su identidad.
-  Coordina con cuidado." notice.
-Pro's own dashboard/verification panel (their actionable status + how to verify)
-is unchanged.
+When a public pro has no upcoming slots, "Solicitar servicio" would open an empty
+calendar. Now:
+- /buscar card: a public pro with no slots shows "Este profesional coordina por
+  WhatsApp." + the WhatsApp (+ Llamar) buttons, bottom-pinned — no Solicitar /
+  ver-horario. (new schedule.coordinateWhatsApp key, ES/EN.) Replaces the old
+  "Sin horarios próximos. Solicita el servicio para coordinar."
+- Booking modal: the public "no availability configured" state now shows a clear
+  "Coordinar por WhatsApp" button (matching the private state), so the profile's
+  Solicitar path never lands on an empty/broken calendar either.
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>

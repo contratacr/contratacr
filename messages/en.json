@@ -279,6 +279,7 @@
     "tomorrow": "Tomorrow",
     "upcomingTimes": "Upcoming times",
     "noUpcoming": "No upcoming times. Request the service to coordinate.",
+    "coordinateWhatsApp": "This professional coordinates via WhatsApp.",
     "prevDays": "Previous days",
     "nextDays": "Next days",
     "viewFullSchedule": "View full schedule",

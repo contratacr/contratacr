@@ -766,9 +766,23 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                       </a>
                     </div>
                   ) : !hasAnyAvailability ? (
-                    <div className="text-center py-8 rounded-2xl bg-[#f9fafb] border border-[#e5e7eb]">
-                      <p className="text-sm text-[#6b7280]">Este profesional no ha configurado su disponibilidad todavía.</p>
-                      <p className="text-xs text-[#9ca3af] mt-1">Puedes contactarlo directamente por WhatsApp.</p>
+                    <div className="flex flex-col items-center text-center gap-3 py-8 rounded-2xl bg-[#f9fafb] border border-[#e5e7eb]">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#EBF5FB]">
+                        <WhatsAppIcon className="h-5 w-5 text-[#25D366]" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-[#111827]">Este profesional coordina por WhatsApp</p>
+                        <p className="text-xs text-[#9ca3af] mt-1 max-w-xs">Aún no publica horarios en línea. Escríbele para coordinar tu servicio.</p>
+                      </div>
+                      <a
+                        href={getWhatsAppLink(professional.whatsapp, `Hola ${professional.fullName.split(" ")[0]}, me gustaría coordinar un servicio por ContrataCR.`)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#1ebe5d] text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
+                      >
+                        <WhatsAppIcon className="h-4 w-4" />
+                        Coordinar por WhatsApp
+                      </a>
                     </div>
                   ) : (
                     <>

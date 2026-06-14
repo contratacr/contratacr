@@ -239,6 +239,24 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const canPrev = effOffset > 0;
   const canNext = effOffset + COLS < daysWithSlots.length;
 
+  // ── No published slots → coordinate via WhatsApp ──────────────────────────
+  // "Solicitar servicio" books a time slot, which makes no sense when there are
+  // none to book (it would open an empty calendar). So instead of a dead booking
+  // CTA, guide the client to coordinate by WhatsApp (+ Llamar if enabled), the
+  // realistic path until the pro publishes availability. Bottom-pinned so the card
+  // keeps the same height as the others.
+  if (!hasUpcoming) {
+    return (
+      <div className="flex h-full flex-col justify-end gap-1.5">
+        <div className="rounded-lg bg-[#f9fafb] border border-[#f3f4f6] px-2.5 py-2">
+          <p className="text-[11px] text-[#6b7280] leading-snug">{t("coordinateWhatsApp")}</p>
+        </div>
+        {contactButtons(true)}
+        {selfModal}
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-1.5 h-full">
       {/* Location control — selector for multi-place, else a plain label. Rendered
