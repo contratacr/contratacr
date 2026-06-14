@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import {
   CalendarDays, Bookmark, LogOut, Bell, User, FolderOpen, Briefcase, Search, LifeBuoy,
-  ShieldCheck, Lock, Camera, X,
+  ShieldCheck, Lock, Camera, X, Settings,
 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { detectIdType } from "@/lib/cedula";
@@ -24,7 +24,7 @@ import { AccountSecuritySection } from "@/components/account/account-security";
 import { SupportTickets } from "@/components/support/support-tickets";
 import { ClientActivity } from "@/components/dashboard/client-activity";
 
-type Tab = "bookings" | "projects" | "saved" | "notifications" | "soporte" | "profile";
+type Tab = "bookings" | "projects" | "saved" | "notifications" | "soporte" | "profile" | "cuenta";
 
 export default function ClientDashboardPage() {
   const { user, loading: authLoading } = useAuth();
@@ -61,6 +61,7 @@ export default function ClientDashboardPage() {
       notifications: "notifications",
       soporte: "soporte",
       profile: "cuenta",
+      cuenta: "cuenta",
     };
     const target = map[activeTab];
     router.replace(`/dashboard/profesional${target ? `?tab=${target}` : ""}`);
@@ -239,6 +240,7 @@ export default function ClientDashboardPage() {
       label: t("tabSupport"),
     },
     { key: "profile", icon: <User className="h-4 w-4" />, label: t("tabProfile") },
+    { key: "cuenta", icon: <Settings className="h-4 w-4" />, label: t("tabAccount") },
   ];
 
   const inputClass =
@@ -253,6 +255,8 @@ export default function ClientDashboardPage() {
     saved: t("savedHeading"),
     notifications: t("notificationsHeading"),
     soporte: t("supportHeading"),
+    profile: t("tabProfile"),
+    cuenta: t("tabAccount"),
   };
   const SECTION_SUBTITLE: Partial<Record<Tab, string>> = {
     bookings: t("bookingsSubtitle"),
@@ -325,122 +329,118 @@ export default function ClientDashboardPage() {
 
             <div className="flex-1 min-w-0">
 
-          {/* List/activity tabs share ONE titled Card shell — identical to the
-              professional panel, so Proyectos/Solicitudes match across both. */}
-          {activeTab !== "profile" && (
-            <Card>
-              <CardHeader className="px-6 pt-6 pb-4">
-                <h2 className="text-lg font-semibold text-[#111827]">{SECTION_TITLE[activeTab]}</h2>
-                {SECTION_SUBTITLE[activeTab] && (
-                  <p className="text-sm text-[#6b7280] mt-0.5">{SECTION_SUBTITLE[activeTab]}</p>
-                )}
-              </CardHeader>
-              <CardContent className="px-6 pb-6">
-                {activeTab === "bookings" && <ClientActivity section="bookings" />}
-                {activeTab === "projects" && <ClientActivity section="projects" />}
-                {activeTab === "saved" && <ClientActivity section="saved" />}
-                {activeTab === "notifications" && <NotificationsList />}
-                {activeTab === "soporte" && <SupportTickets onUnreadChange={setSupportUnread} />}
-              </CardContent>
-            </Card>
-          )}
+          {/* ALL tabs share ONE titled Card shell — identical to the professional
+              panel. "Mi perfil" is the large container; its subsections live inside
+              it (divider-separated), and "Cuenta y seguridad" is its OWN tab. */}
+          <Card>
+            <CardHeader className="px-6 pt-6 pb-4">
+              <h2 className="text-lg font-semibold text-[#111827]">{SECTION_TITLE[activeTab]}</h2>
+              {SECTION_SUBTITLE[activeTab] && (
+                <p className="text-sm text-[#6b7280] mt-0.5">{SECTION_SUBTITLE[activeTab]}</p>
+              )}
+            </CardHeader>
+            <CardContent className="px-6 pb-6">
+              {activeTab === "bookings" && <ClientActivity section="bookings" />}
+              {activeTab === "projects" && <ClientActivity section="projects" />}
+              {activeTab === "saved" && <ClientActivity section="saved" />}
+              {activeTab === "notifications" && <NotificationsList />}
+              {activeTab === "soporte" && <SupportTickets onUnreadChange={setSupportUnread} />}
 
-          {/* PROFILE TAB */}
-          {activeTab === "profile" && (
-            <div className="space-y-4">
-              {/* Photo + name + phone — one card */}
-              <div className="bg-white rounded-2xl border border-[#e5e7eb] p-5 flex flex-col gap-4">
-                <div className="flex items-center gap-4">
-                  <div className="relative h-16 w-16 rounded-full overflow-hidden bg-[#EBF5FB] flex items-center justify-center shrink-0">
-                    {profileAvatar ? (
-                      <img src={profileAvatar} alt="Foto" className="h-full w-full object-cover" />
-                    ) : (
-                      <span className="text-[#009FD9] font-bold text-xl">{getInitials(displayName)}</span>
-                    )}
-                    {photoUploading && (
-                      <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center">
-                        <span className="h-5 w-5 rounded-full border-2 border-white/40 border-t-white animate-spin" />
-                      </div>
-                    )}
-                  </div>
-                  {/* Change + remove — same control as the professional panel. */}
-                  {profileAvatar ? (
-                    <div className="flex items-center gap-2">
-                      <Button type="button" variant="outline" size="sm" onClick={() => photoInputRef.current?.click()} disabled={photoUploading}>
-                        <Camera className="h-4 w-4" /> {t("changePhoto")}
-                      </Button>
-                      <Button type="button" variant="ghost" size="sm" onClick={handlePhotoRemove} disabled={photoUploading} className="text-red-500 hover:text-red-600">
-                        <X className="h-4 w-4" /> {t("removePhoto")}
-                      </Button>
-                    </div>
-                  ) : (
-                    <Button type="button" variant="outline" size="sm" onClick={() => photoInputRef.current?.click()} disabled={photoUploading}>
-                      <Camera className="h-4 w-4" /> {t("addPhoto")}
-                    </Button>
-                  )}
-                  <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={photoUploading} />
-                </div>
-
-                <div className="border-t border-[#f3f4f6] pt-4 flex flex-col gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-[#374151] mb-1.5 flex items-center gap-1.5">
-                      {t("fullName")} <span className="text-red-500">*</span>
-                      {cedulaVerified && (
-                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#16a34a]"><ShieldCheck className="h-3.5 w-3.5" /> {t("verified")}</span>
+              {/* MI PERFIL — one container, divider-separated subsections inside. */}
+              {activeTab === "profile" && (
+                <div className="flex flex-col gap-6">
+                  {/* Foto */}
+                  <div className="flex items-center gap-4">
+                    <div className="relative h-16 w-16 rounded-full overflow-hidden bg-[#EBF5FB] flex items-center justify-center shrink-0">
+                      {profileAvatar ? (
+                        <img src={profileAvatar} alt="Foto" className="h-full w-full object-cover" />
+                      ) : (
+                        <span className="text-[#009FD9] font-bold text-xl">{getInitials(displayName)}</span>
                       )}
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        className={cn(inputClass, cedulaVerified && "bg-[#f3f4f6] cursor-not-allowed pr-10")}
-                        value={profileForm.full_name}
-                        disabled={cedulaVerified}
-                        onChange={(e) => setProfileForm((f) => ({ ...f, full_name: e.target.value }))}
-                      />
-                      {cedulaVerified && <Lock className="h-4 w-4 text-[#9ca3af] absolute right-3 top-1/2 -translate-y-1/2" />}
+                      {photoUploading && (
+                        <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center">
+                          <span className="h-5 w-5 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+                        </div>
+                      )}
                     </div>
-                    {cedulaVerified && (
-                      <p className="text-xs text-[#6b7280] mt-1.5">
-                        {t.rich("nameLockedHelp", { link: (c) => <Link href="/dashboard/cliente?tab=soporte" className="text-[#009FD9] font-medium hover:underline">{c}</Link> })}
-                      </p>
+                    {/* Change + remove — same control as the professional panel. */}
+                    {profileAvatar ? (
+                      <div className="flex items-center gap-2">
+                        <Button type="button" variant="outline" size="sm" onClick={() => photoInputRef.current?.click()} disabled={photoUploading}>
+                          <Camera className="h-4 w-4" /> {t("changePhoto")}
+                        </Button>
+                        <Button type="button" variant="ghost" size="sm" onClick={handlePhotoRemove} disabled={photoUploading} className="text-red-500 hover:text-red-600">
+                          <X className="h-4 w-4" /> {t("removePhoto")}
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button type="button" variant="outline" size="sm" onClick={() => photoInputRef.current?.click()} disabled={photoUploading}>
+                        <Camera className="h-4 w-4" /> {t("addPhoto")}
+                      </Button>
                     )}
+                    <input ref={photoInputRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={photoUploading} />
                   </div>
-                  <PhoneInput
-                    label={<>{t("phone")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span></>}
-                    value={profileForm.phone}
-                    onChange={(digits) => setProfileForm((f) => ({ ...f, phone: digits }))}
-                  />
-                  <div className="flex items-center gap-3">
-                    <Button onClick={saveProfile} loading={profileSaving} disabled={profileSaving}>
-                      {t("saveChanges")}
+
+                  {/* Datos — nombre + teléfono */}
+                  <div className="border-t border-[#f3f4f6] pt-5 flex flex-col gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-[#374151] mb-1.5 flex items-center gap-1.5">
+                        {t("fullName")} <span className="text-red-500">*</span>
+                        {cedulaVerified && (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#16a34a]"><ShieldCheck className="h-3.5 w-3.5" /> {t("verified")}</span>
+                        )}
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          className={cn(inputClass, cedulaVerified && "bg-[#f3f4f6] cursor-not-allowed pr-10")}
+                          value={profileForm.full_name}
+                          disabled={cedulaVerified}
+                          onChange={(e) => setProfileForm((f) => ({ ...f, full_name: e.target.value }))}
+                        />
+                        {cedulaVerified && <Lock className="h-4 w-4 text-[#9ca3af] absolute right-3 top-1/2 -translate-y-1/2" />}
+                      </div>
+                      {cedulaVerified && (
+                        <p className="text-xs text-[#6b7280] mt-1.5">
+                          {t.rich("nameLockedHelp", { link: (c) => <Link href="/dashboard/cliente?tab=soporte" className="text-[#009FD9] font-medium hover:underline">{c}</Link> })}
+                        </p>
+                      )}
+                    </div>
+                    <PhoneInput
+                      label={<>{t("phone")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span></>}
+                      value={profileForm.phone}
+                      onChange={(digits) => setProfileForm((f) => ({ ...f, phone: digits }))}
+                    />
+                    <div className="flex items-center gap-3">
+                      <Button onClick={saveProfile} loading={profileSaving} disabled={profileSaving}>
+                        {t("saveChanges")}
+                      </Button>
+                      {profileSaved && <span className="text-sm text-emerald-600 font-medium">{t("saved")}</span>}
+                    </div>
+                  </div>
+
+                  {/* Ofrecer mis servicios — same account, adds the pro role. */}
+                  <div className="border-t border-[#f3f4f6] pt-5">
+                    <h3 className="text-sm font-semibold text-[#111827]">{t("offerTitle")}</h3>
+                    <p className="text-xs text-[#6b7280] mt-0.5 mb-3">
+                      {t("offerBody")}
+                    </p>
+                    <Button size="sm" onClick={() => router.push("/registro/profesional")}>
+                      <Briefcase className="h-4 w-4" /> {t("offerCta")}
                     </Button>
-                    {profileSaved && <span className="text-sm text-emerald-600 font-medium">{t("saved")}</span>}
                   </div>
                 </div>
-              </div>
+              )}
 
-              {/* (Identity/cédula display block removed — we don't surface the
-                  registered cédula in the panel.) */}
-
-              {/* Offer my services — same account, adds the pro role + onboarding.
-                  No leading icon, so the content aligns flush with the cards above. */}
-              <div className="bg-white rounded-2xl border border-[#e5e7eb] p-5">
-                <h3 className="text-sm font-semibold text-[#111827]">{t("offerTitle")}</h3>
-                <p className="text-xs text-[#6b7280] mt-0.5 mb-3">
-                  {t("offerBody")}
-                </p>
-                <Button size="sm" onClick={() => router.push("/registro/profesional")}>
-                  <Briefcase className="h-4 w-4" /> {t("offerCta")}
-                </Button>
-              </div>
-
-              {/* Cuenta y seguridad — change email/password, OAuth-aware */}
-              <AccountSecuritySection />
-
-              {/* Cerrar / deshabilitar cuenta */}
-              <CloseAccountSection />
-            </div>
-          )}
+              {/* CUENTA Y SEGURIDAD — its own section, like the professional panel. */}
+              {activeTab === "cuenta" && (
+                <div className="space-y-6">
+                  <AccountSecuritySection showHeading={false} />
+                  <CloseAccountSection />
+                </div>
+              )}
+            </CardContent>
+          </Card>
             </div>
           </div>
         </div>
