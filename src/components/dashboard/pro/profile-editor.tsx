@@ -96,6 +96,8 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
   // contact setting). Saved with the rest of the profile.
   const [allowPhoneCall, setAllowPhoneCall] = useState<boolean>(!!initial.allow_phone_call);
   const [contactEmail, setContactEmail] = useState<string>(initial.contact_email ?? "");
+  // Optional public email is opt-in (toggle): on only if one is already saved.
+  const [showContactEmail, setShowContactEmail] = useState<boolean>(!!initial.contact_email);
   const [fullName, setFullName] = useState<string>(initial.profiles?.full_name ?? "");
   // The official name is locked once verified — it's what backs the "Identidad
   // verificada" badge (the guarantee it matches the padrón). Corrections go
@@ -501,7 +503,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
       </Section>
 
       {/* ── Contacto ──────────────────────────────────────────────────── */}
-      <Section title={t("secContact")}>
+      <Section title={t("secContact")} desc={t("secContactDesc")}>
         {/* WhatsApp — required contact channel. */}
         <div>
           <PhoneInput
@@ -538,24 +540,38 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved }: P
           </div>
         )}
 
-        {/* Optional public contact email — opt-in; shown to clients who prefer
-            email. Hidden on the profile when empty. */}
-        <div>
-          <label className="text-sm font-medium text-[#374151] block mb-1.5">
-            {t("contactEmail")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
-          </label>
-          <input
-            type="email"
-            inputMode="email"
-            placeholder={t("emailPlaceholder")}
-            value={contactEmail}
-            onChange={(e) => { setContactEmail(e.target.value); touch(); }}
-            className="w-full h-11 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
-          />
-          {contactEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail.trim()) && (
-            <p className="text-xs text-red-500 mt-1">{t("emailInvalid")}</p>
-          )}
+        {/* Optional public contact email — opt-in via a toggle (consistent with the
+            call-number pattern). Off → no email is shown; turning it off clears it. */}
+        <div className="flex items-center justify-between gap-4 rounded-xl bg-[#f9fafb] p-3.5">
+          <p className="text-sm font-medium text-[#111827]">{t("contactEmail")}</p>
+          <button
+            type="button"
+            onClick={() => {
+              setShowContactEmail((v) => { const nv = !v; if (!nv) setContactEmail(""); return nv; });
+              touch();
+            }}
+            className={cn("relative h-6 w-11 rounded-full transition-all shrink-0", showContactEmail ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
+            aria-label={t("contactEmail")}
+          >
+            <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", showContactEmail ? "left-5" : "left-0.5")} />
+          </button>
         </div>
+
+        {showContactEmail && (
+          <div>
+            <input
+              type="email"
+              inputMode="email"
+              placeholder={t("emailPlaceholder")}
+              value={contactEmail}
+              onChange={(e) => { setContactEmail(e.target.value); touch(); }}
+              className="w-full h-11 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+            />
+            {contactEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail.trim()) && (
+              <p className="text-xs text-red-500 mt-1">{t("emailInvalid")}</p>
+            )}
+          </div>
+        )}
       </Section>
 
       {/* ── Idiomas (+ aseguradoras only for health pros) ─────────────────

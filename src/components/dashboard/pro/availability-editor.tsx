@@ -388,26 +388,24 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
              WhatsApp-only (no agenda); pública = agenda publicada. WhatsApp is
              always available. ── */}
       <div className="rounded-2xl border border-[#e5e7eb] p-4 sm:p-5">
-        <div className="flex items-center gap-2 mb-3">
-          <h3 className="text-sm font-semibold text-[#111827]">{t("contactHeading")}</h3>
-          {savingVisibility && <Loader2 className="h-4 w-4 animate-spin text-[#009FD9] ml-auto" />}
-        </div>
-
         {/* "Disponibilidad privada" (ON = private; hides + clears slots) */}
         <div className="flex items-center justify-between gap-4">
           <p className="text-sm font-semibold text-[#111827]">{t("privateLabel")}</p>
-          <button
-            type="button"
-            onClick={toggleVisibility}
-            disabled={savingVisibility}
-            className={cn(
-              "relative h-6 w-11 rounded-full transition-all duration-200 shrink-0 cursor-pointer",
-              !isPublic ? "bg-[#b45309]" : "bg-[#d1d5db]"
-            )}
-            aria-label={isPublic ? t("makePrivate") : t("makePublic")}
-          >
-            <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all duration-200", !isPublic ? "left-5" : "left-0.5")} />
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            {savingVisibility && <Loader2 className="h-4 w-4 animate-spin text-[#009FD9]" />}
+            <button
+              type="button"
+              onClick={toggleVisibility}
+              disabled={savingVisibility}
+              className={cn(
+                "relative h-6 w-11 rounded-full transition-all duration-200 shrink-0 cursor-pointer",
+                !isPublic ? "bg-[#b45309]" : "bg-[#d1d5db]"
+              )}
+              aria-label={isPublic ? t("makePrivate") : t("makePublic")}
+            >
+              <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all duration-200", !isPublic ? "left-5" : "left-0.5")} />
+            </button>
+          </div>
         </div>
 
         {/* Public agenda → the slot generator lives in the SAME card, under a
