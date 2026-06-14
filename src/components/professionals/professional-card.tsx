@@ -175,20 +175,21 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
             </Link>
 
             <div className="flex-1 min-w-0 flex flex-col gap-1 overflow-hidden">
-              {/* Name line: name on the left (truncates to ONE line), "Verificado"
-                  pill aligned to the RIGHT of the name, then the optional price.
-                  Right-aligning the badge frees the space below so the location /
-                  "se desplaza" lines can show in full. `pr-9 md:pr-0` clears the
-                  absolute save button on mobile. */}
-              <div className="flex items-center gap-2 min-w-0 pr-9 md:pr-0">
-                <Link href={`/profesionales/${professional.slug}`} className="min-w-0 flex-1">
-                  <h3 className="font-bold text-[#111827] text-[15px] leading-tight hover:text-[#009FD9] transition-colors truncate">{brandPrimary}</h3>
+              {/* Name line. DESKTOP (md, nowrap): the name takes only its content
+                  width (shrinks/truncates to ONE line if very long) so the
+                  "Verificado" pill sits IMMEDIATELY beside it; price pushed right
+                  (md:ml-auto). MOBILE (wrap): the name shows in FULL (up to 2 lines,
+                  never cut off) and the pill wraps to the next line if there's no
+                  room. `pr-9 md:pr-0` clears the absolute save button on mobile. */}
+              <div className="flex flex-wrap md:flex-nowrap items-start md:items-center gap-x-1.5 gap-y-0.5 min-w-0 pr-9 md:pr-0">
+                <Link href={`/profesionales/${professional.slug}`} className="min-w-0">
+                  <h3 className="font-bold text-[#111827] text-[15px] leading-tight hover:text-[#009FD9] transition-colors line-clamp-2 md:line-clamp-1">{brandPrimary}</h3>
                 </Link>
                 {verifiedBadge}
                 {/* Price — just the amount, no "Desde/Tarifa" word. Shown only when
                     there's a real numeric price. */}
                 {priceLabel.includes("₡") && (
-                  <span className="shrink-0 font-bold text-[#111827] text-sm whitespace-nowrap">{priceLabel}</span>
+                  <span className="shrink-0 font-bold text-[#111827] text-sm whitespace-nowrap md:ml-auto">{priceLabel}</span>
                 )}
               </div>
 
