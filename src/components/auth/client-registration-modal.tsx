@@ -564,7 +564,16 @@ export function ClientRegistrationModal({
                       : <>{t("continue")} <ArrowRight className="h-4 w-4" /></>}
                   </Button>
                 </div>
-              ) : (
+              ) : null}
+              {view === "register" && step === "password" && (
+                <p className="text-center text-xs text-[#9ca3af] mt-3">
+                  {t.rich("terms", {
+                    terms: (c) => <a href="/terminos" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#374151]">{c}</a>,
+                    privacy: (c) => <a href="/privacidad" target="_blank" rel="noopener noreferrer" className="underline hover:text-[#374151]">{c}</a>,
+                  })}
+                </p>
+              )}
+              {view === "login" && (
                 <div className="flex gap-3">
                   <Button variant="outline" size="md" onClick={() => { setView("register"); setError(null); }}>
                     <ArrowLeft className="h-4 w-4" />

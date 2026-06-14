@@ -364,7 +364,10 @@ export default function RegisterClientPage() {
               </Button>
 
               <p className="text-center text-xs text-[#9ca3af]">
-                {t.rich("terms", { link: (c) => <a href="/terminos" className="underline hover:text-[#374151]">{c}</a> })}
+                {t.rich("terms", {
+                  terms: (c) => <a href="/terminos" className="underline hover:text-[#374151]">{c}</a>,
+                  privacy: (c) => <a href="/privacidad" className="underline hover:text-[#374151]">{c}</a>,
+                })}
               </p>
 
               <div className="text-center text-sm text-[#6b7280]">

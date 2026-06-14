@@ -1,142 +1,178 @@
-import { LandingNavbar } from "@/components/landing/landing-navbar";
-import { LandingFooter } from "@/components/landing/landing-footer";
 import { Link } from "@/i18n/navigation";
 import { SUPPORT_EMAIL } from "@/lib/constants";
-import { AlertTriangle } from "lucide-react";
+import { LegalDocument, type LegalSection } from "@/components/legal/legal-document";
 
 export const metadata = {
   title: "Términos y condiciones — ContrataCR",
-  description: "Términos y condiciones de uso de ContrataCR, el mercado de servicios profesionales para Costa Rica.",
+  description: "Términos y Condiciones de Uso de ContrataCR, plataforma de intermediación que conecta clientes con profesionales en Costa Rica.",
 };
 
-const SECTIONS: { id: string; h: string; p: string[] }[] = [
+const SECTIONS: LegalSection[] = [
   {
-    id: "aceptacion",
-    h: "1. Aceptación de los términos",
-    p: [
-      "Al crear una cuenta o usar ContrataCR aceptas estos Términos y Condiciones. Si no estás de acuerdo, no uses la plataforma.",
-      "Para usar ContrataCR debes ser mayor de edad y proporcionar información veraz.",
+    id: "definiciones",
+    h: "1. Definiciones",
+    body: [
+      { k: "ul", items: [
+        "**ContrataCR / la Plataforma / nosotros:** el sitio web y los servicios tecnológicos disponibles en contratacr.com, que conectan a clientes con proveedores de servicios en Costa Rica.",
+        "**Usuario:** toda persona que accede o utiliza la Plataforma, ya sea como Cliente o como Profesional.",
+        "**Cliente:** el Usuario que busca, contacta o contrata servicios a través de la Plataforma.",
+        "**Profesional / Proveedor:** el Usuario que ofrece sus servicios a través de la Plataforma.",
+        "**Servicios de la Plataforma:** las herramientas tecnológicas de intermediación, búsqueda, contacto y coordinación que ContrataCR pone a disposición.",
+        "**Servicios de terceros:** los trabajos, labores o servicios prestados por los Profesionales, que NO son prestados por ContrataCR.",
+      ] },
     ],
   },
   {
-    id: "que-es",
-    h: "2. Qué es ContrataCR",
-    p: [
-      "ContrataCR es una plataforma intermediaria que conecta a clientes con profesionales de servicios en Costa Rica. No somos los proveedores de los servicios ni participamos en su ejecución.",
-      "La contratación, el precio, la fecha y el pago se acuerdan y se realizan directamente entre el cliente y el profesional. ContrataCR no cobra comisiones por las contrataciones.",
-    ],
-  },
-  {
-    id: "cuentas",
-    h: "3. Cuentas y verificación de identidad",
-    p: [
-      "Cada usuario es responsable de la veracidad de su información y de la actividad en su cuenta. Los profesionales confirman su identidad mediante la cédula, que validamos contra el padrón del Tribunal Supremo de Elecciones (TSE).",
-      "La insignia “Identidad verificada” confirma únicamente que la cédula es real y que el nombre coincide con los registros oficiales. No certifica la calidad, la idoneidad ni el resultado de ningún trabajo, y no prueba por sí sola que quien se registró sea físicamente esa persona.",
-    ],
-  },
-  {
-    id: "uso",
-    h: "4. Uso de la plataforma",
-    p: [
-      "Los clientes pueden buscar profesionales, publicar proyectos y solicitar servicios. Los profesionales pueden crear un perfil, recibir solicitudes y enviar propuestas.",
-      "Te comprometes a usar la plataforma de buena fe, sin suplantar a terceros, sin publicar información falsa y sin usarla para fines ilícitos.",
+    id: "intermediario",
+    h: "2. Naturaleza de ContrataCR: somos un intermediario",
+    body: [
+      { k: "p", text: "**ContrataCR es únicamente una plataforma tecnológica de intermediación.** Nuestra función es poner en contacto a Clientes con Profesionales. ContrataCR **no presta, no ejecuta, no supervisa y no garantiza** los servicios ofrecidos por los Profesionales." },
+      { k: "p", text: "En consecuencia, usted reconoce y acepta que:" },
+      { k: "ul", items: [
+        "ContrataCR **no es parte** de ningún acuerdo, contrato o relación que se establezca entre un Cliente y un Profesional. Dicha relación es directa y exclusiva entre ellos.",
+        "ContrataCR **no contrata, no emplea y no representa** a los Profesionales. Los Profesionales son terceros independientes que utilizan la Plataforma por su cuenta y riesgo.",
+        "ContrataCR **no garantiza** la calidad, idoneidad, seguridad, legalidad, puntualidad, finalización ni resultado de ningún servicio prestado por un Profesional.",
+        "ContrataCR **no interviene** en la negociación, el precio, las condiciones, la ejecución ni el pago de los servicios entre Cliente y Profesional.",
+      ] },
     ],
   },
   {
     id: "pagos",
-    h: "5. Pagos",
-    p: [
-      "Los pagos ocurren fuera de la plataforma, directamente entre el cliente y el profesional. ContrataCR no procesa, retiene ni garantiza pagos, y no cobra comisiones por las transacciones.",
+    h: "3. ContrataCR no procesa pagos",
+    body: [
+      { k: "p", text: "ContrataCR **no maneja, no procesa, no retiene ni intermedia ningún pago** entre Clientes y Profesionales. Cualquier pago, cobro, factura, depósito, anticipo o transacción económica se acuerda y realiza **directa y exclusivamente entre el Cliente y el Profesional, fuera de la Plataforma**, bajo su propia responsabilidad." },
+      { k: "p", text: "ContrataCR no es responsable por disputas económicas, cobros indebidos, falta de pago, estafas, reembolsos o cualquier asunto financiero derivado de la relación entre Cliente y Profesional." },
+    ],
+  },
+  {
+    id: "verificado",
+    h: "4. La insignia “Verificado” (verificación de identidad)",
+    body: [
+      { k: "p", text: "Algunos Profesionales muestran una insignia de **“Verificado”** en su perfil. Esta insignia tiene un significado **limitado y específico**, que usted acepta y comprende:" },
+      { k: "ul", items: [
+        "La insignia **únicamente** confirma que el número de cédula proporcionado corresponde a un registro real y que el nombre asociado coincide con los registros oficiales consultados.",
+        "La insignia **NO garantiza ni certifica**: (i) la calidad, competencia, experiencia o idoneidad del Profesional; (ii) el resultado, la finalización o la satisfacción de ningún trabajo; (iii) que el Profesional cuente con permisos, licencias, seguros o titulaciones; ni (iv) por sí sola, que la persona que se registró sea físicamente el titular de la cédula.",
+        "La ausencia de la insignia no implica que el Profesional sea menos confiable; simplemente significa que no completó o no aportó la verificación de identidad.",
+      ] },
+      { k: "p", text: "La verificación de identidad es una herramienta de referencia para los Clientes, **no una garantía** de ContrataCR sobre el Profesional ni sobre sus servicios. El significado de la insignia se explica también en la sección de la Plataforma destinada a ello." },
+    ],
+  },
+  {
+    id: "responsabilidad-usuarios",
+    h: "5. Responsabilidad de los Usuarios",
+    body: [
+      { k: "sub", text: "5.1 Veracidad de la información" },
+      { k: "p", text: "Cada Usuario es el único responsable de la veracidad, exactitud y vigencia de la información que publica (datos personales, profesión, servicios, certificaciones, precios, ubicación, fotografías, etc.). Está prohibido suplantar la identidad de terceros o usar cédulas que no le pertenezcan." },
+      { k: "sub", text: "5.2 Conducta" },
+      { k: "p", text: "Los Usuarios se comprometen a usar la Plataforma de forma lícita, respetuosa y de buena fe, y a no:" },
+      { k: "ul", items: [
+        "Publicar información falsa, engañosa, difamatoria, ofensiva o ilegal.",
+        "Suplantar a otra persona o entidad.",
+        "Utilizar la Plataforma para fines fraudulentos o ilegales.",
+        "Recolectar datos de otros Usuarios sin autorización.",
+        "Interferir con el funcionamiento técnico de la Plataforma.",
+      ] },
+      { k: "sub", text: "5.3 Relación entre Cliente y Profesional" },
+      { k: "p", text: "Toda contratación, coordinación, ejecución y pago de servicios ocurre **directamente entre el Cliente y el Profesional**, bajo su exclusiva responsabilidad. Los Usuarios son responsables de evaluar, por su propia cuenta, con quién deciden contratar o trabajar, y de tomar las precauciones razonables." },
+    ],
+  },
+  {
+    id: "limitacion",
+    h: "6. Limitación de responsabilidad de ContrataCR",
+    body: [
+      { k: "p", text: "En la máxima medida permitida por la legislación costarricense, usted acepta que:" },
+      { k: "ul", items: [
+        "ContrataCR **no será responsable** por los daños, perjuicios, pérdidas, lesiones, incumplimientos, fraudes o conflictos que surjan de la relación entre Clientes y Profesionales o de los servicios prestados por los Profesionales.",
+        "ContrataCR **no será responsable** por la conducta, las acciones u omisiones de ningún Usuario, dentro o fuera de la Plataforma.",
+        "ContrataCR proporciona la Plataforma “tal cual” y “según disponibilidad”, sin garantías de funcionamiento ininterrumpido o libre de errores.",
+        "ContrataCR **no será responsable** por información inexacta publicada por los Usuarios.",
+      ] },
+      { k: "p", text: "ContrataCR sí se compromete a actuar de buena fe en la operación de la Plataforma y a atender los reportes y reclamos de los Usuarios a través de sus canales de soporte." },
+      { k: "note", text: "**Nota:** La legislación costarricense de protección al consumidor (Ley N.º 7472) establece ciertas responsabilidades que no pueden excluirse por contrato. Esta cláusula se aplica dentro de los límites que la ley permite." },
+    ],
+  },
+  {
+    id: "moderacion",
+    h: "7. Verificación, moderación y suspensión",
+    body: [
+      { k: "p", text: "ContrataCR se reserva el derecho, sin que ello constituya una obligación ni una garantía, de:" },
+      { k: "ul", items: [
+        "Revisar, moderar o eliminar contenido que infrinja estos Términos.",
+        "Suspender o cancelar cuentas que incumplan estos Términos o la ley.",
+        "Atender reportes de suplantación, fraude o mala conducta a través de sus canales.",
+      ] },
+      { k: "p", text: "Las decisiones de moderación buscan proteger a la comunidad, pero no convierten a ContrataCR en garante de la conducta de los Usuarios." },
     ],
   },
   {
     id: "resenas",
-    h: "6. Reseñas y reportes",
-    p: [
-      "Solo los clientes que recibieron un servicio pueden dejar una reseña. Las reseñas deben ser honestas y respetuosas. La reputación funciona en ambas direcciones: los profesionales también pueden reportar a un cliente.",
-      "Podemos moderar, ocultar o eliminar contenido que incumpla estos términos o la ley.",
+    h: "8. Reseñas y reportes",
+    body: [
+      { k: "ul", items: [
+        "Las reseñas solo pueden ser dejadas por Clientes que recibieron un servicio del Profesional, y reflejan la opinión personal de quien las escribe, no la de ContrataCR.",
+        "Los Usuarios pueden reportar conductas indebidas a través de los canales de la Plataforma. ContrataCR revisará los reportes razonablemente, sin garantizar un resultado específico.",
+      ] },
     ],
   },
   {
-    id: "responsabilidad",
-    h: "7. Limitación de responsabilidad",
-    p: [
-      "ContrataCR no garantiza la disponibilidad, la calidad, la seguridad ni el resultado de los servicios contratados a través de la plataforma. La relación de servicio es exclusivamente entre el cliente y el profesional.",
-      "En la medida permitida por la ley, ContrataCR no será responsable por daños derivados de los acuerdos, trabajos o pagos realizados entre las partes.",
+    id: "edad",
+    h: "9. Requisitos de edad",
+    body: [
+      { k: "p", text: "ContrataCR está dirigido exclusivamente a personas **mayores de 18 años**. Al usar la Plataforma, usted declara ser mayor de edad y tener capacidad legal para contratar conforme a la legislación costarricense. No está permitido el registro ni el uso por parte de menores de edad." },
+    ],
+  },
+  {
+    id: "propiedad",
+    h: "10. Propiedad intelectual",
+    body: [
+      { k: "p", text: "La marca, el logotipo, el diseño, los textos y el software de ContrataCR son propiedad de ContrataCR y están protegidos por la ley. El contenido que cada Usuario publica sigue siendo de su titularidad, pero el Usuario otorga a ContrataCR una licencia para mostrarlo en la Plataforma con el fin de prestar el servicio." },
     ],
   },
   {
     id: "datos",
-    h: "8. Protección de datos",
-    p: [
-      "El tratamiento de tus datos personales se rige por nuestra Política de Privacidad y por la Ley N.º 8968 de Costa Rica, aplicando el principio de minimización de datos.",
+    h: "11. Protección de datos",
+    body: [
+      { k: "p", text: "El tratamiento de los datos personales se rige por nuestra **Política de Privacidad**, conforme a la Ley N.º 8968 de Protección de la Persona frente al tratamiento de sus datos personales y su reglamento." },
     ],
   },
   {
-    id: "cambios",
-    h: "9. Cambios y ley aplicable",
-    p: [
-      "Podemos actualizar estos términos cuando sea necesario; los cambios relevantes se comunicarán en la plataforma. Estos términos se rigen por las leyes de la República de Costa Rica.",
+    id: "modificaciones",
+    h: "12. Modificaciones",
+    body: [
+      { k: "p", text: "ContrataCR podrá modificar estos Términos en cualquier momento. Los cambios se publicarán en la Plataforma con su fecha de actualización. El uso continuado de la Plataforma después de una modificación implica la aceptación de los nuevos Términos." },
+    ],
+  },
+  {
+    id: "ley",
+    h: "13. Legislación aplicable y jurisdicción",
+    body: [
+      { k: "p", text: "Estos Términos se rigen por las leyes de la República de Costa Rica. Cualquier controversia se someterá a los tribunales costarricenses competentes." },
+    ],
+  },
+  {
+    id: "contacto",
+    h: "14. Contacto",
+    body: [
+      { k: "p", text: "Para consultas sobre estos Términos, puede contactarnos en: **soporte@contratacr.com**" },
     ],
   },
 ];
 
 export default function TerminosPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-white">
-      <LandingNavbar />
-      <main className="flex-1 pt-28 pb-20 px-4">
-        <div className="mx-auto max-w-3xl">
-
-          {/* Draft notice */}
-          <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-[#92400e]">
-            <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
-            <p>
-              <strong>Borrador pendiente de revisión legal.</strong> Esta es una versión preliminar de ContrataCR,
-              pendiente de revisión por un abogado costarricense antes del lanzamiento. No constituye asesoría legal
-              ni la versión definitiva del documento.
-            </p>
-          </div>
-
-          {/* Title */}
-          <header className="mt-8">
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-[#111827]">Términos y condiciones</h1>
-            <p className="text-[#6b7280] mt-2">Última actualización: 9 de junio de 2026</p>
-          </header>
-
-          {/* Table of contents */}
-          <nav aria-label="Contenido" className="mt-8 rounded-2xl border border-[#e5e7eb] bg-[#f9fafb] p-5">
-            <p className="text-xs font-bold uppercase tracking-widest text-[#9ca3af] mb-3">Contenido</p>
-            <ol className="grid sm:grid-cols-2 gap-x-6 gap-y-2">
-              {SECTIONS.map((s) => (
-                <li key={s.id}>
-                  <a href={`#${s.id}`} className="text-sm text-[#009FD9] hover:underline">{s.h}</a>
-                </li>
-              ))}
-            </ol>
-          </nav>
-
-          {/* Sections */}
-          <div className="mt-10 flex flex-col gap-10">
-            {SECTIONS.map((s) => (
-              <section key={s.id} id={s.id} className="scroll-mt-24">
-                <h2 className="text-xl font-bold text-[#111827] mb-3">{s.h}</h2>
-                <div className="space-y-3 text-[#374151] leading-relaxed">
-                  {s.p.map((para, i) => <p key={i}>{para}</p>)}
-                </div>
-              </section>
-            ))}
-
-            <div className="rounded-2xl border border-[#e5e7eb] bg-[#f9fafb] p-5 text-sm text-[#6b7280]">
-              ¿Dudas sobre estos términos? Escríbenos a{" "}
-              <a href={`mailto:${SUPPORT_EMAIL}`} className="font-semibold text-[#009FD9] hover:underline">{SUPPORT_EMAIL}</a>{" "}
-              o desde <Link href="/soporte" className="font-semibold text-[#009FD9] hover:underline">Contactar soporte</Link>. Revisa también nuestra{" "}
-              <Link href="/privacidad" className="font-semibold text-[#009FD9] hover:underline">Política de Privacidad</Link>.
-            </div>
-          </div>
-        </div>
-      </main>
-      <LandingFooter />
-    </div>
+    <LegalDocument
+      title="Términos y Condiciones de Uso"
+      updated="14 de junio de 2026"
+      intro="Bienvenido a ContrataCR. Al acceder y utilizar nuestra plataforma, usted acepta estos Términos y Condiciones en su totalidad. Le pedimos leerlos con atención antes de usar el servicio. Si no está de acuerdo con ellos, no debe utilizar ContrataCR."
+      sections={SECTIONS}
+      footer={
+        <>
+          ¿Dudas sobre estos Términos? Escríbenos a{" "}
+          <a href={`mailto:${SUPPORT_EMAIL}`} className="font-semibold text-[#009FD9] hover:underline">{SUPPORT_EMAIL}</a>{" "}
+          o desde <Link href="/soporte" className="font-semibold text-[#009FD9] hover:underline">Contactar soporte</Link>. Revisa también nuestra{" "}
+          <Link href="/privacidad" className="font-semibold text-[#009FD9] hover:underline">Política de Privacidad</Link>.
+        </>
+      }
+    />
   );
 }

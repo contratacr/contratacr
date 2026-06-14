@@ -399,7 +399,8 @@
     "haveAccount": "Already have an account?",
     "signInLink": "Sign in",
     "noAccount": "Don't have an account?",
-    "signUpFree": "Sign up free"
+    "signUpFree": "Sign up free",
+    "terms": "By creating your account you accept our <terms>Terms</terms> and <privacy>Privacy Policy</privacy>."
   },
   "inputs": {
     "remove": "Remove",
@@ -1610,7 +1611,7 @@
     "creating": "Creating account...",
     "saveContinue": "Save and continue",
     "createFree": "Create free account",
-    "terms": "By registering you accept our <link>Terms of use</link>.",
+    "terms": "By registering you accept our <terms>Terms of use</terms> and our <privacy>Privacy Policy</privacy>.",
     "haveAccount": "Already have an account?",
     "signIn": "Sign in"
   },
