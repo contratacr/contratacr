@@ -163,7 +163,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
     // Content-driven height with a floor (md:min-h): simple cards stay compact,
     // rich ones (multi-location/profession + many slots) grow. The number badge
     // (page wrapper) sits at the top-left, so the content is padded `pl-10`.
-    <div className={`group relative rounded-2xl bg-white border border-[#e5e7eb] hover:border-[#cbd5e1] hover:shadow-md transition-all duration-200 min-h-[320px] md:min-h-[190px] ${className ?? ""}`}>
+    <div className={`group relative rounded-2xl bg-white border border-[#e5e7eb] hover:border-[#cbd5e1] hover:shadow-md transition-all duration-200 h-[360px] md:h-[232px] overflow-hidden ${className ?? ""}`}>
       <div className="p-3.5 pl-10 h-full">
         <div className="flex flex-col md:flex-row gap-3 h-full">
           {/* ── Identity zone ── */}
@@ -289,7 +289,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
                  min-height keeps every card the SAME height regardless of the
                  button-layout type (private/with-call/without-call); on desktop the
                  row layout + card min-h govern. ── */}
-          <div className="md:w-[232px] md:shrink-0 md:border-l md:border-[#f3f4f6] md:pl-4 pt-3 md:pt-0 border-t border-[#f3f4f6] md:border-t-0 flex flex-col min-h-[150px] md:min-h-0">
+          <div className="md:w-[232px] md:shrink-0 md:border-l md:border-[#f3f4f6] md:pl-4 pt-3 md:pt-0 border-t border-[#f3f4f6] md:border-t-0 flex flex-col">
             <div className="flex-1 min-h-0">
               <ProfessionalSchedule
                 professional={professional}
