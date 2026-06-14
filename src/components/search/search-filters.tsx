@@ -31,11 +31,15 @@ export function SearchFilters() {
   const geoActive = !!params.get("lat") && params.get("sortBy") === "cercania";
 
   // Official list = static INSURERS + admin-approved additions from the DB.
-  // The filter never offers a "Ninguna / sin seguros" entry — that's a pro
-  // attribute, not a way to filter clients. Default is no insurer selected.
-  const NON_INSURER = new Set(["ninguna", "none", "sin_seguros", "sin_seguro", "no_insurance"]);
+  // The filter never offers a "Ninguna / Todas / sin seguros" entry — those are a
+  // pro attribute or a stray placeholder, NOT a way to filter clients. Default is
+  // simply no insurer selected (unfiltered). Excluded by id AND by label so a DB
+  // row like "Ninguna" can't leak in regardless of its id.
+  const NON_INSURER_ID = new Set(["ninguna", "none", "sin_seguros", "sin_seguro", "no_insurance", "todas", "todos", "all"]);
+  const isRealInsurer = (i: { id: string; label: string }) =>
+    !NON_INSURER_ID.has(i.id?.toLowerCase?.() ?? "") && !/^(ninguna|todas|todos|sin seguros?)$/i.test((i.label ?? "").trim());
   const [insurerOptions, setInsurerOptions] = useState<{ id: string; label: string }[]>(
-    INSURERS.filter((i) => !NON_INSURER.has(i.id))
+    INSURERS.filter(isRealInsurer)
   );
   useEffect(() => {
     (async () => {
@@ -45,7 +49,7 @@ export function SearchFilters() {
         if (Array.isArray(data) && data.length) {
           const map = new Map(INSURERS.map((i) => [i.id, { id: i.id, label: i.label }]));
           for (const d of data) map.set(d.id as string, { id: d.id as string, label: d.label as string });
-          setInsurerOptions(Array.from(map.values()).filter((i) => !NON_INSURER.has(i.id)));
+          setInsurerOptions(Array.from(map.values()).filter(isRealInsurer));
         }
       } catch { /* static list still works */ }
     })();
