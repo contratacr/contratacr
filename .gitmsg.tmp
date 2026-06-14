@@ -1,12 +1,9 @@
-feat(completa tu perfil): jump to the exact field (opens its section) + count any description
+fix(text/spacing): drop registration photo caption, reword client name source, tighten client Mi perfil
 
-- Each completion item now opens the matching collapsed section in the profile
-  editor AND smooth-scrolls to the exact field, with a brief brand-blue flash.
-  Sections in ProfileEditor are now controlled (open state lifted), and the
-  editor takes focusField/focusKey props; field→section map drives the open.
-  data-field anchors added (photo, bio, location, whatsapp, insurers). Works on
-  mobile (scroll-mt + smooth scrollIntoView).
-- Description completion: any non-empty bio now counts (removed the >=40 char
-  gate, so "test" marks it done).
+- Remove the "Una buena foto genera más confianza…" caption from the
+  registration add-photo step (unnecessary).
+- Client account: "Tu nombre proviene de la cédula que ingresaste en tu última
+  solicitud de servicio…" (EN matched) — keeps the "solicítalo a soporte" path.
+- Client "Mi perfil" content gap 6 -> 4 so the title sits closer to the content.
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>

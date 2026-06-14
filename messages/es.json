@@ -1412,7 +1412,7 @@
     "photoHint": "JPG, PNG o WebP — máx 5MB",
     "fullName": "Nombre completo",
     "verified": "Verificado",
-    "nameLockedHelp": "Tu nombre está verificado con tu cédula del padrón. ¿Un error o cambio legal? <link>Solicítalo a soporte</link>.",
+    "nameLockedHelp": "Tu nombre proviene de la cédula que ingresaste en tu última solicitud de servicio. ¿Un error o cambio legal? <link>Solicítalo a soporte</link>.",
     "phone": "Teléfono",
     "optional": "(opcional)",
     "saveChanges": "Guardar cambios",

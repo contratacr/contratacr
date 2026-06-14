@@ -929,10 +929,6 @@ export default function RegisterProfessionalPage() {
                   casos de éxito now lives in the panel's profile-completion flow. */}
               <PhotoPicker preview={photoPreview} onFile={handlePhotoSelect} onRemove={() => { setPhotoFile(null); setPhotoPreview(null); }} />
 
-              <p className="text-sm text-[#6b7280] text-center">
-                {t("photoCaption")}
-              </p>
-
               <div className="flex gap-3 mt-2">
                 <Button variant="outline" size="lg" type="button" onClick={() => setStep(1)}>
                   <ArrowLeft className="h-4 w-4" /> {t("back")}

@@ -363,7 +363,7 @@ export default function ClientDashboardPage() {
 
               {/* MI PERFIL — one container, divider-separated subsections inside. */}
               {activeTab === "profile" && (
-                <div className="flex flex-col gap-6">
+                <div className="flex flex-col gap-4">
                   {/* App-wide autosave — consistent status, no save button. */}
                   <SaveStatus saving={profileSaving} saved={profileSaved} dirty={profileDirty} />
                   {/* Foto */}

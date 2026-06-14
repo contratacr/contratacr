@@ -1412,7 +1412,7 @@
     "photoHint": "JPG, PNG or WebP — max 5MB",
     "fullName": "Full name",
     "verified": "Verified",
-    "nameLockedHelp": "Your name is verified with your padrón ID. A mistake or legal change? <link>Request it from support</link>.",
+    "nameLockedHelp": "Your name comes from the ID you entered on your latest service request. A mistake or legal change? <link>Request it from support</link>.",
     "phone": "Phone",
     "optional": "(optional)",
     "saveChanges": "Save changes",
