@@ -225,13 +225,18 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
                 )}
               </div>
 
-              {/* Rating — one star + value + count */}
+              {/* Rating — star + value + count. With reviews it's a LINK to the
+                  reviews tab (count styled brand-blue to read as tappable, like the
+                  casos/certificaciones links). No reviews → honest, non-link state. */}
               {professional.reviewCount > 0 ? (
-                <div className="flex items-center gap-1.5">
+                <Link
+                  href={`/profesionales/${professional.slug}?tab=resenas`}
+                  className="inline-flex w-fit items-center gap-1.5 hover:underline"
+                >
                   <Star className="h-3.5 w-3.5 fill-[#ff9b32] text-[#ff9b32]" />
                   <span className="text-[13px] font-bold text-[#111827]">{professional.ratingAvg.toFixed(1)}</span>
-                  <span className="text-[11px] text-[#6b7280]">· {tCard("reviewsCount", { count: professional.reviewCount })}</span>
-                </div>
+                  <span className="text-[11px] font-medium text-[#009FD9]">· {tCard("reviewsCount", { count: professional.reviewCount })}</span>
+                </Link>
               ) : (
                 <span className="inline-flex items-center gap-1.5 text-[11px] text-[#9ca3af]">
                   <Star className="h-3.5 w-3.5 fill-[#e5e7eb] text-[#e5e7eb]" /> {tCard("noReviews")}
