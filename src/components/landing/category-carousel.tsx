@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import Image from "next/image";
 import { useLocale } from "next-intl";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { getCategoryLabel } from "@/lib/data/categories";
 
@@ -46,8 +46,11 @@ function Card({ id, lifted, onLinkClick }: { id: string; lifted: boolean; onLink
     >
       <Link
         href={`/buscar?categoria=${id}`}
-        // Navigates to /buscar pre-filtered by this category. A clean tap/click
-        // navigates; only the click that ENDS a real drag is cancelled (guard).
+        // `data-href` lets the carousel navigate PROGRAMMATICALLY on a tap (pointerup)
+        // — needed because pointer capture (used for dragging) makes the browser send
+        // the follow-up click to the viewport, not this <a>, so the link's own click
+        // never fires. The real href stays for SEO / right-click / keyboard.
+        data-href={`/buscar?categoria=${id}`}
         onClick={onLinkClick}
         draggable={false}
         // No per-card will-change/3d here — that promoted all 38 cards to their
@@ -78,6 +81,7 @@ function Card({ id, lifted, onLinkClick }: { id: string; lifted: boolean; onLink
 }
 
 export function CategoryCarousel() {
+  const router = useRouter();
   const viewport = useRef<HTMLDivElement>(null);
   const track = useRef<HTMLDivElement>(null);
 
@@ -171,21 +175,27 @@ export function CategoryCarousel() {
     if (!drag.current.active) return;
     viewport.current?.classList.remove("is-dragging");
     viewport.current?.releasePointerCapture?.(e.pointerId);
-    // NOTE: we do NOT swallow clicks via a lingering listener here. A real drag
-    // is cancelled by the card's onClick guard (checks drag.current.moved, which
-    // resets on every pointerdown) — so a tap that follows a swipe still works.
+    const wasTap = !drag.current.moved;
     drag.current.active = false;
     paused.current = false;
+    // TAP (no real drag) → navigate to the tapped card's category. Done
+    // PROGRAMMATICALLY because the carousel uses pointer capture for dragging, which
+    // makes the browser dispatch the follow-up `click` to the viewport (the capturing
+    // element) instead of the card's <a> — so the link's own click never fires. We
+    // find the card under the release point and push its category route. Reliable on
+    // touch + mouse; a real drag (moved) just scrolls and never navigates.
+    if (wasTap) {
+      const el = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement | null;
+      const href = el?.closest<HTMLElement>("[data-href]")?.dataset.href;
+      if (href) router.push(href);
+    }
   };
 
-  // Card click guard: cancel navigation ONLY when this gesture was a real drag.
-  // `moved` is reset on each pointerdown, so a prior swipe can never block a
-  // later clean tap/click (the bug where the old lingering swallower ate taps).
+  // The anchor keeps a real href (SEO / right-click / keyboard). Pointer-generated
+  // clicks are handled by the pointerup tap logic above, so cancel them here to avoid
+  // double navigation; keyboard activation (detail === 0) navigates natively.
   const onLinkClick = (e: React.MouseEvent) => {
-    if (drag.current.moved) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
+    if (e.detail !== 0) e.preventDefault();
   };
 
   const nudge = (dir: 1 | -1) => {
