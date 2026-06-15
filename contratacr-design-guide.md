@@ -974,28 +974,35 @@ section body. In `profile-editor.tsx` it lives in the shared `Section` component
 `autosave` defaults true) so it's identical across sections; only add it where autosave is
 actually wired.
 
-## 50. /buscar card — DESKTOP two columns (info | schedule), MOBILE stacked
+## 50. /buscar card — SINGLE vertical column at all widths (desktop reverted from two-column)
 
-Doctoralia-style. On **desktop (lg+)** the card body is TWO columns — professional info on the
-LEFT, the schedule on the RIGHT — with a full-width action row spanning both. On **mobile** the
-same blocks STACK in one column (info, then schedule, then buttons). Content-driven height.
+The card is a **single vertical column at EVERY width** (the desktop two-column split was
+REVERTED at the user's request — they preferred the single column; mobile was already this and
+is unchanged). Two stacked blocks: **[info + location tabs]** then **[schedule-or-message +
+action buttons]**. Content-driven height. (DESKTOP-ONLY layout history — the wider two-column
+grid `lg:grid-cols-[minmax(0,1.85fr)_minmax(0,1fr)]` and the wider results column
+`lg:w-[620/680/880]` — was removed; the desktop wrapper is now plain `flex flex-col gap-3` and
+the desktop results column hugs the ~500px card via `lg:w-[500px]`, map `lg:flex-1`. If you
+ever rebuild a desktop two-column, it must be ADDITIVE `lg:` classes on the mobile base so
+mobile stays untouched.)
 
-HuliHealth-style: schedule + action buttons share the RIGHT column; there is NO full-width
-bottom button strip.
+HuliHealth-style: schedule + action buttons sit together (schedule on top, buttons full-width
+below); there is NO separate full-width bottom button strip.
 
 **Who owns what (the server/client split matters):** `professional-card.tsx` is an ASYNC SERVER
 component; `professional-schedule.tsx` is the `"use client"` component holding ALL schedule
-state (location options, `effectiveId`, filtered slots, booking modals). Because the location
-TABS (left col), schedule preview, and action buttons (right col) all share that state,
-they MUST live in ONE client component instance. So **`ProfessionalSchedule` owns the card-body
-LAYOUT** and the card passes its left-column info as a slot: `<ProfessionalSchedule info={…} />`.
-The info JSX (server-rendered) is the photo + name + Verificado + personal name + price + tags +
-rating + location line; the schedule appends the location tabs/address to the left column.
+state (location options, `effectiveId`, filtered slots, booking modals). The location TABS,
+schedule preview, and action buttons all share that state, so they live in ONE client component
+instance. **`ProfessionalSchedule` owns the card-body LAYOUT** and the card passes its info as a
+slot: `<ProfessionalSchedule info={…} />`. The info JSX (server-rendered) is the photo + name +
+Verificado + personal name + price + tags + rating + location line; the schedule appends the
+location tabs/address below it, then the schedule block.
 
 - **Sizing = CONTENT-DRIVEN height.** The article is `flex h-full flex-col`, **no hardcoded
   height, no `overflow-hidden`** — it grows for max content. Don't reintroduce a fixed `h-[…]`.
-- **Desktop layout (in ProfessionalSchedule) = a clean TWO-COLUMN split, ~65/35.**
-  `lg:grid lg:grid-cols-[minmax(0,1.85fr)_minmax(0,1fr)] lg:gap-5 lg:items-start`. Use
+- **Layout (in ProfessionalSchedule) = a single column** (`flex flex-col gap-3`): the
+  `{info}` + location tabs/address block, then the schedule-or-message + buttons block.
+  ~~Two-column grid~~ removed. Below is the old two-column note kept for reference only —
   FRACTIONAL columns (`1.85fr` / `1fr`), NOT a fixed right width — a fixed `288px` right column
   became ~49% (near-equal columns) on the narrower ~620px card; fractions keep it ~⅓ at every
   width. `minmax(0,…)` lets both columns shrink so long content never forces overflow. LEFT

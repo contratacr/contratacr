@@ -417,11 +417,12 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
 
   return (
     <>
-      {/* DESKTOP (lg+) = TWO columns: [info + location tabs] | [schedule + buttons].
-          MOBILE = the same blocks STACKED in one column (info → schedule-or-message →
-          buttons). HuliHealth style: the action buttons live IN the right column (full
-          width of it), NOT a separate bottom strip. Content-driven height. */}
-      <div className="flex flex-col gap-3 lg:grid lg:grid-cols-[minmax(0,1.85fr)_minmax(0,1fr)] lg:gap-5 lg:items-start">
+      {/* SINGLE-COLUMN card at ALL widths. Desktop was REVERTED from the two-column split
+          (per user request) — it now renders the same single column the mobile/responsive
+          card already used (which is unchanged). Two stacked blocks: [info + location tabs]
+          then [schedule-or-message + action buttons]. The buttons live with the schedule
+          (full width), NOT a separate bottom strip. Content-driven height. */}
+      <div className="flex flex-col gap-3">
         {/* LEFT — professional info (slotted from the card) + the location tabs/address. */}
         <div className="flex min-w-0 flex-col gap-2">
           {info}
