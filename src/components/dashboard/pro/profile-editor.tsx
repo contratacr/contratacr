@@ -368,15 +368,15 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
       }
       if (locError) throw locError;
 
-      // 3) Other optional identity columns — best-effort; a not-yet-migrated column is
-      // ignored so it doesn't block the rest of the save.
+      // 3) Other optional identity columns — best-effort, NEVER fatal. A not-yet-migrated
+      // column (or any error here) must not abort the save: the core + locations already
+      // persisted, and throwing would leave the whole form `dirty` (which kept firing the
+      // "unsaved changes" beforeunload warning even though the zones saved). Log only.
       const { error: idError } = await supabase
         .from("professionals")
         .update(identityFields)
         .eq("id", professionalId);
-      if (idError && !/business_name|coverage_areas|coverage_provincias|coverage_country|insurance_networks|call_phone|contact_email|allow_phone_call|affiliations|schema cache|could not find|PGRST204/i.test(idError.message)) {
-        throw idError;
-      }
+      if (idError) console.warn("[profile-editor] optional identity columns not saved:", idError.message);
 
       // Persist certifications in their OWN update so an unrelated optional column
       // can never drop them (that was the "not saving" bug). Each keeps its
@@ -404,13 +404,20 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
           .map(({ key }) => [key, cleanUsername(social[key])] as const)
           .filter(([, u]) => u && isValidUsername(u))
       );
+      // NON-FATAL: a social_links failure must never abort the save (the core + locations
+      // already persisted). If the column simply isn't migrated yet (056 pending), swallow
+      // it silently. For a real failure with usernames present, surface a soft warning AFTER
+      // clearing `dirty` — so the user is informed but the beforeunload warning never sticks.
+      let socialWarning: string | null = null;
       const { error: socialError } = await supabase
         .from("professionals")
         .update({ social_links })
         .eq("id", professionalId);
       if (socialError && Object.keys(social_links).length > 0) {
         console.error("[profile-editor] social_links save failed:", socialError.message);
-        throw new Error(t("socialSaveError"));
+        if (!/social_links|could not find|PGRST204|schema cache/i.test(socialError.message)) {
+          socialWarning = t("socialSaveError");
+        }
       }
 
       // Persist the personal/display name — but NEVER overwrite a verified
@@ -423,10 +430,18 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
         await supabase.auth.updateUser({ data: { full_name: fullName } });
       }
 
-      setSaved(true);
+      // Core + locations succeeded → the profile is saved. ALWAYS clear `dirty` here so the
+      // "unsaved changes" beforeunload warning can never get stuck (only a core/location
+      // failure throws and keeps it dirty). A best-effort social failure shows a soft notice
+      // but does NOT keep the form dirty.
       setDirty(false);
       dirtyRef.current = false;
-      setTimeout(() => setSaved((_p) => false), 3000);
+      if (socialWarning) {
+        setError(socialWarning);
+      } else {
+        setSaved(true);
+        setTimeout(() => setSaved((_p) => false), 3000);
+      }
       onSaved?.();
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : t("saveError"));
