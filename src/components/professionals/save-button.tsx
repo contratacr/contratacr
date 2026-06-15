@@ -144,7 +144,9 @@ interface CardWrapperProps {
 
 export function SaveableCard({ pro, children, isOwn = false }: CardWrapperProps) {
   return (
-    <div className="relative">
+    // `h-full` so equal-height grid rows flow through to the card (the article is
+    // `h-full`): grid item → this wrapper → ProfessionalCard.
+    <div className="relative h-full">
       {children}
       {/* Always-visible favorites button, pinned consistently to the card's
           top-right corner (small + subtle; price row clears it via md:pr-10). */}
