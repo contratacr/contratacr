@@ -86,38 +86,81 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     if (id.startsWith("cov_")) return t("atHome");
     return professional.workplaces?.find((w) => w.id === id)?.name ?? t("location");
   }
-  // ONE selectable option per DISTINCT service location ACTUALLY present in the
-  // published slots — grouped by label (so two zones that read the same collapse) but
-  // keeping the underlying location ids for STRICT id-based filtering. The selector
-  // therefore appears only for pros who genuinely have per-location availability, and
-  // each option always has slots (it's derived from them).
-  const locationGroups = useMemo(() => {
-    const map = new Map<string, string[]>();
-    for (const s of slots) {
-      const id = s.locationId ?? "general";
-      const label = locLabel(id);
-      const ids = map.get(label) ?? [];
-      if (!ids.includes(id)) ids.push(id);
-      map.set(label, ids);
+  // ── SERVICE LOCATIONS (the durable list the selector is built from) ──
+  // DURABLE source = the pro's named WORKPLACES, UNION any extra distinct locations
+  // their slots carry (a-domicilio `cov_*`, videoconsulta). Keyed by id.
+  //
+  // WHY THIS (the recurring regression): the selector kept disappearing whenever it
+  // was derived from the SLOTS alone — a multi-location pro who only published hours at
+  // ONE of their locations (or whose upcoming slots happened to be at one place)
+  // produced a single slot-group, so the selector vanished. Basing it on the pro's
+  // actual locations makes it appear RELIABLY for every multi-location pro, regardless
+  // of which locations currently have upcoming slots. DO NOT revert this to a
+  // slots-only derivation.
+  const locationOptions = useMemo(() => {
+    const map = new Map<string, string>(); // id -> label, insertion-ordered
+    for (const w of professional.workplaces ?? []) {
+      if (w.id && w.name?.trim()) map.set(w.id, w.name.trim());
     }
-    return Array.from(map.entries()).map(([label, ids]) => ({ label, ids }));
+    for (const s of slots) {
+      const id = s.locationId;
+      if (id && id !== "general" && !map.has(id)) map.set(id, locLabel(id));
+    }
+    return Array.from(map, ([id, label]) => ({ id, label }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [slots]);
-  // Default to the FIRST location when there's more than one, so hours are never an
-  // undifferentiated mix; the selector switches between them.
+  }, [professional.workplaces, slots]);
+
+  const hasLocationSelector = locationOptions.length > 1;
   const [selectedLoc, setSelectedLoc] = useState<string | null>(null);
-  const effectiveLabel = selectedLoc ?? (locationGroups.length > 1 ? locationGroups[0].label : null);
-  const effectiveIds = locationGroups.find((g) => g.label === effectiveLabel)?.ids ?? null;
-  // STRICT per-location: a selected location shows ONLY its OWN slots (matched by id),
-  // so a slot available only at B can NEVER appear under A. No fallback to "all".
+  // Default to the first location that ACTUALLY has slots (so the card doesn't open on
+  // an empty location), else the first option.
+  const defaultLoc = hasLocationSelector
+    ? (locationOptions.find((o) => slots.some((s) => (s.locationId ?? "general") === o.id))?.id ?? locationOptions[0].id)
+    : null;
+  const effectiveId = selectedLoc ?? defaultLoc;
+  // STRICT per-location: a selected location shows ONLY its OWN slots — plus any
+  // location-agnostic "general" slots (available anywhere) — so a slot available only
+  // at B can NEVER appear under A. A selected location with no slots shows the
+  // honest "no upcoming times" state (it doesn't borrow another location's hours).
   const filteredSlots = useMemo(() => {
-    if (effectiveLabel === null) return slots;
-    const g = locationGroups.find((x) => x.label === effectiveLabel);
-    if (!g) return slots;
-    const idSet = new Set(g.ids);
-    return slots.filter((s) => idSet.has(s.locationId ?? "general"));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [slots, effectiveLabel]);
+    if (!effectiveId) return slots;
+    return slots.filter((s) => {
+      const loc = s.locationId ?? "general";
+      return loc === effectiveId || loc === "general";
+    });
+  }, [slots, effectiveId]);
+
+  // The location control (a SELECTOR for >1 location, else a single-location label),
+  // built ONCE and reused in EVERY schedule branch — including the "no upcoming at this
+  // location" state — so switching locations is always possible and the selector never
+  // vanishes just because the chosen location currently has no slots. Shown whenever
+  // the pro has any published slots. (Durable: independent of the per-branch returns.)
+  const showLocationControl = locationOptions.length >= 1 && slots.length > 0;
+  const locationControl = showLocationControl ? (
+    // `md:pr-9` keeps this top row clear of the card's top-right favorites bookmark.
+    <div className="min-w-0 md:pr-9">
+      {hasLocationSelector ? (
+        <div className="relative">
+          <MapPin className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-[#009FD9] pointer-events-none" />
+          <select
+            value={effectiveId ?? ""}
+            onClick={(e) => e.stopPropagation()}
+            onChange={(e) => { e.stopPropagation(); setSelectedLoc(e.target.value); setOffset(0); }}
+            aria-label={t("location")}
+            className="w-full appearance-none rounded-lg border border-[#bfdbfe] bg-[#EBF5FB] pl-6 pr-6 py-1 text-[11px] font-semibold text-[#0089bb] focus:outline-none focus:ring-2 focus:ring-[#009FD9] cursor-pointer truncate"
+          >
+            {locationOptions.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+          </select>
+          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-[#0089bb] pointer-events-none" />
+        </div>
+      ) : (
+        <p className="flex items-center gap-1 text-[11px] leading-tight truncate">
+          <MapPin className="h-3 w-3 text-[#009FD9] shrink-0" />
+          <span className="truncate font-medium text-[#374151]">{locationOptions[0].label}</span>
+        </p>
+      )}
+    </div>
+  ) : null;
 
   // Rolling window of upcoming days, keyed to the FULL slot so picking carries the
   // (service + location) context into the booking.
@@ -173,8 +216,8 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
         initialDate={preset?.date}
         initialTime={preset?.time}
         initialCategoryId={preset?.categoryId ?? activeCategory ?? professional.categoryId ?? null}
-        initialLocationId={preset?.locationId ?? (effectiveIds && effectiveIds[0] !== "general" ? effectiveIds[0] : null)}
-        initialLocationLabel={preset?.locationId ? locLabel(preset.locationId) : (effectiveLabel && effectiveLabel !== "General" ? effectiveLabel : null)}
+        initialLocationId={preset?.locationId ?? (effectiveId && effectiveId !== "general" ? effectiveId : null)}
+        initialLocationLabel={preset?.locationId ? locLabel(preset.locationId) : (effectiveId ? locLabel(effectiveId) : null)}
       />
     </>
   );
@@ -261,11 +304,16 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   // keeps the same height as the others.
   if (!hasUpcoming) {
     return (
-      <div className="flex h-full flex-col justify-end gap-1.5">
-        <div className="rounded-lg bg-[#f9fafb] border border-[#f3f4f6] px-2.5 py-2">
-          <p className="text-[11px] text-[#6b7280] leading-snug">{t("noScheduleNote")}</p>
+      <div className="flex h-full flex-col gap-1.5">
+        {/* Keep the location selector visible so a client can switch away from a
+            location that has no upcoming hours (it never traps them on an empty one). */}
+        {locationControl}
+        <div className="flex-1 flex flex-col justify-end gap-1.5">
+          <div className="rounded-lg bg-[#f9fafb] border border-[#f3f4f6] px-2.5 py-2">
+            <p className="text-[11px] text-[#6b7280] leading-snug">{t("noScheduleNote")}</p>
+          </div>
+          {contactButtons(true)}
         </div>
-        {contactButtons(true)}
         {selfModal}
       </div>
     );
@@ -273,37 +321,9 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
 
   return (
     <div className="flex flex-col gap-1.5 h-full">
-      {/* Location control — selector for multi-place, else a plain label. Rendered
-          ONLY when there's something to show, so single-location cards don't keep an
-          empty top row. ("Ver horario completo" moved BELOW the grid — see further
-          down — so it no longer collides with the card's top-right bookmark.) */}
-      {(locationGroups.length > 1 || (!!effectiveLabel && effectiveLabel !== "General")) && (
-        // `md:pr-9` keeps this top row clear of the card's top-right favorites
-        // bookmark on desktop (the selector used to run underneath it).
-        <div className="min-w-0 md:pr-9">
-          {locationGroups.length > 1 ? (
-            <div className="relative">
-              <MapPin className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-[#009FD9] pointer-events-none" />
-              <select
-                value={effectiveLabel ?? ""}
-                onClick={(e) => e.stopPropagation()}
-                onChange={(e) => { e.stopPropagation(); setSelectedLoc(e.target.value); setOffset(0); }}
-                aria-label={t("location")}
-                className="w-full appearance-none rounded-lg border border-[#bfdbfe] bg-[#EBF5FB] pl-6 pr-6 py-1 text-[11px] font-semibold text-[#0089bb] focus:outline-none focus:ring-2 focus:ring-[#009FD9] cursor-pointer truncate"
-              >
-                {locationGroups.map((g) => <option key={g.label} value={g.label}>{g.label}</option>)}
-              </select>
-              <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-[#0089bb] pointer-events-none" />
-            </div>
-          ) : (
-            // Only a real place name; the generic "Próximos horarios" label is removed.
-            <p className="flex items-center gap-1 text-[11px] leading-tight truncate">
-              <MapPin className="h-3 w-3 text-[#009FD9] shrink-0" />
-              <span className="truncate font-medium text-[#374151]">{effectiveLabel}</span>
-            </p>
-          )}
-        </div>
-      )}
+      {/* Location selector / label — shared `locationControl` (see definition above);
+          identical markup in every branch so it can't regress per-layout. */}
+      {locationControl}
 
       <div className="flex-1 min-h-0 flex items-center">
         {!hasUpcoming ? (
