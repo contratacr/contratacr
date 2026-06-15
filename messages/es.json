@@ -283,6 +283,7 @@
     "noScheduleNote": "Aún no publica sus horarios. Escríbele para coordinar.",
     "prevDays": "Días anteriores",
     "nextDays": "Días siguientes",
+    "dayUnavailable": "No disponible",
     "viewFullSchedule": "Ver horario completo",
     "requestService": "Solicitar servicio",
     "location": "Ubicación",

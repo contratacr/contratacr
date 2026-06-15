@@ -974,54 +974,57 @@ section body. In `profile-editor.tsx` it lives in the shared `Section` component
 `autosave` defaults true) so it's identical across sections; only add it where autosave is
 actually wired.
 
-## 50. /buscar card — content-driven height, single vertical column (REBUILT)
+## 50. /buscar card — DESKTOP two columns (info | schedule), MOBILE stacked
 
-The card was REBUILT from scratch (`professional-card.tsx`) because the old fixed-height +
-`overflow-hidden` + two-zone (identity | action) layout kept breaking on mobile (names cut
-off, bottom buttons disappearing, uneven heights). These rules ARE the fix — non-negotiable:
+Doctoralia-style. On **desktop (lg+)** the card body is TWO columns — professional info on the
+LEFT, the schedule on the RIGHT — with a full-width action row spanning both. On **mobile** the
+same blocks STACK in one column (info, then schedule, then buttons). Content-driven height.
 
-- **Sizing = CONTENT-DRIVEN height.** The card is `flex h-full flex-col` with **no hardcoded
-  height and no `overflow-hidden`** — it grows to fit, so nothing is ever truncated to fit a
-  height. Do NOT reintroduce a fixed `h-[…]` or `overflow-hidden` on the card. (`h-full` on the
-  article is harmless in the single-column list — it just resolves to the content height.)
-- **Results layout = SINGLE vertical column, with a CAPPED card width.** The list container is
-  `flex flex-col gap-3` — ONE card per row (NOT a multi-column grid). Each card wrapper is
-  **`w-full max-w-[500px]`** so the card reads at a comfortable width and NEVER stretches to
-  fill the column (≤~560px is the ceiling; at ~500px the WhatsApp/Llamar buttons sit nicely
-  side by side). The results COLUMN hugs that width on desktop (`lg:w-[500px] lg:shrink-0`,
-  full width on mobile) and the **map takes the remaining space** (`lg:flex-1`). One card per
-  row → each card grows to its content; there is **no equal-height-per-row** coupling (that
-  only mattered for a grid, and was removed — `SaveableCard` is a plain `relative` wrapper, no
-  `h-full`). (History: full-width single column looked empty/stretched; an auto-fill grid
-  squeezed cards next to the map — a capped ~500px card in a hugging column + a flexible map is
-  the resolution.)
-- **ONE vertical flex column**, identical sections + order + spacing for every card. The
-  ACTION AREA is bottom-pinned with **`mt-auto`** so "ver horario completo" + the WhatsApp /
-  Llamar / Solicitar buttons are ALWAYS visible regardless of content above. Inter-section
-  spacing is tight (`mt-2.5`/`mt-1.5`, action `pt-2.5`) so a low-content card isn't airy.
-- **Header uses the FULL width:** the identity (logo + company name + Verificado + personal
-  name) is on the LEFT in a `min-w-0 flex-1` column; the **PRICE is right-aligned in its own
-  `shrink-0` column** on the right (so there's no empty top-right). The price sits just BELOW
-  the favorite bookmark — the `pt-10` band clears the bookmark, so they never overlap. The
-  price is NOT `z-10` (it's not a link) so the stretched card overlay still routes its clicks
-  to the profile; `max-w-[45%]` lets a very long price wrap instead of crowding the name.
-- **No meaning-losing clipping (sized for MAX content):** company name AND personal name each
-  wrap up to 2 lines (`line-clamp-2`) in the left column without colliding with the price;
-  service tags wrap to multiple lines + cap with "+N"; the location line wraps + "+N"; the
-  schedule's location TABS scroll horizontally for 5+ locations; a busy day caps time chips
-  with "+N". In the max case the card simply GROWS taller — nothing clips, collides, or pushes
-  the buttons out of place.
+**Who owns what (the server/client split matters):** `professional-card.tsx` is an ASYNC SERVER
+component; `professional-schedule.tsx` is the `"use client"` component holding ALL schedule
+state (location options, `effectiveId`, filtered slots, booking modals). Because the location
+TABS (left col), schedule preview (right col), and action buttons (bottom) all share that state,
+they MUST live in ONE client component instance. So **`ProfessionalSchedule` owns the card-body
+LAYOUT** and the card passes its left-column info as a slot: `<ProfessionalSchedule info={…} />`.
+The info JSX (server-rendered) is the photo + name + Verificado + personal name + price + tags +
+rating + location line; the schedule appends the location tabs/address to the left column.
 
-**Section order (top → bottom):** ranking number badge + favorite bookmark (both ABSOLUTE
-overlays — number top-left from the page wrapper, favorite top-right from `SaveableCard`;
-the card reserves a top band with **`pt-10`** so they NEVER overlap content) → **header row**:
-[company logo (avatar)] · [company name + **Verificado** badge, then personal name (first +
-both surnames, `shortPersonName`, when a company leads)] · [**price**, right-aligned] → service
-tags → rating + review count (only the count links to the reviews tab) → location ("+N" for
-extra places) → "se desplaza a tu ubicación" → **`ProfessionalSchedule`** (location tabs →
-compact schedule preview + "ver horario completo" → action buttons). All scheduling /
-availability /
-filtering LOGIC lives in `ProfessionalSchedule` and is NOT changed by card-layout work.
+- **Sizing = CONTENT-DRIVEN height.** The article is `flex h-full flex-col`, **no hardcoded
+  height, no `overflow-hidden`** — it grows for max content. Don't reintroduce a fixed `h-[…]`.
+- **Desktop layout (in ProfessionalSchedule):** `lg:grid lg:grid-cols-[minmax(0,1fr)_288px]
+  lg:gap-5 lg:items-start`. LEFT = `{info}` + location tabs/address; RIGHT (`288px`, `relative
+  z-10`) = schedule day-columns + "Ver horario completo". Below the grid, the **action row spans
+  both columns**. On mobile the same wrapper is `flex flex-col gap-3` (stacked).
+- **Card WIDTH:** wrapper `w-full max-w-[520px] lg:max-w-none` — capped for the single-column
+  mobile/tablet card, but on desktop it FILLS the results column, which hugs the wider two-column
+  card responsively: `lg:w-[620px] xl:w-[680px] 2xl:w-[880px]` (≈820–900px ceiling). The **map
+  takes the remaining space** (`lg:flex-1`). One card per row; no equal-height coupling.
+- **SQUARE photo** (not circular): `<Avatar className="h-14 w-14 rounded-xl lg:h-16 lg:w-16">`
+  (+ `rounded-xl` on the fallback) — `cn`/tailwind-merge overrides the Avatar's default
+  `rounded-full`. Same square photo on mobile, just smaller.
+- **Header uses the full width:** identity (square photo + company name + Verificado + personal
+  name) on the LEFT (`min-w-0 flex-1`); **price right-aligned** in its own `shrink-0
+  max-w-[45%]` column. Price sits below the favorite bookmark (the `pt-10` band clears it); it's
+  NOT `z-10` so the stretched card overlay still routes its clicks to the profile.
+- **Schedule (right column) = consecutive day-columns** from the first day WITH availability,
+  paged 3 at a time; days in the window with none show **"No disponible"** (`schedule.dayUnavailable`),
+  Doctoralia-style. No bookable schedule → a short note. The slot DATA/fetch is UNCHANGED — this
+  only changes how the already-fetched `days` display.
+- **Action row** (`professional-schedule.tsx`): WhatsApp + Llamar + Solicitar servicio in ONE
+  `flex flex-wrap gap-1.5` row — side by side on desktop, wrapping to a 2nd line on narrow
+  widths via `min-w-[…]`; `relative z-10`, always visible at the bottom spanning both columns.
+- **No meaning-losing clipping (sized for MAX content):** company + personal name each wrap up
+  to 2 lines (`line-clamp-2`) without colliding with the price; tags wrap + "+N"; location wraps
+  + "+N"; location TABS scroll horizontally for 5+ locations; a busy day caps time chips with
+  "+N". Max case → the card GROWS taller; nothing clips, collides, or pushes the buttons.
+
+**Overlays + z-index:** ranking number (top-left, page wrapper) + favorite bookmark (top-right,
+`SaveableCard`, z-20) are ABSOLUTE; `pt-10` reserves a top band so they never overlap. The whole
+card is a stretched `<Link absolute inset-0 z-0>`; interactive bits (name/reviews links, location
+tabs, schedule chips, action buttons) are `relative z-10`. The LEFT info column is NOT wrapped in
+z-10 (only its links are) so clicking its empty space still navigates to the profile; the RIGHT
+schedule column IS `z-10` (interactive). All scheduling/availability/filtering LOGIC lives in
+`ProfessionalSchedule` and is NOT changed by card-layout work.
 
 **Whole card opens the profile (stretched link).** A low-z overlay `<Link absolute inset-0
 z-0 tabIndex={-1} aria-hidden>` covers the card → the professional's profile. Interactive

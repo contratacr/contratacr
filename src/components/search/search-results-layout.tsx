@@ -92,10 +92,10 @@ export function SearchResultsLayout({ children, filters, mapData, apiKey, locale
           <div className="sticky top-20">{filters}</div>
         </aside>
 
-        {/* Results list — on desktop the column HUGS the capped card width (~500px,
-            see buscar/page.tsx) so cards read at a comfortable width instead of
-            stretching; full width on mobile. The map (below) takes the remaining space. */}
-        <div className={cn("min-w-0 w-full lg:w-[500px] lg:shrink-0", mobileView === "map" ? "hidden lg:block" : "block")}>
+        {/* Results list — on desktop the column HUGS the wider TWO-column card (info |
+            schedule); responsive width grows with the viewport so the map keeps usable
+            room. Full width on mobile. The map (below) takes the remaining space. */}
+        <div className={cn("min-w-0 w-full lg:w-[620px] xl:w-[680px] 2xl:w-[880px] lg:shrink-0", mobileView === "map" ? "hidden lg:block" : "block")}>
           {children}
         </div>
 

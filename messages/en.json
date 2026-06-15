@@ -283,6 +283,7 @@
     "noScheduleNote": "They haven't posted times yet. Message them to coordinate.",
     "prevDays": "Previous days",
     "nextDays": "Next days",
+    "dayUnavailable": "Not available",
     "viewFullSchedule": "View full schedule",
     "requestService": "Request service",
     "location": "Location",

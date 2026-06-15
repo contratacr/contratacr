@@ -241,17 +241,17 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                 </div>
               ) : (
                 <>
-                  {/* SINGLE vertical column — one card per row. Each card is CAPPED at a
-                      comfortable reading width (`max-w-[500px]`) so it never stretches to
-                      fill the column; the results column itself hugs this width on desktop
-                      (see search-results-layout) and the map takes the rest. `w-full` keeps
-                      cards full-width on mobile (below 500px). One card per row → each card
-                      grows to its content; no equal-height-per-row coupling. */}
+                  {/* SINGLE vertical column — one card per row. On MOBILE/tablet the card is
+                      a single stacked column capped for readability (`max-w-[520px]`); on
+                      DESKTOP (lg+) the card goes TWO-column (info | schedule) and fills the
+                      wider results column (`lg:max-w-none`), which hugs the card width while
+                      the map takes the rest (see search-results-layout). Content-driven
+                      height — one card per row, each grows to its content. */}
                   <div className="flex flex-col gap-3">
                     {await Promise.all(results.map((pro, i) => (
                       // data-pro-id + scroll-mt let the map highlight/scroll to this
                       // card on pin hover; the number badge matches the map pin.
-                      <div key={pro.id} id={`pro-card-${pro.id}`} data-pro-id={pro.id} className="relative w-full max-w-[500px] scroll-mt-24 rounded-2xl transition-shadow">
+                      <div key={pro.id} id={`pro-card-${pro.id}`} data-pro-id={pro.id} className="relative w-full max-w-[520px] lg:max-w-none scroll-mt-24 rounded-2xl transition-shadow">
                         <span className="absolute top-2.5 left-2.5 z-20 flex h-6 w-6 items-center justify-center rounded-full bg-[#009FD9] text-white text-[11px] font-bold shadow ring-2 ring-white">
                           {i + 1}
                         </span>

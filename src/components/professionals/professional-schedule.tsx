@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { ChevronLeft, ChevronRight, MapPin, Phone } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
@@ -24,6 +24,10 @@ interface ProfessionalScheduleProps {
   activeCategory?: string;
   /** True when the viewer owns this profile — no self-service actions. */
   isOwn?: boolean;
+  /** The LEFT-column professional info (photo, name, price, tags, rating, location),
+   *  server-rendered by the card and slotted in so the schedule can own the desktop
+   *  two-column layout while keeping ALL schedule state in this one component. */
+  info?: ReactNode;
 }
 
 // How many day-columns are shown at once, and how far ahead the arrows page.
@@ -54,7 +58,7 @@ function dateLabel(d: Date, locale: string): string {
  *    "Ver horario completo" link to the full profile.
  *  - Private: lock state with "Contáctanos por Whatsapp" + "por llamada".
  */
-export function ProfessionalSchedule({ professional, categoryName, availabilityPublic, contactPreference = "ambas", slots: allSlots, activeCategory, isOwn = false }: ProfessionalScheduleProps) {
+export function ProfessionalSchedule({ professional, categoryName, availabilityPublic, contactPreference = "ambas", slots: allSlots, activeCategory, isOwn = false, info }: ProfessionalScheduleProps) {
   const t = useTranslations("schedule");
   const locale = useLocale();
   // When a specific profession was searched, only show that profession's hours
@@ -145,7 +149,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   // Address line shown UNDER the tabs for the currently-selected location.
   const selectedAddress = effectiveId ? locAddress(effectiveId) : "";
   const locationControl = showLocationControl ? (
-    <div className="min-w-0">
+    <div className="relative z-10 min-w-0">
       {hasLocationSelector ? (
         <>
           {/* Horizontal TABS (Doctoralia-style): pin + name; the selected tab is
@@ -270,117 +274,93 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const showCall = !!professional.allowPhoneCall && !!(professional.callPhone || professional.whatsapp);
   const waHref = getWhatsAppLink(professional.whatsapp, `Hola ${professional.fullName.split(" ")[0]}, vi tu perfil en ContrataCR y me gustaría coordinar un servicio.`);
   const telHref = `tel:+${((professional.callPhone || professional.whatsapp) || "").replace(/\D/g, "")}`;
-  const btnWidth = (stacked: boolean) => (stacked ? "w-full" : "flex-1");
-  const contactButtons = (stacked = false) =>
-    (showWa || showCall) ? (
-      <div className={stacked ? "flex flex-col gap-1.5" : "flex gap-1.5"}>
-        {showWa && (
-          <a
-            href={isOwn ? undefined : waHref}
-            target={isOwn ? undefined : "_blank"}
-            rel="noopener noreferrer"
-            onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.whatsapp); } : (e) => e.stopPropagation()}
-            className={`${btnWidth(stacked)} inline-flex items-center justify-center gap-1.5 bg-[#25D366] hover:bg-[#1ebe5d] text-white text-[13px] font-semibold py-1.5 rounded-lg transition-colors`}
-          >
-            <WhatsAppIcon className="h-4 w-4" /> {t("whatsapp")}
-          </a>
-        )}
-        {showCall && (
-          <a
-            href={isOwn ? undefined : telHref}
-            onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.call); } : (e) => e.stopPropagation()}
-            className={`${btnWidth(stacked)} inline-flex items-center justify-center gap-1.5 border border-[#e5e7eb] text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] text-[13px] font-semibold py-1.5 rounded-lg transition-colors`}
-          >
-            <Phone className="h-4 w-4" /> {t("call")}
-          </a>
-        )}
-      </div>
-    ) : null;
+  // Bottom ACTION ROW (spans both columns): WhatsApp + Llamar + Solicitar servicio in
+  // ONE wrapping flex row — side by side on desktop, wrapping to a second line on narrow
+  // widths (via `min-w`) so they never overflow. All blocked on the pro's OWN card.
+  const actionRow = (showWa || showCall || canBook) ? (
+    <div className="relative z-10 mt-3 flex flex-wrap gap-1.5">
+      {showWa && (
+        <a
+          href={isOwn ? undefined : waHref}
+          target={isOwn ? undefined : "_blank"}
+          rel="noopener noreferrer"
+          onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.whatsapp); } : (e) => e.stopPropagation()}
+          className="flex-1 min-w-[130px] inline-flex items-center justify-center gap-1.5 bg-[#25D366] hover:bg-[#1ebe5d] text-white text-[13px] font-semibold py-2 rounded-lg transition-colors"
+        >
+          <WhatsAppIcon className="h-4 w-4" /> {t("whatsapp")}
+        </a>
+      )}
+      {showCall && (
+        <a
+          href={isOwn ? undefined : telHref}
+          onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.call); } : (e) => e.stopPropagation()}
+          className="flex-1 min-w-[120px] inline-flex items-center justify-center gap-1.5 border border-[#e5e7eb] text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] text-[13px] font-semibold py-2 rounded-lg transition-colors"
+        >
+          <Phone className="h-4 w-4" /> {t("call")}
+        </a>
+      )}
+      {canBook && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); openBooking(); }}
+          className="flex-[1.4] min-w-[170px] bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-semibold py-2 rounded-lg transition-colors"
+        >
+          {t("requestService")}
+        </button>
+      )}
+    </div>
+  ) : null;
 
-  // ── Contact-only (private availability OR WhatsApp-only preference) ────
-  // The reason is shown as a flush top band on the card; here we only render the
-  // compact contact actions so every card stays the same tidy height.
-  if (!canBook) {
-    // TYPE 3 — no public schedule. Contact actions are the ONLY buttons, stacked
-    // (WhatsApp above Llamar), bottom-pinned so the card height is unchanged. When
-    // availability was hidden ON PURPOSE (private), say so; a WhatsApp-only pref
-    // just shows the buttons. Note fills the empty space — it doesn't grow the card.
-    return (
-      <div className="flex h-full flex-col justify-end gap-1.5">
-        {!availabilityPublic && (
-          <div className="rounded-lg bg-[#f9fafb] border border-[#f3f4f6] px-2.5 py-2">
-            <p className="text-[11px] text-[#6b7280] leading-snug">{t("availabilityHiddenNote")}</p>
-          </div>
-        )}
-        {contactButtons(true)}
-        {selfModal}
-      </div>
-    );
-  }
-
-  // ── Public availability — packed date columns (skip empty days) ───────
-  // Show only the upcoming days that actually have bookable slots (no "—"
-  // filler columns), paged 3 at a time — matches the redesign.
-  const daysWithSlots = days.filter((d) => d.items.length > 0);
-  const hasUpcoming = daysWithSlots.length > 0;
-  const maxOffset = Math.max(0, daysWithSlots.length - COLS);
+  // ── Schedule body (the RIGHT column on desktop) ───────────────────────────
+  // Consecutive upcoming day-columns starting from the FIRST day that has any
+  // availability; days within the shown window that have none render "No disponible"
+  // (Doctoralia-style), paged COLS at a time. No bookable schedule → a short note.
+  // The slot DATA is unchanged — this only changes how the already-fetched days display.
+  const firstIdx = days.findIndex((d) => d.items.length > 0);
+  const hasUpcoming = firstIdx >= 0;
+  const consecutive = hasUpcoming ? days.slice(firstIdx) : [];
+  const maxOffset = Math.max(0, consecutive.length - COLS);
   const effOffset = Math.min(offset, maxOffset);
-  const windowDays = daysWithSlots.slice(effOffset, effOffset + COLS);
+  const windowDays = consecutive.slice(effOffset, effOffset + COLS);
   const canPrev = effOffset > 0;
-  const canNext = effOffset + COLS < daysWithSlots.length;
+  const canNext = effOffset + COLS < consecutive.length;
 
-  // ── No published slots → coordinate via WhatsApp ──────────────────────────
-  // "Solicitar servicio" books a time slot, which makes no sense when there are
-  // none to book (it would open an empty calendar). So instead of a dead booking
-  // CTA, guide the client to coordinate by WhatsApp (+ Llamar if enabled), the
-  // realistic path until the pro publishes availability. Bottom-pinned so the card
-  // keeps the same height as the others.
-  if (!hasUpcoming) {
-    return (
-      <div className="flex h-full flex-col gap-1.5">
-        {/* Keep the location selector visible so a client can switch away from a
-            location that has no upcoming hours (it never traps them on an empty one). */}
-        {locationControl}
-        <div className="flex-1 flex flex-col justify-end gap-1.5">
-          <div className="rounded-lg bg-[#f9fafb] border border-[#f3f4f6] px-2.5 py-2">
-            <p className="text-[11px] text-[#6b7280] leading-snug">{t("noScheduleNote")}</p>
-          </div>
-          {contactButtons(true)}
-        </div>
-        {selfModal}
-      </div>
-    );
-  }
+  const scheduleNote = (text: string) => (
+    <div className="rounded-lg bg-[#f9fafb] border border-[#f3f4f6] px-2.5 py-2">
+      <p className="text-[11px] text-[#6b7280] leading-snug">{text}</p>
+    </div>
+  );
 
-  return (
-    <div className="flex flex-col gap-1.5 h-full">
-      {/* Location selector / label — shared `locationControl` (see definition above);
-          identical markup in every branch so it can't regress per-layout. */}
-      {locationControl}
+  let scheduleBody: ReactNode;
+  if (!canBook) {
+    // No public booking (private availability OR WhatsApp-only preference).
+    scheduleBody = scheduleNote(!availabilityPublic ? t("availabilityHiddenNote") : t("noScheduleNote"));
+  } else if (!hasUpcoming) {
+    // Booking enabled but no published slots → coordinate via WhatsApp instead.
+    scheduleBody = scheduleNote(t("noScheduleNote"));
+  } else {
+    scheduleBody = (
+      <div className="flex w-full items-start gap-1">
+        <button
+          type="button"
+          disabled={!canPrev}
+          onClick={(e) => { e.stopPropagation(); setOffset(() => Math.max(0, effOffset - COLS)); }}
+          aria-label={t("prevDays")}
+          className="flex w-4 shrink-0 self-center items-center justify-center rounded text-[#9ca3af] enabled:hover:text-[#009FD9] disabled:opacity-25"
+        >
+          <ChevronLeft className="h-[15px] w-[15px]" />
+        </button>
 
-      <div className="flex-1 min-h-0 flex items-center">
-        {!hasUpcoming ? (
-          <div className="w-full rounded-lg bg-[#f9fafb] border border-[#f3f4f6] px-2.5 py-2">
-            <p className="text-[11px] text-[#9ca3af] leading-snug">{t("noUpcoming")}</p>
-          </div>
-        ) : (
-          <div className="flex w-full items-start gap-1">
-            <button
-              type="button"
-              disabled={!canPrev}
-              onClick={(e) => { e.stopPropagation(); setOffset(() => Math.max(0, effOffset - COLS)); }}
-              aria-label={t("prevDays")}
-              className="flex w-4 shrink-0 self-center items-center justify-center rounded text-[#9ca3af] enabled:hover:text-[#009FD9] disabled:opacity-25"
-            >
-              <ChevronLeft className="h-[15px] w-[15px]" />
-            </button>
-
-            <div className="grid flex-1 grid-cols-3 gap-1.5">
-              {windowDays.map((day) => {
-                const extra = day.items.length - 2;
-                return (
-                  <div key={day.key} className="flex flex-col gap-1 min-w-0">
-                    <p className={`text-center text-[10px] font-bold uppercase tracking-wide leading-tight truncate ${day.soon ? "text-[#009FD9]" : "text-[#9ca3af]"}`}>{day.label}</p>
+        <div className="grid flex-1 grid-cols-3 gap-1.5">
+          {windowDays.map((day) => {
+            const extra = day.items.length - 2;
+            return (
+              <div key={day.key} className="flex flex-col gap-1 min-w-0">
+                <p className={`text-center text-[10px] font-bold uppercase tracking-wide leading-tight truncate ${day.soon ? "text-[#009FD9]" : "text-[#9ca3af]"}`}>{day.label}</p>
+                {day.items.length === 0 ? (
+                  <p className="text-center text-[10px] leading-tight text-[#cbd5e1] py-1">{t("dayUnavailable")}</p>
+                ) : (
+                  <>
                     {day.items.slice(0, 2).map((slot) => (
                       <button
                         key={`${slot.time}-${slot.locationId ?? ""}`}
@@ -399,49 +379,57 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
                         +{extra}
                       </button>
                     )}
-                  </div>
-                );
-              })}
-            </div>
+                  </>
+                )}
+              </div>
+            );
+          })}
+        </div>
 
+        <button
+          type="button"
+          disabled={!canNext}
+          onClick={(e) => { e.stopPropagation(); setOffset(() => Math.min(maxOffset, effOffset + COLS)); }}
+          aria-label={t("nextDays")}
+          className="flex w-4 shrink-0 self-center items-center justify-center rounded text-[#9ca3af] enabled:hover:text-[#009FD9] disabled:opacity-25"
+        >
+          <ChevronRight className="h-[15px] w-[15px]" />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      {/* DESKTOP (lg+) = TWO columns: [info + location tabs] | [schedule]. MOBILE = the
+          same blocks STACKED in one column (info, then schedule). The action row below
+          spans BOTH columns. Content-driven height — the card just grows for max content. */}
+      <div className="flex flex-col gap-3 lg:grid lg:grid-cols-[minmax(0,1fr)_288px] lg:gap-5 lg:items-start">
+        {/* LEFT — professional info (slotted from the card) + the location tabs/address. */}
+        <div className="flex min-w-0 flex-col gap-2">
+          {info}
+          {locationControl}
+        </div>
+        {/* RIGHT — schedule preview + "Ver horario completo". */}
+        <div className="relative z-10 flex min-w-0 flex-col gap-2">
+          {scheduleBody}
+          {canBook && hasUpcoming && (
             <button
               type="button"
-              disabled={!canNext}
-              onClick={(e) => { e.stopPropagation(); setOffset(() => Math.min(maxOffset, effOffset + COLS)); }}
-              aria-label={t("nextDays")}
-              className="flex w-4 shrink-0 self-center items-center justify-center rounded text-[#9ca3af] enabled:hover:text-[#009FD9] disabled:opacity-25"
+              onClick={(e) => { e.stopPropagation(); openBooking(); }}
+              className="self-center text-[11px] font-medium text-[#009FD9] hover:underline whitespace-nowrap"
             >
-              <ChevronRight className="h-[15px] w-[15px]" />
+              {t("viewFullSchedule")}
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
-      {/* "Ver horario completo" — centered BELOW the schedule (was top-right, where it
-          collided with the card's bookmark button). Compact line; sits above the
-          contact/primary actions on every breakpoint. */}
-      <button
-        type="button"
-        onClick={(e) => { e.stopPropagation(); openBooking(); }}
-        className="self-center text-[10px] font-medium text-[#009FD9] hover:underline whitespace-nowrap"
-      >
-        {t("viewFullSchedule")}
-      </button>
-
-      {/* TYPE 1 / TYPE 2 — contact actions grouped ABOVE (WhatsApp always; "Llamar"
-          when enabled), then the large "Solicitar servicio" primary BELOW. The
-          grouped contact row is a single line, so the card never grows taller. */}
-      {contactButtons(false)}
-      <button
-        type="button"
-        onClick={(e) => { e.stopPropagation(); openBooking(); }}
-        className="w-full bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-semibold py-2 rounded-lg transition-colors"
-      >
-        {t("requestService")}
-      </button>
+      {/* Action buttons — full-width row at the bottom, spanning both columns. */}
+      {actionRow}
 
       {bookingModals}
       {selfModal}
-    </div>
+    </>
   );
 }

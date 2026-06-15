@@ -173,32 +173,26 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
     : [professional.provinceName, professional.cantonName].filter(Boolean).join(", ");
   const mobileText = professional.serviceType?.includes("mobile") ? coverageLabel(professional.coverage, tCard) : "";
 
-  return (
-    // CONTENT-DRIVEN height — NO fixed height, NO overflow clipping — so names wrap and
-    // the bottom action area is NEVER cut off (the recurring mobile bug). `h-full` lets
-    // the card fill its cell so cards in the SAME ROW stretch to equal height when laid
-    // out in a grid; in the single-column list each card simply grows to its content.
-    // ONE vertical flex column with a FIXED section order; the action area is pinned to
-    // the bottom (`mt-auto`) so "ver horario completo" + the WhatsApp/Llamar/Solicitar
-    // buttons always show. `pt-10` reserves a top band for the absolute ranking number
-    // (top-left, page wrapper) + favorite bookmark (top-right, SaveableCard) so they
-    // never overlap content.
-    <article className={`group relative flex h-full flex-col rounded-2xl border border-[#e5e7eb] bg-white p-4 pt-10 transition-shadow duration-200 hover:border-[#cbd5e1] hover:shadow-md ${className ?? ""}`}>
-      {/* ── Identity: logo + company/personal name (+ Verificado) on the LEFT, PRICE
-             right-aligned on the RIGHT so the header uses the full width (no empty
-             top-right). The price sits just BELOW the favorite bookmark — the card's
-             `pt-10` band clears the bookmark (top-right) + ranking number (top-left), so
-             nothing overlaps. ── */}
+  // ── LEFT-column professional info (slotted into ProfessionalSchedule, which owns the
+  // desktop two-column layout). Each block is a direct child of the schedule's left
+  // column `flex flex-col gap-2`, so vertical spacing comes from that gap — no per-section
+  // margins. Order: photo + name/Verificado/personal name + price → tags → rating →
+  // location. The location TABS + selected address come AFTER this (in ProfessionalSchedule).
+  const info = (
+    <>
+      {/* Identity: SQUARE rounded photo on the LEFT; company name + Verificado + personal
+          name in the middle; PRICE right-aligned (fills the header width). The price sits
+          below the favorite bookmark (the `pt-10` band clears it), never overlapping. */}
       <div className="flex items-start gap-3">
         <Link href={`/profesionales/${professional.slug}`} className="relative z-10 shrink-0">
-          <Avatar className="h-12 w-12">
+          <Avatar className="h-14 w-14 rounded-xl lg:h-16 lg:w-16">
             <AvatarImage src={professional.avatarUrl} alt={professional.fullName} />
-            <AvatarFallback className="bg-[#EBF5FB] text-[#009FD9] font-bold">{getInitials(professional.fullName)}</AvatarFallback>
+            <AvatarFallback className="rounded-xl bg-[#EBF5FB] text-[#009FD9] font-bold">{getInitials(professional.fullName)}</AvatarFallback>
           </Avatar>
         </Link>
         <div className="min-w-0 flex-1">
-          {/* Company/brand name (or the personal name when there's no company) +
-              Verificado. Wraps up to 2 lines — never cut off. */}
+          {/* Company/brand name (or personal name when there's no company) + Verificado.
+              Wraps up to 2 lines — never cut off. */}
           <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
             <Link href={`/profesionales/${professional.slug}`} className="relative z-10 min-w-0">
               <h3 className="font-bold text-[#111827] text-[15px] leading-snug line-clamp-2 hover:text-[#009FD9] transition-colors">{brandPrimary}</h3>
@@ -206,22 +200,20 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
             {verifiedBadge}
           </div>
           {/* Personal name = first name + both surnames; wraps up to 2 lines (long names
-              never collide with the price — they're in separate flex columns). */}
+              never collide with the price — separate flex columns). */}
           {brandSecondary && (
             <p className="text-[12px] font-medium text-[#6b7280] line-clamp-2">{brandSecondary}</p>
           )}
         </div>
-        {/* Price — just the amount, no "Desde/Tarifa" word. Right-aligned; capped so a long
-            price wraps instead of crowding the name. */}
+        {/* Price — just the amount. Right-aligned; capped so a long price wraps. */}
         {priceLabel.includes("₡") && (
           <p className="shrink-0 max-w-[45%] text-right text-sm font-bold leading-snug text-[#111827]">{priceLabel}</p>
         )}
       </div>
 
-      {/* ── Service tags — wrap to MULTIPLE lines; cap to a couple + "+N" overflow (never
-             widen/clip). With many professions the rows simply grow the card taller. ── */}
+      {/* Service tags — wrap to MULTIPLE lines; cap to a couple + "+N" overflow. */}
       {(professionList.length > 0 || professional.isFeatured) && (
-        <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+        <div className="flex flex-wrap items-center gap-1.5">
           {professionList.map((cat) => (
             <span key={cat} className="inline-flex items-center rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-medium text-[#6b7280]">
               {catLabel(cat)}
@@ -238,8 +230,8 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
         </div>
       )}
 
-      {/* ── Rating + review count (only the count links to the reviews tab) ── */}
-      <div className="mt-2">
+      {/* Rating + review count (only the count links to the reviews tab). */}
+      <div>
         {professional.reviewCount > 0 ? (
           <span className="inline-flex w-fit items-center gap-1.5">
             <Star className="h-3.5 w-3.5 fill-[#ff9b32] text-[#ff9b32]" />
@@ -256,10 +248,9 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
         )}
       </div>
 
-      {/* ── Location (primary place "+N") + "se desplaza a tu ubicación" — wrap to a
-             second line, never clipped. ── */}
+      {/* Location (primary place "+N") + "se desplaza a tu ubicación" — wrap, never clipped. */}
       {(fixedText || mobileText) && (
-        <div className="mt-1.5 flex flex-col gap-0.5 text-[11px] text-[#6b7280]">
+        <div className="flex flex-col gap-0.5 text-[11px] text-[#6b7280]">
           {fixedText && (
             <span className="flex items-start gap-1.5">
               <MapPin className="h-3 w-3 text-[#009FD9] shrink-0 mt-0.5" />
@@ -274,28 +265,32 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
           )}
         </div>
       )}
+    </>
+  );
 
-      {/* ── Action area: location selector + compact schedule preview ("ver horario
-             completo") + WhatsApp / Llamar / Solicitar servicio. Pinned to the BOTTOM
-             (`mt-auto`) so it's ALWAYS visible no matter how much content is above.
-             `relative z-10` keeps it above the whole-card profile overlay. All
-             scheduling/availability LOGIC lives in ProfessionalSchedule (unchanged). ── */}
-      <div className="relative z-10 mt-auto pt-2.5">
-        <ProfessionalSchedule
-          professional={professional}
-          categoryName={categoryName}
-          availabilityPublic={!isPrivate}
-          contactPreference={professional.contactPreference ?? "ambas"}
-          slots={slots}
-          activeCategory={activeCategory}
-          isOwn={isOwn}
-        />
-      </div>
+  return (
+    // CONTENT-DRIVEN height — NO fixed height, NO overflow clipping. DESKTOP (lg+) lays the
+    // body out in TWO columns (info+location tabs | schedule); MOBILE stacks them (info,
+    // schedule, then the full-width action row) — all owned by ProfessionalSchedule, which
+    // holds the schedule state and receives the info above as a slot. `pt-10` reserves a top
+    // band for the absolute ranking number (top-left, page wrapper) + favorite bookmark
+    // (top-right, SaveableCard) so they never overlap content.
+    <article className={`group relative flex h-full flex-col rounded-2xl border border-[#e5e7eb] bg-white p-4 pt-10 transition-shadow duration-200 hover:border-[#cbd5e1] hover:shadow-md ${className ?? ""}`}>
+      <ProfessionalSchedule
+        info={info}
+        professional={professional}
+        categoryName={categoryName}
+        availabilityPublic={!isPrivate}
+        contactPreference={professional.contactPreference ?? "ambas"}
+        slots={slots}
+        activeCategory={activeCategory}
+        isOwn={isOwn}
+      />
 
-      {/* Whole card → the professional's profile (stretched low-z overlay). The
-          interactive bits above are `relative z-10` and keep working; the favorite
-          bookmark (z-20, SaveableCard) stays clickable. Keyboard/SR users use the
-          focusable logo/name links (this overlay is aria-hidden). */}
+      {/* Whole card → the professional's profile (stretched low-z overlay). The interactive
+          bits (name/reviews links, location tabs, schedule chips, action buttons) are
+          `relative z-10` and keep working; the favorite bookmark (z-20, SaveableCard) stays
+          clickable. Keyboard/SR users use the focusable logo/name links (overlay aria-hidden). */}
       <Link
         href={`/profesionales/${professional.slug}`}
         className="absolute inset-0 z-0"
