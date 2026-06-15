@@ -1005,10 +1005,15 @@ List/Map toggle (stacked).
 - **The whole card is the profile link** (stretched overlay, above). casos/cert links
   live in a `shrink-0` footer of the identity zone (OUTSIDE the clipping block) so they're
   never clipped, at `relative z-10` so they sit above the overlay and reach their tabs.
-- **Location schedule is STRICT per-location.** The selector's options are the DISTINCT
-  locations actually present in the published slots (grouped by label, keyed by location
-  id). Selecting one shows ONLY that location's slots — filtered by **location id** (a
-  `Set`), with NO fallback to "all" — so a slot available only at B can never appear under
-  A. The availability editor tags every slot with its `location_id`, so genuinely
-  multi-location pros get the selector and it filters correctly; do NOT add a
-  workplace-derived fallback selector that doesn't actually filter the schedule.
+- **Multi-location selector — separate the two concerns (this kept regressing).** Build
+  the selector's OPTIONS from the pro's ACTUAL service locations: their named `workplaces`
+  UNION any extra locations the slots carry (`cov_*` a-domicilio, videoconsulta), keyed by
+  id. This makes it appear for EVERY multi-location pro regardless of which locations
+  currently have upcoming slots. Keep the schedule FILTER STRICT per-location by id (a
+  selected location shows only its own slots + location-agnostic `general` slots, never
+  another location's; an empty location shows the honest "no upcoming" state). **Do NOT
+  derive the selector options from the SLOTS alone** — that's the recurring regression
+  (it vanishes when a pro's upcoming slots are all at one location). Build the control
+  ONCE (`locationControl`) and render it in EVERY schedule branch (incl. no-upcoming) so
+  it can't be dropped per-layout or trap the client on an empty location. Single-location
+  pros show a plain label (no selector).
