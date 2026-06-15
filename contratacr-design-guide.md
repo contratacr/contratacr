@@ -960,15 +960,27 @@ Verificado pill beside the name; price; professions (primary + up to 2 chips + "
 rating (★ + "N reseñas" link); location SUMMARY (primary place "+N" + a coverage line);
 the inline **availability schedule** (3-day grid, ~3 slots PC / ~2 mobile, multi-location
 selector, paging arrows, tappable chips → `BookingModal`); **casos de éxito +
-certificaciones links**; WhatsApp + "Solicitar servicio"; and **"Ver perfil completo →"**
-(`card.viewProfile`).
+certificaciones links**; WhatsApp + "Solicitar servicio". There is **no "Ver perfil
+completo" link** — the WHOLE card is clickable to the profile (see below).
+
+**Whole card opens the profile (stretched link).** A low-z overlay `<Link absolute
+inset-0 z-0 tabIndex={-1} aria-hidden>` covers the card → the professional's profile.
+Interactive bits sit ABOVE it at `relative z-10` (the rating "N reseñas" link, the
+casos/cert links, and the entire action/schedule column) and keep working; the favorites
+bookmark (z-20, in `SaveableCard`) is above it too. Keyboard/screen-reader users use the
+still-focusable name/avatar links (the overlay is aria-hidden). Don't re-add a separate
+"Ver perfil completo" link.
 
 **Layout that guarantees nothing important clips:** the identity zone is a COLUMN =
 `[avatar+info, flex-1, overflow-hidden]` (clips its OWN overflow only in a rare extreme)
-+ `[shrink-0 footer: casos/cert links + "Ver perfil completo", ALWAYS visible]`. The
-action column (schedule + buttons) is content-height and always fully shown; the identity
-zone is `flex-1` (= card − action) so it absorbs slack / clips, never the actions. So the
-primary actions and "Ver perfil completo" can NEVER be clipped.
++ `[shrink-0 footer: casos/cert links]`. The action column (schedule + buttons) is
+content-height and always fully shown; the identity zone is `flex-1` (= card − action) so
+it absorbs slack / clips, never the actions.
+
+**List/map split (desktop):** the map is the dominant right column — `lg:w-[46%]
+xl:w-[46%]` — so the results list + cards are narrower and the map is bigger. Cards stay
+clean at the narrower width via single-line truncating summaries. Mobile keeps the
+List/Map toggle (stacked).
 
 **Name + price rules** (company-first; person NEVER dropped, esp. mobile):
 - Name line = company/brand + Verificado pill. With no company the person's name is the
@@ -990,14 +1002,13 @@ primary actions and "Ver perfil completo" can NEVER be clipped.
 - Custom selects use `appearance-none` + an absolute `ChevronDown` (never the native OS
   arrow) so the chevron is aligned/consistent (e.g. the availability editor's interval
   select).
-- **"Ver perfil completo" is ALWAYS visible** — it's a `shrink-0` footer of the identity
-  zone, OUTSIDE the `overflow-hidden` avatar+info block (which is the part allowed to
-  clip on an info-heavy mobile card). Never put it back inside the clipping block, or it
-  disappears on mobile. The identity zone is a column: `[avatar+info flex-1 min-h-0
-  overflow-hidden]` + `[Ver perfil completo footer]`.
-- **Location selector reflects the pro's real service places.** Build selector options
-  from slot-tagged locations when slots carry ≥2 locations; otherwise fall back to the
-  pro's named `workplaces` (≥2) so a multi-workplace pro ALWAYS gets a selector even when
-  slots aren't tagged per place. Selecting a place filters to its slots if any exist,
-  else shows all bookable times and carries the place into the booking — never empty the
-  grid.
+- **The whole card is the profile link** (stretched overlay, above). casos/cert links
+  live in a `shrink-0` footer of the identity zone (OUTSIDE the clipping block) so they're
+  never clipped, at `relative z-10` so they sit above the overlay and reach their tabs.
+- **Location schedule is STRICT per-location.** The selector's options are the DISTINCT
+  locations actually present in the published slots (grouped by label, keyed by location
+  id). Selecting one shows ONLY that location's slots — filtered by **location id** (a
+  `Set`), with NO fallback to "all" — so a slot available only at B can never appear under
+  A. The availability editor tags every slot with its `location_id`, so genuinely
+  multi-location pros get the selector and it filters correctly; do NOT add a
+  workplace-derived fallback selector that doesn't actually filter the schedule.
