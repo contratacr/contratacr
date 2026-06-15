@@ -829,6 +829,13 @@ simply don't show it — never describe a public "Identidad sin verificar" label
 Keep the meaning accurate (identity is real/verifiable via the TSE padrón; NOT a
 quality rating). Prefer commas over em-dashes "—" in Spanish UI copy.
 
+**PUBLIC vs OWN panel:** the no-negative-label rule is for the PUBLIC view (/buscar
+card + public profile) — unverified pros show NO badge/text there. In the pro's OWN
+panel, do NOT show a negative "sin verificar"/"rechazada" label either; instead show a
+positive, OPTIONAL **"Verifica tu identidad"** invitation chip (brand-blue + ShieldCheck)
+when not verified, that links to the Verificación tab (`setTab("verificacion")`) where the
+detailed status/actions live. Verified pros show the "Verificado" badge and no invitation.
+
 ## 45. Social links: username in, app builds the URL, icons out (updates §42)
 
 The pro enters ONLY a username per network (Instagram, Facebook, TikTok), shown
