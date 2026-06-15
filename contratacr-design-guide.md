@@ -168,7 +168,7 @@ A professional is always **ONE card** (`rounded-2xl bg-white border`, never spli
 
 ### Availability display (Hulihealth-style)
 - **Packed day columns** (3 at a time): show only upcoming days that **actually have bookable slots** (no "—" filler), with **uppercase** labels (`Hoy`/`Mañana`/`Jue 11`, brand-colored when soon ≤ tomorrow), ~2 time chips per day (brand-tint pills) + a **dashed `+N` chip**; chevrons page further out. Empty → one compact line ("Sin horarios próximos. Solicita el servicio para coordinar."). Slots are one-click → opens booking pre-selected.
-- **Location selector** above the strip when the pro publishes hours at more than one place — a brand-tint `select` (dropdown), defaulting to the first; single-location shows a `MapPin` + label line, else "Próximos horarios". Dedupe by label.
+- **Location selector** above the strip when the pro publishes hours at more than one place — **horizontal scrollable TABS** (`MapPin` + name; selected = brand-blue + underline), with the selected location's address shown directly below, defaulting to the first; single-location shows a `MapPin` + name (+ address) line. See §50 for the full rule (options from workplaces∪slots, strict per-id filter). Dedupe by id.
 - Grouped lists (e.g. the pro's own "Tus horarios próximos") group times by **Mañana (<12h) / Tarde (12–18h) / Noche (≥18h)** so dense lists are scannable; each part renders only when it has slots.
 - **Action button** (bottom of the availability panel): **"Solicitar servicio"** is a **single FULL-WIDTH primary** (`w-full`), identical on every card. The **direct-contact icons do NOT sit beside it** (that would vary card width / tempt a second row). Instead the **WhatsApp + call icon-buttons live in the card's TOP row, next to the name** (pushed right with `ml-auto`) — reusing existing horizontal space so **the card never grows taller**. They are **borderless** (no box/container): bare icons in a `h-7 w-7` tap target, `rounded-full`, with a **hover-only subtle circular highlight** (WhatsApp `text-[#1ebe5d] hover:bg-[#25D366]/10`; call `text-[#6b7280] hover:bg-[#EBF5FB] hover:text-[#009FD9]`). Official `WhatsAppIcon` + `Phone`, ~18px. They show only when enabled (WhatsApp when bookable + not appointments-only; call when `allowPhoneCall`); their presence/absence must not change card height or the button size. Contact-only (private / WhatsApp-only) cards show a **full-width "Solicitar por WhatsApp"** primary instead (the call icon, if any, is in the top row).
 - **Verified wording:** the trust mark reads **"Identidad verificada"** (green `ShieldCheck`) on cards and profiles (unverified → amber `ShieldAlert` "Sin verificar"). Keep it a small icon+label, visually distinct from profession chips.
@@ -948,12 +948,20 @@ The card was REBUILT from scratch (`professional-card.tsx`) because the old fixe
 `overflow-hidden` + two-zone (identity | action) layout kept breaking on mobile (names cut
 off, bottom buttons disappearing, uneven heights). These rules ARE the fix — non-negotiable:
 
-- **Sizing = CONTENT-DRIVEN, NEVER a fixed height.** The card is `flex h-full flex-col`
+- **Sizing = CONTENT-DRIVEN height, CONSTRAINED width.** The card is `flex h-full flex-col`
   with **no hardcoded height and no `overflow-hidden`** — it grows to fit, so nothing is
-  ever truncated to fit a height. `h-full` lets cards in the SAME grid row stretch to EQUAL
-  height (uniform); the current /buscar layout is a SINGLE-COLUMN list beside the map, so
-  each card simply grows to its content (one card per row → naturally even). Do NOT
-  reintroduce a fixed `h-[…]` or `overflow-hidden` on the card.
+  ever truncated to fit a height. WIDTH, however, is constrained by the GRID (below) — the
+  card must NEVER stretch to fill the whole results row. `h-full` lets cards in the SAME grid
+  row stretch to EQUAL height (uniform). Do NOT reintroduce a fixed `h-[…]` or
+  `overflow-hidden` on the card, and do NOT give the card its own width — the grid owns width.
+- **Results layout = AUTO-FILL grid (this is what keeps width sane).** The list container is
+  `grid grid-cols-[repeat(auto-fill,minmax(min(100%,300px),1fr))] gap-3` — 1 column on mobile,
+  then as many ~300px+ columns as fit (≈3 on wide screens) beside the map. Use **`auto-fill`,
+  NEVER `auto-fit`**: auto-fill keeps empty tracks, so a SINGLE result sits at the normal
+  ~300px card width instead of ballooning to fill the row (the bug auto-fit causes). Equal
+  height per row flows via `h-full`: grid item → `SaveableCard` (also `h-full`) →
+  `ProfessionalCard`. Do NOT revert this to a single-column `flex flex-col` (the card then
+  stretches full-width, leaving dead space on the right).
 - **ONE vertical flex column**, identical sections + order + spacing for every card. The
   ACTION AREA is bottom-pinned with **`mt-auto`** so "ver horario completo" + the WhatsApp /
   Llamar / Solicitar buttons are ALWAYS visible regardless of content above.
@@ -982,25 +990,29 @@ completo" link.
 icons. Do NOT re-add them to the card.
 
 **List/map split (desktop):** the map is the dominant right column — `lg:w-[46%]
-xl:w-[46%]` — so the results list + cards are narrower and the map is bigger. Mobile keeps
+xl:w-[46%]`; the results column holds the auto-fill card GRID (above) so cards stay a
+comfortable ~300px width and tile into multiple columns rather than stretching. Mobile keeps
 the List/Map toggle (stacked).
 
 **No-overlap / consistency rules:**
 - The favorite bookmark is `absolute top-2.5 right-2.5`; the card's `pt-10` top band keeps
-  ALL content below it so nothing overlaps it. The schedule's top selector row also keeps
-  `md:pr-9` as belt-and-suspenders.
-- Custom selects use `appearance-none` + an absolute `ChevronDown` (never the native OS
-  arrow) so the chevron is aligned/consistent (e.g. the availability editor's interval
-  select).
-- **Multi-location selector — separate the two concerns (this kept regressing).** Build
-  the selector's OPTIONS from the pro's ACTUAL service locations: their named `workplaces`
+  ALL content below it so nothing overlaps it. (The location control now lives in the BOTTOM
+  action area, well clear of the top-right bookmark — the old `md:pr-9` guard was dropped.)
+- **Multi-location selector = HORIZONTAL TABS (Doctoralia-style), not a dropdown.** Each
+  location is a tab: a small `MapPin` + the name; the SELECTED tab is brand-blue
+  (`text-[#009FD9] border-b-2 border-[#009FD9]`), the rest muted; the selected location's
+  street ADDRESS shows directly below the tab row. The tab row is `flex overflow-x-auto
+  hide-scrollbar` with every tab `shrink-0 whitespace-nowrap`, so when there are more tabs
+  than fit it SCROLLS sideways and NEVER wraps (wrapping would shift the buttons / break
+  equal-height). A single-location pro shows the name + address directly, no tab row.
+- **Multi-location options — separate the two concerns (this kept regressing).** Build
+  the tabs' OPTIONS from the pro's ACTUAL service locations: their named `workplaces`
   UNION any extra locations the slots carry (`cov_*` a-domicilio, videoconsulta), keyed by
-  id. This makes it appear for EVERY multi-location pro regardless of which locations
+  id. This makes them appear for EVERY multi-location pro regardless of which locations
   currently have upcoming slots. Keep the schedule FILTER STRICT per-location by id (a
   selected location shows only its own slots + location-agnostic `general` slots, never
   another location's; an empty location shows the honest "no upcoming" state). **Do NOT
-  derive the selector options from the SLOTS alone** — that's the recurring regression
-  (it vanishes when a pro's upcoming slots are all at one location). Build the control
-  ONCE (`locationControl`) and render it in EVERY schedule branch (incl. no-upcoming) so
-  it can't be dropped per-layout or trap the client on an empty location. Single-location
-  pros show a plain label (no selector).
+  derive the options from the SLOTS alone** — that's the recurring regression (they vanish
+  when a pro's upcoming slots are all at one location). Build the control ONCE
+  (`locationControl`) and render it in EVERY schedule branch (incl. no-upcoming) so it can't
+  be dropped per-layout or trap the client on an empty location.
