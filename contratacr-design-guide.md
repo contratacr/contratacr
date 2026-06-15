@@ -942,69 +942,56 @@ guard — they rely on flush-on-blur + flush-on-unmount above. That combination 
 fixed the "edit a field, switch section, lose the change" bug. Any NEW editable section
 must follow this standard.
 
-## 50. /buscar card — keep the rich card, GROW it (uniform) to fit everything
+## 50. /buscar card — content-driven height, single vertical column (REBUILT)
 
-The search card keeps ALL its information and is allowed to GROW so nothing is cut off
-(the "must not grow" constraint was DROPPED, and the Sprint 134 "strip to a summary"
-redesign was REVERTED — it removed too much). The model: **keep everything; give it
-space; cards may be tall but stay UNIFORM.** Two-zone responsive shell
-(`professional-card.tsx` identity zone + `professional-schedule.tsx` action zone), FIXED
-uniform height **`h-[452px]` mobile / `md:h-[244px]` desktop**, sized for the
-most-information case so a minimal pro and an info-heavy pro render at the SAME height
-(mobile is intentionally tall — users scroll). Tune the height if the live site shows
-clipping (too short) or excessive whitespace (too tall).
+The card was REBUILT from scratch (`professional-card.tsx`) because the old fixed-height +
+`overflow-hidden` + two-zone (identity | action) layout kept breaking on mobile (names cut
+off, bottom buttons disappearing, uneven heights). These rules ARE the fix — non-negotiable:
 
-**ON the card (keep ALL of this — don't remove to save space, give space):** avatar;
-**company/brand (bold primary)** + person name (smaller secondary, never dropped);
-Verificado pill beside the name; price; professions (primary + up to 2 chips + "+N");
-rating (★ + "N reseñas" link); location SUMMARY (primary place "+N" + a coverage line);
-the inline **availability schedule** (3-day grid, ~3 slots PC / ~2 mobile, multi-location
-selector, paging arrows, tappable chips → `BookingModal`); **casos de éxito +
-certificaciones links**; WhatsApp + "Solicitar servicio". There is **no "Ver perfil
-completo" link** — the WHOLE card is clickable to the profile (see below).
+- **Sizing = CONTENT-DRIVEN, NEVER a fixed height.** The card is `flex h-full flex-col`
+  with **no hardcoded height and no `overflow-hidden`** — it grows to fit, so nothing is
+  ever truncated to fit a height. `h-full` lets cards in the SAME grid row stretch to EQUAL
+  height (uniform); the current /buscar layout is a SINGLE-COLUMN list beside the map, so
+  each card simply grows to its content (one card per row → naturally even). Do NOT
+  reintroduce a fixed `h-[…]` or `overflow-hidden` on the card.
+- **ONE vertical flex column**, identical sections + order + spacing for every card. The
+  ACTION AREA is bottom-pinned with **`mt-auto`** so "ver horario completo" + the WhatsApp /
+  Llamar / Solicitar buttons are ALWAYS visible regardless of content above.
+- **No meaning-losing clipping:** company/personal name wraps up to 2 lines
+  (`line-clamp-2`); service tags wrap + cap with "+N"; the location line wraps to a 2nd line
+  and keeps the "+N" pattern for extra locations.
 
-**Whole card opens the profile (stretched link).** A low-z overlay `<Link absolute
-inset-0 z-0 tabIndex={-1} aria-hidden>` covers the card → the professional's profile.
-Interactive bits sit ABOVE it at `relative z-10` (the rating "N reseñas" link, the
-casos/cert links, and the entire action/schedule column) and keep working; the favorites
-bookmark (z-20, in `SaveableCard`) is above it too. Keyboard/screen-reader users use the
-still-focusable name/avatar links (the overlay is aria-hidden). Don't re-add a separate
-"Ver perfil completo" link.
+**Section order (top → bottom):** ranking number badge + favorite bookmark (both ABSOLUTE
+overlays — number top-left from the page wrapper, favorite top-right from `SaveableCard`;
+the card reserves a top band with **`pt-10`** so they NEVER overlap content) → company logo
+(avatar) → company name + **Verificado** badge → personal name (first + both surnames,
+`shortPersonName`; only when a company leads) → price (own line) → service tags → rating +
+review count (only the count links to the reviews tab) → location ("+N" for extra places) →
+"se desplaza a tu ubicación" → **`ProfessionalSchedule`** (location selector → compact
+schedule preview + "ver horario completo" → action buttons). All scheduling / availability /
+filtering LOGIC lives in `ProfessionalSchedule` and is NOT changed by card-layout work.
 
-**Layout that guarantees nothing important clips:** the identity zone is a COLUMN =
-`[avatar+info, flex-1, overflow-hidden]` (clips its OWN overflow only in a rare extreme)
-+ `[shrink-0 footer: casos/cert links]`. The action column (schedule + buttons) is
-content-height and always fully shown; the identity zone is `flex-1` (= card − action) so
-it absorbs slack / clips, never the actions.
+**Whole card opens the profile (stretched link).** A low-z overlay `<Link absolute inset-0
+z-0 tabIndex={-1} aria-hidden>` covers the card → the professional's profile. Interactive
+bits sit ABOVE it at `relative z-10` (logo + name links, the rating "N reseñas" link, the
+whole action/schedule area); the favorite bookmark (z-20, `SaveableCard`) is above it too.
+Keyboard/SR users use the focusable logo/name links. Don't add a separate "Ver perfil
+completo" link.
+
+**ON THE PROFILE ONLY — not on the card:** Casos de éxito, Certificaciones, social-media
+icons. Do NOT re-add them to the card.
 
 **List/map split (desktop):** the map is the dominant right column — `lg:w-[46%]
-xl:w-[46%]` — so the results list + cards are narrower and the map is bigger. Cards stay
-clean at the narrower width via single-line truncating summaries. Mobile keeps the
-List/Map toggle (stacked).
+xl:w-[46%]` — so the results list + cards are narrower and the map is bigger. Mobile keeps
+the List/Map toggle (stacked).
 
-**Name + price rules** (company-first; person NEVER dropped, esp. mobile):
-- Name line = company/brand + Verificado pill. With no company the person's name is the
-  primary (abbreviated `shortPersonName` = first + both surnames).
-- DESKTOP: price far-right on the name line (`hidden md:inline-block md:ml-auto`); person
-  name on the line below (`hidden md:block`).
-- MOBILE: name line is ONLY company + Verificado; a `md:hidden` secondary line holds the
-  **person name (left) + price (right, `ml-auto`, `pr-9`)**. Don't move price back onto
-  the mobile name line; don't gate the person name behind space.
-
-**Uniformity / no-overlap rules:**
-- Location/professions are single-line truncating SUMMARIES (primary "+N") — never
-  multi-line wrap that clips, never the full list (full list = profile).
-- The favorites bookmark is `absolute top-2.5 right-2.5`; any top-right content must clear
-  it: `pr-9` on the mobile name/secondary lines, and `md:pr-9` on the schedule's top
-  selector/label row (the grid itself is vertically centered, so it's already clear). A
-  full-width control (e.g. the location `<select>`) at the very top of the action column
-  WILL overlap the bookmark unless padded.
+**No-overlap / consistency rules:**
+- The favorite bookmark is `absolute top-2.5 right-2.5`; the card's `pt-10` top band keeps
+  ALL content below it so nothing overlaps it. The schedule's top selector row also keeps
+  `md:pr-9` as belt-and-suspenders.
 - Custom selects use `appearance-none` + an absolute `ChevronDown` (never the native OS
   arrow) so the chevron is aligned/consistent (e.g. the availability editor's interval
   select).
-- **The whole card is the profile link** (stretched overlay, above). casos/cert links
-  live in a `shrink-0` footer of the identity zone (OUTSIDE the clipping block) so they're
-  never clipped, at `relative z-10` so they sit above the overlay and reach their tabs.
 - **Multi-location selector — separate the two concerns (this kept regressing).** Build
   the selector's OPTIONS from the pro's ACTUAL service locations: their named `workplaces`
   UNION any extra locations the slots carry (`cov_*` a-domicilio, videoconsulta), keyed by
