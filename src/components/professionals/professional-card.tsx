@@ -184,7 +184,11 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
     // (top-left, page wrapper) + favorite bookmark (top-right, SaveableCard) so they
     // never overlap content.
     <article className={`group relative flex h-full flex-col rounded-2xl border border-[#e5e7eb] bg-white p-4 pt-10 transition-shadow duration-200 hover:border-[#cbd5e1] hover:shadow-md ${className ?? ""}`}>
-      {/* ── Identity: logo + company/personal name (+ Verificado) + price ── */}
+      {/* ── Identity: logo + company/personal name (+ Verificado) on the LEFT, PRICE
+             right-aligned on the RIGHT so the header uses the full width (no empty
+             top-right). The price sits just BELOW the favorite bookmark — the card's
+             `pt-10` band clears the bookmark (top-right) + ranking number (top-left), so
+             nothing overlaps. ── */}
       <div className="flex items-start gap-3">
         <Link href={`/profesionales/${professional.slug}`} className="relative z-10 shrink-0">
           <Avatar className="h-12 w-12">
@@ -201,20 +205,23 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
             </Link>
             {verifiedBadge}
           </div>
-          {/* Personal name = first name + both surnames; shown only when a company leads. */}
+          {/* Personal name = first name + both surnames; wraps up to 2 lines (long names
+              never collide with the price — they're in separate flex columns). */}
           {brandSecondary && (
-            <p className="text-[12px] font-medium text-[#6b7280] line-clamp-1">{brandSecondary}</p>
-          )}
-          {/* Price — just the amount, no "Desde/Tarifa" word. */}
-          {priceLabel.includes("₡") && (
-            <p className="mt-0.5 text-sm font-bold text-[#111827]">{priceLabel}</p>
+            <p className="text-[12px] font-medium text-[#6b7280] line-clamp-2">{brandSecondary}</p>
           )}
         </div>
+        {/* Price — just the amount, no "Desde/Tarifa" word. Right-aligned; capped so a long
+            price wraps instead of crowding the name. */}
+        {priceLabel.includes("₡") && (
+          <p className="shrink-0 max-w-[45%] text-right text-sm font-bold leading-snug text-[#111827]">{priceLabel}</p>
+        )}
       </div>
 
-      {/* ── Service tags — wrap; cap to a couple + "+N" overflow (never widen/clip). ── */}
+      {/* ── Service tags — wrap to MULTIPLE lines; cap to a couple + "+N" overflow (never
+             widen/clip). With many professions the rows simply grow the card taller. ── */}
       {(professionList.length > 0 || professional.isFeatured) && (
-        <div className="mt-3 flex flex-wrap items-center gap-1.5">
+        <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
           {professionList.map((cat) => (
             <span key={cat} className="inline-flex items-center rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-medium text-[#6b7280]">
               {catLabel(cat)}
@@ -252,7 +259,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
       {/* ── Location (primary place "+N") + "se desplaza a tu ubicación" — wrap to a
              second line, never clipped. ── */}
       {(fixedText || mobileText) && (
-        <div className="mt-2 flex flex-col gap-0.5 text-[11px] text-[#6b7280]">
+        <div className="mt-1.5 flex flex-col gap-0.5 text-[11px] text-[#6b7280]">
           {fixedText && (
             <span className="flex items-start gap-1.5">
               <MapPin className="h-3 w-3 text-[#009FD9] shrink-0 mt-0.5" />
@@ -273,7 +280,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
              (`mt-auto`) so it's ALWAYS visible no matter how much content is above.
              `relative z-10` keeps it above the whole-card profile overlay. All
              scheduling/availability LOGIC lives in ProfessionalSchedule (unchanged). ── */}
-      <div className="relative z-10 mt-auto pt-3">
+      <div className="relative z-10 mt-auto pt-2.5">
         <ProfessionalSchedule
           professional={professional}
           categoryName={categoryName}
