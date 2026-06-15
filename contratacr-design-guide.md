@@ -994,11 +994,16 @@ rating + location line; the schedule appends the location tabs/address to the le
 
 - **Sizing = CONTENT-DRIVEN height.** The article is `flex h-full flex-col`, **no hardcoded
   height, no `overflow-hidden`** — it grows for max content. Don't reintroduce a fixed `h-[…]`.
-- **Desktop layout (in ProfessionalSchedule):** `lg:grid lg:grid-cols-[minmax(0,1fr)_288px]
-  lg:gap-5 lg:items-start`. LEFT = `{info}` + location tabs/address; RIGHT (`288px`, `relative
-  z-10`) = schedule-or-message ON TOP, then the **action buttons full-width of the right column**
-  (NO bottom strip). On mobile the same wrapper is `flex flex-col gap-3` (stacked: info → tabs →
-  schedule-or-message → buttons).
+- **Desktop layout (in ProfessionalSchedule) = a clean TWO-COLUMN split, ~65/35.**
+  `lg:grid lg:grid-cols-[minmax(0,1.85fr)_minmax(0,1fr)] lg:gap-5 lg:items-start`. Use
+  FRACTIONAL columns (`1.85fr` / `1fr`), NOT a fixed right width — a fixed `288px` right column
+  became ~49% (near-equal columns) on the narrower ~620px card; fractions keep it ~⅓ at every
+  width. `minmax(0,…)` lets both columns shrink so long content never forces overflow. LEFT
+  (~65%) = ALL the professional info (`{info}`) + location tabs/address; RIGHT (~35%, `relative
+  z-10`) = schedule-or-message ON TOP, then the **action buttons full-width of the right column**.
+  **NOTHING spans both columns** (NO bottom strip). On mobile the same wrapper is `flex flex-col
+  gap-3` (stacked: info → tabs → schedule-or-message → buttons). The narrower right column shows
+  the same 3-day strip (it just pages with the `< >` arrows; chips get smaller).
 - **Card WIDTH:** wrapper `w-full max-w-[520px] lg:max-w-none` — capped for the single-column
   mobile/tablet card, but on desktop it FILLS the results column, which hugs the wider two-column
   card responsively: `lg:w-[620px] xl:w-[680px] 2xl:w-[880px]` (≈820–900px ceiling). The **map

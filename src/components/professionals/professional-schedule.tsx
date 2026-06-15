@@ -421,7 +421,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           MOBILE = the same blocks STACKED in one column (info → schedule-or-message →
           buttons). HuliHealth style: the action buttons live IN the right column (full
           width of it), NOT a separate bottom strip. Content-driven height. */}
-      <div className="flex flex-col gap-3 lg:grid lg:grid-cols-[minmax(0,1fr)_288px] lg:gap-5 lg:items-start">
+      <div className="flex flex-col gap-3 lg:grid lg:grid-cols-[minmax(0,1.85fr)_minmax(0,1fr)] lg:gap-5 lg:items-start">
         {/* LEFT — professional info (slotted from the card) + the location tabs/address. */}
         <div className="flex min-w-0 flex-col gap-2">
           {info}
