@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { MapPin, Truck, Star, ArrowRight } from "lucide-react";
+import { MapPin, Truck, Image as ImageIcon, Star, Award } from "lucide-react";
 import { ProfessionalSchedule, type ScheduleSlot } from "@/components/professionals/professional-schedule";
 import { Link } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -180,11 +180,8 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
     <div className={`group relative rounded-2xl bg-white border border-[#e5e7eb] hover:border-[#cbd5e1] hover:shadow-md transition-all duration-200 h-[360px] md:h-[232px] overflow-hidden ${className ?? ""}`}>
       <div className="p-3.5 pl-10 h-full">
         <div className="flex flex-col md:flex-row gap-3 h-full">
-          {/* ── Identity zone — a COLUMN: the avatar+info block (which clips its own
-                 overflow if a pro is very info-heavy) plus an ALWAYS-visible
-                 "Ver perfil completo" footer that is never clipped. ── */}
-          <div className="flex-1 min-w-0 flex flex-col gap-1.5 overflow-hidden">
-            <div className="flex gap-3 min-h-0 flex-1 overflow-hidden">
+          {/* ── Identity zone ── */}
+          <div className="flex-1 min-w-0 flex gap-3 overflow-hidden">
             <Link href={`/profesionales/${professional.slug}`} className="shrink-0">
               <Avatar className="h-[3.25rem] w-[3.25rem]">
                 <AvatarImage src={professional.avatarUrl} alt={professional.fullName} />
@@ -269,37 +266,48 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
                 </span>
               )}
 
-              {/* Location SUMMARY — primary place "+N" and the coverage line, each a
-                  SINGLE truncating line so they always fit and are never cut off. The
-                  full address list lives on the profile. */}
-              <div className="flex flex-col gap-0.5 text-[11px] text-[#6b7280] min-w-0">
+              {/* Location + coverage — wrap in full (never truncated). The icon stays
+                  top-aligned when the text wraps to a second line on narrow mobile. */}
+              <div className="flex flex-col gap-0.5 text-[11px] text-[#6b7280]">
                 {fixedText && (
-                  <span className="flex items-center gap-1.5 min-w-0">
-                    <MapPin className="h-3 w-3 text-[#009FD9] shrink-0" />
-                    <span className="truncate">{fixedText}</span>
+                  <span className="flex items-start gap-1.5">
+                    <MapPin className="h-3 w-3 text-[#009FD9] shrink-0 mt-0.5" />
+                    <span className="leading-snug">{fixedText}</span>
                   </span>
                 )}
                 {mobileText && (
-                  <span className="flex items-center gap-1.5 min-w-0">
-                    <Truck className="h-3 w-3 text-[#0089bb] shrink-0" />
-                    <span className="truncate">{mobileText}</span>
+                  <span className="flex items-start gap-1.5">
+                    <Truck className="h-3 w-3 text-[#0089bb] shrink-0 mt-0.5" />
+                    <span className="leading-snug">{mobileText}</span>
                   </span>
                 )}
               </div>
 
+              {/* Casos de éxito + Certificaciones — compact links sharing ONE bottom
+                  row so the card height stays uniform (they don't each add a line). */}
+              {(professional.portfolioCount || professional.certificationCount) ? (
+                <div className="mt-auto pt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5">
+                  {professional.portfolioCount ? (
+                    <Link
+                      href={`/profesionales/${professional.slug}?tab=casos`}
+                      className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[#009FD9] hover:underline w-fit"
+                    >
+                      <ImageIcon className="h-3.5 w-3.5" />
+                      {tCard("viewCases")}
+                    </Link>
+                  ) : null}
+                  {professional.certificationCount ? (
+                    <Link
+                      href={`/profesionales/${professional.slug}?tab=certificaciones`}
+                      className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[#009FD9] hover:underline w-fit"
+                    >
+                      <Award className="h-3.5 w-3.5" />
+                      {tCard("viewCertifications")}
+                    </Link>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
-            </div>
-
-            {/* Lead into the full profile — ALWAYS visible (shrink-0 footer, OUTSIDE
-                the clipping block above), even on info-heavy mobile cards, so clients
-                can always open the full profile (casos de éxito, certificaciones and
-                full details live there). */}
-            <Link
-              href={`/profesionales/${professional.slug}`}
-              className="shrink-0 inline-flex w-fit items-center gap-1 text-[11px] font-semibold text-[#009FD9] hover:underline"
-            >
-              {tCard("viewProfile")} <ArrowRight className="h-3 w-3" />
-            </Link>
           </div>
 
           {/* ── Action zone: availability + contact/primary actions. A mobile

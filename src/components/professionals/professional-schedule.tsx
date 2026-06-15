@@ -86,9 +86,9 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     if (id.startsWith("cov_")) return t("atHome");
     return professional.workplaces?.find((w) => w.id === id)?.name ?? t("location");
   }
-  // Distinct locations CARRIED BY the published slots (when a pro tags slots per place).
-  // Grouped by LABEL so two coverage zones that both read "A domicilio" collapse to one.
-  const slotGroups = useMemo(() => {
+  // Group by LABEL so two coverage zones that both read "A domicilio" collapse to
+  // a single chip (no confusing duplicates); each group keeps its underlying ids.
+  const locationGroups = useMemo(() => {
     const map = new Map<string, string[]>();
     for (const s of slots) {
       const id = s.locationId ?? "general";
@@ -100,31 +100,16 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     return Array.from(map.entries()).map(([label, ids]) => ({ label, ids }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slots]);
-  // The pro's ACTUAL service places (workplaces). A pro with MULTIPLE workplaces should
-  // always get a location selector — even when their slots aren't tagged per place
-  // (common). So: trust the slot-derived groups when the slots themselves carry >=2
-  // locations; otherwise fall back to the named workplaces.
-  const placeGroups = useMemo(
-    () => (professional.workplaces ?? [])
-      .filter((w) => w.id && w.name?.trim())
-      .map((w) => ({ label: (w.name as string).trim(), ids: [w.id as string] })),
-    [professional.workplaces]
-  );
-  const locationGroups = slotGroups.length > 1 ? slotGroups : (placeGroups.length > 1 ? placeGroups : slotGroups);
   // Default to the FIRST location group when there's more than one, so hours are
   // never shown as an undifferentiated mix; the chips switch between them.
   const [selectedLoc, setSelectedLoc] = useState<string | null>(null);
   const effectiveLabel = selectedLoc ?? (locationGroups.length > 1 ? locationGroups[0].label : null);
   const effectiveIds = locationGroups.find((g) => g.label === effectiveLabel)?.ids ?? null;
-  const filteredSlots = useMemo(() => {
-    if (effectiveLabel === null) return slots;
-    const forLabel = slots.filter((s) => locLabel(s.locationId ?? "general") === effectiveLabel);
-    // If the chosen place has its OWN slots, show those; if not (generic/untagged
-    // slots), show ALL bookable times and just carry the chosen place into the booking
-    // — so the selector never empties the grid.
-    return forLabel.length > 0 ? forLabel : slots;
+  const filteredSlots = useMemo(
+    () => (effectiveLabel === null ? slots : slots.filter((s) => locLabel(s.locationId ?? "general") === effectiveLabel)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [slots, effectiveLabel]);
+    [slots, effectiveLabel]
+  );
 
   // Rolling window of upcoming days, keyed to the FULL slot so picking carries the
   // (service + location) context into the booking.
@@ -285,9 +270,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           empty top row. ("Ver horario completo" moved BELOW the grid — see further
           down — so it no longer collides with the card's top-right bookmark.) */}
       {(locationGroups.length > 1 || (!!effectiveLabel && effectiveLabel !== "General")) && (
-        // `md:pr-9` keeps this top row clear of the card's top-right favorites
-        // bookmark on desktop (the selector used to run underneath it).
-        <div className="min-w-0 md:pr-9">
+        <div className="min-w-0">
           {locationGroups.length > 1 ? (
             <div className="relative">
               <MapPin className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-[#009FD9] pointer-events-none" />
