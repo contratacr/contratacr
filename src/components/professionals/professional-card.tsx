@@ -195,14 +195,14 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
               Wraps up to 2 lines — never cut off. */}
           <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
             <Link href={`/profesionales/${professional.slug}`} className="relative z-10 min-w-0">
-              <h3 className="font-bold text-[#111827] text-[15px] leading-snug line-clamp-2 hover:text-[#009FD9] transition-colors">{brandPrimary}</h3>
+              <h3 className="font-bold text-[#111827] text-[15px] leading-snug line-clamp-2 lg:line-clamp-1 hover:text-[#009FD9] transition-colors">{brandPrimary}</h3>
             </Link>
             {verifiedBadge}
           </div>
           {/* Personal name = first name + both surnames; wraps up to 2 lines (long names
               never collide with the price — separate flex columns). */}
           {brandSecondary && (
-            <p className="text-[12px] font-medium text-[#6b7280] line-clamp-2">{brandSecondary}</p>
+            <p className="text-[12px] font-medium text-[#6b7280] line-clamp-2 lg:line-clamp-1">{brandSecondary}</p>
           )}
         </div>
         {/* Price + info icon (HuliHealth style) — top of the left column, on the name line,

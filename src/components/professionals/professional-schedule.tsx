@@ -417,19 +417,21 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
 
   return (
     <>
-      {/* SINGLE-COLUMN card at ALL widths. Desktop was REVERTED from the two-column split
-          (per user request) — it now renders the same single column the mobile/responsive
-          card already used (which is unchanged). Two stacked blocks: [info + location tabs]
-          then [schedule-or-message + action buttons]. The buttons live with the schedule
-          (full width), NOT a separate bottom strip. Content-driven height. */}
-      <div className="flex flex-col gap-3">
+      {/* MOBILE (<lg) = SINGLE column, UNCHANGED: [info + tabs] then [schedule + buttons]
+          stacked (`flex flex-col gap-3`, blocks `gap-2`). DESKTOP (lg+) = a COMPACT HORIZONTAL
+          card: info+tabs on the LEFT, schedule+buttons on the RIGHT (fixed `300px`), so the
+          card is much SHORTER and more fit per screen. The LEFT info column is the larger one;
+          the schedule rail is a fixed 260px. All `lg:` here is ADDITIVE on the mobile base, so
+          mobile renders byte-identically. `lg:items-start` keeps both columns their natural
+          (compact) height; desktop gaps are tighter (`lg:gap-1.5`). */}
+      <div className="flex flex-col gap-3 lg:grid lg:grid-cols-[minmax(0,1fr)_260px] lg:gap-4 lg:items-start">
         {/* LEFT — professional info (slotted from the card) + the location tabs/address. */}
-        <div className="flex min-w-0 flex-col gap-2">
+        <div className="flex min-w-0 flex-col gap-2 lg:gap-1.5">
           {info}
           {locationControl}
         </div>
-        {/* RIGHT — schedule (or contact message) on top, action buttons full-width below. */}
-        <div className="relative z-10 flex min-w-0 flex-col gap-2">
+        {/* RIGHT — schedule (or contact message) on top, action buttons below. */}
+        <div className="relative z-10 flex min-w-0 flex-col gap-2 lg:gap-1.5">
           {scheduleBody}
           {hasSchedule ? (
             <>

@@ -974,20 +974,26 @@ section body. In `profile-editor.tsx` it lives in the shared `Section` component
 `autosave` defaults true) so it's identical across sections; only add it where autosave is
 actually wired.
 
-## 50. /buscar card — SINGLE vertical column at all widths (desktop reverted from two-column)
+## 50. /buscar card — MOBILE single column, DESKTOP COMPACT HORIZONTAL two columns
 
-The card is a **single vertical column at EVERY width** (the desktop two-column split was
-REVERTED at the user's request — they preferred the single column; mobile was already this and
-is unchanged). Two stacked blocks: **[info + location tabs]** then **[schedule-or-message +
-action buttons]**. Content-driven height. (DESKTOP-ONLY layout history — the wider two-column
-grid `lg:grid-cols-[minmax(0,1.85fr)_minmax(0,1fr)]` and the wider results column
-`lg:w-[620/680/880]` — was removed; the desktop wrapper is now plain `flex flex-col gap-3` and
-the desktop results column hugs the ~500px card via `lg:w-[500px]`, map `lg:flex-1`. If you
-ever rebuild a desktop two-column, it must be ADDITIVE `lg:` classes on the mobile base so
-mobile stays untouched.)
+**THE GOLDEN RULE (learned the hard way across many flip-flops): the MOBILE single column is the
+BASE, and the desktop layout is ADDITIVE `lg:` classes ON TOP of it.** Never change a mobile
+(unprefixed) class to alter desktop — only add `lg:`/`xl:`/`2xl:` variants. That guarantees
+mobile renders byte-identically while desktop changes. Verify with `git diff`: a desktop-only
+change must show ONLY `lg:`/`xl:`/`2xl:` additions.
 
-HuliHealth-style: schedule + action buttons sit together (schedule on top, buttons full-width
-below); there is NO separate full-width bottom button strip.
+- **MOBILE (<lg):** a single vertical column — `flex flex-col gap-3`, blocks `gap-2`: [info +
+  location tabs] then [schedule-or-message + action buttons] stacked. Content-driven height.
+- **DESKTOP (lg+): a COMPACT HORIZONTAL card** so more fit per screen. The wrapper adds
+  `lg:grid lg:grid-cols-[minmax(0,1fr)_260px] lg:gap-4 lg:items-start` → info+tabs in the LEFT
+  (larger) column, schedule+buttons in the RIGHT 260px rail — much SHORTER than stacking. Tighter
+  desktop gaps (`lg:gap-1.5`) and the name/personal-name clamp to 1 line on desktop
+  (`lg:line-clamp-1`, mobile keeps `line-clamp-2`). The desktop results column widens to fit it
+  (`lg:w-[640px] xl:w-[700px] 2xl:w-[820px]`, map `lg:flex-1`). Cards are near-uniform height via
+  the compact clamped content (no fixed height — that would truncate).
+
+Within each column the schedule + action buttons sit together (schedule on top, buttons below);
+there is NO separate full-width bottom button strip.
 
 **Who owns what (the server/client split matters):** `professional-card.tsx` is an ASYNC SERVER
 component; `professional-schedule.tsx` is the `"use client"` component holding ALL schedule

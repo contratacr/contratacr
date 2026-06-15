@@ -90,9 +90,9 @@ export function SearchResultsLayout({ children, filters, mobileFilters, mobileSe
         </aside>
 
         {/* 4) count + 5) list — mobile: below the map; desktop: the middle column. The
-            desktop column HUGS the single-column card (~500px; reverted from the wider
-            two-column widths) and the map (lg:flex-1) takes the rest. */}
-        <div className="lg:order-2 min-w-0 w-full lg:w-[500px] lg:shrink-0">
+            desktop column hugs the COMPACT HORIZONTAL two-column card (needs room for info +
+            the 300px schedule rail); map (lg:flex-1) takes the rest. */}
+        <div className="lg:order-2 min-w-0 w-full lg:w-[640px] xl:w-[700px] 2xl:w-[820px] lg:shrink-0">
           {countLabel && <p className="lg:hidden mb-2 text-sm font-medium text-[#374151]">{countLabel}</p>}
           {children}
         </div>
