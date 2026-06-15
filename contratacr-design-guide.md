@@ -969,22 +969,18 @@ The card was REBUILT from scratch (`professional-card.tsx`) because the old fixe
 `overflow-hidden` + two-zone (identity | action) layout kept breaking on mobile (names cut
 off, bottom buttons disappearing, uneven heights). These rules ARE the fix — non-negotiable:
 
-- **Sizing = CONTENT-DRIVEN height, CONSTRAINED width.** The card is `flex h-full flex-col`
-  with **no hardcoded height and no `overflow-hidden`** — it grows to fit, so nothing is
-  ever truncated to fit a height. WIDTH, however, is constrained by the GRID (below) — the
-  card must NEVER stretch to fill the whole results row. `h-full` lets cards in the SAME grid
-  row stretch to EQUAL height (uniform). Do NOT reintroduce a fixed `h-[…]` or
-  `overflow-hidden` on the card, and do NOT give the card its own width — the grid owns width.
-- **Results layout = AUTO-FILL grid (this is what keeps width sane).** The list container is
-  `grid grid-cols-[repeat(auto-fill,minmax(min(100%,340px),1fr))] gap-3` — 1 full-width column
-  on mobile, then a COMFORTABLE ~340px+ card width that tiles into 2 (and ~3 on very wide
-  screens) columns only when there's real room. Use **`auto-fill`, NEVER `auto-fit`**:
-  auto-fill keeps empty tracks, so a SINGLE result sits at the normal ~340px card width instead
-  of ballooning to fill the row (the bug auto-fit causes). The **~340px min matters**: too low
-  (e.g. 300) and the cards get cramped into a narrow band next to the map; this pairs with the
-  map width below. Equal height per row flows via `h-full`: grid item → `SaveableCard` (also
-  `h-full`) → `ProfessionalCard`. Do NOT revert this to a single-column `flex flex-col` (the
-  card then stretches full-width, leaving dead space on the right).
+- **Sizing = CONTENT-DRIVEN height.** The card is `flex h-full flex-col` with **no hardcoded
+  height and no `overflow-hidden`** — it grows to fit, so nothing is ever truncated to fit a
+  height. Do NOT reintroduce a fixed `h-[…]` or `overflow-hidden` on the card. (`h-full` on the
+  article is harmless in the single-column list — it just resolves to the content height.)
+- **Results layout = SINGLE vertical column.** The list container is `flex flex-col gap-3` —
+  ONE card per row, each spanning the FULL width of the results column (NOT a multi-column
+  grid), so cards are comfortably wide next to the map. One card per row → each card simply
+  grows to its content; there is **no equal-height-per-row** coupling (that only mattered for a
+  grid, and was removed — `SaveableCard` is back to a plain `relative` wrapper, no `h-full`).
+  This is the chosen layout: a wide single-column list flanked by the sticky map. (History: an
+  auto-fill grid was tried to fix a full-width ballooning bug, but multi-column squeezed the
+  cards next to the map — single column + a narrower map (below) is the resolution.)
 - **ONE vertical flex column**, identical sections + order + spacing for every card. The
   ACTION AREA is bottom-pinned with **`mt-auto`** so "ver horario completo" + the WhatsApp /
   Llamar / Solicitar buttons are ALWAYS visible regardless of content above.
@@ -1012,10 +1008,9 @@ completo" link.
 **ON THE PROFILE ONLY — not on the card:** Casos de éxito, Certificaciones, social-media
 icons. Do NOT re-add them to the card.
 
-**List/map split (desktop):** the map is the right column at **`lg:w-[40%] xl:w-[38%]`** —
-deliberately NOT dominant, so the results column has room for the auto-fill card GRID (above)
-to render COMFORTABLE, legible cards (a wider map at 46% squeezed the cards into a cramped
-narrow band). Tune the two together: map ~38–40% + grid min ~340px. Mobile keeps the List/Map
+**List/map split (desktop):** filter sidebar (left) · single-column results list (middle) ·
+sticky map (right). The map is `lg:w-[40%] xl:w-[38%]` — deliberately NOT dominant — so the
+results column keeps ~60% for comfortably WIDE full-width cards. Mobile keeps the List/Map
 toggle (stacked); these widths are `lg:`/`xl:` only.
 
 **No-overlap / consistency rules:**

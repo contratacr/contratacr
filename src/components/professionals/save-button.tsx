@@ -144,9 +144,9 @@ interface CardWrapperProps {
 
 export function SaveableCard({ pro, children, isOwn = false }: CardWrapperProps) {
   return (
-    // `h-full` so equal-height grid rows flow through to the card (the article is
-    // `h-full`): grid item → this wrapper → ProfessionalCard.
-    <div className="relative h-full">
+    // The /buscar results are a SINGLE-COLUMN list (one card per row), so the card just
+    // grows to its content — no equal-height plumbing needed here.
+    <div className="relative">
       {children}
       {/* Always-visible favorites button, pinned consistently to the card's
           top-right corner (small + subtle; price row clears it via md:pr-10). */}
