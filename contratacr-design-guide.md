@@ -1036,10 +1036,9 @@ completo" link.
 **ON THE PROFILE ONLY — not on the card:** Casos de éxito, Certificaciones, social-media
 icons. Do NOT re-add them to the card.
 
-**List/map split (desktop):** filter sidebar (left) · single-column results list (middle,
-hugs the ~500px capped card via `lg:w-[500px] lg:shrink-0`) · sticky map (right, `lg:flex-1`
-taking the remaining space). Mobile keeps the List/Map toggle (stacked); the column/map widths
-are `lg:` only.
+**Page shell (responsive):** see §51 — desktop = filter sidebar · results column (hugs the
+two-column card, `lg:w-[620px] xl:w-[680px] 2xl:w-[880px]`) · sticky map (`lg:flex-1`); mobile =
+map on top + filter chips + list.
 
 **No-overlap / consistency rules:**
 - The favorite bookmark is `absolute top-2.5 right-2.5`; the card's `pt-10` top band keeps
@@ -1063,3 +1062,31 @@ are `lg:` only.
   when a pro's upcoming slots are all at one location). Build the control ONCE
   (`locationControl`) and render it in EVERY schedule branch (incl. no-upcoming) so it can't
   be dropped per-layout or trap the client on an empty location.
+
+## 51. /buscar page shell — desktop 3-column, MOBILE map-on-top (Yelp-style)
+
+`SearchResultsLayout` (`search-results-layout.tsx`) is the responsive shell. **Filtering/search
+LOGIC is unchanged** — every control drives the same URL params via `SearchFilters`.
+
+- **Desktop unchanged:** xl+ = sticky filter sidebar · results column · sticky map; lg–xl =
+  results · map with a "Filtros" drawer button (now scoped `hidden lg:flex xl:hidden`). The
+  results column hugs the two-column card; the map is `lg:flex-1` (remaining width).
+- **Mobile (<lg) = Yelp pattern**, NOT a List/Map toggle (that was removed):
+  1. **Service search** pinned at the very top (`MobileServiceSearch`, the "Busca un servicio…"
+     field) — a self-contained component that manages ONLY `q` and preserves all other params by
+     copying the current URL.
+  2. **Map on TOP** (`h-[45vh]`, full width) with the pins.
+  3. **Results panel below:** a single **horizontally-scrollable filter chips row**
+     (`<SearchFilters variant="chips"/>` — Categoría/Provincia/Cantón/Ordenar/Aseguradora as pill
+     dropdowns + "Buscar cerca de mí" / "Solo verificados" toggle chips; `overflow-x-auto
+     hide-scrollbar`, never wraps), then the **"N profesionales" count**, then the vertical card
+     list.
+- **ONE map instance, repositioned via flex `order`** — NOT a second `<GoogleMapPanel>`. The
+  outer flex is `flex-col lg:flex-row`; map `order-2 lg:order-3`, results `order-3 lg:order-2`,
+  sidebar `xl:order-1`, mobile search `order-1 lg:hidden`. Keep the container `items-stretch`
+  (default) so the desktop map aside stretches and its inner `lg:sticky` div works.
+- **No clobbering between the search bar and the chips:** the search bar copies the live URL
+  (preserving filters); the chips' `applyFilters` reads `q` from the URL (not the chip
+  instance's stale local state). Two instances of `SearchFilters` would otherwise overwrite each
+  other's params — keep this split. The mobile count is shown in the panel, so the page-header
+  subtitle is `hidden lg:block` (no duplication).

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
-import { SearchFilters } from "@/components/search/search-filters";
+import { SearchFilters, MobileServiceSearch } from "@/components/search/search-filters";
 import { ProfessionalCard } from "@/components/professionals/professional-card";
 import { SaveableCard } from "@/components/professionals/save-button";
 import { searchProfessionals } from "@/lib/queries/professionals";
@@ -212,7 +212,9 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       <div className="bg-white border-b border-[#e5e7eb]">
         <div className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 py-3">
           <h1 className="text-xl font-bold text-[#111827]">{pageTitle}</h1>
-          <p className="text-[#6b7280] text-sm mt-0.5">{subtitle}</p>
+          {/* On mobile the count is shown in the results panel (above the list); avoid
+              duplicating it here. Desktop keeps it in the header. */}
+          <p className="hidden lg:block text-[#6b7280] text-sm mt-0.5">{subtitle}</p>
         </div>
       </div>
 
@@ -224,7 +226,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             apiKey={MAPS_API_KEY}
             locale={locale}
             numbering={numbering}
+            countLabel={subtitle}
             filters={<Suspense fallback={null}><SearchFilters /></Suspense>}
+            mobileSearch={<Suspense fallback={null}><MobileServiceSearch /></Suspense>}
+            mobileFilters={<Suspense fallback={null}><SearchFilters variant="chips" /></Suspense>}
           >
 
             {/* ── Results list ── */}

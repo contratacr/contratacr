@@ -3,7 +3,7 @@
 import { useRouter, usePathname } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Search, X, Loader2 } from "lucide-react";
+import { Search, X, Loader2, MapPin, ShieldCheck } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PROVINCES, getCantonsByProvince, nearestProvinceId } from "@/lib/data/cr-geography";
@@ -18,7 +18,7 @@ import { createClient } from "@/lib/supabase/client";
 // outline — the open dropdown + chevron are the affordance.
 const FILTER_TRIGGER = "text-sm focus-visible:ring-0 focus-visible:border-[#e5e7eb]";
 
-export function SearchFilters() {
+export function SearchFilters({ variant = "sidebar" }: { variant?: "sidebar" | "chips" } = {}) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -68,7 +68,10 @@ export function SearchFilters() {
   const applyFilters = useCallback(
     (overrides: Record<string, string> = {}) => {
       const next = new URLSearchParams();
-      const vals = { q: query, categoria: category, provincia: province, canton, sortBy, aseguradora, verificados: verifiedOnly ? "1" : "", lat: params.get("lat") ?? "", lng: params.get("lng") ?? "", ...overrides };
+      // In CHIPS mode the search input lives in a SEPARATE component (MobileServiceSearch),
+      // so take `q` from the URL — never from this instance's stale local `query` — to
+      // avoid clobbering what the search bar set. The sidebar keeps using its own input.
+      const vals = { q: variant === "chips" ? (params.get("q") ?? "") : query, categoria: category, provincia: province, canton, sortBy, aseguradora, verificados: verifiedOnly ? "1" : "", lat: params.get("lat") ?? "", lng: params.get("lng") ?? "", ...overrides };
       if (vals.q) next.set("q", vals.q);
       if (vals.categoria && vals.categoria !== "todas") next.set("categoria", vals.categoria);
       if (vals.provincia && vals.provincia !== "todas") next.set("provincia", vals.provincia);
@@ -80,7 +83,7 @@ export function SearchFilters() {
       if (vals.lat && vals.lng) { next.set("lat", vals.lat); next.set("lng", vals.lng); }
       router.push(`${pathname}?${next.toString()}`);
     },
-    [query, category, province, canton, sortBy, aseguradora, verifiedOnly, params, router, pathname]
+    [query, category, province, canton, sortBy, aseguradora, verifiedOnly, params, router, pathname, variant]
   );
 
   // Request geolocation on demand (item 11). Granted → proximity sort + autofill
@@ -150,6 +153,86 @@ export function SearchFilters() {
     (aseguradora ? 1 : 0) +
     (verifiedOnly ? 1 : 0) +
     (geoActive ? 1 : 0);
+
+  // ── MOBILE chips variant ──────────────────────────────────────────────────
+  // A single horizontally-scrollable row of pill controls (NO vertical sidebar, NO
+  // search input — that's the separate MobileServiceSearch). Reuses every handler above,
+  // so the filtering/URL logic is identical; only the presentation differs.
+  if (variant === "chips") {
+    const pill = `${FILTER_TRIGGER} h-9 w-full rounded-full bg-white`;
+    const toggleChip = (active: boolean) =>
+      `shrink-0 inline-flex items-center gap-1.5 h-9 rounded-full border px-3.5 text-[13px] font-medium whitespace-nowrap transition-colors ${
+        active ? "border-[#009FD9] bg-[#EBF5FB] text-[#0089bb]" : "border-[#e5e7eb] bg-white text-[#374151] hover:border-[#009FD9]"
+      }`;
+    return (
+      <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar pb-0.5">
+        <div className="shrink-0 w-[170px]">
+          <CategorySearch
+            value={category && category !== "todas" ? category : ""}
+            onChange={(id) => { setCategory(id); applyFilters({ categoria: id }); }}
+            placeholder={t("filters.category")}
+          />
+        </div>
+        <div className="shrink-0 w-[140px]">
+          <Select value={province} onValueChange={(v) => { setProvince(v); setCanton(""); applyFilters({ provincia: v, canton: "" }); }}>
+            <SelectTrigger className={pill}><SelectValue placeholder={t("filters.province")} /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todas">{t("filters.allProvinces")}</SelectItem>
+              {PROVINCES.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="shrink-0 w-[140px]">
+          <Select value={canton} onValueChange={(v) => { setCanton(v); applyFilters({ canton: v }); }} disabled={!province || cantons.length === 0}>
+            <SelectTrigger className={pill}><SelectValue placeholder={t("filters.canton")} /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">{t("filters.allCantons")}</SelectItem>
+              {cantons.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="shrink-0 w-[150px]">
+          <Select value={sortBy} onValueChange={(v) => {
+            setSortBy(v);
+            if (v === "cercania" && !geoActive) { useMyLocation(); return; }
+            applyFilters({ sortBy: v });
+          }}>
+            <SelectTrigger className={pill}><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="rating">{t("sort.rating")}</SelectItem>
+              <SelectItem value="priceAsc">{t("sort.priceAsc")}</SelectItem>
+              <SelectItem value="availability">{t("sort.availability")}</SelectItem>
+              <SelectItem value="cercania">{t("sort.cercania")}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="shrink-0 w-[170px]">
+          <Select value={aseguradora || undefined} onValueChange={(v) => { setAseguradora(v); applyFilters({ aseguradora: v }); }}>
+            <SelectTrigger className={pill}>
+              <SelectValue placeholder={t("filters.anyInsurer")}>
+                {aseguradora ? insurerOptions.find((i) => i.id === aseguradora)?.label : <span className="text-[#9ca3af]">{t("filters.anyInsurer")}</span>}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {insurerOptions.map((i) => <SelectItem key={i.id} value={i.id}>{i.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <button type="button" onClick={useMyLocation} disabled={geoLoading} className={toggleChip(geoActive)}>
+          {geoLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MapPin className="h-3.5 w-3.5" />}
+          {geoActive ? t("filters.nearMeActive") : t("filters.nearMe")}
+        </button>
+        <button type="button" onClick={() => { const v = !verifiedOnly; setVerifiedOnly(v); applyFilters({ verificados: v ? "1" : "" }); }} className={toggleChip(verifiedOnly)}>
+          <ShieldCheck className="h-3.5 w-3.5" /> {t("filters.verifiedOnly")}
+        </button>
+        {activeCount > 0 && (
+          <button type="button" onClick={clearAll} className="shrink-0 inline-flex items-center gap-1 h-9 rounded-full px-3 text-[13px] font-medium text-[#6b7280] hover:text-red-500 whitespace-nowrap">
+            <X className="h-3.5 w-3.5" /> {t("filters.clear")}
+          </button>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-2xl border border-[#e5e7eb] p-3">
@@ -301,6 +384,55 @@ export function SearchFilters() {
           </button>
         )}
       </div>
+    </div>
+  );
+}
+
+// ── MOBILE service-search bar (the "Busca un servicio…" field, pinned at the top) ──
+// Self-contained: manages ONLY the `q` param and PRESERVES every other param by copying
+// the current URL — so it never clobbers the chips' filters (and vice-versa). Same
+// debounced behavior as the sidebar search.
+export function MobileServiceSearch() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const params = useSearchParams();
+  const t = useTranslations("search");
+  const [q, setQ] = useState(params.get("q") ?? "");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const push = useCallback((value: string) => {
+    const next = new URLSearchParams(params.toString());
+    if (value.trim()) next.set("q", value); else next.delete("q");
+    next.delete("page");
+    router.push(`${pathname}?${next.toString()}`);
+  }, [params, router, pathname]);
+
+  function onChange(value: string) {
+    setQ(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => push(value), 400);
+  }
+  function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === "Enter") { if (debounceRef.current) clearTimeout(debounceRef.current); push(q); }
+  }
+  useEffect(() => () => { if (debounceRef.current) clearTimeout(debounceRef.current); }, []);
+
+  return (
+    <div className="relative flex items-center">
+      <Search className="absolute left-3 h-4 w-4 text-[#9ca3af] pointer-events-none" />
+      <input
+        type="text"
+        value={q}
+        onChange={(e) => onChange(e.target.value)}
+        onKeyDown={onKeyDown}
+        placeholder={t("filters.searchPlaceholder")}
+        className="w-full rounded-full border border-[#e5e7eb] bg-white py-2.5 pl-9 pr-9 text-sm text-[#111827] placeholder-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition"
+      />
+      {q && (
+        <button onClick={() => { setQ(""); if (debounceRef.current) clearTimeout(debounceRef.current); push(""); }} className="absolute right-3 text-[#9ca3af] hover:text-[#374151] transition-colors" aria-label={t("filters.clearSearch")}>
+          <X className="h-4 w-4" />
+        </button>
+      )}
     </div>
   );
 }

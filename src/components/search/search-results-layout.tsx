@@ -2,13 +2,18 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { List, Map as MapIcon, SlidersHorizontal, X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { SlidersHorizontal, X } from "lucide-react";
 import { GoogleMapPanel, type MapProfessional } from "@/components/maps/google-map-panel";
 
 interface SearchResultsLayoutProps {
   children: React.ReactNode; // server-rendered list column (cards + pagination)
-  filters: React.ReactNode; // the <SearchFilters/> control
+  filters: React.ReactNode; // the <SearchFilters/> sidebar/drawer control
+  /** Mobile-only horizontal filter chips (<SearchFilters variant="chips"/>). */
+  mobileFilters?: React.ReactNode;
+  /** Mobile-only service-search bar (<MobileServiceSearch/>), pinned at the top. */
+  mobileSearch?: React.ReactNode;
+  /** Mobile-only "<N> profesionales" count shown above the list. */
+  countLabel?: string;
   mapData: MapProfessional[];
   apiKey: string;
   locale: string;
@@ -17,23 +22,22 @@ interface SearchResultsLayoutProps {
 }
 
 /**
- * Responsive search shell that maximises how many professionals are visible:
- *  - Desktop (xl+): three columns — sticky filters sidebar · results list · sticky
- *    map. The list sits high in the viewport, no tall filter block pushing it down.
- *  - Laptop (lg–xl): two columns — results list · map. Filters move behind a
- *    "Filtros" button (slide-over drawer) so the list+map stay wide.
- *  - Tablet/phone (<lg): one column. A "Filtros" button opens the drawer and a
- *    List/Map toggle swaps the results and the map.
+ * Responsive search shell:
+ *  - Desktop (xl+): three columns — sticky filters sidebar · results list · sticky map.
+ *  - Laptop (lg–xl): two columns — results list · map; filters behind a "Filtros" drawer.
+ *  - Mobile (<lg): Yelp-style — service search pinned at the top, the map on TOP
+ *    (~45vh), then a results panel (horizontal filter chips · count · the vertical
+ *    card list). The SAME single map is repositioned via flex `order` (no 2nd instance).
  */
-export function SearchResultsLayout({ children, filters, mapData, apiKey, locale, numbering }: SearchResultsLayoutProps) {
+export function SearchResultsLayout({ children, filters, mobileFilters, mobileSearch, countLabel, mapData, apiKey, locale, numbering }: SearchResultsLayoutProps) {
   const t = useTranslations("search");
-  const [mobileView, setMobileView] = useState<"list" | "map">("list");
   const [showFilters, setShowFilters] = useState(false);
 
   return (
     <div>
-      {/* Controls bar — "Filtros" button below xl; List/Map toggle below lg. */}
-      <div className="xl:hidden sticky top-16 z-30 mb-4 flex items-center justify-between gap-2">
+      {/* Controls bar — "Filtros" drawer button ONLY at lg–xl (mobile uses the chips
+          row; xl+ uses the sidebar). */}
+      <div className="hidden lg:flex xl:hidden sticky top-16 z-30 mb-4 items-center gap-2">
         <button
           type="button"
           onClick={() => setShowFilters(true)}
@@ -41,33 +45,9 @@ export function SearchResultsLayout({ children, filters, mapData, apiKey, locale
         >
           <SlidersHorizontal className="h-4 w-4" /> {t("filters.title")}
         </button>
-        <div className="lg:hidden inline-flex bg-white border border-[#e5e7eb] rounded-full p-1 shadow-sm">
-          <button
-            type="button"
-            onClick={() => setMobileView("list")}
-            aria-pressed={mobileView === "list"}
-            className={cn(
-              "flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-colors",
-              mobileView === "list" ? "bg-[#009FD9] text-white" : "text-[#6b7280]"
-            )}
-          >
-            <List className="h-4 w-4" /> {t("list")}
-          </button>
-          <button
-            type="button"
-            onClick={() => setMobileView("map")}
-            aria-pressed={mobileView === "map"}
-            className={cn(
-              "flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-colors",
-              mobileView === "map" ? "bg-[#009FD9] text-white" : "text-[#6b7280]"
-            )}
-          >
-            <MapIcon className="h-4 w-4" /> {t("map")}
-          </button>
-        </div>
       </div>
 
-      {/* Filters drawer (below xl) */}
+      {/* Filters drawer (lg–xl, opened from the button above) */}
       {showFilters && (
         <div className="xl:hidden fixed inset-0 z-50">
           <div className="absolute inset-0 bg-black/40" onClick={() => setShowFilters(false)} />
@@ -78,44 +58,39 @@ export function SearchResultsLayout({ children, filters, mapData, apiKey, locale
                 <X className="h-5 w-5" />
               </button>
             </div>
-            {/* Filters apply INSTANTLY (same as the desktop sidebar — no apply
-                button anywhere), so the drawer has no redundant "Ver resultados"
-                action; the X above and the backdrop both dismiss it. */}
+            {/* Filters apply INSTANTLY (no apply button); X + backdrop both dismiss. */}
             {filters}
           </div>
         </div>
       )}
 
-      <div className="flex gap-5">
-        {/* Filters sidebar — xl+ only */}
-        <aside className="hidden xl:block w-64 shrink-0">
+      <div className="flex flex-col lg:flex-row lg:gap-5">
+        {/* MOBILE service-search — pinned at the top, above the map. */}
+        {mobileSearch && <div className="order-1 lg:hidden mb-3">{mobileSearch}</div>}
+
+        {/* Filters sidebar — xl+ only. */}
+        <aside className="hidden xl:block xl:order-1 w-64 shrink-0">
           <div className="sticky top-20">{filters}</div>
         </aside>
 
-        {/* Results list — on desktop the column HUGS the wider TWO-column card (info |
-            schedule); responsive width grows with the viewport so the map keeps usable
-            room. Full width on mobile. The map (below) takes the remaining space. */}
-        <div className={cn("min-w-0 w-full lg:w-[620px] xl:w-[680px] 2xl:w-[880px] lg:shrink-0", mobileView === "map" ? "hidden lg:block" : "block")}>
-          {children}
-        </div>
-
-        {/* Map — inline sticky column on lg+ taking the REMAINING horizontal space (the
-            results column hugs the ~500px card); the toggled full-width panel on phones. */}
-        <aside
-          className={cn(
-            "lg:block lg:flex-1 lg:min-w-0",
-            mobileView === "map" ? "block w-full" : "hidden"
-          )}
-        >
-          <div
-            className={cn(
-              "lg:sticky lg:top-20 w-full overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white",
-              "h-[calc(100dvh-200px-env(safe-area-inset-bottom))] lg:h-[calc(100vh-104px)]"
-            )}
-          >
+        {/* Map — TOP on mobile (~45vh), RIGHT sticky column on desktop. ONE instance,
+            repositioned via flex `order`; on desktop it takes the remaining width
+            (`lg:flex-1`) next to the hugging results column. */}
+        <aside className="order-2 lg:order-3 w-full lg:flex-1 lg:min-w-0 mb-3 lg:mb-0">
+          <div className="h-[45vh] lg:h-[calc(100vh-104px)] lg:sticky lg:top-20 w-full overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white">
             <GoogleMapPanel apiKey={apiKey} professionals={mapData} locale={locale} numbering={numbering} />
           </div>
         </aside>
+
+        {/* Results panel — below the map on mobile; the middle column on desktop. It hugs
+            the wider two-column card on desktop (responsive width). */}
+        <div className="order-3 lg:order-2 min-w-0 w-full lg:w-[620px] xl:w-[680px] 2xl:w-[880px] lg:shrink-0">
+          {/* MOBILE: horizontal filter chips row. */}
+          {mobileFilters && <div className="lg:hidden mb-3">{mobileFilters}</div>}
+          {/* MOBILE: result count above the list. */}
+          {countLabel && <p className="lg:hidden mb-2 text-sm font-medium text-[#374151]">{countLabel}</p>}
+          {children}
+        </div>
       </div>
     </div>
   );
