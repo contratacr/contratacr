@@ -86,9 +86,12 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     if (id.startsWith("cov_")) return t("atHome");
     return professional.workplaces?.find((w) => w.id === id)?.name ?? t("location");
   }
-  // Distinct locations CARRIED BY the published slots (when a pro tags slots per place).
-  // Grouped by LABEL so two coverage zones that both read "A domicilio" collapse to one.
-  const slotGroups = useMemo(() => {
+  // ONE selectable option per DISTINCT service location ACTUALLY present in the
+  // published slots — grouped by label (so two zones that read the same collapse) but
+  // keeping the underlying location ids for STRICT id-based filtering. The selector
+  // therefore appears only for pros who genuinely have per-location availability, and
+  // each option always has slots (it's derived from them).
+  const locationGroups = useMemo(() => {
     const map = new Map<string, string[]>();
     for (const s of slots) {
       const id = s.locationId ?? "general";
@@ -100,29 +103,19 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     return Array.from(map.entries()).map(([label, ids]) => ({ label, ids }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slots]);
-  // The pro's ACTUAL service places (workplaces). A pro with MULTIPLE workplaces should
-  // always get a location selector — even when their slots aren't tagged per place
-  // (common). So: trust slot-derived groups when slots carry >=2 locations; otherwise
-  // fall back to the named workplaces.
-  const placeGroups = useMemo(
-    () => (professional.workplaces ?? [])
-      .filter((w) => w.id && w.name?.trim())
-      .map((w) => ({ label: (w.name as string).trim(), ids: [w.id as string] })),
-    [professional.workplaces]
-  );
-  const locationGroups = slotGroups.length > 1 ? slotGroups : (placeGroups.length > 1 ? placeGroups : slotGroups);
-  // Default to the FIRST location group when there's more than one, so hours are
-  // never shown as an undifferentiated mix; the chips switch between them.
+  // Default to the FIRST location when there's more than one, so hours are never an
+  // undifferentiated mix; the selector switches between them.
   const [selectedLoc, setSelectedLoc] = useState<string | null>(null);
   const effectiveLabel = selectedLoc ?? (locationGroups.length > 1 ? locationGroups[0].label : null);
   const effectiveIds = locationGroups.find((g) => g.label === effectiveLabel)?.ids ?? null;
+  // STRICT per-location: a selected location shows ONLY its OWN slots (matched by id),
+  // so a slot available only at B can NEVER appear under A. No fallback to "all".
   const filteredSlots = useMemo(() => {
     if (effectiveLabel === null) return slots;
-    const forLabel = slots.filter((s) => locLabel(s.locationId ?? "general") === effectiveLabel);
-    // If the chosen place has its OWN slots, show those; if not (generic/untagged
-    // slots), show ALL bookable times and just carry the chosen place into the booking
-    // — so the selector never empties the grid.
-    return forLabel.length > 0 ? forLabel : slots;
+    const g = locationGroups.find((x) => x.label === effectiveLabel);
+    if (!g) return slots;
+    const idSet = new Set(g.ids);
+    return slots.filter((s) => idSet.has(s.locationId ?? "general"));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slots, effectiveLabel]);
 

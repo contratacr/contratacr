@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { MapPin, Truck, Image as ImageIcon, Star, Award, ArrowRight } from "lucide-react";
+import { MapPin, Truck, Image as ImageIcon, Star, Award } from "lucide-react";
 import { ProfessionalSchedule, type ScheduleSlot } from "@/components/professionals/professional-schedule";
 import { Link } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -261,7 +261,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
                   <span aria-hidden className="text-[11px] text-[#9ca3af]">·</span>
                   <Link
                     href={`/profesionales/${professional.slug}?tab=resenas`}
-                    className="text-[11px] font-medium text-[#009FD9] hover:underline"
+                    className="relative z-10 text-[11px] font-medium text-[#009FD9] hover:underline"
                   >
                     {tCard("reviewsCount", { count: professional.reviewCount })}
                   </Link>
@@ -292,47 +292,40 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
             </div>
             </div>
 
-            {/* ALWAYS-visible footer (shrink-0, OUTSIDE the clipping block above):
-                casos de éxito + certificaciones links (when present) and the
-                "Ver perfil completo" lead-in — never clipped, even on info-heavy
-                mobile cards. */}
-            <div className="shrink-0 flex flex-col gap-1">
-              {(professional.portfolioCount || professional.certificationCount) ? (
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5">
-                  {professional.portfolioCount ? (
-                    <Link
-                      href={`/profesionales/${professional.slug}?tab=casos`}
-                      className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[#009FD9] hover:underline w-fit"
-                    >
-                      <ImageIcon className="h-3.5 w-3.5" />
-                      {tCard("viewCases")}
-                    </Link>
-                  ) : null}
-                  {professional.certificationCount ? (
-                    <Link
-                      href={`/profesionales/${professional.slug}?tab=certificaciones`}
-                      className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[#009FD9] hover:underline w-fit"
-                    >
-                      <Award className="h-3.5 w-3.5" />
-                      {tCard("viewCertifications")}
-                    </Link>
-                  ) : null}
-                </div>
-              ) : null}
-              <Link
-                href={`/profesionales/${professional.slug}`}
-                className="inline-flex w-fit items-center gap-1 text-[11px] font-semibold text-[#009FD9] hover:underline"
-              >
-                {tCard("viewProfile")} <ArrowRight className="h-3 w-3" />
-              </Link>
-            </div>
+            {/* Casos de éxito + certificaciones links (when present) — shrink-0 footer
+                so they're never clipped, and `relative z-10` so they sit ABOVE the
+                clickable-card overlay and reach their specific profile tabs. (The
+                whole card is clickable to the profile — see the stretched link below —
+                so a separate "Ver perfil completo" link is no longer needed.) */}
+            {(professional.portfolioCount || professional.certificationCount) ? (
+              <div className="relative z-10 shrink-0 flex flex-wrap items-center gap-x-3 gap-y-0.5">
+                {professional.portfolioCount ? (
+                  <Link
+                    href={`/profesionales/${professional.slug}?tab=casos`}
+                    className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[#009FD9] hover:underline w-fit"
+                  >
+                    <ImageIcon className="h-3.5 w-3.5" />
+                    {tCard("viewCases")}
+                  </Link>
+                ) : null}
+                {professional.certificationCount ? (
+                  <Link
+                    href={`/profesionales/${professional.slug}?tab=certificaciones`}
+                    className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[#009FD9] hover:underline w-fit"
+                  >
+                    <Award className="h-3.5 w-3.5" />
+                    {tCard("viewCertifications")}
+                  </Link>
+                ) : null}
+              </div>
+            ) : null}
           </div>
 
           {/* ── Action zone: availability + contact/primary actions. A mobile
                  min-height keeps every card the SAME height regardless of the
                  button-layout type (private/with-call/without-call); on desktop the
                  row layout + card min-h govern. ── */}
-          <div className="md:w-[232px] md:shrink-0 md:border-l md:border-[#f3f4f6] md:pl-4 pt-3 md:pt-0 border-t border-[#f3f4f6] md:border-t-0 flex flex-col">
+          <div className="relative z-10 md:w-[232px] md:shrink-0 md:border-l md:border-[#f3f4f6] md:pl-4 pt-3 md:pt-0 border-t border-[#f3f4f6] md:border-t-0 flex flex-col">
             <div className="flex-1 min-h-0">
               <ProfessionalSchedule
                 professional={professional}
@@ -347,6 +340,18 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
           </div>
         </div>
       </div>
+
+      {/* Stretched, low-z overlay link: the WHOLE card opens the professional's full
+          profile (replaces the removed "Ver perfil completo"). Interactive bits
+          (reviews link, casos/cert, the schedule + its buttons) sit at `relative z-10`
+          ABOVE this overlay and keep working; the favorites bookmark (z-20, in
+          SaveableCard) is above it too. */}
+      <Link
+        href={`/profesionales/${professional.slug}`}
+        className="absolute inset-0 z-0"
+        tabIndex={-1}
+        aria-hidden
+      />
     </div>
   );
 }
