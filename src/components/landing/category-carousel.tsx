@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import Image from "next/image";
 import { useLocale } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
-import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { getCategoryLabel } from "@/lib/data/categories";
 
 /* ONE single staggered (zigzag) carousel. All cards live in ONE track that
@@ -71,9 +71,8 @@ function Card({ id, lifted, onLinkClick }: { id: string; lifted: boolean; onLink
           className="absolute inset-0"
           style={{ background: "linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.18) 58%, transparent 100%)" }}
         />
-        <div className="absolute bottom-0 left-0 right-0 p-4 flex items-end justify-between gap-2">
+        <div className="absolute bottom-0 left-0 right-0 p-4">
           <span className="text-white font-bold text-[15px] drop-shadow leading-tight line-clamp-2">{label}</span>
-          <ArrowRight className="h-4 w-4 text-white/70 shrink-0 translate-x-1 opacity-0 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200" />
         </div>
       </Link>
     </div>
