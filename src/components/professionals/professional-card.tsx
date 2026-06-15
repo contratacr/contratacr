@@ -180,8 +180,11 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
     <div className={`group relative rounded-2xl bg-white border border-[#e5e7eb] hover:border-[#cbd5e1] hover:shadow-md transition-all duration-200 h-[360px] md:h-[232px] overflow-hidden ${className ?? ""}`}>
       <div className="p-3.5 pl-10 h-full">
         <div className="flex flex-col md:flex-row gap-3 h-full">
-          {/* ── Identity zone ── */}
-          <div className="flex-1 min-w-0 flex gap-3 overflow-hidden">
+          {/* ── Identity zone — a COLUMN: the avatar+info block (which clips its own
+                 overflow if a pro is very info-heavy) plus an ALWAYS-visible
+                 "Ver perfil completo" footer that is never clipped. ── */}
+          <div className="flex-1 min-w-0 flex flex-col gap-1.5 overflow-hidden">
+            <div className="flex gap-3 min-h-0 flex-1 overflow-hidden">
             <Link href={`/profesionales/${professional.slug}`} className="shrink-0">
               <Avatar className="h-[3.25rem] w-[3.25rem]">
                 <AvatarImage src={professional.avatarUrl} alt={professional.fullName} />
@@ -284,16 +287,19 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
                 )}
               </div>
 
-              {/* Lead into the full profile — casos de éxito, certificaciones and the
-                  full details live THERE. Always shown (uses the freed space) so it's
-                  obvious the card opens a richer profile. Bottom-anchored for uniformity. */}
-              <Link
-                href={`/profesionales/${professional.slug}`}
-                className="mt-auto inline-flex w-fit items-center gap-1 pt-0.5 text-[11px] font-semibold text-[#009FD9] hover:underline"
-              >
-                {tCard("viewProfile")} <ArrowRight className="h-3 w-3" />
-              </Link>
             </div>
+            </div>
+
+            {/* Lead into the full profile — ALWAYS visible (shrink-0 footer, OUTSIDE
+                the clipping block above), even on info-heavy mobile cards, so clients
+                can always open the full profile (casos de éxito, certificaciones and
+                full details live there). */}
+            <Link
+              href={`/profesionales/${professional.slug}`}
+              className="shrink-0 inline-flex w-fit items-center gap-1 text-[11px] font-semibold text-[#009FD9] hover:underline"
+            >
+              {tCard("viewProfile")} <ArrowRight className="h-3 w-3" />
+            </Link>
           </div>
 
           {/* ── Action zone: availability + contact/primary actions. A mobile
