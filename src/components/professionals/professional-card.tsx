@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { MapPin, Truck, Star } from "lucide-react";
+import { MapPin, Truck, Star, Info } from "lucide-react";
 import { ProfessionalSchedule, type ScheduleSlot } from "@/components/professionals/professional-schedule";
 import { Link } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -205,9 +205,13 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
             <p className="text-[12px] font-medium text-[#6b7280] line-clamp-2">{brandSecondary}</p>
           )}
         </div>
-        {/* Price — just the amount. Right-aligned; capped so a long price wraps. */}
+        {/* Price + info icon (HuliHealth style) — top of the left column, on the name line,
+            right-aligned. Just the amount; capped so a long price wraps. */}
         {priceLabel.includes("₡") && (
-          <p className="shrink-0 max-w-[45%] text-right text-sm font-bold leading-snug text-[#111827]">{priceLabel}</p>
+          <div className="shrink-0 flex max-w-[45%] items-start gap-1">
+            <span className="text-right text-sm font-bold leading-snug text-[#111827]">{priceLabel}</span>
+            <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#9ca3af]" aria-hidden />
+          </div>
         )}
       </div>
 

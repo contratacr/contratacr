@@ -289,50 +289,57 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const canPrev = effOffset > 0;
   const canNext = effOffset + COLS < consecutive.length;
 
-  // Bottom ACTION ROW (spans both columns) — CONDITIONAL on availability (NOT a layout
-  // change; same full-width row, only WHICH buttons render differs):
-  //  • HAS available schedules (the day strip is showing → canBook && hasUpcoming): show
-  //    ONLY "Solicitar servicio" (the schedule + "Ver horario completo" are the path).
-  //  • NO schedules (contact-to-coordinate state): show WhatsApp, plus "Llamar" ONLY when
-  //    phone calls are enabled (showCall). No "Solicitar servicio".
-  // All actions are blocked on the pro's OWN card. `min-w` lets them wrap on narrow widths.
+  // Action buttons live IN the right column (HuliHealth style), full width of that column —
+  // NOT a separate bottom strip. CONDITIONAL on availability (logic unchanged):
+  //  • HAS available schedules (the day strip is showing → canBook && hasUpcoming): the
+  //    OUTLINED "Ver horario completo" then the filled "Solicitar servicio" (no WhatsApp/Llamar).
+  //  • NO schedules (contact-to-coordinate state): WhatsApp, plus "Llamar" ONLY when phone
+  //    calls are enabled (showCall). No "Solicitar servicio".
+  // All actions are blocked on the pro's OWN card.
   const hasSchedule = canBook && hasUpcoming;
-  const actionRow = (hasSchedule || showWa || showCall) ? (
-    <div className="relative z-10 mt-3 flex flex-wrap gap-1.5">
-      {hasSchedule ? (
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); openBooking(); }}
-          className="flex-1 min-w-[170px] bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-semibold py-2 rounded-lg transition-colors"
+
+  const verHorarioButton = (
+    <button
+      type="button"
+      onClick={(e) => { e.stopPropagation(); openBooking(); }}
+      className="w-full rounded-lg border border-[#009FD9] py-2 text-sm font-semibold text-[#009FD9] hover:bg-[#EBF5FB] transition-colors"
+    >
+      {t("viewFullSchedule")}
+    </button>
+  );
+  const solicitarButton = (
+    <button
+      type="button"
+      onClick={(e) => { e.stopPropagation(); openBooking(); }}
+      className="w-full rounded-lg bg-[#009FD9] py-2 text-sm font-semibold text-white hover:bg-[#0089bb] transition-colors"
+    >
+      {t("requestService")}
+    </button>
+  );
+  const contactButtons = (
+    <>
+      {showWa && (
+        <a
+          href={isOwn ? undefined : waHref}
+          target={isOwn ? undefined : "_blank"}
+          rel="noopener noreferrer"
+          onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.whatsapp); } : (e) => e.stopPropagation()}
+          className="w-full inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#25D366] py-2 text-[13px] font-semibold text-white hover:bg-[#1ebe5d] transition-colors"
         >
-          {t("requestService")}
-        </button>
-      ) : (
-        <>
-          {showWa && (
-            <a
-              href={isOwn ? undefined : waHref}
-              target={isOwn ? undefined : "_blank"}
-              rel="noopener noreferrer"
-              onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.whatsapp); } : (e) => e.stopPropagation()}
-              className="flex-1 min-w-[130px] inline-flex items-center justify-center gap-1.5 bg-[#25D366] hover:bg-[#1ebe5d] text-white text-[13px] font-semibold py-2 rounded-lg transition-colors"
-            >
-              <WhatsAppIcon className="h-4 w-4" /> {t("whatsapp")}
-            </a>
-          )}
-          {showCall && (
-            <a
-              href={isOwn ? undefined : telHref}
-              onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.call); } : (e) => e.stopPropagation()}
-              className="flex-1 min-w-[120px] inline-flex items-center justify-center gap-1.5 border border-[#e5e7eb] text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] text-[13px] font-semibold py-2 rounded-lg transition-colors"
-            >
-              <Phone className="h-4 w-4" /> {t("call")}
-            </a>
-          )}
-        </>
+          <WhatsAppIcon className="h-4 w-4" /> {t("whatsapp")}
+        </a>
       )}
-    </div>
-  ) : null;
+      {showCall && (
+        <a
+          href={isOwn ? undefined : telHref}
+          onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.call); } : (e) => e.stopPropagation()}
+          className="w-full inline-flex items-center justify-center gap-1.5 rounded-lg border border-[#e5e7eb] py-2 text-[13px] font-semibold text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] transition-colors"
+        >
+          <Phone className="h-4 w-4" /> {t("call")}
+        </a>
+      )}
+    </>
+  );
 
   const scheduleNote = (text: string) => (
     <div className="rounded-lg bg-[#f9fafb] border border-[#f3f4f6] px-2.5 py-2">
@@ -410,32 +417,29 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
 
   return (
     <>
-      {/* DESKTOP (lg+) = TWO columns: [info + location tabs] | [schedule]. MOBILE = the
-          same blocks STACKED in one column (info, then schedule). The action row below
-          spans BOTH columns. Content-driven height — the card just grows for max content. */}
+      {/* DESKTOP (lg+) = TWO columns: [info + location tabs] | [schedule + buttons].
+          MOBILE = the same blocks STACKED in one column (info → schedule-or-message →
+          buttons). HuliHealth style: the action buttons live IN the right column (full
+          width of it), NOT a separate bottom strip. Content-driven height. */}
       <div className="flex flex-col gap-3 lg:grid lg:grid-cols-[minmax(0,1fr)_288px] lg:gap-5 lg:items-start">
         {/* LEFT — professional info (slotted from the card) + the location tabs/address. */}
         <div className="flex min-w-0 flex-col gap-2">
           {info}
           {locationControl}
         </div>
-        {/* RIGHT — schedule preview + "Ver horario completo". */}
+        {/* RIGHT — schedule (or contact message) on top, action buttons full-width below. */}
         <div className="relative z-10 flex min-w-0 flex-col gap-2">
           {scheduleBody}
-          {canBook && hasUpcoming && (
-            <button
-              type="button"
-              onClick={(e) => { e.stopPropagation(); openBooking(); }}
-              className="self-center text-[11px] font-medium text-[#009FD9] hover:underline whitespace-nowrap"
-            >
-              {t("viewFullSchedule")}
-            </button>
+          {hasSchedule ? (
+            <>
+              {verHorarioButton}
+              {solicitarButton}
+            </>
+          ) : (
+            contactButtons
           )}
         </div>
       </div>
-
-      {/* Action buttons — full-width row at the bottom, spanning both columns. */}
-      {actionRow}
 
       {bookingModals}
       {selfModal}

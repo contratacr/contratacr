@@ -980,10 +980,13 @@ Doctoralia-style. On **desktop (lg+)** the card body is TWO columns — professi
 LEFT, the schedule on the RIGHT — with a full-width action row spanning both. On **mobile** the
 same blocks STACK in one column (info, then schedule, then buttons). Content-driven height.
 
+HuliHealth-style: schedule + action buttons share the RIGHT column; there is NO full-width
+bottom button strip.
+
 **Who owns what (the server/client split matters):** `professional-card.tsx` is an ASYNC SERVER
 component; `professional-schedule.tsx` is the `"use client"` component holding ALL schedule
 state (location options, `effectiveId`, filtered slots, booking modals). Because the location
-TABS (left col), schedule preview (right col), and action buttons (bottom) all share that state,
+TABS (left col), schedule preview, and action buttons (right col) all share that state,
 they MUST live in ONE client component instance. So **`ProfessionalSchedule` owns the card-body
 LAYOUT** and the card passes its left-column info as a slot: `<ProfessionalSchedule info={…} />`.
 The info JSX (server-rendered) is the photo + name + Verificado + personal name + price + tags +
@@ -993,8 +996,9 @@ rating + location line; the schedule appends the location tabs/address to the le
   height, no `overflow-hidden`** — it grows for max content. Don't reintroduce a fixed `h-[…]`.
 - **Desktop layout (in ProfessionalSchedule):** `lg:grid lg:grid-cols-[minmax(0,1fr)_288px]
   lg:gap-5 lg:items-start`. LEFT = `{info}` + location tabs/address; RIGHT (`288px`, `relative
-  z-10`) = schedule day-columns + "Ver horario completo". Below the grid, the **action row spans
-  both columns**. On mobile the same wrapper is `flex flex-col gap-3` (stacked).
+  z-10`) = schedule-or-message ON TOP, then the **action buttons full-width of the right column**
+  (NO bottom strip). On mobile the same wrapper is `flex flex-col gap-3` (stacked: info → tabs →
+  schedule-or-message → buttons).
 - **Card WIDTH:** wrapper `w-full max-w-[520px] lg:max-w-none` — capped for the single-column
   mobile/tablet card, but on desktop it FILLS the results column, which hugs the wider two-column
   card responsively: `lg:w-[620px] xl:w-[680px] 2xl:w-[880px]` (≈820–900px ceiling). The **map
@@ -1003,20 +1007,21 @@ rating + location line; the schedule appends the location tabs/address to the le
   (+ `rounded-xl` on the fallback) — `cn`/tailwind-merge overrides the Avatar's default
   `rounded-full`. Same square photo on mobile, just smaller.
 - **Header uses the full width:** identity (square photo + company name + Verificado + personal
-  name) on the LEFT (`min-w-0 flex-1`); **price right-aligned** in its own `shrink-0
-  max-w-[45%]` column. Price sits below the favorite bookmark (the `pt-10` band clears it); it's
-  NOT `z-10` so the stretched card overlay still routes its clicks to the profile.
+  name) on the LEFT (`min-w-0 flex-1`); the **PRICE is at the TOP-right of the left column, on
+  the name line, with a small grey info icon** (`Info`, HuliHealth style) — `shrink-0 flex
+  max-w-[45%] items-start gap-1`. It sits below the favorite bookmark (the `pt-10` band clears
+  it); NOT `z-10` so the stretched card overlay still routes its clicks to the profile.
 - **Schedule (right column) = consecutive day-columns** from the first day WITH availability,
   paged 3 at a time; days in the window with none show **"No disponible"** (`schedule.dayUnavailable`),
   Doctoralia-style. No bookable schedule → a short note. The slot DATA/fetch is UNCHANGED — this
   only changes how the already-fetched `days` display.
-- **Action row** (`professional-schedule.tsx`): a single full-width `flex flex-wrap gap-1.5`
-  row, `relative z-10`, at the bottom spanning both columns. Its CONTENTS are **conditional on
-  availability** (the position never changes): if the day strip is showing
-  (`hasSchedule = canBook && hasUpcoming`) → ONLY **"Solicitar servicio"** (the schedule + "Ver
-  horario completo" are the booking path; no WhatsApp/Llamar). Otherwise (contact-to-coordinate
-  state) → **WhatsApp**, plus **"Llamar" only when `showCall`** (phone calls enabled); NO
-  "Solicitar servicio". `min-w-[…]` lets the contact buttons wrap on narrow widths.
+- **Action buttons (IN the right column, full width of it — HuliHealth style, NO bottom strip),
+  conditional on availability:** if the day strip is showing (`hasSchedule = canBook &&
+  hasUpcoming`) → the **OUTLINED "Ver horario completo"** (`border border-[#009FD9]
+  text-[#009FD9]`) then the **filled "Solicitar servicio"** (`bg-[#009FD9] text-white`); no
+  WhatsApp/Llamar. Otherwise (contact-to-coordinate state) → the message, then **WhatsApp**
+  stacked, plus **"Llamar" only when `showCall`** (phone calls enabled); NO "Solicitar servicio".
+  All buttons `w-full` (of the 288px right column on desktop; full width on mobile).
 - **No meaning-losing clipping (sized for MAX content):** company + personal name each wrap up
   to 2 lines (`line-clamp-2`) without colliding with the price; tags wrap + "+N"; location wraps
   + "+N"; location TABS scroll horizontally for 5+ locations; a busy day caps time chips with
