@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { ChevronLeft, ChevronRight, ChevronDown, MapPin, Phone } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPin, Phone } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { BookingModal } from "@/components/booking/booking-modal";
 import { ClientRegistrationModal } from "@/components/auth/client-registration-modal";
@@ -86,6 +86,12 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     if (id.startsWith("cov_")) return t("atHome");
     return professional.workplaces?.find((w) => w.id === id)?.name ?? t("location");
   }
+  // Street address for the detail line shown UNDER the location tabs. Only physical
+  // workplaces have one — coverage zones (cov_*) / videoconsulta / general don't.
+  function locAddress(id: string | null): string {
+    if (!id || id === "general" || id === "videoconsulta" || id.startsWith("cov_")) return "";
+    return professional.workplaces?.find((w) => w.id === id)?.address?.trim() ?? "";
+  }
   // ── SERVICE LOCATIONS (the durable list the selector is built from) ──
   // DURABLE source = the pro's named WORKPLACES, UNION any extra distinct locations
   // their slots carry (a-domicilio `cov_*`, videoconsulta). Keyed by id.
@@ -136,28 +142,55 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   // vanishes just because the chosen location currently has no slots. Shown whenever
   // the pro has any published slots. (Durable: independent of the per-branch returns.)
   const showLocationControl = locationOptions.length >= 1 && slots.length > 0;
+  // Address line shown UNDER the tabs for the currently-selected location.
+  const selectedAddress = effectiveId ? locAddress(effectiveId) : "";
   const locationControl = showLocationControl ? (
-    // `md:pr-9` keeps this top row clear of the card's top-right favorites bookmark.
-    <div className="min-w-0 md:pr-9">
+    <div className="min-w-0">
       {hasLocationSelector ? (
-        <div className="relative">
-          <MapPin className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-[#009FD9] pointer-events-none" />
-          <select
-            value={effectiveId ?? ""}
-            onClick={(e) => e.stopPropagation()}
-            onChange={(e) => { e.stopPropagation(); setSelectedLoc(e.target.value); setOffset(0); }}
-            aria-label={t("location")}
-            className="w-full appearance-none rounded-lg border border-[#bfdbfe] bg-[#EBF5FB] pl-6 pr-6 py-1 text-[11px] font-semibold text-[#0089bb] focus:outline-none focus:ring-2 focus:ring-[#009FD9] cursor-pointer truncate"
-          >
-            {locationOptions.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
-          </select>
-          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-[#0089bb] pointer-events-none" />
-        </div>
+        <>
+          {/* Horizontal TABS (Doctoralia-style): pin + name; the selected tab is
+              brand-blue with an underline, the rest muted. The row SCROLLS sideways
+              when the tabs exceed the card width — `shrink-0` + `whitespace-nowrap`
+              guarantee it never wraps (which would shift the buttons / break the
+              equal-height layout). `.hide-scrollbar` hides the scrollbar chrome. */}
+          <div className="-mx-1 flex gap-1 overflow-x-auto hide-scrollbar px-1" role="tablist" aria-label={t("location")}>
+            {locationOptions.map((o) => {
+              const active = o.id === effectiveId;
+              return (
+                <button
+                  key={o.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={(e) => { e.stopPropagation(); setSelectedLoc(o.id); setOffset(0); }}
+                  className={`shrink-0 inline-flex items-center gap-1 whitespace-nowrap border-b-2 px-1 pb-1 text-[11px] font-semibold transition-colors ${
+                    active
+                      ? "border-[#009FD9] text-[#009FD9]"
+                      : "border-transparent text-[#9ca3af] hover:text-[#374151]"
+                  }`}
+                >
+                  <MapPin className="h-3 w-3 shrink-0" />
+                  {o.label}
+                </button>
+              );
+            })}
+          </div>
+          {/* Selected location's address, directly below the tabs (when it has one). */}
+          {selectedAddress && (
+            <p className="mt-1 truncate text-[11px] text-[#6b7280]">{selectedAddress}</p>
+          )}
+        </>
       ) : (
-        <p className="flex items-center gap-1 text-[11px] leading-tight truncate">
-          <MapPin className="h-3 w-3 text-[#009FD9] shrink-0" />
-          <span className="truncate font-medium text-[#374151]">{locationOptions[0].label}</span>
-        </p>
+        // Single location → name (+ address) shown directly, no tab row.
+        <div className="min-w-0">
+          <p className="flex items-center gap-1 text-[11px] leading-tight">
+            <MapPin className="h-3 w-3 text-[#009FD9] shrink-0" />
+            <span className="truncate font-semibold text-[#374151]">{locationOptions[0].label}</span>
+          </p>
+          {locAddress(locationOptions[0].id) && (
+            <p className="mt-0.5 truncate pl-4 text-[11px] text-[#6b7280]">{locAddress(locationOptions[0].id)}</p>
+          )}
+        </div>
       )}
     </div>
   ) : null;
