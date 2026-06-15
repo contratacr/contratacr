@@ -1097,30 +1097,55 @@ map on top + filter chips + list.
   (`locationControl`) and render it in EVERY schedule branch (incl. no-upcoming) so it can't
   be dropped per-layout or trap the client on an empty location.
 
-## 51. /buscar page shell — desktop 3-column, MOBILE map-on-top (Yelp-style)
+## 51. /buscar page shell — desktop 3-column, MOBILE map-background + draggable bottom sheet
 
-`SearchResultsLayout` (`search-results-layout.tsx`) is the responsive shell. **Filtering/search
-LOGIC is unchanged** — every control drives the same URL params via `SearchFilters`.
+`SearchResultsLayout` (`search-results-layout.tsx`, `"use client"`) is the responsive shell.
+**Filtering/search LOGIC is unchanged** — every control drives the same URL params via
+`SearchFilters`.
+
+**THE GOLDEN RULE still holds** (see §50): desktop is the *additive `lg:`* layer; mobile is the
+base. Here the user explicitly redesigned MOBILE, so the unprefixed classes changed — but every
+mobile class carries a `lg:` reset so DESKTOP renders byte-identically (the only "extra" desktop
+property is a harmless `position: relative` on the shell, which has no positioned descendant on
+desktop). Verify with `git diff`: desktop columns/widths/sticky are untouched.
 
 - **Desktop unchanged:** xl+ = sticky filter sidebar · results column · sticky map; lg–xl =
-  results · map with a "Filtros" drawer button (now scoped `hidden lg:flex xl:hidden`). The
-  results column hugs the two-column card; the map is `lg:flex-1` (remaining width).
-- **Mobile (<lg) = Yelp pattern**, NOT a List/Map toggle (that was removed):
-  1. **Service search** pinned at the very top (`MobileServiceSearch`, the "Busca un servicio…"
-     field) — a self-contained component that manages ONLY `q` and preserves all other params by
-     copying the current URL.
-  2. **Map on TOP** (`h-[45vh]`, full width) with the pins.
-  3. **Results panel below:** a single **horizontally-scrollable filter chips row**
-     (`<SearchFilters variant="chips"/>` — Categoría/Provincia/Cantón/Ordenar/Aseguradora as pill
-     dropdowns + "Buscar cerca de mí" / "Solo verificados" toggle chips; `overflow-x-auto
-     hide-scrollbar`, never wraps), then the **"N profesionales" count**, then the vertical card
-     list.
-- **ONE map instance, repositioned via flex `order`** — NOT a second `<GoogleMapPanel>`. The
-  outer flex is `flex-col lg:flex-row`; map `order-2 lg:order-3`, results `order-3 lg:order-2`,
-  sidebar `xl:order-1`, mobile search `order-1 lg:hidden`. Keep the container `items-stretch`
-  (default) so the desktop map aside stretches and its inner `lg:sticky` div works.
+  results · map with a "Filtros" drawer button (`hidden lg:flex xl:hidden`). The results column
+  (`lg:w-[640px] xl:w-[700px] 2xl:w-[820px]`) hugs the two-column card; the map is `lg:flex-1`.
+  The shell is `lg:flex lg:flex-row lg:gap-5`; map `lg:order-3` (inner box `lg:sticky lg:top-20
+  lg:h-[calc(100vh-104px)] lg:rounded-2xl lg:border`), results `lg:order-2 lg:static`, sidebar
+  `lg:order-1 hidden xl:block`.
+- **Mobile (<lg) = map-as-BACKGROUND + a DRAGGABLE BOTTOM SHEET over it** (Yelp / Apple-Maps /
+  Airbnb pattern — the user sees the map AND the cards at the same time, superimposed). NOT the
+  old stacked map-on-top-then-list, and NOT a List/Map toggle.
+  - **The region** is one viewport tall and full-bleed: `relative -mx-4 -mt-4 h-[calc(100dvh-8rem)]
+    overflow-hidden sm:-mx-6` (negative margins cancel the page gutters/top-padding so the map
+    reaches the screen edges; `overflow-hidden` clips the off-screen part of the sheet). Reset on
+    desktop with `lg:mx-0 lg:mt-0 lg:h-auto lg:overflow-visible`.
+  - **The map** fills the region as the background: `absolute inset-0 z-0` (inner box `h-full
+    w-full`, no border/radius — full bleed), reset to the sticky column with `lg:static
+    lg:order-3 …`.
+  - **The sheet** is the results panel over the map: `absolute inset-x-0 bottom-0 z-30 flex
+    flex-col overflow-hidden rounded-t-2xl border bg-white shadow-[0_-8px_24px_rgba(0,0,0,.12)]`,
+    reset to the plain results column with `lg:static lg:order-2 lg:h-auto lg:bg-transparent
+    lg:border-0 lg:shadow-none lg:rounded-none lg:overflow-visible`. Top→bottom inside: a **grab
+    handle** (`lg:hidden`, the ONLY drag target so the list still scrolls natively), then the
+    **search + filter chips + count** (`lg:hidden` header — `MobileServiceSearch`, `<SearchFilters
+    variant="chips"/>`, the "N profesionales" count), then the **card list** in a `flex-1
+    overflow-y-auto overscroll-contain` scroll area (`lg:flex-none lg:overflow-visible` on
+    desktop).
+- **The drag is HEIGHT-based, NOT a transform.** The sheet's height = `100 - sheetPct`% of the
+  region (inline `style.height`, applied ONLY when `isMobile` so it can't leak past `lg:`). Sizing
+  by height (vs `translateY`) keeps the inner scroll area equal to the visible window — with a
+  transform the sheet box stays taller than the window and the LAST cards end up below the fold,
+  unreachable. Snap detents are `SNAP = { full: 12, mid: 52, peek: 80 }` (% map at top; default
+  `mid`). Pointer events on the handle update `sheetPct`; on release it snaps to the nearest
+  detent; a tap (<6px) toggles full↔mid. SSR default `h-[48%]` (= mid) avoids a pre-hydration
+  flash; `isMobile` comes from `matchMedia("(max-width: 1023px)")`.
+- **ONE map instance** — NOT a second `<GoogleMapPanel>`. The single map element morphs from
+  full-bleed `absolute` (mobile) to the sticky `lg:static` column (desktop) via responsive
+  classes; never duplicate it (a hidden 2nd instance wastes a Maps load + tiles).
 - **No clobbering between the search bar and the chips:** the search bar copies the live URL
   (preserving filters); the chips' `applyFilters` reads `q` from the URL (not the chip
-  instance's stale local state). Two instances of `SearchFilters` would otherwise overwrite each
-  other's params — keep this split. The mobile count is shown in the panel, so the page-header
-  subtitle is `hidden lg:block` (no duplication).
+  instance's stale local state). Keep this split. The mobile count is shown in the sheet, so the
+  page-header subtitle is `hidden lg:block` (no duplication).
