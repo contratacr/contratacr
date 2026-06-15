@@ -417,22 +417,28 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
 
   return (
     <>
-      {/* MOBILE (<lg) = SINGLE column, UNCHANGED: [info + tabs] then [schedule + buttons]
-          stacked (`flex flex-col gap-3`, blocks `gap-2`). DESKTOP (lg+) = a COMPACT HORIZONTAL
-          card: info+tabs on the LEFT, schedule+buttons on the RIGHT (fixed `300px`), so the
-          card is much SHORTER and more fit per screen. The LEFT info column is the larger one;
-          the schedule rail is a fixed 260px. All `lg:` here is ADDITIVE on the mobile base, so
-          mobile renders byte-identically. `lg:items-start` keeps both columns their natural
-          (compact) height; desktop gaps are tighter (`lg:gap-1.5`). */}
+      {/* MOBILE (<lg) = SINGLE column: [info] then [location + schedule + buttons] stacked
+          (`flex flex-col gap-3`, blocks `gap-2`). DESKTOP (lg+) = a COMPACT HORIZONTAL card:
+          info on the LEFT (larger), the location selector + schedule + buttons on the RIGHT
+          (fixed `260px`), so the card is much SHORTER and more fit per screen. All `lg:` here
+          is ADDITIVE on the mobile base. `lg:items-start` keeps both columns their natural
+          (compact) height; desktop gaps are tighter (`lg:gap-1.5`).
+
+          The LOCATION selector/label lives WITH the schedule (right column), TIGHTLY grouped
+          directly above its slots (`gap-1`) so each location + its time slots read as ONE
+          connected unit — NOT split across columns (which made them look disconnected). */}
       <div className="flex flex-col gap-3 lg:grid lg:grid-cols-[minmax(0,1fr)_260px] lg:gap-4 lg:items-start">
-        {/* LEFT — professional info (slotted from the card) + the location tabs/address. */}
+        {/* LEFT — professional info (slotted from the card). */}
         <div className="flex min-w-0 flex-col gap-2 lg:gap-1.5">
           {info}
-          {locationControl}
         </div>
-        {/* RIGHT — schedule (or contact message) on top, action buttons below. */}
+        {/* RIGHT — location + its schedule (grouped) on top, action buttons below. */}
         <div className="relative z-10 flex min-w-0 flex-col gap-2 lg:gap-1.5">
-          {scheduleBody}
+          {/* Location label/tabs sit TIGHT (`gap-1`) directly above their slots = one group. */}
+          <div className="flex flex-col gap-1">
+            {locationControl}
+            {scheduleBody}
+          </div>
           {hasSchedule ? (
             <>
               {verHorarioButton}

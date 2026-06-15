@@ -982,18 +982,25 @@ BASE, and the desktop layout is ADDITIVE `lg:` classes ON TOP of it.** Never cha
 mobile renders byte-identically while desktop changes. Verify with `git diff`: a desktop-only
 change must show ONLY `lg:`/`xl:`/`2xl:` additions.
 
-- **MOBILE (<lg):** a single vertical column — `flex flex-col gap-3`, blocks `gap-2`: [info +
-  location tabs] then [schedule-or-message + action buttons] stacked. Content-driven height.
+- **MOBILE (<lg):** a single vertical column — `flex flex-col gap-3`, blocks `gap-2`: [info]
+  then [location selector + schedule-or-message + action buttons] stacked. Content-driven height.
 - **DESKTOP (lg+): a COMPACT HORIZONTAL card** so more fit per screen. The wrapper adds
-  `lg:grid lg:grid-cols-[minmax(0,1fr)_260px] lg:gap-4 lg:items-start` → info+tabs in the LEFT
-  (larger) column, schedule+buttons in the RIGHT 260px rail — much SHORTER than stacking. Tighter
-  desktop gaps (`lg:gap-1.5`) and the name/personal-name clamp to 1 line on desktop
-  (`lg:line-clamp-1`, mobile keeps `line-clamp-2`). The desktop results column widens to fit it
-  (`lg:w-[640px] xl:w-[700px] 2xl:w-[820px]`, map `lg:flex-1`). Cards are near-uniform height via
-  the compact clamped content (no fixed height — that would truncate).
+  `lg:grid lg:grid-cols-[minmax(0,1fr)_260px] lg:gap-4 lg:items-start` → the **info in the LEFT
+  (larger) column**, and the **location selector + schedule + buttons in the RIGHT 260px rail** —
+  much SHORTER than stacking. Tighter desktop gaps (`lg:gap-1.5`) and the name/personal-name clamp
+  to 1 line on desktop (`lg:line-clamp-1`, mobile keeps `line-clamp-2`). The desktop results
+  column widens to fit it (`lg:w-[640px] xl:w-[700px] 2xl:w-[820px]`, map `lg:flex-1`). Cards are
+  near-uniform height via the compact clamped content (no fixed height — that would truncate).
+- **The LOCATION selector belongs WITH its schedule, not with the info.** The `locationControl`
+  (tabs/label + address) sits in the RIGHT rail, **TIGHTLY grouped (`gap-1`) directly above its
+  slots** — `<div className="flex flex-col gap-1">{locationControl}{scheduleBody}</div>` — so each
+  location + its time slots read as ONE connected unit. Do NOT put `locationControl` in the LEFT
+  info column (that split the label from its slots across columns and looked disconnected). The
+  info's own location LINE ("San Ramón, Alajuela" + "se desplaza") stays in the info — that's the
+  general summary, separate from the per-location selector.
 
-Within each column the schedule + action buttons sit together (schedule on top, buttons below);
-there is NO separate full-width bottom button strip.
+Within the right rail the schedule + action buttons sit together (location+schedule on top,
+buttons below); there is NO separate full-width bottom button strip.
 
 **Who owns what (the server/client split matters):** `professional-card.tsx` is an ASYNC SERVER
 component; `professional-schedule.tsx` is the `"use client"` component holding ALL schedule
