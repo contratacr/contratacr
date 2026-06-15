@@ -973,14 +973,17 @@ off, bottom buttons disappearing, uneven heights). These rules ARE the fix — n
   height and no `overflow-hidden`** — it grows to fit, so nothing is ever truncated to fit a
   height. Do NOT reintroduce a fixed `h-[…]` or `overflow-hidden` on the card. (`h-full` on the
   article is harmless in the single-column list — it just resolves to the content height.)
-- **Results layout = SINGLE vertical column.** The list container is `flex flex-col gap-3` —
-  ONE card per row, each spanning the FULL width of the results column (NOT a multi-column
-  grid), so cards are comfortably wide next to the map. One card per row → each card simply
-  grows to its content; there is **no equal-height-per-row** coupling (that only mattered for a
-  grid, and was removed — `SaveableCard` is back to a plain `relative` wrapper, no `h-full`).
-  This is the chosen layout: a wide single-column list flanked by the sticky map. (History: an
-  auto-fill grid was tried to fix a full-width ballooning bug, but multi-column squeezed the
-  cards next to the map — single column + a narrower map (below) is the resolution.)
+- **Results layout = SINGLE vertical column, with a CAPPED card width.** The list container is
+  `flex flex-col gap-3` — ONE card per row (NOT a multi-column grid). Each card wrapper is
+  **`w-full max-w-[500px]`** so the card reads at a comfortable width and NEVER stretches to
+  fill the column (≤~560px is the ceiling; at ~500px the WhatsApp/Llamar buttons sit nicely
+  side by side). The results COLUMN hugs that width on desktop (`lg:w-[500px] lg:shrink-0`,
+  full width on mobile) and the **map takes the remaining space** (`lg:flex-1`). One card per
+  row → each card grows to its content; there is **no equal-height-per-row** coupling (that
+  only mattered for a grid, and was removed — `SaveableCard` is a plain `relative` wrapper, no
+  `h-full`). (History: full-width single column looked empty/stretched; an auto-fill grid
+  squeezed cards next to the map — a capped ~500px card in a hugging column + a flexible map is
+  the resolution.)
 - **ONE vertical flex column**, identical sections + order + spacing for every card. The
   ACTION AREA is bottom-pinned with **`mt-auto`** so "ver horario completo" + the WhatsApp /
   Llamar / Solicitar buttons are ALWAYS visible regardless of content above.
@@ -1008,10 +1011,10 @@ completo" link.
 **ON THE PROFILE ONLY — not on the card:** Casos de éxito, Certificaciones, social-media
 icons. Do NOT re-add them to the card.
 
-**List/map split (desktop):** filter sidebar (left) · single-column results list (middle) ·
-sticky map (right). The map is `lg:w-[40%] xl:w-[38%]` — deliberately NOT dominant — so the
-results column keeps ~60% for comfortably WIDE full-width cards. Mobile keeps the List/Map
-toggle (stacked); these widths are `lg:`/`xl:` only.
+**List/map split (desktop):** filter sidebar (left) · single-column results list (middle,
+hugs the ~500px capped card via `lg:w-[500px] lg:shrink-0`) · sticky map (right, `lg:flex-1`
+taking the remaining space). Mobile keeps the List/Map toggle (stacked); the column/map widths
+are `lg:` only.
 
 **No-overlap / consistency rules:**
 - The favorite bookmark is `absolute top-2.5 right-2.5`; the card's `pt-10` top band keeps
