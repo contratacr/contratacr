@@ -956,6 +956,7 @@
     "identityVerified": "Verified",
     "identityUnverified": "Identity unverified",
     "verificationRejected": "Verification rejected",
+    "verifyInvite": "Verify your identity",
     "groupPro": "My professional profile",
     "groupClient": "Hire services",
     "tabs": {

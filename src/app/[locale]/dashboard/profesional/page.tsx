@@ -237,14 +237,19 @@ export default function ProDashboardPage() {
               <div>
                 <h1 className="text-xl font-bold text-[#111827]">{pro.profiles?.full_name}</h1>
                 <div className="flex items-center gap-2 mt-1 flex-wrap">
-                  {pro.verification_status === "verified" && (
+                  {pro.verification_status === "verified" ? (
                     <Badge variant="verified">{t("identityVerified")}</Badge>
-                  )}
-                  {(pro.verification_status === "pending" || pro.verification_status === "under_appeal") && (
-                    <Badge variant="warning">{t("identityUnverified")}</Badge>
-                  )}
-                  {pro.verification_status === "rejected" && (
-                    <Badge variant="error">{t("verificationRejected")}</Badge>
+                  ) : (
+                    // NOT verified → a positive, OPTIONAL invitation (never a negative
+                    // "sin verificar" label) that opens the Verificación tab, where the
+                    // detailed status + actions live. Public view shows NO label.
+                    <button
+                      type="button"
+                      onClick={() => setTab("verificacion")}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-[#bfdbfe] bg-[#EBF5FB] px-3 py-1 text-xs font-semibold text-[#0089bb] hover:bg-[#dbeafe] transition-colors"
+                    >
+                      <ShieldCheck className="h-3.5 w-3.5" /> {t("verifyInvite")}
+                    </button>
                   )}
                 </div>
               </div>
