@@ -1010,9 +1010,13 @@ rating + location line; the schedule appends the location tabs/address to the le
   paged 3 at a time; days in the window with none show **"No disponible"** (`schedule.dayUnavailable`),
   Doctoralia-style. No bookable schedule → a short note. The slot DATA/fetch is UNCHANGED — this
   only changes how the already-fetched `days` display.
-- **Action row** (`professional-schedule.tsx`): WhatsApp + Llamar + Solicitar servicio in ONE
-  `flex flex-wrap gap-1.5` row — side by side on desktop, wrapping to a 2nd line on narrow
-  widths via `min-w-[…]`; `relative z-10`, always visible at the bottom spanning both columns.
+- **Action row** (`professional-schedule.tsx`): a single full-width `flex flex-wrap gap-1.5`
+  row, `relative z-10`, at the bottom spanning both columns. Its CONTENTS are **conditional on
+  availability** (the position never changes): if the day strip is showing
+  (`hasSchedule = canBook && hasUpcoming`) → ONLY **"Solicitar servicio"** (the schedule + "Ver
+  horario completo" are the booking path; no WhatsApp/Llamar). Otherwise (contact-to-coordinate
+  state) → **WhatsApp**, plus **"Llamar" only when `showCall`** (phone calls enabled); NO
+  "Solicitar servicio". `min-w-[…]` lets the contact buttons wrap on narrow widths.
 - **No meaning-losing clipping (sized for MAX content):** company + personal name each wrap up
   to 2 lines (`line-clamp-2`) without colliding with the price; tags wrap + "+N"; location wraps
   + "+N"; location TABS scroll horizontally for 5+ locations; a busy day caps time chips with

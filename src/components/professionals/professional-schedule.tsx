@@ -274,42 +274,6 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const showCall = !!professional.allowPhoneCall && !!(professional.callPhone || professional.whatsapp);
   const waHref = getWhatsAppLink(professional.whatsapp, `Hola ${professional.fullName.split(" ")[0]}, vi tu perfil en ContrataCR y me gustaría coordinar un servicio.`);
   const telHref = `tel:+${((professional.callPhone || professional.whatsapp) || "").replace(/\D/g, "")}`;
-  // Bottom ACTION ROW (spans both columns): WhatsApp + Llamar + Solicitar servicio in
-  // ONE wrapping flex row — side by side on desktop, wrapping to a second line on narrow
-  // widths (via `min-w`) so they never overflow. All blocked on the pro's OWN card.
-  const actionRow = (showWa || showCall || canBook) ? (
-    <div className="relative z-10 mt-3 flex flex-wrap gap-1.5">
-      {showWa && (
-        <a
-          href={isOwn ? undefined : waHref}
-          target={isOwn ? undefined : "_blank"}
-          rel="noopener noreferrer"
-          onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.whatsapp); } : (e) => e.stopPropagation()}
-          className="flex-1 min-w-[130px] inline-flex items-center justify-center gap-1.5 bg-[#25D366] hover:bg-[#1ebe5d] text-white text-[13px] font-semibold py-2 rounded-lg transition-colors"
-        >
-          <WhatsAppIcon className="h-4 w-4" /> {t("whatsapp")}
-        </a>
-      )}
-      {showCall && (
-        <a
-          href={isOwn ? undefined : telHref}
-          onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.call); } : (e) => e.stopPropagation()}
-          className="flex-1 min-w-[120px] inline-flex items-center justify-center gap-1.5 border border-[#e5e7eb] text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] text-[13px] font-semibold py-2 rounded-lg transition-colors"
-        >
-          <Phone className="h-4 w-4" /> {t("call")}
-        </a>
-      )}
-      {canBook && (
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); openBooking(); }}
-          className="flex-[1.4] min-w-[170px] bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-semibold py-2 rounded-lg transition-colors"
-        >
-          {t("requestService")}
-        </button>
-      )}
-    </div>
-  ) : null;
 
   // ── Schedule body (the RIGHT column on desktop) ───────────────────────────
   // Consecutive upcoming day-columns starting from the FIRST day that has any
@@ -324,6 +288,51 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const windowDays = consecutive.slice(effOffset, effOffset + COLS);
   const canPrev = effOffset > 0;
   const canNext = effOffset + COLS < consecutive.length;
+
+  // Bottom ACTION ROW (spans both columns) — CONDITIONAL on availability (NOT a layout
+  // change; same full-width row, only WHICH buttons render differs):
+  //  • HAS available schedules (the day strip is showing → canBook && hasUpcoming): show
+  //    ONLY "Solicitar servicio" (the schedule + "Ver horario completo" are the path).
+  //  • NO schedules (contact-to-coordinate state): show WhatsApp, plus "Llamar" ONLY when
+  //    phone calls are enabled (showCall). No "Solicitar servicio".
+  // All actions are blocked on the pro's OWN card. `min-w` lets them wrap on narrow widths.
+  const hasSchedule = canBook && hasUpcoming;
+  const actionRow = (hasSchedule || showWa || showCall) ? (
+    <div className="relative z-10 mt-3 flex flex-wrap gap-1.5">
+      {hasSchedule ? (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); openBooking(); }}
+          className="flex-1 min-w-[170px] bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-semibold py-2 rounded-lg transition-colors"
+        >
+          {t("requestService")}
+        </button>
+      ) : (
+        <>
+          {showWa && (
+            <a
+              href={isOwn ? undefined : waHref}
+              target={isOwn ? undefined : "_blank"}
+              rel="noopener noreferrer"
+              onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.whatsapp); } : (e) => e.stopPropagation()}
+              className="flex-1 min-w-[130px] inline-flex items-center justify-center gap-1.5 bg-[#25D366] hover:bg-[#1ebe5d] text-white text-[13px] font-semibold py-2 rounded-lg transition-colors"
+            >
+              <WhatsAppIcon className="h-4 w-4" /> {t("whatsapp")}
+            </a>
+          )}
+          {showCall && (
+            <a
+              href={isOwn ? undefined : telHref}
+              onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.call); } : (e) => e.stopPropagation()}
+              className="flex-1 min-w-[120px] inline-flex items-center justify-center gap-1.5 border border-[#e5e7eb] text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] text-[13px] font-semibold py-2 rounded-lg transition-colors"
+            >
+              <Phone className="h-4 w-4" /> {t("call")}
+            </a>
+          )}
+        </>
+      )}
+    </div>
+  ) : null;
 
   const scheduleNote = (text: string) => (
     <div className="rounded-lg bg-[#f9fafb] border border-[#f3f4f6] px-2.5 py-2">
