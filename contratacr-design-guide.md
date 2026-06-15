@@ -935,43 +935,45 @@ guard — they rely on flush-on-blur + flush-on-unmount above. That combination 
 fixed the "edit a field, switch section, lose the change" bug. Any NEW editable section
 must follow this standard.
 
-## 50. /buscar card = a SUMMARY (card decides "open or not"; detail lives on the profile)
+## 50. /buscar card — keep the rich card, SUMMARIZE to fit (casos/cert live on the profile)
 
-The search card is a scannable SUMMARY (Airbnb/Thumbtack model), NOT a mini-profile.
-After ~10 incremental patches the old "show everything" card kept overflowing; the fix
-was to cap/summarize content so minimal and maximal pros render identically in a FIXED
-uniform height. Files: `professional-card.tsx` + `professional-schedule.tsx`. Card
-height is FIXED `h-[330px] md:h-[216px]` (never grows), sized for the richest case so
-nothing is ever cut off.
+The search card keeps its full information (a Sprint 134 "strip it to a summary"
+redesign was REVERTED — it removed too much). The right model is: **keep everything,
+arrange it to fit, and summarize long lists** (primary "+N"). Two-zone responsive shell
+(`professional-card.tsx` identity zone + `professional-schedule.tsx` action zone), FIXED
+uniform height `h-[360px] md:h-[232px]` (don't grow).
 
-**Essential ON the card (and nothing more):**
-- Avatar; **company/brand (bold primary)** + person name (smaller secondary); Verificado
-  pill beside the name; price; PRIMARY profession + "+N"; rating (★ + count); PRIMARY
-  location + "+N" (+ a coverage line for mobile pros); a soonest-times schedule GLIMPSE
-  (up to 3 quick-book chips "Hoy 15:00") + **Solicitar servicio** (opens the full
-  calendar in `BookingModal`) + WhatsApp.
+**ON the card (keep all of this):** avatar; **company/brand (bold primary)** + person
+name (smaller secondary, never dropped — see below); Verificado pill beside the name;
+price; professions (primary + up to 2 chips + "+N"); rating (★ + "N reseñas" link);
+location SUMMARY (primary place "+N" + a coverage line for mobile pros); the inline
+**availability schedule** (3-day grid, ~3 slots PC / ~2 mobile, multi-location selector,
+paging arrows, tappable chips that open `BookingModal`); WhatsApp + "Solicitar servicio".
+Plus a **"Ver perfil completo →"** link (`card.viewProfile`) — the card clearly leads
+into the profile.
 
-**Lives ONLY on the profile / in the booking modal (do NOT add to the card):**
-- All addresses, all professions, the FULL multi-day scheduler + multi-location selector
-  + paging arrows, casos de éxito, certifications. New detail goes here, not the card.
+**The ONLY things removed from the card → live ONLY on the profile:** **Casos de éxito**
+and **Certificaciones**. The profile (`profesionales/[slug]`) has dedicated tabs for both;
+the "Ver perfil completo" link + avatar/name links take clients there. Do NOT re-add
+casos/cert chips/links to the card.
 
 **Name + price rules** (company-first; person NEVER dropped, esp. mobile):
-- Name line = company/brand + Verificado pill (both breakpoints). With no company the
-  person's name is the primary (abbreviated `shortPersonName` = first + both surnames).
+- Name line = company/brand + Verificado pill. With no company the person's name is the
+  primary (abbreviated `shortPersonName` = first + both surnames).
 - DESKTOP: price far-right on the name line (`hidden md:inline-block md:ml-auto`); person
   name on the line below (`hidden md:block`).
 - MOBILE: name line is ONLY company + Verificado; a `md:hidden` secondary line holds the
   **person name (left) + price (right, `ml-auto`, `pr-9`)**. Don't move price back onto
   the mobile name line; don't gate the person name behind space.
 
-**Uniformity / no-overlap rules (keep these):**
-- Location/profession are single-line truncating SUMMARIES (primary "+N") — never
-  multi-line wrap that clips, never the full list.
-- The favorites bookmark is `absolute top-2.5 right-2.5`; any top content must clear it
-  (`pr-9` on the mobile name/secondary lines and on the desktop glimpse row). Do NOT put
-  a full-width control (e.g. a `<select>`) at the top of the right/action column — that
-  was what overlapped the bookmark.
-- Schedule on the card is a GLIMPSE only (flat soonest chips + "+N" → opens the modal);
-  no inline day-grid, no location `<select>`, no prev/next arrows on the card.
+**Uniformity / no-overlap rules:**
+- Location/professions are single-line truncating SUMMARIES (primary "+N") — never
+  multi-line wrap that clips, never the full list (full list = profile).
+- The favorites bookmark is `absolute top-2.5 right-2.5`; any top-right content must clear
+  it: `pr-9` on the mobile name/secondary lines, and `md:pr-9` on the schedule's top
+  selector/label row (the grid itself is vertically centered, so it's already clear). A
+  full-width control (e.g. the location `<select>`) at the very top of the action column
+  WILL overlap the bookmark unless padded.
 - Custom selects use `appearance-none` + an absolute `ChevronDown` (never the native OS
-  arrow) so the chevron is aligned/consistent.
+  arrow) so the chevron is aligned/consistent (e.g. the availability editor's interval
+  select).
