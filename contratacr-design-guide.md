@@ -951,10 +951,21 @@ find the 'X' column" / schema cache). The old fallback re-saved with ONLY the co
 `social_links`. **Rule:** write the core (always-present) columns first (throw on error), then
 each independent optional group in its OWN `update()` — `workplaces`+`search_*`,
 `certifications`, `social_links`, the contact/coverage identity fields, etc. — so a missing
-column in one group can never wipe another. For data the user actively edited (locations,
-usernames), **CHECK the write result and surface a real error** (never a false "Guardado");
-for purely optional columns, swallow only the migration errors (`could not find|PGRST204|schema
-cache|<column names>`) and re-throw anything else.
+column in one group can never wipe another.
+
+**Only CORE + the user-edited primary data may be FATAL; every other write is best-effort and
+must NOT throw.** In a single `handleSave` that autosaves the WHOLE form, any throw skips the
+success path (`setDirty(false)`), so the form stays `dirty` — which makes the
+`UnsavedChangesGuard` fire the native "Changes you made may not be saved." beforeunload warning
+FOREVER, even though the core/locations already saved. This was the recurring "zones don't save
++ beforeunload won't clear" bug: a `social_links` write threw because column 056 isn't migrated
+in prod, aborting the save after the zones had persisted. **Rule:** throw ONLY for the core
+update and the locations update (`workplaces`); make identity/certs/social writes best-effort —
+log on failure, set a SOFT warning (shown via `setError` AFTER `setDirty(false)`) only for a
+real failure with user data present, and swallow migration-missing errors entirely. So `dirty`
+clears (and the beforeunload stops) whenever core + locations succeed, regardless of which
+optional column is unmigrated. Keep the global `UnsavedChangesGuard` (it protects the debounce
+window for ALL sections) — the fix is reliable dirty-clearing, NOT removing the guard.
 
 **Autosave reassurance line.** Every autosaving section shows a muted helper
 `"Los cambios se guardan automáticamente."` / `"Changes are saved automatically."`
@@ -986,19 +997,30 @@ off, bottom buttons disappearing, uneven heights). These rules ARE the fix — n
   the resolution.)
 - **ONE vertical flex column**, identical sections + order + spacing for every card. The
   ACTION AREA is bottom-pinned with **`mt-auto`** so "ver horario completo" + the WhatsApp /
-  Llamar / Solicitar buttons are ALWAYS visible regardless of content above.
-- **No meaning-losing clipping:** company/personal name wraps up to 2 lines
-  (`line-clamp-2`); service tags wrap + cap with "+N"; the location line wraps to a 2nd line
-  and keeps the "+N" pattern for extra locations.
+  Llamar / Solicitar buttons are ALWAYS visible regardless of content above. Inter-section
+  spacing is tight (`mt-2.5`/`mt-1.5`, action `pt-2.5`) so a low-content card isn't airy.
+- **Header uses the FULL width:** the identity (logo + company name + Verificado + personal
+  name) is on the LEFT in a `min-w-0 flex-1` column; the **PRICE is right-aligned in its own
+  `shrink-0` column** on the right (so there's no empty top-right). The price sits just BELOW
+  the favorite bookmark — the `pt-10` band clears the bookmark, so they never overlap. The
+  price is NOT `z-10` (it's not a link) so the stretched card overlay still routes its clicks
+  to the profile; `max-w-[45%]` lets a very long price wrap instead of crowding the name.
+- **No meaning-losing clipping (sized for MAX content):** company name AND personal name each
+  wrap up to 2 lines (`line-clamp-2`) in the left column without colliding with the price;
+  service tags wrap to multiple lines + cap with "+N"; the location line wraps + "+N"; the
+  schedule's location TABS scroll horizontally for 5+ locations; a busy day caps time chips
+  with "+N". In the max case the card simply GROWS taller — nothing clips, collides, or pushes
+  the buttons out of place.
 
 **Section order (top → bottom):** ranking number badge + favorite bookmark (both ABSOLUTE
 overlays — number top-left from the page wrapper, favorite top-right from `SaveableCard`;
-the card reserves a top band with **`pt-10`** so they NEVER overlap content) → company logo
-(avatar) → company name + **Verificado** badge → personal name (first + both surnames,
-`shortPersonName`; only when a company leads) → price (own line) → service tags → rating +
-review count (only the count links to the reviews tab) → location ("+N" for extra places) →
-"se desplaza a tu ubicación" → **`ProfessionalSchedule`** (location selector → compact
-schedule preview + "ver horario completo" → action buttons). All scheduling / availability /
+the card reserves a top band with **`pt-10`** so they NEVER overlap content) → **header row**:
+[company logo (avatar)] · [company name + **Verificado** badge, then personal name (first +
+both surnames, `shortPersonName`, when a company leads)] · [**price**, right-aligned] → service
+tags → rating + review count (only the count links to the reviews tab) → location ("+N" for
+extra places) → "se desplaza a tu ubicación" → **`ProfessionalSchedule`** (location tabs →
+compact schedule preview + "ver horario completo" → action buttons). All scheduling /
+availability /
 filtering LOGIC lives in `ProfessionalSchedule` and is NOT changed by card-layout work.
 
 **Whole card opens the profile (stretched link).** A low-z overlay `<Link absolute inset-0
