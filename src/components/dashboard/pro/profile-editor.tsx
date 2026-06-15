@@ -48,7 +48,8 @@ const FIELD_SECTION: Record<string, string> = {
 // it's quick to scan and edit. Presentation only; all fields still live in the
 // same form/state and save identically. CONTROLLED by the editor so a
 // "Completa tu perfil" item can open the right section and scroll to its field.
-function Section({ id, title, desc, open, onToggle, children }: { id: string; title: string; desc?: string; open: boolean; onToggle: (id: string) => void; children: React.ReactNode }) {
+function Section({ id, title, desc, open, onToggle, autosave = true, children }: { id: string; title: string; desc?: string; open: boolean; onToggle: (id: string) => void; autosave?: boolean; children: React.ReactNode }) {
+  const t = useTranslations("profileEditor");
   return (
     <div id={`sec-${id}`} className="rounded-2xl border border-[#e5e7eb] bg-white overflow-hidden scroll-mt-24">
       <button
@@ -63,7 +64,14 @@ function Section({ id, title, desc, open, onToggle, children }: { id: string; ti
         </div>
         <ChevronDown className={cn("h-4 w-4 text-[#9ca3af] shrink-0 transition-transform", open && "rotate-180")} />
       </button>
-      {open && <div className="px-4 pb-4 pt-1 flex flex-col gap-4 border-t border-[#f3f4f6]">{children}</div>}
+      {open && (
+        <div className="px-4 pb-4 pt-1 flex flex-col gap-4 border-t border-[#f3f4f6]">
+          {children}
+          {/* These sections autosave (via `touch()`); reassure the pro consistently —
+              same spot (bottom of the open section) and style in every section. */}
+          {autosave && <p className="text-xs text-[#9ca3af]">{t("autosaveNote")}</p>}
+        </div>
+      )}
     </div>
   );
 }
@@ -321,12 +329,13 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
         lat: effectiveWorkplaces[0]?.lat ?? null,
         lng: effectiveWorkplaces[0]?.lng ?? null,
       };
+      // The OTHER optional identity columns. These may not all be migrated on every
+      // environment, so they're saved best-effort (a missing column is ignored) — and,
+      // crucially, SEPARATELY from `workplaces` (below) so a missing column here can
+      // NEVER drop the saved locations.
       const identityFields = {
         business_name: businessName.trim() || null,
-        workplaces: effectiveWorkplaces,
         coverage_areas: [],
-        search_provincias: provincias,
-        search_cantones: cantones,
         coverage_provincias: [],
         coverage_country: false,
         insurance_networks: insurers,
@@ -335,16 +344,39 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
         contact_email: contactEmail.trim() || null,
       };
 
-      let { error: proError } = await supabase
+      // 1) Core fields — guaranteed columns; a failure here is a real error.
+      const { error: baseError } = await supabase
         .from("professionals")
-        .update({ ...baseUpdate, ...identityFields })
+        .update(baseUpdate)
         .eq("id", professionalId);
-      // Retry without the optional identity columns if the DB isn't migrated yet.
-      if (proError && /business_name|workplaces|coverage_areas|search_provincias|search_cantones|insurance_networks|call_phone|contact_email|affiliations|schema cache|could not find|PGRST204/i.test(proError.message)) {
-        ({ error: proError } = await supabase.from("professionals").update(baseUpdate).eq("id", professionalId));
-      }
+      if (baseError) throw baseError;
 
-      if (proError) throw proError;
+      // 2) LOCATIONS — saved in their OWN update so an unrelated, possibly-unmigrated
+      // optional column (contact_email, coverage_*, …) can NEVER drop them. This was
+      // the persistence bug: `workplaces` was bundled with those columns and the
+      // all-or-nothing fallback silently re-saved WITHOUT it (and showed "Guardado").
+      // `search_*` are the denormalized arrays that power location search; if they
+      // aren't migrated we retry with just `workplaces` — the essential bit — so the
+      // locations always persist. A genuine failure (e.g. RLS) is surfaced, never
+      // swallowed into a false confirmation.
+      let { error: locError } = await supabase
+        .from("professionals")
+        .update({ workplaces: effectiveWorkplaces, search_provincias: provincias, search_cantones: cantones })
+        .eq("id", professionalId);
+      if (locError && /search_provincias|search_cantones|could not find|PGRST204|schema cache/i.test(locError.message)) {
+        ({ error: locError } = await supabase.from("professionals").update({ workplaces: effectiveWorkplaces }).eq("id", professionalId));
+      }
+      if (locError) throw locError;
+
+      // 3) Other optional identity columns — best-effort; a not-yet-migrated column is
+      // ignored so it doesn't block the rest of the save.
+      const { error: idError } = await supabase
+        .from("professionals")
+        .update(identityFields)
+        .eq("id", professionalId);
+      if (idError && !/business_name|coverage_areas|coverage_provincias|coverage_country|insurance_networks|call_phone|contact_email|allow_phone_call|affiliations|schema cache|could not find|PGRST204/i.test(idError.message)) {
+        throw idError;
+      }
 
       // Persist certifications in their OWN update so an unrelated optional column
       // can never drop them (that was the "not saving" bug). Each keeps its
