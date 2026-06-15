@@ -942,27 +942,33 @@ guard — they rely on flush-on-blur + flush-on-unmount above. That combination 
 fixed the "edit a field, switch section, lose the change" bug. Any NEW editable section
 must follow this standard.
 
-## 50. /buscar card — keep the rich card, SUMMARIZE to fit (casos/cert live on the profile)
+## 50. /buscar card — keep the rich card, GROW it (uniform) to fit everything
 
-The search card keeps its full information (a Sprint 134 "strip it to a summary"
-redesign was REVERTED — it removed too much). The right model is: **keep everything,
-arrange it to fit, and summarize long lists** (primary "+N"). Two-zone responsive shell
+The search card keeps ALL its information and is allowed to GROW so nothing is cut off
+(the "must not grow" constraint was DROPPED, and the Sprint 134 "strip to a summary"
+redesign was REVERTED — it removed too much). The model: **keep everything; give it
+space; cards may be tall but stay UNIFORM.** Two-zone responsive shell
 (`professional-card.tsx` identity zone + `professional-schedule.tsx` action zone), FIXED
-uniform height `h-[360px] md:h-[232px]` (don't grow).
+uniform height **`h-[452px]` mobile / `md:h-[244px]` desktop**, sized for the
+most-information case so a minimal pro and an info-heavy pro render at the SAME height
+(mobile is intentionally tall — users scroll). Tune the height if the live site shows
+clipping (too short) or excessive whitespace (too tall).
 
-**ON the card (keep all of this):** avatar; **company/brand (bold primary)** + person
-name (smaller secondary, never dropped — see below); Verificado pill beside the name;
-price; professions (primary + up to 2 chips + "+N"); rating (★ + "N reseñas" link);
-location SUMMARY (primary place "+N" + a coverage line for mobile pros); the inline
-**availability schedule** (3-day grid, ~3 slots PC / ~2 mobile, multi-location selector,
-paging arrows, tappable chips that open `BookingModal`); WhatsApp + "Solicitar servicio".
-Plus a **"Ver perfil completo →"** link (`card.viewProfile`) — the card clearly leads
-into the profile.
+**ON the card (keep ALL of this — don't remove to save space, give space):** avatar;
+**company/brand (bold primary)** + person name (smaller secondary, never dropped);
+Verificado pill beside the name; price; professions (primary + up to 2 chips + "+N");
+rating (★ + "N reseñas" link); location SUMMARY (primary place "+N" + a coverage line);
+the inline **availability schedule** (3-day grid, ~3 slots PC / ~2 mobile, multi-location
+selector, paging arrows, tappable chips → `BookingModal`); **casos de éxito +
+certificaciones links**; WhatsApp + "Solicitar servicio"; and **"Ver perfil completo →"**
+(`card.viewProfile`).
 
-**The ONLY things removed from the card → live ONLY on the profile:** **Casos de éxito**
-and **Certificaciones**. The profile (`profesionales/[slug]`) has dedicated tabs for both;
-the "Ver perfil completo" link + avatar/name links take clients there. Do NOT re-add
-casos/cert chips/links to the card.
+**Layout that guarantees nothing important clips:** the identity zone is a COLUMN =
+`[avatar+info, flex-1, overflow-hidden]` (clips its OWN overflow only in a rare extreme)
++ `[shrink-0 footer: casos/cert links + "Ver perfil completo", ALWAYS visible]`. The
+action column (schedule + buttons) is content-height and always fully shown; the identity
+zone is `flex-1` (= card − action) so it absorbs slack / clips, never the actions. So the
+primary actions and "Ver perfil completo" can NEVER be clipped.
 
 **Name + price rules** (company-first; person NEVER dropped, esp. mobile):
 - Name line = company/brand + Verificado pill. With no company the person's name is the
