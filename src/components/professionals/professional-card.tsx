@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { MapPin, Truck, Image as ImageIcon, Star, Award } from "lucide-react";
+import { MapPin, Truck, Star } from "lucide-react";
 import { ProfessionalSchedule, type ScheduleSlot } from "@/components/professionals/professional-schedule";
 import { Link } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -174,184 +174,127 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
   const mobileText = professional.serviceType?.includes("mobile") ? coverageLabel(professional.coverage, tCard) : "";
 
   return (
-    // FIXED, UNIFORM height sized for the MOST-information case so nothing is ever
-    // cut off — the card is allowed to be tall (especially on mobile, where users
-    // scroll) rather than dropping info. Every card is the same height; a minimal pro
-    // and an info-heavy pro render identically (content top-anchored, actions/footer
-    // bottom-anchored, so the extra room reads as clean breathing space). The number
-    // badge (page wrapper) sits top-left, so the content is padded `pl-10`.
-    <div className={`group relative rounded-2xl bg-white border border-[#e5e7eb] hover:border-[#cbd5e1] hover:shadow-md transition-all duration-200 h-[452px] md:h-[244px] overflow-hidden ${className ?? ""}`}>
-      <div className="p-3.5 pl-10 h-full">
-        <div className="flex flex-col md:flex-row gap-3 h-full">
-          {/* ── Identity zone — a COLUMN: the avatar+info block (clips its own
-                 overflow in the rare extreme case) plus an ALWAYS-visible footer
-                 (casos/cert links + "Ver perfil completo") that is never clipped. ── */}
-          <div className="flex-1 min-w-0 flex flex-col gap-1.5 overflow-hidden">
-            <div className="flex gap-3 min-h-0 flex-1 overflow-hidden">
-            <Link href={`/profesionales/${professional.slug}`} className="shrink-0">
-              <Avatar className="h-[3.25rem] w-[3.25rem]">
-                <AvatarImage src={professional.avatarUrl} alt={professional.fullName} />
-                <AvatarFallback className="text-base bg-[#EBF5FB] text-[#009FD9] font-bold">{getInitials(professional.fullName)}</AvatarFallback>
-              </Avatar>
+    // CONTENT-DRIVEN height — NO fixed height, NO overflow clipping — so names wrap and
+    // the bottom action area is NEVER cut off (the recurring mobile bug). `h-full` lets
+    // the card fill its cell so cards in the SAME ROW stretch to equal height when laid
+    // out in a grid; in the single-column list each card simply grows to its content.
+    // ONE vertical flex column with a FIXED section order; the action area is pinned to
+    // the bottom (`mt-auto`) so "ver horario completo" + the WhatsApp/Llamar/Solicitar
+    // buttons always show. `pt-10` reserves a top band for the absolute ranking number
+    // (top-left, page wrapper) + favorite bookmark (top-right, SaveableCard) so they
+    // never overlap content.
+    <article className={`group relative flex h-full flex-col rounded-2xl border border-[#e5e7eb] bg-white p-4 pt-10 transition-shadow duration-200 hover:border-[#cbd5e1] hover:shadow-md ${className ?? ""}`}>
+      {/* ── Identity: logo + company/personal name (+ Verificado) + price ── */}
+      <div className="flex items-start gap-3">
+        <Link href={`/profesionales/${professional.slug}`} className="relative z-10 shrink-0">
+          <Avatar className="h-12 w-12">
+            <AvatarImage src={professional.avatarUrl} alt={professional.fullName} />
+            <AvatarFallback className="bg-[#EBF5FB] text-[#009FD9] font-bold">{getInitials(professional.fullName)}</AvatarFallback>
+          </Avatar>
+        </Link>
+        <div className="min-w-0 flex-1">
+          {/* Company/brand name (or the personal name when there's no company) +
+              Verificado. Wraps up to 2 lines — never cut off. */}
+          <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
+            <Link href={`/profesionales/${professional.slug}`} className="relative z-10 min-w-0">
+              <h3 className="font-bold text-[#111827] text-[15px] leading-snug line-clamp-2 hover:text-[#009FD9] transition-colors">{brandPrimary}</h3>
             </Link>
-
-            <div className="flex-1 min-w-0 flex flex-col gap-1 overflow-hidden">
-              {/* Name line. DESKTOP (md, nowrap): the name takes only its content
-                  width (shrinks/truncates to ONE line if very long) so the
-                  "Verificado" pill sits IMMEDIATELY beside it; price pushed right
-                  (md:ml-auto). MOBILE (wrap): the name shows in FULL (up to 2 lines,
-                  never cut off) and the pill wraps to the next line if there's no
-                  room. `pr-9 md:pr-0` clears the absolute save button on mobile. */}
-              <div className="flex flex-wrap md:flex-nowrap items-start md:items-center gap-x-1.5 gap-y-0.5 min-w-0 pr-9 md:pr-0">
-                <Link href={`/profesionales/${professional.slug}`} className="min-w-0">
-                  <h3 className="font-bold text-[#111827] text-[15px] leading-tight hover:text-[#009FD9] transition-colors line-clamp-2 md:line-clamp-1">{brandPrimary}</h3>
-                </Link>
-                {verifiedBadge}
-                {/* Price — just the amount, no "Desde/Tarifa" word. On DESKTOP it sits
-                    far right on the name line; on MOBILE it moves to the secondary line
-                    below (so the name line stays clean and never wraps awkwardly). */}
-                {priceLabel.includes("₡") && (
-                  <span className="hidden md:inline-block shrink-0 font-bold text-[#111827] text-sm whitespace-nowrap md:ml-auto">{priceLabel}</span>
-                )}
-              </div>
-
-              {/* DESKTOP secondary: the PERSON's name (shown only when a company leads). */}
-              {brandSecondary && (
-                <p className="hidden md:block text-[11px] font-medium text-[#6b7280] truncate -mt-0.5">{brandSecondary}</p>
-              )}
-
-              {/* MOBILE secondary line: the PERSON's name (left) + price (right). The
-                  person name ALWAYS shows here when there's a company, so it can never
-                  disappear on mobile; the price is right-aligned and tidy. */}
-              {(brandSecondary || priceLabel.includes("₡")) && (
-                <div className="md:hidden flex items-center gap-2 -mt-0.5 pr-9">
-                  {brandSecondary && (
-                    <p className="min-w-0 truncate text-[11px] font-medium text-[#6b7280]">{brandSecondary}</p>
-                  )}
-                  {priceLabel.includes("₡") && (
-                    <span className="ml-auto shrink-0 font-bold text-[#111827] text-sm whitespace-nowrap">{priceLabel}</span>
-                  )}
-                </div>
-              )}
-
-              {/* Profession tags — soft, muted, few (categories, not trust). */}
-              <div className="flex items-center gap-1 flex-wrap">
-                {professionList.map((cat) => (
-                  <span key={cat} className="inline-flex shrink-0 items-center rounded-full bg-[#f3f4f6] text-[#6b7280] px-2 py-0.5 text-[11px] font-medium whitespace-nowrap">
-                    {catLabel(cat)}
-                  </span>
-                ))}
-                {extraProfessions > 0 && (
-                  <span className="text-[11px] font-medium text-[#9ca3af]">+{extraProfessions}</span>
-                )}
-                {professional.isFeatured && (
-                  <span className="inline-flex items-center rounded-full bg-[#fff8ed] px-2 py-0.5 text-[10px] font-semibold text-[#c74600]">
-                    {tCard("featured")}
-                  </span>
-                )}
-              </div>
-
-              {/* Rating — star + value are plain text; ONLY the "N reseñas" count is
-                  the clickable link to the reviews tab (brand-blue + underline to read
-                  as tappable). No reviews → honest, fully non-link state. */}
-              {professional.reviewCount > 0 ? (
-                <span className="inline-flex w-fit items-center gap-1.5">
-                  <Star className="h-3.5 w-3.5 fill-[#ff9b32] text-[#ff9b32]" />
-                  <span className="text-[13px] font-bold text-[#111827]">{professional.ratingAvg.toFixed(1)}</span>
-                  <span aria-hidden className="text-[11px] text-[#9ca3af]">·</span>
-                  <Link
-                    href={`/profesionales/${professional.slug}?tab=resenas`}
-                    className="relative z-10 text-[11px] font-medium text-[#009FD9] hover:underline"
-                  >
-                    {tCard("reviewsCount", { count: professional.reviewCount })}
-                  </Link>
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1.5 text-[11px] text-[#9ca3af]">
-                  <Star className="h-3.5 w-3.5 fill-[#e5e7eb] text-[#e5e7eb]" /> {tCard("noReviews")}
-                </span>
-              )}
-
-              {/* Location SUMMARY — primary place "+N" and the coverage line, each a
-                  SINGLE truncating line so they always fit on their line and are never
-                  cut off. The full address list lives on the profile. */}
-              <div className="flex flex-col gap-0.5 text-[11px] text-[#6b7280] min-w-0">
-                {fixedText && (
-                  <span className="flex items-center gap-1.5 min-w-0">
-                    <MapPin className="h-3 w-3 text-[#009FD9] shrink-0" />
-                    <span className="truncate">{fixedText}</span>
-                  </span>
-                )}
-                {mobileText && (
-                  <span className="flex items-center gap-1.5 min-w-0">
-                    <Truck className="h-3 w-3 text-[#0089bb] shrink-0" />
-                    <span className="truncate">{mobileText}</span>
-                  </span>
-                )}
-              </div>
-            </div>
-            </div>
-
-            {/* Casos de éxito + certificaciones links (when present) — shrink-0 footer
-                so they're never clipped, and `relative z-10` so they sit ABOVE the
-                clickable-card overlay and reach their specific profile tabs. (The
-                whole card is clickable to the profile — see the stretched link below —
-                so a separate "Ver perfil completo" link is no longer needed.) */}
-            {(professional.portfolioCount || professional.certificationCount) ? (
-              <div className="relative z-10 shrink-0 flex flex-wrap items-center gap-x-3 gap-y-0.5">
-                {professional.portfolioCount ? (
-                  <Link
-                    href={`/profesionales/${professional.slug}?tab=casos`}
-                    className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[#009FD9] hover:underline w-fit"
-                  >
-                    <ImageIcon className="h-3.5 w-3.5" />
-                    {tCard("viewCases")}
-                  </Link>
-                ) : null}
-                {professional.certificationCount ? (
-                  <Link
-                    href={`/profesionales/${professional.slug}?tab=certificaciones`}
-                    className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[#009FD9] hover:underline w-fit"
-                  >
-                    <Award className="h-3.5 w-3.5" />
-                    {tCard("viewCertifications")}
-                  </Link>
-                ) : null}
-              </div>
-            ) : null}
+            {verifiedBadge}
           </div>
-
-          {/* ── Action zone: availability + contact/primary actions. A mobile
-                 min-height keeps every card the SAME height regardless of the
-                 button-layout type (private/with-call/without-call); on desktop the
-                 row layout + card min-h govern. ── */}
-          <div className="relative z-10 md:w-[232px] md:shrink-0 md:border-l md:border-[#f3f4f6] md:pl-4 pt-3 md:pt-0 border-t border-[#f3f4f6] md:border-t-0 flex flex-col">
-            <div className="flex-1 min-h-0">
-              <ProfessionalSchedule
-                professional={professional}
-                categoryName={categoryName}
-                availabilityPublic={!isPrivate}
-                contactPreference={professional.contactPreference ?? "ambas"}
-                slots={slots}
-                activeCategory={activeCategory}
-                isOwn={isOwn}
-              />
-            </div>
-          </div>
+          {/* Personal name = first name + both surnames; shown only when a company leads. */}
+          {brandSecondary && (
+            <p className="text-[12px] font-medium text-[#6b7280] line-clamp-1">{brandSecondary}</p>
+          )}
+          {/* Price — just the amount, no "Desde/Tarifa" word. */}
+          {priceLabel.includes("₡") && (
+            <p className="mt-0.5 text-sm font-bold text-[#111827]">{priceLabel}</p>
+          )}
         </div>
       </div>
 
-      {/* Stretched, low-z overlay link: the WHOLE card opens the professional's full
-          profile (replaces the removed "Ver perfil completo"). Interactive bits
-          (reviews link, casos/cert, the schedule + its buttons) sit at `relative z-10`
-          ABOVE this overlay and keep working; the favorites bookmark (z-20, in
-          SaveableCard) is above it too. */}
+      {/* ── Service tags — wrap; cap to a couple + "+N" overflow (never widen/clip). ── */}
+      {(professionList.length > 0 || professional.isFeatured) && (
+        <div className="mt-3 flex flex-wrap items-center gap-1.5">
+          {professionList.map((cat) => (
+            <span key={cat} className="inline-flex items-center rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-medium text-[#6b7280]">
+              {catLabel(cat)}
+            </span>
+          ))}
+          {extraProfessions > 0 && (
+            <span className="text-[11px] font-medium text-[#9ca3af]">+{extraProfessions}</span>
+          )}
+          {professional.isFeatured && (
+            <span className="inline-flex items-center rounded-full bg-[#fff8ed] px-2 py-0.5 text-[10px] font-semibold text-[#c74600]">
+              {tCard("featured")}
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* ── Rating + review count (only the count links to the reviews tab) ── */}
+      <div className="mt-2">
+        {professional.reviewCount > 0 ? (
+          <span className="inline-flex w-fit items-center gap-1.5">
+            <Star className="h-3.5 w-3.5 fill-[#ff9b32] text-[#ff9b32]" />
+            <span className="text-[13px] font-bold text-[#111827]">{professional.ratingAvg.toFixed(1)}</span>
+            <span aria-hidden className="text-[11px] text-[#9ca3af]">·</span>
+            <Link href={`/profesionales/${professional.slug}?tab=resenas`} className="relative z-10 text-[11px] font-medium text-[#009FD9] hover:underline">
+              {tCard("reviewsCount", { count: professional.reviewCount })}
+            </Link>
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1.5 text-[11px] text-[#9ca3af]">
+            <Star className="h-3.5 w-3.5 fill-[#e5e7eb] text-[#e5e7eb]" /> {tCard("noReviews")}
+          </span>
+        )}
+      </div>
+
+      {/* ── Location (primary place "+N") + "se desplaza a tu ubicación" — wrap to a
+             second line, never clipped. ── */}
+      {(fixedText || mobileText) && (
+        <div className="mt-2 flex flex-col gap-0.5 text-[11px] text-[#6b7280]">
+          {fixedText && (
+            <span className="flex items-start gap-1.5">
+              <MapPin className="h-3 w-3 text-[#009FD9] shrink-0 mt-0.5" />
+              <span className="leading-snug">{fixedText}</span>
+            </span>
+          )}
+          {mobileText && (
+            <span className="flex items-start gap-1.5">
+              <Truck className="h-3 w-3 text-[#0089bb] shrink-0 mt-0.5" />
+              <span className="leading-snug">{mobileText}</span>
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* ── Action area: location selector + compact schedule preview ("ver horario
+             completo") + WhatsApp / Llamar / Solicitar servicio. Pinned to the BOTTOM
+             (`mt-auto`) so it's ALWAYS visible no matter how much content is above.
+             `relative z-10` keeps it above the whole-card profile overlay. All
+             scheduling/availability LOGIC lives in ProfessionalSchedule (unchanged). ── */}
+      <div className="relative z-10 mt-auto pt-3">
+        <ProfessionalSchedule
+          professional={professional}
+          categoryName={categoryName}
+          availabilityPublic={!isPrivate}
+          contactPreference={professional.contactPreference ?? "ambas"}
+          slots={slots}
+          activeCategory={activeCategory}
+          isOwn={isOwn}
+        />
+      </div>
+
+      {/* Whole card → the professional's profile (stretched low-z overlay). The
+          interactive bits above are `relative z-10` and keep working; the favorite
+          bookmark (z-20, SaveableCard) stays clickable. Keyboard/SR users use the
+          focusable logo/name links (this overlay is aria-hidden). */}
       <Link
         href={`/profesionales/${professional.slug}`}
         className="absolute inset-0 z-0"
         tabIndex={-1}
         aria-hidden
       />
-    </div>
+    </article>
   );
 }
