@@ -244,12 +244,13 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                   {/* Responsive grid — cards keep a COMFORTABLE, CONSTRAINED width and
                       never stretch to fill the results column. `auto-fill` (not auto-fit)
                       keeps empty tracks, so a SINGLE result sits at the normal card width
-                      instead of ballooning across the whole row. `minmax(min(100%,300px),1fr)`
-                      = 1 column on mobile, then as many ~300px+ columns as fit (≈3 on wide
-                      screens). Grid rows stretch (default `align-items:stretch`) so cards in
-                      the SAME ROW share equal height; the card's `h-full` flows through the
-                      wrappers below. */}
-                  <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,300px),1fr))] gap-3">
+                      instead of ballooning across the whole row. `minmax(min(100%,340px),1fr)`
+                      = 1 full-width column on mobile, then a comfortable ~340px+ card width,
+                      tiling into 2 (and ~3 on very wide screens) columns only when there's
+                      real room — so cards are never cramped next to the map. Grid rows
+                      stretch (default `align-items:stretch`) so cards in the SAME ROW share
+                      equal height; the card's `h-full` flows through the wrappers below. */}
+                  <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,340px),1fr))] gap-3">
                     {await Promise.all(results.map((pro, i) => (
                       // data-pro-id + scroll-mt let the map highlight/scroll to this
                       // card on pin hover; the number badge matches the map pin.

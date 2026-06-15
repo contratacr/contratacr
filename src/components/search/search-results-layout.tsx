@@ -98,11 +98,12 @@ export function SearchResultsLayout({ children, filters, mapData, apiKey, locale
         </div>
 
         {/* Map — inline sticky column on lg+; the toggled full-width panel on phones.
-            Wider than before (the results list/cards are correspondingly narrower) so
-            the map is more prominent on desktop. */}
+            Kept to ~38-40% so the results column has enough room for COMFORTABLE,
+            legible cards (the card grid fills the rest); the map stays a useful size
+            without squeezing the cards into a cramped band. */}
         <aside
           className={cn(
-            "lg:block lg:w-[46%] xl:w-[46%] lg:shrink-0",
+            "lg:block lg:w-[40%] xl:w-[38%] lg:shrink-0",
             mobileView === "map" ? "block w-full" : "hidden"
           )}
         >
