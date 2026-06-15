@@ -270,7 +270,9 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           empty top row. ("Ver horario completo" moved BELOW the grid — see further
           down — so it no longer collides with the card's top-right bookmark.) */}
       {(locationGroups.length > 1 || (!!effectiveLabel && effectiveLabel !== "General")) && (
-        <div className="min-w-0">
+        // `md:pr-9` keeps this top row clear of the card's top-right favorites
+        // bookmark on desktop (the selector used to run underneath it).
+        <div className="min-w-0 md:pr-9">
           {locationGroups.length > 1 ? (
             <div className="relative">
               <MapPin className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-[#009FD9] pointer-events-none" />
