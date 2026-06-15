@@ -942,6 +942,27 @@ guard — they rely on flush-on-blur + flush-on-unmount above. That combination 
 fixed the "edit a field, switch section, lose the change" bug. Any NEW editable section
 must follow this standard.
 
+**Persist each group of OPTIONAL columns in its OWN Supabase update — never bundle them
+all-or-nothing.** A combined `update({ ...core, ...optionalA, ...optionalB })` fails ENTIRELY
+when ANY single optional column isn't migrated on that environment (`PGRST204` / "could not
+find the 'X' column" / schema cache). The old fallback re-saved with ONLY the core columns,
+**silently dropping unrelated data** (and still showing "Guardado"). This is the bug that hit
+`workplaces` (Ubicación y cobertura wouldn't persist), and earlier `certifications` /
+`social_links`. **Rule:** write the core (always-present) columns first (throw on error), then
+each independent optional group in its OWN `update()` — `workplaces`+`search_*`,
+`certifications`, `social_links`, the contact/coverage identity fields, etc. — so a missing
+column in one group can never wipe another. For data the user actively edited (locations,
+usernames), **CHECK the write result and surface a real error** (never a false "Guardado");
+for purely optional columns, swallow only the migration errors (`could not find|PGRST204|schema
+cache|<column names>`) and re-throw anything else.
+
+**Autosave reassurance line.** Every autosaving section shows a muted helper
+`"Los cambios se guardan automáticamente."` / `"Changes are saved automatically."`
+(`profileEditor.autosaveNote`, `text-xs text-[#9ca3af]`) at the SAME spot — the bottom of the
+section body. In `profile-editor.tsx` it lives in the shared `Section` component (prop
+`autosave` defaults true) so it's identical across sections; only add it where autosave is
+actually wired.
+
 ## 50. /buscar card — content-driven height, single vertical column (REBUILT)
 
 The card was REBUILT from scratch (`professional-card.tsx`) because the old fixed-height +
@@ -955,13 +976,15 @@ off, bottom buttons disappearing, uneven heights). These rules ARE the fix — n
   row stretch to EQUAL height (uniform). Do NOT reintroduce a fixed `h-[…]` or
   `overflow-hidden` on the card, and do NOT give the card its own width — the grid owns width.
 - **Results layout = AUTO-FILL grid (this is what keeps width sane).** The list container is
-  `grid grid-cols-[repeat(auto-fill,minmax(min(100%,300px),1fr))] gap-3` — 1 column on mobile,
-  then as many ~300px+ columns as fit (≈3 on wide screens) beside the map. Use **`auto-fill`,
-  NEVER `auto-fit`**: auto-fill keeps empty tracks, so a SINGLE result sits at the normal
-  ~300px card width instead of ballooning to fill the row (the bug auto-fit causes). Equal
-  height per row flows via `h-full`: grid item → `SaveableCard` (also `h-full`) →
-  `ProfessionalCard`. Do NOT revert this to a single-column `flex flex-col` (the card then
-  stretches full-width, leaving dead space on the right).
+  `grid grid-cols-[repeat(auto-fill,minmax(min(100%,340px),1fr))] gap-3` — 1 full-width column
+  on mobile, then a COMFORTABLE ~340px+ card width that tiles into 2 (and ~3 on very wide
+  screens) columns only when there's real room. Use **`auto-fill`, NEVER `auto-fit`**:
+  auto-fill keeps empty tracks, so a SINGLE result sits at the normal ~340px card width instead
+  of ballooning to fill the row (the bug auto-fit causes). The **~340px min matters**: too low
+  (e.g. 300) and the cards get cramped into a narrow band next to the map; this pairs with the
+  map width below. Equal height per row flows via `h-full`: grid item → `SaveableCard` (also
+  `h-full`) → `ProfessionalCard`. Do NOT revert this to a single-column `flex flex-col` (the
+  card then stretches full-width, leaving dead space on the right).
 - **ONE vertical flex column**, identical sections + order + spacing for every card. The
   ACTION AREA is bottom-pinned with **`mt-auto`** so "ver horario completo" + the WhatsApp /
   Llamar / Solicitar buttons are ALWAYS visible regardless of content above.
@@ -989,10 +1012,11 @@ completo" link.
 **ON THE PROFILE ONLY — not on the card:** Casos de éxito, Certificaciones, social-media
 icons. Do NOT re-add them to the card.
 
-**List/map split (desktop):** the map is the dominant right column — `lg:w-[46%]
-xl:w-[46%]`; the results column holds the auto-fill card GRID (above) so cards stay a
-comfortable ~300px width and tile into multiple columns rather than stretching. Mobile keeps
-the List/Map toggle (stacked).
+**List/map split (desktop):** the map is the right column at **`lg:w-[40%] xl:w-[38%]`** —
+deliberately NOT dominant, so the results column has room for the auto-fill card GRID (above)
+to render COMFORTABLE, legible cards (a wider map at 46% squeezed the cards into a cramped
+narrow band). Tune the two together: map ~38–40% + grid min ~340px. Mobile keeps the List/Map
+toggle (stacked); these widths are `lg:`/`xl:` only.
 
 **No-overlap / consistency rules:**
 - The favorite bookmark is `absolute top-2.5 right-2.5`; the card's `pt-10` top band keeps
