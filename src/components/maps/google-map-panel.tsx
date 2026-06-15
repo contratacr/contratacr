@@ -274,7 +274,10 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
         strategy="afterInteractive"
         onLoad={renderMarkers}
       />
-      <div ref={mapRef} className="w-full h-full" />
+      {/* `relative` makes THIS the containing block for the map's absolutely-positioned
+          canvas, so it can NEVER escape its box and overlap siblings (e.g. the result cards
+          below it on mobile) even if a parent forgets to be a positioning context. */}
+      <div ref={mapRef} className="relative w-full h-full" />
     </>
   );
 }

@@ -84,7 +84,7 @@ export function SearchResultsLayout({ children, filters, mobileFilters, mobileSe
             so the map canvas never escapes its box; NOT sticky on mobile). Desktop: the right
             column, sticky, taking the remaining width. */}
         <aside className="lg:order-3 w-full lg:flex-1 lg:min-w-0 mb-3 lg:mb-0">
-          <div className="relative h-[40vh] lg:h-[calc(100vh-104px)] w-full overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white lg:sticky lg:top-20">
+          <div className="relative isolate h-[40vh] lg:h-[calc(100vh-104px)] w-full overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white lg:sticky lg:top-20">
             <GoogleMapPanel apiKey={apiKey} professionals={mapData} locale={locale} numbering={numbering} />
           </div>
         </aside>
