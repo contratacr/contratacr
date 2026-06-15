@@ -977,3 +977,14 @@ casos/cert chips/links to the card.
 - Custom selects use `appearance-none` + an absolute `ChevronDown` (never the native OS
   arrow) so the chevron is aligned/consistent (e.g. the availability editor's interval
   select).
+- **"Ver perfil completo" is ALWAYS visible** — it's a `shrink-0` footer of the identity
+  zone, OUTSIDE the `overflow-hidden` avatar+info block (which is the part allowed to
+  clip on an info-heavy mobile card). Never put it back inside the clipping block, or it
+  disappears on mobile. The identity zone is a column: `[avatar+info flex-1 min-h-0
+  overflow-hidden]` + `[Ver perfil completo footer]`.
+- **Location selector reflects the pro's real service places.** Build selector options
+  from slot-tagged locations when slots carry ≥2 locations; otherwise fall back to the
+  pro's named `workplaces` (≥2) so a multi-workplace pro ALWAYS gets a selector even when
+  slots aren't tagged per place. Selecting a place filters to its slots if any exist,
+  else shows all bookable times and carries the place into the booking — never empty the
+  grid.
