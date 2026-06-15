@@ -64,30 +64,33 @@ export function SearchResultsLayout({ children, filters, mobileFilters, mobileSe
         </div>
       )}
 
+      {/* MOBILE = a single clean vertical flow in NORMAL DOM ORDER (search → chips → map →
+          count → list). NO sticky/absolute/order/negative-margins on mobile, so NOTHING
+          overlaps — the whole page just scrolls. DESKTOP (lg+) switches to flex-row and uses
+          `lg:order-*` to arrange the three columns (sidebar · results · map). */}
       <div className="flex flex-col lg:flex-row lg:gap-5">
-        {/* MOBILE service-search — pinned at the top, above the map. */}
-        {mobileSearch && <div className="order-1 lg:hidden mb-3">{mobileSearch}</div>}
+        {/* 1) MOBILE service-search (top). */}
+        {mobileSearch && <div className="lg:hidden mb-3">{mobileSearch}</div>}
 
-        {/* Filters sidebar — xl+ only. */}
-        <aside className="hidden xl:block xl:order-1 w-64 shrink-0">
+        {/* 2) MOBILE filter chips — a single horizontal-scroll row ABOVE the map. */}
+        {mobileFilters && <div className="lg:hidden mb-3">{mobileFilters}</div>}
+
+        {/* Filters sidebar — xl+ only (desktop: first column). */}
+        <aside className="hidden xl:block lg:order-1 w-64 shrink-0">
           <div className="sticky top-20">{filters}</div>
         </aside>
 
-        {/* Map — TOP on mobile (~45vh), RIGHT sticky column on desktop. ONE instance,
-            repositioned via flex `order`; on desktop it takes the remaining width
-            (`lg:flex-1`) next to the hugging results column. */}
-        <aside className="order-2 lg:order-3 w-full lg:flex-1 lg:min-w-0 mb-3 lg:mb-0">
-          <div className="h-[45vh] lg:h-[calc(100vh-104px)] lg:sticky lg:top-20 w-full overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white">
+        {/* 3) Map — mobile: a fixed ~40vh block in normal flow (`relative` + `overflow-hidden`
+            so the map canvas never escapes its box; NOT sticky on mobile). Desktop: the right
+            column, sticky, taking the remaining width. */}
+        <aside className="lg:order-3 w-full lg:flex-1 lg:min-w-0 mb-3 lg:mb-0">
+          <div className="relative h-[40vh] lg:h-[calc(100vh-104px)] w-full overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white lg:sticky lg:top-20">
             <GoogleMapPanel apiKey={apiKey} professionals={mapData} locale={locale} numbering={numbering} />
           </div>
         </aside>
 
-        {/* Results panel — below the map on mobile; the middle column on desktop. It hugs
-            the wider two-column card on desktop (responsive width). */}
-        <div className="order-3 lg:order-2 min-w-0 w-full lg:w-[620px] xl:w-[680px] 2xl:w-[880px] lg:shrink-0">
-          {/* MOBILE: horizontal filter chips row. */}
-          {mobileFilters && <div className="lg:hidden mb-3">{mobileFilters}</div>}
-          {/* MOBILE: result count above the list. */}
+        {/* 4) count + 5) list — mobile: below the map; desktop: the middle column. */}
+        <div className="lg:order-2 min-w-0 w-full lg:w-[620px] xl:w-[680px] 2xl:w-[880px] lg:shrink-0">
           {countLabel && <p className="lg:hidden mb-2 text-sm font-medium text-[#374151]">{countLabel}</p>}
           {children}
         </div>
