@@ -353,6 +353,14 @@ A **plain client** (not a professional) keeps the simple `/dashboard/cliente` (t
 
 **Disponibilidad = ONE control, two clean steps.** There is **no separate "¿Cómo recibes clientes?"** block — it was redundant. The **"Disponibilidad privada"** toggle is the single switch (it *is* the old Solo-WhatsApp vs Agenda+WhatsApp choice): **PRIVATE** (`availability_public=false`) = WhatsApp-only, no agenda — hides "Ofreces videoconsulta" AND the whole schedule section (clears slots), shows a short amber note; **PUBLIC** = published agenda — shows "Ofreces videoconsulta" + "Agregar horarios disponibles" + "Tus horarios próximos". **"Permitir contacto por llamada" is independent and always visible** (applies in both modes); WhatsApp is always available. Two numbered steps: **STEP 1 "Tu disponibilidad"** (privada toggle + permitir llamada + videoconsulta-when-public), **STEP 2 "Agregar horarios disponibles"** + the list (public only). Keep `contact_preference` in sync with the toggle for downstream `/buscar` card + schedule logic (`pública→ambas`, `privada→solo_whatsapp`).
 
+**Relative dates ("hace X") — ONE canonical helper, app-wide.** Always use
+`formatRelativeTime(date, locale)` from `lib/utils.ts` — never `Intl.RelativeTimeFormat` with
+`numeric:"auto"` (it produces **"anteayer"/"antier"**, which breaks the consistent "hace N días"
+series). Scale (ES): `hace un momento · hace N minutos · hace 1 hora/N horas · ayer · hace N días ·
+hace 1 semana/N semanas · hace 1 mes/N meses`, then the **actual date** ("15 jun 2025") past ~1 year.
+Only 1 day → "ayer"; 2+ → "hace N días". EN mirrors it ("just now / yesterday / N days ago / …",
+correct singular/plural). Pass the active `useLocale()` so EN renders in English.
+
 **Uniform time chips (everywhere times are listed as chips).** Time chips must be a **uniform width in an even grid**, not text-sized in a `flex-wrap` (12h text like "8:00 AM" vs "12:00 PM" makes ragged rows). Use a **`grid` with fixed columns** + **`tabular-nums`** + **`whitespace-nowrap`** (NOT `truncate` — that cuts the time off). On MOBILE keep columns wide enough for the full 12h time: **`grid-cols-2 sm:grid-cols-3 md:grid-cols-4`** in the availability list (the part label Mañana/Tarde/Noche goes ABOVE the grid, not in a side column that steals width); `grid-cols-4 sm:grid-cols-5` for the 24h booking picker. When a chip has a remove-X use `justify-between` with the X `shrink-0`.
 
 **Disponibilidad keeps labels icon-free.** No decorative icon next to "Disponibilidad privada", "Ofreces videoconsulta", or the "Agregar horarios disponibles" heading — the step-number badges carry the structure; the toggles speak for themselves.

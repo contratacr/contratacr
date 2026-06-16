@@ -4,7 +4,7 @@ import { Star } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { StarRating } from "@/components/ui/star-rating";
-import { getInitials } from "@/lib/utils";
+import { getInitials, formatRelativeTime } from "@/lib/utils";
 import type { Review } from "@/lib/queries/professionals";
 
 interface ReviewSectionProps {
@@ -14,16 +14,6 @@ interface ReviewSectionProps {
   ratingAvg: number;
   reviews: Review[];
   isAuthenticated: boolean;
-}
-
-// Locale-aware relative time via Intl (no hardcoded "hace … días" strings).
-function timeAgo(isoDate: string, locale: string): string {
-  const rtf = new Intl.RelativeTimeFormat(locale === "en" ? "en" : "es", { numeric: "auto" });
-  const days = Math.floor((Date.now() - new Date(isoDate).getTime()) / 86400000);
-  if (days < 1) return rtf.format(0, "day");
-  if (days < 7) return rtf.format(-days, "day");
-  if (days < 30) return rtf.format(-Math.floor(days / 7), "week");
-  return rtf.format(-Math.floor(days / 30), "month");
 }
 
 export function ReviewSection({
@@ -56,7 +46,7 @@ export function ReviewSection({
               <div className="flex items-center justify-between gap-2">
                 <span className="text-sm font-medium text-[#111827]">{review.clientName}</span>
                 {/* "editada" is intentionally NOT shown publicly (item 4). */}
-                <span className="text-xs text-[#9ca3af]">{timeAgo(review.createdAt, locale)}</span>
+                <span className="text-xs text-[#9ca3af]">{formatRelativeTime(review.createdAt, locale)}</span>
               </div>
               <StarRating rating={review.rating} size="sm" className="my-1" />
               {review.jobTitle && (

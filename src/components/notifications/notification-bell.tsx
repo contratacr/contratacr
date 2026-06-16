@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Bell, CheckCheck, Trash2 } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { cn, formatRelativeTime } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
@@ -21,6 +21,7 @@ type Notification = {
 export function NotificationBell() {
   const { user } = useAuth();
   const t = useTranslations("notifications");
+  const locale = useLocale();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -215,7 +216,7 @@ export function NotificationBell() {
                           <p className="text-sm font-medium text-[#111827]">{n.title}</p>
                           <p className="text-xs text-[#6b7280] mt-0.5">{n.message}</p>
                           <p className="text-xs text-[#9ca3af] mt-1">
-                            {formatRelativeTime(n.created_at)}
+                            {formatRelativeTime(n.created_at, locale)}
                           </p>
                         </div>
                       </div>

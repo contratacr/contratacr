@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Bell, CheckCheck, Check, Trash2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -23,6 +23,7 @@ type Notification = {
 export function NotificationsList() {
   const { user } = useAuth();
   const t = useTranslations("notifications");
+  const locale = useLocale();
   const [items, setItems] = useState<Notification[]>([]);
   const [busy, setBusy] = useState(true);
 
@@ -121,7 +122,7 @@ export function NotificationsList() {
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-[#111827]">{n.title}</p>
                       <p className="text-xs text-[#6b7280] mt-0.5">{n.message}</p>
-                      <p className="text-xs text-[#9ca3af] mt-1">{formatRelativeTime(n.created_at)}</p>
+                      <p className="text-xs text-[#9ca3af] mt-1">{formatRelativeTime(n.created_at, locale)}</p>
                     </div>
                   </div>
                 </button>

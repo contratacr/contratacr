@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Bell, CheckCheck, X } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -26,6 +26,7 @@ type Notification = {
 export default function NotificationsPage() {
   const { user, loading } = useAuth();
   const t = useTranslations("notifications");
+  const locale = useLocale();
   const router = useRouter();
   const [items, setItems] = useState<Notification[]>([]);
   const [busy, setBusy] = useState(true);

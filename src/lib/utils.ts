@@ -68,27 +68,39 @@ export function getWhatsAppLink(phone: string, message?: string) {
   return `https://wa.me/${number}${text ? `?text=${text}` : ""}`;
 }
 
-/** Spanish relative timestamp, e.g. "hace 5 minutos", "hace 2 días". */
-export function formatRelativeTime(date: string | Date): string {
+/**
+ * SINGLE canonical relative timestamp used app-wide (reviews, notifications, requests,
+ * projects, tickets…). One consistent "hace X" scale, correct singular/plural, and the
+ * ACTUAL date once it's older than ~a year. NOTE: deliberately NOT `Intl.RelativeTimeFormat`
+ * with `numeric:"auto"` — that yields "anteayer"/"antier" for 2 days, which breaks the
+ * consistent "hace N días" series. Only "ayer"/"yesterday" (1 day) is special-cased.
+ *  ES: hace un momento · hace N minutos · hace 1 hora/N horas · ayer · hace N días ·
+ *      hace 1 semana/N semanas · hace 1 mes/N meses · "15 jun 2025"
+ *  EN: just now · N minutes ago · 1 hour/N hours ago · yesterday · N days ago ·
+ *      1 week/N weeks ago · 1 month/N months ago · "Jun 15, 2025"
+ */
+export function formatRelativeTime(date: string | Date, locale: string = "es"): string {
   const d = typeof date === "string" ? new Date(date) : date;
+  const en = locale === "en";
   const sec = Math.floor((Date.now() - d.getTime()) / 1000);
-  if (sec < 60) return "hace un momento";
+  if (sec < 60) return en ? "just now" : "hace un momento";
   const min = Math.floor(sec / 60);
-  if (min < 60) return `hace ${min} minuto${min !== 1 ? "s" : ""}`;
+  if (min < 60) return en ? `${min} minute${min !== 1 ? "s" : ""} ago` : `hace ${min} minuto${min !== 1 ? "s" : ""}`;
   const hr = Math.floor(min / 60);
-  if (hr < 24) return `hace ${hr} hora${hr !== 1 ? "s" : ""}`;
+  if (hr < 24) return en ? `${hr} hour${hr !== 1 ? "s" : ""} ago` : `hace ${hr} hora${hr !== 1 ? "s" : ""}`;
   const day = Math.floor(hr / 24);
-  if (day < 7) return `hace ${day} día${day !== 1 ? "s" : ""}`;
+  if (day === 1) return en ? "yesterday" : "ayer";
+  if (day < 7) return en ? `${day} days ago` : `hace ${day} días`;
   if (day < 30) {
     const wk = Math.floor(day / 7);
-    return `hace ${wk} semana${wk !== 1 ? "s" : ""}`;
+    return en ? `${wk} week${wk !== 1 ? "s" : ""} ago` : `hace ${wk} semana${wk !== 1 ? "s" : ""}`;
   }
   if (day < 365) {
     const mo = Math.floor(day / 30);
-    return `hace ${mo} mes${mo !== 1 ? "es" : ""}`;
+    return en ? `${mo} month${mo !== 1 ? "s" : ""} ago` : `hace ${mo} mes${mo !== 1 ? "es" : ""}`;
   }
-  const yr = Math.floor(day / 365);
-  return `hace ${yr} año${yr !== 1 ? "s" : ""}`;
+  // Older than ~a year → the actual date, never "hace N años".
+  return d.toLocaleDateString(en ? "en-US" : "es-CR", { day: "numeric", month: "short", year: "numeric" });
 }
 
 export function getInitials(name: string) {
