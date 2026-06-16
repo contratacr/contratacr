@@ -16,6 +16,10 @@ type Slot = { id?: string; slot_date: string; slot_time: string; location_id?: s
 
 const GENERAL_LOC = "general";
 const VIDEO_LOC = "videoconsulta";
+// Stable id for the optional "A domicilio" (traveling) schedule. Starts with `cov_` so
+// /buscar treats it exactly like any coverage zone: an "A domicilio" location tab with
+// its own slots and NO street address. One per pro (the pro's travel availability).
+const A_DOMICILIO_LOC = "cov_domicilio";
 
 const INTERVAL_VALUES = [30, 60, 120, 0];
 
@@ -80,12 +84,16 @@ interface AvailabilityEditorProps {
   initialContactPreference?: ContactPreference;
   workplaces?: Place[];
   coverageAreas?: Coverage[];
+  /** True when the pro selected "Me desplazo donde el cliente" (service_type includes
+   *  "mobile"). Adds an OPTIONAL "A domicilio" schedulable location (the cov_* mechanism)
+   *  so a traveling pro can publish travel hours — but is never forced to. */
+  travels?: boolean;
   /** The pro's professions (category ids). Schedules are tied to a profession. */
   professions?: string[];
   onSaved?: () => void;
 }
 
-export function AvailabilityEditor({ professionalId, initialPublic = true, workplaces = [], coverageAreas = [], professions = [], onSaved }: AvailabilityEditorProps) {
+export function AvailabilityEditor({ professionalId, initialPublic = true, workplaces = [], coverageAreas = [], travels = false, professions = [], onSaved }: AvailabilityEditorProps) {
   const locale = useLocale();
   const t = useTranslations("availabilityEditor");
   const dateLocale = locale === "en" ? "en-US" : "es-CR";
@@ -113,8 +121,14 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
           : t("covCanton", { canton: `${c.cantonName ?? "Zona"}${c.provinceName ? `, ${c.provinceName}` : ""}` });
       opts.push({ id: `cov_${key}`, label });
     });
+    // "Me desplazo donde el cliente" → ONE optional "A domicilio" schedule, listed after
+    // any physical workplaces. Same slot machinery as a location; on /buscar it shows as
+    // an "A domicilio" tab. OPTIONAL — the pro may leave it empty (WhatsApp coordination).
+    if (travels && !opts.some((o) => o.id === A_DOMICILIO_LOC)) {
+      opts.push({ id: A_DOMICILIO_LOC, label: t("aDomicilio") });
+    }
     return opts;
-  }, [workplaces, coverageAreas, t]);
+  }, [workplaces, coverageAreas, travels, t]);
   const [genLocation, setGenLocation] = useState("");
 
   // Profession this schedule is for (item 1). Each schedule belongs to a
@@ -443,6 +457,9 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
               <select value={genLocation} onChange={(e) => setGenLocation(e.target.value)} className={cn(inputCls, "cursor-pointer w-full")}>
                 {locationOptions.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
               </select>
+              {genLocation === A_DOMICILIO_LOC && (
+                <p className="text-[11px] leading-snug text-[#6b7280] mt-0.5">{t("aDomicilioHint")}</p>
+              )}
             </div>
           </div>
 
