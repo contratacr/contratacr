@@ -147,13 +147,12 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
   // ProfessionalSchedule), so the card no longer renders separate top-row icons.
   const isOwn = !!viewerProfileId && viewerProfileId === professional.profileId;
 
-  // Verified trust mark — on the /buscar card this is GREEN TEXT (no icon, no pill),
-  // sitting on its OWN line between the company name and the personal name (HuliHealth
-  // handoff). The solid brand-blue "Verificado" pill stays canonical on the profile /
-  // dashboard / saved-pros mockup; this lighter treatment is the search card only.
-  // Unverified shows NOTHING (no mark, no negative label).
+  // Verified trust mark — a compact brand-blue "Verificado" PILL (bg #009FD9 / white),
+  // the SAME color as the canonical `Badge variant="verified"` used in the professional
+  // panel/dashboard, for cross-surface consistency. Sits on its OWN line between the
+  // company name and the personal name. Unverified shows NOTHING (no negative label).
   const verifiedMark = isVerified ? (
-    <span title={tCard("verifiedTitle")} className="block text-[11px] font-semibold text-[#16a34a]">
+    <span title={tCard("verifiedTitle")} className="inline-flex w-fit items-center rounded-full bg-[#009FD9] px-2 py-0.5 text-[10px] font-semibold text-white">
       {tCard("verifiedShort")}
     </span>
   ) : null;
