@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { CheckCircle2, Circle, Eye, EyeOff, ArrowRight, AlertCircle, Lock } from "lucide-react";
+import { SuccessIcon } from "@/components/ui/success-icon";
 import { Navbar } from "@/components/layout/navbar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -106,9 +107,7 @@ export default function ResetPasswordPage() {
         <Navbar />
         <main className="flex-1 flex items-center justify-center py-12 px-4">
           <div className="w-full max-w-sm text-center">
-            <div className="flex h-20 w-20 mx-auto items-center justify-center rounded-full bg-[#EBF5FB] mb-5">
-              <CheckCircle2 className="h-10 w-10 text-[#009FD9]" />
-            </div>
+            <SuccessIcon size={80} className="mx-auto mb-5" />
             <h1 className="text-2xl font-bold text-[#111827] mb-2">{t("doneTitle")}</h1>
             <p className="text-[#6b7280] text-sm">
               {t("doneBody")}

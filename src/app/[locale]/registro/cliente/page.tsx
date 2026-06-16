@@ -11,6 +11,7 @@ import { PhoneInput, isPhoneComplete } from "@/components/ui/phone-input";
 import { OtpVerification } from "@/components/auth/otp-verification";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { CheckCircle2, Eye, EyeOff, User } from "lucide-react";
+import { SuccessIcon } from "@/components/ui/success-icon";
 import { PROVINCES } from "@/lib/data/cr-geography";
 import { cn } from "@/lib/utils";
 import { getInitials } from "@/lib/utils";
@@ -181,9 +182,7 @@ export default function RegisterClientPage() {
         <Navbar />
         <main className="flex-1 flex items-center justify-center px-4 py-12">
           <div className="w-full max-w-md text-center">
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#EBF5FB] mx-auto mb-5">
-              <CheckCircle2 className="h-10 w-10 text-[#009FD9]" />
-            </div>
+            <SuccessIcon size={80} className="mx-auto mb-5" />
             <h1 className="text-2xl font-bold text-[#111827] mb-2">{t("successTitle")}</h1>
             <p className="text-[#6b7280] mb-8">
               {t("successBody")}

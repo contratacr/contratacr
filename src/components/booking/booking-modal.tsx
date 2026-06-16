@@ -3,9 +3,10 @@
 import { useState, useEffect, useRef } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
-  X, CheckCircle2, MapPin, Shield, ShieldAlert, ArrowLeft, ChevronLeft, ChevronRight, Lock, CalendarPlus,
+  X, MapPin, Shield, ShieldAlert, ArrowLeft, ChevronLeft, ChevronRight, Lock, CalendarPlus,
   Check, Sun, Sunset, Moon, CalendarCheck,
 } from "lucide-react";
+import { SuccessIcon } from "@/components/ui/success-icon";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { useTranslations } from "next-intl";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -1234,9 +1235,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
               {/* SUCCESS */}
               {step === "success" && (
                 <div className="flex flex-col items-center text-center gap-5 py-4">
-                  <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#EBF5FB]">
-                    <CheckCircle2 className="h-10 w-10 text-[#009FD9]" />
-                  </div>
+                  <SuccessIcon size={80} />
                   <div>
                     <h3 className="text-xl font-bold text-[#111827] mb-2">{t("success.title")}</h3>
                     <p className="text-sm text-[#6b7280] max-w-xs mx-auto">{t("success.desc")}</p>

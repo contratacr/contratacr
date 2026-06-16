@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { CheckCircle2 } from "lucide-react";
+import { SuccessIcon } from "@/components/ui/success-icon";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
@@ -23,9 +23,7 @@ export function SupportModal({ onClose }: { onClose: () => void }) {
         <SupportForm onSuccess={(email) => setDoneEmail(email)} />
       ) : (
         <div className="flex flex-col items-center text-center gap-3 py-6">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#EBF5FB]">
-            <CheckCircle2 className="h-8 w-8 text-[#009FD9]" />
-          </div>
+          <SuccessIcon size={64} />
           <h3 className="text-lg font-bold text-[#111827]">{t("successTitle")}</h3>
           <p className="max-w-sm text-sm text-[#6b7280]">
             {user ? t("successUserDesc") : t("successGuestDesc", { email: doneEmail })}

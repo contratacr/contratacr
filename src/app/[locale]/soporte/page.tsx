@@ -5,7 +5,8 @@ import { useTranslations } from "next-intl";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { useAuth } from "@/hooks/use-auth";
-import { CheckCircle2, MessageSquare, LifeBuoy } from "lucide-react";
+import { MessageSquare, LifeBuoy } from "lucide-react";
+import { SuccessIcon } from "@/components/ui/success-icon";
 import { Link } from "@/i18n/navigation";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { SUPPORT_WHATSAPP_URL } from "@/lib/constants";
@@ -24,9 +25,7 @@ export default function SoportePage() {
         <LandingNavbar />
         <main className="flex-1 flex items-center justify-center px-4 py-20">
           <div className="text-center max-w-md">
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#EBF5FB] mx-auto mb-5">
-              <CheckCircle2 className="h-10 w-10 text-[#009FD9]" />
-            </div>
+            <SuccessIcon size={80} className="mx-auto mb-5" />
             <h1 className="text-2xl font-bold text-[#111827] mb-2">{t("successTitle")}</h1>
             {user ? (
               <>

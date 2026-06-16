@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { AlertCircle, CheckCircle2, Star, X } from "lucide-react";
+import { AlertCircle, Star, X } from "lucide-react";
+import { SuccessIcon } from "@/components/ui/success-icon";
 
 interface LeaveReviewModalProps {
   professionalId: string;
@@ -134,7 +135,7 @@ export function LeaveReviewModal({
 
         {success ? (
           <div className="flex flex-col items-center gap-3 px-6 py-10">
-            <CheckCircle2 className="h-14 w-14 text-emerald-500" />
+            <SuccessIcon size={56} />
             <p className="text-lg font-semibold text-[#111827]">{t("thanks")}</p>
             {/* Filled stars so the user can see their submitted rating. */}
             <div className="flex gap-1">

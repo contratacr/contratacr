@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { X, Flag, CheckCircle2, AlertCircle, ShieldAlert } from "lucide-react";
+import { X, Flag, AlertCircle, ShieldAlert } from "lucide-react";
+import { SuccessIcon } from "@/components/ui/success-icon";
 import { createClient } from "@/lib/supabase/client";
 
 interface ReportProfileModalProps {
@@ -95,7 +96,7 @@ export function ReportProfileModal({ professionalName, professionalSlug, onClose
 
         {sent ? (
           <div className="flex flex-col items-center gap-3 px-6 py-10 text-center">
-            <CheckCircle2 className="h-14 w-14 text-emerald-500" />
+            <SuccessIcon size={56} />
             <p className="text-lg font-semibold text-[#111827]">{t("sentTitle")}</p>
             <p className="text-sm text-[#6b7280]">
               {t("sentBody")}
