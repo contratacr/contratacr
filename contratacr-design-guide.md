@@ -266,6 +266,14 @@ Simplified for non-technical pros (Uber/Airbnb pattern: **structured field first
 
 ### "Ver horario completo" opens Solicitar
 - On /buscar cards the **"Ver horario completo"** control opens the **Solicitar servicio** booking flow (`openBooking()`), not the profile page — the client lands directly in booking (and it self-blocks on the pro's own card).
+- **Profile contact card reuses ProfessionalSchedule in `stacked` mode (Sprint 179).** The
+  /profesionales/[slug] right contact card renders `<ProfessionalSchedule stacked showSolicitar … />`
+  so it MIRRORS the /buscar card exactly: location tabs (switch the address) → that location's 3-day
+  strip → mutually-exclusive buttons. `stacked` = single vertical column (no two-column grid, no `info`
+  slot); `showSolicitar` adds a secondary outlined "Solicitar servicio" under "Ver horario completo" in
+  the bookable case (the profile shows both; the /buscar card shows only "Ver horario completo"). The
+  profile fetches `availability_slots` itself (`profileSlots`). Verificación (Sobre mí) + the header use
+  the canonical blue `Badge variant="verified"` pill — never green text.
 - **Booking modal = two panels (`booking-modal.tsx`, Sprint 177).** LEFT = navy gradient `from-[#1a2744] via-[#13294a] to-[#009FD9]`, ~320px, **centered**: avatar → name → green "✓ Verificado" (`#34d399`, verified pros) → specialty → ★rating(count) → location → "Desde ₡…" → a "QUÉ SIGUE" 3-step list pinned to the bottom. RIGHT = white: header ("Reservar cita" `t("title")` + step-progress + ×), then the calendar step as **two sub-columns** (calendar | that day's slots, `md:grid-cols-2`). Calendar: every AVAILABLE day shows a **blue dot**, today is **"HOY"**, selected = filled brand-blue. Slots are **grouped by franja** Mañana(`Sun`)/Tarde(`Sunset`)/Noche(`Moon`) — grey icons (serious-app rule) — as equal-width `grid-cols-3` pills; no day selected → an empty-state (`CalendarCheck` + "Elige un día disponible…"). Sticky footer: selected "fecha · hora" left + "Continuar" right (disabled until a time is picked). Brand `#009FD9` + Inter (NOT the screenshot's `#008ce0`/typeface).
 
 ### Profesiones — one card per profession (profession → services)

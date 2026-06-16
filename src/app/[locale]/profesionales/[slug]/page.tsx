@@ -26,6 +26,7 @@ import { ProfileGallery } from "@/components/professionals/profile-gallery";
 import { ReportProfileModal } from "@/components/professionals/report-profile-modal";
 import { createClient } from "@/lib/supabase/client";
 import { BookingButton } from "@/components/booking/booking-button";
+import { ProfessionalSchedule, type ScheduleSlot } from "@/components/professionals/professional-schedule";
 import { ClientRegistrationModal } from "@/components/auth/client-registration-modal";
 import { SelfActionModal, SELF_MSG } from "@/components/professionals/self-action-modal";
 import type { ProfessionalDetail } from "@/lib/queries/professionals";
@@ -61,6 +62,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
   const tCat = useTranslations("categories");
   const locale = useLocale();
   const [professional, setProfessional] = useState<ProfessionalDetail | null>(null);
+  const [profileSlots, setProfileSlots] = useState<ScheduleSlot[]>([]);
   const [loading, setLoading] = useState(true);
   const [proNotFound, setProNotFound] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>("servicios");
@@ -98,6 +100,20 @@ export default function ProfilePage({ params }: ProfilePageProps) {
       const { data: { user } } = await supabase.auth.getUser();
       setIsAuthenticated(!!user);
       setViewerId(user?.id ?? null);
+
+      // Upcoming availability slots → the contact card's 3-day schedule strip (mirrors
+      // the /buscar card). Retry without the optional location/category columns on an
+      // unmigrated DB so the page never breaks.
+      const today = new Date().toISOString().slice(0, 10);
+      const sel = "slot_date, slot_time, location_id, category_id";
+      let rows = await supabase.from("availability_slots").select(sel).eq("professional_id", pro.id).gte("slot_date", today).order("slot_date").order("slot_time");
+      if (rows.error && /location_id|category_id|column/i.test(rows.error.message)) {
+        rows = (await supabase.from("availability_slots").select("slot_date, slot_time").eq("professional_id", pro.id).gte("slot_date", today).order("slot_date").order("slot_time")) as typeof rows;
+      }
+      setProfileSlots((rows.data ?? []).map((r) => {
+        const row = r as { slot_date: string; slot_time: string; location_id?: string | null; category_id?: string | null };
+        return { date: row.slot_date, time: String(row.slot_time).slice(0, 5), locationId: row.location_id ?? null, categoryId: row.category_id ?? null };
+      }));
     }
     load();
   }, [params]);
@@ -161,6 +177,10 @@ export default function ProfilePage({ params }: ProfilePageProps) {
   const services = professional.services ?? [];
   const visibleServices = showAllServices ? services : services.slice(0, 5);
   const locationText = [professional.cantonName, professional.provinceName].filter(Boolean).join(", ");
+  // Fallback location tab/address for the contact-card schedule (when the pro has no named
+  // workplaces) — same data the /buscar card passes to ProfessionalSchedule.
+  const placeFallback = professional.cantonName || professional.provinceName || "";
+  const placeAddress = locationText;
 
   const hasCasos = !!professional.portfolioUrls && professional.portfolioUrls.length > 0;
   const certificationsList = (professional.certifications ?? []).filter((c) => c?.name?.trim());
@@ -178,8 +198,6 @@ export default function ProfilePage({ params }: ProfilePageProps) {
   })();
   // A pro viewing their OWN public profile cannot request a service from themselves.
   const isOwn = !!viewerId && viewerId === professional.profileId;
-  // Calls use the SEPARATE call number when set, else the WhatsApp number.
-  const callDigits = (professional.callPhone || professional.whatsapp || "").replace(/\D/g, "");
   const TABS: Array<{ id: Tab; label: string }> = [
     { id: "servicios",      label: t("tabs.servicios") },
     { id: "disponibilidad", label: t("tabs.disponibilidad") },
@@ -300,91 +318,25 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                   })()}
                 </div>
 
-                {/* Ver horario completo — the primary CTA (filled blue); opens the booking
-                    modal (the full schedule lives inside it). Only when the schedule is public. */}
-                {professional.availabilityPublic && (
-                  <BookingButton
-                    professional={professional}
-                    categoryName={professional.categoryId ? tCat(professional.categoryId as Parameters<typeof tCat>[0]) : ""}
-                    label={t("viewFullSchedule")}
-                    size="md"
-                    className="w-full"
-                  />
-                )}
-
-                {/* The pro's OWN profile shows the SAME buttons a client sees; the
-                    action is blocked with a friendly modal (handled per button). */}
-                {/* WhatsApp CTA */}
-                {isOwn ? (
-                  <button
-                    onClick={() => setSelfMsg(SELF_MSG.whatsapp)}
-                    className="flex items-center justify-center gap-2 w-full bg-[#25D366] hover:bg-[#1ebe5d] text-white font-bold py-3 rounded-xl transition-colors text-sm"
-                  >
-                    <WhatsAppIcon className="h-4 w-4" />
-                    {t("contact.whatsapp")}
-                  </button>
-                ) : isAuthenticated ? (
-                  <a
-                    href={waLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 w-full bg-[#25D366] hover:bg-[#1ebe5d] text-white font-bold py-3 rounded-xl transition-colors text-sm"
-                  >
-                    <WhatsAppIcon className="h-4 w-4" />
-                    {t("contact.whatsapp")}
-                  </a>
-                ) : (
-                  <button
-                    onClick={() => setShowRegistration(true)}
-                    className="flex items-center justify-center gap-2 w-full bg-[#25D366] hover:bg-[#1ebe5d] text-white font-bold py-3 rounded-xl transition-colors text-sm"
-                  >
-                    <WhatsAppIcon className="h-4 w-4" />
-                    {t("contact.whatsapp")}
-                  </button>
-                )}
-
-                {/* Llamar — driven by "Permitir contacto por llamada", independent of
-                    the privada toggle: shows in BOTH public and private modes. */}
-                {professional.allowPhoneCall && callDigits && (
-                  isOwn ? (
-                    <button
-                      onClick={() => setSelfMsg(SELF_MSG.call)}
-                      className="flex items-center justify-center gap-2 w-full border border-[#009FD9] text-[#009FD9] hover:bg-[#EBF5FB] font-semibold py-3 rounded-xl transition-colors text-sm"
-                    >
-                      <Phone className="h-4 w-4" />
-                      {t("contact.call")}
-                    </button>
-                  ) : (
-                    <a
-                      href={`tel:+506${callDigits}`}
-                      className="flex items-center justify-center gap-2 w-full border border-[#009FD9] text-[#009FD9] hover:bg-[#EBF5FB] font-semibold py-3 rounded-xl transition-colors text-sm"
-                    >
-                      <Phone className="h-4 w-4" />
-                      {t("contact.call")}
-                    </a>
-                  )
-                )}
-
-                {/* Correo — only when the pro opted in to show a contact email. */}
-                {professional.contactEmail && (
-                  isOwn ? (
-                    <button
-                      onClick={() => setSelfMsg(SELF_MSG.email)}
-                      className="flex items-center justify-center gap-2 w-full border border-[#009FD9] text-[#009FD9] hover:bg-[#EBF5FB] font-semibold py-3 rounded-xl transition-colors text-sm"
-                    >
-                      <Mail className="h-4 w-4" />
-                      {t("email")}
-                    </button>
-                  ) : (
-                    <a
-                      href={`mailto:${professional.contactEmail}`}
-                      className="flex items-center justify-center gap-2 w-full border border-[#009FD9] text-[#009FD9] hover:bg-[#EBF5FB] font-semibold py-3 rounded-xl transition-colors text-sm"
-                    >
-                      <Mail className="h-4 w-4" />
-                      {t("email")}
-                    </a>
-                  )
-                )}
+                {/* Schedule + booking/contact buttons — REUSES the /buscar card's
+                    ProfessionalSchedule in a STACKED layout: location tabs + that location's
+                    3-day strip, then the mutually-exclusive buttons (bookable → "Ver horario
+                    completo" + "Solicitar servicio"; no public schedule → "Contáctanos por
+                    WhatsApp" + "Contáctanos por llamada"). It owns its booking modal +
+                    self-action handling, so no separate WhatsApp/Llamar/Correo buttons here. */}
+                <ProfessionalSchedule
+                  stacked
+                  showSolicitar
+                  professional={professional}
+                  categoryName={professional.categoryId ? tCat(professional.categoryId as Parameters<typeof tCat>[0]) : ""}
+                  availabilityPublic={professional.availabilityPublic ?? true}
+                  contactPreference={professional.contactPreference ?? "ambas"}
+                  slots={profileSlots}
+                  isOwn={isOwn}
+                  placeFallback={placeFallback}
+                  placeAddress={placeAddress}
+                  businessName={professional.businessName ?? ""}
+                />
 
                 {/* Social links — usernames the pro shared; we build the URL. Only
                     the networks filled in show; icons only, open in a new tab.
@@ -719,9 +671,9 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                           <div className="flex flex-col gap-1">
                             <dt className="text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">{t("verification")}</dt>
                             <dd>
-                              <span className="inline-flex items-center text-sm font-semibold text-[#15803d]">
-                                {t("identityVerified")}
-                              </span>
+                              {/* Same canonical blue "Verificado" pill as the header card and
+                                  the pro's panel (not green text) — consistent everywhere. */}
+                              <Badge variant="verified">{t("identityVerified")}</Badge>
                             </dd>
                           </div>
                         )}

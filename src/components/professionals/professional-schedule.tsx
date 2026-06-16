@@ -38,6 +38,13 @@ interface ProfessionalScheduleProps {
   coverageText?: string;
   /** Business/brand name — bolded as the venue prefix on a real workplace address. */
   businessName?: string;
+  /** STACKED single-column layout for the professional-profile contact card (no two-column
+   *  grid, no `info` slot): location tabs → 3-day strip → buttons. Default false = the
+   *  /buscar card's two-column layout (unchanged). */
+  stacked?: boolean;
+  /** In stacked mode, when bookable ALSO show a secondary "Solicitar servicio" button below
+   *  "Ver horario completo" (the profile shows both; the /buscar card shows only the first). */
+  showSolicitar?: boolean;
 }
 
 // How many day-columns are shown at once, and how far ahead the arrows page.
@@ -69,7 +76,7 @@ function dayColumnLabel(d: Date, i: number, locale: string): string {
  *    "Ver horario completo" link to the full profile.
  *  - Private: lock state with "Contáctanos por Whatsapp" + "por llamada".
  */
-export function ProfessionalSchedule({ professional, categoryName, availabilityPublic, contactPreference = "ambas", slots: allSlots, activeCategory, isOwn = false, info, placeFallback = "", placeAddress = "", coverageText = "", businessName = "" }: ProfessionalScheduleProps) {
+export function ProfessionalSchedule({ professional, categoryName, availabilityPublic, contactPreference = "ambas", slots: allSlots, activeCategory, isOwn = false, info, placeFallback = "", placeAddress = "", coverageText = "", businessName = "", stacked = false, showSolicitar = false }: ProfessionalScheduleProps) {
   const t = useTranslations("schedule");
   const locale = useLocale();
   // When a specific profession was searched, only show that profession's hours
@@ -361,6 +368,17 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       {t("viewFullSchedule")}
     </button>
   );
+  // Secondary booking CTA — only shown in `stacked` (profile contact card) mode when
+  // bookable, alongside "Ver horario completo" (both open the same booking flow).
+  const solicitarButton = (
+    <button
+      type="button"
+      onClick={(e) => { e.stopPropagation(); openBooking(); }}
+      className="w-full rounded-full border border-[#009FD9] py-2.5 text-sm font-semibold text-[#009FD9] hover:bg-[#EBF5FB] transition-colors"
+    >
+      {t("requestService")}
+    </button>
+  );
   const contactButtons = (
     <>
       {showWa && (
@@ -465,6 +483,31 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           <ChevronRight className="h-[15px] w-[15px]" />
         </button>
       </div>
+    );
+  }
+
+  // STACKED layout (professional-profile contact card): a single vertical column —
+  // location tabs/address → 3-day strip (or note) → mutually-exclusive buttons. No `info`
+  // slot, no two-column grid. Bookable → "Ver horario completo" (+ "Solicitar servicio"
+  // when showSolicitar); not bookable → "Contáctanos por WhatsApp" + "Contáctanos por llamada".
+  if (stacked) {
+    return (
+      <>
+        <div className="flex flex-col gap-3">
+          {locationControl}
+          {scheduleBody}
+          {hasSchedule ? (
+            <div className="flex flex-col gap-2">
+              {verHorarioButton}
+              {showSolicitar && solicitarButton}
+            </div>
+          ) : (
+            contactButtons
+          )}
+        </div>
+        {bookingModals}
+        {selfModal}
+      </>
     );
   }
 
