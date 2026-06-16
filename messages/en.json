@@ -281,6 +281,7 @@
     "noUpcoming": "No upcoming times. Request the service to coordinate.",
     "availabilityHiddenNote": "This professional's availability is private. Contact us to find out their hours.",
     "noScheduleNote": "This professional's availability is private. Contact us to find out their hours.",
+    "noTimesAtLocation": "No available times at this location. Pick another location or contact us to coordinate.",
     "prevDays": "Previous days",
     "nextDays": "Next days",
     "dayUnavailable": "Not available",

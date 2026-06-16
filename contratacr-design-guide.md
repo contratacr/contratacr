@@ -1055,6 +1055,16 @@ actually wired.
 > - **Results header** ("Todos los profesionales / N profesionales en Costa Rica", `buscar/page.tsx`) is a
 >   **brand-tinted panel `bg-[#f4f9fc]`** with a brand accent bar (`h-6 w-1.5 rounded-full bg-[#009FD9]`) to
 >   the left of the grouped title+subtitle — not a flat white strip. Mobile still hides the subtitle.
+>
+> **UPDATE (Sprint 165) — favorites-icon clearance + per-location empty note.**
+> - The right rail has **`lg:pr-6`** so its content (the coral note AND the day strip) clears the
+>   top-right favorites bookmark (`SaveableCard`, `absolute top-2.5 right-2.5`) — the bookmark gets a clean
+>   gutter instead of overlapping the note. (Mobile bookmark sits over the header, which has `pr-8`.)
+> - **TWO empty-state notes, by case** (`scheduleBody`): `!canBook` (private/WhatsApp-only) → the general
+>   "…no es pública…" note. `canBook && !hasUpcoming` → if the pro publishes times at ANOTHER of their
+>   locations (`hasUpcomingAnywhere && locTabs.length > 1`) show **`noTimesAtLocation`** ("No hay horarios
+>   disponibles en esta ubicación. Elige otra…"); otherwise the general note. `hasUpcomingAnywhere` is a
+>   `useMemo` over the UNFILTERED `slots` (vs `hasUpcoming`, which is the selected location only).
 
 **THE GOLDEN RULE (learned the hard way across many flip-flops): the MOBILE single column is the
 BASE, and the desktop layout is ADDITIVE `lg:` classes ON TOP of it.** Never change a mobile

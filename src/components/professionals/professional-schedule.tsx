@@ -227,6 +227,22 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     });
   }, [filteredSlots, t, locale]);
 
+  // Does the pro publish ANY upcoming bookable time at ANY of their locations? This
+  // lets us tell "this pro has no public schedule at all" apart from "this LOCATION has
+  // no times" (the pro DOES book — just not at the place currently selected) — the two
+  // get different notes. Built over the unfiltered `slots`, same window/lead-time rules.
+  const hasUpcomingAnywhere = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    for (let i = 0; i < WINDOW_DAYS; i++) {
+      const d = new Date(today);
+      d.setDate(today.getDate() + i);
+      const key = toKey(d);
+      if (slots.some((s) => s.date === key && !isTooSoonCR(key, s.time))) return true;
+    }
+    return false;
+  }, [slots]);
+
   function pick(slot: ScheduleSlot) {
     if (isOwn) { setSelfMsg(SELF_MSG.request); return; }
     setPreset(slot);
@@ -351,11 +367,14 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
 
   let scheduleBody: ReactNode;
   if (!canBook) {
-    // No public booking (private availability OR WhatsApp-only preference).
-    scheduleBody = scheduleNote(!availabilityPublic ? t("availabilityHiddenNote") : t("noScheduleNote"));
+    // No public booking at all (private availability OR WhatsApp-only preference).
+    scheduleBody = scheduleNote(t("availabilityHiddenNote"));
   } else if (!hasUpcoming) {
-    // Booking enabled but no published slots → coordinate via WhatsApp instead.
-    scheduleBody = scheduleNote(t("noScheduleNote"));
+    // Booking is enabled but the SELECTED location has no upcoming times. If the pro DOES
+    // publish times at ANOTHER of their locations, say so SPECIFICALLY (it's not that their
+    // availability is private — it's just this place); otherwise it's the general note.
+    const otherLocationHasTimes = hasUpcomingAnywhere && locTabs.length > 1;
+    scheduleBody = scheduleNote(otherLocationHasTimes ? t("noTimesAtLocation") : t("availabilityHiddenNote"));
   } else {
     scheduleBody = (
       <div className="flex w-full items-start gap-1">
@@ -433,7 +452,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
         </div>
         {/* RIGHT — schedule-or-message on top, action buttons below; a divider (top on
             mobile, left on desktop) separates it from the info. */}
-        <div className="relative z-10 flex min-w-0 flex-col gap-3 border-t border-[#e5e7eb] pt-3 lg:justify-center lg:border-t-0 lg:border-l lg:border-[#e5e7eb] lg:pt-0 lg:pl-4">
+        <div className="relative z-10 flex min-w-0 flex-col gap-3 border-t border-[#e5e7eb] pt-3 lg:justify-center lg:border-t-0 lg:border-l lg:border-[#e5e7eb] lg:pt-0 lg:pl-4 lg:pr-6">
           {scheduleBody}
           {hasSchedule ? verHorarioButton : contactButtons}
         </div>
