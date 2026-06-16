@@ -49,10 +49,11 @@ const PROVINCE_CENTROIDS: Record<string, { lat: number; lng: number }> = {
   Limón: { lat: 9.9907, lng: -83.0359 },
 };
 
-// Default view: the Greater Metropolitan Area (GAM), ~zoom 11–12. minZoom 8 +
-// a CR bounds restriction keep the map locked onto Costa Rica.
+// Default view: the Greater Metropolitan Area (GAM), ~zoom 11–12. The map OPENS centered on
+// Costa Rica but pans/zooms FREELY — there is NO `restriction` bounds (which used to lock the
+// center inside CR and made it impossible to reach the coasts) and a low `minZoom` so the user
+// can zoom out to the region and beyond.
 const GAM_CENTER = { lat: 9.9325, lng: -84.08 };
-const CR_BOUNDS = { north: 11.35, south: 7.95, west: -86.05, east: -82.45 };
 
 const PIN_NAVY = "#162543";
 const PIN_ACTIVE = "#008ce0";
@@ -373,11 +374,10 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     if (!g?.marker?.AdvancedMarkerElement) return null;
     const map = new g.Map(mapRef.current, {
       mapId: MAP_ID,                 // cloud-styled light basemap + enables AdvancedMarkers
-      center: GAM_CENTER,
+      center: GAM_CENTER,    // opens centered on Costa Rica…
       zoom: 11,
-      minZoom: 8,
+      minZoom: 4,            // …but pans/zooms FREELY (no CR bounds restriction; zoom out to the region)
       maxZoom: 18,
-      restriction: { latLngBounds: CR_BOUNDS, strictBounds: false },
       mapTypeControl: false,
       streetViewControl: false,
       rotateControl: false,
