@@ -1,15 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Plus, Trash2, Check, Pencil, X, Loader2 } from "lucide-react";
+import { Plus, Trash2, Pencil, ChevronRight, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { PriceInput } from "@/components/ui/price-input";
-import { CategorySearch } from "@/components/ui/category-search";
+import { Modal } from "@/components/ui/modal";
+import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import { getCategoryLabel } from "@/lib/data/categories";
-import { SaveStatus } from "@/components/dashboard/save-status";
+import { getCategoryLabel, ALL_CATEGORIES, normalizeText } from "@/lib/data/categories";
 import { PRICING_TYPES, formatServicePrice, type PricingType } from "@/lib/pricing";
 
 export type ProService = {
@@ -37,15 +36,20 @@ function genId() {
   return `svc_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 }
 
+// Price units offered in the service modal's <select> (the "Precio a consultar"
+// checkbox covers a_convenir separately, so it's excluded here).
+const PRICE_UNITS = PRICING_TYPES.filter((p) => p.value !== "a_convenir");
+
 interface ServiceFormState {
   name: string;
   description: string;
-  priceType: PricingType;
+  priceUnit: PricingType;   // a non-a_convenir unit (por_hora, por_proyecto, …)
   priceAmount: string;
-  years: string;
+  aConsultar: boolean;      // "Precio a consultar" → persists as priceType a_convenir
+  years: string;            // preserved from existing data (no input in the new modal)
 }
 
-const EMPTY_FORM: ServiceFormState = { name: "", description: "", priceType: "por_hora", priceAmount: "", years: "" };
+const EMPTY_FORM: ServiceFormState = { name: "", description: "", priceUnit: "por_hora", priceAmount: "", aConsultar: false, years: "" };
 
 export function ServicesEditor({
   professionalId,
@@ -67,13 +71,14 @@ export function ServicesEditor({
   const [professions, setProfessions] = useState<string[]>(seedProfessions);
   const [services, setServices] = useState<ProService[]>(initialServices);
 
-  // Add-profession UI
-  const [addingProfession, setAddingProfession] = useState(false);
-  const [newProfession, setNewProfession] = useState("");
-  const [professionError, setProfessionError] = useState<string | null>(null);
+  // Master–detail: which profession's services are shown on the right.
+  const [selectedProfession, setSelectedProfession] = useState<string>(seedProfessions[0] ?? "");
 
-  // Service form UI (the form is bound to one profession at a time).
-  // Empty string = form closed; a category id = form open under that profession.
+  // Add-profession picker (modal)
+  const [showPicker, setShowPicker] = useState(false);
+  const [pickerQuery, setPickerQuery] = useState("");
+
+  // Service form (modal). Empty formCategory + null editingId = closed.
   const [formCategory, setFormCategory] = useState<string>("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<ServiceFormState>(EMPTY_FORM);
@@ -86,6 +91,13 @@ export function ServicesEditor({
   function effectiveCategory(s: ProService): string {
     return s.category ?? primary ?? "";
   }
+
+  // Keep the selected profession valid as professions change.
+  useEffect(() => {
+    if (professions.length > 0 && !professions.includes(selectedProfession)) {
+      setSelectedProfession(professions[0]);
+    }
+  }, [professions, selectedProfession]);
 
   async function persist(nextProfessions: string[], nextServices: ProService[]) {
     setSaving(true);
@@ -104,20 +116,13 @@ export function ServicesEditor({
     onSaved?.();
   }
 
-  function confirmAddProfession() {
-    if (!newProfession) {
-      setProfessionError(t("chooseProfession"));
-      return;
-    }
-    if (professions.includes(newProfession)) {
-      setProfessionError(t("alreadyAdded"));
-      return;
-    }
-    const next = [...professions, newProfession];
+  function addProfession(id: string) {
+    if (!id || professions.includes(id)) return;
+    const next = [...professions, id];
     setProfessions(next);
-    setNewProfession("");
-    setAddingProfession(false);
-    setProfessionError(null);
+    setSelectedProfession(id);
+    setShowPicker(false);
+    setPickerQuery("");
     persist(next, services);
   }
 
@@ -138,6 +143,7 @@ export function ServicesEditor({
     );
     setProfessions(next);
     setServices(nextServices);
+    setSelectedProfession(next[0]);
     persist(next, nextServices);
   }
 
@@ -151,11 +157,13 @@ export function ServicesEditor({
   function openEdit(svc: ProService) {
     setEditingId(svc.id);
     setFormCategory(effectiveCategory(svc));
+    const isAsk = svc.priceType === "a_convenir";
     setForm({
       name: svc.name,
       description: svc.description ?? "",
-      priceType: svc.priceType ?? "por_hora",
+      priceUnit: svc.priceType && !isAsk ? svc.priceType : "por_hora",
       priceAmount: svc.priceAmount != null ? String(svc.priceAmount) : "",
+      aConsultar: isAsk,
       years: svc.years != null ? String(svc.years) : "",
     });
     setFormError(null);
@@ -177,8 +185,10 @@ export function ServicesEditor({
     }
     setFormError(null);
 
-    const amount = form.priceAmount.trim() ? Number(form.priceAmount.replace(/\D/g, "")) : undefined;
-    const priceType = form.priceType;
+    const priceType: PricingType = form.aConsultar ? "a_convenir" : form.priceUnit;
+    const amount = form.aConsultar
+      ? undefined
+      : form.priceAmount.trim() ? Number(form.priceAmount.replace(/\D/g, "")) : undefined;
     const priceDisplay = formatServicePrice(amount, priceType) ?? undefined;
     const years = form.years.trim() ? Number(form.years.replace(/\D/g, "")) : undefined;
 
@@ -224,6 +234,17 @@ export function ServicesEditor({
     await persist(professions, next);
   }
 
+  // Professions available to add (taxonomy minus the ones already added), filtered
+  // by the picker's search (label + keywords, accent-insensitive).
+  const pickerList = useMemo(() => {
+    const base = ALL_CATEGORIES.filter((c) => !professions.includes(c.id));
+    const q = normalizeText(pickerQuery.trim());
+    if (!q) return base;
+    return base.filter(
+      (c) => normalizeText(getCategoryLabel(c.id, locale)).includes(q) || c.keywords.some((k) => normalizeText(k).includes(q))
+    );
+  }, [pickerQuery, professions, locale]);
+
   if (professions.length === 0) {
     return (
       <div className="text-center py-8 rounded-xl border-2 border-dashed border-[#e5e7eb]">
@@ -232,217 +253,235 @@ export function ServicesEditor({
     );
   }
 
+  const detailServices = services.filter((s) => effectiveCategory(s) === selectedProfession);
+  const isPrincipalSelected = selectedProfession === primary;
+  const inputClass =
+    "w-full h-11 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
+
   return (
     <div className="flex flex-col gap-4">
-      {/* App-wide autosave: changes persist per action; consistent status. */}
-      <SaveStatus saving={saving} saved={saved} />
-      <p className="text-sm text-[#6b7280]">
-        {t.rich("intro", rich)}
-      </p>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,240px)_minmax(0,1fr)]">
+        {/* ── LEFT: profession list ─────────────────────────────────────── */}
+        <div className="flex flex-col gap-2">
+          {professions.map((prof, i) => {
+            const count = services.filter((s) => effectiveCategory(s) === prof).length;
+            const selected = prof === selectedProfession;
+            return (
+              <button
+                key={prof}
+                type="button"
+                onClick={() => setSelectedProfession(prof)}
+                className={cn(
+                  "w-full rounded-xl border p-3 text-left flex items-center gap-2 transition-colors",
+                  selected ? "border-[#009FD9] bg-[#EBF5FB]" : "border-[#e5e7eb] bg-white hover:bg-[#f9fafb]"
+                )}
+              >
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center gap-1.5">
+                    <span className="text-sm font-semibold text-[#111827] truncate">{getCategoryLabel(prof, locale)}</span>
+                    {i === 0 && <span className="shrink-0 text-xs font-medium text-[#009FD9]">{t("principal")}</span>}
+                  </span>
+                  <span className="mt-0.5 block text-[11px] text-[#9ca3af]">{t("servicesCount", { count })}</span>
+                </span>
+                <ChevronRight className={cn("h-4 w-4 shrink-0", selected ? "text-[#009FD9]" : "text-[#cbd5e1]")} />
+              </button>
+            );
+          })}
 
-      {/* One CARD per PROFESSION — the profession is the group header and its
-          services live inside it, so the profession → services structure is
-          obvious. Single border per card (R1: no nested bordered boxes; the form
-          and list use tinted/hairline surfaces, not extra borders). */}
-      {professions.map((prof, i) => {
-        const profServices = services.filter((s) => effectiveCategory(s) === prof);
-        const formHere = formOpen && formCategory === prof;
-        return (
-          <section key={prof} className="rounded-2xl border border-[#e5e7eb] bg-white overflow-hidden">
-            {/* Profession header (no icon) */}
-            <div className="flex items-center gap-3 px-4 sm:px-5 py-3 bg-[#f9fafb] border-b border-[#eef2f5]">
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-[#111827] flex items-center gap-2">
-                  <span className="truncate">{getCategoryLabel(prof, locale)}</span>
-                  {i === 0 && <span className="shrink-0 rounded-full bg-[#EBF5FB] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#0089bb]">{t("principal")}</span>}
-                </p>
-                <p className="text-[11px] text-[#9ca3af]">{t("servicesCount", { count: profServices.length })}</p>
-              </div>
-              {/* Mark a non-principal profession as the MAIN one (moves it first). */}
-              {i > 0 && (
-                <button onClick={() => makePrincipal(prof)} className="shrink-0 text-xs font-medium text-[#009FD9] hover:underline" aria-label={t("makePrincipal")}>
+          <button
+            type="button"
+            onClick={() => { setShowPicker(true); setPickerQuery(""); }}
+            className="w-full rounded-xl border-2 border-dashed border-[#d1d5db] py-2.5 text-sm font-medium text-[#009FD9] hover:border-[#009FD9] hover:bg-[#EBF5FB] transition-all flex items-center justify-center gap-1.5"
+          >
+            <Plus className="h-4 w-4" /> {t("addProfession")}
+          </button>
+        </div>
+
+        {/* ── RIGHT: selected profession's services ─────────────────────── */}
+        <div className="rounded-2xl border border-[#e5e7eb] bg-white p-4 sm:p-5">
+          {/* Header */}
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h3 className="text-base font-bold text-[#111827] truncate">{getCategoryLabel(selectedProfession, locale)}</h3>
+              <p className="mt-0.5 text-xs text-[#6b7280]">{t("servicesPublished", { count: detailServices.length })}</p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              {isPrincipalSelected ? (
+                <span className="rounded-full bg-[#EBF5FB] px-2.5 py-1 text-xs font-semibold text-[#0089bb]">{t("principal")}</span>
+              ) : (
+                <button type="button" onClick={() => makePrincipal(selectedProfession)} className="text-xs font-medium text-[#009FD9] hover:underline">
                   {t("makePrincipal")}
                 </button>
               )}
               {professions.length > 1 && (
-                <button onClick={() => removeProfession(prof)} className="h-7 w-7 shrink-0 rounded-lg flex items-center justify-center text-[#9ca3af] hover:text-red-500 hover:bg-red-50 transition-colors" aria-label={t("removeProfession")}>
-                  <X className="h-4 w-4" />
+                <button
+                  type="button"
+                  onClick={() => removeProfession(selectedProfession)}
+                  aria-label={t("removeProfession")}
+                  title={t("removeProfession")}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9ca3af] hover:bg-red-50 hover:text-red-500 transition-colors"
+                >
+                  <Trash2 className="h-4 w-4" />
                 </button>
               )}
             </div>
+          </div>
 
-            <div className="p-3 sm:p-4 flex flex-col gap-2">
-              {/* Services for this profession */}
-              {profServices.length > 0 && (
-                <div className="flex flex-col divide-y divide-[#f3f4f6]">
-                  {profServices.map((svc) => (
-                    <div key={svc.id} className="flex items-center justify-between gap-3 py-2.5 hover:bg-[#fafafa] transition-colors -mx-2 px-2 rounded-lg">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-[#111827] truncate">{svc.name}</p>
-                        {svc.description && <p className="text-xs text-[#6b7280] mt-0.5 line-clamp-1">{svc.description}</p>}
-                        {svc.years != null && <p className="text-xs text-[#9ca3af] mt-0.5">{t("experience", { years: svc.years })}</p>}
-                      </div>
-                      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-                        {svc.price && <span className="text-sm font-semibold text-[#009FD9] whitespace-nowrap">{svc.price}</span>}
-                        <button onClick={() => openEdit(svc)} className="h-8 w-8 rounded-lg flex items-center justify-center text-[#9ca3af] hover:text-[#009FD9] hover:bg-[#EBF5FB] transition-colors" title={t("edit")}>
-                          <Pencil className="h-3.5 w-3.5" />
-                        </button>
-                        <button onClick={() => handleDelete(svc.id)} className="h-8 w-8 rounded-lg flex items-center justify-center text-[#9ca3af] hover:text-red-500 hover:bg-red-50 transition-colors" title={t("delete")}>
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Empty state — inviting, clickable prompt to add the first service. */}
-              {profServices.length === 0 && !formHere && (
-                <button
-                  onClick={() => openAdd(prof)}
-                  className="w-full rounded-xl border-2 border-dashed border-[#d1d5db] py-4 px-3 flex flex-col items-center justify-center gap-1.5 text-center hover:border-[#009FD9] hover:bg-[#EBF5FB] transition-all"
-                >
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#EBF5FB] text-[#009FD9]"><Plus className="h-4 w-4" /></span>
-                  <span className="text-sm font-medium text-[#374151]">{t("addFirstInProfession", { profession: getCategoryLabel(prof, locale) })}</span>
-                </button>
-              )}
-
-              {/* Inline add/edit form (tinted surface, no border → no box-in-box). */}
-              {formHere && (
-                <div className="rounded-xl bg-[#f9fafb] p-4 flex flex-col gap-3">
-                  <div className="flex items-center justify-between">
-                    <p className="text-sm font-semibold text-[#111827]">
-                      {editingId ? t("editService") : t("newService", { profession: getCategoryLabel(prof, locale) })}
-                    </p>
-                    <button onClick={cancelForm} className="text-[#9ca3af] hover:text-[#374151] transition-colors">
-                      <X className="h-4 w-4" />
+          {/* Services */}
+          <div className="mt-4 flex flex-col gap-2.5">
+            {detailServices.length === 0 ? (
+              <p className="rounded-xl bg-[#f9fafb] px-4 py-6 text-center text-sm text-[#9ca3af]">{t("emptyUnderProfession")}</p>
+            ) : (
+              detailServices.map((svc) => (
+                <div key={svc.id} className="flex items-start justify-between gap-3 rounded-xl border border-[#e5e7eb] p-3.5">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-[#111827]">{svc.name}</p>
+                    {svc.description && <p className="mt-0.5 text-xs text-[#6b7280] line-clamp-2">{svc.description}</p>}
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {svc.price && <span className="text-sm font-semibold text-[#009FD9] whitespace-nowrap">{svc.price}</span>}
+                    <button onClick={() => openEdit(svc)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#f3f4f6] text-[#6b7280] hover:bg-[#EBF5FB] hover:text-[#009FD9] transition-colors" title={t("edit")} aria-label={t("edit")}>
+                      <Pencil className="h-3.5 w-3.5" />
+                    </button>
+                    <button onClick={() => handleDelete(svc.id)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#f3f4f6] text-[#6b7280] hover:bg-red-50 hover:text-red-500 transition-colors" title={t("delete")} aria-label={t("delete")}>
+                      <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>
-
-                  {formError && (
-                    <p className="text-xs text-red-600 bg-red-50 border border-red-100 px-3 py-2 rounded-lg">{formError}</p>
-                  )}
-
-                  <Input
-                    label={t("nameLabel")}
-                    placeholder={t("namePlaceholder")}
-                    value={form.name}
-                    onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                    autoFocus
-                  />
-                  <div>
-                    <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                      {t("description")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
-                    </label>
-                    <textarea
-                      className="w-full rounded-xl border border-[#e5e7eb] bg-white px-3.5 py-2.5 text-sm text-[#111827] placeholder:text-[#9ca3af] min-h-[72px] resize-none focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
-                      placeholder={t("descPlaceholder")}
-                      value={form.description}
-                      onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                      {t("price")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <select
-                        value={form.priceType}
-                        onChange={(e) => setForm((f) => ({ ...f, priceType: e.target.value as PricingType }))}
-                        className="h-10 px-3 rounded-xl border border-[#e5e7eb] bg-white text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
-                      >
-                        {PRICING_TYPES.map((pt) => (
-                          <option key={pt.value} value={pt.value}>{pt.label}</option>
-                        ))}
-                      </select>
-                      {form.priceType !== "a_convenir" && (
-                        <div className="flex-1">
-                          <PriceInput
-                            placeholder="15000"
-                            value={form.priceAmount}
-                            onChange={(v) => setForm((f) => ({ ...f, priceAmount: v }))}
-                          />
-                        </div>
-                      )}
-                    </div>
-                    {form.priceType !== "a_convenir" && form.priceAmount && (
-                      <p className="text-xs text-emerald-600 mt-1">{t("willShowAs", { price: formatServicePrice(Number(form.priceAmount.replace(/\D/g, "")), form.priceType) ?? "" })}</p>
-                    )}
-                  </div>
-
-                  <Input
-                    label={<>{t("yearsLabel")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span></>}
-                    type="number"
-                    inputMode="numeric"
-                    placeholder={t("yearsPlaceholder")}
-                    value={form.years}
-                    onChange={(e) => setForm((f) => ({ ...f, years: e.target.value }))}
-                  />
-                  <div className="flex gap-2 pt-1">
-                    <Button onClick={handleFormSave} loading={saving} size="sm">
-                      {saving ? t("saving") : editingId ? t("saveChanges") : t("addServiceBtn")}
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={cancelForm}>{t("cancel")}</Button>
-                  </div>
                 </div>
-              )}
+              ))
+            )}
 
-              {/* Add another service — shown when there are already services and the
-                  form isn't open here. */}
-              {profServices.length > 0 && !formHere && (
-                <button
-                  onClick={() => openAdd(prof)}
-                  className="self-start inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-sm font-medium text-[#009FD9] hover:bg-[#EBF5FB] transition-colors"
-                >
-                  <Plus className="h-4 w-4" /> {t("addService")}
-                </button>
-              )}
-            </div>
-          </section>
-        );
-      })}
-
-      {/* Add another profession — a profession groups its own services. */}
-      {addingProfession ? (
-        <div className="rounded-2xl border border-dashed border-[#d1d5db] p-4 flex flex-col gap-2">
-          <CategorySearch
-            value={newProfession}
-            onChange={(v) => { setNewProfession(v); setProfessionError(null); }}
-            placeholder={t("searchProfession")}
-            error={professionError ?? undefined}
-          />
-          <div className="flex gap-2">
-            <Button size="sm" onClick={confirmAddProfession}>{t("add")}</Button>
-            <Button size="sm" variant="ghost" onClick={() => { setAddingProfession(false); setNewProfession(""); setProfessionError(null); }}>
-              {t("cancel")}
-            </Button>
+            <button
+              type="button"
+              onClick={() => openAdd(selectedProfession)}
+              className="mt-1 w-full rounded-xl border border-dashed border-[#bfdbfe] py-2.5 text-sm font-semibold text-[#009FD9] hover:bg-[#EBF5FB] transition-colors flex items-center justify-center gap-1.5"
+            >
+              <Plus className="h-4 w-4" /> {t("addService")}
+            </button>
           </div>
         </div>
-      ) : (
-        <button
-          onClick={() => { setAddingProfession(true); setProfessionError(null); }}
-          className="self-start inline-flex items-center gap-1.5 text-sm font-medium text-[#009FD9] hover:underline"
+      </div>
+
+      {/* Autosave status — every change persists immediately. */}
+      <p className="text-center text-xs text-[#9ca3af]">
+        {saving ? t("saving") : saved ? t("saved") : t("savedAuto")}
+      </p>
+
+      {/* ── Add-profession picker ─────────────────────────────────────── */}
+      {showPicker && (
+        <Modal
+          onClose={() => { setShowPicker(false); setPickerQuery(""); }}
+          title={t("pickerTitle")}
+          closeLabel={t("cancel")}
+          bodyClassName="px-0 py-0"
         >
-          <Plus className="h-4 w-4" /> {t("addProfession")}
-        </button>
+          <div className="sticky top-0 z-10 border-b border-[#f3f4f6] bg-white px-5 pb-3 pt-4 sm:px-6">
+            <div className="relative">
+              <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9ca3af]" />
+              <input
+                value={pickerQuery}
+                onChange={(e) => setPickerQuery(e.target.value)}
+                placeholder={t("pickerSearch")}
+                autoFocus
+                className="w-full h-11 rounded-xl border border-[#e5e7eb] bg-white pl-9 pr-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+              />
+            </div>
+          </div>
+          <div className="px-3 py-2 sm:px-4">
+            {pickerList.length === 0 ? (
+              <p className="px-2 py-6 text-center text-sm text-[#9ca3af]">{t("pickerEmpty")}</p>
+            ) : (
+              pickerList.map((cat) => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => addProfession(cat.id)}
+                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm text-[#374151] hover:bg-[#EBF5FB] hover:text-[#0089bb] transition-colors"
+                >
+                  <Plus className="h-4 w-4 shrink-0 text-[#009FD9]" /> {getCategoryLabel(cat.id, locale)}
+                </button>
+              ))
+            )}
+          </div>
+        </Modal>
       )}
 
-      {/* Persistent save status — every change (add / edit / delete) autosaves;
-          this line always tells the pro the current state, so there's never a
-          "did it save?" ambiguity. */}
-      <div className="flex items-center gap-1.5 text-sm pt-1 border-t border-[#f3f4f6] mt-1">
-        {saving ? (
-          <span className="flex items-center gap-1.5 text-[#6b7280] font-medium">
-            <Loader2 className="h-4 w-4 animate-spin" /> {t("saving")}
-          </span>
-        ) : saved ? (
-          <span className="flex items-center gap-1 text-emerald-600 font-medium">
-            <Check className="h-4 w-4" /> {t("saved")}
-          </span>
-        ) : (
-          <span className="text-[#9ca3af]">{t("savedAuto")}</span>
-        )}
-      </div>
+      {/* ── Add / edit service ────────────────────────────────────────── */}
+      {formOpen && (
+        <Modal
+          onClose={cancelForm}
+          title={editingId ? t("editService") : t("newServiceShort")}
+          subtitle={t("inProfession", { profession: getCategoryLabel(formCategory, locale) })}
+          closeLabel={t("cancel")}
+          footer={
+            <>
+              <Button type="button" variant="outline" onClick={cancelForm}>{t("cancel")}</Button>
+              <Button type="button" onClick={handleFormSave} loading={saving} disabled={!form.name.trim() || saving}>
+                {editingId ? t("saveChanges") : t("addServiceBtn")}
+              </Button>
+            </>
+          }
+        >
+          <div className="flex flex-col gap-4">
+            {formError && (
+              <p className="rounded-lg bg-red-50 border border-red-100 px-3 py-2 text-xs text-red-600">{formError}</p>
+            )}
+
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("nameField")}</label>
+              <input
+                className={inputClass}
+                placeholder={t("namePlaceholderShort")}
+                value={form.name}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                autoFocus
+              />
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("descBrief")}</label>
+              <textarea
+                className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] min-h-[88px] resize-none focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+                placeholder={t("descPlaceholderShort")}
+                value={form.description}
+                onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+              />
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("priceRef")}</label>
+              <div className="flex items-stretch gap-2">
+                <div className={cn("flex-1", form.aConsultar && "opacity-50 pointer-events-none")}>
+                  <PriceInput
+                    placeholder={t("amountPlaceholder")}
+                    value={form.priceAmount}
+                    onChange={(v) => setForm((f) => ({ ...f, priceAmount: v }))}
+                  />
+                </div>
+                <select
+                  value={form.priceUnit}
+                  onChange={(e) => setForm((f) => ({ ...f, priceUnit: e.target.value as PricingType }))}
+                  disabled={form.aConsultar}
+                  className="h-11 rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all disabled:opacity-50 cursor-pointer"
+                >
+                  {PRICE_UNITS.map((pt) => (
+                    <option key={pt.value} value={pt.value}>{pt.suffix || pt.label}</option>
+                  ))}
+                </select>
+              </div>
+              <label className="mt-2.5 flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.aConsultar}
+                  onChange={(e) => setForm((f) => ({ ...f, aConsultar: e.target.checked }))}
+                  className="h-4 w-4 rounded border-[#cbd5e1] text-[#009FD9] focus:ring-[#009FD9]"
+                />
+                <span className="text-sm text-[#374151]">{t("aConsultarLabel")}</span>
+              </label>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 }

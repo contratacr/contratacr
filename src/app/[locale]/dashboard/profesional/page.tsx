@@ -65,7 +65,7 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
 
 // Tabs that show a one-line context note under the section title (translated via
 // proPanel.subtitles.<tab>), so it's always obvious which role a section belongs to.
-const TABS_WITH_SUBTITLE = new Set<Tab>(["bookings", "proposals", "sent_bookings", "sent_projects", "saved"]);
+const TABS_WITH_SUBTITLE = new Set<Tab>(["services", "bookings", "proposals", "sent_bookings", "sent_projects", "saved"]);
 
 // Sidebar layout — two labeled groups + a standalone notifications entry. The
 // "Suscripción" tab only appears when PAYMENTS_ENABLED is on; with the flag off it
@@ -304,7 +304,7 @@ export default function ProDashboardPage() {
             <div ref={contentRef} className="flex-1 scroll-mt-20 lg:scroll-mt-0">
               <Card>
                 <CardHeader className="px-6 pt-6 pb-3">
-                  <h2 className="text-lg font-semibold text-[#111827]">{t(`tabs.${activeTab}`)}</h2>
+                  <h2 className="text-lg font-semibold text-[#111827]">{activeTab === "services" ? t("servicesHeading") : t(`tabs.${activeTab}`)}</h2>
                   {TABS_WITH_SUBTITLE.has(activeTab) && (
                     <p className="text-sm text-[#6b7280] mt-0.5">{t(`subtitles.${activeTab}`)}</p>
                   )}

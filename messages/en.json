@@ -984,7 +984,9 @@
       "soporte": "Support",
       "cuenta": "Account & security"
     },
+    "servicesHeading": "Professions & services",
     "subtitles": {
+      "services": "Each profession has its own priced services. Your main profession decides where you appear first.",
       "bookings": "Requests your clients sent you.",
       "proposals": "Published projects you can send proposals to.",
       "sent_bookings": "Services you requested from other professionals.",
@@ -1159,7 +1161,20 @@
     "removeProfession": "Remove profession",
     "edit": "Edit",
     "delete": "Delete",
-    "makePrincipal": "Make main"
+    "makePrincipal": "Make main",
+    "pickerTitle": "Add profession",
+    "pickerSearch": "Search profession...",
+    "pickerEmpty": "No professions found.",
+    "servicesPublished": "{count, plural, =0 {No services published} one {# service published} other {# services published}}",
+    "newServiceShort": "New service",
+    "inProfession": "in {profession}",
+    "nameField": "Service name",
+    "namePlaceholderShort": "e.g. Leak repair",
+    "descBrief": "Short description",
+    "descPlaceholderShort": "What does this service include?",
+    "priceRef": "Reference price",
+    "aConsultarLabel": "Price on request (don't show amount)",
+    "amountPlaceholder": "12 000"
   },
   "availabilityEditor": {
     "interval30": "Every 30 min",
