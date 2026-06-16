@@ -1044,6 +1044,17 @@ actually wired.
 > - **Exact contact copy** (`schedule` namespace, ES + EN): the private/no-schedule note is
 >   "La disponibilidad de este profesional no es pública. Contáctanos y conoce sus horarios."; the two
 >   contact buttons are "Contáctanos por WhatsApp" / "Contáctanos por llamada" (was "WhatsApp"/"Llamar").
+>
+> **UPDATE (Sprint 164) — coral note, blue text-price, redesigned results header.**
+> - **Availability note is CORAL** (`scheduleNote`): `CalendarDays` icon + text in coral `#DC5B4B` on a
+>   pale coral panel (`bg-[#FDF3F1] border-[#F7D8D1]`, `flex items-start gap-2`). This is a deliberate,
+>   single-purpose accent for the "availability not public" state — the general "serious app, no colorful
+>   icons" rule still applies everywhere else.
+> - **"Precio a consultar" uses the SAME brand-blue `#009FD9` as the colones price** (text price at
+>   `text-[13px]`, colones at `text-[15px]`); no price renders grey anymore.
+> - **Results header** ("Todos los profesionales / N profesionales en Costa Rica", `buscar/page.tsx`) is a
+>   **brand-tinted panel `bg-[#f4f9fc]`** with a brand accent bar (`h-6 w-1.5 rounded-full bg-[#009FD9]`) to
+>   the left of the grouped title+subtitle — not a flat white strip. Mobile still hides the subtitle.
 
 **THE GOLDEN RULE (learned the hard way across many flip-flops): the MOBILE single column is the
 BASE, and the desktop layout is ADDITIVE `lg:` classes ON TOP of it.** Never change a mobile

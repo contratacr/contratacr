@@ -210,7 +210,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
             brand-blue; the /unit is muted grey. Capped width so a long price wraps. */}
         {priceLabel && (
           <div className="shrink-0 max-w-[45%] text-right leading-tight">
-            <span className={`text-[15px] font-bold ${priceIsColones ? "text-[#009FD9]" : "text-[#6b7280]"}`}>{priceAmount}</span>
+            <span className={`font-bold text-[#009FD9] ${priceIsColones ? "text-[15px]" : "text-[13px]"}`}>{priceAmount}</span>
             {priceUnit && <span className="text-[11px] font-medium text-[#9ca3af]"> {priceUnit}</span>}
           </div>
         )}

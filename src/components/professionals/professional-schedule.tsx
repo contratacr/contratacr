@@ -2,7 +2,7 @@
 
 import { useMemo, useState, type ReactNode } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { ChevronLeft, ChevronRight, MapPin, Phone } from "lucide-react";
+import { ChevronLeft, ChevronRight, MapPin, Phone, CalendarDays } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { BookingModal } from "@/components/booking/booking-modal";
 import { ClientRegistrationModal } from "@/components/auth/client-registration-modal";
@@ -338,9 +338,14 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     </>
   );
 
+  // Contact-to-coordinate note — CORAL (calendar icon + text on a pale coral panel),
+  // matching the target screenshots. The coral here is an intentional, single-purpose
+  // accent for the "availability not public" state (the general "serious app, no
+  // colorful icons" rule still holds everywhere else).
   const scheduleNote = (text: string) => (
-    <div className="rounded-lg bg-[#f9fafb] border border-[#f3f4f6] px-2.5 py-2">
-      <p className="text-[11px] text-[#6b7280] leading-snug">{text}</p>
+    <div className="flex items-start gap-2 rounded-lg bg-[#FDF3F1] border border-[#F7D8D1] px-2.5 py-2">
+      <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-[#DC5B4B]" aria-hidden />
+      <p className="text-[11px] leading-snug text-[#DC5B4B]">{text}</p>
     </div>
   );
 

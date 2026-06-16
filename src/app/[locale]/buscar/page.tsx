@@ -208,13 +208,20 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       <LandingNavbar />
       <div className="h-16" aria-hidden />
 
-      {/* Top bar — title + subtitle */}
-      <div className="bg-white border-b border-[#e5e7eb]">
-        <div className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 py-3">
-          <h1 className="text-xl font-bold text-[#111827]">{pageTitle}</h1>
-          {/* On mobile the count is shown in the results panel (above the list); avoid
-              duplicating it here. Desktop keeps it in the header. */}
-          <p className="hidden lg:block text-[#6b7280] text-sm mt-0.5">{subtitle}</p>
+      {/* Top bar — title + subtitle. Subtle brand-tinted panel with a brand accent bar
+          to the left of the title, so the results header reads as its own section
+          instead of a flat white strip. */}
+      <div className="bg-[#f4f9fc] border-b border-[#e5e7eb]">
+        <div className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-start gap-2.5">
+            <span className="mt-0.5 h-6 w-1.5 shrink-0 rounded-full bg-[#009FD9]" aria-hidden />
+            <div className="min-w-0">
+              <h1 className="text-xl font-bold leading-tight text-[#111827]">{pageTitle}</h1>
+              {/* On mobile the count is shown in the results panel (above the list); avoid
+                  duplicating it here. Desktop keeps it in the header. */}
+              <p className="hidden lg:block text-[#6b7280] text-[13px] leading-tight mt-0.5">{subtitle}</p>
+            </div>
+          </div>
         </div>
       </div>
 
