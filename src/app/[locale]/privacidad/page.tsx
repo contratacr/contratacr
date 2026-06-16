@@ -1,5 +1,4 @@
 import { Link } from "@/i18n/navigation";
-import { SUPPORT_EMAIL } from "@/lib/constants";
 import { LegalDocument, type LegalSection } from "@/components/legal/legal-document";
 
 export const metadata = {
@@ -151,9 +150,7 @@ export default function PrivacidadPage() {
       sections={SECTIONS}
       footer={
         <>
-          ¿Preguntas sobre tus datos? Escríbenos a{" "}
-          <a href={`mailto:${SUPPORT_EMAIL}`} className="font-semibold text-[#009FD9] hover:underline">{SUPPORT_EMAIL}</a>{" "}
-          o desde <Link href="/soporte" className="font-semibold text-[#009FD9] hover:underline">Contactar soporte</Link>. Revisa también nuestros{" "}
+          Revisa también nuestros{" "}
           <Link href="/terminos" className="font-semibold text-[#009FD9] hover:underline">Términos y Condiciones</Link>.
         </>
       }
