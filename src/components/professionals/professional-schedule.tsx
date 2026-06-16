@@ -131,11 +131,13 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [professional.workplaces, slots]);
 
-  const hasLocationSelector = locationOptions.length > 1;
   const [selectedLoc, setSelectedLoc] = useState<string | null>(null);
-  // Default to the first location that ACTUALLY has slots (so the card doesn't open on
-  // an empty location), else the first option.
-  const defaultLoc = hasLocationSelector
+  // Default to the first location that ACTUALLY has slots (so the card doesn't open on an
+  // empty location), else the first option. Resolved even when there's only ONE location —
+  // so a single location renders in the SELECTED (active, brand-blue + underline) state,
+  // identical to a chosen tab in the multi-location case (and shows its address). When the
+  // pro has no named workplaces at all, there's nothing to select (handled by the fallback).
+  const defaultLoc = locationOptions.length > 0
     ? (locationOptions.find((o) => slots.some((s) => (s.locationId ?? "general") === o.id))?.id ?? locationOptions[0].id)
     : null;
   const effectiveId = selectedLoc ?? defaultLoc;

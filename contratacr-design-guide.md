@@ -1065,6 +1065,12 @@ actually wired.
 >   locations (`hasUpcomingAnywhere && locTabs.length > 1`) show **`noTimesAtLocation`** ("No hay horarios
 >   disponibles en esta ubicación. Elige otra…"); otherwise the general note. `hasUpcomingAnywhere` is a
 >   `useMemo` over the UNFILTERED `slots` (vs `hasUpcoming`, which is the selected location only).
+>
+> **UPDATE (Sprint 166) — a SINGLE location renders ACTIVE (selected color).** `defaultLoc` now resolves
+> whenever `locationOptions.length > 0` (not only when `> 1`), so `effectiveId` points at the lone
+> location and its tab gets the **active brand-blue `#009FD9` + underline** styling — identical to a
+> selected tab in the multi-location case (and it now shows that workplace's address). The province/cantón
+> FALLBACK tab was already always-active. Removed the unused `hasLocationSelector`.
 
 **THE GOLDEN RULE (learned the hard way across many flip-flops): the MOBILE single column is the
 BASE, and the desktop layout is ADDITIVE `lg:` classes ON TOP of it.** Never change a mobile
