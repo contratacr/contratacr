@@ -326,7 +326,6 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                     self-action handling, so no separate WhatsApp/Llamar/Correo buttons here. */}
                 <ProfessionalSchedule
                   stacked
-                  showSolicitar
                   professional={professional}
                   categoryName={professional.categoryId ? tCat(professional.categoryId as Parameters<typeof tCat>[0]) : ""}
                   availabilityPublic={professional.availabilityPublic ?? true}

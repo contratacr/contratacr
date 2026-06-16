@@ -39,12 +39,10 @@ interface ProfessionalScheduleProps {
   /** Business/brand name — bolded as the venue prefix on a real workplace address. */
   businessName?: string;
   /** STACKED single-column layout for the professional-profile contact card (no two-column
-   *  grid, no `info` slot): location tabs → 3-day strip → buttons. Default false = the
-   *  /buscar card's two-column layout (unchanged). */
+   *  grid, no `info` slot): location tabs → 3-day strip → buttons. In stacked mode the
+   *  contact buttons (WhatsApp + Llamar) ALWAYS show, plus "Ver horario completo" when
+   *  bookable (Llamar renders outlined). Default false = the /buscar card layout (unchanged). */
   stacked?: boolean;
-  /** In stacked mode, when bookable ALSO show a secondary "Solicitar servicio" button below
-   *  "Ver horario completo" (the profile shows both; the /buscar card shows only the first). */
-  showSolicitar?: boolean;
 }
 
 // How many day-columns are shown at once, and how far ahead the arrows page.
@@ -76,7 +74,7 @@ function dayColumnLabel(d: Date, i: number, locale: string): string {
  *    "Ver horario completo" link to the full profile.
  *  - Private: lock state with "Contáctanos por Whatsapp" + "por llamada".
  */
-export function ProfessionalSchedule({ professional, categoryName, availabilityPublic, contactPreference = "ambas", slots: allSlots, activeCategory, isOwn = false, info, placeFallback = "", placeAddress = "", coverageText = "", businessName = "", stacked = false, showSolicitar = false }: ProfessionalScheduleProps) {
+export function ProfessionalSchedule({ professional, categoryName, availabilityPublic, contactPreference = "ambas", slots: allSlots, activeCategory, isOwn = false, info, placeFallback = "", placeAddress = "", coverageText = "", businessName = "", stacked = false }: ProfessionalScheduleProps) {
   const t = useTranslations("schedule");
   const locale = useLocale();
   // When a specific profession was searched, only show that profession's hours
@@ -368,17 +366,6 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       {t("viewFullSchedule")}
     </button>
   );
-  // Secondary booking CTA — only shown in `stacked` (profile contact card) mode when
-  // bookable, alongside "Ver horario completo" (both open the same booking flow).
-  const solicitarButton = (
-    <button
-      type="button"
-      onClick={(e) => { e.stopPropagation(); openBooking(); }}
-      className="w-full rounded-full border border-[#009FD9] py-2.5 text-sm font-semibold text-[#009FD9] hover:bg-[#EBF5FB] transition-colors"
-    >
-      {t("requestService")}
-    </button>
-  );
   const contactButtons = (
     <>
       {showWa && (
@@ -396,7 +383,11 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
         <a
           href={isOwn ? undefined : telHref}
           onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.call); } : (e) => e.stopPropagation()}
-          className="w-full inline-flex items-center justify-center gap-1.5 rounded-full bg-[#009FD9] py-2.5 text-[13px] font-semibold text-white hover:bg-[#0089bb] transition-colors"
+          className={`w-full inline-flex items-center justify-center gap-1.5 rounded-full py-2.5 text-[13px] font-semibold transition-colors ${
+            stacked
+              ? "border border-[#009FD9] text-[#009FD9] hover:bg-[#EBF5FB]"
+              : "bg-[#009FD9] text-white hover:bg-[#0089bb]"
+          }`}
         >
           <Phone className="h-4 w-4" /> {t("call")}
         </a>
@@ -491,19 +482,19 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   // slot, no two-column grid. Bookable → "Ver horario completo" (+ "Solicitar servicio"
   // when showSolicitar); not bookable → "Contáctanos por WhatsApp" + "Contáctanos por llamada".
   if (stacked) {
+    // Profile contact card: location tabs → 3-day strip (or coral note) → buttons.
+    // Bookable → "Ver horario completo" (filled) + WhatsApp (green) + Llamar (outlined).
+    // Not bookable → just WhatsApp + Llamar (the coral note explains why). NO "Solicitar
+    // servicio" here (the WhatsApp/Llamar contact buttons replace it).
     return (
       <>
         <div className="flex flex-col gap-3">
           {locationControl}
           {scheduleBody}
-          {hasSchedule ? (
-            <div className="flex flex-col gap-2">
-              {verHorarioButton}
-              {showSolicitar && solicitarButton}
-            </div>
-          ) : (
-            contactButtons
-          )}
+          <div className="flex flex-col gap-2">
+            {hasSchedule && verHorarioButton}
+            {contactButtons}
+          </div>
         </div>
         {bookingModals}
         {selfModal}
