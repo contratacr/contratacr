@@ -1346,32 +1346,39 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
   disabled-Cantón faded border beside Provincia (looks inconsistent). Toggle rows ("Cerca de mí",
   "Solo verificados") are plain label+switch rows (no bordered boxes); a "Filtros" header carries the
   active-count + "Limpiar (N)".
-- **Mobile (<lg) = the Yelp map-first pattern: a pinned search bar, a BIG map, a BOTTOM SHEET over
-  it.** The shell root is a fixed-viewport column `h-[calc(100dvh-64px)] flex flex-col overflow-hidden`
-  (`lg:block lg:h-auto lg:overflow-visible`). Top→bottom: **(1) the search bar** (`MobileServiceSearch`,
-  `lg:hidden`, pinned at the very top) → **(2) the MAP** — a single `<GoogleMapPanel>` in an aside that
-  `flex-1`-fills the remaining height (inner box `h-full`, full-bleed: NO border/rounding on mobile,
-  `lg:rounded-2xl lg:border lg:sticky lg:top-20 lg:h-[calc(100vh-104px)]`), so the map gets full
-  prominence with the pins + "Buscar en esta área" → **(3) the BOTTOM SHEET** floating over the map's
-  lower part. In `page.tsx` the mobile chrome is trimmed so the map dominates: the **"Todos los
-  profesionales" header strip is `hidden lg:block`**, the **footer is `hidden lg:block`**, and `main`
-  padding is **zeroed on mobile** (`px-0 py-0 lg:px-8 lg:py-4`) for the edge-to-edge map.
-- **The BOTTOM SHEET** (`fixed inset-x-0 bottom-0 z-30`, `rounded-t-2xl` + top/side border + upward
-  shadow): a **drag handle** (a `h-1.5 w-10` grey grip) you **drag to resize** (pointer events on the
-  handle only, `touch-none`) between two snap points — **PEEK ≈ 0.46 dvh** (chips + first card peek over
-  the map) and **FULL ≈ 0.84 dvh** (browse the full list, search bar still visible on top); a small
-  drag → snap to nearest, a tap → toggle. Inside, top→bottom: a **leading filter-icon button** (opens
-  the full-filter drawer; a brand-blue dot marks active filters) + the **horizontally-scrollable chip
-  row** (`<SearchFilters variant="chips"/>`, never wraps), the **"<N> profesionales" count**, then the
-  **scrolling card list** (`overflow-y-auto`, `children`). The cards live INSIDE the sheet — a clean
-  contained panel — and NEVER bleed onto the map.
+- **Mobile (<lg) = a polished map-background bottom-sheet (Yelp/Airbnb/Hulihealth; Sprint 151).** The
+  shell root is a fixed-viewport column `h-[calc(100dvh-64px)] flex flex-col overflow-hidden`
+  (`lg:block lg:h-auto lg:overflow-visible`). Top→bottom: **(1) a compact HEADER** (`lg:hidden`) — the
+  search bar (`MobileServiceSearch`, flex-fills) + a **"Filtros" control** (opens the full-filter drawer;
+  brand-blue `#008ce0` dot when filters are active). The site navbar above is the menu. → **(2) the MAP**
+  as a full-bleed BACKGROUND — a single `<GoogleMapPanel>` in an aside that `flex-1`-fills the rest
+  (inner box `h-full`, no border/rounding on mobile; `lg:rounded-2xl lg:border lg:sticky lg:top-20
+  lg:h-[calc(100vh-104px)]`), carrying the pins, "Buscar en esta área" + the top-right zoom/fullscreen
+  controls. → **(3) the BOTTOM SHEET** floating over the map's lower part. In `page.tsx` the mobile
+  chrome is trimmed so the map dominates: the **"Todos los profesionales" header strip is `hidden
+  lg:block`**, the **footer is `hidden lg:block`**, and `main` padding is **zeroed on mobile** (`px-0
+  py-0 lg:px-8 lg:py-4`).
+- **The BOTTOM SHEET** (`fixed inset-x-0 bottom-0 z-30`, `rounded-t-[20px]` + top/side border + upward
+  shadow): the **whole header strip (a clean grip + the "<N> profesionales en <área>" count) is the drag
+  target** (`touch-none`, `select-none`). **Drag to resize** between snap points — **PEEK ≈ 0.44 dvh**
+  (map-dominant; ~1 card + a peek of the next) and **FULL ≈ 0.9 dvh** — with **VELOCITY flick snapping**
+  (flick up → FULL, flick down → PEEK; otherwise settle to nearest; a tap toggles) and a spring
+  transition (`cubic-bezier(.32,.72,0,1)`). A `maxHeight: calc(100dvh - 112px)` keeps the header visible
+  even at full. Below the header: the **scrolling card list** (`overflow-y-auto`, `children`). Cards live
+  INSIDE the sheet and NEVER bleed onto the map. Filters are reached via the **header "Filtros" drawer**
+  (the in-sheet chip row was dropped Sprint 151 for a cleaner, map-dominant look).
+- **Pin ↔ sheet:** tapping a map pin dispatches a **`ccr:focus-card`** window event (detail = proId); the
+  layout (mobile only, gated by `matchMedia(max-width:1023px)`) springs the sheet open to **FOCUS ≈ 0.64
+  dvh** and `scrollIntoView({block:"center"})`s that card. The pin's ring highlight + mini-card popup
+  still fire (`setActive` / `openPopup`). The reverse (card hover → pin) keeps the delegated-document
+  listener.
 - **ONE map instance + ONE card list, repositioned by classes** — NOT a second `<GoogleMapPanel>` and
   NOT a duplicated card list (duplicate `#pro-card-<id>` IDs would break the card↔pin highlight). The
   sheet wrapper is `lg:contents` so on desktop it dissolves: the card column (`lg:order-2 lg:w-[640px]
-  xl:w-[700px] 2xl:w-[820px]`, with its mobile `flex-1 overflow-y-auto px-4` reset by `lg:`) and the
-  map (`lg:order-3 lg:flex-1`) land in the `lg:flex-row` shell; the sheet chrome + the search bar are
-  `lg:hidden`. The full-filter **drawer** (left panel, `xl:hidden`) is shared by the mobile filter-icon
-  AND the lg–xl "Filtros" button.
+  xl:w-[700px] 2xl:w-[820px]`, with its mobile `flex-1 overflow-y-auto px-4` + the inline `height`/
+  `maxHeight` all reset/ignored by `lg:`) and the map (`lg:order-3 lg:flex-1`) land in the `lg:flex-row`
+  shell; the sheet header + the mobile header are `lg:hidden`. The full-filter **drawer** (left panel,
+  `xl:hidden`) is shared by the mobile header "Filtros" AND the lg–xl "Filtros" button.
 - **No clobbering between the search bar and the chips:** the search bar copies the live URL
   (preserving filters); the chips' `applyFilters` reads `q` from the URL (not the chip
   instance's stale local state). Keep this split. The mobile count is shown in the sheet, so the
