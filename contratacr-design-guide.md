@@ -1257,10 +1257,18 @@ location tabs/address below it, then the schedule block.
   the name line, with a small grey info icon** (`Info`, HuliHealth style) — `shrink-0 flex
   max-w-[45%] items-start gap-1`. It sits below the favorite bookmark (the `pt-10` band clears
   it); NOT `z-10` so the stretched card overlay still routes its clicks to the profile.
-- **Schedule (right column) = consecutive day-columns** from the first day WITH availability,
-  paged 3 at a time; days in the window with none show **"No disponible"** (`schedule.dayUnavailable`),
-  Doctoralia-style. No bookable schedule → a short note. The slot DATA/fetch is UNCHANGED — this
-  only changes how the already-fetched `days` display.
+- **Schedule (right column) = ALWAYS 3 day-columns, prioritizing days WITH availability** (Sprint
+  163, in `ProfessionalSchedule` → applies to BOTH the /buscar cards AND the profile). Fill the 3
+  columns with the **next days that actually have appointments** (soonest first, **NOT necessarily
+  consecutive** — e.g. today / +3 days / +2 weeks, each with its slots). Only when **fewer than 3**
+  days have availability, **pad** the remaining columns with the **immediately following CONSECUTIVE
+  calendar days marked "No disponible"** (`schedule.dayUnavailable`) — e.g. availability only today →
+  today / Mañana (No disponible) / +2 (No disponible). Never waste a column on "No disponible" when a
+  real availability day further out can fill it. Implementation: `availableDays` = days with slots;
+  `windowDays` = `availableDays.slice(effOffset, +COLS)` padded (from the last shown day's `dayIndex`)
+  when `< COLS`; `dayColsClass` is always `grid-cols-3`. Arrows page through the days-with-availability;
+  "+N" per day + the per-location logic + the slot DATA/fetch are UNCHANGED. No bookable schedule (0
+  available days) still shows the short coral note, not 3 empty columns.
 - **Action buttons (IN the right column, full-width PILLS of it — HuliHealth style, NO bottom
   strip), conditional on availability** *(updated per the /buscar design handoff — this
   supersedes the old outlined-button / two-button rule)*: if the day strip is showing
