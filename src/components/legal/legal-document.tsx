@@ -73,13 +73,18 @@ export async function LegalDocument({ title, updated, intro, sections, footer }:
           {/* Intro */}
           <p className="mt-6 text-[#374151] leading-relaxed">{renderInline(intro, "intro")}</p>
 
-          {/* Table of contents */}
+          {/* Table of contents — a balanced 2-column FLOW (CSS multi-columns), NOT a grid.
+              A grid couples each row's height, so a long item that wraps to two lines stretched
+              its row and left an empty gap below the short item paired with it. With multi-columns
+              each item takes only its own height and the spacing stays even, even when an item
+              wraps. `list-none` (the "N." prefix is already in the text); `break-inside-avoid`
+              keeps a link from splitting across the column break. */}
           <nav aria-label="Contenido" className="mt-8 rounded-2xl border border-[#e5e7eb] bg-[#f9fafb] p-5">
             <p className="text-xs font-bold uppercase tracking-widest text-[#9ca3af] mb-3">Contenido</p>
-            <ol className="grid sm:grid-cols-2 gap-x-6 gap-y-2">
+            <ol className="list-none columns-1 sm:columns-2 gap-x-6">
               {sections.map((s) => (
-                <li key={s.id}>
-                  <a href={`#${s.id}`} className="text-sm text-[#009FD9] hover:underline">{s.h}</a>
+                <li key={s.id} className="mb-2 break-inside-avoid">
+                  <a href={`#${s.id}`} className="text-sm leading-snug text-[#009FD9] hover:underline">{s.h}</a>
                 </li>
               ))}
             </ol>

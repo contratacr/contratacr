@@ -166,8 +166,7 @@ export default function TerminosPage() {
       sections={SECTIONS}
       footer={
         <>
-          ¿Dudas sobre estos Términos? Contáctanos desde{" "}
-          <Link href="/soporte" className="font-semibold text-[#009FD9] hover:underline">Soporte</Link>. Revisa también nuestra{" "}
+          Revisa también nuestra{" "}
           <Link href="/privacidad" className="font-semibold text-[#009FD9] hover:underline">Política de Privacidad</Link>.
         </>
       }
