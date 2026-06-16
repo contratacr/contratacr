@@ -1127,7 +1127,8 @@
     "matchesServices": "Coincide con tus servicios"
   },
   "servicesEditor": {
-    "intro": "Cada <strong>profesión</strong> tiene sus propios <strong>servicios</strong>. Agrega los que ofreces en cada una, con su precio. Cada servicio guarda sus fotos de casos de éxito.",
+    "intro": "Una <strong>profesión</strong> es un área en la que trabajas (p. ej. Plomería). Dentro de cada profesión agregas <strong>servicios</strong> específicos, cada uno con su precio (p. ej. «Instalación de tuberías»).",
+    "servicesOf": "Servicios de",
     "servicesCount": "{count, plural, =0 {Sin servicios todavía} one {# servicio} other {# servicios}}",
     "addFirstInProfession": "Agrega tu primer servicio en {profession}",
     "noProfession": "Primero elige tu profesión principal en la pestaña <strong>Mi perfil</strong>.",

@@ -260,9 +260,15 @@ export function ServicesEditor({
 
   return (
     <div className="flex flex-col gap-4">
+      {/* Relationship explainer — makes the profession (area) → service (specific, priced) hierarchy
+          explicit so "Agregar profesión" vs "Agregar servicio" can't be confused. */}
+      <p className="rounded-xl border border-[#e5e7eb] bg-[#f9fafb] px-4 py-3 text-[13px] leading-relaxed text-[#6b7280]">
+        {t.rich("intro", rich)}
+      </p>
       <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,240px)_minmax(0,1fr)]">
-        {/* ── LEFT: profession list ─────────────────────────────────────── */}
+        {/* ── LEFT: profession list (the AREAS you work in) ─────────────── */}
         <div className="flex flex-col gap-2">
+          <p className="px-1 text-[11px] font-bold uppercase tracking-wide text-[#9ca3af]">{t("step1Title")}</p>
           {professions.map((prof, i) => {
             const count = services.filter((s) => effectiveCategory(s) === prof).length;
             const selected = prof === selectedProfession;
@@ -291,18 +297,20 @@ export function ServicesEditor({
           <button
             type="button"
             onClick={() => { setShowPicker(true); setPickerQuery(""); }}
-            className="w-full rounded-xl border-2 border-dashed border-[#d1d5db] py-2.5 text-sm font-medium text-[#009FD9] hover:border-[#009FD9] hover:bg-[#EBF5FB] transition-all flex items-center justify-center gap-1.5"
+            className="mt-1 w-full rounded-xl border border-dashed border-[#cbd5e1] py-2.5 text-sm font-semibold text-[#0089bb] hover:border-[#009FD9] hover:bg-[#EBF5FB] transition-all flex items-center justify-center gap-2"
           >
             <Plus className="h-4 w-4" /> {t("addProfession")}
           </button>
         </div>
 
-        {/* ── RIGHT: selected profession's services ─────────────────────── */}
+        {/* ── RIGHT: the SERVICES of the selected profession (specific, priced) ── */}
         <div className="rounded-2xl border border-[#e5e7eb] bg-white p-4 sm:p-5">
-          {/* Header */}
+          {/* Header — the "Servicios de · <profession>" eyebrow makes it obvious these services
+              belong UNDER the profession selected on the left. */}
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <h3 className="text-base font-bold text-[#111827] truncate">{getCategoryLabel(selectedProfession, locale)}</h3>
+              <p className="text-[11px] font-bold uppercase tracking-wide text-[#9ca3af]">{t("servicesOf")}</p>
+              <h3 className="text-base font-bold leading-tight text-[#111827] truncate">{getCategoryLabel(selectedProfession, locale)}</h3>
               <p className="mt-0.5 text-xs text-[#6b7280]">{t("servicesPublished", { count: detailServices.length })}</p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
@@ -354,7 +362,7 @@ export function ServicesEditor({
             <button
               type="button"
               onClick={() => openAdd(selectedProfession)}
-              className="mt-1 w-full rounded-xl border border-dashed border-[#bfdbfe] py-2.5 text-sm font-semibold text-[#009FD9] hover:bg-[#EBF5FB] transition-colors flex items-center justify-center gap-1.5"
+              className="mt-1 w-full rounded-xl border border-dashed border-[#bfdbfe] py-2.5 text-sm font-semibold text-[#0089bb] hover:border-[#009FD9] hover:bg-[#EBF5FB] transition-colors flex items-center justify-center gap-2"
             >
               <Plus className="h-4 w-4" /> {t("addService")}
             </button>
