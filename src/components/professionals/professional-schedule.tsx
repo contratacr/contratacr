@@ -258,7 +258,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       const items = (byDate.get(key) ?? []).filter((s) => !isTooSoonCR(key, s.time)).sort((a, b) => a.time.localeCompare(b.time));
       // Relative column label (Hoy / Mañana / "Jue 18"), matching the prototype.
       const label = dayColumnLabel(d, i, locale);
-      return { key, label, soon: i <= 1, items };
+      return { key, label, soon: i <= 1, items, dayIndex: i };
     });
   }, [filteredSlots, t, locale]);
 
@@ -332,19 +332,36 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const telHref = `tel:+${((professional.callPhone || professional.whatsapp) || "").replace(/\D/g, "")}`;
 
   // ── Schedule body (the RIGHT column on desktop) ───────────────────────────
-  // ADAPTIVE day strip: show ONLY the days that actually have availability (never
-  // "No disponible" filler columns), and size the grid to HOW MANY are shown — 1 day →
-  // full-width, 2 days → halves, 3 → thirds — so a pro with few open days fills the
-  // space instead of looking sparse. Page COLS at a time when there are MORE than COLS
-  // available days. The slot DATA is unchanged — only the display.
+  // ALWAYS 3 day-columns, PRIORITIZING the next days that actually HAVE availability (soonest
+  // first, NOT necessarily consecutive — e.g. today / +3 days / +2 weeks). When fewer than 3
+  // days have availability, PAD the remaining columns with the immediately following CONSECUTIVE
+  // calendar days marked "No disponible" (e.g. availability only today → today / Mañana (No
+  // disponible) / +2 (No disponible)). So real appointment days further out are never wasted on
+  // "No disponible" filler. The slot DATA is unchanged — only the display. The arrows still page
+  // COLS at a time through the days WITH availability.
   const availableDays = useMemo(() => days.filter((d) => d.items.length > 0), [days]);
   const hasUpcoming = availableDays.length > 0;
   const maxOffset = Math.max(0, availableDays.length - COLS);
   const effOffset = Math.min(offset, maxOffset);
-  const windowDays = availableDays.slice(effOffset, effOffset + COLS);
+  const windowDays = useMemo(() => {
+    const page = availableDays.slice(effOffset, effOffset + COLS);
+    if (page.length === 0 || page.length >= COLS) return page;
+    // Pad with consecutive calendar days AFTER the last available day shown (all "No disponible").
+    const anchorIdx = page[page.length - 1].dayIndex;
+    const base = new Date();
+    base.setHours(0, 0, 0, 0);
+    const pad: typeof page = [];
+    for (let k = 1; page.length + pad.length < COLS; k++) {
+      const idx = anchorIdx + k;
+      const d = new Date(base);
+      d.setDate(base.getDate() + idx);
+      pad.push({ key: toKey(d), label: dayColumnLabel(d, idx, locale), soon: idx <= 1, items: [] as ScheduleSlot[], dayIndex: idx });
+    }
+    return [...page, ...pad];
+  }, [availableDays, effOffset, locale]);
   const canPrev = effOffset > 0;
   const canNext = effOffset + COLS < availableDays.length;
-  const dayColsClass = windowDays.length >= 3 ? "grid-cols-3" : windowDays.length === 2 ? "grid-cols-2" : "grid-cols-1";
+  const dayColsClass = "grid-cols-3"; // always 3 columns (availability days + "No disponible" padding)
 
   // Action buttons live IN the right column (HuliHealth style), full-width PILLS of that
   // column — NOT a separate bottom strip. CONDITIONAL on availability (logic unchanged):
