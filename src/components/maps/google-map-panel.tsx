@@ -348,10 +348,15 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
       restriction: { latLngBounds: CR_BOUNDS, strictBounds: false },
       mapTypeControl: false,
       streetViewControl: false,
-      fullscreenControl: false,
       rotateControl: false,
       scaleControl: false,
-      zoomControl: true,             // ONLY the zoom control
+      // Controls clustered at the TOP-RIGHT: clear of the top-center "Buscar en esta área"
+      // pill AND the bottom card sheet (the default bottom-right zoom was hidden behind the
+      // sheet on mobile). Zoom +/- and the maximize/fullscreen button stack cleanly there.
+      zoomControl: true,
+      zoomControlOptions: { position: g.ControlPosition.TOP_RIGHT },
+      fullscreenControl: true,
+      fullscreenControlOptions: { position: g.ControlPosition.TOP_RIGHT },
       clickableIcons: false,
       gestureHandling: "greedy", // wheel/scroll zooms DIRECTLY over the map (no Ctrl hint); one-finger pan + pinch-zoom on mobile
     });
