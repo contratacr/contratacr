@@ -113,18 +113,20 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const infoRef = useRef<any>(null);
 
-  // Single location → center + zoom. Multiple → fit all markers.
+  // Single location → center + zoom. Multiple → fit the pin cluster (generous
+  // padding) but cap zoom at 12 (maxZoom) so a tight cluster stays focused on the
+  // result area instead of zooming the whole country in/out.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function fitToMarkers(map: any, g: any, bounds: any, count: number) {
     if (count === 0) return;
     if (count === 1) {
       map.setCenter(bounds.getCenter());
-      map.setZoom(14);
+      map.setZoom(13);
       return;
     }
-    map.fitBounds(bounds, 48);
+    map.fitBounds(bounds, 64);
     g.event.addListenerOnce(map, "idle", () => {
-      if (map.getZoom() > 15) map.setZoom(15);
+      if (map.getZoom() > 12) map.setZoom(12);
     });
   }
 

@@ -1014,6 +1014,21 @@ actually wired.
 >   `placeAddress`, `coverageText`, `businessName`.
 > The schedule/booking LOGIC, slot styling, and the conditional-button rule (§ below / Sprint 159)
 > are unchanged. THE GOLDEN RULE (mobile base + additive `lg:`) still holds.
+>
+> **UPDATE (Sprint 162) — schedule grid + map zoom polish (still matching the target screenshots).**
+> - Right rail narrowed **`300px → 292px`**; the grid gains a **`lg:min-h-[184px]` floor** so short
+>   cards keep a consistent height and the centered right rail (`lg:justify-center`) no longer floats
+>   with a big empty gap above "Ver horario completo".
+> - **Day columns now use RELATIVE labels** — `dayColumnLabel(d, i, locale)`: today → "Hoy", tomorrow →
+>   "Mañana", else capitalized short weekday + day number ("Jue 18" / "Thu 18"). Replaces the always-full
+>   "18 jun" label. Labels are muted `text-[#6b7280]`, normal case (no uppercase, no bold, no blue-for-soon).
+> - Each day is its OWN equal-width grid cell (label on top, pills stacked below); each column shows
+>   **up to 3 time pills** (was 2) before the dashed `+N`, with roomier `py-1` pills and `gap-1.5`/`gap-2`.
+> - **Map (`google-map-panel.tsx`) `fitToMarkers`: maxZoom 12** (was 15) + padding `64` (was 48) so the
+>   pin cluster stays focused on the result area instead of zooming out to the whole country; single-pin
+>   zoom `14 → 13`.
+> - Initials avatar (light-blue `#EBF5FB` circle + blue `#009FD9` initials) confirmed as the no-photo
+>   fallback — `avatarUrl` resolves to `null` when there's no photo, never a logo placeholder.
 
 **THE GOLDEN RULE (learned the hard way across many flip-flops): the MOBILE single column is the
 BASE, and the desktop layout is ADDITIVE `lg:` classes ON TOP of it.** Never change a mobile

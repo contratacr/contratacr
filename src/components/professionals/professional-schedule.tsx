@@ -51,14 +51,15 @@ function toKey(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-// Full, CONSISTENT date label for every day column: day number + short month
-// (e.g. "15 mar" / "Mar 15"), never a weekday-only "lun 15". The label row is
-// CSS-uppercased, so casing/period differences don't matter.
-function dateLabel(d: Date, locale: string): string {
+// Prototype-matching column label (relative): today → "Hoy"/"Today", tomorrow →
+// "Mañana"/"Tomorrow", any other day → capitalized short weekday + day number
+// ("Jue 18" / "Thu 18"). `i` is the day's offset (in days) from today.
+function dayColumnLabel(d: Date, i: number, locale: string): string {
+  if (i === 0) return locale === "en" ? "Today" : "Hoy";
+  if (i === 1) return locale === "en" ? "Tomorrow" : "Mañana";
   const loc = locale === "en" ? "en-US" : "es-CR";
-  const day = d.getDate();
-  const month = d.toLocaleDateString(loc, { month: "short" }).replace(".", "");
-  return locale === "en" ? `${month} ${day}` : `${day} ${month}`;
+  const wd = d.toLocaleDateString(loc, { weekday: "short" }).replace(".", "");
+  return `${wd.charAt(0).toUpperCase()}${wd.slice(1)} ${d.getDate()}`;
 }
 
 /**
@@ -220,8 +221,8 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       // Hide any slot within the 15-minute lead time (today only) — it's no longer
       // bookable, so it must stop showing in search.
       const items = (byDate.get(key) ?? []).filter((s) => !isTooSoonCR(key, s.time)).sort((a, b) => a.time.localeCompare(b.time));
-      // Always the full date (no "Hoy"/"Mañana"/weekday-only) so columns are consistent.
-      const label = dateLabel(d, locale);
+      // Relative column label (Hoy / Mañana / "Jue 18"), matching the prototype.
+      const label = dayColumnLabel(d, i, locale);
       return { key, label, soon: i <= 1, items };
     });
   }, [filteredSlots, t, locale]);
@@ -363,30 +364,30 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           <ChevronLeft className="h-[15px] w-[15px]" />
         </button>
 
-        <div className="grid flex-1 grid-cols-3 gap-1.5">
+        <div className="grid flex-1 grid-cols-3 gap-2">
           {windowDays.map((day) => {
-            const extra = day.items.length - 2;
+            const extra = day.items.length - 3;
             return (
-              <div key={day.key} className="flex flex-col gap-1 min-w-0">
-                <p className={`text-center text-[10px] font-bold uppercase tracking-wide leading-tight truncate ${day.soon ? "text-[#009FD9]" : "text-[#9ca3af]"}`}>{day.label}</p>
+              <div key={day.key} className="flex flex-col gap-1.5 min-w-0">
+                <p className="text-center text-[11px] font-semibold leading-tight truncate text-[#6b7280]">{day.label}</p>
                 {day.items.length === 0 ? (
-                  <p className="text-center text-[10px] leading-tight text-[#cbd5e1] py-1">{t("dayUnavailable")}</p>
+                  <p className="text-center text-[10px] leading-tight text-[#cbd5e1] py-1.5">{t("dayUnavailable")}</p>
                 ) : (
                   <>
-                    {day.items.slice(0, 2).map((slot) => (
+                    {day.items.slice(0, 3).map((slot) => (
                       <button
                         key={`${slot.time}-${slot.locationId ?? ""}`}
                         onClick={(e) => { e.stopPropagation(); pick(slot); }}
-                        className="w-full rounded-md py-0.5 text-[11px] font-semibold text-[#0089bb] bg-[#EBF5FB] hover:bg-[#009FD9] hover:text-white transition-colors leading-none"
+                        className="w-full rounded-md py-1 text-[11px] font-semibold text-[#0089bb] bg-[#EBF5FB] hover:bg-[#009FD9] hover:text-white transition-colors leading-none"
                       >
                         {slot.time}
                       </button>
                     ))}
                     {extra > 0 && (
                       <button
-                        onClick={(e) => { e.stopPropagation(); pick(day.items[2]); }}
+                        onClick={(e) => { e.stopPropagation(); pick(day.items[3]); }}
                         title={t("viewFullSchedule")}
-                        className="w-full rounded-md py-0.5 text-[10px] font-bold leading-none text-[#0089bb] border border-dashed border-[#bfdbfe] hover:bg-[#EBF5FB] transition-colors"
+                        className="w-full rounded-md py-1 text-[10px] font-bold leading-none text-[#0089bb] border border-dashed border-[#bfdbfe] hover:bg-[#EBF5FB] transition-colors"
                       >
                         +{extra}
                       </button>
@@ -419,7 +420,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           (schedule + buttons, 300px) separated by a VERTICAL divider, so more fit per screen.
           The grid (no `items-start`) lets the columns stretch to equal height so the divider
           runs full-height and the schedule centers against the taller left column. */}
-      <div className="flex flex-col gap-3 lg:grid lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-5">
+      <div className="flex flex-col gap-3 lg:grid lg:grid-cols-[minmax(0,1fr)_292px] lg:gap-5 lg:min-h-[184px]">
         {/* LEFT — professional info + location tabs/address (under the rating). */}
         <div className="flex min-w-0 flex-col gap-2.5">
           {info}
