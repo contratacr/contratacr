@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
   X, CheckCircle2, MapPin, Shield, ShieldAlert, ArrowLeft, ChevronLeft, ChevronRight, Lock, CalendarPlus,
+  Check, Sun, Sunset, Moon, CalendarCheck,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { useTranslations } from "next-intl";
@@ -648,9 +649,9 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
           )}
         >
           {/* LEFT PANEL */}
-          <div className="bg-gradient-to-br from-[#1a2744] via-[#13294a] to-[#009FD9] md:w-[260px] shrink-0 flex flex-col p-6 text-white">
-            <div className="flex items-center gap-3 md:flex-col md:items-start md:gap-0">
-              <Avatar className="h-14 w-14 md:h-20 md:w-20 md:self-center shrink-0">
+          <div className="bg-gradient-to-br from-[#1a2744] via-[#13294a] to-[#009FD9] md:w-[320px] shrink-0 flex flex-col p-6 text-white">
+            <div className="flex items-center gap-3 md:flex-col md:items-center md:gap-0">
+              <Avatar className="h-14 w-14 md:h-20 md:w-20 shrink-0">
                 <AvatarImage src={professional.avatarUrl} alt={professional.fullName} />
                 <AvatarFallback className="bg-white/20 text-white text-xl font-bold">
                   {getInitials(professional.fullName)}
@@ -660,6 +661,11 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                 <div className="flex items-center gap-1.5 md:justify-center flex-wrap">
                   <span className="font-bold text-base md:text-lg leading-tight">{professional.fullName}</span>
                 </div>
+                {professional.isVerified && (
+                  <span className="mt-1 inline-flex items-center gap-1 text-[13px] font-semibold text-[#34d399] md:justify-center">
+                    <Check className="h-3.5 w-3.5" /> Verificado
+                  </span>
+                )}
                 <p className="text-sm text-white/70 mt-1 md:text-center">{categoryName}</p>
               </div>
             </div>
@@ -688,9 +694,9 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
             <div className="hidden md:flex flex-col gap-2.5 mt-auto pt-5">
               <p className="text-[11px] font-semibold uppercase tracking-wide text-white/50">Qué sigue</p>
               {[
-                "Envías tu solicitud y se abre WhatsApp con el profesional.",
-                "El profesional confirma disponibilidad y precio.",
-                "Coordinan los detalles directamente, sin intermediarios.",
+                "Eliges fecha y hora y envías tu solicitud.",
+                "Se abre WhatsApp con el profesional para confirmar.",
+                "Coordinan precio y detalles directamente, sin intermediarios.",
               ].map((text, i) => (
                 <div key={i} className="flex items-start gap-2 text-white/70 text-xs">
                   <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-white/15 text-[10px] font-semibold text-white">{i + 1}</span>
@@ -737,7 +743,8 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                 <div>
                   <h3 className="text-lg font-semibold text-[#111827] mb-1">Elige fecha y hora</h3>
                   <p className="text-sm text-[#6b7280] mb-4">
-                    Selecciona una fecha disponible para tu servicio.
+                    {initialLocationLabel ? <>En <span className="font-semibold text-[#374151]">{initialLocationLabel}</span>. </> : null}
+                    Los días con punto azul tienen citas.
                   </p>
 
                   {!availabilityLoaded ? (
@@ -785,106 +792,117 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                       </a>
                     </div>
                   ) : (
-                    <>
-                      {/* Month navigation */}
-                      <div className="flex items-center justify-between mb-3">
-                        <button
-                          onClick={prevMonth}
-                          disabled={!canGoPrev}
-                          className="p-1.5 rounded-lg text-[#6b7280] hover:bg-[#f3f4f6] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                        >
-                          <ChevronLeft className="h-4 w-4" />
-                        </button>
-                        <span className="text-sm font-semibold text-[#111827]">
-                          {MONTH_NAMES[currentMonth]} {currentYear}
-                        </span>
-                        <button
-                          onClick={nextMonth}
-                          disabled={!canGoNext}
-                          className="p-1.5 rounded-lg text-[#6b7280] hover:bg-[#f3f4f6] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                        >
-                          <ChevronRight className="h-4 w-4" />
-                        </button>
-                      </div>
-
-                      {/* Day headers */}
-                      <div className="grid grid-cols-7 mb-1">
-                        {DAY_NAMES_SHORT.map((d) => (
-                          <div key={d} className="text-center text-xs font-medium text-[#9ca3af] py-1">{d}</div>
-                        ))}
-                      </div>
-
-                      {/* Calendar grid */}
-                      <div className="grid grid-cols-7 gap-0.5">
-                        {calendarDays.map((date, i) => {
-                          if (!date) return <div key={`empty-${i}`} />;
-                          const dateStr = formatDateISO(date);
-                          const available = isDayAvailable(date);
-                          const isSelected = selectedDate === dateStr;
-                          const isBlocked = blockedDates.includes(dateStr);
-                          const isToday = formatDateISO(date) === formatDateISO(today);
-
-                          return (
-                            <button
-                              key={dateStr}
-                              disabled={!available}
-                              onClick={() => {
-                                setSelectedDate(dateStr);
-                                setSelectedTime("");
-                              }}
-                              className={cn(
-                                "relative aspect-square flex items-center justify-center rounded-xl text-sm font-medium transition-all",
-                                isSelected && "bg-[#009FD9] text-white shadow-sm",
-                                !isSelected && available && "hover:bg-[#EBF5FB] text-[#111827] cursor-pointer",
-                                !isSelected && available && isToday && "text-[#009FD9] font-bold",
-                                !isSelected && !available && "text-[#d1d5db] cursor-not-allowed"
-                              )}
-                            >
-                              {isBlocked ? (
-                                <span className="line-through opacity-50">{date.getDate()}</span>
-                              ) : (
-                                date.getDate()
-                              )}
-                              {isToday && !isSelected && (
-                                <span className="absolute bottom-1 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-[#009FD9]" />
-                              )}
-                            </button>
-                          );
-                        })}
-                      </div>
-
-                      {/* Time slots */}
-                      {selectedDate && (
-                        <div ref={slotsRef} className="mt-4 pt-4 border-t border-[#f3f4f6] scroll-mt-4">
-                          {slots.length === 0 ? (
-                            <p className="text-sm text-[#9ca3af] text-center py-2">
-                              Sin horarios disponibles para este día.
-                            </p>
-                          ) : (
-                            <>
-                              <p className="text-sm font-medium text-[#374151] mb-2">Elige una hora:</p>
-                              {/* Even grid → uniform chip width regardless of the time text */}
-                              <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
-                                {slots.map((slot) => (
-                                  <button
-                                    key={slot}
-                                    onClick={() => setSelectedTime(slot)}
-                                    className={cn(
-                                      "w-full px-2 py-1.5 rounded-xl text-sm font-medium tabular-nums text-center transition-all border",
-                                      selectedTime === slot
-                                        ? "bg-[#009FD9] text-white border-[#009FD9]"
-                                        : "bg-white text-[#374151] border-[#e5e7eb] hover:border-[#009FD9] hover:text-[#009FD9]"
-                                    )}
-                                  >
-                                    {slot}
-                                  </button>
-                                ))}
-                              </div>
-                            </>
-                          )}
+                    // Two sub-columns on desktop: CALENDAR (left) and that day's SLOTS (right).
+                    <div className="grid gap-5 md:grid-cols-2">
+                      {/* CALENDAR */}
+                      <div>
+                        {/* Month navigation */}
+                        <div className="flex items-center justify-between mb-3">
+                          <button
+                            onClick={prevMonth}
+                            disabled={!canGoPrev}
+                            className="p-1.5 rounded-lg text-[#6b7280] hover:bg-[#f3f4f6] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                          >
+                            <ChevronLeft className="h-4 w-4" />
+                          </button>
+                          <span className="text-sm font-semibold text-[#111827] capitalize">
+                            {MONTH_NAMES[currentMonth]} {currentYear}
+                          </span>
+                          <button
+                            onClick={nextMonth}
+                            disabled={!canGoNext}
+                            className="p-1.5 rounded-lg text-[#6b7280] hover:bg-[#f3f4f6] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                          >
+                            <ChevronRight className="h-4 w-4" />
+                          </button>
                         </div>
-                      )}
-                    </>
+
+                        {/* Day headers */}
+                        <div className="grid grid-cols-7 mb-1">
+                          {DAY_NAMES_SHORT.map((d) => (
+                            <div key={d} className="text-center text-xs font-medium text-[#9ca3af] py-1">{d}</div>
+                          ))}
+                        </div>
+
+                        {/* Calendar grid — available days carry a blue dot; today is marked HOY. */}
+                        <div className="grid grid-cols-7 gap-0.5">
+                          {calendarDays.map((date, i) => {
+                            if (!date) return <div key={`empty-${i}`} />;
+                            const dateStr = formatDateISO(date);
+                            const available = isDayAvailable(date);
+                            const isSelected = selectedDate === dateStr;
+                            const isBlocked = blockedDates.includes(dateStr);
+                            const isToday = formatDateISO(date) === formatDateISO(today);
+
+                            return (
+                              <button
+                                key={dateStr}
+                                disabled={!available}
+                                onClick={() => { setSelectedDate(dateStr); setSelectedTime(""); }}
+                                className={cn(
+                                  "relative aspect-square flex items-center justify-center rounded-xl text-sm font-medium transition-all",
+                                  isSelected && "bg-[#009FD9] text-white shadow-sm",
+                                  !isSelected && available && "hover:bg-[#EBF5FB] text-[#111827] cursor-pointer",
+                                  !isSelected && available && isToday && "text-[#009FD9]",
+                                  !isSelected && !available && "text-[#d1d5db] cursor-not-allowed"
+                                )}
+                              >
+                                {isToday && !isSelected && (
+                                  <span className="absolute top-1 left-1/2 -translate-x-1/2 text-[8px] font-bold uppercase tracking-wide leading-none text-[#009FD9]">Hoy</span>
+                                )}
+                                <span className={cn(isBlocked && "line-through opacity-50")}>{date.getDate()}</span>
+                                {available && !isSelected && (
+                                  <span className="absolute bottom-1 left-1/2 -translate-x-1/2 h-1 w-1 rounded-full bg-[#009FD9]" />
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* SLOTS for the selected day, grouped by franja (Mañana / Tarde / Noche). */}
+                      <div ref={slotsRef} className="md:border-l md:border-[#f3f4f6] md:pl-5 scroll-mt-4">
+                        {!selectedDate ? (
+                          <div className="flex h-full min-h-[180px] flex-col items-center justify-center rounded-2xl border border-[#e5e7eb] bg-[#f9fafb] px-4 text-center">
+                            <CalendarCheck className="h-7 w-7 text-[#cbd5e1]" />
+                            <p className="mt-2 text-sm text-[#9ca3af]">Elige un día disponible para ver las horas.</p>
+                          </div>
+                        ) : slots.length === 0 ? (
+                          <p className="text-sm text-[#9ca3af] text-center py-6">Sin horarios disponibles para este día.</p>
+                        ) : (
+                          <>
+                            <p className="mb-3 text-sm font-semibold text-[#111827] capitalize">{formatDateDisplay(selectedDate)}</p>
+                            {[
+                              { key: "manana", label: "Mañana", Icon: Sun, items: slots.filter((s) => parseInt(s, 10) < 12) },
+                              { key: "tarde", label: "Tarde", Icon: Sunset, items: slots.filter((s) => { const h = parseInt(s, 10); return h >= 12 && h < 18; }) },
+                              { key: "noche", label: "Noche", Icon: Moon, items: slots.filter((s) => parseInt(s, 10) >= 18) },
+                            ].filter((f) => f.items.length > 0).map((f) => (
+                              <div key={f.key} className="mb-4 last:mb-0">
+                                <div className="mb-2 flex items-center gap-1.5 text-[13px] font-semibold text-[#374151]">
+                                  <f.Icon className="h-4 w-4 text-[#9ca3af]" /> {f.label}
+                                </div>
+                                <div className="grid grid-cols-3 gap-2">
+                                  {f.items.map((slot) => (
+                                    <button
+                                      key={slot}
+                                      onClick={() => setSelectedTime(slot)}
+                                      className={cn(
+                                        "w-full rounded-xl border px-2 py-2 text-sm font-medium tabular-nums text-center transition-all",
+                                        selectedTime === slot
+                                          ? "bg-[#009FD9] text-white border-[#009FD9]"
+                                          : "bg-white text-[#374151] border-[#e5e7eb] hover:border-[#009FD9] hover:text-[#009FD9]"
+                                      )}
+                                    >
+                                      {slot}
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                          </>
+                        )}
+                      </div>
+                    </div>
                   )}
                 </div>
               )}
@@ -1267,18 +1285,23 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                 )}
 
                 {step === "calendar" && (
-                  <Button
-                    size="md"
-                    className="flex-1"
-                    disabled={!selectedDate || slots.length === 0 || !selectedTime}
-                    onClick={() => setStep("details")}
-                  >
-                    {!selectedDate
-                      ? "Elige una fecha"
-                      : !selectedTime
-                        ? "Elige una hora"
-                        : t("continue")}
-                  </Button>
+                  <div className="flex flex-1 items-center justify-between gap-3">
+                    <span className="min-w-0 truncate text-sm text-[#6b7280]">
+                      {selectedDate && selectedTime ? (
+                        <span className="capitalize">{formatDateDisplay(selectedDate)} · <span className="font-semibold text-[#111827]">{selectedTime}</span></span>
+                      ) : (
+                        "Selecciona fecha y hora"
+                      )}
+                    </span>
+                    <Button
+                      size="md"
+                      className="shrink-0"
+                      disabled={!selectedDate || slots.length === 0 || !selectedTime}
+                      onClick={() => setStep("details")}
+                    >
+                      {t("continue")}
+                    </Button>
+                  </div>
                 )}
 
                 {step === "details" && (
