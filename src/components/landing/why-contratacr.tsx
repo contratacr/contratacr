@@ -44,9 +44,9 @@ export async function WhyContratacr() {
     results: t("mockResults"),
     search: t("mockSearch"),
     verified: tCard("verifiedShort"),
-    request: tSched("requestService"),
     whatsapp: tSched("whatsapp"),
     viewSchedule: tSched("viewFullSchedule"),
+    noScheduleNote: tSched("availabilityHiddenNote"),
     reviews: (n: number) => tCard("reviewsCount", { count: n }),
     days,
   };

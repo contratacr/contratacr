@@ -1,4 +1,4 @@
-import { Search, MapPin, ShieldCheck, Star, Send, LifeBuoy, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, MapPin, ShieldCheck, Star, Send, LifeBuoy, CheckCircle2, CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import { Poppins } from "next/font/google";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 
@@ -105,76 +105,112 @@ export function SearchScreen() {
   );
 }
 
-// A FAITHFUL miniature of the real /buscar professional card: white rounded-2xl
-// with border, avatar (EBF5FB / brand-blue initials), the SAME solid brand-blue
-// "Verificado" pill (Badge variant="verified" = bg #009FD9 / white), price on the
-// right, grey profession chip, orange-star rating + brand-blue reviews link,
-// brand-blue location pin, an inline availability schedule (the hero feature), and
-// the WhatsApp (green) + "Solicitar servicio" (brand-blue) action row.
+// A FAITHFUL miniature of the CURRENT /buscar professional card. Mirrors the real
+// card 1:1: white rounded-2xl + border; CIRCULAR avatar (EBF5FB / brand-blue initials)
+// carrying the navy ranking badge that mirrors its map pin; company name with the
+// "Verificado" pill on its OWN line (the canonical Badge variant="verified" = solid
+// brand-blue #009FD9 / white); the muted personal name beneath; price right-aligned
+// (brand-blue amount + grey unit); grey profession chip; orange-star rating + GREY
+// "(N reseñas)" in parens; a Doctoralia-style LOCATION TAB (brand-blue, underlined) on
+// a hairline divider + the address line. Then EITHER (pro with published hours) the
+// 3-day availability strip + a SINGLE filled "Ver horario completo" button — the
+// booking entry point; the old separate "Solicitar servicio" button no longer exists —
+// OR (no public schedule) the coral contact note + a filled WhatsApp button.
 function ProCard({
-  initials, company, person, profession, place, rating, reviews, price, verified,
-  schedule, request, whatsapp, viewSchedule,
+  rank, initials, company, person, profession, place, address,
+  rating, reviews, price, priceUnit, verified,
+  schedule, viewSchedule, whatsapp, noScheduleNote,
 }: {
-  initials: string; company: string; person?: string; profession: string; place: string;
-  rating: string; reviews: string; price: string; verified: string;
+  rank: number;
+  initials: string; company: string; person?: string; profession: string;
+  place: string; address?: string;
+  rating: string; reviews: string; price: string; priceUnit?: string; verified: string;
   schedule?: { label: string; times: string[] }[];
-  request: string; whatsapp: string; viewSchedule: string;
+  viewSchedule: string; whatsapp: string; noScheduleNote?: string;
 }) {
   return (
     <div className="rounded-2xl border border-[#e5e7eb] bg-white p-3 shadow-[0_1px_3px_rgba(16,24,40,0.05)]">
-      <div className="flex gap-2.5">
-        <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#EBF5FB] text-[12px] font-extrabold text-[#009FD9]">{initials}</div>
+      {/* Identity — circular avatar + navy ranking badge (mirrors the map pin) ·
+          name / Verificado pill / personal name · price (blue amount + grey unit). */}
+      <div className="flex items-start gap-2.5">
+        <div className="relative shrink-0">
+          <div className="grid h-11 w-11 place-items-center rounded-full bg-[#EBF5FB] text-[12px] font-extrabold text-[#009FD9]">{initials}</div>
+          <span className="absolute -left-1.5 -top-1.5 grid h-[18px] w-[18px] place-items-center rounded-full bg-[#162543] text-[9px] font-bold text-white ring-2 ring-white">{rank}</span>
+        </div>
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5">
-            <span className="min-w-0 truncate text-[13px] font-bold leading-tight text-[#111827]">{company}</span>
-            <span className="shrink-0 rounded-full bg-[#009FD9] px-1.5 py-0.5 text-[8px] font-semibold leading-none text-white">{verified}</span>
-            <span className="ml-auto shrink-0 whitespace-nowrap text-[12px] font-bold text-[#111827]">{price}</span>
+          <div className="flex items-start gap-1.5">
+            <span className="min-w-0 flex-1 truncate text-[13px] font-bold leading-tight text-[#111827]">{company}</span>
+            {price ? (
+              <span className="shrink-0 whitespace-nowrap text-right leading-tight">
+                <span className="text-[12px] font-bold text-[#009FD9]">{price}</span>
+                {priceUnit ? <span className="text-[9px] font-medium text-[#9ca3af]"> {priceUnit}</span> : null}
+              </span>
+            ) : null}
           </div>
-          {person ? <p className="truncate text-[10px] font-medium leading-tight text-[#6b7280]">{person}</p> : null}
-          <span className="mt-1 inline-block rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[9px] font-medium text-[#6b7280]">{profession}</span>
-          <div className="mt-1 flex items-center gap-1 text-[10px]">
-            <Star className="h-2.5 w-2.5 fill-[#ff9b32] text-[#ff9b32]" />
-            <span className="font-bold text-[#111827]">{rating}</span>
-            <span className="text-[#9ca3af]">·</span>
-            <span className="font-medium text-[#009FD9]">{reviews}</span>
-          </div>
-          <div className="mt-0.5 flex items-center gap-1 text-[10px] text-[#6b7280]">
-            <MapPin className="h-2.5 w-2.5 shrink-0 text-[#009FD9]" /><span className="truncate">{place}</span>
-          </div>
+          {/* "Verificado" on its OWN line — solid brand-blue pill, white text (the same
+              treatment as the badge on the professional profile). */}
+          <span className="mt-1 inline-flex w-fit items-center rounded-full bg-[#009FD9] px-1.5 py-0.5 text-[8px] font-semibold leading-none text-white">{verified}</span>
+          {person ? <p className="mt-0.5 truncate text-[10px] font-medium leading-tight text-[#6b7280]">{person}</p> : null}
         </div>
       </div>
 
+      {/* Profession chip */}
+      <span className="mt-2 inline-block rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[9px] font-medium text-[#6b7280]">{profession}</span>
+
+      {/* Rating + GREY review count in parens (matches the real card). */}
+      <div className="mt-1.5 flex items-center gap-1 text-[10px]">
+        <Star className="h-2.5 w-2.5 fill-[#ff9b32] text-[#ff9b32]" />
+        <span className="font-bold text-[#111827]">{rating}</span>
+        <span className="font-medium text-[#9ca3af]">({reviews})</span>
+      </div>
+
+      {/* Location TAB (brand-blue, underlined) on a hairline divider + address line. */}
+      <div className="mt-1.5 flex items-center border-b border-[#e5e7eb]">
+        <span className="-mb-px inline-flex items-center gap-1 border-b-2 border-[#009FD9] pb-1.5 text-[10px] font-semibold text-[#009FD9]">
+          <MapPin className="h-2.5 w-2.5" /> {place}
+        </span>
+      </div>
+      {address ? <p className="mt-1 truncate text-[9px] leading-snug text-[#6b7280]">{address}</p> : null}
+
       {schedule ? (
-        <div className="mt-2.5 border-t border-[#f3f4f6] pt-2">
-          <div className="flex items-start gap-1">
+        <>
+          {/* 3-day availability strip — the hero feature. */}
+          <div className="mt-2.5 flex items-start gap-1">
             <ChevronLeft className="mt-3 h-3 w-3 shrink-0 text-[#d1d5db]" />
-            <div className="grid flex-1 grid-cols-3 gap-1">
+            <div className="grid flex-1 grid-cols-3 gap-1.5">
               {schedule.map((d) => (
                 <div key={d.label} className="min-w-0">
-                  <p className="truncate text-center text-[8px] font-bold uppercase leading-tight tracking-wide text-[#009FD9]">{d.label}</p>
+                  <p className="truncate text-center text-[9px] font-semibold leading-tight text-[#6b7280]">{d.label}</p>
                   {d.times.map((tt) => (
-                    <span key={tt} className="mt-1 block rounded-md bg-[#EBF5FB] py-0.5 text-center text-[9px] font-semibold leading-none text-[#0089bb]">{tt}</span>
+                    <span key={tt} className="mt-1 block rounded-md bg-[#EBF5FB] py-1 text-center text-[9px] font-semibold leading-none text-[#0089bb]">{tt}</span>
                   ))}
                 </div>
               ))}
             </div>
             <ChevronRight className="mt-3 h-3 w-3 shrink-0 text-[#9ca3af]" />
           </div>
-          <p className="mt-1.5 text-center text-[8px] font-medium text-[#009FD9]">{viewSchedule}</p>
-        </div>
-      ) : null}
-
-      <div className="mt-2.5 flex items-center gap-1.5">
-        <span className="inline-flex flex-1 items-center justify-center gap-1 rounded-lg bg-[#25D366] py-1.5 text-[10px] font-bold text-white"><WhatsAppIcon className="h-3 w-3" /> {whatsapp}</span>
-        <span className="flex-1 rounded-lg bg-[#009FD9] py-1.5 text-center text-[10px] font-bold text-white">{request}</span>
-      </div>
+          {/* SINGLE filled primary button (the booking entry point). */}
+          <button className="mt-2.5 w-full rounded-full bg-[#009FD9] py-2 text-[10px] font-semibold text-white">{viewSchedule}</button>
+        </>
+      ) : (
+        <>
+          {/* No public schedule → coral contact note + filled WhatsApp button. */}
+          {noScheduleNote ? (
+            <div className="mt-2.5 flex items-start gap-1.5 rounded-lg border border-[#F7D8D1] bg-[#FDF3F1] px-2 py-1.5">
+              <CalendarDays className="mt-px h-3 w-3 shrink-0 text-[#DC5B4B]" />
+              <p className="line-clamp-2 text-[9px] leading-snug text-[#DC5B4B]">{noScheduleNote}</p>
+            </div>
+          ) : null}
+          <button className="mt-2.5 inline-flex w-full items-center justify-center gap-1.5 rounded-full bg-[#25D366] py-2 text-[10px] font-bold text-white"><WhatsAppIcon className="h-3 w-3" /> {whatsapp}</button>
+        </>
+      )}
     </div>
   );
 }
 
 export type ResultsCopy = {
   title: string; results: string; search: string; verified: string;
-  request: string; whatsapp: string; viewSchedule: string;
+  whatsapp: string; viewSchedule: string; noScheduleNote: string;
   reviews: (n: number) => string;
   days: { label: string; times: string[] }[];
 };
@@ -186,14 +222,14 @@ const DEFAULT_RESULTS_COPY: ResultsCopy = {
   results: "128 profesionales en Costa Rica",
   search: "Plomería en San José",
   verified: "Verificado",
-  request: "Solicitar servicio",
-  whatsapp: "WhatsApp",
+  whatsapp: "Contáctanos por WhatsApp",
   viewSchedule: "Ver horario completo",
+  noScheduleNote: "La disponibilidad de este profesional no es pública. Contáctanos y conoce sus horarios.",
   reviews: (n) => `${n} reseñas`,
   days: [
-    { label: "HOY", times: ["9:00", "14:00"] },
-    { label: "MAÑ", times: ["8:30", "15:00"] },
-    { label: "+2", times: ["10:00"] },
+    { label: "Hoy", times: ["9:00", "14:00"] },
+    { label: "Mañana", times: ["8:30", "15:00"] },
+    { label: "Jue 18", times: ["10:00"] },
   ],
 };
 
@@ -209,19 +245,20 @@ export function ResultsScreen({ copy = DEFAULT_RESULTS_COPY }: { copy?: ResultsC
         </div>
         <p className="mt-1.5 text-[10px] text-[#6b7280]">{copy.results}</p>
       </div>
-      {/* Real-style result cards */}
+      {/* Real-style result cards — one WITH a published schedule (the booking hero),
+          one WITHOUT (the WhatsApp contact path), mirroring the real mixed /buscar list. */}
       <div className="flex-1 space-y-2 overflow-hidden p-3">
         <ProCard
-          initials="SG" company="SG Solutions" person="Steven Gómez" profession={copy.title}
-          place="San José, Escazú" rating="4.9" reviews={copy.reviews(48)} price="₡12 000/h"
-          verified={copy.verified} schedule={copy.days}
-          request={copy.request} whatsapp={copy.whatsapp} viewSchedule={copy.viewSchedule}
+          rank={1} initials="SG" company="SG Solutions" person="Steven Gómez" profession={copy.title}
+          place="San José" address="Escazú, San José" rating="4.9" reviews={copy.reviews(48)}
+          price="₡12 000" priceUnit="/hora" verified={copy.verified} schedule={copy.days}
+          viewSchedule={copy.viewSchedule} whatsapp={copy.whatsapp}
         />
         <ProCard
-          initials="AM" company="Ana Mora" profession={copy.title}
-          place="Heredia" rating="4.8" reviews={copy.reviews(31)} price="₡10 000/h"
-          verified={copy.verified}
-          request={copy.request} whatsapp={copy.whatsapp} viewSchedule={copy.viewSchedule}
+          rank={2} initials="AM" company="Ana Mora" profession={copy.title}
+          place="Heredia" address="Heredia centro" rating="4.8" reviews={copy.reviews(31)}
+          price="₡10 000" priceUnit="/hora" verified={copy.verified}
+          viewSchedule={copy.viewSchedule} whatsapp={copy.whatsapp} noScheduleNote={copy.noScheduleNote}
         />
       </div>
     </div>
