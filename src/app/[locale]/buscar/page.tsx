@@ -233,8 +233,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
       {/* Top bar — title + subtitle. Background MATCHES the page/results area (#f4f7fa)
           and is FLUSH with it: no shadow, divider or raised band, so the title reads as
-          part of one continuous page. A brand accent bar sits to the left of the title. */}
-      <div className="bg-[#f4f7fa]">
+          part of one continuous page. A brand accent bar sits to the left of the title.
+          HIDDEN on mobile (Yelp layout) so the map gets full prominence — the in-sheet
+          count carries the result total there. */}
+      <div className="hidden lg:block bg-[#f4f7fa]">
         <div className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-start gap-2.5">
             <span className="mt-0.5 h-6 w-1.5 shrink-0 rounded-full bg-[#009FD9]" aria-hidden />
@@ -248,9 +250,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         </div>
       </div>
 
-      {/* Main content — 3-column shell (filters · results · map) */}
+      {/* Main content — 3-column shell (filters · results · map). On mobile the padding is
+          zeroed so the Yelp map + bottom sheet go edge-to-edge; desktop keeps its gutters. */}
       <main className="flex-1">
-        <div className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 py-4">
+        <div className="mx-auto max-w-[1920px] px-0 py-0 lg:px-8 lg:py-4">
           <SearchResultsLayout
             mapData={mapData}
             apiKey={MAPS_API_KEY}
@@ -340,7 +343,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         </div>
       </main>
 
-      <LandingFooter />
+      {/* Footer hidden on mobile — the Yelp map + bottom sheet fill the screen (no scroll). */}
+      <div className="hidden lg:block">
+        <LandingFooter />
+      </div>
     </div>
   );
 }
