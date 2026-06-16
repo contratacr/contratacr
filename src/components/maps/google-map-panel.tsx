@@ -3,11 +3,12 @@
 import { useEffect, useRef } from "react";
 import Script from "next/script";
 import { MapPin } from "lucide-react";
-import { loadGoogleMaps } from "@/lib/maps/loader";
+import { loadGoogleMaps, MAP_ID } from "@/lib/maps/loader";
 
 export interface MapProfessional {
   id: string;
-  /** Canonical professional id (the pin id may carry a workplace suffix). */
+  /** Canonical professional id (the pin id may carry a workplace suffix). The
+   *  card↔pin highlight + numbering both key off this. */
   proId?: string;
   slug: string;
   fullName: string;
@@ -15,8 +16,12 @@ export interface MapProfessional {
   ratingAvg: number;
   reviewCount: number;
   categoryLabel?: string;
+  /** Profession labels for the popup (already localized). */
+  professions?: string[];
+  /** True → green "Verificado" in the popup. */
+  verified?: boolean;
   hourlyRate?: number | null;
-  /** Pre-formatted "from" price for the hover/tap preview (e.g. "₡10 000 /hora"). */
+  /** Pre-formatted "from" price for the popup (e.g. "₡10 000 /hora"). */
   priceLabel?: string | null;
   provinceName?: string;
   lat?: number | null;
@@ -31,8 +36,7 @@ interface GoogleMapPanelProps {
   numbering?: Record<string, number>;
 }
 
-// Approximate province centroids — fallback for professionals who travel to
-// the client (no fixed coordinates), pinned to the province they serve.
+// Province centroids — fallback for professionals who travel (no fixed coords).
 const PROVINCE_CENTROIDS: Record<string, { lat: number; lng: number }> = {
   "San José": { lat: 9.9281, lng: -84.0907 },
   Alajuela: { lat: 10.0162, lng: -84.2116 },
@@ -43,34 +47,46 @@ const PROVINCE_CENTROIDS: Record<string, { lat: number; lng: number }> = {
   Limón: { lat: 9.9907, lng: -83.0359 },
 };
 
-const CR_CENTER = { lat: 9.9281, lng: -84.0907 };
+// Default view: the Greater Metropolitan Area (GAM), ~zoom 11–12. minZoom 8 +
+// a CR bounds restriction keep the map locked onto Costa Rica.
+const GAM_CENTER = { lat: 9.9325, lng: -84.08 };
+const CR_BOUNDS = { north: 11.35, south: 7.95, west: -86.05, east: -82.45 };
 
-// Warm, low-noise basemap (soft cream/beige land, muted blue-grey water): POI/transit
-// clutter + all label ICONS hidden, road labels off (understated), but locality/province
-// TEXT labels kept readable. Inline `styles` require a NON-vector map (no mapId) + legacy
-// markers. The navy result pins stay high-contrast against this light cream ground.
-const LIGHT_STYLE = [
-  { elementType: "geometry", stylers: [{ color: "#f4efe4" }] },           // cream land
-  { elementType: "labels.icon", stylers: [{ visibility: "off" }] },        // no business/POI glyphs
-  { elementType: "labels.text.fill", stylers: [{ color: "#9b9077" }] },    // soft warm-grey label text
-  { elementType: "labels.text.stroke", stylers: [{ color: "#f7f3ea" }, { weight: 2 }] },
-  { featureType: "administrative", elementType: "geometry", stylers: [{ visibility: "off" }] }, // no borders, keep text
-  { featureType: "administrative.land_parcel", stylers: [{ visibility: "off" }] },
-  { featureType: "administrative.neighborhood", stylers: [{ visibility: "off" }] },
-  { featureType: "poi", stylers: [{ visibility: "off" }] },                // hide all points of interest
-  { featureType: "transit", stylers: [{ visibility: "off" }] },
-  { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#f4efe4" }] },
-  { featureType: "landscape.natural", elementType: "geometry", stylers: [{ color: "#ece5d6" }] }, // subtle warmer parks/hills
-  { featureType: "road", elementType: "geometry", stylers: [{ color: "#fdfaf3" }] },        // near-white roads
-  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#e8e0cf" }] }, // gentle warm stroke
-  { featureType: "road", elementType: "labels", stylers: [{ visibility: "off" }] },         // understated: no road labels
-  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#f6efdf" }] },
-  { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ color: "#e6dcc6" }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#c9d6da" }] },        // muted desaturated blue-grey
-  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#94a7ac" }] },
-];
+const PIN_NAVY = "#162543";
+const PIN_ACTIVE = "#008ce0";
 
-// Deterministic small offset so multiple pins in the same canton don't overlap.
+// Brand styling for the pins, active state, and the popup mini-card. The light
+// "Voyager"-like TILE style comes from the cloud Map ID (a mapId disables inline
+// JSON styles), so it is configured on NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID in the
+// Google Cloud console — not here.
+const MAP_CSS =
+  ".ccr-pin{position:relative;width:30px;height:40px;cursor:pointer;transform-origin:center bottom;transition:transform .15s ease;}" +
+  ".ccr-pin svg{display:block;width:30px;height:40px;filter:drop-shadow(0 2px 3px rgba(15,23,42,.35));}" +
+  ".ccr-pin path{transition:fill .15s ease;}" +
+  ".ccr-pin .num{position:absolute;top:6px;left:0;right:0;text-align:center;color:#fff;font:700 12px/1 Inter,system-ui,sans-serif;}" +
+  ".ccr-pin.is-active{transform:scale(1.15);}" +
+  ".ccr-pin.is-active path{fill:" + PIN_ACTIVE + ";}" +
+  ".ccr-cl{display:flex;align-items:center;justify-content:center;border-radius:9999px;background:" + PIN_NAVY + ";color:#fff;border:2px solid #fff;font:700 12px/1 Inter,system-ui,sans-serif;box-shadow:0 2px 5px rgba(15,23,42,.35);}" +
+  ".ccr-popwrap{transform:translateY(-46px);pointer-events:none;}" +
+  ".ccr-pop{pointer-events:auto;position:relative;width:240px;background:#fff;border-radius:14px;box-shadow:0 10px 30px -8px rgba(15,23,42,.30),0 2px 6px rgba(15,23,42,.10);padding:12px;font-family:Inter,system-ui,sans-serif;text-decoration:none;display:block;}" +
+  ".ccr-pop-x{position:absolute;top:6px;right:6px;width:22px;height:22px;border:0;background:transparent;color:#9ca3af;font-size:16px;line-height:1;cursor:pointer;border-radius:6px;}" +
+  ".ccr-pop-x:hover{background:#f3f4f6;color:#374151;}" +
+  ".ccr-pop-top{display:flex;gap:10px;align-items:flex-start;}" +
+  ".ccr-av{width:42px;height:42px;border-radius:9999px;background:#EBF5FB;color:#009FD9;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0;}" +
+  ".ccr-pop-name{font-weight:700;color:#111827;font-size:14px;line-height:1.25;padding-right:14px;}" +
+  ".ccr-ver{display:inline-flex;align-items:center;gap:2px;color:#16a34a;font-size:11px;font-weight:600;margin-left:4px;white-space:nowrap;}" +
+  ".ccr-pop-prof{color:#6b7280;font-size:12px;margin-top:2px;line-height:1.3;}" +
+  ".ccr-pop-rate{font-size:12px;margin-top:4px;color:#ff9b32;font-weight:700;}" +
+  ".ccr-pop-rate span{color:#9ca3af;font-weight:500;}" +
+  ".ccr-pop-price{font-size:13px;font-weight:700;color:" + PIN_ACTIVE + ";margin-top:6px;}";
+
+function pinSvg(): string {
+  return (
+    `<svg xmlns="http://www.w3.org/2000/svg" width="30" height="40" viewBox="0 0 24 32">` +
+    `<path d="M12 0C7.03 0 3 4.03 3 9c0 6.75 9 23 9 23s9-16.25 9-23c0-4.97-4.03-9-9-9z" fill="${PIN_NAVY}" stroke="#ffffff" stroke-width="1.5"/></svg>`
+  );
+}
+
 function jitter(seed: string): { dlat: number; dlng: number } {
   let h = 0;
   for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
@@ -80,60 +96,30 @@ function jitter(seed: string): { dlat: number; dlng: number } {
 }
 
 function positionFor(pro: MapProfessional): { lat: number; lng: number } | null {
-  if (typeof pro.lat === "number" && typeof pro.lng === "number") {
-    return { lat: pro.lat, lng: pro.lng };
-  }
+  if (typeof pro.lat === "number" && typeof pro.lng === "number") return { lat: pro.lat, lng: pro.lng };
   const centroid = pro.provinceName ? PROVINCE_CENTROIDS[pro.provinceName] : null;
   if (!centroid) return null;
   const { dlat, dlng } = jitter(pro.id);
   return { lat: centroid.lat + dlat, lng: centroid.lng + dlng };
 }
 
-function starsHtml(rating: number): string {
-  return `<span style="color:#ff9b32;font-weight:700;">★ ${rating.toFixed(1)}</span>`;
+function initials(name: string): string {
+  return name.split(" ").filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase() || "?";
+}
+function esc(s: string): string {
+  return s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c] as string));
 }
 
-// NAVY teardrop pin (legacy Marker icon) — matches the navy (#162543) rank badge on
-// each result card. The card number is drawn as the marker LABEL, centered in the head.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function pinIcon(g: any) {
-  const svg =
-    `<svg xmlns="http://www.w3.org/2000/svg" width="30" height="40" viewBox="0 0 24 32">` +
-    `<path d="M12 0C7.03 0 3 4.03 3 9c0 6.75 9 23 9 23s9-16.25 9-23c0-4.97-4.03-9-9-9z" fill="#162543" stroke="#ffffff" stroke-width="1.5"/></svg>`;
-  return {
-    url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`,
-    scaledSize: new g.Size(30, 40),
-    anchor: new g.Point(15, 40),
-    labelOrigin: new g.Point(15, 13), // in the circular head, not the tip
-  };
-}
-
-// Navy cluster bubble (legacy Marker icon); count drawn as the label.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function clusterIcon(g: any, count: number) {
-  const size = Math.round(34 + Math.min(count, 30) * 0.8);
-  const r = size / 2;
-  const svg =
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">` +
-    `<circle cx="${r}" cy="${r}" r="${r - 2}" fill="#162543" stroke="#ffffff" stroke-width="2"/></svg>`;
-  return {
-    url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`,
-    scaledSize: new g.Size(size, size),
-    anchor: new g.Point(r, r),
-    labelOrigin: new g.Point(r, r),
-  };
-}
-
-// Cross-component highlight: on pin hover, ring + scroll the matching list card.
-function setCardHighlight(proId: string | undefined, on: boolean) {
+// Highlight the matching result CARD (ring + scroll into view).
+function highlightCard(proId: string | undefined, on: boolean, scroll: boolean) {
   if (!proId || typeof document === "undefined") return;
   const el = document.getElementById(`pro-card-${proId}`);
   if (!el) return;
   if (on) {
-    el.classList.add("ring-2", "ring-[#009FD9]", "shadow-lg");
-    el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    el.classList.add("ring-2", "ring-[#008ce0]", "shadow-lg");
+    if (scroll) el.scrollIntoView({ behavior: "smooth", block: "nearest" });
   } else {
-    el.classList.remove("ring-2", "ring-[#009FD9]", "shadow-lg");
+    el.classList.remove("ring-2", "ring-[#008ce0]", "shadow-lg");
   }
 }
 
@@ -143,52 +129,88 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
   const mapInstanceRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const boundsRef = useRef<any>(null);
-  const hasMarkersRef = useRef(false);
   const markerCountRef = useRef(0);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const clustererRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const infoRef = useRef<any>(null);
-  // Pending close for the hover preview — a tiny delay debounces moving between nearby pins.
-  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const popupRef = useRef<any>(null);
+  // proId → its pin elements (a pro can have several workplace pins).
+  const pinsByProRef = useRef<Map<string, HTMLElement[]>>(new Map());
+  const hoverCardRef = useRef<string | null>(null);
 
-  // Single location → center + zoom. Multiple → fit the pin cluster (generous
-  // padding) but cap zoom at 12 (maxZoom) so a tight cluster stays focused on the
-  // result area instead of zooming the whole country in/out.
+  function setPinActive(proId: string | undefined, on: boolean) {
+    if (!proId) return;
+    for (const el of pinsByProRef.current.get(proId) ?? []) {
+      el.classList.toggle("is-active", on);
+      const mk = (el as unknown as { _marker?: { zIndex: number } })._marker;
+      if (mk) mk.zIndex = on ? 9999 : Number(el.dataset.basez || 1);
+    }
+  }
+  // Shared highlight: a pin AND its card light up together (either direction).
+  function setActive(proId: string | undefined, on: boolean, scroll: boolean) {
+    setPinActive(proId, on);
+    highlightCard(proId, on, scroll);
+  }
+
+  function closePopup() {
+    if (popupRef.current) { popupRef.current.map = null; popupRef.current = null; }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function openPopup(g: any, map: any, pro: MapProfessional, pos: { lat: number; lng: number }) {
+    closePopup();
+    const href = `/${locale}/profesionales/${pro.slug}`;
+    const profs = (pro.professions ?? []).filter(Boolean).slice(0, 2).join(" · ") || pro.categoryLabel || "";
+    const wrap = document.createElement("div");
+    wrap.className = "ccr-popwrap";
+    wrap.innerHTML =
+      `<a class="ccr-pop" href="${href}">` +
+        `<button class="ccr-pop-x" aria-label="Cerrar">×</button>` +
+        `<div class="ccr-pop-top">` +
+          `<div class="ccr-av">${esc(initials(pro.fullName))}</div>` +
+          `<div style="min-width:0;">` +
+            `<div class="ccr-pop-name">${esc(pro.fullName)}${pro.verified ? `<span class="ccr-ver">✓ Verificado</span>` : ""}</div>` +
+            (profs ? `<div class="ccr-pop-prof">${esc(profs)}</div>` : "") +
+            `<div class="ccr-pop-rate">★ ${pro.ratingAvg.toFixed(1)} <span>(${pro.reviewCount})</span></div>` +
+            (pro.priceLabel ? `<div class="ccr-pop-price">${esc(pro.priceLabel)}</div>` : "") +
+          `</div>` +
+        `</div>` +
+      `</a>`;
+    wrap.querySelector(".ccr-pop-x")?.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); closePopup(); });
+    popupRef.current = new g.marker.AdvancedMarkerElement({ map, position: pos, content: wrap, zIndex: 100000 });
+  }
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function fitToMarkers(map: any, g: any, bounds: any, count: number) {
-    if (count === 0) return;
-    if (count === 1) {
-      map.setCenter(bounds.getCenter());
-      map.setZoom(13);
-      return;
-    }
+    if (count === 0) { map.setCenter(GAM_CENTER); map.setZoom(11); return; }
+    if (count === 1) { map.setCenter(bounds.getCenter()); map.setZoom(13); return; }
     map.fitBounds(bounds, 64);
-    g.event.addListenerOnce(map, "idle", () => {
-      if (map.getZoom() > 12) map.setZoom(12);
-    });
+    g.event.addListenerOnce(map, "idle", () => { if (map.getZoom() > 13) map.setZoom(13); });
   }
 
   function ensureMap() {
     if (mapInstanceRef.current || !mapRef.current) return null;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const g = (window as any).google?.maps;
-    if (!g) return null;
+    if (!g?.marker?.AdvancedMarkerElement) return null;
     const map = new g.Map(mapRef.current, {
-      center: CR_CENTER,
-      zoom: 9,
-      // NO mapId → the inline light `styles` apply (CARTO-like basemap). Legacy
-      // markers are used below (AdvancedMarkerElement would require a vector mapId).
-      styles: LIGHT_STYLE,
+      mapId: MAP_ID,                 // cloud-styled light basemap + enables AdvancedMarkers
+      center: GAM_CENTER,
+      zoom: 11,
+      minZoom: 8,
+      maxZoom: 18,
+      restriction: { latLngBounds: CR_BOUNDS, strictBounds: false },
       mapTypeControl: false,
       streetViewControl: false,
-      fullscreenControl: true,
-      zoomControl: true,
+      fullscreenControl: false,
+      rotateControl: false,
+      scaleControl: false,
+      zoomControl: true,             // ONLY the zoom control
       clickableIcons: false,
-      gestureHandling: "greedy",
+      gestureHandling: "cooperative", // scroll-wheel off until ctrl / two-finger
     });
     mapInstanceRef.current = map;
-    infoRef.current = new g.InfoWindow();
+    map.addListener("click", closePopup);
     return map;
   }
 
@@ -197,98 +219,53 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     const g = (window as any).google?.maps;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const clusterer = (window as any).markerClusterer;
-    if (!g?.Marker || !clusterer) return; // wait for the API + clusterer lib
+    if (!g?.marker?.AdvancedMarkerElement || !clusterer) return;
     const map = mapInstanceRef.current ?? ensureMap();
     if (!map) return;
 
-    const info = infoRef.current;
-    const bounds = new g.LatLngBounds();
-    // Hover preview on devices with a real pointer; TAP preview on touch.
+    closePopup();
+    pinsByProRef.current = new Map();
     const canHover = typeof window !== "undefined" && !!window.matchMedia?.("(hover: hover)").matches;
-    const cancelClose = () => { if (closeTimerRef.current) { clearTimeout(closeTimerRef.current); closeTimerRef.current = null; } };
-    const verPerfil = locale === "en" ? "View profile" : "Ver perfil";
+    const bounds = new g.LatLngBounds();
 
-    const markers = professionals
-      .map((pro) => {
-        const pos = positionFor(pro);
-        if (!pos) return null;
-        bounds.extend(pos);
-        const num = numbering?.[pro.proId ?? pro.id];
-        const marker = new g.Marker({
-          position: pos,
-          icon: pinIcon(g),
-          label: num
-            ? { text: String(num), color: "#ffffff", fontSize: "11px", fontWeight: "700" }
-            : undefined,
-          zIndex: num ? 500 - num : 1,
-          title: pro.fullName,
-        });
+    const markers = professionals.map((pro) => {
+      const pos = positionFor(pro);
+      if (!pos) return null;
+      bounds.extend(pos);
+      const proId = pro.proId ?? pro.id;
+      const num = numbering?.[proId];
+      const z = num ? 1000 - num : 1;
 
-        const href = `/${locale}/profesionales/${pro.slug}`;
-        // The mini-card: photo · name · profession · rating · price. On touch we add a
-        // "Ver perfil" button (tap = the only action); on desktop the card is a quick hover
-        // preview and CLICKING the pin navigates, so no button is needed.
-        const openPreview = (withButton: boolean) => {
-          const avatar = pro.avatarUrl
-            ? `<img src="${pro.avatarUrl}" alt="" style="width:46px;height:46px;border-radius:9999px;object-fit:cover;flex-shrink:0;" />`
-            : `<div style="width:46px;height:46px;border-radius:9999px;background:#EBF5FB;color:#009FD9;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex-shrink:0;">${pro.fullName.charAt(0)}</div>`;
-          const price = pro.priceLabel
-            ? `<div style="font-size:13px;font-weight:700;color:#009FD9;margin-top:3px;">${pro.priceLabel}</div>`
-            : "";
-          const button = withButton
-            ? `<a href="${href}" style="display:block;text-align:center;margin-top:10px;background:#009FD9;color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:10px 0;border-radius:8px;min-height:44px;box-sizing:border-box;line-height:24px;">${verPerfil}</a>`
-            : "";
-          info.setContent(
-            `<div style="font-family:Inter,Arial,sans-serif;max-width:236px;padding:2px;">` +
-              `<div style="display:flex;gap:10px;align-items:flex-start;">` +
-                avatar +
-                `<div style="min-width:0;">` +
-                  `<div style="font-weight:700;color:#111827;font-size:14px;line-height:1.25;">${pro.fullName}</div>` +
-                  (pro.categoryLabel ? `<div style="color:#6b7280;font-size:12px;margin-top:1px;">${pro.categoryLabel}</div>` : "") +
-                  `<div style="font-size:12px;margin-top:3px;">${starsHtml(pro.ratingAvg)} <span style="color:#9ca3af;">(${pro.reviewCount})</span></div>` +
-                  price +
-                `</div>` +
-              `</div>` +
-              button +
-            `</div>`
-          );
-          info.open({ map, anchor: marker });
-        };
+      const el = document.createElement("div");
+      el.className = "ccr-pin";
+      el.dataset.basez = String(z);
+      el.innerHTML = pinSvg() + (num ? `<span class="num">${num}</span>` : "");
 
-        // Legacy Marker events. DESKTOP: hover shows the preview, leaving hides it (small
-        // debounce so moving between nearby pins isn't janky); clicking the pin navigates.
-        // TOUCH: tap shows the preview (with the "Ver perfil" button); Google's × closes it.
-        marker.addListener("mouseover", () => {
-          if (!canHover) return;
-          cancelClose();
-          openPreview(false);
-          setCardHighlight(pro.proId ?? pro.id, true);
-        });
-        marker.addListener("mouseout", () => {
-          if (!canHover) return;
-          setCardHighlight(pro.proId ?? pro.id, false);
-          cancelClose();
-          closeTimerRef.current = setTimeout(() => info.close(), 130);
-        });
-        marker.addListener("click", () => {
-          if (canHover) { window.location.href = href; return; }
-          openPreview(true);
-          setCardHighlight(pro.proId ?? pro.id, true);
-        });
-        return marker;
-      })
-      .filter(Boolean);
+      const marker = new g.marker.AdvancedMarkerElement({ position: pos, content: el, zIndex: z, title: pro.fullName });
+      // Keep a back-ref so setPinActive can raise zIndex without a marker lookup.
+      (el as unknown as { _marker: unknown })._marker = marker;
+      const list = pinsByProRef.current.get(proId) ?? [];
+      list.push(el); pinsByProRef.current.set(proId, list);
 
-    // Navy cluster bubbles (legacy Marker renderer).
+      if (canHover) {
+        el.addEventListener("mouseenter", () => setActive(proId, true, true));
+        el.addEventListener("mouseleave", () => setActive(proId, false, false));
+      }
+      el.addEventListener("click", (e) => { e.stopPropagation(); openPopup(g, map, pro, pos); setActive(proId, true, false); });
+      return marker;
+    }).filter(Boolean);
+
+    // Navy cluster bubbles (AdvancedMarkerElement renderer).
     const renderer = {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      render: ({ count, position }: any) =>
-        new g.Marker({
-          position,
-          icon: clusterIcon(g, count),
-          label: { text: String(count), color: "#ffffff", fontSize: "12px", fontWeight: "700" },
-          zIndex: 1000 + count,
-        }),
+      render: ({ count, position }: any) => {
+        const size = Math.round(34 + Math.min(count, 30) * 0.8);
+        const div = document.createElement("div");
+        div.className = "ccr-cl";
+        div.style.width = `${size}px`; div.style.height = `${size}px`;
+        div.textContent = String(count);
+        return new g.marker.AdvancedMarkerElement({ position, content: div, zIndex: 5000 + count });
+      },
     };
 
     if (clustererRef.current) {
@@ -299,17 +276,40 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     }
 
     boundsRef.current = bounds;
-    hasMarkersRef.current = markers.length > 0;
     markerCountRef.current = markers.length;
     fitToMarkers(map, g, bounds, markers.length);
   }
 
-  // Load the Maps JS API (async) once, then render whenever inputs change.
   useEffect(() => {
     if (!apiKey) return;
     loadGoogleMaps(apiKey).then(renderMarkers).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [professionals, numbering]);
+
+  // Card → pin: hovering a result card highlights its pin (delegated, so it works
+  // with server-rendered cards). Shares the same setActive as pin → card.
+  useEffect(() => {
+    const cardId = (t: EventTarget | null): string | null => {
+      const c = (t as HTMLElement | null)?.closest?.("[id^='pro-card-']") as HTMLElement | null;
+      return c ? c.id.slice("pro-card-".length) : null;
+    };
+    const onOver = (e: MouseEvent) => {
+      const id = cardId(e.target);
+      if (id && id !== hoverCardRef.current) {
+        if (hoverCardRef.current) setPinActive(hoverCardRef.current, false);
+        hoverCardRef.current = id; setPinActive(id, true);
+      }
+    };
+    const onOut = (e: MouseEvent) => {
+      if (cardId(e.target) && !cardId(e.relatedTarget)) {
+        if (hoverCardRef.current) setPinActive(hoverCardRef.current, false);
+        hoverCardRef.current = null;
+      }
+    };
+    document.addEventListener("mouseover", onOver);
+    document.addEventListener("mouseout", onOut);
+    return () => { document.removeEventListener("mouseover", onOver); document.removeEventListener("mouseout", onOut); };
+  }, []);
 
   // Relayout + re-fit when the container becomes visible / resizes.
   useEffect(() => {
@@ -320,10 +320,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
       const g = (window as any).google?.maps;
       const map = mapInstanceRef.current;
       if (!g || !map || el.offsetWidth === 0) return;
-      g.event.trigger(map, "resize");
-      if (hasMarkersRef.current && boundsRef.current) {
-        fitToMarkers(map, g, boundsRef.current, markerCountRef.current);
-      }
+      if (boundsRef.current && markerCountRef.current > 0) fitToMarkers(map, g, boundsRef.current, markerCountRef.current);
     });
     ro.observe(el);
     return () => ro.disconnect();
@@ -337,9 +334,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
         </div>
         <div>
           <p className="font-semibold text-[#1a2744] mb-1">Mapa no disponible</p>
-          <p className="text-xs text-[#9ca3af] max-w-[200px]">
-            Configura NEXT_PUBLIC_GOOGLE_MAPS_API_KEY para activar el mapa.
-          </p>
+          <p className="text-xs text-[#9ca3af] max-w-[200px]">Configura NEXT_PUBLIC_GOOGLE_MAPS_API_KEY para activar el mapa.</p>
         </div>
       </div>
     );
@@ -347,23 +342,9 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
 
   return (
     <>
-      {/* Trim the Google InfoWindow's default chrome so the hover mini-card has NO
-          excessive empty space above the photo/name — content sits near the top, compact. */}
-      <style dangerouslySetInnerHTML={{ __html:
-        ".gm-style .gm-style-iw-c{padding:6px 10px 10px!important;}" +
-        ".gm-style .gm-style-iw-d{overflow:hidden!important;padding:0!important;}" +
-        ".gm-style .gm-style-iw-c button.gm-ui-hover-effect{top:0!important;right:0!important;}"
-      }} />
-      {/* MarkerClusterer is a separate (non-Google) lib; the Maps JS API itself
-          loads via the async loader. */}
-      <Script
-        src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"
-        strategy="afterInteractive"
-        onLoad={renderMarkers}
-      />
-      {/* `relative` makes THIS the containing block for the map's absolutely-positioned
-          canvas, so it can NEVER escape its box and overlap siblings (e.g. the result cards
-          below it on mobile) even if a parent forgets to be a positioning context. */}
+      <style dangerouslySetInnerHTML={{ __html: MAP_CSS }} />
+      {/* MarkerClusterer (non-Google lib); the Maps JS API loads via the async loader. */}
+      <Script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js" strategy="afterInteractive" onLoad={renderMarkers} />
       <div ref={mapRef} className="relative w-full h-full" />
     </>
   );

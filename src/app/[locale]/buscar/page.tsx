@@ -159,6 +159,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       ratingAvg: pro.ratingAvg,
       reviewCount: pro.reviewCount,
       categoryLabel: pro.categoryId ? tCat(pro.categoryId as Parameters<typeof tCat>[0]) : undefined,
+      // Profession labels + verified flag power the pin popup mini-card.
+      professions: ((pro.professions && pro.professions.length > 0) ? pro.professions : (pro.categoryId ? [pro.categoryId] : []))
+        .map((id) => tCat(id as Parameters<typeof tCat>[0])),
+      verified: pro.verificationStatus === "verified",
       hourlyRate: pro.hourlyRate ?? null,
       priceLabel: primaryPricingLabel(pro.pricing, pro.hourlyRate),
       provinceName: pro.provinceName,
