@@ -1071,6 +1071,11 @@ actually wired.
 > location and its tab gets the **active brand-blue `#009FD9` + underline** styling — identical to a
 > selected tab in the multi-location case (and it now shows that workplace's address). The province/cantón
 > FALLBACK tab was already always-active. Removed the unused `hasLocationSelector`.
+>
+> **UPDATE (Sprint 167) — favorites bookmark clearance via a TOP band (not a side gutter).** The right rail
+> uses **`lg:pt-6`** (small top band) instead of the Sprint-165 `lg:pr-6`: the bookmark sits in the
+> top-right CORNER above the content, and the schedule/note/buttons stay FULL-WIDTH (no blank strip on the
+> right). `lg:justify-center` centers content in the space below the band, so the bookmark always clears.
 
 **THE GOLDEN RULE (learned the hard way across many flip-flops): the MOBILE single column is the
 BASE, and the desktop layout is ADDITIVE `lg:` classes ON TOP of it.** Never change a mobile
