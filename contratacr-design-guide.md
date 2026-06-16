@@ -1347,9 +1347,11 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
   rounded-xl border-[#e5e7eb]`) + the `FILTER_TRIGGER` focus override (no stuck ring/border after
   picking). **Do NOT put Provincia + Cantón in a 2-column row** — the 256px (`w-64`) sidebar makes
   each half too narrow for "Todas las provincias"/"Todos los cantones" (overflow) and puts the
-  disabled-Cantón faded border beside Provincia (looks inconsistent). Toggle rows ("Cerca de mí",
-  "Solo verificados") are plain label+switch rows (no bordered boxes); a "Filtros" header carries the
-  active-count + "Limpiar (N)".
+  disabled-Cantón faded border beside Provincia (looks inconsistent). **Cantón is `disabled` until a
+  Provincia is chosen, and its placeholder GUIDES** — `!province ? t("filters.selectProvince") : …`
+  → "Selecciona la provincia" / "Select a province first" (both sidebar + chips), never blank. Toggle
+  rows ("Cerca de mí", "Solo verificados") are plain label+switch rows (no bordered boxes); a "Filtros"
+  header carries the active-count + "Limpiar (N)".
 - **Mobile (<lg) = a polished map-background bottom-sheet (Yelp/Airbnb/Hulihealth; Sprint 151).** The
   shell root is a fixed-viewport column `h-[calc(100dvh-64px)] flex flex-col overflow-hidden`
   (`lg:block lg:h-auto lg:overflow-visible`). Top→bottom: **(1) a SINGLE-LINE HEADER = the navbar**
