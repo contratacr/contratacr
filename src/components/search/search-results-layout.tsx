@@ -2,15 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { useSearchParams } from "next/navigation";
 import { SlidersHorizontal, X } from "lucide-react";
 import { GoogleMapPanel, type MapProfessional } from "@/components/maps/google-map-panel";
 
 interface SearchResultsLayoutProps {
   children: React.ReactNode; // server-rendered list column (cards + pagination)
   filters: React.ReactNode; // the <SearchFilters/> sidebar/drawer control
-  /** Mobile-only service-search bar (<MobileServiceSearch/>), pinned in the header. */
-  mobileSearch?: React.ReactNode;
   /** Mobile-only "<N> profesionales en <área>" count shown in the sheet header. */
   countLabel?: string;
   mapData: MapProfessional[];
@@ -43,16 +40,17 @@ const MAX = 0.92;
  *  DESKTOP is unchanged (same `lg:` classes). The bottom-sheet wrapper is `lg:contents`, so on
  *  desktop it dissolves and the card column (`lg:order-2`) drops into the 3-column flex shell.
  */
-export function SearchResultsLayout({ children, filters, mobileSearch, countLabel, mapData, apiKey, locale, numbering }: SearchResultsLayoutProps) {
+export function SearchResultsLayout({ children, filters, countLabel, mapData, apiKey, locale, numbering }: SearchResultsLayoutProps) {
   const t = useTranslations("search");
-  const params = useSearchParams();
   const [showFilters, setShowFilters] = useState(false); // full-filter drawer (mobile + lg–xl)
 
-  // Any active filter → a brand-blue dot on the mobile "Filtros" button.
-  const hasActiveFilters =
-    !!params.get("q") || !!params.get("categoria") || !!params.get("provincia") ||
-    !!params.get("canton") || !!params.get("aseguradora") || params.get("verificados") === "1" ||
-    !!params.get("lat") || (!!params.get("sortBy") && params.get("sortBy") !== "rating");
+  // The single-line mobile header (in the navbar) hosts the "Filtros" icon button, which
+  // dispatches `ccr:open-filters` — open the drawer when we hear it.
+  useEffect(() => {
+    const open = () => setShowFilters(true);
+    window.addEventListener("ccr:open-filters", open);
+    return () => window.removeEventListener("ccr:open-filters", open);
+  }, []);
 
   // ── Draggable bottom sheet (mobile) ──────────────────────────────────────────
   const [heightFr, setHeightFr] = useState(PEEK);
@@ -148,20 +146,9 @@ export function SearchResultsLayout({ children, filters, mobileSearch, countLabe
         </div>
       )}
 
-      {/* MOBILE HEADER — search (flex-fills) + a "Filtros" control. The site navbar above is
-          the menu. Kept compact so the map dominates. */}
-      <div className="lg:hidden shrink-0 flex items-center gap-2 px-3 pt-0.5 pb-2">
-        <div className="min-w-0 flex-1">{mobileSearch}</div>
-        <button
-          type="button"
-          onClick={() => setShowFilters(true)}
-          aria-label={t("filters.title")}
-          className="relative shrink-0 inline-flex h-10 items-center gap-1.5 rounded-full border border-[#e5e7eb] bg-white px-3.5 text-[13px] font-semibold text-[#162543] shadow-sm active:scale-95 transition"
-        >
-          <SlidersHorizontal className="h-4 w-4" /> {t("filters.title")}
-          {hasActiveFilters && <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#008ce0]" />}
-        </button>
-      </div>
+      {/* The mobile search + "Filtros" now live in the navbar's single-line header (see
+          page.tsx `mobileInline`); "Filtros" opens this drawer via the `ccr:open-filters`
+          event above. So the layout goes straight to the map + sheet on mobile. */}
 
       {/* ONE flex container: mobile = the map fills the remaining height (the sheet floats
           over it); desktop = the 3-column shell (filters · cards · map) via `lg:order-*`. */}
@@ -184,9 +171,9 @@ export function SearchResultsLayout({ children, filters, mobileSearch, countLabe
             (order-2) and the desktop map sit in the flex shell. */}
         <div
           className="fixed inset-x-0 bottom-0 z-30 flex flex-col rounded-t-[20px] border-x border-t border-[#e5e7eb] bg-white shadow-[0_-12px_36px_-14px_rgba(15,23,42,0.32)] lg:static lg:z-auto lg:rounded-none lg:border-0 lg:shadow-none lg:contents"
-          // maxHeight keeps the header (search + Filtros) visible even when fully expanded.
-          // On desktop the wrapper is `lg:contents`, so these inline styles have no effect.
-          style={{ height: `${heightFr * 100}dvh`, maxHeight: "calc(100dvh - 112px)", transition: dragging ? "none" : "height .3s cubic-bezier(.32,.72,0,1)" }}
+          // maxHeight keeps the navbar (logo + search + filters + menu) visible even when fully
+          // expanded. On desktop the wrapper is `lg:contents`, so these inline styles have no effect.
+          style={{ height: `${heightFr * 100}dvh`, maxHeight: "calc(100dvh - 72px)", transition: dragging ? "none" : "height .3s cubic-bezier(.32,.72,0,1)" }}
         >
           {/* Sheet header (handle + count) — the whole strip is the drag target; drag to
               resize, tap to toggle peek/full. `touch-none` keeps the gesture from scrolling

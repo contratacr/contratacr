@@ -3,7 +3,7 @@
 import { useRouter, usePathname } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Search, X, Loader2, MapPin, ShieldCheck } from "lucide-react";
+import { Search, X, Loader2, MapPin, ShieldCheck, SlidersHorizontal } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PROVINCES, getCantonsByProvince, nearestProvinceId } from "@/lib/data/cr-geography";
@@ -398,6 +398,29 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
         {geoError && <span className="px-1.5 text-[11px] text-[#b45309]">{geoError}</span>}
       </div>
     </div>
+  );
+}
+
+// ── MOBILE "Filtros" icon-button (in the single-line /buscar header) ──
+// Compact icon-only trigger; dispatches `ccr:open-filters`, which `SearchResultsLayout`
+// listens for to open the full-filter drawer. A brand-blue dot marks active filters.
+export function MobileFiltersButton() {
+  const t = useTranslations("search");
+  const params = useSearchParams();
+  const hasActive =
+    !!params.get("categoria") || !!params.get("provincia") || !!params.get("canton") ||
+    !!params.get("aseguradora") || params.get("verificados") === "1" || !!params.get("lat") ||
+    (!!params.get("sortBy") && params.get("sortBy") !== "rating");
+  return (
+    <button
+      type="button"
+      aria-label={t("filters.title")}
+      onClick={() => window.dispatchEvent(new CustomEvent("ccr:open-filters"))}
+      className="relative shrink-0 inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#e5e7eb] bg-white text-[#162543] shadow-sm active:scale-95 transition-transform"
+    >
+      <SlidersHorizontal className="h-[18px] w-[18px]" />
+      {hasActive && <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#008ce0]" />}
+    </button>
   );
 }
 

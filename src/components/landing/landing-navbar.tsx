@@ -625,8 +625,13 @@ function AccountMenu({
   );
 }
 
-/* ─── Navbar ─── */
-export function LandingNavbar() {
+/* ─── Navbar ───
+   `mobileInline` (optional): content injected into the MOBILE header row only (<lg),
+   between the logo and the hamburger — used by /buscar to put the search + filters on the
+   SAME single line as the logo + menu. When present, the mobile logo compacts to the mark
+   (the wordmark would crowd the row at ~360px). Desktop + pages that don't pass it are
+   unchanged. */
+export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode } = {}) {
   const [compact, setCompact] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
@@ -846,8 +851,21 @@ export function LandingNavbar() {
               style={{ opacity: compact ? 0 : 1, pointerEvents: compact ? "none" : "auto" }}
             >
               <Link href="/" aria-label="ContrataCR inicio" className="shrink-0">
-                <ContrataCRLogo size="lg" />
+                {mobileInline ? (
+                  <>
+                    {/* Compact mark on mobile (saves room for the inline search), full logo on desktop. */}
+                    <ContrataCRMark className="h-8 w-8 lg:hidden" />
+                    <span className="hidden lg:inline-flex"><ContrataCRLogo size="lg" /></span>
+                  </>
+                ) : (
+                  <ContrataCRLogo size="lg" />
+                )}
               </Link>
+
+              {/* MOBILE inline slot (search + filters) — only when provided, only <lg. */}
+              {mobileInline && (
+                <div className="lg:hidden flex min-w-0 flex-1 items-center gap-2">{mobileInline}</div>
+              )}
 
               <nav className="hidden lg:flex items-center gap-0.5">
                 {/* Categorías — mega-menu with autocomplete + curated columns */}
@@ -961,7 +979,9 @@ export function LandingNavbar() {
                 </div>
               </nav>
 
-              <div className="flex-1" />
+              {/* Spacer — on mobile the inline slot (when present) is the flex filler instead,
+                  so hide this one to avoid two competing flex-1 (which would halve the search). */}
+              <div className={cn("flex-1", mobileInline && "hidden lg:block")} />
 
               {/* Right actions */}
               <div className="hidden lg:flex items-center gap-2 shrink-0">

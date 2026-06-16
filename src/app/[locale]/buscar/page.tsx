@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
-import { SearchFilters, MobileServiceSearch } from "@/components/search/search-filters";
+import { SearchFilters, MobileServiceSearch, MobileFiltersButton } from "@/components/search/search-filters";
 import { ProfessionalCard } from "@/components/professionals/professional-card";
 import { SaveableCard } from "@/components/professionals/save-button";
 import { searchProfessionals } from "@/lib/queries/professionals";
@@ -239,8 +239,17 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f4f7fa]">
-      {/* Same app-wide header as every page; it's fixed, so reserve its height. */}
-      <LandingNavbar />
+      {/* Same app-wide header as every page; it's fixed, so reserve its height. On MOBILE the
+          search + Filtros are injected INLINE so the logo + search + filters + menu share ONE
+          line (desktop header unchanged — `mobileInline` is `lg:hidden`). */}
+      <LandingNavbar
+        mobileInline={
+          <>
+            <div className="min-w-0 flex-1"><Suspense fallback={null}><MobileServiceSearch /></Suspense></div>
+            <Suspense fallback={null}><MobileFiltersButton /></Suspense>
+          </>
+        }
+      />
       <div className="h-16" aria-hidden />
 
       {/* Top bar — title + subtitle. Background MATCHES the page/results area (#f4f7fa)
@@ -273,7 +282,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             numbering={numbering}
             countLabel={subtitle}
             filters={<Suspense fallback={null}><SearchFilters /></Suspense>}
-            mobileSearch={<Suspense fallback={null}><MobileServiceSearch /></Suspense>}
           >
 
             {/* ── Results list ── */}
