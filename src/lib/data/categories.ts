@@ -319,9 +319,12 @@ export const CATEGORY_GROUP_LABELS_EN: Record<string, string> = {
 /* ─── Get category label from ID (locale-aware) ─── */
 export function getCategoryLabel(id: string, locale?: string): string {
   if (locale === "en" && CATEGORY_LABELS_EN[id]) return CATEGORY_LABELS_EN[id];
-  if (id === "otro") return "Otro servicio";
+  if (id === "otro") return locale === "en" ? "Other service" : "Otro servicio";
   const found = ALL_CATEGORIES.find((c) => c.id === id);
-  return found?.label ?? id;
+  if (found) return found.label;
+  // Unknown id → a readable label (never the raw key), and a warning to catch it.
+  if (id) console.warn(`[categories] unknown category id "${id}" — add it to the taxonomy + messages`);
+  return id.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
 }
 
 /* ─── Get category GROUP label from group ID (locale-aware) ─── */
