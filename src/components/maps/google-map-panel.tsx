@@ -68,7 +68,7 @@ const MAP_CSS =
   ".ccr-pin .num{position:absolute;top:6px;left:0;right:0;text-align:center;color:#fff;font:700 12px/1 Inter,system-ui,sans-serif;}" +
   ".ccr-pin.is-active{transform:scale(1.15);}" +
   ".ccr-pin.is-active path{fill:" + PIN_ACTIVE + ";}" +
-  ".ccr-popwrap{transform:translateY(-46px);pointer-events:none;}" +
+  ".ccr-popwrap{transform:translateY(-52px);pointer-events:none;}" +
   ".ccr-pop{pointer-events:auto;position:relative;width:240px;background:#fff;border-radius:14px;box-shadow:0 10px 30px -8px rgba(15,23,42,.30),0 2px 6px rgba(15,23,42,.10);padding:12px;font-family:Inter,system-ui,sans-serif;text-decoration:none;display:block;}" +
   ".ccr-pop-x{position:absolute;top:6px;right:6px;width:22px;height:22px;border:0;background:transparent;color:#9ca3af;font-size:16px;line-height:1;cursor:pointer;border-radius:6px;}" +
   ".ccr-pop-x:hover{background:#f3f4f6;color:#374151;}" +
@@ -200,22 +200,40 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
   function cancelClose() { if (closeTimerRef.current) { clearTimeout(closeTimerRef.current); closeTimerRef.current = null; } }
   function scheduleClose() { cancelClose(); closeTimerRef.current = setTimeout(closePopup, 150); }
 
-  // `interactive` = a CLICK/TAP popup (clickable card, hoverable). `false` = a HOVER preview.
-  // ROOT-CAUSE of the hover VIBRATION: the popup card is anchored just above the pin, and the
-  // pin's `is-active` 1.15× scale grows its top edge up UNDER the card; an interactive card
-  // (`pointer-events:auto`) then STEALS the hover from the pin → pin `mouseleave` → the pin
-  // un-scales → the cursor is over the pin again → `mouseenter` → … = a continuous flicker
-  // loop that no debounce can stop. The fix: the HOVER preview is `pointer-events:none`, so it
-  // can NEVER capture the pointer or steal the pin's hover — the pin stays hovered, rock stable.
-  // Click/tap popups keep `pointer-events:auto` (they're opened by a deliberate gesture, and the
-  // cursor settles ON the card, so there's no pin↔card alternation).
+  // THE fix for the long-standing hover VIBRATION. The popup is a SEPARATE AdvancedMarkerElement
+  // anchored at the pin/cluster location; Google wraps the content in a `<gmp-advanced-marker>`
+  // whose hit-box sits at the popup's UN-transformed layout position — i.e. right ON TOP OF the
+  // pin (the card is only shifted up *visually* by the CSS `transform`). That transparent wrapper,
+  // with its default `pointer-events:auto`, STOLE the pin's hover → pin `mouseleave` → popup
+  // closes → cursor back on the pin → `mouseenter` → … = the flicker loop. (Setting
+  // pointer-events:none on the CARD didn't help — the WRAPPER was the one capturing.) This makes
+  // the Google wrapper itself pointer-events:none, so the cursor passes straight THROUGH the popup
+  // to the pin below — zero steal, rock stable — while the card/rows keep their own
+  // `pointer-events:auto` (CSS) and stay clickable. Stops at `<gmp-advanced-marker>` so it never
+  // touches the shared marker pane.
+  function killWrapperPE(wrap: HTMLElement) {
+    const apply = () => {
+      let node: HTMLElement | null = wrap.parentElement;
+      for (let i = 0; i < 2 && node; i++) {
+        node.style.pointerEvents = "none";
+        if ((node.tagName || "").toLowerCase() === "gmp-advanced-marker") break;
+        node = node.parentElement;
+      }
+    };
+    apply();
+    if (typeof requestAnimationFrame !== "undefined") requestAnimationFrame(apply);
+  }
+  const CAN_HOVER = typeof window !== "undefined" && !!window.matchMedia?.("(hover: hover)").matches;
+
+  // The pin mini-card. Opened on hover (desktop) AND click/tap. Position is computed ONCE on open
+  // (anchored to the pin), never per-mousemove. Deduped by `pro.id` so re-entering the same pin
+  // never rebuilds it. The card stays `pointer-events:auto` (clickable); only the wrapper is
+  // killed (see `killWrapperPE`) so it can never steal the pin's hover.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function openPopup(g: any, map: any, pro: MapProfessional, pos: { lat: number; lng: number }, interactive: boolean) {
-    const key = (interactive ? "C:" : "H:") + pro.id;
-    // Already showing this exact popup → keep it (don't rebuild → no flicker).
-    if (popupRef.current && popupKeyRef.current === key) { cancelClose(); return; }
+  function openPopup(g: any, map: any, pro: MapProfessional, pos: { lat: number; lng: number }) {
+    if (popupRef.current && popupKeyRef.current === pro.id) { cancelClose(); return; }
     closePopup();
-    popupKeyRef.current = key;
+    popupKeyRef.current = pro.id;
     const href = `/${locale}/profesionales/${pro.slug}`;
     const profs = (pro.professions ?? []).filter(Boolean).slice(0, 2).join(" · ") || pro.categoryLabel || "";
     const wrap = document.createElement("div");
@@ -233,18 +251,15 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
           `</div>` +
         `</div>` +
       `</a>`;
-    if (interactive) {
-      wrap.querySelector(".ccr-pop-x")?.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); closePopup(); });
-      // Keep the popup open while the cursor is over the card itself.
-      if (typeof window !== "undefined" && window.matchMedia?.("(hover: hover)").matches) {
-        wrap.addEventListener("mouseenter", cancelClose);
-        wrap.addEventListener("mouseleave", scheduleClose);
-      }
-    } else {
-      // HOVER preview → transparent to pointer events (can't steal the pin's hover).
-      (wrap.firstElementChild as HTMLElement | null)?.style.setProperty("pointer-events", "none");
+    const card = wrap.firstElementChild as HTMLElement | null;
+    wrap.querySelector(".ccr-pop-x")?.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); closePopup(); });
+    // Keep the card open while the cursor is over IT (the card is `auto`; the wrapper is `none`).
+    if (CAN_HOVER) {
+      card?.addEventListener("mouseenter", cancelClose);
+      card?.addEventListener("mouseleave", scheduleClose);
     }
     popupRef.current = new g.marker.AdvancedMarkerElement({ map, position: pos, content: wrap, zIndex: 100000 });
+    killWrapperPE(wrap); // ← the wrapper can no longer steal hover from the pin
   }
 
   // CLUSTER preview — opened by hovering (desktop) or tapping (mobile) a cluster. A
@@ -284,13 +299,15 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
         `<div class="ccr-cllist">${rows}</div>` +
         (more > 0 ? `<div class="ccr-clmore">+${more} ${locale === "en" ? "more" : "más"}</div>` : "") +
       `</div>`;
+    const clpop = wrap.firstElementChild as HTMLElement | null; // .ccr-clpop (pointer-events:auto)
     wrap.querySelector(".ccr-pop-x")?.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); closePopup(); });
-    // Keep the preview open while the cursor is over it (desktop).
-    if (typeof window !== "undefined" && window.matchMedia?.("(hover: hover)").matches) {
-      wrap.addEventListener("mouseenter", cancelClose);
-      wrap.addEventListener("mouseleave", scheduleClose);
+    // Keep the preview open while the cursor is over IT (the list is `auto`; the wrapper is `none`).
+    if (CAN_HOVER) {
+      clpop?.addEventListener("mouseenter", cancelClose);
+      clpop?.addEventListener("mouseleave", scheduleClose);
     }
     popupRef.current = new g.marker.AdvancedMarkerElement({ map, position: pos, content: wrap, zIndex: 100000 });
+    killWrapperPE(wrap); // ← the wrapper can no longer steal hover from the cluster pin
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -419,21 +436,20 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
       list.push(el); pinsByProRef.current.set(proId, list);
 
       if (canHover) {
-        // Desktop hover: highlight the pin/card AND show a NON-interactive mini-card preview
-        // (pointer-events:none → it can't steal the pin's hover → no vibration). Re-entering
-        // the same pin re-activates it without re-scrolling/rebuilding (openPopup dedupes).
+        // Desktop hover: ring the matching card + show the (stable) mini-card. NO scroll on hover
+        // (scrolling shifts the sticky map → pin moves → churn); the ring is enough. Re-entering
+        // the same pin doesn't rebuild the popup (openPopup dedupes by pro.id).
         el.addEventListener("mouseenter", () => {
           cancelClose();
-          const already = !!popupRef.current && popupKeyRef.current === "H:" + pro.id;
-          setActive(proId, true, !already);
-          openPopup(g, map, pro, pos, false);
+          setActive(proId, true, false);
+          openPopup(g, map, pro, pos);
         });
         el.addEventListener("mouseleave", () => { setActive(proId, false, false); scheduleClose(); });
       }
       el.addEventListener("click", (e) => {
         e.stopPropagation();
         cancelClose();
-        openPopup(g, map, pro, pos, true); // a deliberate click → interactive (clickable) popup
+        openPopup(g, map, pro, pos);
         setActive(proId, true, false);
         // Mobile: tell the results sheet to spring open + scroll to this pro's card.
         if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("ccr:focus-card", { detail: proId }));
