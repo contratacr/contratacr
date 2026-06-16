@@ -149,7 +149,7 @@ Unverified professionals **are listed and bookable** (not hidden) but, when cont
 This is the signature screen and is **full-width** — NOT a narrow `max-w-7xl` centered container (that wastes horizontal space next to a map). Wrap it in `mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8` so it fills the screen on laptops/desktops. Three columns, Hulihealth-style, responsive:
 - **xl+ (≥1280):** `filters sidebar (w-64, sticky)` · `results list (flex-1)` · `map (xl:w-[38%], sticky, full viewport height)`.
 - **lg–xl (1024–1279):** `results` · `map (lg:w-[40%])`; filters move behind a **"Filtros" slide-over drawer**.
-- **<lg:** single column; **"Filtros"** button opens the drawer + a **List/Map toggle** swaps results/map.
+- **<lg (mobile): a clean VERTICAL flow (Yelp-style), NOT a bottom-sheet/List-Map toggle.** One single column, in order: **(1)** the **search bar** (`MobileServiceSearch`) → **(2)** the **filters as a single horizontally-scrollable chip row** (`<SearchFilters variant="chips"/>` — Categoría/Provincia/Cantón/Ordenar/Aseguradora dropdown chips + "cerca de mí"/"Solo verificados" toggle chips; `overflow-x-auto`, `shrink-0`, never wraps) → **(3)** the **map at a FIXED height** (`h-[42vh]`, rounded+bordered) → **(4)** the **count** → **(5)** the stacked **card list**. The whole page scrolls normally; cards NEVER overlap the map. The SAME single `GoogleMapPanel` is repositioned via `lg:order-*` (mobile flow vs desktop column) — never a 2nd instance.
 - `SearchResultsLayout` owns the three slots + drawer (takes a `filters` prop). `SearchFilters` is a **vertical sidebar** (stacked search, category [typeable+browsable], province/cantón, sort, aseguradora, geolocation, verified, clear). **Filters live ONLY in the sidebar — never inside the cards.**
 - **Sort ("Ordenar por") — the standard set:** Mejor calificados (`rating`, default) · Precio (de menor a mayor) (`priceAsc`) · Disponibilidad inmediata (`availability` — soonest upcoming slot first) · Cercanía (`cercania` — requests geolocation when picked).
 - **Default ranking — verified first.** Across every sort, **verified professionals rank above unverified** (a stable secondary pass after the chosen sort; featured within each group), so clients are steered to verified pros automatically and pros have a built-in incentive to verify. Unverified still appear, just lower. Keep the single **"Solo identidad verificada"** toggle for clients who want only verified — do **not** add any other verification filter.
@@ -1304,7 +1304,7 @@ map on top + filter chips + list.
   (`locationControl`) and render it in EVERY schedule branch (incl. no-upcoming) so it can't
   be dropped per-layout or trap the client on an empty location.
 
-## 51. /buscar page shell — desktop 3-column, MOBILE map-background + draggable bottom sheet
+## 51. /buscar page shell — desktop 3-column, MOBILE vertical flow (Yelp-style)
 
 `SearchResultsLayout` (`search-results-layout.tsx`, `"use client"`) is the responsive shell.
 **Filtering/search LOGIC is unchanged** — every control drives the same URL params via
@@ -1332,43 +1332,19 @@ desktop). Verify with `git diff`: desktop columns/widths/sticky are untouched.
   disabled-Cantón faded border beside Provincia (looks inconsistent). Toggle rows ("Cerca de mí",
   "Solo verificados") are plain label+switch rows (no bordered boxes); a "Filtros" header carries the
   active-count + "Limpiar (N)".
-- **MOBILE filters (<lg) = a "Filtros (N)" button → BOTTOM SHEET (not a chips row).** The results-sheet
-  header shows the search bar + a compact **"Filtros"** button (`SlidersHorizontal` + a brand-blue
-  count badge) + the count. Tapping opens a bottom sheet (`fixed inset-0 z-[60]`, rounded-top,
-  `max-h-[86dvh]`, backdrop) holding the SAME filters stacked vertically — rendered via
-  `<SearchFilters hideSearch hideHeader />` (drops the duplicate search + card chrome). A sticky "Ver
-  resultados" footer (and ×/backdrop) just dismisses; filters apply instantly. Do NOT go back to the
-  cramped horizontal dropdown-chips row.
-- **Mobile (<lg) = map-as-BACKGROUND + a DRAGGABLE BOTTOM SHEET over it** (Yelp / Apple-Maps /
-  Airbnb pattern — the user sees the map AND the cards at the same time, superimposed). NOT the
-  old stacked map-on-top-then-list, and NOT a List/Map toggle.
-  - **The region** is one viewport tall and full-bleed: `relative -mx-4 -mt-4 h-[calc(100dvh-8rem)]
-    overflow-hidden sm:-mx-6` (negative margins cancel the page gutters/top-padding so the map
-    reaches the screen edges; `overflow-hidden` clips the off-screen part of the sheet). Reset on
-    desktop with `lg:mx-0 lg:mt-0 lg:h-auto lg:overflow-visible`.
-  - **The map** fills the region as the background: `absolute inset-0 z-0` (inner box `h-full
-    w-full`, no border/radius — full bleed), reset to the sticky column with `lg:static
-    lg:order-3 …`.
-  - **The sheet** is the results panel over the map: `absolute inset-x-0 bottom-0 z-30 flex
-    flex-col overflow-hidden rounded-t-2xl border bg-white shadow-[0_-8px_24px_rgba(0,0,0,.12)]`,
-    reset to the plain results column with `lg:static lg:order-2 lg:h-auto lg:bg-transparent
-    lg:border-0 lg:shadow-none lg:rounded-none lg:overflow-visible`. Top→bottom inside: a **grab
-    handle** (`lg:hidden`, the ONLY drag target so the list still scrolls natively), then the
-    **search + filter chips + count** (`lg:hidden` header — `MobileServiceSearch`, `<SearchFilters
-    variant="chips"/>`, the "N profesionales" count), then the **card list** in a `flex-1
-    overflow-y-auto overscroll-contain` scroll area (`lg:flex-none lg:overflow-visible` on
-    desktop).
-- **The drag is HEIGHT-based, NOT a transform.** The sheet's height = `100 - sheetPct`% of the
-  region (inline `style.height`, applied ONLY when `isMobile` so it can't leak past `lg:`). Sizing
-  by height (vs `translateY`) keeps the inner scroll area equal to the visible window — with a
-  transform the sheet box stays taller than the window and the LAST cards end up below the fold,
-  unreachable. Snap detents are `SNAP = { full: 12, mid: 52, peek: 80 }` (% map at top; default
-  `mid`). Pointer events on the handle update `sheetPct`; on release it snaps to the nearest
-  detent; a tap (<6px) toggles full↔mid. SSR default `h-[48%]` (= mid) avoids a pre-hydration
-  flash; `isMobile` comes from `matchMedia("(max-width: 1023px)")`.
-- **ONE map instance** — NOT a second `<GoogleMapPanel>`. The single map element morphs from
-  full-bleed `absolute` (mobile) to the sticky `lg:static` column (desktop) via responsive
-  classes; never duplicate it (a hidden 2nd instance wastes a Maps load + tiles).
+- **Mobile (<lg) = a clean VERTICAL FLOW (Yelp-style), NOT a bottom-sheet/List-Map toggle.** The page
+  scrolls normally; nothing overlaps. Order (DOM order = visual order in the `flex flex-col` shell):
+  **(1) search bar** (`MobileServiceSearch`) → **(2) filter chips** (`<SearchFilters variant="chips"/>`,
+  wrapped in `-mx-4 px-4 sm:-mx-6 sm:px-6` so the `overflow-x-auto` row scrolls edge-to-edge and never
+  wraps) → **(3) the map** as a FIXED-height block (`h-[42vh] min-h-[260px]`, `rounded-2xl border`,
+  `relative isolate overflow-hidden`) → **(4) the count** (`lg:hidden`) → **(5) the card list**
+  (`children`). No drag handle, no superimposed sheet, no full-bleed negative margins.
+- **ONE map instance, reflowed by `lg:order-*`** — NOT a second `<GoogleMapPanel>`. The shell is
+  `flex flex-col gap-3 lg:flex-row lg:gap-5`; on desktop the same nodes reorder to the 3 columns:
+  filters sidebar `lg:order-1 hidden xl:block`, card list `lg:order-2 lg:w-[640px] …`, map
+  `lg:order-3 lg:flex-1` (inner box adds `lg:h-[calc(100vh-104px)] lg:sticky lg:top-20`). The mobile
+  search+chips block and the count are `lg:hidden`. Verify with `git diff` that desktop
+  columns/widths/sticky are untouched.
 - **No clobbering between the search bar and the chips:** the search bar copies the live URL
   (preserving filters); the chips' `applyFilters` reads `q` from the URL (not the chip
   instance's stale local state). Keep this split. The mobile count is shown in the sheet, so the
