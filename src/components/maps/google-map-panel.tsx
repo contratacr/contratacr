@@ -16,6 +16,8 @@ export interface MapProfessional {
   reviewCount: number;
   categoryLabel?: string;
   hourlyRate?: number | null;
+  /** Pre-formatted "from" price for the hover/tap preview (e.g. "₡10 000 /hora"). */
+  priceLabel?: string | null;
   provinceName?: string;
   lat?: number | null;
   lng?: number | null;
@@ -47,20 +49,23 @@ const CR_CENTER = { lat: 9.9281, lng: -84.0907 };
 // land, white roads, light-blue water, POI/transit clutter hidden, only locality
 // labels kept. Inline `styles` require a NON-vector map (no mapId) + legacy markers.
 const LIGHT_STYLE = [
-  { elementType: "geometry", stylers: [{ color: "#f3f4f6" }] },
-  { elementType: "labels.text.fill", stylers: [{ color: "#6b7280" }] },
+  { elementType: "geometry", stylers: [{ color: "#f6f7f9" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#7a828c" }] },
   { elementType: "labels.text.stroke", stylers: [{ color: "#ffffff" }, { weight: 2 }] },
   { featureType: "administrative", elementType: "geometry", stylers: [{ visibility: "off" }] },
   { featureType: "administrative.land_parcel", stylers: [{ visibility: "off" }] },
+  { featureType: "administrative.neighborhood", stylers: [{ visibility: "off" }] },
   { featureType: "poi", stylers: [{ visibility: "off" }] },
   { featureType: "transit", stylers: [{ visibility: "off" }] },
-  { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#f3f4f6" }] },
+  { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#f6f7f9" }] },
+  { featureType: "landscape.natural", elementType: "geometry", stylers: [{ color: "#eef1f4" }] },
   { featureType: "road", elementType: "geometry", stylers: [{ color: "#ffffff" }] },
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#e7eaee" }] },
   { featureType: "road", elementType: "labels", stylers: [{ visibility: "off" }] },
-  { featureType: "road.arterial", elementType: "geometry", stylers: [{ color: "#f0f1f3" }] },
-  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#e6e8eb" }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#d6eaf2" }] },
-  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#9ca3af" }] },
+  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#eef0f3" }] },
+  { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ color: "#e0e4e9" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#cfe3ee" }] },
+  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#9bb3c0" }] },
 ];
 
 // Deterministic small offset so multiple pins in the same canton don't overlap.
@@ -142,6 +147,8 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
   const clustererRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const infoRef = useRef<any>(null);
+  // Pending close for the hover preview — a tiny delay debounces moving between nearby pins.
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Single location → center + zoom. Multiple → fit the pin cluster (generous
   // padding) but cap zoom at 12 (maxZoom) so a tight cluster stays focused on the
@@ -194,6 +201,10 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
 
     const info = infoRef.current;
     const bounds = new g.LatLngBounds();
+    // Hover preview on devices with a real pointer; TAP preview on touch.
+    const canHover = typeof window !== "undefined" && !!window.matchMedia?.("(hover: hover)").matches;
+    const cancelClose = () => { if (closeTimerRef.current) { clearTimeout(closeTimerRef.current); closeTimerRef.current = null; } };
+    const verPerfil = locale === "en" ? "View profile" : "Ver perfil";
 
     const markers = professionals
       .map((pro) => {
@@ -211,29 +222,57 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
           title: pro.fullName,
         });
 
-        const openPreview = () => {
-          const href = `/${locale}/profesionales/${pro.slug}`;
+        const href = `/${locale}/profesionales/${pro.slug}`;
+        // The mini-card: photo · name · profession · rating · price. On touch we add a
+        // "Ver perfil" button (tap = the only action); on desktop the card is a quick hover
+        // preview and CLICKING the pin navigates, so no button is needed.
+        const openPreview = (withButton: boolean) => {
           const avatar = pro.avatarUrl
-            ? `<img src="${pro.avatarUrl}" alt="" style="width:48px;height:48px;border-radius:9999px;object-fit:cover;flex-shrink:0;" />`
-            : `<div style="width:48px;height:48px;border-radius:9999px;background:#EBF5FB;color:#009FD9;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">${pro.fullName.charAt(0)}</div>`;
-          info.setContent(`
-            <div style="font-family:Inter,Arial,sans-serif;max-width:240px;padding:4px;">
-              <div style="display:flex;gap:10px;align-items:center;">
-                ${avatar}
-                <div style="min-width:0;">
-                  <div style="font-weight:700;color:#111827;font-size:14px;line-height:1.2;">${pro.fullName}</div>
-                  ${pro.categoryLabel ? `<div style="color:#6b7280;font-size:12px;margin-top:2px;">${pro.categoryLabel}</div>` : ""}
-                  <div style="font-size:12px;margin-top:3px;">${starsHtml(pro.ratingAvg)} <span style="color:#9ca3af;">(${pro.reviewCount})</span></div>
-                </div>
-              </div>
-              <a href="${href}" style="display:block;text-align:center;margin-top:12px;background:#009FD9;color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:11px 0;border-radius:8px;min-height:44px;box-sizing:border-box;line-height:22px;">Ver perfil</a>
-            </div>`);
+            ? `<img src="${pro.avatarUrl}" alt="" style="width:46px;height:46px;border-radius:9999px;object-fit:cover;flex-shrink:0;" />`
+            : `<div style="width:46px;height:46px;border-radius:9999px;background:#EBF5FB;color:#009FD9;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex-shrink:0;">${pro.fullName.charAt(0)}</div>`;
+          const price = pro.priceLabel
+            ? `<div style="font-size:13px;font-weight:700;color:#009FD9;margin-top:3px;">${pro.priceLabel}</div>`
+            : "";
+          const button = withButton
+            ? `<a href="${href}" style="display:block;text-align:center;margin-top:10px;background:#009FD9;color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:10px 0;border-radius:8px;min-height:44px;box-sizing:border-box;line-height:24px;">${verPerfil}</a>`
+            : "";
+          info.setContent(
+            `<div style="font-family:Inter,Arial,sans-serif;max-width:236px;padding:2px;">` +
+              `<div style="display:flex;gap:10px;align-items:flex-start;">` +
+                avatar +
+                `<div style="min-width:0;">` +
+                  `<div style="font-weight:700;color:#111827;font-size:14px;line-height:1.25;">${pro.fullName}</div>` +
+                  (pro.categoryLabel ? `<div style="color:#6b7280;font-size:12px;margin-top:1px;">${pro.categoryLabel}</div>` : "") +
+                  `<div style="font-size:12px;margin-top:3px;">${starsHtml(pro.ratingAvg)} <span style="color:#9ca3af;">(${pro.reviewCount})</span></div>` +
+                  price +
+                `</div>` +
+              `</div>` +
+              button +
+            `</div>`
+          );
           info.open({ map, anchor: marker });
         };
-        // Legacy Marker: attach Maps event listeners.
-        marker.addListener("mouseover", () => { openPreview(); setCardHighlight(pro.proId ?? pro.id, true); });
-        marker.addListener("mouseout", () => setCardHighlight(pro.proId ?? pro.id, false));
-        marker.addListener("click", openPreview);
+
+        // Legacy Marker events. DESKTOP: hover shows the preview, leaving hides it (small
+        // debounce so moving between nearby pins isn't janky); clicking the pin navigates.
+        // TOUCH: tap shows the preview (with the "Ver perfil" button); Google's × closes it.
+        marker.addListener("mouseover", () => {
+          if (!canHover) return;
+          cancelClose();
+          openPreview(false);
+          setCardHighlight(pro.proId ?? pro.id, true);
+        });
+        marker.addListener("mouseout", () => {
+          if (!canHover) return;
+          setCardHighlight(pro.proId ?? pro.id, false);
+          cancelClose();
+          closeTimerRef.current = setTimeout(() => info.close(), 130);
+        });
+        marker.addListener("click", () => {
+          if (canHover) { window.location.href = href; return; }
+          openPreview(true);
+          setCardHighlight(pro.proId ?? pro.id, true);
+        });
         return marker;
       })
       .filter(Boolean);

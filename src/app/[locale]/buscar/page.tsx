@@ -8,6 +8,7 @@ import { SearchFilters, MobileServiceSearch } from "@/components/search/search-f
 import { ProfessionalCard } from "@/components/professionals/professional-card";
 import { SaveableCard } from "@/components/professionals/save-button";
 import { searchProfessionals } from "@/lib/queries/professionals";
+import { primaryPricingLabel } from "@/lib/pricing";
 import { PROVINCES } from "@/lib/data/cr-geography";
 import { SearchResultsLayout } from "@/components/search/search-results-layout";
 import { createClient } from "@/lib/supabase/server";
@@ -159,6 +160,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       reviewCount: pro.reviewCount,
       categoryLabel: pro.categoryId ? tCat(pro.categoryId as Parameters<typeof tCat>[0]) : undefined,
       hourlyRate: pro.hourlyRate ?? null,
+      priceLabel: primaryPricingLabel(pro.pricing, pro.hourlyRate),
       provinceName: pro.provinceName,
     };
     const places = (pro.workplaces ?? []).filter((w) => typeof w.lat === "number" && typeof w.lng === "number");
