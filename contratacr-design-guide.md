@@ -1348,9 +1348,13 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
   active-count + "Limpiar (N)".
 - **Mobile (<lg) = a polished map-background bottom-sheet (Yelp/Airbnb/Hulihealth; Sprint 151).** The
   shell root is a fixed-viewport column `h-[calc(100dvh-64px)] flex flex-col overflow-hidden`
-  (`lg:block lg:h-auto lg:overflow-visible`). Top→bottom: **(1) a compact HEADER** (`lg:hidden`) — the
-  search bar (`MobileServiceSearch`, flex-fills) + a **"Filtros" control** (opens the full-filter drawer;
-  brand-blue `#008ce0` dot when filters are active). The site navbar above is the menu. → **(2) the MAP**
+  (`lg:block lg:h-auto lg:overflow-visible`). Top→bottom: **(1) a SINGLE-LINE HEADER = the navbar**
+  (Sprint 157) — `LandingNavbar` takes a `mobileInline` slot (`lg:hidden`, between the logo + the
+  hamburger) and /buscar injects the **search** (`MobileServiceSearch`, flex-fills) + a compact
+  **`MobileFiltersButton`** (icon-only, brand-blue `#008ce0` active dot) there, so **logo (compacted to
+  the mark) + search + filters + menu share ONE row** at ~360px. The Filtros icon dispatches
+  **`ccr:open-filters`**; the layout listens and opens the full-filter drawer. (Desktop navbar +
+  other pages untouched — only /buscar passes `mobileInline`.) → **(2) the MAP**
   as a full-bleed BACKGROUND — a single `<GoogleMapPanel>` in an aside that `flex-1`-fills the rest
   (inner box `h-full`, no border/rounding on mobile; `lg:rounded-2xl lg:border lg:sticky lg:top-20
   lg:h-[calc(100vh-104px)]`), carrying the pins, "Buscar en esta área" + the top-right zoom/fullscreen
