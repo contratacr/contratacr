@@ -1031,6 +1031,11 @@ location tabs/address below it, then the schedule block.
 - **SQUARE photo** (not circular): `<Avatar className="h-14 w-14 rounded-xl lg:h-16 lg:w-16">`
   (+ `rounded-xl` on the fallback) — `cn`/tailwind-merge overrides the Avatar's default
   `rounded-full`. Same square photo on mobile, just smaller.
+- **Verificado on the /buscar card = GREEN TEXT** (`text-[11px] font-semibold text-[#16a34a]`),
+  **no icon, no pill**, on its OWN line between the company name and the personal name (per the
+  handoff). The solid brand-blue **"Verificado" pill** (`Badge variant="verified"`) stays
+  canonical everywhere ELSE (profile, dashboard, saved-pros mockup) — only the search card uses
+  the lighter green text. Unverified shows nothing.
 - **Header uses the full width:** identity (square photo + company name + Verificado + personal
   name) on the LEFT (`min-w-0 flex-1`); the **PRICE is at the TOP-right of the left column, on
   the name line, with a small grey info icon** (`Info`, HuliHealth style) — `shrink-0 flex
@@ -1040,13 +1045,16 @@ location tabs/address below it, then the schedule block.
   paged 3 at a time; days in the window with none show **"No disponible"** (`schedule.dayUnavailable`),
   Doctoralia-style. No bookable schedule → a short note. The slot DATA/fetch is UNCHANGED — this
   only changes how the already-fetched `days` display.
-- **Action buttons (IN the right column, full width of it — HuliHealth style, NO bottom strip),
-  conditional on availability:** if the day strip is showing (`hasSchedule = canBook &&
-  hasUpcoming`) → the **OUTLINED "Ver horario completo"** (`border border-[#009FD9]
-  text-[#009FD9]`) then the **filled "Solicitar servicio"** (`bg-[#009FD9] text-white`); no
-  WhatsApp/Llamar. Otherwise (contact-to-coordinate state) → the message, then **WhatsApp**
-  stacked, plus **"Llamar" only when `showCall`** (phone calls enabled); NO "Solicitar servicio".
-  All buttons `w-full` (of the 288px right column on desktop; full width on mobile).
+- **Action buttons (IN the right column, full-width PILLS of it — HuliHealth style, NO bottom
+  strip), conditional on availability** *(updated per the /buscar design handoff — this
+  supersedes the old outlined-button / two-button rule)*: if the day strip is showing
+  (`hasSchedule = canBook && hasUpcoming`) → a **SINGLE FILLED "Ver horario completo"**
+  (`rounded-full bg-[#009FD9] text-white`) which opens the booking flow; the separate
+  "Solicitar servicio" button was **removed** (booking happens inside "Ver horario completo").
+  Otherwise (contact-to-coordinate state) → the message, then **FILLED WhatsApp** (`rounded-full
+  bg-[#25D366] text-white`), plus **FILLED "Llamar"** (`rounded-full bg-[#009FD9] text-white`)
+  **only when `showCall`** (phone calls enabled); NO "Solicitar servicio". All actions `w-full`,
+  `py-2.5`, `rounded-full` (of the 260px right rail on desktop; full width on mobile).
 - **No meaning-losing clipping (sized for MAX content):** company + personal name each wrap up
   to 2 lines (`line-clamp-2`) without colliding with the price; tags wrap + "+N"; location wraps
   + "+N"; location TABS scroll horizontally for 5+ locations; a busy day caps time chips with

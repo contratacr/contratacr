@@ -289,12 +289,13 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const canPrev = effOffset > 0;
   const canNext = effOffset + COLS < consecutive.length;
 
-  // Action buttons live IN the right column (HuliHealth style), full width of that column —
-  // NOT a separate bottom strip. CONDITIONAL on availability (logic unchanged):
-  //  • HAS available schedules (the day strip is showing → canBook && hasUpcoming): the
-  //    OUTLINED "Ver horario completo" then the filled "Solicitar servicio" (no WhatsApp/Llamar).
-  //  • NO schedules (contact-to-coordinate state): WhatsApp, plus "Llamar" ONLY when phone
-  //    calls are enabled (showCall). No "Solicitar servicio".
+  // Action buttons live IN the right column (HuliHealth style), full-width PILLS of that
+  // column — NOT a separate bottom strip. CONDITIONAL on availability (logic unchanged):
+  //  • HAS available schedules (the day strip is showing → canBook && hasUpcoming): a SINGLE
+  //    FILLED "Ver horario completo" (opens the booking flow). The old separate "Solicitar
+  //    servicio" button was removed — booking happens inside "Ver horario completo".
+  //  • NO schedules (contact-to-coordinate state): FILLED WhatsApp (green), plus FILLED
+  //    "Llamar" (blue) ONLY when phone calls are enabled (showCall). No "Solicitar servicio".
   // All actions are blocked on the pro's OWN card.
   const hasSchedule = canBook && hasUpcoming;
 
@@ -302,18 +303,9 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     <button
       type="button"
       onClick={(e) => { e.stopPropagation(); openBooking(); }}
-      className="w-full rounded-lg border border-[#009FD9] py-2 text-sm font-semibold text-[#009FD9] hover:bg-[#EBF5FB] transition-colors"
+      className="w-full rounded-full bg-[#009FD9] py-2.5 text-sm font-semibold text-white hover:bg-[#0089bb] transition-colors"
     >
       {t("viewFullSchedule")}
-    </button>
-  );
-  const solicitarButton = (
-    <button
-      type="button"
-      onClick={(e) => { e.stopPropagation(); openBooking(); }}
-      className="w-full rounded-lg bg-[#009FD9] py-2 text-sm font-semibold text-white hover:bg-[#0089bb] transition-colors"
-    >
-      {t("requestService")}
     </button>
   );
   const contactButtons = (
@@ -324,7 +316,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           target={isOwn ? undefined : "_blank"}
           rel="noopener noreferrer"
           onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.whatsapp); } : (e) => e.stopPropagation()}
-          className="w-full inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#25D366] py-2 text-[13px] font-semibold text-white hover:bg-[#1ebe5d] transition-colors"
+          className="w-full inline-flex items-center justify-center gap-1.5 rounded-full bg-[#25D366] py-2.5 text-[13px] font-semibold text-white hover:bg-[#1ebe5d] transition-colors"
         >
           <WhatsAppIcon className="h-4 w-4" /> {t("whatsapp")}
         </a>
@@ -333,7 +325,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
         <a
           href={isOwn ? undefined : telHref}
           onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.call); } : (e) => e.stopPropagation()}
-          className="w-full inline-flex items-center justify-center gap-1.5 rounded-lg border border-[#e5e7eb] py-2 text-[13px] font-semibold text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] transition-colors"
+          className="w-full inline-flex items-center justify-center gap-1.5 rounded-full bg-[#009FD9] py-2.5 text-[13px] font-semibold text-white hover:bg-[#0089bb] transition-colors"
         >
           <Phone className="h-4 w-4" /> {t("call")}
         </a>
@@ -439,14 +431,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
             {locationControl}
             {scheduleBody}
           </div>
-          {hasSchedule ? (
-            <>
-              {verHorarioButton}
-              {solicitarButton}
-            </>
-          ) : (
-            contactButtons
-          )}
+          {hasSchedule ? verHorarioButton : contactButtons}
         </div>
       </div>
 

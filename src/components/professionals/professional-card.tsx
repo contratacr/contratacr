@@ -3,7 +3,6 @@ import { MapPin, Truck, Star, Info } from "lucide-react";
 import { ProfessionalSchedule, type ScheduleSlot } from "@/components/professionals/professional-schedule";
 import { Link } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { getInitials } from "@/lib/utils";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { primaryPricingLabel, type PricingTier } from "@/lib/pricing";
@@ -153,13 +152,15 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
   // ProfessionalSchedule), so the card no longer renders separate top-row icons.
   const isOwn = !!viewerProfileId && viewerProfileId === professional.profileId;
 
-  // Verified trust mark — the SAME visual as the professional dashboard (solid
-  // brand-blue pill, `Badge variant="verified"`), placed to the RIGHT of the name
-  // on the name line. Unverified shows NOTHING (no badge, no negative label).
-  const verifiedBadge = isVerified ? (
-    <Badge variant="verified" title={tCard("verifiedTitle")} className="shrink-0 px-2 py-0.5 text-[10px] font-semibold">
+  // Verified trust mark — on the /buscar card this is GREEN TEXT (no icon, no pill),
+  // sitting on its OWN line between the company name and the personal name (HuliHealth
+  // handoff). The solid brand-blue "Verificado" pill stays canonical on the profile /
+  // dashboard / saved-pros mockup; this lighter treatment is the search card only.
+  // Unverified shows NOTHING (no mark, no negative label).
+  const verifiedMark = isVerified ? (
+    <span title={tCard("verifiedTitle")} className="block text-[11px] font-semibold text-[#16a34a]">
       {tCard("verifiedShort")}
-    </Badge>
+    </span>
   ) : null;
 
   // ── ONE consolidated location line (keeps cards uniform): a fixed pro shows
@@ -197,10 +198,11 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
             <Link href={`/profesionales/${professional.slug}`} className="relative z-10 min-w-0">
               <h3 className="font-bold text-[#111827] text-[15px] leading-snug line-clamp-2 lg:line-clamp-1 hover:text-[#009FD9] transition-colors">{brandPrimary}</h3>
             </Link>
-            {verifiedBadge}
           </div>
-          {/* Personal name = first name + both surnames; wraps up to 2 lines (long names
-              never collide with the price — separate flex columns). */}
+          {/* Verificado (green text) on its own line, then the personal name = first name
+              + both surnames; wraps up to 2 lines (long names never collide with the
+              price — separate flex columns). */}
+          {verifiedMark}
           {brandSecondary && (
             <p className="text-[12px] font-medium text-[#6b7280] line-clamp-2 lg:line-clamp-1">{brandSecondary}</p>
           )}

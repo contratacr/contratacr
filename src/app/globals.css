@@ -1,6 +1,10 @@
 @import "tailwindcss";
 
 @theme inline {
+  /* TODO(brand): the brand direction may migrate the global typeface to Poppins
+     (per the /buscar design handoff). Out of scope for that ticket — the search
+     redesign keeps Inter. If we adopt Poppins, swap the next/font import in the
+     root layout AND this stack together, then QA every page's metrics/spacing. */
   --font-sans: var(--font-sans), "Inter", system-ui, sans-serif;
   --font-mono: "Geist Mono", "Menlo", monospace;
 
