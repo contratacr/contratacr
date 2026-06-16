@@ -8,28 +8,28 @@ import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { MAX_PORTFOLIO_PHOTOS, cldThumb } from "@/lib/cloudinary";
 import { getCategoryLabel } from "@/lib/data/categories";
-import { serviceLabelMap, type ServiceLike } from "@/lib/services";
+import { casoProfession, type ServiceLike } from "@/lib/services";
 
-// Photos are tied to a SERVICE INSTANCE by `serviceId` (not by name/profession),
-// so several services with the same name (e.g. three "Otro servicio") keep their
-// own photos. `profession` is retained for back-compat with older items.
+// Casos de éxito (work photos) are organized BY PROFESSION (category). An item stores its
+// `profession`; the legacy `serviceId` is kept for back-compat (existing photos derive their
+// profession from the service's category — see `casoProfession`).
 export type PortfolioItem = { url: string; serviceId?: string; profession?: string };
 
 interface PhotoGalleryProps {
   professionalId: string;
   initialUrls?: string[];
   initialItems?: PortfolioItem[];
-  /** The pro's categories — used only for the legacy profession-tagged fallback. */
+  /** The pro's professions (category ids) — the sections casos are grouped under. */
   professions?: string[];
-  /** The pro's services — casos de éxito attach to a specific service instance. */
+  /** The pro's services — only used to DERIVE the profession of legacy serviceId-tagged photos. */
   services?: ServiceLike[];
   onSaved?: () => void;
 }
 
-// Casos de éxito (work photos) are attached PER SERVICE INSTANCE. Stored as
-// portfolio_items [{ url, serviceId, profession? }]; portfolio_urls (flat) kept
-// for back-compat and the 5-photo DB CHECK.
-export function PhotoGallery({ professionalId, initialUrls = [], initialItems, services = [], onSaved }: PhotoGalleryProps) {
+// Casos de éxito are grouped PER PROFESSION (category). Stored as portfolio_items
+// [{ url, profession, serviceId? }]; portfolio_urls (flat) kept for back-compat and the
+// 5-photo DB CHECK.
+export function PhotoGallery({ professionalId, initialUrls = [], initialItems, professions = [], services = [], onSaved }: PhotoGalleryProps) {
   const locale = useLocale();
   const t = useTranslations("photoGallery");
   const rich = { strong: (c: React.ReactNode) => <strong>{c}</strong> };
@@ -43,29 +43,33 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, s
   const [saving, setSaving] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const pendingServiceRef = useRef<string | undefined>(undefined);
+  const pendingProfessionRef = useRef<string | undefined>(undefined);
 
-  // Unique, disambiguated label per service (handles duplicate names).
-  const labels = serviceLabelMap(services);
-  const serviceIds = new Set(services.map((s) => s.id));
+  const primary = professions[0];
+  const profSet = new Set(professions);
+  // The PROFESSION (category) a photo belongs to — explicit, else derived from its legacy
+  // serviceId's service category, else the primary profession.
+  const profOf = (it: PortfolioItem) => casoProfession(it, services, primary);
 
-  // One section per SERVICE (labeled with its profession for context), plus an
-  // "Otros trabajos" bucket for photos not tied to a current service (legacy /
-  // profession-tagged / from a deleted service) so none are ever lost.
-  const groups: { id: string; label: string; sub?: string }[] = services.map((s) => ({
-    id: s.id,
-    label: labels.get(s.id) ?? s.name,
-    sub: s.category ? getCategoryLabel(s.category, locale) : undefined,
+  // One section per PROFESSION (category), plus an "Otros trabajos" bucket for photos whose
+  // profession isn't one of the current professions (e.g. from a removed profession) so none
+  // are ever lost.
+  const groups: { id: string; label: string }[] = professions.map((cat) => ({
+    id: cat,
+    label: getCategoryLabel(cat, locale),
   }));
-  const hasOther = items.some((it) => !it.serviceId || !serviceIds.has(it.serviceId));
+  const hasOther = items.some((it) => { const p = profOf(it); return !p || !profSet.has(p); });
   if (hasOther) groups.push({ id: "__other__", label: t("otherWorks") });
 
   function itemsFor(groupId: string): PortfolioItem[] {
-    if (groupId === "__other__") return items.filter((it) => !it.serviceId || !serviceIds.has(it.serviceId));
-    return items.filter((it) => it.serviceId === groupId);
+    if (groupId === "__other__") return items.filter((it) => { const p = profOf(it); return !p || !profSet.has(p); });
+    return items.filter((it) => profOf(it) === groupId);
   }
 
   async function persist(next: PortfolioItem[]) {
+    // Persist the derived profession on every item (lossless lazy migration; serviceId kept).
+    const normalized = next.map((it) => ({ ...it, profession: profOf(it) || undefined }));
+    next = normalized;
     setItems(next);
     setSaving(true);
     const supabase = createClient();
@@ -84,16 +88,15 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, s
     onSaved?.();
   }
 
-  async function handleUpload(files: FileList, serviceId: string | undefined) {
+  async function handleUpload(files: FileList, profession: string | undefined) {
     const remaining = MAX_PORTFOLIO_PHOTOS - items.length;
     const toUpload = Array.from(files).slice(0, Math.max(0, remaining));
     if (toUpload.length === 0) {
       alert(t("maxAlert", { max: MAX_PORTFOLIO_PHOTOS }));
       return;
     }
-    // Carry the service's profession too (context for the public profile grouping).
-    const profession = services.find((s) => s.id === serviceId)?.category;
-    setUploadingFor(serviceId ?? "__none__");
+    // Casos de éxito are grouped by PROFESSION — the photo is tagged with the chosen profession.
+    setUploadingFor(profession ?? "__none__");
     try {
       const uploaded: PortfolioItem[] = [];
       for (const file of toUpload) {
@@ -102,7 +105,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, s
         formData.append("type", "portfolio");
         const res = await fetch("/api/upload/photo", { method: "POST", body: formData });
         const data = await res.json();
-        if (data.url) uploaded.push({ url: data.url, serviceId, profession });
+        if (data.url) uploaded.push({ url: data.url, profession });
         else alert(data.error ?? t("uploadError"));
       }
       if (uploaded.length > 0) await persist([...items, ...uploaded]);
@@ -125,7 +128,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, s
         {t.rich("intro", { ...rich, max: MAX_PORTFOLIO_PHOTOS })}
       </p>
 
-      {services.length === 0 && (
+      {professions.length === 0 && (
         <div className="rounded-xl bg-[#fffbeb] border border-[#fde68a] p-4 text-sm text-[#92400e]">
           {t.rich("noServices", rich)}
         </div>
@@ -138,7 +141,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, s
         multiple
         className="hidden"
         onChange={(e) => {
-          if (e.target.files && e.target.files.length > 0) handleUpload(e.target.files, pendingServiceRef.current);
+          if (e.target.files && e.target.files.length > 0) handleUpload(e.target.files, pendingProfessionRef.current);
           e.target.value = "";
         }}
       />
@@ -154,7 +157,6 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, s
                 {g.label}
                 {list.length > 0 && <span className="ml-1.5 text-[11px] font-normal text-[#9ca3af]">({list.length})</span>}
               </h4>
-              {g.sub && <p className="text-[11px] text-[#9ca3af]">{g.sub}</p>}
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {list.map((it) => (
@@ -173,7 +175,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, s
 
               {canAdd && (
                 <button
-                  onClick={() => { pendingServiceRef.current = g.id; inputRef.current?.click(); }}
+                  onClick={() => { pendingProfessionRef.current = g.id; inputRef.current?.click(); }}
                   disabled={!!uploadingFor}
                   className={cn(
                     "aspect-square rounded-2xl border-2 border-dashed border-[#d1d5db] flex flex-col items-center justify-center gap-2",

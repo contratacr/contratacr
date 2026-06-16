@@ -1064,8 +1064,8 @@
     "thePerson": "la persona"
   },
   "photoGallery": {
-    "intro": "Sube tus <strong>casos de éxito</strong> (trabajos anteriores) <strong>en cada servicio</strong> para generar confianza. Aparecen en tu perfil y en los resultados de búsqueda. Máximo {max} fotos en total.",
-    "noServices": "Primero agrega tus servicios en la pestaña <strong>Servicios</strong>. Luego podrás subir fotos de casos de éxito en cada uno.",
+    "intro": "Sube tus <strong>casos de éxito</strong> (trabajos anteriores) <strong>en cada profesión</strong> para generar confianza. Aparecen en tu perfil y en los resultados de búsqueda. Máximo {max} fotos en total.",
+    "noServices": "Primero agrega tus <strong>profesiones</strong> en la pestaña <strong>Profesiones</strong>. Luego podrás subir casos de éxito en cada una.",
     "otherWorks": "Otros trabajos",
     "addPhoto": "Agregar foto",
     "remove": "Eliminar",

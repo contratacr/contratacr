@@ -15,6 +15,23 @@ export type ServiceLike = {
  * append the description snippet if present, else an ordinal "(2)", "(3)". So the
  * pro and clients can always tell the repeated services (and their photos) apart.
  */
+/**
+ * The PROFESSION (category id) a caso de éxito photo belongs to. Casos are organized BY
+ * PROFESSION, not by individual service. Existing photos are migrated LOSSLESSLY at read time:
+ * use the item's explicit `profession`, else derive it from its (legacy) `serviceId`'s service
+ * category, else fall back to the pro's primary profession. (New uploads store `profession`
+ * directly; the derived value persists the next time the editor saves.)
+ */
+export function casoProfession(
+  item: { serviceId?: string; profession?: string },
+  services: ServiceLike[],
+  primaryProfession?: string,
+): string {
+  if (item.profession) return item.profession;
+  const cat = services.find((s) => s.id === item.serviceId)?.category;
+  return cat || primaryProfession || "";
+}
+
 export function serviceLabelMap(services: ServiceLike[]): Map<string, string> {
   const norm = (s: string) => s.trim().toLowerCase();
   const counts = new Map<string, number>();

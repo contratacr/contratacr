@@ -1064,8 +1064,8 @@
     "thePerson": "the person"
   },
   "photoGallery": {
-    "intro": "Upload your <strong>success stories</strong> (past work) <strong>for each service</strong> to build trust. They appear on your profile and in search results. Up to {max} photos total.",
-    "noServices": "First add your services in the <strong>Services</strong> tab. Then you can upload success-story photos for each one.",
+    "intro": "Upload your <strong>success stories</strong> (past work) <strong>under each profession</strong> to build trust. They appear on your profile and in search results. Up to {max} photos total.",
+    "noServices": "First add your <strong>professions</strong> in the <strong>Professions</strong> tab. Then you can upload success stories under each.",
     "otherWorks": "Other work",
     "addPhoto": "Add photo",
     "remove": "Remove",

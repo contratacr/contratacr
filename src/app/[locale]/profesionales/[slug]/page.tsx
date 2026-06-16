@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { StarRating } from "@/components/ui/star-rating";
 import { getInitials, getWhatsAppLink } from "@/lib/utils";
 import { getCategoryLabel } from "@/lib/data/categories";
-import { serviceLabelMap } from "@/lib/services";
+import { casoProfession } from "@/lib/services";
 import { formatPricingTier, primaryPricingLabel } from "@/lib/pricing";
 import { languageLabel } from "@/lib/data/languages";
 import { insurerLabel } from "@/lib/data/insurers";
@@ -493,21 +493,26 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                           const items = professional.portfolioItems && professional.portfolioItems.length > 0
                             ? professional.portfolioItems
                             : professional.portfolioUrls!.map((url) => ({ url, serviceId: undefined as string | undefined, profession: undefined as string | undefined }));
-                          // Group by SERVICE INSTANCE (id) so repeated service names
-                          // (e.g. several "Otro servicio") never share photos.
+                          // Group by PROFESSION (category). Existing photos derive their profession
+                          // from the legacy serviceId's service category (casoProfession) — lossless.
                           const svcs = professional.services ?? [];
-                          const labels = serviceLabelMap(svcs);
-                          const svcIds = new Set(svcs.map((s) => s.id));
-                          const tagged = svcs.filter((s) => items.some((it) => it.serviceId === s.id));
-                          const other = items.filter((it) => !it.serviceId || !svcIds.has(it.serviceId));
-                          // No service tags at all → single gallery (back-compat).
+                          const profsOrder = (professional.professions && professional.professions.length > 0)
+                            ? professional.professions
+                            : (professional.categoryId ? [professional.categoryId] : []);
+                          const primaryProf = profsOrder[0] ?? "";
+                          const profSet = new Set(profsOrder);
+                          const profOf = (it: { serviceId?: string; profession?: string }) => casoProfession(it, svcs, primaryProf);
+                          // Professions (in order) that actually have photos.
+                          const tagged = profsOrder.filter((cat) => items.some((it) => profOf(it) === cat));
+                          const other = items.filter((it) => { const p = profOf(it); return !p || !profSet.has(p); });
+                          // No profession tags at all → single gallery (back-compat).
                           if (tagged.length === 0) return <ProfileGallery urls={items.map((it) => it.url)} />;
                           return (
                             <>
-                              {tagged.map((s) => (
-                                <div key={s.id}>
-                                  <h3 className="text-sm font-semibold text-[#111827] mb-2">{labels.get(s.id) ?? s.name}</h3>
-                                  <ProfileGallery urls={items.filter((it) => it.serviceId === s.id).map((it) => it.url)} />
+                              {tagged.map((cat) => (
+                                <div key={cat}>
+                                  <h3 className="text-sm font-semibold text-[#111827] mb-2">{getCategoryLabel(cat, locale)}</h3>
+                                  <ProfileGallery urls={items.filter((it) => profOf(it) === cat).map((it) => it.url)} />
                                 </div>
                               ))}
                               {other.length > 0 && (
