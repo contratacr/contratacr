@@ -1,7 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { ChevronRight, ShieldCheck } from "lucide-react";
+import { ChevronRight, ShieldCheck, X } from "lucide-react";
 import { anyHealthCategory } from "@/lib/data/categories";
 
 // Context-aware profile-completion (inspired by Airbnb's "complete your listing"
@@ -70,8 +71,24 @@ export function ProfileCompletion({ pro, onGo }: { pro: ProRecord; onGo: (tab: s
   const missing = items.filter((i) => !i.done);
   const complete = percent === 100;
 
-  // Everything controllable is done AND identity is verified → nothing to nudge.
-  if (complete && verified) return null;
+  // The OPTIONAL identity-verification invite is dismissible and must NOT keep nagging
+  // once dismissed (persisted per-pro). The pro can still verify anytime from the
+  // Verificación section. Verification never counts toward the % (it's separate/optional).
+  const proId = typeof pro.id === "string" ? pro.id : "";
+  const [dismissedVerify, setDismissedVerify] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try { setDismissedVerify(localStorage.getItem(`contratacr_verify_dismissed_${proId}`) === "1"); } catch { /* noop */ }
+  }, [proId]);
+  function dismissVerify() {
+    setDismissedVerify(true);
+    try { localStorage.setItem(`contratacr_verify_dismissed_${proId}`, "1"); } catch { /* noop */ }
+  }
+  const showVerify = !verified && !dismissedVerify;
+
+  // Nothing left to nudge: the profile is complete AND verification is either done or
+  // has been dismissed. (Verification is OPTIONAL — its absence never blocks "complete".)
+  if (complete && !showVerify) return null;
 
   return (
     <section className="rounded-2xl border border-[#e5e7eb] bg-white overflow-hidden mb-6">
@@ -133,27 +150,43 @@ export function ProfileCompletion({ pro, onGo }: { pro: ProRecord; onGo: (tab: s
         </ul>
       )}
 
-      {/* Identity verification — a separate recommended action, never part of the %. */}
-      {!verified && (
-        <button
-          type="button"
-          onClick={() => onGo("verificacion")}
-          className="group flex w-full items-center gap-3 border-t border-[#f3f4f6] bg-[#f8fafc] px-4 sm:px-6 py-3 text-left transition-colors hover:bg-[#EBF5FB] min-h-[56px]"
-        >
-          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#EBF5FB] text-[#009FD9]">
-            <ShieldCheck className="h-4 w-4" />
-          </span>
-          <span className="min-w-0 flex-1">
-            <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-medium text-[#111827]">
-              {t("verifyTitle")}
-              <span className="rounded-full bg-[#e5e7eb] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#6b7280]">
-                {t("recommended")}
-              </span>
+      {/* Identity verification — a SEPARATE, OPTIONAL opportunity (never part of the % and
+          never framed as "missing"). Dismissible with the × ("Ahora no"); once dismissed it
+          doesn't reappear (the pro can still verify from the Verificación section). */}
+      {showVerify && (
+        <div className="relative border-t border-[#f3f4f6] bg-[#f8fafc]">
+          <button
+            type="button"
+            onClick={() => onGo("verificacion")}
+            className="group flex w-full items-center gap-3 px-4 sm:px-6 py-3 pr-11 text-left transition-colors hover:bg-[#EBF5FB] min-h-[56px]"
+          >
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#EBF5FB] text-[#009FD9]">
+              <ShieldCheck className="h-4 w-4" />
             </span>
-            <span className="block text-xs text-[#6b7280] mt-0.5 leading-snug">{t("verifyBenefit")}</span>
-          </span>
-          <ChevronRight className="h-5 w-5 shrink-0 text-[#9ca3af] transition-transform group-hover:translate-x-0.5" />
-        </button>
+            <span className="min-w-0 flex-1">
+              <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-medium text-[#111827]">
+                {t("verifyTitle")}
+                <span className="rounded-full bg-[#EBF5FB] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#009FD9]">
+                  {t("optional")}
+                </span>
+              </span>
+              <span className="block text-xs text-[#6b7280] mt-0.5 leading-snug">{t("verifyBenefit")}</span>
+            </span>
+            <span className="hidden sm:inline-flex items-center gap-1 text-xs font-semibold text-[#009FD9] shrink-0">
+              {t("verifyAction")}
+              <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={dismissVerify}
+            aria-label={t("dismissVerify")}
+            title={t("dismissVerify")}
+            className="absolute right-2 top-2 rounded-full p-1.5 text-[#9ca3af] transition-colors hover:bg-[#e5e7eb] hover:text-[#374151]"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
       )}
     </section>
   );
