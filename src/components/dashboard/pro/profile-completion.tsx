@@ -151,41 +151,47 @@ export function ProfileCompletion({ pro, onGo }: { pro: ProRecord; onGo: (tab: s
       )}
 
       {/* Identity verification — a SEPARATE, OPTIONAL opportunity (never part of the % and
-          never framed as "missing"). Dismissible with the × ("Ahora no"); once dismissed it
-          doesn't reappear (the pro can still verify from the Verificación section). */}
+          never framed as "missing"). Dismiss is an explicit, LABELED "✕ Ahora no" control
+          (not a bare corner ×) so it clearly reads as "ignore this optional suggestion";
+          once dismissed it doesn't reappear (the pro can still verify from the Verificación
+          section). */}
       {showVerify && (
-        <div className="relative border-t border-[#f3f4f6] bg-[#f8fafc]">
-          <button
-            type="button"
-            onClick={() => onGo("verificacion")}
-            className="group flex w-full items-center gap-3 px-4 sm:px-6 py-3 pr-11 text-left transition-colors hover:bg-[#EBF5FB] min-h-[56px]"
-          >
+        <div className="border-t border-[#f3f4f6] bg-[#f8fafc]">
+          <div className="flex items-center gap-3 px-4 sm:px-6 py-3 min-h-[56px]">
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#EBF5FB] text-[#009FD9]">
               <ShieldCheck className="h-4 w-4" />
             </span>
-            <span className="min-w-0 flex-1">
+            {/* Title + benefit — tap to go to Verificación. */}
+            <button type="button" onClick={() => onGo("verificacion")} className="group min-w-0 flex-1 text-left">
               <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-medium text-[#111827]">
-                {t("verifyTitle")}
+                <span className="group-hover:text-[#009FD9] transition-colors">{t("verifyTitle")}</span>
                 <span className="rounded-full bg-[#EBF5FB] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#009FD9]">
                   {t("optional")}
                 </span>
               </span>
               <span className="block text-xs text-[#6b7280] mt-0.5 leading-snug">{t("verifyBenefit")}</span>
-            </span>
-            <span className="hidden sm:inline-flex items-center gap-1 text-xs font-semibold text-[#009FD9] shrink-0">
+            </button>
+            {/* Verificar CTA (desktop) */}
+            <button
+              type="button"
+              onClick={() => onGo("verificacion")}
+              className="hidden sm:inline-flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[#009FD9] hover:bg-[#EBF5FB] transition-colors"
+            >
               {t("verifyAction")}
-              <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-            </span>
-          </button>
-          <button
-            type="button"
-            onClick={dismissVerify}
-            aria-label={t("dismissVerify")}
-            title={t("dismissVerify")}
-            className="absolute right-2 top-2 rounded-full p-1.5 text-[#9ca3af] transition-colors hover:bg-[#e5e7eb] hover:text-[#374151]"
-          >
-            <X className="h-4 w-4" />
-          </button>
+              <ChevronRight className="h-4 w-4" />
+            </button>
+            {/* Explicit, labeled dismiss — reads as "ignore this optional suggestion". */}
+            <button
+              type="button"
+              onClick={dismissVerify}
+              aria-label={t("dismissVerify")}
+              title={t("dismissVerify")}
+              className="inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1.5 text-xs font-medium text-[#9ca3af] hover:bg-[#e5e7eb] hover:text-[#374151] transition-colors"
+            >
+              <X className="h-3.5 w-3.5" />
+              {t("dismissVerify")}
+            </button>
+          </div>
         </div>
       )}
     </section>

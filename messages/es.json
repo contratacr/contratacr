@@ -294,6 +294,8 @@
     "videoconsulta": "Videoconsulta",
     "atHome": "A domicilio",
     "whatsapp": "Contáctanos por WhatsApp",
+    "whatsappShort": "WhatsApp",
+    "callShort": "Llamar",
     "call": "Contáctanos por llamada"
   },
   "selfAction": {

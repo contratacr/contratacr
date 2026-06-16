@@ -25,7 +25,6 @@ import { ReviewSection } from "@/components/professionals/review-section";
 import { ProfileGallery } from "@/components/professionals/profile-gallery";
 import { ReportProfileModal } from "@/components/professionals/report-profile-modal";
 import { createClient } from "@/lib/supabase/client";
-import { BookingButton } from "@/components/booking/booking-button";
 import { ProfessionalSchedule, type ScheduleSlot } from "@/components/professionals/professional-schedule";
 import { ClientRegistrationModal } from "@/components/auth/client-registration-modal";
 import { SelfActionModal, SELF_MSG } from "@/components/professionals/self-action-modal";
@@ -46,12 +45,12 @@ function WhatsAppIcon({ className }: { className?: string }) {
 
 // ─── Sub-rating row ───────────────────────────────────────────────────────────
 // ─── Tab types ────────────────────────────────────────────────────────────────
-type Tab = "servicios" | "disponibilidad" | "casos" | "certificaciones" | "resenas" | "sobre";
+type Tab = "servicios" | "casos" | "certificaciones" | "resenas" | "sobre";
 
 function initialTabFromUrl(): Tab {
   if (typeof window === "undefined") return "servicios";
   const tab = new URLSearchParams(window.location.search).get("tab");
-  return (["servicios", "disponibilidad", "casos", "certificaciones", "resenas", "sobre"] as const).includes(tab as Tab)
+  return (["servicios", "casos", "certificaciones", "resenas", "sobre"] as const).includes(tab as Tab)
     ? (tab as Tab)
     : "servicios";
 }
@@ -200,7 +199,6 @@ export default function ProfilePage({ params }: ProfilePageProps) {
   const isOwn = !!viewerId && viewerId === professional.profileId;
   const TABS: Array<{ id: Tab; label: string }> = [
     { id: "servicios",      label: t("tabs.servicios") },
-    { id: "disponibilidad", label: t("tabs.disponibilidad") },
     ...(hasCasos ? [{ id: "casos" as Tab, label: t("tabs.casos") }] : []),
     ...(hasCerts ? [{ id: "certificaciones" as Tab, label: t("tabs.certificaciones") }] : []),
     { id: "resenas",        label: t("tabs.resenas") },
@@ -479,64 +477,9 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                     </div>
                   )}
 
-                  {/* ── TAB: Disponibilidad ── */}
-                  {activeTab === "disponibilidad" && (
-                    <div>
-                      <h2 className="text-lg font-semibold text-[#111827] mb-5">{t("tabs.disponibilidad")}</h2>
-                      {professional.availabilityPublic ? (
-                        <div className="flex flex-col items-center text-center gap-4 py-6">
-                          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#EBF5FB]">
-                            <MapPin className="h-6 w-6 text-[#009FD9]" />
-                          </div>
-                          <p className="text-sm text-[#374151] max-w-sm">
-                            {t.rich("availPublicNote", { b: (c) => <strong>{c}</strong> })}
-                          </p>
-                          <BookingButton
-                            professional={professional}
-                            categoryName={professional.categoryId ? tCat(professional.categoryId as Parameters<typeof tCat>[0]) : ""}
-                            size="md"
-                          />
-                          {/* No "Llamar" here — it already lives in the contact card
-                              (sidebar); repeating it in this tab is redundant. */}
-                        </div>
-                      ) : (
-                        <div className="flex flex-col items-center text-center gap-4 py-6">
-                          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#f4f7fa]">
-                            <Lock className="h-6 w-6 text-[#6b7280]" />
-                          </div>
-                          <p className="text-sm font-medium text-[#374151] max-w-sm">
-                            {t("availPrivateTitle")}
-                          </p>
-                          <p className="text-xs text-[#9ca3af] max-w-sm -mt-2">
-                            {t("availPrivateDesc")}
-                          </p>
-                          <div className="flex flex-col sm:flex-row gap-2.5 w-full max-w-xs">
-                            {isAuthenticated ? (
-                              <a
-                                href={waLink}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex-1 flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1ebe5d] text-white font-semibold py-2.5 rounded-xl transition-colors text-sm"
-                              >
-                                <WhatsAppIcon className="h-4 w-4" />
-                                WhatsApp
-                              </a>
-                            ) : (
-                              <button
-                                onClick={() => setShowRegistration(true)}
-                                className="flex-1 flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#1ebe5d] text-white font-semibold py-2.5 rounded-xl transition-colors text-sm"
-                              >
-                                <WhatsAppIcon className="h-4 w-4" />
-                                WhatsApp
-                              </button>
-                            )}
-                            {/* No "Llamar" here — the contact card (sidebar) already
-                                offers it; repeating it in this tab is redundant. */}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                  {/* "Disponibilidad" is NOT a content tab — the contact card already
+                      shows the schedule (3-day strip + booking/contact), so a separate
+                      section here would only duplicate it. */}
 
                   {/* ── TAB: Casos de éxito (grouped per profession/service) ── */}
                   {activeTab === "casos" && (

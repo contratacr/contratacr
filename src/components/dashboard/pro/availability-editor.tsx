@@ -507,12 +507,14 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                         <p className="text-sm text-[#9ca3af] sm:pt-1.5">{t("closed")}</p>
                       ) : (
                         <div className="flex flex-col gap-2">
+                          {/* time range + its remove "x" on ONE line — the x stays to the
+                              RIGHT (never wraps below), the selects shrink on mobile. */}
                           {franjas.map((f) => (
-                            <div key={f.id} className="flex flex-wrap items-center gap-2">
-                              <TimeSelect value={f.start} onChange={(v) => updateFranja(wd, f.id, { start: v, ...(toMins(f.end) <= toMins(v) ? { end: hhmm(Math.min(toMins(v) + 60, 23 * 60 + 30)) } : {}) })} className="w-32" />
-                              <span className="text-[#9ca3af]">–</span>
-                              <TimeSelect value={f.end} min={hhmm(Math.min(toMins(f.start) + 30, 23 * 60 + 30))} onChange={(v) => updateFranja(wd, f.id, { end: v })} className="w-32" error={toMins(f.end) <= toMins(f.start) ? t("toAfterFrom") : undefined} />
-                              <button type="button" onClick={() => removeFranja(wd, f.id)} className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9ca3af] hover:bg-[#f3f4f6] hover:text-red-500 transition-colors" aria-label={t("remove")}>
+                            <div key={f.id} className="flex items-center gap-1.5">
+                              <TimeSelect value={f.start} onChange={(v) => updateFranja(wd, f.id, { start: v, ...(toMins(f.end) <= toMins(v) ? { end: hhmm(Math.min(toMins(v) + 60, 23 * 60 + 30)) } : {}) })} className="min-w-0 flex-1 sm:flex-none sm:w-32" />
+                              <span className="shrink-0 text-[#9ca3af]">–</span>
+                              <TimeSelect value={f.end} min={hhmm(Math.min(toMins(f.start) + 30, 23 * 60 + 30))} onChange={(v) => updateFranja(wd, f.id, { end: v })} className="min-w-0 flex-1 sm:flex-none sm:w-32" error={toMins(f.end) <= toMins(f.start) ? t("toAfterFrom") : undefined} />
+                              <button type="button" onClick={() => removeFranja(wd, f.id)} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#9ca3af] hover:bg-[#f3f4f6] hover:text-red-500 transition-colors" aria-label={t("remove")}>
                                 <X className="h-4 w-4" />
                               </button>
                             </div>
@@ -714,12 +716,13 @@ function DayModal({ initialDate, existing, markedDates, defaultDuration, dateLoc
 
             {mode !== "closed" && (
               <div className="flex flex-col gap-2">
+                {/* time range + its remove "x" on ONE line (x stays right, selects shrink on mobile). */}
                 {franjas.map((f) => (
-                  <div key={f.id} className="flex flex-wrap items-center gap-2">
-                    <TimeSelect value={f.start} onChange={(v) => setFranjas((prev) => prev.map((x) => (x.id === f.id ? { ...x, start: v, ...(toMins(x.end) <= toMins(v) ? { end: hhmmLocal(Math.min(toMins(v) + 60, 23 * 60 + 30)) } : {}) } : x)))} className="w-32" />
-                    <span className="text-[#9ca3af]">–</span>
-                    <TimeSelect value={f.end} min={hhmmLocal(Math.min(toMins(f.start) + 30, 23 * 60 + 30))} onChange={(v) => setFranjas((prev) => prev.map((x) => (x.id === f.id ? { ...x, end: v } : x)))} className="w-32" error={toMins(f.end) <= toMins(f.start) ? t("toAfterFrom") : undefined} />
-                    <button type="button" onClick={() => setFranjas((prev) => prev.filter((x) => x.id !== f.id))} className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9ca3af] hover:bg-[#f3f4f6] hover:text-red-500 transition-colors" aria-label={t("remove")}>
+                  <div key={f.id} className="flex items-center gap-1.5">
+                    <TimeSelect value={f.start} onChange={(v) => setFranjas((prev) => prev.map((x) => (x.id === f.id ? { ...x, start: v, ...(toMins(x.end) <= toMins(v) ? { end: hhmmLocal(Math.min(toMins(v) + 60, 23 * 60 + 30)) } : {}) } : x)))} className="min-w-0 flex-1 sm:flex-none sm:w-32" />
+                    <span className="shrink-0 text-[#9ca3af]">–</span>
+                    <TimeSelect value={f.end} min={hhmmLocal(Math.min(toMins(f.start) + 30, 23 * 60 + 30))} onChange={(v) => setFranjas((prev) => prev.map((x) => (x.id === f.id ? { ...x, end: v } : x)))} className="min-w-0 flex-1 sm:flex-none sm:w-32" error={toMins(f.end) <= toMins(f.start) ? t("toAfterFrom") : undefined} />
+                    <button type="button" onClick={() => setFranjas((prev) => prev.filter((x) => x.id !== f.id))} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#9ca3af] hover:bg-[#f3f4f6] hover:text-red-500 transition-colors" aria-label={t("remove")}>
                       <X className="h-4 w-4" />
                     </button>
                   </div>
