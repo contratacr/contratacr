@@ -339,7 +339,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
       scaleControl: false,
       zoomControl: true,             // ONLY the zoom control
       clickableIcons: false,
-      gestureHandling: "cooperative", // scroll-wheel off until ctrl / two-finger
+      gestureHandling: "greedy", // wheel/scroll zooms DIRECTLY over the map (no Ctrl hint); one-finger pan + pinch-zoom on mobile
     });
     mapInstanceRef.current = map;
     map.addListener("click", closePopup);
