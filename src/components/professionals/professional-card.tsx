@@ -1,25 +1,11 @@
 import { getTranslations } from "next-intl/server";
-import { MapPin, Truck, Star, Info } from "lucide-react";
+import { Star, Info } from "lucide-react";
 import { ProfessionalSchedule, type ScheduleSlot } from "@/components/professionals/professional-schedule";
 import { Link } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/utils";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { primaryPricingLabel, type PricingTier } from "@/lib/pricing";
-
-// Listings show a READABLE place label — never a raw Plus Code / long geocoder
-// string. Strips Plus Code tokens (e.g. "XJQ3+227") and noisy segments; returns
-// the cleanest readable part, or "" to hide the chip (province/cantón tags remain).
-function prettyPlace(name?: string): string {
-  if (!name) return "";
-  const dropped = /costa rica|provincia de|ruta nacional|^\s*$/i;
-  const isPlusCode = (s: string) => /[A-Z0-9]{2,}\+[A-Z0-9]{2,}/.test(s);
-  const parts = name.split(",").map((p) => p.trim()).filter((p) => p && !isPlusCode(p) && !dropped.test(p));
-  // Prefer the first 2 meaningful segments (e.g. "C. Mercedes, Atenas").
-  const readable = parts.slice(0, 2).join(", ");
-  if (readable && !isPlusCode(readable)) return readable;
-  return "";
-}
 
 // CARD-ONLY: shorten a PERSON's name to first name + both surnames, dropping any
 // middle name(s) — e.g. "Isaac Alberto Sanchez Monge" → "Isaac Sanchez Monge".
@@ -111,9 +97,11 @@ interface ProfessionalCardProps {
   activeCategory?: string;
   /** Viewer's auth id — when it matches this pro's owner, hide self-service actions. */
   viewerProfileId?: string;
+  /** 1-based rank — rendered as a navy badge overlapping the avatar, matching the map pin. */
+  rank?: number;
 }
 
-export async function ProfessionalCard({ professional, className, slots = [], activeCategory, viewerProfileId }: ProfessionalCardProps) {
+export async function ProfessionalCard({ professional, className, slots = [], activeCategory, viewerProfileId, rank }: ProfessionalCardProps) {
   const tCat = await getTranslations("categories");
   const tCard = await getTranslations("card");
   // Safe category label: if a translation key is missing, next-intl returns the
@@ -163,16 +151,14 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
     </span>
   ) : null;
 
-  // ── ONE consolidated location line (keeps cards uniform): a fixed pro shows
-  // their first readable workplace (+N), else province/cantón; a mobile pro shows
-  // their real coverage. Both bits truncate so the row stays a single line. ──
-  const placeLabels = (professional.workplaces ?? [])
-    .map((w) => prettyPlace(w.name))
-    .filter(Boolean) as string[];
-  const fixedText = placeLabels.length > 0
-    ? `${placeLabels[0]}${placeLabels.length > 1 ? ` +${placeLabels.length - 1}` : ""}`
-    : [professional.provinceName, professional.cantonName].filter(Boolean).join(", ");
-  const mobileText = professional.serviceType?.includes("mobile") ? coverageLabel(professional.coverage, tCard) : "";
+  // Location data for the schedule's location control (now rendered in the LEFT
+  // column under the rating — see ProfessionalSchedule). The per-place TABS +
+  // street addresses come from the pro's workplaces; here we only supply the
+  // FALLBACK tab (province/cantón, shown when there are no named workplaces) and
+  // the travel COVERAGE line ("se desplaza…") used when a place has no address.
+  const placeFallback = professional.cantonName || professional.provinceName || "";
+  const placeAddress = [professional.cantonName, professional.provinceName].filter(Boolean).join(", ");
+  const coverageText = professional.serviceType?.includes("mobile") ? coverageLabel(professional.coverage, tCard) : "";
 
   // ── LEFT-column professional info (slotted into ProfessionalSchedule, which owns the
   // desktop two-column layout). Each block is a direct child of the schedule's left
@@ -181,15 +167,21 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
   // location. The location TABS + selected address come AFTER this (in ProfessionalSchedule).
   const info = (
     <>
-      {/* Identity: SQUARE rounded photo on the LEFT; company name + Verificado + personal
-          name in the middle; PRICE right-aligned (fills the header width). The price sits
-          below the favorite bookmark (the `pt-10` band clears it), never overlapping. */}
-      <div className="flex items-start gap-3">
+      {/* Identity: CIRCULAR photo on the LEFT carrying the navy ranking badge that mirrors
+          its map pin; company name + Verificado + personal name in the middle; PRICE
+          right-aligned. The mobile `pr-8` keeps the price clear of the top-right bookmark
+          (on desktop the price sits in the LEFT column, far from it — `lg:pr-0`). */}
+      <div className="flex items-start gap-3 pr-8 lg:pr-0">
         <Link href={`/profesionales/${professional.slug}`} className="relative z-10 shrink-0">
-          <Avatar className="h-14 w-14 rounded-xl lg:h-16 lg:w-16">
+          <Avatar className="h-14 w-14 rounded-full lg:h-16 lg:w-16">
             <AvatarImage src={professional.avatarUrl} alt={professional.fullName} />
-            <AvatarFallback className="rounded-xl bg-[#EBF5FB] text-[#009FD9] font-bold">{getInitials(professional.fullName)}</AvatarFallback>
+            <AvatarFallback className="rounded-full bg-[#EBF5FB] text-[#009FD9] font-bold">{getInitials(professional.fullName)}</AvatarFallback>
           </Avatar>
+          {rank != null && (
+            <span className="absolute -top-1.5 -left-1.5 flex h-[22px] w-[22px] items-center justify-center rounded-full bg-[#162543] text-[10px] font-bold text-white ring-2 ring-white">
+              {rank}
+            </span>
+          )}
         </Link>
         <div className="min-w-0 flex-1">
           {/* Company/brand name (or personal name when there's no company) + Verificado.
@@ -254,34 +246,17 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
         )}
       </div>
 
-      {/* Location (primary place "+N") + "se desplaza a tu ubicación" — wrap, never clipped. */}
-      {(fixedText || mobileText) && (
-        <div className="flex flex-col gap-0.5 text-[11px] text-[#6b7280]">
-          {fixedText && (
-            <span className="flex items-start gap-1.5">
-              <MapPin className="h-3 w-3 text-[#009FD9] shrink-0 mt-0.5" />
-              <span className="leading-snug">{fixedText}</span>
-            </span>
-          )}
-          {mobileText && (
-            <span className="flex items-start gap-1.5">
-              <Truck className="h-3 w-3 text-[#0089bb] shrink-0 mt-0.5" />
-              <span className="leading-snug">{mobileText}</span>
-            </span>
-          )}
-        </div>
-      )}
     </>
   );
 
   return (
     // CONTENT-DRIVEN height — NO fixed height, NO overflow clipping. DESKTOP (lg+) lays the
-    // body out in TWO columns (info+location tabs | schedule); MOBILE stacks them (info,
-    // schedule, then the full-width action row) — all owned by ProfessionalSchedule, which
-    // holds the schedule state and receives the info above as a slot. `pt-10` reserves a top
-    // band for the absolute ranking number (top-left, page wrapper) + favorite bookmark
-    // (top-right, SaveableCard) so they never overlap content.
-    <article className={`group relative flex h-full flex-col rounded-2xl border border-[#e5e7eb] bg-white p-4 pt-10 transition-shadow duration-200 hover:border-[#cbd5e1] hover:shadow-md ${className ?? ""}`}>
+    // body out in TWO columns (info + location tabs | schedule), separated by a vertical
+    // divider; MOBILE stacks them — all owned by ProfessionalSchedule, which holds the
+    // schedule state and receives the info above as a slot. The ranking number now rides on
+    // the avatar; only the favorite bookmark (top-right, SaveableCard) floats over the top,
+    // and the header's `pr-8` (mobile) keeps content clear of it.
+    <article className={`group relative flex h-full flex-col rounded-2xl border border-[#e5e7eb] bg-white p-4 transition-shadow duration-200 hover:border-[#cbd5e1] hover:shadow-md ${className ?? ""}`}>
       <ProfessionalSchedule
         info={info}
         professional={professional}
@@ -291,6 +266,10 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
         slots={slots}
         activeCategory={activeCategory}
         isOwn={isOwn}
+        placeFallback={placeFallback}
+        placeAddress={placeAddress}
+        coverageText={coverageText}
+        businessName={businessName ?? ""}
       />
 
       {/* Whole card → the professional's profile (stretched low-z overlay). The interactive

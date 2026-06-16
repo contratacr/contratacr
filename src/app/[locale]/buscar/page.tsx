@@ -257,11 +257,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                       // data-pro-id + scroll-mt let the map highlight/scroll to this
                       // card on pin hover; the number badge matches the map pin.
                       <div key={pro.id} id={`pro-card-${pro.id}`} data-pro-id={pro.id} className="relative w-full max-w-[520px] lg:max-w-none scroll-mt-24 rounded-2xl transition-shadow">
-                        <span className="absolute top-2.5 left-2.5 z-20 flex h-6 w-6 items-center justify-center rounded-full bg-[#009FD9] text-white text-[11px] font-bold shadow ring-2 ring-white">
-                          {i + 1}
-                        </span>
                         <SaveableCard pro={pro} isOwn={!!viewerProfileId && viewerProfileId === pro.profileId}>
-                          <ProfessionalCard professional={pro} slots={slotsByPro[pro.id] ?? []} activeCategory={activeCategoryId} viewerProfileId={viewerProfileId} />
+                          <ProfessionalCard professional={pro} slots={slotsByPro[pro.id] ?? []} activeCategory={activeCategoryId} viewerProfileId={viewerProfileId} rank={i + 1} />
                         </SaveableCard>
                       </div>
                     )))}

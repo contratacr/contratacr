@@ -988,6 +988,33 @@ actually wired.
 
 ## 50. /buscar card — MOBILE single column, DESKTOP COMPACT HORIZONTAL two columns
 
+> **UPDATE (Sprint 161) — matches the HuliHealth target screenshots; supersedes the contradicting
+> details below.** Net layout of the card body (owned by `ProfessionalSchedule`):
+> - **LEFT column (~68%) = `{info}` + `{locationControl}`** — the location TABS + address now live
+>   in the LEFT column, directly UNDER the rating (NOT in the right rail; this supersedes Sprint 157
+>   and the "location belongs WITH its schedule" bullet). The card's old left-column location
+>   SUMMARY line (`fixedText`/`mobileText`) was REMOVED — the tabs replace it.
+> - **RIGHT rail (~32%, 300px) = `{scheduleBody}` + the action button(s)**, separated from the left
+>   by a **vertical divider** (`lg:border-l lg:border-[#e5e7eb] lg:pl-4 lg:justify-center`; mobile =
+>   a top divider `border-t pt-3`). Grid is `lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-5` with **no
+>   `lg:items-start`** so both columns stretch to equal height (full-height divider; schedule
+>   centers vertically against the taller left column).
+> - **CIRCULAR photo** (`rounded-full`, + `rounded-full` fallback) — NOT square. This supersedes the
+>   "SQUARE photo" bullet.
+> - **The numbered RANK badge rides on the avatar** — navy `#162543`, `absolute -top-1.5 -left-1.5
+>   h-[22px] w-[22px] ring-2 ring-white`, via a `rank?: number` prop on `ProfessionalCard` (passed
+>   `rank={i+1}` from `buscar/page.tsx`). It is NO LONGER a `<span>` on the page wrapper, and the
+>   card's **`pt-10` top band was removed**. The favorite bookmark still floats top-right; the
+>   header's `pr-8 lg:pr-0` keeps the mobile price clear of it (on desktop the price is in the left
+>   column, far from the bookmark).
+> - **`locationControl` is ALWAYS shown** (decoupled from `slots.length`) so a pro with no public
+>   schedule still says WHERE they work; with no named workplaces it falls back to a single static
+>   **province/cantón tab** + a `cantón, provincia`/coverage address. A real workplace bolds the
+>   business name as a venue prefix. Extra `ProfessionalSchedule` props: `placeFallback`,
+>   `placeAddress`, `coverageText`, `businessName`.
+> The schedule/booking LOGIC, slot styling, and the conditional-button rule (§ below / Sprint 159)
+> are unchanged. THE GOLDEN RULE (mobile base + additive `lg:`) still holds.
+
 **THE GOLDEN RULE (learned the hard way across many flip-flops): the MOBILE single column is the
 BASE, and the desktop layout is ADDITIVE `lg:` classes ON TOP of it.** Never change a mobile
 (unprefixed) class to alter desktop — only add `lg:`/`xl:`/`2xl:` variants. That guarantees

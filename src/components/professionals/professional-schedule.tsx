@@ -24,10 +24,20 @@ interface ProfessionalScheduleProps {
   activeCategory?: string;
   /** True when the viewer owns this profile — no self-service actions. */
   isOwn?: boolean;
-  /** The LEFT-column professional info (photo, name, price, tags, rating, location),
+  /** The LEFT-column professional info (photo, name, price, tags, rating),
    *  server-rendered by the card and slotted in so the schedule can own the desktop
    *  two-column layout while keeping ALL schedule state in this one component. */
   info?: ReactNode;
+  /** Fallback location TAB label (province/cantón) shown only when the pro has no
+   *  named workplaces, so the card always says WHERE they work. */
+  placeFallback?: string;
+  /** Fallback address line ("cantón, provincia") for the no-workplace case. */
+  placeAddress?: string;
+  /** Travel coverage line ("se desplaza…") shown under the tabs when the selected
+   *  place has no street address (mobile pros / coverage zones). */
+  coverageText?: string;
+  /** Business/brand name — bolded as the venue prefix on a real workplace address. */
+  businessName?: string;
 }
 
 // How many day-columns are shown at once, and how far ahead the arrows page.
@@ -58,7 +68,7 @@ function dateLabel(d: Date, locale: string): string {
  *    "Ver horario completo" link to the full profile.
  *  - Private: lock state with "Contáctanos por Whatsapp" + "por llamada".
  */
-export function ProfessionalSchedule({ professional, categoryName, availabilityPublic, contactPreference = "ambas", slots: allSlots, activeCategory, isOwn = false, info }: ProfessionalScheduleProps) {
+export function ProfessionalSchedule({ professional, categoryName, availabilityPublic, contactPreference = "ambas", slots: allSlots, activeCategory, isOwn = false, info, placeFallback = "", placeAddress = "", coverageText = "", businessName = "" }: ProfessionalScheduleProps) {
   const t = useTranslations("schedule");
   const locale = useLocale();
   // When a specific profession was searched, only show that profession's hours
@@ -140,61 +150,55 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     });
   }, [slots, effectiveId]);
 
-  // The location control (a SELECTOR for >1 location, else a single-location label),
-  // built ONCE and reused in EVERY schedule branch — including the "no upcoming at this
-  // location" state — so switching locations is always possible and the selector never
-  // vanishes just because the chosen location currently has no slots. Shown whenever
-  // the pro has any published slots. (Durable: independent of the per-branch returns.)
-  const showLocationControl = locationOptions.length >= 1 && slots.length > 0;
-  // Address line shown UNDER the tabs for the currently-selected location.
-  const selectedAddress = effectiveId ? locAddress(effectiveId) : "";
-  const locationControl = showLocationControl ? (
+  // ── LOCATION control (LEFT column, under the rating) — a HORIZONTAL TAB ROW on a
+  // hairline divider, then the selected place's ADDRESS. Built ONCE and ALWAYS shown
+  // (independent of whether there are upcoming slots) so a pro with no published
+  // schedule still says WHERE they work. When the pro has no named workplaces we fall
+  // back to a single static province/cantón tab. (Supersedes §50's right-rail placement.)
+  const hasRealLoc = locationOptions.length > 0;
+  const locTabs = hasRealLoc
+    ? locationOptions
+    : (placeFallback ? [{ id: "__fallback", label: placeFallback }] : []);
+  // Address under the tabs: the selected workplace's street address, else the pro's
+  // travel coverage ("se desplaza…"), else the province/cantón fallback. Only a real
+  // workplace gets its business name bolded as the venue prefix.
+  const workplaceAddr = hasRealLoc && effectiveId ? locAddress(effectiveId) : "";
+  const addressLine = workplaceAddr || coverageText || placeAddress || "";
+  const venueName = workplaceAddr ? businessName.trim() : "";
+  const locationControl = locTabs.length > 0 ? (
     <div className="relative z-10 min-w-0">
-      {hasLocationSelector ? (
-        <>
-          {/* Horizontal TABS (Doctoralia-style): pin + name; the selected tab is
-              brand-blue with an underline, the rest muted. The row SCROLLS sideways
-              when the tabs exceed the card width — `shrink-0` + `whitespace-nowrap`
-              guarantee it never wraps (which would shift the buttons / break the
-              equal-height layout). `.hide-scrollbar` hides the scrollbar chrome. */}
-          <div className="-mx-1 flex gap-1 overflow-x-auto hide-scrollbar px-1" role="tablist" aria-label={t("location")}>
-            {locationOptions.map((o) => {
-              const active = o.id === effectiveId;
-              return (
-                <button
-                  key={o.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={active}
-                  onClick={(e) => { e.stopPropagation(); setSelectedLoc(o.id); setOffset(0); }}
-                  className={`shrink-0 inline-flex items-center gap-1 whitespace-nowrap border-b-2 px-1 pb-1 text-[11px] font-semibold transition-colors ${
-                    active
-                      ? "border-[#009FD9] text-[#009FD9]"
-                      : "border-transparent text-[#9ca3af] hover:text-[#374151]"
-                  }`}
-                >
-                  <MapPin className="h-3 w-3 shrink-0" />
-                  {o.label}
-                </button>
-              );
-            })}
-          </div>
-          {/* Selected location's address, directly below the tabs (when it has one). */}
-          {selectedAddress && (
-            <p className="mt-1 truncate text-[11px] text-[#6b7280]">{selectedAddress}</p>
-          )}
-        </>
-      ) : (
-        // Single location → name (+ address) shown directly, no tab row.
-        <div className="min-w-0">
-          <p className="flex items-center gap-1 text-[11px] leading-tight">
-            <MapPin className="h-3 w-3 text-[#009FD9] shrink-0" />
-            <span className="truncate font-semibold text-[#374151]">{locationOptions[0].label}</span>
-          </p>
-          {locAddress(locationOptions[0].id) && (
-            <p className="mt-0.5 truncate pl-4 text-[11px] text-[#6b7280]">{locAddress(locationOptions[0].id)}</p>
-          )}
-        </div>
+      {/* TABS (Doctoralia-style): pin + name; the selected tab is brand-blue with an
+          underline, the rest muted. The row SCROLLS sideways and NEVER wraps
+          (`shrink-0` + `whitespace-nowrap`). `.hide-scrollbar` hides the chrome. */}
+      <div className="-mx-1 flex gap-3 overflow-x-auto hide-scrollbar border-b border-[#e5e7eb] px-1" role="tablist" aria-label={t("location")}>
+        {locTabs.map((o) => {
+          const active = hasRealLoc ? o.id === effectiveId : true;
+          return (
+            <button
+              key={o.id}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={hasRealLoc
+                ? (e) => { e.stopPropagation(); setSelectedLoc(o.id); setOffset(0); }
+                : (e) => e.stopPropagation()}
+              className={`shrink-0 -mb-px inline-flex items-center gap-1 whitespace-nowrap border-b-2 px-0.5 pb-1.5 text-[12px] font-semibold transition-colors ${
+                active
+                  ? "border-[#009FD9] text-[#009FD9]"
+                  : "border-transparent text-[#6b7280] hover:text-[#374151]"
+              }`}
+            >
+              <MapPin className="h-3 w-3 shrink-0" />
+              {o.label}
+            </button>
+          );
+        })}
+      </div>
+      {addressLine && (
+        <p className="mt-1.5 line-clamp-2 text-[11px] leading-snug text-[#6b7280]">
+          {venueName && <span className="font-semibold text-[#374151]">{venueName} · </span>}
+          {addressLine}
+        </p>
       )}
     </div>
   ) : null;
@@ -409,28 +413,22 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
 
   return (
     <>
-      {/* MOBILE (<lg) = SINGLE column: [info] then [location + schedule + buttons] stacked
-          (`flex flex-col gap-3`, blocks `gap-2`). DESKTOP (lg+) = a COMPACT HORIZONTAL card:
-          info on the LEFT (larger), the location selector + schedule + buttons on the RIGHT
-          (fixed `260px`), so the card is much SHORTER and more fit per screen. All `lg:` here
-          is ADDITIVE on the mobile base. `lg:items-start` keeps both columns their natural
-          (compact) height; desktop gaps are tighter (`lg:gap-1.5`).
-
-          The LOCATION selector/label lives WITH the schedule (right column), TIGHTLY grouped
-          directly above its slots (`gap-1`) so each location + its time slots read as ONE
-          connected unit — NOT split across columns (which made them look disconnected). */}
-      <div className="flex flex-col gap-3 lg:grid lg:grid-cols-[minmax(0,1fr)_260px] lg:gap-4 lg:items-start">
-        {/* LEFT — professional info (slotted from the card). */}
-        <div className="flex min-w-0 flex-col gap-2 lg:gap-1.5">
+      {/* MOBILE (<lg) = SINGLE column: [info + location tabs/address] then
+          [schedule-or-message + buttons], split by a top divider. DESKTOP (lg+) = a COMPACT
+          HORIZONTAL card: the LEFT column (info + location, ~68%) and the RIGHT rail
+          (schedule + buttons, 300px) separated by a VERTICAL divider, so more fit per screen.
+          The grid (no `items-start`) lets the columns stretch to equal height so the divider
+          runs full-height and the schedule centers against the taller left column. */}
+      <div className="flex flex-col gap-3 lg:grid lg:grid-cols-[minmax(0,1fr)_300px] lg:gap-5">
+        {/* LEFT — professional info + location tabs/address (under the rating). */}
+        <div className="flex min-w-0 flex-col gap-2.5">
           {info}
+          {locationControl}
         </div>
-        {/* RIGHT — location + its schedule (grouped) on top, action buttons below. */}
-        <div className="relative z-10 flex min-w-0 flex-col gap-2 lg:gap-1.5">
-          {/* Location label/tabs sit TIGHT (`gap-1`) directly above their slots = one group. */}
-          <div className="flex flex-col gap-1">
-            {locationControl}
-            {scheduleBody}
-          </div>
+        {/* RIGHT — schedule-or-message on top, action buttons below; a divider (top on
+            mobile, left on desktop) separates it from the info. */}
+        <div className="relative z-10 flex min-w-0 flex-col gap-3 border-t border-[#e5e7eb] pt-3 lg:justify-center lg:border-t-0 lg:border-l lg:border-[#e5e7eb] lg:pt-0 lg:pl-4">
+          {scheduleBody}
           {hasSchedule ? verHorarioButton : contactButtons}
         </div>
       </div>
