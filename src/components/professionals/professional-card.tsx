@@ -1,5 +1,5 @@
 import { getTranslations } from "next-intl/server";
-import { Star, Info } from "lucide-react";
+import { Star } from "lucide-react";
 import { ProfessionalSchedule, type ScheduleSlot } from "@/components/professionals/professional-schedule";
 import { Link } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -131,8 +131,15 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
   const professionList =
     activeCategory && allProfessions.includes(activeCategory)
       ? [activeCategory]
-      : allProfessions.slice(0, 2);
+      : allProfessions.slice(0, 3);
+  // Price split so the AMOUNT can be brand-blue and the /unit muted grey (matches the
+  // target screenshots — e.g. "₡10 000" blue + " /hora" grey). A text price like
+  // "Precio a consultar" has no "/" and renders whole in grey.
   const priceLabel = primaryPricingLabel(professional.pricing, professional.hourlyRate);
+  const priceSlash = priceLabel.indexOf("/");
+  const priceAmount = priceSlash >= 0 ? priceLabel.slice(0, priceSlash).trim() : priceLabel;
+  const priceUnit = priceSlash >= 0 ? priceLabel.slice(priceSlash) : "";
+  const priceIsColones = priceLabel.includes("₡");
   const isVerified = professional.verificationStatus === "verified";
   const extraProfessions = allProfessions.length - professionList.length;
   // A pro viewing their OWN card cannot request a service from themselves. The
@@ -199,12 +206,12 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
             <p className="text-[12px] font-medium text-[#6b7280] line-clamp-2 lg:line-clamp-1">{brandSecondary}</p>
           )}
         </div>
-        {/* Price + info icon (HuliHealth style) — top of the left column, on the name line,
-            right-aligned. Just the amount; capped so a long price wraps. */}
-        {priceLabel.includes("₡") && (
-          <div className="shrink-0 flex max-w-[45%] items-start gap-1">
-            <span className="text-right text-sm font-bold leading-snug text-[#111827]">{priceLabel}</span>
-            <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#9ca3af]" aria-hidden />
+        {/* Price — top of the left column, on the name line, right-aligned. The AMOUNT is
+            brand-blue; the /unit is muted grey. Capped width so a long price wraps. */}
+        {priceLabel && (
+          <div className="shrink-0 max-w-[45%] text-right leading-tight">
+            <span className={`text-[15px] font-bold ${priceIsColones ? "text-[#009FD9]" : "text-[#6b7280]"}`}>{priceAmount}</span>
+            {priceUnit && <span className="text-[11px] font-medium text-[#9ca3af]"> {priceUnit}</span>}
           </div>
         )}
       </div>
@@ -234,9 +241,8 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
           <span className="inline-flex w-fit items-center gap-1.5">
             <Star className="h-3.5 w-3.5 fill-[#ff9b32] text-[#ff9b32]" />
             <span className="text-[13px] font-bold text-[#111827]">{professional.ratingAvg.toFixed(1)}</span>
-            <span aria-hidden className="text-[11px] text-[#9ca3af]">·</span>
-            <Link href={`/profesionales/${professional.slug}?tab=resenas`} className="relative z-10 text-[11px] font-medium text-[#009FD9] hover:underline">
-              {tCard("reviewsCount", { count: professional.reviewCount })}
+            <Link href={`/profesionales/${professional.slug}?tab=resenas`} className="relative z-10 text-[11px] font-medium text-[#9ca3af] hover:underline">
+              ({tCard("reviewsCount", { count: professional.reviewCount })})
             </Link>
           </span>
         ) : (

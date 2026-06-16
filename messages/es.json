@@ -279,8 +279,8 @@
     "tomorrow": "Mañana",
     "upcomingTimes": "Próximos horarios",
     "noUpcoming": "Sin horarios próximos. Solicita el servicio para coordinar.",
-    "availabilityHiddenNote": "Disponibilidad privada. Contáctanos para coordinar.",
-    "noScheduleNote": "Aún no publica sus horarios. Escríbele para coordinar.",
+    "availabilityHiddenNote": "La disponibilidad de este profesional no es pública. Contáctanos y conoce sus horarios.",
+    "noScheduleNote": "La disponibilidad de este profesional no es pública. Contáctanos y conoce sus horarios.",
     "prevDays": "Días anteriores",
     "nextDays": "Días siguientes",
     "dayUnavailable": "No disponible",
@@ -289,8 +289,8 @@
     "location": "Ubicación",
     "videoconsulta": "Videoconsulta",
     "atHome": "A domicilio",
-    "whatsapp": "WhatsApp",
-    "call": "Llamar"
+    "whatsapp": "Contáctanos por WhatsApp",
+    "call": "Contáctanos por llamada"
   },
   "selfAction": {
     "title": "Este es tu perfil",

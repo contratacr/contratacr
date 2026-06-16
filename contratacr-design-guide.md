@@ -1029,6 +1029,21 @@ actually wired.
 >   zoom `14 → 13`.
 > - Initials avatar (light-blue `#EBF5FB` circle + blue `#009FD9` initials) confirmed as the no-photo
 >   fallback — `avatarUrl` resolves to `null` when there's no photo, never a logo placeholder.
+>
+> **UPDATE (Sprint 163) — six target-screenshot mismatches fixed + exact contact copy.**
+> - **Pricing**: AMOUNT in brand-blue `#009FD9`, `/unit` in muted grey `#9ca3af` (split on the first `/`);
+>   the `Info` icon is GONE. Text prices ("Precio a consultar") now also show, in grey. Supersedes the
+>   Sprint-161 black-price + Info-icon look.
+> - **Map points** (`google-map-panel.tsx`): pins + cluster bubbles are **navy `#162543`** (was `#009FD9`)
+>   to match the navy rank badge on each card's avatar (pin #N ↔ card #N, same colour).
+> - **Reseñas**: no `·` separator; the count is parenthesised + muted grey (was brand-blue link) →
+>   "★ 4.8 (47 reseñas)".
+> - **Profesiones**: chip cap `2 → 3` (`allProfessions.slice(0,3)`) so 3-profession pros show all three.
+> - **Favorites icon** (`save-button.tsx`): a PLAIN bookmark outline (`h-[18px]`, grey, no circle/border/bg),
+>   filled brand-blue when saved — NOT the old circular bordered button.
+> - **Exact contact copy** (`schedule` namespace, ES + EN): the private/no-schedule note is
+>   "La disponibilidad de este profesional no es pública. Contáctanos y conoce sus horarios."; the two
+>   contact buttons are "Contáctanos por WhatsApp" / "Contáctanos por llamada" (was "WhatsApp"/"Llamar").
 
 **THE GOLDEN RULE (learned the hard way across many flip-flops): the MOBILE single column is the
 BASE, and the desktop layout is ADDITIVE `lg:` classes ON TOP of it.** Never change a mobile

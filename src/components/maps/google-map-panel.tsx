@@ -66,13 +66,14 @@ function starsHtml(rating: number): string {
   return `<span style="color:#ff9b32;font-weight:700;">★ ${rating.toFixed(1)}</span>`;
 }
 
-// AdvancedMarkerElement content: a brand teardrop pin with the card number.
+// AdvancedMarkerElement content: a NAVY teardrop pin with the card number, matching
+// the navy (#162543) rank badge that rides on each result card's avatar.
 function makePinContent(num?: number): HTMLElement {
   const el = document.createElement("div");
   el.style.cssText = "position:relative;width:30px;height:40px;cursor:pointer;";
   el.innerHTML = `
     <svg width="30" height="40" viewBox="0 0 24 32" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 0C7.03 0 3 4.03 3 9c0 6.75 9 23 9 23s9-16.25 9-23c0-4.97-4.03-9-9-9z" fill="#009FD9" stroke="#ffffff" stroke-width="1.5"/>
+      <path d="M12 0C7.03 0 3 4.03 3 9c0 6.75 9 23 9 23s9-16.25 9-23c0-4.97-4.03-9-9-9z" fill="#162543" stroke="#ffffff" stroke-width="1.5"/>
     </svg>
     ${num ? `<span style="position:absolute;top:5px;left:0;width:30px;text-align:center;color:#fff;font-size:11px;font-weight:700;font-family:Inter,Arial,sans-serif;">${num}</span>` : ""}`;
   return el;
@@ -82,7 +83,7 @@ function makePinContent(num?: number): HTMLElement {
 function makeClusterContent(count: number): HTMLElement {
   const size = 32 + Math.min(count, 30) * 0.8;
   const el = document.createElement("div");
-  el.style.cssText = `display:flex;align-items:center;justify-content:center;width:${size}px;height:${size}px;border-radius:9999px;background:#009FD9;border:2px solid #fff;color:#fff;font-weight:700;font-size:12px;font-family:Inter,Arial,sans-serif;box-shadow:0 1px 4px rgba(0,0,0,0.3);`;
+  el.style.cssText = `display:flex;align-items:center;justify-content:center;width:${size}px;height:${size}px;border-radius:9999px;background:#162543;border:2px solid #fff;color:#fff;font-weight:700;font-size:12px;font-family:Inter,Arial,sans-serif;box-shadow:0 1px 4px rgba(0,0,0,0.3);`;
   el.textContent = String(count);
   return el;
 }

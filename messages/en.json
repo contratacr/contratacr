@@ -279,8 +279,8 @@
     "tomorrow": "Tomorrow",
     "upcomingTimes": "Upcoming times",
     "noUpcoming": "No upcoming times. Request the service to coordinate.",
-    "availabilityHiddenNote": "Private availability. Contact us to coordinate.",
-    "noScheduleNote": "They haven't posted times yet. Message them to coordinate.",
+    "availabilityHiddenNote": "This professional's availability is private. Contact us to find out their hours.",
+    "noScheduleNote": "This professional's availability is private. Contact us to find out their hours.",
     "prevDays": "Previous days",
     "nextDays": "Next days",
     "dayUnavailable": "Not available",
@@ -289,8 +289,8 @@
     "location": "Location",
     "videoconsulta": "Video consultation",
     "atHome": "At your location",
-    "whatsapp": "WhatsApp",
-    "call": "Call"
+    "whatsapp": "Contact us on WhatsApp",
+    "call": "Contact us by phone"
   },
   "selfAction": {
     "title": "This is your profile",

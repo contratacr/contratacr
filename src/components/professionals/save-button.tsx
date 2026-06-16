@@ -121,14 +121,14 @@ export function SaveButton({ pro, className, isOwn = false }: SaveButtonProps) {
         onClick={toggle}
         aria-label={saved ? t("unsave") : t("save")}
         className={cn(
-          "flex items-center justify-center w-7 h-7 rounded-full border bg-white/90 backdrop-blur transition-colors duration-200",
+          "flex items-center justify-center p-1 transition-colors duration-200",
           saved
-            ? "border-[#009FD9] text-[#009FD9]"
-            : "border-[#e5e7eb] text-[#9ca3af] hover:text-[#374151] hover:border-[#cbd5e1]",
+            ? "text-[#009FD9]"
+            : "text-[#9ca3af] hover:text-[#374151]",
           className
         )}
       >
-        <Bookmark className="h-3.5 w-3.5" fill={saved ? "currentColor" : "none"} />
+        <Bookmark className="h-[18px] w-[18px]" strokeWidth={2} fill={saved ? "currentColor" : "none"} />
       </button>
       <SelfActionModal open={!!selfMsg} onClose={() => setSelfMsg(null)} message={selfMsg ?? ""} />
     </>
