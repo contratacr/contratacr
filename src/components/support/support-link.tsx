@@ -1,33 +1,29 @@
 "use client";
 
 import { type ReactNode } from "react";
-import { Link } from "@/i18n/navigation";
+import { Link, usePathname } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
-import { OPEN_SUPPORT_EVENT } from "@/lib/support-events";
 
-// Auth-conditional "Soporte" link:
-//  • logged OUT → navigate to the standalone /soporte page (support works for guests).
-//  • logged IN  → open the support modal OVER the current page (no navigation).
-// Direct navigation to /soporte still shows the page in both states — only link
-// clicks open the modal for logged-in users. `onNavigate` closes the host menu/drawer.
+// Session- + location-aware "Soporte" entry point, consistent app-wide:
+//  • logged OUT, or anywhere OUTSIDE the dashboard → the PUBLIC /soporte page/form
+//    (support works without an account; everyone in the public context lands here).
+//  • logged IN and INSIDE the dashboard → the panel's INLINE "Soporte" SECTION
+//    (?tab=soporte) — no modal, no separate page (the pro panel for professionals,
+//    the client panel otherwise).
+// `onNavigate` closes the host menu/drawer.
 export function SupportLink({ className, children, onNavigate }: { className?: string; children: ReactNode; onNavigate?: () => void }) {
   const { user } = useAuth();
+  const pathname = usePathname();
+  const inDashboard = pathname.startsWith("/dashboard");
+  const isPro = user?.user_metadata?.role === "professional";
 
-  if (!user) {
-    return (
-      <Link href="/soporte" className={className} onClick={onNavigate}>
-        {children}
-      </Link>
-    );
-  }
+  const href = user && inDashboard
+    ? (isPro ? "/dashboard/profesional?tab=soporte" : "/dashboard/cliente?tab=soporte")
+    : "/soporte";
 
   return (
-    <button
-      type="button"
-      className={className}
-      onClick={() => { onNavigate?.(); window.dispatchEvent(new CustomEvent(OPEN_SUPPORT_EVENT)); }}
-    >
+    <Link href={href} className={className} onClick={onNavigate}>
       {children}
-    </button>
+    </Link>
   );
 }

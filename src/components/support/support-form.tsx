@@ -6,7 +6,8 @@ import { AlertCircle, Paperclip, X } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 
 // The support ticket form — SINGLE SOURCE OF TRUTH for the fields, validation and
-// submit. Rendered both on the standalone /soporte page and inside SupportModal.
+// submit. Rendered on the public /soporte page (the in-dashboard Soporte section uses
+// SupportTickets instead).
 // On a successful submit it calls onSuccess(email); the container decides what to
 // show next (the page shows its full success screen; the modal shows a compact one).
 
