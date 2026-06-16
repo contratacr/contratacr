@@ -125,9 +125,11 @@ export function AdminShell({
         </div>
       </header>
 
-      {/* ── Content ── */}
+      {/* ── Content ── hugs the sidebar: LEFT-anchored (no `mx-auto` centering) with a
+          comfortable gutter, filling the width next to the sidebar instead of floating in a
+          narrow centered column (which left a big gap after the sidebar + an empty right band). */}
       <main className="lg:ml-60 flex-1 min-w-0">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 py-6">{children}</div>
+        <div className="px-4 sm:px-6 lg:px-8 py-6">{children}</div>
       </main>
     </div>
   );
