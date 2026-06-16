@@ -74,27 +74,27 @@ const MAP_CSS =
   ".ccr-pop-top{display:flex;gap:10px;align-items:flex-start;}" +
   ".ccr-av{width:42px;height:42px;border-radius:9999px;background:#EBF5FB;color:#009FD9;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;flex-shrink:0;}" +
   ".ccr-pop-name{font-weight:700;color:#111827;font-size:14px;line-height:1.25;padding-right:14px;}" +
-  // "Verificado" pill — the SAME treatment as the profile badge (Badge variant="verified"):
-  // a solid brand-blue #009FD9 rounded-full pill, white text, NO green, NO check icon.
-  ".ccr-ver{display:inline-flex;align-items:center;border-radius:9999px;background:#009FD9;color:#fff;font-size:10px;font-weight:600;line-height:1;padding:3px 7px;margin-left:5px;white-space:nowrap;vertical-align:middle;}" +
+  // "Verificado" pill — EXACTLY the /buscar card's badge: solid brand-blue #009FD9
+  // rounded-full pill, white text, font-size 10px / weight 600, padding 2px 8px
+  // (= card `rounded-full bg-[#009FD9] px-2 py-0.5 text-[10px] font-semibold text-white`).
+  // NO green, NO check icon.
+  ".ccr-ver{display:inline-flex;align-items:center;border-radius:9999px;background:#009FD9;color:#fff;font-size:10px;font-weight:600;line-height:1.2;padding:2px 8px;margin-left:5px;white-space:nowrap;vertical-align:middle;}" +
   ".ccr-pop-prof{color:#6b7280;font-size:12px;margin-top:2px;line-height:1.3;}" +
   ".ccr-pop-rate{font-size:12px;margin-top:4px;color:#ff9b32;font-weight:700;}" +
   ".ccr-pop-rate span{color:#9ca3af;font-weight:500;}" +
   ".ccr-pop-price{font-size:13px;font-weight:700;color:" + PIN_ACTIVE + ";margin-top:6px;}" +
-  // Cluster preview popup — a compact list of the grouped pros (each row → profile) plus
-  // an explicit "zoom in to separate" button, so a cluster is never a dead marker.
+  // Cluster preview popup — a compact list of the grouped pros (each row → profile), so a
+  // cluster is never a dead marker. (No zoom button — pinch / wheel-zoom separates them.)
   ".ccr-clpop{pointer-events:auto;position:relative;width:250px;background:#fff;border-radius:14px;box-shadow:0 10px 30px -8px rgba(15,23,42,.30),0 2px 6px rgba(15,23,42,.10);padding:10px;font-family:Inter,system-ui,sans-serif;}" +
   ".ccr-clpop-h{font-weight:700;color:#111827;font-size:12px;padding:0 18px 6px 2px;}" +
-  ".ccr-cllist{display:flex;flex-direction:column;gap:1px;max-height:190px;overflow-y:auto;}" +
+  ".ccr-cllist{display:flex;flex-direction:column;gap:1px;max-height:208px;overflow-y:auto;}" +
   ".ccr-clrow{display:flex;gap:8px;align-items:center;padding:6px;border-radius:9px;text-decoration:none;}" +
   ".ccr-clrow:hover{background:#f4f7fa;}" +
   ".ccr-av-sm{width:32px;height:32px;font-size:12px;}" +
   ".ccr-clname{font-weight:700;color:#111827;font-size:12px;line-height:1.2;display:flex;align-items:center;flex-wrap:wrap;}" +
   ".ccr-clmeta{color:#6b7280;font-size:11px;margin-top:1px;}" +
   ".ccr-clmeta b{color:#ff9b32;font-weight:700;}" +
-  ".ccr-clmore{color:#9ca3af;font-size:11px;padding:5px 2px 0;}" +
-  ".ccr-clzoom{margin-top:8px;width:100%;display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid #e5e7eb;background:#fff;color:#162543;font-size:12px;font-weight:600;padding:8px;border-radius:9999px;cursor:pointer;}" +
-  ".ccr-clzoom:hover{background:#f9fafb;}";
+  ".ccr-clmore{color:#9ca3af;font-size:11px;padding:5px 2px 0;}";
 
 function pinSvg(): string {
   return (
@@ -161,6 +161,11 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
   const clustererRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const popupRef = useRef<any>(null);
+  // The key of the pro/cluster the popup is CURRENTLY showing. The hover preview is
+  // recreated only when this key changes — so re-entering the SAME pin (or a stray
+  // enter/leave loop in the pin↔card overlap zone) no longer tears down + rebuilds the
+  // mini-card every mousemove (that rebuild was the "vibration"/flicker).
+  const popupKeyRef = useRef<string | null>(null);
   // Debounce closing the hover preview so moving the cursor pin → card (or between
   // nearby pins) doesn't flicker the mini-card shut.
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -189,13 +194,17 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
 
   function closePopup() {
     if (popupRef.current) { popupRef.current.map = null; popupRef.current = null; }
+    popupKeyRef.current = null;
   }
   function cancelClose() { if (closeTimerRef.current) { clearTimeout(closeTimerRef.current); closeTimerRef.current = null; } }
   function scheduleClose() { cancelClose(); closeTimerRef.current = setTimeout(closePopup, 150); }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function openPopup(g: any, map: any, pro: MapProfessional, pos: { lat: number; lng: number }) {
+    // Already showing this pro → keep the existing card (don't rebuild → no flicker).
+    if (popupRef.current && popupKeyRef.current === pro.proId + "|" + pro.id) { cancelClose(); return; }
     closePopup();
+    popupKeyRef.current = pro.proId + "|" + pro.id;
     const href = `/${locale}/profesionales/${pro.slug}`;
     const profs = (pro.professions ?? []).filter(Boolean).slice(0, 2).join(" · ") || pro.categoryLabel || "";
     const wrap = document.createElement("div");
@@ -222,14 +231,17 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     popupRef.current = new g.marker.AdvancedMarkerElement({ map, position: pos, content: wrap, zIndex: 100000 });
   }
 
-  // CLUSTER preview — opened by hovering (desktop) or tapping (mobile) a cluster. It
-  // combines BOTH cluster affordances so a cluster is never "dead": (1) a scrollable LIST
-  // of the grouped professionals, each row a link to that pro's profile (see + pick), and
-  // (2) an explicit "Acercar para separar" button that zooms the map into the cluster
-  // (separate). Single safe gesture everywhere; zoom is a button, not a competing gesture.
+  // CLUSTER preview — opened by hovering (desktop) or tapping (mobile) a cluster. A
+  // scrollable LIST of the grouped professionals, each row a link to that pro's profile
+  // (see + pick), so a cluster is never "dead". To separate the pins the user simply
+  // zooms in (wheel/pinch) — there is NO zoom button. Deduped by the cluster's position
+  // key so re-hovering the same cluster doesn't rebuild the card (no flicker).
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function openClusterPopup(g: any, map: any, members: MapProfessional[], pos: { lat: number; lng: number }, bounds: any) {
+  function openClusterPopup(g: any, map: any, members: MapProfessional[], pos: { lat: number; lng: number }) {
+    const key = `cl:${pos.lat.toFixed(5)},${pos.lng.toFixed(5)}`;
+    if (popupRef.current && popupKeyRef.current === key) { cancelClose(); return; }
     closePopup();
+    popupKeyRef.current = key;
     const head = `${members.length} ${locale === "en" ? "professionals here" : "profesionales aquí"}`;
     const shown = members.slice(0, 6);
     const more = members.length - shown.length;
@@ -247,7 +259,6 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
         `</a>`
       );
     }).join("");
-    const zoomLabel = locale === "en" ? "Zoom in to separate" : "Acercar para separar";
     const wrap = document.createElement("div");
     wrap.className = "ccr-popwrap";
     wrap.innerHTML =
@@ -256,43 +267,14 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
         `<div class="ccr-clpop-h">${esc(head)}</div>` +
         `<div class="ccr-cllist">${rows}</div>` +
         (more > 0 ? `<div class="ccr-clmore">+${more} ${locale === "en" ? "more" : "más"}</div>` : "") +
-        `<button class="ccr-clzoom" type="button">⊕ ${esc(zoomLabel)}</button>` +
       `</div>`;
     wrap.querySelector(".ccr-pop-x")?.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); closePopup(); });
-    wrap.querySelector(".ccr-clzoom")?.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); zoomToCluster(g, map, bounds, pos); });
     // Keep the preview open while the cursor is over it (desktop).
     if (typeof window !== "undefined" && window.matchMedia?.("(hover: hover)").matches) {
       wrap.addEventListener("mouseenter", cancelClose);
       wrap.addEventListener("mouseleave", scheduleClose);
     }
     popupRef.current = new g.marker.AdvancedMarkerElement({ map, position: pos, content: wrap, zIndex: 100000 });
-  }
-
-  // Zoom the map into a cluster so its pins separate. Frame the members' bounds when they
-  // span an area; otherwise step in (+2) and recenter. Always make progress on repeat taps
-  // and never slam to the max zoom. Suppressed from the "Buscar en esta área" prompt.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function zoomToCluster(g: any, map: any, bounds: any, pos: { lat: number; lng: number }) {
-    closePopup();
-    suppressMoveRef.current = true;
-    const done = () => { suppressMoveRef.current = false; };
-    const cur = map.getZoom() || 11;
-    const ne = bounds?.getNorthEast?.();
-    const sw = bounds?.getSouthWest?.();
-    const hasArea = ne && sw && !ne.equals(sw);
-    if (hasArea) {
-      map.fitBounds(bounds, 80);
-      g.event.addListenerOnce(map, "idle", () => {
-        const z = map.getZoom();
-        if (z > 17) map.setZoom(17);
-        else if (z <= cur) map.setZoom(Math.min(17, cur + 2)); // guarantee progress
-        done();
-      });
-    } else {
-      map.panTo(pos);
-      map.setZoom(Math.min(17, cur + 2));
-      g.event.addListenerOnce(map, "idle", done);
-    }
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -384,8 +366,15 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
       list.push(el); pinsByProRef.current.set(proId, list);
 
       if (canHover) {
-        // Desktop hover: highlight the pin/card AND show the mini-card preview.
-        el.addEventListener("mouseenter", () => { cancelClose(); setActive(proId, true, true); openPopup(g, map, pro, pos); });
+        // Desktop hover: highlight the pin/card AND show the mini-card preview. If the card
+        // is ALREADY showing this pro, re-activate the pin WITHOUT re-scrolling or rebuilding
+        // the popup (openPopup dedupes) — that idempotence is what stops the hover vibration.
+        el.addEventListener("mouseenter", () => {
+          cancelClose();
+          const already = !!popupRef.current && popupKeyRef.current === pro.proId + "|" + pro.id;
+          setActive(proId, true, !already);
+          openPopup(g, map, pro, pos);
+        });
         el.addEventListener("mouseleave", () => { setActive(proId, false, false); scheduleClose(); });
       }
       el.addEventListener("click", (e) => { e.stopPropagation(); cancelClose(); openPopup(g, map, pro, pos); setActive(proId, true, false); });
@@ -395,11 +384,11 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     // Clusters reuse the SAME shared teardrop (identical shape/size/color); only the
     // number differs (here the count). No separate marker style → pins can't drift. The
     // cluster is INTERACTIVE: hover (desktop) / tap (mobile) opens a members-preview popup
-    // (list of grouped pros + a "zoom in to separate" button) so it's never a dead marker.
+    // (list of grouped pros) so it's never a dead marker. To separate, the user zooms in.
     const renderer = {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       render: (cluster: any) => {
-        const { count, position, markers: members, bounds } = cluster;
+        const { count, position, markers: members } = cluster;
         const el = teardropEl(count);
         const clMarker = new g.marker.AdvancedMarkerElement({ position, content: el, zIndex: 5000 + count });
         // The grouped pros (deduped — a pro can have several workplace pins in one cluster).
@@ -412,7 +401,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
           if (seen.has(key)) continue;
           seen.add(key); pros.push(p);
         }
-        const open = () => { cancelClose(); openClusterPopup(g, map, pros, position, bounds); };
+        const open = () => { cancelClose(); openClusterPopup(g, map, pros, position); };
         if (canHover) {
           el.addEventListener("mouseenter", open);
           el.addEventListener("mouseleave", scheduleClose);
