@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { EmojiBlocker } from "@/components/util/emoji-blocker";
 import { BackToTop } from "@/components/landing/back-to-top";
+import { SupportModalHost } from "@/components/support/support-modal-host";
 import "../globals.css";
 
 const inter = Inter({
@@ -78,6 +79,8 @@ export default async function LocaleLayout({
           {/* App-wide — only appears after scrolling 400px, so it shows on
               long-scroll pages and stays hidden on short ones. */}
           <BackToTop />
+          {/* App-wide support modal — opened by logged-in SupportLink clicks. */}
+          <SupportModalHost />
         </NextIntlClientProvider>
       </body>
     </html>

@@ -2156,6 +2156,7 @@
   },
   "soporte": {
     "headerTitle": "Centro de soporte",
+    "close": "Cerrar",
     "headerSubtitle": "Abre un tiquete y le damos seguimiento por correo y en tu panel — así no se pierde ninguna consulta.",
     "successTitle": "¡Tiquete creado!",
     "successUserDesc": "Recibimos tu consulta. Te respondemos por correo y puedes seguir la conversación en tus tiquetes.",

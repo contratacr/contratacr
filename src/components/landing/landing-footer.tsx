@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { ContrataCRLogo } from "./landing-navbar";
 import { SmartRegisterLink } from "@/components/layout/smart-register-link";
+import { SupportLink } from "@/components/support/support-link";
 
 function InstagramIcon() {
   return (
@@ -114,6 +115,10 @@ export function LandingFooter() {
                       <SmartRegisterLink className="text-sm text-white/60 hover:text-white transition-colors">
                         {t(key)}
                       </SmartRegisterLink>
+                    ) : href === "/soporte" ? (
+                      <SupportLink className="text-sm text-left text-white/60 hover:text-white transition-colors">
+                        {t(key)}
+                      </SupportLink>
                     ) : (
                       <Link
                         href={href}

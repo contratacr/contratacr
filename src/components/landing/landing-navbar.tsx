@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { getInitials } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { NotificationBell } from "@/components/notifications/notification-bell";
+import { SupportLink } from "@/components/support/support-link";
 import { ALL_CATEGORIES, searchCategories, normalizeText, getCategoryLabel, getCategoryGroupLabel } from "@/lib/data/categories";
 import { searchLocations, resolveLocation, type LocationSuggestion } from "@/lib/data/location-search";
 
@@ -936,13 +937,22 @@ export function LandingNavbar() {
                       <ul className="space-y-1">
                         {RESOURCES_LINKS.map((link) => (
                           <li key={link.href}>
-                            <Link
-                              href={link.href}
-                              onClick={() => setOpenMenu(null)}
-                              className="block px-3 py-2 rounded-lg text-sm text-gray-600 hover:text-[#009FD9] hover:bg-gray-50 transition-colors"
-                            >
-                              {t(`resourceLinks.${link.key}`)}
-                            </Link>
+                            {link.key === "support" ? (
+                              <SupportLink
+                                onNavigate={() => setOpenMenu(null)}
+                                className="block w-full text-left px-3 py-2 rounded-lg text-sm text-gray-600 hover:text-[#009FD9] hover:bg-gray-50 transition-colors"
+                              >
+                                {t(`resourceLinks.${link.key}`)}
+                              </SupportLink>
+                            ) : (
+                              <Link
+                                href={link.href}
+                                onClick={() => setOpenMenu(null)}
+                                className="block px-3 py-2 rounded-lg text-sm text-gray-600 hover:text-[#009FD9] hover:bg-gray-50 transition-colors"
+                              >
+                                {t(`resourceLinks.${link.key}`)}
+                              </Link>
+                            )}
                           </li>
                         ))}
                       </ul>
@@ -1308,16 +1318,26 @@ export function LandingNavbar() {
             {/* RECURSOS */}
             <div className="mb-5">
               <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t("resources")}</p>
-              {RESOURCES_LINKS.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMobileOpen(false)}
-                  className="block px-2 py-2 text-sm text-gray-600 hover:text-[#009FD9] transition-colors leading-tight"
-                >
-                  {t(`resourceLinks.${link.key}`)}
-                </Link>
-              ))}
+              {RESOURCES_LINKS.map((link) =>
+                link.key === "support" ? (
+                  <SupportLink
+                    key={link.href}
+                    onNavigate={() => setMobileOpen(false)}
+                    className="block w-full text-left px-2 py-2 text-sm text-gray-600 hover:text-[#009FD9] transition-colors leading-tight"
+                  >
+                    {t(`resourceLinks.${link.key}`)}
+                  </SupportLink>
+                ) : (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setMobileOpen(false)}
+                    className="block px-2 py-2 text-sm text-gray-600 hover:text-[#009FD9] transition-colors leading-tight"
+                  >
+                    {t(`resourceLinks.${link.key}`)}
+                  </Link>
+                )
+              )}
             </div>
 
             {/* Idioma */}

@@ -883,6 +883,18 @@ refreshes its list) and closes — it **never navigates** to a separate page.
   Login honors `?redirect=projects` (email/password resolves it directly; OAuth threads it as the
   callback's `?next=projects`, resolved to the role-aware projects tab after the role is known).
 
+### 43.2 "Soporte" = a MODAL for logged-in users, the page for guests
+The support ticket form is a **single shared component** — **`SupportForm`** (`components/support/support-form.tsx`,
+fields/validation/submit unchanged) — rendered in BOTH the standalone **`/soporte` page** (kept as-is,
+its full success screen intact) and the **`SupportModal`** (`Modal` + `SupportForm`; on success it shows
+a compact confirmation and **does not navigate**). The **"Soporte"/"Centro de soporte" links are
+auth-conditional** via **`SupportLink`**: logged-OUT → navigate to `/soporte` (support must work for
+guests — never send them to login); logged-IN → open the **support modal over the current page**
+(dispatches `OPEN_SUPPORT_EVENT`; a single app-wide **`SupportModalHost`** in the locale layout renders
+the modal so it survives the menu/drawer unmounting). Direct navigation to `/soporte` still shows the
+page in both states — only link clicks open the modal. Wired in the footer + Recursos menu
+(desktop + mobile).
+
 ## 44. Verification copy = "Verificado"-only (no unverified label)
 
 App copy must match the model: verified pros show "Verificado"; unverified ones
