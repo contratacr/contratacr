@@ -2,12 +2,13 @@
 
 import { useRouter, usePathname } from "@/i18n/navigation";
 import { useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Search, X, Loader2, MapPin, ShieldCheck, SlidersHorizontal } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PROVINCES, getCantonsByProvince, nearestProvinceId } from "@/lib/data/cr-geography";
 import { CategorySearch } from "@/components/ui/category-search";
+import { searchCategories, getCategoryLabel } from "@/lib/data/categories";
 import { INSURERS } from "@/lib/data/insurers";
 import { createClient } from "@/lib/supabase/client";
 
@@ -23,8 +24,14 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
   const pathname = usePathname();
   const params = useSearchParams();
   const t = useTranslations("search");
+  const locale = useLocale();
 
   const [query, setQuery] = useState(params.get("q") ?? "");
+  // Service autocomplete for the sidebar text search (our categories taxonomy).
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchActive, setSearchActive] = useState(-1);
+  const searchBlurRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchSug = useMemo(() => (query.trim().length >= 2 ? searchCategories(query).slice(0, 6) : []), [query]);
   const [category, setCategory] = useState(params.get("categoria") ?? "");
   const [province, setProvince] = useState(params.get("provincia") ?? "");
   const [canton, setCanton] = useState(params.get("canton") ?? "");
@@ -252,22 +259,62 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
         </div>
       )}
 
-      {/* Text search (omitted in the mobile sheet — the sheet header already has a search bar). */}
+      {/* Text search (omitted in the mobile sheet — the sheet header already has a search bar).
+          Autocompletes against OUR categories taxonomy: picking a suggestion filters by
+          `categoria`; free text still searches `q` on debounce/Enter. */}
       {!hideSearch && (
         <div className="relative mb-3 flex items-center">
           <Search className="pointer-events-none absolute left-3 h-4 w-4 text-[#9ca3af]" />
           <input
             type="text"
             value={query}
-            onChange={(e) => handleQueryChange(e.target.value)}
-            onKeyDown={handleQueryKeyDown}
+            onChange={(e) => { handleQueryChange(e.target.value); setSearchActive(-1); setSearchOpen(true); }}
+            onFocus={() => { if (searchSug.length > 0) setSearchOpen(true); }}
+            onBlur={() => { searchBlurRef.current = setTimeout(() => setSearchOpen(false), 150); }}
+            onKeyDown={(e) => {
+              if (searchOpen && searchSug.length > 0) {
+                if (e.key === "ArrowDown") { e.preventDefault(); setSearchActive((i) => Math.min(i + 1, searchSug.length - 1)); return; }
+                if (e.key === "ArrowUp") { e.preventDefault(); setSearchActive((i) => Math.max(i - 1, 0)); return; }
+                if (e.key === "Enter" && searchActive >= 0) {
+                  e.preventDefault();
+                  const s = searchSug[searchActive];
+                  setCategory(s.id); setQuery(getCategoryLabel(s.id, locale)); setSearchOpen(false);
+                  applyFilters({ categoria: s.id, q: "" });
+                  return;
+                }
+                if (e.key === "Escape") { setSearchOpen(false); return; }
+              }
+              handleQueryKeyDown(e);
+            }}
             placeholder={t("filters.searchPlaceholder")}
+            role="combobox"
+            aria-expanded={searchOpen}
+            aria-autocomplete="list"
             className="w-full rounded-xl border border-[#e5e7eb] bg-[#f9fafb] py-2.5 pl-9 pr-9 text-sm text-[#111827] placeholder-[#9ca3af] transition focus:border-transparent focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
           />
           {query && (
-            <button onClick={clearQuery} className="absolute right-3 text-[#9ca3af] hover:text-[#374151] transition-colors" aria-label={t("filters.clearSearch")}>
+            <button onClick={() => { clearQuery(); setSearchOpen(false); }} className="absolute right-3 text-[#9ca3af] hover:text-[#374151] transition-colors" aria-label={t("filters.clearSearch")}>
               <X className="h-4 w-4" />
             </button>
+          )}
+          {searchOpen && searchSug.length > 0 && (
+            <ul className="absolute left-0 right-0 top-full z-50 mt-1.5 max-h-72 overflow-auto rounded-xl border border-[#e5e7eb] bg-white py-1 shadow-xl" role="listbox">
+              {searchSug.map((s, i) => (
+                <li key={s.id}>
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={i === searchActive}
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => { setCategory(s.id); setQuery(getCategoryLabel(s.id, locale)); setSearchOpen(false); applyFilters({ categoria: s.id, q: "" }); }}
+                    className={`flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm transition-colors ${i === searchActive ? "bg-[#EBF5FB]" : "hover:bg-[#f9fafb]"}`}
+                  >
+                    <Search className="h-4 w-4 shrink-0 text-[#009FD9]" />
+                    <span className="truncate text-[#374151]">{getCategoryLabel(s.id, locale)}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
           )}
         </div>
       )}
@@ -425,33 +472,56 @@ export function MobileFiltersButton() {
 }
 
 // ── MOBILE service-search bar (the "Busca un servicio…" field, pinned at the top) ──
-// Self-contained: manages ONLY the `q` param and PRESERVES every other param by copying
-// the current URL — so it never clobbers the chips' filters (and vice-versa). Same
-// debounced behavior as the sidebar search.
+// Self-contained: manages the `q` param (PRESERVING every other param), AND autocompletes
+// against OUR professions/categories taxonomy (`searchCategories`) — typing shows matching
+// services; picking one filters by `categoria` (clears `q`). Same debounced free-text search
+// on Enter / blur. The taxonomy is the same one the "Categoría" filter + hero use.
 export function MobileServiceSearch() {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
   const t = useTranslations("search");
+  const locale = useLocale();
   const [q, setQ] = useState(params.get("q") ?? "");
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState(-1);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const blurRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const push = useCallback((value: string) => {
+  const suggestions = useMemo(() => (q.trim().length >= 2 ? searchCategories(q).slice(0, 6) : []), [q]);
+
+  const pushQuery = useCallback((value: string) => {
     const next = new URLSearchParams(params.toString());
     if (value.trim()) next.set("q", value); else next.delete("q");
     next.delete("page");
     router.push(`${pathname}?${next.toString()}`);
   }, [params, router, pathname]);
 
+  const pickCategory = useCallback((id: string) => {
+    const next = new URLSearchParams(params.toString());
+    next.set("categoria", id);
+    next.delete("q");
+    next.delete("page");
+    setQ(getCategoryLabel(id, locale));
+    setOpen(false);
+    router.push(`${pathname}?${next.toString()}`);
+  }, [params, router, pathname, locale]);
+
   function onChange(value: string) {
-    setQ(value);
+    setQ(value); setActive(-1); setOpen(true);
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => push(value), 400);
+    debounceRef.current = setTimeout(() => pushQuery(value), 400);
   }
   function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Enter") { if (debounceRef.current) clearTimeout(debounceRef.current); push(q); }
+    if (open && suggestions.length > 0) {
+      if (e.key === "ArrowDown") { e.preventDefault(); setActive((i) => Math.min(i + 1, suggestions.length - 1)); return; }
+      if (e.key === "ArrowUp") { e.preventDefault(); setActive((i) => Math.max(i - 1, 0)); return; }
+      if (e.key === "Enter" && active >= 0) { e.preventDefault(); pickCategory(suggestions[active].id); return; }
+      if (e.key === "Escape") { setOpen(false); return; }
+    }
+    if (e.key === "Enter") { if (debounceRef.current) clearTimeout(debounceRef.current); setOpen(false); pushQuery(q); }
   }
-  useEffect(() => () => { if (debounceRef.current) clearTimeout(debounceRef.current); }, []);
+  useEffect(() => () => { if (debounceRef.current) clearTimeout(debounceRef.current); if (blurRef.current) clearTimeout(blurRef.current); }, []);
 
   return (
     <div className="relative flex items-center">
@@ -461,13 +531,37 @@ export function MobileServiceSearch() {
         value={q}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={onKeyDown}
+        onFocus={() => { if (suggestions.length > 0) setOpen(true); }}
+        onBlur={() => { blurRef.current = setTimeout(() => setOpen(false), 150); }}
         placeholder={t("filters.searchPlaceholder")}
+        role="combobox"
+        aria-expanded={open}
+        aria-autocomplete="list"
         className="w-full rounded-full border border-[#e5e7eb] bg-white py-2.5 pl-9 pr-9 text-sm text-[#111827] placeholder-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition"
       />
       {q && (
-        <button onClick={() => { setQ(""); if (debounceRef.current) clearTimeout(debounceRef.current); push(""); }} className="absolute right-3 text-[#9ca3af] hover:text-[#374151] transition-colors" aria-label={t("filters.clearSearch")}>
+        <button onClick={() => { setQ(""); setOpen(false); if (debounceRef.current) clearTimeout(debounceRef.current); pushQuery(""); }} className="absolute right-3 text-[#9ca3af] hover:text-[#374151] transition-colors" aria-label={t("filters.clearSearch")}>
           <X className="h-4 w-4" />
         </button>
+      )}
+      {open && suggestions.length > 0 && (
+        <ul className="absolute left-0 right-0 top-full z-50 mt-1.5 max-h-72 overflow-auto rounded-xl border border-[#e5e7eb] bg-white py-1 shadow-xl" role="listbox">
+          {suggestions.map((s, i) => (
+            <li key={s.id}>
+              <button
+                type="button"
+                role="option"
+                aria-selected={i === active}
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => pickCategory(s.id)}
+                className={`flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm transition-colors ${i === active ? "bg-[#EBF5FB]" : "hover:bg-[#f9fafb]"}`}
+              >
+                <Search className="h-4 w-4 shrink-0 text-[#009FD9]" />
+                <span className="truncate text-[#374151]">{getCategoryLabel(s.id, locale)}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   );

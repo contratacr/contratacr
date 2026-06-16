@@ -8,6 +8,13 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 import type { SearchSuggestion } from "@/app/api/search/suggestions/route";
 import { searchLocations, resolveLocation, type LocationSuggestion } from "@/lib/data/location-search";
+import { loadGoogleMaps } from "@/lib/maps/loader";
+import { matchProvinceCanton } from "@/lib/data/cr-geography";
+
+// A Google Places ADDRESS prediction shown alongside our province/cantón suggestions, so the
+// location field autocompletes real addresses (not just province/cantón names).
+type AddressSuggestion = { type: "address"; placeId: string; label: string };
+const GMAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 
 const ROTATING_LINES: Record<string, string[]> = {
   es: ["Plomería,", "Electricidad,", "Limpieza,", "Jardinería,", "Pintura,", "Niñera,", "Mudanzas,", "Fumigación,"],
@@ -141,22 +148,27 @@ function SuggestionsDropdown({
   );
 }
 
-/* ─── Location autocomplete dropdown (provinces + cantones) ─── */
+/* ─── Location autocomplete dropdown (provinces + cantones + Google addresses) ─── */
 function LocationDropdown({
   suggestions,
+  addresses,
   activeIdx,
   onPick,
+  onPickAddress,
 }: {
   suggestions: LocationSuggestion[];
+  addresses: AddressSuggestion[];
   activeIdx: number;
   onPick: (s: LocationSuggestion) => void;
+  onPickAddress: (a: AddressSuggestion) => void;
 }) {
-  if (suggestions.length === 0) return null;
+  if (suggestions.length === 0 && addresses.length === 0) return null;
   return (
     <div
       className="absolute left-0 right-0 top-full mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden py-1 text-left"
       role="listbox"
     >
+      {/* Our province/cantón taxonomy (keyboard-navigable). */}
       {suggestions.map((s, i) => (
         <button
           key={`${s.type}-${s.id}`}
@@ -182,6 +194,22 @@ function LocationDropdown({
           </span>
         </button>
       ))}
+
+      {/* Google Places addresses. */}
+      {addresses.map((a) => (
+        <button
+          key={`addr-${a.placeId}`}
+          type="button"
+          role="option"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => onPickAddress(a)}
+          className="w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-gray-50"
+        >
+          <MapPin className="h-4 w-4 text-[#009FD9] shrink-0" />
+          <span className="flex-1 min-w-0 block text-sm text-[#111827] truncate">{a.label}</span>
+          <span className="text-[10px] uppercase tracking-wide text-gray-300 shrink-0">Dirección</span>
+        </button>
+      ))}
     </div>
   );
 }
@@ -194,12 +222,19 @@ export function LandingHero() {
   const [openSug, setOpenSug] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
 
-  // Location is a typeable autocomplete over provinces + cantones.
+  // Location is a typeable autocomplete over provinces + cantones AND Google Places addresses.
   const [location, setLocation] = useState("");
   const [locationSel, setLocationSel] = useState<LocationSuggestion | null>(null);
   const [locSug, setLocSug] = useState<LocationSuggestion[]>([]);
+  const [addrSug, setAddrSug] = useState<AddressSuggestion[]>([]);
   const [openLoc, setOpenLoc] = useState(false);
   const [locActive, setLocActive] = useState(-1);
+  // Google Places (new API): ready flag, a session token, and the resolved place a user picked
+  // (provincia/cantón from its admin areas + lat/lng) used when the search runs.
+  const mapsReadyRef = useRef(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sessionTokenRef = useRef<any>(null);
+  const pickedAddrRef = useRef<{ provinceId?: string; cantonId?: string; lat?: number; lng?: number; label: string } | null>(null);
 
   const router = useRouter();
   const locale = useLocale();
@@ -230,11 +265,41 @@ export function LandingHero() {
     return () => clearTimeout(id);
   }, [service, locale]);
 
-  // Local (synchronous) location suggestions as the user types.
+  // Local (synchronous) province/cantón suggestions as the user types.
   useEffect(() => {
     const next = searchLocations(location);
     setLocSug(next);
     setLocActive(-1);
+  }, [location]);
+
+  // Load Google Maps (Places) once so the location field can autocomplete ADDRESSES.
+  useEffect(() => {
+    if (!GMAPS_KEY) return;
+    loadGoogleMaps(GMAPS_KEY).then(() => { mapsReadyRef.current = true; }).catch(() => {});
+  }, []);
+
+  // Google Places ADDRESS predictions (new AutocompleteSuggestion API), debounced. Costa Rica
+  // only. Best-effort: any failure just leaves the province/cantón taxonomy working.
+  useEffect(() => {
+    const q = location.trim();
+    if (q.length < 3) { setAddrSug([]); return; }
+    const id = setTimeout(async () => {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const maps = (window as any).google?.maps;
+        if (!mapsReadyRef.current || !maps?.places?.AutocompleteSuggestion) { setAddrSug([]); return; }
+        if (!sessionTokenRef.current) sessionTokenRef.current = new maps.places.AutocompleteSessionToken();
+        const { suggestions } = await maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions({
+          input: q, includedRegionCodes: ["cr"], sessionToken: sessionTokenRef.current,
+        });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const items: AddressSuggestion[] = (suggestions ?? []).map((s: any) => s.placePrediction).filter(Boolean).slice(0, 5).map((p: any) => ({
+          type: "address" as const, placeId: p.placeId, label: (p.text?.text ?? p.text ?? "").toString(),
+        })).filter((a: AddressSuggestion) => a.placeId && a.label);
+        setAddrSug(items);
+      } catch { setAddrSug([]); }
+    }, 250);
+    return () => clearTimeout(id);
   }, [location]);
 
   // Selecting a service suggestion FILLS the field — it does NOT search. The
@@ -248,7 +313,33 @@ export function LandingHero() {
   function selectLocation(s: LocationSuggestion) {
     setLocation(s.label);
     setLocationSel(s);
+    pickedAddrRef.current = null;
+    setAddrSug([]);
     setOpenLoc(false);
+  }
+
+  // Picking a Google address → resolve its province/cantón (from admin areas) + lat/lng, so the
+  // search filters by that area and sorts by proximity. Best-effort; falls back to text search.
+  async function selectAddress(a: AddressSuggestion) {
+    setLocation(a.label);
+    setLocationSel(null);
+    setAddrSug([]);
+    setOpenLoc(false);
+    pickedAddrRef.current = { label: a.label };
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const maps = (window as any).google?.maps;
+      const place = new maps.places.Place({ id: a.placeId });
+      await place.fetchFields({ fields: ["location", "addressComponents"] });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const comps: any[] = place.addressComponents ?? [];
+      const pick = (type: string) => comps.find((c) => c.types?.includes(type))?.longText as string | undefined;
+      const { provinceId, cantonId } = matchProvinceCanton(pick("administrative_area_level_1"), pick("administrative_area_level_2"));
+      const lat = typeof place.location?.lat === "function" ? place.location.lat() : place.location?.lat;
+      const lng = typeof place.location?.lng === "function" ? place.location.lng() : place.location?.lng;
+      pickedAddrRef.current = { provinceId, cantonId, lat, lng, label: a.label };
+      sessionTokenRef.current = null; // end the Places session after a selection
+    } catch { /* keep the typed label; the search falls back to text */ }
   }
 
   // Build params from current state and navigate. Service: a picked category
@@ -262,10 +353,25 @@ export function LandingHero() {
     } else if (svc) {
       params.set("q", svc);
     }
-    const loc = locationSel && locationSel.label === location ? locationSel : resolveLocation(location);
-    if (loc) {
-      if (loc.type === "province") params.set("provincia", loc.id);
-      else params.set("canton", loc.id);
+    // Location: a picked Google ADDRESS → its resolved province/cantón + proximity (lat/lng);
+    // else a picked/resolved province/cantón from our taxonomy.
+    const picked = pickedAddrRef.current;
+    if (picked && picked.label === location && (picked.provinceId || picked.lat != null)) {
+      if (picked.provinceId) {
+        params.set("provincia", picked.provinceId);
+        if (picked.cantonId) params.set("canton", picked.cantonId);
+      }
+      if (picked.lat != null && picked.lng != null) {
+        params.set("lat", picked.lat.toFixed(5));
+        params.set("lng", picked.lng.toFixed(5));
+        params.set("sortBy", "cercania");
+      }
+    } else {
+      const loc = locationSel && locationSel.label === location ? locationSel : resolveLocation(location);
+      if (loc) {
+        if (loc.type === "province") params.set("provincia", loc.id);
+        else params.set("canton", loc.id);
+      }
     }
     setOpenSug(false);
     setOpenLoc(false);
@@ -392,7 +498,7 @@ export function LandingHero() {
                   aria-autocomplete="list"
                 />
                 {openLoc && (
-                  <LocationDropdown suggestions={locSug} activeIdx={locActive} onPick={selectLocation} />
+                  <LocationDropdown suggestions={locSug} addresses={addrSug} activeIdx={locActive} onPick={selectLocation} onPickAddress={selectAddress} />
                 )}
               </div>
               {/* Buscar button */}
@@ -446,7 +552,7 @@ export function LandingHero() {
                 />
               </div>
               {openLoc && (
-                <LocationDropdown suggestions={locSug} activeIdx={locActive} onPick={selectLocation} />
+                <LocationDropdown suggestions={locSug} addresses={addrSug} activeIdx={locActive} onPick={selectLocation} onPickAddress={selectAddress} />
               )}
             </div>
             <button
