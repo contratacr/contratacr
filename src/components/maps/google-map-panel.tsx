@@ -66,7 +66,6 @@ const MAP_CSS =
   ".ccr-pin .num{position:absolute;top:6px;left:0;right:0;text-align:center;color:#fff;font:700 12px/1 Inter,system-ui,sans-serif;}" +
   ".ccr-pin.is-active{transform:scale(1.15);}" +
   ".ccr-pin.is-active path{fill:" + PIN_ACTIVE + ";}" +
-  ".ccr-cl{display:flex;align-items:center;justify-content:center;border-radius:9999px;background:" + PIN_NAVY + ";color:#fff;border:2px solid #fff;font:700 12px/1 Inter,system-ui,sans-serif;box-shadow:0 2px 5px rgba(15,23,42,.35);}" +
   ".ccr-popwrap{transform:translateY(-46px);pointer-events:none;}" +
   ".ccr-pop{pointer-events:auto;position:relative;width:240px;background:#fff;border-radius:14px;box-shadow:0 10px 30px -8px rgba(15,23,42,.30),0 2px 6px rgba(15,23,42,.10);padding:12px;font-family:Inter,system-ui,sans-serif;text-decoration:none;display:block;}" +
   ".ccr-pop-x{position:absolute;top:6px;right:6px;width:22px;height:22px;border:0;background:transparent;color:#9ca3af;font-size:16px;line-height:1;cursor:pointer;border-radius:6px;}" +
@@ -85,6 +84,17 @@ function pinSvg(): string {
     `<svg xmlns="http://www.w3.org/2000/svg" width="30" height="40" viewBox="0 0 24 32">` +
     `<path d="M12 0C7.03 0 3 4.03 3 9c0 6.75 9 23 9 23s9-16.25 9-23c0-4.97-4.03-9-9-9z" fill="${PIN_NAVY}" stroke="#ffffff" stroke-width="1.5"/></svg>`
   );
+}
+
+// THE single shared marker definition — every map marker (each result pin AND every
+// cluster bubble) is built here, so they are visually identical (same teardrop shape,
+// size, color, font) and can never drift apart. Only the number inside differs (the
+// result number for a pin, the count for a cluster).
+function teardropEl(num: string | number): HTMLDivElement {
+  const el = document.createElement("div");
+  el.className = "ccr-pin";
+  el.innerHTML = pinSvg() + (num !== "" ? `<span class="num">${num}</span>` : "");
+  return el;
 }
 
 function jitter(seed: string): { dlat: number; dlng: number } {
@@ -134,6 +144,9 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
   const clustererRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const popupRef = useRef<any>(null);
+  // Debounce closing the hover preview so moving the cursor pin → card (or between
+  // nearby pins) doesn't flicker the mini-card shut.
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // proId → its pin elements (a pro can have several workplace pins).
   const pinsByProRef = useRef<Map<string, HTMLElement[]>>(new Map());
   const hoverCardRef = useRef<string | null>(null);
@@ -155,6 +168,8 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
   function closePopup() {
     if (popupRef.current) { popupRef.current.map = null; popupRef.current = null; }
   }
+  function cancelClose() { if (closeTimerRef.current) { clearTimeout(closeTimerRef.current); closeTimerRef.current = null; } }
+  function scheduleClose() { cancelClose(); closeTimerRef.current = setTimeout(closePopup, 150); }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function openPopup(g: any, map: any, pro: MapProfessional, pos: { lat: number; lng: number }) {
@@ -169,7 +184,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
         `<div class="ccr-pop-top">` +
           `<div class="ccr-av">${esc(initials(pro.fullName))}</div>` +
           `<div style="min-width:0;">` +
-            `<div class="ccr-pop-name">${esc(pro.fullName)}${pro.verified ? `<span class="ccr-ver">✓ Verificado</span>` : ""}</div>` +
+            `<div class="ccr-pop-name">${esc(pro.fullName)}${pro.verified ? `<span class="ccr-ver">✓ ${locale === "en" ? "Verified" : "Verificado"}</span>` : ""}</div>` +
             (profs ? `<div class="ccr-pop-prof">${esc(profs)}</div>` : "") +
             `<div class="ccr-pop-rate">★ ${pro.ratingAvg.toFixed(1)} <span>(${pro.reviewCount})</span></div>` +
             (pro.priceLabel ? `<div class="ccr-pop-price">${esc(pro.priceLabel)}</div>` : "") +
@@ -177,6 +192,11 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
         `</div>` +
       `</a>`;
     wrap.querySelector(".ccr-pop-x")?.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); closePopup(); });
+    // Keep the hover preview open while the cursor is over the card itself.
+    if (typeof window !== "undefined" && window.matchMedia?.("(hover: hover)").matches) {
+      wrap.addEventListener("mouseenter", cancelClose);
+      wrap.addEventListener("mouseleave", scheduleClose);
+    }
     popupRef.current = new g.marker.AdvancedMarkerElement({ map, position: pos, content: wrap, zIndex: 100000 });
   }
 
@@ -236,10 +256,8 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
       const num = numbering?.[proId];
       const z = num ? 1000 - num : 1;
 
-      const el = document.createElement("div");
-      el.className = "ccr-pin";
+      const el = teardropEl(num ?? "");
       el.dataset.basez = String(z);
-      el.innerHTML = pinSvg() + (num ? `<span class="num">${num}</span>` : "");
 
       const marker = new g.marker.AdvancedMarkerElement({ position: pos, content: el, zIndex: z, title: pro.fullName });
       // Keep a back-ref so setPinActive can raise zIndex without a marker lookup.
@@ -248,24 +266,20 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
       list.push(el); pinsByProRef.current.set(proId, list);
 
       if (canHover) {
-        el.addEventListener("mouseenter", () => setActive(proId, true, true));
-        el.addEventListener("mouseleave", () => setActive(proId, false, false));
+        // Desktop hover: highlight the pin/card AND show the mini-card preview.
+        el.addEventListener("mouseenter", () => { cancelClose(); setActive(proId, true, true); openPopup(g, map, pro, pos); });
+        el.addEventListener("mouseleave", () => { setActive(proId, false, false); scheduleClose(); });
       }
-      el.addEventListener("click", (e) => { e.stopPropagation(); openPopup(g, map, pro, pos); setActive(proId, true, false); });
+      el.addEventListener("click", (e) => { e.stopPropagation(); cancelClose(); openPopup(g, map, pro, pos); setActive(proId, true, false); });
       return marker;
     }).filter(Boolean);
 
-    // Navy cluster bubbles (AdvancedMarkerElement renderer).
+    // Clusters reuse the SAME shared teardrop (identical shape/size/color); only the
+    // number differs (here the count). No separate marker style → pins can't drift.
     const renderer = {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      render: ({ count, position }: any) => {
-        const size = Math.round(34 + Math.min(count, 30) * 0.8);
-        const div = document.createElement("div");
-        div.className = "ccr-cl";
-        div.style.width = `${size}px`; div.style.height = `${size}px`;
-        div.textContent = String(count);
-        return new g.marker.AdvancedMarkerElement({ position, content: div, zIndex: 5000 + count });
-      },
+      render: ({ count, position }: any) =>
+        new g.marker.AdvancedMarkerElement({ position, content: teardropEl(count), zIndex: 5000 + count }),
     };
 
     if (clustererRef.current) {

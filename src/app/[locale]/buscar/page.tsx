@@ -214,11 +214,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       <LandingNavbar />
       <div className="h-16" aria-hidden />
 
-      {/* Top bar — title + subtitle. Background MATCHES the results/cards area (#f4f7fa) with
-          NO divider line; a subtle soft shadow underneath separates it cleanly from the
-          content. A brand accent bar sits to the left of the title. `relative z-10` so the
-          shadow draws ABOVE the content below it. */}
-      <div className="relative z-10 bg-[#f4f7fa] shadow-[0_4px_10px_-6px_rgba(0,0,0,0.12)]">
+      {/* Top bar — title + subtitle. Background MATCHES the page/results area (#f4f7fa)
+          and is FLUSH with it: no shadow, divider or raised band, so the title reads as
+          part of one continuous page. A brand accent bar sits to the left of the title. */}
+      <div className="bg-[#f4f7fa]">
         <div className="mx-auto max-w-[1920px] px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-start gap-2.5">
             <span className="mt-0.5 h-6 w-1.5 shrink-0 rounded-full bg-[#009FD9]" aria-hidden />
