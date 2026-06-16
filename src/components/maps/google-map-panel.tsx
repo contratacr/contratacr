@@ -45,27 +45,29 @@ const PROVINCE_CENTROIDS: Record<string, { lat: number; lng: number }> = {
 
 const CR_CENTER = { lat: 9.9281, lng: -84.0907 };
 
-// Clean, light "Positron"-style basemap (close to the CARTO example): muted grey
-// land, white roads, light-blue water, POI/transit clutter hidden, only locality
-// labels kept. Inline `styles` require a NON-vector map (no mapId) + legacy markers.
+// Warm, low-noise basemap (soft cream/beige land, muted blue-grey water): POI/transit
+// clutter + all label ICONS hidden, road labels off (understated), but locality/province
+// TEXT labels kept readable. Inline `styles` require a NON-vector map (no mapId) + legacy
+// markers. The navy result pins stay high-contrast against this light cream ground.
 const LIGHT_STYLE = [
-  { elementType: "geometry", stylers: [{ color: "#f6f7f9" }] },
-  { elementType: "labels.text.fill", stylers: [{ color: "#7a828c" }] },
-  { elementType: "labels.text.stroke", stylers: [{ color: "#ffffff" }, { weight: 2 }] },
-  { featureType: "administrative", elementType: "geometry", stylers: [{ visibility: "off" }] },
+  { elementType: "geometry", stylers: [{ color: "#f4efe4" }] },           // cream land
+  { elementType: "labels.icon", stylers: [{ visibility: "off" }] },        // no business/POI glyphs
+  { elementType: "labels.text.fill", stylers: [{ color: "#9b9077" }] },    // soft warm-grey label text
+  { elementType: "labels.text.stroke", stylers: [{ color: "#f7f3ea" }, { weight: 2 }] },
+  { featureType: "administrative", elementType: "geometry", stylers: [{ visibility: "off" }] }, // no borders, keep text
   { featureType: "administrative.land_parcel", stylers: [{ visibility: "off" }] },
   { featureType: "administrative.neighborhood", stylers: [{ visibility: "off" }] },
-  { featureType: "poi", stylers: [{ visibility: "off" }] },
+  { featureType: "poi", stylers: [{ visibility: "off" }] },                // hide all points of interest
   { featureType: "transit", stylers: [{ visibility: "off" }] },
-  { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#f6f7f9" }] },
-  { featureType: "landscape.natural", elementType: "geometry", stylers: [{ color: "#eef1f4" }] },
-  { featureType: "road", elementType: "geometry", stylers: [{ color: "#ffffff" }] },
-  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#e7eaee" }] },
-  { featureType: "road", elementType: "labels", stylers: [{ visibility: "off" }] },
-  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#eef0f3" }] },
-  { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ color: "#e0e4e9" }] },
-  { featureType: "water", elementType: "geometry", stylers: [{ color: "#cfe3ee" }] },
-  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#9bb3c0" }] },
+  { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#f4efe4" }] },
+  { featureType: "landscape.natural", elementType: "geometry", stylers: [{ color: "#ece5d6" }] }, // subtle warmer parks/hills
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#fdfaf3" }] },        // near-white roads
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#e8e0cf" }] }, // gentle warm stroke
+  { featureType: "road", elementType: "labels", stylers: [{ visibility: "off" }] },         // understated: no road labels
+  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#f6efdf" }] },
+  { featureType: "road.highway", elementType: "geometry.stroke", stylers: [{ color: "#e6dcc6" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#c9d6da" }] },        // muted desaturated blue-grey
+  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#94a7ac" }] },
 ];
 
 // Deterministic small offset so multiple pins in the same canton don't overlap.
@@ -345,6 +347,13 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
 
   return (
     <>
+      {/* Trim the Google InfoWindow's default chrome so the hover mini-card has NO
+          excessive empty space above the photo/name — content sits near the top, compact. */}
+      <style dangerouslySetInnerHTML={{ __html:
+        ".gm-style .gm-style-iw-c{padding:6px 10px 10px!important;}" +
+        ".gm-style .gm-style-iw-d{overflow:hidden!important;padding:0!important;}" +
+        ".gm-style .gm-style-iw-c button.gm-ui-hover-effect{top:0!important;right:0!important;}"
+      }} />
       {/* MarkerClusterer is a separate (non-Google) lib; the Maps JS API itself
           loads via the async loader. */}
       <Script

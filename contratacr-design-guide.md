@@ -1049,6 +1049,11 @@ actually wired.
 > - **Map (`google-map-panel.tsx`) `fitToMarkers`: maxZoom 12** (was 15) + padding `64` (was 48) so the
 >   pin cluster stays focused on the result area instead of zooming out to the whole country; single-pin
 >   zoom `14 → 13`.
+> - **Basemap = warm CREAM/BEIGE, low-noise (Sprint 182).** `LIGHT_STYLE` (inline `styles`, no mapId, on
+>   the single shared instance → desktop+mobile identical): land `#f4efe4`, natural `#ece5d6`, roads
+>   `#fdfaf3`, water muted blue-grey `#c9d6da`. `labels.icon`/`poi`/`transit`/road-labels/admin-borders
+>   OFF; locality/province TEXT kept (`#9b9077`). Navy pins `#162543` stay (high contrast). Hover
+>   mini-card: a CSS override trims `.gm-style-iw-c/-d` padding so there's no empty band above the photo/name.
 > - Initials avatar (light-blue `#EBF5FB` circle + blue `#009FD9` initials) confirmed as the no-photo
 >   fallback — `avatarUrl` resolves to `null` when there's no photo, never a logo placeholder.
 >
