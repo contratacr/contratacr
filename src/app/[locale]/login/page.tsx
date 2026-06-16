@@ -78,9 +78,27 @@ export default function LoginPage() {
         if (pro) role = "professional";
       }
     }
+    // Optional post-login destination (e.g. the "Publicar proyecto" CTA sends
+    // logged-out users here with ?redirect=projects → land on the role-aware
+    // projects section after authenticating). Read from the URL at submit time
+    // (avoids a useSearchParams suspense boundary on this client page).
+    const redirectParam = new URLSearchParams(window.location.search).get("redirect");
+    const dest =
+      redirectParam === "projects"
+        ? role === "professional"
+          ? "/dashboard/profesional?tab=sent_projects"
+          : "/dashboard/cliente?tab=projects"
+        : `/dashboard/${role === "professional" ? "profesional" : "cliente"}`;
     // Hard redirect so the new page loads with the session already in cookies,
     // preventing the navbar from flashing logged-out state.
-    window.location.href = `/${locale}/dashboard/${role === "professional" ? "profesional" : "cliente"}`;
+    window.location.href = `/${locale}${dest}`;
+  }
+
+  // Carry the post-login destination through the OAuth round-trip via the callback's
+  // `next` param (the callback resolves "projects" to the role-aware projects tab).
+  function oauthCallbackUrl() {
+    const wantsProjects = new URLSearchParams(window.location.search).get("redirect") === "projects";
+    return window.location.origin + "/auth/callback" + (wantsProjects ? "?next=projects" : "");
   }
 
   async function handleGoogle() {
@@ -89,7 +107,7 @@ export default function LoginPage() {
     const supabase = createClient();
     await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: window.location.origin + "/auth/callback" },
+      options: { redirectTo: oauthCallbackUrl() },
     });
     setGoogleLoading(false);
   }
@@ -100,7 +118,7 @@ export default function LoginPage() {
     const supabase = createClient();
     await supabase.auth.signInWithOAuth({
       provider: "facebook",
-      options: { redirectTo: window.location.origin + "/auth/callback" },
+      options: { redirectTo: oauthCallbackUrl() },
     });
     setFacebookLoading(false);
   }

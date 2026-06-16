@@ -2,18 +2,40 @@ import { redirect } from "next/navigation";
 import { getLocale } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import { safeGetUser } from "@/lib/supabase/get-user";
-import { PublishProjectForm } from "./publish-form";
 
 export const dynamic = "force-dynamic";
 
-// Auth is checked on the SERVER, BEFORE rendering: an unauthenticated visitor is
-// redirected straight to /login and never sees a flash of the publish form.
+// The "Publicar proyecto" FORM is now a MODAL opened from the panel's "Mis proyectos
+// publicados" section — this standalone route no longer renders a form. It just routes
+// the user to the right place:
+//   • logged OUT → /login (with ?redirect=projects so they land on the projects
+//     section after authenticating);
+//   • logged IN  → their panel's projects section, role-aware (professional →
+//     "Mis proyectos publicados" in the unified panel; client → the client panel).
 export default async function PublicarProyectoPage() {
+  const locale = await getLocale();
   const supabase = await createClient();
   const user = await safeGetUser(supabase);
+
   if (!user) {
-    const locale = await getLocale();
-    redirect(`/${locale}/login`);
+    redirect(`/${locale}/login?redirect=projects`);
   }
-  return <PublishProjectForm />;
+
+  // Resolve the role authoritatively (metadata is often missing/stale):
+  // user_metadata.role → profiles.role → existence of a professionals row.
+  let role = user.user_metadata?.role as string | undefined;
+  if (role !== "professional" && role !== "client") {
+    const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+    role = (profile?.role as string | undefined) ?? role;
+    if (!role) {
+      const { data: pro } = await supabase.from("professionals").select("id").eq("profile_id", user.id).maybeSingle();
+      if (pro) role = "professional";
+    }
+  }
+
+  redirect(
+    role === "professional"
+      ? `/${locale}/dashboard/profesional?tab=sent_projects`
+      : `/${locale}/dashboard/cliente?tab=projects`
+  );
 }

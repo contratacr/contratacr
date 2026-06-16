@@ -39,8 +39,10 @@ export async function GET(request: NextRequest) {
         } catch { /* best-effort */ }
       }
 
-      // Password reset flow → explicit next param (e.g. /es/reset-password)
-      if (next) {
+      // Explicit next PATH (e.g. password reset → /es/reset-password). The
+      // "projects" alias is NOT a path — it's resolved to the role-aware projects
+      // section AFTER we know the role (below), so let it fall through.
+      if (next && next.startsWith("/")) {
         return NextResponse.redirect(`${origin}${next}`);
       }
 
@@ -56,10 +58,13 @@ export async function GET(request: NextRequest) {
         return NextResponse.redirect(`${origin}/es/onboarding`);
       }
 
+      // The "Publicar proyecto" CTA carries ?next=projects → land on the role-aware
+      // "Mis proyectos publicados" section after authenticating.
+      const wantProjects = next === "projects";
       const destPath =
         profile.role === "professional"
-          ? "/es/dashboard/profesional"
-          : "/es/dashboard/cliente";
+          ? wantProjects ? "/es/dashboard/profesional?tab=sent_projects" : "/es/dashboard/profesional"
+          : wantProjects ? "/es/dashboard/cliente?tab=projects" : "/es/dashboard/cliente";
 
       // Cédula is NOT required up-front for clients — it is requested later, at
       // the moment they book/request a service (see the booking flow). So we no

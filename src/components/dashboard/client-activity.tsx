@@ -16,6 +16,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { cn, getInitials, getWhatsAppLink } from "@/lib/utils";
 import { StatusFilterTabs, SOLICITUD_TABS, PROYECTO_TABS, solicitudMatches, proyectoMatches } from "@/components/dashboard/status-filter-tabs";
 import { LeaveReviewModal } from "@/components/professionals/leave-review-modal";
+import { PublishProjectModal } from "@/components/projects/publish-project-modal";
 import { SavedProfessionalsTab } from "@/components/professionals/saved-professionals-tab";
 import type { BookingStatus } from "@/types";
 
@@ -121,6 +122,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   const [projectFilter, setProjectFilter] = useState("activos");
   const [expandedProject, setExpandedProject] = useState<string | null>(null);
   const [projectProposals, setProjectProposals] = useState<Record<string, Proposal[]>>({});
+  const [showPublish, setShowPublish] = useState(false);
 
   const fetchSection = useCallback(async () => {
     if (!user) return;
@@ -410,16 +412,16 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
               <p className="text-sm text-[#9ca3af] mt-1">
                 {t("pEmptySub")}
               </p>
-              <Button className="mt-5" asChild>
-                <a href="/publicar-proyecto"><Plus className="h-4 w-4" /> {t("publishProject")}</a>
+              <Button className="mt-5" onClick={() => setShowPublish(true)}>
+                <Plus className="h-4 w-4" /> {t("publishProject")}
               </Button>
             </div>
           ) : (
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <StatusFilterTabs tabs={PROYECTO_TABS} value={projectFilter} onChange={setProjectFilter} />
-                <Button size="sm" asChild>
-                  <a href="/publicar-proyecto"><Plus className="h-4 w-4" /> {t("publishProject")}</a>
+                <Button size="sm" onClick={() => setShowPublish(true)}>
+                  <Plus className="h-4 w-4" /> {t("publishProject")}
                 </Button>
               </div>
               {filteredProjects.length === 0 && (
@@ -616,6 +618,12 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
           onSuccess={loadMyReviews}
           onClose={() => setReviewModal(null)}
         />
+      )}
+
+      {/* Publicar proyecto — the project form opens in a modal here (no longer a
+          separate page), and refreshes this list on a successful publish. */}
+      {showPublish && (
+        <PublishProjectModal onClose={() => setShowPublish(false)} onSuccess={refreshProjects} />
       )}
     </>
   );

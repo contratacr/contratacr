@@ -840,11 +840,29 @@ tab, in the contact sidebar. Brand glyphs live in `components/icons/social-icons
 
 ## 43. Auth-gated pages: check on the server (no flash)
 
-For pages that require login (e.g. /publicar-proyecto), do the auth check in a
-SERVER component and `redirect()` to /login BEFORE rendering — never render the
-page then redirect in a client `useEffect` (that flashes the gated screen). Pattern:
-`page.tsx` (server) calls `safeGetUser`; if absent `redirect(\`/${locale}/login\`)`;
-otherwise render a client child form.
+For pages that require login, do the auth check in a SERVER component and
+`redirect()` to /login BEFORE rendering — never render the page then redirect in a
+client `useEffect` (that flashes the gated screen). Pattern: `page.tsx` (server)
+calls `safeGetUser`; if absent `redirect(\`/${locale}/login\`)`; otherwise render
+the gated content.
+
+### 43.1 "Publicar proyecto" = a MODAL in the panel, not a standalone page
+The project form lives in **`PublishProjectModal`** (`components/projects/publish-project-modal.tsx`),
+opened from the **"Mis proyectos publicados"** panel section (`ClientActivity` section="projects"
+header button + empty-state button). Same fields/validation/submit as before — only the container
+changed (page → modal). It uses the **app's hand-rolled modal pattern** (NOT Radix here, so the
+body-portaled `CategorySearch` dropdown isn't fought by a focus-trap): dimmed `bg-black/50`
+backdrop (click to close) + centered white `rounded-2xl shadow-2xl` dialog, **pinned header
+(title + X) and footer (Cancelar / Publicar proyecto) with a `overflow-y-auto` body** (`max-h-[90vh]`),
+closes on **X / Cancelar / backdrop / Esc**, locks background scroll, and is a **full-width bottom
+sheet on mobile** (`rounded-t-2xl`, `items-end`). On success it calls `onSuccess` (the panel
+refreshes its list) and closes — it **never navigates** to a separate page.
+- **The old `/publicar-proyecto` route is now a server REDIRECTOR**, not a form: logged-out →
+  `/login?redirect=projects`; logged-in → the role-aware projects section (`profesional?tab=sent_projects`
+  / `cliente?tab=projects`). All "Publicar un proyecto" links (footer, /como-funciona CTAs) keep
+  pointing at `/publicar-proyecto` and funnel through this one redirector, so they're consistent.
+  Login honors `?redirect=projects` (email/password resolves it directly; OAuth threads it as the
+  callback's `?next=projects`, resolved to the role-aware projects tab after the role is known).
 
 ## 44. Verification copy = "Verificado"-only (no unverified label)
 

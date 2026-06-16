@@ -1780,6 +1780,7 @@
     "budgetMax": "Maximum",
     "whenNeeded": "When do you need it?",
     "cancel": "Cancel",
+    "close": "Close",
     "publishing": "Publishing...",
     "publish": "Post project"
   },
