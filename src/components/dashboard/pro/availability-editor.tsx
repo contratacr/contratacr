@@ -1,81 +1,70 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import { Plus, X, Lock, Loader2, MapPin, AlertCircle, ChevronDown } from "lucide-react";
+import { Plus, X, Lock, Loader2, MapPin, ChevronDown, ChevronLeft, ChevronRight, Calendar, Pencil, Trash2, Copy } from "lucide-react";
 import { type ContactPreference } from "@/lib/constants";
-import { crTodayISO, isPastDateTimeCR, isTooSoonCR, nextFullHourCR, LEAD_MINUTES } from "@/lib/time-cr";
+import { crTodayISO, isTooSoonCR } from "@/lib/time-cr";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { TimeSelect, to12h } from "@/components/ui/time-select";
 import { SaveStatus } from "@/components/dashboard/save-status";
 
-type Slot = { id?: string; slot_date: string; slot_time: string; location_id?: string | null; category_id?: string | null };
-
-const GENERAL_LOC = "general";
-const VIDEO_LOC = "videoconsulta";
-// Stable id for the optional "A domicilio" (traveling) schedule. Starts with `cov_` so
-// /buscar treats it exactly like any coverage zone: an "A domicilio" location tab with
-// its own slots and NO street address. One per pro (the pro's travel availability).
+// Stable id for the optional "A domicilio" (traveling) schedule. Starts with `cov_`
+// so /buscar treats it exactly like any coverage zone (an "A domicilio" tab with its
+// own slots and no street address).
 const A_DOMICILIO_LOC = "cov_domicilio";
 
-const INTERVAL_VALUES = [30, 60, 120, 0];
+// How far ahead the weekly template + exceptions are MATERIALIZED into concrete
+// `availability_slots` (the booking-critical table everything downstream reads). The
+// window is regenerated on every edit AND when the editor mounts, so it stays fresh.
+const HORIZON_DAYS = 70;
+
+// Monday-first display order (JS getDay: 0=Sun … 6=Sat).
+const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
+const DURATION_OPTIONS = [30, 45, 60, 90, 120];
+
+type Franja = { id: string; start: string; end: string };
+type WeeklyRow = { id?: string; location_id: string; category_id: string | null; weekday: number; start: string; end: string; slot_minutes: number };
+type ExcMode = "closed" | "custom" | "extra";
+type ExcRow = { id?: string; location_id: string; category_id: string | null; date: string; mode: ExcMode; start: string | null; end: string | null; slot_minutes: number };
 
 function hhmm(mins: number): string {
   return `${String(Math.floor(mins / 60)).padStart(2, "0")}:${String(mins % 60).padStart(2, "0")}`;
 }
-
 function toMins(t: string): number {
   const [h, m] = t.split(":").map(Number);
   return h * 60 + m;
 }
-
-function prettyDate(iso: string, dateLocale: string): string {
-  const [y, m, d] = iso.split("-").map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString(dateLocale, {
-    weekday: "short", day: "numeric", month: "short",
-  });
-}
-
-// All "today" comparisons use Costa Rica time so past slots are rejected
-// consistently regardless of the professional's device timezone.
 function todayISO(): string {
   return crTodayISO();
 }
-
-const DAY_END_MIN = 23 * 60 + 30; // last selectable time on the 30-min grid
-
-// Sensible default for the "hora puntual" picker: today → the next rounded full
-// hour (same logic as "Desde"); a future date → 8:00 a.m. (its next full hour would
-// be midnight). The picker's `min` + the insert check still enforce the CR 15-min lead.
-function puntualDefault(dateISO: string): string {
-  const t = nextFullHourCR(dateISO);
-  return t === "00:00" ? "08:00" : t;
+function genId(): string {
+  return typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2);
 }
-
-// Default "Desde": a future day starts at 8:00 a.m.; today starts at the next
-// valid rounded full hour (CR, respects the lead). Never returns midnight.
-function defaultStartFor(dateISO: string): string {
-  const floor = nextFullHourCR(dateISO); // future → "00:00"; today → next full hour
-  return floor === "00:00" ? "08:00" : floor;
+function toKeyLocal(dt: Date): string {
+  return `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
 }
-
-// Default "Hasta" for a given start — ALWAYS strictly after it, so the auto-defaults
-// can never trip the "Hasta debe ser después de Desde" validation. Aims at the 5:00
-// p.m. workday end, but for a late start it's at least one hour later (capped to the
-// end of the grid).
-function defaultEndFor(start: string): string {
-  const s = toMins(start);
-  const end = Math.min(Math.max(17 * 60, s + 60), DAY_END_MIN);
-  // Near midnight there may be no room left after `s`; keep it valid by one step.
-  return hhmm(end > s ? end : Math.min(s + 30, DAY_END_MIN));
+function addDaysISO(iso: string, n: number): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  return toKeyLocal(new Date(y, m - 1, d + n));
+}
+function weekdayOf(iso: string): number {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(y, m - 1, d).getDay();
+}
+// A sensible new franja: after the previous one, else a default 8–5 / 9–12 block.
+function nextFranja(existing: Franja[]): Franja {
+  if (existing.length === 0) return { id: genId(), start: "08:00", end: "17:00" };
+  const last = existing[existing.length - 1];
+  const start = toMins(last.end);
+  const end = Math.min(start + 60, 23 * 60 + 30);
+  return { id: genId(), start: hhmm(Math.min(start, 23 * 60)), end: hhmm(end > start ? end : Math.min(start + 30, 23 * 60 + 30)) };
 }
 
 type Place = { id?: string; name: string };
-// Coverage areas can be cantón-, provincia-, or country-level (item 2): ALL are
-// schedulable, not just cantón-level ones.
 type Coverage = { level?: "canton" | "provincia" | "country"; provinciaId?: string; cantonId?: string; cantonName?: string; provinceName?: string };
 
 interface AvailabilityEditorProps {
@@ -85,8 +74,7 @@ interface AvailabilityEditorProps {
   workplaces?: Place[];
   coverageAreas?: Coverage[];
   /** True when the pro selected "Me desplazo donde el cliente" (service_type includes
-   *  "mobile"). Adds an OPTIONAL "A domicilio" schedulable location (the cov_* mechanism)
-   *  so a traveling pro can publish travel hours — but is never forced to. */
+   *  "mobile"). Adds an OPTIONAL "A domicilio" schedulable location. */
   travels?: boolean;
   /** The pro's professions (category ids). Schedules are tied to a profession. */
   professions?: string[];
@@ -97,42 +85,49 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
   const locale = useLocale();
   const t = useTranslations("availabilityEditor");
   const dateLocale = locale === "en" ? "en-US" : "es-CR";
-  const intervalLabel = (v: number) => t(v === 0 ? "intervalCustom" : (`interval${v}` as "interval30" | "interval60" | "interval120"));
   const rich = { strong: (c: React.ReactNode) => <strong>{c}</strong> };
+
   const [isPublic, setIsPublic] = useState(initialPublic);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [savingVisibility, setSavingVisibility] = useState(false);
+  const [showPrivateConfirm, setShowPrivateConfirm] = useState(false);
+  const [justSaved, setJustSaved] = useState(false);
+  function pulseSaved() { setJustSaved(true); setTimeout(() => setJustSaved(false), 2500); }
 
-  // ("Permitir contacto por llamada" moved to Mi perfil → Contacto.)
+  // The recurring template + date exceptions are the source of truth (the editor
+  // edits these); they MATERIALIZE into availability_slots.
+  const [weekly, setWeekly] = useState<WeeklyRow[]>([]);
+  const [exceptions, setExceptions] = useState<ExcRow[]>([]);
 
-  // Schedules belong to a specific location: each workplace, each travel-coverage
-  // area (item 2 — cantón/provincia/país ALL schedulable), and Videoconsulta.
+  // ── Location tabs ("HORARIO PARA") — workplaces + coverage + A domicilio ──
   const locationOptions = useMemo(() => {
     const opts: { id: string; label: string }[] = [];
     for (const w of workplaces) if (w.id) opts.push({ id: w.id, label: w.name });
-    // Coverage areas ("me desplazo") are schedulable at every level — a traveling
-    // pro must be able to add hours even with only province/country coverage.
     coverageAreas.forEach((c, i) => {
       const level = c.level ?? (c.cantonId ? "canton" : c.provinciaId ? "provincia" : "country");
       const key = c.cantonId ?? c.provinciaId ?? `pais${i}`;
       const label =
-        level === "country"
-          ? t("covCountry")
-          : level === "provincia"
-          ? t("covProvincia", { province: c.provinceName ?? "Provincia" })
-          : t("covCanton", { canton: `${c.cantonName ?? "Zona"}${c.provinceName ? `, ${c.provinceName}` : ""}` });
+        level === "country" ? t("covCountry")
+        : level === "provincia" ? t("covProvincia", { province: c.provinceName ?? "Provincia" })
+        : t("covCanton", { canton: `${c.cantonName ?? "Zona"}${c.provinceName ? `, ${c.provinceName}` : ""}` });
       opts.push({ id: `cov_${key}`, label });
     });
-    // "Me desplazo donde el cliente" → ONE optional "A domicilio" schedule, listed after
-    // any physical workplaces. Same slot machinery as a location; on /buscar it shows as
-    // an "A domicilio" tab. OPTIONAL — the pro may leave it empty (WhatsApp coordination).
     if (travels && !opts.some((o) => o.id === A_DOMICILIO_LOC)) {
       opts.push({ id: A_DOMICILIO_LOC, label: t("aDomicilio") });
     }
     return opts;
   }, [workplaces, coverageAreas, travels, t]);
-  const [genLocation, setGenLocation] = useState("");
 
-  // Profession this schedule is for (item 1). Each schedule belongs to a
-  // (profession + location) pair. Defaults to the only/primary profession.
+  const [genLocation, setGenLocation] = useState("");
+  useEffect(() => {
+    if (locationOptions.length > 0 && !locationOptions.some((o) => o.id === genLocation)) {
+      setGenLocation(locationOptions[0].id);
+    }
+  }, [locationOptions, genLocation]);
+
+  // Profession this schedule is for. Each schedule belongs to a (profession + location)
+  // pair; defaults to the primary profession.
   const professionOptions = useMemo(() => professions.filter(Boolean), [professions]);
   const [genCategory, setGenCategory] = useState("");
   useEffect(() => {
@@ -141,36 +136,275 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
     }
   }, [professionOptions, genCategory]);
 
-  // Keep the selected location valid as options change.
-  useEffect(() => {
-    if (locationOptions.length > 0 && !locationOptions.some((o) => o.id === genLocation)) {
-      setGenLocation(locationOptions[0].id);
-    }
-  }, [locationOptions, genLocation]);
+  const activeCat = genCategory || null;
+  const sameCombo = useCallback(
+    (loc: string, cat: string | null) => loc === genLocation && (cat ?? "") === (activeCat ?? ""),
+    [genLocation, activeCat]
+  );
 
-  // Resolve any slot's location id to its human label using the SAME option list
-  // used to create them — so workplaces, coverage zones (cov_*) and videoconsulta
-  // all display correctly in "Tus horarios próximos" (item 2).
-  const locLabelById = useMemo(() => {
-    const m = new Map<string, string>();
-    for (const o of locationOptions) m.set(o.id, o.label);
-    return m;
-  }, [locationOptions]);
-  function locationLabel(id?: string | null): string {
-    if (!id || id === GENERAL_LOC) return t("general");
-    if (id === VIDEO_LOC) return t("videoconsulta");
-    return locLabelById.get(id) ?? workplaces.find((w) => w.id === id)?.name ?? t("locationFallback");
+  function locationLabel(id: string): string {
+    return locationOptions.find((o) => o.id === id)?.label ?? t("locationFallback");
   }
 
-  const [slots, setSlots] = useState<Slot[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [savingVisibility, setSavingVisibility] = useState(false);
-  const [showPrivateConfirm, setShowPrivateConfirm] = useState(false);
-  // App-wide autosave feedback: a brief "Guardado" pulse after each persisted action.
-  const [justSaved, setJustSaved] = useState(false);
-  function pulseSaved() { setJustSaved(true); setTimeout(() => setJustSaved(false), 2500); }
+  // ── MATERIALIZE the template + exceptions into concrete slots ──────────────
+  // Computed across ALL locations/professions (availability_slots is UNIQUE per
+  // pro+date+time — a pro can't be in two places at once), first writer wins.
+  const computeDesiredSlots = useCallback((wk: WeeklyRow[], exc: ExcRow[]) => {
+    const start = todayISO();
+    // weekly franjas keyed by `${loc}|${cat}|${weekday}`
+    const weeklyByKey = new Map<string, { start: string; end: string; dur: number }[]>();
+    const combos = new Map<string, { loc: string; cat: string | null }>();
+    for (const r of wk) {
+      const ck = `${r.location_id}|${r.category_id ?? ""}`;
+      combos.set(ck, { loc: r.location_id, cat: r.category_id ?? null });
+      const k = `${ck}|${r.weekday}`;
+      const arr = weeklyByKey.get(k) ?? [];
+      arr.push({ start: r.start, end: r.end, dur: r.slot_minutes });
+      weeklyByKey.set(k, arr);
+    }
+    // exceptions keyed by `${loc}|${cat}|${date}`
+    const excByKey = new Map<string, { closed: boolean; custom: { start: string; end: string; dur: number }[]; extra: { start: string; end: string; dur: number }[] }>();
+    for (const e of exc) {
+      const ck = `${e.location_id}|${e.category_id ?? ""}`;
+      combos.set(ck, { loc: e.location_id, cat: e.category_id ?? null });
+      const k = `${ck}|${e.date}`;
+      const cur = excByKey.get(k) ?? { closed: false, custom: [], extra: [] };
+      if (e.mode === "closed") cur.closed = true;
+      else if (e.start && e.end) (e.mode === "custom" ? cur.custom : cur.extra).push({ start: e.start, end: e.end, dur: e.slot_minutes });
+      excByKey.set(k, cur);
+    }
 
-  // Close the "hacer privada" confirm on Escape (it already closes on scrim tap).
+    const seen = new Set<string>(); // date|time
+    const out: { date: string; time: string; location_id: string; category_id: string | null }[] = [];
+    for (let i = 0; i <= HORIZON_DAYS; i++) {
+      const date = addDaysISO(start, i);
+      const wd = weekdayOf(date);
+      for (const [ck, { loc, cat }] of combos) {
+        const exDay = excByKey.get(`${ck}|${date}`);
+        if (exDay?.closed) continue;
+        const base = exDay?.custom.length ? exDay.custom : (weeklyByKey.get(`${ck}|${wd}`) ?? []);
+        const franjas = [...base, ...(exDay?.extra ?? [])];
+        for (const f of franjas) {
+          const dur = Math.max(5, f.dur || 60);
+          const s = toMins(f.start), e = toMins(f.end);
+          if (e <= s) continue;
+          const times: string[] = [];
+          for (let m = s; m + dur <= e; m += dur) times.push(hhmm(m));
+          if (times.length === 0) times.push(hhmm(s)); // a configured franja always yields ≥1 time
+          for (const time of times) {
+            if (isTooSoonCR(date, time)) continue;
+            const key = `${date}|${time}`;
+            if (seen.has(key)) continue;
+            seen.add(key);
+            out.push({ date, time, location_id: loc, category_id: cat });
+          }
+        }
+      }
+    }
+    return out;
+  }, []);
+
+  const regenerate = useCallback(async (wk: WeeklyRow[], exc: ExcRow[]) => {
+    setBusy(true);
+    const supabase = createClient();
+    const desired = computeDesiredSlots(wk, exc);
+    // Rewrite the rolling window: drop future slots, insert the freshly materialized set.
+    // (Bookings reference scheduled_date/time, not slot ids, so this never breaks one.)
+    await supabase.from("availability_slots").delete().eq("professional_id", professionalId).gte("slot_date", todayISO());
+    if (desired.length > 0) {
+      const rows = desired.map((d) => ({ professional_id: professionalId, slot_date: d.date, slot_time: d.time, location_id: d.location_id, category_id: d.category_id }));
+      for (let i = 0; i < rows.length; i += 500) {
+        let { error } = await supabase.from("availability_slots").insert(rows.slice(i, i + 500));
+        if (error && /location_id|category_id|column/i.test(error.message)) {
+          ({ error } = await supabase.from("availability_slots").insert(rows.slice(i, i + 500).map((r) => ({ professional_id: r.professional_id, slot_date: r.slot_date, slot_time: r.slot_time }))));
+        }
+        if (error) console.error("[availability] materialize", error);
+      }
+    }
+    setBusy(false);
+    pulseSaved();
+    onSaved?.();
+  }, [professionalId, computeDesiredSlots, onSaved]);
+
+  // ── Initial load: read the template + exceptions; top up the slot window once. ──
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const supabase = createClient();
+      const [{ data: wk }, { data: exc }] = await Promise.all([
+        supabase.from("availability_weekly").select("id, location_id, category_id, weekday, start_time, end_time, slot_minutes").eq("professional_id", professionalId),
+        supabase.from("availability_exceptions").select("id, location_id, category_id, exception_date, mode, start_time, end_time, slot_minutes").eq("professional_id", professionalId),
+      ]);
+      if (cancelled) return;
+      const wkRows: WeeklyRow[] = (wk ?? []).map((r) => ({ id: r.id, location_id: r.location_id ?? "", category_id: r.category_id ?? null, weekday: r.weekday, start: String(r.start_time).slice(0, 5), end: String(r.end_time).slice(0, 5), slot_minutes: r.slot_minutes ?? 60 }));
+      const excRows: ExcRow[] = (exc ?? []).map((r) => ({ id: r.id, location_id: r.location_id ?? "", category_id: r.category_id ?? null, date: r.exception_date, mode: r.mode as ExcMode, start: r.start_time ? String(r.start_time).slice(0, 5) : null, end: r.end_time ? String(r.end_time).slice(0, 5) : null, slot_minutes: r.slot_minutes ?? 60 }));
+      setWeekly(wkRows);
+      setExceptions(excRows);
+      setLoading(false);
+      // Refresh the materialized window from the template (keeps the rolling 70-day
+      // horizon current). Skip when there is NO template at all, so a legacy pro's
+      // manually-created slots are preserved until they adopt the weekly editor.
+      if (isPublic && (wkRows.length > 0 || excRows.length > 0)) regenerate(wkRows, excRows);
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [professionalId]);
+
+  // ── Active view (current location + profession) ───────────────────────────
+  // Chosen appointment length sticks even before any day is toggled on (a combo with
+  // no rows yet falls back to this instead of resetting to 60).
+  const [durationPref, setDurationPref] = useState(60);
+  const activeDuration = useMemo(() => {
+    const row = weekly.find((r) => sameCombo(r.location_id, r.category_id));
+    return row?.slot_minutes ?? durationPref;
+  }, [weekly, sameCombo, durationPref]);
+
+  const dayFranjas = useMemo(() => {
+    const map = new Map<number, Franja[]>();
+    for (const r of weekly) {
+      if (!sameCombo(r.location_id, r.category_id)) continue;
+      const arr = map.get(r.weekday) ?? [];
+      arr.push({ id: r.id ?? genId(), start: r.start, end: r.end });
+      map.set(r.weekday, arr);
+    }
+    for (const arr of map.values()) arr.sort((a, b) => a.start.localeCompare(b.start));
+    return map;
+  }, [weekly, sameCombo]);
+
+  const activeExceptions = useMemo(() => {
+    const byDate = new Map<string, ExcRow[]>();
+    for (const e of exceptions) {
+      if (!sameCombo(e.location_id, e.category_id)) continue;
+      const arr = byDate.get(e.date) ?? [];
+      arr.push(e);
+      byDate.set(e.date, arr);
+    }
+    return Array.from(byDate.entries())
+      .filter(([d]) => d >= todayISO())
+      .sort(([a], [b]) => a.localeCompare(b));
+  }, [exceptions, sameCombo]);
+
+  // ── Persist the weekly schedule for a single weekday, then re-materialize. ──
+  async function persistDay(weekday: number, franjas: Franja[], dur: number) {
+    const next = weekly.filter((r) => !(sameCombo(r.location_id, r.category_id) && r.weekday === weekday));
+    for (const f of franjas) next.push({ location_id: genLocation, category_id: activeCat, weekday, start: f.start, end: f.end, slot_minutes: dur });
+    setWeekly(next);
+
+    const supabase = createClient();
+    let del = supabase.from("availability_weekly").delete().eq("professional_id", professionalId).eq("location_id", genLocation).eq("weekday", weekday);
+    del = activeCat ? del.eq("category_id", activeCat) : del.is("category_id", null);
+    await del;
+    if (franjas.length > 0) {
+      await supabase.from("availability_weekly").insert(franjas.map((f) => ({ professional_id: professionalId, location_id: genLocation, category_id: activeCat, weekday, start_time: f.start, end_time: f.end, slot_minutes: dur })));
+    }
+    await regenerate(next, exceptions);
+  }
+
+  function toggleDay(weekday: number) {
+    const cur = dayFranjas.get(weekday) ?? [];
+    persistDay(weekday, cur.length > 0 ? [] : [{ id: genId(), start: "08:00", end: "17:00" }], activeDuration);
+  }
+  function addFranja(weekday: number) {
+    const cur = dayFranjas.get(weekday) ?? [];
+    persistDay(weekday, [...cur, nextFranja(cur)], activeDuration);
+  }
+  function updateFranja(weekday: number, id: string, patch: Partial<Franja>) {
+    const cur = dayFranjas.get(weekday) ?? [];
+    persistDay(weekday, cur.map((f) => (f.id === id ? { ...f, ...patch } : f)), activeDuration);
+  }
+  function removeFranja(weekday: number, id: string) {
+    const cur = dayFranjas.get(weekday) ?? [];
+    persistDay(weekday, cur.filter((f) => f.id !== id), activeDuration);
+  }
+
+  // "Igual a todos los días": copy this day's franjas to EVERY weekday.
+  async function copyToAll(weekday: number) {
+    const src = (dayFranjas.get(weekday) ?? []).map((f) => ({ start: f.start, end: f.end }));
+    const next = weekly.filter((r) => !sameCombo(r.location_id, r.category_id));
+    for (const wd of WEEKDAY_ORDER) for (const f of src) next.push({ location_id: genLocation, category_id: activeCat, weekday: wd, start: f.start, end: f.end, slot_minutes: activeDuration });
+    setWeekly(next);
+
+    const supabase = createClient();
+    let del = supabase.from("availability_weekly").delete().eq("professional_id", professionalId).eq("location_id", genLocation);
+    del = activeCat ? del.eq("category_id", activeCat) : del.is("category_id", null);
+    await del;
+    if (src.length > 0) {
+      const rows = WEEKDAY_ORDER.flatMap((wd) => src.map((f) => ({ professional_id: professionalId, location_id: genLocation, category_id: activeCat, weekday: wd, start_time: f.start, end_time: f.end, slot_minutes: activeDuration })));
+      await supabase.from("availability_weekly").insert(rows);
+    }
+    await regenerate(next, exceptions);
+  }
+
+  async function setDuration(dur: number) {
+    setDurationPref(dur);
+    const next = weekly.map((r) => (sameCombo(r.location_id, r.category_id) ? { ...r, slot_minutes: dur } : r));
+    setWeekly(next);
+    const supabase = createClient();
+    let upd = supabase.from("availability_weekly").update({ slot_minutes: dur }).eq("professional_id", professionalId).eq("location_id", genLocation);
+    upd = activeCat ? upd.eq("category_id", activeCat) : upd.is("category_id", null);
+    await upd;
+    await regenerate(next, exceptions);
+  }
+
+  // ── Exceptions ("¿Un día distinto?") ──────────────────────────────────────
+  async function saveException(date: string, mode: ExcMode, franjas: Franja[], dur: number) {
+    const next = exceptions.filter((e) => !(sameCombo(e.location_id, e.category_id) && e.date === date));
+    if (mode === "closed") {
+      next.push({ location_id: genLocation, category_id: activeCat, date, mode: "closed", start: null, end: null, slot_minutes: dur });
+    } else {
+      for (const f of franjas) next.push({ location_id: genLocation, category_id: activeCat, date, mode, start: f.start, end: f.end, slot_minutes: dur });
+    }
+    setExceptions(next);
+
+    const supabase = createClient();
+    let del = supabase.from("availability_exceptions").delete().eq("professional_id", professionalId).eq("location_id", genLocation).eq("exception_date", date);
+    del = activeCat ? del.eq("category_id", activeCat) : del.is("category_id", null);
+    await del;
+    const rows: { professional_id: string; location_id: string; category_id: string | null; exception_date: string; mode: ExcMode; start_time: string | null; end_time: string | null; slot_minutes: number }[] =
+      mode === "closed"
+        ? [{ professional_id: professionalId, location_id: genLocation, category_id: activeCat, exception_date: date, mode, start_time: null, end_time: null, slot_minutes: dur }]
+        : franjas.map((f) => ({ professional_id: professionalId, location_id: genLocation, category_id: activeCat, exception_date: date, mode, start_time: f.start, end_time: f.end, slot_minutes: dur }));
+    if (rows.length > 0) await supabase.from("availability_exceptions").insert(rows);
+    await regenerate(weekly, next);
+  }
+
+  async function removeException(date: string) {
+    const next = exceptions.filter((e) => !(sameCombo(e.location_id, e.category_id) && e.date === date));
+    setExceptions(next);
+    const supabase = createClient();
+    let del = supabase.from("availability_exceptions").delete().eq("professional_id", professionalId).eq("location_id", genLocation).eq("exception_date", date);
+    del = activeCat ? del.eq("category_id", activeCat) : del.is("category_id", null);
+    await del;
+    await regenerate(weekly, next);
+  }
+
+  // ── Visibility (privada) ──────────────────────────────────────────────────
+  function toggleVisibility() {
+    if (isPublic) { setShowPrivateConfirm(true); return; }
+    makePublic();
+  }
+  async function makePublic() {
+    setIsPublic(true);
+    setSavingVisibility(true);
+    const supabase = createClient();
+    await supabase.from("professionals").update({ availability_public: true, contact_preference: "ambas" }).eq("id", professionalId);
+    setSavingVisibility(false);
+    // Re-publish the schedule from the kept template.
+    await regenerate(weekly, exceptions);
+  }
+  async function confirmMakePrivate() {
+    setSavingVisibility(true);
+    const supabase = createClient();
+    // Hide the agenda: remove the published slots but KEEP the weekly template +
+    // exceptions, so turning public again restores everything.
+    await supabase.from("availability_slots").delete().eq("professional_id", professionalId);
+    await supabase.from("professionals").update({ availability_public: false, contact_preference: "solo_whatsapp" }).eq("id", professionalId);
+    setSavingVisibility(false);
+    setShowPrivateConfirm(false);
+    setIsPublic(false);
+    pulseSaved();
+    onSaved?.();
+  }
   useEffect(() => {
     if (!showPrivateConfirm) return;
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setShowPrivateConfirm(false); };
@@ -178,473 +412,423 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
     return () => document.removeEventListener("keydown", onKey);
   }, [showPrivateConfirm]);
 
-  // Generator form. Future day → 8:00 a.m.–5:00 p.m.; today → next valid time with a
-  // sensible later end. `defaultEndFor` guarantees the end is ALWAYS after the start,
-  // so the auto-defaults can never trip the "Hasta debe ser después" validation.
-  const [genDate, setGenDate] = useState(todayISO());
-  const [genStart, setGenStart] = useState(() => defaultStartFor(todayISO()));
-  const [genEnd, setGenEnd] = useState(() => defaultEndFor(defaultStartFor(todayISO())));
-  const [interval, setInterval] = useState(60);
-  const [customInterval, setCustomInterval] = useState(45);
-  const [singleTime, setSingleTime] = useState(puntualDefault(todayISO()));
-  const [busy, setBusy] = useState(false);
-  const [pastError, setPastError] = useState<string | null>(null);
+  // "Cambiar un día" modal
+  const [dayModal, setDayModal] = useState<{ date: string } | null>(null);
 
-  useEffect(() => {
-    const supabase = createClient();
-    supabase
-      .from("availability_slots")
-      .select("id, slot_date, slot_time, location_id, category_id")
-      .eq("professional_id", professionalId)
-      .gte("slot_date", todayISO())
-      .order("slot_date")
-      .order("slot_time")
-      .then(({ data, error }) => {
-        // Retry without the optional columns if not migrated yet (location_id/category_id).
-        if (error && /location_id|category_id|column/i.test(error.message)) {
-          supabase
-            .from("availability_slots")
-            .select("id, slot_date, slot_time")
-            .eq("professional_id", professionalId)
-            .gte("slot_date", todayISO())
-            .order("slot_date")
-            .order("slot_time")
-            .then(({ data: d2 }) => {
-              setSlots((d2 ?? []).map((s) => ({ id: s.id, slot_date: s.slot_date, slot_time: String(s.slot_time).slice(0, 5), location_id: null, category_id: null })));
-              setLoading(false);
-            });
-          return;
-        }
-        setSlots(
-          (data ?? []).map((s) => ({ id: s.id, slot_date: s.slot_date, slot_time: String(s.slot_time).slice(0, 5), location_id: (s as { location_id?: string }).location_id ?? null, category_id: (s as { category_id?: string }).category_id ?? null }))
-        );
-        setLoading(false);
-      });
-  }, [professionalId]);
-
-  // Group slots by date for display
-  const grouped = useMemo(() => {
-    const map = new Map<string, Slot[]>();
-    for (const s of slots) {
-      if (!map.has(s.slot_date)) map.set(s.slot_date, []);
-      map.get(s.slot_date)!.push(s);
-    }
-    return Array.from(map.entries())
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([date, list]) => [date, list.sort((x, y) => x.slot_time.localeCompare(y.slot_time))] as const);
-  }, [slots]);
-
-  function toggleVisibility() {
-    // Turning OFF requires confirmation (it deletes all schedules).
-    if (isPublic) { setShowPrivateConfirm(true); return; }
-    makePublic();
-  }
-
-  async function makePublic() {
-    setIsPublic(true);
-    setSavingVisibility(true);
-    const supabase = createClient();
-    // Keep the stored contact_preference in sync (pública = "ambas") so the
-    // /buscar card + schedule logic stay correct now that this is the only control.
-    await supabase.from("professionals").update({ availability_public: true, contact_preference: "ambas" }).eq("id", professionalId);
-    setSavingVisibility(false);
-    pulseSaved();
-    onSaved?.();
-  }
-
-  async function confirmMakePrivate() {
-    setSavingVisibility(true);
-    const supabase = createClient();
-    // Delete all schedules, mark availability private + WhatsApp-only, then refresh.
-    await supabase.from("availability_slots").delete().eq("professional_id", professionalId);
-    await supabase.from("professionals").update({ availability_public: false, contact_preference: "solo_whatsapp" }).eq("id", professionalId);
-    window.location.reload();
-  }
-
-  async function insertSlots(times: string[]) {
-    if (times.length === 0) return;
-    if (!genLocation) return;
-    setPastError(null);
-    // Reject past dates outright (CR time).
-    if (isPastDateTimeCR(genDate)) {
-      setPastError(t("errPastDate"));
-      return;
-    }
-    // Enforce a 15-minute lead time (CR): drop any time less than 15 min ahead.
-    // The picker already only offers valid times — this is the safety-net check,
-    // and it fires every time (not just once).
-    const valid = times.filter((t) => !isTooSoonCR(genDate, t));
-    if (valid.length === 0) {
-      setPastError(t("errTooSoon", { min: LEAD_MINUTES }));
-      return;
-    }
-    times = valid;
-    // A pro can't be in two places at once: any time already scheduled THIS date
-    // at a DIFFERENT location (any profession) is a conflict. Skip those times and
-    // surface a clear inline error naming the first one + the other location.
-    const conflicting = times.filter((time) =>
-      slots.some((s) => s.slot_date === genDate && s.slot_time === time && (s.location_id ?? null) !== genLocation)
-    );
-    if (conflicting.length > 0) {
-      setPastError(t("errLocationConflict"));
-      times = times.filter((time) => !conflicting.includes(time));
-      if (times.length === 0) return;
-    }
-    setBusy(true);
-    const supabase = createClient();
-    const locId = genLocation;
-    const catId = genCategory || null;
-    // Skip times that already exist for this date AND location AND profession.
-    const existing = new Set(
-      slots.filter((s) => s.slot_date === genDate && (s.location_id ?? null) === locId && (s.category_id ?? null) === catId).map((s) => s.slot_time)
-    );
-    const fresh = times.filter((t) => !existing.has(t));
-    if (fresh.length === 0) { setBusy(false); return; }
-
-    const rows = fresh.map((t) => ({ professional_id: professionalId, slot_date: genDate, slot_time: t, location_id: locId, category_id: catId }));
-    let { data, error } = await supabase
-      .from("availability_slots")
-      .insert(rows)
-      .select("id, slot_date, slot_time, location_id, category_id");
-    // Retry without the optional columns if not migrated yet.
-    if (error && /location_id|category_id|column/i.test(error.message)) {
-      ({ data, error } = await supabase
-        .from("availability_slots")
-        .insert(fresh.map((t) => ({ professional_id: professionalId, slot_date: genDate, slot_time: t })))
-        .select("id, slot_date, slot_time"));
-    }
-    setBusy(false);
-    if (error) {
-      console.error("[availability] insert", error);
-      if (/pasado|past/i.test(error.message)) setPastError(t("errPast"));
-      return;
-    }
-    setSlots((prev) => [
-      ...prev,
-      ...((data ?? []).map((s) => ({ id: s.id, slot_date: s.slot_date, slot_time: String(s.slot_time).slice(0, 5), location_id: (s as { location_id?: string }).location_id ?? locId, category_id: (s as { category_id?: string }).category_id ?? catId }))),
-    ]);
-    // Adding a schedule automatically makes availability public (+ "ambas").
-    if (!isPublic) {
-      setIsPublic(true);
-      await supabase.from("professionals").update({ availability_public: true, contact_preference: "ambas" }).eq("id", professionalId);
-    }
-    pulseSaved();
-    onSaved?.();
-  }
-
-  function generate() {
-    setPastError(null);
-    const step = interval === 0 ? Math.max(5, customInterval) : interval;
-    const start = toMins(genStart);
-    const end = toMins(genEnd);
-    // Explicit, friendly validation — never a silent no-op (item 1).
-    if (end <= start) {
-      setPastError(t("errEndBeforeStart"));
-      return;
-    }
-    const times: string[] = [];
-    for (let m = start; m + step <= end; m += step) times.push(hhmm(m));
-    // Range shorter than one step but still valid → keep the start time.
-    if (times.length === 0) times.push(hhmm(start));
-    insertSlots(times);
-  }
-
-  async function removeSlot(slot: Slot) {
-    if (!slot.id) return;
-    setSlots((prev) => prev.filter((s) => s.id !== slot.id));
-    const supabase = createClient();
-    await supabase.from("availability_slots").delete().eq("id", slot.id);
-    pulseSaved();
-    onSaved?.();
-  }
-
-  async function removeDate(date: string) {
-    const ids = slots.filter((s) => s.slot_date === date).map((s) => s.id).filter(Boolean) as string[];
-    setSlots((prev) => prev.filter((s) => s.slot_date !== date));
-    const supabase = createClient();
-    await supabase.from("availability_slots").delete().in("id", ids);
-    pulseSaved();
-    onSaved?.();
-  }
-
-  const inputCls =
-    "h-9 px-3 rounded-xl border border-[#e5e7eb] bg-white text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
-
-  // When the chosen date is today, both "Desde" and "hora puntual" start at the
-  // next ROUNDED full hour (e.g. 12:49 → 13:00) and stay in sync.
-  const isToday = genDate === todayISO();
-  const startMin = isToday ? nextFullHourCR(genDate) : undefined; // Desde / hora puntual floor
-  const startMinMins = startMin ? toMins(startMin) : 0;
-
-  // "Hasta" can NEVER be ≤ "Desde": its options start one grid step after "Desde"
-  // (and never before today's lead floor). The invalid combo can't be picked.
-  const hastaMin = hhmm(Math.min(Math.max(toMins(genStart) + 30, startMinMins), 24 * 60 - 30));
-
-  // Picking "Desde" auto-bumps "Hasta" so the range stays valid.
-  function setDesde(v: string) {
-    setPastError(null);
-    setGenStart(v);
-    if (toMins(genEnd) <= toMins(v)) setGenEnd(defaultEndFor(v));
-  }
-
-  // Range validity drives the single inline "Hasta" error + the disabled "Generar".
-  const rangeInvalid = toMins(genEnd) <= toMins(genStart);
-  // Keep the fields valid as time passes / on switching back to today: bump "Desde"
-  // up to the next full hour AND bump "Hasta" with it so the defaults never go stale
-  // into an invalid range (this was the false-error bug).
-  useEffect(() => {
-    if (!startMin) return;
-    if (toMins(genStart) < toMins(startMin)) {
-      setGenStart(startMin);
-      if (toMins(genEnd) <= toMins(startMin)) setGenEnd(defaultEndFor(startMin));
-    }
-    if (toMins(singleTime) < toMins(startMin)) setSingleTime(startMin);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [startMin]);
+  const selectClass = "h-9 rounded-xl border border-[#e5e7eb] bg-white pl-3 pr-9 text-sm font-medium text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all appearance-none cursor-pointer";
 
   return (
     <div className="flex flex-col gap-4">
-      {/* App-wide autosave: each action persists immediately; consistent status. */}
       <SaveStatus saving={savingVisibility || busy} saved={justSaved} />
-      {/* ── ONE control (privada vs pública) decides everything below. Private =
-             WhatsApp-only (no agenda); pública = agenda publicada. WhatsApp is
-             always available. ── */}
+
+      {/* ── Disponibilidad privada ─────────────────────────────────────────── */}
       <div className="rounded-2xl border border-[#e5e7eb] p-4 sm:p-5">
-        {/* "Disponibilidad privada" (ON = private; hides + clears slots) */}
         <div className="flex items-center justify-between gap-4">
-          <p className="text-sm font-semibold text-[#111827]">{t("privateLabel")}</p>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-[#111827]">{t("privateLabel")}</p>
+            <p className="mt-0.5 text-xs text-[#6b7280]">{isPublic ? t("privateSubPublic") : t("privateSubPrivate")}</p>
+          </div>
           <div className="flex items-center gap-2 shrink-0">
             {savingVisibility && <Loader2 className="h-4 w-4 animate-spin text-[#009FD9]" />}
             <button
               type="button"
               onClick={toggleVisibility}
               disabled={savingVisibility}
-              className={cn(
-                "relative h-6 w-11 rounded-full transition-all duration-200 shrink-0 cursor-pointer",
-                !isPublic ? "bg-[#b45309]" : "bg-[#d1d5db]"
-              )}
+              className={cn("relative h-6 w-11 rounded-full transition-all duration-200 shrink-0 cursor-pointer", !isPublic ? "bg-[#b45309]" : "bg-[#d1d5db]")}
               aria-label={isPublic ? t("makePrivate") : t("makePublic")}
             >
               <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all duration-200", !isPublic ? "left-5" : "left-0.5")} />
             </button>
           </div>
         </div>
-
-        {/* Public agenda → the slot generator lives in the SAME card, under a
-            divider (one cohesive flow, fewer borders). */}
-        {isPublic && (
-        <div className="mt-4 pt-4 border-t border-[#f3f4f6]">
-        <h3 className="text-sm font-semibold text-[#111827] mb-4">{t("addHeading")}</h3>
-
-        {locationOptions.length === 0 ? (
-          <div className="rounded-xl bg-[#fffbeb] border border-[#fde68a] p-4 text-sm text-[#92400e]">
-            {t.rich("needLocation", rich)}
-          </div>
-        ) : (
-        <div className="flex flex-col gap-4">
-          {/* Paso 1 — ¿para qué servicio y en qué ubicación? */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {professionOptions.length > 1 && (
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-medium text-[#6b7280]">{t("professionService")}</label>
-                <select value={genCategory} onChange={(e) => setGenCategory(e.target.value)} className={cn(inputCls, "cursor-pointer w-full")}>
-                  {professionOptions.map((p) => <option key={p} value={p}>{getCategoryLabel(p, locale)}</option>)}
-                </select>
-              </div>
-            )}
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-[#6b7280] flex items-center gap-1"><MapPin className="h-3 w-3" /> {t("scheduleLocation")}</label>
-              <select value={genLocation} onChange={(e) => setGenLocation(e.target.value)} className={cn(inputCls, "cursor-pointer w-full")}>
-                {locationOptions.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
-              </select>
-              {genLocation === A_DOMICILIO_LOC && (
-                <p className="text-[11px] leading-snug text-[#6b7280] mt-0.5">{t("aDomicilioHint")}</p>
-              )}
-            </div>
-          </div>
-
-          {/* Paso 2 — el rango horario. */}
-          <div className="flex flex-wrap items-end gap-3">
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-[#6b7280]">{t("date")}</label>
-              <input type="date" min={todayISO()} value={genDate} onChange={(e) => {
-                const d = e.target.value;
-                setGenDate(d);
-                setPastError(null);
-                // Reset to valid defaults for the chosen day (future 8–5; today next
-                // valid time + sensible later end) so the range is never invalid.
-                const s = defaultStartFor(d);
-                setGenStart(s);
-                setGenEnd(defaultEndFor(s));
-                setSingleTime(puntualDefault(d));
-              }} className={cn(inputCls, "h-10")} />
-            </div>
-            <TimeSelect label={t("from")} min={startMin} value={genStart} onChange={setDesde} className="w-32" />
-            {/* Visual "→" between the two pickers. */}
-            <span className="text-[#9ca3af] mb-2.5 hidden sm:inline">→</span>
-            <TimeSelect label={t("to")} min={hastaMin} value={genEnd} onChange={(v) => { setGenEnd(v); setPastError(null); }} className="w-32" error={rangeInvalid ? t("toAfterFrom") : undefined} />
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-medium text-[#6b7280]">{t("interval")}</label>
-              {/* appearance-none + custom chevron so the arrow is consistent and
-                  aligned (the native OS arrow looked misaligned/cramped). */}
-              <div className="relative">
-                <select value={interval} onChange={(e) => setInterval(Number(e.target.value))} className={cn(inputCls, "h-10 w-full appearance-none pr-9 cursor-pointer")}>
-                  {INTERVAL_VALUES.map((v) => (
-                    <option key={v} value={v}>{intervalLabel(v)}</option>
-                  ))}
-                </select>
-                <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9ca3af]" />
-              </div>
-            </div>
-            {interval === 0 && (
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-medium text-[#6b7280]">{t("minutes")}</label>
-                <input type="number" min={5} step={5} value={customInterval} onChange={(e) => setCustomInterval(Number(e.target.value))} className={cn(inputCls, "h-10 w-24")} />
-              </div>
-            )}
-          </div>
-
-          {/* Generar — its own row, clearly OFF (solid gray) when the range is invalid. */}
-          <Button
-            type="button"
-            size="md"
-            onClick={generate}
-            disabled={busy || rangeInvalid}
-            aria-disabled={busy || rangeInvalid}
-            className={cn("w-full sm:w-auto sm:self-start", rangeInvalid && "bg-[#d1d5db] text-white shadow-none hover:bg-[#d1d5db] hover:shadow-none")}
-          >
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-            {t("generate")}
-          </Button>
-
-          <div className="flex flex-wrap items-end gap-2 pt-3 border-t border-[#f3f4f6]">
-            <span className="text-xs text-[#9ca3af] mb-2.5">{t("orSingle")}</span>
-            <TimeSelect min={startMin} value={singleTime} onChange={setSingleTime} className="w-36" />
-            <button
-              type="button"
-              onClick={() => insertSlots([singleTime])}
-              disabled={busy}
-              className="text-xs font-medium text-[#009FD9] hover:underline cursor-pointer mb-2.5"
-            >
-              {t("addTime", { time: to12h(singleTime) })}
-            </button>
-          </div>
-
-          {pastError && (
-            <div className="flex items-center gap-2 rounded-lg bg-red-50 border border-red-100 p-2.5 text-xs text-red-600">
-              <AlertCircle className="h-3.5 w-3.5 shrink-0" /> {pastError}
-            </div>
-          )}
-        </div>
-        )}
-        </div>
-        )}
       </div>
 
-      {/* ── Slot list (public agenda only) ───────────────────────── */}
-      {isPublic && (
-      <div>
-        <h3 className="text-sm font-semibold text-[#111827] mb-3">{t("upcomingTitle")}</h3>
-        {loading ? (
-          <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin text-[#009FD9]" /></div>
-        ) : grouped.length === 0 ? (
-          <div className="text-center py-10 rounded-xl bg-[#f4f7fa] border border-dashed border-[#d1d5db]">
-            <p className="text-sm text-[#6b7280]">{t("noSlots")}</p>
-            <p className="text-xs text-[#9ca3af] mt-1">{t("noSlotsSub")}</p>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-3">
-            {grouped.map(([date, list]) => {
-              // Within a day, group by (profesión + ubicación) so a pro with several
-              // professions/locations can tell each block apart.
-              const subMap = new Map<string, Slot[]>();
-              for (const s of list) {
-                const key = `${s.category_id ?? ""}|${s.location_id ?? ""}`;
-                if (!subMap.has(key)) subMap.set(key, []);
-                subMap.get(key)!.push(s);
-              }
-              const subgroups = Array.from(subMap.entries());
-              return (
-                <div key={date} className="rounded-2xl border border-[#e5e7eb] overflow-hidden">
-                  {/* Day header */}
-                  <div className="flex items-center justify-between gap-3 px-4 py-2.5 bg-[#f9fafb] border-b border-[#eef2f5]">
-                    <span className="text-sm font-semibold text-[#111827] capitalize">{prettyDate(date, dateLocale)}</span>
-                    <button onClick={() => removeDate(date)} className="text-xs font-medium text-[#9ca3af] hover:text-red-500 transition-colors cursor-pointer">
-                      {t("removeDay")}
-                    </button>
-                  </div>
-                  <div className="p-3 sm:p-4 flex flex-col gap-3">
-                    {subgroups.map(([key, sg]) => {
-                      const cat = sg[0].category_id;
-                      const loc = sg[0].location_id ?? null;
-                      return (
-                        <div key={key} className="flex flex-col gap-2">
-                          {(cat || loc) && (
-                            <div className="flex flex-wrap items-center gap-1.5">
-                              {cat && <span className="rounded-md bg-[#EBF5FB] text-[#0089bb] text-[11px] font-medium px-1.5 py-0.5">{getCategoryLabel(cat, locale)}</span>}
-                              {loc && <span className="inline-flex items-center gap-1 rounded-md bg-[#f3f4f6] text-[#374151] text-[11px] font-medium px-1.5 py-0.5"><MapPin className="h-3 w-3" />{locationLabel(loc)}</span>}
-                            </div>
-                          )}
-                          {/* Uniform time chips: an even grid → every chip is the SAME
-                              width; the full time always fits (no truncation). */}
-                          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
-                            {sg.map((s) => (
-                              <span key={s.id ?? `${s.slot_time}-${s.location_id ?? ""}-${s.category_id ?? ""}`} className="group inline-flex items-center justify-center gap-1 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-[13px] font-medium tabular-nums whitespace-nowrap pl-2 pr-1 py-1.5">
-                                {to12h(s.slot_time)}
-                                <button onClick={() => removeSlot(s)} className="rounded-md p-0.5 text-[#0089bb]/60 hover:text-[#0089bb] hover:bg-[#009FD9]/20 transition-colors cursor-pointer shrink-0" aria-label={t("remove")}>
-                                  <X className="h-3.5 w-3.5" />
-                                </button>
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-      )}
-
-      {/* Private → a short note instead of the agenda. */}
-      {!isPublic && (
+      {loading ? (
+        <div className="flex justify-center py-10"><Loader2 className="h-5 w-5 animate-spin text-[#009FD9]" /></div>
+      ) : !isPublic ? (
         <div className="rounded-xl bg-[#fffbeb] border border-[#fde68a] p-4 text-sm text-[#92400e] flex items-start gap-2">
           <Lock className="h-4 w-4 shrink-0 mt-0.5" />
-          <span>
-            {t.rich("privateNote", { ...rich, call: "" })}
-          </span>
+          <span>{t.rich("privateNote", { ...rich, call: "" })}</span>
         </div>
+      ) : locationOptions.length === 0 ? (
+        <div className="rounded-xl bg-[#fffbeb] border border-[#fde68a] p-4 text-sm text-[#92400e]">
+          {t.rich("needLocation", rich)}
+        </div>
+      ) : (
+        <>
+          {/* ── HORARIO PARA — location tabs ─────────────────────────────── */}
+          <div className="rounded-2xl border border-[#e5e7eb] p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Calendar className="h-3.5 w-3.5 text-[#9ca3af]" />
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-[#9ca3af]">{t("scheduleForLabel")}</span>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {locationOptions.map((o) => {
+                const active = o.id === genLocation;
+                return (
+                  <button
+                    key={o.id}
+                    type="button"
+                    onClick={() => setGenLocation(o.id)}
+                    className={cn(
+                      "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
+                      active ? "bg-[#EBF5FB] text-[#009FD9] border-[#bfdbfe]" : "bg-white text-[#6b7280] border-[#e5e7eb] hover:bg-[#f3f4f6]"
+                    )}
+                  >
+                    <MapPin className="h-3 w-3" /> {o.label}
+                  </button>
+                );
+              })}
+              <a href="?tab=profile" className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium text-[#009FD9] hover:bg-[#EBF5FB] transition-colors">
+                <Plus className="h-3.5 w-3.5" /> {t("addLocation")}
+              </a>
+            </div>
+            {professionOptions.length > 1 && (
+              <div className="mt-3 flex items-center gap-2">
+                <label className="text-xs font-medium text-[#6b7280]">{t("profession")}</label>
+                <div className="relative">
+                  <select value={genCategory} onChange={(e) => setGenCategory(e.target.value)} className={selectClass}>
+                    {professionOptions.map((p) => <option key={p} value={p}>{getCategoryLabel(p, locale)}</option>)}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9ca3af]" />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ── Mis horarios de siempre — recurring weekly schedule ───────── */}
+          <div className="rounded-2xl border border-[#e5e7eb] p-4 sm:p-5">
+            <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
+              <div className="min-w-0">
+                <h3 className="text-sm font-semibold text-[#111827]">{t("alwaysTitle")}</h3>
+                <p className="mt-0.5 text-xs text-[#6b7280]">{t("alwaysSub", { place: locationLabel(genLocation) })}</p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <label className="text-xs font-medium text-[#6b7280]">{t("apptDuration")}</label>
+                <div className="relative">
+                  <select value={activeDuration} onChange={(e) => setDuration(Number(e.target.value))} className={selectClass}>
+                    {DURATION_OPTIONS.map((d) => <option key={d} value={d}>{t(`dur${d}` as `dur${number}`)}</option>)}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9ca3af]" />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col divide-y divide-[#f3f4f6]">
+              {WEEKDAY_ORDER.map((wd) => {
+                const franjas = dayFranjas.get(wd) ?? [];
+                const on = franjas.length > 0;
+                return (
+                  <div key={wd} className="flex flex-col gap-2 py-3 sm:flex-row sm:gap-4">
+                    {/* toggle + weekday name */}
+                    <div className="flex items-center gap-2.5 sm:w-32 sm:shrink-0 sm:pt-1.5">
+                      <button
+                        type="button"
+                        onClick={() => toggleDay(wd)}
+                        className={cn("relative h-5 w-9 rounded-full transition-all duration-200 shrink-0 cursor-pointer", on ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
+                        aria-label={t(`weekday${wd}` as `weekday${number}`)}
+                        aria-pressed={on}
+                      >
+                        <span className={cn("absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all duration-200", on ? "left-[18px]" : "left-0.5")} />
+                      </button>
+                      <span className={cn("text-sm font-medium", on ? "text-[#111827]" : "text-[#9ca3af]")}>{t(`weekday${wd}` as `weekday${number}`)}</span>
+                    </div>
+
+                    {/* franjas */}
+                    <div className="min-w-0 flex-1">
+                      {!on ? (
+                        <p className="text-sm text-[#9ca3af] sm:pt-1.5">{t("closed")}</p>
+                      ) : (
+                        <div className="flex flex-col gap-2">
+                          {franjas.map((f) => (
+                            <div key={f.id} className="flex flex-wrap items-center gap-2">
+                              <TimeSelect value={f.start} onChange={(v) => updateFranja(wd, f.id, { start: v, ...(toMins(f.end) <= toMins(v) ? { end: hhmm(Math.min(toMins(v) + 60, 23 * 60 + 30)) } : {}) })} className="w-32" />
+                              <span className="text-[#9ca3af]">–</span>
+                              <TimeSelect value={f.end} min={hhmm(Math.min(toMins(f.start) + 30, 23 * 60 + 30))} onChange={(v) => updateFranja(wd, f.id, { end: v })} className="w-32" error={toMins(f.end) <= toMins(f.start) ? t("toAfterFrom") : undefined} />
+                              <button type="button" onClick={() => removeFranja(wd, f.id)} className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9ca3af] hover:bg-[#f3f4f6] hover:text-red-500 transition-colors" aria-label={t("remove")}>
+                                <X className="h-4 w-4" />
+                              </button>
+                            </div>
+                          ))}
+                          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 pt-0.5">
+                            <button type="button" onClick={() => addFranja(wd)} className="inline-flex items-center gap-1 text-xs font-medium text-[#009FD9] hover:underline cursor-pointer">
+                              <Plus className="h-3.5 w-3.5" /> {t("addFranja")}
+                            </button>
+                            <button type="button" onClick={() => copyToAll(wd)} className="inline-flex items-center gap-1 text-xs font-medium text-[#6b7280] hover:text-[#111827] cursor-pointer">
+                              <Copy className="h-3.5 w-3.5" /> {t("sameAllDays")}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ── ¿Un día distinto? — date exceptions ──────────────────────── */}
+          <div className="rounded-2xl border border-[#e5e7eb] p-4 sm:p-5">
+            <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
+              <div className="min-w-0">
+                <h3 className="text-sm font-semibold text-[#111827]">{t("diffDayTitle")}</h3>
+                <p className="mt-0.5 text-xs text-[#6b7280]">{t("diffDaySub")}</p>
+              </div>
+              <Button type="button" variant="secondary" size="sm" onClick={() => setDayModal({ date: todayISO() })}>
+                <Calendar className="h-4 w-4" /> {t("changeDay")}
+              </Button>
+            </div>
+
+            {activeExceptions.length === 0 ? (
+              <p className="text-xs text-[#9ca3af]">{t("noExceptions")}</p>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {activeExceptions.map(([date, rows]) => {
+                  const mode = rows[0].mode;
+                  const times = rows.filter((r) => r.start && r.end).map((r) => `${to12h(r.start!)}–${to12h(r.end!)}`).join(", ");
+                  const [y, m, d] = date.split("-").map(Number);
+                  const dt = new Date(y, m - 1, d);
+                  const monthShort = dt.toLocaleDateString(dateLocale, { month: "short" }).replace(".", "").toUpperCase();
+                  const weekdayLong = dt.toLocaleDateString(dateLocale, { weekday: "long" });
+                  const summary = mode === "closed" ? t("excClosedLabel") : `${mode === "custom" ? t("excCustomLabel") : t("excExtraLabel")} · ${times}`;
+                  return (
+                    <div key={date} className="flex items-center gap-3 rounded-xl border border-[#e5e7eb] p-2.5">
+                      <div className="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-lg bg-[#f9fafb]">
+                        <span className="text-[9px] font-bold uppercase text-[#dc5b4b] leading-none">{monthShort}</span>
+                        <span className="text-base font-bold text-[#111827] leading-tight">{d}</span>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-[#111827] capitalize">{weekdayLong}</p>
+                        <p className="text-xs text-[#6b7280] truncate">{summary}</p>
+                      </div>
+                      <button type="button" onClick={() => setDayModal({ date })} className="flex h-8 w-8 items-center justify-center rounded-lg text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#111827] transition-colors" aria-label={t("edit")}>
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                      <button type="button" onClick={() => removeException(date)} className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9ca3af] hover:bg-[#f3f4f6] hover:text-red-500 transition-colors" aria-label={t("removeException")}>
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </>
       )}
 
-      {/* Confirmation modal — making availability private deletes all schedules */}
+      {/* ── "Cambiar un día" modal ──────────────────────────────────────── */}
+      {dayModal && (
+        <DayModal
+          initialDate={dayModal.date}
+          existing={exceptions.filter((e) => sameCombo(e.location_id, e.category_id))}
+          markedDates={new Set(exceptions.filter((e) => sameCombo(e.location_id, e.category_id)).map((e) => e.date))}
+          defaultDuration={activeDuration}
+          dateLocale={dateLocale}
+          onClose={() => setDayModal(null)}
+          onSave={async (date, mode, franjas, dur) => { await saveException(date, mode, franjas, dur); setDayModal(null); }}
+        />
+      )}
+
+      {/* ── Confirm: hide agenda ─────────────────────────────────────────── */}
       {showPrivateConfirm && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowPrivateConfirm(false)} />
           <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 z-10">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-50 mb-4">
-              <Lock className="h-5 w-5 text-red-500" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-50 mb-4">
+              <Lock className="h-5 w-5 text-[#b45309]" />
             </div>
             <h3 className="text-lg font-bold text-[#111827] mb-1">{t("confirmTitle")}</h3>
             <p className="text-sm text-[#6b7280] mb-5">{t("confirmBody")}</p>
             <div className="flex gap-3">
-              <Button variant="outline" size="md" className="flex-1" onClick={() => setShowPrivateConfirm(false)} disabled={savingVisibility}>
-                {t("cancel")}
-              </Button>
-              <Button
-                size="md"
-                className="flex-1 bg-red-500 hover:bg-red-600"
-                onClick={confirmMakePrivate}
-                loading={savingVisibility}
-              >
-                {t("confirmPrivate")}
-              </Button>
+              <Button variant="outline" size="md" className="flex-1" onClick={() => setShowPrivateConfirm(false)} disabled={savingVisibility}>{t("cancel")}</Button>
+              <Button size="md" className="flex-1 bg-[#b45309] hover:bg-[#92400e]" onClick={confirmMakePrivate} loading={savingVisibility}>{t("confirmPrivate")}</Button>
             </div>
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// "Cambiar un día" — pick a date on a month calendar, then choose: add extra hours,
+// replace that day's hours, or close the day. Edits ONE date without touching the
+// recurring template.
+function DayModal({ initialDate, existing, markedDates, defaultDuration, dateLocale, onClose, onSave }: {
+  initialDate: string;
+  existing: ExcRow[];
+  markedDates: Set<string>;
+  defaultDuration: number;
+  dateLocale: string;
+  onClose: () => void;
+  onSave: (date: string, mode: ExcMode, franjas: Franja[], dur: number) => Promise<void> | void;
+}) {
+  const t = useTranslations("availabilityEditor");
+  const [date, setDate] = useState(initialDate);
+  const [mode, setMode] = useState<ExcMode>("extra");
+  const [franjas, setFranjas] = useState<Franja[]>([{ id: genId(), start: "18:00", end: "20:00" }]);
+  const [dur, setDur] = useState(defaultDuration);
+  const [saving, setSaving] = useState(false);
+
+  // Prefill from any existing exception when the picked date changes.
+  useEffect(() => {
+    const rows = existing.filter((e) => e.date === date);
+    if (rows.length === 0) { setMode("extra"); setFranjas([{ id: genId(), start: "18:00", end: "20:00" }]); setDur(defaultDuration); return; }
+    const m = rows[0].mode;
+    setMode(m);
+    setDur(rows[0].slot_minutes ?? defaultDuration);
+    setFranjas(m === "closed" ? [] : rows.filter((r) => r.start && r.end).map((r) => ({ id: genId(), start: r.start!, end: r.end! })));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [date]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  function setModeWithDefault(m: ExcMode) {
+    setMode(m);
+    if (m !== "closed" && franjas.length === 0) setFranjas([{ id: genId(), start: m === "extra" ? "18:00" : "08:00", end: m === "extra" ? "20:00" : "17:00" }]);
+  }
+
+  const hhmmLocal = (mins: number) => `${String(Math.floor(mins / 60)).padStart(2, "0")}:${String(mins % 60).padStart(2, "0")}`;
+  const invalid = mode !== "closed" && (franjas.length === 0 || franjas.some((f) => toMins(f.end) <= toMins(f.start)));
+
+  const [y, m, d] = date.split("-").map(Number);
+  const selectedLong = new Date(y, m - 1, d).toLocaleDateString(dateLocale, { weekday: "long", day: "numeric", month: "long" });
+
+  const options: { key: ExcMode; label: string; desc: string }[] = [
+    { key: "extra", label: t("optExtra"), desc: t("optExtraDesc") },
+    { key: "custom", label: t("optCustom"), desc: t("optCustomDesc") },
+    { key: "closed", label: t("optClosed"), desc: t("optClosedDesc") },
+  ];
+
+  return (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative z-10 w-full max-w-2xl rounded-2xl bg-white shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-start justify-between gap-3 border-b border-[#f3f4f6] p-4 sm:p-5">
+          <div>
+            <h3 className="text-base font-bold text-[#111827]">{t("modalTitle")}</h3>
+            <p className="mt-0.5 text-xs text-[#6b7280]">{t("modalSub")}</p>
+          </div>
+          <button type="button" onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-lg text-[#6b7280] hover:bg-[#f3f4f6]" aria-label={t("close")}>
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 gap-5 p-4 sm:grid-cols-2 sm:p-5">
+          <MonthCalendar value={date} onChange={setDate} marked={markedDates} dateLocale={dateLocale} />
+
+          <div className="flex flex-col gap-3">
+            <p className="text-sm font-semibold text-[#111827] capitalize">{selectedLong}</p>
+            <div className="flex flex-col gap-2">
+              {options.map((o) => {
+                const active = mode === o.key;
+                return (
+                  <button
+                    key={o.key}
+                    type="button"
+                    onClick={() => setModeWithDefault(o.key)}
+                    className={cn("flex items-start gap-2.5 rounded-xl border p-3 text-left transition-colors", active ? "border-[#009FD9] bg-[#EBF5FB]" : "border-[#e5e7eb] hover:bg-[#f9fafb]")}
+                  >
+                    <span className={cn("mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2", active ? "border-[#009FD9]" : "border-[#cbd5e1]")}>
+                      {active && <span className="h-2 w-2 rounded-full bg-[#009FD9]" />}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-sm font-medium text-[#111827]">{o.label}</span>
+                      <span className="block text-xs text-[#6b7280]">{o.desc}</span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {mode !== "closed" && (
+              <div className="flex flex-col gap-2">
+                {franjas.map((f) => (
+                  <div key={f.id} className="flex flex-wrap items-center gap-2">
+                    <TimeSelect value={f.start} onChange={(v) => setFranjas((prev) => prev.map((x) => (x.id === f.id ? { ...x, start: v, ...(toMins(x.end) <= toMins(v) ? { end: hhmmLocal(Math.min(toMins(v) + 60, 23 * 60 + 30)) } : {}) } : x)))} className="w-32" />
+                    <span className="text-[#9ca3af]">–</span>
+                    <TimeSelect value={f.end} min={hhmmLocal(Math.min(toMins(f.start) + 30, 23 * 60 + 30))} onChange={(v) => setFranjas((prev) => prev.map((x) => (x.id === f.id ? { ...x, end: v } : x)))} className="w-32" error={toMins(f.end) <= toMins(f.start) ? t("toAfterFrom") : undefined} />
+                    <button type="button" onClick={() => setFranjas((prev) => prev.filter((x) => x.id !== f.id))} className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9ca3af] hover:bg-[#f3f4f6] hover:text-red-500 transition-colors" aria-label={t("remove")}>
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+                <button type="button" onClick={() => setFranjas((prev) => [...prev, nextFranja(prev)])} className="inline-flex items-center gap-1 self-start text-xs font-medium text-[#009FD9] hover:underline cursor-pointer">
+                  <Plus className="h-3.5 w-3.5" /> {t("addFranja")}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-3 border-t border-[#f3f4f6] p-4 sm:p-5">
+          <Button type="button" variant="outline" size="md" onClick={onClose} disabled={saving}>{t("cancel")}</Button>
+          <Button type="button" size="md" disabled={invalid || saving} loading={saving} onClick={async () => { setSaving(true); await onSave(date, mode, franjas, dur); }}>{t("saveDay")}</Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Compact month calendar (Monday-first). Past days are disabled; the selected day is
+// brand-filled; dates with an existing exception get a small dot.
+function MonthCalendar({ value, onChange, marked, dateLocale }: { value: string; onChange: (iso: string) => void; marked: Set<string>; dateLocale: string }) {
+  const today = todayISO();
+  const [vy, vm] = (() => { const [y, m] = value.split("-").map(Number); return [y, m - 1]; })();
+  const [view, setView] = useState<{ y: number; m: number }>({ y: vy, m: vm });
+
+  const monthLabel = new Date(view.y, view.m, 1).toLocaleDateString(dateLocale, { month: "long", year: "numeric" });
+  const weekdayMini = dateLocale.startsWith("en") ? ["M", "T", "W", "T", "F", "S", "S"] : ["L", "M", "M", "J", "V", "S", "D"];
+  const first = new Date(view.y, view.m, 1);
+  const startCol = (first.getDay() + 6) % 7; // Monday-first
+  const daysInMonth = new Date(view.y, view.m + 1, 0).getDate();
+  const cells: (string | null)[] = [];
+  for (let i = 0; i < startCol; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(toKeyLocal(new Date(view.y, view.m, d)));
+
+  const canPrev = `${view.y}-${String(view.m + 1).padStart(2, "0")}` > today.slice(0, 7);
+
+  return (
+    <div className="rounded-xl border border-[#e5e7eb] p-3">
+      <div className="mb-2 flex items-center justify-between">
+        <button type="button" disabled={!canPrev} onClick={() => setView((v) => ({ y: v.m === 0 ? v.y - 1 : v.y, m: (v.m + 11) % 12 }))} className="flex h-7 w-7 items-center justify-center rounded-lg text-[#6b7280] enabled:hover:bg-[#f3f4f6] disabled:opacity-30" aria-label="<">
+          <ChevronLeft className="h-4 w-4" />
+        </button>
+        <span className="text-sm font-semibold text-[#111827] capitalize">{monthLabel}</span>
+        <button type="button" onClick={() => setView((v) => ({ y: v.m === 11 ? v.y + 1 : v.y, m: (v.m + 1) % 12 }))} className="flex h-7 w-7 items-center justify-center rounded-lg text-[#6b7280] hover:bg-[#f3f4f6]" aria-label=">">
+          <ChevronRight className="h-4 w-4" />
+        </button>
+      </div>
+      <div className="mb-1 grid grid-cols-7 gap-0.5">
+        {weekdayMini.map((w, i) => <span key={i} className="py-1 text-center text-[10px] font-semibold uppercase text-[#9ca3af]">{w}</span>)}
+      </div>
+      <div className="grid grid-cols-7 gap-0.5">
+        {cells.map((iso, i) => {
+          if (!iso) return <span key={i} />;
+          const day = Number(iso.slice(8, 10));
+          const past = iso < today;
+          const selected = iso === value;
+          return (
+            <button
+              key={i}
+              type="button"
+              disabled={past}
+              onClick={() => onChange(iso)}
+              className={cn(
+                "relative flex h-9 items-center justify-center rounded-lg text-sm transition-colors",
+                selected ? "bg-[#009FD9] font-semibold text-white" : past ? "text-[#d1d5db]" : "text-[#374151] hover:bg-[#EBF5FB]"
+              )}
+            >
+              {day}
+              {marked.has(iso) && !selected && <span className="absolute bottom-1 h-1 w-1 rounded-full bg-[#dc5b4b]" />}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
