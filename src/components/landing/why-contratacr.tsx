@@ -47,6 +47,7 @@ export async function WhyContratacr() {
     whatsapp: tSched("whatsapp"),
     viewSchedule: tSched("viewFullSchedule"),
     noScheduleNote: tSched("availabilityHiddenNote"),
+    priceUnit: tCard("perHour"),
     reviews: (n: number) => tCard("reviewsCount", { count: n }),
     days,
   };

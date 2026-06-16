@@ -210,7 +210,7 @@ function ProCard({
 
 export type ResultsCopy = {
   title: string; results: string; search: string; verified: string;
-  whatsapp: string; viewSchedule: string; noScheduleNote: string;
+  whatsapp: string; viewSchedule: string; noScheduleNote: string; priceUnit: string;
   reviews: (n: number) => string;
   days: { label: string; times: string[] }[];
 };
@@ -225,6 +225,7 @@ const DEFAULT_RESULTS_COPY: ResultsCopy = {
   whatsapp: "Contáctanos por WhatsApp",
   viewSchedule: "Ver horario completo",
   noScheduleNote: "La disponibilidad de este profesional no es pública. Contáctanos y conoce sus horarios.",
+  priceUnit: "/hora",
   reviews: (n) => `${n} reseñas`,
   days: [
     { label: "Hoy", times: ["9:00", "14:00"] },
@@ -251,13 +252,13 @@ export function ResultsScreen({ copy = DEFAULT_RESULTS_COPY }: { copy?: ResultsC
         <ProCard
           rank={1} initials="SG" company="SG Solutions" person="Steven Gómez" profession={copy.title}
           place="San José" address="Escazú, San José" rating="4.9" reviews={copy.reviews(48)}
-          price="₡12 000" priceUnit="/hora" verified={copy.verified} schedule={copy.days}
+          price="₡12 000" priceUnit={copy.priceUnit} verified={copy.verified} schedule={copy.days}
           viewSchedule={copy.viewSchedule} whatsapp={copy.whatsapp}
         />
         <ProCard
           rank={2} initials="AM" company="Ana Mora" profession={copy.title}
           place="Heredia" address="Heredia centro" rating="4.8" reviews={copy.reviews(31)}
-          price="₡10 000" priceUnit="/hora" verified={copy.verified}
+          price="₡10 000" priceUnit={copy.priceUnit} verified={copy.verified}
           viewSchedule={copy.viewSchedule} whatsapp={copy.whatsapp} noScheduleNote={copy.noScheduleNote}
         />
       </div>
