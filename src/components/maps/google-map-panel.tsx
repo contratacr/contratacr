@@ -350,13 +350,14 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
       streetViewControl: false,
       rotateControl: false,
       scaleControl: false,
-      // Controls clustered at the TOP-RIGHT: clear of the top-center "Buscar en esta área"
-      // pill AND the bottom card sheet (the default bottom-right zoom was hidden behind the
-      // sheet on mobile). Zoom +/- and the maximize/fullscreen button stack cleanly there.
-      zoomControl: true,
-      zoomControlOptions: { position: g.ControlPosition.TOP_RIGHT },
+      // Controls in the TOP-RIGHT corner column, clear of the top-center "Buscar en esta
+      // área" pill AND the bottom card sheet (the default bottom-right zoom was hidden behind
+      // the sheet on mobile). Maximize/fullscreen sits at TOP_RIGHT (the very corner); zoom is
+      // RIGHT_TOP so it stacks directly BELOW it in the same right-aligned column.
       fullscreenControl: true,
       fullscreenControlOptions: { position: g.ControlPosition.TOP_RIGHT },
+      zoomControl: true,
+      zoomControlOptions: { position: g.ControlPosition.RIGHT_TOP },
       clickableIcons: false,
       gestureHandling: "greedy", // wheel/scroll zooms DIRECTLY over the map (no Ctrl hint); one-finger pan + pinch-zoom on mobile
     });
