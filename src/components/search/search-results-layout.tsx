@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { SlidersHorizontal, X } from "lucide-react";
 import { GoogleMapPanel, type MapProfessional } from "@/components/maps/google-map-panel";
@@ -43,7 +44,16 @@ const nearestDetent = (pct: number) =>
 
 export function SearchResultsLayout({ children, filters, mobileFilters, mobileSearch, countLabel, mapData, apiKey, locale, numbering }: SearchResultsLayoutProps) {
   const t = useTranslations("search");
+  const params = useSearchParams();
   const [showFilters, setShowFilters] = useState(false);
+  // Mobile filter sheet (separate from the lg–xl left drawer).
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
+  // Active FILTER count (excludes the free-text query, which has its own bar) — drives
+  // the badge on the mobile "Filtros" button.
+  const activeFilterCount =
+    ["categoria", "provincia", "canton", "aseguradora"].filter((k) => params.get(k)).length +
+    (params.get("verificados") === "1" ? 1 : 0) +
+    (params.get("sortBy") && params.get("sortBy") !== "rating" ? 1 : 0);
 
   // ── Mobile bottom-sheet drag state ───────────────────────────────────────
   // `isMobile` gates the inline transform so it NEVER leaks onto desktop (inline
@@ -126,6 +136,35 @@ export function SearchResultsLayout({ children, filters, mobileFilters, mobileSe
         </div>
       )}
 
+      {/* MOBILE filter sheet (<lg) — a tidy BOTTOM SHEET with all filters stacked, opened by
+          the "Filtros" button in the results-sheet header. Replaces the old cramped chips row.
+          Filters apply instantly; the footer button + × + backdrop all just dismiss. */}
+      {showMobileFilters && (
+        <div className="lg:hidden fixed inset-0 z-[60]">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setShowMobileFilters(false)} />
+          <div className="absolute inset-x-0 bottom-0 flex max-h-[86dvh] flex-col rounded-t-2xl bg-white shadow-[0_-8px_24px_rgba(0,0,0,0.18)]">
+            <div className="flex items-center justify-between border-b border-[#e5e7eb] px-4 py-3">
+              <span className="text-base font-bold text-[#111827]">{t("filters.title")}</span>
+              <button onClick={() => setShowMobileFilters(false)} aria-label={t("close")} className="rounded-full p-1.5 text-[#9ca3af] hover:bg-[#f3f4f6]">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4">
+              {mobileFilters}
+            </div>
+            <div className="border-t border-[#e5e7eb] p-3">
+              <button
+                type="button"
+                onClick={() => setShowMobileFilters(false)}
+                className="w-full rounded-full bg-[#009FD9] py-3 text-sm font-semibold text-white transition-colors hover:bg-[#0089bb]"
+              >
+                {t("filters.showResults")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* MOBILE = map-as-background + a draggable bottom sheet over it. The region is one
           viewport tall (full-bleed via negative margins), `relative` so its children can be
           absolutely positioned, and `overflow-hidden` so the off-screen part of the sheet is
@@ -170,11 +209,25 @@ export function SearchResultsLayout({ children, filters, mobileFilters, mobileSe
             <span className="h-1.5 w-10 rounded-full bg-[#d1d5db]" aria-hidden />
           </div>
 
-          {/* Search + filter chips + count — inside the sheet header (mobile only). */}
+          {/* Search bar + a compact "Filtros" button (opens the bottom-sheet panel) + count
+              — inside the sheet header (mobile only). The old cramped horizontal chips row is
+              gone; all filters now live in the tidy bottom sheet. */}
           <div className="lg:hidden shrink-0 space-y-2 px-3 pb-2">
             {mobileSearch}
-            {mobileFilters}
-            {countLabel && <p className="text-sm font-medium text-[#374151]">{countLabel}</p>}
+            <div className="flex items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={() => setShowMobileFilters(true)}
+                className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-[#e5e7eb] bg-white px-3.5 text-[13px] font-medium text-[#374151] shadow-sm active:bg-[#f9fafb]"
+              >
+                <SlidersHorizontal className="h-4 w-4" />
+                {t("filters.title")}
+                {activeFilterCount > 0 && (
+                  <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#009FD9] px-1.5 text-[11px] font-bold text-white">{activeFilterCount}</span>
+                )}
+              </button>
+              {countLabel && <p className="min-w-0 truncate text-right text-[13px] font-medium text-[#374151]">{countLabel}</p>}
+            </div>
           </div>
 
           {/* Scroll area — the card list. Mobile: scrolls inside the sheet. Desktop: plain

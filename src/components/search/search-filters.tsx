@@ -18,7 +18,7 @@ import { createClient } from "@/lib/supabase/client";
 // outline — the open dropdown + chevron are the affordance.
 const FILTER_TRIGGER = "text-sm focus-visible:ring-0 focus-visible:border-[#e5e7eb]";
 
-export function SearchFilters({ variant = "sidebar" }: { variant?: "sidebar" | "chips" } = {}) {
+export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHeader = false }: { variant?: "sidebar" | "chips"; hideSearch?: boolean; hideHeader?: boolean } = {}) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -235,35 +235,42 @@ export function SearchFilters({ variant = "sidebar" }: { variant?: "sidebar" | "
   }
 
   const fieldLabel = "mb-1 block text-[11px] font-semibold text-[#6b7280]";
+  // `hideHeader` = rendered inside the mobile filter sheet, which supplies its own
+  // chrome (title bar / padding) — so drop the card border/rounding/padding here.
+  const inDrawer = hideHeader;
   return (
-    <div className="rounded-2xl border border-[#e5e7eb] bg-white p-4">
+    <div className={inDrawer ? "" : "rounded-2xl border border-[#e5e7eb] bg-white p-4"}>
       {/* Header — "Filtros" + a live active-count, with an inline clear when any are on. */}
-      <div className="mb-3 flex items-center justify-between">
-        <h2 className="text-sm font-bold text-[#111827]">{t("filters.title")}</h2>
-        {activeCount > 0 && (
-          <button onClick={clearAll} className="inline-flex items-center gap-1 text-[11px] font-medium text-[#9ca3af] hover:text-red-500 transition-colors">
-            <X className="h-3 w-3" /> {t("filters.clear")} ({activeCount})
-          </button>
-        )}
-      </div>
+      {!hideHeader && (
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-sm font-bold text-[#111827]">{t("filters.title")}</h2>
+          {activeCount > 0 && (
+            <button onClick={clearAll} className="inline-flex items-center gap-1 text-[11px] font-medium text-[#9ca3af] hover:text-red-500 transition-colors">
+              <X className="h-3 w-3" /> {t("filters.clear")} ({activeCount})
+            </button>
+          )}
+        </div>
+      )}
 
-      {/* Text search */}
-      <div className="relative mb-3 flex items-center">
-        <Search className="pointer-events-none absolute left-3 h-4 w-4 text-[#9ca3af]" />
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => handleQueryChange(e.target.value)}
-          onKeyDown={handleQueryKeyDown}
-          placeholder={t("filters.searchPlaceholder")}
-          className="w-full rounded-xl border border-[#e5e7eb] bg-[#f9fafb] py-2.5 pl-9 pr-9 text-sm text-[#111827] placeholder-[#9ca3af] transition focus:border-transparent focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
-        />
-        {query && (
-          <button onClick={clearQuery} className="absolute right-3 text-[#9ca3af] hover:text-[#374151] transition-colors" aria-label={t("filters.clearSearch")}>
-            <X className="h-4 w-4" />
-          </button>
-        )}
-      </div>
+      {/* Text search (omitted in the mobile sheet — the sheet header already has a search bar). */}
+      {!hideSearch && (
+        <div className="relative mb-3 flex items-center">
+          <Search className="pointer-events-none absolute left-3 h-4 w-4 text-[#9ca3af]" />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => handleQueryChange(e.target.value)}
+            onKeyDown={handleQueryKeyDown}
+            placeholder={t("filters.searchPlaceholder")}
+            className="w-full rounded-xl border border-[#e5e7eb] bg-[#f9fafb] py-2.5 pl-9 pr-9 text-sm text-[#111827] placeholder-[#9ca3af] transition focus:border-transparent focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
+          />
+          {query && (
+            <button onClick={clearQuery} className="absolute right-3 text-[#9ca3af] hover:text-[#374151] transition-colors" aria-label={t("filters.clearSearch")}>
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Vertical stack — designed for the left sidebar (and the mobile drawer). */}
       <div className="flex flex-col gap-3">

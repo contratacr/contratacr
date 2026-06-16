@@ -239,7 +239,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             countLabel={subtitle}
             filters={<Suspense fallback={null}><SearchFilters /></Suspense>}
             mobileSearch={<Suspense fallback={null}><MobileServiceSearch /></Suspense>}
-            mobileFilters={<Suspense fallback={null}><SearchFilters variant="chips" /></Suspense>}
+            mobileFilters={<Suspense fallback={null}><SearchFilters hideSearch hideHeader /></Suspense>}
           >
 
             {/* ── Results list ── */}

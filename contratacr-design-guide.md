@@ -1236,6 +1236,13 @@ desktop). Verify with `git diff`: desktop columns/widths/sticky are untouched.
   disabled-Cantón faded border beside Provincia (looks inconsistent). Toggle rows ("Cerca de mí",
   "Solo verificados") are plain label+switch rows (no bordered boxes); a "Filtros" header carries the
   active-count + "Limpiar (N)".
+- **MOBILE filters (<lg) = a "Filtros (N)" button → BOTTOM SHEET (not a chips row).** The results-sheet
+  header shows the search bar + a compact **"Filtros"** button (`SlidersHorizontal` + a brand-blue
+  count badge) + the count. Tapping opens a bottom sheet (`fixed inset-0 z-[60]`, rounded-top,
+  `max-h-[86dvh]`, backdrop) holding the SAME filters stacked vertically — rendered via
+  `<SearchFilters hideSearch hideHeader />` (drops the duplicate search + card chrome). A sticky "Ver
+  resultados" footer (and ×/backdrop) just dismisses; filters apply instantly. Do NOT go back to the
+  cramped horizontal dropdown-chips row.
 - **Mobile (<lg) = map-as-BACKGROUND + a DRAGGABLE BOTTOM SHEET over it** (Yelp / Apple-Maps /
   Airbnb pattern — the user sees the map AND the cards at the same time, superimposed). NOT the
   old stacked map-on-top-then-list, and NOT a List/Map toggle.

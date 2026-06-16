@@ -176,6 +176,7 @@
       "sortBy": "Sort by",
       "searchPlaceholder": "Search for a service…",
       "clearSearch": "Clear search",
+      "showResults": "Show results",
       "insurer": "Insurer",
       "anyInsurer": "Any insurer",
       "removeInsurer": "Remove insurer filter",
