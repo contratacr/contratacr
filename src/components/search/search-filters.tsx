@@ -277,33 +277,34 @@ export function SearchFilters({ variant = "sidebar" }: { variant?: "sidebar" | "
           />
         </div>
 
-        {/* Provincia + Cantón share a row (cleaner, less vertical sprawl). */}
-        <div className="grid grid-cols-2 gap-2.5">
-          <div>
-            <label className={fieldLabel}>{t("filters.province")}</label>
-            <Select value={province} onValueChange={(v) => { setProvince(v); setCanton(""); applyFilters({ provincia: v, canton: "" }); }}>
-              <SelectTrigger className={FILTER_TRIGGER}>
-                <SelectValue placeholder={t("filters.allProvinces")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todas">{t("filters.allProvinces")}</SelectItem>
-                {PROVINCES.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
+        {/* Provincia + Cantón — FULL-WIDTH stacked, exactly like every other filter
+            (Categoría / Ordenar / Aseguradora). The old 2-column row made each box too
+            narrow for "Todas las provincias"/"Todos los cantones" (overflow) and put the
+            disabled-Cantón faded border right next to Provincia — visually inconsistent. */}
+        <div>
+          <label className={fieldLabel}>{t("filters.province")}</label>
+          <Select value={province} onValueChange={(v) => { setProvince(v); setCanton(""); applyFilters({ provincia: v, canton: "" }); }}>
+            <SelectTrigger className={FILTER_TRIGGER}>
+              <SelectValue placeholder={t("filters.allProvinces")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todas">{t("filters.allProvinces")}</SelectItem>
+              {PROVINCES.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
 
-          <div>
-            <label className={fieldLabel}>{t("filters.canton")}</label>
-            <Select value={canton} onValueChange={(v) => { setCanton(v); applyFilters({ canton: v }); }} disabled={!province || cantons.length === 0}>
-              <SelectTrigger className={FILTER_TRIGGER}>
-                <SelectValue placeholder={t("filters.allCantons")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">{t("filters.allCantons")}</SelectItem>
-                {cantons.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
+        <div>
+          <label className={fieldLabel}>{t("filters.canton")}</label>
+          <Select value={canton} onValueChange={(v) => { setCanton(v); applyFilters({ canton: v }); }} disabled={!province || cantons.length === 0}>
+            <SelectTrigger className={FILTER_TRIGGER}>
+              <SelectValue placeholder={t("filters.allCantons")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">{t("filters.allCantons")}</SelectItem>
+              {cantons.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </div>
 
         <div>

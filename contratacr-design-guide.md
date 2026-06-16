@@ -1226,6 +1226,16 @@ desktop). Verify with `git diff`: desktop columns/widths/sticky are untouched.
   The shell is `lg:flex lg:flex-row lg:gap-5`; map `lg:order-3` (inner box `lg:sticky lg:top-20
   lg:h-[calc(100vh-104px)] lg:rounded-2xl lg:border`), results `lg:order-2 lg:static`, sidebar
   `lg:order-1 hidden xl:block`.
+- **Filter panel fields (`SearchFilters` sidebar) are ALL FULL-WIDTH and uniform.** Categoría,
+  **Provincia, Cantón**, Ordenar por, and Aseguradora each stack full-width in the `flex flex-col
+  gap-3` field list, with the same label (`fieldLabel` = `text-[11px] font-semibold text-[#6b7280]`)
+  and the same control height/border. Provincia/Cantón use the shared `SelectTrigger` (`h-10 w-full
+  rounded-xl border-[#e5e7eb]`) + the `FILTER_TRIGGER` focus override (no stuck ring/border after
+  picking). **Do NOT put Provincia + Cantón in a 2-column row** — the 256px (`w-64`) sidebar makes
+  each half too narrow for "Todas las provincias"/"Todos los cantones" (overflow) and puts the
+  disabled-Cantón faded border beside Provincia (looks inconsistent). Toggle rows ("Cerca de mí",
+  "Solo verificados") are plain label+switch rows (no bordered boxes); a "Filtros" header carries the
+  active-count + "Limpiar (N)".
 - **Mobile (<lg) = map-as-BACKGROUND + a DRAGGABLE BOTTOM SHEET over it** (Yelp / Apple-Maps /
   Airbnb pattern — the user sees the map AND the cards at the same time, superimposed). NOT the
   old stacked map-on-top-then-list, and NOT a List/Map toggle.
