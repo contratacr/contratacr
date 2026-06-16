@@ -1315,17 +1315,18 @@ map on top + filter chips + list.
   (`locationControl`) and render it in EVERY schedule branch (incl. no-upcoming) so it can't
   be dropped per-layout or trap the client on an empty location.
 
-## 51. /buscar page shell — desktop 3-column, MOBILE vertical flow (Yelp-style)
+## 51. /buscar page shell — desktop 3-column, MOBILE = Yelp map + bottom sheet
 
 `SearchResultsLayout` (`search-results-layout.tsx`, `"use client"`) is the responsive shell.
 **Filtering/search LOGIC is unchanged** — every control drives the same URL params via
 `SearchFilters`.
 
 **THE GOLDEN RULE still holds** (see §50): desktop is the *additive `lg:`* layer; mobile is the
-base. Here the user explicitly redesigned MOBILE, so the unprefixed classes changed — but every
-mobile class carries a `lg:` reset so DESKTOP renders byte-identically (the only "extra" desktop
-property is a harmless `position: relative` on the shell, which has no positioned descendant on
-desktop). Verify with `git diff`: desktop columns/widths/sticky are untouched.
+base. The user redesigned MOBILE twice (Sprint 143 vertical flow → **Sprint 146 the real Yelp
+map-first pattern**), so the unprefixed classes changed — but every mobile class carries a `lg:`
+reset so DESKTOP renders byte-identically. The bottom-sheet wrapper is **`lg:contents`**: on desktop
+its box dissolves and its children (the card column `lg:order-2`, the chrome `lg:hidden`) drop
+straight into the flex shell. Verify with `git diff`: desktop columns/widths/sticky are untouched.
 
 - **Desktop unchanged:** xl+ = sticky filter sidebar · results column · sticky map; lg–xl =
   results · map with a "Filtros" drawer button (`hidden lg:flex xl:hidden`). The results column
@@ -1343,19 +1344,32 @@ desktop). Verify with `git diff`: desktop columns/widths/sticky are untouched.
   disabled-Cantón faded border beside Provincia (looks inconsistent). Toggle rows ("Cerca de mí",
   "Solo verificados") are plain label+switch rows (no bordered boxes); a "Filtros" header carries the
   active-count + "Limpiar (N)".
-- **Mobile (<lg) = a clean VERTICAL FLOW (Yelp-style), NOT a bottom-sheet/List-Map toggle.** The page
-  scrolls normally; nothing overlaps. Order (DOM order = visual order in the `flex flex-col` shell):
-  **(1) search bar** (`MobileServiceSearch`) → **(2) filter chips** (`<SearchFilters variant="chips"/>`,
-  wrapped in `-mx-4 px-4 sm:-mx-6 sm:px-6` so the `overflow-x-auto` row scrolls edge-to-edge and never
-  wraps) → **(3) the map** as a FIXED-height block (`h-[42vh] min-h-[260px]`, `rounded-2xl border`,
-  `relative isolate overflow-hidden`) → **(4) the count** (`lg:hidden`) → **(5) the card list**
-  (`children`). No drag handle, no superimposed sheet, no full-bleed negative margins.
-- **ONE map instance, reflowed by `lg:order-*`** — NOT a second `<GoogleMapPanel>`. The shell is
-  `flex flex-col gap-3 lg:flex-row lg:gap-5`; on desktop the same nodes reorder to the 3 columns:
-  filters sidebar `lg:order-1 hidden xl:block`, card list `lg:order-2 lg:w-[640px] …`, map
-  `lg:order-3 lg:flex-1` (inner box adds `lg:h-[calc(100vh-104px)] lg:sticky lg:top-20`). The mobile
-  search+chips block and the count are `lg:hidden`. Verify with `git diff` that desktop
-  columns/widths/sticky are untouched.
+- **Mobile (<lg) = the Yelp map-first pattern: a pinned search bar, a BIG map, a BOTTOM SHEET over
+  it.** The shell root is a fixed-viewport column `h-[calc(100dvh-64px)] flex flex-col overflow-hidden`
+  (`lg:block lg:h-auto lg:overflow-visible`). Top→bottom: **(1) the search bar** (`MobileServiceSearch`,
+  `lg:hidden`, pinned at the very top) → **(2) the MAP** — a single `<GoogleMapPanel>` in an aside that
+  `flex-1`-fills the remaining height (inner box `h-full`, full-bleed: NO border/rounding on mobile,
+  `lg:rounded-2xl lg:border lg:sticky lg:top-20 lg:h-[calc(100vh-104px)]`), so the map gets full
+  prominence with the pins + "Buscar en esta área" → **(3) the BOTTOM SHEET** floating over the map's
+  lower part. In `page.tsx` the mobile chrome is trimmed so the map dominates: the **"Todos los
+  profesionales" header strip is `hidden lg:block`**, the **footer is `hidden lg:block`**, and `main`
+  padding is **zeroed on mobile** (`px-0 py-0 lg:px-8 lg:py-4`) for the edge-to-edge map.
+- **The BOTTOM SHEET** (`fixed inset-x-0 bottom-0 z-30`, `rounded-t-2xl` + top/side border + upward
+  shadow): a **drag handle** (a `h-1.5 w-10` grey grip) you **drag to resize** (pointer events on the
+  handle only, `touch-none`) between two snap points — **PEEK ≈ 0.46 dvh** (chips + first card peek over
+  the map) and **FULL ≈ 0.84 dvh** (browse the full list, search bar still visible on top); a small
+  drag → snap to nearest, a tap → toggle. Inside, top→bottom: a **leading filter-icon button** (opens
+  the full-filter drawer; a brand-blue dot marks active filters) + the **horizontally-scrollable chip
+  row** (`<SearchFilters variant="chips"/>`, never wraps), the **"<N> profesionales" count**, then the
+  **scrolling card list** (`overflow-y-auto`, `children`). The cards live INSIDE the sheet — a clean
+  contained panel — and NEVER bleed onto the map.
+- **ONE map instance + ONE card list, repositioned by classes** — NOT a second `<GoogleMapPanel>` and
+  NOT a duplicated card list (duplicate `#pro-card-<id>` IDs would break the card↔pin highlight). The
+  sheet wrapper is `lg:contents` so on desktop it dissolves: the card column (`lg:order-2 lg:w-[640px]
+  xl:w-[700px] 2xl:w-[820px]`, with its mobile `flex-1 overflow-y-auto px-4` reset by `lg:`) and the
+  map (`lg:order-3 lg:flex-1`) land in the `lg:flex-row` shell; the sheet chrome + the search bar are
+  `lg:hidden`. The full-filter **drawer** (left panel, `xl:hidden`) is shared by the mobile filter-icon
+  AND the lg–xl "Filtros" button.
 - **No clobbering between the search bar and the chips:** the search bar copies the live URL
   (preserving filters); the chips' `applyFilters` reads `q` from the URL (not the chip
   instance's stale local state). Keep this split. The mobile count is shown in the sheet, so the
