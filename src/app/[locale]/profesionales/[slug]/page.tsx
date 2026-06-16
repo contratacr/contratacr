@@ -3,9 +3,10 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import {
-  MapPin, Shield, ArrowLeft,
+  MapPin, Shield, ArrowLeft, Star, Briefcase, Camera,
   Share2, Flag, ChevronDown, Lock, Phone, Building2, Award, Mail,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { InstagramIcon, FacebookIcon, TikTokIcon } from "@/components/icons/social-icons";
 import { buildSocialUrl } from "@/lib/social";
 import { Link } from "@/i18n/navigation";
@@ -17,7 +18,7 @@ import { StarRating } from "@/components/ui/star-rating";
 import { getInitials, getWhatsAppLink } from "@/lib/utils";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { serviceLabelMap } from "@/lib/services";
-import { formatPricingTier } from "@/lib/pricing";
+import { formatPricingTier, primaryPricingLabel } from "@/lib/pricing";
 import { languageLabel } from "@/lib/data/languages";
 import { insurerLabel } from "@/lib/data/insurers";
 import { ReviewSection } from "@/components/professionals/review-section";
@@ -210,71 +211,106 @@ export default function ProfilePage({ params }: ProfilePageProps) {
             </Link>
           )}
 
-          {professional.isFeatured && (
-            <div className="bg-gradient-to-r from-[#ff7c0a] to-[#ff9b32] px-5 py-2 rounded-t-2xl">
-              <span className="text-xs font-semibold text-white tracking-wide">{t("featuredBadge")}</span>
+          {/* ── HEADER CARD ── identity on the left, a right-aligned stats strip. Mirrors
+              the new /buscar card (circular avatar, solid-blue "Verificado" pill). No
+              "destacado" ribbon. */}
+          <div className="bg-white rounded-2xl border border-[#e5e7eb] shadow-sm p-5 sm:p-6 mb-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-4 min-w-0">
+                <Avatar className="h-20 w-20 sm:h-[88px] sm:w-[88px] shrink-0">
+                  <AvatarImage src={professional.avatarUrl ?? undefined} alt={professional.fullName} className="object-cover" />
+                  <AvatarFallback className="text-2xl bg-[#EBF5FB] text-[#009FD9] font-bold">{getInitials(professional.fullName)}</AvatarFallback>
+                </Avatar>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <h1 className="text-2xl font-bold leading-tight text-[#111827]">{professional.businessName?.trim() || professional.fullName}</h1>
+                    {professional.verificationStatus === "verified" && <Badge variant="verified">{t("identityVerified")}</Badge>}
+                  </div>
+                  {professional.businessName?.trim() && (
+                    <p className="mt-0.5 text-sm font-medium text-[#6b7280]">{professional.fullName}</p>
+                  )}
+                  <p className="mt-1 text-sm text-[#6b7280]">
+                    {(professional.professions && professional.professions.length > 0 ? professional.professions : [professional.categoryId])
+                      .filter(Boolean)
+                      .map((cat) => tCat(cat as Parameters<typeof tCat>[0]))
+                      .join(" · ")}
+                  </p>
+                  {locationText && (
+                    <div className="mt-1.5 flex items-center gap-1.5 text-sm text-[#6b7280]">
+                      <MapPin className="h-4 w-4 shrink-0 text-[#009FD9]" />
+                      <span>{locationText}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Stats strip — rating · años de exp · casos de éxito. */}
+              <div className="flex items-center gap-5 self-start shrink-0 sm:self-center sm:border-l sm:border-[#f3f4f6] sm:pl-5">
+                <button type="button" onClick={() => setActiveTab("resenas")} className="text-center">
+                  <div className="flex items-center justify-center gap-1">
+                    <Star className="h-4 w-4 fill-[#ff9b32] text-[#ff9b32]" />
+                    <span className="text-[15px] font-bold text-[#111827]">{professional.ratingAvg.toFixed(1)}</span>
+                  </div>
+                  <p className="mt-0.5 text-[11px] text-[#9ca3af]">{t("reviewCountLabel", { count: professional.reviewCount })}</p>
+                </button>
+                {expYears > 0 && (
+                  <div className="text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      <Briefcase className="h-4 w-4 text-[#009FD9]" />
+                      <span className="text-[15px] font-bold text-[#111827]">{expYears}</span>
+                    </div>
+                    <p className="mt-0.5 text-[11px] text-[#9ca3af]">{t("statYears")}</p>
+                  </div>
+                )}
+                {hasCasos && (
+                  <button type="button" onClick={() => setActiveTab("casos")} className="text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      <Camera className="h-4 w-4 text-[#009FD9]" />
+                      <span className="text-[15px] font-bold text-[#111827]">{professional.portfolioUrls?.length ?? 0}</span>
+                    </div>
+                    <p className="mt-0.5 text-[11px] text-[#9ca3af]">{t("statCasos")}</p>
+                  </button>
+                )}
+              </div>
             </div>
-          )}
+          </div>
 
           <div className="flex flex-col lg:flex-row gap-6">
 
             {/* ── LEFT STICKY CARD ── */}
-            <aside className="w-full lg:w-72 shrink-0">
-              <div className="bg-white rounded-2xl shadow-sm border border-[#e5e7eb] p-6 lg:sticky lg:top-24 flex flex-col gap-4">
+            <aside className="w-full shrink-0 lg:order-2 lg:w-80">
+              <div className="bg-white rounded-2xl shadow-sm border border-[#e5e7eb] p-5 lg:sticky lg:top-24 flex flex-col gap-4">
 
-                {/* Avatar + name — photo appears exactly once */}
-                <div className="flex flex-col items-center text-center gap-3">
-                  <Avatar className="h-24 w-24">
-                    <AvatarImage src={professional.avatarUrl ?? undefined} alt={professional.fullName} className="object-cover" />
-                    <AvatarFallback className="text-2xl bg-[#EBF5FB] text-[#009FD9] font-bold">
-                      {getInitials(professional.fullName)}
-                    </AvatarFallback>
-                  </Avatar>
-
-                  <div>
-                    {/* Brand leads when present; personal name as muted subtitle. */}
-                    <h1 className="text-xl font-bold text-[#111827]">{professional.businessName?.trim() || professional.fullName}</h1>
-                    {professional.businessName?.trim() && (
-                      <p className="text-sm font-medium text-[#6b7280] mt-0.5">{professional.fullName}</p>
-                    )}
-                    {/* Professions as plain muted text, not colored chips. */}
-                    <p className="text-sm text-[#6b7280] mt-1">
-                      {(professional.professions && professional.professions.length > 0
-                        ? professional.professions
-                        : [professional.categoryId]
-                      ).filter(Boolean)
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        .map((cat) => tCat(cat as any)).join(" · ")}
-                    </p>
-                  </div>
-
-                  {/* Verified → plain-text "Verificado". Unverified shows NOTHING
-                      (no badge, no negative label). */}
-                  {professional.verificationStatus === "verified" && (
-                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#15803d]">
-                      {t("identityVerified")}
-                    </span>
-                  )}
+                {/* "Desde" price — mirrors the right side of the /buscar card. Identity
+                    (avatar/name/verificado/rating/location) now lives in the HEADER card
+                    above, so it's not repeated here. */}
+                <div>
+                  <span className="text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">{t("from")}</span>
+                  {(() => {
+                    const label = primaryPricingLabel(professional.pricing, professional.hourlyRate);
+                    const slash = label.indexOf("/");
+                    const amount = slash >= 0 ? label.slice(0, slash).trim() : label;
+                    const unit = slash >= 0 ? label.slice(slash) : "";
+                    return (
+                      <p className="leading-tight">
+                        <span className="text-xl font-bold text-[#009FD9]">{amount}</span>
+                        {unit && <span className="text-sm font-medium text-[#9ca3af]"> {unit}</span>}
+                      </p>
+                    );
+                  })()}
                 </div>
 
-                {/* Rating */}
-                <div className="flex flex-col items-center gap-1">
-                  <StarRating rating={professional.ratingAvg} showValue reviewCount={professional.reviewCount} size="md" />
-                  <button onClick={() => setActiveTab("resenas")} className="text-xs text-[#009FD9] hover:underline">
-                    {t("viewReviewsCount", { count: professional.reviewCount })}
-                  </button>
-                </div>
-
-                {/* Location — only show if there's content */}
-                {locationText && (
-                  <div className="flex items-center justify-center gap-1.5 text-sm text-[#6b7280]">
-                    <MapPin className="h-4 w-4 shrink-0 text-[#009FD9]" />
-                    <span>{locationText}</span>
-                  </div>
+                {/* Ver horario completo — the primary CTA (filled blue); opens the booking
+                    modal (the full schedule lives inside it). Only when the schedule is public. */}
+                {professional.availabilityPublic && (
+                  <BookingButton
+                    professional={professional}
+                    categoryName={professional.categoryId ? tCat(professional.categoryId as Parameters<typeof tCat>[0]) : ""}
+                    label={t("viewFullSchedule")}
+                    size="md"
+                    className="w-full"
+                  />
                 )}
-
-                {/* Casos de éxito images live ONLY in the "Casos de éxito" tab — no
-                    duplicate thumbnail strip here under the profile summary. */}
 
                 {/* The pro's OWN profile shows the SAME buttons a client sees; the
                     action is blocked with a friendly modal (handled per button). */}
@@ -305,18 +341,6 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                     <WhatsAppIcon className="h-4 w-4" />
                     {t("contact.whatsapp")}
                   </button>
-                )}
-
-                {/* Solicitar servicio CTA — only when the schedule is public.
-                    BookingButton blocks the self-request on the pro's own profile. */}
-                {professional.availabilityPublic && (
-                  <BookingButton
-                    professional={professional}
-                    categoryName={professional.categoryId ? tCat(professional.categoryId as Parameters<typeof tCat>[0]) : ""}
-                    variant="outline"
-                    size="md"
-                    className="w-full"
-                  />
                 )}
 
                 {/* Llamar — driven by "Permitir contacto por llamada", independent of
@@ -439,8 +463,8 @@ export default function ProfilePage({ params }: ProfilePageProps) {
               </div>
             </aside>
 
-            {/* ── RIGHT TABBED CONTENT ── */}
-            <div className="flex-1 min-w-0">
+            {/* ── TABBED CONTENT (LEFT on desktop; contact card is the right aside) ── */}
+            <div className="flex-1 min-w-0 lg:order-1">
               <div className="bg-white rounded-2xl shadow-sm border border-[#e5e7eb] overflow-hidden">
 
                 {/* Tab bar */}

@@ -16,6 +16,8 @@ interface BookingButtonProps {
   variant?: "default" | "outline" | "ghost";
   size?: "sm" | "md" | "lg";
   className?: string;
+  /** Override the default "Solicitar servicio" label (e.g. "Ver horario completo"). */
+  label?: string;
 }
 
 export function BookingButton({
@@ -24,6 +26,7 @@ export function BookingButton({
   variant = "default",
   size = "md",
   className,
+  label,
 }: BookingButtonProps) {
   const { user } = useAuth();
   const [showRegistration, setShowRegistration] = useState(false);
@@ -50,7 +53,7 @@ export function BookingButton({
     <>
       <Button variant={variant} size={size} className={className} onClick={handleClick}>
         <CalendarDays className="h-4 w-4" />
-        {t("requestService")}
+        {label ?? t("requestService")}
       </Button>
 
       {/* Step 1: inline registration for non-logged-in users */}
