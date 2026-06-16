@@ -200,12 +200,22 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
   function cancelClose() { if (closeTimerRef.current) { clearTimeout(closeTimerRef.current); closeTimerRef.current = null; } }
   function scheduleClose() { cancelClose(); closeTimerRef.current = setTimeout(closePopup, 150); }
 
+  // `interactive` = a CLICK/TAP popup (clickable card, hoverable). `false` = a HOVER preview.
+  // ROOT-CAUSE of the hover VIBRATION: the popup card is anchored just above the pin, and the
+  // pin's `is-active` 1.15× scale grows its top edge up UNDER the card; an interactive card
+  // (`pointer-events:auto`) then STEALS the hover from the pin → pin `mouseleave` → the pin
+  // un-scales → the cursor is over the pin again → `mouseenter` → … = a continuous flicker
+  // loop that no debounce can stop. The fix: the HOVER preview is `pointer-events:none`, so it
+  // can NEVER capture the pointer or steal the pin's hover — the pin stays hovered, rock stable.
+  // Click/tap popups keep `pointer-events:auto` (they're opened by a deliberate gesture, and the
+  // cursor settles ON the card, so there's no pin↔card alternation).
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function openPopup(g: any, map: any, pro: MapProfessional, pos: { lat: number; lng: number }) {
-    // Already showing this pro → keep the existing card (don't rebuild → no flicker).
-    if (popupRef.current && popupKeyRef.current === pro.proId + "|" + pro.id) { cancelClose(); return; }
+  function openPopup(g: any, map: any, pro: MapProfessional, pos: { lat: number; lng: number }, interactive: boolean) {
+    const key = (interactive ? "C:" : "H:") + pro.id;
+    // Already showing this exact popup → keep it (don't rebuild → no flicker).
+    if (popupRef.current && popupKeyRef.current === key) { cancelClose(); return; }
     closePopup();
-    popupKeyRef.current = pro.proId + "|" + pro.id;
+    popupKeyRef.current = key;
     const href = `/${locale}/profesionales/${pro.slug}`;
     const profs = (pro.professions ?? []).filter(Boolean).slice(0, 2).join(" · ") || pro.categoryLabel || "";
     const wrap = document.createElement("div");
@@ -223,11 +233,16 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
           `</div>` +
         `</div>` +
       `</a>`;
-    wrap.querySelector(".ccr-pop-x")?.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); closePopup(); });
-    // Keep the hover preview open while the cursor is over the card itself.
-    if (typeof window !== "undefined" && window.matchMedia?.("(hover: hover)").matches) {
-      wrap.addEventListener("mouseenter", cancelClose);
-      wrap.addEventListener("mouseleave", scheduleClose);
+    if (interactive) {
+      wrap.querySelector(".ccr-pop-x")?.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); closePopup(); });
+      // Keep the popup open while the cursor is over the card itself.
+      if (typeof window !== "undefined" && window.matchMedia?.("(hover: hover)").matches) {
+        wrap.addEventListener("mouseenter", cancelClose);
+        wrap.addEventListener("mouseleave", scheduleClose);
+      }
+    } else {
+      // HOVER preview → transparent to pointer events (can't steal the pin's hover).
+      (wrap.firstElementChild as HTMLElement | null)?.style.setProperty("pointer-events", "none");
     }
     popupRef.current = new g.marker.AdvancedMarkerElement({ map, position: pos, content: wrap, zIndex: 100000 });
   }
@@ -404,21 +419,21 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
       list.push(el); pinsByProRef.current.set(proId, list);
 
       if (canHover) {
-        // Desktop hover: highlight the pin/card AND show the mini-card preview. If the card
-        // is ALREADY showing this pro, re-activate the pin WITHOUT re-scrolling or rebuilding
-        // the popup (openPopup dedupes) — that idempotence is what stops the hover vibration.
+        // Desktop hover: highlight the pin/card AND show a NON-interactive mini-card preview
+        // (pointer-events:none → it can't steal the pin's hover → no vibration). Re-entering
+        // the same pin re-activates it without re-scrolling/rebuilding (openPopup dedupes).
         el.addEventListener("mouseenter", () => {
           cancelClose();
-          const already = !!popupRef.current && popupKeyRef.current === pro.proId + "|" + pro.id;
+          const already = !!popupRef.current && popupKeyRef.current === "H:" + pro.id;
           setActive(proId, true, !already);
-          openPopup(g, map, pro, pos);
+          openPopup(g, map, pro, pos, false);
         });
         el.addEventListener("mouseleave", () => { setActive(proId, false, false); scheduleClose(); });
       }
       el.addEventListener("click", (e) => {
         e.stopPropagation();
         cancelClose();
-        openPopup(g, map, pro, pos);
+        openPopup(g, map, pro, pos, true); // a deliberate click → interactive (clickable) popup
         setActive(proId, true, false);
         // Mobile: tell the results sheet to spring open + scroll to this pro's card.
         if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("ccr:focus-card", { detail: proId }));
