@@ -118,6 +118,8 @@ Use the standard 4px Tailwind steps. Defaults for this app:
 
 ### Components & standards
 
+**Success-confirmation icon** — use the shared **`<SuccessIcon size={…} />`** (`components/ui/success-icon.tsx`) on EVERY "creado / enviado / completado" confirmation screen (support modal + public /soporte, /reset-password, booking success, /registro/cliente, leave-review + report-profile modals, …). It's the on-brand "check on a light tint of the same blue" badge: a pale brand-blue circle (`#EBF5FB`) + a subtle inset brand ring (`ring-[#009FD9]/20`) + a soft brand-blue glow + a bold `#009FD9` `Check`. **Do NOT** hand-roll a grey circle or a bare green check — always reuse `SuccessIcon` so all confirmations look identical (Sprint 158).
+
 **Buttons** (`Button` component). Clear hierarchy, **compact sizing by default**:
 - **Primary** — `variant="default"` (filled brand `#009FD9`). Exactly one per context. The main action ("Solicitar servicio", "Generar", "Guardar").
 - **Secondary** — `variant="secondary"` (white, brand border/text) or `variant="outline"` (neutral). Supporting actions.
