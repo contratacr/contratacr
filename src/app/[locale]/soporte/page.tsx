@@ -293,8 +293,7 @@ export default function SoportePage() {
               className="inline-flex items-center gap-1 font-medium text-[#1ebe5d] hover:underline"
             >
               <WhatsAppIcon className="h-4 w-4" /> {t("whatsappLink")}
-            </a>{" "}
-            <span className="text-[#cbd5e1]">·</span> {t("whatsappPost")}
+            </a>
           </p>
 
         </div>
