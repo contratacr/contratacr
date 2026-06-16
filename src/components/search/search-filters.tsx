@@ -191,7 +191,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
         </div>
         <div className="shrink-0 w-[140px]">
           <Select value={canton} onValueChange={(v) => { setCanton(v); applyFilters({ canton: v }); }} disabled={!province || cantons.length === 0}>
-            <SelectTrigger className={pill}><SelectValue placeholder={t("filters.canton")} /></SelectTrigger>
+            <SelectTrigger className={pill}><SelectValue placeholder={!province ? t("filters.selectProvince") : t("filters.canton")} /></SelectTrigger>
             <SelectContent>
               <SelectItem value="todos">{t("filters.allCantons")}</SelectItem>
               {cantons.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
@@ -352,7 +352,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
           <label className={fieldLabel}>{t("filters.canton")}</label>
           <Select value={canton} onValueChange={(v) => { setCanton(v); applyFilters({ canton: v }); }} disabled={!province || cantons.length === 0}>
             <SelectTrigger className={FILTER_TRIGGER}>
-              <SelectValue placeholder={t("filters.allCantons")} />
+              <SelectValue placeholder={!province ? t("filters.selectProvince") : t("filters.allCantons")} />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="todos">{t("filters.allCantons")}</SelectItem>
