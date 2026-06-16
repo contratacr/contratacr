@@ -284,6 +284,8 @@
     "noTimesAtLocation": "No available times at this location. Pick another location or contact us to coordinate.",
     "prevDays": "Previous days",
     "nextDays": "Next days",
+    "prevLocations": "Previous locations",
+    "nextLocations": "More locations",
     "dayUnavailable": "Not available",
     "viewFullSchedule": "View full schedule",
     "requestService": "Request service",

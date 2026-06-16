@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { ChevronLeft, ChevronRight, MapPin, Phone, CalendarDays } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
@@ -83,6 +83,8 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const [showBooking, setShowBooking] = useState(false);
   const [preset, setPreset] = useState<ScheduleSlot | null>(null);
   const [offset, setOffset] = useState(0);
+  // Scroll container for the location tabs — chevron buttons scroll it when >3 locations.
+  const locScrollRef = useRef<HTMLDivElement>(null);
   // When the pro acts on their OWN card we block the action with a friendly modal
   // instead of hiding the buttons (the card looks identical to a client's view).
   const [selfMsg, setSelfMsg] = useState<string | null>(null);
@@ -168,34 +170,61 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const workplaceAddr = hasRealLoc && effectiveId ? locAddress(effectiveId) : "";
   const addressLine = workplaceAddr || coverageText || placeAddress || "";
   const venueName = workplaceAddr ? businessName.trim() : "";
+  // MORE THAN 3 locations → flank the tab row with chevron buttons so every location is
+  // reachable without breaking the card (the row also scrolls by touch/trackpad).
+  const showLocNav = locTabs.length > 3;
+  const scrollLocs = (dir: number) => locScrollRef.current?.scrollBy({ left: dir * 140, behavior: "smooth" });
   const locationControl = locTabs.length > 0 ? (
     <div className="relative z-10 min-w-0">
       {/* TABS (Doctoralia-style): pin + name; the selected tab is brand-blue with an
           underline, the rest muted. The row SCROLLS sideways and NEVER wraps
-          (`shrink-0` + `whitespace-nowrap`). `.hide-scrollbar` hides the chrome. */}
-      <div className="-mx-1 flex gap-3 overflow-x-auto hide-scrollbar border-b border-[#e5e7eb] px-1" role="tablist" aria-label={t("location")}>
-        {locTabs.map((o) => {
-          const active = hasRealLoc ? o.id === effectiveId : true;
-          return (
-            <button
-              key={o.id}
-              type="button"
-              role="tab"
-              aria-selected={active}
-              onClick={hasRealLoc
-                ? (e) => { e.stopPropagation(); setSelectedLoc(o.id); setOffset(0); }
-                : (e) => e.stopPropagation()}
-              className={`shrink-0 -mb-px inline-flex items-center gap-1 whitespace-nowrap border-b-2 px-0.5 pb-1.5 text-[12px] font-semibold transition-colors ${
-                active
-                  ? "border-[#009FD9] text-[#009FD9]"
-                  : "border-transparent text-[#6b7280] hover:text-[#374151]"
-              }`}
-            >
-              <MapPin className="h-3 w-3 shrink-0" />
-              {o.label}
-            </button>
-          );
-        })}
+          (`shrink-0` + `whitespace-nowrap`). `.hide-scrollbar` hides the chrome; when
+          there are >3 tabs the chevrons below scroll it. */}
+      <div className="flex items-center gap-0.5">
+        {showLocNav && (
+          <button
+            type="button"
+            aria-label={t("prevLocations")}
+            onClick={(e) => { e.stopPropagation(); scrollLocs(-1); }}
+            className="relative z-10 shrink-0 flex h-5 w-5 items-center justify-center rounded-full text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#111827] transition-colors"
+          >
+            <ChevronLeft className="h-3.5 w-3.5" />
+          </button>
+        )}
+        <div ref={locScrollRef} className="-mx-1 flex min-w-0 flex-1 gap-3 overflow-x-auto hide-scrollbar border-b border-[#e5e7eb] px-1" role="tablist" aria-label={t("location")}>
+          {locTabs.map((o) => {
+            const active = hasRealLoc ? o.id === effectiveId : true;
+            return (
+              <button
+                key={o.id}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={hasRealLoc
+                  ? (e) => { e.stopPropagation(); setSelectedLoc(o.id); setOffset(0); }
+                  : (e) => e.stopPropagation()}
+                className={`shrink-0 -mb-px inline-flex items-center gap-1 whitespace-nowrap border-b-2 px-0.5 pb-1.5 text-[12px] font-semibold transition-colors ${
+                  active
+                    ? "border-[#009FD9] text-[#009FD9]"
+                    : "border-transparent text-[#6b7280] hover:text-[#374151]"
+                }`}
+              >
+                <MapPin className="h-3 w-3 shrink-0" />
+                {o.label}
+              </button>
+            );
+          })}
+        </div>
+        {showLocNav && (
+          <button
+            type="button"
+            aria-label={t("nextLocations")}
+            onClick={(e) => { e.stopPropagation(); scrollLocs(1); }}
+            className="relative z-10 shrink-0 flex h-5 w-5 items-center justify-center rounded-full text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#111827] transition-colors"
+          >
+            <ChevronRight className="h-3.5 w-3.5" />
+          </button>
+        )}
       </div>
       {addressLine && (
         <p className="mt-1.5 line-clamp-2 text-[11px] leading-snug text-[#6b7280]">
@@ -299,18 +328,19 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const telHref = `tel:+${((professional.callPhone || professional.whatsapp) || "").replace(/\D/g, "")}`;
 
   // ── Schedule body (the RIGHT column on desktop) ───────────────────────────
-  // Consecutive upcoming day-columns starting from the FIRST day that has any
-  // availability; days within the shown window that have none render "No disponible"
-  // (Doctoralia-style), paged COLS at a time. No bookable schedule → a short note.
-  // The slot DATA is unchanged — this only changes how the already-fetched days display.
-  const firstIdx = days.findIndex((d) => d.items.length > 0);
-  const hasUpcoming = firstIdx >= 0;
-  const consecutive = hasUpcoming ? days.slice(firstIdx) : [];
-  const maxOffset = Math.max(0, consecutive.length - COLS);
+  // ADAPTIVE day strip: show ONLY the days that actually have availability (never
+  // "No disponible" filler columns), and size the grid to HOW MANY are shown — 1 day →
+  // full-width, 2 days → halves, 3 → thirds — so a pro with few open days fills the
+  // space instead of looking sparse. Page COLS at a time when there are MORE than COLS
+  // available days. The slot DATA is unchanged — only the display.
+  const availableDays = useMemo(() => days.filter((d) => d.items.length > 0), [days]);
+  const hasUpcoming = availableDays.length > 0;
+  const maxOffset = Math.max(0, availableDays.length - COLS);
   const effOffset = Math.min(offset, maxOffset);
-  const windowDays = consecutive.slice(effOffset, effOffset + COLS);
+  const windowDays = availableDays.slice(effOffset, effOffset + COLS);
   const canPrev = effOffset > 0;
-  const canNext = effOffset + COLS < consecutive.length;
+  const canNext = effOffset + COLS < availableDays.length;
+  const dayColsClass = windowDays.length >= 3 ? "grid-cols-3" : windowDays.length === 2 ? "grid-cols-2" : "grid-cols-1";
 
   // Action buttons live IN the right column (HuliHealth style), full-width PILLS of that
   // column — NOT a separate bottom strip. CONDITIONAL on availability (logic unchanged):
@@ -390,7 +420,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           <ChevronLeft className="h-[15px] w-[15px]" />
         </button>
 
-        <div className="grid flex-1 grid-cols-3 gap-2">
+        <div className={`grid flex-1 gap-2 ${dayColsClass}`}>
           {windowDays.map((day) => {
             const extra = day.items.length - 3;
             return (

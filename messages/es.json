@@ -284,6 +284,8 @@
     "noTimesAtLocation": "No hay horarios disponibles en esta ubicación. Elige otra ubicación o contáctanos para coordinar.",
     "prevDays": "Días anteriores",
     "nextDays": "Días siguientes",
+    "prevLocations": "Ubicaciones anteriores",
+    "nextLocations": "Más ubicaciones",
     "dayUnavailable": "No disponible",
     "viewFullSchedule": "Ver horario completo",
     "requestService": "Solicitar servicio",
