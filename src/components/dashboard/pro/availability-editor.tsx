@@ -8,7 +8,6 @@ import { createClient } from "@/lib/supabase/client";
 import { Plus, X, Lock, Loader2, MapPin, ChevronDown, ChevronLeft, ChevronRight, Calendar, Pencil, Trash2, Copy } from "lucide-react";
 import { type ContactPreference } from "@/lib/constants";
 import { crTodayISO, isTooSoonCR } from "@/lib/time-cr";
-import { getCategoryLabel } from "@/lib/data/categories";
 import { TimeSelect, to12h } from "@/components/ui/time-select";
 import { SaveStatus } from "@/components/dashboard/save-status";
 
@@ -76,12 +75,10 @@ interface AvailabilityEditorProps {
   /** True when the pro selected "Me desplazo donde el cliente" (service_type includes
    *  "mobile"). Adds an OPTIONAL "A domicilio" schedulable location. */
   travels?: boolean;
-  /** The pro's professions (category ids). Schedules are tied to a profession. */
-  professions?: string[];
   onSaved?: () => void;
 }
 
-export function AvailabilityEditor({ professionalId, initialPublic = true, workplaces = [], coverageAreas = [], travels = false, professions = [], onSaved }: AvailabilityEditorProps) {
+export function AvailabilityEditor({ professionalId, initialPublic = true, workplaces = [], coverageAreas = [], travels = false, onSaved }: AvailabilityEditorProps) {
   const locale = useLocale();
   const t = useTranslations("availabilityEditor");
   const dateLocale = locale === "en" ? "en-US" : "es-CR";
@@ -126,48 +123,37 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
     }
   }, [locationOptions, genLocation]);
 
-  // Profession this schedule is for. Each schedule belongs to a (profession + location)
-  // pair; defaults to the primary profession.
-  const professionOptions = useMemo(() => professions.filter(Boolean), [professions]);
-  const [genCategory, setGenCategory] = useState("");
-  useEffect(() => {
-    if (professionOptions.length > 0 && !professionOptions.includes(genCategory)) {
-      setGenCategory(professionOptions[0]);
-    }
-  }, [professionOptions, genCategory]);
-
-  const activeCat = genCategory || null;
-  const sameCombo = useCallback(
-    (loc: string, cat: string | null) => loc === genLocation && (cat ?? "") === (activeCat ?? ""),
-    [genLocation, activeCat]
-  );
+  // Schedules are keyed by LOCATION ONLY. Professions ("what I do") are profile info,
+  // never tied to when/where — the specific service is coordinated at contact/booking.
+  // New weekly/exception rows write category_id = null; legacy profession-tagged rows
+  // are matched by location (any category) and migrate to null as the pro edits.
+  const sameLoc = useCallback((loc: string) => loc === genLocation, [genLocation]);
 
   function locationLabel(id: string): string {
     return locationOptions.find((o) => o.id === id)?.label ?? t("locationFallback");
   }
 
   // ── MATERIALIZE the template + exceptions into concrete slots ──────────────
-  // Computed across ALL locations/professions (availability_slots is UNIQUE per
-  // pro+date+time — a pro can't be in two places at once), first writer wins.
+  // Keyed by LOCATION (not profession): availability_slots is UNIQUE per pro+date+time
+  // (a pro can't be in two places at once), so we dedupe by (date,time) across all
+  // locations — first writer wins. Slots are written with category_id = null.
   const computeDesiredSlots = useCallback((wk: WeeklyRow[], exc: ExcRow[]) => {
     const start = todayISO();
-    // weekly franjas keyed by `${loc}|${cat}|${weekday}`
+    const locs = new Set<string>();
+    // weekly franjas keyed by `${loc}|${weekday}`
     const weeklyByKey = new Map<string, { start: string; end: string; dur: number }[]>();
-    const combos = new Map<string, { loc: string; cat: string | null }>();
     for (const r of wk) {
-      const ck = `${r.location_id}|${r.category_id ?? ""}`;
-      combos.set(ck, { loc: r.location_id, cat: r.category_id ?? null });
-      const k = `${ck}|${r.weekday}`;
+      locs.add(r.location_id);
+      const k = `${r.location_id}|${r.weekday}`;
       const arr = weeklyByKey.get(k) ?? [];
       arr.push({ start: r.start, end: r.end, dur: r.slot_minutes });
       weeklyByKey.set(k, arr);
     }
-    // exceptions keyed by `${loc}|${cat}|${date}`
+    // exceptions keyed by `${loc}|${date}`
     const excByKey = new Map<string, { closed: boolean; custom: { start: string; end: string; dur: number }[]; extra: { start: string; end: string; dur: number }[] }>();
     for (const e of exc) {
-      const ck = `${e.location_id}|${e.category_id ?? ""}`;
-      combos.set(ck, { loc: e.location_id, cat: e.category_id ?? null });
-      const k = `${ck}|${e.date}`;
+      locs.add(e.location_id);
+      const k = `${e.location_id}|${e.date}`;
       const cur = excByKey.get(k) ?? { closed: false, custom: [], extra: [] };
       if (e.mode === "closed") cur.closed = true;
       else if (e.start && e.end) (e.mode === "custom" ? cur.custom : cur.extra).push({ start: e.start, end: e.end, dur: e.slot_minutes });
@@ -179,10 +165,10 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
     for (let i = 0; i <= HORIZON_DAYS; i++) {
       const date = addDaysISO(start, i);
       const wd = weekdayOf(date);
-      for (const [ck, { loc, cat }] of combos) {
-        const exDay = excByKey.get(`${ck}|${date}`);
+      for (const loc of locs) {
+        const exDay = excByKey.get(`${loc}|${date}`);
         if (exDay?.closed) continue;
-        const base = exDay?.custom.length ? exDay.custom : (weeklyByKey.get(`${ck}|${wd}`) ?? []);
+        const base = exDay?.custom.length ? exDay.custom : (weeklyByKey.get(`${loc}|${wd}`) ?? []);
         const franjas = [...base, ...(exDay?.extra ?? [])];
         for (const f of franjas) {
           const dur = Math.max(5, f.dur || 60);
@@ -196,7 +182,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
             const key = `${date}|${time}`;
             if (seen.has(key)) continue;
             seen.add(key);
-            out.push({ date, time, location_id: loc, category_id: cat });
+            out.push({ date, time, location_id: loc, category_id: null });
           }
         }
       }
@@ -255,26 +241,26 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
   // no rows yet falls back to this instead of resetting to 60).
   const [durationPref, setDurationPref] = useState(60);
   const activeDuration = useMemo(() => {
-    const row = weekly.find((r) => sameCombo(r.location_id, r.category_id));
+    const row = weekly.find((r) => sameLoc(r.location_id));
     return row?.slot_minutes ?? durationPref;
-  }, [weekly, sameCombo, durationPref]);
+  }, [weekly, sameLoc, durationPref]);
 
   const dayFranjas = useMemo(() => {
     const map = new Map<number, Franja[]>();
     for (const r of weekly) {
-      if (!sameCombo(r.location_id, r.category_id)) continue;
+      if (!sameLoc(r.location_id)) continue;
       const arr = map.get(r.weekday) ?? [];
       arr.push({ id: r.id ?? genId(), start: r.start, end: r.end });
       map.set(r.weekday, arr);
     }
     for (const arr of map.values()) arr.sort((a, b) => a.start.localeCompare(b.start));
     return map;
-  }, [weekly, sameCombo]);
+  }, [weekly, sameLoc]);
 
   const activeExceptions = useMemo(() => {
     const byDate = new Map<string, ExcRow[]>();
     for (const e of exceptions) {
-      if (!sameCombo(e.location_id, e.category_id)) continue;
+      if (!sameLoc(e.location_id)) continue;
       const arr = byDate.get(e.date) ?? [];
       arr.push(e);
       byDate.set(e.date, arr);
@@ -282,20 +268,20 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
     return Array.from(byDate.entries())
       .filter(([d]) => d >= todayISO())
       .sort(([a], [b]) => a.localeCompare(b));
-  }, [exceptions, sameCombo]);
+  }, [exceptions, sameLoc]);
 
   // ── Persist the weekly schedule for a single weekday, then re-materialize. ──
+  // Delete matches by LOCATION + weekday (any category) so legacy profession-tagged
+  // rows are absorbed; new rows are written with category_id = null.
   async function persistDay(weekday: number, franjas: Franja[], dur: number) {
-    const next = weekly.filter((r) => !(sameCombo(r.location_id, r.category_id) && r.weekday === weekday));
-    for (const f of franjas) next.push({ location_id: genLocation, category_id: activeCat, weekday, start: f.start, end: f.end, slot_minutes: dur });
+    const next = weekly.filter((r) => !(sameLoc(r.location_id) && r.weekday === weekday));
+    for (const f of franjas) next.push({ location_id: genLocation, category_id: null, weekday, start: f.start, end: f.end, slot_minutes: dur });
     setWeekly(next);
 
     const supabase = createClient();
-    let del = supabase.from("availability_weekly").delete().eq("professional_id", professionalId).eq("location_id", genLocation).eq("weekday", weekday);
-    del = activeCat ? del.eq("category_id", activeCat) : del.is("category_id", null);
-    await del;
+    await supabase.from("availability_weekly").delete().eq("professional_id", professionalId).eq("location_id", genLocation).eq("weekday", weekday);
     if (franjas.length > 0) {
-      await supabase.from("availability_weekly").insert(franjas.map((f) => ({ professional_id: professionalId, location_id: genLocation, category_id: activeCat, weekday, start_time: f.start, end_time: f.end, slot_minutes: dur })));
+      await supabase.from("availability_weekly").insert(franjas.map((f) => ({ professional_id: professionalId, location_id: genLocation, category_id: null, weekday, start_time: f.start, end_time: f.end, slot_minutes: dur })));
     }
     await regenerate(next, exceptions);
   }
@@ -320,16 +306,14 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
   // "Igual a todos los días": copy this day's franjas to EVERY weekday.
   async function copyToAll(weekday: number) {
     const src = (dayFranjas.get(weekday) ?? []).map((f) => ({ start: f.start, end: f.end }));
-    const next = weekly.filter((r) => !sameCombo(r.location_id, r.category_id));
-    for (const wd of WEEKDAY_ORDER) for (const f of src) next.push({ location_id: genLocation, category_id: activeCat, weekday: wd, start: f.start, end: f.end, slot_minutes: activeDuration });
+    const next = weekly.filter((r) => !sameLoc(r.location_id));
+    for (const wd of WEEKDAY_ORDER) for (const f of src) next.push({ location_id: genLocation, category_id: null, weekday: wd, start: f.start, end: f.end, slot_minutes: activeDuration });
     setWeekly(next);
 
     const supabase = createClient();
-    let del = supabase.from("availability_weekly").delete().eq("professional_id", professionalId).eq("location_id", genLocation);
-    del = activeCat ? del.eq("category_id", activeCat) : del.is("category_id", null);
-    await del;
+    await supabase.from("availability_weekly").delete().eq("professional_id", professionalId).eq("location_id", genLocation);
     if (src.length > 0) {
-      const rows = WEEKDAY_ORDER.flatMap((wd) => src.map((f) => ({ professional_id: professionalId, location_id: genLocation, category_id: activeCat, weekday: wd, start_time: f.start, end_time: f.end, slot_minutes: activeDuration })));
+      const rows = WEEKDAY_ORDER.flatMap((wd) => src.map((f) => ({ professional_id: professionalId, location_id: genLocation, category_id: null, weekday: wd, start_time: f.start, end_time: f.end, slot_minutes: activeDuration })));
       await supabase.from("availability_weekly").insert(rows);
     }
     await regenerate(next, exceptions);
@@ -337,44 +321,38 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
 
   async function setDuration(dur: number) {
     setDurationPref(dur);
-    const next = weekly.map((r) => (sameCombo(r.location_id, r.category_id) ? { ...r, slot_minutes: dur } : r));
+    const next = weekly.map((r) => (sameLoc(r.location_id) ? { ...r, slot_minutes: dur } : r));
     setWeekly(next);
     const supabase = createClient();
-    let upd = supabase.from("availability_weekly").update({ slot_minutes: dur }).eq("professional_id", professionalId).eq("location_id", genLocation);
-    upd = activeCat ? upd.eq("category_id", activeCat) : upd.is("category_id", null);
-    await upd;
+    await supabase.from("availability_weekly").update({ slot_minutes: dur }).eq("professional_id", professionalId).eq("location_id", genLocation);
     await regenerate(next, exceptions);
   }
 
   // ── Exceptions ("¿Un día distinto?") ──────────────────────────────────────
   async function saveException(date: string, mode: ExcMode, franjas: Franja[], dur: number) {
-    const next = exceptions.filter((e) => !(sameCombo(e.location_id, e.category_id) && e.date === date));
+    const next = exceptions.filter((e) => !(sameLoc(e.location_id) && e.date === date));
     if (mode === "closed") {
-      next.push({ location_id: genLocation, category_id: activeCat, date, mode: "closed", start: null, end: null, slot_minutes: dur });
+      next.push({ location_id: genLocation, category_id: null, date, mode: "closed", start: null, end: null, slot_minutes: dur });
     } else {
-      for (const f of franjas) next.push({ location_id: genLocation, category_id: activeCat, date, mode, start: f.start, end: f.end, slot_minutes: dur });
+      for (const f of franjas) next.push({ location_id: genLocation, category_id: null, date, mode, start: f.start, end: f.end, slot_minutes: dur });
     }
     setExceptions(next);
 
     const supabase = createClient();
-    let del = supabase.from("availability_exceptions").delete().eq("professional_id", professionalId).eq("location_id", genLocation).eq("exception_date", date);
-    del = activeCat ? del.eq("category_id", activeCat) : del.is("category_id", null);
-    await del;
+    await supabase.from("availability_exceptions").delete().eq("professional_id", professionalId).eq("location_id", genLocation).eq("exception_date", date);
     const rows: { professional_id: string; location_id: string; category_id: string | null; exception_date: string; mode: ExcMode; start_time: string | null; end_time: string | null; slot_minutes: number }[] =
       mode === "closed"
-        ? [{ professional_id: professionalId, location_id: genLocation, category_id: activeCat, exception_date: date, mode, start_time: null, end_time: null, slot_minutes: dur }]
-        : franjas.map((f) => ({ professional_id: professionalId, location_id: genLocation, category_id: activeCat, exception_date: date, mode, start_time: f.start, end_time: f.end, slot_minutes: dur }));
+        ? [{ professional_id: professionalId, location_id: genLocation, category_id: null, exception_date: date, mode, start_time: null, end_time: null, slot_minutes: dur }]
+        : franjas.map((f) => ({ professional_id: professionalId, location_id: genLocation, category_id: null, exception_date: date, mode, start_time: f.start, end_time: f.end, slot_minutes: dur }));
     if (rows.length > 0) await supabase.from("availability_exceptions").insert(rows);
     await regenerate(weekly, next);
   }
 
   async function removeException(date: string) {
-    const next = exceptions.filter((e) => !(sameCombo(e.location_id, e.category_id) && e.date === date));
+    const next = exceptions.filter((e) => !(sameLoc(e.location_id) && e.date === date));
     setExceptions(next);
     const supabase = createClient();
-    let del = supabase.from("availability_exceptions").delete().eq("professional_id", professionalId).eq("location_id", genLocation).eq("exception_date", date);
-    del = activeCat ? del.eq("category_id", activeCat) : del.is("category_id", null);
-    await del;
+    await supabase.from("availability_exceptions").delete().eq("professional_id", professionalId).eq("location_id", genLocation).eq("exception_date", date);
     await regenerate(weekly, next);
   }
 
@@ -483,17 +461,6 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                 <Plus className="h-3.5 w-3.5" /> {t("addLocation")}
               </a>
             </div>
-            {professionOptions.length > 1 && (
-              <div className="mt-3 flex items-center gap-2">
-                <label className="text-xs font-medium text-[#6b7280]">{t("profession")}</label>
-                <div className="relative">
-                  <select value={genCategory} onChange={(e) => setGenCategory(e.target.value)} className={selectClass}>
-                    {professionOptions.map((p) => <option key={p} value={p}>{getCategoryLabel(p, locale)}</option>)}
-                  </select>
-                  <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9ca3af]" />
-                </div>
-              </div>
-            )}
           </div>
 
           {/* ── Mis horarios de siempre — recurring weekly schedule ───────── */}
@@ -620,8 +587,8 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
       {dayModal && (
         <DayModal
           initialDate={dayModal.date}
-          existing={exceptions.filter((e) => sameCombo(e.location_id, e.category_id))}
-          markedDates={new Set(exceptions.filter((e) => sameCombo(e.location_id, e.category_id)).map((e) => e.date))}
+          existing={exceptions.filter((e) => sameLoc(e.location_id))}
+          markedDates={new Set(exceptions.filter((e) => sameLoc(e.location_id)).map((e) => e.date))}
           defaultDuration={activeDuration}
           dateLocale={dateLocale}
           onClose={() => setDayModal(null)}

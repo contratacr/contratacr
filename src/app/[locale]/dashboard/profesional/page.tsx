@@ -347,7 +347,6 @@ export default function ProDashboardPage() {
                       workplaces={pro.workplaces ?? []}
                       coverageAreas={pro.coverage_areas ?? []}
                       travels={String(pro.service_type ?? "").includes("mobile")}
-                      professions={(pro.professions && pro.professions.length > 0) ? pro.professions : (pro.category_id ? [pro.category_id] : [])}
                       onSaved={handleSaved}
                     />
                   )}

@@ -77,12 +77,11 @@ function dayColumnLabel(d: Date, i: number, locale: string): string {
 export function ProfessionalSchedule({ professional, categoryName, availabilityPublic, contactPreference = "ambas", slots: allSlots, activeCategory, isOwn = false, info, placeFallback = "", placeAddress = "", coverageText = "", businessName = "", stacked = false }: ProfessionalScheduleProps) {
   const t = useTranslations("schedule");
   const locale = useLocale();
-  // When a specific profession was searched, only show that profession's hours
-  // (item 1). Slots with no category (legacy/pre-migration) always show.
-  const slots = useMemo(
-    () => (activeCategory ? allSlots.filter((s) => !s.categoryId || s.categoryId === activeCategory) : allSlots),
-    [allSlots, activeCategory]
-  );
+  // Schedules are per-LOCATION, not per-profession: a pro at a location is reachable
+  // at those hours regardless of which service was searched. So we show ALL of the
+  // pro's slots (no profession filter). `activeCategory` is still used purely as the
+  // booking context (which service the request is about), not to hide hours.
+  const slots = allSlots;
   const { user } = useAuth();
   const [showRegistration, setShowRegistration] = useState(false);
   const [showBooking, setShowBooking] = useState(false);
