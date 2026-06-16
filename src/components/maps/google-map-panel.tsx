@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import Script from "next/script";
 import { MapPin } from "lucide-react";
-import { loadGoogleMaps, MAP_ID } from "@/lib/maps/loader";
+import { loadGoogleMaps } from "@/lib/maps/loader";
 
 export interface MapProfessional {
   id: string;
@@ -43,6 +43,26 @@ const PROVINCE_CENTROIDS: Record<string, { lat: number; lng: number }> = {
 
 const CR_CENTER = { lat: 9.9281, lng: -84.0907 };
 
+// Clean, light "Positron"-style basemap (close to the CARTO example): muted grey
+// land, white roads, light-blue water, POI/transit clutter hidden, only locality
+// labels kept. Inline `styles` require a NON-vector map (no mapId) + legacy markers.
+const LIGHT_STYLE = [
+  { elementType: "geometry", stylers: [{ color: "#f3f4f6" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#6b7280" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#ffffff" }, { weight: 2 }] },
+  { featureType: "administrative", elementType: "geometry", stylers: [{ visibility: "off" }] },
+  { featureType: "administrative.land_parcel", stylers: [{ visibility: "off" }] },
+  { featureType: "poi", stylers: [{ visibility: "off" }] },
+  { featureType: "transit", stylers: [{ visibility: "off" }] },
+  { featureType: "landscape", elementType: "geometry", stylers: [{ color: "#f3f4f6" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#ffffff" }] },
+  { featureType: "road", elementType: "labels", stylers: [{ visibility: "off" }] },
+  { featureType: "road.arterial", elementType: "geometry", stylers: [{ color: "#f0f1f3" }] },
+  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#e6e8eb" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#d6eaf2" }] },
+  { featureType: "water", elementType: "labels.text.fill", stylers: [{ color: "#9ca3af" }] },
+];
+
 // Deterministic small offset so multiple pins in the same canton don't overlap.
 function jitter(seed: string): { dlat: number; dlng: number } {
   let h = 0;
@@ -66,26 +86,35 @@ function starsHtml(rating: number): string {
   return `<span style="color:#ff9b32;font-weight:700;">★ ${rating.toFixed(1)}</span>`;
 }
 
-// AdvancedMarkerElement content: a NAVY teardrop pin with the card number, matching
-// the navy (#162543) rank badge that rides on each result card's avatar.
-function makePinContent(num?: number): HTMLElement {
-  const el = document.createElement("div");
-  el.style.cssText = "position:relative;width:30px;height:40px;cursor:pointer;";
-  el.innerHTML = `
-    <svg width="30" height="40" viewBox="0 0 24 32" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 0C7.03 0 3 4.03 3 9c0 6.75 9 23 9 23s9-16.25 9-23c0-4.97-4.03-9-9-9z" fill="#162543" stroke="#ffffff" stroke-width="1.5"/>
-    </svg>
-    ${num ? `<span style="position:absolute;top:5px;left:0;width:30px;text-align:center;color:#fff;font-size:11px;font-weight:700;font-family:Inter,Arial,sans-serif;">${num}</span>` : ""}`;
-  return el;
+// NAVY teardrop pin (legacy Marker icon) — matches the navy (#162543) rank badge on
+// each result card. The card number is drawn as the marker LABEL, centered in the head.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function pinIcon(g: any) {
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="30" height="40" viewBox="0 0 24 32">` +
+    `<path d="M12 0C7.03 0 3 4.03 3 9c0 6.75 9 23 9 23s9-16.25 9-23c0-4.97-4.03-9-9-9z" fill="#162543" stroke="#ffffff" stroke-width="1.5"/></svg>`;
+  return {
+    url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`,
+    scaledSize: new g.Size(30, 40),
+    anchor: new g.Point(15, 40),
+    labelOrigin: new g.Point(15, 13), // in the circular head, not the tip
+  };
 }
 
-// Cluster bubble content.
-function makeClusterContent(count: number): HTMLElement {
-  const size = 32 + Math.min(count, 30) * 0.8;
-  const el = document.createElement("div");
-  el.style.cssText = `display:flex;align-items:center;justify-content:center;width:${size}px;height:${size}px;border-radius:9999px;background:#162543;border:2px solid #fff;color:#fff;font-weight:700;font-size:12px;font-family:Inter,Arial,sans-serif;box-shadow:0 1px 4px rgba(0,0,0,0.3);`;
-  el.textContent = String(count);
-  return el;
+// Navy cluster bubble (legacy Marker icon); count drawn as the label.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function clusterIcon(g: any, count: number) {
+  const size = Math.round(34 + Math.min(count, 30) * 0.8);
+  const r = size / 2;
+  const svg =
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">` +
+    `<circle cx="${r}" cy="${r}" r="${r - 2}" fill="#162543" stroke="#ffffff" stroke-width="2"/></svg>`;
+  return {
+    url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`,
+    scaledSize: new g.Size(size, size),
+    anchor: new g.Point(r, r),
+    labelOrigin: new g.Point(r, r),
+  };
 }
 
 // Cross-component highlight: on pin hover, ring + scroll the matching list card.
@@ -139,11 +168,14 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     const map = new g.Map(mapRef.current, {
       center: CR_CENTER,
       zoom: 9,
-      mapId: MAP_ID,
+      // NO mapId → the inline light `styles` apply (CARTO-like basemap). Legacy
+      // markers are used below (AdvancedMarkerElement would require a vector mapId).
+      styles: LIGHT_STYLE,
       mapTypeControl: false,
       streetViewControl: false,
       fullscreenControl: true,
       zoomControl: true,
+      clickableIcons: false,
       gestureHandling: "greedy",
     });
     mapInstanceRef.current = map;
@@ -156,7 +188,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     const g = (window as any).google?.maps;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const clusterer = (window as any).markerClusterer;
-    if (!g?.marker?.AdvancedMarkerElement || !clusterer) return; // wait for both
+    if (!g?.Marker || !clusterer) return; // wait for the API + clusterer lib
     const map = mapInstanceRef.current ?? ensureMap();
     if (!map) return;
 
@@ -169,11 +201,14 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
         if (!pos) return null;
         bounds.extend(pos);
         const num = numbering?.[pro.proId ?? pro.id];
-        const content = makePinContent(num);
-        const marker = new g.marker.AdvancedMarkerElement({
+        const marker = new g.Marker({
           position: pos,
-          content,
+          icon: pinIcon(g),
+          label: num
+            ? { text: String(num), color: "#ffffff", fontSize: "11px", fontWeight: "700" }
+            : undefined,
           zIndex: num ? 500 - num : 1,
+          title: pro.fullName,
         });
 
         const openPreview = () => {
@@ -195,21 +230,22 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
             </div>`);
           info.open({ map, anchor: marker });
         };
-        // AdvancedMarkerElement: attach DOM listeners to its content element.
-        content.addEventListener("mouseenter", () => { openPreview(); setCardHighlight(pro.proId ?? pro.id, true); });
-        content.addEventListener("mouseleave", () => setCardHighlight(pro.proId ?? pro.id, false));
-        content.addEventListener("click", openPreview);
+        // Legacy Marker: attach Maps event listeners.
+        marker.addListener("mouseover", () => { openPreview(); setCardHighlight(pro.proId ?? pro.id, true); });
+        marker.addListener("mouseout", () => setCardHighlight(pro.proId ?? pro.id, false));
+        marker.addListener("click", openPreview);
         return marker;
       })
       .filter(Boolean);
 
-    // Brand-colored cluster bubbles (AdvancedMarkerElement renderer).
+    // Navy cluster bubbles (legacy Marker renderer).
     const renderer = {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       render: ({ count, position }: any) =>
-        new g.marker.AdvancedMarkerElement({
+        new g.Marker({
           position,
-          content: makeClusterContent(count),
+          icon: clusterIcon(g, count),
+          label: { text: String(count), color: "#ffffff", fontSize: "12px", fontWeight: "700" },
           zIndex: 1000 + count,
         }),
     };
