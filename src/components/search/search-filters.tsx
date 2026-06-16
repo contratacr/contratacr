@@ -234,33 +234,42 @@ export function SearchFilters({ variant = "sidebar" }: { variant?: "sidebar" | "
     );
   }
 
+  const fieldLabel = "mb-1 block text-[11px] font-semibold text-[#6b7280]";
   return (
-    <div className="bg-white rounded-2xl border border-[#e5e7eb] p-3">
+    <div className="rounded-2xl border border-[#e5e7eb] bg-white p-4">
+      {/* Header — "Filtros" + a live active-count, with an inline clear when any are on. */}
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-sm font-bold text-[#111827]">{t("filters.title")}</h2>
+        {activeCount > 0 && (
+          <button onClick={clearAll} className="inline-flex items-center gap-1 text-[11px] font-medium text-[#9ca3af] hover:text-red-500 transition-colors">
+            <X className="h-3 w-3" /> {t("filters.clear")} ({activeCount})
+          </button>
+        )}
+      </div>
+
       {/* Text search */}
-      <div className="mb-2.5">
-        <div className="relative flex items-center">
-          <Search className="absolute left-3 h-4 w-4 text-[#9ca3af] pointer-events-none" />
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => handleQueryChange(e.target.value)}
-            onKeyDown={handleQueryKeyDown}
-            placeholder={t("filters.searchPlaceholder")}
-            className="w-full rounded-xl border border-[#e5e7eb] bg-white py-2 pl-9 pr-9 text-sm text-[#111827] placeholder-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition"
-          />
-          {query && (
-            <button onClick={clearQuery} className="absolute right-3 text-[#9ca3af] hover:text-[#374151] transition-colors" aria-label={t("filters.clearSearch")}>
-              <X className="h-4 w-4" />
-            </button>
-          )}
-        </div>
+      <div className="relative mb-3 flex items-center">
+        <Search className="pointer-events-none absolute left-3 h-4 w-4 text-[#9ca3af]" />
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => handleQueryChange(e.target.value)}
+          onKeyDown={handleQueryKeyDown}
+          placeholder={t("filters.searchPlaceholder")}
+          className="w-full rounded-xl border border-[#e5e7eb] bg-[#f9fafb] py-2.5 pl-9 pr-9 text-sm text-[#111827] placeholder-[#9ca3af] transition focus:border-transparent focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
+        />
+        {query && (
+          <button onClick={clearQuery} className="absolute right-3 text-[#9ca3af] hover:text-[#374151] transition-colors" aria-label={t("filters.clearSearch")}>
+            <X className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       {/* Vertical stack — designed for the left sidebar (and the mobile drawer). */}
-      <div className="flex flex-col gap-2.5">
+      <div className="flex flex-col gap-3">
         {/* Category — typeable + browsable list (with "¿No ves tu categoría?"). */}
-        <div className="flex-1">
-          <label className="text-xs font-medium text-[#6b7280] mb-1 block">{t("filters.category")}</label>
+        <div>
+          <label className={fieldLabel}>{t("filters.category")}</label>
           <CategorySearch
             value={category && category !== "todas" ? category : ""}
             onChange={(id) => { setCategory(id); applyFilters({ categoria: id }); }}
@@ -268,34 +277,37 @@ export function SearchFilters({ variant = "sidebar" }: { variant?: "sidebar" | "
           />
         </div>
 
-        <div>
-          <label className="text-xs font-medium text-[#6b7280] mb-1 block">{t("filters.province")}</label>
-          <Select value={province} onValueChange={(v) => { setProvince(v); setCanton(""); applyFilters({ provincia: v, canton: "" }); }}>
-            <SelectTrigger className={FILTER_TRIGGER}>
-              <SelectValue placeholder={t("filters.allProvinces")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todas">{t("filters.allProvinces")}</SelectItem>
-              {PROVINCES.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
+        {/* Provincia + Cantón share a row (cleaner, less vertical sprawl). */}
+        <div className="grid grid-cols-2 gap-2.5">
+          <div>
+            <label className={fieldLabel}>{t("filters.province")}</label>
+            <Select value={province} onValueChange={(v) => { setProvince(v); setCanton(""); applyFilters({ provincia: v, canton: "" }); }}>
+              <SelectTrigger className={FILTER_TRIGGER}>
+                <SelectValue placeholder={t("filters.allProvinces")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todas">{t("filters.allProvinces")}</SelectItem>
+                {PROVINCES.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <label className={fieldLabel}>{t("filters.canton")}</label>
+            <Select value={canton} onValueChange={(v) => { setCanton(v); applyFilters({ canton: v }); }} disabled={!province || cantons.length === 0}>
+              <SelectTrigger className={FILTER_TRIGGER}>
+                <SelectValue placeholder={t("filters.allCantons")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">{t("filters.allCantons")}</SelectItem>
+                {cantons.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         <div>
-          <label className="text-xs font-medium text-[#6b7280] mb-1 block">{t("filters.canton")}</label>
-          <Select value={canton} onValueChange={(v) => { setCanton(v); applyFilters({ canton: v }); }} disabled={!province || cantons.length === 0}>
-            <SelectTrigger className={FILTER_TRIGGER}>
-              <SelectValue placeholder={t("filters.allCantons")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="todos">{t("filters.allCantons")}</SelectItem>
-              {cantons.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div>
-          <label className="text-xs font-medium text-[#6b7280] mb-1 block">{t("filters.sortBy")}</label>
+          <label className={fieldLabel}>{t("filters.sortBy")}</label>
           <Select value={sortBy} onValueChange={(v) => {
             setSortBy(v);
             // "Cercanía" needs the user's coordinates — request geolocation if we
@@ -314,7 +326,7 @@ export function SearchFilters({ variant = "sidebar" }: { variant?: "sidebar" | "
         </div>
 
         <div>
-          <label className="text-xs font-medium text-[#6b7280] mb-1 block">{t("filters.insurer")}</label>
+          <label className={fieldLabel}>{t("filters.insurer")}</label>
           {/* Non-filtering default: nothing selected shows "Cualquier aseguradora"
               (greyed, like a placeholder, so it reads as NOT an active filter — most
               pros don't work with insurers). Pick one to filter; X clears it. */}
@@ -345,23 +357,21 @@ export function SearchFilters({ variant = "sidebar" }: { variant?: "sidebar" | "
         </div>
       </div>
 
-      {/* On/off filters → TOGGLES (booleans), shown DIRECTLY (no "Más filtros"
-          collapse/heading) at the same level as the dropdowns above. A thin divider
-          is the only separation. */}
-      <div className="mt-2.5 pt-2.5 border-t border-[#f3f4f6] flex flex-col gap-2">
-        {/* Consistent toggle rows (label + on/off switch, no icons). */}
+      {/* On/off filters → clean toggle ROWS (no bordered boxes): label left, switch
+          right, the whole row a subtle hover target. A thin divider separates them. */}
+      <div className="mt-3 flex flex-col gap-0.5 border-t border-[#f3f4f6] pt-2">
         <button
           type="button"
           onClick={useMyLocation}
           disabled={geoLoading}
-          className="w-full inline-flex items-center justify-between gap-2 rounded-lg border border-[#e5e7eb] bg-white px-3 py-2 text-xs font-medium text-[#374151] hover:border-[#009FD9] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9] transition-colors"
+          className="inline-flex w-full items-center justify-between gap-2 rounded-lg px-1.5 py-2 text-[13px] font-medium text-[#374151] transition-colors hover:bg-[#f9fafb] focus:outline-none focus-visible:bg-[#f9fafb]"
         >
           <span className="flex-1 text-left">{geoActive ? t("filters.nearMeActive") : t("filters.nearMe")}</span>
           {geoLoading ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
+            <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-[#009FD9]" />
           ) : (
-            <span className={`flex h-4 w-7 shrink-0 items-center rounded-full transition-colors ${geoActive ? "bg-[#009FD9]" : "bg-[#d1d5db]"}`}>
-              <span className={`h-3 w-3 rounded-full bg-white transition-transform ${geoActive ? "translate-x-3.5" : "translate-x-0.5"}`} />
+            <span className={`flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${geoActive ? "bg-[#009FD9]" : "bg-[#d1d5db]"}`}>
+              <span className={`h-4 w-4 rounded-full bg-white shadow transition-transform ${geoActive ? "translate-x-4" : "translate-x-0.5"}`} />
             </span>
           )}
         </button>
@@ -369,20 +379,15 @@ export function SearchFilters({ variant = "sidebar" }: { variant?: "sidebar" | "
         <button
           type="button"
           onClick={() => { const v = !verifiedOnly; setVerifiedOnly(v); applyFilters({ verificados: v ? "1" : "" }); }}
-          className="w-full inline-flex items-center justify-between gap-2 rounded-lg border border-[#e5e7eb] bg-white px-3 py-2 text-xs font-medium text-[#374151] hover:border-[#009FD9] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9] transition-colors"
+          className="inline-flex w-full items-center justify-between gap-2 rounded-lg px-1.5 py-2 text-[13px] font-medium text-[#374151] transition-colors hover:bg-[#f9fafb] focus:outline-none focus-visible:bg-[#f9fafb]"
         >
           <span>{t("filters.verifiedOnly")}</span>
-          <span className={`flex h-4 w-7 shrink-0 items-center rounded-full transition-colors ${verifiedOnly ? "bg-[#009FD9]" : "bg-[#d1d5db]"}`}>
-            <span className={`h-3 w-3 rounded-full bg-white transition-transform ${verifiedOnly ? "translate-x-3.5" : "translate-x-0.5"}`} />
+          <span className={`flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${verifiedOnly ? "bg-[#009FD9]" : "bg-[#d1d5db]"}`}>
+            <span className={`h-4 w-4 rounded-full bg-white shadow transition-transform ${verifiedOnly ? "translate-x-4" : "translate-x-0.5"}`} />
           </span>
         </button>
 
-        {geoError && <span className="text-xs text-[#b45309]">{geoError}</span>}
-        {activeCount > 0 && (
-          <button onClick={clearAll} className="inline-flex items-center justify-center gap-1 text-xs text-[#6b7280] hover:text-red-500 focus:outline-none focus-visible:underline transition-colors pt-0.5">
-            <X className="h-3 w-3" /> {t("filters.clear")} ({activeCount})
-          </button>
-        )}
+        {geoError && <span className="px-1.5 text-[11px] text-[#b45309]">{geoError}</span>}
       </div>
     </div>
   );
