@@ -46,6 +46,9 @@ export type SearchFilters = {
   /** User coordinates (geolocation) — enables the "cerca de mí" proximity sort. */
   nearLat?: number;
   nearLng?: number;
+  /** "Buscar en esta área" — keep only pros within the map's visible viewport.
+   *  Applied IN ADDITION to the other filters (a JS post-filter on the results). */
+  bounds?: { north: number; south: number; east: number; west: number };
 };
 
 export type ProService = {
@@ -272,6 +275,19 @@ export async function searchProfessionals(
       const rank = (p: ProfessionalCardData) =>
         (p.verificationStatus === "verified" ? 2 : 0) + (p.isFeatured ? 1 : 0);
       mapped.sort((a, b) => rank(b) - rank(a));
+
+      // "Buscar en esta área" — keep only pros whose position (exact pin, a workplace,
+      // or their province centroid) falls within the map's visible viewport.
+      if (filters.bounds) {
+        const b = filters.bounds;
+        const within = (lat: number, lng: number) => lat <= b.north && lat >= b.south && lng <= b.east && lng >= b.west;
+        return mapped.filter((p) => {
+          if (typeof p.lat === "number" && typeof p.lng === "number" && within(p.lat, p.lng)) return true;
+          if ((p.workplaces ?? []).some((w) => typeof w.lat === "number" && typeof w.lng === "number" && within(w.lat as number, w.lng as number))) return true;
+          const c = PROVINCE_CENTROIDS[getProvinceIdByName(p.provinceName)];
+          return !!c && within(c.lat, c.lng);
+        });
+      }
 
       return mapped;
     } catch (err) {

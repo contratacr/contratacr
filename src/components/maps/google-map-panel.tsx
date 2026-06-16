@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import Script from "next/script";
-import { MapPin } from "lucide-react";
+import { MapPin, Search } from "lucide-react";
 import { loadGoogleMaps, MAP_ID } from "@/lib/maps/loader";
 
 export interface MapProfessional {
@@ -150,6 +151,11 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
   // proId → its pin elements (a pro can have several workplace pins).
   const pinsByProRef = useRef<Map<string, HTMLElement[]>>(new Map());
   const hoverCardRef = useRef<string | null>(null);
+  // "Buscar en esta área": show the button only after a USER move (suppress while we
+  // programmatically fit the map to the results).
+  const router = useRouter();
+  const [showArea, setShowArea] = useState(false);
+  const suppressMoveRef = useRef(false);
 
   function setPinActive(proId: string | undefined, on: boolean) {
     if (!proId) return;
@@ -202,10 +208,27 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function fitToMarkers(map: any, g: any, bounds: any, count: number) {
-    if (count === 0) { map.setCenter(GAM_CENTER); map.setZoom(11); return; }
-    if (count === 1) { map.setCenter(bounds.getCenter()); map.setZoom(13); return; }
+    // Programmatic move → suppress the "search this area" button until it settles.
+    suppressMoveRef.current = true;
+    const done = () => { suppressMoveRef.current = false; };
+    if (count === 0) { map.setCenter(GAM_CENTER); map.setZoom(11); g.event.addListenerOnce(map, "idle", done); return; }
+    if (count === 1) { map.setCenter(bounds.getCenter()); map.setZoom(13); g.event.addListenerOnce(map, "idle", done); return; }
     map.fitBounds(bounds, 64);
-    g.event.addListenerOnce(map, "idle", () => { if (map.getZoom() > 13) map.setZoom(13); });
+    g.event.addListenerOnce(map, "idle", () => { if (map.getZoom() > 13) map.setZoom(13); done(); });
+  }
+
+  // The user moved the map (pan or zoom) → offer to re-search the visible area.
+  function searchThisArea() {
+    const map = mapInstanceRef.current;
+    const b = map?.getBounds?.();
+    if (!b) return;
+    const ne = b.getNorthEast(), sw = b.getSouthWest();
+    const sp = new URLSearchParams(window.location.search);
+    sp.set("n", ne.lat().toFixed(5)); sp.set("s", sw.lat().toFixed(5));
+    sp.set("e", ne.lng().toFixed(5)); sp.set("w", sw.lng().toFixed(5));
+    sp.delete("page");
+    setShowArea(false);
+    router.push(`${window.location.pathname}?${sp.toString()}`);
   }
 
   function ensureMap() {
@@ -231,6 +254,9 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     });
     mapInstanceRef.current = map;
     map.addListener("click", closePopup);
+    // Show "Buscar en esta área" after a user pan/zoom (ignored during programmatic fits).
+    map.addListener("dragend", () => { if (!suppressMoveRef.current) setShowArea(true); });
+    map.addListener("zoom_changed", () => { if (!suppressMoveRef.current) setShowArea(true); });
     return map;
   }
 
@@ -244,6 +270,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     if (!map) return;
 
     closePopup();
+    setShowArea(false); // fresh results reflect the (just-searched) area
     pinsByProRef.current = new Map();
     const canHover = typeof window !== "undefined" && !!window.matchMedia?.("(hover: hover)").matches;
     const bounds = new g.LatLngBounds();
@@ -359,7 +386,20 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
       <style dangerouslySetInnerHTML={{ __html: MAP_CSS }} />
       {/* MarkerClusterer (non-Google lib); the Maps JS API loads via the async loader. */}
       <Script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js" strategy="afterInteractive" onLoad={renderMarkers} />
-      <div ref={mapRef} className="relative w-full h-full" />
+      {/* Wrapper is the positioning context; the map fills it and the floating
+          "Buscar en esta área" button overlays on top (top-center, like Airbnb/Uber). */}
+      <div className="relative w-full h-full">
+        <div ref={mapRef} className="absolute inset-0" />
+        {showArea && (
+          <button
+            type="button"
+            onClick={searchThisArea}
+            className="absolute left-1/2 top-3 z-[5] -translate-x-1/2 inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border border-[#e5e7eb] bg-white px-4 py-2 text-sm font-semibold text-[#162543] shadow-lg transition hover:bg-[#f9fafb] active:scale-95"
+          >
+            <Search className="h-4 w-4 text-[#008ce0]" /> {locale === "en" ? "Search this area" : "Buscar en esta área"}
+          </button>
+        )}
+      </div>
     </>
   );
 }

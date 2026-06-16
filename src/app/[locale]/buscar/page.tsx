@@ -29,6 +29,11 @@ interface SearchPageProps {
     aseguradora?: string;
     lat?: string;
     lng?: string;
+    // "Buscar en esta área" — the map's visible bounds (N/S/E/W).
+    n?: string;
+    s?: string;
+    e?: string;
+    w?: string;
   }>;
 }
 
@@ -49,6 +54,12 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const viewer = await safeGetUser(supabaseViewer);
   const viewerProfileId = viewer?.id;
 
+  // "Buscar en esta área" → filter to the map's visible viewport (ADDS to the active
+  // filters; the map sends N/S/E/W when the user searches the moved area).
+  const mapBounds = params.n && params.s && params.e && params.w
+    ? { north: Number(params.n), south: Number(params.s), east: Number(params.e), west: Number(params.w) }
+    : undefined;
+
   const allResults = await searchProfessionals({
     categoryId: params.categoria,
     provinceId: params.provincia,
@@ -59,6 +70,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     insurerId: params.aseguradora,
     nearLat: params.lat ? Number(params.lat) : undefined,
     nearLng: params.lng ? Number(params.lng) : undefined,
+    bounds: mapBounds,
   });
 
   // "Disponibilidad inmediata" sort — order pros by their SOONEST upcoming bookable
@@ -203,6 +215,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
     if (params.aseguradora && params.aseguradora !== "todas") next.set("aseguradora", params.aseguradora);
     if (params.lat) next.set("lat", params.lat);
     if (params.lng) next.set("lng", params.lng);
+    // Preserve the searched map area across pagination.
+    if (params.n) next.set("n", params.n);
+    if (params.s) next.set("s", params.s);
+    if (params.e) next.set("e", params.e);
+    if (params.w) next.set("w", params.w);
     if (page > 1) next.set("page", String(page));
     const qs = next.toString();
     return qs ? `?${qs}` : "?";
