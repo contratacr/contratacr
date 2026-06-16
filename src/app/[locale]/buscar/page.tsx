@@ -9,7 +9,7 @@ import { ProfessionalCard } from "@/components/professionals/professional-card";
 import { SaveableCard } from "@/components/professionals/save-button";
 import { searchProfessionals } from "@/lib/queries/professionals";
 import { primaryPricingLabel } from "@/lib/pricing";
-import { PROVINCES } from "@/lib/data/cr-geography";
+import { PROVINCES, nearestProvinceId } from "@/lib/data/cr-geography";
 import { SearchResultsLayout } from "@/components/search/search-results-layout";
 import { createClient } from "@/lib/supabase/server";
 import { safeGetUser } from "@/lib/supabase/get-user";
@@ -195,13 +195,25 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const activeProvince = params.provincia && params.provincia !== "todas"
     ? PROVINCES.find((p) => p.id === params.provincia)
     : undefined;
+  const activeCanton = activeProvince && params.canton && params.canton !== "todos"
+    ? activeProvince.cantons.find((c) => c.id === params.canton)
+    : undefined;
 
   const pageTitle = activeCategoryId
     ? tCat(activeCategoryId as Parameters<typeof tCat>[0])
     : t("title.default");
 
-  const subtitle = activeProvince
-    ? t("resultsIn", { count: allResults.length, location: activeProvince.name })
+  // Area-aware count label: the cantón (most specific) → the province → the searched map
+  // AREA (bounds centroid → nearest province) → generic "en Costa Rica". So the count and
+  // the place name always match what's actually being searched.
+  let areaName = activeCanton?.name ?? activeProvince?.name;
+  if (!areaName && mapBounds) {
+    const cLat = (mapBounds.north + mapBounds.south) / 2;
+    const cLng = (mapBounds.east + mapBounds.west) / 2;
+    areaName = PROVINCES.find((p) => p.id === nearestProvinceId(cLat, cLng))?.name;
+  }
+  const subtitle = areaName
+    ? t("resultsIn", { count: allResults.length, location: areaName })
     : t("resultsInCR", { count: allResults.length });
 
   function buildPageUrl(page: number) {

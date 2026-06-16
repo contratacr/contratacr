@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Script from "next/script";
 import { MapPin, Search } from "lucide-react";
 import { loadGoogleMaps, MAP_ID } from "@/lib/maps/loader";
+import { nearestProvinceId, matchProvinceCanton } from "@/lib/data/cr-geography";
 
 export interface MapProfessional {
   id: string;
@@ -288,16 +289,47 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     g.event.addListenerOnce(map, "idle", () => { if (map.getZoom() > 13) map.setZoom(13); done(); });
   }
 
-  // The user moved the map (pan or zoom) → offer to re-search the visible area.
-  function searchThisArea() {
+  // The user moved the map → re-search the visible area AND sync the location filters to
+  // it. We reverse-geocode the map CENTER to its province + cantón and set those filter
+  // params, so the filters, the "X profesionales en <área>" count and the results all match
+  // the searched area. The cantón is only set when zoomed in enough that the viewport ≈ a
+  // cantón (otherwise just the province). Raw N/S/E/W bounds are dropped (the province/cantón
+  // filters now represent the area). Best-effort: a geocoder failure falls back to the
+  // nearest province by centroid.
+  async function searchThisArea() {
     const map = mapInstanceRef.current;
-    const b = map?.getBounds?.();
-    if (!b) return;
-    const ne = b.getNorthEast(), sw = b.getSouthWest();
+    const center = map?.getCenter?.();
+    if (!center) return;
+    const lat = center.lat(), lng = center.lng();
+    const zoom = map.getZoom?.() ?? 11;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const g = (window as any).google?.maps;
+
     const sp = new URLSearchParams(window.location.search);
-    sp.set("n", ne.lat().toFixed(5)); sp.set("s", sw.lat().toFixed(5));
-    sp.set("e", ne.lng().toFixed(5)); sp.set("w", sw.lng().toFixed(5));
     sp.delete("page");
+    // Drop any prior raw viewport bounds — the province/cantón filters now carry the area.
+    sp.delete("n"); sp.delete("s"); sp.delete("e"); sp.delete("w");
+
+    let provinceId: string | undefined;
+    let cantonId: string | undefined;
+    try {
+      if (g?.Geocoder) {
+        const res = await new g.Geocoder().geocode({ location: { lat, lng } });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const comps: any[] = res?.results?.[0]?.address_components ?? [];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const pick = (type: string) => comps.find((c: any) => c.types?.includes(type))?.long_name as string | undefined;
+        ({ provinceId, cantonId } = matchProvinceCanton(pick("administrative_area_level_1"), pick("administrative_area_level_2")));
+      }
+    } catch { /* fall back to the nearest province below */ }
+    if (!provinceId) provinceId = nearestProvinceId(lat, lng);
+
+    if (provinceId) {
+      sp.set("provincia", provinceId);
+      // Narrow to the cantón only when zoomed in (the viewport ≈ a cantón); else the area
+      // is province-scale, so don't over-narrow.
+      if (cantonId && zoom >= 11) sp.set("canton", cantonId); else sp.delete("canton");
+    }
     setShowArea(false);
     router.push(`${window.location.pathname}?${sp.toString()}`);
   }
