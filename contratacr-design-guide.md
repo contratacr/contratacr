@@ -992,13 +992,22 @@ preview of the CURRENT product, not a stylized fake. Rules:
 - **Device frame:** modern flagship look — titanium rail, slim black bezel, squircle
   screen, dynamic island, machined side buttons, layered shadow, subtle top glass
   sheen. Premium but restrained (serious tone, no gimmicks).
-- **Inner content mirrors the REAL `/buscar` card** (`professional-card.tsx`): white
-  `rounded-2xl`+border, `EBF5FB`/`#009FD9` avatar, the SAME **solid brand-blue
-  "Verificado" pill** (`Badge variant="verified"` = `bg-[#009FD9] text-white`) — never
-  a green check/text, price on the right, grey profession chip, orange-star
-  (`#ff9b32`) rating with brand-blue reviews, brand-blue location pin, the inline
-  **availability schedule** (the hero feature), and WhatsApp (`#25D366`) + "Solicitar
-  servicio" (`#009FD9`) buttons. When the real card changes, update the mockup to match.
+- **Inner content mirrors the REAL `/buscar` card** (`professional-card.tsx` +
+  `professional-schedule.tsx`), 1:1 with the CURRENT design (refreshed Sprint 144):
+  white `rounded-2xl`+border; **circular** `EBF5FB`/`#009FD9` avatar carrying the
+  **navy ranking badge** (`#162543`, white number, `ring-2 ring-white`) that mirrors
+  its map pin; the SAME **solid brand-blue "Verificado" pill** (`Badge variant="verified"`
+  = `bg-[#009FD9] text-white`, `verifiedShort`) **on its OWN line** under the name —
+  never a green check/text and never inline; **price = blue amount + grey unit**;
+  grey profession chip; orange-star (`#ff9b32`) rating + **grey `(N reseñas)` in
+  parens** (not a blue link); a **Doctoralia-style location TAB** (brand-blue, underlined,
+  on a hairline divider) + address line. Then EITHER the **3-day availability strip**
+  (hero) + a SINGLE filled **"Ver horario completo"** button — the booking entry point;
+  the old separate **"Solicitar servicio" button no longer exists** — OR, for a pro with
+  no public schedule, the **coral contact note** (`#FDF3F1`/`#F7D8D1`/`#DC5B4B`,
+  `CalendarDays`) + a filled **WhatsApp** (`#25D366`) button. The live `ResultsScreen`
+  shows BOTH variants (one of each card) to mirror the real mixed list. When the real
+  card changes, update the mockup to match.
 - **Example name:** use **"SG Solutions"** (company) as the sample professional, the
   standard example name across the app.
 - **i18n:** never hardcode the in-phone copy. Build a locale-aware `ResultsCopy` in the
