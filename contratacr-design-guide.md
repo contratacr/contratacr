@@ -967,6 +967,18 @@ clears (and the beforeunload stops) whenever core + locations succeed, regardles
 optional column is unmigrated. Keep the global `UnsavedChangesGuard` (it protects the debounce
 window for ALL sections) — the fix is reliable dirty-clearing, NOT removing the guard.
 
+**The debounced autosave MUST fire the latest closure via `saveRef.current`, never a captured
+`handleSave`.** `touch()` runs SYNCHRONOUSLY inside an `onChange` (e.g. `setWorkplaces(next); touch()`)
+— BEFORE React re-renders — so the `handleSave` in scope there closes over PRE-change state. If the
+debounce timer calls that captured `handleSave` directly, a discrete single edit (add the first work
+zone: `[]`→`[A]`) autosaves the STALE value (`[]`), "succeeds", and clears `dirty` — the UI shows the
+new item but the DB got the empty array, and because `dirty` cleared, flush-on-unmount sees nothing
+pending so the real value is orphaned in React state only. It also silently drops the LAST keystroke
+of a text field when the user then sits idle. **Rule:** `setTimeout(() => saveRef.current?.(true), 1000)`
+— `saveRef.current = handleSave` is reassigned every render, so when the timer fires (after the
+re-render applied the new state) it points at a `handleSave` that sees the CURRENT value. This — not
+the write-bundling above — was the deepest cause of "Ubicación y cobertura no guarda."
+
 **Autosave reassurance line.** Every autosaving section shows a muted helper
 `"Los cambios se guardan automáticamente."` / `"Changes are saved automatically."`
 (`profileEditor.autosaveNote`, `text-xs text-[#9ca3af]`) at the SAME spot — the bottom of the

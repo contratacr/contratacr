@@ -217,7 +217,14 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
     setDirty(true);
     dirtyRef.current = true;
     if (autoTimer.current) clearTimeout(autoTimer.current);
-    autoTimer.current = setTimeout(() => { void handleSave(true); }, 1000);
+    // Fire the LATEST handleSave via the ref — NOT this render's `handleSave`. `touch`
+    // runs synchronously inside an onChange BEFORE React re-renders, so the `handleSave`
+    // in scope here closes over PRE-change state. A discrete single edit (e.g. adding the
+    // first workplace: [] → [A]) would otherwise autosave the stale value ([]), "succeed",
+    // and clear `dirty` — so the new place was shown in the UI but never persisted (the
+    // real "Ubicación y cobertura no guarda" bug). `saveRef.current` is reassigned every
+    // render, so by the time the timer fires it points at a handleSave that sees [A].
+    autoTimer.current = setTimeout(() => { void saveRef.current?.(true); }, 1000);
   }
 
   // Persist pending edits immediately (cancel the debounce). Bound to input blur
