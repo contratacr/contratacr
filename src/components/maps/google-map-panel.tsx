@@ -414,7 +414,14 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
         });
         el.addEventListener("mouseleave", () => { setActive(proId, false, false); scheduleClose(); });
       }
-      el.addEventListener("click", (e) => { e.stopPropagation(); cancelClose(); openPopup(g, map, pro, pos); setActive(proId, true, false); });
+      el.addEventListener("click", (e) => {
+        e.stopPropagation();
+        cancelClose();
+        openPopup(g, map, pro, pos);
+        setActive(proId, true, false);
+        // Mobile: tell the results sheet to spring open + scroll to this pro's card.
+        if (typeof window !== "undefined") window.dispatchEvent(new CustomEvent("ccr:focus-card", { detail: proId }));
+      });
       return marker;
     }).filter(Boolean);
 
