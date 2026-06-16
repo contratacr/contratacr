@@ -23,7 +23,12 @@ export function SaveStatus({
 }) {
   const t = useTranslations("saveStatus");
 
-  // Reserve the row height so the section doesn't jump as the state changes.
+  // When fully idle there's nothing to show — render NOTHING (no reserved empty
+  // row) so a section's TITLE sits tidily next to its content instead of leaving a
+  // gap below it. The status row only appears during/after a save (or when there
+  // are unsaved changes), where a brief reserved height keeps it from flickering.
+  if (!saving && !saved && !dirty) return null;
+
   return (
     <div className={cn("flex justify-end items-center min-h-[20px]", className)} aria-live="polite">
       {saving ? (
