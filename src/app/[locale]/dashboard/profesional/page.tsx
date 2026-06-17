@@ -179,7 +179,13 @@ export default function ProDashboardPage() {
     window.location.assign("/es");
   }
 
-  if (authLoading || loading) {
+  // `!user` is part of this guard ON PURPOSE: on sign-out, `useAuth` (a per-component
+  // hook, not a context) fires `setUser(null)` in this still-mounted page BEFORE the
+  // logout hard-navigation unloads it. `pro` is still populated (its refetch effect
+  // early-returns on null user, so it never clears), so without this guard the body
+  // would render and `user!.id` below (profile tab) would throw `null.id` → error
+  // boundary ("Algo salió mal"). The effect above redirects to /login meanwhile.
+  if (authLoading || loading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
@@ -313,7 +319,7 @@ export default function ProDashboardPage() {
                   {activeTab === "profile" && (
                     <ProfileEditor
                       professionalId={pro.id}
-                      profileId={user!.id}
+                      profileId={user.id}
                       initial={pro}
                       onSaved={handleSaved}
                       focusField={profileFocus?.field ?? null}
