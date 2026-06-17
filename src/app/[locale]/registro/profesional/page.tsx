@@ -613,11 +613,13 @@ export default function RegisterProfessionalPage() {
   // ── OTP screen ──────────────────────────────────────────────────────────────
   if (otpEmail) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen flex flex-col bg-[#fafafa]">
         <Navbar />
         <main className="flex-1 flex items-center justify-center py-12 px-4">
           <div className="w-full max-w-sm">
-            <OtpVerification email={otpEmail} />
+            <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-8">
+              <OtpVerification email={otpEmail} />
+            </div>
           </div>
         </main>
         <LandingFooter />
@@ -650,10 +652,14 @@ export default function RegisterProfessionalPage() {
   const indicatorStep = currentUser ? step - 1 : step;
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-[#fafafa]">
       <Navbar />
-      <main className="flex-1 py-10 px-4">
-        <div className="mx-auto max-w-lg">
+      <main className="flex-1 flex items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md">
+          {/* Same container treatment as the client registration ("Crear cuenta de
+              cliente"): a clean white card (rounded-3xl, hairline border, soft shadow,
+              p-8) on a #fafafa page, centered. The multi-step form lives inside it. */}
+          <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-8">
           <div className="text-center mb-2">
             <h1 className="text-2xl font-bold text-[#111827]">
               {currentUser ? t("completeProfileTitle") : t("title")}
@@ -957,6 +963,7 @@ export default function RegisterProfessionalPage() {
               </Link>
             </p>
           )}
+          </div>
         </div>
       </main>
       <LandingFooter />
