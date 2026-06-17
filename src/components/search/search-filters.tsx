@@ -275,9 +275,11 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
               if (searchOpen && searchSug.length > 0) {
                 if (e.key === "ArrowDown") { e.preventDefault(); setSearchActive((i) => Math.min(i + 1, searchSug.length - 1)); return; }
                 if (e.key === "ArrowUp") { e.preventDefault(); setSearchActive((i) => Math.max(i - 1, 0)); return; }
-                if (e.key === "Enter" && searchActive >= 0) {
+                // Enter resolves the partial term to the highlighted OR the FIRST (best) match
+                // and searches THAT (e.g. "electrici" → "electricista").
+                if (e.key === "Enter") {
                   e.preventDefault();
-                  const s = searchSug[searchActive];
+                  const s = searchSug[searchActive >= 0 ? searchActive : 0];
                   setCategory(s.id); setQuery(getCategoryLabel(s.id, locale)); setSearchOpen(false);
                   applyFilters({ categoria: s.id, q: "" });
                   return;
@@ -516,9 +518,12 @@ export function MobileServiceSearch() {
     if (open && suggestions.length > 0) {
       if (e.key === "ArrowDown") { e.preventDefault(); setActive((i) => Math.min(i + 1, suggestions.length - 1)); return; }
       if (e.key === "ArrowUp") { e.preventDefault(); setActive((i) => Math.max(i - 1, 0)); return; }
-      if (e.key === "Enter" && active >= 0) { e.preventDefault(); pickCategory(suggestions[active].id); return; }
+      // Enter resolves the partial term to the highlighted OR the FIRST (best) matching service
+      // and searches THAT — e.g. "electrici" → "electricista" (not a literal `q=electrici`).
+      if (e.key === "Enter") { e.preventDefault(); if (debounceRef.current) clearTimeout(debounceRef.current); pickCategory(suggestions[active >= 0 ? active : 0].id); return; }
       if (e.key === "Escape") { setOpen(false); return; }
     }
+    // No taxonomy match → fall back to a literal text search (graceful).
     if (e.key === "Enter") { if (debounceRef.current) clearTimeout(debounceRef.current); setOpen(false); pushQuery(q); }
   }
   useEffect(() => () => { if (debounceRef.current) clearTimeout(debounceRef.current); if (blurRef.current) clearTimeout(blurRef.current); }, []);

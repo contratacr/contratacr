@@ -345,13 +345,17 @@ export function LandingHero() {
   // Build params from current state and navigate. Service: a picked category
   // filters by id; otherwise free text → q. Location: a picked/resolved
   // province → provincia, canton → canton.
-  function runSearch() {
+  function runSearch(serviceOverride?: SearchSuggestion) {
     const params = new URLSearchParams();
-    const svc = service.trim();
-    if (serviceSel && serviceSel.type === "category" && serviceSel.label === service) {
-      params.set("categoria", serviceSel.id);
-    } else if (svc) {
-      params.set("q", svc);
+    // `serviceOverride` (from Enter) resolves a partial term to the best suggestion. A CATEGORY
+    // → filter by id (e.g. "electrici" → categoria=electricista); a professional → search their
+    // name; otherwise the literal typed text.
+    const chosen = serviceOverride ?? (serviceSel && serviceSel.label === service ? serviceSel : null);
+    if (chosen && chosen.type === "category") {
+      params.set("categoria", chosen.id);
+    } else {
+      const svc = (chosen?.type === "professional" ? chosen.label : service).trim();
+      if (svc) params.set("q", svc);
     }
     // Location: a picked Google ADDRESS → its resolved province/cantón + proximity (lat/lng);
     // else a picked/resolved province/cantón from our taxonomy.
@@ -388,16 +392,17 @@ export function LandingHero() {
         e.preventDefault();
         setActiveIdx((i) => Math.max(i - 1, 0));
         return;
-      } else if (e.key === "Enter" && activeIdx >= 0) {
+      } else if (e.key === "Enter") {
         e.preventDefault();
-        selectSuggestion(suggestions[activeIdx]);
+        // Resolve the partial term to the highlighted OR the FIRST (best) suggestion and search it.
+        runSearch(suggestions[activeIdx >= 0 ? activeIdx : 0]);
         return;
       } else if (e.key === "Escape") {
         setOpenSug(false);
         return;
       }
     }
-    // Enter with no active suggestion → run the search.
+    // No suggestions → run the search with the literal/exact text (graceful fallback).
     if (e.key === "Enter") {
       e.preventDefault();
       runSearch();
