@@ -195,7 +195,12 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
             <ChevronLeft className="h-3.5 w-3.5" />
           </button>
         )}
-        <div ref={locScrollRef} className="-mx-1 flex min-w-0 flex-1 gap-3 overflow-x-auto hide-scrollbar border-b border-[#e5e7eb] px-1" role="tablist" aria-label={t("location")}>
+        {/* `overflow-y-hidden` is REQUIRED: `overflow-x-auto` alone leaves overflow-y as
+            `visible`, which CSS then COMPUTES to `auto` — so the row became vertically
+            scrollable (it could be dragged up/down even with ONE location). Pinning overflow-y
+            to hidden makes it strictly a HORIZONTAL tab scroll; vertical touch-drags then bubble
+            to the page/sheet scroll (default touch-action). */}
+        <div ref={locScrollRef} className="-mx-1 flex min-w-0 flex-1 gap-3 overflow-x-auto overflow-y-hidden hide-scrollbar border-b border-[#e5e7eb] px-1" role="tablist" aria-label={t("location")}>
           {locTabs.map((o) => {
             const active = hasRealLoc ? o.id === effectiveId : true;
             return (

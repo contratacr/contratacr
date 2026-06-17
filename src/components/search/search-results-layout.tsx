@@ -134,8 +134,9 @@ export function SearchResultsLayout({ children, filters, countLabel, mapData, ap
         <div className="xl:hidden fixed inset-0 z-50">
           <div className="absolute inset-0 bg-black/40" onClick={() => setShowFilters(false)} />
           <div className="absolute inset-y-0 left-0 w-[88%] max-w-xs bg-[#f4f7fa] shadow-xl overflow-y-auto p-4">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm font-semibold text-[#111827]">{t("filters.title")}</span>
+            {/* Only the close X here — `{filters}` (SearchFilters) renders its OWN "Filtros"
+                header, so a title here too would duplicate the word "Filtros". */}
+            <div className="mb-2 flex items-center justify-end">
               <button onClick={() => setShowFilters(false)} aria-label={t("close")} className="rounded-full p-1.5 text-[#9ca3af] hover:bg-[#e5e7eb]">
                 <X className="h-5 w-5" />
               </button>
