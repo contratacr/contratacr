@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Headset, ArrowLeft, Send, User, Shield, Plus } from "lucide-react";
-import { Link } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
+import { SupportModal } from "@/components/support/support-modal";
 
 type Ticket = {
   id: string;
@@ -61,6 +61,10 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
   const [threadLoading, setThreadLoading] = useState(false);
   const [reply, setReply] = useState("");
   const [sending, setSending] = useState(false);
+  // In-panel "Contactar soporte" opens the support form as a MODAL (no navigation
+  // away from the panel). On submit we close it and reload the list so the new
+  // ticket appears inline.
+  const [showModal, setShowModal] = useState(false);
 
   const setUnreadAndNotify = useCallback((s: Set<string>) => {
     setUnread(s);
@@ -246,9 +250,9 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
             empty-state card carries the single "Contactar soporte" button, so it never
             appears twice. The heading above stays in both states. */}
         {(loading || items.length > 0) && (
-          <Link href="/soporte" className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#009FD9] text-white text-sm font-semibold px-4 py-2.5 hover:bg-[#0089bb] shrink-0 w-full sm:w-auto">
+          <button onClick={() => setShowModal(true)} className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#009FD9] text-white text-sm font-semibold px-4 py-2.5 hover:bg-[#0089bb] shrink-0 w-full sm:w-auto">
             <Plus className="h-4 w-4" /> {t("newTicket")}
-          </Link>
+          </button>
         )}
       </div>
 
@@ -282,9 +286,9 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
           <Headset className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
           <p className="font-semibold text-[#374151]">{t("empty")}</p>
           <p className="text-sm text-[#9ca3af] mt-1">{t("emptySub")}</p>
-          <Link href="/soporte" className="mt-5 inline-flex items-center gap-1.5 rounded-lg bg-[#009FD9] text-white text-sm font-semibold px-4 py-2 hover:bg-[#0089bb]">
+          <button onClick={() => setShowModal(true)} className="mt-5 inline-flex items-center gap-1.5 rounded-lg bg-[#009FD9] text-white text-sm font-semibold px-4 py-2 hover:bg-[#0089bb]">
             <Plus className="h-4 w-4" /> {t("openTicket")}
-          </Link>
+          </button>
         </div>
       ) : filtered.length === 0 ? (
         <p className="text-sm text-[#9ca3af] text-center py-8">{t("noneInView")}</p>
@@ -308,6 +312,15 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
             );
           })}
         </div>
+      )}
+
+      {showModal && (
+        <SupportModal
+          onClose={() => setShowModal(false)}
+          // New ticket submitted → close the modal, jump to "Pendiente" (where a
+          // brand-new ticket lands) and reload so it shows up inline immediately.
+          onSubmitted={() => { setShowModal(false); setFilter("open"); load(); loadUnread(); }}
+        />
       )}
     </div>
   );

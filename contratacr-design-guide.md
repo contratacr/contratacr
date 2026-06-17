@@ -931,17 +931,36 @@ refreshes its list) and closes — it **never navigates** to a separate page.
   Login honors `?redirect=projects` (email/password resolves it directly; OAuth threads it as the
   callback's `?next=projects`, resolved to the role-aware projects tab after the role is known).
 
-### 43.2 "Soporte" = a MODAL for logged-in users, the page for guests
+### 43.2 "Soporte" = the page for guests, the in-panel section (+ modal) for logged-in users
 The support ticket form is a **single shared component** — **`SupportForm`** (`components/support/support-form.tsx`,
-fields/validation/submit unchanged) — rendered in BOTH the standalone **`/soporte` page** (kept as-is,
-its full success screen intact) and the **`SupportModal`** (`Modal` + `SupportForm`; on success it shows
-a compact confirmation and **does not navigate**). The **"Soporte"/"Centro de soporte" links are
-auth-conditional** via **`SupportLink`**: logged-OUT → navigate to `/soporte` (support must work for
-guests — never send them to login); logged-IN → open the **support modal over the current page**
-(dispatches `OPEN_SUPPORT_EVENT`; a single app-wide **`SupportModalHost`** in the locale layout renders
-the modal so it survives the menu/drawer unmounting). Direct navigation to `/soporte` still shows the
-page in both states — only link clicks open the modal. Wired in the footer + Recursos menu
-(desktop + mobile).
+fields/validation/submit unchanged; posts to `/api/contact`, which stamps the logged-in `user_id` so the
+ticket is owned by the user and shows up in `GET /api/support`). It is rendered in THREE places, all reusing
+that one form:
+- The standalone **`/soporte` page** (kept as-is, its full success screen intact) — the entry point for GUESTS.
+- The **in-dashboard Soporte section** (`SupportTickets`, the pro/client panel `?tab=soporte`) — the ticket
+  list + thread view for logged-in users.
+- The **`SupportModal`** (`components/support/support-modal.tsx` = the shared `Modal` + `SupportForm`).
+
+**Global "Soporte"/"Centro de soporte" links** (footer + Recursos menu, desktop+mobile) go through
+**`SupportLink`**, which is session/location-aware: logged-OUT or anywhere OUTSIDE the dashboard → navigate
+to the public **`/soporte` page** (support must work for guests — never send them to login); logged-IN and
+INSIDE the dashboard → the panel's inline **`?tab=soporte`** section. (The old `OPEN_SUPPORT_EVENT` /
+`SupportModalHost` global-modal wiring was removed — `SupportLink` navigates, it does not dispatch an event.)
+
+**Inside the panel's Soporte section**, the two **"Contactar soporte"** buttons (the top-right header button
+and the centered empty-state button) **open `SupportModal` over the panel** — they do NOT navigate to
+`/soporte`. `SupportModal` takes an optional **`onSubmitted(email)`**: the panel passes it, so on a successful
+submit the modal closes and the panel reloads (`setShowModal(false); setFilter("open"); load(); loadUnread()`)
+— the freshly-created ticket (defaults to `open`/Pendiente, `last_reply_at=now` → top of the list) appears
+**inline, with no page navigation**. When `onSubmitted` is omitted, `SupportModal` falls back to its compact
+in-modal confirmation (reusable for over-page contexts). Direct navigation to `/soporte` still shows the page.
+
+**Empty-state split in `SupportTickets`** — decided by the user's TOTAL ticket count (`items.length`), never the
+filtered count: **TRUE-empty** (0 tickets) → full headset empty-card + centered "Contactar soporte" button, with
+the header button AND the status-filter chips HIDDEN (nothing to filter, one action only); **FILTERED-empty**
+(has ≥1 ticket, none match the selected status) → chips + header button + the simple "No hay tiquetes en esta
+vista." line (no big card); **HAS-tickets** → chips + header button + the ticket list. The `filtered.length===0`
+branch is only reachable when `items.length!==0`, so a zero-ticket user can never be shown the filtered treatment.
 
 ## 44. Verification copy = "Verificado"-only (no unverified label)
 
