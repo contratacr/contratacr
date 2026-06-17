@@ -1,4 +1,4 @@
-import { UserPlus, Users, Briefcase, FolderOpen, LifeBuoy } from "lucide-react";
+import { UserPlus, Users, Briefcase, FolderOpen, Headset } from "lucide-react";
 import { formatRelativeTime } from "@/lib/utils";
 import type { ActivityEvent, ActivityKind } from "@/lib/admin/activity";
 
@@ -7,7 +7,7 @@ const META: Record<ActivityKind, { icon: typeof UserPlus; bg: string; fg: string
   client: { icon: Users, bg: "bg-[#dcfce7]", fg: "text-[#15803d]", tag: "Cliente" },
   solicitud: { icon: Briefcase, bg: "bg-[#ede9fe]", fg: "text-[#6d28d9]", tag: "Solicitud" },
   proyecto: { icon: FolderOpen, bg: "bg-[#fef3c7]", fg: "text-[#b45309]", tag: "Proyecto" },
-  ticket: { icon: LifeBuoy, bg: "bg-[#fee2e2]", fg: "text-[#b91c1c]", tag: "Soporte" },
+  ticket: { icon: Headset, bg: "bg-[#fee2e2]", fg: "text-[#b91c1c]", tag: "Soporte" },
 };
 
 export function AdminActivity({ events }: { events: ActivityEvent[] }) {

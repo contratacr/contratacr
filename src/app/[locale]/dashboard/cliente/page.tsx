@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import {
-  CalendarDays, Bookmark, LogOut, Bell, User, FolderOpen, Briefcase, Search, LifeBuoy,
+  CalendarDays, Bookmark, LogOut, Bell, User, FolderOpen, Briefcase, Search, Headset,
   Lock, Camera, X, Settings,
 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
@@ -260,7 +260,7 @@ export default function ClientDashboardPage() {
       key: "soporte",
       icon: (
         <div className="relative">
-          <LifeBuoy className="h-4 w-4" />
+          <Headset className="h-4 w-4" />
           {supportUnread > 0 && (
             <span className="absolute -top-2 -right-2.5 flex h-[16px] min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold leading-none text-white ring-2 ring-white">
               {supportUnread > 9 ? "9+" : supportUnread}

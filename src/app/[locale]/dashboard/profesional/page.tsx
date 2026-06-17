@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import {
   User, Image as ImageIcon, CalendarDays, Inbox, LogOut, ExternalLink, Wrench,
-  FolderOpen, ShieldCheck, Bell, Send, ClipboardList, Bookmark, Settings, LifeBuoy, CreditCard,
+  FolderOpen, ShieldCheck, Bell, Send, ClipboardList, Bookmark, Settings, Headset, CreditCard,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -59,7 +59,7 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
   sent_projects: <ClipboardList className="h-4 w-4" />,
   saved: <Bookmark className="h-4 w-4" />,
   notifications: <Bell className="h-4 w-4" />,
-  soporte: <LifeBuoy className="h-4 w-4" />,
+  soporte: <Headset className="h-4 w-4" />,
   cuenta: <Settings className="h-4 w-4" />,
 };
 

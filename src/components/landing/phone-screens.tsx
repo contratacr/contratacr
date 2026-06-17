@@ -1,4 +1,4 @@
-import { Search, MapPin, ShieldCheck, Star, Send, LifeBuoy, CheckCircle2, CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, MapPin, ShieldCheck, Star, Send, Headset, CheckCircle2, CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import { Poppins } from "next/font/google";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 
@@ -305,7 +305,7 @@ export function SupportScreen() {
           <p className="mt-1 text-[10px] text-[#9ca3af]">Tu reseña ayuda a otros clientes.</p>
         </div>
         <div className="flex items-center gap-3 rounded-xl border border-[#e5e7eb] bg-white p-3">
-          <span className="grid h-9 w-9 place-items-center rounded-lg bg-[#EBF5FB] text-[#009FD9]"><LifeBuoy className="h-4 w-4" /></span>
+          <span className="grid h-9 w-9 place-items-center rounded-lg bg-[#EBF5FB] text-[#009FD9]"><Headset className="h-4 w-4" /></span>
           <div><p className="text-[11px] font-bold text-[#111827]">Soporte ContrataCR</p><p className="text-[10px] text-[#6b7280]">¿Algo no salió bien? Estamos para ayudarte.</p></div>
         </div>
       </div>

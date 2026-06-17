@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { useAuth } from "@/hooks/use-auth";
-import { MessageSquare, LifeBuoy } from "lucide-react";
+import { Headset } from "lucide-react";
 import { SuccessIcon } from "@/components/ui/success-icon";
 import { Link } from "@/i18n/navigation";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
@@ -37,7 +37,7 @@ export default function SoportePage() {
                     href="/dashboard/cliente?tab=soporte"
                     className="inline-flex items-center justify-center gap-2 bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold px-6 py-3 rounded-full transition-all text-sm"
                   >
-                    <LifeBuoy className="h-4 w-4" /> {t("viewTickets")}
+                    <Headset className="h-4 w-4" /> {t("viewTickets")}
                   </Link>
                   <Link
                     href="/dashboard/cliente"
@@ -74,7 +74,7 @@ export default function SoportePage() {
           {/* Header */}
           <div className="text-center mb-8">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#EBF5FB] mx-auto mb-3">
-              <MessageSquare className="h-6 w-6 text-[#009FD9]" />
+              <Headset className="h-6 w-6 text-[#009FD9]" />
             </div>
             <h1 className="text-2xl font-bold text-[#111827] mb-1">{t("headerTitle")}</h1>
             <p className="text-sm text-[#6b7280]">{t("headerSubtitle")}</p>

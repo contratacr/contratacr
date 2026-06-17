@@ -1,5 +1,5 @@
 import { getTranslations, getLocale } from "next-intl/server";
-import { Search, BadgeCheck, LifeBuoy, ArrowRight } from "lucide-react";
+import { Search, BadgeCheck, Headset, ArrowRight } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { PhoneFrame, ResultsScreen, type ResultsCopy } from "@/components/landing/phone-screens";
 import { SmartRegisterLink } from "@/components/layout/smart-register-link";
@@ -14,7 +14,7 @@ const POINTS = [
   { Icon: Search, key: "point0" },
   { Icon: BadgeCheck, key: "point1" },
   { Icon: WhatsAppIcon, key: "point2" },
-  { Icon: LifeBuoy, key: "point3" },
+  { Icon: Headset, key: "point3" },
 ];
 
 export async function WhyContratacr() {

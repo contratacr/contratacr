@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import {
-  ArrowLeft, Loader2, ExternalLink, ShieldCheck, LifeBuoy, Flag, FolderOpen,
+  ArrowLeft, Loader2, ExternalLink, ShieldCheck, Headset, Flag, FolderOpen,
   CalendarDays, Ban, ShieldOff, Mail, Phone, IdCard, BadgeCheck, History,
 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
@@ -181,7 +181,7 @@ export function AdminUserProfile({ userId }: { userId: string }) {
       </div>
 
       {/* ── Support tickets ── */}
-      <Section icon={LifeBuoy} title="Tickets de soporte" count={tickets.length}>
+      <Section icon={Headset} title="Tickets de soporte" count={tickets.length}>
         {tickets.length === 0 ? (
           <p className="px-4 py-4 text-sm text-[#9ca3af]">Sin tickets.</p>
         ) : (

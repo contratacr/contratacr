@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { LifeBuoy, ArrowLeft, Send, User, Shield, UserSearch, Loader2 } from "lucide-react";
+import { Headset, ArrowLeft, Send, User, Shield, UserSearch, Loader2 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { AdminUserSearch } from "@/components/admin/admin-user-search";
 
@@ -193,7 +193,7 @@ export function AdminSupport() {
   return (
     <div>
       <div className="flex items-center gap-2 mb-5">
-        <LifeBuoy className="h-5 w-5 text-[#009FD9]" />
+        <Headset className="h-5 w-5 text-[#009FD9]" />
         <h1 className="text-xl font-bold text-[#111827]">Soporte</h1>
       </div>
 
@@ -229,7 +229,7 @@ export function AdminSupport() {
         <div className="flex justify-center py-12"><Loader2 className="h-7 w-7 animate-spin text-[#009FD9]" /></div>
       ) : items.length === 0 ? (
         <div className="text-center py-16 text-[#9ca3af]">
-          <LifeBuoy className="h-10 w-10 mx-auto mb-2 text-[#cbd5e1]" />
+          <Headset className="h-10 w-10 mx-auto mb-2 text-[#cbd5e1]" />
           <p className="text-sm">No hay tickets en esta vista.</p>
         </div>
       ) : (

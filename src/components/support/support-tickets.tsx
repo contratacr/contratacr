@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { LifeBuoy, ArrowLeft, Send, User, Shield, Plus } from "lucide-react";
+import { Headset, ArrowLeft, Send, User, Shield, Plus } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
@@ -258,7 +258,7 @@ export function SupportTickets({ onUnreadChange }: { onUnreadChange?: (n: number
         <div className="flex justify-center py-12"><div className="h-7 w-7 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" /></div>
       ) : items.length === 0 ? (
         <div className="text-center py-14 rounded-2xl border border-dashed border-[#e5e7eb] bg-white">
-          <LifeBuoy className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
+          <Headset className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
           <p className="font-semibold text-[#374151]">{t("empty")}</p>
           <p className="text-sm text-[#9ca3af] mt-1">{t("emptySub")}</p>
           <Link href="/soporte" className="mt-5 inline-flex items-center gap-1.5 rounded-lg bg-[#009FD9] text-white text-sm font-semibold px-4 py-2 hover:bg-[#0089bb]">

@@ -1,4 +1,4 @@
-import { Users, UserCheck, Briefcase, FolderOpen, CreditCard, LifeBuoy, Truck, CalendarClock } from "lucide-react";
+import { Users, UserCheck, Briefcase, FolderOpen, CreditCard, Headset, Truck, CalendarClock } from "lucide-react";
 import { formatColones } from "@/lib/pricing";
 import type { AdminReports, Count } from "@/lib/admin/reports";
 
@@ -214,7 +214,7 @@ export function AdminAnalytics({ data }: { data: AdminReports }) {
       </Section>
 
       {/* SOPORTE */}
-      <Section icon={LifeBuoy} title="Soporte" sub="Tickets por estado y volumen (últimos 30 días)">
+      <Section icon={Headset} title="Soporte" sub="Tickets por estado y volumen (últimos 30 días)">
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <div><BarsH items={support.byStatus} /></div>
           <div>

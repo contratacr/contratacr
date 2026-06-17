@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ShieldCheck, LogOut, Flag, Shield, Tag, UserX, LifeBuoy, Users, CreditCard, LayoutGrid, BarChart3, Activity } from "lucide-react";
+import { ShieldCheck, LogOut, Flag, Shield, Tag, UserX, Headset, Users, CreditCard, LayoutGrid, BarChart3, Activity } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
@@ -56,7 +56,7 @@ export function AdminShell({
     { id: "categorias", label: "Categorías", icon: Tag, href: "/admin/categorias", badge: 0 },
     { id: "cuentas", label: "Cuentas", icon: UserX, href: "/admin/cuentas", badge: 0 },
     { id: "suscripciones", label: "Suscripciones", icon: CreditCard, href: "/admin/suscripciones", badge: counts.suscripciones ?? 0 },
-    { id: "soporte", label: "Soporte", icon: LifeBuoy, href: "/admin/soporte", badge: counts.soporte ?? 0 },
+    { id: "soporte", label: "Soporte", icon: Headset, href: "/admin/soporte", badge: counts.soporte ?? 0 },
     { id: "analitica", label: "Analítica", icon: BarChart3, href: "/admin/analitica", badge: 0 },
     { id: "actividad", label: "Actividad", icon: Activity, href: "/admin/actividad", badge: 0 },
   ];
