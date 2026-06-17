@@ -168,9 +168,10 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
   // enter/leave loop in the pin↔card overlap zone) no longer tears down + rebuilds the
   // mini-card every mousemove (that rebuild was the "vibration"/flicker).
   const popupKeyRef = useRef<string | null>(null);
-  // Debounce closing the hover preview so moving the cursor pin → card (or between
-  // nearby pins) doesn't flicker the mini-card shut.
-  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // The proId of the currently highlighted / popup'd pin. Used to clear the PREVIOUS pin's
+  // highlight when the cursor moves to a different pin, and on hide. The popup NEVER closes on a
+  // pin's own mouseleave (that boundary toggling was the flicker) — only on map-leave/click/switch.
+  const activePinRef = useRef<string | null>(null);
   // proId → its pin elements (a pro can have several workplace pins).
   const pinsByProRef = useRef<Map<string, HTMLElement[]>>(new Map());
   const hoverCardRef = useRef<string | null>(null);
@@ -198,8 +199,15 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     if (popupRef.current) { popupRef.current.map = null; popupRef.current = null; }
     popupKeyRef.current = null;
   }
-  function cancelClose() { if (closeTimerRef.current) { clearTimeout(closeTimerRef.current); closeTimerRef.current = null; } }
-  function scheduleClose() { cancelClose(); closeTimerRef.current = setTimeout(closePopup, 150); }
+  // Hide the popup AND clear the highlighted pin. Called ONLY when the cursor leaves the whole
+  // map area, on a map click, or before showing a DIFFERENT pin/cluster — never on a pin's own
+  // mouseleave. (That pin↔popup boundary toggling — open on enter, close on leave — was the
+  // flicker: the popup/scale momentarily steals the pin's hover → mouseleave → close → the
+  // cursor is back on the pin → mouseenter → reopen → loop.)
+  function hidePopup() {
+    if (activePinRef.current) { setActive(activePinRef.current, false, false); activePinRef.current = null; }
+    closePopup();
+  }
 
   // ANTI-FLICKER (the definitive, structure-independent fix). The popup is a SEPARATE
   // AdvancedMarkerElement anchored at the pin/cluster; Google's `<gmp-advanced-marker>` wrapper has
@@ -226,7 +234,6 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     apply();
     if (typeof requestAnimationFrame !== "undefined") requestAnimationFrame(apply);
   }
-  const CAN_HOVER = typeof window !== "undefined" && !!window.matchMedia?.("(hover: hover)").matches;
 
   // The pin mini-card. Opened on hover (desktop) AND click/tap. Position is computed ONCE on open
   // (anchored to the pin), never per-mousemove. Deduped by `pro.id` so re-entering the same pin
@@ -234,7 +241,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
   // killed (see `killWrapperPE`) so it can never steal the pin's hover.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function openPopup(g: any, map: any, pro: MapProfessional, pos: { lat: number; lng: number }) {
-    if (popupRef.current && popupKeyRef.current === pro.id) { cancelClose(); return; }
+    if (popupRef.current && popupKeyRef.current === pro.id) return; // already showing this pin
     closePopup();
     popupKeyRef.current = pro.id;
     const href = `/${locale}/profesionales/${pro.slug}`;
@@ -254,15 +261,9 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
           `</div>` +
         `</div>` +
       `</a>`;
-    const card = wrap.firstElementChild as HTMLElement | null;
-    wrap.querySelector(".ccr-pop-x")?.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); closePopup(); });
-    // Keep the card open while the cursor is over IT (the card is `auto`; the wrapper is `none`).
-    if (CAN_HOVER) {
-      card?.addEventListener("mouseenter", cancelClose);
-      card?.addEventListener("mouseleave", scheduleClose);
-    }
+    wrap.querySelector(".ccr-pop-x")?.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); hidePopup(); });
     popupRef.current = new g.marker.AdvancedMarkerElement({ map, position: pos, content: wrap, zIndex: 100000 });
-    neutralizePopup(popupRef.current, wrap); // ← the popup can no longer steal hover from the pin
+    neutralizePopup(popupRef.current, wrap); // ← belt-and-suspenders: the popup also can't capture the pointer
   }
 
   // CLUSTER preview — opened by hovering (desktop) or tapping (mobile) a cluster. A
@@ -273,7 +274,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function openClusterPopup(g: any, map: any, members: MapProfessional[], pos: { lat: number; lng: number }) {
     const key = `cl:${pos.lat.toFixed(5)},${pos.lng.toFixed(5)}`;
-    if (popupRef.current && popupKeyRef.current === key) { cancelClose(); return; }
+    if (popupRef.current && popupKeyRef.current === key) return; // already showing this cluster
     closePopup();
     popupKeyRef.current = key;
     const head = `${members.length} ${locale === "en" ? "professionals here" : "profesionales aquí"}`;
@@ -302,15 +303,9 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
         `<div class="ccr-cllist">${rows}</div>` +
         (more > 0 ? `<div class="ccr-clmore">+${more} ${locale === "en" ? "more" : "más"}</div>` : "") +
       `</div>`;
-    const clpop = wrap.firstElementChild as HTMLElement | null; // .ccr-clpop (pointer-events:auto)
-    wrap.querySelector(".ccr-pop-x")?.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); closePopup(); });
-    // Keep the preview open while the cursor is over IT (the list is `auto`; the wrapper is `none`).
-    if (CAN_HOVER) {
-      clpop?.addEventListener("mouseenter", cancelClose);
-      clpop?.addEventListener("mouseleave", scheduleClose);
-    }
+    wrap.querySelector(".ccr-pop-x")?.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); hidePopup(); });
     popupRef.current = new g.marker.AdvancedMarkerElement({ map, position: pos, content: wrap, zIndex: 100000 });
-    neutralizePopup(popupRef.current, wrap); // ← the popup can no longer steal hover from the cluster pin
+    neutralizePopup(popupRef.current, wrap); // ← belt-and-suspenders: the popup also can't capture the pointer
   }
 
   // CLUSTER click/tap → ZOOM IN to separate the grouped pins (Airbnb / Google-Maps style). Frame
@@ -422,7 +417,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
       gestureHandling: "greedy", // wheel/scroll zooms DIRECTLY over the map (no Ctrl hint); one-finger pan + pinch-zoom on mobile
     });
     mapInstanceRef.current = map;
-    map.addListener("click", closePopup);
+    map.addListener("click", hidePopup); // tapping the map closes the popup + clears the pin highlight
     // Show "Buscar en esta área" after a user pan/zoom (ignored during programmatic fits).
     map.addListener("dragend", () => { if (!suppressMoveRef.current) setShowArea(true); });
     map.addListener("zoom_changed", () => { if (!suppressMoveRef.current) setShowArea(true); });
@@ -464,26 +459,28 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
       list.push(el); pinsByProRef.current.set(proId, list);
 
       if (canHover) {
-        // DESKTOP HOVER → ring the matching card + show the (stable) mini-card preview. NO scroll on
-        // hover (it would shift the sticky map → pin moves → churn); the ring is enough. Re-entering
-        // the same pin doesn't rebuild the popup (openPopup dedupes by pro.id).
+        // DESKTOP HOVER → switch the highlight to THIS pin (clearing the previous one) + show the
+        // mini-card. There is NO mouseleave handler — the popup is NOT closed when the cursor leaves
+        // the pin (that boundary toggle was the flicker). It closes only on map-leave / map-click /
+        // hovering a different pin (which re-enters here and switches). Re-entering the SAME pin is a
+        // no-op (openPopup dedupes by pro.id). NO scroll on hover (it would shift the sticky map).
         el.addEventListener("mouseenter", () => {
-          cancelClose();
+          if (activePinRef.current && activePinRef.current !== proId) setActive(activePinRef.current, false, false);
+          activePinRef.current = proId;
           setActive(proId, true, false);
           openPopup(g, map, pro, pos);
         });
-        el.addEventListener("mouseleave", () => { setActive(proId, false, false); scheduleClose(); });
       }
       el.addEventListener("click", (e) => {
         e.stopPropagation();
         if (canHover) {
           // DESKTOP CLICK → go straight to the professional (reliable navigation).
-          closePopup();
-          setActive(proId, false, false);
+          hidePopup();
           router.push(`/${locale}/profesionales/${pro.slug}`);
         } else {
           // MOBILE TAP → show the stable mini-card (tap the card itself to open the profile).
-          cancelClose();
+          if (activePinRef.current && activePinRef.current !== proId) setActive(activePinRef.current, false, false);
+          activePinRef.current = proId;
           setActive(proId, true, false);
           openPopup(g, map, pro, pos);
         }
@@ -512,8 +509,12 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
           seen.add(key); pros.push(p);
         }
         if (canHover) {
-          el.addEventListener("mouseenter", () => { cancelClose(); openClusterPopup(g, map, pros, position); });
-          el.addEventListener("mouseleave", scheduleClose);
+          // Same model as pins: hovering a cluster switches the popup to its members-list; clear any
+          // highlighted pin. NO mouseleave-close (closes on map-leave/click instead → no flicker).
+          el.addEventListener("mouseenter", () => {
+            if (activePinRef.current) { setActive(activePinRef.current, false, false); activePinRef.current = null; }
+            openClusterPopup(g, map, pros, position);
+          });
         }
         el.addEventListener("click", (e) => { e.stopPropagation(); zoomToCluster(g, map, cluster); });
         return clMarker;
@@ -600,8 +601,10 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
       {/* MarkerClusterer (non-Google lib); the Maps JS API loads via the async loader. */}
       <Script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js" strategy="afterInteractive" onLoad={renderMarkers} />
       {/* Wrapper is the positioning context; the map fills it and the floating
-          "Buscar en esta área" button overlays on top (top-center, like Airbnb/Uber). */}
-      <div className="relative w-full h-full">
+          "Buscar en esta área" button overlays on top (top-center, like Airbnb/Uber).
+          `onMouseLeave` closes the hover popup ONLY when the cursor leaves the WHOLE map
+          (desktop) — never on the pin↔popup boundary (the flicker source). */}
+      <div className="relative w-full h-full" onMouseLeave={hidePopup}>
         <div ref={mapRef} className="absolute inset-0" />
         {showArea && (
           <button
