@@ -225,8 +225,19 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
                   {catLabel(cat)}
                 </span>
               ))}
+              {/* "+N" → the profile (where ALL professions are listed). A LINK (not a span) so
+                  it's tappable; `relative z-10` lifts it above the whole-card overlay; the pill
+                  + hover (brand-blue bg/text + pointer) signals it's interactive without
+                  cluttering the row — consistent with the other card→profile links. */}
               {extraProfessions > 0 && (
-                <span className="text-[11px] font-medium text-[#9ca3af]">+{extraProfessions}</span>
+                <Link
+                  href={`/profesionales/${professional.slug}`}
+                  title={tCard("moreProfessions")}
+                  aria-label={tCard("moreProfessions")}
+                  className="relative z-10 inline-flex items-center rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-medium text-[#6b7280] transition-colors hover:bg-[#EBF5FB] hover:text-[#009FD9]"
+                >
+                  +{extraProfessions}
+                </Link>
               )}
               {professional.isFeatured && (
                 <span className="inline-flex items-center rounded-full bg-[#fff8ed] px-2 py-0.5 text-[10px] font-semibold text-[#c74600]">
