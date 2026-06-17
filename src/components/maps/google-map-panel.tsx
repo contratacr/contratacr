@@ -172,6 +172,14 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
   // highlight when the cursor moves to a different pin, and on hide. The popup NEVER closes on a
   // pin's own mouseleave (that boundary toggling was the flicker) — only on map-leave/click/switch.
   const activePinRef = useRef<string | null>(null);
+  // The DOM element the popup is anchored to (the active pin OR cluster) + the popup's
+  // content element — measured on each mousemove to hide the card PROMPTLY once the
+  // cursor leaves a TIGHT region around the pin/card (instead of lingering until the
+  // cursor leaves the whole map). Distance-based, so it never toggles the pin's own
+  // hover boundary → the anti-flicker fix stays intact.
+  const activeAnchorElRef = useRef<HTMLElement | null>(null);
+  const popupContentElRef = useRef<HTMLElement | null>(null);
+  const canHoverRef = useRef(false);
   // proId → its pin elements (a pro can have several workplace pins).
   const pinsByProRef = useRef<Map<string, HTMLElement[]>>(new Map());
   const hoverCardRef = useRef<string | null>(null);
@@ -195,8 +203,34 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     highlightCard(proId, on, scroll);
   }
 
+  // Proximity hide: with a popup open, hide it as soon as the cursor leaves a TIGHT region
+  // — the pin, a narrow corridor straight up to the card, and the card itself — so the
+  // mini-card no longer lingers far from the pin. We hide by DISTANCE on mousemove, NEVER
+  // by the pin's mouseenter/leave, so the pin↔popup boundary never toggles (the flicker
+  // fix stays intact). Desktop (hover) only; mobile keeps tap-to-close.
+  function handleHoverProximity(e: React.MouseEvent) {
+    if (!popupRef.current || !canHoverRef.current) return;
+    const anchor = activeAnchorElRef.current;
+    if (!anchor) return;
+    const m = 14; // small margin so micro-jitter never closes it
+    const x = e.clientX, y = e.clientY;
+    const a = anchor.getBoundingClientRect();
+    const p = popupContentElRef.current?.getBoundingClientRect();
+    const inRect = (r: DOMRect, mm: number) =>
+      x >= r.left - mm && x <= r.right + mm && y >= r.top - mm && y <= r.bottom + mm;
+    const onPin = inRect(a, m);
+    const onCard = p ? inRect(p, m) : false;
+    // Narrow vertical corridor directly above the pin, bridging the gap to the card so
+    // moving pin→card never crosses "dead" space (which would otherwise hide+reopen).
+    const inBridge = p
+      ? x >= a.left - m && x <= a.right + m && y >= Math.min(p.bottom, a.top) - m && y <= a.bottom + m
+      : false;
+    if (!onPin && !onCard && !inBridge) hidePopup();
+  }
+
   function closePopup() {
     if (popupRef.current) { popupRef.current.map = null; popupRef.current = null; }
+    popupContentElRef.current = null;
     popupKeyRef.current = null;
   }
   // Hide the popup AND clear the highlighted pin. Called ONLY when the cursor leaves the whole
@@ -263,6 +297,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
       `</a>`;
     wrap.querySelector(".ccr-pop-x")?.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); hidePopup(); });
     popupRef.current = new g.marker.AdvancedMarkerElement({ map, position: pos, content: wrap, zIndex: 100000 });
+    popupContentElRef.current = wrap; // measured by the proximity-hide on mousemove
     neutralizePopup(popupRef.current, wrap); // ← belt-and-suspenders: the popup also can't capture the pointer
   }
 
@@ -305,6 +340,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
       `</div>`;
     wrap.querySelector(".ccr-pop-x")?.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); hidePopup(); });
     popupRef.current = new g.marker.AdvancedMarkerElement({ map, position: pos, content: wrap, zIndex: 100000 });
+    popupContentElRef.current = wrap; // measured by the proximity-hide on mousemove
     neutralizePopup(popupRef.current, wrap); // ← belt-and-suspenders: the popup also can't capture the pointer
   }
 
@@ -437,6 +473,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
     setShowArea(false); // fresh results reflect the (just-searched) area
     pinsByProRef.current = new Map();
     const canHover = typeof window !== "undefined" && !!window.matchMedia?.("(hover: hover)").matches;
+    canHoverRef.current = canHover; // so the proximity-hide (mousemove) runs on desktop only
     const bounds = new g.LatLngBounds();
 
     const markers = professionals.map((pro) => {
@@ -467,6 +504,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
         el.addEventListener("mouseenter", () => {
           if (activePinRef.current && activePinRef.current !== proId) setActive(activePinRef.current, false, false);
           activePinRef.current = proId;
+          activeAnchorElRef.current = el;
           setActive(proId, true, false);
           openPopup(g, map, pro, pos);
         });
@@ -481,6 +519,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
           // MOBILE TAP → show the stable mini-card (tap the card itself to open the profile).
           if (activePinRef.current && activePinRef.current !== proId) setActive(activePinRef.current, false, false);
           activePinRef.current = proId;
+          activeAnchorElRef.current = el;
           setActive(proId, true, false);
           openPopup(g, map, pro, pos);
         }
@@ -513,6 +552,7 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
           // highlighted pin. NO mouseleave-close (closes on map-leave/click instead → no flicker).
           el.addEventListener("mouseenter", () => {
             if (activePinRef.current) { setActive(activePinRef.current, false, false); activePinRef.current = null; }
+            activeAnchorElRef.current = el;
             openClusterPopup(g, map, pros, position);
           });
         }
@@ -602,9 +642,10 @@ export function GoogleMapPanel({ apiKey, professionals, locale = "es", numbering
       <Script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js" strategy="afterInteractive" onLoad={renderMarkers} />
       {/* Wrapper is the positioning context; the map fills it and the floating
           "Buscar en esta área" button overlays on top (top-center, like Airbnb/Uber).
-          `onMouseLeave` closes the hover popup ONLY when the cursor leaves the WHOLE map
-          (desktop) — never on the pin↔popup boundary (the flicker source). */}
-      <div className="relative w-full h-full" onMouseLeave={hidePopup}>
+          `onMouseMove` hides the hover popup promptly once the cursor leaves the tight
+          pin+card region (proximity, not boundary-toggle → no flicker); `onMouseLeave`
+          is the backstop for when the cursor leaves the WHOLE map. */}
+      <div className="relative w-full h-full" onMouseMove={handleHoverProximity} onMouseLeave={hidePopup}>
         <div ref={mapRef} className="absolute inset-0" />
         {showArea && (
           <button
