@@ -359,6 +359,7 @@
   "identity": {
     "idLabel": "ID number",
     "idHint": "CR: 9 digits · DIMEX: 11-12 · NITE: 10",
+    "idIncomplete": "That number doesn't look valid. Please check that it's complete.",
     "optional": "(optional)",
     "confirmed": "Identity confirmed",
     "cedulaLabel": "ID:",

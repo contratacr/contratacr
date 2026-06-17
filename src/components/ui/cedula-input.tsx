@@ -1,8 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Input } from "@/components/ui/input";
-import { cleanId, formatId, detectIdType, idTypeLabel } from "@/lib/cedula";
+import { cleanId, formatId, detectIdType, idTypeLabel, isValidId } from "@/lib/cedula";
 
 interface CedulaInputProps {
   /** Stored value: clean digits only (no hyphens). */
@@ -34,7 +35,15 @@ export function CedulaInput({
   disabled,
 }: CedulaInputProps) {
   const t = useTranslations("identity");
+  const [touched, setTouched] = useState(false);
   const type = detectIdType(value);
+  // Smart validation (replaces the old fixed "CR: 9 dígitos · DIMEX…" helper text):
+  // nothing shows until the user leaves the field with a number that doesn't match
+  // any valid CR id length (cédula 9 · NITE 10 · DIMEX 11–12) → a single friendly
+  // warning. A valid format (or an empty field) shows nothing. An explicit `error`
+  // from the parent (e.g. "already registered") always wins.
+  const formatWarning = touched && value.length > 0 && !isValidId(value) ? t("idIncomplete") : undefined;
+  const shownError = error ?? formatWarning;
   const label = (
     <span className="flex items-center justify-between gap-2">
       <span>
@@ -59,17 +68,18 @@ export function CedulaInput({
       label={label}
       value={formatId(value)}
       onChange={(e) => onChange(cleanId(e.target.value))}
+      onBlur={() => setTouched(true)}
       type="text"
       inputMode="numeric"
       pattern="[0-9-]*"
       autoComplete="off"
       maxLength={14}
       placeholder="1-0000-0000"
-      hint={hint ?? t("idHint")}
-      error={error}
+      hint={hint}
+      error={shownError}
       autoFocus={autoFocus}
       disabled={disabled}
-      aria-invalid={!!error}
+      aria-invalid={!!shownError}
     />
   );
 }

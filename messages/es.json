@@ -359,6 +359,7 @@
   "identity": {
     "idLabel": "Número de identificación",
     "idHint": "CR: 9 dígitos · DIMEX: 11-12 · NITE: 10",
+    "idIncomplete": "Ese número no parece válido. Revisa que esté completo.",
     "optional": "(opcional)",
     "confirmed": "Identidad confirmada",
     "cedulaLabel": "Cédula:",
