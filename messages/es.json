@@ -1686,6 +1686,8 @@
     "title": "Crear cuenta de cliente",
     "subtitle": "Encuentra profesionales cerca de ti. Gratis.",
     "identityConfirmed": "Identidad confirmada",
+    "fullName": "Nombre completo",
+    "namePlaceholder": "Tu nombre y apellidos",
     "email": "Correo electrónico",
     "emailPlaceholder": "tu@email.com",
     "password": "Contraseña",

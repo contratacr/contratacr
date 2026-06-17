@@ -1686,6 +1686,8 @@
     "title": "Create a client account",
     "subtitle": "Find professionals near you. Free.",
     "identityConfirmed": "Identity confirmed",
+    "fullName": "Full name",
+    "namePlaceholder": "Your first and last name",
     "email": "Email",
     "emailPlaceholder": "you@email.com",
     "password": "Password",

@@ -15,8 +15,6 @@ import { SuccessIcon } from "@/components/ui/success-icon";
 import { PROVINCES } from "@/lib/data/cr-geography";
 import { cn } from "@/lib/utils";
 import { getInitials } from "@/lib/utils";
-import { IdentityField, type IdentityResult } from "@/components/ui/identity-field";
-import { cleanId, detectIdType, isValidId } from "@/lib/cedula";
 
 export default function RegisterClientPage() {
   const router = useRouter();
@@ -24,8 +22,6 @@ export default function RegisterClientPage() {
   const { user, loading: authLoading } = useAuth();
 
   const [fullName, setFullName] = useState("");
-  const [cedula, setCedula] = useState("");
-  const [identity, setIdentity] = useState<IdentityResult | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -73,18 +69,9 @@ export default function RegisterClientPage() {
       return;
     }
 
-    // Cédula required + 18+ gate. National cédulas must be found in the padrón
-    // (the electoral roll only contains citizens 18+) — this blocks minors. A
-    // DIMEX/NITE can't be age-checked here, so it's accepted on format.
-    const cleanCedula = cleanId(cedula);
-    if (!isValidId(cleanCedula)) {
-      setError(t("errIdInvalid"));
-      return;
-    }
-    if (detectIdType(cleanCedula) === "cedula" && (!identity || !identity.found)) {
-      setError(t("errIdentity"));
-      return;
-    }
+    // NOTE: clients do NOT provide a cédula at signup — it's only collected later
+    // when they REQUEST A SERVICE (booking flow / completar-perfil). Keeping it out
+    // of registration reduces friction. (Pros still provide a cédula for verification.)
 
     setSubmitting(true);
 
@@ -100,7 +87,7 @@ export default function RegisterClientPage() {
           options: {
             // onboarding_completed lets middleware send them straight to their
             // panel after verifying — never back to the role-selection screen.
-            data: { role: "client", full_name: fullName, cedula: cleanCedula, onboarding_completed: true },
+            data: { role: "client", full_name: fullName, onboarding_completed: true },
           },
         });
 
@@ -133,7 +120,6 @@ export default function RegisterClientPage() {
         body: JSON.stringify({
           userId,
           fullName: fullName.trim(),
-          cedula: cleanCedula,
           phone: phone.trim(),
           provinciaId: provinciaId || null,
           cantonId: cantonId || null,
@@ -237,15 +223,19 @@ export default function RegisterClientPage() {
             )}
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-              {/* Cédula → padrón auto-fill (name comes from the padrón; also our
-                  18+ gate). The client does not type their name when found. */}
-              <IdentityField
-                cedula={cedula}
-                fullName={fullName}
-                onCedulaChange={setCedula}
-                onFullNameChange={setFullName}
-                onResult={setIdentity}
-              />
+              {/* Full name — clients sign up with just their name (no cédula; that's
+                  collected later when they request a service). Pre-filled for OAuth. */}
+              <div>
+                <label className="text-sm font-medium text-[#374151] block mb-1.5">{t("fullName")} <span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  className={inputClass}
+                  placeholder={t("namePlaceholder")}
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required
+                />
+              </div>
 
               {!user && (
                 <>
