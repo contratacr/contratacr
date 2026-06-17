@@ -634,6 +634,8 @@ When you need to investigate ONE person end-to-end, use the person-centric layer
 - **Reachable from anywhere a user appears**: link with either the user id (tickets) or the professional id (reports, verification case) — the profile route resolves a professional id to its owner.
 - Keep every section view + its per-status filters/badges intact; the user layer is additive. Admin tab bar scrolls horizontally on mobile.
 
+**Unified admin layout width:** ALL admin content width/centering is owned by **ONE shared container in `AdminShell`** — `<div className="mx-auto w-full max-w-[1320px] px-4 sm:px-6 lg:px-8 py-6">{children}</div>` — so every route (Resumen, Verificación + detail, Usuarios, Reportes, …) lines up identically. Wide tables/queues fill it; sparse detail pages get balanced side margins. **Admin pages/components must NOT apply their own `max-w`/`mx-auto` to the page container** (it would drift from the rest). If you need the detail page narrower, change the shared container, not one page.
+
 **Unified admin color system (apply to every section/component):**
 - **Brand blue `#009FD9`** — segment/filter tabs (active: `bg-[#009FD9] text-white border-[#009FD9]`; inactive: `bg-white text-[#374151] border-[#e5e7eb] hover:border-[#009FD9]`, always with a `border` on both states so there's no 1px shift), loading spinners (`<Loader2 className="h-7 w-7 animate-spin text-[#009FD9]" />` — never a hand-rolled `border-t-transparent` div), links, input focus rings, and the icon in section/`Section` headings.
 - **Navy `#0f172a`** — chrome only: the shell header, neutral-**primary** action buttons (e.g. "Responder", "Abrir caso de verificación"), and the admin side of chat bubbles. Not for tabs.
