@@ -28,6 +28,7 @@ import { createClient } from "@/lib/supabase/client";
 import { ProfessionalSchedule, type ScheduleSlot } from "@/components/professionals/professional-schedule";
 import { ClientRegistrationModal } from "@/components/auth/client-registration-modal";
 import { SelfActionModal, SELF_MSG } from "@/components/professionals/self-action-modal";
+import { SaveButton, type SavedPro } from "@/components/professionals/save-button";
 import type { ProfessionalDetail } from "@/lib/queries/professionals";
 
 interface ProfilePageProps {
@@ -197,6 +198,25 @@ export default function ProfilePage({ params }: ProfilePageProps) {
   })();
   // A pro viewing their OWN public profile cannot request a service from themselves.
   const isOwn = !!viewerId && viewerId === professional.profileId;
+
+  // Favorites: the SAME system as the /buscar cards. Keyed on `professional.id`
+  // (the professionals row id the card also uses), so saving here reflects on the
+  // card and vice-versa. `isVerified` is derived exactly like the card. Self-favorite
+  // is blocked via the shared SelfActionModal (isOwn) — see SaveButton.
+  const savedPro: SavedPro = {
+    id: professional.id,
+    slug: professional.slug,
+    fullName: professional.fullName,
+    avatarUrl: professional.avatarUrl ?? undefined,
+    categoryIcon: professional.categoryIcon,
+    categoryId: professional.categoryId,
+    provinceName: professional.provinceName,
+    cantonName: professional.cantonName,
+    ratingAvg: professional.ratingAvg,
+    reviewCount: professional.reviewCount,
+    hourlyRate: professional.hourlyRate,
+    isVerified: professional.verificationStatus === "verified",
+  };
   const TABS: Array<{ id: Tab; label: string }> = [
     { id: "servicios",      label: t("tabs.servicios") },
     ...(hasCasos ? [{ id: "casos" as Tab, label: t("tabs.casos") }] : []),
@@ -315,6 +335,12 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                     );
                   })()}
                 </div>
+
+                {/* Save to favorites — SAME favorites system as the /buscar cards
+                    (shared SaveButton: same storage, saved/unsaved state, and the
+                    self-action block that prevents favoriting your OWN profile).
+                    Labeled pill variant so it reads clearly on the profile. */}
+                <SaveButton pro={savedPro} isOwn={isOwn} withLabel />
 
                 {/* Schedule + booking/contact buttons — REUSES the /buscar card's
                     ProfessionalSchedule in a STACKED layout: location tabs + that location's

@@ -1227,6 +1227,18 @@ actually wired.
 > - **Profesiones**: chip cap `2 → 3` (`allProfessions.slice(0,3)`) so 3-profession pros show all three.
 > - **Favorites icon** (`save-button.tsx`): a PLAIN bookmark outline (`h-[18px]`, grey, no circle/border/bg),
 >   filled brand-blue when saved — NOT the old circular bordered button.
+>
+> **Favorites on the PROFILE (Sprint 211).** The public professional profile (`/profesionales/[slug]`) reuses
+> the SAME `SaveButton` (same `contratacr_saved_pros_<userId>` storage, `savePro/unsavePro/isSaved`, and
+> `savedProsChanged` event) so favorites are consistent between a /buscar card and the profile — keyed on the
+> `professionals` row id (`professional.id`), so saving on either surface reflects on the other (cross-page via
+> localStorage on mount; same-tab live via a `savedProsChanged` listener now in SaveButton). The profile uses
+> the **`withLabel`** variant: a clear, on-brand **labeled pill** ("Guardar"/"Guardado" — `card.saveLabel`/
+> `card.savedLabel`, es+en; brand-blue `bg-[#EBF5FB]` when saved, outline otherwise; filled vs outline bookmark),
+> placed in the contact/actions ASIDE after the "Desde" price (visible high up on mobile, where the aside stacks
+> first). Cards keep the bare top-right icon. **Self-favorite is blocked via the shared `SelfActionModal`**:
+> `isOwn` (viewerId === professional.profileId) shows `SELF_MSG.favorite` instead of saving — same reveal-then-
+> block pattern as the other own-profile actions. Logged-out saving behaves exactly like the cards (guest bucket).
 > - **Exact contact copy** (`schedule` namespace, ES + EN): the private/no-schedule note is
 >   "La disponibilidad de este profesional no es pública. Contáctanos y conoce sus horarios."; the two
 >   contact buttons are "Contáctanos por WhatsApp" / "Contáctanos por llamada" (was "WhatsApp"/"Llamar").

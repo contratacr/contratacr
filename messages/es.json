@@ -220,6 +220,8 @@
     "coverageAreas": "Se desplaza en {areas}",
     "save": "Guardar profesional",
     "unsave": "Quitar de guardados",
+    "saveLabel": "Guardar",
+    "savedLabel": "Guardado",
     "verified": "Verificado",
     "verifiedTitle": "Verificado por ContrataCR",
     "unverified": "Sin verificar",

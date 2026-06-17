@@ -220,6 +220,8 @@
     "coverageAreas": "Travels in {areas}",
     "save": "Save professional",
     "unsave": "Remove from saved",
+    "saveLabel": "Save",
+    "savedLabel": "Saved",
     "verified": "Verified",
     "verifiedTitle": "Verified by ContrataCR",
     "unverified": "Unverified",

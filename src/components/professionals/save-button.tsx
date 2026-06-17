@@ -86,15 +86,25 @@ interface SaveButtonProps {
   /** True when the viewer is looking at their OWN professional profile — block
       self-favoriting with a friendly explanation instead of saving. */
   isOwn?: boolean;
+  /** Labeled pill variant for the PROFILE page (icon + "Guardar"/"Guardado").
+      Default (cards) is the bare, subtle top-right bookmark icon. Both share the
+      exact same favorites logic, storage and self-action block, so the saved state
+      stays consistent between a /buscar card and the profile. */
+  withLabel?: boolean;
 }
 
-export function SaveButton({ pro, className, isOwn = false }: SaveButtonProps) {
+export function SaveButton({ pro, className, isOwn = false, withLabel = false }: SaveButtonProps) {
   const t = useTranslations("card");
   const [saved, setSaved] = useState(false);
   const [selfMsg, setSelfMsg] = useState<string | null>(null);
 
   useEffect(() => {
     setSaved(isSaved(pro.id));
+    // Stay in sync if the SAME pro is toggled elsewhere in this tab (e.g. another
+    // SaveButton instance) — cross-PAGE sync already happens via localStorage on mount.
+    const sync = () => setSaved(isSaved(pro.id));
+    window.addEventListener("savedProsChanged", sync);
+    return () => window.removeEventListener("savedProsChanged", sync);
   }, [pro.id]);
 
   function toggle(e: React.MouseEvent) {
@@ -111,25 +121,44 @@ export function SaveButton({ pro, className, isOwn = false }: SaveButtonProps) {
       savePro(pro);
       setSaved(true);
     }
-    /* dispatch custom event so saved-tab can refresh if open */
+    /* dispatch custom event so saved-tab + any other SaveButton refresh */
     window.dispatchEvent(new CustomEvent("savedProsChanged"));
   }
 
   return (
     <>
-      <button
-        onClick={toggle}
-        aria-label={saved ? t("unsave") : t("save")}
-        className={cn(
-          "flex items-center justify-center p-1 transition-colors duration-200",
-          saved
-            ? "text-[#009FD9]"
-            : "text-[#9ca3af] hover:text-[#374151]",
-          className
-        )}
-      >
-        <Bookmark className="h-[18px] w-[18px]" strokeWidth={2} fill={saved ? "currentColor" : "none"} />
-      </button>
+      {withLabel ? (
+        <button
+          onClick={toggle}
+          aria-label={saved ? t("unsave") : t("save")}
+          aria-pressed={saved}
+          className={cn(
+            "inline-flex w-full items-center justify-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-semibold transition-colors duration-200",
+            saved
+              ? "border-[#009FD9] bg-[#EBF5FB] text-[#009FD9]"
+              : "border-[#e5e7eb] bg-white text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9]",
+            className
+          )}
+        >
+          <Bookmark className="h-4 w-4 shrink-0" strokeWidth={2} fill={saved ? "currentColor" : "none"} />
+          {saved ? t("savedLabel") : t("saveLabel")}
+        </button>
+      ) : (
+        <button
+          onClick={toggle}
+          aria-label={saved ? t("unsave") : t("save")}
+          aria-pressed={saved}
+          className={cn(
+            "flex items-center justify-center p-1 transition-colors duration-200",
+            saved
+              ? "text-[#009FD9]"
+              : "text-[#9ca3af] hover:text-[#374151]",
+            className
+          )}
+        >
+          <Bookmark className="h-[18px] w-[18px]" strokeWidth={2} fill={saved ? "currentColor" : "none"} />
+        </button>
+      )}
       <SelfActionModal open={!!selfMsg} onClose={() => setSelfMsg(null)} message={selfMsg ?? ""} />
     </>
   );
