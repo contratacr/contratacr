@@ -772,7 +772,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                   return (
                     <div key={date} className="flex items-center gap-3 rounded-xl border border-[#e5e7eb] p-2.5">
                       <div className="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-lg bg-[#f9fafb]">
-                        <span className="text-[9px] font-bold uppercase text-[#dc5b4b] leading-none">{monthShort}</span>
+                        <span className="text-[9px] font-bold uppercase text-[#009FD9] leading-none">{monthShort}</span>
                         <span className="text-base font-bold text-[#111827] leading-tight">{d}</span>
                       </div>
                       <div className="min-w-0 flex-1">
