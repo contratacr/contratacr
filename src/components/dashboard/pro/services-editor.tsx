@@ -417,8 +417,13 @@ export function ServicesEditor({
             </div>
           </div>
           <div className="px-3 py-2 sm:px-4">
+            {/* No match → a clear two-line message that points to "Otro" (matches the
+                publicar-proyecto category picker's empty state). */}
             {pickerList.length === 0 ? (
-              <p className="px-2 py-6 text-center text-sm text-[#9ca3af]">{t("pickerEmpty")}</p>
+              <div className="px-3 py-4 text-center">
+                <p className="mb-1 text-sm font-medium text-[#374151]">{t("pickerNoResults")}</p>
+                <p className="text-xs text-[#9ca3af]">{t("pickerNoResultsHint")}</p>
+              </div>
             ) : (
               pickerList.map((cat) => (
                 <button
@@ -432,17 +437,19 @@ export function ServicesEditor({
               ))
             )}
 
-            {/* "Otro / no está mi servicio" — always available at the bottom (like the
-                "otro" option in publicar-proyecto's category picker). Lets the pro add a
-                free-text service the catalog doesn't have; it's searchable like any other. */}
+            {/* "Otro" section — ALWAYS available (even with matches), like the project
+                picker's "Otro servicio" row: a small "OTRO" label + a plain selectable row
+                styled like a normal project-picker option. Lets the pro add a free-text
+                service the catalog lacks (searchable like any other). */}
             {!professions.includes("otro") && (
-              <div className="mt-1 border-t border-[#f3f4f6] pt-2">
+              <div className="mt-1 border-t border-[#f3f4f6] pt-1">
+                <p className="px-3 pb-1 pt-3 text-[10px] font-bold uppercase tracking-widest text-[#9ca3af]">{t("otherGroup")}</p>
                 <button
                   type="button"
                   onClick={addOtro}
-                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-[#0089bb] hover:bg-[#EBF5FB] transition-colors"
+                  className="w-full rounded-lg px-3 py-2.5 text-left text-sm text-[#374151] transition-colors hover:bg-[#f9fafb]"
                 >
-                  <Plus className="h-4 w-4 shrink-0 text-[#009FD9]" /> {t("otherOption")}
+                  {t("otherOption")}
                 </button>
               </div>
             )}
