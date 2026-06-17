@@ -10,9 +10,8 @@ import { Button } from "@/components/ui/button";
 import { PhoneInput, isPhoneComplete } from "@/components/ui/phone-input";
 import { OtpVerification } from "@/components/auth/otp-verification";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { CheckCircle2, Eye, EyeOff, User, ChevronDown } from "lucide-react";
+import { CheckCircle2, Eye, EyeOff, User } from "lucide-react";
 import { SuccessIcon } from "@/components/ui/success-icon";
-import { PROVINCES } from "@/lib/data/cr-geography";
 import { cn } from "@/lib/utils";
 import { getInitials } from "@/lib/utils";
 import { detectSocialOnly, providerLabel } from "@/lib/auth-method";
@@ -30,16 +29,11 @@ export default function RegisterClientPage() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [phone, setPhone] = useState("");
   const [phoneError, setPhoneError] = useState<string | null>(null);
-  const [provinciaId, setProvinciaId] = useState("");
-  const [cantonId, setCantonId] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [otpEmail, setOtpEmail] = useState<string | null>(null);
   const [oauthPhoto, setOauthPhoto] = useState<string | null>(null);
-
-  const selectedProvincia = PROVINCES.find((p) => p.id === provinciaId);
-  const cantons = selectedProvincia?.cantons ?? [];
 
   // Pre-fill from OAuth user
   useEffect(() => {
@@ -129,8 +123,6 @@ export default function RegisterClientPage() {
           userId,
           fullName: fullName.trim(),
           phone: phone.trim(),
-          provinciaId: provinciaId || null,
-          cantonId: cantonId || null,
         }),
       });
 
@@ -308,6 +300,10 @@ export default function RegisterClientPage() {
                 </>
               )}
 
+              {/* NOTE: clients do NOT set a provincia/cantón at signup — they indicate
+                  their location when SEARCHING or REQUESTING A SERVICE, where it's actually
+                  used. Keeping it out of registration reduces friction. */}
+
               <PhoneInput
                 label={t("phone")}
                 required
@@ -315,48 +311,6 @@ export default function RegisterClientPage() {
                 onChange={(v) => { setPhone(v); setPhoneError(null); }}
                 error={phoneError ?? undefined}
               />
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                    {t("provincia")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
-                  </label>
-                  {/* `appearance-none` + `pr-10` + an overlaid chevron inset from the
-                      right border (the native arrow sat too close to the edge). */}
-                  <div className="relative">
-                    <select
-                      className={cn(inputClass, "cursor-pointer appearance-none pr-10")}
-                      value={provinciaId}
-                      onChange={(e) => { setProvinciaId(e.target.value); setCantonId(""); }}
-                    >
-                      <option value="">{t("select")}</option>
-                      {PROVINCES.map((p) => (
-                        <option key={p.id} value={p.id}>{p.name}</option>
-                      ))}
-                    </select>
-                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6b7280]" />
-                  </div>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                    {t("canton")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
-                  </label>
-                  <div className="relative">
-                    <select
-                      className={cn(inputClass, "cursor-pointer appearance-none pr-10", !provinciaId && "opacity-50")}
-                      value={cantonId}
-                      onChange={(e) => setCantonId(e.target.value)}
-                      disabled={!provinciaId}
-                    >
-                      <option value="">{t("select")}</option>
-                      {cantons.map((c) => (
-                        <option key={c.id} value={c.id}>{c.name}</option>
-                      ))}
-                    </select>
-                    <ChevronDown className={cn("pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6b7280]", !provinciaId && "opacity-50")} />
-                  </div>
-                </div>
-              </div>
 
               {error && (
                 <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
