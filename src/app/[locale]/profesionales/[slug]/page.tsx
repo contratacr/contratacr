@@ -450,14 +450,16 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                             {visibleServices.map((svc) => (
                               <div key={svc.id} className="py-3.5">
                                 <div className="flex items-start justify-between gap-3">
+                                  {/* `min-w-0` + `break-words` let a long name WRAP within its column
+                                      instead of overflowing onto the price (never overlap). */}
                                   <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-semibold text-[#111827]">{svc.name}</p>
+                                    <p className="break-words text-sm font-semibold text-[#111827]">{svc.name}</p>
                                     {svc.description && (
-                                      <p className="text-xs text-[#6b7280] mt-0.5 leading-relaxed">{svc.description}</p>
+                                      <p className="break-words text-xs text-[#6b7280] mt-0.5 leading-relaxed">{svc.description}</p>
                                     )}
                                   </div>
                                   {svc.price ? (
-                                    <span className="text-sm font-semibold text-[#009FD9] whitespace-nowrap shrink-0">{svc.price}</span>
+                                    <span className="max-w-[10rem] shrink-0 break-words text-right text-sm font-semibold text-[#009FD9]">{svc.price}</span>
                                   ) : (
                                     <button className="text-xs font-semibold text-[#009FD9] hover:underline shrink-0">
                                       {t("consult")}
