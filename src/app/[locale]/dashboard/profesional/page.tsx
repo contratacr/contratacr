@@ -18,6 +18,7 @@ import { ProfileCompletion } from "@/components/dashboard/pro/profile-completion
 import { PhotoGallery } from "@/components/dashboard/pro/photo-gallery";
 import { AvailabilityEditor } from "@/components/dashboard/pro/availability-editor";
 import { ServicesEditor } from "@/components/dashboard/pro/services-editor";
+import { SaveStatusProvider, HeaderSaveStatus } from "@/components/dashboard/save-status-context";
 import { BookingRequests } from "@/components/dashboard/pro/booking-requests";
 import { ProposalsTab } from "@/components/dashboard/pro/proposals-tab";
 import { VerificationPanel } from "@/components/dashboard/pro/verification-panel";
@@ -322,9 +323,17 @@ export default function ProDashboardPage() {
 
             {/* Main content */}
             <div ref={contentRef} className="flex-1 scroll-mt-20 lg:scroll-mt-0">
+              {/* SaveStatusProvider lets each editor REPORT its autosave state up to the
+                  section title row (HeaderSaveStatus), so "Guardado" shows inline with the
+                  title and never pushes the content below it (no layout jump). */}
+              <SaveStatusProvider>
               <Card>
                 <CardHeader className="px-6 pt-6 pb-3">
-                  <h2 className="text-lg font-semibold text-[#111827]">{activeTab === "services" ? t("servicesHeading") : t(`tabs.${activeTab}`)}</h2>
+                  <div className="flex items-start justify-between gap-3">
+                    <h2 className="min-w-0 text-lg font-semibold text-[#111827]">{activeTab === "services" ? t("servicesHeading") : t(`tabs.${activeTab}`)}</h2>
+                    {/* Inline autosave status — right of the title, fixed-width slot so a long title wraps instead of overlapping. */}
+                    <HeaderSaveStatus className="mt-0.5" />
+                  </div>
                   {TABS_WITH_SUBTITLE.has(activeTab) && (
                     <p className="text-sm text-[#6b7280] mt-0.5">{t(`subtitles.${activeTab}`)}</p>
                   )}
@@ -403,6 +412,7 @@ export default function ProDashboardPage() {
                   )}
                 </CardContent>
               </Card>
+              </SaveStatusProvider>
             </div>
           </div>
         </div>

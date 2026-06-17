@@ -10,7 +10,7 @@ import { Plus, X, Lock, Loader2, MapPin, ChevronDown, ChevronLeft, ChevronRight,
 import { type ContactPreference } from "@/lib/constants";
 import { crTodayISO, isTooSoonCR } from "@/lib/time-cr";
 import { TimeSelect, to12h } from "@/components/ui/time-select";
-import { SaveStatus } from "@/components/dashboard/save-status";
+import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
 
 // Stable id for the optional "A domicilio" (traveling) schedule. Starts with `cov_`
 // so /buscar treats it exactly like any coverage zone (an "A domicilio" tab with its
@@ -501,9 +501,11 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
 
   const selectClass = "h-9 rounded-xl border border-[#e5e7eb] bg-white pl-3 pr-9 text-sm font-medium text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all appearance-none cursor-pointer";
 
+  // App-wide autosave: report status to the section title row (inline, no layout shift).
+  useReportSaveStatus(savingVisibility || busy, justSaved);
+
   return (
     <div className="flex flex-col gap-4">
-      <SaveStatus saving={savingVisibility || busy} saved={justSaved} />
 
       {/* ── Disponibilidad privada ─────────────────────────────────────────── */}
       <div className="rounded-2xl border border-[#e5e7eb] p-4 sm:p-5">

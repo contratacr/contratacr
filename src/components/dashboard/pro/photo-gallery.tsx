@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Upload, X, Loader2 } from "lucide-react";
-import { SaveStatus } from "@/components/dashboard/save-status";
+import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { MAX_PORTFOLIO_PHOTOS, cldThumb } from "@/lib/cloudinary";
@@ -121,10 +121,11 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
     await persist(items.filter((it) => it.url !== url));
   }
 
+  // App-wide autosave: report status to the section title row (inline, no layout shift).
+  useReportSaveStatus(saving || !!uploadingFor, justSaved);
+
   return (
     <div className="flex flex-col gap-6">
-      {/* App-wide autosave: uploads/changes persist immediately; consistent status. */}
-      <SaveStatus saving={saving || !!uploadingFor} saved={justSaved} />
       <p className="text-sm text-[#6b7280]">
         {t.rich("intro", { ...rich, max: MAX_PORTFOLIO_PHOTOS })}
       </p>

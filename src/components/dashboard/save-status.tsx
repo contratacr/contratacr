@@ -7,8 +7,13 @@ import { cn } from "@/lib/utils";
 /**
  * ONE app-wide save-state indicator. The whole app autosaves; this is the
  * consistent "Guardando… / Guardado / Sin guardar" feedback every editable
- * section shows so users always know their changes are persisted. Place it
- * right-aligned at the top of each section for a uniform position.
+ * section shows so users always know their changes are persisted.
+ *
+ * Placement: INLINE WITH THE SECTION TITLE (right of the heading), NOT in the
+ * content flow — rendered via `HeaderSaveStatus` (editors report their state with
+ * `useReportSaveStatus`; see save-status-context.tsx) or directly in a title row.
+ * Because the title line always exists, toggling this null↔shown never moves the
+ * content below it (the old in-flow placement caused a layout jump).
  */
 export function SaveStatus({
   saving,

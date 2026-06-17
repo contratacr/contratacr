@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
-import { SaveStatus } from "@/components/dashboard/save-status";
+import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { LanguagesInput } from "@/components/ui/languages-input";
@@ -460,11 +460,11 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
   }
 
 
+  // App-wide autosave: report status to the section title row (inline, no layout shift).
+  useReportSaveStatus(saving || autoSaving, saved, dirty);
+
   return (
     <div className="flex flex-col gap-3 max-w-lg">
-      {/* App-wide autosave: one consistent status indicator (no save button). */}
-      <SaveStatus saving={saving || autoSaving} saved={saved} dirty={dirty} />
-
       {error && (
         <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-600">
           {error}

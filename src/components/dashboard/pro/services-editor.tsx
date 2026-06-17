@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { getCategoryLabel, ALL_CATEGORIES, normalizeText } from "@/lib/data/categories";
 import { PRICING_TYPES, formatServicePrice, type PricingType } from "@/lib/pricing";
+import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
 
 export type ProService = {
   id: string;
@@ -85,6 +86,10 @@ export function ServicesEditor({
   const [formError, setFormError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  // App-wide autosave: report status to the section title row (inline, no layout shift).
+  // Called BEFORE the early "no professions" return so the hook order stays stable.
+  useReportSaveStatus(saving, saved);
 
   const primary = professions[0];
 
@@ -390,10 +395,6 @@ export function ServicesEditor({
         </div>
       </div>
 
-      {/* Autosave status — every change persists immediately. */}
-      <p className="text-center text-xs text-[#9ca3af]">
-        {saving ? t("saving") : saved ? t("saved") : t("savedAuto")}
-      </p>
 
       {/* ── Add-profession picker ─────────────────────────────────────── */}
       {showPicker && (

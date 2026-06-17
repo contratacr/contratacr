@@ -365,7 +365,17 @@ export default function ClientDashboardPage() {
               it (divider-separated), and "Cuenta y seguridad" is its OWN tab. */}
           <Card>
             <CardHeader className="px-6 pt-6 pb-3">
-              <h2 className="text-lg font-semibold text-[#111827]">{SECTION_TITLE[activeTab]}</h2>
+              <div className="flex items-start justify-between gap-3">
+                <h2 className="min-w-0 text-lg font-semibold text-[#111827]">{SECTION_TITLE[activeTab]}</h2>
+                {/* Autosave status INLINE with the title (only the autosaving "profile"
+                    tab) — fixed-width slot so the status never pushes/reflows the title or
+                    the content below it (no layout jump). */}
+                {activeTab === "profile" && (
+                  <div className="mt-0.5 min-w-[112px] shrink-0">
+                    <SaveStatus saving={profileSaving} saved={profileSaved} dirty={profileDirty} />
+                  </div>
+                )}
+              </div>
               {SECTION_SUBTITLE[activeTab] && (
                 <p className="text-sm text-[#6b7280] mt-0.5">{SECTION_SUBTITLE[activeTab]}</p>
               )}
@@ -380,8 +390,6 @@ export default function ClientDashboardPage() {
               {/* MI PERFIL — one container, divider-separated subsections inside. */}
               {activeTab === "profile" && (
                 <div className="flex flex-col gap-4">
-                  {/* App-wide autosave — consistent status, no save button. */}
-                  <SaveStatus saving={profileSaving} saved={profileSaved} dirty={profileDirty} />
                   {/* Foto */}
                   <div className="flex items-center gap-4">
                     <div className="relative h-16 w-16 rounded-full overflow-hidden bg-[#EBF5FB] flex items-center justify-center shrink-0">
