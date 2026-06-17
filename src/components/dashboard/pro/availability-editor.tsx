@@ -38,6 +38,12 @@ function toMins(t: string): number {
   const [h, m] = t.split(":").map(Number);
   return h * 60 + m;
 }
+// Two half-open minute ranges [aS,aE) and [bS,bE) overlap iff they share any minute.
+// Touching ends (e.g. 12:00–13:00 then 13:00–14:00) do NOT overlap — that's a clean
+// hand-off between back-to-back blocks, not being in two places at once.
+function rangesOverlap(aS: number, aE: number, bS: number, bE: number): boolean {
+  return aS < bE && bS < aE;
+}
 function todayISO(): string {
   return crTodayISO();
 }
@@ -90,6 +96,8 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
   const [busy, setBusy] = useState(false);
   const [savingVisibility, setSavingVisibility] = useState(false);
   const [showPrivateConfirm, setShowPrivateConfirm] = useState(false);
+  // Cross/same-location overlap block — a pro can't be in two places at once.
+  const [conflict, setConflict] = useState<{ title: string; body: string } | null>(null);
   const [justSaved, setJustSaved] = useState(false);
   function pulseSaved() { setJustSaved(true); setTimeout(() => setJustSaved(false), 2500); }
 
@@ -132,6 +140,72 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
 
   function locationLabel(id: string): string {
     return locationOptions.find((o) => o.id === id)?.label ?? t("locationFallback");
+  }
+
+  // ── Overlap guard: a pro can't be available in two places at the same time ──
+  // The minute-ranges a location is actually OPEN on a concrete DATE, applying the
+  // SAME precedence as materialization (closed → none; a `custom` exception REPLACES
+  // the weekly hours; `extra` ADDS to them). Used to compare a proposed schedule
+  // against every OTHER location on the affected day(s).
+  const rangesForLocOnDate = useCallback((loc: string, date: string, wk: WeeklyRow[], exc: ExcRow[]): [number, number][] => {
+    const wd = weekdayOf(date);
+    const dayExc = exc.filter((e) => e.location_id === loc && e.date === date);
+    if (dayExc.some((e) => e.mode === "closed")) return [];
+    const custom = dayExc.filter((e) => e.mode === "custom" && e.start && e.end);
+    const extra = dayExc.filter((e) => e.mode === "extra" && e.start && e.end);
+    const base: [number, number][] = custom.length > 0
+      ? custom.map((e) => [toMins(e.start!), toMins(e.end!)])
+      : wk.filter((r) => r.location_id === loc && r.weekday === wd).map((r) => [toMins(r.start), toMins(r.end)]);
+    return [...base, ...extra.map((e) => [toMins(e.start!), toMins(e.end!)] as [number, number])];
+  }, []);
+
+  // Validate a PROPOSED set of franjas (minute-ranges) placed at `loc`, BEFORE writing.
+  // `scope` is a recurring weekday (check every future date that lands on it) or a
+  // single exception date. `ownBase` are this location's OTHER ranges the proposal must
+  // also clear (e.g. the weekly hours when adding `extra` on the same location/day).
+  // Returns a localized conflict {title, body} to block with, or null when it's safe.
+  function findOverlapConflict(
+    loc: string,
+    proposed: [number, number][],
+    scope: { weekday: number } | { date: string },
+    ownBase: [number, number][] = []
+  ): { title: string; body: string } | null {
+    // 1) SAME-LOCATION: proposed franjas must not overlap each other or the own base.
+    for (let i = 0; i < proposed.length; i++) {
+      for (let j = i + 1; j < proposed.length; j++) {
+        if (rangesOverlap(proposed[i][0], proposed[i][1], proposed[j][0], proposed[j][1])) {
+          return { title: t("conflictTitle"), body: t("conflictSelf") };
+        }
+      }
+      for (const b of ownBase) {
+        if (rangesOverlap(proposed[i][0], proposed[i][1], b[0], b[1])) {
+          return { title: t("conflictTitle"), body: t("conflictSelf") };
+        }
+      }
+    }
+    // 2) CROSS-LOCATION: proposed must not overlap any OTHER location on the same day.
+    const otherLocs = [...new Set([...weekly, ...exceptions].map((r) => r.location_id))].filter((l) => l && l !== loc);
+    const dates: string[] = "date" in scope
+      ? [scope.date]
+      : (() => {
+          const out: string[] = [];
+          const start = todayISO();
+          for (let i = 0; i <= HORIZON_DAYS; i++) { const d = addDaysISO(start, i); if (weekdayOf(d) === scope.weekday) out.push(d); }
+          return out;
+        })();
+    for (const date of dates) {
+      for (const other of otherLocs) {
+        const ranges = rangesForLocOnDate(other, date, weekly, exceptions);
+        for (const p of proposed) {
+          for (const r of ranges) {
+            if (rangesOverlap(p[0], p[1], r[0], r[1])) {
+              return { title: t("conflictTitle"), body: t("conflictCross", { place: locationLabel(other) }) };
+            }
+          }
+        }
+      }
+    }
+    return null;
   }
 
   // ── MATERIALIZE the template + exceptions into concrete slots ──────────────
@@ -275,6 +349,11 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
   // Delete matches by LOCATION + weekday (any category) so legacy profession-tagged
   // rows are absorbed; new rows are written with category_id = null.
   async function persistDay(weekday: number, franjas: Franja[], dur: number) {
+    // Block a save that would put this pro in two places at once (or overlap itself).
+    const proposed = franjas.map((f) => [toMins(f.start), toMins(f.end)] as [number, number]).filter(([s, e]) => e > s);
+    const c = findOverlapConflict(genLocation, proposed, { weekday });
+    if (c) { setConflict(c); return; }
+
     const next = weekly.filter((r) => !(sameLoc(r.location_id) && r.weekday === weekday));
     for (const f of franjas) next.push({ location_id: genLocation, category_id: null, weekday, start: f.start, end: f.end, slot_minutes: dur });
     setWeekly(next);
@@ -307,6 +386,13 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
   // "Igual a todos los días": copy this day's franjas to EVERY weekday.
   async function copyToAll(weekday: number) {
     const src = (dayFranjas.get(weekday) ?? []).map((f) => ({ start: f.start, end: f.end }));
+    // These franjas would repeat on EVERY weekday — block if any day collides with
+    // another location (or itself).
+    const proposed = src.map((f) => [toMins(f.start), toMins(f.end)] as [number, number]).filter(([s, e]) => e > s);
+    for (const wd of WEEKDAY_ORDER) {
+      const c = findOverlapConflict(genLocation, proposed, { weekday: wd });
+      if (c) { setConflict(c); return; }
+    }
     const next = weekly.filter((r) => !sameLoc(r.location_id));
     for (const wd of WEEKDAY_ORDER) for (const f of src) next.push({ location_id: genLocation, category_id: null, weekday: wd, start: f.start, end: f.end, slot_minutes: activeDuration });
     setWeekly(next);
@@ -330,7 +416,19 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
   }
 
   // ── Exceptions ("¿Un día distinto?") ──────────────────────────────────────
-  async function saveException(date: string, mode: ExcMode, franjas: Franja[], dur: number) {
+  // Returns false (without writing) when the proposed hours overlap another location
+  // — or this location's own weekly hours when ADDING extra — on that date.
+  async function saveException(date: string, mode: ExcMode, franjas: Franja[], dur: number): Promise<boolean> {
+    if (mode !== "closed") {
+      const proposed = franjas.map((f) => [toMins(f.start), toMins(f.end)] as [number, number]).filter(([s, e]) => e > s);
+      // `extra` keeps the weekly hours, so it must also clear THIS location's weekly base.
+      const ownBase: [number, number][] = mode === "extra"
+        ? weekly.filter((r) => r.location_id === genLocation && r.weekday === weekdayOf(date)).map((r) => [toMins(r.start), toMins(r.end)])
+        : [];
+      const c = findOverlapConflict(genLocation, proposed, { date }, ownBase);
+      if (c) { setConflict(c); return false; }
+    }
+
     const next = exceptions.filter((e) => !(sameLoc(e.location_id) && e.date === date));
     if (mode === "closed") {
       next.push({ location_id: genLocation, category_id: null, date, mode: "closed", start: null, end: null, slot_minutes: dur });
@@ -347,6 +445,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
         : franjas.map((f) => ({ professional_id: professionalId, location_id: genLocation, category_id: null, exception_date: date, mode, start_time: f.start, end_time: f.end, slot_minutes: dur }));
     if (rows.length > 0) await supabase.from("availability_exceptions").insert(rows);
     await regenerate(weekly, next);
+    return true;
   }
 
   async function removeException(date: string) {
@@ -390,6 +489,12 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [showPrivateConfirm]);
+  useEffect(() => {
+    if (!conflict) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setConflict(null); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [conflict]);
 
   // "Cambiar un día" modal
   const [dayModal, setDayModal] = useState<{ date: string } | null>(null);
@@ -598,7 +703,9 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
           defaultDuration={activeDuration}
           dateLocale={dateLocale}
           onClose={() => setDayModal(null)}
-          onSave={async (date, mode, franjas, dur) => { await saveException(date, mode, franjas, dur); setDayModal(null); }}
+          // Close only when the save actually went through; a blocked overlap keeps the
+          // modal open (the conflict notice explains why) so the pro can adjust the hours.
+          onSave={async (date, mode, franjas, dur) => { const ok = await saveException(date, mode, franjas, dur); if (ok) setDayModal(null); return ok; }}
         />
       )}
 
@@ -619,6 +726,23 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
           </div>
         </div>
       )}
+
+      {/* ── Overlap conflict notice ──────────────────────────────────────────
+          Blocks a schedule that would have the pro in two places at once (or
+          overlapping itself). Sits above the "Cambiar un día" modal (z-[210]). */}
+      {conflict && (
+        <div className="fixed inset-0 z-[210] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setConflict(null)} />
+          <div className="relative z-10 w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl text-center">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#fef3c7]">
+              <Calendar className="h-6 w-6 text-[#b45309]" />
+            </div>
+            <h3 className="text-lg font-bold text-[#111827] mb-1.5">{conflict.title}</h3>
+            <p className="text-sm text-[#6b7280] mb-5 leading-relaxed">{conflict.body}</p>
+            <Button size="md" className="w-full" onClick={() => setConflict(null)}>{t("conflictOk")}</Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -634,7 +758,7 @@ function DayModal({ initialDate, existing, markedDates, defaultDuration, dateLoc
   defaultDuration: number;
   dateLocale: string;
   onClose: () => void;
-  onSave: (date: string, mode: ExcMode, franjas: Franja[], dur: number) => Promise<void> | void;
+  onSave: (date: string, mode: ExcMode, franjas: Franja[], dur: number) => Promise<boolean> | boolean;
 }) {
   const t = useTranslations("availabilityEditor");
   const [date, setDate] = useState(initialDate);
@@ -741,7 +865,7 @@ function DayModal({ initialDate, existing, markedDates, defaultDuration, dateLoc
 
         <div className="flex justify-end gap-3 border-t border-[#f3f4f6] p-4 sm:p-5">
           <Button type="button" variant="outline" size="md" onClick={onClose} disabled={saving}>{t("cancel")}</Button>
-          <Button type="button" size="md" disabled={invalid || saving} loading={saving} onClick={async () => { setSaving(true); await onSave(date, mode, franjas, dur); }}>{t("saveDay")}</Button>
+          <Button type="button" size="md" disabled={invalid || saving} loading={saving} onClick={async () => { setSaving(true); const ok = await onSave(date, mode, franjas, dur); if (!ok) setSaving(false); }}>{t("saveDay")}</Button>
         </div>
       </div>
     </div>
