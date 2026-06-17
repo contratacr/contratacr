@@ -33,7 +33,12 @@ export function SupportModal({ onClose, onSubmitted }: { onClose: () => void; on
           </div>
           <h3 className="text-lg font-bold text-[#111827]">{t("successTitle")}</h3>
           <p className="max-w-sm text-sm text-[#6b7280]">
-            {user ? t("successUserDesc") : t("successGuestDesc", { email: doneEmail })}
+            {user
+              ? t("successUserDesc")
+              : t.rich("successGuestDesc", {
+                  email: doneEmail,
+                  b: (c) => <span className="font-semibold text-[#111827]">{c}</span>,
+                })}
           </p>
           <Button type="button" onClick={onClose} className="mt-1">{t("close")}</Button>
         </div>

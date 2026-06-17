@@ -955,6 +955,15 @@ submit the modal closes and the panel reloads (`setShowModal(false); setFilter("
 **inline, with no page navigation**. When `onSubmitted` is omitted, `SupportModal` falls back to its compact
 in-modal confirmation (reusable for over-page contexts). Direct navigation to `/soporte` still shows the page.
 
+**Ticket-created confirmation = tight hierarchy, NOT a wall of text.** Both the `/soporte` success screen and
+the `SupportModal` confirmation follow one shape: **prominent** check icon + "¡Tiquete creado!" title + **ONE
+concise reply line** — "Te responderemos por correo a **{email}**." with the EMAIL bold (rendered via `t.rich` +
+a `<b>` tag in `successGuestDesc`, so any consumer of that key MUST use `t.rich`, never plain `t()`, or the tag
+prints literally) — then the **action buttons**, then a **subtle muted footnote block** (`text-xs text-[#9ca3af]`)
+holding the spam note (`SpamNotice`) and, for guests only, the follow-tickets hint (`guestFollow`). Drop redundant
+lead-ins like "Recibimos tu consulta" (the title already confirms creation). No voseo; buttons stack
+`flex-col sm:flex-row` for ~360px.
+
 **Loading first — never flash a decided state.** While the initial `/api/support` fetch is in flight the
 section shows ONLY a spinner in the content area; the header "Contactar soporte" button AND the status-filter
 chips are gated on **`!loading && items.length > 0`** (NOT `loading || …`, which used to flash the "has tickets"

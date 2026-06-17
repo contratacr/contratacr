@@ -25,16 +25,28 @@ export default function SoportePage() {
       <div className="min-h-screen flex flex-col bg-white">
         <LandingNavbar />
         <main className="flex-1 flex items-center justify-center px-4 py-20">
+          {/* Confirmation — tight visual hierarchy: prominent title + ONE concise
+              reply line (email emphasized), then the actions, then the spam note +
+              (guest) follow-tickets hint demoted to small muted footnotes. Avoids the
+              old wall of four equal-weight lines. */}
           <div className="text-center max-w-md">
             <SuccessIcon size={80} className="mx-auto mb-5" />
             <h1 className="text-2xl font-bold text-[#111827] mb-2">{t("successTitle")}</h1>
-            {user ? (
-              <>
-                <p className="text-[#6b7280] mb-2">
-                  {t("successUserDesc")}
-                </p>
-                <SpamNotice className="mb-6" />
-                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+
+            {/* Primary message (one line) */}
+            <p className="text-[#6b7280]">
+              {user
+                ? t("successUserDesc")
+                : t.rich("successGuestDesc", {
+                    email: successEmail,
+                    b: (c) => <span className="font-semibold text-[#111827]">{c}</span>,
+                  })}
+            </p>
+
+            {/* Actions */}
+            <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6">
+              {user ? (
+                <>
                   <Link
                     href="/dashboard/cliente?tab=soporte"
                     className="inline-flex items-center justify-center gap-2 bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold px-6 py-3 rounded-full transition-all text-sm"
@@ -47,18 +59,9 @@ export default function SoportePage() {
                   >
                     {t("goPanel")}
                   </Link>
-                </div>
-              </>
-            ) : (
-              <>
-                <p className="text-[#6b7280] mb-2">
-                  {t("successGuestDesc", { email: successEmail })}
-                </p>
-                <SpamNotice className="mb-3" />
-                <p className="text-sm text-[#6b7280] mb-6">
-                  {t("guestFollow")}
-                </p>
-                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                </>
+              ) : (
+                <>
                   {/* Primary: leave / continue (so the user is never stranded). */}
                   <Link
                     href="/"
@@ -74,9 +77,15 @@ export default function SoportePage() {
                   >
                     {t("guestSignInOrRegister")}
                   </Link>
-                </div>
-              </>
-            )}
+                </>
+              )}
+            </div>
+
+            {/* Secondary, subtle footnotes (spam note + guest follow-tickets hint) */}
+            <div className="mt-6 space-y-1">
+              <SpamNotice />
+              {!user && <p className="text-xs text-[#9ca3af]">{t("guestFollow")}</p>}
+            </div>
           </div>
         </main>
         <LandingFooter />
