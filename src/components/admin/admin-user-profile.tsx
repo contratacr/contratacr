@@ -195,7 +195,7 @@ export function AdminUserProfile({ userId }: { userId: string }) {
                 <div className="flex items-center gap-2 shrink-0">
                   {t.last_reply_role === "user" && t.status !== "resolved" && <span className="h-2 w-2 rounded-full bg-red-500" title="Espera respuesta" />}
                   <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${statusPill(t.status)}`}>{t.status}</span>
-                  <Link href="/admin/soporte" className="text-xs text-[#009FD9] hover:underline">Abrir</Link>
+                  <Link href={`/admin/soporte?ticket=${t.id}`} className="text-xs text-[#009FD9] hover:underline">Abrir</Link>
                 </div>
               </li>
             ))}

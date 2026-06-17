@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Headset, ArrowLeft, Send, User, Shield, UserSearch, Loader2 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { AdminUserSearch } from "@/components/admin/admin-user-search";
@@ -82,6 +83,20 @@ export function AdminSupport() {
       .then(({ ticket, messages }) => { setTicket(ticket); setMessages(messages ?? []); })
       .finally(() => setThreadLoading(false));
   }, []);
+
+  // Deep-link: open a specific ticket on mount (e.g. ?ticket=<id> from the "Abrir"
+  // link on a user's admin profile). Runs once so the admin can still go back to the
+  // list afterwards. Works regardless of the status filter — the thread is fetched
+  // directly by id, not from the filtered list.
+  const searchParams = useSearchParams();
+  const initialTicketId = searchParams.get("ticket");
+  const didOpenInitial = useRef(false);
+  useEffect(() => {
+    if (initialTicketId && !didOpenInitial.current) {
+      didOpenInitial.current = true;
+      openTicket(initialTicketId);
+    }
+  }, [initialTicketId, openTicket]);
 
   async function sendReply() {
     if (!reply.trim() || !openId) return;
