@@ -220,6 +220,46 @@ export const OTHER_CATEGORY: CategoryItem = {
   keywords: ["otro", "otro servicio", "otra especialidad", "no encontre", "diferente"],
 };
 
+/* ─── Admin-approved CUSTOM categories (dynamic overlay) ───────────────────────
+   The fixed catalog above is the base. When an admin approves a user's
+   "¿No ves tu categoría?" suggestion it becomes a real, selectable/searchable
+   category WITHOUT a code deploy: it's stored as an approved `category_suggestions`
+   row and loaded at runtime into this registry (client-side, via
+   `useCustomCategories`). `searchCategories` + `getCategoryLabel` consult it so an
+   approved custom category behaves like any built-in one. Stays empty on the
+   server (no fetch) — there `getCategoryLabel` falls back to a clean slug label. */
+export const CUSTOM_GROUP_ID = "otras";
+let CUSTOM_CATEGORIES: (CategoryItem & { groupId: string; groupLabel: string })[] = [];
+const customListeners = new Set<() => void>();
+
+export function setCustomCategories(list: { id: string; label: string; keywords?: string[] }[]): void {
+  CUSTOM_CATEGORIES = list
+    .filter((c) => c && c.id && c.label)
+    .map((c) => ({
+      id: c.id,
+      label: c.label,
+      keywords: c.keywords ?? [],
+      groupId: CUSTOM_GROUP_ID,
+      groupLabel: "Otras categorías",
+    }));
+  customListeners.forEach((fn) => { try { fn(); } catch { /* ignore */ } });
+}
+
+export function getCustomCategories(): (CategoryItem & { groupId: string; groupLabel: string })[] {
+  return CUSTOM_CATEGORIES;
+}
+
+/** Subscribe to custom-category registry changes (used by the client hook). */
+export function subscribeCustomCategories(fn: () => void): () => void {
+  customListeners.add(fn);
+  return () => { customListeners.delete(fn); };
+}
+
+/** The full catalog = fixed taxonomy + admin-approved custom categories. */
+export function getAllCategories(): (CategoryItem & { groupId: string; groupLabel: string })[] {
+  return CUSTOM_CATEGORIES.length ? [...ALL_CATEGORIES, ...CUSTOM_CATEGORIES] : ALL_CATEGORIES;
+}
+
 /* ─── Normalize text for accent-insensitive comparison ─── */
 export function normalizeText(text: string): string {
   return text
@@ -228,11 +268,12 @@ export function normalizeText(text: string): string {
     .replace(/[̀-ͯ]/g, "");
 }
 
-/* ─── Fuzzy search across all categories by label + keywords ─── */
+/* ─── Fuzzy search across all categories (fixed + custom) by label + keywords ─── */
 export function searchCategories(query: string): (CategoryItem & { groupId: string; groupLabel: string })[] {
-  if (!query.trim()) return ALL_CATEGORIES;
+  const pool = getAllCategories();
+  if (!query.trim()) return pool;
   const q = normalizeText(query);
-  return ALL_CATEGORIES.filter((item) => {
+  return pool.filter((item) => {
     if (normalizeText(item.label).includes(q)) return true;
     return item.keywords.some((k) => normalizeText(k).includes(q));
   });
@@ -322,13 +363,22 @@ export function getCategoryLabel(id: string, locale?: string): string {
   if (id === "otro") return locale === "en" ? "Other service" : "Otro servicio";
   const found = ALL_CATEGORIES.find((c) => c.id === id);
   if (found) return found.label;
-  // Unknown id → a readable label (never the raw key), and a warning to catch it.
-  if (id) console.warn(`[categories] unknown category id "${id}" — add it to the taxonomy + messages`);
-  return id.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
+  // Admin-approved custom category (loaded on the client) — its real label.
+  const custom = CUSTOM_CATEGORIES.find((c) => c.id === id);
+  if (custom) return custom.label;
+  // Unknown id → a readable label (never the raw key). Custom-category ids are
+  // slugged as `sg_<name>`, so strip that prefix before de-slugging (e.g.
+  // "sg_vendedor_de_botellas" → "Vendedor de botellas") — this is the server-side
+  // fallback when the dynamic registry isn't loaded.
+  return id
+    .replace(/^sg_/, "")
+    .replace(/_/g, " ")
+    .replace(/^\w/, (c) => c.toUpperCase());
 }
 
 /* ─── Get category GROUP label from group ID (locale-aware) ─── */
 export function getCategoryGroupLabel(groupId: string, locale?: string): string {
+  if (groupId === CUSTOM_GROUP_ID) return locale === "en" ? "Other categories" : "Otras categorías";
   if (locale === "en" && CATEGORY_GROUP_LABELS_EN[groupId]) return CATEGORY_GROUP_LABELS_EN[groupId];
   const g = CATEGORY_GROUPS.find((x) => x.id === groupId);
   return g?.label ?? groupId;

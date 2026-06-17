@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import { EmojiBlocker } from "@/components/util/emoji-blocker";
 import { BackToTop } from "@/components/landing/back-to-top";
+import { CustomCategoriesLoader } from "@/lib/data/use-custom-categories";
 import "../globals.css";
 
 const inter = Inter({
@@ -74,6 +75,8 @@ export default async function LocaleLayout({
       <body className="min-h-full flex flex-col bg-white">
         <NextIntlClientProvider messages={messages}>
           <EmojiBlocker />
+          {/* Loads admin-approved custom categories into the runtime catalog overlay. */}
+          <CustomCategoriesLoader />
           {children}
           {/* App-wide — only appears after scrolling 400px, so it shows on
               long-scroll pages and stays hidden on short ones. */}

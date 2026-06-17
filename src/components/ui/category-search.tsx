@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Search, X, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
+import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import {
   CATEGORY_GROUPS,
   searchCategories,
@@ -33,6 +34,8 @@ export function CategorySearch({
   autoFocus = false,
 }: CategorySearchProps) {
   const t = useTranslations("categorySearch");
+  // Load admin-approved custom categories so they're selectable/searchable here too.
+  const customCategories = useCustomCategories();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -128,7 +131,9 @@ export function CategorySearch({
 
   const results = searchCategories(query);
 
-  // Group results by groupLabel for display
+  // Group results by groupLabel for display. The no-query browse lists the fixed
+  // groups + (if any) an "Otras categorías" group of admin-approved customs; the
+  // query branch already includes customs via searchCategories.
   const grouped = query
     ? Object.entries(
         results.reduce<Record<string, typeof results>>((acc, item) => {
@@ -138,7 +143,10 @@ export function CategorySearch({
           return acc;
         }, {})
       )
-    : CATEGORY_GROUPS.map((g) => [g.label, g.items.map((i) => ({ ...i, groupId: g.id, groupLabel: g.label }))] as [string, typeof results]);
+    : [
+        ...CATEGORY_GROUPS.map((g) => [g.label, g.items.map((i) => ({ ...i, groupId: g.id, groupLabel: g.label }))] as [string, typeof results]),
+        ...(customCategories.length ? [["Otras categorías", customCategories] as [string, typeof results]] : []),
+      ];
 
   return (
     <div ref={containerRef} className={cn("relative", className)}>

@@ -13,6 +13,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 //                    "no es mi info" cases land in pending too).
 //  • reportes      — open moderation reports.
 //  • suscripciones — manual SINPE/transfer payments awaiting approval.
+//  • categorias    — user-suggested categories awaiting review ("¿No ves tu categoría?").
 //  • soporte       — open tickets + in_progress ones whose last reply was the USER's
 //                    (same "needsAttention" definition the Soporte view uses).
 export async function GET() {
@@ -21,10 +22,11 @@ export async function GET() {
 
   const db = createAdminClient();
 
-  const [verificacion, reportes, suscripciones, supportOpen, supportAwaiting] = await Promise.all([
+  const [verificacion, reportes, suscripciones, categorias, supportOpen, supportAwaiting] = await Promise.all([
     db.from("professionals").select("id", { count: "exact", head: true }).in("verification_status", ["pending", "under_appeal"]),
     db.from("reports").select("id", { count: "exact", head: true }).eq("status", "open"),
     db.from("subscription_payments").select("id", { count: "exact", head: true }).eq("status", "pending"),
+    db.from("category_suggestions").select("id", { count: "exact", head: true }).eq("status", "pending"),
     db.from("support_tickets").select("id", { count: "exact", head: true }).eq("status", "open"),
     db.from("support_tickets").select("id", { count: "exact", head: true }).eq("status", "in_progress").eq("last_reply_role", "user"),
   ]);
@@ -33,6 +35,7 @@ export async function GET() {
     verificacion: verificacion.count ?? 0,
     reportes: reportes.count ?? 0,
     suscripciones: suscripciones.count ?? 0,
+    categorias: categorias.count ?? 0,
     soporte: (supportOpen.count ?? 0) + (supportAwaiting.count ?? 0),
   });
 }

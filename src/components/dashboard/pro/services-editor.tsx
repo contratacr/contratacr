@@ -9,7 +9,8 @@ import { Modal } from "@/components/ui/modal";
 import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import { getCategoryLabel, ALL_CATEGORIES, normalizeText } from "@/lib/data/categories";
+import { getCategoryLabel, getAllCategories, normalizeText } from "@/lib/data/categories";
+import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import { PRICING_TYPES, formatServicePrice, type PricingType } from "@/lib/pricing";
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
 
@@ -79,6 +80,8 @@ export function ServicesEditor({
   // Add-profession picker (modal)
   const [showPicker, setShowPicker] = useState(false);
   const [pickerQuery, setPickerQuery] = useState("");
+  // Admin-approved custom categories — selectable as professions too.
+  const customCategories = useCustomCategories();
   // "¿No ves tu profesión?" lives in the shared <CategorySuggestionBox> (same
   // component the publicar-proyecto picker uses), so its state is self-contained
   // and resets each time the modal re-mounts.
@@ -249,13 +252,14 @@ export function ServicesEditor({
   // Professions available to add (taxonomy minus the ones already added), filtered
   // by the picker's search (label + keywords, accent-insensitive).
   const pickerList = useMemo(() => {
-    const base = ALL_CATEGORIES.filter((c) => !professions.includes(c.id));
+    const base = getAllCategories().filter((c) => !professions.includes(c.id));
     const q = normalizeText(pickerQuery.trim());
     if (!q) return base;
     return base.filter(
       (c) => normalizeText(getCategoryLabel(c.id, locale)).includes(q) || c.keywords.some((k) => normalizeText(k).includes(q))
     );
-  }, [pickerQuery, professions, locale]);
+    // customCategories in deps so the list refreshes once approved customs load.
+  }, [pickerQuery, professions, locale, customCategories]);
 
   if (professions.length === 0) {
     return (
