@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { LanguagesInput } from "@/components/ui/languages-input";
 import { WorkplacesPicker, type Workplace } from "@/components/maps/workplaces-picker";
+import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 import { createClient } from "@/lib/supabase/client";
 import { Camera, X, Plus, ChevronDown, Lock, Award } from "lucide-react";
 import { InstagramIcon, FacebookIcon, TikTokIcon } from "@/components/icons/social-icons";
@@ -512,7 +513,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
           <input
             ref={photoInputRef}
             type="file"
-            accept="image/*"
+            accept={IMAGE_ACCEPT}
             className="hidden"
             onChange={(e) => { const f = e.target.files?.[0]; if (f) handlePhotoSelect(f); }}
           />

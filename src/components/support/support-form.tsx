@@ -43,10 +43,17 @@ export function SupportForm({ onSuccess }: { onSuccess?: (email: string) => void
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const selected = Array.from(e.target.files ?? []);
     const remaining = MAX_FILES - attachments.length;
-    const toAdd = selected.slice(0, remaining).filter((f) => f.size <= MAX_FILE_MB * 1024 * 1024);
-    const oversized = selected.filter((f) => f.size > MAX_FILE_MB * 1024 * 1024);
+    // Allowed: safe images + PDF. Reject by MIME on the client for a localized message;
+    // the server re-validates by magic bytes (the real gate). No SVG.
+    const allowedMime = ["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif", "application/pdf"];
+    const badType = selected.filter((f) => !allowedMime.includes(f.type));
+    const okType = selected.filter((f) => allowedMime.includes(f.type));
+    const toAdd = okType.slice(0, remaining).filter((f) => f.size <= MAX_FILE_MB * 1024 * 1024);
+    const oversized = okType.filter((f) => f.size > MAX_FILE_MB * 1024 * 1024);
 
-    if (oversized.length > 0) {
+    if (badType.length > 0) {
+      setError(t("errFormat"));
+    } else if (oversized.length > 0) {
       setError(t("errOversized", { mb: MAX_FILE_MB }));
     }
 

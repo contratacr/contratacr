@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { validateUpload, IMAGE_KINDS } from "@/lib/upload-validation";
 
 export async function POST(req: NextRequest) {
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
@@ -21,6 +22,15 @@ export async function POST(req: NextRequest) {
     cloudinary.config({ cloud_name: cloudName, api_key: apiKey, api_secret: apiSecret });
 
     const buffer = Buffer.from(await file.arrayBuffer());
+
+    // Magic-byte validation against a safe raster-image allow-list (SVG + non-images
+    // rejected). Server-side gate — `accept=` on the client can be bypassed.
+    const check = validateUpload(buffer, {
+      allow: IMAGE_KINDS,
+      maxBytes: 10 * 1024 * 1024,
+      allowLabel: "JPG, PNG, WEBP, HEIC o GIF",
+    });
+    if (!check.ok) return NextResponse.json({ error: check.error }, { status: 400 });
 
     const result = await new Promise<{ secure_url: string; public_id: string }>(
       (resolve, reject) => {

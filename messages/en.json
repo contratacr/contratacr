@@ -2207,6 +2207,7 @@
     "formats": "Accepted formats: JPG, PNG, WebP, PDF",
     "errRequired": "Please complete all required fields.",
     "errOversized": "Some files exceed the {mb}MB limit and were skipped.",
+    "errFormat": "File type not allowed. Use JPG, PNG, WEBP or PDF.",
     "errSend": "Failed to send. Please try again.",
     "errUnexpected": "Unexpected error. Please try again in a few minutes.",
     "submit": "Send message",

@@ -7,6 +7,7 @@ import { SaveStatus } from "@/components/dashboard/save-status";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { MAX_PORTFOLIO_PHOTOS, cldThumb } from "@/lib/cloudinary";
+import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { casoProfession, type ServiceLike } from "@/lib/services";
 
@@ -137,7 +138,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
       <input
         ref={inputRef}
         type="file"
-        accept="image/*"
+        accept={IMAGE_ACCEPT}
         multiple
         className="hidden"
         onChange={(e) => {

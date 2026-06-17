@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { v2 as cloudinary } from "cloudinary";
+import { validateUpload, IMAGE_KINDS, DOC_KINDS, MIME_FOR } from "@/lib/upload-validation";
 import { createClient } from "@/lib/supabase/server";
 import { safeGetUser } from "@/lib/supabase/get-user";
 import { PAYMENTS_ENABLED } from "@/lib/payments/config";
@@ -29,14 +30,17 @@ export async function POST(req: Request) {
     const form = await req.formData();
     const file = form.get("file") as File | null;
     if (!file || file.size === 0) return NextResponse.json({ error: "No se recibió el comprobante" }, { status: 400 });
-    if (file.size > 10 * 1024 * 1024) return NextResponse.json({ error: "El archivo pesa más de 10 MB." }, { status: 400 });
-
-    const type = file.type || "";
-    const ok = type === "" || type.startsWith("image/") || type === "application/pdf";
-    if (!ok) return NextResponse.json({ error: "Sube una imagen o un PDF." }, { status: 400 });
 
     const buffer = Buffer.from(await file.arrayBuffer());
-    const dataUri = `data:${type || "application/octet-stream"};base64,${buffer.toString("base64")}`;
+    // Magic-byte validation: safe images OR PDF only (no SVG / scripts). 10 MB cap.
+    const check = validateUpload(buffer, {
+      allow: [...IMAGE_KINDS, ...DOC_KINDS],
+      maxBytes: 10 * 1024 * 1024,
+      allowLabel: "JPG, PNG, WEBP o PDF",
+    });
+    if (!check.ok) return NextResponse.json({ error: check.error }, { status: 400 });
+
+    const dataUri = `data:${MIME_FOR[check.kind]};base64,${buffer.toString("base64")}`;
     // resource_type auto → handles both images and PDFs. Stored in a dedicated
     // folder so comprobantes are easy to find/audit.
     const result = await cloudinary.uploader.upload(dataUri, {

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { v2 as cloudinary } from "cloudinary";
+import { validateUpload, IMAGE_KINDS, MIME_FOR } from "@/lib/upload-validation";
 
 export async function POST(req: Request) {
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
@@ -23,24 +24,21 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "No se recibió ningún archivo" }, { status: 400 });
     }
 
-    // 10 MB cap — modern phone photos routinely exceed 5 MB, and Cloudinary
-    // downscales anyway (avatars to 400px), so a low cap only caused failures.
-    if (file.size > 10 * 1024 * 1024) {
-      return NextResponse.json({ error: "La imagen pesa más de 10 MB. Usa una más liviana." }, { status: 400 });
-    }
-
-    // Accept any image — including iPhone HEIC/HEIF (Cloudinary converts them).
-    // Some mobile browsers send an EMPTY type for HEIC, so allow that too; a true
-    // non-image still fails at Cloudinary with a clear message.
-    const type = file.type || "";
-    const isImage = type === "" || type.startsWith("image/");
-    if (!isImage) {
-      return NextResponse.json({ error: "El archivo no es una imagen. Usa JPG, PNG, WebP o HEIC." }, { status: 400 });
-    }
-
     const buffer = Buffer.from(await file.arrayBuffer());
-    // Empty type (some mobile HEIC) → use a sensible default so the data URI is valid.
-    const dataUri = `data:${type || "image/heic"};base64,${buffer.toString("base64")}`;
+
+    // Validate by MAGIC BYTES (not the spoofable file.type/extension) against a safe
+    // raster-image allow-list. SVG (XML, scriptable → stored-XSS risk) and any
+    // non-image are REJECTED here, before anything reaches Cloudinary. 10 MB cap —
+    // modern phone photos routinely exceed 5 MB, and Cloudinary downscales anyway.
+    const check = validateUpload(buffer, {
+      allow: IMAGE_KINDS,
+      maxBytes: 10 * 1024 * 1024,
+      allowLabel: "JPG, PNG, WEBP, HEIC o GIF",
+    });
+    if (!check.ok) return NextResponse.json({ error: check.error }, { status: 400 });
+
+    // Correct MIME from the DETECTED kind (never the uploaded file.type).
+    const dataUri = `data:${MIME_FOR[check.kind]};base64,${buffer.toString("base64")}`;
 
     // "avatar" → square face crop (profile photo). "portfolio" (default) →
     // store ONE optimized original (max 1600px, auto format/quality); thumbnails

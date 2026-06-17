@@ -5,6 +5,7 @@ import { Check, CreditCard, Loader2, Smartphone, ShieldCheck, Star, Upload, X, C
 import {
   PRICES, SINPE_PAYMENT, formatColones, type BillingCycle,
 } from "@/lib/payments/config";
+import { IMAGE_DOC_ACCEPT } from "@/lib/upload-validation";
 
 // Professional-facing subscription plans page (modern SaaS pricing style: plan
 // cards → payment-method step). Rendered ONLY when PAYMENTS_ENABLED is on, or by an
@@ -237,7 +238,7 @@ export function SubscriptionPanel() {
                   {uploading ? "Subiendo…" : "Adjuntar imagen o PDF"}
                 </button>
               )}
-              <input ref={fileRef} type="file" accept="image/*,application/pdf" className="hidden" onChange={onFile} />
+              <input ref={fileRef} type="file" accept={IMAGE_DOC_ACCEPT} className="hidden" onChange={onFile} />
             </div>
 
             {error && <p className="text-xs text-red-600">{error}</p>}

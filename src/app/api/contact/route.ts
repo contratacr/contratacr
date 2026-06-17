@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
+import { validateUpload, IMAGE_KINDS, DOC_KINDS } from "@/lib/upload-validation";
 
 // ALL of the app's automated email goes through RESEND (the contratacr.com domain
 // is verified there → SPF/DKIM pass → good deliverability). The old Zoho/Outlook
@@ -151,6 +152,19 @@ export async function POST(req: NextRequest) {
 
     if (!email || !subject || !message) {
       return NextResponse.json({ error: "Faltan campos requeridos" }, { status: 400 });
+    }
+
+    // Validate EVERY attachment by magic bytes — safe images OR PDF only (no SVG /
+    // scripts / executables), 4 MB each — before saving or emailing anything.
+    for (const f of fileAttachments) {
+      const check = validateUpload(f.content, {
+        allow: [...IMAGE_KINDS, ...DOC_KINDS],
+        maxBytes: 4 * 1024 * 1024,
+        allowLabel: "JPG, PNG, WEBP o PDF",
+      });
+      if (!check.ok) {
+        return NextResponse.json({ ok: false, error: check.error }, { status: 400 });
+      }
     }
 
     // Record the ticket in the admin panel (primary record), then notify the support
