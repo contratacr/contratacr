@@ -110,7 +110,9 @@ export function AdminCase({ providerId }: { providerId: string }) {
   );
 
   return (
-    <div>
+    // Capped + centered content so the detail page reads as a tidy, intentional layout
+    // (balanced side margins) instead of full-bleed stretched cards on wide screens.
+    <div className="mx-auto w-full max-w-[1200px]">
       <Link href="/admin" className="inline-flex items-center gap-1.5 text-sm text-[#6b7280] hover:text-[#009FD9] mb-4">
         <ArrowLeft className="h-4 w-4" /> Volver a la cola
       </Link>
@@ -121,9 +123,11 @@ export function AdminCase({ providerId }: { providerId: string }) {
         </div>
       )}
 
-      <div className="grid lg:grid-cols-3 gap-5">
+      {/* Two-column: flexible review content on the left, a fixed ~340px decision rail
+          on the right. Stacks to a single column below `lg`. */}
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
         {/* ── Left: case file ─────────────────────────────── */}
-        <div className="lg:col-span-2 space-y-5">
+        <div className="space-y-5 min-w-0">
           {/* Header card */}
           <div className="bg-white rounded-xl border border-[#e5e7eb] p-5">
             <div className="flex items-start gap-4">
@@ -159,7 +163,9 @@ export function AdminCase({ providerId }: { providerId: string }) {
               </div>
             </div>
 
-            <dl className="grid sm:grid-cols-2 gap-x-6 gap-y-2 mt-4 text-sm">
+            {/* Meta fields as filled cells in a 2-column grid — fills the card width
+                neatly instead of leaving sparse empty space to the right. */}
+            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-4 text-sm">
               <Field label="Correo" value={profile?.email} />
               <Field label="Teléfono / WhatsApp" value={pro.whatsapp} />
               <Field label="Provincia/Cantón" value={[pro.address].filter(Boolean).join(" · ") || "—"} />
@@ -203,14 +209,14 @@ export function AdminCase({ providerId }: { providerId: string }) {
               {!padron.found ? (
                 <p className="text-sm text-[#b45309]">La cédula no se encontró en el padrón cargado.</p>
               ) : (
-                <div className="grid sm:grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="text-xs text-[#9ca3af]">Nombre ingresado</p>
-                    <p className="text-[#374151] font-medium">{profile?.full_name}</p>
+                <div className="grid sm:grid-cols-2 gap-2.5 text-sm">
+                  <div className="rounded-lg border border-[#f1f3f5] bg-[#f9fafb] px-3 py-2">
+                    <p className="text-[11px] uppercase tracking-wide text-[#9ca3af]">Nombre ingresado</p>
+                    <p className="text-[#374151] font-medium mt-0.5">{profile?.full_name}</p>
                   </div>
-                  <div>
-                    <p className="text-xs text-[#9ca3af]">Nombre en el padrón</p>
-                    <p className="text-[#374151] font-medium">{padron.name || "—"}</p>
+                  <div className="rounded-lg border border-[#f1f3f5] bg-[#f9fafb] px-3 py-2">
+                    <p className="text-[11px] uppercase tracking-wide text-[#9ca3af]">Nombre en el padrón</p>
+                    <p className="text-[#374151] font-medium mt-0.5">{padron.name || "—"}</p>
                   </div>
                   <div className="sm:col-span-2">
                     <span className={`text-xs px-2 py-0.5 rounded-md ${padron.matched ? "bg-[#dcfce7] text-[#15803d]" : "bg-[#fef3c7] text-[#b45309]"}`}>
@@ -416,9 +422,9 @@ export function AdminCase({ providerId }: { providerId: string }) {
 
 function Field({ label, value }: { label: string; value?: string | null }) {
   return (
-    <div>
-      <dt className="text-xs text-[#9ca3af]">{label}</dt>
-      <dd className="text-[#374151] break-words">{value || "—"}</dd>
+    <div className="rounded-lg border border-[#f1f3f5] bg-[#f9fafb] px-3 py-2">
+      <dt className="text-[11px] uppercase tracking-wide text-[#9ca3af]">{label}</dt>
+      <dd className="text-[#374151] break-words text-sm mt-0.5">{value || "—"}</dd>
     </div>
   );
 }
