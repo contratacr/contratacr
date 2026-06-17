@@ -39,10 +39,13 @@ export async function GET(request: NextRequest) {
         } catch { /* best-effort */ }
       }
 
-      // Explicit next PATH (e.g. password reset → /es/reset-password). The
-      // "projects" alias is NOT a path — it's resolved to the role-aware projects
-      // section AFTER we know the role (below), so let it fall through.
-      if (next && next.startsWith("/")) {
+      // Explicit next PATH (e.g. password reset → /es/reset-password, or a support
+      // email's ticket deep-link /es/dashboard/…?tab=soporte&ticket=…). `next` was
+      // URL-encoded by the login page, so `searchParams.get` returns it decoded and
+      // whole. Only INTERNAL paths (single leading "/", never "//") to avoid an
+      // open-redirect. The "projects" alias is NOT a path — it falls through to the
+      // role-aware resolution below.
+      if (next && next.startsWith("/") && !next.startsWith("//")) {
         return NextResponse.redirect(`${origin}${next}`);
       }
 

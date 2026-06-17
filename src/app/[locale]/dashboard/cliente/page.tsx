@@ -375,7 +375,7 @@ export default function ClientDashboardPage() {
               {activeTab === "projects" && <ClientActivity section="projects" />}
               {activeTab === "saved" && <ClientActivity section="saved" />}
               {activeTab === "notifications" && <NotificationsList />}
-              {activeTab === "soporte" && <SupportTickets onUnreadChange={setSupportUnread} />}
+              {activeTab === "soporte" && <SupportTickets onUnreadChange={setSupportUnread} initialTicketId={searchParams.get("ticket")} />}
 
               {/* MI PERFIL — one container, divider-separated subsections inside. */}
               {activeTab === "profile" && (

@@ -107,12 +107,20 @@ export async function POST(req: Request) {
     handled_by: admin.id, handled_by_name: admin.fullName, handled_at: now,
   }).eq("id", id);
 
+  // Reply email + bell deep-link both open THIS exact ticket in the requester's
+  // panel. Resolve their role so a professional lands on the pro panel, not cliente.
+  let panel: "cliente" | "profesional" = "cliente";
+  if (ticket.user_id) {
+    const { data: prof } = await db.from("profiles").select("role").eq("id", ticket.user_id).maybeSingle();
+    if (prof?.role === "professional") panel = "profesional";
+  }
+
   // Email the user (best-effort) AND drop a tagged notification in their bell so
   // the reply also shows in their general Notifications and links to the ticket.
   if (ticket.email) {
-    // `user_id` set → the requester has an account (panel); null → a guest, who gets
-    // the "create account / sign in with this email" path instead of a panel link.
-    await notifyUserOfReply({ toEmail: ticket.email, toName: ticket.name, subject: ticket.subject, body: body.trim(), hasAccount: !!ticket.user_id });
+    // `user_id` set → the requester has an account → deep-link to the exact ticket in
+    // their panel; null → a guest (no panel) → "create account / sign in" path instead.
+    await notifyUserOfReply({ toEmail: ticket.email, toName: ticket.name, subject: ticket.subject, body: body.trim(), hasAccount: !!ticket.user_id, panel, ticketId: id });
   }
   if (ticket.user_id) {
     await db.from("notifications").insert({
@@ -120,7 +128,7 @@ export async function POST(req: Request) {
       type: "support_reply",
       title: "Respuesta de soporte",
       message: `Soporte respondió a tu ticket "${ticket.subject}".`,
-      data: { link: `/es/dashboard/cliente?tab=soporte&ticket=${id}`, ticketId: id },
+      data: { link: `/es/dashboard/${panel}?tab=soporte&ticket=${id}`, ticketId: id },
     });
   }
 

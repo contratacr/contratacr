@@ -77,13 +77,22 @@ export async function notifyUserOfReply(opts: {
   subject: string;
   body: string;
   hasAccount?: boolean;
+  /** Which dashboard the account holder's ticket lives in. */
+  panel?: "cliente" | "profesional";
+  /** Ticket id → the email deep-links to this exact open conversation. */
+  ticketId?: string;
 }): Promise<void> {
   const firstName = (opts.toName ?? "").split(" ")[0] || "";
+  const panel = opts.panel === "profesional" ? "profesional" : "cliente";
+  // Account holders → deep-link straight to THIS ticket open in their panel. The
+  // target is carried through login + Google OAuth (login → ?redirect=… → callback
+  // ?next=…), so even a logged-out click lands on the open conversation.
+  const ticketPath = `/es/dashboard/${panel}?tab=soporte${opts.ticketId ? `&ticket=${opts.ticketId}` : ""}`;
   const followHtml = opts.hasAccount
     ? `<p style="margin:14px 0 0 0;color:#6b7280;font-size:13px;">Puedes responder desde tu panel para continuar la conversación.</p>`
     : `<p style="margin:14px 0 0 0;color:#6b7280;font-size:13px;">Para ver la conversación completa y seguir respondiendo, crea una cuenta o inicia sesión con este correo (${escapeHtml(opts.toEmail)}). Encontrarás este tiquete en tu panel.</p>`;
   const cta = opts.hasAccount
-    ? { href: `${SITE}/es/dashboard/cliente?tab=soporte`, label: "Ver conversación" }
+    ? { href: `${SITE}${ticketPath}`, label: "Ver conversación" }
     : { href: `${SITE}/es/login`, label: "Crear cuenta o iniciar sesión" };
   const html = shell(
     "Tienes una respuesta de soporte",

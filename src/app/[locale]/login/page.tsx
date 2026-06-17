@@ -78,27 +78,39 @@ export default function LoginPage() {
         if (pro) role = "professional";
       }
     }
-    // Optional post-login destination (e.g. the "Publicar proyecto" CTA sends
-    // logged-out users here with ?redirect=projects → land on the role-aware
-    // projects section after authenticating). Read from the URL at submit time
-    // (avoids a useSearchParams suspense boundary on this client page).
+    // Optional post-login destination. `?redirect=` may be a full in-app PATH (e.g.
+    // a support email's deep-link to a ticket, preserved by the proxy) OR the
+    // "projects" alias (the "Publicar proyecto" CTA). Read at submit time (avoids a
+    // useSearchParams suspense boundary on this client page).
     const redirectParam = new URLSearchParams(window.location.search).get("redirect");
+    // Hard redirect so the new page loads with the session already in cookies
+    // (prevents the navbar flashing logged-out state).
+    if (redirectParam && redirectParam.startsWith("/") && !redirectParam.startsWith("//")) {
+      // Already a locale-prefixed in-app path → go straight there (the open ticket).
+      const dest = /^\/(es|en)(\/|$)/.test(redirectParam) ? redirectParam : `/${locale}${redirectParam}`;
+      window.location.href = dest;
+      return;
+    }
     const dest =
       redirectParam === "projects"
         ? role === "professional"
           ? "/dashboard/profesional?tab=sent_projects"
           : "/dashboard/cliente?tab=projects"
         : `/dashboard/${role === "professional" ? "profesional" : "cliente"}`;
-    // Hard redirect so the new page loads with the session already in cookies,
-    // preventing the navbar from flashing logged-out state.
     window.location.href = `/${locale}${dest}`;
   }
 
   // Carry the post-login destination through the OAuth round-trip via the callback's
-  // `next` param (the callback resolves "projects" to the role-aware projects tab).
+  // `next` param. `?redirect=` may be a full in-app PATH (a support email's ticket
+  // deep-link, preserved by the proxy) → pass it as an ENCODED `next` so the callback
+  // URL stays well-formed (the unencoded query was what broke the OAuth code exchange
+  // = auth=error); or the "projects" alias, which the callback role-resolves.
   function oauthCallbackUrl() {
-    const wantsProjects = new URLSearchParams(window.location.search).get("redirect") === "projects";
-    return window.location.origin + "/auth/callback" + (wantsProjects ? "?next=projects" : "");
+    const redirect = new URLSearchParams(window.location.search).get("redirect");
+    let next = "";
+    if (redirect === "projects") next = "projects";
+    else if (redirect && redirect.startsWith("/") && !redirect.startsWith("//")) next = redirect;
+    return window.location.origin + "/auth/callback" + (next ? `?next=${encodeURIComponent(next)}` : "");
   }
 
   async function handleGoogle() {

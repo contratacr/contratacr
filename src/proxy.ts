@@ -74,7 +74,7 @@ export async function proxy(request: NextRequest) {
     .some((c) => c.name.startsWith("sb-") && c.name.includes("-auth-token"));
 
   if (!hasAuthCookie) {
-    if (needsAuthGate) return redirectKeepingCookies(`/${locale}/login`, request, response);
+    if (needsAuthGate) return redirectToLogin(locale, request, response);
     return response;
   }
 
@@ -109,7 +109,7 @@ export async function proxy(request: NextRequest) {
 
   if (!user) {
     clearAuthCookies(request, response);
-    if (needsAuthGate) return redirectKeepingCookies(`/${locale}/login`, request, response);
+    if (needsAuthGate) return redirectToLogin(locale, request, response);
     return response;
   }
 
@@ -123,13 +123,26 @@ export async function proxy(request: NextRequest) {
 }
 
 // Expire the Supabase auth cookies on the response so a stale/invalid session
-// stops re-triggering errors on every visit.
+// stops re-triggering errors on every visit. NEVER touch the PKCE
+// `…-code-verifier` cookie — clearing it mid-OAuth would make the /auth/callback
+// exchange fail (the auth=error a user hit when arriving from a deep-link).
 function clearAuthCookies(request: NextRequest, response: NextResponse) {
   for (const c of request.cookies.getAll()) {
-    if (c.name.startsWith("sb-") && c.name.includes("-auth-token")) {
+    if (c.name.startsWith("sb-") && c.name.includes("-auth-token") && !c.name.includes("code-verifier")) {
       response.cookies.set(c.name, "", { maxAge: 0, path: "/" });
     }
   }
+}
+
+// Redirect to login, preserving the original gated destination (path + query) as
+// `?redirect=` so login can return the user there — carried through Google OAuth
+// (login → ?next= → /auth/callback). Used by both auth-gate branches.
+function redirectToLogin(locale: string, request: NextRequest, response: NextResponse) {
+  const url = new URL(`/${locale}/login`, request.url);
+  url.searchParams.set("redirect", request.nextUrl.pathname + request.nextUrl.search);
+  const redirectRes = NextResponse.redirect(url);
+  response.cookies.getAll().forEach((c) => redirectRes.cookies.set(c));
+  return redirectRes;
 }
 
 // Redirect while preserving any cookie changes already staged on `response`

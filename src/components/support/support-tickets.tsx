@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Headset, ArrowLeft, Send, User, Shield, Plus } from "lucide-react";
 import { Link } from "@/i18n/navigation";
@@ -36,7 +36,7 @@ const STATUS_COLOR: Record<string, string> = {
 // cleaner. Defaults to "open" (Pendiente).
 const FILTER_IDS = ["open", "in_progress", "resolved"] as const;
 
-export function SupportTickets({ onUnreadChange }: { onUnreadChange?: (n: number) => void }) {
+export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadChange?: (n: number) => void; initialTicketId?: string | null }) {
   const { user } = useAuth();
   const t = useTranslations("supportTickets");
   const locale = useLocale();
@@ -100,7 +100,12 @@ export function SupportTickets({ onUnreadChange }: { onUnreadChange?: (n: number
     setThreadLoading(true);
     fetch(`/api/support?id=${id}`)
       .then((r) => r.json())
-      .then(({ ticket, messages }) => { setTicket(ticket); setMessages(messages ?? []); })
+      // Not theirs / not found (e.g. a deep-link opened by the wrong account) →
+      // fall back to the list gracefully instead of a stuck loader.
+      .then(({ ticket, messages }) => {
+        if (!ticket) { setOpenId(null); return; }
+        setTicket(ticket); setMessages(messages ?? []);
+      })
       .finally(() => setThreadLoading(false));
     // Reading the ticket clears its "new reply" notifications (auto-refresh badges).
     if (user) {
@@ -113,6 +118,16 @@ export function SupportTickets({ onUnreadChange }: { onUnreadChange?: (n: number
       });
     }
   }, [user, onUnreadChange]);
+
+  // Deep-link: open a specific ticket on mount (e.g. ?ticket=<id> from a support
+  // email's "Ver conversación", carried through login → callback). Runs once.
+  const didOpenInitial = useRef(false);
+  useEffect(() => {
+    if (initialTicketId && !didOpenInitial.current) {
+      didOpenInitial.current = true;
+      openTicket(initialTicketId);
+    }
+  }, [initialTicketId, openTicket]);
 
   async function sendReply() {
     if (!reply.trim() || !openId) return;

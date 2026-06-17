@@ -393,7 +393,7 @@ export default function ProDashboardPage() {
 
                   {activeTab === "notifications" && <NotificationsList />}
 
-                  {activeTab === "soporte" && <SupportTickets onUnreadChange={setSupportUnread} />}
+                  {activeTab === "soporte" && <SupportTickets onUnreadChange={setSupportUnread} initialTicketId={searchParams.get("ticket")} />}
 
                   {activeTab === "cuenta" && (
                     <div className="space-y-6">
