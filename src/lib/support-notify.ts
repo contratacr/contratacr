@@ -63,20 +63,34 @@ export async function notifySupportInbox(opts: {
   await sendEmail(SUPPORT_TO, `[Soporte] ${opts.isReply ? "Re: " : ""}${opts.subject}`, html, opts.fromEmail);
 }
 
-/** Admin replied → email the user so they receive it (with a link to the thread). */
+/** Admin replied → email the user so they receive it (with a link to continue).
+ *  The follow-up path DIFFERS by whether the recipient has an account:
+ *   • ACCOUNT holder → continue in their panel ("Ver conversación").
+ *   • GUEST (no account) → has NO panel, so "responder desde tu panel" is
+ *     contradictory. Instead invite them to sign in / create an account with THIS
+ *     email — `claimGuestTickets()` then attaches this ticket to the account so it
+ *     appears in their panel and they can keep replying. We do NOT suggest replying
+ *     to this email: inbound email is not wired into the ticket thread. */
 export async function notifyUserOfReply(opts: {
   toEmail: string;
   toName?: string | null;
   subject: string;
   body: string;
+  hasAccount?: boolean;
 }): Promise<void> {
   const firstName = (opts.toName ?? "").split(" ")[0] || "";
+  const followHtml = opts.hasAccount
+    ? `<p style="margin:14px 0 0 0;color:#6b7280;font-size:13px;">Puedes responder desde tu panel para continuar la conversación.</p>`
+    : `<p style="margin:14px 0 0 0;color:#6b7280;font-size:13px;">Para ver la conversación completa y seguir respondiendo, crea una cuenta o inicia sesión con este correo (${escapeHtml(opts.toEmail)}). Encontrarás este tiquete en tu panel.</p>`;
+  const cta = opts.hasAccount
+    ? { href: `${SITE}/es/dashboard/cliente?tab=soporte`, label: "Ver conversación" }
+    : { href: `${SITE}/es/login`, label: "Crear cuenta o iniciar sesión" };
   const html = shell(
     "Tienes una respuesta de soporte",
     `<p style="margin:0 0 12px 0;">${firstName ? `Hola ${escapeHtml(firstName)}, ` : ""}respondimos a tu consulta <strong>“${escapeHtml(opts.subject)}”</strong>:</p>
      <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:14px;white-space:pre-wrap;">${escapeHtml(opts.body)}</div>
-     <p style="margin:14px 0 0 0;color:#6b7280;font-size:13px;">Puedes responder desde tu panel para continuar la conversación.</p>`,
-    { href: `${SITE}/es/dashboard/cliente?tab=soporte`, label: "Ver conversación" },
+     ${followHtml}`,
+    cta,
   );
   await sendEmail(opts.toEmail, `Re: ${opts.subject} — ContrataCR`, html);
 }

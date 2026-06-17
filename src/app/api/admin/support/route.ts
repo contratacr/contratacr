@@ -110,7 +110,9 @@ export async function POST(req: Request) {
   // Email the user (best-effort) AND drop a tagged notification in their bell so
   // the reply also shows in their general Notifications and links to the ticket.
   if (ticket.email) {
-    await notifyUserOfReply({ toEmail: ticket.email, toName: ticket.name, subject: ticket.subject, body: body.trim() });
+    // `user_id` set → the requester has an account (panel); null → a guest, who gets
+    // the "create account / sign in with this email" path instead of a panel link.
+    await notifyUserOfReply({ toEmail: ticket.email, toName: ticket.name, subject: ticket.subject, body: body.trim(), hasAccount: !!ticket.user_id });
   }
   if (ticket.user_id) {
     await db.from("notifications").insert({
