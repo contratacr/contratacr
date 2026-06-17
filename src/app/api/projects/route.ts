@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getCategoryLabel } from "@/lib/data/categories";
+import { getCategoryLabel, OTHER_CATEGORY } from "@/lib/data/categories";
 import { getProvinceById, getCantonById } from "@/lib/data/cr-geography";
 
 /**
@@ -86,7 +86,10 @@ export async function POST(req: NextRequest) {
     }
 
     // Notify every professional whose profession matches the project category.
-    if (categoryId) {
+    // "Otro" is a FREEFORM catch-all — its custom text isn't reliably comparable, so it
+    // must NEVER drive matching: two different "Otro" entries (e.g. "yavines" vs
+    // "payasitos") are NOT the same category. An "Otro" project therefore notifies NO ONE.
+    if (categoryId && categoryId !== OTHER_CATEGORY.id) {
       try {
         const { data: pros } = await admin
           .from("professionals")
@@ -163,6 +166,9 @@ export async function GET(req: NextRequest) {
       : proRow?.category_id
         ? [proRow.category_id]
         : [];
+  // "Otro" is a FREEFORM catch-all, never a match key — drop it so an "Otro" pro is not
+  // auto-matched to (unrelated) "Otro" projects. Their real professions still match.
+  const matchable = professions.filter((p) => p && p !== OTHER_CATEGORY.id);
 
   let query = supabase
     .from("projects")
@@ -173,13 +179,17 @@ export async function GET(req: NextRequest) {
     .order("created_at", { ascending: false })
     .limit(30);
 
-  if (professions.length > 0) {
-    const inList = professions.map((p) => `"${p}"`).join(",");
-    // category in the pro's professions OR the project has no category set
+  if (matchable.length > 0) {
+    const inList = matchable.map((p) => `"${p}"`).join(",");
+    // category in the pro's REAL professions OR the project has no category set
     query = query.or(`category_id.in.(${inList}),category_id.is.null`);
-  } else if (categoryId) {
+  } else if (categoryId && categoryId !== OTHER_CATEGORY.id) {
     // Fallback when the pro record is missing professions for some reason.
     query = query.eq("category_id", categoryId);
+  } else {
+    // Pro has no matchable (non-"Otro") profession → only UNcategorized projects
+    // (visible to everyone); never the "Otro" bucket.
+    query = query.is("category_id", null);
   }
 
   const { data, error } = await query;
