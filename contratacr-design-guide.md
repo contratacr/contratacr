@@ -955,7 +955,13 @@ submit the modal closes and the panel reloads (`setShowModal(false); setFilter("
 **inline, with no page navigation**. When `onSubmitted` is omitted, `SupportModal` falls back to its compact
 in-modal confirmation (reusable for over-page contexts). Direct navigation to `/soporte` still shows the page.
 
-**Empty-state split in `SupportTickets`** — decided by the user's TOTAL ticket count (`items.length`), never the
+**Loading first — never flash a decided state.** While the initial `/api/support` fetch is in flight the
+section shows ONLY a spinner in the content area; the header "Contactar soporte" button AND the status-filter
+chips are gated on **`!loading && items.length > 0`** (NOT `loading || …`, which used to flash the "has tickets"
+treatment for ~0.5s before data arrived), and the body renders the spinner while `loading`. Initial state is
+`loading=true` / `items=[]`, so the component never assumes "empty" before the data resolves.
+
+**Empty-state split in `SupportTickets`** — decided (after loading) by the user's TOTAL ticket count (`items.length`), never the
 filtered count: **TRUE-empty** (0 tickets) → full headset empty-card + centered "Contactar soporte" button, with
 the header button AND the status-filter chips HIDDEN (nothing to filter, one action only); **FILTERED-empty**
 (has ≥1 ticket, none match the selected status) → chips + header button + the simple "No hay tiquetes en esta

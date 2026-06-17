@@ -245,19 +245,21 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
     <div>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
         <p className="text-sm text-[#6b7280]">{t("yourConversations")}</p>
-        {/* Header action shows when there ARE tickets (the persistent action above the
-            list) or while loading. In the EMPTY state it's hidden — the centered
-            empty-state card carries the single "Contactar soporte" button, so it never
-            appears twice. The heading above stays in both states. */}
-        {(loading || items.length > 0) && (
+        {/* Header action shows ONLY once tickets have loaded AND there's at least one
+            (the persistent action above the list). It must NOT render while loading
+            (that flashed the "has tickets" treatment before data arrived) nor in the
+            EMPTY state (the centered empty-state card carries the single "Contactar
+            soporte" button, so it never appears twice). The heading above stays always. */}
+        {!loading && items.length > 0 && (
           <button onClick={() => setShowModal(true)} className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#009FD9] text-white text-sm font-semibold px-4 py-2.5 hover:bg-[#0089bb] shrink-0 w-full sm:w-auto">
             <Plus className="h-4 w-4" /> {t("newTicket")}
           </button>
         )}
       </div>
 
-      {/* Status filter — like the admin inbox, with a "new" badge per status */}
-      {items.length > 0 && (
+      {/* Status filter — like the admin inbox, with a "new" badge per status. Hidden
+          until loading resolves so it never flashes before the tickets arrive. */}
+      {!loading && items.length > 0 && (
         <div className="flex items-center gap-1.5 mb-4 flex-wrap">
           {FILTER_IDS.map((fid) => {
             const badge = unreadByStatus[fid] ?? 0;
