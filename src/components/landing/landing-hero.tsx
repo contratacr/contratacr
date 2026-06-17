@@ -405,9 +405,16 @@ export function LandingHero() {
   }
 
   // Build params from current state and navigate. Service: a picked category
-  // filters by id; otherwise free text → q. Location: a picked/resolved
-  // province → provincia, canton → canton.
-  function runSearch(serviceOverride?: SearchSuggestion) {
+  // filters by id; otherwise free text → q. Location is OPTIONAL — the search
+  // always runs with whatever is filled (service-only, location-only, or both).
+  //
+  // `locationOverride` lets Enter pass an explicitly-resolved location WITHOUT
+  // waiting for React state to flush (avoids a stale `location`): a taxonomy
+  // province/cantón, or a resolved Google address (province/cantón + lat/lng).
+  type LocOverride =
+    | { kind: "taxonomy"; sug: LocationSuggestion }
+    | { kind: "address"; provinceId?: string; cantonId?: string; lat?: number; lng?: number };
+  function runSearch(serviceOverride?: SearchSuggestion, locationOverride?: LocOverride) {
     const params = new URLSearchParams();
     // `serviceOverride` (from Enter) resolves a partial term to the best suggestion. A CATEGORY
     // → filter by id (e.g. "electrici" → categoria=electricista); a professional → search their
@@ -419,10 +426,24 @@ export function LandingHero() {
       const svc = (chosen?.type === "professional" ? chosen.label : service).trim();
       if (svc) params.set("q", svc);
     }
-    // Location: a picked Google ADDRESS → its resolved province/cantón + proximity (lat/lng);
-    // else a picked/resolved province/cantón from our taxonomy.
+    // Location resolution order: explicit Enter override → a picked Google ADDRESS
+    // (province/cantón + proximity) → a picked/typed province/cantón from our taxonomy.
     const picked = pickedAddrRef.current;
-    if (picked && picked.label === location && (picked.provinceId || picked.lat != null)) {
+    if (locationOverride?.kind === "taxonomy") {
+      const loc = locationOverride.sug;
+      if (loc.type === "province") params.set("provincia", loc.id);
+      else params.set("canton", loc.id);
+    } else if (locationOverride?.kind === "address") {
+      if (locationOverride.provinceId) {
+        params.set("provincia", locationOverride.provinceId);
+        if (locationOverride.cantonId) params.set("canton", locationOverride.cantonId);
+      }
+      if (locationOverride.lat != null && locationOverride.lng != null) {
+        params.set("lat", locationOverride.lat.toFixed(5));
+        params.set("lng", locationOverride.lng.toFixed(5));
+        params.set("sortBy", "cercania");
+      }
+    } else if (picked && picked.label === location && (picked.provinceId || picked.lat != null)) {
       if (picked.provinceId) {
         params.set("provincia", picked.provinceId);
         if (picked.cantonId) params.set("canton", picked.cantonId);
@@ -471,8 +492,9 @@ export function LandingHero() {
     }
   }
 
-  function handleLocKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (openLoc && locSug.length > 0) {
+  async function handleLocKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    const hasSug = locSug.length > 0 || addrSug.length > 0;
+    if (openLoc && hasSug) {
       if (e.key === "ArrowDown") {
         e.preventDefault();
         setLocActive((i) => Math.min(i + 1, locSug.length - 1));
@@ -481,15 +503,35 @@ export function LandingHero() {
         e.preventDefault();
         setLocActive((i) => Math.max(i - 1, 0));
         return;
-      } else if (e.key === "Enter" && locActive >= 0) {
+      } else if (e.key === "Enter") {
+        // Auto-complete the HIGHLIGHTED or FIRST/best suggestion AND run the search in
+        // one press. Taxonomy (province/cantón) resolves synchronously; if only Google
+        // ADDRESS results exist, resolve the first one first (its ref is set before the
+        // promise resolves), then search. Either way location is filled + applied.
         e.preventDefault();
-        selectLocation(locSug[locActive]);
+        if (locSug.length > 0) {
+          const chosen = locSug[locActive >= 0 ? locActive : 0];
+          setLocation(chosen.label);
+          setLocationSel(chosen);
+          pickedAddrRef.current = null;
+          setOpenLoc(false);
+          runSearch(undefined, { kind: "taxonomy", sug: chosen });
+        } else {
+          setOpenLoc(false);
+          await selectAddress(addrSug[0]);
+          const p = pickedAddrRef.current;
+          runSearch(undefined, p && (p.provinceId || p.lat != null)
+            ? { kind: "address", provinceId: p.provinceId, cantonId: p.cantonId, lat: p.lat, lng: p.lng }
+            : undefined);
+        }
         return;
       } else if (e.key === "Escape") {
         setOpenLoc(false);
         return;
       }
     }
+    // No open dropdown / no matches → just run the search with whatever is filled
+    // (location is OPTIONAL — service-only still searches).
     if (e.key === "Enter") {
       e.preventDefault();
       runSearch();
