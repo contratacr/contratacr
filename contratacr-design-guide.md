@@ -1239,6 +1239,12 @@ slot: `<ProfessionalSchedule info={…} />`. The info JSX (server-rendered) is t
 Verificado + personal name + price + tags + rating + location line; the schedule appends the
 location tabs/address below it, then the schedule block.
 
+- **Location-nav chevrons are FIT-based** (Sprint 174): `showLocNav` = the tab row actually OVERFLOWS
+  its container (`scrollWidth - clientWidth > 1`, measured via a `ResizeObserver`), NOT a fixed
+  `locTabs.length > 3`. So the arrows appear as soon as a location won't fit — identical on the wide
+  /buscar card and the narrow profile contact rail (the count rule showed them too late on the narrow
+  one: the 3rd tab cut off at 3 locations, arrows only at 4). Monotonic (showing the chevrons only
+  narrows the row), so it never oscillates. Don't revert to a count threshold.
 - **The location TAB row is HORIZONTAL-scroll ONLY** (`overflow-x-auto overflow-y-hidden hide-scrollbar`).
   **Always pair `overflow-x-auto` with an explicit `overflow-y-hidden`** on any horizontal scroller:
   with overflow-y left `visible`, CSS COMPUTES it to `auto`, so the row becomes vertically draggable
