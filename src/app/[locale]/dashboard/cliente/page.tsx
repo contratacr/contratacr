@@ -365,13 +365,13 @@ export default function ClientDashboardPage() {
               it (divider-separated), and "Cuenta y seguridad" is its OWN tab. */}
           <Card>
             <CardHeader className="px-6 pt-6 pb-3">
-              <div className="flex items-start justify-between gap-3">
-                <h2 className="min-w-0 text-lg font-semibold text-[#111827]">{SECTION_TITLE[activeTab]}</h2>
-                {/* Autosave status INLINE with the title (only the autosaving "profile"
-                    tab) — fixed-width slot so the status never pushes/reflows the title or
-                    the content below it (no layout jump). */}
+              {/* Autosave status (profile tab only) as an ABSOLUTE OVERLAY pinned top-right —
+                  out of flow, so it never pushes/reflows the title or content below it. The
+                  title keeps `pr-28` so its text never runs under the status. */}
+              <div className="relative">
+                <h2 className="text-lg font-semibold text-[#111827] pr-28">{SECTION_TITLE[activeTab]}</h2>
                 {activeTab === "profile" && (
-                  <div className="mt-0.5 min-w-[112px] shrink-0">
+                  <div className="pointer-events-none absolute right-0 top-1">
                     <SaveStatus saving={profileSaving} saved={profileSaved} dirty={profileDirty} />
                   </div>
                 )}

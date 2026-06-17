@@ -329,10 +329,12 @@ export default function ProDashboardPage() {
               <SaveStatusProvider>
               <Card>
                 <CardHeader className="px-6 pt-6 pb-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <h2 className="min-w-0 text-lg font-semibold text-[#111827]">{activeTab === "services" ? t("servicesHeading") : t(`tabs.${activeTab}`)}</h2>
-                    {/* Inline autosave status — right of the title, fixed-width slot so a long title wraps instead of overlapping. */}
-                    <HeaderSaveStatus className="mt-0.5" />
+                  {/* `relative` anchors the autosave status as an ABSOLUTE OVERLAY (top-right);
+                      `pr-28` reserves room so the title text never runs under it. The overlay
+                      is out of flow → it can never push/reflow the content below (no jump). */}
+                  <div className="relative">
+                    <h2 className="text-lg font-semibold text-[#111827] pr-28">{activeTab === "services" ? t("servicesHeading") : t(`tabs.${activeTab}`)}</h2>
+                    <HeaderSaveStatus />
                   </div>
                   {TABS_WITH_SUBTITLE.has(activeTab) && (
                     <p className="text-sm text-[#6b7280] mt-0.5">{t(`subtitles.${activeTab}`)}</p>

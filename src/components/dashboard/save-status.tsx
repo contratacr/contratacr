@@ -9,11 +9,15 @@ import { cn } from "@/lib/utils";
  * consistent "Guardando… / Guardado / Sin guardar" feedback every editable
  * section shows so users always know their changes are persisted.
  *
- * Placement: INLINE WITH THE SECTION TITLE (right of the heading), NOT in the
- * content flow — rendered via `HeaderSaveStatus` (editors report their state with
- * `useReportSaveStatus`; see save-status-context.tsx) or directly in a title row.
- * Because the title line always exists, toggling this null↔shown never moves the
- * content below it (the old in-flow placement caused a layout jump).
+ * ZERO LAYOUT IMPACT — two guarantees, so the content NEVER moves when the status
+ * appears / disappears / changes:
+ *  1) It is ALWAYS mounted at a FIXED height (`h-5`) and only toggles OPACITY +
+ *     text — it never mounts/unmounts, so it never adds/removes height.
+ *  2) It is rendered as an ABSOLUTE OVERLAY pinned to the section title's top-right
+ *     (via `HeaderSaveStatus`, or a title-row overlay) — it sits OUTSIDE the normal
+ *     document flow, so its presence/size can't push or reflow anything. The title
+ *     keeps a fixed right padding so its text never runs under the status.
+ * `whitespace-nowrap` keeps the label on one line inside the overlay.
  */
 export function SaveStatus({
   saving,
@@ -27,15 +31,17 @@ export function SaveStatus({
   className?: string;
 }) {
   const t = useTranslations("saveStatus");
-
-  // When fully idle there's nothing to show — render NOTHING (no reserved empty
-  // row) so a section's TITLE sits tidily next to its content instead of leaving a
-  // gap below it. The status row only appears during/after a save (or when there
-  // are unsaved changes), where a brief reserved height keeps it from flickering.
-  if (!saving && !saved && !dirty) return null;
+  const show = saving || saved || dirty;
 
   return (
-    <div className={cn("flex justify-end items-center min-h-[20px]", className)} aria-live="polite">
+    <div
+      className={cn(
+        "flex h-5 items-center justify-end whitespace-nowrap transition-opacity duration-200",
+        show ? "opacity-100" : "opacity-0",
+        className
+      )}
+      aria-live="polite"
+    >
       {saving ? (
         <span className="inline-flex items-center gap-1.5 text-sm font-medium text-[#6b7280]">
           <Loader2 className="h-4 w-4 animate-spin" /> {t("saving")}
@@ -46,7 +52,10 @@ export function SaveStatus({
         </span>
       ) : dirty ? (
         <span className="text-sm font-medium text-amber-600">{t("unsaved")}</span>
-      ) : null}
+      ) : (
+        // Keep the element present (fixed height) even when idle → no mount/unmount.
+        <span className="text-sm">&nbsp;</span>
+      )}
     </div>
   );
 }

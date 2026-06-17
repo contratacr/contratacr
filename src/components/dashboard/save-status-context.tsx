@@ -40,15 +40,15 @@ export function useReportSaveStatus(saving: boolean, saved: boolean, dirty = fal
   useEffect(() => () => set?.(IDLE), [set]);
 }
 
-// Rendered INLINE with the section title (right-aligned). The slot ALWAYS reserves a
-// fixed width (even when idle, where SaveStatus renders null) so the title's available
-// width is constant — the title never reflows/wraps differently when the status
-// toggles, which would otherwise still nudge the content. Wide enough for the longest
-// state ("Guardando…"); the title (`min-w-0`) wraps within the remaining width at ~360px.
+// Rendered as an ABSOLUTE OVERLAY pinned to the section title's top-right — OUT of the
+// document flow, so its presence/size can NEVER push or reflow the title or the content
+// below it. The parent title wrapper must be `relative` and the title must keep enough
+// right padding (`pr-28`) that its text never runs under this overlay. `SaveStatus` is
+// always mounted (fixed height), so even the overlay itself never changes size.
 export function HeaderSaveStatus({ className }: { className?: string }) {
   const s = useContext(ValueCtx);
   return (
-    <div className={cn("shrink-0 min-w-[112px]", className)}>
+    <div className={cn("pointer-events-none absolute right-0 top-1", className)}>
       <SaveStatus saving={s.saving} saved={s.saved} dirty={s.dirty} />
     </div>
   );
