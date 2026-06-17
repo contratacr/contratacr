@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { getInitials } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { NotificationBell } from "@/components/notifications/notification-bell";
+import { SpamNotice } from "@/components/ui/spam-notice";
 import { SupportLink } from "@/components/support/support-link";
 import { ALL_CATEGORIES, searchCategories, normalizeText, getCategoryLabel, getCategoryGroupLabel } from "@/lib/data/categories";
 import { searchLocations, resolveLocation, type LocationSuggestion } from "@/lib/data/location-search";
@@ -390,6 +391,7 @@ function LoginModal({ onClose }: { onClose: () => void }) {
             <div className="text-4xl mb-3">📧</div>
             <p className="font-semibold text-[#1a2744] mb-2">{t("checkEmailTitle")}</p>
             <p className="text-sm text-gray-400">{success}</p>
+            <SpamNotice className="mt-2" />
             <button onClick={onClose} className="mt-6 text-sm text-[#009FD9] hover:underline">{t("close")}</button>
           </div>
         ) : (

@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { ContrataCRLogo } from "@/components/landing/landing-navbar";
+import { SpamNotice } from "@/components/ui/spam-notice";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -176,7 +177,7 @@ function OtpStep({ email, onVerified }: { email: string; onVerified: () => void 
           </button>
         )}
       </p>
-      <p className="text-xs text-center text-[#9ca3af]">{t("checkSpam")}</p>
+      <SpamNotice className="text-center" />
     </div>
   );
 }

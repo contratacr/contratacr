@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { AlertCircle, RotateCcw } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "@/i18n/navigation";
+import { SpamNotice } from "@/components/ui/spam-notice";
 
 interface OtpVerificationProps {
   email: string;
@@ -155,7 +156,7 @@ export function OtpVerification({ email, onVerified }: OtpVerificationProps) {
           </button>
         )}
       </p>
-      <p className="text-xs text-[#9ca3af] mt-2">Revisa también tu carpeta de spam.</p>
+      <SpamNotice className="mt-2" />
     </div>
   );
 }

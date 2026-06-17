@@ -1,4 +1,7 @@
 {
+  "common": {
+    "spamNotice": "Don't see it? Check your spam or junk folder."
+  },
   "nav": {
     "search": "Search",
     "categories": "Categories",
@@ -1646,7 +1649,7 @@
     "subtitle": "Enter your email and we'll send you a link to reset your password.",
     "error": "Something went wrong. Check the email and try again.",
     "sentTitle": "Email sent",
-    "sentBody": "Check your inbox and follow the link to create a new password. Check your spam folder too.",
+    "sentBody": "Check your inbox and follow the link to create a new password.",
     "emailLabel": "Email",
     "emailPlaceholder": "you@email.com",
     "sending": "Sending…",

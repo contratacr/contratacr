@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
+import { SpamNotice } from "@/components/ui/spam-notice";
 
 /* Where each provider lets the user manage their account/email + sign-in security.
    Shown to OAuth users instead of fields that wouldn't work here. */
@@ -177,6 +178,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
         ) : emailSent ? (
           <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-700">
             {t("emailSent")}
+            <SpamNotice className="mt-1 text-emerald-600/80" />
           </div>
         ) : emailMode ? (
           <div className="flex flex-col gap-3">
@@ -259,7 +261,10 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
             </div>
             {/* Forgot-password escape hatch — sends the reset email. */}
             {resetSent ? (
-              <p className="text-xs text-emerald-600">{t("resetSent", { email: user?.email ?? "" })}</p>
+              <div>
+                <p className="text-xs text-emerald-600">{t("resetSent", { email: user?.email ?? "" })}</p>
+                <SpamNotice className="mt-1" />
+              </div>
             ) : (
               <button type="button" onClick={sendReset} disabled={resetBusy} className="self-start text-xs text-[#009FD9] hover:underline disabled:opacity-60">
                 {resetBusy ? t("sending") : t("forgotPassword")}

@@ -1,4 +1,7 @@
 {
+  "common": {
+    "spamNotice": "¿No ves el correo? Revisa tu carpeta de spam o correo no deseado."
+  },
   "nav": {
     "search": "Buscar",
     "categories": "Categorías",
@@ -1646,7 +1649,7 @@
     "subtitle": "Ingresa tu correo y te enviamos un enlace para restablecer tu contraseña.",
     "error": "Ocurrió un error. Verifica el correo e intenta de nuevo.",
     "sentTitle": "Correo enviado",
-    "sentBody": "Revisa tu bandeja de entrada y sigue el enlace para crear una nueva contraseña. Revisa también la carpeta de spam.",
+    "sentBody": "Revisa tu bandeja de entrada y sigue el enlace para crear una nueva contraseña.",
     "emailLabel": "Correo electrónico",
     "emailPlaceholder": "tu@email.com",
     "sending": "Enviando…",

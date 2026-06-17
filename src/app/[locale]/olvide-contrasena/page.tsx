@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { ContrataCRLogo } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
+import { SpamNotice } from "@/components/ui/spam-notice";
 
 const schema = z.object({
   email: z.string().email("Email inválido"),
@@ -76,6 +77,7 @@ export default function OlvideContrasenaPage() {
                 <p className="mt-0.5 text-[#374151]">
                   {t("sentBody")}
                 </p>
+                <SpamNotice className="mt-1.5" />
               </div>
             </div>
           ) : (

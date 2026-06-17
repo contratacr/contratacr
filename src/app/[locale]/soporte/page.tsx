@@ -11,6 +11,7 @@ import { Link } from "@/i18n/navigation";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { SUPPORT_WHATSAPP_URL } from "@/lib/constants";
 import { SupportForm } from "@/components/support/support-form";
+import { SpamNotice } from "@/components/ui/spam-notice";
 
 export default function SoportePage() {
   const t = useTranslations("soporte");
@@ -29,9 +30,10 @@ export default function SoportePage() {
             <h1 className="text-2xl font-bold text-[#111827] mb-2">{t("successTitle")}</h1>
             {user ? (
               <>
-                <p className="text-[#6b7280] mb-6">
+                <p className="text-[#6b7280] mb-2">
                   {t("successUserDesc")}
                 </p>
+                <SpamNotice className="mb-6" />
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <Link
                     href="/dashboard/cliente?tab=soporte"
@@ -49,9 +51,10 @@ export default function SoportePage() {
               </>
             ) : (
               <>
-                <p className="text-[#6b7280] mb-3">
+                <p className="text-[#6b7280] mb-2">
                   {t("successGuestDesc", { email: successEmail })}
                 </p>
+                <SpamNotice className="mb-3" />
                 <p className="text-sm text-[#6b7280] mb-6">
                   {t("guestFollow")}
                 </p>
