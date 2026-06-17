@@ -124,10 +124,14 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-[#fafafa]">
       <Navbar />
-      <main className="flex-1 flex items-center justify-center py-10 px-4">
-        <div className="w-full max-w-sm">
+      <main className="flex-1 flex items-center justify-center py-12 px-4">
+        <div className="w-full max-w-md">
+          {/* Same card container as the client ("Crear cuenta de cliente") and
+              professional registrations — clean white card, hairline border, soft
+              shadow, p-8 — so the whole auth flow (login + both signups) is consistent. */}
+          <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-8">
           <div className="text-center mb-8">
             <ContrataCRLogo className="justify-center mb-4" />
             <h1 className="text-2xl font-bold text-[#111827]">{t("title")}</h1>
@@ -177,7 +181,7 @@ export default function LoginPage() {
               <div className="w-full border-t border-[#e5e7eb]" />
             </div>
             <div className="relative flex justify-center">
-              <span className="bg-[#fafafa] px-4 text-xs text-[#9ca3af]">{t("or")}</span>
+              <span className="bg-white px-4 text-xs text-[#9ca3af]">{t("or")}</span>
             </div>
           </div>
 
@@ -218,6 +222,7 @@ export default function LoginPage() {
               {t("signUp")}
             </Link>
           </p>
+          </div>
         </div>
       </main>
       <LandingFooter />
