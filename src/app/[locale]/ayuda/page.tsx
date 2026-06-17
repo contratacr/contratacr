@@ -8,7 +8,7 @@ import { FadeInUp } from "@/components/landing/fade-in-up";
 import { Link } from "@/i18n/navigation";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { SUPPORT_WHATSAPP_URL } from "@/lib/constants";
-import { ChevronDown, MessageSquare, Search, UserCheck, CalendarDays, Star, ShieldCheck, HelpCircle } from "lucide-react";
+import { ChevronDown, Headset, Search, UserCheck, CalendarDays, Star, ShieldCheck, HelpCircle } from "lucide-react";
 
 const FAQ_ICONS = [
   <HelpCircle key="0" className="h-4 w-4" />, <UserCheck key="1" className="h-4 w-4" />,
@@ -25,7 +25,7 @@ const HELP_CATEGORIES: { icon: React.ReactNode; faq?: number; href?: "/soporte" 
   { icon: <ShieldCheck className="h-6 w-6 text-[#009FD9]" />, faq: 2 },     // Verificación de identidad
   { icon: <CalendarDays className="h-6 w-6 text-[#009FD9]" />, faq: 6 },    // Solicitudes y proyectos
   { icon: <Star className="h-6 w-6 text-[#009FD9]" />, faq: 5 },            // Reseñas y calificaciones
-  { icon: <MessageSquare className="h-6 w-6 text-[#009FD9]" />, href: "/soporte" }, // Contactar soporte
+  { icon: <Headset className="h-6 w-6 text-[#009FD9]" />, href: "/soporte" }, // Contactar soporte
 ];
 
 export default function AyudaPage() {
@@ -143,7 +143,7 @@ export default function AyudaPage() {
                   href="/soporte"
                   className="inline-flex items-center justify-center gap-2 bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold px-6 py-3 rounded-full transition-all text-sm whitespace-nowrap"
                 >
-                  <MessageSquare className="h-4 w-4" />
+                  <Headset className="h-4 w-4" />
                   {t("contactCta")}
                 </Link>
                 <a
