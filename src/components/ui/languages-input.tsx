@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useLocale, useTranslations } from "next-intl";
 import { X } from "lucide-react";
+import { useAnchoredPosition } from "@/components/ui/anchored-dropdown";
 import { LANGUAGES, languageLabel } from "@/lib/data/languages";
 
 // Modern chip/tag multi-select with autocomplete over the full language list. Selected
@@ -37,30 +38,11 @@ export function LanguagesInput({ value, onChange }: Props) {
     ).slice(0, 8);
   }, [query, value]);
 
-  // Position the portaled dropdown as `fixed` from the field's rect — flips up when there's
-  // more room above, recomputed on scroll/resize so it stays attached to the input.
-  const [pos, setPos] = useState<{ left: number; width: number; top?: number; bottom?: number; maxH: number } | null>(null);
-  const reposition = useCallback(() => {
-    const el = containerRef.current;
-    if (!el || typeof window === "undefined") return;
-    const r = el.getBoundingClientRect();
-    const MARGIN = 6, PAD = 12, MAXH = 264;
-    const spaceBelow = window.innerHeight - r.bottom;
-    const spaceAbove = r.top;
-    const openUp = spaceBelow < 200 && spaceAbove > spaceBelow;
-    if (openUp) setPos({ left: r.left, width: r.width, bottom: window.innerHeight - r.top + MARGIN, maxH: Math.max(140, Math.min(MAXH, spaceAbove - PAD)) });
-    else setPos({ left: r.left, width: r.width, top: r.bottom + MARGIN, maxH: Math.max(140, Math.min(MAXH, spaceBelow - PAD)) });
-  }, []);
-
+  // Portaled dropdown positioned `fixed` from the field's rect via the shared,
+  // keyboard-aware helper (opens below, flips up only with no room; never covers
+  // the field; recomputes on scroll/resize + keyboard show/hide).
   const dropdownOpen = open && suggestions.length > 0;
-  useEffect(() => {
-    if (!dropdownOpen) return;
-    reposition();
-    const onScroll = () => reposition();
-    window.addEventListener("scroll", onScroll, true); // capture → catches scrolling parents
-    window.addEventListener("resize", onScroll);
-    return () => { window.removeEventListener("scroll", onScroll, true); window.removeEventListener("resize", onScroll); };
-  }, [dropdownOpen, reposition, query, value]);
+  const pos = useAnchoredPosition(containerRef, dropdownOpen, 264);
 
   function add(id: string) {
     if (!value.includes(id)) onChange([...value, id]);

@@ -318,6 +318,11 @@ select:focus-visible {
    reading as "no suggestions". */
 .pac-container {
   z-index: 100000 !important;
+  /* Google positions it just below the input; cap the height + scroll so a long
+     list never runs off a small screen (it must not cover the field above it). */
+  max-height: 45vh;
+  overflow-y: auto;
+  border-radius: 0.75rem;
 }
 .cr-pac {
   position: relative;

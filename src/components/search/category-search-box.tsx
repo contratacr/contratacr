@@ -5,6 +5,7 @@ import { Search } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
+import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
 import { ALL_CATEGORIES, searchCategories, normalizeText, getCategoryLabel, getCategoryGroupLabel } from "@/lib/data/categories";
 
 /**
@@ -57,6 +58,7 @@ export function CategorySearchBox({
   const [active, setActive] = useState(0);
   const [focused, setFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const blurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const suggestions = useMemo(() => matchCategories(q), [q]);
 
@@ -85,6 +87,7 @@ export function CategorySearchBox({
   return (
     <div className="relative w-full max-w-xl mx-auto text-left">
       <form
+        ref={formRef}
         onSubmit={(e) => { e.preventDefault(); go(suggestions[active]?.id); }}
         className="flex items-center gap-3 h-[52px] rounded-2xl border border-gray-200 bg-white px-4 shadow-[0_8px_28px_rgba(0,0,0,0.08)] transition-all focus-within:border-[#009FD9] focus-within:ring-2 focus-within:ring-[#009FD9]/20"
       >
@@ -103,8 +106,8 @@ export function CategorySearchBox({
         />
       </form>
 
-      {open && (
-        <div className="absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 py-1.5 z-50 max-h-[340px] overflow-y-auto">
+      <AnchoredDropdown anchorRef={formRef} open={open} maxHeight={340} className="rounded-2xl border-gray-100 shadow-2xl">
+        <div className="py-1.5">
           {suggestions.length === 0 ? (
             <button
               onMouseDown={(e) => { e.preventDefault(); go(); }}
@@ -129,7 +132,7 @@ export function CategorySearchBox({
             ))
           )}
         </div>
-      )}
+      </AnchoredDropdown>
     </div>
   );
 }

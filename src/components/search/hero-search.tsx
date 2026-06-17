@@ -4,6 +4,7 @@ import { useMemo, useRef, useState } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { Search, MapPin } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
 import { Button } from "@/components/ui/button";
 import { PROVINCES } from "@/lib/data/cr-geography";
 import { ALL_CATEGORIES, searchCategories } from "@/lib/data/categories";
@@ -33,6 +34,8 @@ export function HeroSearch() {
   const [openSvc, setOpenSvc] = useState(false);
   const [openLoc, setOpenLoc] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
+  const svcRef = useRef<HTMLDivElement>(null);
+  const locRef = useRef<HTMLDivElement>(null);
 
   const svcSuggestions = useMemo(() => (service.trim() ? searchCategories(service).slice(0, 6) : ALL_CATEGORIES.slice(0, 6)), [service]);
   const locSuggestions = useMemo(() => {
@@ -81,7 +84,7 @@ export function HeroSearch() {
     <form ref={formRef} onSubmit={handleSearch} className="w-full max-w-2xl mx-auto">
       <div className="bg-white rounded-2xl shadow-xl border border-[#e5e7eb] p-3 flex flex-col sm:flex-row gap-2">
         {/* Service */}
-        <div className="relative flex-1">
+        <div ref={svcRef} className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6b7280] pointer-events-none" />
           <input
             value={service}
@@ -91,8 +94,8 @@ export function HeroSearch() {
             placeholder={t("hero.categoryPlaceholder")}
             className={inputCls}
           />
-          {openSvc && svcSuggestions.length > 0 && (
-            <ul className="absolute z-30 mt-1 w-full max-h-64 overflow-auto rounded-xl border border-[#e5e7eb] bg-white shadow-lg py-1">
+          <AnchoredDropdown anchorRef={svcRef} open={openSvc && svcSuggestions.length > 0} maxHeight={264}>
+            <ul className="py-1">
               {svcSuggestions.map((c) => (
                 <li key={c.id}>
                   <button
@@ -106,13 +109,13 @@ export function HeroSearch() {
                 </li>
               ))}
             </ul>
-          )}
+          </AnchoredDropdown>
         </div>
 
         <div className="hidden sm:block w-px bg-[#e5e7eb] my-1" />
 
         {/* Location */}
-        <div className="relative sm:w-52">
+        <div ref={locRef} className="relative sm:w-52">
           <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6b7280] pointer-events-none" />
           <input
             value={location}
@@ -122,8 +125,8 @@ export function HeroSearch() {
             placeholder={t("hero.provincePlaceholder")}
             className={inputCls}
           />
-          {openLoc && locSuggestions.length > 0 && (
-            <ul className="absolute z-30 mt-1 w-full max-h-64 overflow-auto rounded-xl border border-[#e5e7eb] bg-white shadow-lg py-1">
+          <AnchoredDropdown anchorRef={locRef} open={openLoc && locSuggestions.length > 0} maxHeight={264}>
+            <ul className="py-1">
               {locSuggestions.map((l) => (
                 <li key={`${l.provinceId}-${l.cantonId ?? "prov"}`}>
                   <button
@@ -138,7 +141,7 @@ export function HeroSearch() {
                 </li>
               ))}
             </ul>
-          )}
+          </AnchoredDropdown>
         </div>
 
         <Button type="submit" size="lg" className="h-12 px-8 shrink-0">

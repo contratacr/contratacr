@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { getInitials } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { NotificationBell } from "@/components/notifications/notification-bell";
+import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
 import { SpamNotice } from "@/components/ui/spam-notice";
 import { SupportLink } from "@/components/support/support-link";
 import { ALL_CATEGORIES, searchCategories, normalizeText, getCategoryLabel, getCategoryGroupLabel } from "@/lib/data/categories";
@@ -223,6 +224,7 @@ function CategoryAutocomplete({
   const [active, setActive] = useState(0);
   const [focused, setFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const blurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const suggestions = useMemo(() => matchCategories(q), [q]);
 
@@ -258,6 +260,7 @@ function CategoryAutocomplete({
   return (
     <div className="relative w-full">
       <form
+        ref={formRef}
         onSubmit={(e) => { e.preventDefault(); go(suggestions[active]?.id); }}
         className={cn(
           "flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50/70 transition-all focus-within:border-[#009FD9] focus-within:ring-2 focus-within:ring-[#009FD9]/20 focus-within:bg-white",
@@ -279,8 +282,8 @@ function CategoryAutocomplete({
         />
       </form>
 
-      {open && (
-        <div className="absolute left-0 right-0 top-full mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 py-1.5 z-[60] max-h-[300px] overflow-y-auto">
+      <AnchoredDropdown anchorRef={formRef} open={open} maxHeight={300} className="rounded-xl border-gray-100 shadow-2xl">
+        <div className="py-1.5">
           {suggestions.length === 0 ? (
             <button
               onMouseDown={(e) => { e.preventDefault(); go(); }}
@@ -305,7 +308,7 @@ function CategoryAutocomplete({
             ))
           )}
         </div>
-      )}
+      </AnchoredDropdown>
     </div>
   );
 }
@@ -649,6 +652,8 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
   const [navLocOpen, setNavLocOpen] = useState(false);
   const [navLocActive, setNavLocActive] = useState(-1);
   const navLocBlurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const compactSvcRef = useRef<HTMLDivElement>(null);
+  const compactLocRef = useRef<HTMLDivElement>(null);
   // Drives a SHORTER search placeholder on small screens so it never clips.
   const [isSmallScreen, setIsSmallScreen] = useState(false);
   const searchBlurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -1067,7 +1072,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
               <form onSubmit={handleCompactSearch} className="flex-1 min-w-0 flex justify-center">
                 <div className="relative w-full max-w-5xl">
                   <div className="flex w-full items-center h-12 bg-white border border-gray-200 rounded-[6px] overflow-hidden pl-3 sm:pl-5 pr-1.5 sm:pr-2 shadow-[0_8px_28px_rgba(0,0,0,0.14)]">
-                    <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 h-full">
+                    <div ref={compactSvcRef} className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 h-full">
                       <Search className="h-5 w-5 text-gray-300 shrink-0" />
                       <input
                         type="text"
@@ -1084,7 +1089,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                       />
                     </div>
                     <div className="hidden sm:block w-px bg-gray-200 self-stretch my-3 mx-2 shrink-0" />
-                    <div className="hidden sm:flex items-center gap-2 min-w-[150px] shrink-0 h-full">
+                    <div ref={compactLocRef} className="hidden sm:flex items-center gap-2 min-w-[150px] shrink-0 h-full">
                       <MapPin className="h-5 w-5 text-gray-300 shrink-0" />
                       <input
                         type="text"
@@ -1112,8 +1117,8 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
 
                   {/* Service autocomplete — selecting FILLS the field; search
                       runs only on Buscar/Enter. */}
-                  {searchFocused && searchQuery.trim().length > 0 && (
-                    <div className="absolute left-0 right-0 sm:right-auto sm:w-[60%] top-full mt-1.5 bg-white rounded-xl shadow-2xl border border-gray-100 py-1.5 z-[60] max-h-[320px] overflow-y-auto">
+                  <AnchoredDropdown anchorRef={compactSvcRef} open={searchFocused && searchQuery.trim().length > 0} maxHeight={320} className="rounded-xl border-gray-100 shadow-2xl">
+                    <div className="py-1.5">
                       {compactSuggestions.length === 0 ? (
                         <button
                           type="button"
@@ -1139,11 +1144,11 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                         ))
                       )}
                     </div>
-                  )}
+                  </AnchoredDropdown>
 
                   {/* Location autocomplete (desktop) — selecting FILLS the field. */}
-                  {navLocOpen && navLocSug.length > 0 && (
-                    <div className="hidden sm:block absolute right-0 top-full mt-1.5 w-64 bg-white rounded-xl shadow-2xl border border-gray-100 py-1.5 z-[60] max-h-[320px] overflow-y-auto">
+                  <AnchoredDropdown anchorRef={compactLocRef} open={navLocOpen && navLocSug.length > 0} maxHeight={320} className="rounded-xl border-gray-100 shadow-2xl">
+                    <div className="py-1.5">
                       {navLocSug.map((s, i) => (
                         <button
                           key={`${s.type}-${s.id}`}
@@ -1163,7 +1168,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                         </button>
                       ))}
                     </div>
-                  )}
+                  </AnchoredDropdown>
                 </div>
               </form>
 

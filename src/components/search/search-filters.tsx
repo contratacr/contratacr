@@ -8,6 +8,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PROVINCES, getCantonsByProvince, nearestProvinceId } from "@/lib/data/cr-geography";
 import { CategorySearch } from "@/components/ui/category-search";
+import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
 import { searchCategories, getCategoryLabel } from "@/lib/data/categories";
 import { INSURERS } from "@/lib/data/insurers";
 import { createClient } from "@/lib/supabase/client";
@@ -31,6 +32,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchActive, setSearchActive] = useState(-1);
   const searchBlurRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchFieldRef = useRef<HTMLDivElement>(null);
   const searchSug = useMemo(() => (query.trim().length >= 2 ? searchCategories(query).slice(0, 6) : []), [query]);
   const [category, setCategory] = useState(params.get("categoria") ?? "");
   const [province, setProvince] = useState(params.get("provincia") ?? "");
@@ -263,7 +265,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
           Autocompletes against OUR categories taxonomy: picking a suggestion filters by
           `categoria`; free text still searches `q` on debounce/Enter. */}
       {!hideSearch && (
-        <div className="relative mb-3 flex items-center">
+        <div ref={searchFieldRef} className="relative mb-3 flex items-center">
           <Search className="pointer-events-none absolute left-3 h-4 w-4 text-[#9ca3af]" />
           <input
             type="text"
@@ -299,8 +301,8 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
               <X className="h-4 w-4" />
             </button>
           )}
-          {searchOpen && searchSug.length > 0 && (
-            <ul className="absolute left-0 right-0 top-full z-50 mt-1.5 max-h-72 overflow-auto rounded-xl border border-[#e5e7eb] bg-white py-1 shadow-xl" role="listbox">
+          <AnchoredDropdown anchorRef={searchFieldRef} open={searchOpen && searchSug.length > 0} maxHeight={288}>
+            <ul className="py-1" role="listbox">
               {searchSug.map((s, i) => (
                 <li key={s.id}>
                   <button
@@ -317,7 +319,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
                 </li>
               ))}
             </ul>
-          )}
+          </AnchoredDropdown>
         </div>
       )}
 
@@ -489,6 +491,7 @@ export function MobileServiceSearch() {
   const [active, setActive] = useState(-1);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const blurRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fieldRef = useRef<HTMLDivElement>(null);
 
   const suggestions = useMemo(() => (q.trim().length >= 2 ? searchCategories(q).slice(0, 6) : []), [q]);
 
@@ -529,7 +532,7 @@ export function MobileServiceSearch() {
   useEffect(() => () => { if (debounceRef.current) clearTimeout(debounceRef.current); if (blurRef.current) clearTimeout(blurRef.current); }, []);
 
   return (
-    <div className="relative flex items-center">
+    <div ref={fieldRef} className="relative flex items-center">
       <Search className="absolute left-3 h-4 w-4 text-[#9ca3af] pointer-events-none" />
       <input
         type="text"
@@ -549,8 +552,8 @@ export function MobileServiceSearch() {
           <X className="h-4 w-4" />
         </button>
       )}
-      {open && suggestions.length > 0 && (
-        <ul className="absolute left-0 right-0 top-full z-50 mt-1.5 max-h-72 overflow-auto rounded-xl border border-[#e5e7eb] bg-white py-1 shadow-xl" role="listbox">
+      <AnchoredDropdown anchorRef={fieldRef} open={open && suggestions.length > 0} maxHeight={288}>
+        <ul className="py-1" role="listbox">
           {suggestions.map((s, i) => (
             <li key={s.id}>
               <button
@@ -567,7 +570,7 @@ export function MobileServiceSearch() {
             </li>
           ))}
         </ul>
-      )}
+      </AnchoredDropdown>
     </div>
   );
 }

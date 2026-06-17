@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Search, Loader2, BadgeCheck, Ban, ShieldOff } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
+import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
 import { getInitials } from "@/lib/utils";
 
 type Result = {
@@ -82,8 +83,8 @@ export function AdminUserSearch({
         {loading && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-[#9ca3af]" />}
       </div>
 
-      {open && q.trim().length >= 2 && (
-        <div className="absolute left-0 right-0 top-full mt-1.5 bg-white rounded-xl shadow-2xl border border-[#e5e7eb] py-1.5 z-50 max-h-[360px] overflow-y-auto">
+      <AnchoredDropdown anchorRef={boxRef} open={open && q.trim().length >= 2} maxHeight={360} className="shadow-2xl">
+        <div className="py-1.5">
           {results.length === 0 && !loading ? (
             <p className="px-4 py-3 text-sm text-[#9ca3af]">Sin resultados para “{q.trim()}”.</p>
           ) : (
@@ -117,7 +118,7 @@ export function AdminUserSearch({
             ))
           )}
         </div>
-      )}
+      </AnchoredDropdown>
     </div>
   );
 }

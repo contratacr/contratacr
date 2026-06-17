@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { X, Check } from "lucide-react";
+import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
 import { INSURERS } from "@/lib/data/insurers";
 import { createClient } from "@/lib/supabase/client";
 
@@ -33,6 +34,7 @@ export function AseguradorasInput({ value, onChange }: Props) {
   const [highlight, setHighlight] = useState(0);
   const [approved, setApproved] = useState<Option[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
+  const fieldRef = useRef<HTMLDivElement>(null);
 
   // Suggestion form state.
   const [suggesting, setSuggesting] = useState(false);
@@ -101,7 +103,7 @@ export function AseguradorasInput({ value, onChange }: Props) {
   return (
     <div className="flex flex-col gap-2">
       {!noInsurers && (<>
-      <div className="relative">
+      <div ref={fieldRef} className="relative">
         <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[#e5e7eb] bg-white p-2 overflow-hidden transition-all focus-within:ring-2 focus-within:ring-[#009FD9] focus-within:border-transparent">
           {chipValues.map((id) => (
             <span key={id} className="inline-flex items-center gap-1.5 rounded-lg bg-[#EBF5FB] text-[#0089bb] text-sm font-medium pl-2.5 pr-1.5 py-1">
@@ -128,8 +130,8 @@ export function AseguradorasInput({ value, onChange }: Props) {
           />
         </div>
 
-        {open && suggestions.length > 0 && (
-          <ul className="absolute z-20 mt-1 w-full max-h-56 overflow-auto rounded-xl border border-[#e5e7eb] bg-white shadow-lg py-1">
+        <AnchoredDropdown anchorRef={fieldRef} open={open && suggestions.length > 0} maxHeight={264}>
+          <ul className="py-1">
             {suggestions.map((s, i) => (
               <li key={s.id}>
                 <button
@@ -143,7 +145,7 @@ export function AseguradorasInput({ value, onChange }: Props) {
               </li>
             ))}
           </ul>
-        )}
+        </AnchoredDropdown>
       </div>
 
       {/* Discreet "¿No ves tu aseguradora?" — opens a suggestion form (admin ticket). */}

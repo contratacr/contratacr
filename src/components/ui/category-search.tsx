@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useLocale, useTranslations } from "next-intl";
 import { Search, X, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAnchoredPosition } from "@/components/ui/anchored-dropdown";
 import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import {
@@ -42,38 +43,10 @@ export function CategorySearch({
   const containerRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
-  // The dropdown is rendered in a PORTAL (document.body) so it's never clipped
-  // by a parent with overflow:hidden/auto (e.g. the accordion Section / card).
-  // We position it as `fixed` from the trigger's rect, flipping up if there's
-  // more room above than below, and recompute on scroll/resize.
-  const [pos, setPos] = useState<{ left: number; width: number; top?: number; bottom?: number; maxH: number } | null>(null);
-
-  const reposition = useCallback(() => {
-    const el = containerRef.current;
-    if (!el || typeof window === "undefined") return;
-    const r = el.getBoundingClientRect();
-    const MARGIN = 6, PAD = 12, MAXH = 340;
-    const spaceBelow = window.innerHeight - r.bottom;
-    const spaceAbove = r.top;
-    const openUp = spaceBelow < 240 && spaceAbove > spaceBelow;
-    if (openUp) {
-      setPos({ left: r.left, width: r.width, bottom: window.innerHeight - r.top + MARGIN, maxH: Math.max(160, Math.min(MAXH, spaceAbove - PAD)) });
-    } else {
-      setPos({ left: r.left, width: r.width, top: r.bottom + MARGIN, maxH: Math.max(160, Math.min(MAXH, spaceBelow - PAD)) });
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!open) return;
-    reposition();
-    const onScroll = () => reposition();
-    window.addEventListener("scroll", onScroll, true); // capture → catches scrolling parents
-    window.addEventListener("resize", onScroll);
-    return () => {
-      window.removeEventListener("scroll", onScroll, true);
-      window.removeEventListener("resize", onScroll);
-    };
-  }, [open, reposition]);
+  // The dropdown is rendered in a PORTAL (document.body) so it's never clipped by a
+  // parent with overflow:hidden/auto, positioned `fixed` from the trigger's rect via
+  // the shared, keyboard-aware helper (opens below, flips up only with no room).
+  const pos = useAnchoredPosition(containerRef, open, 340);
 
   const locale = useLocale();
   const selectedLabel = value ? getCategoryLabel(value, locale) : "";
