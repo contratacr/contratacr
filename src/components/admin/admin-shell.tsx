@@ -22,19 +22,21 @@ export function AdminShell({
   active?: AdminTab;
   children: React.ReactNode;
 }) {
-  const [supportCount, setSupportCount] = useState(0);
-
-  // Badge: tickets needing attention (pending + awaiting an admin reply). Polled.
+  // Pending-count badges for EVERY section with an actionable queue (not just
+  // Soporte) — verificación, reportes, suscripciones, soporte — from ONE polled
+  // endpoint so the counts stay accurate and consistent. Polled + refreshed on
+  // window focus so resolving an item updates its badge.
+  const [counts, setCounts] = useState<Record<string, number>>({});
   useEffect(() => {
     let alive = true;
-    const fetchCount = () =>
-      fetch("/api/admin/support?status=open")
+    const fetchCounts = () =>
+      fetch("/api/admin/pending-counts")
         .then((r) => r.json())
-        .then((d) => { if (alive) setSupportCount(d.needsAttention ?? d.openCount ?? 0); })
+        .then((d) => { if (alive) setCounts(d ?? {}); })
         .catch(() => {});
-    fetchCount();
-    const id = setInterval(fetchCount, 30000);
-    const onFocus = () => fetchCount();
+    fetchCounts();
+    const id = setInterval(fetchCounts, 30000);
+    const onFocus = () => fetchCounts();
     window.addEventListener("focus", onFocus);
     return () => { alive = false; clearInterval(id); window.removeEventListener("focus", onFocus); };
   }, []);
@@ -47,14 +49,14 @@ export function AdminShell({
 
   const items: { id: AdminTab; label: string; icon: typeof ShieldCheck; href: string; badge: number }[] = [
     { id: "resumen", label: "Resumen", icon: LayoutGrid, href: "/admin", badge: 0 },
-    { id: "verificacion", label: "Verificación", icon: ShieldCheck, href: "/admin/verificacion", badge: 0 },
+    { id: "verificacion", label: "Verificación", icon: ShieldCheck, href: "/admin/verificacion", badge: counts.verificacion ?? 0 },
     { id: "usuarios", label: "Usuarios", icon: Users, href: "/admin/usuarios", badge: 0 },
-    { id: "reportes", label: "Reportes", icon: Flag, href: "/admin/reportes", badge: 0 },
+    { id: "reportes", label: "Reportes", icon: Flag, href: "/admin/reportes", badge: counts.reportes ?? 0 },
     { id: "aseguradoras", label: "Aseguradoras", icon: Shield, href: "/admin/aseguradoras", badge: 0 },
     { id: "categorias", label: "Categorías", icon: Tag, href: "/admin/categorias", badge: 0 },
     { id: "cuentas", label: "Cuentas", icon: UserX, href: "/admin/cuentas", badge: 0 },
-    { id: "suscripciones", label: "Suscripciones", icon: CreditCard, href: "/admin/suscripciones", badge: 0 },
-    { id: "soporte", label: "Soporte", icon: LifeBuoy, href: "/admin/soporte", badge: supportCount },
+    { id: "suscripciones", label: "Suscripciones", icon: CreditCard, href: "/admin/suscripciones", badge: counts.suscripciones ?? 0 },
+    { id: "soporte", label: "Soporte", icon: LifeBuoy, href: "/admin/soporte", badge: counts.soporte ?? 0 },
     { id: "analitica", label: "Analítica", icon: BarChart3, href: "/admin/analitica", badge: 0 },
     { id: "actividad", label: "Actividad", icon: Activity, href: "/admin/actividad", badge: 0 },
   ];
