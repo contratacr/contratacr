@@ -231,20 +231,24 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
   }
 
   // ── "Already occupied elsewhere" guidance ─────────────────────────────────────
-  // Other locations' occupied ranges on a WEEKDAY (recurring weekly) — so the pro can
-  // see what's taken and pick a free slot. Grouped by location, ranges merged + sorted.
+  // Other locations' occupied ranges on a WEEKDAY — the UNION across every future date that
+  // lands on it (within HORIZON), computed with the SAME `rangesForLocOnDate` the overlap
+  // check uses, so it includes date-specific EXCEPTIONS (closed/custom/extra), not just the
+  // recurring weekly. CRITICAL for consistency: a weekly franja recurs on ALL those dates, so
+  // it must clear EVERY one — using only the recurring rows here let the smart default
+  // suggest a range (e.g. 14:00–17:00) that the exception-aware validator then BLOCKED. Now
+  // the guidance + smart default + validation all agree. Grouped by location, merged + sorted.
   function otherOccupiedForWeekday(weekday: number): { label: string; ranges: [number, number][] }[] {
-    const byLoc = new Map<string, [number, number][]>();
-    for (const r of weekly) {
-      if (r.location_id === genLocation || r.weekday !== weekday) continue;
-      const s = toMins(r.start), e = toMins(r.end);
-      if (e <= s) continue;
-      const arr = byLoc.get(r.location_id) ?? [];
-      arr.push([s, e]);
-      byLoc.set(r.location_id, arr);
-    }
-    return [...byLoc.entries()]
-      .map(([loc, ranges]) => ({ label: locationLabel(loc), ranges: mergeRanges(ranges) }))
+    const otherLocs = [...new Set([...weekly, ...exceptions].map((r) => r.location_id))].filter((l) => l && l !== genLocation);
+    const start = todayISO();
+    const dates: string[] = [];
+    for (let i = 0; i <= HORIZON_DAYS; i++) { const d = addDaysISO(start, i); if (weekdayOf(d) === weekday) dates.push(d); }
+    return otherLocs
+      .map((loc) => {
+        const all: [number, number][] = [];
+        for (const d of dates) all.push(...rangesForLocOnDate(loc, d, weekly, exceptions));
+        return { label: locationLabel(loc), ranges: mergeRanges(all) };
+      })
       .filter((o) => o.ranges.length > 0);
   }
 
