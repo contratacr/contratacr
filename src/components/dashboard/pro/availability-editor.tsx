@@ -45,6 +45,12 @@ function toMins(t: string): number {
 function rangesOverlap(aS: number, aE: number, bS: number, bE: number): boolean {
   return aS < bE && bS < aE;
 }
+// A franja is COMPLETE (savable) only when BOTH ends are set and end > start. Newly
+// enabled days start as INCOMPLETE drafts (empty fields) — kept in the UI so the pro
+// can pick freely, but never validated/persisted/materialized until complete.
+function isCompleteFranja(f: { start: string; end: string }): boolean {
+  return !!f.start && !!f.end && toMins(f.end) > toMins(f.start);
+}
 // Merge overlapping/touching ranges into the fewest contiguous ranges (sorted) — for a
 // clean "already occupied" read (08:00–12:00 + 12:00–15:00 → 08:00–15:00).
 function mergeRanges(ranges: [number, number][]): [number, number][] {
@@ -168,7 +174,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
     const extra = dayExc.filter((e) => e.mode === "extra" && e.start && e.end);
     const base: [number, number][] = custom.length > 0
       ? custom.map((e) => [toMins(e.start!), toMins(e.end!)])
-      : wk.filter((r) => r.location_id === loc && r.weekday === wd).map((r) => [toMins(r.start), toMins(r.end)]);
+      : wk.filter((r) => r.location_id === loc && r.weekday === wd && isCompleteFranja(r)).map((r) => [toMins(r.start), toMins(r.end)]);
     return [...base, ...extra.map((e) => [toMins(e.start!), toMins(e.end!)] as [number, number])];
   }, []);
 
@@ -266,22 +272,6 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
     return ranges.map(([s, e]) => `${to12h(hhmm(s))}–${to12h(hhmm(e))}`).join(", ");
   }
 
-  // Toggling a day ON for a SECOND location must land on a FREE slot — not the default
-  // 08:00–17:00, which would overlap an existing location, get blocked, and leave the day
-  // un-editable. Pick the first free block from 08:00, ending at the next occupied start
-  // (or 17:00). Falls back to 08:00–17:00 when nothing else is occupied that weekday.
-  function suggestFreeFranja(weekday: number): { start: string; end: string } {
-    const occ = mergeRanges(otherOccupiedForWeekday(weekday).flatMap((o) => o.ranges));
-    const DAY_END = 23 * 60 + 30;
-    let s = 8 * 60; // prefer 08:00
-    for (const [os, oe] of occ) if (os <= s && s < oe) s = oe; // jump past a block covering 08:00
-    let e = 17 * 60; // prefer 17:00
-    for (const [os] of occ) if (os > s && os < e) e = os; // cap before the next block
-    if (e <= s) e = Math.min(s + 60, DAY_END); // ensure a positive length
-    if (e <= s) { s = 8 * 60; e = 17 * 60; } // whole-day-occupied fallback (validation guides)
-    return { start: hhmm(s), end: hhmm(e) };
-  }
-
   // ── MATERIALIZE the template + exceptions into concrete slots ──────────────
   // Keyed by LOCATION (not profession): availability_slots is UNIQUE per pro+date+time
   // (a pro can't be in two places at once), so we dedupe by (date,time) across all
@@ -292,6 +282,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
     // weekly franjas keyed by `${loc}|${weekday}`
     const weeklyByKey = new Map<string, { start: string; end: string; dur: number }[]>();
     for (const r of wk) {
+      if (!isCompleteFranja(r)) continue; // skip INCOMPLETE drafts (just-enabled, empty fields)
       locs.add(r.location_id);
       const k = `${r.location_id}|${r.weekday}`;
       const arr = weeklyByKey.get(k) ?? [];
@@ -402,7 +393,9 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
       arr.push({ id: r.id ?? genId(), start: r.start, end: r.end });
       map.set(r.weekday, arr);
     }
-    for (const arr of map.values()) arr.sort((a, b) => a.start.localeCompare(b.start));
+    // Sort by start; empty drafts (just-enabled, no time yet) go LAST so a new row appears
+    // below the existing franjas.
+    for (const arr of map.values()) arr.sort((a, b) => (!a.start ? 1 : !b.start ? -1 : a.start.localeCompare(b.start)));
     return map;
   }, [weekly, sameLoc]);
 
@@ -422,34 +415,41 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
   // ── Persist the weekly schedule for a single weekday, then re-materialize. ──
   // Delete matches by LOCATION + weekday (any category) so legacy profession-tagged
   // rows are absorbed; new rows are written with category_id = null.
+  // INCOMPLETE drafts (a just-enabled day with empty time fields, or a half-typed range)
+  // are kept in LOCAL state so the pro can fill them freely, but are NOT validated, NOT
+  // written to the DB and NOT materialized — only COMPLETE franjas are. This is what lets
+  // the pro pick any free time from scratch: a transient single-field value never trips the
+  // overlap guard, and an incomplete slot can never be saved.
   async function persistDay(weekday: number, franjas: Franja[], dur: number) {
-    // Block a save that would put this pro in two places at once (or overlap itself).
-    const proposed = franjas.map((f) => [toMins(f.start), toMins(f.end)] as [number, number]).filter(([s, e]) => e > s);
+    const complete = franjas.filter(isCompleteFranja);
+    // Block a save that would put this pro in two places at once — COMPLETE franjas only.
+    const proposed = complete.map((f) => [toMins(f.start), toMins(f.end)] as [number, number]);
     const c = findOverlapConflict(genLocation, proposed, { weekday });
     if (c) { setConflict(c); return; }
 
+    // Local state keeps ALL franjas (incl. the empty draft) so the UI shows the open row.
     const next = weekly.filter((r) => !(sameLoc(r.location_id) && r.weekday === weekday));
     for (const f of franjas) next.push({ location_id: genLocation, category_id: null, weekday, start: f.start, end: f.end, slot_minutes: dur });
     setWeekly(next);
 
     const supabase = createClient();
     await supabase.from("availability_weekly").delete().eq("professional_id", professionalId).eq("location_id", genLocation).eq("weekday", weekday);
-    if (franjas.length > 0) {
-      await supabase.from("availability_weekly").insert(franjas.map((f) => ({ professional_id: professionalId, location_id: genLocation, category_id: null, weekday, start_time: f.start, end_time: f.end, slot_minutes: dur })));
+    if (complete.length > 0) {
+      await supabase.from("availability_weekly").insert(complete.map((f) => ({ professional_id: professionalId, location_id: genLocation, category_id: null, weekday, start_time: f.start, end_time: f.end, slot_minutes: dur })));
     }
-    await regenerate(next, exceptions);
+    await regenerate(next, exceptions); // computeDesiredSlots skips incomplete drafts
   }
 
   function toggleDay(weekday: number) {
     const cur = dayFranjas.get(weekday) ?? [];
-    // Turning a day ON picks a FREE block so a second location doesn't collide with the
-    // first (it would otherwise be blocked and leave the day un-editable).
-    const def = suggestFreeFranja(weekday);
-    persistDay(weekday, cur.length > 0 ? [] : [{ id: genId(), start: def.start, end: def.end }], activeDuration);
+    // Turning a day ON starts with an EMPTY franja (no pre-filled default time) so the pro
+    // picks any free time from scratch — nothing pre-constrains the choice.
+    persistDay(weekday, cur.length > 0 ? [] : [{ id: genId(), start: "", end: "" }], activeDuration);
   }
   function addFranja(weekday: number) {
     const cur = dayFranjas.get(weekday) ?? [];
-    persistDay(weekday, [...cur, nextFranja(cur)], activeDuration);
+    // New franja starts EMPTY (no pre-filled default) so the pro picks any free time.
+    persistDay(weekday, [...cur, { id: genId(), start: "", end: "" }], activeDuration);
   }
   function updateFranja(weekday: number, id: string, patch: Partial<Franja>) {
     const cur = dayFranjas.get(weekday) ?? [];
@@ -462,10 +462,13 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
 
   // "Igual a todos los días": copy this day's franjas to EVERY weekday.
   async function copyToAll(weekday: number) {
-    const src = (dayFranjas.get(weekday) ?? []).map((f) => ({ start: f.start, end: f.end }));
+    // Only COMPLETE franjas are copied — an empty/half-typed draft is ignored (and if the
+    // source day has nothing complete, this is a no-op rather than wiping every day).
+    const src = (dayFranjas.get(weekday) ?? []).filter(isCompleteFranja).map((f) => ({ start: f.start, end: f.end }));
+    if (src.length === 0) return;
     // These franjas would repeat on EVERY weekday — block if any day collides with
     // another location (or itself).
-    const proposed = src.map((f) => [toMins(f.start), toMins(f.end)] as [number, number]).filter(([s, e]) => e > s);
+    const proposed = src.map((f) => [toMins(f.start), toMins(f.end)] as [number, number]);
     for (const wd of WEEKDAY_ORDER) {
       const c = findOverlapConflict(genLocation, proposed, { weekday: wd });
       if (c) { setConflict(c); return; }
@@ -701,9 +704,12 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                               RIGHT (never wraps below), the selects shrink on mobile. */}
                           {franjas.map((f) => (
                             <div key={f.id} className="flex items-center gap-1.5">
-                              <TimeSelect value={f.start} onChange={(v) => updateFranja(wd, f.id, { start: v, ...(toMins(f.end) <= toMins(v) ? { end: hhmm(Math.min(toMins(v) + 60, 23 * 60 + 30)) } : {}) })} className="min-w-0 flex-1 sm:flex-none sm:w-32" />
+                              {/* Start: no min (any time pickable). Only bump the END when it's
+                                  already set AND now ≤ start — never auto-fill an empty end. */}
+                              <TimeSelect value={f.start} onChange={(v) => updateFranja(wd, f.id, { start: v, ...(f.end && toMins(f.end) <= toMins(v) ? { end: hhmm(Math.min(toMins(v) + 60, 23 * 60 + 30)) } : {}) })} className="min-w-0 flex-1 sm:flex-none sm:w-32" />
                               <span className="shrink-0 text-[#9ca3af]">–</span>
-                              <TimeSelect value={f.end} min={hhmm(Math.min(toMins(f.start) + 30, 23 * 60 + 30))} onChange={(v) => updateFranja(wd, f.id, { end: v })} className="min-w-0 flex-1 sm:flex-none sm:w-32" error={toMins(f.end) <= toMins(f.start) ? t("toAfterFrom") : undefined} />
+                              {/* End: min only once a start is picked (so it never pre-constrains an empty row). */}
+                              <TimeSelect value={f.end} min={f.start ? hhmm(Math.min(toMins(f.start) + 30, 23 * 60 + 30)) : undefined} onChange={(v) => updateFranja(wd, f.id, { end: v })} className="min-w-0 flex-1 sm:flex-none sm:w-32" error={f.start && f.end && toMins(f.end) <= toMins(f.start) ? t("toAfterFrom") : undefined} />
                               <button type="button" onClick={() => removeFranja(wd, f.id)} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#9ca3af] hover:bg-[#f3f4f6] hover:text-red-500 transition-colors" aria-label={t("remove")}>
                                 <X className="h-4 w-4" />
                               </button>
