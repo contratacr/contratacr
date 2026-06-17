@@ -110,9 +110,9 @@ export function AdminCase({ providerId }: { providerId: string }) {
   );
 
   return (
-    // Capped + centered content so the detail page reads as a tidy, intentional layout
-    // (balanced side margins) instead of full-bleed stretched cards on wide screens.
-    <div className="mx-auto w-full max-w-[1200px]">
+    // Width/centering is owned by AdminShell's shared container — this page must NOT
+    // re-apply its own max-width (it would drift from every other admin page).
+    <div>
       <Link href="/admin" className="inline-flex items-center gap-1.5 text-sm text-[#6b7280] hover:text-[#009FD9] mb-4">
         <ArrowLeft className="h-4 w-4" /> Volver a la cola
       </Link>

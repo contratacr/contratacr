@@ -127,11 +127,13 @@ export function AdminShell({
         </div>
       </header>
 
-      {/* ── Content ── hugs the sidebar: LEFT-anchored (no `mx-auto` centering) with a
-          comfortable gutter, filling the width next to the sidebar instead of floating in a
-          narrow centered column (which left a big gap after the sidebar + an empty right band). */}
+      {/* ── Content ── ONE shared, centered max-width container so EVERY admin page lines
+          up at the same width (the width is defined here, once — never per page). Wide
+          tables/queues (Usuarios, Verificación, Reportes) fill it; sparse detail pages
+          (e.g. the verification-detail) get balanced side margins. Pages must NOT re-apply
+          their own `max-w`/`mx-auto` — they inherit this. */}
       <main className="lg:ml-60 flex-1 min-w-0">
-        <div className="px-4 sm:px-6 lg:px-8 py-6">{children}</div>
+        <div className="mx-auto w-full max-w-[1320px] px-4 sm:px-6 lg:px-8 py-6">{children}</div>
       </main>
     </div>
   );
