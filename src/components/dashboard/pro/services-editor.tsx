@@ -126,6 +126,23 @@ export function ServicesEditor({
     persist(next, services);
   }
 
+  // "Otro / no está mi servicio" — same idea as the "otro" in publicar-proyecto: when the
+  // catalog doesn't have it, the pro adds the `otro` profession and types their service as
+  // FREE TEXT. It's stored as a normal service NAME under "otro" (so it shows on the
+  // profile/card AND is found by the existing search, which already matches services::text).
+  function addOtro() {
+    setShowPicker(false);
+    setPickerQuery("");
+    if (!professions.includes("otro")) {
+      const next = [...professions, "otro"];
+      setProfessions(next);
+      persist(next, services);
+    }
+    setSelectedProfession("otro");
+    // Jump straight to the service form so they describe the custom service right away.
+    openAdd("otro");
+  }
+
   // Make a profession the PRINCIPAL one (index 0 = principal everywhere).
   function makePrincipal(id: string) {
     if (professions[0] === id) return;
@@ -413,6 +430,21 @@ export function ServicesEditor({
                 </button>
               ))
             )}
+
+            {/* "Otro / no está mi servicio" — always available at the bottom (like the
+                "otro" option in publicar-proyecto's category picker). Lets the pro add a
+                free-text service the catalog doesn't have; it's searchable like any other. */}
+            {!professions.includes("otro") && (
+              <div className="mt-1 border-t border-[#f3f4f6] pt-2">
+                <button
+                  type="button"
+                  onClick={addOtro}
+                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-[#0089bb] hover:bg-[#EBF5FB] transition-colors"
+                >
+                  <Plus className="h-4 w-4 shrink-0 text-[#009FD9]" /> {t("otherOption")}
+                </button>
+              </div>
+            )}
           </div>
         </Modal>
       )}
@@ -442,11 +474,15 @@ export function ServicesEditor({
               <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("nameField")}</label>
               <input
                 className={inputClass}
-                placeholder={t("namePlaceholderShort")}
+                placeholder={formCategory === "otro" ? t("otherNamePlaceholder") : t("namePlaceholderShort")}
                 value={form.name}
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                 autoFocus
               />
+              {/* For "otro", clarify it's free text AND that clients find it by searching. */}
+              {formCategory === "otro" && (
+                <p className="mt-1.5 text-xs text-[#9ca3af]">{t("otherHelp")}</p>
+              )}
             </div>
 
             <div>
