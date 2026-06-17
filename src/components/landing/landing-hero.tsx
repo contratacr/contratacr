@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, type RefObject } from "react";
+import { createPortal } from "react-dom";
 import { Search, MapPin, User } from "lucide-react";
 import { useRouter } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -98,20 +99,66 @@ function RotatingLine({ lines }: { lines: string[] }) {
   );
 }
 
-/* ─── Autocomplete dropdown ─── */
+/* Anchored, viewport-FIXED position for a dropdown PORTALED to <body>.
+   ──────────────────────────────────────────────────────────────────
+   WHY A PORTAL (this is the RECURRING bug): the home search bar is a single
+   rounded pill with `overflow-hidden` (for its shape). The autocomplete panels
+   used to be absolutely-positioned children INSIDE that pill, so the pill's
+   `overflow-hidden` CLIPPED them to zero height → "suggestions stopped showing".
+   Every restyle of the bar re-introduced the clip. Portaling each dropdown to
+   <body> with `position:fixed` (measured from the field's rect) makes it
+   IMMUNE to any ancestor overflow/stacking — it can never be clipped again, no
+   matter how the bar is styled. Returns null while the field is hidden
+   (responsive `display:none` → rect 0×0), so only the VISIBLE field's dropdown
+   renders even though desktop + mobile both mount. */
+function useAnchoredRect(ref: RefObject<HTMLElement | null>, open: boolean, minWidth = 0) {
+  const [pos, setPos] = useState<{ left: number; top: number; width: number } | null>(null);
+  useEffect(() => {
+    if (!open) { setPos(null); return; }
+    const el = ref.current;
+    if (!el) { setPos(null); return; }
+    const update = () => {
+      const r = el.getBoundingClientRect();
+      if (r.width === 0 && r.height === 0) { setPos(null); return; } // field hidden (display:none)
+      const width = Math.max(r.width, minWidth);
+      let left = r.left;
+      if (typeof window !== "undefined" && left + width > window.innerWidth - 8) {
+        left = Math.max(8, window.innerWidth - 8 - width);
+      }
+      setPos({ left, top: r.bottom + 8, width });
+    };
+    update();
+    window.addEventListener("scroll", update, true);
+    window.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("scroll", update, true);
+      window.removeEventListener("resize", update);
+    };
+  }, [open, ref, minWidth]);
+  return pos;
+}
+
+/* ─── Autocomplete dropdown (service/profession) — PORTALED to <body> ─── */
 function SuggestionsDropdown({
+  anchorRef,
+  open,
   suggestions,
   activeIdx,
   onPick,
 }: {
+  anchorRef: RefObject<HTMLElement | null>;
+  open: boolean;
   suggestions: SearchSuggestion[];
   activeIdx: number;
   onPick: (s: SearchSuggestion) => void;
 }) {
-  if (suggestions.length === 0) return null;
-  return (
+  const show = open && suggestions.length > 0;
+  const pos = useAnchoredRect(anchorRef, show, 240);
+  if (!show || !pos || typeof document === "undefined") return null;
+  return createPortal(
     <div
-      className="absolute left-0 right-0 top-full mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden py-1 text-left"
+      style={{ position: "fixed", left: pos.left, top: pos.top, width: pos.width, zIndex: 9999 }}
+      className="bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden py-1 text-left"
       role="listbox"
     >
       {suggestions.map((s, i) => (
@@ -144,28 +191,36 @@ function SuggestionsDropdown({
           </span>
         </button>
       ))}
-    </div>
+    </div>,
+    document.body
   );
 }
 
-/* ─── Location autocomplete dropdown (provinces + cantones + Google addresses) ─── */
+/* ─── Location autocomplete dropdown (provinces + cantones + Google addresses) — PORTALED ─── */
 function LocationDropdown({
+  anchorRef,
+  open,
   suggestions,
   addresses,
   activeIdx,
   onPick,
   onPickAddress,
 }: {
+  anchorRef: RefObject<HTMLElement | null>;
+  open: boolean;
   suggestions: LocationSuggestion[];
   addresses: AddressSuggestion[];
   activeIdx: number;
   onPick: (s: LocationSuggestion) => void;
   onPickAddress: (a: AddressSuggestion) => void;
 }) {
-  if (suggestions.length === 0 && addresses.length === 0) return null;
-  return (
+  const show = open && (suggestions.length > 0 || addresses.length > 0);
+  const pos = useAnchoredRect(anchorRef, show, 260);
+  if (!show || !pos || typeof document === "undefined") return null;
+  return createPortal(
     <div
-      className="absolute left-0 right-0 top-full mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden py-1 text-left"
+      style={{ position: "fixed", left: pos.left, top: pos.top, width: pos.width, zIndex: 9999 }}
+      className="bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden py-1 text-left"
       role="listbox"
     >
       {/* Our province/cantón taxonomy (keyboard-navigable). */}
@@ -210,7 +265,8 @@ function LocationDropdown({
           <span className="text-[10px] uppercase tracking-wide text-gray-300 shrink-0">Dirección</span>
         </button>
       ))}
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -221,6 +277,12 @@ export function LandingHero() {
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
   const [openSug, setOpenSug] = useState(false);
   const [activeIdx, setActiveIdx] = useState(-1);
+  // Anchor refs for the PORTALED dropdowns — one per field per breakpoint (desktop +
+  // mobile both mount; the hidden one has a 0×0 rect, so its dropdown renders nothing).
+  const svcDesktopRef = useRef<HTMLDivElement>(null);
+  const svcMobileRef = useRef<HTMLDivElement>(null);
+  const locDesktopRef = useRef<HTMLDivElement>(null);
+  const locMobileRef = useRef<HTMLDivElement>(null);
 
   // Location is a typeable autocomplete over provinces + cantones AND Google Places addresses.
   const [location, setLocation] = useState("");
@@ -464,9 +526,9 @@ export function LandingHero() {
           {/* Desktop row: single line h-14 */}
           <div className="hidden sm:block relative">
             <div className="flex items-center h-14 bg-white border border-gray-200 rounded-[6px] overflow-hidden pl-5 pr-2 shadow-[0_8px_48px_rgba(0,0,0,0.12)] hover:shadow-[0_12px_60px_rgba(0,159,217,0.20)] transition-shadow duration-300">
-              {/* Service input + its dropdown (relative wrapper so the panel
-                  aligns under just this field) */}
-              <div className="relative flex items-center gap-3 flex-1 min-w-0 h-full">
+              {/* Service input — its dropdown PORTALS to <body> (anchored to this wrapper),
+                  so the bar's `overflow-hidden` can never clip it. */}
+              <div ref={svcDesktopRef} className="flex items-center gap-3 flex-1 min-w-0 h-full">
                 <Search className="h-5 w-5 text-gray-300 shrink-0" />
                 <input
                   type="text"
@@ -481,13 +543,11 @@ export function LandingHero() {
                   aria-expanded={openSug}
                   aria-autocomplete="list"
                 />
-                {openSug && (
-                  <SuggestionsDropdown suggestions={suggestions} activeIdx={activeIdx} onPick={selectSuggestion} />
-                )}
+                <SuggestionsDropdown anchorRef={svcDesktopRef} open={openSug} suggestions={suggestions} activeIdx={activeIdx} onPick={selectSuggestion} />
               </div>
               {/* Divider + location autocomplete */}
               <div className="w-px bg-gray-200 self-stretch my-3 mx-2 shrink-0" />
-              <div className="relative flex items-center gap-2 min-w-[150px] shrink-0 h-full">
+              <div ref={locDesktopRef} className="flex items-center gap-2 min-w-[150px] shrink-0 h-full">
                 <MapPin className="h-5 w-5 text-gray-300 shrink-0" />
                 <input
                   type="text"
@@ -502,9 +562,7 @@ export function LandingHero() {
                   aria-expanded={openLoc}
                   aria-autocomplete="list"
                 />
-                {openLoc && (
-                  <LocationDropdown suggestions={locSug} addresses={addrSug} activeIdx={locActive} onPick={selectLocation} onPickAddress={selectAddress} />
-                )}
+                <LocationDropdown anchorRef={locDesktopRef} open={openLoc} suggestions={locSug} addresses={addrSug} activeIdx={locActive} onPick={selectLocation} onPickAddress={selectAddress} />
               </div>
               {/* Buscar button */}
               <button
@@ -518,7 +576,7 @@ export function LandingHero() {
 
           {/* Mobile stacked layout — service, then location, then Buscar */}
           <div className="sm:hidden flex flex-col gap-2">
-            <div className="relative">
+            <div ref={svcMobileRef} className="relative">
               <div className="flex items-center h-12 bg-white border border-gray-200 rounded-[6px] overflow-hidden pl-4 pr-3 shadow-[0_4px_24px_rgba(0,0,0,0.10)]">
                 <Search className="h-5 w-5 text-gray-300 shrink-0 mr-3" />
                 <input
@@ -535,11 +593,9 @@ export function LandingHero() {
                   aria-autocomplete="list"
                 />
               </div>
-              {openSug && (
-                <SuggestionsDropdown suggestions={suggestions} activeIdx={activeIdx} onPick={selectSuggestion} />
-              )}
+              <SuggestionsDropdown anchorRef={svcMobileRef} open={openSug} suggestions={suggestions} activeIdx={activeIdx} onPick={selectSuggestion} />
             </div>
-            <div className="relative">
+            <div ref={locMobileRef} className="relative">
               <div className="flex items-center h-12 bg-white border border-gray-200 rounded-[6px] overflow-hidden pl-4 pr-3 shadow-[0_4px_24px_rgba(0,0,0,0.10)]">
                 <MapPin className="h-5 w-5 text-gray-300 shrink-0 mr-3" />
                 <input
@@ -556,9 +612,7 @@ export function LandingHero() {
                   aria-autocomplete="list"
                 />
               </div>
-              {openLoc && (
-                <LocationDropdown suggestions={locSug} addresses={addrSug} activeIdx={locActive} onPick={selectLocation} onPickAddress={selectAddress} />
-              )}
+              <LocationDropdown anchorRef={locMobileRef} open={openLoc} suggestions={locSug} addresses={addrSug} activeIdx={locActive} onPick={selectLocation} onPickAddress={selectAddress} />
             </div>
             <button
               type="submit"
