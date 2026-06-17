@@ -50,14 +50,29 @@ export async function POST(req: Request) {
       );
 
     if (profileError) {
-      // Never surface raw DB constraint errors. A duplicate cédula → friendly message.
-      const dupCedula = /profiles_cedula_key|cedula/i.test(profileError.message);
-      const dupEmail = /profiles_email|email/i.test(profileError.message) && /duplicate|unique/i.test(profileError.message);
-      if (dupCedula) {
-        return NextResponse.json({ error: "Esta cédula ya está registrada.", code: "cedula_taken" }, { status: 409 });
+      // Log the REAL DB error (the friendly message below never leaks it) so a
+      // recurring constraint is diagnosable from the server logs.
+      console.error("[POST /api/register/client] profile upsert failed:", profileError);
+
+      // A FRESH email/password signup that fails here would otherwise leave an
+      // ORPHANED auth user (auth row created by signUp, no usable profile). Roll it
+      // back so the user can retry cleanly — `profiles.id` cascades on delete, so
+      // this also clears any partial profile. NEVER delete a logged-in user (the
+      // session/OAuth path is a conversion, not a fresh signup).
+      if (!sessionUser) {
+        try { await supabase.auth.admin.deleteUser(userId); } catch { /* best-effort */ }
       }
+
+      // Detect a genuine DUPLICATE by the UNIQUE constraint/index NAME only — never
+      // by the bare word "cedula"/"email" (a NOT-NULL or other error mentioning the
+      // column would otherwise be mislabeled as "ya está registrada").
+      const dupCedula = /profiles_cedula_key|idx_profiles_cedula_unique/i.test(profileError.message);
+      const dupEmail = /profiles_email_key|idx_profiles_email_unique/i.test(profileError.message);
       if (dupEmail) {
         return NextResponse.json({ error: "Este correo ya está registrado. Inicia sesión.", code: "email_taken" }, { status: 409 });
+      }
+      if (dupCedula) {
+        return NextResponse.json({ error: "Esta cédula ya está registrada.", code: "cedula_taken" }, { status: 409 });
       }
       return NextResponse.json({ error: "No pudimos crear tu cuenta. Intenta de nuevo en unos minutos." }, { status: 500 });
     }
