@@ -1,11 +1,16 @@
 export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
-import nodemailer from "nodemailer";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
+// ALL of the app's automated email goes through RESEND (the contratacr.com domain
+// is verified there → SPF/DKIM pass → good deliverability). The old Zoho/Outlook
+// SMTP fallback was REMOVED because mail sent through it failed authentication for
+// @contratacr.com and landed in spam. Zoho stays only as a HUMAN mailbox for
+// soporte@contratacr.com (a person can read/reply there manually) — the app never
+// sends through it. From-address is the verified @contratacr.com domain.
 const FROM_ADDRESS = "ContrataCR <soporte@contratacr.com>";
 const SUPPORT_TO   = "soporte@contratacr.com";
 
@@ -107,37 +112,6 @@ async function sendViaResend(
   return true;
 }
 
-/* ─── Send via SMTP (Nodemailer fallback) ─── */
-async function sendViaSMTP(
-  name: string, email: string, subject: string, message: string,
-  fileAttachments: { filename: string; content: Buffer; contentType: string }[]
-) {
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-  if (!user || !pass) return false;
-
-  const domain = user.split("@")[1]?.toLowerCase() ?? "";
-  let host = process.env.SMTP_HOST ?? "smtp-mail.outlook.com";
-  let port = parseInt(process.env.SMTP_PORT ?? "587", 10);
-  if (domain === "gmail.com") { host = "smtp.gmail.com"; port = 587; }
-
-  const transporter = nodemailer.createTransport({
-    host, port, secure: false,
-    auth: { user, pass },
-    tls: { rejectUnauthorized: false },
-  });
-
-  await transporter.sendMail({
-    from: FROM_ADDRESS,
-    to: SUPPORT_TO,
-    replyTo: email,
-    subject: `[Soporte] ${subject}`,
-    html: buildHtml(name, email, subject, message, fileAttachments.map((f) => f.filename)),
-    attachments: fileAttachments,
-  });
-  return true;
-}
-
 /* ─── Persist as an admin support ticket + seed the thread's first message ─── */
 async function saveTicket(name: string, email: string, subject: string, message: string, topic?: string): Promise<boolean> {
   try {
@@ -179,10 +153,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Faltan campos requeridos" }, { status: 400 });
     }
 
-    // Record the ticket in the admin panel (primary record), then notify by email.
+    // Record the ticket in the admin panel (primary record), then notify the support
+    // inbox by email — ALWAYS via Resend (no Zoho/SMTP fallback). Even if the email
+    // can't be sent, the ticket is already saved and shows in the admin panel.
     const ticketSaved = await saveTicket(name, email, subject, message, topic);
-    const sent = await sendViaResend(name, email, subject, message, fileAttachments)
-      || await sendViaSMTP(name, email, subject, message, fileAttachments);
+    const sent = await sendViaResend(name, email, subject, message, fileAttachments);
 
     if (!ticketSaved && !sent) {
       return NextResponse.json({
