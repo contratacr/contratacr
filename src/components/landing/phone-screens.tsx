@@ -1,6 +1,7 @@
 import { Search, MapPin, ShieldCheck, Star, Send, Headset, CheckCircle2, CalendarDays, ChevronLeft, ChevronRight } from "lucide-react";
 import { Poppins } from "next/font/google";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
+import { MockAvatar } from "@/components/landing/mock-avatar";
 
 // New brand wordmark font (matches the official ContrataCR logo).
 const poppins = Poppins({ subsets: ["latin"], weight: ["700", "800"], display: "swap" });
@@ -117,12 +118,12 @@ export function SearchScreen() {
 // booking entry point; the old separate "Solicitar servicio" button no longer exists —
 // OR (no public schedule) the coral contact note + a filled WhatsApp button.
 function ProCard({
-  rank, initials, company, person, profession, place, address,
+  rank, initials, image, company, person, profession, place, address,
   rating, reviews, price, priceUnit, verified,
   schedule, viewSchedule, whatsapp, noScheduleNote,
 }: {
   rank: number;
-  initials: string; company: string; person?: string; profession: string;
+  initials: string; image?: string; company: string; person?: string; profession: string;
   place: string; address?: string;
   rating: string; reviews: string; price: string; priceUnit?: string; verified: string;
   schedule?: { label: string; times: string[] }[];
@@ -130,16 +131,18 @@ function ProCard({
 }) {
   return (
     <div className="rounded-2xl border border-[#e5e7eb] bg-white p-3 shadow-[0_1px_3px_rgba(16,24,40,0.05)]">
-      {/* Identity — circular avatar + navy ranking badge (mirrors the map pin) ·
+      {/* Identity — circular avatar (photo, else initials) + navy ranking badge ·
           name / Verificado pill / personal name · price (blue amount + grey unit). */}
       <div className="flex items-start gap-2.5">
         <div className="relative shrink-0">
-          <div className="grid h-11 w-11 place-items-center rounded-full bg-[#EBF5FB] text-[12px] font-extrabold text-[#009FD9]">{initials}</div>
+          <MockAvatar src={image} initials={initials} />
           <span className="absolute -left-1.5 -top-1.5 grid h-[18px] w-[18px] place-items-center rounded-full bg-[#162543] text-[9px] font-bold text-white ring-2 ring-white">{rank}</span>
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-start gap-1.5">
-            <span className="min-w-0 flex-1 truncate text-[13px] font-bold leading-tight text-[#111827]">{company}</span>
+            {/* Company name WRAPS (up to 2 lines) instead of truncating, so a name like
+                "SG Solutions" is never cut off when the price shares the row. */}
+            <span className="min-w-0 flex-1 break-words line-clamp-2 text-[13px] font-bold leading-tight text-[#111827]">{company}</span>
             {price ? (
               <span className="shrink-0 whitespace-nowrap text-right leading-tight">
                 <span className="text-[12px] font-bold text-[#009FD9]">{price}</span>
@@ -250,13 +253,13 @@ export function ResultsScreen({ copy = DEFAULT_RESULTS_COPY }: { copy?: ResultsC
           one WITHOUT (the WhatsApp contact path), mirroring the real mixed /buscar list. */}
       <div className="flex-1 space-y-2 overflow-hidden p-3">
         <ProCard
-          rank={1} initials="SG" company="SG Solutions" person="Steven Gómez" profession={copy.title}
+          rank={1} initials="SG" image="/sgimage.jpg" company="SG Solutions" person="Steven Gómez" profession={copy.title}
           place="San José" address="Escazú, San José" rating="4.9" reviews={copy.reviews(48)}
           price="₡12 000" priceUnit={copy.priceUnit} verified={copy.verified} schedule={copy.days}
           viewSchedule={copy.viewSchedule} whatsapp={copy.whatsapp}
         />
         <ProCard
-          rank={2} initials="AM" company="Ana Mora" profession={copy.title}
+          rank={2} initials="AM" image="https://randomuser.me/api/portraits/women/68.jpg" company="Ana Mora" profession={copy.title}
           place="Heredia" address="Heredia centro" rating="4.8" reviews={copy.reviews(31)}
           price="₡10 000" priceUnit={copy.priceUnit} verified={copy.verified}
           viewSchedule={copy.viewSchedule} whatsapp={copy.whatsapp} noScheduleNote={copy.noScheduleNote}
