@@ -1127,7 +1127,7 @@
     "matchesServices": "Matches your services"
   },
   "servicesEditor": {
-    "intro": "A <strong>profession</strong> is an area you work in (e.g. Plumbing). Within each profession you add specific <strong>services</strong>, each with its price (e.g. \"Pipe installation\").",
+    "intro": "A <strong>profession</strong> is an area you work in; for example, Plumbing. Within each profession you add specific <strong>services</strong>, each with its price; for example, \"Pipe installation\".",
     "servicesOf": "Services of",
     "servicesCount": "{count, plural, =0 {No services yet} one {# service} other {# services}}",
     "addFirstInProfession": "Add your first service in {profession}",
