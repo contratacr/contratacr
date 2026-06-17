@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { ChevronLeft, ChevronRight, MapPin, Phone, CalendarDays } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
@@ -87,7 +87,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const [showBooking, setShowBooking] = useState(false);
   const [preset, setPreset] = useState<ScheduleSlot | null>(null);
   const [offset, setOffset] = useState(0);
-  // Scroll container for the location tabs — chevron buttons scroll it when >3 locations.
+  // Scroll container for the location tabs — chevron buttons scroll it when the tabs OVERFLOW.
   const locScrollRef = useRef<HTMLDivElement>(null);
   // When the pro acts on their OWN card we block the action with a friendly modal
   // instead of hiding the buttons (the card looks identical to a client's view).
@@ -174,9 +174,25 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const workplaceAddr = hasRealLoc && effectiveId ? locAddress(effectiveId) : "";
   const addressLine = workplaceAddr || coverageText || placeAddress || "";
   const venueName = workplaceAddr ? businessName.trim() : "";
-  // MORE THAN 3 locations → flank the tab row with chevron buttons so every location is
-  // reachable without breaking the card (the row also scrolls by touch/trackpad).
-  const showLocNav = locTabs.length > 3;
+  // Show the chevron nav whenever the tab row actually OVERFLOWS its container (FIT-based, not a
+  // fixed count) — so on a NARROW card (e.g. the profile contact rail) where the 3rd location is
+  // cut off, the arrows already appear; on a wide card they only appear once a tab won't fit. This
+  // makes /buscar and the profile consistent (the old `locTabs.length > 3` showed them too late on
+  // the narrower profile card). Measured on mount, on resize (ResizeObserver), and when the tabs
+  // change. Monotonic (adding the chevrons only narrows the row further), so it never oscillates.
+  const [locOverflow, setLocOverflow] = useState(false);
+  useEffect(() => {
+    const el = locScrollRef.current;
+    if (!el) return;
+    const measure = () => setLocOverflow(el.scrollWidth - el.clientWidth > 1);
+    measure();
+    let ro: ResizeObserver | undefined;
+    if (typeof ResizeObserver !== "undefined") { ro = new ResizeObserver(measure); ro.observe(el); }
+    if (typeof window !== "undefined") window.addEventListener("resize", measure);
+    return () => { ro?.disconnect(); if (typeof window !== "undefined") window.removeEventListener("resize", measure); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locTabs.length, effectiveId]);
+  const showLocNav = locOverflow;
   const scrollLocs = (dir: number) => locScrollRef.current?.scrollBy({ left: dir * 140, behavior: "smooth" });
   const locationControl = locTabs.length > 0 ? (
     <div className="relative z-10 min-w-0">
