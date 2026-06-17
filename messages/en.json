@@ -533,6 +533,7 @@
       "emailInvalid": "Invalid email",
       "passwordRequired": "Enter your password",
       "loginError": "Incorrect email or password. If you signed up with Google or Facebook, use that button. Forgot your password? You can reset it below.",
+      "socialOnly": "This account uses {provider} sign-in. Use the {provider} button below.",
       "redirecting": "Redirecting…",
       "continueGoogle": "Continue with Google",
       "continueFacebook": "Continue with Facebook"
@@ -629,6 +630,7 @@
       "errIdRequired": "ID required. CR: 9 digits · DIMEX: 11-12 · NITE: 10.",
       "errCreateAccount": "We couldn't create the account.",
       "errAccountExists": "An account with this email already exists. Sign in with your password, or with Google or Facebook if that's how you registered.",
+      "errSocialAccount": "This email is already registered with {provider}. Sign in with {provider}.",
       "errCreateProfile": "Error creating your professional profile.",
       "errTitle": "Registration error",
       "errAlreadyTitle": "Account already exists",
@@ -1678,6 +1680,7 @@
     "errIdInvalid": "Enter a valid ID number (CR: 9 digits · DIMEX: 11-12 · NITE: 10).",
     "errIdentity": "We couldn't confirm your identity or that you're of age with that ID. If your ID is new or you're a foreigner, open a ticket in the Support center.",
     "errAlreadyRegistered": "An account with this email already exists. Sign in with your password, or with Google or Facebook if that's how you registered.",
+    "errSocialAccount": "This email is already registered with {provider}. Sign in with {provider}.",
     "errCreate": "Error creating account.",
     "errUnexpected": "Unexpected error. Try again.",
     "successTitle": "Welcome to ContrataCR!",

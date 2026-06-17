@@ -15,6 +15,7 @@ import { SuccessIcon } from "@/components/ui/success-icon";
 import { PROVINCES } from "@/lib/data/cr-geography";
 import { cn } from "@/lib/utils";
 import { getInitials } from "@/lib/utils";
+import { detectSocialOnly, providerLabel } from "@/lib/auth-method";
 
 export default function RegisterClientPage() {
   const router = useRouter();
@@ -51,6 +52,13 @@ export default function RegisterClientPage() {
       setOauthPhoto(photo);
     }
   }, [user, authLoading]);
+
+  // "Already registered" message — specific when the existing account is social-only
+  // (so we say "regístrate/entra con Google" instead of suggesting a password).
+  async function alreadyRegisteredMsg(addr: string): Promise<string> {
+    const provider = await detectSocialOnly(addr);
+    return provider ? t("errSocialAccount", { provider: providerLabel(provider) }) : t("errAlreadyRegistered");
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -93,7 +101,7 @@ export default function RegisterClientPage() {
 
         if (signUpError) {
           if (signUpError.message.toLowerCase().includes("already registered")) {
-            setError(t("errAlreadyRegistered"));
+            setError(await alreadyRegisteredMsg(email));
           } else {
             setError(signUpError.message);
           }
@@ -103,7 +111,7 @@ export default function RegisterClientPage() {
 
         // Supabase anti-enumeration: existing email → user with empty identities.
         if (Array.isArray(data.user?.identities) && data.user!.identities!.length === 0) {
-          setError(t("errAlreadyRegistered"));
+          setError(await alreadyRegisteredMsg(email));
           setSubmitting(false);
           return;
         }

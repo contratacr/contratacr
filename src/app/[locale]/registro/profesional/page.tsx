@@ -25,6 +25,7 @@ import { getCategoryLabel } from "@/lib/data/categories";
 import { WorkplacesPicker, type Workplace } from "@/components/maps/workplaces-picker";
 import { computeSearchAreas, primaryArea } from "@/lib/location";
 import { useAvailabilityCheck } from "@/hooks/use-availability-check";
+import { detectSocialOnly, providerLabel } from "@/lib/auth-method";
 
 // ─── Category data lives in src/lib/data/categories.ts (single source of truth) ─
 // The CategorySearch component handles display + fuzzy search; this page never
@@ -404,9 +405,11 @@ export default function RegisterProfessionalPage() {
   //   }
   // }
 
-  function onStep1(data: Step1Data) {
+  async function onStep1(data: Step1Data) {
     if (emailCheck.taken) {
-      form1.setError("email", { message: t("errEmailTaken") });
+      // If the existing account is social-only, guide to that provider specifically.
+      const provider = await detectSocialOnly(data.email);
+      form1.setError("email", { message: provider ? t("errSocialAccount", { provider: providerLabel(provider) }) : t("errEmailTaken") });
       return;
     }
     // Cédula format required UNLESS the pro has no CR identification OR flagged the
@@ -600,7 +603,9 @@ export default function RegisterProfessionalPage() {
         msg.includes("ya está registrado") ||
         msg.includes("Ya existe una cuenta")
       ) {
-        setError(t("errAccountExists"));
+        // Specific guidance when the existing account is social-only (use Google).
+        const provider = step1Data?.email ? await detectSocialOnly(step1Data.email) : null;
+        setError(provider ? t("errSocialAccount", { provider: providerLabel(provider) }) : t("errAccountExists"));
       } else {
         setError(msg);
       }

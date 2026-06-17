@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { ContrataCRLogo } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
+import { detectSocialOnly, providerLabel } from "@/lib/auth-method";
 
 type FormData = { email: string; password: string };
 
@@ -43,6 +44,9 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [facebookLoading, setFacebookLoading] = useState(false);
+  // When a manual login fails because the email is a SOCIAL-only account, highlight
+  // the right provider button ("google" | "facebook") and show a specific message.
+  const [socialHint, setSocialHint] = useState<string | null>(null);
 
   // Built inside the component so the validation messages are localized.
   const schema = useMemo(
@@ -63,6 +67,7 @@ export default function LoginPage() {
   async function onSubmit(data: FormData) {
     setSubmitting(true);
     setError(null);
+    setSocialHint(null);
     const supabase = createClient();
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
       email: data.email,
@@ -70,9 +75,15 @@ export default function LoginPage() {
     });
     setSubmitting(false);
     if (authError) {
-      // A common lockout: the email belongs to an account created with Google/
-      // Facebook (no password set). Guide the user to the right method instead of
-      // a dead-end "wrong password".
+      // The email may belong to an account created with Google/Facebook (no password
+      // in our app). Detect that and guide the user to that EXACT method, instead of
+      // a dead-end "wrong password". Falls back to the generic message otherwise.
+      const provider = await detectSocialOnly(data.email);
+      if (provider) {
+        setSocialHint(provider);
+        setError(t("socialOnly", { provider: providerLabel(provider) }));
+        return;
+      }
       setError(t("loginError"));
       return;
     }
@@ -225,7 +236,7 @@ export default function LoginPage() {
               type="button"
               onClick={handleGoogle}
               disabled={googleLoading || facebookLoading}
-              className="w-full flex items-center justify-center gap-3 px-4 py-2.5 bg-white border border-[#e5e7eb] rounded-xl text-sm font-medium text-[#374151] hover:bg-[#f9fafb] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              className={`w-full flex items-center justify-center gap-3 px-4 py-2.5 bg-white border rounded-xl text-sm font-medium text-[#374151] hover:bg-[#f9fafb] transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${socialHint === "google" ? "border-[#009FD9] ring-2 ring-[#009FD9]/30" : "border-[#e5e7eb]"}`}
             >
               <svg className="h-5 w-5" viewBox="0 0 24 24">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
@@ -241,7 +252,7 @@ export default function LoginPage() {
               type="button"
               onClick={handleFacebook}
               disabled={googleLoading || facebookLoading}
-              className="w-full flex items-center justify-center gap-3 px-4 py-2.5 bg-[#1877F2] hover:bg-[#166FE5] text-white border border-[#1877F2] rounded-xl text-sm font-medium transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              className={`w-full flex items-center justify-center gap-3 px-4 py-2.5 bg-[#1877F2] hover:bg-[#166FE5] text-white border rounded-xl text-sm font-medium transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${socialHint === "facebook" ? "border-white ring-2 ring-[#1877F2]/40" : "border-[#1877F2]"}`}
             >
               <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />

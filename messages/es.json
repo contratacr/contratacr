@@ -533,6 +533,7 @@
       "emailInvalid": "Correo inválido",
       "passwordRequired": "Ingresa tu contraseña",
       "loginError": "Correo o contraseña incorrectos. Si te registraste con Google o Facebook, entra con ese botón. ¿Olvidaste tu contraseña? Puedes restablecerla abajo.",
+      "socialOnly": "Esta cuenta usa inicio de sesión con {provider}. Entra con el botón de {provider} abajo.",
       "redirecting": "Redirigiendo…",
       "continueGoogle": "Continuar con Google",
       "continueFacebook": "Continuar con Facebook"
@@ -629,6 +630,7 @@
       "errIdRequired": "Cédula requerida. CR: 9 dígitos · DIMEX: 11-12 · NITE: 10.",
       "errCreateAccount": "No se pudo crear la cuenta.",
       "errAccountExists": "Ya existe una cuenta con este correo. Inicia sesión con tu contraseña, o con Google o Facebook si así te registraste.",
+      "errSocialAccount": "Este correo ya está registrado con {provider}. Inicia sesión con {provider}.",
       "errCreateProfile": "Error al crear tu perfil de profesional.",
       "errTitle": "Error al registrarse",
       "errAlreadyTitle": "Ya existe una cuenta",
@@ -1678,6 +1680,7 @@
     "errIdInvalid": "Ingresa un número de identificación válido (CR: 9 dígitos · DIMEX: 11-12 · NITE: 10).",
     "errIdentity": "No pudimos confirmar tu identidad ni tu mayoría de edad con esa cédula. Si tu cédula es nueva o eres extranjero, abre un tiquete en el Centro de soporte.",
     "errAlreadyRegistered": "Ya existe una cuenta con este correo. Inicia sesión con tu contraseña, o con Google o Facebook si así te registraste.",
+    "errSocialAccount": "Este correo ya está registrado con {provider}. Inicia sesión con {provider}.",
     "errCreate": "Error al crear cuenta.",
     "errUnexpected": "Error inesperado. Intenta de nuevo.",
     "successTitle": "¡Bienvenido a ContrataCR!",
