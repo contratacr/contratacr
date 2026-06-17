@@ -5,7 +5,10 @@ import { createClient as createServerClient } from "@/lib/supabase/server";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { fullName, phone, provinciaId, cantonId, cedula, userId: bodyUserId } = body;
+    // NOTE: clients do NOT send provincia/cantón (location is gathered at search /
+    // service-request, not signup), and `profiles` has no provincia_id/canton_id
+    // columns anyway — never write them here.
+    const { fullName, phone, cedula, userId: bodyUserId } = body;
 
     const sessionClient = await createServerClient();
     const { data: { user: sessionUser } } = await sessionClient.auth.getUser();
@@ -43,8 +46,6 @@ export async function POST(req: Request) {
           onboarding_completed: true,
           ...(cedula ? { cedula: String(cedula).replace(/\D/g, "") } : {}),
           ...(phone ? { phone } : {}),
-          ...(provinciaId ? { provincia_id: provinciaId } : {}),
-          ...(cantonId ? { canton_id: cantonId } : {}),
         },
         { onConflict: "id" }
       );
