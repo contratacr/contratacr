@@ -5,15 +5,14 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { enforceRateLimit } from "@/lib/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 import { validateUpload, IMAGE_KINDS, DOC_KINDS } from "@/lib/upload-validation";
+import { sendBrevoEmail } from "@/lib/email/send";
 
-// ALL of the app's automated email goes through RESEND (the contratacr.com domain
-// is verified there → SPF/DKIM pass → good deliverability). The old Zoho/Outlook
-// SMTP fallback was REMOVED because mail sent through it failed authentication for
-// @contratacr.com and landed in spam. Zoho stays only as a HUMAN mailbox for
+// ALL of the app's automated email goes through BREVO (the contratacr.com domain is
+// verified there → SPF/DKIM pass → good deliverability), via the shared
+// `sendBrevoEmail` helper. Zoho stays only as a HUMAN mailbox for
 // soporte@contratacr.com (a person can read/reply there manually) — the app never
 // sends through it. From-address is the verified @contratacr.com domain.
-const FROM_ADDRESS = "ContrataCR <soporte@contratacr.com>";
-const SUPPORT_TO   = "soporte@contratacr.com";
+const SUPPORT_TO = "soporte@contratacr.com";
 
 /* ─── Parse FormData from request ─── */
 async function parseRequest(req: NextRequest) {
@@ -76,41 +75,19 @@ function buildHtml(name: string, email: string, subject: string, message: string
     </div>`;
 }
 
-/* ─── Send via Resend ─── */
-async function sendViaResend(
+/* ─── Send the new-ticket notification to the support inbox via Brevo ─── */
+async function sendInboxEmail(
   name: string, email: string, subject: string, message: string,
   fileAttachments: { filename: string; content: Buffer; contentType: string }[]
-) {
-  const resendKey = process.env.RESEND_API_KEY;
-  if (!resendKey) return false;
-
-  const body: Record<string, unknown> = {
-    from: FROM_ADDRESS,
-    to:   [SUPPORT_TO],
-    reply_to: email,
+): Promise<boolean> {
+  const r = await sendBrevoEmail({
+    to: SUPPORT_TO,
+    replyTo: email, // so a human reply from the inbox goes to the requester
     subject: `[Soporte] ${subject}`,
     html: buildHtml(name, email, subject, message, fileAttachments.map((f) => f.filename)),
-  };
-
-  if (fileAttachments.length > 0) {
-    body.attachments = fileAttachments.map((f) => ({
-      filename: f.filename,
-      content: f.content.toString("base64"),
-    }));
-  }
-
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${resendKey}` },
-    body: JSON.stringify(body),
+    attachments: fileAttachments.map((f) => ({ name: f.filename, content: f.content.toString("base64") })),
   });
-
-  if (!res.ok) {
-    const err = await res.text();
-    console.error("[contact] Resend error:", err);
-    return false;
-  }
-  return true;
+  return r.ok;
 }
 
 /* ─── Persist as an admin support ticket + seed the thread's first message ─── */
@@ -168,10 +145,10 @@ export async function POST(req: NextRequest) {
     }
 
     // Record the ticket in the admin panel (primary record), then notify the support
-    // inbox by email — ALWAYS via Resend (no Zoho/SMTP fallback). Even if the email
-    // can't be sent, the ticket is already saved and shows in the admin panel.
+    // inbox by email — via Brevo. Even if the email can't be sent, the ticket is
+    // already saved and shows in the admin panel.
     const ticketSaved = await saveTicket(name, email, subject, message, topic);
-    const sent = await sendViaResend(name, email, subject, message, fileAttachments);
+    const sent = await sendInboxEmail(name, email, subject, message, fileAttachments);
 
     if (!ticketSaved && !sent) {
       return NextResponse.json({

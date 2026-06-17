@@ -1,6 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-
-const FROM_ADDRESS = "ContrataCR <soporte@contratacr.com>";
+import { sendBrevoEmail } from "@/lib/email/send";
 
 interface NewBookingArgs {
   professionalId: string;
@@ -220,24 +219,8 @@ async function sendEmailText(
   subject: string,
   html: string
 ): Promise<{ status: DeliveryStatus; detail: string | null }> {
-  const key = process.env.RESEND_API_KEY;
-  if (!key) return { status: "skipped", detail: "Resend not configured" };
-  if (!to) return { status: "skipped", detail: "No client email on file" };
-
-  try {
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
-      body: JSON.stringify({ from: FROM_ADDRESS, to: [to], subject, html }),
-    });
-    if (!res.ok) {
-      const txt = await res.text().catch(() => "");
-      return { status: "failed", detail: `HTTP ${res.status} ${txt}` };
-    }
-    return { status: "sent", detail: null };
-  } catch (err) {
-    return { status: "failed", detail: String(err) };
-  }
+  const r = await sendBrevoEmail({ to, subject, html });
+  return { status: r.status, detail: r.detail };
 }
 
 function statusEmailHtml(
@@ -280,8 +263,7 @@ async function sendProEmail(
   serviceDescription: string,
   whenText: string | null
 ): Promise<void> {
-  const key = process.env.RESEND_API_KEY;
-  if (!key || !to) return;
+  if (!to) return;
 
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;background:#f4f7fa;border-radius:8px;">
@@ -303,20 +285,7 @@ async function sendProEmail(
       </div>
     </div>`;
 
-  try {
-    await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
-      body: JSON.stringify({
-        from: FROM_ADDRESS,
-        to: [to],
-        subject: `Nueva solicitud de ${clientName} — ContrataCR`,
-        html,
-      }),
-    });
-  } catch (err) {
-    console.error("[notifyNewBooking] email failed:", err);
-  }
+  await sendBrevoEmail({ to, subject: `Nueva solicitud de ${clientName} — ContrataCR`, html });
 }
 
 async function sendProWhatsApp(

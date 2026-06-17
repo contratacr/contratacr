@@ -1,6 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import { sendBrevoEmail } from "@/lib/email/send";
 
-const FROM_ADDRESS = "ContrataCR <soporte@contratacr.com>";
 const PRO_LINK = "/es/dashboard/profesional?tab=verificacion";
 
 type DecisionKind = "verified" | "pending" | "rejected" | "reverted";
@@ -169,17 +169,7 @@ export async function notifyAppealReceived(
 // ---------------------------------------------------------------------------
 
 async function sendEmail(to: string | undefined, subject: string, html: string): Promise<void> {
-  const key = process.env.RESEND_API_KEY;
-  if (!key || !to) return;
-  try {
-    await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
-      body: JSON.stringify({ from: FROM_ADDRESS, to: [to], subject, html }),
-    });
-  } catch (err) {
-    console.error("[verification-notify] email failed:", err);
-  }
+  await sendBrevoEmail({ to, subject, html });
 }
 
 function escapeHtml(s: string): string {

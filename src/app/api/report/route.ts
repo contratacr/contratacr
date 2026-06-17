@@ -2,8 +2,8 @@ export const runtime = "nodejs";
 
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { sendBrevoEmail } from "@/lib/email/send";
 
-const FROM_ADDRESS = "ContrataCR <soporte@contratacr.com>";
 const SUPPORT_TO = "soporte@contratacr.com";
 
 export async function POST(req: NextRequest) {
@@ -36,13 +36,6 @@ export async function POST(req: NextRequest) {
       console.error("[report] persist failed (continuing to email):", e);
     }
 
-    const key = process.env.RESEND_API_KEY;
-    if (!key) {
-      // No email provider configured, but the report was persisted above — the
-      // admin will see it in the moderation queue, so this still succeeds.
-      return NextResponse.json({ ok: true, persisted: true });
-    }
-
     const profileUrl = `https://contratacr.com/es/profesionales/${professionalSlug}`;
     const html = `
       <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;background:#f4f7fa;border-radius:8px;">
@@ -61,21 +54,17 @@ export async function POST(req: NextRequest) {
         </div>
       </div>`;
 
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
-      body: JSON.stringify({
-        from: FROM_ADDRESS,
-        to: [SUPPORT_TO],
-        reply_to: reporterEmail || undefined,
-        subject: `${isImpersonation ? "[PRIORIDAD ALTA] " : ""}[Reporte] Perfil de ${professionalName ?? professionalSlug}`,
-        html,
-      }),
+    const r = await sendBrevoEmail({
+      to: SUPPORT_TO,
+      replyTo: reporterEmail || undefined,
+      subject: `${isImpersonation ? "[PRIORIDAD ALTA] " : ""}[Reporte] Perfil de ${professionalName ?? professionalSlug}`,
+      html,
     });
 
-    if (!res.ok) {
-      const err = await res.text();
-      console.error("[report] Resend error:", err);
+    // The report is already persisted to the moderation queue above, so a skipped
+    // (Brevo not configured) or failed email still succeeds for the user. Only a
+    // hard failure surfaces an error.
+    if (r.status === "failed") {
       return NextResponse.json({ error: "No se pudo enviar el reporte." }, { status: 500 });
     }
 

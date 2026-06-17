@@ -1,6 +1,7 @@
-// Branded support-ticket email notifications (Resend). Best-effort: failures are
+// Branded support-ticket email notifications (Brevo). Best-effort: failures are
 // logged and never break the request. Clickable links only — no raw URLs.
-const FROM_ADDRESS = "ContrataCR <soporte@contratacr.com>";
+import { sendBrevoEmail } from "@/lib/email/send";
+
 const SUPPORT_TO = "soporte@contratacr.com";
 const SITE = "https://contratacr.com";
 const LOGO = "https://res.cloudinary.com/dxxrjx2go/image/upload/f_png,w_128/contratacr/brand/email-logo.png";
@@ -10,17 +11,7 @@ function escapeHtml(s: string): string {
 }
 
 async function sendEmail(to: string, subject: string, html: string, replyTo?: string): Promise<void> {
-  const key = process.env.RESEND_API_KEY;
-  if (!key || !to) return;
-  try {
-    await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
-      body: JSON.stringify({ from: FROM_ADDRESS, to: [to], subject, html, ...(replyTo ? { reply_to: replyTo } : {}) }),
-    });
-  } catch (err) {
-    console.error("[support-notify] email failed:", err);
-  }
+  await sendBrevoEmail({ to, subject, html, replyTo });
 }
 
 /** Branded shell with an optional CTA button (clickable link, never a raw URL). */
