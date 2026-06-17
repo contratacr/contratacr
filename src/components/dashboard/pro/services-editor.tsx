@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Plus, Trash2, Pencil, ChevronRight, Search } from "lucide-react";
+import { Plus, Trash2, Pencil, ChevronRight, Search, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PriceInput } from "@/components/ui/price-input";
 import { Modal } from "@/components/ui/modal";
@@ -78,6 +78,35 @@ export function ServicesEditor({
   // Add-profession picker (modal)
   const [showPicker, setShowPicker] = useState(false);
   const [pickerQuery, setPickerQuery] = useState("");
+  // "¿No ves tu profesión?" — mirrors publicar-proyecto's category picker: a tracked
+  // suggestion to the admin team (NO usable category added, NO auto-matching).
+  const [suggesting, setSuggesting] = useState(false);
+  const [suggestName, setSuggestName] = useState("");
+  const [suggestSent, setSuggestSent] = useState(false);
+  const [suggestSending, setSuggestSending] = useState(false);
+  function closePicker() {
+    setShowPicker(false);
+    setPickerQuery("");
+    setSuggesting(false);
+    setSuggestName("");
+    setSuggestSent(false);
+  }
+  async function sendSuggestion() {
+    const name = suggestName.trim();
+    if (!name) return;
+    setSuggestSending(true);
+    try {
+      await fetch("/api/categories/suggest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name }),
+      });
+      setSuggestSent(true);
+      setSuggestName("");
+      setSuggesting(false);
+    } catch { /* best-effort */ }
+    finally { setSuggestSending(false); }
+  }
 
   // Service form (modal). Empty formCategory + null editingId = closed.
   const [formCategory, setFormCategory] = useState<string>("");
@@ -126,26 +155,8 @@ export function ServicesEditor({
     const next = [...professions, id];
     setProfessions(next);
     setSelectedProfession(id);
-    setShowPicker(false);
-    setPickerQuery("");
+    closePicker();
     persist(next, services);
-  }
-
-  // "Otro / no está mi servicio" — same idea as the "otro" in publicar-proyecto: when the
-  // catalog doesn't have it, the pro adds the `otro` profession and types their service as
-  // FREE TEXT. It's stored as a normal service NAME under "otro" (so it shows on the
-  // profile/card AND is found by the existing search, which already matches services::text).
-  function addOtro() {
-    setShowPicker(false);
-    setPickerQuery("");
-    if (!professions.includes("otro")) {
-      const next = [...professions, "otro"];
-      setProfessions(next);
-      persist(next, services);
-    }
-    setSelectedProfession("otro");
-    // Jump straight to the service form so they describe the custom service right away.
-    openAdd("otro");
   }
 
   // Make a profession the PRINCIPAL one (index 0 = principal everywhere).
@@ -399,7 +410,7 @@ export function ServicesEditor({
       {/* ── Add-profession picker ─────────────────────────────────────── */}
       {showPicker && (
         <Modal
-          onClose={() => { setShowPicker(false); setPickerQuery(""); }}
+          onClose={closePicker}
           title={t("pickerTitle")}
           closeLabel={t("cancel")}
           bodyClassName="px-0 py-0"
@@ -417,8 +428,8 @@ export function ServicesEditor({
             </div>
           </div>
           <div className="px-3 py-2 sm:px-4">
-            {/* No match → a clear two-line message that points to "Otro" (matches the
-                publicar-proyecto category picker's empty state). */}
+            {/* No match → a clear two-line message that points to the suggestion box below
+                (matches the publicar-proyecto category picker's empty state). */}
             {pickerList.length === 0 ? (
               <div className="px-3 py-4 text-center">
                 <p className="mb-1 text-sm font-medium text-[#374151]">{t("pickerNoResults")}</p>
@@ -437,22 +448,35 @@ export function ServicesEditor({
               ))
             )}
 
-            {/* "Otro" section — ALWAYS available (even with matches), like the project
-                picker's "Otro servicio" row: a small "OTRO" label + a plain selectable row
-                styled like a normal project-picker option. Lets the pro add a free-text
-                service the catalog lacks (searchable like any other). */}
-            {!professions.includes("otro") && (
-              <div className="mt-1 border-t border-[#f3f4f6] pt-1">
-                <p className="px-3 pb-1 pt-3 text-[10px] font-bold uppercase tracking-widest text-[#9ca3af]">{t("otherGroup")}</p>
-                <button
-                  type="button"
-                  onClick={addOtro}
-                  className="w-full rounded-lg px-3 py-2.5 text-left text-sm text-[#374151] transition-colors hover:bg-[#f9fafb]"
-                >
-                  {t("otherOption")}
+            {/* "¿No ves tu profesión?" — EXACTLY the publicar-proyecto pattern: a tracked
+                suggestion to the admin team (NO usable category is added to the account, so
+                there's NO "otro"-to-"otro" auto-matching). Always available. */}
+            <div className="mt-1 border-t border-[#f3f4f6] px-3 py-2.5">
+              {suggestSent ? (
+                <p className="inline-flex items-center gap-1.5 text-xs text-[#15803d]">
+                  <Check className="h-3.5 w-3.5" /> {t("suggestThanks")}
+                </p>
+              ) : suggesting ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    value={suggestName}
+                    onChange={(e) => setSuggestName(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); sendSuggestion(); } }}
+                    placeholder={t("suggestNamePlaceholder")}
+                    autoFocus
+                    className="h-9 min-w-0 flex-1 rounded-lg border border-[#e5e7eb] px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20"
+                  />
+                  <button type="button" disabled={!suggestName.trim() || suggestSending} onClick={sendSuggestion} className="h-9 shrink-0 rounded-lg bg-[#009FD9] px-3 text-sm font-medium text-white disabled:opacity-50">
+                    {suggestSending ? t("suggestSending") : t("suggestSend")}
+                  </button>
+                  <button type="button" onClick={() => setSuggesting(false)} className="h-9 shrink-0 px-2 text-sm text-[#9ca3af] hover:text-[#374151]">{t("cancel")}</button>
+                </div>
+              ) : (
+                <button type="button" onClick={() => setSuggesting(true)} className="text-xs font-medium text-[#009FD9] hover:underline">
+                  {t("notListed")}
                 </button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </Modal>
       )}
