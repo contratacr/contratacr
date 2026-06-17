@@ -1,0 +1,106 @@
+"use client";
+
+import { useState } from "react";
+import { Check } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+// Shared "¿No ves tu categoría? / ¿No ves tu profesión?" suggestion box.
+// ONE implementation so publicar-proyecto (CategorySearch) and agregar-profesión
+// (services-editor) have IDENTICAL design + behavior:
+//   link → type the name → submit → POST /api/categories/suggest (admin ticket)
+//   → "Gracias. Enviamos tu sugerencia al equipo para revisión."
+// The submitted name lands in `category_suggestions` (pending) where the admin
+// reviews it and, on approval, it becomes a real selectable/searchable category.
+// There is NO "otro" auto-matching: a suggestion never creates a usable category
+// on its own, so two unrelated custom entries can never match each other.
+export function CategorySuggestionBox({
+  notListedLabel,
+  placeholder,
+  sendLabel,
+  sendingLabel,
+  cancelLabel,
+  thanksLabel,
+  className,
+}: {
+  notListedLabel: string;
+  placeholder: string;
+  sendLabel: string;
+  sendingLabel: string;
+  cancelLabel: string;
+  thanksLabel: string;
+  className?: string;
+}) {
+  const [suggesting, setSuggesting] = useState(false);
+  const [name, setName] = useState("");
+  const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+
+  async function send() {
+    const clean = name.trim();
+    if (!clean) return;
+    setSending(true);
+    try {
+      await fetch("/api/categories/suggest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: clean }),
+      });
+      setSent(true);
+      setName("");
+      setSuggesting(false);
+    } catch {
+      /* best-effort — the thank-you only shows on a resolved request */
+    } finally {
+      setSending(false);
+    }
+  }
+
+  return (
+    <div className={cn("border-t border-[#f3f4f6] px-3 py-2.5", className)}>
+      {sent ? (
+        <p className="inline-flex items-center gap-1.5 text-xs text-[#15803d]">
+          <Check className="h-3.5 w-3.5" /> {thanksLabel}
+        </p>
+      ) : suggesting ? (
+        <div className="flex items-center gap-2">
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                send();
+              }
+            }}
+            placeholder={placeholder}
+            autoFocus
+            className="h-9 min-w-0 flex-1 rounded-lg border border-[#e5e7eb] px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20"
+          />
+          <button
+            type="button"
+            disabled={!name.trim() || sending}
+            onClick={send}
+            className="h-9 shrink-0 rounded-lg bg-[#009FD9] px-3 text-sm font-medium text-white disabled:opacity-50"
+          >
+            {sending ? sendingLabel : sendLabel}
+          </button>
+          <button
+            type="button"
+            onClick={() => setSuggesting(false)}
+            className="h-9 shrink-0 px-2 text-sm text-[#9ca3af] hover:text-[#374151]"
+          >
+            {cancelLabel}
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setSuggesting(true)}
+          className="text-xs font-medium text-[#009FD9] hover:underline"
+        >
+          {notListedLabel}
+        </button>
+      )}
+    </div>
+  );
+}

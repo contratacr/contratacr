@@ -2,10 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Plus, Trash2, Pencil, ChevronRight, Search, Check } from "lucide-react";
+import { Plus, Trash2, Pencil, ChevronRight, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PriceInput } from "@/components/ui/price-input";
 import { Modal } from "@/components/ui/modal";
+import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { getCategoryLabel, ALL_CATEGORIES, normalizeText } from "@/lib/data/categories";
@@ -78,34 +79,12 @@ export function ServicesEditor({
   // Add-profession picker (modal)
   const [showPicker, setShowPicker] = useState(false);
   const [pickerQuery, setPickerQuery] = useState("");
-  // "¿No ves tu profesión?" — mirrors publicar-proyecto's category picker: a tracked
-  // suggestion to the admin team (NO usable category added, NO auto-matching).
-  const [suggesting, setSuggesting] = useState(false);
-  const [suggestName, setSuggestName] = useState("");
-  const [suggestSent, setSuggestSent] = useState(false);
-  const [suggestSending, setSuggestSending] = useState(false);
+  // "¿No ves tu profesión?" lives in the shared <CategorySuggestionBox> (same
+  // component the publicar-proyecto picker uses), so its state is self-contained
+  // and resets each time the modal re-mounts.
   function closePicker() {
     setShowPicker(false);
     setPickerQuery("");
-    setSuggesting(false);
-    setSuggestName("");
-    setSuggestSent(false);
-  }
-  async function sendSuggestion() {
-    const name = suggestName.trim();
-    if (!name) return;
-    setSuggestSending(true);
-    try {
-      await fetch("/api/categories/suggest", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name }),
-      });
-      setSuggestSent(true);
-      setSuggestName("");
-      setSuggesting(false);
-    } catch { /* best-effort */ }
-    finally { setSuggestSending(false); }
   }
 
   // Service form (modal). Empty formCategory + null editingId = closed.
@@ -448,35 +427,19 @@ export function ServicesEditor({
               ))
             )}
 
-            {/* "¿No ves tu profesión?" — EXACTLY the publicar-proyecto pattern: a tracked
-                suggestion to the admin team (NO usable category is added to the account, so
-                there's NO "otro"-to-"otro" auto-matching). Always available. */}
-            <div className="mt-1 border-t border-[#f3f4f6] px-3 py-2.5">
-              {suggestSent ? (
-                <p className="inline-flex items-center gap-1.5 text-xs text-[#15803d]">
-                  <Check className="h-3.5 w-3.5" /> {t("suggestThanks")}
-                </p>
-              ) : suggesting ? (
-                <div className="flex items-center gap-2">
-                  <input
-                    value={suggestName}
-                    onChange={(e) => setSuggestName(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); sendSuggestion(); } }}
-                    placeholder={t("suggestNamePlaceholder")}
-                    autoFocus
-                    className="h-9 min-w-0 flex-1 rounded-lg border border-[#e5e7eb] px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20"
-                  />
-                  <button type="button" disabled={!suggestName.trim() || suggestSending} onClick={sendSuggestion} className="h-9 shrink-0 rounded-lg bg-[#009FD9] px-3 text-sm font-medium text-white disabled:opacity-50">
-                    {suggestSending ? t("suggestSending") : t("suggestSend")}
-                  </button>
-                  <button type="button" onClick={() => setSuggesting(false)} className="h-9 shrink-0 px-2 text-sm text-[#9ca3af] hover:text-[#374151]">{t("cancel")}</button>
-                </div>
-              ) : (
-                <button type="button" onClick={() => setSuggesting(true)} className="text-xs font-medium text-[#009FD9] hover:underline">
-                  {t("notListed")}
-                </button>
-              )}
-            </div>
+            {/* "¿No ves tu profesión?" — the SAME shared component the
+                publicar-proyecto picker uses: type → submit → admin reviews →
+                on approval it becomes a real, selectable profession. No "otro"
+                selectable, so there's no "otro"-to-"otro" auto-matching. */}
+            <CategorySuggestionBox
+              className="mt-1"
+              notListedLabel={t("notListed")}
+              placeholder={t("suggestNamePlaceholder")}
+              sendLabel={t("suggestSend")}
+              sendingLabel={t("suggestSending")}
+              cancelLabel={t("cancel")}
+              thanksLabel={t("suggestThanks")}
+            />
           </div>
         </Modal>
       )}

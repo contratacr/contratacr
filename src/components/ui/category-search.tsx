@@ -3,11 +3,11 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useLocale, useTranslations } from "next-intl";
-import { Search, X, ChevronDown, Check } from "lucide-react";
+import { Search, X, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import {
   CATEGORY_GROUPS,
-  OTHER_CATEGORY,
   searchCategories,
   getCategoryLabel,
   getCategoryGroupLabel,
@@ -71,29 +71,6 @@ export function CategorySearch({
       window.removeEventListener("resize", onScroll);
     };
   }, [open, reposition]);
-
-  // "¿No ves tu categoría?" → suggestion ticket (admin moderation).
-  const [suggesting, setSuggesting] = useState(false);
-  const [suggestName, setSuggestName] = useState("");
-  const [suggestSent, setSuggestSent] = useState(false);
-  const [sending, setSending] = useState(false);
-
-  async function sendSuggestion() {
-    const name = suggestName.trim();
-    if (!name) return;
-    setSending(true);
-    try {
-      await fetch("/api/categories/suggest", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name }),
-      });
-      setSuggestSent(true);
-      setSuggestName("");
-      setSuggesting(false);
-    } catch { /* best-effort */ }
-    finally { setSending(false); }
-  }
 
   const locale = useLocale();
   const selectedLabel = value ? getCategoryLabel(value, locale) : "";
@@ -265,52 +242,19 @@ export function CategorySearch({
               ))
             )}
 
-            {/* Otro option always at bottom */}
-            <div className="border-t border-[#f3f4f6] mt-1">
-              <p className="px-3 pt-3 pb-1 text-[10px] font-bold text-[#9ca3af] uppercase tracking-widest">
-                {t("otherGroup")}
-              </p>
-              <button
-                type="button"
-                onClick={() => handleSelect(OTHER_CATEGORY.id)}
-                className={cn(
-                  "w-full text-left px-3 py-2.5 text-sm transition-colors",
-                  value === OTHER_CATEGORY.id
-                    ? "bg-[#EBF5FB] text-[#009FD9] font-medium"
-                    : "text-[#374151] hover:bg-[#f9fafb]"
-                )}
-              >
-                {t("otherOption")}
-              </button>
-
-              {/* "¿No ves tu categoría?" → tracked suggestion ticket (admin reviews;
-                  not usable/filterable until approved). */}
-              <div className="px-3 py-2.5 border-t border-[#f3f4f6]">
-                {suggestSent ? (
-                  <p className="inline-flex items-center gap-1.5 text-xs text-[#15803d]">
-                    <Check className="h-3.5 w-3.5" /> {t("suggestThanks")}
-                  </p>
-                ) : suggesting ? (
-                  <div className="flex items-center gap-2">
-                    <input
-                      value={suggestName}
-                      onChange={(e) => setSuggestName(e.target.value)}
-                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); sendSuggestion(); } }}
-                      placeholder={t("suggestNamePlaceholder")}
-                      className="flex-1 h-9 px-3 rounded-lg border border-[#e5e7eb] text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20"
-                    />
-                    <button type="button" disabled={!suggestName.trim() || sending} onClick={sendSuggestion} className="h-9 px-3 rounded-lg bg-[#009FD9] text-white text-sm font-medium disabled:opacity-50">
-                      {sending ? t("sending") : t("send")}
-                    </button>
-                    <button type="button" onClick={() => setSuggesting(false)} className="h-9 px-2 text-sm text-[#9ca3af] hover:text-[#374151]">{t("cancel")}</button>
-                  </div>
-                ) : (
-                  <button type="button" onClick={() => setSuggesting(true)} className="text-xs text-[#009FD9] hover:underline">
-                    {t("notListed")}
-                  </button>
-                )}
-              </div>
-            </div>
+            {/* "¿No ves tu categoría?" — the ONE escape hatch (no selectable
+                "Otro"): a tracked suggestion the admin reviews and, on approval,
+                turns into a real selectable/searchable category. Shared component
+                so it's identical to the agregar-profesión picker. */}
+            <CategorySuggestionBox
+              className="mt-1"
+              notListedLabel={t("notListed")}
+              placeholder={t("suggestNamePlaceholder")}
+              sendLabel={t("send")}
+              sendingLabel={t("sending")}
+              cancelLabel={t("cancel")}
+              thanksLabel={t("suggestThanks")}
+            />
           </div>
         </div>,
         document.body
