@@ -102,6 +102,20 @@ export default function ProDashboardPage() {
     if (!authLoading && !user) router.push("/login");
   }, [user, authLoading, router]);
 
+  // Deep-link focus: `?tab=profile&focus=location` (e.g. Disponibilidad's "Agregar
+  // lugar") lands the pro on the profile editor with that section auto-opened +
+  // scrolled. We mirror the param into `profileFocus` (which ProfileEditor consumes),
+  // then strip it so a refresh doesn't re-scroll and the URL stays clean.
+  useEffect(() => {
+    const focus = searchParams.get("focus");
+    if (!focus) return;
+    setProfileFocus({ field: focus, key: Date.now() });
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("focus");
+    const qs = params.toString();
+    router.replace(`/dashboard/profesional${qs ? `?${qs}` : ""}`, { scroll: false });
+  }, [searchParams, router]);
+
   const fetchPro = useCallback(async () => {
     if (!user) return;
     const supabase = createClient();

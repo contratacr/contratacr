@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
@@ -457,9 +458,12 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                   </button>
                 );
               })}
-              <a href="?tab=profile" className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium text-[#009FD9] hover:bg-[#EBF5FB] transition-colors">
+              {/* Work locations live in the profile's "Ubicación y cobertura" section, not
+                  here — so this jumps to Mi perfil and (via ?focus=location) auto-opens +
+                  scrolls to that section, landing the pro ready to add a place. */}
+              <Link href="/dashboard/profesional?tab=profile&focus=location" className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium text-[#009FD9] hover:bg-[#EBF5FB] transition-colors">
                 <Plus className="h-3.5 w-3.5" /> {t("addLocation")}
-              </a>
+              </Link>
             </div>
           </div>
 
