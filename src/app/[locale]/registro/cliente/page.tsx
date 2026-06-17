@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { PhoneInput, isPhoneComplete } from "@/components/ui/phone-input";
 import { OtpVerification } from "@/components/auth/otp-verification";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { CheckCircle2, Eye, EyeOff, User } from "lucide-react";
+import { CheckCircle2, Eye, EyeOff, User, ChevronDown } from "lucide-react";
 import { SuccessIcon } from "@/components/ui/success-icon";
 import { PROVINCES } from "@/lib/data/cr-geography";
 import { cn } from "@/lib/utils";
@@ -313,32 +313,40 @@ export default function RegisterClientPage() {
                   <label className="text-sm font-medium text-[#374151] block mb-1.5">
                     {t("provincia")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
                   </label>
-                  <select
-                    className={cn(inputClass, "cursor-pointer")}
-                    value={provinciaId}
-                    onChange={(e) => { setProvinciaId(e.target.value); setCantonId(""); }}
-                  >
-                    <option value="">{t("select")}</option>
-                    {PROVINCES.map((p) => (
-                      <option key={p.id} value={p.id}>{p.name}</option>
-                    ))}
-                  </select>
+                  {/* `appearance-none` + `pr-10` + an overlaid chevron inset from the
+                      right border (the native arrow sat too close to the edge). */}
+                  <div className="relative">
+                    <select
+                      className={cn(inputClass, "cursor-pointer appearance-none pr-10")}
+                      value={provinciaId}
+                      onChange={(e) => { setProvinciaId(e.target.value); setCantonId(""); }}
+                    >
+                      <option value="">{t("select")}</option>
+                      {PROVINCES.map((p) => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6b7280]" />
+                  </div>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-[#374151] block mb-1.5">
                     {t("canton")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
                   </label>
-                  <select
-                    className={cn(inputClass, "cursor-pointer", !provinciaId && "opacity-50")}
-                    value={cantonId}
-                    onChange={(e) => setCantonId(e.target.value)}
-                    disabled={!provinciaId}
-                  >
-                    <option value="">{t("select")}</option>
-                    {cantons.map((c) => (
-                      <option key={c.id} value={c.id}>{c.name}</option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <select
+                      className={cn(inputClass, "cursor-pointer appearance-none pr-10", !provinciaId && "opacity-50")}
+                      value={cantonId}
+                      onChange={(e) => setCantonId(e.target.value)}
+                      disabled={!provinciaId}
+                    >
+                      <option value="">{t("select")}</option>
+                      {cantons.map((c) => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className={cn("pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6b7280]", !provinciaId && "opacity-50")} />
+                  </div>
                 </div>
               </div>
 

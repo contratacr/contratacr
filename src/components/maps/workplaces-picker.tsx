@@ -274,14 +274,22 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200 }: W
       <div className="flex flex-col gap-2.5">
       {/* 1 — Structured field FIRST: provincia → cantón (authoritative for search). */}
       <div className="grid grid-cols-2 gap-2">
-        <select value={province} onChange={(e) => { setProvince(e.target.value); setCanton(""); }} className={selectCls}>
-          <option value="">{t("provincePlaceholder")}</option>
-          {PROVINCES.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-        </select>
-        <select value={canton} onChange={(e) => setCanton(e.target.value)} disabled={!province} className={cn(selectCls, !province && "opacity-50 cursor-not-allowed")}>
-          <option value="">{t("cantonPlaceholder")}</option>
-          {cantons.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-        </select>
+        {/* `appearance-none` + `pr-10` + an overlaid chevron gives the dropdown arrow
+            comfortable inset from the right border (the native arrow sat too close). */}
+        <div className="relative">
+          <select value={province} onChange={(e) => { setProvince(e.target.value); setCanton(""); }} className={cn(selectCls, "w-full appearance-none pr-10")}>
+            <option value="">{t("provincePlaceholder")}</option>
+            {PROVINCES.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6b7280]" />
+        </div>
+        <div className="relative">
+          <select value={canton} onChange={(e) => setCanton(e.target.value)} disabled={!province} className={cn(selectCls, "w-full appearance-none pr-10", !province && "opacity-50 cursor-not-allowed")}>
+            <option value="">{t("cantonPlaceholder")}</option>
+            {cantons.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+          <ChevronDown className={cn("pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6b7280]", !province && "opacity-50")} />
+        </div>
       </div>
 
       {/* 2 — OPTIONAL exact pin (refinement), HIDDEN by default. A clean expandable
