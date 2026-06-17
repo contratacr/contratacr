@@ -174,9 +174,12 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
   const info = (
     <>
       {/* Identity: CIRCULAR photo on the LEFT carrying the navy ranking badge that mirrors
-          its map pin; company name + Verificado + personal name in the middle; PRICE
-          right-aligned. The mobile `pr-8` keeps the price clear of the top-right bookmark
-          (on desktop the price sits in the LEFT column, far from it — `lg:pr-0`). */}
+          its map pin. To its right, a TIGHT identity stack (gap-1): company name +
+          Verificado + personal name, then the service tags and rating DIRECTLY beneath —
+          so tags/reviews read as part of the same block right under the name (they used to
+          be siblings of this row and got pushed BELOW the taller avatar, leaving a gap).
+          PRICE is right-aligned on the company-name line only. The mobile `pr-8` keeps the
+          price clear of the top-right bookmark (`lg:pr-0` on desktop). */}
       <div className="flex items-start gap-3 pr-8 lg:pr-0">
         <Link href={`/profesionales/${professional.slug}`} className="relative z-10 shrink-0">
           <Avatar className="h-14 w-14 rounded-full lg:h-16 lg:w-16">
@@ -189,68 +192,68 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
             </span>
           )}
         </Link>
-        <div className="min-w-0 flex-1">
-          {/* Company/brand name (or personal name when there's no company) + Verificado.
-              Wraps up to 2 lines — never cut off. */}
-          <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5">
-            <Link href={`/profesionales/${professional.slug}`} className="relative z-10 min-w-0">
-              <h3 className="font-bold text-[#111827] text-[15px] leading-snug line-clamp-2 lg:line-clamp-1 hover:text-[#009FD9] transition-colors">{brandPrimary}</h3>
-            </Link>
+        <div className="flex min-w-0 flex-1 flex-col gap-1">
+          {/* Company-name line + PRICE (right-aligned on THIS line only). */}
+          <div className="flex items-start gap-2">
+            <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+              {/* Company/brand name (or personal name when there's no company). Wraps up to
+                  2 lines — never cut off. Then Verificado, then the personal name = first
+                  name + both surnames (wraps up to 2 lines). */}
+              <Link href={`/profesionales/${professional.slug}`} className="relative z-10 min-w-0">
+                <h3 className="font-bold text-[#111827] text-[15px] leading-snug line-clamp-2 lg:line-clamp-1 hover:text-[#009FD9] transition-colors">{brandPrimary}</h3>
+              </Link>
+              {verifiedMark}
+              {brandSecondary && (
+                <p className="text-[12px] font-medium text-[#6b7280] line-clamp-2 lg:line-clamp-1">{brandSecondary}</p>
+              )}
+            </div>
+            {/* Price — on the name line, right-aligned. AMOUNT brand-blue, /unit muted grey;
+                capped width so a long price wraps instead of crowding the name. */}
+            {priceLabel && (
+              <div className="shrink-0 max-w-[45%] text-right leading-tight">
+                <span className={`font-bold text-[#009FD9] ${priceIsColones ? "text-[15px]" : "text-[13px]"}`}>{priceAmount}</span>
+                {priceUnit && <span className="text-[11px] font-medium text-[#9ca3af]"> {priceUnit}</span>}
+              </div>
+            )}
           </div>
-          {/* Verificado (green text) on its own line, then the personal name = first name
-              + both surnames; wraps up to 2 lines (long names never collide with the
-              price — separate flex columns). */}
-          {verifiedMark}
-          {brandSecondary && (
-            <p className="text-[12px] font-medium text-[#6b7280] line-clamp-2 lg:line-clamp-1">{brandSecondary}</p>
+
+          {/* Service tags — DIRECTLY under the name; wrap to multiple lines, cap + "+N". */}
+          {(professionList.length > 0 || professional.isFeatured) && (
+            <div className="flex flex-wrap items-center gap-1.5">
+              {professionList.map((cat) => (
+                <span key={cat} className="inline-flex items-center rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-medium text-[#6b7280]">
+                  {catLabel(cat)}
+                </span>
+              ))}
+              {extraProfessions > 0 && (
+                <span className="text-[11px] font-medium text-[#9ca3af]">+{extraProfessions}</span>
+              )}
+              {professional.isFeatured && (
+                <span className="inline-flex items-center rounded-full bg-[#fff8ed] px-2 py-0.5 text-[10px] font-semibold text-[#c74600]">
+                  {tCard("featured")}
+                </span>
+              )}
+            </div>
           )}
-        </div>
-        {/* Price — top of the left column, on the name line, right-aligned. The AMOUNT is
-            brand-blue; the /unit is muted grey. Capped width so a long price wraps. */}
-        {priceLabel && (
-          <div className="shrink-0 max-w-[45%] text-right leading-tight">
-            <span className={`font-bold text-[#009FD9] ${priceIsColones ? "text-[15px]" : "text-[13px]"}`}>{priceAmount}</span>
-            {priceUnit && <span className="text-[11px] font-medium text-[#9ca3af]"> {priceUnit}</span>}
+
+          {/* Rating + review count — DIRECTLY under the tags (only the count links out). */}
+          <div>
+            {professional.reviewCount > 0 ? (
+              <span className="inline-flex w-fit items-center gap-1.5">
+                <Star className="h-3.5 w-3.5 fill-[#ff9b32] text-[#ff9b32]" />
+                <span className="text-[13px] font-bold text-[#111827]">{professional.ratingAvg.toFixed(1)}</span>
+                <Link href={`/profesionales/${professional.slug}?tab=resenas`} className="relative z-10 text-[11px] font-medium text-[#9ca3af] hover:underline">
+                  ({tCard("reviewsCount", { count: professional.reviewCount })})
+                </Link>
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 text-[11px] text-[#9ca3af]">
+                <Star className="h-3.5 w-3.5 fill-[#e5e7eb] text-[#e5e7eb]" /> {tCard("noReviews")}
+              </span>
+            )}
           </div>
-        )}
-      </div>
-
-      {/* Service tags — wrap to MULTIPLE lines; cap to a couple + "+N" overflow. */}
-      {(professionList.length > 0 || professional.isFeatured) && (
-        <div className="flex flex-wrap items-center gap-1.5">
-          {professionList.map((cat) => (
-            <span key={cat} className="inline-flex items-center rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-medium text-[#6b7280]">
-              {catLabel(cat)}
-            </span>
-          ))}
-          {extraProfessions > 0 && (
-            <span className="text-[11px] font-medium text-[#9ca3af]">+{extraProfessions}</span>
-          )}
-          {professional.isFeatured && (
-            <span className="inline-flex items-center rounded-full bg-[#fff8ed] px-2 py-0.5 text-[10px] font-semibold text-[#c74600]">
-              {tCard("featured")}
-            </span>
-          )}
         </div>
-      )}
-
-      {/* Rating + review count (only the count links to the reviews tab). */}
-      <div>
-        {professional.reviewCount > 0 ? (
-          <span className="inline-flex w-fit items-center gap-1.5">
-            <Star className="h-3.5 w-3.5 fill-[#ff9b32] text-[#ff9b32]" />
-            <span className="text-[13px] font-bold text-[#111827]">{professional.ratingAvg.toFixed(1)}</span>
-            <Link href={`/profesionales/${professional.slug}?tab=resenas`} className="relative z-10 text-[11px] font-medium text-[#9ca3af] hover:underline">
-              ({tCard("reviewsCount", { count: professional.reviewCount })})
-            </Link>
-          </span>
-        ) : (
-          <span className="inline-flex items-center gap-1.5 text-[11px] text-[#9ca3af]">
-            <Star className="h-3.5 w-3.5 fill-[#e5e7eb] text-[#e5e7eb]" /> {tCard("noReviews")}
-          </span>
-        )}
       </div>
-
     </>
   );
 
