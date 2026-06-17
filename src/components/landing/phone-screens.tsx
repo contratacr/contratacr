@@ -154,17 +154,16 @@ function ProCard({
               treatment as the badge on the professional profile). */}
           <span className="mt-1 inline-flex w-fit items-center rounded-full bg-[#009FD9] px-1.5 py-0.5 text-[8px] font-semibold leading-none text-white">{verified}</span>
           {person ? <p className="mt-0.5 truncate text-[10px] font-medium leading-tight text-[#6b7280]">{person}</p> : null}
+          {/* Profession chip + reviews sit DIRECTLY under the name (mirrors the real
+              /buscar card: company → personal name → profession → reviews, all grouped
+              in the column beside the avatar — Sprint 175). */}
+          <span className="mt-1.5 inline-block w-fit rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[9px] font-medium text-[#6b7280]">{profession}</span>
+          <div className="mt-1 flex items-center gap-1 text-[10px]">
+            <Star className="h-2.5 w-2.5 fill-[#ff9b32] text-[#ff9b32]" />
+            <span className="font-bold text-[#111827]">{rating}</span>
+            <span className="font-medium text-[#9ca3af]">({reviews})</span>
+          </div>
         </div>
-      </div>
-
-      {/* Profession chip */}
-      <span className="mt-2 inline-block rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[9px] font-medium text-[#6b7280]">{profession}</span>
-
-      {/* Rating + GREY review count in parens (matches the real card). */}
-      <div className="mt-1.5 flex items-center gap-1 text-[10px]">
-        <Star className="h-2.5 w-2.5 fill-[#ff9b32] text-[#ff9b32]" />
-        <span className="font-bold text-[#111827]">{rating}</span>
-        <span className="font-medium text-[#9ca3af]">({reviews})</span>
       </div>
 
       {/* Location TAB (brand-blue, underlined) on a hairline divider + address line. */}
@@ -253,7 +252,7 @@ export function ResultsScreen({ copy = DEFAULT_RESULTS_COPY }: { copy?: ResultsC
           one WITHOUT (the WhatsApp contact path), mirroring the real mixed /buscar list. */}
       <div className="flex-1 space-y-2 overflow-hidden p-3">
         <ProCard
-          rank={1} initials="SG" image="/sgimage.jpg" company="SG Solutions" person="Steven Gómez" profession={copy.title}
+          rank={1} initials="SG" image="https://res.cloudinary.com/dxxrjx2go/image/upload/v1781710352/sgimage_psyvpn.jpg" company="SG Solutions" person="Luis Sánchez" profession={copy.title}
           place="San José" address="Escazú, San José" rating="4.9" reviews={copy.reviews(48)}
           price="₡12 000" priceUnit={copy.priceUnit} verified={copy.verified} schedule={copy.days}
           viewSchedule={copy.viewSchedule} whatsapp={copy.whatsapp}
