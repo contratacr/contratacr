@@ -1041,17 +1041,20 @@ preview of the CURRENT product, not a stylized fake. Rules:
   `CalendarDays`) + a filled **WhatsApp** (`#25D366`) button. The live `ResultsScreen`
   shows BOTH variants (one of each card) to mirror the real mixed list. When the real
   card changes, update the mockup to match.
-- **Example name:** use **"SG Solutions"** (company) as the sample professional, the
-  standard example name across the app. The card's company name **wraps** (`break-words
-  line-clamp-2`) — NEVER `truncate` — so it's never cut off when the price shares the row
-  in the narrow (~262px) phone.
+- **Example name:** the sample SG card is **"SG Solutions"** (company/brand) with the
+  personal name **"Luis Sánchez"** below it. The card's company name **wraps**
+  (`break-words line-clamp-2`) — NEVER `truncate` — so it's never cut off when the price
+  shares the row in the narrow (~262px) phone. The **profession chip + reviews live in
+  the name COLUMN** (under the personal name), NOT full-width below the avatar — mirror
+  the real /buscar card order exactly: company → personal name → profession → reviews.
 - **Avatar = real PHOTO with an initials fallback:** the cards use the client
   `<MockAvatar src initials>` — a circular profile photo when `src` is set, falling back
   to the `EBF5FB`/`#009FD9` initials circle if the image is missing or fails to load
-  (`onError`), so the mockup never shows a broken image. SG Solutions → **`/sgimage.jpg`**
-  (a real image placed in `public/`); the other card → a **free-license** portrait
-  (randomuser.me). Keep `phone-screens.tsx` a server component; only `MockAvatar` is
-  `"use client"`.
+  (`onError`), so the mockup never shows a broken image. SG Solutions → a **Cloudinary
+  URL** (`res.cloudinary.com/dxxrjx2go/image/upload/v1781710352/sgimage_psyvpn.jpg`) via a
+  plain `<img>` (no next/image domain config); the other card → a **free-license**
+  portrait (randomuser.me). Keep `phone-screens.tsx` a server component; only `MockAvatar`
+  is `"use client"`.
 - **i18n:** never hardcode the in-phone copy. Build a locale-aware `ResultsCopy` in the
   (server) parent, reusing the real app's strings (`card.*`, `schedule.*`,
   `categories.*`) so ES/EN stay correct and in sync with the product.
