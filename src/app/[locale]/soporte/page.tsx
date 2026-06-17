@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { useAuth } from "@/hooks/use-auth";
-import { Headset } from "lucide-react";
+import { Headset, Home } from "lucide-react";
 import { SuccessIcon } from "@/components/ui/success-icon";
 import { Link } from "@/i18n/navigation";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
@@ -49,13 +49,29 @@ export default function SoportePage() {
               </>
             ) : (
               <>
-                <p className="text-[#6b7280] mb-6">
+                <p className="text-[#6b7280] mb-3">
                   {t("successGuestDesc", { email: successEmail })}
                 </p>
-                <p className="text-sm text-[#9ca3af]">
-                  {t("guestFollowPre")}{" "}
-                  <Link href="/login" className="text-[#009FD9] font-semibold hover:underline">{t("guestLogin")}</Link> {t("guestFollowPost")}
+                <p className="text-sm text-[#6b7280] mb-6">
+                  {t("guestFollow")}
                 </p>
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  {/* Primary: leave / continue (so the user is never stranded). */}
+                  <Link
+                    href="/"
+                    className="inline-flex items-center justify-center gap-2 bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold px-6 py-3 rounded-full transition-all text-sm"
+                  >
+                    <Home className="h-4 w-4" /> {t("backHome")}
+                  </Link>
+                  {/* Secondary: follow tickets — sign in OR create an account (the /login
+                      page offers both). */}
+                  <Link
+                    href="/login"
+                    className="inline-flex items-center justify-center gap-2 bg-white border border-[#e5e7eb] text-[#374151] font-bold px-6 py-3 rounded-full transition-all text-sm hover:bg-gray-50"
+                  >
+                    {t("guestSignInOrRegister")}
+                  </Link>
+                </div>
               </>
             )}
           </div>
