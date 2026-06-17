@@ -1232,6 +1232,13 @@ slot: `<ProfessionalSchedule info={…} />`. The info JSX (server-rendered) is t
 Verificado + personal name + price + tags + rating + location line; the schedule appends the
 location tabs/address below it, then the schedule block.
 
+- **The location TAB row is HORIZONTAL-scroll ONLY** (`overflow-x-auto overflow-y-hidden hide-scrollbar`).
+  **Always pair `overflow-x-auto` with an explicit `overflow-y-hidden`** on any horizontal scroller:
+  with overflow-y left `visible`, CSS COMPUTES it to `auto`, so the row becomes vertically draggable
+  (it could be scrolled up/down even with ONE location — Sprint 169). Do NOT add `touch-action: pan-x`
+  — that would stop vertical touch-drags from bubbling to the page/sheet scroll; the default
+  touch-action already lets them pass through once overflow-y is hidden.
+
 - **Sizing = CONTENT-DRIVEN height.** The article is `flex h-full flex-col`, **no hardcoded
   height, no `overflow-hidden`** — it grows for max content. Don't reintroduce a fixed `h-[…]`.
 - **Layout (in ProfessionalSchedule) = a single column** (`flex flex-col gap-3`): the
