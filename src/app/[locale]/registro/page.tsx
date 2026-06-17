@@ -5,9 +5,22 @@ import { Search, Briefcase, ArrowRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
+import { useRedirectIfRegistered } from "@/hooks/use-redirect-if-registered";
 
 export default function RegisterPage() {
   const t = useTranslations("registerChoice");
+  // A logged-in user with an existing account must never see the "choose account
+  // type" screen — send them to their panel. Genuinely-new visitors see the chooser.
+  const { checking } = useRedirectIfRegistered();
+
+  if (checking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#f4f7fa]">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-[#f4f7fa]">
       <Navbar />

@@ -15,11 +15,16 @@ import { SuccessIcon } from "@/components/ui/success-icon";
 import { cn } from "@/lib/utils";
 import { getInitials } from "@/lib/utils";
 import { detectSocialOnly, providerLabel } from "@/lib/auth-method";
+import { useRedirectIfRegistered } from "@/hooks/use-redirect-if-registered";
 
 export default function RegisterClientPage() {
   const router = useRouter();
   const t = useTranslations("registerClient");
   const { user, loading: authLoading } = useAuth();
+  // An already-registered, logged-in user must never be pushed through account
+  // creation — bounce them to their panel. Logged-out visitors (new email/password
+  // signup) and incomplete OAuth sessions completing their profile are left alone.
+  const { checking } = useRedirectIfRegistered();
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -145,6 +150,17 @@ export default function RegisterClientPage() {
     } finally {
       setSubmitting(false);
     }
+  }
+
+  // While we determine whether this is an existing account, show a loader — never
+  // the registration form — so an already-logged-in user never sees the "create
+  // account" flash before being redirected to their panel.
+  if (checking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#fafafa]">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
+      </div>
+    );
   }
 
   if (otpEmail) {
