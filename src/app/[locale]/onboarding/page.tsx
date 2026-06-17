@@ -15,28 +15,56 @@ export default function OnboardingPage() {
   const tc = useTranslations("registerChoice");
   const router = useRouter();
   const [selecting, setSelecting] = useState<"client" | "professional" | null>(null);
-  // Prevents the "already done" useEffect from competing with selectRole's navigation
+  // While we determine whether this is an EXISTING account, render a loader — never
+  // the role cards — so an existing user logging in never sees the onboarding "flash".
+  const [checkingExisting, setCheckingExisting] = useState(true);
+  // Prevents the "already done" check from competing with selectRole's navigation
   const completing = useRef(false);
 
-  // Not logged in → login
+  // Decide, BEFORE rendering the role cards, whether this user already has an account:
+  //  - canonical signal = `user_metadata.onboarding_completed`;
+  //  - fallback = the SECURITY DEFINER RPC `get_my_profile` (covers accounts whose
+  //    metadata predates the flag — `profiles.onboarding_completed` is column-restricted
+  //    by migration 047, so it can't be selected directly).
+  // Existing users go STRAIGHT to their panel (after healing the metadata flag so the
+  // proxy doesn't bounce them back here → avoids a redirect loop). Only genuinely new
+  // users see the cards.
   useEffect(() => {
-    if (!authLoading && !user) {
-      router.push("/login");
-    }
-  }, [user, authLoading, router]);
-
-  // Returning user who already finished onboarding → jump straight to dashboard.
-  // Skipped while selectRole is in progress (completing.current = true) to avoid
-  // a double-navigation race after updateUser() triggers onAuthStateChange.
-  useEffect(() => {
-    if (!authLoading && user && !completing.current) {
-      if (user.user_metadata?.onboarding_completed === true) {
-        const role = user.user_metadata?.role as string | undefined;
-        router.push(
-          role === "professional" ? "/dashboard/profesional" : "/dashboard/cliente"
-        );
+    if (authLoading) return;
+    if (!user) { router.push("/login"); return; }
+    if (completing.current) { setCheckingExisting(false); return; }
+    let cancelled = false;
+    (async () => {
+      let done = user.user_metadata?.onboarding_completed === true;
+      let role = user.user_metadata?.role as string | undefined;
+      if (!done) {
+        try {
+          const supabase = createClient();
+          const { data: prof } = await supabase.rpc("get_my_profile");
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const p = prof as any;
+          if (p) {
+            if (p.onboarding_completed) done = true;
+            if (!role && (p.role === "professional" || p.role === "client")) role = p.role;
+          }
+        } catch { /* ignore — treat as a new user */ }
       }
-    }
+      if (cancelled) return;
+      if (done) {
+        // Heal the metadata flag (best-effort) so the proxy stops sending this account
+        // here, THEN hard-navigate to the panel so the refreshed session cookie is read.
+        if (user.user_metadata?.onboarding_completed !== true) {
+          try {
+            const supabase = createClient();
+            await supabase.auth.updateUser({ data: { onboarding_completed: true, ...(role ? { role } : {}) } });
+          } catch { /* best-effort */ }
+        }
+        window.location.assign(`/es/dashboard/${role === "professional" ? "profesional" : "cliente"}`);
+        return;
+      }
+      setCheckingExisting(false); // genuinely new → show the role cards
+    })();
+    return () => { cancelled = true; };
   }, [user, authLoading, router]);
 
   async function selectRole(role: "client" | "professional") {
@@ -80,7 +108,9 @@ export default function OnboardingPage() {
     window.location.assign(role === "professional" ? "/es/registro/profesional" : "/es/dashboard/cliente");
   }
 
-  if (authLoading || !user) {
+  // Loader until we KNOW this is a new user (existing users are redirected above) —
+  // so the role-selection cards never flash for someone who already has an account.
+  if (authLoading || !user || checkingExisting) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />

@@ -16,6 +16,25 @@ import { LandingFooter } from "@/components/landing/landing-footer";
 
 type FormData = { email: string; password: string };
 
+// After a CLIENT-side sign-in the @supabase/ssr browser client writes the session
+// COOKIE, but a hard navigation can race that write — the server proxy would then
+// see no session and bounce the user back to /login (manual login "doesn't reach the
+// panel", while OAuth does because its callback sets the cookie server-side). Wait
+// (briefly) for the auth cookie to be present before navigating. Resolves instantly
+// once it's set; bounded so it never hangs.
+async function waitForAuthCookie(maxMs = 2000): Promise<void> {
+  const has = () =>
+    typeof document !== "undefined" &&
+    document.cookie.split(";").some((c) => {
+      const n = c.trim();
+      return n.startsWith("sb-") && n.includes("-auth-token");
+    });
+  const start = Date.now();
+  while (!has() && Date.now() - start < maxMs) {
+    await new Promise((r) => setTimeout(r, 40));
+  }
+}
+
 export default function LoginPage() {
   const t = useTranslations("auth.login");
   const locale = useLocale();
@@ -83,6 +102,9 @@ export default function LoginPage() {
     // "projects" alias (the "Publicar proyecto" CTA). Read at submit time (avoids a
     // useSearchParams suspense boundary on this client page).
     const redirectParam = new URLSearchParams(window.location.search).get("redirect");
+    // Make sure the session cookie is written before the hard navigation, so the
+    // proxy lets the user into the panel instead of bouncing back to /login.
+    await waitForAuthCookie();
     // Hard redirect so the new page loads with the session already in cookies
     // (prevents the navbar flashing logged-out state).
     if (redirectParam && redirectParam.startsWith("/") && !redirectParam.startsWith("//")) {

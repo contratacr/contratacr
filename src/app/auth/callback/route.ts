@@ -49,15 +49,28 @@ export async function GET(request: NextRequest) {
         return NextResponse.redirect(`${origin}${next}`);
       }
 
-      // ── Scenario A & B: check profiles table for role + onboarding status ──
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role, onboarding_completed, cedula")
-        .eq("id", data.user.id)
-        .single();
+      // ── Onboarding decision ──
+      // CANONICAL signal = `user_metadata.onboarding_completed` (same as the proxy +
+      // the onboarding page). DO NOT select `profiles.onboarding_completed`/`cedula`
+      // here: migration 047 COLUMN-restricts them from the authenticated role, so the
+      // select ERRORS → null → EVERY existing OAuth user was wrongly sent to
+      // /onboarding (then bounced to the panel = the onboarding "flash"). For accounts
+      // whose metadata predates the flag, fall back to the SECURITY DEFINER RPC
+      // (`get_my_profile`) which returns the full row regardless of column grants.
+      let onboardingDone = data.user.user_metadata?.onboarding_completed === true;
+      let role = data.user.user_metadata?.role as string | undefined;
+      if (!onboardingDone || (role !== "professional" && role !== "client")) {
+        const { data: prof } = await supabase.rpc("get_my_profile");
+        if (prof) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const p = prof as any;
+          if (p.onboarding_completed) onboardingDone = true;
+          if (p.role === "professional" || p.role === "client") role = p.role;
+        }
+      }
 
-      if (!profile || !profile.onboarding_completed) {
-        // Scenario B — new OAuth user, no role chosen yet → onboarding
+      if (!onboardingDone) {
+        // Genuinely new OAuth user, no role chosen yet → onboarding.
         return NextResponse.redirect(`${origin}/es/onboarding`);
       }
 
@@ -65,7 +78,7 @@ export async function GET(request: NextRequest) {
       // "Mis proyectos publicados" section after authenticating.
       const wantProjects = next === "projects";
       const destPath =
-        profile.role === "professional"
+        role === "professional"
           ? wantProjects ? "/es/dashboard/profesional?tab=sent_projects" : "/es/dashboard/profesional"
           : wantProjects ? "/es/dashboard/cliente?tab=projects" : "/es/dashboard/cliente";
 
