@@ -40,9 +40,22 @@ function toMins(t: string): number {
 }
 // Two half-open minute ranges [aS,aE) and [bS,bE) overlap iff they share any minute.
 // Touching ends (e.g. 12:00–13:00 then 13:00–14:00) do NOT overlap — that's a clean
-// hand-off between back-to-back blocks, not being in two places at once.
+// CONSECUTIVE hand-off between back-to-back blocks (08:00–15:00 then 15:00–17:00 is
+// fine), not being in two places at once. No minimum gap/travel time is enforced.
 function rangesOverlap(aS: number, aE: number, bS: number, bE: number): boolean {
   return aS < bE && bS < aE;
+}
+// Merge overlapping/touching ranges into the fewest contiguous ranges (sorted) — for a
+// clean "already occupied" read (08:00–12:00 + 12:00–15:00 → 08:00–15:00).
+function mergeRanges(ranges: [number, number][]): [number, number][] {
+  const sorted = [...ranges].sort((a, b) => a[0] - b[0]);
+  const out: [number, number][] = [];
+  for (const [s, e] of sorted) {
+    const last = out[out.length - 1];
+    if (last && s <= last[1]) last[1] = Math.max(last[1], e);
+    else out.push([s, e]);
+  }
+  return out;
 }
 function todayISO(): string {
   return crTodayISO();
@@ -199,13 +212,70 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
         for (const p of proposed) {
           for (const r of ranges) {
             if (rangesOverlap(p[0], p[1], r[0], r[1])) {
-              return { title: t("conflictTitle"), body: t("conflictCross", { place: locationLabel(other) }) };
+              // Name the EXACT occupied range + place, and suggest a start AFTER it so
+              // the pro knows how to adjust (consecutive is allowed).
+              return {
+                title: t("conflictTitle"),
+                body: t("conflictCross", {
+                  place: locationLabel(other),
+                  start: to12h(hhmm(r[0])),
+                  end: to12h(hhmm(r[1])),
+                }),
+              };
             }
           }
         }
       }
     }
     return null;
+  }
+
+  // ── "Already occupied elsewhere" guidance ─────────────────────────────────────
+  // Other locations' occupied ranges on a WEEKDAY (recurring weekly) — so the pro can
+  // see what's taken and pick a free slot. Grouped by location, ranges merged + sorted.
+  function otherOccupiedForWeekday(weekday: number): { label: string; ranges: [number, number][] }[] {
+    const byLoc = new Map<string, [number, number][]>();
+    for (const r of weekly) {
+      if (r.location_id === genLocation || r.weekday !== weekday) continue;
+      const s = toMins(r.start), e = toMins(r.end);
+      if (e <= s) continue;
+      const arr = byLoc.get(r.location_id) ?? [];
+      arr.push([s, e]);
+      byLoc.set(r.location_id, arr);
+    }
+    return [...byLoc.entries()]
+      .map(([loc, ranges]) => ({ label: locationLabel(loc), ranges: mergeRanges(ranges) }))
+      .filter((o) => o.ranges.length > 0);
+  }
+
+  // Same, for a specific DATE (used in the "Cambiar un día" modal) — applies the full
+  // closed/custom/extra precedence via rangesForLocOnDate.
+  function otherOccupiedForDate(date: string): { label: string; ranges: [number, number][] }[] {
+    const otherLocs = [...new Set([...weekly, ...exceptions].map((r) => r.location_id))].filter((l) => l && l !== genLocation);
+    return otherLocs
+      .map((loc) => ({ label: locationLabel(loc), ranges: mergeRanges(rangesForLocOnDate(loc, date, weekly, exceptions)) }))
+      .filter((o) => o.ranges.length > 0);
+  }
+
+  // Render a location's occupied ranges as "8:00 AM–3:00 PM, 5:00 PM–7:00 PM".
+  function fmtRanges(ranges: [number, number][]): string {
+    return ranges.map(([s, e]) => `${to12h(hhmm(s))}–${to12h(hhmm(e))}`).join(", ");
+  }
+
+  // Toggling a day ON for a SECOND location must land on a FREE slot — not the default
+  // 08:00–17:00, which would overlap an existing location, get blocked, and leave the day
+  // un-editable. Pick the first free block from 08:00, ending at the next occupied start
+  // (or 17:00). Falls back to 08:00–17:00 when nothing else is occupied that weekday.
+  function suggestFreeFranja(weekday: number): { start: string; end: string } {
+    const occ = mergeRanges(otherOccupiedForWeekday(weekday).flatMap((o) => o.ranges));
+    const DAY_END = 23 * 60 + 30;
+    let s = 8 * 60; // prefer 08:00
+    for (const [os, oe] of occ) if (os <= s && s < oe) s = oe; // jump past a block covering 08:00
+    let e = 17 * 60; // prefer 17:00
+    for (const [os] of occ) if (os > s && os < e) e = os; // cap before the next block
+    if (e <= s) e = Math.min(s + 60, DAY_END); // ensure a positive length
+    if (e <= s) { s = 8 * 60; e = 17 * 60; } // whole-day-occupied fallback (validation guides)
+    return { start: hhmm(s), end: hhmm(e) };
   }
 
   // ── MATERIALIZE the template + exceptions into concrete slots ──────────────
@@ -368,7 +438,10 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
 
   function toggleDay(weekday: number) {
     const cur = dayFranjas.get(weekday) ?? [];
-    persistDay(weekday, cur.length > 0 ? [] : [{ id: genId(), start: "08:00", end: "17:00" }], activeDuration);
+    // Turning a day ON picks a FREE block so a second location doesn't collide with the
+    // first (it would otherwise be blocked and leave the day un-editable).
+    const def = suggestFreeFranja(weekday);
+    persistDay(weekday, cur.length > 0 ? [] : [{ id: genId(), start: def.start, end: def.end }], activeDuration);
   }
   function addFranja(weekday: number) {
     const cur = dayFranjas.get(weekday) ?? [];
@@ -596,6 +669,8 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
               {WEEKDAY_ORDER.map((wd) => {
                 const franjas = dayFranjas.get(wd) ?? [];
                 const on = franjas.length > 0;
+                // What OTHER locations already occupy this weekday → pick a free slot.
+                const occupied = otherOccupiedForWeekday(wd);
                 return (
                   <div key={wd} className="flex flex-col gap-2 py-3 sm:flex-row sm:gap-4">
                     {/* toggle + weekday name */}
@@ -638,6 +713,19 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                               <Copy className="h-3.5 w-3.5" /> {t("sameAllDays")}
                             </button>
                           </div>
+                        </div>
+                      )}
+
+                      {/* Guidance: what OTHER locations already occupy this weekday, so the
+                          pro picks a free slot. Consecutive (touching) times are allowed. */}
+                      {occupied.length > 0 && (
+                        <div className="mt-2 flex flex-col gap-0.5">
+                          {occupied.map((o) => (
+                            <p key={o.label} className="flex items-start gap-1.5 text-[11px] leading-relaxed text-[#9ca3af]">
+                              <Lock className="h-3 w-3 shrink-0 mt-[3px]" />
+                              <span>{t("occupiedElsewhere", { ranges: fmtRanges(o.ranges), place: o.label })}</span>
+                            </p>
+                          ))}
                         </div>
                       )}
                     </div>
@@ -704,6 +792,9 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
           markedDates={new Set(exceptions.filter((e) => sameLoc(e.location_id)).map((e) => e.date))}
           defaultDuration={activeDuration}
           dateLocale={dateLocale}
+          // Other locations' occupied ranges on the picked date → guidance to pick a free slot.
+          occupiedOnDate={otherOccupiedForDate}
+          fmtRanges={fmtRanges}
           onClose={() => setDayModal(null)}
           // Close only when the save actually went through; a blocked overlap keeps the
           // modal open (the conflict notice explains why) so the pro can adjust the hours.
@@ -753,12 +844,14 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
 // "Cambiar un día" — pick a date on a month calendar, then choose: add extra hours,
 // replace that day's hours, or close the day. Edits ONE date without touching the
 // recurring template.
-function DayModal({ initialDate, existing, markedDates, defaultDuration, dateLocale, onClose, onSave }: {
+function DayModal({ initialDate, existing, markedDates, defaultDuration, dateLocale, occupiedOnDate, fmtRanges, onClose, onSave }: {
   initialDate: string;
   existing: ExcRow[];
   markedDates: Set<string>;
   defaultDuration: number;
   dateLocale: string;
+  occupiedOnDate: (date: string) => { label: string; ranges: [number, number][] }[];
+  fmtRanges: (ranges: [number, number][]) => string;
   onClose: () => void;
   onSave: (date: string, mode: ExcMode, franjas: Franja[], dur: number) => Promise<boolean> | boolean;
 }) {
@@ -822,6 +915,24 @@ function DayModal({ initialDate, existing, markedDates, defaultDuration, dateLoc
 
           <div className="flex flex-col gap-3">
             <p className="text-sm font-semibold text-[#111827] capitalize">{selectedLong}</p>
+
+            {/* Guidance: what OTHER locations already occupy this date → pick a free slot.
+                Consecutive (touching) ranges are allowed; only true overlaps are blocked. */}
+            {(() => {
+              const occupied = occupiedOnDate(date);
+              if (occupied.length === 0) return null;
+              return (
+                <div className="flex flex-col gap-0.5 rounded-xl border border-[#f3f4f6] bg-[#f9fafb] p-2.5">
+                  {occupied.map((o) => (
+                    <p key={o.label} className="flex items-start gap-1.5 text-[11px] leading-relaxed text-[#6b7280]">
+                      <Lock className="h-3 w-3 shrink-0 mt-[3px] text-[#9ca3af]" />
+                      <span>{t("occupiedElsewhere", { ranges: fmtRanges(o.ranges), place: o.label })}</span>
+                    </p>
+                  ))}
+                </div>
+              );
+            })()}
+
             <div className="flex flex-col gap-2">
               {options.map((o) => {
                 const active = mode === o.key;
