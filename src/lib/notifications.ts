@@ -1,6 +1,10 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendBrevoEmail } from "@/lib/email/send";
 
+// Booking notifications are transactional and not meant to be replied to (the user
+// acts in their panel), so they send from no-reply@ — not the soporte@ inbox.
+const NO_REPLY = { name: "ContrataCR", email: "no-reply@contratacr.com" };
+
 interface NewBookingArgs {
   professionalId: string;
   bookingId?: string;
@@ -219,7 +223,7 @@ async function sendEmailText(
   subject: string,
   html: string
 ): Promise<{ status: DeliveryStatus; detail: string | null }> {
-  const r = await sendBrevoEmail({ to, subject, html });
+  const r = await sendBrevoEmail({ to, subject, html, sender: NO_REPLY });
   return { status: r.status, detail: r.detail };
 }
 
@@ -285,7 +289,7 @@ async function sendProEmail(
       </div>
     </div>`;
 
-  await sendBrevoEmail({ to, subject: `Nueva solicitud de ${clientName} — ContrataCR`, html });
+  await sendBrevoEmail({ to, subject: `Nueva solicitud de ${clientName} — ContrataCR`, html, sender: NO_REPLY });
 }
 
 async function sendProWhatsApp(

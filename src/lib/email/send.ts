@@ -1,13 +1,16 @@
-// Single send path for ALL of the app's automated email — Brevo transactional API.
-// Every email (verification status, support inbox + replies, notifications, reports,
-// new-ticket) routes through here, so the provider/from-address live in ONE place.
+// Single send path for ALL of the app's CODE-SENT email — Brevo transactional API.
+// Every email the app sends from its own code (verification status, support inbox +
+// replies, notifications, reports, new-ticket) routes through here, so the
+// provider/from-address live in ONE place.
 //
 // Auth: the BREVO_API_KEY env var (set in Vercel), via Brevo's `api-key` header —
 // never hardcoded. The contratacr.com domain is verified in Brevo.
 //
-// NOTE: the SIGNUP/OTP verification codes are sent by SUPABASE AUTH (its own SMTP
-// config in the Supabase dashboard), NOT by this helper — to move those to Brevo,
-// point Supabase Auth's custom SMTP at Brevo (see the report/context.md).
+// EMAIL IS SPLIT BY SOURCE — do not conflate the two:
+//  • SUPABASE AUTH emails (signup/OTP verification, email-change, password recovery)
+//    are sent by Supabase via its OWN Custom SMTP (currently Resend) configured in the
+//    Supabase dashboard — NOT by this helper. Never route those through here.
+//  • The app's own code-sent emails (below) → Brevo, via this helper.
 
 const BREVO_ENDPOINT = "https://api.brevo.com/v3/smtp/email";
 
