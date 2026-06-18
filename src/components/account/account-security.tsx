@@ -111,12 +111,19 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
   const [resetSent, setResetSent] = useState(false);
 
   // Detect OAuth (Google/Facebook) accounts — no password, provider-managed email.
+  // One email = one method: an account that HAS an email/password identity is a
+  // MANUAL account, so we show the email/password controls even if a stray social
+  // identity is also present (we block mixing at sign-in, but if a legacy account
+  // ended up with both, the password is what works — keep the UI truthful).
   const oauthProvider = user?.app_metadata?.provider as string | undefined;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const hasPasswordIdentity = (user?.identities ?? []).some((id: any) => id.provider === "email");
   const isOAuthAccount =
-    oauthProvider === "google" ||
-    oauthProvider === "facebook" ||
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (user?.identities ?? []).some((id: any) => id.provider && id.provider !== "email");
+    !hasPasswordIdentity &&
+    (oauthProvider === "google" ||
+      oauthProvider === "facebook" ||
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (user?.identities ?? []).some((id: any) => id.provider && id.provider !== "email"));
   const providerLabel = oauthProvider === "facebook" ? "Facebook" : "Google";
   const providerLinks = PROVIDER_LINKS[providerLabel];
 

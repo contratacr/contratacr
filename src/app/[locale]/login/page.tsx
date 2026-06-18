@@ -5,7 +5,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, AlertCircle } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Input } from "@/components/ui/input";
@@ -63,6 +63,15 @@ export default function LoginPage() {
     handleSubmit,
     formState: { errors },
   } = useForm<FormData>({ resolver: zodResolver(schema) });
+
+  // A blocked OAuth attempt — Google/Facebook on an email that already has a
+  // password account — bounces back here with ?autherror=use_password (set by
+  // /auth/callback). Surface the reason so the user signs in with their password.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("autherror") === "use_password") {
+      setError(t("blockedUsePassword"));
+    }
+  }, [t]);
 
   async function onSubmit(data: FormData) {
     setSubmitting(true);
@@ -143,7 +152,10 @@ export default function LoginPage() {
     let next = "";
     if (redirect === "projects") next = "projects";
     else if (redirect && redirect.startsWith("/") && !redirect.startsWith("//")) next = redirect;
-    return window.location.origin + "/auth/callback" + (next ? `?next=${encodeURIComponent(next)}` : "");
+    // `flow=oauth` lets /auth/callback enforce "one email = one method": it refuses
+    // an OAuth sign-in that lands on an account which already has a password. The
+    // `next` stays URL-ENCODED (an unencoded query previously broke the code exchange).
+    return window.location.origin + "/auth/callback?flow=oauth" + (next ? `&next=${encodeURIComponent(next)}` : "");
   }
 
   async function handleGoogle() {

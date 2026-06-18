@@ -538,6 +538,7 @@
       "passwordRequired": "Enter your password",
       "loginError": "Incorrect email or password. If you signed up with Google or Facebook, use that button. Forgot your password? You can reset it below.",
       "socialOnly": "This account uses {provider} sign-in. Use the {provider} button below.",
+      "blockedUsePassword": "This account was created with email and password. Sign in with your password.",
       "redirecting": "Redirecting…",
       "continueGoogle": "Continue with Google",
       "continueFacebook": "Continue with Facebook"

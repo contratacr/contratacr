@@ -30,6 +30,24 @@ export async function GET(request: NextRequest) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error && data.user) {
+      // ── One email = ONE login method (BLOCK mixing) ─────────────────────────
+      // A Google/Facebook sign-in (flow=oauth, set by /login's OAuth buttons) must
+      // NOT attach to / take over an account that already has an email+password
+      // identity. Supabase GoTrue auto-links the OAuth identity to a same-email
+      // account during the code exchange; left unchecked, that flips a manual
+      // account to "Google", routes the user to onboarding, and can break password
+      // login. So: if the just-authenticated user ALSO has an "email" (password)
+      // identity, we REFUSE the OAuth session and send them to manual login with a
+      // clear message — their password account stays intact. A brand-new Google
+      // user (no password identity) passes through normally to onboarding.
+      if (searchParams.get("flow") === "oauth") {
+        const hasPassword = (data.user.identities ?? []).some((i) => i.provider === "email");
+        if (hasPassword) {
+          await supabase.auth.signOut();
+          return NextResponse.redirect(`${origin}/es/login?autherror=use_password`);
+        }
+      }
+
       // Guest→account linking: attach prior GUEST tickets with this (now
       // verified) email to the account so the history continues in-app.
       if (data.user.email && data.user.email_confirmed_at) {
