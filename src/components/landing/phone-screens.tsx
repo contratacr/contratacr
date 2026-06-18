@@ -280,7 +280,7 @@ export function ChatScreen() {
       </div>
       <div className="flex-1 space-y-2 p-3">
         <div className="max-w-[82%] rounded-2xl rounded-tl-sm bg-white px-3 py-2 text-[11px] text-[#374151] shadow-sm">Hola, tengo una fuga bajo el lavamanos. ¿Podría ir hoy?</div>
-        <div className="ml-auto max-w-[82%] rounded-2xl rounded-tr-sm bg-[#dcf8c6] px-3 py-2 text-[11px] text-[#1a2744] shadow-sm">¡Claro! Llego hoy a las 3:00 p. m. El diagnóstico es gratis. 👍</div>
+        <div className="ml-auto max-w-[82%] rounded-2xl rounded-tr-sm bg-[#dcf8c6] px-3 py-2 text-[11px] text-[#1a2744] shadow-sm">¡Claro! Llego hoy a las 3:00PM. El diagnóstico es gratis. 👍</div>
         <div className="max-w-[82%] rounded-2xl rounded-tl-sm bg-white px-3 py-2 text-[11px] text-[#374151] shadow-sm">Perfecto, ahí lo espero. ¡Gracias!</div>
       </div>
       <div className="flex items-center gap-2 bg-white px-3 py-2.5">

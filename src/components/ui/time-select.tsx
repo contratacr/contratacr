@@ -1,14 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Clock, ChevronDown, Check } from "lucide-react";
+import { ChevronDown, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // A polished 12-hour time picker (custom popover). Each option is a full,
-// unambiguous label ("10:00am", "3:00pm" — lowercase meridiem attached, no
-// periods/spaces), so the meridiem is intrinsic — crossing noon flips am/pm
-// automatically (there is no separate, sticky AM/PM control). Stores a 24-hour
-// "HH:MM" value. Earlier-than-`min` options are hidden.
+// unambiguous label ("10:00AM", "3:00PM" — UPPERCASE meridiem attached, no
+// periods/spaces; this is the app-wide time format), so the meridiem is
+// intrinsic — crossing noon flips AM/PM automatically (there is no separate,
+// sticky AM/PM control). Stores a 24-hour "HH:MM" value. Earlier-than-`min`
+// options are hidden.
 
 function toMins(t: string): number {
   const [h, m] = t.split(":").map(Number);
@@ -20,7 +21,7 @@ function hhmm(mins: number): string {
 export function to12h(value: string): string {
   if (!value) return "";
   const [h, m] = value.split(":").map(Number);
-  const mer = h < 12 ? "am" : "pm";
+  const mer = h < 12 ? "AM" : "PM";
   const h12 = h % 12 === 0 ? 12 : h % 12;
   return `${h12}:${String(m).padStart(2, "0")}${mer}`;
 }
@@ -86,14 +87,13 @@ export function TimeSelect({ value, onChange, min, step = 30, label, error, id, 
         aria-expanded={open}
         aria-invalid={!!error}
         className={cn(
-          "flex items-center h-10 rounded-xl border bg-white pl-9 pr-9 text-sm font-medium text-[#111827] relative text-left transition-all",
+          "flex items-center h-10 rounded-xl border bg-white pl-3.5 pr-10 text-sm font-medium text-[#111827] relative text-left transition-all",
           "focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent",
           open && "ring-2 ring-[#009FD9] border-transparent",
           error ? "border-red-400" : "border-[#e5e7eb]",
           disabled && "opacity-50 cursor-not-allowed"
         )}
       >
-        <Clock className="pointer-events-none absolute left-3 h-4 w-4 text-[#9ca3af]" />
         {to12h(value) || <span className="text-[#9ca3af]">--:--</span>}
         <ChevronDown className={cn("pointer-events-none absolute right-3 h-4 w-4 text-[#9ca3af] transition-transform", open && "rotate-180")} />
       </button>
