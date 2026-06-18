@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { slugifyCategory } from "@/lib/data/categories";
 
 // A user suggests a category that isn't in the official list. Creates a tracked,
 // pending row in `category_suggestions` (an admin moderation ticket) — NOT usable
-// or filterable until an admin approves it.
+// or filterable until an admin approves it. The row id (reused as the real category
+// id on approval) is the CLEAN slug of the name — e.g. "Amor" → "amor", "Amor
+// bueno" → "amor_bueno" — with NO prefix (the old `sg_` "suggestion" tag is gone).
 export async function POST(req: NextRequest) {
   try {
     const { name } = await req.json();
@@ -17,8 +20,10 @@ export async function POST(req: NextRequest) {
     const { data: { session } } = await supabase.auth.getSession();
 
     const admin = createAdminClient();
-    const id = `sg_${clean.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "").slice(0, 40)}`;
+    const id = slugifyCategory(clean);
 
+    // `ignoreDuplicates` = re-suggesting the SAME name reuses its existing ticket
+    // (the slug is the primary key) instead of creating a duplicate or erroring.
     const { error } = await admin.from("category_suggestions").upsert(
       { id, label: clean, suggested_name: clean, suggested_by: session?.user?.id ?? null, approved: false, status: "pending" },
       { onConflict: "id", ignoreDuplicates: true }

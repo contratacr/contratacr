@@ -268,6 +268,25 @@ export function normalizeText(text: string): string {
     .replace(/[̀-ͯ]/g, "");
 }
 
+/* ─── Canonical category ID from a name ───
+   The ONE way to turn a category name into an id, so generated ids are consistent
+   everywhere (e.g. the "¿No ves tu categoría?" suggestion → approval flow). It's
+   the name lowercased with words joined by underscores, accents stripped and any
+   other char dropped — e.g. "Plomería" → "plomeria", "Amor bueno" → "amor_bueno".
+   NO prefix (the old `sg_` was a leftover "suggestion" tag). Falls back to
+   "categoria" if the name has no usable characters. */
+export function slugifyCategory(name: string): string {
+  const slug = (name ?? "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "") // strip accents/diacritics
+    .replace(/[^a-z0-9]+/g, "_")      // any run of non-alphanumerics → one underscore
+    .replace(/^_+|_+$/g, "")          // trim leading/trailing underscores
+    .slice(0, 40)
+    .replace(/_+$/g, "");             // re-trim if slice cut mid-underscore
+  return slug || "categoria";
+}
+
 /* ─── Fuzzy search across all categories (fixed + custom) by label + keywords ─── */
 export function searchCategories(query: string): (CategoryItem & { groupId: string; groupLabel: string })[] {
   const pool = getAllCategories();
@@ -366,10 +385,11 @@ export function getCategoryLabel(id: string, locale?: string): string {
   // Admin-approved custom category (loaded on the client) — its real label.
   const custom = CUSTOM_CATEGORIES.find((c) => c.id === id);
   if (custom) return custom.label;
-  // Unknown id → a readable label (never the raw key). Custom-category ids are
-  // slugged as `sg_<name>`, so strip that prefix before de-slugging (e.g.
-  // "sg_vendedor_de_botellas" → "Vendedor de botellas") — this is the server-side
-  // fallback when the dynamic registry isn't loaded.
+  // Unknown id → a readable label (never the raw key). New custom-category ids are
+  // a clean slug (no prefix), but LEGACY ones were slugged as `sg_<name>`, so strip
+  // that prefix before de-slugging (e.g. "sg_vendedor_de_botellas" → "Vendedor de
+  // botellas") for back-compat — this is the server-side fallback when the dynamic
+  // registry isn't loaded.
   return id
     .replace(/^sg_/, "")
     .replace(/_/g, " ")
