@@ -336,4 +336,38 @@ select:focus-visible {
 .cr-pac gmp-place-autocomplete {
   width: 100%;
   color-scheme: light;
+  font-family: inherit;
+  /* Match the app's STANDARD input border so this field looks like every other
+     one (the legacy autocomplete input + the provincia/cantón selects use the
+     same token): 1px #e5e7eb, rounded-xl (12px), white bg, #cbd5e1 on hover,
+     and a 2px #009FD9 focus ring with the border going transparent — same as
+     `border border-[#e5e7eb] rounded-xl focus:ring-2 focus:ring-[#009FD9]
+     focus:border-transparent`. Without this the Google web component renders its
+     own Material border (different color/radius/focus), looking inconsistent. */
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  background-color: #fff;
+}
+.cr-pac gmp-place-autocomplete:hover {
+  border-color: #cbd5e1;
+}
+.cr-pac gmp-place-autocomplete:focus-within {
+  border-color: transparent;
+  outline: none;
+  box-shadow: 0 0 0 2px #009FD9;
+}
+/* Drop any border/background the widget's INNER input carries, so only the
+   matched chrome above shows (prevents a double border) — targets both the
+   shadow ::part(input) and a light-DOM input. */
+.cr-pac gmp-place-autocomplete::part(input) {
+  border: 0;
+  outline: none;
+  background: transparent;
+  box-shadow: none;
+}
+.cr-pac gmp-place-autocomplete input {
+  border: 0;
+  outline: none;
+  background: transparent;
+  box-shadow: none;
 }
