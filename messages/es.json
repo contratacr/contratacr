@@ -995,7 +995,6 @@
     },
     "servicesHeading": "Profesiones y servicios",
     "subtitles": {
-      "services": "Cada profesión tiene sus servicios con precio. Tu profesión principal define dónde apareces primero.",
       "bookings": "Solicitudes que te enviaron tus clientes.",
       "proposals": "Proyectos publicados a los que puedes enviar propuestas.",
       "sent_bookings": "Servicios que tú solicitaste a otros profesionales.",
@@ -1071,7 +1070,7 @@
     "thePerson": "la persona"
   },
   "photoGallery": {
-    "intro": "Sube tus <strong>casos de éxito</strong> (trabajos anteriores) <strong>en cada profesión</strong> para generar confianza. Aparecen en tu perfil y en los resultados de búsqueda. Máximo {max} fotos en total.",
+    "intro": "Máximo {max} fotos en total.",
     "noServices": "Primero agrega tus <strong>profesiones</strong> en la pestaña <strong>Profesiones</strong>. Luego podrás subir casos de éxito en cada una.",
     "otherWorks": "Otros trabajos",
     "addPhoto": "Agregar foto",
@@ -1134,10 +1133,10 @@
     "matchesServices": "Coincide con tus servicios"
   },
   "servicesEditor": {
-    "intro": "Una <strong>profesión</strong> es un área en la que trabajas; por ejemplo, Plomería. Dentro de cada profesión agregas <strong>servicios</strong> específicos, cada uno con su precio; por ejemplo, «Instalación de tuberías».",
     "servicesOf": "Servicios de",
     "servicesCount": "{count, plural, =0 {Sin servicios todavía} one {# servicio} other {# servicios}}",
     "addFirstInProfession": "Agrega tu primer servicio en {profession}",
+    "addFirstHelp": "Lista lo que ofreces con su precio para que los clientes sepan qué esperar.",
     "noProfession": "Primero elige tu profesión principal en la pestaña <strong>Mi perfil</strong>.",
     "step1Title": "Tus profesiones",
     "addProfession": "Agregar profesión",

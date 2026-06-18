@@ -276,15 +276,43 @@ export function ServicesEditor({
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Relationship explainer — makes the profession (area) → service (specific, priced) hierarchy
-          explicit so "Agregar profesión" vs "Agregar servicio" can't be confused. */}
-      <p className="rounded-xl border border-[#e5e7eb] bg-[#f9fafb] px-4 py-3 text-[13px] leading-relaxed text-[#6b7280]">
-        {t.rich("intro", rich)}
-      </p>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,240px)_minmax(0,1fr)]">
-        {/* ── LEFT: profession list (the AREAS you work in) ─────────────── */}
-        <div className="flex flex-col gap-2">
-          <p className="px-1 text-[11px] font-bold uppercase tracking-wide text-[#9ca3af]">{t("step1Title")}</p>
+      {/* ── MOBILE (<lg): professions as a HORIZONTAL SCROLLING TAB ROW ──
+          Each tab `shrink-0`; the row scrolls horizontally with the scrollbar
+          hidden. The vertical sidebar (below) is hidden on mobile. */}
+      <div className="lg:hidden -mx-1 flex gap-2 overflow-x-auto hide-scrollbar px-1 pb-1">
+        {professions.map((prof, i) => {
+          const count = services.filter((s) => effectiveCategory(s) === prof).length;
+          const selected = prof === selectedProfession;
+          return (
+            <button
+              key={prof}
+              type="button"
+              onClick={() => setSelectedProfession(prof)}
+              className={cn(
+                "shrink-0 w-[160px] rounded-xl border px-3 py-2.5 text-left transition-colors",
+                selected ? "border-[#009FD9] bg-[#EBF5FB]" : "border-[#e5e7eb] bg-white hover:bg-[#f9fafb]"
+              )}
+            >
+              <span className="flex items-center gap-1.5">
+                <span className="truncate text-sm font-semibold text-[#111827]">{getCategoryLabel(prof, locale)}</span>
+                {i === 0 && <span className="shrink-0 text-xs font-medium text-[#009FD9]">{t("principal")}</span>}
+              </span>
+              <span className="mt-0.5 block text-[11px] text-[#9ca3af]">{t("servicesCount", { count })}</span>
+            </button>
+          );
+        })}
+        <button
+          type="button"
+          onClick={() => { setShowPicker(true); setPickerQuery(""); }}
+          className="shrink-0 inline-flex items-center gap-1.5 rounded-xl border border-dashed border-[#cbd5e1] px-4 text-sm font-semibold text-[#0089bb] hover:border-[#009FD9] hover:bg-[#EBF5FB] transition-all"
+        >
+          <Plus className="h-4 w-4" /> {t("addProfession")}
+        </button>
+      </div>
+
+      <div className="flex gap-4">
+        {/* ── DESKTOP (≥lg): fixed-width LEFT sidebar of professions (the AREAS) ── */}
+        <div className="hidden shrink-0 flex-col gap-2 lg:flex lg:w-[230px]">
           {professions.map((prof, i) => {
             const count = services.filter((s) => effectiveCategory(s) === prof).length;
             const selected = prof === selectedProfession;
@@ -319,14 +347,12 @@ export function ServicesEditor({
           </button>
         </div>
 
-        {/* ── RIGHT: the SERVICES of the selected profession (specific, priced) ── */}
-        <div className="rounded-2xl border border-[#e5e7eb] bg-white p-4 sm:p-5">
-          {/* Header — the "Servicios de · <profession>" eyebrow makes it obvious these services
-              belong UNDER the profession selected on the left. */}
+        {/* ── DETAIL: services of the selected profession — full-width on mobile,
+              flex-1 beside the sidebar on desktop. ── */}
+        <div className="min-w-0 flex-1 rounded-2xl border border-[#e5e7eb] bg-white p-4 sm:p-5">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="text-[11px] font-bold uppercase tracking-wide text-[#9ca3af]">{t("servicesOf")}</p>
-              <h3 className="text-base font-bold leading-tight text-[#111827] truncate">{getCategoryLabel(selectedProfession, locale)}</h3>
+              <h3 className="text-lg font-bold leading-tight text-[#111827] truncate">{getCategoryLabel(selectedProfession, locale)}</h3>
               <p className="mt-0.5 text-xs text-[#6b7280]">{t("servicesPublished", { count: detailServices.length })}</p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
@@ -354,37 +380,50 @@ export function ServicesEditor({
           {/* Services */}
           <div className="mt-4 flex flex-col gap-2.5">
             {detailServices.length === 0 ? (
-              <p className="rounded-xl bg-[#f9fafb] px-4 py-6 text-center text-sm text-[#9ca3af]">{t("emptyUnderProfession")}</p>
+              /* Empty → a dashed "add your first service" card that IS the add affordance. */
+              <button
+                type="button"
+                onClick={() => openAdd(selectedProfession)}
+                className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-[#bfdbfe] bg-[#f9fafb] px-4 py-8 text-center transition-colors hover:border-[#009FD9] hover:bg-[#EBF5FB]"
+              >
+                <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-sm">
+                  <Plus className="h-5 w-5 text-[#009FD9]" />
+                </span>
+                <span className="text-sm font-semibold text-[#0089bb]">{t("addFirstInProfession", { profession: getCategoryLabel(selectedProfession, locale) })}</span>
+                <span className="max-w-xs text-xs text-[#9ca3af]">{t("addFirstHelp")}</span>
+              </button>
             ) : (
-              detailServices.map((svc) => (
-                <div key={svc.id} className="flex items-start justify-between gap-3 rounded-xl border border-[#e5e7eb] p-3.5">
-                  {/* `min-w-0` + `break-words` let a long name (even one unbroken word) WRAP within its
-                      own column instead of overflowing onto the price. */}
-                  <div className="min-w-0 flex-1">
-                    <p className="break-words text-sm font-semibold text-[#111827]">{svc.name}</p>
-                    {svc.description && <p className="mt-0.5 break-words text-xs text-[#6b7280] line-clamp-2">{svc.description}</p>}
+              <>
+                {detailServices.map((svc) => (
+                  <div key={svc.id} className="flex items-start justify-between gap-3 rounded-xl border border-[#e5e7eb] p-3.5">
+                    {/* `min-w-0` + `break-words` let a long name (even one unbroken word) WRAP within its
+                        own column instead of overflowing onto the price. */}
+                    <div className="min-w-0 flex-1">
+                      <p className="break-words text-sm font-semibold text-[#111827]">{svc.name}</p>
+                      {svc.description && <p className="mt-0.5 break-words text-xs text-[#6b7280] line-clamp-2">{svc.description}</p>}
+                    </div>
+                    {/* Price + actions: fixed width, right-aligned, top-aligned with the name; never shrinks. */}
+                    <div className="flex shrink-0 items-center gap-2">
+                      {svc.price && <span className="max-w-[10rem] break-words text-right text-sm font-semibold text-[#009FD9]">{svc.price}</span>}
+                      <button onClick={() => openEdit(svc)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#f3f4f6] text-[#6b7280] hover:bg-[#EBF5FB] hover:text-[#009FD9] transition-colors" title={t("edit")} aria-label={t("edit")}>
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
+                      <button onClick={() => handleDelete(svc.id)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#f3f4f6] text-[#6b7280] hover:bg-red-50 hover:text-red-500 transition-colors" title={t("delete")} aria-label={t("delete")}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                   </div>
-                  {/* Price + actions: fixed width, right-aligned, top-aligned with the name; never shrinks. */}
-                  <div className="flex shrink-0 items-center gap-2">
-                    {svc.price && <span className="max-w-[10rem] break-words text-right text-sm font-semibold text-[#009FD9]">{svc.price}</span>}
-                    <button onClick={() => openEdit(svc)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#f3f4f6] text-[#6b7280] hover:bg-[#EBF5FB] hover:text-[#009FD9] transition-colors" title={t("edit")} aria-label={t("edit")}>
-                      <Pencil className="h-3.5 w-3.5" />
-                    </button>
-                    <button onClick={() => handleDelete(svc.id)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#f3f4f6] text-[#6b7280] hover:bg-red-50 hover:text-red-500 transition-colors" title={t("delete")} aria-label={t("delete")}>
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
+                ))}
 
-            <button
-              type="button"
-              onClick={() => openAdd(selectedProfession)}
-              className="mt-1 w-full rounded-xl border border-dashed border-[#bfdbfe] py-2.5 text-sm font-semibold text-[#0089bb] hover:border-[#009FD9] hover:bg-[#EBF5FB] transition-colors flex items-center justify-center gap-2"
-            >
-              <Plus className="h-4 w-4" /> {t("addService")}
-            </button>
+                <button
+                  type="button"
+                  onClick={() => openAdd(selectedProfession)}
+                  className="mt-1 w-full rounded-xl border border-dashed border-[#bfdbfe] py-2.5 text-sm font-semibold text-[#0089bb] hover:border-[#009FD9] hover:bg-[#EBF5FB] transition-colors flex items-center justify-center gap-2"
+                >
+                  <Plus className="h-4 w-4" /> {t("addService")}
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>

@@ -66,7 +66,7 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
 
 // Tabs that show a one-line context note under the section title (translated via
 // proPanel.subtitles.<tab>), so it's always obvious which role a section belongs to.
-const TABS_WITH_SUBTITLE = new Set<Tab>(["services", "bookings", "proposals", "sent_bookings", "sent_projects", "saved"]);
+const TABS_WITH_SUBTITLE = new Set<Tab>(["bookings", "proposals", "sent_bookings", "sent_projects", "saved"]);
 
 // Sidebar layout — two labeled groups + a standalone notifications entry. The
 // "Suscripción" tab only appears when PAYMENTS_ENABLED is on; with the flag off it
