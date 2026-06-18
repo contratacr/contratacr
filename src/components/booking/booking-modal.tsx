@@ -8,14 +8,14 @@ import {
 } from "lucide-react";
 import { SuccessIcon } from "@/components/ui/success-icon";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { CedulaInput } from "@/components/ui/cedula-input";
 import { isValidId, detectIdType, cleanId } from "@/lib/cedula";
 import { computeAge, formatAge, isMinorFromDob } from "@/lib/age";
-import { anyHealthCategory } from "@/lib/data/categories";
+import { anyHealthCategory, getCategoryLabel } from "@/lib/data/categories";
 import { StarRating } from "@/components/ui/star-rating";
 import { getInitials, getWhatsAppLink, buildBookingIcs } from "@/lib/utils";
 import { cn } from "@/lib/utils";
@@ -98,10 +98,23 @@ interface BookingModalProps {
 
 export function BookingModal({ professional, categoryName, open, onClose, initialDate, initialTime, initialCategoryId, initialLocationId, initialLocationLabel }: BookingModalProps) {
   const t = useTranslations("booking");
+  const locale = useLocale();
 
   // DOB is only relevant for HEALTH/medical services (patient age). Driven by the
-  // es_salud category flag — requested/shown/stored ONLY when the pro is health.
-  const proIsHealth = anyHealthCategory([professional.categoryId, ...(professional.professions ?? [])]);
+  // es_salud / DOB are derived from the EFFECTIVE profession being booked — NOT "any of
+  // the pro's professions is health". Effective = the category context (initialCategoryId)
+  // or, when the pro has a single profession, that one. When the pro has MULTIPLE
+  // professions and there's no context, the client must first pick which one (so we know
+  // whether it's a health service that needs a date of birth).
+  const proProfessions = (professional.professions && professional.professions.length > 0)
+    ? professional.professions
+    : (professional.categoryId ? [professional.categoryId] : []);
+  const [pickedCategory, setPickedCategory] = useState<string | null>(
+    initialCategoryId ?? (proProfessions.length === 1 ? proProfessions[0] : null)
+  );
+  const effectiveCategory = initialCategoryId ?? pickedCategory ?? null;
+  const needsProfessionPick = !effectiveCategory && proProfessions.length > 1;
+  const proIsHealth = anyHealthCategory(effectiveCategory ? [effectiveCategory] : []);
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -437,7 +450,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
           scheduledDate: selectedDate || null,
           scheduledTime: selectedTime || null,
           // (service + location) context of the picked slot.
-          categoryId: initialCategoryId ?? professional.categoryId ?? null,
+          categoryId: effectiveCategory ?? professional.categoryId ?? null,
           slotLocationId: initialLocationId ?? null,
           slotLocationLabel: initialLocationLabel ?? null,
           preferredDateText: selectedDate
@@ -742,6 +755,26 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
               {/* STEP: calendar */}
               {step === "calendar" && (
                 <div>
+                  {/* Multi-profession pro + no category context → pick the service FIRST
+                      (so we know whether it's health → date of birth). */}
+                  {needsProfessionPick && (
+                    <div className="flex flex-col gap-2.5">
+                      <h3 className="text-lg font-semibold text-[#111827] mb-0.5">¿Qué servicio necesitas?</h3>
+                      <p className="text-sm text-[#6b7280] mb-1.5">Elige el servicio que buscas para continuar.</p>
+                      {proProfessions.map((cat) => (
+                        <button
+                          key={cat}
+                          type="button"
+                          onClick={() => setPickedCategory(cat)}
+                          className="flex items-center justify-between gap-2 rounded-xl border border-[#e5e7eb] px-4 py-3 text-left text-sm font-medium text-[#374151] hover:border-[#009FD9] hover:bg-[#EBF5FB] transition-colors"
+                        >
+                          <span className="min-w-0 break-words">{getCategoryLabel(cat, locale)}</span>
+                          <ChevronRight className="h-4 w-4 shrink-0 text-[#9ca3af]" />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {!needsProfessionPick && (<>
                   <h3 className="text-lg font-semibold text-[#111827] mb-1">Elige fecha y hora</h3>
                   <p className="text-sm text-[#6b7280] mb-4">
                     {initialLocationLabel ? <>En <span className="font-semibold text-[#374151]">{initialLocationLabel}</span>. </> : null}
@@ -905,6 +938,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                       </div>
                     </div>
                   )}
+                  </>)}
                 </div>
               )}
 
@@ -1278,7 +1312,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                   </Button>
                 )}
 
-                {step === "calendar" && (
+                {step === "calendar" && !needsProfessionPick && (
                   <div className="flex flex-1 items-center justify-between gap-3">
                     <span className="min-w-0 truncate text-sm text-[#6b7280]">
                       {selectedDate && selectedTime ? (

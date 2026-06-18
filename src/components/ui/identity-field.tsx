@@ -39,7 +39,6 @@ export function IdentityField({
   onFullNameChange,
   onStatusChange,
   onResult,
-  onMismatch,
   cedulaError,
   nameError,
   cedulaReadOnly,
@@ -113,22 +112,14 @@ export function IdentityField({
       )}
 
       {/* Found in the padrón → confirm the official info */}
+      {/* Found in the padrón → confirm the official info. The "¿No es tu información?"
+          mismatch override was removed: the cédula auto-fills the official identity and
+          there is no "this isn't me" option (use your own cédula, or "No tengo cédula"). */}
       {status === "found" && !manualOverride && (
         <IdentityInfoBlock
           fullName={officialName}
           cedula={cedula}
           dob={dob}
-          onReset={() => {
-            // Discard the padrón auto-fill: clear the matched name, mark the case as
-            // a mismatch (manual review), and let the user type their real name.
-            setManualOverride(true);
-            setOfficialName("");
-            setDob(null);
-            onFullNameChange("");
-            onResult?.({ found: false, isAdult: false, dob: null });
-            setStatusBoth("notfound");
-            onMismatch?.();
-          }}
         />
       )}
 

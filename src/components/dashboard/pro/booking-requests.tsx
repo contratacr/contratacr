@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarDays, FileText, Phone, Flag, MapPin } from "lucide-react";
+import { CalendarDays, FileText, Phone, Flag, MapPin, IdCard } from "lucide-react";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Button } from "@/components/ui/button";
@@ -151,6 +151,14 @@ export function BookingRequests() {
                   <div className="flex items-center gap-2 text-sm">
                     <Phone className="h-4 w-4 text-[#6b7280] shrink-0" />
                     <span className="text-[#374151]">{booking.client_phone}</span>
+                  </div>
+                )}
+                {/* Client's cédula — shown whether the booking is for themselves OR a
+                    third party (the responsible client's ID). */}
+                {booking.client_cedula && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <IdCard className="h-4 w-4 text-[#6b7280] shrink-0" />
+                    <span className="text-[#374151]">{t("clientCedula", { cedula: booking.client_cedula })}</span>
                   </div>
                 )}
                 {/* Client DOB — only stored/shown for HEALTH-category solicitudes. */}

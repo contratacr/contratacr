@@ -4,10 +4,13 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { PriceInput } from "@/components/ui/price-input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { CategorySearch } from "@/components/ui/category-search";
 import { X } from "lucide-react";
 import { PROVINCES } from "@/lib/data/cr-geography";
 import { cn } from "@/lib/utils";
+import { createClient } from "@/lib/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
 
 // "Publicar proyecto" as a MODAL (was a standalone page). Same fields, validation
 // and submit logic as the old publish-form — only the container changed to a modal:
@@ -37,6 +40,22 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
   });
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const { user } = useAuth();
+
+  // Same rule as "Solicitar servicio": projects need a contact phone. If the client
+  // already has one on file we don't ask; otherwise we prompt for it here and save it
+  // to their profile so we never ask again.
+  const [phone, setPhone] = useState("");
+  const [needsPhone, setNeedsPhone] = useState(false);
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.rpc("get_my_profile").then(({ data }) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const p = ((data as any)?.phone as string | undefined) ?? "";
+      setPhone(p);
+      setNeedsPhone(!p.trim());
+    });
+  }, []);
 
   const selectedProvincia = PROVINCES.find((p) => p.id === form.provinciaId);
   const cantons = selectedProvincia?.cantons ?? [];
@@ -62,9 +81,15 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
     if (!form.categoryId) { setError(t("errCategory")); return; }
     if (!form.title.trim()) { setError(t("errTitle")); return; }
     if (!form.description.trim()) { setError(t("errDescription")); return; }
+    if (needsPhone && phone.replace(/\D/g, "").length < 8) { setError(t("errPhone")); return; }
 
     setSubmitting(true);
     try {
+      // Persist the phone to the profile (only when we prompted for it).
+      if (needsPhone && user?.id) {
+        const supabase = createClient();
+        await supabase.from("profiles").update({ phone }).eq("id", user.id);
+      }
       const res = await fetch("/api/projects", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -242,6 +267,19 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
                 ))}
               </div>
             </div>
+
+            {/* Contact phone — only when the client has none on file. */}
+            {needsPhone && (
+              <div>
+                <PhoneInput
+                  label={<>{t("phoneLabel")} <span className="text-red-500">*</span></>}
+                  required
+                  value={phone}
+                  onChange={setPhone}
+                />
+                <p className="text-xs text-[#9ca3af] mt-1">{t("phoneHelp")}</p>
+              </div>
+            )}
 
             {error && (
               <div className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
