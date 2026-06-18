@@ -5,6 +5,7 @@ import { Mail, Lock, ShieldCheck, Eye, EyeOff, Info, ExternalLink } from "lucide
 import { useLocale, useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useResendCooldown } from "@/hooks/use-resend-cooldown";
 import { Button } from "@/components/ui/button";
 import { SpamNotice } from "@/components/ui/spam-notice";
 
@@ -74,6 +75,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
   const { user } = useAuth();
   const locale = useLocale();
   const t = useTranslations("accountSecurity");
+  const tc = useTranslations("common");
 
   // Email change
   const [emailMode, setEmailMode] = useState(false);
@@ -81,6 +83,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
   const [emailSent, setEmailSent] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [emailApplied, setEmailApplied] = useState(false);
+  const emailResend = useResendCooldown();
 
   // After the user confirms the change from the email link, the confirmation URL
   // returns here (via emailRedirectTo → /auth/callback → this account tab) with
@@ -127,24 +130,30 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
   const providerLabel = oauthProvider === "facebook" ? "Facebook" : "Google";
   const providerLinks = PROVIDER_LINKS[providerLabel];
 
-  async function sendEmailChange() {
-    if (!newEmail.trim()) return;
-    setEmailError(null);
+  // The actual send (used by the initial submit AND the resend). CRITICAL: pass
+  // `emailRedirectTo` so the confirmation code lands on **/auth/callback** (which
+  // exchanges it, then honors `next`). Without it, GoTrue falls back to the Supabase
+  // **Site URL** root — the code arrived on `/es` (home), unprocessed, stranding the
+  // user on main. `next` (the role-aware "Cuenta y seguridad" tab + success flag) is
+  // URL-encoded so the callback receives it whole. (Requires
+  // `https://contratacr.com/auth/callback` in Supabase → Redirect URLs.)
+  async function performEmailChange(): Promise<string | null> {
     const supabase = createClient();
-    // CRITICAL: pass `emailRedirectTo` so the confirmation code lands on
-    // **/auth/callback** (which exchanges it, then honors `next`). Without it,
-    // GoTrue has no redirect target and falls back to the Supabase **Site URL**
-    // root — the code arrived on `/es` (home), which doesn't process it, so the
-    // user got stuck on main. `next` (the role-aware "Cuenta y seguridad" tab +
-    // success flag) is URL-encoded so the callback receives it whole. (Requires
-    // `https://contratacr.com/auth/callback` in Supabase → Redirect URLs.)
     const role = (user?.user_metadata?.role as string | undefined) === "professional" ? "profesional" : "cliente";
     const next = `/${locale}/dashboard/${role}?tab=cuenta&emailChanged=1`;
     const emailRedirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`;
     const { error } = await supabase.auth.updateUser({ email: newEmail.trim() }, { emailRedirectTo });
-    if (error) { setEmailError(error.message); return; }
+    return error?.message ?? null;
+  }
+
+  async function sendEmailChange() {
+    if (!newEmail.trim()) return;
+    setEmailError(null);
+    const err = await performEmailChange();
+    if (err) { setEmailError(err); return; }
     setEmailSent(true);
     setEmailMode(false);
+    emailResend.armCooldown();
   }
 
   async function savePassword() {
@@ -217,6 +226,19 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
           <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-700">
             {t("emailSent")}
             <SpamNotice className="mt-1 text-emerald-600/80" />
+            {/* Resend (brief cooldown so it can't be spammed) */}
+            <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-emerald-600/90">
+              {emailResend.resent && <span className="font-semibold">{tc("resent")}</span>}
+              <span>{tc("resendPrompt")}</span>
+              <button
+                type="button"
+                onClick={() => emailResend.resend(async () => { await performEmailChange(); })}
+                disabled={emailResend.cooldown > 0 || emailResend.resending}
+                className="font-semibold text-emerald-700 underline hover:no-underline disabled:text-emerald-600/50 disabled:no-underline disabled:cursor-not-allowed"
+              >
+                {emailResend.cooldown > 0 ? tc("resendIn", { seconds: emailResend.cooldown }) : emailResend.resending ? tc("resending") : tc("resend")}
+              </button>
+            </div>
           </div>
         ) : emailMode ? (
           <div className="flex flex-col gap-3">

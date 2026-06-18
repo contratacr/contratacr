@@ -1,6 +1,11 @@
 {
   "common": {
-    "spamNotice": "¿No ves el correo? Revisa tu carpeta de spam o correo no deseado."
+    "spamNotice": "¿No ves el correo? Revisa tu carpeta de spam o correo no deseado.",
+    "resendPrompt": "¿No te llegó el correo?",
+    "resend": "Reenviar correo",
+    "resendIn": "Reenviar en {seconds} s",
+    "resending": "Reenviando…",
+    "resent": "Correo reenviado"
   },
   "nav": {
     "search": "Buscar",
@@ -1669,8 +1674,8 @@
     "title": "Olvidé mi contraseña",
     "subtitle": "Ingresa tu correo y te enviamos un enlace para restablecer tu contraseña.",
     "error": "Ocurrió un error. Verifica el correo e intenta de nuevo.",
-    "sentTitle": "Correo enviado",
-    "sentBody": "Revisa tu bandeja de entrada y sigue el enlace para crear una nueva contraseña.",
+    "sentTitle": "Revisa tu correo",
+    "sentBody": "Si hay una cuenta asociada a ese correo, te enviaremos un enlace para restablecer tu contraseña. Revisa tu bandeja de entrada.",
     "emailLabel": "Correo electrónico",
     "emailPlaceholder": "tu@email.com",
     "sending": "Enviando…",

@@ -1,6 +1,11 @@
 {
   "common": {
-    "spamNotice": "Don't see it? Check your spam or junk folder."
+    "spamNotice": "Don't see it? Check your spam or junk folder.",
+    "resendPrompt": "Didn't get the email?",
+    "resend": "Resend email",
+    "resendIn": "Resend in {seconds}s",
+    "resending": "Resending…",
+    "resent": "Email resent"
   },
   "nav": {
     "search": "Search",
@@ -1669,8 +1674,8 @@
     "title": "Forgot my password",
     "subtitle": "Enter your email and we'll send you a link to reset your password.",
     "error": "Something went wrong. Check the email and try again.",
-    "sentTitle": "Email sent",
-    "sentBody": "Check your inbox and follow the link to create a new password.",
+    "sentTitle": "Check your email",
+    "sentBody": "If there's an account for that email, we'll send a link to reset your password. Check your inbox.",
     "emailLabel": "Email",
     "emailPlaceholder": "you@email.com",
     "sending": "Sending…",
