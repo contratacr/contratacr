@@ -265,7 +265,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
 
   // Render a location's occupied ranges as "8:00 AM–3:00 PM, 5:00 PM–7:00 PM".
   function fmtRanges(ranges: [number, number][]): string {
-    return ranges.map(([s, e]) => `${to12h(hhmm(s))}–${to12h(hhmm(e))}`).join(", ");
+    return ranges.map(([s, e]) => `${to12h(hhmm(s))} – ${to12h(hhmm(e))}`).join(", ");
   }
 
   // ── MATERIALIZE the template + exceptions into concrete slots ──────────────
@@ -721,13 +721,12 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                             );
                             // Single-location pros: just the time row (clean, compact, no location UI).
                             if (!isMultiLocation) return <div key={b.id}>{timeRow}</div>;
-                            // 2+ locations: keep the time row + its location together as one
-                            // block — no background/border (per R1; cleaner than the old gray
-                            // tint). The location select sits directly below the times and spans
-                            // the same width; spacing + the bordered select carry the grouping.
+                            // 2+ locations: location-FIRST, hours below — reads top-to-bottom
+                            // "where → when" and lays out cleanly on mobile (each on its own
+                            // line). No background/border (per R1); spacing + the bordered select
+                            // carry the grouping. The select spans the time-row width.
                             return (
                               <div key={b.id} className="flex w-full flex-col gap-2 sm:w-fit">
-                                {timeRow}
                                 <div className="relative">
                                   <MapPin className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#9ca3af]" />
                                   <select
@@ -740,6 +739,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                                   </select>
                                   <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9ca3af]" />
                                 </div>
+                                {timeRow}
                               </div>
                             );
                           })}
@@ -794,7 +794,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
               <div className="flex flex-col gap-2">
                 {activeExceptions.map(([date, rows]) => {
                   const mode = rows[0].mode;
-                  const times = rows.filter((r) => r.start && r.end).map((r) => `${to12h(r.start!)}–${to12h(r.end!)}`).join(", ");
+                  const times = rows.filter((r) => r.start && r.end).map((r) => `${to12h(r.start!)} – ${to12h(r.end!)}`).join(", ");
                   const [y, m, d] = date.split("-").map(Number);
                   const dt = new Date(y, m - 1, d);
                   const monthShort = dt.toLocaleDateString(dateLocale, { month: "short" }).replace(".", "").toUpperCase();
