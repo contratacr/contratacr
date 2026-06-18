@@ -36,6 +36,21 @@ async function waitForAuthCookie(maxMs = 2000): Promise<void> {
   }
 }
 
+// A post-login `?redirect=` is honored ONLY when it targets an AUTHENTICATED area —
+// a `/dashboard` deep-link (the proxy preserves these for gated pages, incl.
+// support-ticket / notification email links) or the "projects" alias. A generic /
+// PUBLIC target (home `/`, `/buscar`, a profile — e.g. the navbar "Ingresar"
+// current-path) returns null, so it can NEVER override the role-based DASHBOARD
+// redirect (that was the "login lands on the main page" regression). Returns
+// "projects", a (possibly locale-prefixed) /dashboard path, or null.
+function meaningfulRedirect(raw: string | null): string | null {
+  if (!raw) return null;
+  if (raw === "projects") return "projects";
+  if (!raw.startsWith("/") || raw.startsWith("//")) return null;
+  const path = raw.replace(/^\/(?:es|en)(?=\/|$)/, "") || "/";
+  return path.startsWith("/dashboard") ? raw : null;
+}
+
 export default function LoginPage() {
   const t = useTranslations("auth.login");
   const locale = useLocale();
@@ -117,24 +132,25 @@ export default function LoginPage() {
         if (pro) role = "professional";
       }
     }
-    // Optional post-login destination. `?redirect=` may be a full in-app PATH (e.g.
-    // a support email's deep-link to a ticket, preserved by the proxy) OR the
-    // "projects" alias (the "Publicar proyecto" CTA). Read at submit time (avoids a
-    // useSearchParams suspense boundary on this client page).
-    const redirectParam = new URLSearchParams(window.location.search).get("redirect");
+    // Optional post-login destination — see `meaningfulRedirect`: ONLY a /dashboard
+    // deep-link (incl. support-ticket links the proxy preserves) or the "projects"
+    // alias is honored; a generic/public target (the navbar "Ingresar" current-path,
+    // home, /buscar…) is ignored so login ALWAYS lands on the role-based panel. Read
+    // at submit time (avoids a useSearchParams suspense boundary on this client page).
+    const redirect = meaningfulRedirect(new URLSearchParams(window.location.search).get("redirect"));
     // Make sure the session cookie is written before the hard navigation, so the
     // proxy lets the user into the panel instead of bouncing back to /login.
     await waitForAuthCookie();
     // Hard redirect so the new page loads with the session already in cookies
     // (prevents the navbar flashing logged-out state).
-    if (redirectParam && redirectParam.startsWith("/") && !redirectParam.startsWith("//")) {
-      // Already a locale-prefixed in-app path → go straight there (the open ticket).
-      const dest = /^\/(es|en)(\/|$)/.test(redirectParam) ? redirectParam : `/${locale}${redirectParam}`;
+    if (redirect && redirect !== "projects") {
+      // A /dashboard deep-link (locale-prefixed or not) → go straight there.
+      const dest = /^\/(es|en)(\/|$)/.test(redirect) ? redirect : `/${locale}${redirect}`;
       window.location.href = dest;
       return;
     }
     const dest =
-      redirectParam === "projects"
+      redirect === "projects"
         ? role === "professional"
           ? "/dashboard/profesional?tab=sent_projects"
           : "/dashboard/cliente?tab=projects"
@@ -148,13 +164,13 @@ export default function LoginPage() {
   // URL stays well-formed (the unencoded query was what broke the OAuth code exchange
   // = auth=error); or the "projects" alias, which the callback role-resolves.
   function oauthCallbackUrl() {
-    const redirect = new URLSearchParams(window.location.search).get("redirect");
-    let next = "";
-    if (redirect === "projects") next = "projects";
-    else if (redirect && redirect.startsWith("/") && !redirect.startsWith("//")) next = redirect;
-    // `flow=oauth` lets /auth/callback enforce "one email = one method": it refuses
-    // an OAuth sign-in that lands on an account which already has a password. The
-    // `next` stays URL-ENCODED (an unencoded query previously broke the code exchange).
+    // Same gate as manual login: carry only a MEANINGFUL target through OAuth (a
+    // /dashboard deep-link or "projects"); a generic/public redirect → no `next`, so
+    // the callback role-resolves to the right panel instead of bouncing to the page
+    // the user came from (e.g. home). `flow=oauth` lets /auth/callback enforce "one
+    // email = one method". The `next` stays URL-ENCODED (an unencoded query
+    // previously broke the code exchange = auth=error).
+    const next = meaningfulRedirect(new URLSearchParams(window.location.search).get("redirect")) ?? "";
     return window.location.origin + "/auth/callback?flow=oauth" + (next ? `&next=${encodeURIComponent(next)}` : "");
   }
 

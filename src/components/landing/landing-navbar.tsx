@@ -506,14 +506,16 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
   const router = useRouter();
   const t = useTranslations("header");
   const locale = useLocale();
-  const pathname = usePathname();
   const { user, avatarUrl } = useAuth();
 
   // "Ingresar" routes to the robust /login PAGE (forgot-password, role-aware
-  // post-login redirect, waitForAuthCookie, OAuth `next`, social-only detection) —
-  // we pass the current path as `redirect` so the user returns where they were. The
-  // old in-navbar login modal + its role-less email/password signup were removed.
-  const loginHref = `/login?redirect=${encodeURIComponent(pathname)}`;
+  // post-login redirect to the correct panel, waitForAuthCookie, OAuth `next`,
+  // social-only detection). NO `redirect` param: the navbar only sits on PUBLIC
+  // pages and login must land on the user's DASHBOARD — a generic public redirect
+  // would OVERRIDE the role-based panel redirect (the "login lands on the main page"
+  // bug). Meaningful deep-links (support tickets, gated pages) carry their OWN
+  // ?redirect= via the proxy and are still honored by /login.
+  const loginHref = "/login";
 
   const role = user?.user_metadata?.role as string | undefined;
   const isPro = role === "professional";
