@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { MapPin, X, Plus, ChevronDown, Check } from "lucide-react";
+import { MapPin, X, Plus, ChevronDown, Check, Search } from "lucide-react";
 import { loadGoogleMaps, MAP_ID } from "@/lib/maps/loader";
 import { PROVINCES, getCantonsByProvince, getCantonById, getProvinceById } from "@/lib/data/cr-geography";
+import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
 import { cn } from "@/lib/utils";
 
 export type Workplace = {
@@ -47,12 +48,24 @@ function genId() {
 export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200 }: WorkplacesPickerProps) {
   const t = useTranslations("workplacesPicker");
   const mapRef = useRef<HTMLDivElement>(null);
-  const pacContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<GMaps>(null);
   const geocoderRef = useRef<GMaps>(null);
   const markersRef = useRef<GMaps[]>([]);
   const valueRef = useRef<Workplace[]>(value);
   valueRef.current = value;
+
+  // Address search — OUR OWN standard input + dropdown (NOT the Google
+  // `gmp-place-autocomplete` web component, whose shadow-DOM input draws its own
+  // border we can't remove → a double border). Suggestions come from the
+  // `AutocompleteSuggestion` data API (same one the homepage hero uses), so the
+  // field uses the app's standard input chrome with ONE clean border.
+  const mapsReadyRef = useRef(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sessionTokenRef = useRef<any>(null);
+  const addrFieldRef = useRef<HTMLDivElement>(null);
+  const [addrQuery, setAddrQuery] = useState("");
+  const [addrSug, setAddrSug] = useState<{ placeId: string; label: string }[]>([]);
+  const [addrOpen, setAddrOpen] = useState(false);
 
   // Draft for the zone being added: provincia/cantón (+ optional pin). The exact
   // place SEARCH now lives inside the map option (no separate "name" field).
@@ -101,6 +114,9 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200 }: W
     setDraftPin(null);
     setShowMap(false);
     setAdding(false);
+    setAddrQuery("");
+    setAddrSug([]);
+    setAddrOpen(false);
   }
 
   // A pin placed via search / map click / current location → just stores lat/lng.
@@ -139,63 +155,33 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200 }: W
     }
   }
 
-  // Mount a place-search box. Prefer the new PlaceAutocompleteElement; if it isn't
-  // available OR errors at runtime (e.g. "Places API (New)" not enabled on the key
-  // while the legacy Places API is), fall back to the legacy Autocomplete widget so
-  // search keeps working. Either way a pick becomes a draft pin.
-  function mountAutocomplete(map: GMaps, container: HTMLElement) {
-    const maps = getMaps();
-    if (!maps?.places) return;
-
-    function mountLegacy() {
-      if (!maps.places?.Autocomplete || container.childElementCount > 0) return;
-      const input = document.createElement("input");
-      input.type = "text";
-      input.placeholder = t("searchPlaceholder");
-      input.className = "h-11 w-full rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent";
-      container.appendChild(input);
-      const ac = new maps.places.Autocomplete(input, { componentRestrictions: { country: "cr" }, fields: ["geometry", "formatted_address"] });
-      ac.addListener("place_changed", () => {
-        const place = ac.getPlace();
-        const loc = place.geometry?.location;
-        if (!loc) return;
-        const lat = loc.lat(), lng = loc.lng();
-        map.setCenter({ lat, lng }); map.setZoom(15);
-        onPinPlaced(lat, lng, place.formatted_address || "");
-      });
-    }
-
-    if (maps.places.PlaceAutocompleteElement) {
-      try {
-        const pac = new maps.places.PlaceAutocompleteElement({ includedRegionCodes: ["cr"], requestedRegion: "cr" });
-        pac.style.width = "100%";
-        pac.setAttribute("placeholder", t("searchPlaceholder"));
-        container.appendChild(pac);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        pac.addEventListener("gmp-select", async (e: any) => {
-          const prediction = e.placePrediction ?? e.place;
-          if (!prediction) return;
-          const place = typeof prediction.toPlace === "function" ? prediction.toPlace() : prediction;
-          await place.fetchFields({ fields: ["location", "formattedAddress"] });
-          if (!place.location) return;
-          const loc = place.location;
-          map.setCenter(loc); map.setZoom(15);
-          const lat = typeof loc.lat === "function" ? loc.lat() : loc.lat;
-          const lng = typeof loc.lng === "function" ? loc.lng() : loc.lng;
-          onPinPlaced(lat, lng, place.formattedAddress || "");
-        });
-        // If the new backend is blocked, the element fires an error → use legacy.
-        pac.addEventListener("gmp-error", () => { try { pac.remove(); } catch {} mountLegacy(); });
-        return;
-      } catch { /* fall through to legacy */ }
-    }
-    mountLegacy();
+  // Picking an address suggestion → resolve its lat/lng + formatted address and
+  // drop the pin (same outcome the old web component produced). The provincia/
+  // cantón selects stay the source of truth; the pin is just the exact marker.
+  async function selectAddress(placeId: string, label: string) {
+    setAddrOpen(false);
+    setAddrQuery(label);
+    setAddrSug([]);
+    try {
+      const maps = getMaps();
+      const place = new maps.places.Place({ id: placeId });
+      await place.fetchFields({ fields: ["location", "formattedAddress"] });
+      const loc = place.location;
+      if (!loc) return;
+      const lat = typeof loc.lat === "function" ? loc.lat() : loc.lat;
+      const lng = typeof loc.lng === "function" ? loc.lng() : loc.lng;
+      const map = mapInstanceRef.current;
+      if (map) { map.setCenter({ lat, lng }); map.setZoom(15); }
+      onPinPlaced(lat, lng, place.formattedAddress || label);
+      sessionTokenRef.current = null; // end the Places session after a selection
+    } catch { /* keep the typed label; the map click still works */ }
   }
 
   function initMap() {
     if (!mapRef.current || mapInstanceRef.current) return;
     const maps = getMaps();
     if (!maps) return;
+    mapsReadyRef.current = true;
 
     const first = value.find((w) => w.lat != null && w.lng != null);
     const map = new maps.Map(mapRef.current, {
@@ -209,10 +195,6 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200 }: W
     });
     mapInstanceRef.current = map;
     geocoderRef.current = new maps.Geocoder();
-
-    if (pacContainerRef.current && pacContainerRef.current.childElementCount === 0) {
-      mountAutocomplete(map, pacContainerRef.current);
-    }
 
     map.addListener("click", (e: { latLng: GMaps }) => {
       if (!e.latLng) return;
@@ -250,11 +232,10 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200 }: W
   }
 
   // Initialize the map only once the optional refinement is opened (the container
-  // doesn't exist until then). On CLOSE, drop the map instance so the next open
-  // re-binds to the freshly-mounted container + re-mounts the search box.
+  // doesn't exist until then). On CLOSE, drop the map instance + clear the search.
   useEffect(() => {
     if (!effectiveKey) return;
-    if (!showMap) { mapInstanceRef.current = null; return; }
+    if (!showMap) { mapInstanceRef.current = null; setAddrQuery(""); setAddrSug([]); setAddrOpen(false); return; }
     loadGoogleMaps(effectiveKey).then(initMap).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showMap]);
@@ -263,6 +244,29 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200 }: W
     renderMarkers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, draftPin]);
+
+  // Debounced Costa Rica address predictions (new AutocompleteSuggestion API).
+  // Best-effort: any failure just leaves the map click + "use my location" working.
+  useEffect(() => {
+    const q = addrQuery.trim();
+    if (q.length < 3) { setAddrSug([]); return; }
+    const id = setTimeout(async () => {
+      try {
+        const maps = getMaps();
+        if (!mapsReadyRef.current || !maps?.places?.AutocompleteSuggestion) { setAddrSug([]); return; }
+        if (!sessionTokenRef.current) sessionTokenRef.current = new maps.places.AutocompleteSessionToken();
+        const { suggestions } = await maps.places.AutocompleteSuggestion.fetchAutocompleteSuggestions({
+          input: q, includedRegionCodes: ["cr"], sessionToken: sessionTokenRef.current,
+        });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const items = (suggestions ?? []).map((s: any) => s.placePrediction).filter(Boolean).slice(0, 5).map((p: any) => ({
+          placeId: p.placeId as string, label: (p.text?.text ?? p.text ?? "").toString(),
+        })).filter((a: { placeId: string; label: string }) => a.placeId && a.label);
+        setAddrSug(items);
+      } catch { setAddrSug([]); }
+    }, 250);
+    return () => clearTimeout(id);
+  }, [addrQuery]);
 
   const selectCls =
     "h-11 px-3 rounded-xl border border-[#e5e7eb] bg-white text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all cursor-pointer";
@@ -334,8 +338,38 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200 }: W
           </button>
           {showMap && (
             <div className="flex flex-col gap-2">
-              {/* Address search → drops the pin. */}
-              <div ref={pacContainerRef} className="cr-pac w-full" />
+              {/* Address search → drops the pin. OUR standard input (single border
+                  matching the section's other fields) + the app's shared dropdown. */}
+              <div ref={addrFieldRef} className="relative">
+                <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9ca3af]" />
+                <input
+                  type="text"
+                  value={addrQuery}
+                  onChange={(e) => { setAddrQuery(e.target.value); setAddrOpen(true); }}
+                  onFocus={() => { if (addrSug.length > 0) setAddrOpen(true); }}
+                  onBlur={() => setTimeout(() => setAddrOpen(false), 150)}
+                  placeholder={t("searchPlaceholder")}
+                  aria-label={t("searchPlaceholder")}
+                  className="h-11 w-full rounded-xl border border-[#e5e7eb] bg-white pl-9 pr-3 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+                />
+                <AnchoredDropdown anchorRef={addrFieldRef} open={addrOpen && addrSug.length > 0} maxHeight={240}>
+                  <ul className="py-1">
+                    {addrSug.map((a) => (
+                      <li key={a.placeId}>
+                        <button
+                          type="button"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => selectAddress(a.placeId, a.label)}
+                          className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm text-[#374151] hover:bg-[#EBF5FB]"
+                        >
+                          <MapPin className="h-4 w-4 shrink-0 text-[#009FD9]" />
+                          <span className="truncate">{a.label}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </AnchoredDropdown>
+              </div>
               <button type="button" onClick={useMyLocation} disabled={locating} className="self-start inline-flex items-center gap-1.5 text-sm font-medium text-[#009FD9] hover:underline disabled:opacity-60">
                 <MapPin className="h-4 w-4" />
                 {locating ? t("locating") : t("useMyLocation")}
