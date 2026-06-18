@@ -4,16 +4,19 @@ import { useCallback, useEffect, useState, type ReactNode, type RefObject } from
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 
-export type AnchoredPos = { left: number; width: number; top?: number; bottom?: number; maxH: number };
+export type AnchoredPos = { left: number; top: number; width: number; maxH: number };
 
-// Position an autocomplete dropdown so it NEVER covers the field it belongs to.
-// It's portaled to <body> (so no ancestor `overflow:hidden`/`transform` can clip
-// it) and `position: fixed`, anchored to the field's rect. It opens BELOW the
-// field by default and flips ABOVE only when the *visible* space below is too
-// small — and "visible" is measured with `visualViewport`, so the MOBILE KEYBOARD
-// is accounted for (the old `window.innerHeight` math thought the area behind the
-// keyboard was free, so the list rendered behind it / over the field). max-height
-// is clamped to the visible space and the list scrolls internally.
+// Position an autocomplete dropdown so it stays ATTACHED to its field and NEVER
+// covers it. It's portaled to <body> (so no ancestor `overflow:hidden`/`transform`
+// can clip it) and positioned **`absolute` in DOCUMENT coordinates** (rect +
+// scrollX/scrollY). Why absolute-in-document, not `fixed`: a `fixed` panel is
+// pinned to the VIEWPORT, so on iOS — where focusing an input opens the keyboard
+// and shifts the visual viewport — the panel floats up and OVER the field while
+// the input scrolls down with the page (it "detaches"). In document coords the
+// panel lives in the same coordinate space as the input, so they move together
+// (page scroll, keyboard shift, internal modal scroll) and it always sits DIRECTLY
+// BELOW the input. max-height is clamped to the space above the keyboard and the
+// list scrolls internally.
 export function useAnchoredPosition(
   anchorRef: RefObject<HTMLElement | null>,
   open: boolean,
@@ -25,29 +28,26 @@ export function useAnchoredPosition(
     const el = anchorRef.current;
     if (!el || typeof window === "undefined") return;
     const r = el.getBoundingClientRect();
-    // getBoundingClientRect + position:fixed are BOTH layout-viewport coords, so
-    // anchoring stays correct; only the *visible* window changes with the keyboard.
+    if (r.width === 0 && r.height === 0) { setPos(null); return; } // field hidden (display:none)
+    const sx = window.scrollX;
+    const sy = window.scrollY;
     const vv = window.visualViewport;
-    const viewTop = vv?.offsetTop ?? 0;
-    const viewH = vv?.height ?? window.innerHeight;
-    const MARGIN = 6;
+    const viewBottom = (vv?.offsetTop ?? 0) + (vv?.height ?? window.innerHeight);
+    const GAP = 6;
     const PAD = 10;
-    const spaceBelow = viewTop + viewH - r.bottom;
-    const spaceAbove = r.top - viewTop;
-    const clamp = (s: number) => Math.max(120, Math.min(maxHeight, s - PAD));
-    // Prefer below; flip up only when below is cramped AND above has more room.
-    if (spaceBelow < 180 && spaceAbove > spaceBelow) {
-      setPos({ left: r.left, width: r.width, bottom: window.innerHeight - r.top + MARGIN, maxH: clamp(spaceAbove) });
-    } else {
-      setPos({ left: r.left, width: r.width, top: r.bottom + MARGIN, maxH: clamp(spaceBelow) });
-    }
+    const width = r.width;
+    let left = r.left + sx;
+    if (left + width > sx + window.innerWidth - 8) left = Math.max(8 + sx, sx + window.innerWidth - 8 - width);
+    // Always open BELOW; cap the height to the visible space above the keyboard.
+    const maxH = Math.max(120, Math.min(maxHeight, viewBottom - r.bottom - PAD));
+    setPos({ left, top: r.bottom + sy + GAP, width, maxH });
   }, [anchorRef, maxHeight]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) { setPos(null); return; }
     reposition();
     const onMove = () => reposition();
-    window.addEventListener("scroll", onMove, true); // capture → catches scrolling parents
+    window.addEventListener("scroll", onMove, true); // capture → catches scrolling parents/modals
     window.addEventListener("resize", onMove);
     window.visualViewport?.addEventListener("resize", onMove); // keyboard show/hide
     window.visualViewport?.addEventListener("scroll", onMove);
@@ -62,7 +62,7 @@ export function useAnchoredPosition(
   return pos;
 }
 
-// Portaled, keyboard-aware dropdown container. Render the list items as children;
+// Portaled, attached dropdown container. Render the list items as children;
 // the box chrome (border/rounded/bg/shadow + internal scroll) is provided here.
 export function AnchoredDropdown({
   anchorRef,
@@ -82,11 +82,10 @@ export function AnchoredDropdown({
   return createPortal(
     <div
       style={{
-        position: "fixed",
+        position: "absolute",
         left: pos.left,
-        width: pos.width,
         top: pos.top,
-        bottom: pos.bottom,
+        width: pos.width,
         maxHeight: pos.maxH,
         zIndex: 9999,
       }}

@@ -99,20 +99,25 @@ function RotatingLine({ lines }: { lines: string[] }) {
   );
 }
 
-/* Anchored, viewport-FIXED position for a dropdown PORTALED to <body>.
+/* Anchored position for a dropdown PORTALED to <body>.
    ──────────────────────────────────────────────────────────────────
-   WHY A PORTAL (this is the RECURRING bug): the home search bar is a single
-   rounded pill with `overflow-hidden` (for its shape). The autocomplete panels
-   used to be absolutely-positioned children INSIDE that pill, so the pill's
-   `overflow-hidden` CLIPPED them to zero height → "suggestions stopped showing".
-   Every restyle of the bar re-introduced the clip. Portaling each dropdown to
-   <body> with `position:fixed` (measured from the field's rect) makes it
-   IMMUNE to any ancestor overflow/stacking — it can never be clipped again, no
-   matter how the bar is styled. Returns null while the field is hidden
+   WHY A PORTAL: the home search bar is a single rounded pill with
+   `overflow-hidden` (for its shape). The autocomplete panels used to be absolute
+   children INSIDE that pill, so the pill's `overflow-hidden` CLIPPED them to zero
+   height. Portaling each dropdown to <body> makes it IMMUNE to any ancestor
+   overflow/stacking — it can never be clipped again.
+   WHY ABSOLUTE-IN-DOCUMENT (not `fixed`): a `fixed` panel is pinned to the
+   VIEWPORT, so on mobile — where focusing the input opens the keyboard and shifts
+   the visual viewport — the panel floated UP and OVER the field while the input
+   scrolled down with the page (it "detached" and covered what you were typing).
+   Positioning `absolute` in DOCUMENT coords (rect + scrollX/scrollY) keeps the
+   panel in the SAME coordinate space as the input, so they move together and it
+   always sits DIRECTLY BELOW the field. `maxH` caps it to the space above the
+   keyboard; the list scrolls internally. Returns null while the field is hidden
    (responsive `display:none` → rect 0×0), so only the VISIBLE field's dropdown
    renders even though desktop + mobile both mount. */
 function useAnchoredRect(ref: RefObject<HTMLElement | null>, open: boolean, minWidth = 0) {
-  const [pos, setPos] = useState<{ left: number; top: number; width: number } | null>(null);
+  const [pos, setPos] = useState<{ left: number; top: number; width: number; maxH: number } | null>(null);
   useEffect(() => {
     if (!open) { setPos(null); return; }
     const el = ref.current;
@@ -120,19 +125,28 @@ function useAnchoredRect(ref: RefObject<HTMLElement | null>, open: boolean, minW
     const update = () => {
       const r = el.getBoundingClientRect();
       if (r.width === 0 && r.height === 0) { setPos(null); return; } // field hidden (display:none)
+      const sx = window.scrollX;
+      const sy = window.scrollY;
+      const vv = window.visualViewport;
+      const viewBottom = (vv?.offsetTop ?? 0) + (vv?.height ?? window.innerHeight);
       const width = Math.max(r.width, minWidth);
-      let left = r.left;
-      if (typeof window !== "undefined" && left + width > window.innerWidth - 8) {
-        left = Math.max(8, window.innerWidth - 8 - width);
+      let left = r.left + sx;
+      if (left + width > sx + window.innerWidth - 8) {
+        left = Math.max(8 + sx, sx + window.innerWidth - 8 - width);
       }
-      setPos({ left, top: r.bottom + 8, width });
+      const maxH = Math.max(140, Math.min(320, viewBottom - r.bottom - 12));
+      setPos({ left, top: r.bottom + sy + 8, width, maxH });
     };
     update();
     window.addEventListener("scroll", update, true);
     window.addEventListener("resize", update);
+    window.visualViewport?.addEventListener("resize", update);
+    window.visualViewport?.addEventListener("scroll", update);
     return () => {
       window.removeEventListener("scroll", update, true);
       window.removeEventListener("resize", update);
+      window.visualViewport?.removeEventListener("resize", update);
+      window.visualViewport?.removeEventListener("scroll", update);
     };
   }, [open, ref, minWidth]);
   return pos;
@@ -157,8 +171,8 @@ function SuggestionsDropdown({
   if (!show || !pos || typeof document === "undefined") return null;
   return createPortal(
     <div
-      style={{ position: "fixed", left: pos.left, top: pos.top, width: pos.width, zIndex: 9999 }}
-      className="bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden py-1 text-left"
+      style={{ position: "absolute", left: pos.left, top: pos.top, width: pos.width, maxHeight: pos.maxH, zIndex: 9999 }}
+      className="bg-white border border-gray-200 rounded-xl shadow-xl overflow-y-auto overscroll-contain py-1 text-left"
       role="listbox"
     >
       {suggestions.map((s, i) => (
@@ -219,8 +233,8 @@ function LocationDropdown({
   if (!show || !pos || typeof document === "undefined") return null;
   return createPortal(
     <div
-      style={{ position: "fixed", left: pos.left, top: pos.top, width: pos.width, zIndex: 9999 }}
-      className="bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden py-1 text-left"
+      style={{ position: "absolute", left: pos.left, top: pos.top, width: pos.width, maxHeight: pos.maxH, zIndex: 9999 }}
+      className="bg-white border border-gray-200 rounded-xl shadow-xl overflow-y-auto overscroll-contain py-1 text-left"
       role="listbox"
     >
       {/* Our province/cantón taxonomy (keyboard-navigable). */}

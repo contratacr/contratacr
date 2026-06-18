@@ -88,11 +88,12 @@ export function LanguagesInput({ value, onChange }: Props) {
         />
       </div>
 
-      {/* Portaled to <body> so the card's overflow can't clip it; matches the field width. */}
+      {/* Portaled to <body> so the card's overflow can't clip it; absolute in
+          document coords so it stays attached below the field; matches its width. */}
       {dropdownOpen && pos && typeof document !== "undefined" && createPortal(
         <ul
-          style={{ position: "fixed", left: pos.left, width: pos.width, top: pos.top, bottom: pos.bottom, maxHeight: pos.maxH, zIndex: 9999 }}
-          className="overflow-auto rounded-xl border border-[#e5e7eb] bg-white py-1 shadow-2xl"
+          style={{ position: "absolute", left: pos.left, width: pos.width, top: pos.top, maxHeight: pos.maxH, zIndex: 9999 }}
+          className="overflow-auto overscroll-contain rounded-xl border border-[#e5e7eb] bg-white py-1 shadow-2xl"
           role="listbox"
         >
           {suggestions.map((s, i) => (

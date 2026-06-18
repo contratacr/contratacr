@@ -152,16 +152,17 @@ export function CategorySearch({
         </div>
       </button>
 
-      {/* Dropdown — portaled to <body> so no parent overflow can clip it. */}
+      {/* Dropdown — portaled to <body> so no parent overflow can clip it, and
+          positioned absolute in DOCUMENT coords so it stays attached below the
+          field (no detach when the page/keyboard shifts). */}
       {open && pos && typeof document !== "undefined" && createPortal(
         <div
           ref={panelRef}
           style={{
-            position: "fixed",
+            position: "absolute",
             left: pos.left,
             width: pos.width,
             top: pos.top,
-            bottom: pos.bottom,
             maxHeight: pos.maxH,
             zIndex: 9999,
           }}
