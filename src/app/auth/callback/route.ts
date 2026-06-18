@@ -40,12 +40,18 @@ export async function GET(request: NextRequest) {
       ? await supabase.auth.verifyOtp({ type: (type ?? "email") as EmailOtpType, token_hash: tokenHash })
       : await supabase.auth.exchangeCodeForSession(code!);
 
-    if (!error && data.user) {
-      // Email change confirmed → land on the role-aware "Cuenta y seguridad" tab with
-      // the success-banner flag (?emailChanged=1). The user is an existing account, so
-      // role is set (RPC fallback for older metadata, mirroring the OAuth path below).
-      if (tokenHash && type === "email_change") {
-        let role = data.user.user_metadata?.role as string | undefined;
+    // ── Email change confirmation — handle FIRST and TOLERANTLY ─────────────────
+    // The change is applied by `verifyOtp`, but email security scanners (Outlook /
+    // corporate) often PREFETCH the link and CONSUME the single-use token_hash before
+    // the human clicks — so by the real click verifyOtp ERRORS even though the email
+    // already changed. Previously that fell through to the error page (= the MAIN
+    // page). Instead, resolve the user from the verify result OR the existing session
+    // and land on the role-aware "Cuenta y seguridad" tab with the success-banner flag
+    // (?emailChanged=1) — never the main page.
+    if (tokenHash && type === "email_change") {
+      const u = data.user ?? (await supabase.auth.getUser()).data.user;
+      if (u) {
+        let role = u.user_metadata?.role as string | undefined;
         if (role !== "professional" && role !== "client") {
           const { data: prof } = await supabase.rpc("get_my_profile");
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -55,7 +61,12 @@ export async function GET(request: NextRequest) {
         const panel = role === "professional" ? "profesional" : "cliente";
         return NextResponse.redirect(`${origin}/es/dashboard/${panel}?tab=cuenta&emailChanged=1`);
       }
+      // No session in THIS browser (token consumed AND logged out here) → the change is
+      // already applied, so route to login to sign in with the new email (not main).
+      return NextResponse.redirect(`${origin}/es/login`);
+    }
 
+    if (!error && data.user) {
       // ── One email = ONE login method (BLOCK mixing) ─────────────────────────
       // A Google/Facebook sign-in (flow=oauth, set by /login's OAuth buttons) must
       // NOT attach to / take over an account that already has an email+password
