@@ -243,13 +243,14 @@ Simplified for non-technical pros (Uber/Airbnb pattern: **structured field first
 - **The 5-photo limit is ONLY for "casos de éxito"** (`MAX_PORTFOLIO_PHOTOS`, on `portfolio_urls`/`portfolio_items`). The **profile photo (avatar) is a single, independent image** (`profiles.avatar_url`, `type=avatar`) and must NEVER be subject to that limit.
 - **Casos de éxito are organized BY PROFESSION** (category), NOT by individual service (Sprint 168 — like Certificaciones). `portfolio_items` = `[{ url, profession, serviceId? }]`. The editor (`photo-gallery.tsx`) shows one section per profession; an upload tags the photo with that profession. The public profile's "Casos" tab groups galleries by profession (`getCategoryLabel`) with an **"Otros trabajos"** bucket. **Migration is lossless + at read-time** via shared **`casoProfession(item, services, primary)`** = `item.profession ?? service(serviceId).category ?? primary` — legacy serviceId-tagged photos map to their service's profession automatically (and the derived value is persisted on the next save); nothing is ever lost. Do NOT reintroduce per-service grouping.
 
-### Certificaciones (professional, text-only, PER-PROFESSION)
+### Formación (professional, text-only, PER-PROFESSION)
+- **Label = "Formación" / EN "Education" (Sprint 253).** Renamed from "Certificaciones" because the section covers **courses, títulos/degrees AND certificates** — narrow "Certificaciones" missed the first two. Subtext stays **"Cursos, títulos o certificados"** (the encompassing clarifier); the add button is **"Agregar formación" / "Add education"** (per-profession: "Agregar formación a {profesión}"); item-level controls are GENERIC ("Guardar"/"Quitar") since an entry can be a course/título/cert and "formación" is a collective noun. The DATA stays `certifications` (field/table) and the public tab SLUG stays `certificaciones` — **only the labels changed**, not functionality.
 - **TEXT entries only — image upload is simply not offered** (avoids exposing IDs/personal data on certificates). **Don't mention images at all** in the copy (no "no subas imágenes / texto sin imágenes" notes). Each entry = **nombre + institución + año, ALL required** + a **profession** tag.
-- **Add via an explicit form, not inline editing:** saved certs render as **read-only rows** (Award + name + "institución · año" + remove); **"Agregar certificación"** opens a small form whose **"Guardar certificación"** button validates all three fields (`certAllRequired`) before committing — so it's never ambiguous whether the button saves the current one or adds another. Multiple per profession (heading per profession when >1; legacy untagged certs default to the principal profession).
+- **Add via an explicit form, not inline editing:** saved entries render as **read-only rows** (Award + name + "institución · año" + remove); **"Agregar formación"** opens a small form whose **"Guardar"** button validates all three fields (`certAllRequired`) before committing — so it's never ambiguous whether the button saves the current one or adds another. Multiple per profession (heading per profession when >1; legacy untagged certs default to the principal profession).
 - **Per profession:** certifications belong to a specific profession (category id), not the whole account — a multi-profession pro adds/displays them under each profession separately (heading per profession when >1; legacy untagged certs default to the principal profession).
 - **Save independently:** persist certifications in their **own `update({ certifications })`** call, NOT bundled with other optional columns — otherwise one not-yet-migrated column makes a shared retry silently drop them (this was the "certs not saving" bug).
-- **Public profile:** a **"Certificaciones" tab** appears only when the pro has any (mirrors the "Casos de éxito" tab pattern), grouped by profession, each row = `Award` icon + name + "institución · año". Keep the description neutral ("Cursos, títulos y certificados que indica el profesional.") — do NOT add an "authenticity not verified" disclaimer (it reduces trust and reads as the pro opting out of verification).
-- **/buscar card:** **never list certificates on the card** (would grow it). Show a compact **"Ver certificaciones (N)"** link (Award icon) ONLY when there are any, **sharing the same bottom `flex-wrap` row as "Ver casos de éxito"** so the card height stays uniform. It deep-links to `?tab=certificaciones`. Same rule for any future "extra detail" surfaced from a card: a compact link in the shared bottom row, not inline content.
+- **Public profile:** a **"Formación" tab** (slug still `certificaciones`) appears only when the pro has any (mirrors the "Casos de éxito" tab pattern), grouped by profession, each row = `Award` icon + name + "institución · año". Keep the description neutral ("Cursos, títulos y certificados que indica el profesional.") — do NOT add an "authenticity not verified" disclaimer (it reduces trust and reads as the pro opting out of verification).
+- **/buscar card:** **never list certificates on the card** (would grow it). Show a compact **"Ver formación (N)"** link (Award icon) ONLY when there are any, **sharing the same bottom `flex-wrap` row as "Ver casos de éxito"** so the card height stays uniform. It deep-links to `?tab=certificaciones`. Same rule for any future "extra detail" surfaced from a card: a compact link in the shared bottom row, not inline content.
 
 ### No self-service (a pro can't hire themselves)
 - A professional must **never** be able to request a service from their **own** profile, nor send a proposal to their **own** project. Detect ownership by comparing the viewer's auth id to the pro's owner (`ProfessionalCardData.profileId` = `professionals.profile_id`) / the project's `client_id`.
@@ -313,7 +314,7 @@ Simplified for non-technical pros (Uber/Airbnb pattern: **structured field first
   use the canonical blue `Badge variant="verified"` pill — never green text.
 - **No standalone "Disponibilidad" TAB on the public profile.** The contact card already shows the
   schedule (location tabs + 3-day strip + booking/contact), so a separate Disponibilidad section would
-  only duplicate it — the profile content tabs are **Servicios · Casos de éxito? · Certificaciones? ·
+  only duplicate it — the profile content tabs are **Servicios · Casos de éxito? · Formación? ·
   Reseñas · Sobre mí** (no Disponibilidad). Do not re-add it.
 - **Booking modal = two panels (`booking-modal.tsx`, Sprint 177).** LEFT = navy gradient `from-[#1a2744] via-[#13294a] to-[#009FD9]`, ~320px, **centered**: avatar → name → green "✓ Verificado" (`#34d399`, verified pros) → specialty → ★rating(count) → location → "Desde ₡…" → a "QUÉ SIGUE" 3-step list pinned to the bottom. RIGHT = white: header ("Reservar cita" `t("title")` + step-progress + ×), then the calendar step as **two sub-columns** (calendar | that day's slots, `md:grid-cols-2`). Calendar: every AVAILABLE day shows a **blue dot**, today is **"HOY"**, selected = filled brand-blue. Slots are **grouped by franja** Mañana(`Sun`)/Tarde(`Sunset`)/Noche(`Moon`) — grey icons (serious-app rule) — as equal-width `grid-cols-3` pills; no day selected → an empty-state (`CalendarCheck` + "Elige un día disponible…"). Sticky footer: selected "fecha · hora" left + "Continuar" right (disabled until a time is picked). Brand `#009FD9` + Inter (NOT the screenshot's `#008ce0`/typeface).
 
@@ -766,7 +767,7 @@ Every "Verificado" trust mark renders as the plain word "Verificado" (green) —
 Within the uniform card (mobile floor `min-h-[320px]`, desktop `md:min-h-[190px]`):
 - "Ver horario completo" sits CENTERED below the schedule grid (`self-center`), never in a top corner — it must not collide with the absolute top-right bookmark button.
 - Reviews: star + rating value are plain text; ONLY the "N reseñas" count is the link (brand-blue, to the reviews tab). 0 reviews → honest non-link "Sin reseñas todavía".
-- Casos de éxito / Certificaciones are count-LESS links; certifications only renders when the pro has any.
+- Casos de éxito / Formación are count-LESS links; Formación (certifications) only renders when the pro has any.
 
 ## 27. Dashboard panel spacing (title → content)
 
@@ -1406,7 +1407,7 @@ whole action/schedule area); the favorite bookmark (z-20, `SaveableCard`) is abo
 Keyboard/SR users use the focusable logo/name links. Don't add a separate "Ver perfil
 completo" link.
 
-**ON THE PROFILE ONLY — not on the card:** Casos de éxito, Certificaciones, social-media
+**ON THE PROFILE ONLY — not on the card:** Casos de éxito, Formación, social-media
 icons. Do NOT re-add them to the card.
 
 **Page shell (responsive):** see §51 — desktop = filter sidebar · results column (hugs the
