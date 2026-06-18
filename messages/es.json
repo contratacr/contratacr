@@ -1264,7 +1264,7 @@
     "alwaysTitle": "Mis horarios de siempre",
     "alwaysSub": "En {place} · se repite automáticamente cada semana.",
     "alwaysSubAll": "Se repite automáticamente cada semana.",
-    "presetTypical": "Lun–Vie, 8 a. m.–5 p. m.",
+    "presetTypical": "Aplicar Lun–Vie, 8 a. m.–5 p. m.",
     "blockLocationAria": "Ubicación de este horario",
     "excLocationAria": "Ubicación de las excepciones",
     "apptDuration": "Cada cita dura",

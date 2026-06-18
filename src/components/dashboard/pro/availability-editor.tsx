@@ -6,7 +6,7 @@ import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import { Plus, X, Lock, Loader2, MapPin, ChevronDown, ChevronLeft, ChevronRight, Calendar, Pencil, Trash2, Copy } from "lucide-react";
+import { Plus, X, Lock, Loader2, MapPin, ChevronDown, ChevronLeft, ChevronRight, Calendar, CalendarClock, Pencil, Trash2, Copy } from "lucide-react";
 import { type ContactPreference } from "@/lib/constants";
 import { crTodayISO, isTooSoonCR } from "@/lib/time-cr";
 import { TimeSelect, to12h } from "@/components/ui/time-select";
@@ -667,13 +667,18 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
               </div>
             </div>
 
-            {/* Quick win: one-tap typical workweek (Mon–Fri 8 AM–5 PM). */}
+            {/* Quick win: one-tap typical workweek (Mon–Fri 8 AM–5 PM). Styled as a clear
+                on-brand shortcut pill — leading icon + action verb so it reads as a
+                one-click preset, not a static label. */}
             <button
               type="button"
               onClick={presetWeekdays8to5}
-              className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-[#bfdbfe] bg-[#EBF5FB] px-3 py-1.5 text-xs font-medium text-[#0089bb] hover:bg-[#d9edf9] transition-colors"
+              className="group mb-3.5 inline-flex items-center gap-2 rounded-full border border-[#bfdbfe] bg-[#EBF5FB] py-2 pl-2.5 pr-3.5 text-xs font-semibold text-[#162543] shadow-sm transition-colors hover:border-[#93c5fd] hover:bg-[#dcedfa]"
             >
-              <Copy className="h-3.5 w-3.5" /> {t("presetTypical")}
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#008ce0] text-white">
+                <CalendarClock className="h-3 w-3" />
+              </span>
+              {t("presetTypical")}
             </button>
 
             <div className="flex flex-col divide-y divide-[#f3f4f6]">
@@ -702,9 +707,9 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                         <p className="text-sm text-[#9ca3af] sm:pt-1.5">{t("closed")}</p>
                       ) : (
                         <div className="flex flex-col gap-2.5">
-                          {blocks.map((b) => (
-                            <div key={b.id} className="flex flex-col gap-1">
-                              {/* time range + its remove "x" on ONE line — the x stays RIGHT */}
+                          {blocks.map((b) => {
+                            // time range + its remove "x" on ONE line — the x stays RIGHT
+                            const timeRow = (
                               <div className="flex items-center gap-1.5">
                                 <TimeSelect value={b.start} onChange={(v) => updateBlock(wd, b.id, { start: v, ...(b.end && toMins(b.end) <= toMins(v) ? { end: hhmm(Math.min(toMins(v) + 60, 23 * 60 + 30)) } : {}) })} className="min-w-0 flex-1 sm:flex-none sm:w-28" />
                                 <span className="shrink-0 text-[#9ca3af]">–</span>
@@ -713,23 +718,31 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                                   <X className="h-4 w-4" />
                                 </button>
                               </div>
-                              {/* Per-block LOCATION — only when the pro has 2+ locations. */}
-                              {isMultiLocation && (
-                                <div className="relative inline-flex items-center self-start">
-                                  <MapPin className="pointer-events-none absolute left-2 h-3 w-3 text-[#9ca3af]" />
+                            );
+                            // Single-location pros: just the time row (clean, compact, no location UI).
+                            if (!isMultiLocation) return <div key={b.id}>{timeRow}</div>;
+                            // 2+ locations: group the time row + its location in one soft tint
+                            // surface (no border, per R1) so the franja reads as a single unit —
+                            // "these hours, at this place". The select sits directly below the
+                            // times and spans the same width.
+                            return (
+                              <div key={b.id} className="flex w-full flex-col gap-2 rounded-xl bg-[#f9fafb] p-2.5 sm:w-fit">
+                                {timeRow}
+                                <div className="relative">
+                                  <MapPin className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#9ca3af]" />
                                   <select
                                     value={b.locationId}
                                     onChange={(e) => updateBlock(wd, b.id, { locationId: e.target.value })}
                                     aria-label={t("blockLocationAria")}
-                                    className="h-8 appearance-none rounded-lg border border-[#e5e7eb] bg-white pl-7 pr-7 text-xs font-medium text-[#374151] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent cursor-pointer"
+                                    className="h-9 w-full appearance-none rounded-lg border border-[#e5e7eb] bg-white pl-8 pr-8 text-xs font-medium text-[#374151] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent cursor-pointer"
                                   >
                                     {locationOptions.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
                                   </select>
-                                  <ChevronDown className="pointer-events-none absolute right-2 h-3.5 w-3.5 text-[#9ca3af]" />
+                                  <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9ca3af]" />
                                 </div>
-                              )}
-                            </div>
-                          ))}
+                              </div>
+                            );
+                          })}
                           <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 pt-0.5">
                             <button type="button" onClick={() => addBlock(wd)} className="inline-flex items-center gap-1 text-xs font-medium text-[#009FD9] hover:underline cursor-pointer">
                               <Plus className="h-3.5 w-3.5" /> {t("addFranja")}
