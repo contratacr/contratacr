@@ -131,14 +131,17 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
     if (!newEmail.trim()) return;
     setEmailError(null);
     const supabase = createClient();
-    // The confirmation link is built by the change-email.html template as a
-    // token_hash link to /auth/callback?type=email_change — finalized THERE via
-    // verifyOtp (which actually applies the change), then routed to
-    // ?tab=cuenta&emailChanged=1 for the success banner. No emailRedirectTo: the
-    // template + callback own the destination, and the token_hash flow avoids the
-    // PKCE code_verifier / redirect_to-allowlist pitfalls that broke the old code
-    // flow (the link used to fall through the callback to the main page, unapplied).
-    const { error } = await supabase.auth.updateUser({ email: newEmail.trim() });
+    // CRITICAL: pass `emailRedirectTo` so the confirmation code lands on
+    // **/auth/callback** (which exchanges it, then honors `next`). Without it,
+    // GoTrue has no redirect target and falls back to the Supabase **Site URL**
+    // root — the code arrived on `/es` (home), which doesn't process it, so the
+    // user got stuck on main. `next` (the role-aware "Cuenta y seguridad" tab +
+    // success flag) is URL-encoded so the callback receives it whole. (Requires
+    // `https://contratacr.com/auth/callback` in Supabase → Redirect URLs.)
+    const role = (user?.user_metadata?.role as string | undefined) === "professional" ? "profesional" : "cliente";
+    const next = `/${locale}/dashboard/${role}?tab=cuenta&emailChanged=1`;
+    const emailRedirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`;
+    const { error } = await supabase.auth.updateUser({ email: newEmail.trim() }, { emailRedirectTo });
     if (error) { setEmailError(error.message); return; }
     setEmailSent(true);
     setEmailMode(false);

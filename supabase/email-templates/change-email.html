@@ -22,12 +22,12 @@
       <tr><td align="center" style="padding:0 32px;">
         <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
           <td align="center" bgcolor="#008ce0" style="border-radius:10px;">
-            <a href="{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&amp;type=email_change" target="_blank" style="display:inline-block;padding:14px 32px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:10px;">Confirmar cambio</a>
+            <a href="{{ .ConfirmationURL }}" target="_blank" style="display:inline-block;padding:14px 32px;font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:10px;">Confirmar cambio</a>
           </td>
         </tr></table>
       </td></tr>
       <tr><td style="padding:20px 32px 0 32px;font-family:Arial,Helvetica,sans-serif;">
-        <p style="font-size:12px;line-height:1.6;color:#9ca3af;margin:0;">¿No funciona el botón? <a href="{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&amp;type=email_change" style="color:#008ce0;text-decoration:underline;font-weight:bold;">Abre este enlace</a>.</p>
+        <p style="font-size:12px;line-height:1.6;color:#9ca3af;margin:0;">¿No funciona el botón? <a href="{{ .ConfirmationURL }}" style="color:#008ce0;text-decoration:underline;font-weight:bold;">Abre este enlace</a>.</p>
       </td></tr>
       <tr><td style="padding:22px 32px 0 32px;font-family:Arial,Helvetica,sans-serif;">
         <p style="font-size:13px;line-height:1.6;color:#6b7280;margin:0;border-top:1px solid #eef1f5;padding-top:18px;">Si no solicitaste este cambio, ignora este correo y tu cuenta seguirá igual.</p>
