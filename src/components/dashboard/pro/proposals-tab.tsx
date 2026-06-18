@@ -36,7 +36,7 @@ type OpenProject = {
   budget_max?: number;
   timeline?: string;
   created_at: string;
-  categories?: { name: string; icon: string };
+  categories?: { name: string };
   provincias?: { name: string };
   cantones?: { name: string };
   profiles?: { full_name: string };

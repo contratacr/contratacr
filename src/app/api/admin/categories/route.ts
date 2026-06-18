@@ -68,7 +68,7 @@ export async function PATCH(req: Request) {
       .eq("id", id)
       .single();
     const finalName = name || row?.label || row?.suggested_name || id;
-    await db.from("categories").upsert({ id, name: finalName, icon: "" }, { onConflict: "id", ignoreDuplicates: false });
+    await db.from("categories").upsert({ id, name: finalName }, { onConflict: "id", ignoreDuplicates: false });
   }
 
   return NextResponse.json({ ok: true });

@@ -43,7 +43,7 @@ type Booking = {
     slug: string;
     whatsapp?: string;
     profiles: { full_name: string; avatar_url?: string };
-    categories: { id: string; icon: string; name: string };
+    categories: { id: string; name: string };
   };
 };
 
@@ -53,7 +53,7 @@ type Project = {
   description: string;
   status: string;
   created_at: string;
-  categories?: { name: string; icon: string };
+  categories?: { name: string };
   provincias?: { name: string };
   cantones?: { name: string };
   proposals?: { id: string; status: string }[];
@@ -70,7 +70,7 @@ type Proposal = {
     slug: string;
     whatsapp?: string;
     profiles: { full_name: string; avatar_url?: string };
-    categories: { name: string; icon: string };
+    categories: { name: string };
   };
 };
 
@@ -345,11 +345,11 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                 <div className="flex items-center gap-2 flex-wrap mb-1">
                                   {b.professionals?.slug ? (
                                     <Link href={`/profesionales/${b.professionals.slug}`} className="text-sm font-semibold text-[#111827] hover:text-[#009FD9] hover:underline">
-                                      {b.professionals?.categories?.icon} {b.professionals?.profiles?.full_name ?? t("professional")}
+                                      {b.professionals?.profiles?.full_name ?? t("professional")}
                                     </Link>
                                   ) : (
                                     <span className="text-sm font-semibold text-[#111827]">
-                                      {b.professionals?.categories?.icon} {b.professionals?.profiles?.full_name ?? t("professional")}
+                                      {b.professionals?.profiles?.full_name ?? t("professional")}
                                     </span>
                                   )}
                                   <Badge variant={STATUS_VARIANT[b.status]}>

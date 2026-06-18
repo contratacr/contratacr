@@ -8,8 +8,8 @@ import { getProvinceById, getCantonById } from "@/lib/data/cr-geography";
  * Resolve category / provincia / cantón display data WITHOUT relying on
  * PostgREST embedded joins — the projects table has no FK to `categories`
  * (dropped in migration 013) and its provincia/canton columns are plain text,
- * so `categories(name, icon)` style embeds error out and return zero rows.
- * We look up the icon/name from the real `categories` table + static geography.
+ * so `categories(name)` style embeds error out and return zero rows.
+ * We look up the name from the real `categories` table + static geography.
  */
 async function enrichProjects(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -20,16 +20,16 @@ async function enrichProjects(
   const admin = createAdminClient();
 
   const catIds = [...new Set(rows.map((r) => r.category_id).filter(Boolean))];
-  const catMap: Record<string, { name: string; icon: string }> = {};
+  const catMap: Record<string, { name: string }> = {};
   if (catIds.length > 0) {
-    const { data: cats } = await admin.from("categories").select("id, name, icon").in("id", catIds);
-    for (const c of cats ?? []) catMap[c.id] = { name: c.name, icon: c.icon };
+    const { data: cats } = await admin.from("categories").select("id, name").in("id", catIds);
+    for (const c of cats ?? []) catMap[c.id] = { name: c.name };
   }
 
   return rows.map((r) => ({
     ...r,
     categories: r.category_id
-      ? catMap[r.category_id] ?? { name: getCategoryLabel(r.category_id), icon: "" }
+      ? catMap[r.category_id] ?? { name: getCategoryLabel(r.category_id) }
       : null,
     provincias: r.provincia_id ? { name: getProvinceById(r.provincia_id)?.name ?? "" } : null,
     cantones: r.canton_id ? { name: getCantonById(r.canton_id)?.name ?? "" } : null,
