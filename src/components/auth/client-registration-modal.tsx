@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
   X, Eye, EyeOff, CheckCircle2, Circle,
@@ -192,6 +192,7 @@ export function ClientRegistrationModal({
 }: ClientRegistrationModalProps) {
   const t = useTranslations("clientRegModal");
   const tRp = useTranslations("resetPassword");
+  const locale = useLocale();
   const [view, setView] = useState<ModalView>("register");
   const [step, setStep] = useState<RegisterStep>("email");
 
@@ -427,6 +428,15 @@ export function ClientRegistrationModal({
                     </button>
                   }
                 />
+                {/* Forgot-password — every login surface has it. Links to the standalone
+                    reset page; does NOT touch the booking flow's login (which still closes
+                    + continues via onSuccess on success). */}
+                <a
+                  href={`/${locale}/olvide-contrasena`}
+                  className="self-start -mt-2.5 text-sm text-[#009FD9] hover:underline"
+                >
+                  {t("forgotPassword")}
+                </a>
                 <Button size="lg" loading={submitting} className="w-full" onClick={handleLogin}>
                   {submitting ? t("signingIn") : t("signIn")}
                 </Button>

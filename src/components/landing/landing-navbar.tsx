@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import {
-  X, Menu, Mail, Lock, Eye, EyeOff, AlertCircle, ChevronDown, Search, MapPin,
+  X, Menu, ChevronDown, Search, MapPin,
   LayoutDashboard, LogOut, Bookmark, CalendarDays, FolderOpen, UserPlus, Briefcase, Compass, Settings, Bell, Globe,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
@@ -14,7 +14,6 @@ import { getInitials } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
-import { SpamNotice } from "@/components/ui/spam-notice";
 import { SupportLink } from "@/components/support/support-link";
 import { ALL_CATEGORIES, searchCategories, normalizeText, getCategoryLabel, getCategoryGroupLabel } from "@/lib/data/categories";
 import { searchLocations, resolveLocation, type LocationSuggestion } from "@/lib/data/location-search";
@@ -313,160 +312,6 @@ function CategoryAutocomplete({
   );
 }
 
-/* ─── Login Modal ─── */
-function LoginModal({ onClose }: { onClose: () => void }) {
-  const t = useTranslations("header.loginModal");
-  const locale = useLocale();
-  const [showPw, setShowPw] = useState(false);
-  const [mode, setMode] = useState<"login" | "register">("login");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  }, [onClose]);
-
-  const callbackUrl = typeof window !== "undefined"
-    ? `${window.location.origin}/auth/callback`
-    : "/auth/callback";
-
-  async function handleOAuth(provider: "google" | "facebook" | "apple") {
-    setLoading(true); setError(null);
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOAuth({ provider, options: { redirectTo: callbackUrl } });
-    if (error) { setError(error.message); setLoading(false); }
-  }
-
-  async function handleEmailAuth(e: React.FormEvent) {
-    e.preventDefault();
-    if (!email || !password) { setError(t("fillAllFields")); return; }
-    setLoading(true); setError(null);
-    const supabase = createClient();
-    if (mode === "login") {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) { setError(t("wrongCredentials")); setLoading(false); return; }
-      onClose();
-    } else {
-      const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo: callbackUrl } });
-      if (error) {
-        setError(error.message.toLowerCase().includes("already") ? t("emailAlreadyExists") : error.message);
-        setLoading(false);
-        return;
-      }
-      // Supabase anti-enumeration: an existing email returns a user with an EMPTY
-      // identities array (no error) — surface the same guidance, don't show success.
-      if (Array.isArray(data.user?.identities) && data.user!.identities!.length === 0) {
-        setError(t("emailAlreadyExists"));
-        setLoading(false);
-        return;
-      }
-      setSuccess(t("checkEmailConfirm"));
-      setLoading(false);
-    }
-  }
-
-  return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div
-        className="relative bg-white rounded-2xl shadow-2xl w-full max-w-[420px] p-8 z-10"
-        style={{ animation: "modalIn 0.22s cubic-bezier(0.16,1,0.3,1) both" }}
-      >
-        <style>{`@keyframes modalIn{from{opacity:0;transform:scale(0.95) translateY(12px)}to{opacity:1;transform:scale(1) translateY(0)}}`}</style>
-        <button onClick={onClose} className="absolute top-4 right-4 p-1.5 rounded-full hover:bg-gray-100 transition-colors text-gray-400">
-          <X className="h-4 w-4" />
-        </button>
-        <div className="mb-6">
-          <ContrataCRLogo className="mb-4" />
-          <h2 className="text-2xl font-bold text-[#1a2744]">
-            {mode === "login" ? t("welcomeBack") : t("createAccount")}
-          </h2>
-          <p className="text-sm text-gray-400 mt-1">{mode === "login" ? t("loginToContinue") : t("registerSeconds")}</p>
-        </div>
-
-        {success ? (
-          <div className="text-center py-6">
-            <div className="text-4xl mb-3">📧</div>
-            <p className="font-semibold text-[#1a2744] mb-2">{t("checkEmailTitle")}</p>
-            <p className="text-sm text-gray-400">{success}</p>
-            <SpamNotice className="mt-2" />
-            <button onClick={onClose} className="mt-6 text-sm text-[#009FD9] hover:underline">{t("close")}</button>
-          </div>
-        ) : (
-          <>
-            <div className="space-y-3 mb-5">
-              <button onClick={() => handleOAuth("google")} disabled={loading}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-200 hover:bg-gray-50 transition-all text-sm font-medium text-gray-700 active:scale-[0.98] disabled:opacity-60">
-                <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24">
-                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                </svg>
-                {t("continueGoogle")}
-              </button>
-              <button onClick={() => handleOAuth("facebook")} disabled={loading}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-gray-200 hover:bg-gray-50 transition-all text-sm font-medium text-gray-700 active:scale-[0.98] disabled:opacity-60">
-                <svg className="h-5 w-5 shrink-0 text-[#1877F2]" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                </svg>
-                {t("continueFacebook")}
-              </button>
-            </div>
-
-            <div className="flex items-center gap-3 mb-5">
-              <div className="flex-1 h-px bg-gray-100" /><span className="text-xs text-gray-400 font-medium">{t("or")}</span><div className="flex-1 h-px bg-gray-100" />
-            </div>
-
-            <form onSubmit={handleEmailAuth} className="space-y-3 mb-4">
-              {error && (
-                <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-100 rounded-xl text-xs text-red-600">
-                  <AlertCircle className="h-3.5 w-3.5 shrink-0" />{error}
-                </div>
-              )}
-              <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
-                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t("email")}
-                  className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30 focus:border-[#009FD9] transition-all bg-gray-50/50 placeholder:text-gray-400" />
-              </div>
-              <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300" />
-                <input type={showPw ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder={t("password")}
-                  className="w-full pl-10 pr-10 py-3 rounded-xl border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9]/30 focus:border-[#009FD9] transition-all bg-gray-50/50 placeholder:text-gray-400" />
-                <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500">
-                  {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-              <button type="submit" disabled={loading}
-                className="w-full py-3 rounded-xl bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold text-sm transition-all active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2">
-                {loading && <span className="h-4 w-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />}
-                {mode === "login" ? t("loginBtn") : t("createBtn")}
-              </button>
-            </form>
-
-            <p className="text-center text-sm text-gray-400">
-              {mode === "login" ? (
-                <>{t("noAccount")}{" "}
-                  <button onClick={() => { onClose(); window.location.assign(`/${locale}/registro`); }} className="text-[#009FD9] font-semibold hover:underline">{t("registerFree")}</button>
-                </>
-              ) : (
-                <>{t("haveAccount")}{" "}
-                  <button onClick={() => { setMode("login"); setError(null); }} className="text-[#009FD9] font-semibold hover:underline">{t("loginLink")}</button>
-                </>
-              )}
-            </p>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
 /* ─── Account menu (avatar trigger + dropdown) ───
    Self-contained: owns its open state + tap-away handling, so it can be
    rendered in BOTH the default header row AND the compact/scrolled row
@@ -638,7 +483,6 @@ function AccountMenu({
    unchanged. */
 export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode } = {}) {
   const [compact, setCompact] = useState(false);
-  const [showLogin, setShowLogin] = useState(false);
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -662,7 +506,14 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
   const router = useRouter();
   const t = useTranslations("header");
   const locale = useLocale();
+  const pathname = usePathname();
   const { user, avatarUrl } = useAuth();
+
+  // "Ingresar" routes to the robust /login PAGE (forgot-password, role-aware
+  // post-login redirect, waitForAuthCookie, OAuth `next`, social-only detection) —
+  // we pass the current path as `redirect` so the user returns where they were. The
+  // old in-navbar login modal + its role-less email/password signup were removed.
+  const loginHref = `/login?redirect=${encodeURIComponent(pathname)}`;
 
   const role = user?.user_metadata?.role as string | undefined;
   const isPro = role === "professional";
@@ -1036,12 +887,12 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     >
                       {t("registerPro")}
                     </Link>
-                    <button
-                      onClick={() => setShowLogin(true)}
+                    <Link
+                      href={loginHref}
                       className="text-sm font-medium px-3 py-2 rounded-xl text-[#374151] hover:bg-gray-50 transition-colors"
                     >
                       {t("login")}
-                    </button>
+                    </Link>
                   </>
                 )}
                 <LanguageTogglePill />
@@ -1329,10 +1180,10 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
               <div className="mb-5">
                 <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t("account")}</p>
                 <div className="flex flex-col gap-2 px-1 pt-1">
-                  <button onClick={() => { setShowLogin(true); setMobileOpen(false); }}
+                  <Link href={loginHref} onClick={() => setMobileOpen(false)}
                     className="w-full px-4 py-3 rounded-xl text-sm font-semibold text-[#374151] border border-gray-200 hover:bg-gray-50 text-center transition-colors">
                     {t("login")}
-                  </button>
+                  </Link>
                   <Link href="/registro/profesional" onClick={() => setMobileOpen(false)}
                     className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-full bg-[#009FD9] text-white text-sm font-bold text-center hover:bg-[#0089bb] transition-colors">
                     <UserPlus className="h-4 w-4" />
@@ -1386,8 +1237,6 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
             )}
           </div>
         </div>
-
-      {showLogin && <LoginModal onClose={() => setShowLogin(false)} />}
     </>
   );
 }
