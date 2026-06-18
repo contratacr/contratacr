@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Mail, Lock, ShieldCheck, Eye, EyeOff, Info, ExternalLink } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
@@ -80,6 +80,22 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
   const [newEmail, setNewEmail] = useState("");
   const [emailSent, setEmailSent] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
+  const [emailApplied, setEmailApplied] = useState(false);
+
+  // After the user confirms the change from the email link, the confirmation URL
+  // returns here (via emailRedirectTo → /auth/callback → this account tab) with
+  // ?emailChanged=1. The session has been refreshed (so `user.email` is the new
+  // address), so we just show an "applied" banner and strip the param.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("emailChanged") === "1") {
+      setEmailApplied(true);
+      params.delete("emailChanged");
+      const qs = params.toString();
+      window.history.replaceState({}, "", window.location.pathname + (qs ? `?${qs}` : "") + window.location.hash);
+    }
+  }, []);
 
   // Password change
   const [pwMode, setPwMode] = useState(false);
@@ -108,7 +124,15 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
     if (!newEmail.trim()) return;
     setEmailError(null);
     const supabase = createClient();
-    const { error } = await supabase.auth.updateUser({ email: newEmail.trim() });
+    // Send the confirmation user BACK to this account screen after they click the
+    // email link: the confirmation URL redirects to /auth/callback?code=… which
+    // exchanges the code (refreshing the session with the NEW email), then routes
+    // to ?tab=cuenta&emailChanged=1 so we can show the "applied" banner. Without an
+    // emailRedirectTo the link lands on the Supabase Site URL root with no feedback.
+    const role = (user?.user_metadata?.role as string | undefined) === "professional" ? "profesional" : "cliente";
+    const next = `/${locale}/dashboard/${role}?tab=cuenta&emailChanged=1`;
+    const emailRedirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`;
+    const { error } = await supabase.auth.updateUser({ email: newEmail.trim() }, { emailRedirectTo });
     if (error) { setEmailError(error.message); return; }
     setEmailSent(true);
     setEmailMode(false);
@@ -161,6 +185,11 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
           <Mail className="h-4 w-4 text-[#6b7280]" />
           <h3 className="text-sm font-semibold text-[#374151]">{t("email")}</h3>
         </div>
+        {emailApplied && (
+          <div className="mb-3 rounded-xl bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-700">
+            {t("emailApplied")}
+          </div>
+        )}
         {isOAuthAccount ? (
           <div className="flex flex-col gap-3">
             <span className="text-sm text-[#111827] font-medium break-words">{user?.email}</span>
