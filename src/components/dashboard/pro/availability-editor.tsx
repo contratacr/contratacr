@@ -721,12 +721,12 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                             );
                             // Single-location pros: just the time row (clean, compact, no location UI).
                             if (!isMultiLocation) return <div key={b.id}>{timeRow}</div>;
-                            // 2+ locations: group the time row + its location in one soft tint
-                            // surface (no border, per R1) so the franja reads as a single unit —
-                            // "these hours, at this place". The select sits directly below the
-                            // times and spans the same width.
+                            // 2+ locations: keep the time row + its location together as one
+                            // block — no background/border (per R1; cleaner than the old gray
+                            // tint). The location select sits directly below the times and spans
+                            // the same width; spacing + the bordered select carry the grouping.
                             return (
-                              <div key={b.id} className="flex w-full flex-col gap-2 rounded-xl bg-[#f9fafb] p-2.5 sm:w-fit">
+                              <div key={b.id} className="flex w-full flex-col gap-2 sm:w-fit">
                                 {timeRow}
                                 <div className="relative">
                                   <MapPin className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#9ca3af]" />

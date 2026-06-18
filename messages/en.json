@@ -1264,7 +1264,7 @@
     "alwaysTitle": "My usual hours",
     "alwaysSub": "At {place} · repeats automatically every week.",
     "alwaysSubAll": "Repeats automatically every week.",
-    "presetTypical": "Apply Mon–Fri, 8 AM–5 PM",
+    "presetTypical": "Monday to Friday, 8:00 AM–5:00 PM",
     "blockLocationAria": "Location for this time block",
     "excLocationAria": "Location for exceptions",
     "apptDuration": "Each appointment lasts",
