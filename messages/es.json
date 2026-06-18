@@ -1236,6 +1236,7 @@
     "conflictTitle": "Horarios en conflicto",
     "conflictCross": "{place}: ya está ocupado de {start} a {end}. No puedes estar en dos lugares al mismo tiempo. Puedes agregar a partir de las {end}; un horario seguido sí se permite.",
     "conflictSelf": "Las franjas de este día se traslapan entre sí. Ajusta las horas para que no se crucen.",
+    "conflictExtraWeekly": "Esas horas extra se cruzan con tu horario de siempre de ese día. Agrégalas fuera de tu horario habitual; un horario seguido sí se permite.",
     "occupiedElsewhere": "{place}: ocupado {ranges}",
     "conflictOk": "Entendido",
     "orSingle": "o agrega una hora puntual:",

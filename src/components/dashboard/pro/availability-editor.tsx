@@ -197,13 +197,16 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
   // Validate a PROPOSED set of franjas (minute-ranges) placed at `loc`, BEFORE writing.
   // `scope` is a recurring weekday (check every future date that lands on it) or a
   // single exception date. `ownBase` are this location's OTHER ranges the proposal must
-  // also clear (e.g. the weekly hours when adding `extra` on the same location/day).
+  // also clear (e.g. the weekly hours when adding `extra` on the same location/day) —
+  // `ownBaseBody` is the message to show when the proposal overlaps that base (defaults
+  // to the generic self-overlap copy; `extra` passes a "overlaps your usual hours" one).
   // Returns a localized conflict {title, body} to block with, or null when it's safe.
   function findOverlapConflict(
     loc: string,
     proposed: [number, number][],
     scope: { weekday: number } | { date: string },
-    ownBase: [number, number][] = []
+    ownBase: [number, number][] = [],
+    ownBaseBody: string = t("conflictSelf")
   ): { title: string; body: string } | null {
     // 1) SAME-LOCATION: proposed franjas must not overlap each other or the own base.
     for (let i = 0; i < proposed.length; i++) {
@@ -214,7 +217,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
       }
       for (const b of ownBase) {
         if (rangesOverlap(proposed[i][0], proposed[i][1], b[0], b[1])) {
-          return { title: t("conflictTitle"), body: t("conflictSelf") };
+          return { title: t("conflictTitle"), body: ownBaseBody };
         }
       }
     }
@@ -524,11 +527,15 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
   async function saveException(date: string, mode: ExcMode, franjas: Franja[], dur: number): Promise<boolean> {
     if (mode !== "closed") {
       const proposed = franjas.map((f) => [toMins(f.start), toMins(f.end)] as [number, number]).filter(([s, e]) => e > s);
-      // `extra` keeps the weekly hours, so it must also clear THIS location's weekly base.
+      // `extra` ADDS to the weekly hours (they still apply that date), so the extra
+      // franjas must not overlap THIS location's weekly base for that weekday — block
+      // with a message that names the real conflict (the usual hours). `custom`/`closed`
+      // REPLACE the weekly hours, so they get no weekly base to clear (only the
+      // cross-location check below applies).
       const ownBase: [number, number][] = mode === "extra"
-        ? weekly.filter((r) => r.location_id === genLocation && r.weekday === weekdayOf(date)).map((r) => [toMins(r.start), toMins(r.end)])
+        ? weekly.filter((r) => r.location_id === genLocation && r.weekday === weekdayOf(date) && isCompleteFranja(r)).map((r) => [toMins(r.start), toMins(r.end)])
         : [];
-      const c = findOverlapConflict(genLocation, proposed, { date }, ownBase);
+      const c = findOverlapConflict(genLocation, proposed, { date }, ownBase, t("conflictExtraWeekly"));
       if (c) { setConflict(c); return false; }
     }
 

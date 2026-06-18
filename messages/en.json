@@ -1236,6 +1236,7 @@
     "conflictTitle": "Schedule conflict",
     "conflictCross": "{place}: already taken from {start} to {end}. You can't be in two places at the same time. You can add from {end}; a back-to-back time is allowed.",
     "conflictSelf": "This day's time ranges overlap each other. Adjust the times so they don't overlap.",
+    "conflictExtraWeekly": "Those extra hours overlap your usual hours for that day. Add them outside your regular schedule; back-to-back times are allowed.",
     "occupiedElsewhere": "{place}: taken {ranges}",
     "conflictOk": "Got it",
     "orSingle": "or add a single time:",
