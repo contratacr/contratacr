@@ -814,7 +814,7 @@ export default function RegisterProfessionalPage() {
                   <CheckCircle2 className="h-5 w-5 text-[#16a34a] shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-semibold text-[#15803d]">{t("identityAlreadyRegistered")}</p>
-                    <p className="text-sm text-[#111827] truncate">{t("usesAccountId", { name: oauthFullName || t("yourAccount") })}</p>
+                    <p className="text-sm text-[#111827] break-words">{t("usesAccountId", { name: oauthFullName || t("yourAccount") })}</p>
                   </div>
                 </div>
               ) : currentUser && !noCrId ? (

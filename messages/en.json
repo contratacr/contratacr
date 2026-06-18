@@ -1160,6 +1160,7 @@
     "editService": "Edit service",
     "newService": "New service · {profession}",
     "nameRequired": "The service name is required.",
+    "priceRequired": "Enter a price or check \"Price on request\".",
     "nameLabel": "Service name *",
     "namePlaceholder": "example: Residential electrical installation",
     "description": "Description",

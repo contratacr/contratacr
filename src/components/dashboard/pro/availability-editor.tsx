@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
@@ -735,16 +734,16 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                             return (
                               <div key={b.id} className="flex w-full flex-col gap-2 sm:w-fit">
                                 <div className="relative">
-                                  <MapPin className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-[#9ca3af]" />
+                                  <MapPin className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#009FD9]" />
                                   <select
                                     value={b.locationId}
                                     onChange={(e) => updateBlock(wd, b.id, { locationId: e.target.value })}
                                     aria-label={t("blockLocationAria")}
-                                    className="h-9 w-full appearance-none rounded-lg border border-[#e5e7eb] bg-white pl-8 pr-8 text-xs font-medium text-[#374151] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent cursor-pointer"
+                                    className="h-10 w-full appearance-none rounded-xl border border-[#e5e7eb] bg-[#f9fafb] pl-9 pr-9 text-xs font-semibold text-[#374151] hover:border-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent cursor-pointer transition-colors"
                                   >
                                     {locationOptions.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
                                   </select>
-                                  <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9ca3af]" />
+                                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9ca3af]" />
                                 </div>
                                 {timeRow}
                               </div>
@@ -765,11 +764,6 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                 );
               })}
             </div>
-
-            {/* Add another work location (lives in the profile's "Ubicación y cobertura"). */}
-            <Link href="/dashboard/profesional?tab=profile&focus=location" className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-[#009FD9] hover:underline">
-              <Plus className="h-3.5 w-3.5" /> {t("addLocation")}
-            </Link>
           </div>
 
           {/* ── ¿Un día distinto? — date exceptions ──────────────────────── */}

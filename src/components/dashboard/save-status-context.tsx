@@ -40,15 +40,15 @@ export function useReportSaveStatus(saving: boolean, saved: boolean, dirty = fal
   useEffect(() => () => set?.(IDLE), [set]);
 }
 
-// Rendered as an ABSOLUTE OVERLAY pinned to the section title's top-right — OUT of the
-// document flow, so its presence/size can NEVER push or reflow the title or the content
-// below it. The parent title wrapper must be `relative` and the title must keep enough
-// right padding (`pr-28`) that its text never runs under this overlay. `SaveStatus` is
-// always mounted (fixed height), so even the overlay itself never changes size.
+// Rendered as a FIXED floating pill (bottom-right of the viewport) so the autosave
+// state stays visible no matter how far the pro scrolls through a long profile. It's
+// OUT of the document flow (can't push/reflow content) and only appears while there's
+// something to report (saving / just-saved / unsaved) — idle shows nothing.
 export function HeaderSaveStatus({ className }: { className?: string }) {
   const s = useContext(ValueCtx);
+  if (!s.saving && !s.saved && !s.dirty) return null;
   return (
-    <div className={cn("pointer-events-none absolute right-0 top-1", className)}>
+    <div className={cn("pointer-events-none fixed bottom-4 right-4 z-50 rounded-full border border-[#e5e7eb] bg-white/95 px-3.5 py-2 shadow-lg backdrop-blur", className)}>
       <SaveStatus saving={s.saving} saved={s.saved} dirty={s.dirty} />
     </div>
   );

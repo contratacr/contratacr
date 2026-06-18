@@ -439,9 +439,9 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   // accent for the "availability not public" state (the general "serious app, no
   // colorful icons" rule still holds everywhere else).
   const scheduleNote = (text: string) => (
-    <div className="flex items-start gap-2 rounded-lg bg-[#FDF3F1] border border-[#F7D8D1] px-2.5 py-2">
-      <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-[#DC5B4B]" aria-hidden />
-      <p className="text-[11px] leading-snug text-[#DC5B4B]">{text}</p>
+    <div className="flex items-start gap-2 rounded-lg bg-[#EBF5FB] border border-[#bfdbfe] px-2.5 py-2">
+      <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-[#009FD9]" aria-hidden />
+      <p className="text-[11px] leading-snug text-[#0089bb]">{text}</p>
     </div>
   );
 

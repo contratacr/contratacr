@@ -1160,6 +1160,7 @@
     "editService": "Editar servicio",
     "newService": "Nuevo servicio · {profession}",
     "nameRequired": "El nombre del servicio es requerido.",
+    "priceRequired": "Ingresa un precio o marca \"Precio a consultar\".",
     "nameLabel": "Nombre del servicio *",
     "namePlaceholder": "Ejemplo: Instalación eléctrica residencial",
     "description": "Descripción",

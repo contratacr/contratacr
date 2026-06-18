@@ -198,6 +198,12 @@ export function ServicesEditor({
       setFormError(t("nameRequired"));
       return;
     }
+    // Don't silently default to "Consultar precio": require an explicit price OR the
+    // deliberate "Precio a consultar" choice.
+    if (!form.aConsultar && !form.priceAmount.trim()) {
+      setFormError(t("priceRequired"));
+      return;
+    }
     setFormError(null);
 
     const priceType: PricingType = form.aConsultar ? "a_convenir" : form.priceUnit;
@@ -534,7 +540,7 @@ export function ServicesEditor({
             </div>
 
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("priceRef")}</label>
+              <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("priceRef")} {!form.aConsultar && <span className="text-red-500">*</span>}</label>
               <div className="flex items-stretch gap-2">
                 <div className={cn("flex-1", form.aConsultar && "opacity-50 pointer-events-none")}>
                   <PriceInput
