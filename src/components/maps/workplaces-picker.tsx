@@ -269,7 +269,31 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200 }: W
 
   return (
     <div className="flex flex-col gap-2.5">
-      {/* Draft form for ONE zone — shown while adding; collapses after a commit. */}
+      {/* Added zones — listed FIRST, above the add-another-location form. */}
+      {value.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <p className="text-xs font-medium text-[#374151]">{t("addedPlaces", { count: value.length })}</p>
+          {value.map((wp) => (
+            <div key={wp.id} className="flex items-center gap-2 bg-[#EBF5FB] rounded-xl px-3 py-2">
+              <MapPin className="h-4 w-4 text-[#009FD9] shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-[#0089bb] truncate">{wp.name}</p>
+                <p className="text-[10px] text-[#6b7280] truncate">
+                  {[getCantonById(wp.cantonId ?? "")?.name, getProvinceById(wp.provinciaId ?? "")?.name].filter(Boolean).join(", ")}
+                  {wp.lat != null && wp.lng != null ? ` · ${t("pinnedTag")}` : ""}
+                </p>
+              </div>
+              <button type="button" onClick={() => removeWorkplace(wp.id)} className="rounded-md p-0.5 text-[#9ca3af] hover:text-red-500 transition-colors shrink-0" aria-label={t("removePlace")}>
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Add-another-location form — the COMPLETE group BELOW the list, in order:
+          provincia → cantón → optional map pin → "Agregar esta ubicación". Shown
+          while adding; collapses behind "Agregar otra ubicación" after a commit. */}
       {adding && (
       <div className="flex flex-col gap-2.5">
       {/* 1 — Structured field FIRST: provincia → cantón (authoritative for search). */}
@@ -292,46 +316,9 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200 }: W
         </div>
       </div>
 
-      {/* 3 — Add THIS zone (the one selected above). Enabled once provincia + cantón
-             are chosen, so it's clear it commits the current selection. */}
-      <button
-        type="button"
-        onClick={commitWorkplace}
-        disabled={!province || !canton}
-        className="self-start inline-flex items-center gap-1.5 rounded-xl bg-[#009FD9] text-white text-sm font-semibold px-4 py-2.5 hover:bg-[#0089bb] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-      >
-        <Plus className="h-4 w-4" /> {t("addThisPlace")}
-      </button>
-      {province && !canton && <p className="text-[11px] text-amber-600 -mt-1">{t("hintCanton")}</p>}
-      </div>
-      )}
-
-      {/* Added zones */}
-      {value.length > 0 && (
-        <div className="flex flex-col gap-2 mt-1">
-          <p className="text-xs font-medium text-[#374151]">{t("addedPlaces", { count: value.length })}</p>
-          {value.map((wp) => (
-            <div key={wp.id} className="flex items-center gap-2 bg-[#EBF5FB] rounded-xl px-3 py-2">
-              <MapPin className="h-4 w-4 text-[#009FD9] shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium text-[#0089bb] truncate">{wp.name}</p>
-                <p className="text-[10px] text-[#6b7280] truncate">
-                  {[getCantonById(wp.cantonId ?? "")?.name, getProvinceById(wp.provinciaId ?? "")?.name].filter(Boolean).join(", ")}
-                  {wp.lat != null && wp.lng != null ? ` · ${t("pinnedTag")}` : ""}
-                </p>
-              </div>
-              <button type="button" onClick={() => removeWorkplace(wp.id)} className="rounded-md p-0.5 text-[#9ca3af] hover:text-red-500 transition-colors shrink-0" aria-label={t("removePlace")}>
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* OPTIONAL exact pin (refinement) — placed BELOW the added-zones list. A clean
-          expandable link reveals the address search + map only when the pro chooses to
-          pin the exact spot; it refines the current draft (shown only while adding). */}
-      {adding && (effectiveKey ? (
+      {/* 2 — OPTIONAL exact pin (refinement), HIDDEN by default. A clean expandable
+             link reveals the address search + map only when the pro chooses to pin. */}
+      {effectiveKey ? (
         <div className="flex flex-col gap-2">
           <button
             type="button"
@@ -369,7 +356,21 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200 }: W
         </div>
       ) : (
         <p className="text-xs text-[#9ca3af]">{t("mapUnavailable")}</p>
-      ))}
+      )}
+
+      {/* 3 — Add THIS zone (the one selected above). Enabled once provincia + cantón
+             are chosen, so it's clear it commits the current selection. */}
+      <button
+        type="button"
+        onClick={commitWorkplace}
+        disabled={!province || !canton}
+        className="self-start inline-flex items-center gap-1.5 rounded-xl bg-[#009FD9] text-white text-sm font-semibold px-4 py-2.5 hover:bg-[#0089bb] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+      >
+        <Plus className="h-4 w-4" /> {t("addThisPlace")}
+      </button>
+      {province && !canton && <p className="text-[11px] text-amber-600 -mt-1">{t("hintCanton")}</p>}
+      </div>
+      )}
 
       {/* Separate, explicit way to add ANOTHER zone (only when the draft is closed). */}
       {!adding && (
