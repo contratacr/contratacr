@@ -442,9 +442,18 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
 
   function toggleDay(weekday: number) {
     const cur = dayFranjas.get(weekday) ?? [];
-    // Turning a day ON starts with an EMPTY franja (no pre-filled default time) so the pro
-    // picks any free time from scratch — nothing pre-constrains the choice.
-    persistDay(weekday, cur.length > 0 ? [] : [{ id: genId(), start: "", end: "" }], activeDuration);
+    if (cur.length > 0) { persistDay(weekday, [], activeDuration); return; }
+    // Turning a day ON: SMART default. Pre-fill the convenient 8 AM–5 PM workday when
+    // it wouldn't conflict (checked with the SAME validation persistDay uses, so the
+    // default it sets always passes). If 8–5 WOULD overlap an existing schedule (e.g.
+    // the pro already has 8–5 elsewhere that day), start the fields EMPTY instead, so
+    // the pro can freely pick a non-conflicting time without the default pre-blocking
+    // an earlier choice (the old bug). Either way, only COMPLETE franjas validate/save.
+    const defaultConflicts = findOverlapConflict(genLocation, [[toMins("08:00"), toMins("17:00")]], { weekday });
+    const franja: Franja = defaultConflicts
+      ? { id: genId(), start: "", end: "" }
+      : { id: genId(), start: "08:00", end: "17:00" };
+    persistDay(weekday, [franja], activeDuration);
   }
   function addFranja(weekday: number) {
     const cur = dayFranjas.get(weekday) ?? [];
