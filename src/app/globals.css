@@ -327,7 +327,13 @@ select:focus-visible {
 .cr-pac {
   position: relative;
   z-index: 60;
+  /* The app is light-only. Without this, on a phone in OS dark mode the Google
+     PlaceAutocompleteElement renders its input with a BLACK background (it follows
+     prefers-color-scheme), unlike desktop. Force light so it matches the other
+     inputs in the section. `color-scheme` inherits into the element's shadow DOM. */
+  color-scheme: light;
 }
 .cr-pac gmp-place-autocomplete {
   width: 100%;
+  color-scheme: light;
 }
