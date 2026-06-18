@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { ChevronRight, ShieldCheck, X } from "lucide-react";
-import { anyHealthCategory } from "@/lib/data/categories";
 
 // Context-aware profile-completion (inspired by Airbnb's "complete your listing"
 // checklist + LinkedIn's profile-strength meter). The PERCENT counts only the
@@ -33,7 +32,6 @@ export function computeCompletion(pro: ProRecord): {
   verified: boolean;
 } {
   const profiles = (pro.profiles ?? {}) as { avatar_url?: string | null };
-  const professions = (pro.professions as string[]) ?? [];
 
   // Location is "done" as soon as ANY location signal exists — independent of how
   // service_type is stored, so it never sticks for a pro who clearly set a zone.
@@ -54,11 +52,8 @@ export function computeCompletion(pro: ProRecord): {
     { key: "whatsapp", done: typeof pro.whatsapp === "string" && pro.whatsapp.trim().length > 0, tab: "profile" },
   ];
 
-  // Aseguradoras apply ONLY to health pros; for everyone else it doesn't exist,
-  // so it's never counted as "missing".
-  if (anyHealthCategory(professions)) {
-    items.push({ key: "insurers", done: hasLen(pro.insurance_networks), tab: "profile" });
-  }
+  // Aseguradoras are OPTIONAL (even for health pros) — never a completion step, so
+  // they add no "incomplete profile" pressure.
 
   const done = items.filter((i) => i.done).length;
   const percent = Math.round((done / items.length) * 100);

@@ -1750,8 +1750,8 @@
     "howWorks": "How does it work?",
     "step1Title": "Real ID",
     "step1Body": "We automatically confirm that the ID number (cédula, DIMEX or NITE) exists in the official TSE records.",
-    "step2Title": "The name matches",
-    "step2Body": "We compare the registered name with the padrón. If it matches, verification is granted instantly, no waiting.",
+    "step2Title": "Your official name",
+    "step2Body": "We pull your official name straight from the TSE padrón. Your verification is granted instantly, no waiting.",
     "step3Title": "Always up to date",
     "step3Body": "The padrón is updated periodically. If your case doesn't pass automatically, you can appeal and it's re-verified.",
     "disclaimerTitle": "Important notice",
@@ -2040,7 +2040,13 @@
     "ctaTitle": "Can't find your category?",
     "ctaDesc": "We have 90+ specialties available. Message us and we'll help you find the professional you need.",
     "ctaSearch": "Search professionals",
-    "ctaContact": "Contact us"
+    "ctaContact": "Contact us",
+    "notListed": "Don't see your category?",
+    "suggestPlaceholder": "Category name",
+    "suggestSend": "Send",
+    "suggestSending": "Sending…",
+    "cancel": "Cancel",
+    "suggestThanks": "Thanks. We sent your suggestion to the team for review."
   },
   "comoFunciona": {
     "eyebrow": "How it works",

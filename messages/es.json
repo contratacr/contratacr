@@ -1750,8 +1750,8 @@
     "howWorks": "¿Cómo funciona?",
     "step1Title": "Cédula real",
     "step1Body": "Confirmamos automáticamente que el número de identificación (cédula, DIMEX o NITE) exista en los registros oficiales del TSE.",
-    "step2Title": "El nombre coincide",
-    "step2Body": "Comparamos el nombre registrado con el del padrón. Si coincide, la verificación se otorga al instante, sin esperas.",
+    "step2Title": "Tu nombre oficial",
+    "step2Body": "Tomamos tu nombre oficial directamente del padrón del TSE. Tu verificación se otorga al instante, sin esperas.",
     "step3Title": "Datos siempre al día",
     "step3Body": "El padrón se actualiza periódicamente. Si tu caso no pasa automáticamente, puedes apelar y se vuelve a verificar.",
     "disclaimerTitle": "Aviso importante",
@@ -2040,7 +2040,13 @@
     "ctaTitle": "¿No encuentras tu categoría?",
     "ctaDesc": "Tenemos más de 90 especialidades disponibles. Escríbenos y te ayudamos a encontrar el profesional que necesitas.",
     "ctaSearch": "Buscar profesionales",
-    "ctaContact": "Contactarnos"
+    "ctaContact": "Contactarnos",
+    "notListed": "¿No ves tu categoría?",
+    "suggestPlaceholder": "Nombre de la categoría",
+    "suggestSend": "Enviar",
+    "suggestSending": "Enviando…",
+    "cancel": "Cancelar",
+    "suggestThanks": "Gracias. Enviamos tu sugerencia al equipo para revisión."
   },
   "comoFunciona": {
     "eyebrow": "Cómo funciona",

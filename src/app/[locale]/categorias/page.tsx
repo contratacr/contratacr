@@ -5,6 +5,7 @@ import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { FadeInUp } from "@/components/landing/fade-in-up";
 import { CategorySearchBox } from "@/components/search/category-search-box";
+import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { Link } from "@/i18n/navigation";
 import {
   Home,
@@ -175,6 +176,17 @@ export default function CategoriasPage() {
               </div>
             </FadeInUp>
           ))}
+          {/* "¿No ves tu categoría?" — suggest one for admin review. */}
+          <div className="mx-auto mt-2 w-full max-w-md rounded-2xl border border-gray-100 bg-white px-6 py-5 text-center shadow-sm">
+            <CategorySuggestionBox
+              notListedLabel={tp("notListed")}
+              placeholder={tp("suggestPlaceholder")}
+              sendLabel={tp("suggestSend")}
+              sendingLabel={tp("suggestSending")}
+              cancelLabel={tp("cancel")}
+              thanksLabel={tp("suggestThanks")}
+            />
+          </div>
         </div>
       </section>
 
