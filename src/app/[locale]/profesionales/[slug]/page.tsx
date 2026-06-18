@@ -15,7 +15,7 @@ import { LandingFooter } from "@/components/landing/landing-footer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { StarRating } from "@/components/ui/star-rating";
-import { getInitials, getWhatsAppLink } from "@/lib/utils";
+import { getInitials, getWhatsAppLink, proDisplayName } from "@/lib/utils";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { casoProfession } from "@/lib/services";
 import { formatPricingTier, primaryPricingLabel } from "@/lib/pricing";
@@ -259,11 +259,11 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                 </Avatar>
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                    <h1 className="text-2xl font-bold leading-tight text-[#111827]">{professional.businessName?.trim() || professional.fullName}</h1>
+                    <h1 className="text-2xl font-bold leading-tight text-[#111827]">{professional.businessName?.trim() || proDisplayName(professional.fullName)}</h1>
                     {professional.verificationStatus === "verified" && <Badge variant="verified">{t("identityVerified")}</Badge>}
                   </div>
                   {professional.businessName?.trim() && (
-                    <p className="mt-0.5 text-sm font-medium text-[#6b7280]">{professional.fullName}</p>
+                    <p className="mt-0.5 text-sm font-medium text-[#6b7280]">{proDisplayName(professional.fullName)}</p>
                   )}
                   <p className="mt-1 text-sm text-[#6b7280]">
                     {(professional.professions && professional.professions.length > 0 ? professional.professions : [professional.categoryId])

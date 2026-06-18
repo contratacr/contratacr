@@ -1651,7 +1651,7 @@
   "onboarding": {
     "greeting": "Hi, {name}",
     "title": "What will you use ContrataCR for?",
-    "subtitle": "Choose how you want to use the platform. You can change this later."
+    "subtitle": "Choose how you want to use the platform."
   },
   "completeProfile": {
     "photoError": "Couldn't upload the photo. You can continue without it.",

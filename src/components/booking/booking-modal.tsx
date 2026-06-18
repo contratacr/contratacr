@@ -983,8 +983,8 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
 
                   {forSomeoneElse && (
                     <div className="rounded-xl border border-[#e5e7eb] p-3 flex flex-col gap-3 bg-[#f9fafb]">
-                      <p className="text-xs text-[#6b7280]">
-                        Tú eres la persona responsable de la cita. Cuéntanos para quién es:
+                      <p className="text-xs font-medium text-[#374151]">
+                        ¿Para quién es la cita?
                       </p>
                       <div>
                         <label className="text-xs font-medium text-[#374151] block mb-1.5">¿La persona tiene cédula? <span className="text-red-500">*</span></label>
@@ -1013,7 +1013,6 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                           <CedulaInput
                             value={benCedula}
                             onChange={setBenCedula}
-                            hint="Autocompleta los datos de la persona. Nunca bloquea la cita."
                           />
                           {benLookupName && (
                             <div className="rounded-lg bg-[#f0fdf4] border border-[#bbf7d0] px-3 py-2 -mt-1">
@@ -1068,15 +1067,11 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                           </div>
                           )}
                           <PhoneInput
-                            label={<>Teléfono de contacto para la cita <span className="text-red-500">*</span></>}
+                            label="Teléfono de contacto para la cita"
                             required
                             value={benPhone}
                             onChange={setBenPhone}
                           />
-                          <p className="text-[11px] text-[#9ca3af]">
-                            Es el número que el profesional usará para coordinar esta cita (el de la persona que recibe el servicio).
-                            La cédula de la persona es opcional — nunca bloquea la cita; la identidad la respaldas tú como responsable.
-                          </p>
                         </>
                       )}
                     </div>
@@ -1132,7 +1127,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     )}
                   </div>
                   <PhoneInput
-                    label="Teléfono (WhatsApp)"
+                    label="Teléfono de contacto"
                     value={profilePhone}
                     onChange={setProfilePhone}
                   />
@@ -1195,7 +1190,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     </div>
                   )}
                   <PhoneInput
-                    label="Teléfono (WhatsApp)"
+                    label="Teléfono de contacto"
                     required
                     value={profilePhone}
                     onChange={setProfilePhone}

@@ -106,11 +106,7 @@ export function BookingRequests() {
 
   const filtered = bookings.filter((b) => solicitudMatches(filter, b.status));
 
-  const todayISO = new Date().toISOString().slice(0, 10);
-
   function BookingCard({ booking }: { booking: Booking }) {
-    // Once the booked date has passed, the pro can mark the service completed.
-    const datePassed = booking.scheduled_date ? booking.scheduled_date <= todayISO : false;
     const dateStr = booking.scheduled_date
       ? (() => {
           const [y, m, d] = booking.scheduled_date.split("-").map(Number);
@@ -229,15 +225,9 @@ export function BookingRequests() {
               )}
               {booking.status === "confirmed" && (
                 <>
-                  {datePassed ? (
-                    <Button size="sm" className="w-full sm:w-auto" onClick={() => updateStatus(booking.id, "awaiting_confirmation")}>
-                      {t("markCompleted")}
-                    </Button>
-                  ) : (
-                    <Button size="sm" variant="secondary" className="w-full sm:w-auto" onClick={() => updateStatus(booking.id, "in_progress")}>
-                      {t("inProgress")}
-                    </Button>
-                  )}
+                  <Button size="sm" className="w-full sm:w-auto" onClick={() => updateStatus(booking.id, "awaiting_confirmation")}>
+                    {t("markCompleted")}
+                  </Button>
                   <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => updateStatus(booking.id, "cancelled")}>
                     {t("cancel")}
                   </Button>
@@ -246,7 +236,7 @@ export function BookingRequests() {
               {booking.status === "in_progress" && (
                 <>
                   <Button size="sm" className="w-full sm:w-auto" onClick={() => updateStatus(booking.id, "awaiting_confirmation")}>
-                    {t("markWorkDone")}
+                    {t("markCompleted")}
                   </Button>
                   <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => updateStatus(booking.id, "cancelled")}>
                     {t("cancel")}

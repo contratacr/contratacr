@@ -111,3 +111,13 @@ export function getInitials(name: string) {
     .join("")
     .toUpperCase();
 }
+
+/** Public display name for a professional: ONLY the first given name + first
+ *  surname (no second given name / second surname). CR padrón names are
+ *  "Nombre1 [Nombre2] Apellido1 Apellido2" — the first surname is the
+ *  second-to-last word; with ≤2 words we keep both. */
+export function proDisplayName(full: string) {
+  const w = (full ?? "").trim().split(/\s+/).filter(Boolean);
+  if (w.length <= 2) return w.join(" ");
+  return `${w[0]} ${w[w.length - 2]}`;
+}
