@@ -217,6 +217,10 @@ export function LeaveReviewModal({
                 isEditing ? t("submitUpdate") : t("submitNew")
               )}
             </button>
+            {/* Reviewing is OPTIONAL — clear skip so the prompt never blocks. */}
+            <button type="button" onClick={onClose} className="text-sm font-medium text-[#6b7280] hover:text-[#111827] transition-colors">
+              {t("skip")}
+            </button>
           </form>
         )}
       </div>

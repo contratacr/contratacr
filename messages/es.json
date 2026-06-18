@@ -281,6 +281,7 @@
     "sending": "Enviando…",
     "submitUpdate": "Actualizar reseña",
     "submitNew": "Enviar reseña",
+    "skip": "Omitir por ahora",
     "errRating": "Por favor selecciona una calificación.",
     "errComment": "Por favor escribe un comentario.",
     "errSubmit": "Error al enviar la reseña.",

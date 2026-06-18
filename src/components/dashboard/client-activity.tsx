@@ -169,12 +169,16 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   }
 
   async function confirmBookingDone(id: string) {
+    const b = bookings.find((x) => x.id === id);
     await fetch("/api/bookings", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id, status: "completed" }),
     });
-    setBookings((prev) => prev.map((b) => (b.id === id ? { ...b, status: "completed" } : b)));
+    setBookings((prev) => prev.map((x) => (x.id === id ? { ...x, status: "completed" } : x)));
+    // Immediately invite a review (optional — the modal closes = skip; the item is
+    // already completed either way).
+    if (b) setReviewModal({ professionalId: b.professional_id, professionalName: b.professionals?.profiles?.full_name ?? t("professional"), bookingId: id });
   }
 
   async function reportProfessional(bookingId: string) {
@@ -216,6 +220,8 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
     if (!res.ok) { alert(t("confirmError")); return; }
     setProjects((prev) => prev.map((p) => (p.id === projectId ? { ...p, status: "completed" } : p)));
     refreshProjects();
+    // Immediately invite a review (optional — close = skip; already completed).
+    reviewProjectPro(projectId);
   }
 
   async function deleteProject(projectId: string) {

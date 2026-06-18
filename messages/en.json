@@ -281,6 +281,7 @@
     "sending": "Sending…",
     "submitUpdate": "Update review",
     "submitNew": "Submit review",
+    "skip": "Skip for now",
     "errRating": "Please select a rating.",
     "errComment": "Please write a comment.",
     "errSubmit": "Couldn't submit the review.",
