@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import type { EmailOtpType } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
+  const tokenHash = searchParams.get("token_hash");
+  const type = searchParams.get("type");
   const next = searchParams.get("next");
 
-  if (code) {
+  if (code || tokenHash) {
     const cookieStore = await cookies();
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -27,9 +30,32 @@ export async function GET(request: NextRequest) {
       }
     );
 
-    const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+    // Finalize the session. OAuth + password reset arrive with a PKCE `code`
+    // (exchangeCodeForSession). Email-link OTP flows — notably EMAIL CHANGE
+    // (change-email.html links to /auth/callback?token_hash=…&type=email_change) —
+    // MUST be finalized with verifyOtp, or the change is NEVER applied and the user
+    // lands on the error page (= the main page). The token_hash flow needs NO PKCE
+    // code_verifier (so it works from any browser/device) and NO redirect_to allowlist.
+    const { data, error } = tokenHash
+      ? await supabase.auth.verifyOtp({ type: (type ?? "email") as EmailOtpType, token_hash: tokenHash })
+      : await supabase.auth.exchangeCodeForSession(code!);
 
     if (!error && data.user) {
+      // Email change confirmed → land on the role-aware "Cuenta y seguridad" tab with
+      // the success-banner flag (?emailChanged=1). The user is an existing account, so
+      // role is set (RPC fallback for older metadata, mirroring the OAuth path below).
+      if (tokenHash && type === "email_change") {
+        let role = data.user.user_metadata?.role as string | undefined;
+        if (role !== "professional" && role !== "client") {
+          const { data: prof } = await supabase.rpc("get_my_profile");
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const p = prof as any;
+          if (p?.role === "professional" || p?.role === "client") role = p.role;
+        }
+        const panel = role === "professional" ? "profesional" : "cliente";
+        return NextResponse.redirect(`${origin}/es/dashboard/${panel}?tab=cuenta&emailChanged=1`);
+      }
+
       // ── One email = ONE login method (BLOCK mixing) ─────────────────────────
       // A Google/Facebook sign-in (flow=oauth, set by /login's OAuth buttons) must
       // NOT attach to / take over an account that already has an email+password
