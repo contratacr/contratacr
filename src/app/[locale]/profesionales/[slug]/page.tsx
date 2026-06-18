@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import {
   MapPin, Shield, ArrowLeft, Star, Briefcase, Camera,
-  Share2, Flag, ChevronDown, Lock, Phone, Building2, Award, Mail,
+  Share2, Flag, ChevronDown, Lock, Phone, Building2, Award, Mail, SearchX,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { InstagramIcon, FacebookIcon, TikTokIcon } from "@/components/icons/social-icons";
@@ -153,7 +153,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
         <Navbar />
         <main className="flex-1 flex flex-col items-center justify-center gap-4 px-4 text-center">
           <div className="h-16 w-16 rounded-full bg-[#EBF5FB] flex items-center justify-center">
-            <span className="text-3xl">🔍</span>
+            <SearchX className="h-8 w-8 text-[#009FD9]" />
           </div>
           <h1 className="text-2xl font-bold text-[#111827]">{t("notFoundTitle")}</h1>
           <p className="text-[#6b7280] text-sm max-w-sm">

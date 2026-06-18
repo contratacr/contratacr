@@ -109,6 +109,9 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
       .then(({ ticket, messages }) => {
         if (!ticket) { setOpenId(null); return; }
         setTicket(ticket); setMessages(messages ?? []);
+        // Reflect the ticket's ACTUAL status in the filter (so an email deep-link to
+        // an in-progress conversation lands in the in-progress view, not pending).
+        if (ticket.status) setFilter(ticket.status);
       })
       .finally(() => setThreadLoading(false));
     // Reading the ticket clears its "new reply" notifications (auto-refresh badges).

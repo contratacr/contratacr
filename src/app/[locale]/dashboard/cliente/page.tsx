@@ -431,9 +431,6 @@ export default function ClientDashboardPage() {
                     <div>
                       <label className="text-sm font-medium text-[#374151] mb-1.5 flex items-center gap-1.5">
                         {t("fullName")} <span className="text-red-500">*</span>
-                        {cedulaVerified && (
-                          <span className="inline-flex items-center text-[11px] font-semibold text-[#16a34a]">{t("verified")}</span>
-                        )}
                       </label>
                       <div className="relative">
                         <input

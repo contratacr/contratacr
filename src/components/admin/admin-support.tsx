@@ -144,7 +144,7 @@ export function AdminSupport() {
                   </span>
                 </p>
                 {ticket.handled_by_name && (
-                  <p className="text-[11px] text-[#9ca3af] mt-0.5">Atendido por {ticket.handled_by_name}{ticket.handled_at ? ` · ${fmt(ticket.handled_at)}` : ""}</p>
+                  <p className="text-[11px] text-[#9ca3af] mt-0.5">Atendido por Soporte ContrataCR{ticket.handled_at ? ` · ${fmt(ticket.handled_at)}` : ""}</p>
                 )}
                 {ticket.user_id && (
                   <Link href={`/admin/usuarios/${ticket.user_id}`} className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-[#009FD9] hover:underline">
@@ -175,7 +175,7 @@ export function AdminSupport() {
                   <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 ${m.sender_role === "admin" ? "bg-[#0f172a] text-white" : "bg-white border border-[#e5e7eb] text-[#374151]"}`}>
                     <div className="flex items-center gap-1.5 mb-1 text-[11px] opacity-70">
                       {m.sender_role === "admin" ? <Shield className="h-3 w-3" /> : <User className="h-3 w-3" />}
-                      {m.sender_name || (m.sender_role === "admin" ? "Soporte" : "Usuario")} · {fmt(m.created_at)}
+                      {m.sender_role === "admin" ? "Soporte ContrataCR" : (m.sender_name || "Usuario")} · {fmt(m.created_at)}
                     </div>
                     <p className="text-sm leading-relaxed whitespace-pre-wrap">{m.body}</p>
                   </div>

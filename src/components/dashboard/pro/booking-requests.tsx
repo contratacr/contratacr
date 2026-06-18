@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarDays, User, FileText, Phone, Flag, MapPin } from "lucide-react";
+import { CalendarDays, FileText, Phone, Flag, MapPin } from "lucide-react";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { getWhatsAppLink } from "@/lib/utils";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { getWhatsAppLink, getInitials } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { StatusFilterTabs, SOLICITUD_TABS, solicitudMatches } from "@/components/dashboard/status-filter-tabs";
 import type { BookingStatus } from "@/types";
@@ -134,7 +135,10 @@ export function BookingRequests() {
           <div className="space-y-2">
                 {(booking.client_name) && (
                   <div className="flex items-center gap-2 text-sm flex-wrap">
-                    <User className="h-4 w-4 text-[#6b7280] shrink-0" />
+                    <Avatar className="h-6 w-6 shrink-0">
+                      <AvatarImage src={booking.profiles?.avatar_url} className="object-cover" />
+                      <AvatarFallback className="text-[10px] bg-[#EBF5FB] text-[#009FD9] font-semibold">{getInitials(booking.client_name)}</AvatarFallback>
+                    </Avatar>
                     <span className="font-medium text-[#111827]">{booking.client_name}</span>
                     {booking.profiles?.is_flagged && (
                       <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#b45309] bg-[#fef3c7] px-1.5 py-0.5 rounded-md">

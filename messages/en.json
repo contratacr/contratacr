@@ -1849,6 +1849,8 @@
     "delete": "Delete",
     "deleteAll": "Delete all",
     "deleteAllConfirm": "Delete all your notifications?",
+    "deleteAllBody": "This action can't be undone.",
+    "cancel": "Cancel",
     "noneList": "You have no notifications.",
     "types": {
       "booking_received": "New request",

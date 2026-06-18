@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { Bell, CheckCheck, Check, Trash2 } from "lucide-react";
+import { Bell, CheckCheck, Check, Trash2, AlertTriangle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { cn, formatRelativeTime } from "@/lib/utils";
@@ -26,6 +26,7 @@ export function NotificationsList() {
   const locale = useLocale();
   const [items, setItems] = useState<Notification[]>([]);
   const [busy, setBusy] = useState(true);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -76,9 +77,9 @@ export function NotificationsList() {
     await supabase.from("notifications").delete().eq("id", id);
   }
 
-  async function deleteAll() {
+  async function doDeleteAll() {
+    setConfirmDelete(false);
     if (!user || items.length === 0) return;
-    if (!window.confirm(t("deleteAllConfirm"))) return;
     setItems([]);
     window.dispatchEvent(new CustomEvent("notificationsChanged"));
     const supabase = createClient();
@@ -94,9 +95,26 @@ export function NotificationsList() {
               <CheckCheck className="h-4 w-4" /> {t("markAllRead")}
             </button>
           )}
-          <button onClick={deleteAll} className="flex items-center gap-1.5 text-sm text-red-500 hover:underline">
+          <button onClick={() => setConfirmDelete(true)} className="flex items-center gap-1.5 text-sm text-red-500 hover:underline">
             <Trash2 className="h-4 w-4" /> {t("deleteAll")}
           </button>
+        </div>
+      )}
+
+      {confirmDelete && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setConfirmDelete(false)} />
+          <div className="relative z-10 w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl text-center">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-50">
+              <AlertTriangle className="h-6 w-6 text-red-500" />
+            </div>
+            <h3 className="text-lg font-bold text-[#111827] mb-1.5">{t("deleteAllConfirm")}</h3>
+            <p className="text-sm text-[#6b7280] mb-5">{t("deleteAllBody")}</p>
+            <div className="flex gap-3">
+              <button onClick={() => setConfirmDelete(false)} className="flex-1 rounded-xl border border-[#e5e7eb] px-4 py-2.5 text-sm font-semibold text-[#374151] hover:bg-[#f9fafb] transition-colors">{t("cancel")}</button>
+              <button onClick={doDeleteAll} className="flex-1 rounded-xl bg-red-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-600 transition-colors">{t("deleteAll")}</button>
+            </div>
+          </div>
         </div>
       )}
       <div className="bg-white rounded-2xl border border-[#e5e7eb] overflow-hidden">

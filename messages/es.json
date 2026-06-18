@@ -1849,6 +1849,8 @@
     "delete": "Eliminar",
     "deleteAll": "Eliminar todas",
     "deleteAllConfirm": "¿Eliminar todas tus notificaciones?",
+    "deleteAllBody": "Esta acción no se puede deshacer.",
+    "cancel": "Cancelar",
     "noneList": "No tienes notificaciones.",
     "types": {
       "booking_received": "Nueva solicitud",
