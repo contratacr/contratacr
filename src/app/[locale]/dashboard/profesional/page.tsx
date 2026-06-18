@@ -99,8 +99,10 @@ export default function ProDashboardPage() {
   // the panel never flashes back to the registration flow (item 6).
   const [noProTries, setNoProTries] = useState(0);
 
+  // Suppress the login-redirect while signing out → straight to main, no /login flash.
+  const signingOut = useRef(false);
   useEffect(() => {
-    if (!authLoading && !user) router.push("/login");
+    if (!authLoading && !user && !signingOut.current) router.push("/login");
   }, [user, authLoading, router]);
 
   // Deep-link focus: `?tab=profile&focus=location` (e.g. Disponibilidad's "Agregar
@@ -189,9 +191,10 @@ export default function ProDashboardPage() {
   }
 
   async function handleSignOut() {
+    signingOut.current = true;
     const supabase = createClient();
     await supabase.auth.signOut();
-    window.location.assign("/es");
+    window.location.replace("/es");
   }
 
   // `!user` is part of this guard ON PURPOSE: on sign-out, `useAuth` (a per-component

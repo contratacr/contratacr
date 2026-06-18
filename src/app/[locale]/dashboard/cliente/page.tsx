@@ -64,8 +64,11 @@ export default function ClientDashboardPage() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [supportUnread, setSupportUnread] = useState(0);
 
+  // Suppress the login-redirect while signing out, so sign-out goes straight to the
+  // main page with no brief flash through /login.
+  const signingOut = useRef(false);
   useEffect(() => {
-    if (!authLoading && !user) router.push("/login");
+    if (!authLoading && !user && !signingOut.current) router.push("/login");
   }, [user, authLoading, router]);
 
   // A PROFESSIONAL has no separate client dashboard — their client activity
@@ -136,9 +139,10 @@ export default function ClientDashboardPage() {
   }
 
   async function handleSignOut() {
+    signingOut.current = true;
     const supabase = createClient();
     await supabase.auth.signOut({ scope: "local" });
-    window.location.href = "/es";
+    window.location.replace("/es");
   }
 
   async function saveProfile() {

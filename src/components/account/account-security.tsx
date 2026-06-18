@@ -94,6 +94,9 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
     const params = new URLSearchParams(window.location.search);
     if (params.get("emailChanged") === "1") {
       setEmailApplied(true);
+      // Pull the NEW email into the client session immediately so the UI reflects it
+      // without a sign-out/in (refresh fires onAuthStateChange → useAuth re-renders).
+      createClient().auth.refreshSession().catch(() => {});
       params.delete("emailChanged");
       const qs = params.toString();
       window.history.replaceState({}, "", window.location.pathname + (qs ? `?${qs}` : "") + window.location.hash);
@@ -150,7 +153,12 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
     if (!newEmail.trim()) return;
     setEmailError(null);
     const err = await performEmailChange();
-    if (err) { setEmailError(err); return; }
+    if (err) {
+      // Supabase returns these in English — show a localized message instead.
+      const taken = /already|registered|exists|in use|taken|duplicate/i.test(err);
+      setEmailError(taken ? t("emailTaken") : t("emailChangeError"));
+      return;
+    }
     setEmailSent(true);
     setEmailMode(false);
     emailResend.armCooldown();

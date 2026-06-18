@@ -1557,6 +1557,8 @@
     "manageAccount": "Administrar mi cuenta de {provider}",
     "emailSent": "✓ Revisa tu correo nuevo y abre el enlace para confirmar el cambio.",
     "emailApplied": "✓ Tu correo se actualizó correctamente.",
+    "emailTaken": "Ese correo ya está registrado en otra cuenta.",
+    "emailChangeError": "No pudimos cambiar el correo. Intenta de nuevo.",
     "newEmailPlaceholder": "nuevo@correo.com",
     "sendConfirmation": "Enviar confirmación",
     "cancel": "Cancelar",
