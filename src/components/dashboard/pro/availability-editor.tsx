@@ -27,6 +27,11 @@ const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 const DURATION_OPTIONS = [30, 45, 60, 90, 120];
 
 type Franja = { id: string; start: string; end: string };
+// A weekly time block in the UNIFIED per-day view — a franja that CARRIES its own
+// location (sprint 238). The day-first UI shows every location's blocks together;
+// each block writes its own `location_id` to `availability_weekly` (backend model
+// unchanged).
+type Block = { id: string; locationId: string; start: string; end: string };
 type WeeklyRow = { id?: string; location_id: string; category_id: string | null; weekday: number; start: string; end: string; slot_minutes: number };
 type ExcMode = "closed" | "custom" | "extra";
 type ExcRow = { id?: string; location_id: string; category_id: string | null; date: string; mode: ExcMode; start: string | null; end: string | null; slot_minutes: number };
@@ -124,6 +129,8 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
   // edits these); they MATERIALIZE into availability_slots.
   const [weekly, setWeekly] = useState<WeeklyRow[]>([]);
   const [exceptions, setExceptions] = useState<ExcRow[]>([]);
+  // Appointment length is ONE global value (applies to every block/location).
+  const [durationPref, setDurationPref] = useState(60);
 
   // ── Location tabs ("HORARIO PARA") — workplaces + coverage + A domicilio ──
   const locationOptions = useMemo(() => {
@@ -144,6 +151,15 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
     return opts;
   }, [workplaces, coverageAreas, travels, t]);
 
+  // Unified per-day weekly view (sprint 238): blocks carry their own location, so
+  // there are NO "HORARIO PARA" tabs. The per-block location dropdown only appears
+  // when the pro has 2+ locations; otherwise it's just a simple weekly schedule.
+  const isMultiLocation = locationOptions.length > 1;
+  const defaultLocationId = locationOptions[0]?.id ?? "";
+
+  // `genLocation` now scopes ONLY the EXCEPTIONS ("¿Un día distinto?") section — its
+  // per-location machinery (saveException / DayModal / otherOccupiedForDate) is kept
+  // as-is, driven by a small location selector shown there when multi-location.
   const [genLocation, setGenLocation] = useState("");
   useEffect(() => {
     if (locationOptions.length > 0 && !locationOptions.some((o) => o.id === genLocation)) {
@@ -236,30 +252,10 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
     return null;
   }
 
-  // ── "Already occupied elsewhere" guidance ─────────────────────────────────────
-  // Other locations' occupied ranges on a WEEKDAY — the UNION across every future date that
-  // lands on it (within HORIZON), computed with the SAME `rangesForLocOnDate` the overlap
-  // check uses, so it includes date-specific EXCEPTIONS (closed/custom/extra), not just the
-  // recurring weekly. CRITICAL for consistency: a weekly franja recurs on ALL those dates, so
-  // it must clear EVERY one — using only the recurring rows here let the smart default
-  // suggest a range (e.g. 14:00–17:00) that the exception-aware validator then BLOCKED. Now
-  // the guidance + smart default + validation all agree. Grouped by location, merged + sorted.
-  function otherOccupiedForWeekday(weekday: number): { label: string; ranges: [number, number][] }[] {
-    const otherLocs = [...new Set([...weekly, ...exceptions].map((r) => r.location_id))].filter((l) => l && l !== genLocation);
-    const start = todayISO();
-    const dates: string[] = [];
-    for (let i = 0; i <= HORIZON_DAYS; i++) { const d = addDaysISO(start, i); if (weekdayOf(d) === weekday) dates.push(d); }
-    return otherLocs
-      .map((loc) => {
-        const all: [number, number][] = [];
-        for (const d of dates) all.push(...rangesForLocOnDate(loc, d, weekly, exceptions));
-        return { label: locationLabel(loc), ranges: mergeRanges(all) };
-      })
-      .filter((o) => o.ranges.length > 0);
-  }
-
-  // Same, for a specific DATE (used in the "Cambiar un día" modal) — applies the full
-  // closed/custom/extra precedence via rangesForLocOnDate.
+  // ── "Already occupied elsewhere" guidance (DATE; used by the "Cambiar un día"
+  // modal) — other locations' occupied ranges on a specific DATE, applying the full
+  // closed/custom/extra precedence via rangesForLocOnDate. (The weekly view no longer
+  // needs a per-weekday hint — every location's blocks are shown together.)
   function otherOccupiedForDate(date: string): { label: string; ranges: [number, number][] }[] {
     const otherLocs = [...new Set([...weekly, ...exceptions].map((r) => r.location_id))].filter((l) => l && l !== genLocation);
     return otherLocs
@@ -366,6 +362,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
       const excRows: ExcRow[] = (exc ?? []).map((r) => ({ id: r.id, location_id: r.location_id ?? "", category_id: r.category_id ?? null, date: r.exception_date, mode: r.mode as ExcMode, start: r.start_time ? String(r.start_time).slice(0, 5) : null, end: r.end_time ? String(r.end_time).slice(0, 5) : null, slot_minutes: r.slot_minutes ?? 60 }));
       setWeekly(wkRows);
       setExceptions(excRows);
+      setDurationPref(wkRows[0]?.slot_minutes ?? excRows[0]?.slot_minutes ?? 60);
       setLoading(false);
       // Refresh the materialized window from the template (keeps the rolling 70-day
       // horizon current). Skip when there is NO template at all, so a legacy pro's
@@ -376,28 +373,23 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [professionalId]);
 
-  // ── Active view (current location + profession) ───────────────────────────
-  // Chosen appointment length sticks even before any day is toggled on (a combo with
-  // no rows yet falls back to this instead of resetting to 60).
-  const [durationPref, setDurationPref] = useState(60);
-  const activeDuration = useMemo(() => {
-    const row = weekly.find((r) => sameLoc(r.location_id));
-    return row?.slot_minutes ?? durationPref;
-  }, [weekly, sameLoc, durationPref]);
+  // ── Unified per-day blocks (ALL locations together) ───────────────────────
+  // The appointment length is one global value applied to every block.
+  const activeDuration = durationPref;
 
-  const dayFranjas = useMemo(() => {
-    const map = new Map<number, Franja[]>();
+  // Every weekday → ALL its blocks across ALL locations (each carries its location).
+  const dayBlocks = useMemo(() => {
+    const map = new Map<number, Block[]>();
     for (const r of weekly) {
-      if (!sameLoc(r.location_id)) continue;
       const arr = map.get(r.weekday) ?? [];
-      arr.push({ id: r.id ?? genId(), start: r.start, end: r.end });
+      arr.push({ id: r.id ?? genId(), locationId: r.location_id, start: r.start, end: r.end });
       map.set(r.weekday, arr);
     }
-    // Sort by start; empty drafts (just-enabled, no time yet) go LAST so a new row appears
-    // below the existing franjas.
-    for (const arr of map.values()) arr.sort((a, b) => (!a.start ? 1 : !b.start ? -1 : a.start.localeCompare(b.start)));
+    // Sort by start, then location; empty drafts (just-added, no time) go LAST.
+    for (const arr of map.values()) arr.sort((a, b) => (!a.start ? 1 : !b.start ? -1 : a.start.localeCompare(b.start) || a.locationId.localeCompare(b.locationId)));
     return map;
-  }, [weekly, sameLoc]);
+  }, [weekly]);
+  const blocksFor = (weekday: number): Block[] => dayBlocks.get(weekday) ?? [];
 
   const activeExceptions = useMemo(() => {
     const byDate = new Map<string, ExcRow[]>();
@@ -412,95 +404,117 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
       .sort(([a], [b]) => a.localeCompare(b));
   }, [exceptions, sameLoc]);
 
-  // ── Persist the weekly schedule for a single weekday, then re-materialize. ──
-  // Delete matches by LOCATION + weekday (any category) so legacy profession-tagged
-  // rows are absorbed; new rows are written with category_id = null.
-  // INCOMPLETE drafts (a just-enabled day with empty time fields, or a half-typed range)
-  // are kept in LOCAL state so the pro can fill them freely, but are NOT validated, NOT
-  // written to the DB and NOT materialized — only COMPLETE franjas are. This is what lets
-  // the pro pick any free time from scratch: a transient single-field value never trips the
-  // overlap guard, and an incomplete slot can never be saved.
-  async function persistDay(weekday: number, franjas: Franja[], dur: number) {
-    const complete = franjas.filter(isCompleteFranja);
-    // Block a save that would put this pro in two places at once — COMPLETE franjas only.
-    const proposed = complete.map((f) => [toMins(f.start), toMins(f.end)] as [number, number]);
-    const c = findOverlapConflict(genLocation, proposed, { weekday });
+  // ── Overlap validation for the UNIFIED day (ALL locations together) ─────────
+  // The rule is unchanged (a pro can't be in two places at once), just expressed over
+  // every block of the weekday: on each future date of that weekday, NO two effective
+  // open ranges (any location, exception-aware via `rangesForLocOnDate`) may overlap.
+  // Touching/consecutive ranges are allowed (half-open `rangesOverlap`).
+  function validateDayBlocks(weekday: number, complete: Block[]): { title: string; body: string } | null {
+    const hypo: WeeklyRow[] = [
+      ...weekly.filter((r) => r.weekday !== weekday),
+      ...complete.map((b) => ({ location_id: b.locationId, category_id: null, weekday, start: b.start, end: b.end, slot_minutes: durationPref })),
+    ];
+    const start = todayISO();
+    for (let i = 0; i <= HORIZON_DAYS; i++) {
+      const date = addDaysISO(start, i);
+      if (weekdayOf(date) !== weekday) continue;
+      const locs = [...new Set([...hypo, ...exceptions].map((r) => r.location_id))].filter(Boolean);
+      const flat: { loc: string; r: [number, number] }[] = [];
+      for (const loc of locs) for (const r of rangesForLocOnDate(loc, date, hypo, exceptions)) flat.push({ loc, r });
+      for (let a = 0; a < flat.length; a++) for (let b = a + 1; b < flat.length; b++) {
+        if (rangesOverlap(flat[a].r[0], flat[a].r[1], flat[b].r[0], flat[b].r[1])) {
+          return flat[a].loc === flat[b].loc
+            ? { title: t("conflictTitle"), body: t("conflictSelf") }
+            : { title: t("conflictTitle"), body: t("conflictCross", { place: locationLabel(flat[b].loc), start: to12h(hhmm(flat[b].r[0])), end: to12h(hhmm(flat[b].r[1])) }) };
+        }
+      }
+    }
+    return null;
+  }
+
+  // A new block's SMART default: 8 AM–5 PM when it wouldn't conflict with the day's
+  // other blocks, else EMPTY (so the pro freely picks a non-conflicting time).
+  function smartDefaultBlock(weekday: number, existing: Block[], loc: string): Block {
+    const probe = validateDayBlocks(weekday, [...existing.filter(isCompleteFranja), { id: "_probe", locationId: loc, start: "08:00", end: "17:00" }]);
+    return probe ? { id: genId(), locationId: loc, start: "", end: "" } : { id: genId(), locationId: loc, start: "08:00", end: "17:00" };
+  }
+
+  // ── Persist ALL of a weekday's blocks (every location) at once, then re-materialize. ──
+  // Backend model unchanged: each COMPLETE block writes its own `availability_weekly`
+  // row (category_id null → absorbs legacy). INCOMPLETE drafts stay in LOCAL state so
+  // the row shows, but are NOT validated/written/materialized.
+  async function persistDay(weekday: number, blocks: Block[]) {
+    const complete = blocks.filter(isCompleteFranja);
+    const c = validateDayBlocks(weekday, complete);
     if (c) { setConflict(c); return; }
 
-    // Local state keeps ALL franjas (incl. the empty draft) so the UI shows the open row.
-    const next = weekly.filter((r) => !(sameLoc(r.location_id) && r.weekday === weekday));
-    for (const f of franjas) next.push({ location_id: genLocation, category_id: null, weekday, start: f.start, end: f.end, slot_minutes: dur });
+    const next = weekly.filter((r) => r.weekday !== weekday);
+    for (const b of blocks) next.push({ location_id: b.locationId, category_id: null, weekday, start: b.start, end: b.end, slot_minutes: durationPref });
     setWeekly(next);
 
     const supabase = createClient();
-    await supabase.from("availability_weekly").delete().eq("professional_id", professionalId).eq("location_id", genLocation).eq("weekday", weekday);
+    await supabase.from("availability_weekly").delete().eq("professional_id", professionalId).eq("weekday", weekday);
     if (complete.length > 0) {
-      await supabase.from("availability_weekly").insert(complete.map((f) => ({ professional_id: professionalId, location_id: genLocation, category_id: null, weekday, start_time: f.start, end_time: f.end, slot_minutes: dur })));
+      await supabase.from("availability_weekly").insert(complete.map((b) => ({ professional_id: professionalId, location_id: b.locationId, category_id: null, weekday, start_time: b.start, end_time: b.end, slot_minutes: durationPref })));
     }
-    await regenerate(next, exceptions); // computeDesiredSlots skips incomplete drafts
+    await regenerate(next, exceptions); // skips incomplete drafts
   }
 
   function toggleDay(weekday: number) {
-    const cur = dayFranjas.get(weekday) ?? [];
-    if (cur.length > 0) { persistDay(weekday, [], activeDuration); return; }
-    // Turning a day ON: SMART default. Pre-fill the convenient 8 AM–5 PM workday when
-    // it wouldn't conflict (checked with the SAME validation persistDay uses, so the
-    // default it sets always passes). If 8–5 WOULD overlap an existing schedule (e.g.
-    // the pro already has 8–5 elsewhere that day), start the fields EMPTY instead, so
-    // the pro can freely pick a non-conflicting time without the default pre-blocking
-    // an earlier choice (the old bug). Either way, only COMPLETE franjas validate/save.
-    const defaultConflicts = findOverlapConflict(genLocation, [[toMins("08:00"), toMins("17:00")]], { weekday });
-    const franja: Franja = defaultConflicts
-      ? { id: genId(), start: "", end: "" }
-      : { id: genId(), start: "08:00", end: "17:00" };
-    persistDay(weekday, [franja], activeDuration);
+    const cur = blocksFor(weekday);
+    if (cur.length > 0) { persistDay(weekday, []); return; } // OFF → clear the whole day (all locations)
+    persistDay(weekday, [smartDefaultBlock(weekday, [], defaultLocationId)]);
   }
-  function addFranja(weekday: number) {
-    const cur = dayFranjas.get(weekday) ?? [];
-    // New franja starts EMPTY (no pre-filled default) so the pro picks any free time.
-    persistDay(weekday, [...cur, { id: genId(), start: "", end: "" }], activeDuration);
+  function addBlock(weekday: number) {
+    const cur = blocksFor(weekday);
+    persistDay(weekday, [...cur, smartDefaultBlock(weekday, cur, defaultLocationId)]);
   }
-  function updateFranja(weekday: number, id: string, patch: Partial<Franja>) {
-    const cur = dayFranjas.get(weekday) ?? [];
-    persistDay(weekday, cur.map((f) => (f.id === id ? { ...f, ...patch } : f)), activeDuration);
+  function updateBlock(weekday: number, id: string, patch: Partial<Block>) {
+    persistDay(weekday, blocksFor(weekday).map((b) => (b.id === id ? { ...b, ...patch } : b)));
   }
-  function removeFranja(weekday: number, id: string) {
-    const cur = dayFranjas.get(weekday) ?? [];
-    persistDay(weekday, cur.filter((f) => f.id !== id), activeDuration);
+  function removeBlock(weekday: number, id: string) {
+    persistDay(weekday, blocksFor(weekday).filter((b) => b.id !== id));
   }
 
-  // "Igual a todos los días": copy this day's franjas to EVERY weekday.
+  // "Igual a todos los días": make EVERY weekday a copy of this one (all its blocks +
+  // their locations). Blocked if the source day itself puts the pro in two places.
   async function copyToAll(weekday: number) {
-    // Only COMPLETE franjas are copied — an empty/half-typed draft is ignored (and if the
-    // source day has nothing complete, this is a no-op rather than wiping every day).
-    const src = (dayFranjas.get(weekday) ?? []).filter(isCompleteFranja).map((f) => ({ start: f.start, end: f.end }));
+    const src = blocksFor(weekday).filter(isCompleteFranja).map((b) => ({ locationId: b.locationId, start: b.start, end: b.end }));
     if (src.length === 0) return;
-    // These franjas would repeat on EVERY weekday — block if any day collides with
-    // another location (or itself).
-    const proposed = src.map((f) => [toMins(f.start), toMins(f.end)] as [number, number]);
     for (const wd of WEEKDAY_ORDER) {
-      const c = findOverlapConflict(genLocation, proposed, { weekday: wd });
+      const c = validateDayBlocks(wd, src.map((s) => ({ id: genId(), ...s })));
       if (c) { setConflict(c); return; }
     }
-    const next = weekly.filter((r) => !sameLoc(r.location_id));
-    for (const wd of WEEKDAY_ORDER) for (const f of src) next.push({ location_id: genLocation, category_id: null, weekday: wd, start: f.start, end: f.end, slot_minutes: activeDuration });
+    const next: WeeklyRow[] = [];
+    for (const wd of WEEKDAY_ORDER) for (const s of src) next.push({ location_id: s.locationId, category_id: null, weekday: wd, start: s.start, end: s.end, slot_minutes: durationPref });
     setWeekly(next);
-
     const supabase = createClient();
-    await supabase.from("availability_weekly").delete().eq("professional_id", professionalId).eq("location_id", genLocation);
-    if (src.length > 0) {
-      const rows = WEEKDAY_ORDER.flatMap((wd) => src.map((f) => ({ professional_id: professionalId, location_id: genLocation, category_id: null, weekday: wd, start_time: f.start, end_time: f.end, slot_minutes: activeDuration })));
-      await supabase.from("availability_weekly").insert(rows);
+    await supabase.from("availability_weekly").delete().eq("professional_id", professionalId);
+    await supabase.from("availability_weekly").insert(next.map((r) => ({ professional_id: professionalId, location_id: r.location_id, category_id: null, weekday: r.weekday, start_time: r.start, end_time: r.end, slot_minutes: r.slot_minutes })));
+    await regenerate(next, exceptions);
+  }
+
+  // Quick win: one tap → Mon–Fri 8 AM–5 PM (weekend off) at the main location.
+  async function presetWeekdays8to5() {
+    const days = [1, 2, 3, 4, 5];
+    for (const wd of days) {
+      const c = validateDayBlocks(wd, [{ id: "_p", locationId: defaultLocationId, start: "08:00", end: "17:00" }]);
+      if (c) { setConflict(c); return; }
     }
+    const next: WeeklyRow[] = days.map((wd) => ({ location_id: defaultLocationId, category_id: null, weekday: wd, start: "08:00", end: "17:00", slot_minutes: durationPref }));
+    setWeekly(next);
+    const supabase = createClient();
+    await supabase.from("availability_weekly").delete().eq("professional_id", professionalId);
+    await supabase.from("availability_weekly").insert(next.map((r) => ({ professional_id: professionalId, location_id: r.location_id, category_id: null, weekday: r.weekday, start_time: r.start, end_time: r.end, slot_minutes: r.slot_minutes })));
     await regenerate(next, exceptions);
   }
 
   async function setDuration(dur: number) {
     setDurationPref(dur);
-    const next = weekly.map((r) => (sameLoc(r.location_id) ? { ...r, slot_minutes: dur } : r));
+    const next = weekly.map((r) => ({ ...r, slot_minutes: dur }));
     setWeekly(next);
     const supabase = createClient();
-    await supabase.from("availability_weekly").update({ slot_minutes: dur }).eq("professional_id", professionalId).eq("location_id", genLocation);
+    await supabase.from("availability_weekly").update({ slot_minutes: dur }).eq("professional_id", professionalId);
     await regenerate(next, exceptions);
   }
 
@@ -631,44 +645,16 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
         </div>
       ) : (
         <>
-          {/* ── HORARIO PARA — location tabs ─────────────────────────────── */}
-          <div className="rounded-2xl border border-[#e5e7eb] p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <Calendar className="h-3.5 w-3.5 text-[#9ca3af]" />
-              <span className="text-[10px] font-semibold uppercase tracking-wide text-[#9ca3af]">{t("scheduleForLabel")}</span>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              {locationOptions.map((o) => {
-                const active = o.id === genLocation;
-                return (
-                  <button
-                    key={o.id}
-                    type="button"
-                    onClick={() => setGenLocation(o.id)}
-                    className={cn(
-                      "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
-                      active ? "bg-[#EBF5FB] text-[#009FD9] border-[#bfdbfe]" : "bg-white text-[#6b7280] border-[#e5e7eb] hover:bg-[#f3f4f6]"
-                    )}
-                  >
-                    <MapPin className="h-3 w-3" /> {o.label}
-                  </button>
-                );
-              })}
-              {/* Work locations live in the profile's "Ubicación y cobertura" section, not
-                  here — so this jumps to Mi perfil and (via ?focus=location) auto-opens +
-                  scrolls to that section, landing the pro ready to add a place. */}
-              <Link href="/dashboard/profesional?tab=profile&focus=location" className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium text-[#009FD9] hover:bg-[#EBF5FB] transition-colors">
-                <Plus className="h-3.5 w-3.5" /> {t("addLocation")}
-              </Link>
-            </div>
-          </div>
-
-          {/* ── Mis horarios de siempre — recurring weekly schedule ───────── */}
+          {/* ── Mis horarios de siempre — UNIFIED per-day weekly schedule ─────
+              All locations on one screen: each day lists its time blocks together,
+              and (when the pro has 2+ locations) each block picks its own location.
+              No "HORARIO PARA" tabs, no "ocupado en otra ubicación" hint — overlaps
+              are visible at a glance. */}
           <div className="rounded-2xl border border-[#e5e7eb] p-4 sm:p-5">
-            <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
+            <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
               <div className="min-w-0">
                 <h3 className="text-sm font-semibold text-[#111827]">{t("alwaysTitle")}</h3>
-                <p className="mt-0.5 text-xs text-[#6b7280]">{t("alwaysSub", { place: locationLabel(genLocation) })}</p>
+                <p className="mt-0.5 text-xs text-[#6b7280]">{t("alwaysSubAll")}</p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <label className="text-xs font-medium text-[#6b7280]">{t("apptDuration")}</label>
@@ -681,12 +667,19 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
               </div>
             </div>
 
+            {/* Quick win: one-tap typical workweek (Mon–Fri 8 AM–5 PM). */}
+            <button
+              type="button"
+              onClick={presetWeekdays8to5}
+              className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-[#bfdbfe] bg-[#EBF5FB] px-3 py-1.5 text-xs font-medium text-[#0089bb] hover:bg-[#d9edf9] transition-colors"
+            >
+              <Copy className="h-3.5 w-3.5" /> {t("presetTypical")}
+            </button>
+
             <div className="flex flex-col divide-y divide-[#f3f4f6]">
               {WEEKDAY_ORDER.map((wd) => {
-                const franjas = dayFranjas.get(wd) ?? [];
-                const on = franjas.length > 0;
-                // What OTHER locations already occupy this weekday → pick a free slot.
-                const occupied = otherOccupiedForWeekday(wd);
+                const blocks = blocksFor(wd);
+                const on = blocks.length > 0;
                 return (
                   <div key={wd} className="flex flex-col gap-2 py-3 sm:flex-row sm:gap-4">
                     {/* toggle + weekday name */}
@@ -703,29 +696,42 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                       <span className={cn("text-sm font-medium", on ? "text-[#111827]" : "text-[#9ca3af]")}>{t(`weekday${wd}` as `weekday${number}`)}</span>
                     </div>
 
-                    {/* franjas */}
+                    {/* blocks */}
                     <div className="min-w-0 flex-1">
                       {!on ? (
                         <p className="text-sm text-[#9ca3af] sm:pt-1.5">{t("closed")}</p>
                       ) : (
-                        <div className="flex flex-col gap-2">
-                          {/* time range + its remove "x" on ONE line — the x stays to the
-                              RIGHT (never wraps below), the selects shrink on mobile. */}
-                          {franjas.map((f) => (
-                            <div key={f.id} className="flex items-center gap-1.5">
-                              {/* Start: no min (any time pickable). Only bump the END when it's
-                                  already set AND now ≤ start — never auto-fill an empty end. */}
-                              <TimeSelect value={f.start} onChange={(v) => updateFranja(wd, f.id, { start: v, ...(f.end && toMins(f.end) <= toMins(v) ? { end: hhmm(Math.min(toMins(v) + 60, 23 * 60 + 30)) } : {}) })} className="min-w-0 flex-1 sm:flex-none sm:w-32" />
-                              <span className="shrink-0 text-[#9ca3af]">–</span>
-                              {/* End: min only once a start is picked (so it never pre-constrains an empty row). */}
-                              <TimeSelect value={f.end} min={f.start ? hhmm(Math.min(toMins(f.start) + 30, 23 * 60 + 30)) : undefined} onChange={(v) => updateFranja(wd, f.id, { end: v })} className="min-w-0 flex-1 sm:flex-none sm:w-32" error={f.start && f.end && toMins(f.end) <= toMins(f.start) ? t("toAfterFrom") : undefined} />
-                              <button type="button" onClick={() => removeFranja(wd, f.id)} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#9ca3af] hover:bg-[#f3f4f6] hover:text-red-500 transition-colors" aria-label={t("remove")}>
-                                <X className="h-4 w-4" />
-                              </button>
+                        <div className="flex flex-col gap-2.5">
+                          {blocks.map((b) => (
+                            <div key={b.id} className="flex flex-col gap-1">
+                              {/* time range + its remove "x" on ONE line — the x stays RIGHT */}
+                              <div className="flex items-center gap-1.5">
+                                <TimeSelect value={b.start} onChange={(v) => updateBlock(wd, b.id, { start: v, ...(b.end && toMins(b.end) <= toMins(v) ? { end: hhmm(Math.min(toMins(v) + 60, 23 * 60 + 30)) } : {}) })} className="min-w-0 flex-1 sm:flex-none sm:w-28" />
+                                <span className="shrink-0 text-[#9ca3af]">–</span>
+                                <TimeSelect value={b.end} min={b.start ? hhmm(Math.min(toMins(b.start) + 30, 23 * 60 + 30)) : undefined} onChange={(v) => updateBlock(wd, b.id, { end: v })} className="min-w-0 flex-1 sm:flex-none sm:w-28" error={b.start && b.end && toMins(b.end) <= toMins(b.start) ? t("toAfterFrom") : undefined} />
+                                <button type="button" onClick={() => removeBlock(wd, b.id)} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#9ca3af] hover:bg-[#f3f4f6] hover:text-red-500 transition-colors" aria-label={t("remove")}>
+                                  <X className="h-4 w-4" />
+                                </button>
+                              </div>
+                              {/* Per-block LOCATION — only when the pro has 2+ locations. */}
+                              {isMultiLocation && (
+                                <div className="relative inline-flex items-center self-start">
+                                  <MapPin className="pointer-events-none absolute left-2 h-3 w-3 text-[#9ca3af]" />
+                                  <select
+                                    value={b.locationId}
+                                    onChange={(e) => updateBlock(wd, b.id, { locationId: e.target.value })}
+                                    aria-label={t("blockLocationAria")}
+                                    className="h-8 appearance-none rounded-lg border border-[#e5e7eb] bg-white pl-7 pr-7 text-xs font-medium text-[#374151] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent cursor-pointer"
+                                  >
+                                    {locationOptions.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+                                  </select>
+                                  <ChevronDown className="pointer-events-none absolute right-2 h-3.5 w-3.5 text-[#9ca3af]" />
+                                </div>
+                              )}
                             </div>
                           ))}
                           <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 pt-0.5">
-                            <button type="button" onClick={() => addFranja(wd)} className="inline-flex items-center gap-1 text-xs font-medium text-[#009FD9] hover:underline cursor-pointer">
+                            <button type="button" onClick={() => addBlock(wd)} className="inline-flex items-center gap-1 text-xs font-medium text-[#009FD9] hover:underline cursor-pointer">
                               <Plus className="h-3.5 w-3.5" /> {t("addFranja")}
                             </button>
                             <button type="button" onClick={() => copyToAll(wd)} className="inline-flex items-center gap-1 text-xs font-medium text-[#6b7280] hover:text-[#111827] cursor-pointer">
@@ -734,24 +740,16 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                           </div>
                         </div>
                       )}
-
-                      {/* Guidance: what OTHER locations already occupy this weekday, so the
-                          pro picks a free slot. Consecutive (touching) times are allowed. */}
-                      {occupied.length > 0 && (
-                        <div className="mt-2 flex flex-col gap-0.5">
-                          {occupied.map((o) => (
-                            <p key={o.label} className="flex items-start gap-1.5 text-[11px] leading-relaxed text-[#9ca3af]">
-                              <Lock className="h-3 w-3 shrink-0 mt-[3px]" />
-                              <span>{t("occupiedElsewhere", { ranges: fmtRanges(o.ranges), place: o.label })}</span>
-                            </p>
-                          ))}
-                        </div>
-                      )}
                     </div>
                   </div>
                 );
               })}
             </div>
+
+            {/* Add another work location (lives in the profile's "Ubicación y cobertura"). */}
+            <Link href="/dashboard/profesional?tab=profile&focus=location" className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-[#009FD9] hover:underline">
+              <Plus className="h-3.5 w-3.5" /> {t("addLocation")}
+            </Link>
           </div>
 
           {/* ── ¿Un día distinto? — date exceptions ──────────────────────── */}
@@ -761,9 +759,20 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                 <h3 className="text-sm font-semibold text-[#111827]">{t("diffDayTitle")}</h3>
                 <p className="mt-0.5 text-xs text-[#6b7280]">{t("diffDaySub")}</p>
               </div>
-              <Button type="button" variant="secondary" size="sm" onClick={() => setDayModal({ date: todayISO() })}>
-                <Calendar className="h-4 w-4" /> {t("changeDay")}
-              </Button>
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Exceptions are per-location — pick which location they apply to. */}
+                {isMultiLocation && (
+                  <div className="relative">
+                    <select value={genLocation} onChange={(e) => setGenLocation(e.target.value)} aria-label={t("excLocationAria")} className={selectClass}>
+                      {locationOptions.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+                    </select>
+                    <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9ca3af]" />
+                  </div>
+                )}
+                <Button type="button" variant="secondary" size="sm" onClick={() => setDayModal({ date: todayISO() })}>
+                  <Calendar className="h-4 w-4" /> {t("changeDay")}
+                </Button>
+              </div>
             </div>
 
             {activeExceptions.length === 0 ? (
