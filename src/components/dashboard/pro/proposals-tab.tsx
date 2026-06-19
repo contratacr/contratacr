@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { FolderOpen, Send, ChevronDown, ChevronUp, MapPin, Clock, Coins, User, Briefcase, CheckCircle2, Phone } from "lucide-react";
+import { FolderOpen, Send, ChevronDown, ChevronUp, MapPin, Clock, Coins, Briefcase, CheckCircle2, Phone } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -39,7 +39,7 @@ type OpenProject = {
   categories?: { name: string };
   provincias?: { name: string };
   cantones?: { name: string };
-  profiles?: { full_name: string };
+  profiles?: { full_name: string; avatar_url?: string };
   proposals?: { id: string }[];
 };
 
@@ -282,8 +282,13 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
                           <p className="text-sm text-[#6b7280] line-clamp-2 mb-2">{project.description}</p>
                           <div className="flex flex-wrap gap-3 text-xs text-[#9ca3af]">
                             {project.profiles?.full_name && (
-                              <span className="flex items-center gap-1">
-                                <User className="h-3 w-3" />
+                              <span className="flex items-center gap-1.5">
+                                <Avatar className="h-5 w-5">
+                                  <AvatarImage src={project.profiles.avatar_url} />
+                                  <AvatarFallback className="text-[9px] bg-[#EBF5FB] text-[#009FD9] font-semibold">
+                                    {getInitials(project.profiles.full_name)}
+                                  </AvatarFallback>
+                                </Avatar>
                                 {project.profiles.full_name}
                               </span>
                             )}

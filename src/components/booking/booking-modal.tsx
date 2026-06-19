@@ -379,6 +379,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
       if (user) {
         await supabase.from("profiles").update({ full_name: j.fullName }).eq("id", user.id);
         await supabase.auth.updateUser({ data: { full_name: j.fullName } });
+        window.dispatchEvent(new Event("ccr:profile-updated"));
       }
       if (active) setClientName(j.fullName);
     })();
@@ -552,6 +553,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
         return;
       }
       await supabase.auth.updateUser({ data: { full_name: finalName, profile_completed: true } });
+      window.dispatchEvent(new Event("ccr:profile-updated"));
     }
     if (officialName) setClientName(officialName);
     setProfileCedula(cleanCedula);

@@ -161,6 +161,7 @@ export default function ClientDashboardPage() {
     if (!verified && profileForm.full_name) {
       await supabase.auth.updateUser({ data: { full_name: profileForm.full_name } });
       setProfileData((prev) => (prev ? { ...prev, full_name: profileForm.full_name } : prev));
+      window.dispatchEvent(new Event("ccr:profile-updated"));
     }
     setProfileSaving(false);
     setProfileSaved(true);
