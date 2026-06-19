@@ -646,6 +646,40 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     return { ok: true, officialName: null };
   }
 
+  // Self DOB field (HEALTH services, "para mí"). When the cédula lookup supplied a
+  // birth date (padrón, migration 053) we CONFIRM it read-only — never re-ask. When
+  // it didn't (DIMEX/NITE or a roll with no DOB) we ask once. Co-located with the
+  // cédula step so typing the cédula auto-fills name + DOB together.
+  function renderSelfDobField() {
+    if (selfDob) {
+      return (
+        <div className="rounded-lg bg-[#f0fdf4] border border-[#bbf7d0] px-3 py-2">
+          <p className="text-xs text-[#15803d] break-words">
+            Fecha de nacimiento: <strong>{selfDob}</strong>{computeAge(selfDob) ? ` · ${formatAge(computeAge(selfDob))}` : ""}
+          </p>
+        </div>
+      );
+    }
+    return (
+      <div>
+        <label className="text-sm font-medium text-[#374151] block mb-1.5">
+          Fecha de nacimiento <span className="text-red-500">*</span>
+        </label>
+        <input
+          type="date"
+          value={selfDobInput}
+          max={new Date().toISOString().slice(0, 10)}
+          onChange={(e) => setSelfDobInput(e.target.value)}
+          className="h-10 rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent"
+        />
+        {effectiveSelfDob && computeAge(effectiveSelfDob) && (
+          <p className="text-xs mt-1 text-[#6b7280]">{formatAge(computeAge(effectiveSelfDob))}</p>
+        )}
+        <p className="text-[11px] text-[#9ca3af] mt-1">La pedimos solo para servicios de salud.</p>
+      </div>
+    );
+  }
+
   return (
     <Dialog.Root open={open} onOpenChange={(v) => !v && resetAndClose()}>
       <Dialog.Portal>
@@ -993,27 +1027,11 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     </div>
                   </div>
 
-                  {/* DOB for HEALTH services when the cita is for MYSELF (the padrón
-                      carries no birth date, so we ask it here). Required. */}
-                  {proIsHealth && !forSomeoneElse && (
-                    <div>
-                      <label className="text-sm font-medium text-[#374151] block mb-1.5">
-                        Fecha de nacimiento <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="date"
-                        value={selfDob ?? selfDobInput}
-                        max={new Date().toISOString().slice(0, 10)}
-                        disabled={!!selfDob}
-                        onChange={(e) => setSelfDobInput(e.target.value)}
-                        className="h-10 rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent disabled:bg-[#f3f4f6]"
-                      />
-                      {effectiveSelfDob && computeAge(effectiveSelfDob) && (
-                        <p className="text-xs mt-1 text-[#6b7280]">{formatAge(computeAge(effectiveSelfDob))}</p>
-                      )}
-                      <p className="text-[11px] text-[#9ca3af] mt-1">La pedimos solo para servicios de salud.</p>
-                    </div>
-                  )}
+                  {/* DOB for HEALTH services, "para mí" — ONLY when the cédula is already
+                      on file (auto-filled from it, or asked once if the roll has no DOB).
+                      When there's no cédula yet, the DOB is collected WITH the cédula at the
+                      next step (so typing it auto-fills name + DOB together). */}
+                  {proIsHealth && !forSomeoneElse && hasStoredCedula && !selfDob && renderSelfDobField()}
 
                   {forSomeoneElse && (
                     <div className="rounded-xl border border-[#e5e7eb] p-3 flex flex-col gap-3 bg-[#f9fafb]">
@@ -1187,6 +1205,8 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                       </p>
                     </div>
                   )}
+                  {/* HEALTH service for myself → DOB, auto-filled from the cédula above. */}
+                  {proIsHealth && !forSomeoneElse && renderSelfDobField()}
                 </div>
               )}
 
@@ -1258,6 +1278,9 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                       )}
                     </div>
                   )}
+                  {/* HEALTH service for myself → DOB, auto-filled from the cédula above
+                      (or asked once when the roll has no birth date). */}
+                  {proIsHealth && !forSomeoneElse && needsCedula && renderSelfDobField()}
                 </div>
               )}
 
@@ -1339,7 +1362,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     disabled={
                       !description.trim()
                       || (forSomeoneElse && (benHasCedula === null || !benName.trim() || benPhone.replace(/\D/g, "").length < 8))
-                      || (proIsHealth && !forSomeoneElse && !effectiveSelfDob)
+                      || (proIsHealth && !forSomeoneElse && hasStoredCedula && !effectiveSelfDob)
                       || (proIsHealth && forSomeoneElse && !benDob)
                     }
                     loading={submitting}
@@ -1348,8 +1371,10 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                       // Booking for someone else needs the beneficiary's name + a contact
                       // number for the cita (cédula stays optional).
                       if (forSomeoneElse && (benHasCedula === null || !benName.trim() || benPhone.replace(/\D/g, "").length < 8)) return;
-                      // Health services require the patient's DOB (self or beneficiary).
-                      if (proIsHealth && !forSomeoneElse && !effectiveSelfDob) return;
+                      // Health services require the patient's DOB. For "para mí" we only
+                      // gate HERE when the cédula is already on file; otherwise the DOB is
+                      // collected with the cédula at the contact/complete step.
+                      if (proIsHealth && !forSomeoneElse && hasStoredCedula && !effectiveSelfDob) return;
                       if (proIsHealth && forSomeoneElse && !benDob) return;
                       if (isLoggedIn) {
                         if (needsCompleteStep) setStep("complete");
@@ -1372,7 +1397,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     size="md"
                     className="flex-1"
                     loading={submitting || checkingCedula}
-                    disabled={profilePhone.replace(/\D/g, "").length < 8 || guestEmailCheck.taken || !profileCedula}
+                    disabled={profilePhone.replace(/\D/g, "").length < 8 || guestEmailCheck.taken || !profileCedula || (proIsHealth && !forSomeoneElse && !effectiveSelfDob)}
                     onClick={async () => { const v = await validateClientCedula(); if (v.ok) await handleSubmit(undefined, undefined, v.officialName || undefined); }}
                   >
                     {submitting || checkingCedula ? "Enviando…" : t("step4.submit")}
@@ -1384,6 +1409,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     size="md"
                     className="flex-1"
                     loading={savingProfile || submitting}
+                    disabled={savingProfile || submitting || (proIsHealth && !forSomeoneElse && needsCedula && !effectiveSelfDob)}
                     onClick={saveProfileAndSubmit}
                   >
                     {savingProfile || submitting ? "Enviando…" : t("step4.submit")}

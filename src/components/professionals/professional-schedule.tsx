@@ -329,7 +329,13 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
         onClose={() => setShowBooking(false)}
         initialDate={preset?.date}
         initialTime={preset?.time}
-        initialCategoryId={preset?.categoryId ?? activeCategory ?? professional.categoryId ?? null}
+        // Effective booking category — the picked slot's, else the searched profession,
+        // else NOTHING. We deliberately do NOT fall back to `professional.categoryId`
+        // (the pro's PRIMARY profession): for a multi-specialty pro whose primary is
+        // medical, that fallback wrongly forced a health context (asked DOB) even when
+        // the client wanted a non-medical service. With null, the modal asks the client
+        // which service when the pro has several and there's no context (needsProfessionPick).
+        initialCategoryId={preset?.categoryId ?? activeCategory ?? null}
         initialLocationId={preset?.locationId ?? (effectiveId && effectiveId !== "general" ? effectiveId : null)}
         initialLocationLabel={preset?.locationId ? locLabel(preset.locationId) : (effectiveId ? locLabel(effectiveId) : null)}
       />

@@ -71,8 +71,17 @@ export default function ProfilePage({ params }: ProfilePageProps) {
   // Preview mode (?preview=1): a pro opened "Ver cómo me ven los clientes" from
   // their panel → show a clear "Volver a mi panel" bar so they never get stuck.
   const [previewMode, setPreviewMode] = useState(false);
+  // The profession the client searched/filtered by (?categoria=) — passed to the
+  // booking modal so, for a multi-specialty pro, that service is pre-selected and we
+  // know up front whether it's a health service (DOB) without re-asking.
+  const [activeCategory, setActiveCategory] = useState<string | undefined>(undefined);
   useEffect(() => {
-    if (typeof window !== "undefined") setPreviewMode(new URLSearchParams(window.location.search).get("preview") === "1");
+    if (typeof window !== "undefined") {
+      const sp = new URLSearchParams(window.location.search);
+      setPreviewMode(sp.get("preview") === "1");
+      const cat = sp.get("categoria");
+      if (cat) setActiveCategory(cat);
+    }
   }, []);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [viewerId, setViewerId] = useState<string | null>(null);
@@ -351,6 +360,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                 <ProfessionalSchedule
                   stacked
                   professional={professional}
+                  activeCategory={activeCategory}
                   categoryName={professional.categoryId ? tCat(professional.categoryId as Parameters<typeof tCat>[0]) : ""}
                   availabilityPublic={professional.availabilityPublic ?? true}
                   contactPreference={professional.contactPreference ?? "ambas"}
