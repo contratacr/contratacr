@@ -1541,6 +1541,7 @@
     "nameLockedHelp": "Tu nombre proviene de la cédula que ingresaste en tu última solicitud de servicio. ¿Un error o cambio legal? <link>Solicítalo a soporte</link>.",
     "phone": "Teléfono",
     "optional": "(opcional)",
+    "phoneNotice": "Es opcional aquí, pero lo necesitarás para crear proyectos o solicitar servicios. Te lo pediremos en ese momento.",
     "saveChanges": "Guardar cambios",
     "saved": "✓ ¡Cambios guardados!",
     "identity": "Identidad",

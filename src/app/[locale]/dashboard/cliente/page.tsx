@@ -6,7 +6,7 @@ import { isSigningOut, signOutToHome } from "@/lib/auth/sign-out";
 import { useSearchParams } from "next/navigation";
 import {
   CalendarDays, Bookmark, LogOut, Bell, User, FolderOpen, Briefcase, Search, Headset,
-  Lock, Camera, X, Settings,
+  Lock, Camera, X, Settings, Info,
 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { detectIdType } from "@/lib/cedula";
@@ -450,11 +450,19 @@ export default function ClientDashboardPage() {
                         </p>
                       )}
                     </div>
-                    <PhoneInput
-                      label={<>{t("phone")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span></>}
-                      value={profileForm.phone}
-                      onChange={(digits) => { setProfileForm((f) => ({ ...f, phone: digits })); touchProfile(); }}
-                    />
+                    <div>
+                      <PhoneInput
+                        label={<>{t("phone")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span></>}
+                        value={profileForm.phone}
+                        onChange={(digits) => { setProfileForm((f) => ({ ...f, phone: digits })); touchProfile(); }}
+                      />
+                      {/* Clearing the phone is allowed, but it's still required at the point of
+                          creating a project / requesting a service — make that explicit here. */}
+                      <p className="mt-1.5 flex items-start gap-1.5 text-xs text-[#6b7280]">
+                        <Info className="h-3.5 w-3.5 shrink-0 mt-px text-[#9ca3af]" />
+                        <span>{t("phoneNotice")}</span>
+                      </p>
+                    </div>
                   </div>
 
                   {/* Ofrecer mis servicios — same account, adds the pro role. */}

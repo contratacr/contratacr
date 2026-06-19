@@ -1541,6 +1541,7 @@
     "nameLockedHelp": "Your name comes from the ID you entered on your latest service request. A mistake or legal change? <link>Request it from support</link>.",
     "phone": "Phone",
     "optional": "(optional)",
+    "phoneNotice": "It's optional here, but you'll need it to create projects or request services. We'll ask for it then.",
     "saveChanges": "Save changes",
     "saved": "✓ Changes saved!",
     "identity": "Identity",
