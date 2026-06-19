@@ -666,11 +666,13 @@ export default function RegisterProfessionalPage() {
               p-8) on a #fafafa page, centered. The multi-step form lives inside it. */}
           <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-8">
           <div className="text-center mb-2">
+            {/* Heading matches the CURRENT step: identity / service / photo — so the
+                photo step never shows the "cuéntanos sobre tu servicio" subtitle. */}
             <h1 className="text-2xl font-bold text-[#111827]">
-              {currentUser ? t("completeProfileTitle") : t("title")}
+              {step === 2 ? t("photoStepTitle") : currentUser ? t("completeProfileTitle") : t("title")}
             </h1>
             <p className="text-[#6b7280] text-sm mt-1">
-              {currentUser ? t("completeProfileSubtitle") : t("subtitle")}
+              {step === 2 ? t("subtitlePhoto") : step === 0 ? t("subtitle") : t("completeProfileSubtitle")}
             </p>
           </div>
           <StepIndicator current={indicatorStep} labels={stepLabels} />

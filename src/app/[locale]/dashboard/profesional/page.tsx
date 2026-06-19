@@ -264,15 +264,16 @@ export default function ProDashboardPage() {
                   {pro.verification_status === "verified" ? (
                     <Badge variant="verified">{t("identityVerified")}</Badge>
                   ) : (
-                    // NOT verified → a positive, OPTIONAL invitation (never a negative
-                    // "sin verificar" label) that opens the Verificación tab, where the
-                    // detailed status + actions live. Public view shows NO label.
+                    // NOT verified → mirror the "Verificado" pill (same shape/size) but
+                    // a neutral grey "Sin verificar"; still clickable to open the
+                    // Verificación tab. Public view shows NO label (no negative tag).
                     <button
                       type="button"
                       onClick={() => setTab("verificacion")}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-[#bfdbfe] bg-[#EBF5FB] px-3 py-1 text-xs font-semibold text-[#0089bb] hover:bg-[#dbeafe] transition-colors"
+                      title={t("verifyInvite")}
+                      className="inline-flex items-center rounded-full border border-[#e5e7eb] bg-[#f3f4f6] px-2.5 py-0.5 text-xs font-medium text-[#6b7280] hover:bg-[#e5e7eb] transition-colors"
                     >
-                      <ShieldCheck className="h-3.5 w-3.5" /> {t("verifyInvite")}
+                      {t("notVerifiedBadge")}
                     </button>
                   )}
                 </div>
