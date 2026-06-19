@@ -83,7 +83,7 @@ export function CoverageAreaSelector({
       </div>
 
       {level !== "country" && (
-        <div className={cn("grid gap-2", level === "canton" ? "grid-cols-2" : "grid-cols-1")}>
+        <div className="flex flex-col gap-2">
           <SelectMenu
             value={province}
             onChange={(v) => { setProvince(v); setCanton(""); }}

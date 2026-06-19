@@ -83,7 +83,10 @@ export function SelectMenu({ value, onChange, options, placeholder, label, error
         <div
           ref={listRef}
           role="listbox"
-          className="absolute top-full left-0 z-50 mt-1 max-h-60 w-full min-w-[9rem] overflow-y-auto rounded-xl border border-[#e5e7eb] bg-white py-1 shadow-lg"
+          // Grow to the longest option (`w-max`) but never narrower than the trigger
+          // (`min-w-full`); capped so it can't overflow the viewport. This keeps option
+          // text fully readable even when the trigger sits in a narrow column.
+          className="absolute top-full left-0 z-50 mt-1 max-h-60 min-w-full w-max max-w-[min(18rem,calc(100vw-1.5rem))] overflow-y-auto rounded-xl border border-[#e5e7eb] bg-white py-1 shadow-lg"
         >
           {options.length === 0 ? (
             <p className="px-3 py-2 text-xs text-[#9ca3af]">—</p>

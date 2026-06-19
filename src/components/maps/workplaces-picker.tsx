@@ -300,8 +300,9 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200 }: W
       <div className="flex flex-col gap-2.5">
       {/* 1 — Structured field FIRST: provincia → cantón (authoritative for search).
           Polished popover dropdowns (shared SelectMenu) — same look/behavior as the
-          Disponibilidad time selector. */}
-      <div className="grid grid-cols-2 gap-2">
+          Disponibilidad time selector. FULL-WIDTH stacked so the selected province/cantón
+          name is never truncated (a narrow 2-col cell cut off "Alajuela" etc.). */}
+      <div className="flex flex-col gap-2">
         <SelectMenu
           value={province}
           onChange={(v) => { setProvince(v); setCanton(""); }}
