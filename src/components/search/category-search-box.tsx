@@ -141,7 +141,7 @@ export function CategorySearchBox({
                 }}
                 className="block w-full border-t border-gray-50 px-4 py-3 text-center text-sm font-semibold text-[#009FD9] hover:bg-gray-50"
               >
-                {tp("notListed")}
+                {tp("suggestCta")}
               </button>
             </>
           ) : (

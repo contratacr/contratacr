@@ -334,7 +334,7 @@
     "sending": "Enviando…",
     "send": "Enviar",
     "cancel": "Cancelar",
-    "notListed": "¿No ves tu categoría?"
+    "notListed": "Sugerir categoría"
   },
   "gallery": {
     "workAlt": "Trabajo {n}",
@@ -1197,7 +1197,7 @@
     "pickerEmpty": "No se encontraron profesiones.",
     "pickerNoResults": "No encontramos esa profesión",
     "pickerNoResultsHint": "Sugiérela abajo y nuestro equipo la revisa.",
-    "notListed": "¿No ves tu profesión?",
+    "notListed": "Sugerir profesión",
     "suggestNamePlaceholder": "Nombre de la profesión",
     "suggestSend": "Enviar",
     "suggestSending": "Enviando…",
@@ -2063,7 +2063,7 @@
     "ctaContact": "Contactarnos",
     "notListed": "¿No ves tu categoría?",
     "suggestDescription": "Cuéntanos qué servicio buscabas y lo agregamos a la lista.",
-    "suggestCta": "Sugerir una categoría",
+    "suggestCta": "Sugerir categoría",
     "suggestPlaceholder": "Nombre de la categoría",
     "suggestSend": "Enviar",
     "suggestSending": "Enviando…",

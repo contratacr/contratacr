@@ -334,7 +334,7 @@
     "sending": "Sending…",
     "send": "Send",
     "cancel": "Cancel",
-    "notListed": "Don't see your category?"
+    "notListed": "Suggest a category"
   },
   "gallery": {
     "workAlt": "Work {n}",
@@ -1197,7 +1197,7 @@
     "pickerEmpty": "No professions found.",
     "pickerNoResults": "We couldn't find that profession",
     "pickerNoResultsHint": "Suggest it below and our team will review it.",
-    "notListed": "Don't see your profession?",
+    "notListed": "Suggest a profession",
     "suggestNamePlaceholder": "Profession name",
     "suggestSend": "Send",
     "suggestSending": "Sending…",
