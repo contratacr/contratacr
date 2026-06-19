@@ -11,7 +11,7 @@ import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { useTranslations, useLocale } from "next-intl";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { PhoneInput } from "@/components/ui/phone-input";
+import { PhoneInput, isPhoneComplete } from "@/components/ui/phone-input";
 import { CedulaInput } from "@/components/ui/cedula-input";
 import { isValidId, detectIdType, cleanId } from "@/lib/cedula";
 import { computeAge, formatAge, isMinorFromDob } from "@/lib/age";
@@ -515,7 +515,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
           // DOB only for HEALTH services (data minimization). Omitted for non-health.
           clientDob: proIsHealth && !forSomeoneElse ? (effectiveSelfDob || null) : null,
           beneficiaryDob: proIsHealth && forSomeoneElse && benDob ? benDob : null,
-          beneficiaryPhone: forSomeoneElse ? (benPhone.trim() || null) : null,
+          beneficiaryPhone: forSomeoneElse && benPhone.replace(/\D/g, "").length > 3 ? benPhone : null,
           beneficiaryIsMinor: proIsHealth && forSomeoneElse && benDob ? isMinorFromDob(benDob) : false,
         }),
       });
@@ -653,6 +653,11 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   const benClean = cleanId(benCedula);
   const benIsForeignId = !benNoCedula && !!benCedula && isValidId(benClean) && detectIdType(benClean) !== "cedula";
   const benHasAutoName = !benNoCedula && !!benLookupName;
+  // The other person's phone is OPTIONAL (a child / older adult may have none): empty is
+  // fine; only block a PARTIALLY-typed number. >3 digits ⇒ a real number was started
+  // (more than just a country code).
+  const benHasPhone = benPhone.replace(/\D/g, "").length > 3;
+  const benPhoneOk = !benHasPhone || isPhoneComplete(benPhone);
   // Self: a national cédula resolved the official name → the name auto-fills (read-only)
   // below the ID; otherwise (no cédula / DIMEX) it's typed manually.
   const selfHasAutoName = !noCedula && !!selfCedulaName && !selfIsForeignId;
@@ -1303,7 +1308,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                           )}
                           <PhoneInput
                             label="Teléfono de la persona"
-                            required
+                            optional
                             value={benPhone}
                             onChange={setBenPhone}
                           />
@@ -1534,7 +1539,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     className="flex-1"
                     disabled={
                       !description.trim()
-                      || (forSomeoneElse && (!benName.trim() || benPhone.replace(/\D/g, "").length < 8))
+                      || (forSomeoneElse && (!benName.trim() || !benPhoneOk))
                       || (proIsHealth && !forSomeoneElse && hasStoredCedula && !effectiveSelfDob)
                       || (proIsHealth && forSomeoneElse && !benDob)
                     }
@@ -1543,7 +1548,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                       if (!description.trim()) return;
                       // Booking for someone else needs the beneficiary's name + a contact
                       // number for the cita (cédula stays optional).
-                      if (forSomeoneElse && (!benName.trim() || benPhone.replace(/\D/g, "").length < 8)) return;
+                      if (forSomeoneElse && (!benName.trim() || !benPhoneOk)) return;
                       // Health services require the patient's DOB. For "para mí" we only
                       // gate HERE when the cédula is already on file; otherwise the DOB is
                       // collected with the cédula at the contact/complete step.
