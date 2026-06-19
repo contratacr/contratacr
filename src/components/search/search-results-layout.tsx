@@ -7,7 +7,8 @@ import { GoogleMapPanel, type MapProfessional } from "@/components/maps/google-m
 
 interface SearchResultsLayoutProps {
   children: React.ReactNode; // server-rendered list column (cards + pagination)
-  filters: React.ReactNode; // the <SearchFilters/> sidebar/drawer control
+  filters: React.ReactNode; // the <SearchFilters/> sidebar control (desktop xl+)
+  drawerFilters: React.ReactNode; // header-less <SearchFilters hideHeader/> for the mobile/tablet drawer
   /** Mobile-only "<N> profesionales en <área>" count shown in the sheet header. */
   countLabel?: string;
   mapData: MapProfessional[];
@@ -40,7 +41,7 @@ const MAX = 0.92;
  *  DESKTOP is unchanged (same `lg:` classes). The bottom-sheet wrapper is `lg:contents`, so on
  *  desktop it dissolves and the card column (`lg:order-2`) drops into the 3-column flex shell.
  */
-export function SearchResultsLayout({ children, filters, countLabel, mapData, apiKey, locale, numbering }: SearchResultsLayoutProps) {
+export function SearchResultsLayout({ children, filters, drawerFilters, countLabel, mapData, apiKey, locale, numbering }: SearchResultsLayoutProps) {
   const t = useTranslations("search");
   const [showFilters, setShowFilters] = useState(false); // full-filter drawer (mobile + lg–xl)
 
@@ -129,20 +130,26 @@ export function SearchResultsLayout({ children, filters, countLabel, mapData, ap
         </button>
       </div>
 
-      {/* Full-filter drawer (opened from the lg–xl button OR the mobile header "Filtros"). */}
+      {/* Full-filter drawer (opened from the lg–xl button OR the mobile header "Filtros").
+          ONE clean white surface — NO nested card: a pinned header (title + X, divider below)
+          and a scrolling body where the filters sit directly on the white background. Mobile:
+          full-screen. Tablet (lg): a left drawer. Desktop (xl+) uses the sidebar, not this. */}
       {showFilters && (
         <div className="xl:hidden fixed inset-0 z-50">
           <div className="absolute inset-0 bg-black/40" onClick={() => setShowFilters(false)} />
-          <div className="absolute inset-y-0 left-0 w-[88%] max-w-xs bg-[#f4f7fa] shadow-xl overflow-y-auto p-4">
-            {/* Only the close X here — `{filters}` (SearchFilters) renders its OWN "Filtros"
-                header, so a title here too would duplicate the word "Filtros". */}
-            <div className="mb-2 flex items-center justify-end">
-              <button onClick={() => setShowFilters(false)} aria-label={t("close")} className="rounded-full p-1.5 text-[#9ca3af] hover:bg-[#e5e7eb]">
+          <div className="absolute inset-0 flex flex-col bg-white shadow-xl lg:inset-y-0 lg:right-auto lg:w-[22rem] lg:max-w-[88%]">
+            {/* Header — "Filtros" left, close X right, on one row with a divider below. */}
+            <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[#e5e7eb] px-4 py-3.5">
+              <h2 className="text-base font-bold text-[#111827]">{t("filters.title")}</h2>
+              <button onClick={() => setShowFilters(false)} aria-label={t("close")} className="-mr-1 rounded-full p-1.5 text-[#9ca3af] transition-colors hover:bg-[#f3f4f6] hover:text-[#374151]">
                 <X className="h-5 w-5" />
               </button>
             </div>
-            {/* Filters apply INSTANTLY (no apply button); X + backdrop both dismiss. */}
-            {filters}
+            {/* Scrolling body — filters directly on the white surface (header-less instance).
+                Filters apply INSTANTLY (no apply button); X + backdrop both dismiss. */}
+            <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 pb-8">
+              {drawerFilters}
+            </div>
           </div>
         </div>
       )}

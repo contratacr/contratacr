@@ -282,6 +282,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             numbering={numbering}
             countLabel={subtitle}
             filters={<Suspense fallback={null}><SearchFilters /></Suspense>}
+            // Mobile/tablet drawer gets a header-less, card-less instance (`hideHeader`):
+            // the drawer supplies its own "Filtros" title bar + single white surface, so the
+            // filters sit directly on it (no nested card). Desktop sidebar uses `filters` above.
+            drawerFilters={<Suspense fallback={null}><SearchFilters hideHeader /></Suspense>}
           >
 
             {/* ── Results list ── */}

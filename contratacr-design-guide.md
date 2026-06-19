@@ -1498,6 +1498,15 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
   even at full. Below the header: the **scrolling card list** (`overflow-y-auto`, `children`). Cards live
   INSIDE the sheet and NEVER bleed onto the map. Filters are reached via the **header "Filtros" drawer**
   (the in-sheet chip row was dropped Sprint 151 for a cleaner, map-dominant look).
+- **Mobile/tablet filters drawer = ONE white surface, no nested card (Sprint 259).** The `xl:hidden`
+  drawer in `search-results-layout` is a single white panel — **full-screen on mobile**, a left drawer
+  on `lg`. It owns the chrome: a **pinned header (the "Filtros" title left, close X right, divider below)**
+  over a **scrolling body** (`flex-1 overflow-y-auto`) where the filters sit directly on the white
+  background. It renders a **header-less `<SearchFilters hideHeader/>`** (passed as the layout's
+  `drawerFilters` prop) so there's no inner card/own header — `hideHeader` (= `inDrawer`) drops the
+  `rounded-2xl border bg-white p-4` chrome. The **xl+ desktop sidebar keeps the original `filters` node**
+  (card + header) UNCHANGED. Do NOT wrap the drawer filters in a second container or reintroduce the
+  `bg-[#f4f7fa]` outer panel (that was the old box-in-box with dead space).
 - **Pin ↔ sheet:** tapping a map pin dispatches a **`ccr:focus-card`** window event (detail = proId); the
   layout (mobile only, gated by `matchMedia(max-width:1023px)`) springs the sheet open to **FOCUS ≈ 0.64
   dvh** and `scrollIntoView({block:"center"})`s that card. The pin's ring highlight + mini-card popup
