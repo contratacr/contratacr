@@ -282,6 +282,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
             numbering={numbering}
             countLabel={subtitle}
             filters={<Suspense fallback={null}><SearchFilters /></Suspense>}
+            drawerFilters={<Suspense fallback={null}><SearchFilters closable /></Suspense>}
           >
 
             {/* ── Results list ── */}

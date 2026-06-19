@@ -20,14 +20,20 @@ import { createClient } from "@/lib/supabase/client";
 // outline — the open dropdown + chevron are the affordance.
 const FILTER_TRIGGER = "text-sm focus-visible:ring-0 focus-visible:border-[#e5e7eb]";
 
-export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHeader = false }: { variant?: "sidebar" | "chips"; hideSearch?: boolean; hideHeader?: boolean } = {}) {
+export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHeader = false, closable = false }: { variant?: "sidebar" | "chips"; hideSearch?: boolean; hideHeader?: boolean; closable?: boolean } = {}) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
   const t = useTranslations("search");
   const locale = useLocale();
 
-  const [query, setQuery] = useState(params.get("q") ?? "");
+  // ONE unified service control: the search field IS the category picker. Free text and a
+  // picked category are MUTUALLY EXCLUSIVE (`q` XOR `categoria`), so on load we seed the
+  // field from `q`, else from the active category's label (so arriving at ?categoria=X
+  // shows "X" in the field instead of an empty box).
+  const [query, setQuery] = useState(
+    params.get("q") ?? (params.get("categoria") ? getCategoryLabel(params.get("categoria")!, locale) : "")
+  );
   // Service autocomplete for the sidebar text search (our categories taxonomy).
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchActive, setSearchActive] = useState(-1);
@@ -129,21 +135,34 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
 
   function handleQueryChange(value: string) {
     setQuery(value);
+    // Free text supersedes any picked category (mutually exclusive).
+    if (category) setCategory("");
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => applyFilters({ q: value }), 400);
+    debounceRef.current = setTimeout(() => applyFilters({ q: value, categoria: "" }), 400);
   }
 
   function handleQueryKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter") {
       if (debounceRef.current) clearTimeout(debounceRef.current);
-      applyFilters({ q: query });
+      setCategory("");
+      applyFilters({ q: query, categoria: "" });
     }
   }
 
-  function clearQuery() {
-    setQuery("");
+  // Picking a category suggestion → set `categoria`, clear the free-text `q`, and cancel
+  // any pending free-text debounce (so it can't fire afterward and wipe the category).
+  function pickCategory(id: string) {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    applyFilters({ q: "" });
+    setCategory(id);
+    setQuery(getCategoryLabel(id, locale));
+    setSearchOpen(false);
+    applyFilters({ categoria: id, q: "" });
+  }
+
+  function clearQuery() {
+    setQuery(""); setCategory("");
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    applyFilters({ q: "", categoria: "" });
   }
 
   useEffect(() => {
@@ -156,9 +175,12 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     router.push(pathname);
   }
 
+  // The unified service field (free text OR a picked category) counts as ONE filter — not
+  // two — even though it's backed by `q` XOR `categoria`.
+  const serviceActive = !!(query.trim() || (category && category !== "todas"));
   const activeCount =
-    (query ? 1 : 0) +
-    [category, province, canton].filter((v) => v && v !== "todas" && v !== "todos").length +
+    (serviceActive ? 1 : 0) +
+    [province, canton].filter((v) => v && v !== "todas" && v !== "todos").length +
     (aseguradora ? 1 : 0) +
     (verifiedOnly ? 1 : 0) +
     (geoActive ? 1 : 0);
@@ -249,15 +271,29 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
   const inDrawer = hideHeader;
   return (
     <div className={inDrawer ? "" : "rounded-2xl border border-[#e5e7eb] bg-white p-4"}>
-      {/* Header — "Filtros" + a live active-count, with an inline clear when any are on. */}
+      {/* Header — "Filtros" + a live active-count (inline clear when any are on) + an
+          optional close X. `closable` is set ONLY for the mobile drawer instance, so the
+          X lives INSIDE this white container's header; the desktop sidebar has no X. */}
       {!hideHeader && (
-        <div className="mb-3 flex items-center justify-between">
+        <div className="mb-3 flex items-center justify-between gap-2">
           <h2 className="text-sm font-bold text-[#111827]">{t("filters.title")}</h2>
-          {activeCount > 0 && (
-            <button onClick={clearAll} className="inline-flex items-center gap-1 text-[11px] font-medium text-[#9ca3af] hover:text-red-500 transition-colors">
-              <X className="h-3 w-3" /> {t("filters.clear")} ({activeCount})
-            </button>
-          )}
+          <div className="flex items-center gap-1.5">
+            {activeCount > 0 && (
+              <button onClick={clearAll} className="inline-flex items-center gap-1 text-[11px] font-medium text-[#9ca3af] hover:text-red-500 transition-colors">
+                <X className="h-3 w-3" /> {t("filters.clear")} ({activeCount})
+              </button>
+            )}
+            {closable && (
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent("ccr:close-filters"))}
+                aria-label={t("close")}
+                className="-mr-1 rounded-full p-1 text-[#9ca3af] hover:bg-[#f3f4f6] hover:text-[#374151] transition-colors"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
         </div>
       )}
 
@@ -281,9 +317,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
                 // and searches THAT (e.g. "electrici" → "electricista").
                 if (e.key === "Enter") {
                   e.preventDefault();
-                  const s = searchSug[searchActive >= 0 ? searchActive : 0];
-                  setCategory(s.id); setQuery(getCategoryLabel(s.id, locale)); setSearchOpen(false);
-                  applyFilters({ categoria: s.id, q: "" });
+                  pickCategory(searchSug[searchActive >= 0 ? searchActive : 0].id);
                   return;
                 }
                 if (e.key === "Escape") { setSearchOpen(false); return; }
@@ -310,7 +344,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
                     role="option"
                     aria-selected={i === searchActive}
                     onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => { setCategory(s.id); setQuery(getCategoryLabel(s.id, locale)); setSearchOpen(false); applyFilters({ categoria: s.id, q: "" }); }}
+                    onClick={() => pickCategory(s.id)}
                     className={`flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm transition-colors ${i === searchActive ? "bg-[#EBF5FB]" : "hover:bg-[#f9fafb]"}`}
                   >
                     <Search className="h-4 w-4 shrink-0 text-[#009FD9]" />
@@ -323,18 +357,10 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
         </div>
       )}
 
-      {/* Vertical stack — designed for the left sidebar (and the mobile drawer). */}
+      {/* Vertical stack — designed for the left sidebar (and the mobile drawer). The
+          service/category control is the unified search field ABOVE (no separate
+          "Categoría" dropdown — they were redundant; both filtered by service). */}
       <div className="flex flex-col gap-3">
-        {/* Category — typeable + browsable list (with "¿No ves tu categoría?"). */}
-        <div>
-          <label className={fieldLabel}>{t("filters.category")}</label>
-          <CategorySearch
-            value={category && category !== "todas" ? category : ""}
-            onChange={(id) => { setCategory(id); applyFilters({ categoria: id }); }}
-            placeholder={t("filters.allCategories")}
-          />
-        </div>
-
         {/* Provincia + Cantón — FULL-WIDTH stacked, exactly like every other filter
             (Categoría / Ordenar / Aseguradora). The old 2-column row made each box too
             narrow for "Todas las provincias"/"Todos los cantones" (overflow) and put the

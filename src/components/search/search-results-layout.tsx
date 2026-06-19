@@ -2,12 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { SlidersHorizontal, X } from "lucide-react";
+import { SlidersHorizontal } from "lucide-react";
 import { GoogleMapPanel, type MapProfessional } from "@/components/maps/google-map-panel";
 
 interface SearchResultsLayoutProps {
   children: React.ReactNode; // server-rendered list column (cards + pagination)
-  filters: React.ReactNode; // the <SearchFilters/> sidebar/drawer control
+  filters: React.ReactNode; // the <SearchFilters/> desktop sidebar control
+  /** The drawer variant of the filters (a <SearchFilters closable/> whose header X
+   *  dispatches `ccr:close-filters`). Falls back to `filters` if omitted. */
+  drawerFilters?: React.ReactNode;
   /** Mobile-only "<N> profesionales en <área>" count shown in the sheet header. */
   countLabel?: string;
   mapData: MapProfessional[];
@@ -40,16 +43,21 @@ const MAX = 0.92;
  *  DESKTOP is unchanged (same `lg:` classes). The bottom-sheet wrapper is `lg:contents`, so on
  *  desktop it dissolves and the card column (`lg:order-2`) drops into the 3-column flex shell.
  */
-export function SearchResultsLayout({ children, filters, countLabel, mapData, apiKey, locale, numbering }: SearchResultsLayoutProps) {
+export function SearchResultsLayout({ children, filters, drawerFilters, countLabel, mapData, apiKey, locale, numbering }: SearchResultsLayoutProps) {
   const t = useTranslations("search");
   const [showFilters, setShowFilters] = useState(false); // full-filter drawer (mobile + lg–xl)
 
   // The single-line mobile header (in the navbar) hosts the "Filtros" icon button, which
-  // dispatches `ccr:open-filters` — open the drawer when we hear it.
+  // dispatches `ccr:open-filters`; the drawer's in-card X dispatches `ccr:close-filters`.
   useEffect(() => {
     const open = () => setShowFilters(true);
+    const close = () => setShowFilters(false);
     window.addEventListener("ccr:open-filters", open);
-    return () => window.removeEventListener("ccr:open-filters", open);
+    window.addEventListener("ccr:close-filters", close);
+    return () => {
+      window.removeEventListener("ccr:open-filters", open);
+      window.removeEventListener("ccr:close-filters", close);
+    };
   }, []);
 
   // ── Draggable bottom sheet (mobile) ──────────────────────────────────────────
@@ -129,20 +137,16 @@ export function SearchResultsLayout({ children, filters, countLabel, mapData, ap
         </button>
       </div>
 
-      {/* Full-filter drawer (opened from the lg–xl button OR the mobile header "Filtros"). */}
+      {/* Full-filter drawer (opened from the lg–xl button OR the mobile header "Filtros").
+          The white "Filtros" card sits on a thin gray frame (`p-2.5`) and rises UP near the
+          top — its OWN header now holds the title + the close X (the drawer no longer adds a
+          separate X row above it, so there's no wasted gap). X + backdrop both dismiss;
+          filters apply INSTANTLY (no apply button). */}
       {showFilters && (
         <div className="xl:hidden fixed inset-0 z-50">
           <div className="absolute inset-0 bg-black/40" onClick={() => setShowFilters(false)} />
-          <div className="absolute inset-y-0 left-0 w-[88%] max-w-xs bg-[#f4f7fa] shadow-xl overflow-y-auto p-4">
-            {/* Only the close X here — `{filters}` (SearchFilters) renders its OWN "Filtros"
-                header, so a title here too would duplicate the word "Filtros". */}
-            <div className="mb-2 flex items-center justify-end">
-              <button onClick={() => setShowFilters(false)} aria-label={t("close")} className="rounded-full p-1.5 text-[#9ca3af] hover:bg-[#e5e7eb]">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            {/* Filters apply INSTANTLY (no apply button); X + backdrop both dismiss. */}
-            {filters}
+          <div className="absolute inset-y-0 left-0 w-[88%] max-w-xs overflow-y-auto bg-[#f4f7fa] p-2.5 shadow-xl">
+            {drawerFilters ?? filters}
           </div>
         </div>
       )}
