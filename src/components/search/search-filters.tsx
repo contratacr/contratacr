@@ -328,7 +328,9 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
             role="combobox"
             aria-expanded={searchOpen}
             aria-autocomplete="list"
-            className="w-full rounded-xl border border-[#e5e7eb] bg-[#f9fafb] py-2.5 pl-9 pr-9 text-sm text-[#111827] placeholder-[#9ca3af] transition focus:border-transparent focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
+            // Same h-10 white field as the Selects below (Provincia/Cantón/Ordenar/
+            // Aseguradora) so every filter control is a consistent, aligned size.
+            className="h-10 w-full rounded-xl border border-[#e5e7eb] bg-white pl-9 pr-9 text-sm text-[#111827] placeholder-[#9ca3af] transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
           />
           {query && (
             <button onClick={() => { clearQuery(); setSearchOpen(false); }} className="absolute right-3 text-[#9ca3af] hover:text-[#374151] transition-colors" aria-label={t("filters.clearSearch")}>
