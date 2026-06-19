@@ -360,6 +360,7 @@ interface AccountMenuProps {
   isPro: boolean;
   displayName: string;
   avatarUrl: string | null;
+  avatarReady: boolean;
   initials: string;
   proPanelHref: string;
   clientPanelHref: string;
@@ -374,7 +375,7 @@ interface AccountMenuProps {
 }
 
 function AccountMenu({
-  user, isPro, displayName, avatarUrl, initials,
+  user, isPro, displayName, avatarUrl, avatarReady, initials,
   proPanelHref, clientPanelHref, sentBookingsHref, sentProjectsHref,
   savedHref, notificationsHref, accountHref, notifUnread, onSignOut, onOpen,
 }: AccountMenuProps) {
@@ -408,12 +409,18 @@ function AccountMenu({
         className="flex items-center gap-1 p-0.5 rounded-full ring-2 ring-transparent hover:ring-[#009FD9]/30 transition-all"
         title={displayName || user.email || ""}
       >
-        <Avatar className="h-8 w-8">
-          <AvatarImage src={avatarUrl ?? undefined} />
-          <AvatarFallback delayMs={avatarUrl ? 600 : 0} className="text-[12px] bg-[#009FD9] text-white font-bold">
-            {initials}
-          </AvatarFallback>
-        </Avatar>
+        {!avatarReady ? (
+          // Avatar state not resolved yet → a NEUTRAL skeleton, never the initials
+          // circle, so an account WITH a photo never flashes the no-photo state.
+          <span className="block h-8 w-8 animate-pulse rounded-full bg-gray-200" />
+        ) : (
+          <Avatar className="h-8 w-8">
+            <AvatarImage src={avatarUrl ?? undefined} />
+            <AvatarFallback delayMs={avatarUrl ? 600 : 0} className="text-[12px] bg-[#009FD9] text-white font-bold">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+        )}
       </button>
       {open && (
         <div className="absolute right-0 top-full mt-2 w-60 bg-white border border-gray-100 rounded-2xl shadow-xl z-50 py-1.5 overflow-hidden">
@@ -545,7 +552,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
   const router = useRouter();
   const t = useTranslations("header");
   const locale = useLocale();
-  const { user, avatarUrl } = useAuth();
+  const { user, avatarUrl, avatarReady } = useAuth();
 
   // "Ingresar" routes to the robust /login PAGE (forgot-password, role-aware
   // post-login redirect to the correct panel, waitForAuthCookie, OAuth `next`,
@@ -907,6 +914,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                       isPro={isPro}
                       displayName={displayName}
                       avatarUrl={avatarUrl}
+                      avatarReady={avatarReady}
                       initials={initials}
                       proPanelHref={proPanelHref}
                       clientPanelHref={clientPanelHref}
@@ -1075,6 +1083,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     isPro={isPro}
                     displayName={displayName}
                     avatarUrl={avatarUrl}
+                    avatarReady={avatarReady}
                     initials={initials}
                     proPanelHref={proPanelHref}
                     clientPanelHref={clientPanelHref}
@@ -1152,10 +1161,14 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
             {user && (
               <div className="mb-5">
                 <div className="flex items-center gap-3 px-2 pb-3 mb-1 border-b border-gray-100">
-                  <Avatar className="h-9 w-9">
-                    <AvatarImage src={avatarUrl ?? undefined} />
-                    <AvatarFallback delayMs={avatarUrl ? 600 : 0} className="text-[12px] bg-[#009FD9] text-white font-bold">{initials}</AvatarFallback>
-                  </Avatar>
+                  {!avatarReady ? (
+                    <span className="block h-9 w-9 animate-pulse rounded-full bg-gray-200" />
+                  ) : (
+                    <Avatar className="h-9 w-9">
+                      <AvatarImage src={avatarUrl ?? undefined} />
+                      <AvatarFallback delayMs={avatarUrl ? 600 : 0} className="text-[12px] bg-[#009FD9] text-white font-bold">{initials}</AvatarFallback>
+                    </Avatar>
+                  )}
                   <div className="min-w-0">
                     {displayName && <p className="text-sm font-semibold text-[#111827] truncate">{displayName}</p>}
                     <p className="text-xs text-gray-400 truncate">{user.email}</p>

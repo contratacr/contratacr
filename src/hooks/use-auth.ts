@@ -7,6 +7,11 @@ import { createClient } from "@/lib/supabase/client";
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  // Whether the avatar has been RESOLVED yet (a known photo URL, or a confirmed
+  // no-photo). Until then the header shows a NEUTRAL skeleton — never the explicit
+  // initials/"no-photo" circle — so an account WITH a photo can't flash empty before
+  // the photo URL is known (the ~1s `profiles` fetch on a fresh login with no cache).
+  const [avatarReady, setAvatarReady] = useState(false);
   const [loading, setLoading] = useState(true);
 
   async function syncAvatar(u: User) {
@@ -20,10 +25,13 @@ export function useAuth() {
       null;
     let cached: string | null = null;
     try { cached = typeof localStorage !== "undefined" ? localStorage.getItem(`ccr:avatar:${u.id}`) : null; } catch { /* ignore */ }
-    if (metaAvatar || cached) setAvatarUrl((prev) => prev ?? metaAvatar ?? cached);
+    // A synchronous seed → show it + mark ready immediately (no skeleton, no flash).
+    if (metaAvatar || cached) { setAvatarUrl((prev) => prev ?? metaAvatar ?? cached); setAvatarReady(true); }
 
     // Then reconcile with the canonical profile record (Cloudinary uploads) and
-    // refresh the cache so next load is instant.
+    // refresh the cache so next load is instant. ONLY after this do we know the true
+    // state for an account with NO seed — so the skeleton holds until here, then the
+    // photo (or the initials, if genuinely none) shows.
     const supabase = createClient();
     const { data } = await supabase
       .from("profiles")
@@ -32,6 +40,7 @@ export function useAuth() {
       .single();
     const finalUrl = data?.avatar_url || metaAvatar || cached || null;
     setAvatarUrl(finalUrl);
+    setAvatarReady(true);
     try {
       if (finalUrl) localStorage.setItem(`ccr:avatar:${u.id}`, finalUrl);
       else localStorage.removeItem(`ccr:avatar:${u.id}`);
@@ -47,12 +56,14 @@ export function useAuth() {
         const u = data.session?.user ?? null;
         setUser(u);
         if (u) syncAvatar(u);
+        else setAvatarReady(true); // logged out → nothing to load, render immediately
       })
       .catch(async () => {
         // Corrupt/stale local session — clear it and treat the user as logged
         // out instead of letting the error surface as a broken UI.
         try { await supabase.auth.signOut(); } catch { /* ignore */ }
         setUser(null);
+        setAvatarReady(true);
       })
       .finally(() => setLoading(false));
 
@@ -65,6 +76,7 @@ export function useAuth() {
         syncAvatar(u);
       } else {
         setAvatarUrl(null);
+        setAvatarReady(true);
       }
     });
 
@@ -86,5 +98,5 @@ export function useAuth() {
     };
   }, []);
 
-  return { user, avatarUrl, loading };
+  return { user, avatarUrl, avatarReady, loading };
 }
