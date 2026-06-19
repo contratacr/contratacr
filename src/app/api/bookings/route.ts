@@ -118,6 +118,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Failed to create booking" }, { status: 500 });
     }
 
+    // Persist the DOB for reuse on FUTURE medical requests (backend-only — the padrón
+    // has no birth date, and this is NEVER shown as a profile/account field). Self →
+    // profiles.date_of_birth; beneficiary → beneficiary_dob keyed by (owner, cédula).
+    // Best-effort: the booking already succeeded, so a save miss must never fail it.
+    if (session?.user) {
+      try {
+        if (!forSomeoneElse && clientDob) {
+          await adminInsert.from("profiles").update({ date_of_birth: clientDob }).eq("id", session.user.id);
+        }
+        if (forSomeoneElse && beneficiaryCedula && beneficiaryDob) {
+          await adminInsert.from("beneficiary_dob").upsert(
+            { owner_id: session.user.id, cedula: String(beneficiaryCedula).replace(/\D/g, ""), dob: beneficiaryDob, updated_at: new Date().toISOString() },
+            { onConflict: "owner_id,cedula" }
+          );
+        }
+      } catch { /* best-effort — never fail the booking over the DOB cache */ }
+    }
+
     // Notify the professional (in-app + email + optional WhatsApp). Best-effort.
     await notifyNewBooking({
       professionalId,

@@ -184,18 +184,24 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   const [benCedula, setBenCedula] = useState("");
   const [benName, setBenName] = useState("");
   const [benDob, setBenDob] = useState("");
+  // True when the beneficiary's DOB was AUTO-FILLED from our saved store (keyed by
+  // their cédula) → shown locked with a "Corregir" affordance instead of an open field.
+  const [benDobLocked, setBenDobLocked] = useState(false);
   const [benPhone, setBenPhone] = useState("");
   const [benLookupName, setBenLookupName] = useState<string | null>(null);
   // True while a cédula lookup is in flight — used to suppress a premature
   // "not found" flash before the lookup resolves.
   const [benCedulaLoading, setBenCedulaLoading] = useState(false);
-  // Live padrón name (+ DOB when a source provides it) for the client's OWN cédula.
+  // Live padrón NAME for the client's OWN cédula (the padrón has NO birth date).
   const [selfCedulaName, setSelfCedulaName] = useState<string | null>(null);
+  // The account's SAVED date of birth (backend-only, from profiles.date_of_birth — NOT
+  // a visible account field). When present, future medical requests auto-fill it.
   const [selfDob, setSelfDob] = useState<string | null>(null);
   const [selfCedulaLoading, setSelfCedulaLoading] = useState(false);
-  // The padrón has no birth date, so for HEALTH bookings "for myself" we must ask
-  // it manually. Effective self DOB = padrón DOB (future provider) ?? this input.
+  // The padrón has no birth date, so for HEALTH bookings "for myself" we ask it ONCE
+  // (manual input) then save it. `dobEditing` unlocks the saved value via "Corregir".
   const [selfDobInput, setSelfDobInput] = useState("");
+  const [dobEditing, setDobEditing] = useState(false);
   // Inline error for a submit that fails (e.g. the slot was just taken — 409).
   const [submitError, setSubmitError] = useState<string | null>(null);
   // Guest email duplicate detection (inline, real-time).
@@ -218,8 +224,8 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     setAvailabilityPrivate(false);
     setForSomeoneElse(false);
     setBenHasCedula(null);
-    setBenCedula(""); setBenName(""); setBenDob(""); setBenPhone(""); setBenLookupName(null);
-    setSelfDobInput(""); setSubmitError(null);
+    setBenCedula(""); setBenName(""); setBenDob(""); setBenDobLocked(false); setBenPhone(""); setBenLookupName(null);
+    setSelfDobInput(""); setDobEditing(false); setSelfDob(null); setSubmitError(null);
     // Reset the on-file identity so the DB is the authoritative source each open —
     // a social-login account with no cédula must always be (re)prompted.
     setProfileCedula(""); setProfilePhone(""); setProfileLoaded(false); setHasStoredCedula(false);
@@ -279,6 +285,9 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                 .then(({ data: pro }) => { if (pro?.whatsapp) setProfilePhone(String(pro.whatsapp)); });
             }
             if (data?.full_name) setClientName((prev) => prev || String(data.full_name));
+            // Saved DOB (backend-only) → auto-fills future MEDICAL requests. The padrón
+            // has no birth date, so this profile value is the ONLY source for "para mí".
+            setSelfDob((data as { date_of_birth?: string } | null)?.date_of_birth ?? null);
             setNeedsProfile(isOAuth && !hasCedula);
             setProfileLoaded(true);
           });
@@ -292,9 +301,9 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   // Beneficiary cédula → padrón name auto-fill (debounced). Optional; never blocks.
   useEffect(() => {
     if (!forSomeoneElse || benHasCedula !== true) { setBenLookupName(null); setBenCedulaLoading(false); return; }
-    // The cédula changed → drop any previously auto-filled person (name + DOB) so a
-    // different/longer number never keeps the prior person's data.
-    setBenLookupName(null); setBenName(""); setBenDob("");
+    // The cédula changed → drop the previously auto-filled NAME (DOB is handled by the
+    // saved-DOB effect below) so a different number never keeps the prior person's name.
+    setBenLookupName(null); setBenName("");
     const clean = cleanId(benCedula);
     if (!isValidId(clean) || detectIdType(clean) !== "cedula") { setBenCedulaLoading(false); return; }
     let active = true;
@@ -304,12 +313,10 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
         const res = await fetch(`/api/cedula/${clean}`);
         if (!active) return;
         if (res.ok) {
-          const { fullName, dob } = await res.json();
+          // NAME only — the padrón has no birth date (DOB comes from our saved store).
+          const { fullName } = await res.json();
           setBenLookupName(fullName ?? null);
           if (fullName) setBenName(fullName);
-          // Auto-fill DOB from the same lookup when the source provides it (the TSE
-          // padrón has none; a Registro Civil source would populate this).
-          if (dob) setBenDob(dob);
         } else {
           setBenLookupName(null);
         }
@@ -319,16 +326,36 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     return () => { active = false; clearTimeout(t); };
   }, [benCedula, benHasCedula, forSomeoneElse]);
 
+  // Saved beneficiary DOB by cédula → auto-fill on REUSE (own store, owner-scoped). The
+  // padrón has no birth date, so the first time it's asked manually + saved; thereafter
+  // it pre-fills (locked, with a "Corregir" affordance). MEDICAL only matters downstream.
+  useEffect(() => {
+    setBenDob(""); setBenDobLocked(false);
+    if (!forSomeoneElse || benHasCedula !== true || !isLoggedIn) return;
+    const clean = cleanId(benCedula);
+    if (!isValidId(clean) || detectIdType(clean) !== "cedula") return;
+    let active = true;
+    createClient()
+      .from("beneficiary_dob")
+      .select("dob")
+      .eq("cedula", clean)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (active && data?.dob) { setBenDob(String(data.dob)); setBenDobLocked(true); }
+      });
+    return () => { active = false; };
+  }, [benCedula, benHasCedula, forSomeoneElse, isLoggedIn]);
+
   // Live checks for the client's own ID (guest/needs-cédula flows):
   //  1) Whether it's ALREADY linked to another account — flagged immediately so the
   //     user is told up front, never after pressing confirm (any ID type).
   //  2) The padrón name (national cédulas only) for the match/mismatch confirm.
   useEffect(() => {
     const clean = cleanId(profileCedula);
-    // The cédula changed → drop the previously auto-filled official name + padrón DOB
-    // immediately, so switching to a different/longer ID never keeps stale data while
-    // the new lookup runs. (selfDobInput — a manual entry — is intentionally left.)
-    setSelfCedulaName(null); setSelfDob(null);
+    // The cédula changed → drop the previously auto-filled official NAME so switching to
+    // a different/longer ID never keeps a stale name. The saved DOB is account-bound (not
+    // cédula-bound) and the padrón has no birth date, so we never touch `selfDob` here.
+    setSelfCedulaName(null);
     if (!isValidId(clean)) { setSelfCedulaLoading(false); setCedulaTaken(false); return; }
     const isCedula = detectIdType(clean) === "cedula";
     if (!isCedula) { setSelfCedulaName(null); setSelfCedulaLoading(false); }
@@ -351,9 +378,9 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
         const res = await fetch(`/api/cedula/${clean}`);
         if (!active) return;
         const j = await res.json().catch(() => ({}));
+        // NAME only — the padrón has no birth date, so DOB never comes from here.
         setSelfCedulaName(res.ok ? (j.fullName ?? null) : null);
-        setSelfDob(res.ok ? (j.dob ?? null) : null);
-      } catch { if (active) { setSelfCedulaName(null); setSelfDob(null); } }
+      } catch { if (active) setSelfCedulaName(null); }
       finally { if (active) setSelfCedulaLoading(false); }
     }, 500);
     return () => { active = false; clearTimeout(t); };
@@ -599,8 +626,9 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   const needsCedula = isLoggedIn && profileLoaded && !hasStoredCedula && !forSomeoneElse;
   const needsPhone = isLoggedIn && !profilePhone && !forSomeoneElse;
 
-  // Effective DOB for the account holder (padrón has none → manual input).
-  const effectiveSelfDob = selfDob || selfDobInput || null;
+  // Effective DOB for the account holder: the SAVED profile DOB when present and not
+  // being corrected; otherwise the manual input (first-time entry, or after "Corregir").
+  const effectiveSelfDob = (selfDob && !dobEditing) ? selfDob : (selfDobInput || null);
   // "For myself" + a national cédula found in the padrón → the OFFICIAL name. When
   // it differs from the account name we warn, then let it prevail on confirm.
   // (Beneficiary cédulas never touch the account, so this is gated on !forSomeoneElse.)
@@ -660,12 +688,17 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   // it didn't (DIMEX/NITE or a roll with no DOB) we ask once. Co-located with the
   // cédula step so typing the cédula auto-fills name + DOB together.
   function renderSelfDobField() {
-    if (selfDob) {
+    // SAVED DOB → shown AUTO-FILLED and locked (a fixed fact); "Corregir" unlocks it for
+    // a one-off correction. Otherwise (first time) → a manual date input asked once.
+    if (selfDob && !dobEditing) {
       return (
-        <div className="rounded-lg bg-[#f0fdf4] border border-[#bbf7d0] px-3 py-2">
+        <div className="rounded-lg bg-[#f0fdf4] border border-[#bbf7d0] px-3 py-2 flex items-center justify-between gap-2">
           <p className="text-xs text-[#15803d] break-words">
             Fecha de nacimiento: <strong>{selfDob}</strong>{computeAge(selfDob) ? ` · ${formatAge(computeAge(selfDob))}` : ""}
           </p>
+          <button type="button" onClick={() => { setSelfDobInput(selfDob); setDobEditing(true); }} className="shrink-0 text-[11px] font-semibold text-[#009FD9] hover:underline">
+            Corregir
+          </button>
         </div>
       );
     }
@@ -684,7 +717,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
         {effectiveSelfDob && computeAge(effectiveSelfDob) && (
           <p className="text-xs mt-1 text-[#6b7280]">{formatAge(computeAge(effectiveSelfDob))}</p>
         )}
-        <p className="text-[11px] text-[#9ca3af] mt-1">La pedimos solo para servicios de salud.</p>
+        <p className="text-[11px] text-[#9ca3af] mt-1">La pedimos solo para servicios de salud. La guardamos para no volver a pedirla.</p>
       </div>
     );
   }
@@ -1001,14 +1034,11 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                       </p>
                     )}
                     {/* Stored identity (logged-in + already has cédula) — shown, not re-asked.
-                        Name + cédula always; DOB + age when a source provides the DOB
-                        (the TSE padrón has none). */}
+                        Name + cédula only; the DOB (health) is rendered by renderSelfDobField
+                        below so it carries the auto-filled/locked + "Corregir" treatment. */}
                     {isLoggedIn && profileCedula && (
                       <div className="text-xs text-[#15803d] mt-1 leading-relaxed">
                         <span>Reservas como <strong>{clientName || "tú"}</strong> · cédula {profileCedula}</span>
-                        {proIsHealth && selfDob && computeAge(selfDob) && (
-                          <span className="block">Nacimiento: {selfDob} · {formatAge(computeAge(selfDob))}</span>
-                        )}
                       </div>
                     )}
                   </div>
@@ -1040,7 +1070,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                       on file (auto-filled from it, or asked once if the roll has no DOB).
                       When there's no cédula yet, the DOB is collected WITH the cédula at the
                       next step (so typing it auto-fills name + DOB together). */}
-                  {proIsHealth && !forSomeoneElse && hasStoredCedula && !selfDob && renderSelfDobField()}
+                  {proIsHealth && !forSomeoneElse && hasStoredCedula && renderSelfDobField()}
 
                   {forSomeoneElse && (
                     <div className="rounded-xl border border-[#e5e7eb] p-3 flex flex-col gap-3 bg-[#f9fafb]">
@@ -1104,25 +1134,39 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                             />
                           </div>
                           )}
-                          {/* DOB REQUIRED for HEALTH-category services (patient age). */}
+                          {/* DOB REQUIRED for HEALTH services. Padrón has no birth date, so
+                              it's asked once per person and remembered by their cédula: a
+                              SAVED value shows auto-filled + locked with "Corregir"; otherwise
+                              a manual date input. */}
                           {proIsHealth && (
-                          <div>
-                            <label className="text-xs font-medium text-[#374151] block mb-1.5">
-                              Fecha de nacimiento <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                              type="date"
-                              value={benDob}
-                              max={new Date().toISOString().slice(0, 10)}
-                              onChange={(e) => setBenDob(e.target.value)}
-                              className="h-10 rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent"
-                            />
-                            {benDob && computeAge(benDob) && (
-                              <p className={cn("text-xs mt-1", isMinorFromDob(benDob) ? "text-[#b45309]" : "text-[#6b7280]")}>
-                                {formatAge(computeAge(benDob))}{isMinorFromDob(benDob) ? " · menor de edad (la cita queda marcada como 'para un menor')" : ""}
-                              </p>
-                            )}
-                          </div>
+                            benDobLocked ? (
+                              <div className="rounded-lg bg-[#f0fdf4] border border-[#bbf7d0] px-3 py-2 flex items-center justify-between gap-2">
+                                <p className="text-xs text-[#15803d] break-words">
+                                  Fecha de nacimiento: <strong>{benDob}</strong>{computeAge(benDob) ? ` · ${formatAge(computeAge(benDob))}` : ""}{isMinorFromDob(benDob) ? " · menor de edad" : ""}
+                                </p>
+                                <button type="button" onClick={() => setBenDobLocked(false)} className="shrink-0 text-[11px] font-semibold text-[#009FD9] hover:underline">
+                                  Corregir
+                                </button>
+                              </div>
+                            ) : (
+                            <div>
+                              <label className="text-xs font-medium text-[#374151] block mb-1.5">
+                                Fecha de nacimiento <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                type="date"
+                                value={benDob}
+                                max={new Date().toISOString().slice(0, 10)}
+                                onChange={(e) => setBenDob(e.target.value)}
+                                className="h-10 rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent"
+                              />
+                              {benDob && computeAge(benDob) && (
+                                <p className={cn("text-xs mt-1", isMinorFromDob(benDob) ? "text-[#b45309]" : "text-[#6b7280]")}>
+                                  {formatAge(computeAge(benDob))}{isMinorFromDob(benDob) ? " · menor de edad (la cita queda marcada como 'para un menor')" : ""}
+                                </p>
+                              )}
+                            </div>
+                            )
                           )}
                           <PhoneInput
                             label="Teléfono de contacto"
@@ -1269,9 +1313,6 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                       {selfCedulaName && !nameWillChange && (
                         <div className="rounded-lg bg-[#f0fdf4] border border-[#bbf7d0] px-3 py-2 mt-1.5">
                           <p className="text-xs text-[#15803d] break-words">Confirma: <strong>{selfCedulaName}</strong></p>
-                          {proIsHealth && selfDob && computeAge(selfDob) && (
-                            <p className="text-[11px] text-[#16a34a]">Nacimiento: {selfDob} · {formatAge(computeAge(selfDob))}</p>
-                          )}
                         </div>
                       )}
                       {nameWillChange && (
