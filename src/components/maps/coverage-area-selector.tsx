@@ -4,6 +4,7 @@ import { useState } from "react";
 import { MapPin, Plus, X, Globe } from "lucide-react";
 import { PROVINCES, getCantonsByProvince, getProvinceById, getCantonById } from "@/lib/data/cr-geography";
 import type { CoverageArea, CoverageLevel } from "@/lib/location";
+import { SelectMenu } from "@/components/ui/select-menu";
 import { cn } from "@/lib/utils";
 
 // Hierarchical travel coverage for "me desplazo donde el cliente". The pro can add
@@ -58,9 +59,6 @@ export function CoverageAreaSelector({
     return { icon: <MapPin className="h-3.5 w-3.5" />, text: `${a.cantonName ?? getCantonById(a.cantonId ?? "")?.name}, ${a.provinceName ?? getProvinceById(a.provinciaId ?? "")?.name}` };
   }
 
-  const selectCls =
-    "h-10 px-3 rounded-xl border border-[#e5e7eb] bg-white text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all cursor-pointer";
-
   return (
     <div className="flex flex-col gap-2">
       {/* Level selector */}
@@ -86,15 +84,20 @@ export function CoverageAreaSelector({
 
       {level !== "country" && (
         <div className={cn("grid gap-2", level === "canton" ? "grid-cols-2" : "grid-cols-1")}>
-          <select value={province} onChange={(e) => { setProvince(e.target.value); setCanton(""); }} className={selectCls}>
-            <option value="">Provincia</option>
-            {PROVINCES.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-          </select>
+          <SelectMenu
+            value={province}
+            onChange={(v) => { setProvince(v); setCanton(""); }}
+            placeholder="Provincia"
+            options={PROVINCES.map((p) => ({ value: p.id, label: p.name }))}
+          />
           {level === "canton" && (
-            <select value={canton} onChange={(e) => setCanton(e.target.value)} disabled={!province} className={cn(selectCls, !province && "opacity-50 cursor-not-allowed")}>
-              <option value="">Cantón</option>
-              {cantons.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
+            <SelectMenu
+              value={canton}
+              onChange={setCanton}
+              disabled={!province}
+              placeholder="Cantón"
+              options={cantons.map((c) => ({ value: c.id, label: c.name }))}
+            />
           )}
         </div>
       )}

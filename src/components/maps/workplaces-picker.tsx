@@ -6,6 +6,7 @@ import { MapPin, X, Plus, ChevronDown, Check, Search } from "lucide-react";
 import { loadGoogleMaps, MAP_ID } from "@/lib/maps/loader";
 import { PROVINCES, getCantonsByProvince, getCantonById, getProvinceById } from "@/lib/data/cr-geography";
 import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
+import { SelectMenu } from "@/components/ui/select-menu";
 import { cn } from "@/lib/utils";
 
 export type Workplace = {
@@ -268,9 +269,6 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200 }: W
     return () => clearTimeout(id);
   }, [addrQuery]);
 
-  const selectCls =
-    "h-11 px-3 rounded-xl border border-[#e5e7eb] bg-white text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all cursor-pointer";
-
   return (
     <div className="flex flex-col gap-2.5">
       {/* Added zones — listed FIRST, above the add-another-location form. */}
@@ -300,24 +298,23 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200 }: W
           while adding; collapses behind "Agregar otra ubicación" after a commit. */}
       {adding && (
       <div className="flex flex-col gap-2.5">
-      {/* 1 — Structured field FIRST: provincia → cantón (authoritative for search). */}
+      {/* 1 — Structured field FIRST: provincia → cantón (authoritative for search).
+          Polished popover dropdowns (shared SelectMenu) — same look/behavior as the
+          Disponibilidad time selector. */}
       <div className="grid grid-cols-2 gap-2">
-        {/* `appearance-none` + `pr-10` + an overlaid chevron gives the dropdown arrow
-            comfortable inset from the right border (the native arrow sat too close). */}
-        <div className="relative">
-          <select value={province} onChange={(e) => { setProvince(e.target.value); setCanton(""); }} className={cn(selectCls, "w-full appearance-none pr-10")}>
-            <option value="">{t("provincePlaceholder")}</option>
-            {PROVINCES.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-          </select>
-          <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6b7280]" />
-        </div>
-        <div className="relative">
-          <select value={canton} onChange={(e) => setCanton(e.target.value)} disabled={!province} className={cn(selectCls, "w-full appearance-none pr-10", !province && "opacity-50 cursor-not-allowed")}>
-            <option value="">{t("cantonPlaceholder")}</option>
-            {cantons.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
-          <ChevronDown className={cn("pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6b7280]", !province && "opacity-50")} />
-        </div>
+        <SelectMenu
+          value={province}
+          onChange={(v) => { setProvince(v); setCanton(""); }}
+          placeholder={t("provincePlaceholder")}
+          options={PROVINCES.map((p) => ({ value: p.id, label: p.name }))}
+        />
+        <SelectMenu
+          value={canton}
+          onChange={setCanton}
+          disabled={!province}
+          placeholder={t("cantonPlaceholder")}
+          options={cantons.map((c) => ({ value: c.id, label: c.name }))}
+        />
       </div>
 
       {/* 2 — OPTIONAL exact pin (refinement), HIDDEN by default. A clean expandable
