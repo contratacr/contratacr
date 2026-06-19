@@ -59,7 +59,10 @@ export async function GET(request: NextRequest) {
           if (p?.role === "professional" || p?.role === "client") role = p.role;
         }
         const panel = role === "professional" ? "profesional" : "cliente";
-        return NextResponse.redirect(`${origin}/es/dashboard/${panel}?tab=cuenta&emailChanged=1`);
+        // Preserve the UI locale the user changed their email from (stashed in
+        // user_metadata by account-security — the static email template can't know it).
+        const lc = u.user_metadata?.email_change_locale === "en" ? "en" : "es";
+        return NextResponse.redirect(`${origin}/${lc}/dashboard/${panel}?tab=cuenta&emailChanged=1`);
       }
       // No session in THIS browser (token consumed AND logged out here) → the change is
       // already applied, so route to login to sign in with the new email (not main).

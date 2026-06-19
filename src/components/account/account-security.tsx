@@ -133,19 +133,25 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
   const providerLabel = oauthProvider === "facebook" ? "Facebook" : "Google";
   const providerLinks = PROVIDER_LINKS[providerLabel];
 
-  // The actual send (used by the initial submit AND the resend). CRITICAL: pass
-  // `emailRedirectTo` so the confirmation code lands on **/auth/callback** (which
-  // exchanges it, then honors `next`). Without it, GoTrue falls back to the Supabase
-  // **Site URL** root — the code arrived on `/es` (home), unprocessed, stranding the
-  // user on main. `next` (the role-aware "Cuenta y seguridad" tab + success flag) is
-  // URL-encoded so the callback receives it whole. (Requires
-  // `https://contratacr.com/auth/callback` in Supabase → Redirect URLs.)
+  // The actual send (used by the initial submit AND the resend). The confirmation
+  // link is built by the **change-email.html** template as
+  // `{{ .SiteURL }}/auth/callback?token_hash={{ .TokenHash }}&type=email_change` —
+  // the **token_hash** flow `/auth/callback` finalizes with `verifyOtp` (no PKCE
+  // code_verifier, so it survives email-scanner prefetch / a different device, and
+  // needs no redirect_to allowlist). The static template can't know the app locale,
+  // so we stash it in `user_metadata.email_change_locale`; the callback reads it to
+  // land the user on **/{locale}/dashboard/{panel}?tab=cuenta&emailChanged=1** (the
+  // success flag triggers `refreshSession()` below). `emailRedirectTo` is kept only
+  // as a harmless fallback (the template's self-built link is what's actually used).
   async function performEmailChange(): Promise<string | null> {
     const supabase = createClient();
     const role = (user?.user_metadata?.role as string | undefined) === "professional" ? "profesional" : "cliente";
     const next = `/${locale}/dashboard/${role}?tab=cuenta&emailChanged=1`;
     const emailRedirectTo = `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`;
-    const { error } = await supabase.auth.updateUser({ email: newEmail.trim() }, { emailRedirectTo });
+    const { error } = await supabase.auth.updateUser(
+      { email: newEmail.trim(), data: { email_change_locale: locale } },
+      { emailRedirectTo }
+    );
     return error?.message ?? null;
   }
 
