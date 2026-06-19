@@ -351,6 +351,141 @@ function CategoryAutocomplete({
   );
 }
 
+/* ─── Categorías mega-menu panel ───
+   ONE clean container: the search field FILTERS the curated category list IN PLACE as
+   you type — never a second floating dropdown stacked on top of the mega-menu. Empty →
+   the curated 3-column grid; typing → matching categories inline; no match → the shared
+   suggest flow + a clean "Ver todos". */
+function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
+  const t = useTranslations("header");
+  const ts = useTranslations("categorySearch");
+  const locale = useLocale();
+  const router = useRouter();
+  const [q, setQ] = useState("");
+  const [active, setActive] = useState(0);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const matches = useMemo(() => matchCategories(q, 18), [q]);
+  const filtering = q.trim().length > 0;
+
+  useEffect(() => setActive(0), [q]);
+
+  function go(id?: string) {
+    if (id) router.push(`/buscar?categoria=${id}`);
+    else if (q.trim()) router.push(`/buscar?q=${encodeURIComponent(q.trim())}`);
+    else router.push("/buscar");
+    setQ("");
+    onNavigate();
+  }
+  function goAll() { router.push("/buscar"); setQ(""); onNavigate(); }
+
+  function onKeyDown(e: React.KeyboardEvent) {
+    if (!filtering || matches.length === 0) {
+      if (e.key === "Enter" && q.trim()) { e.preventDefault(); go(); }
+      return;
+    }
+    if (e.key === "ArrowDown") { e.preventDefault(); setActive((a) => Math.min(a + 1, matches.length - 1)); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); setActive((a) => Math.max(a - 1, 0)); }
+    else if (e.key === "Enter") { e.preventDefault(); go(matches[active]?.id); }
+    else if (e.key === "Escape") { setQ(""); }
+  }
+
+  return (
+    <>
+      {/* Search — inline; typing filters the list below IN PLACE (no portal/overlay). */}
+      <div className="mb-4 flex h-11 items-center rounded-xl border border-gray-200 bg-gray-50/70 px-3.5 transition-all focus-within:border-[#009FD9] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#009FD9]/20">
+        <Search className="h-4 w-4 shrink-0 text-gray-400" />
+        <input
+          ref={inputRef}
+          type="text"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          onKeyDown={onKeyDown}
+          placeholder={t("searchServicePlaceholder")}
+          aria-label={t("searchServiceAria")}
+          className="ml-2 min-w-0 flex-1 bg-transparent text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none"
+        />
+        {q && (
+          <button type="button" onClick={() => { setQ(""); inputRef.current?.focus(); }} className="ml-2 text-gray-400 hover:text-gray-600" aria-label={ts("cancel")}>
+            <X className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+
+      {filtering ? (
+        matches.length > 0 ? (
+          <div className="grid max-h-[320px] grid-cols-3 gap-x-6 gap-y-1 overflow-y-auto">
+            {matches.map((m, i) => (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => go(m.id)}
+                onMouseEnter={() => setActive(i)}
+                className={cn(
+                  "rounded-lg px-2 py-1.5 text-left text-sm leading-tight transition-colors",
+                  i === active ? "bg-[#EBF5FB] text-[#009FD9]" : "text-gray-600 hover:text-[#009FD9]"
+                )}
+              >
+                {getCategoryLabel(m.id, locale)}
+              </button>
+            ))}
+          </div>
+        ) : (
+          // No match → consistent wording + clean "Ver todos" + the shared suggest flow,
+          // all INSIDE this same container.
+          <div className="py-1 text-center">
+            <p className="text-sm font-medium text-[#374151]">{ts("noResults")}</p>
+            <p className="mt-0.5 text-xs text-gray-400">{ts("noResultsHint")}</p>
+            <button type="button" onClick={goAll} className="mt-2 inline-block text-sm font-semibold text-[#009FD9] hover:underline">
+              {t("viewAllProfessionals")}
+            </button>
+            <div className="mx-auto mt-1 max-w-sm">
+              <CategorySuggestionBox
+                notListedLabel={ts("notListed")}
+                placeholder={ts("suggestNamePlaceholder")}
+                sendLabel={ts("send")}
+                sendingLabel={ts("sending")}
+                cancelLabel={ts("cancel")}
+                thanksLabel={ts("suggestThanks")}
+              />
+            </div>
+          </div>
+        )
+      ) : (
+        <div className="grid grid-cols-3 gap-6">
+          {CATEGORY_COLUMNS.map((col) => (
+            <div key={col.groupKey}>
+              <h4 className="mb-3 text-[10px] font-bold uppercase tracking-widest text-gray-400">{t(`catGroups.${col.groupKey}`)}</h4>
+              <ul className="space-y-2.5">
+                {col.links.map((link) => (
+                  <li key={link.id}>
+                    <button
+                      onClick={() => go(link.id)}
+                      className="block text-left text-sm leading-tight text-gray-600 transition-colors hover:text-[#009FD9]"
+                    >
+                      {getCategoryLabel(link.id, locale)}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="mt-4 border-t border-gray-100 pt-3">
+        <Link
+          href="/categorias"
+          onClick={onNavigate}
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#009FD9] hover:underline"
+        >
+          <Compass className="h-4 w-4" />
+          {t("viewAllCategories")}
+        </Link>
+      </div>
+    </>
+  );
+}
+
 /* ─── Account menu (avatar trigger + dropdown) ───
    Self-contained: owns its open state + tap-away handling, so it can be
    rendered in BOTH the default header row AND the compact/scrolled row
@@ -795,41 +930,8 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                       className="absolute top-full left-0 mt-1.5 bg-white rounded-2xl shadow-2xl border border-gray-100 p-5 z-50 w-[680px]"
                       style={{ animation: "tab-cards-in 0.15s ease both" }}
                     >
-                      <div className="mb-4">
-                        <CategoryAutocomplete
-                          placeholder={t("searchServicePlaceholder")}
-                          onNavigate={() => setOpenMenu(null)}
-                        />
-                      </div>
-                      <div className="grid grid-cols-3 gap-6">
-                        {CATEGORY_COLUMNS.map((col) => (
-                          <div key={col.groupKey}>
-                            <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">{t(`catGroups.${col.groupKey}`)}</h4>
-                            <ul className="space-y-2.5">
-                              {col.links.map((link) => (
-                                <li key={link.id}>
-                                  <button
-                                    onClick={() => goToCategory(link.id)}
-                                    className="text-sm text-gray-600 hover:text-[#009FD9] transition-colors leading-tight block text-left"
-                                  >
-                                    {getCategoryLabel(link.id, locale)}
-                                  </button>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="mt-4 pt-3 border-t border-gray-100">
-                        <Link
-                          href="/categorias"
-                          onClick={() => setOpenMenu(null)}
-                          className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#009FD9] hover:underline"
-                        >
-                          <Compass className="h-4 w-4" />
-                          {t("viewAllCategories")}
-                        </Link>
-                      </div>
+                      {/* ONE container: typing in the search FILTERS the categories in place. */}
+                      <CategoriesMegaPanel onNavigate={() => setOpenMenu(null)} />
                     </div>
                   )}
                 </div>
