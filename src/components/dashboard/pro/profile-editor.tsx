@@ -501,7 +501,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
                   <Camera className="h-4 w-4" /> {t("changePhoto")}
                 </Button>
                 <Button type="button" variant="ghost" size="sm" onClick={handlePhotoRemove} className="text-red-500 hover:text-red-600">
-                  <X className="h-4 w-4" /> {t("remove")}
+                  <X className="h-4 w-4" /> {t("removePhoto")}
                 </Button>
               </div>
             ) : (

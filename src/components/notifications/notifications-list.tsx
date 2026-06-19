@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Bell, CheckCheck, Check, Trash2, AlertTriangle } from "lucide-react";
+import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { cn, formatRelativeTime } from "@/lib/utils";
@@ -105,9 +106,7 @@ export function NotificationsList() {
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setConfirmDelete(false)} />
           <div className="relative z-10 w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-50">
-              <AlertTriangle className="h-6 w-6 text-red-500" />
-            </div>
+            <BrandIconBadge icon={AlertTriangle} tone="danger" size={56} className="mx-auto mb-4" />
             <h3 className="text-lg font-bold text-[#111827] mb-1.5">{t("deleteAllConfirm")}</h3>
             <p className="text-sm text-[#6b7280] mb-5">{t("deleteAllBody")}</p>
             <div className="flex gap-3">

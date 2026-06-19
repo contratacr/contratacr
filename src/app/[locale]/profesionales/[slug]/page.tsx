@@ -23,6 +23,7 @@ import { languageLabel } from "@/lib/data/languages";
 import { insurerLabel } from "@/lib/data/insurers";
 import { ReviewSection } from "@/components/professionals/review-section";
 import { ProfileGallery } from "@/components/professionals/profile-gallery";
+import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
 import { ReportProfileModal } from "@/components/professionals/report-profile-modal";
 import { createClient } from "@/lib/supabase/client";
 import { ProfessionalSchedule, type ScheduleSlot } from "@/components/professionals/professional-schedule";
@@ -161,9 +162,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
       <div className="min-h-screen flex flex-col">
         <Navbar />
         <main className="flex-1 flex flex-col items-center justify-center gap-4 px-4 text-center">
-          <div className="h-16 w-16 rounded-full bg-[#EBF5FB] flex items-center justify-center">
-            <SearchX className="h-8 w-8 text-[#009FD9]" />
-          </div>
+          <BrandIconBadge icon={SearchX} size={72} />
           <h1 className="text-2xl font-bold text-[#111827]">{t("notFoundTitle")}</h1>
           <p className="text-[#6b7280] text-sm max-w-sm">
             {t("notFoundDesc")}
