@@ -139,21 +139,22 @@ function ProCard({
           <span className="absolute -left-1.5 -top-1.5 grid h-[18px] w-[18px] place-items-center rounded-full bg-[#162543] text-[9px] font-bold text-white ring-2 ring-white">{rank}</span>
         </div>
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5">
-            {/* Company name stays on ONE line (truncates if ever too long) — `min-w-0
-                flex-1` lets it take the room while the price (`shrink-0`) is never
-                squeezed, so "SG Solutions" sits on a single line beside the price. */}
-            <span className="min-w-0 flex-1 truncate text-[13px] font-bold leading-tight text-[#111827]">{company}</span>
+          {/* Company name on its OWN full-width line so it ALWAYS shows in full —
+              "SG Solutions" (and the rank-2 name) are no longer cut off by the price,
+              which used to share this row. Truncate stays only as a safety for a
+              genuinely huge name. */}
+          <span className="block truncate text-[13px] font-bold leading-tight text-[#111827]">{company}</span>
+          {/* "Verificado" pill + the price share the NEXT line (price right-aligned via
+              `ml-auto`), keeping the whole row above free for the name. */}
+          <div className="mt-1 flex items-center gap-1.5">
+            <span className="inline-flex w-fit items-center rounded-full bg-[#009FD9] px-1.5 py-0.5 text-[8px] font-semibold leading-none text-white">{verified}</span>
             {price ? (
-              <span className="shrink-0 whitespace-nowrap text-right leading-tight">
-                <span className="text-[12px] font-bold text-[#009FD9]">{price}</span>
+              <span className="ml-auto shrink-0 whitespace-nowrap leading-tight">
+                <span className="text-[11px] font-bold text-[#009FD9]">{price}</span>
                 {priceUnit ? <span className="text-[9px] font-medium text-[#9ca3af]"> {priceUnit}</span> : null}
               </span>
             ) : null}
           </div>
-          {/* "Verificado" on its OWN line — solid brand-blue pill, white text (the same
-              treatment as the badge on the professional profile). */}
-          <span className="mt-1 inline-flex w-fit items-center rounded-full bg-[#009FD9] px-1.5 py-0.5 text-[8px] font-semibold leading-none text-white">{verified}</span>
           {person ? <p className="mt-0.5 truncate text-[10px] font-medium leading-tight text-[#6b7280]">{person}</p> : null}
           {/* Profession chip + reviews sit DIRECTLY under the name (mirrors the real
               /buscar card: company → personal name → profession → reviews, all grouped
