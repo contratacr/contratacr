@@ -30,10 +30,11 @@ export interface IdentityLookupResult {
   /** Official full name from the source (properly cased), or null when not found. */
   fullName: string | null;
   /**
-   * Date of birth (YYYY-MM-DD) when the source provides it (padron.fecha_nacimiento,
-   * migration 053) — used to autocomplete the DOB on health bookings. Null when the
-   * loaded padrón has no birth date for this cédula (e.g. the bare TSE electoral
-   * roll), in which case the booking flow asks for it manually.
+   * Date of birth (YYYY-MM-DD). ALWAYS null for the padrón provider: the TSE
+   * electoral roll carries no birth date (the always-null `fecha_nacimiento` column
+   * was dropped in migration 066). DOB for health bookings is collected manually and
+   * stored separately (profiles.date_of_birth / beneficiary_dob, migration 064). The
+   * field is kept on the result for the abstraction (a future DOB-bearing provider).
    */
   dob: string | null;
   /**
@@ -64,17 +65,6 @@ export interface IdentityVerifier {
   // this and gate the future "Proveedor Autorizado" tier. Optional by design so
   // the current padrón provider doesn't need it.
   verifyBiometric?(input: { cedula: string; selfie: Blob }): Promise<IdentityCheckResult>;
-}
-
-/** Whole years between a YYYY-MM-DD birth date and today (server-side). */
-function ageFromDob(dob: string): number {
-  const b = new Date(dob);
-  if (isNaN(b.getTime())) return 0;
-  const now = new Date();
-  let age = now.getFullYear() - b.getFullYear();
-  const m = now.getMonth() - b.getMonth();
-  if (m < 0 || (m === 0 && now.getDate() < b.getDate())) age--;
-  return age;
 }
 
 /** Title-case a padrón name ("LUCILA PORRAS AGUERO" → "Lucila Porras Aguero"). */
@@ -145,14 +135,12 @@ export class SelfHostedPadronVerifier implements IdentityVerifier {
     const official = titleCaseName(
       [row.nombre, row.papellido, row.sapellido].filter(Boolean).join(" ")
     );
-    // Birth date when the loaded padrón carries one (migration 053). Normalized to
-    // YYYY-MM-DD so health bookings can AUTOCOMPLETE the beneficiary's DOB. The TSE
-    // electoral roll has none → stays null → booking falls back to manual entry.
-    const dob = row.fecha_nacimiento ? String(row.fecha_nacimiento).slice(0, 10) : null;
-    // Adult gate: derive from DOB when known; otherwise being in the electoral roll
-    // already implies 18+ (the roll only contains citizens 18 or older).
-    const isAdult = dob ? ageFromDob(dob) >= 18 : true;
-    return { found: true, fullName: official || null, dob, isAdult, provider: this.name };
+    // The TSE padrón has NO birth date (the always-null `fecha_nacimiento` column was
+    // dropped in migration 066) → dob is always null and DOB is collected manually for
+    // health bookings (beneficiary_dob / profiles.date_of_birth). Being in the electoral
+    // roll already implies 18+ (the roll only contains citizens 18 or older), which is
+    // our adult gate without needing a birth date.
+    return { found: true, fullName: official || null, dob: null, isAdult: true, provider: this.name };
   }
 
   async verify({ cedula, fullName }: IdentityCheckInput): Promise<IdentityCheckResult> {
