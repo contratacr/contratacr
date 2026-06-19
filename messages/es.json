@@ -544,7 +544,7 @@
       "passwordRequired": "Ingresa tu contraseña",
       "loginError": "Correo o contraseña incorrectos.",
       "socialOnly": "Esta cuenta usa {provider}. Inicia sesión con {provider}.",
-      "blockedUsePassword": "Esta cuenta se creó con correo y contraseña. Inicia sesión con tu contraseña.",
+      "blockedUsePassword": "Esta cuenta usa correo y contraseña. Inicia sesión con tu contraseña.",
       "redirecting": "Redirigiendo…",
       "continueGoogle": "Continuar con Google",
       "continueFacebook": "Continuar con Facebook"

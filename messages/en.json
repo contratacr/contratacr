@@ -544,7 +544,7 @@
       "passwordRequired": "Enter your password",
       "loginError": "Incorrect email or password.",
       "socialOnly": "This account uses {provider}. Sign in with {provider}.",
-      "blockedUsePassword": "This account was created with email and password. Sign in with your password.",
+      "blockedUsePassword": "This account uses email and password. Sign in with your password.",
       "redirecting": "Redirecting…",
       "continueGoogle": "Continue with Google",
       "continueFacebook": "Continue with Facebook"
