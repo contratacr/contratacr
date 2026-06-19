@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { isSigningOut, signOutToHome } from "@/lib/auth/sign-out";
 import { useSearchParams } from "next/navigation";
 import {
   CalendarDays, Bookmark, LogOut, Bell, User, FolderOpen, Briefcase, Search, Headset,
@@ -31,6 +32,7 @@ type Tab = "bookings" | "projects" | "saved" | "notifications" | "soporte" | "pr
 export default function ClientDashboardPage() {
   const { user, loading: authLoading } = useAuth();
   const t = useTranslations("clientPage");
+  const locale = useLocale();
   const router = useRouter();
   const searchParams = useSearchParams();
   // Post-login lands on the panel HOME (Mi perfil), not a deep sub-section.
@@ -68,7 +70,7 @@ export default function ClientDashboardPage() {
   // main page with no brief flash through /login.
   const signingOut = useRef(false);
   useEffect(() => {
-    if (!authLoading && !user && !signingOut.current) router.push("/login");
+    if (!authLoading && !user && !signingOut.current && !isSigningOut()) router.push("/login");
   }, [user, authLoading, router]);
 
   // A PROFESSIONAL has no separate client dashboard — their client activity
@@ -139,10 +141,8 @@ export default function ClientDashboardPage() {
   }
 
   async function handleSignOut() {
-    signingOut.current = true;
-    const supabase = createClient();
-    await supabase.auth.signOut({ scope: "local" });
-    window.location.replace("/es");
+    signingOut.current = true; // local guard for THIS page; `signOutToHome` flags it globally too
+    await signOutToHome(locale);
   }
 
   async function saveProfile() {

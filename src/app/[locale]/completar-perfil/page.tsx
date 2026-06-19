@@ -9,6 +9,7 @@ import { useRouter } from "@/i18n/navigation";
 import { CedulaInput } from "@/components/ui/cedula-input";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
+import { isSigningOut } from "@/lib/auth/sign-out";
 import { ContrataCRLogo } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 
@@ -33,7 +34,7 @@ export default function CompleteProfilePage() {
   const photoInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (!authLoading && !user) router.push("/login");
+    if (!authLoading && !user && !isSigningOut()) router.push("/login");
   }, [user, authLoading, router]);
 
   // Load existing profile; if cédula already present, skip this screen.

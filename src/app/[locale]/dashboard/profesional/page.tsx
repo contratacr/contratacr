@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { isSigningOut, signOutToHome } from "@/lib/auth/sign-out";
 import { useSearchParams } from "next/navigation";
 import {
   User, Image as ImageIcon, CalendarDays, Inbox, LogOut, ExternalLink, Wrench,
@@ -82,6 +83,7 @@ export default function ProDashboardPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const t = useTranslations("proPanel");
+  const locale = useLocale();
   const activeTab = (searchParams.get("tab") as Tab) ?? "profile";
 
   const [pro, setPro] = useState<ProData | null>(null);
@@ -102,7 +104,7 @@ export default function ProDashboardPage() {
   // Suppress the login-redirect while signing out → straight to main, no /login flash.
   const signingOut = useRef(false);
   useEffect(() => {
-    if (!authLoading && !user && !signingOut.current) router.push("/login");
+    if (!authLoading && !user && !signingOut.current && !isSigningOut()) router.push("/login");
   }, [user, authLoading, router]);
 
   // Deep-link focus: `?tab=profile&focus=location` (e.g. Disponibilidad's "Agregar
@@ -191,10 +193,8 @@ export default function ProDashboardPage() {
   }
 
   async function handleSignOut() {
-    signingOut.current = true;
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    window.location.replace("/es");
+    signingOut.current = true; // local guard for THIS page; `signOutToHome` flags it globally too
+    await signOutToHome(locale);
   }
 
   // `!user` is part of this guard ON PURPOSE: on sign-out, `useAuth` (a per-component

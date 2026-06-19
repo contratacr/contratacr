@@ -6,6 +6,7 @@ import { Search, Briefcase, ArrowRight } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
+import { isSigningOut } from "@/lib/auth/sign-out";
 import { ContrataCRLogo } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 
@@ -31,7 +32,7 @@ export default function OnboardingPage() {
   // users see the cards.
   useEffect(() => {
     if (authLoading) return;
-    if (!user) { router.push("/login"); return; }
+    if (!user) { if (!isSigningOut()) router.push("/login"); return; }
     if (completing.current) { setCheckingExisting(false); return; }
     let cancelled = false;
     (async () => {

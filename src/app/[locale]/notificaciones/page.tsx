@@ -6,6 +6,7 @@ import { Bell, CheckCheck, X } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { createClient } from "@/lib/supabase/client";
+import { isSigningOut } from "@/lib/auth/sign-out";
 import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "@/i18n/navigation";
 import { cn, formatRelativeTime } from "@/lib/utils";
@@ -32,7 +33,7 @@ export default function NotificationsPage() {
   const [busy, setBusy] = useState(true);
 
   useEffect(() => {
-    if (!loading && !user) router.push("/login");
+    if (!loading && !user && !isSigningOut()) router.push("/login");
   }, [user, loading, router]);
 
   useEffect(() => {

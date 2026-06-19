@@ -9,6 +9,7 @@ import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
+import { signOutToHome } from "@/lib/auth/sign-out";
 import { useAuth } from "@/hooks/use-auth";
 import { getInitials } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -569,9 +570,9 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
   }, [mobileOpen]);
 
   async function handleSignOut() {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    window.location.href = `/${locale}`;
+    // Go STRAIGHT home — `signOutToHome` flags the in-flight sign-out so protected
+    // pages (dashboards, etc.) don't bounce the now-absent user to /login mid-logout.
+    await signOutToHome(locale);
   }
 
   useEffect(() => {
