@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { FolderOpen, Send, ChevronDown, ChevronUp, MapPin, Clock, Coins, Briefcase, CheckCircle2, Phone } from "lucide-react";
+import { FolderOpen, Send, ChevronDown, ChevronUp, MapPin, Clock, Coins, CheckCircle2, Phone } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -270,28 +270,29 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
                     <CardContent className="p-5">
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap mb-1">
-                            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-[#EBF5FB] text-[#009FD9] shrink-0">
-                              <Briefcase className="h-3.5 w-3.5" />
-                            </span>
-                            <span className="font-semibold text-[#111827] text-sm">{project.title}</span>
-                            {project.categories?.name && (
-                              <Badge variant="muted" className="text-[11px]">{project.categories.name}</Badge>
-                            )}
+                          {/* Lead with the project CREATOR's photo + name — consistent with
+                              "solicitudes recibidas" — instead of a generic gray work icon. */}
+                          <div className="flex items-start gap-2.5 mb-1.5">
+                            <Avatar className="h-9 w-9 shrink-0">
+                              <AvatarImage src={project.profiles?.avatar_url} className="object-cover" />
+                              <AvatarFallback className="text-[11px] bg-[#EBF5FB] text-[#009FD9] font-semibold">
+                                {getInitials(project.profiles?.full_name ?? "?")}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-semibold text-[#111827] text-sm">{project.title}</span>
+                                {project.categories?.name && (
+                                  <Badge variant="muted" className="text-[11px]">{project.categories.name}</Badge>
+                                )}
+                              </div>
+                              {project.profiles?.full_name && (
+                                <p className="text-xs text-[#6b7280] mt-0.5 truncate">{project.profiles.full_name}</p>
+                              )}
+                            </div>
                           </div>
                           <p className="text-sm text-[#6b7280] line-clamp-2 mb-2">{project.description}</p>
                           <div className="flex flex-wrap gap-3 text-xs text-[#9ca3af]">
-                            {project.profiles?.full_name && (
-                              <span className="flex items-center gap-1.5">
-                                <Avatar className="h-5 w-5">
-                                  <AvatarImage src={project.profiles.avatar_url} />
-                                  <AvatarFallback className="text-[9px] bg-[#EBF5FB] text-[#009FD9] font-semibold">
-                                    {getInitials(project.profiles.full_name)}
-                                  </AvatarFallback>
-                                </Avatar>
-                                {project.profiles.full_name}
-                              </span>
-                            )}
                             {(project.provincias?.name || project.cantones?.name) && (
                               <span className="flex items-center gap-1">
                                 <MapPin className="h-3 w-3" />
