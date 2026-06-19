@@ -762,7 +762,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
       );
     }
     return (
-      <button type="button" onClick={() => toggleNoCedula(true)} className="self-start -mt-1 text-xs font-medium text-[#6b7280] hover:text-[#009FD9] hover:underline">
+      <button type="button" onClick={() => toggleNoCedula(true)} className="self-start -mt-1 text-xs font-semibold text-[#009FD9] hover:underline">
         No tengo cédula
       </button>
     );
