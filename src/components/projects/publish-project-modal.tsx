@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { PriceInput } from "@/components/ui/price-input";
-import { PhoneInput } from "@/components/ui/phone-input";
+import { PhoneInput, hasPhoneNumber } from "@/components/ui/phone-input";
 import { CategorySearch } from "@/components/ui/category-search";
 import { X } from "lucide-react";
 import { PROVINCES } from "@/lib/data/cr-geography";
@@ -51,9 +51,11 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
     const supabase = createClient();
     supabase.rpc("get_my_profile").then(({ data }) => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const p = ((data as any)?.phone as string | undefined) ?? "";
+      const raw = ((data as any)?.phone as string | undefined) ?? "";
+      // A bare dial code / empty value is NOT a phone (legacy clears stored "506") → ask again.
+      const p = hasPhoneNumber(raw) ? raw : "";
       setPhone(p);
-      setNeedsPhone(!p.trim());
+      setNeedsPhone(!p);
     });
   }, []);
 

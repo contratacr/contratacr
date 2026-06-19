@@ -19,7 +19,7 @@ import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { cn, getInitials } from "@/lib/utils";
 import { NotificationsList } from "@/components/notifications/notifications-list";
-import { PhoneInput } from "@/components/ui/phone-input";
+import { PhoneInput, hasPhoneNumber } from "@/components/ui/phone-input";
 import { CloseAccountSection } from "@/components/account/close-account-section";
 import { AccountSecuritySection } from "@/components/account/account-security";
 import { SaveStatus } from "@/components/dashboard/save-status";
@@ -103,7 +103,14 @@ export default function ClientDashboardPage() {
         if (data) {
           setProfileData(data);
           setProfileAvatar(data.avatar_url ?? null);
-          setProfileForm({ full_name: data.full_name ?? "", phone: data.phone ?? "" });
+          // Don't clobber an IN-PROGRESS edit. A re-fetch (triggered when the `user`
+          // object identity changes — token refresh, profile-updated event…) used to
+          // overwrite the form mid-edit: e.g. the client clears their phone, and before
+          // the 1s autosave fires this re-seeds the OLD phone from the DB — the phone
+          // "reappears". Only seed the form when there's no pending change.
+          if (!profileDirtyRef.current) {
+            setProfileForm({ full_name: data.full_name ?? "", phone: data.phone ?? "" });
+          }
         }
       });
   }, [user]);
@@ -153,7 +160,9 @@ export default function ClientDashboardPage() {
     // Never overwrite a verified official name (it's locked; corrections go
     // through admin review). Phone is always editable.
     const verified = !!profileData?.cedula && detectIdType(String(profileData.cedula)) === "cedula";
-    const update: Record<string, string | null> = { phone: profileForm.phone || null };
+    // Store null unless there's an ACTUAL number — a cleared field (or a legacy bare dial
+    // code) must persist as null so the phone truly clears and is re-asked next time.
+    const update: Record<string, string | null> = { phone: hasPhoneNumber(profileForm.phone) ? profileForm.phone : null };
     if (!verified) update.full_name = profileForm.full_name;
     await supabase.from("profiles").update(update).eq("id", user.id);
     // Mirror the name into auth metadata so the header/menu update IMMEDIATELY

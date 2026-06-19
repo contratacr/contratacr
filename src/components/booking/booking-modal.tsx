@@ -11,7 +11,7 @@ import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { useTranslations, useLocale } from "next-intl";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { PhoneInput, isPhoneComplete } from "@/components/ui/phone-input";
+import { PhoneInput, isPhoneComplete, hasPhoneNumber } from "@/components/ui/phone-input";
 import { CedulaInput } from "@/components/ui/cedula-input";
 import { isValidId, detectIdType, cleanId } from "@/lib/cedula";
 import { computeAge, formatAge, isMinorFromDob } from "@/lib/age";
@@ -283,7 +283,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
             const hasCedula = !!data?.cedula && String(data.cedula).trim() !== "";
             setHasStoredCedula(hasCedula);
             if (hasCedula) setProfileCedula(String(data!.cedula));
-            if (data?.phone) {
+            if (data?.phone && hasPhoneNumber(String(data.phone))) {
               setProfilePhone(String(data.phone));
             } else {
               // A professional's number lives in professionals.whatsapp — prefill

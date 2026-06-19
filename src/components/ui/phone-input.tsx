@@ -54,6 +54,14 @@ export function isPhoneComplete(value: string): boolean {
   return national.length === country.len;
 }
 
+/** True when the value carries an ACTUAL number (≥1 national digit). A bare dial code
+ *  ("506") or empty string is NOT a phone — so a cleared phone reads as "no phone"
+ *  everywhere, including legacy rows saved as a bare country code before the
+ *  clear-emits-empty fix (sprint 307). */
+export function hasPhoneNumber(value: string): boolean {
+  return detect(value).national.length > 0;
+}
+
 interface PhoneInputProps {
   value: string;
   onChange: (digits: string) => void;
@@ -86,15 +94,23 @@ export function PhoneInput({ value, onChange, label, error, required, optional, 
   const isCR = country.code === "506";
   const complete = national.length === country.len;
 
+  // Emit the FULL number (code + national digits) — but emit a truly EMPTY string when
+  // there are no national digits, so clearing the field clears the stored value. Emitting
+  // a bare country code ("506") would read as a non-empty phone and a "deleted" phone would
+  // never actually clear (it'd persist as "506" and the booking flow would skip re-asking).
+  function emit(codeVal: string, nationalDigits: string) {
+    onChange(nationalDigits ? `${codeVal}${nationalDigits}` : "");
+  }
+
   function changeCountry(newCode: string) {
     const next = COUNTRIES.find((c) => c.code === newCode) ?? COUNTRIES[0];
     setCode(newCode);
-    onChange(`${next.code}${national.slice(0, next.len)}`);
+    emit(next.code, national.slice(0, next.len));
   }
 
   function changeNational(raw: string) {
     const digits = raw.replace(/\D/g, "").slice(0, country.len);
-    onChange(`${code}${digits}`);
+    emit(code, digits);
   }
 
   return (
