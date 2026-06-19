@@ -1044,9 +1044,6 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
 
                   {forSomeoneElse && (
                     <div className="rounded-xl border border-[#e5e7eb] p-3 flex flex-col gap-3 bg-[#f9fafb]">
-                      <p className="text-xs font-medium text-[#374151]">
-                        ¿Para quién es la cita?
-                      </p>
                       <div>
                         <label className="text-xs font-medium text-[#374151] block mb-1.5">¿La persona tiene cédula? <span className="text-red-500">*</span></label>
                         <div className="grid grid-cols-2 gap-2">

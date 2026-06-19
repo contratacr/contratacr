@@ -62,6 +62,12 @@ export function AdminShell({
   ];
 
   const initials = adminName.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase() || "AD";
+  // The sidebar footer is narrow — show ONLY first name + first surname so the name
+  // never truncates with "…". (First surname = the second-to-last word in a CR name.)
+  const shortAdminName = (() => {
+    const w = adminName.trim().split(/\s+/).filter(Boolean);
+    return w.length <= 2 ? adminName : `${w[0]} ${w[w.length - 2]}`;
+  })();
 
   const navLink = (it: (typeof items)[number], variant: "side" | "top") => (
     <Link
@@ -103,7 +109,7 @@ export function AdminShell({
         <div className="border-t border-white/10 p-3 flex items-center gap-2.5">
           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-bold text-[#38bdf8]">{initials}</span>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold leading-tight">{adminName}</p>
+            <p className="truncate text-sm font-semibold leading-tight">{shortAdminName}</p>
             <p className="text-[11px] text-white/50">Administrador</p>
           </div>
           <button onClick={signOut} aria-label="Salir" className="flex h-8 w-8 items-center justify-center rounded-lg text-white/60 hover:bg-white/10 hover:text-white transition-colors">
