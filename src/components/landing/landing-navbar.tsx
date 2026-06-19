@@ -15,6 +15,7 @@ import { getInitials } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
+import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { SupportLink } from "@/components/support/support-link";
 import { ALL_CATEGORIES, searchCategories, normalizeText, getCategoryLabel, getCategoryGroupLabel } from "@/lib/data/categories";
 import { searchLocations, resolveLocation, type LocationSuggestion } from "@/lib/data/location-search";
@@ -218,11 +219,17 @@ function CategoryAutocomplete({
   size?: "md" | "lg";
 }) {
   const t = useTranslations("header");
+  // Shared category-suggestion strings — keeps the navbar's "no results / ¿No ves tu
+  // categoría?" wording IDENTICAL to the crear-proyecto / agregar-profesión picker.
+  const ts = useTranslations("categorySearch");
   const locale = useLocale();
   const router = useRouter();
   const [q, setQ] = useState("");
   const [active, setActive] = useState(0);
   const [focused, setFocused] = useState(false);
+  // True while the inline "suggest a category" box is open/just-sent, so the dropdown
+  // stays open even though the search input lost focus to the suggestion field.
+  const [suggestActive, setSuggestActive] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const blurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -247,6 +254,17 @@ function CategoryAutocomplete({
     onNavigate?.();
   }
 
+  // "Ver todos los profesionales" — a CLEAN search: never carries the unmatched
+  // term as a `q` filter (only the province context, if any).
+  function goAll() {
+    const params = new URLSearchParams();
+    if (province) params.set("provincia", province);
+    router.push(`/buscar${params.toString() ? `?${params.toString()}` : ""}`);
+    setQ("");
+    setFocused(false);
+    onNavigate?.();
+  }
+
   function onKeyDown(e: React.KeyboardEvent) {
     if (e.key === "ArrowDown") { e.preventDefault(); setActive((a) => Math.min(a + 1, suggestions.length - 1)); }
     else if (e.key === "ArrowUp") { e.preventDefault(); setActive((a) => Math.max(a - 1, 0)); }
@@ -254,7 +272,8 @@ function CategoryAutocomplete({
     else if (e.key === "Escape") { setFocused(false); inputRef.current?.blur(); }
   }
 
-  const open = focused && q.trim().length > 0;
+  // Stay open while the suggest box is in use (the search input has blurred to it).
+  const open = (focused || suggestActive) && q.trim().length > 0;
   const lg = size === "lg";
 
   return (
@@ -282,15 +301,34 @@ function CategoryAutocomplete({
         />
       </form>
 
-      <AnchoredDropdown anchorRef={formRef} open={open} maxHeight={300} className="rounded-xl border-gray-100 shadow-2xl">
+      <AnchoredDropdown anchorRef={formRef} open={open} maxHeight={340} className="rounded-xl border-gray-100 shadow-2xl">
         <div className="py-1.5">
           {suggestions.length === 0 ? (
-            <button
-              onMouseDown={(e) => { e.preventDefault(); go(); }}
-              className="w-full text-left px-4 py-2.5 text-sm text-gray-500 hover:bg-gray-50"
-            >
-              {t("noServiceFound")} <span className="text-[#009FD9] font-medium">{t("viewAllProfessionals")}</span>
-            </button>
+            <>
+              {/* No match → consistent "No encontramos esa categoría" wording, a CLEAN
+                  "Ver todos los profesionales" link, and the SAME inline suggest flow
+                  used in crear-proyecto / agregar-profesión (submits to admin). */}
+              <div className="px-4 pt-3 pb-2 text-center">
+                <p className="text-sm font-medium text-[#374151]">{ts("noResults")}</p>
+                <p className="mt-0.5 text-xs text-gray-400">{ts("noResultsHint")}</p>
+                <button
+                  type="button"
+                  onMouseDown={(e) => { e.preventDefault(); goAll(); }}
+                  className="mt-2 inline-block text-sm font-semibold text-[#009FD9] hover:underline"
+                >
+                  {t("viewAllProfessionals")}
+                </button>
+              </div>
+              <CategorySuggestionBox
+                notListedLabel={ts("notListed")}
+                placeholder={ts("suggestNamePlaceholder")}
+                sendLabel={ts("send")}
+                sendingLabel={ts("sending")}
+                cancelLabel={ts("cancel")}
+                thanksLabel={ts("suggestThanks")}
+                onActiveChange={setSuggestActive}
+              />
+            </>
           ) : (
             suggestions.map((s, i) => (
               <button

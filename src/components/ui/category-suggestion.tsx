@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -22,6 +22,7 @@ export function CategorySuggestionBox({
   thanksLabel,
   className,
   prominent = false,
+  onActiveChange,
 }: {
   notListedLabel: string;
   placeholder: string;
@@ -33,11 +34,19 @@ export function CategorySuggestionBox({
   /** Prominent = no loose top divider + the trigger is a pill CTA (for the /categorias
    *  contained card). Default (compact) keeps the inline text-link style used in forms. */
   prominent?: boolean;
+  /** Fires when the box is "active" (the inline input is open or a suggestion was just
+   *  sent). Lets a host like the navbar dropdown keep itself open while the user types
+   *  the suggestion, instead of closing on the search input's blur. */
+  onActiveChange?: (active: boolean) => void;
 }) {
   const [suggesting, setSuggesting] = useState(false);
   const [name, setName] = useState("");
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
+
+  useEffect(() => {
+    onActiveChange?.(suggesting || sent);
+  }, [suggesting, sent, onActiveChange]);
 
   async function send() {
     const clean = name.trim();
