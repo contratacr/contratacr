@@ -10,6 +10,11 @@ export async function POST(req: Request) {
   if (!professionalId || !rating) {
     return NextResponse.json({ error: "Faltan campos requeridos." }, { status: 400 });
   }
+  // Ratings are half-steps in [0.5, 5] (e.g. 4.5). Reject anything else.
+  const r = Number(rating);
+  if (!(r >= 0.5 && r <= 5 && r * 2 === Math.floor(r * 2))) {
+    return NextResponse.json({ error: "Calificación inválida." }, { status: 400 });
+  }
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();

@@ -276,6 +276,8 @@
     "thanks": "Thanks for your review!",
     "thanksSub": "Your feedback helps other clients choose better.",
     "ratingLabel": "Rating",
+    "starAria": "{value} stars",
+    "halfStarAria": "{value} stars",
     "commentLabel": "Comment",
     "commentPlaceholder": "Tell us about your experience with this professional…",
     "sending": "Sending…",

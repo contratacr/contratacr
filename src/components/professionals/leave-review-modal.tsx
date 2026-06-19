@@ -52,7 +52,8 @@ export function LeaveReviewModal({
     return () => { active = false; };
   }, [professionalId, bookingId, projectId]);
 
-  // Close on Escape
+  // Close on Escape (an explicit key — unlike an accidental outside-click, which is
+  // intentionally NOT a dismiss here so a half-written review is never lost).
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
@@ -60,10 +61,6 @@ export function LeaveReviewModal({
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
   }, [onClose]);
-
-  function handleBackdropClick(e: React.MouseEvent<HTMLDivElement>) {
-    if (e.target === backdropRef.current) onClose();
-  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -105,7 +102,6 @@ export function LeaveReviewModal({
   return (
     <div
       ref={backdropRef}
-      onClick={handleBackdropClick}
       className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 px-4"
     >
       <style>{`
@@ -137,11 +133,22 @@ export function LeaveReviewModal({
           <div className="flex flex-col items-center gap-3 px-6 py-10">
             <SuccessIcon size={56} />
             <p className="text-lg font-semibold text-[#111827]">{t("thanks")}</p>
-            {/* Filled stars so the user can see their submitted rating. */}
+            {/* Filled stars so the user can see their submitted rating (half-capable). */}
             <div className="flex gap-1">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <Star key={star} className={`h-7 w-7 ${star <= rating ? "text-yellow-400 fill-yellow-400" : "text-[#d1d5db] fill-[#d1d5db]"}`} />
-              ))}
+              {[1, 2, 3, 4, 5].map((star) => {
+                const full = rating >= star;
+                const half = !full && rating >= star - 0.5;
+                return (
+                  <span key={star} className="relative h-7 w-7">
+                    <Star className="absolute inset-0 h-7 w-7 text-[#d1d5db] fill-[#d1d5db]" />
+                    {(full || half) && (
+                      <span className="absolute inset-0 overflow-hidden" style={{ width: full ? "100%" : "50%" }}>
+                        <Star className="h-7 w-7 text-yellow-400 fill-yellow-400" />
+                      </span>
+                    )}
+                  </span>
+                );
+              })}
             </div>
             <p className="text-sm text-[#6b7280] text-center">{t("thanksSub")}</p>
           </div>
@@ -150,25 +157,42 @@ export function LeaveReviewModal({
             {/* Star rating */}
             <div>
               <p className="text-sm font-medium text-[#374151] mb-3">{t("ratingLabel")}</p>
-              <div className="flex gap-2">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <button
-                    key={star}
-                    type="button"
-                    onClick={() => setRating(star)}
-                    onMouseEnter={() => setHovered(star)}
-                    onMouseLeave={() => setHovered(0)}
-                    className="focus:outline-none transition-transform hover:scale-110"
-                  >
-                    <Star
-                      className={`h-10 w-10 transition-colors ${
-                        star <= displayRating
-                          ? "text-yellow-400 fill-yellow-400"
-                          : "text-[#d1d5db] fill-[#d1d5db]"
-                      }`}
-                    />
-                  </button>
-                ))}
+              {/* Half-star selection: the LEFT half of a star picks x.5, the RIGHT half
+                  picks the whole star. Hover previews the same. */}
+              <div className="flex items-center gap-3">
+                <div className="flex gap-1.5" onMouseLeave={() => setHovered(0)}>
+                  {[1, 2, 3, 4, 5].map((star) => {
+                    const full = displayRating >= star;
+                    const half = !full && displayRating >= star - 0.5;
+                    return (
+                      <div key={star} className="relative h-10 w-10">
+                        <Star className="absolute inset-0 h-10 w-10 text-[#d1d5db] fill-[#d1d5db]" />
+                        {(full || half) && (
+                          <span className="absolute inset-0 overflow-hidden" style={{ width: full ? "100%" : "50%" }}>
+                            <Star className="h-10 w-10 text-yellow-400 fill-yellow-400" />
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          aria-label={t("halfStarAria", { value: star - 0.5 })}
+                          onMouseEnter={() => setHovered(star - 0.5)}
+                          onClick={() => setRating(star - 0.5)}
+                          className="absolute inset-y-0 left-0 z-10 w-1/2 cursor-pointer focus:outline-none"
+                        />
+                        <button
+                          type="button"
+                          aria-label={t("starAria", { value: star })}
+                          onMouseEnter={() => setHovered(star)}
+                          onClick={() => setRating(star)}
+                          className="absolute inset-y-0 right-0 z-10 w-1/2 cursor-pointer focus:outline-none"
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+                {displayRating > 0 && (
+                  <span className="text-sm font-semibold tabular-nums text-[#374151]">{displayRating.toFixed(1)}</span>
+                )}
               </div>
             </div>
 
