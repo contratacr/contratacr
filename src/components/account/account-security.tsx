@@ -84,6 +84,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
   const [emailError, setEmailError] = useState<string | null>(null);
   const [emailApplied, setEmailApplied] = useState(false);
   const emailResend = useResendCooldown();
+  const pwResend = useResendCooldown();
 
   // After the user confirms the change from the email link, the confirmation URL
   // returns here (via emailRedirectTo → /auth/callback → this account tab) with
@@ -191,15 +192,22 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
     setTimeout(() => setPwSaved(false), 4000);
   }
 
-  async function sendReset() {
+  // The actual send (reused by the initial submit AND the resend).
+  async function performReset() {
     if (!user?.email) return;
-    setResetBusy(true);
     const supabase = createClient();
     await supabase.auth.resetPasswordForEmail(user.email, {
       redirectTo: `${window.location.origin}/auth/callback?next=/${locale}/reset-password`,
     });
+  }
+
+  async function sendReset() {
+    if (!user?.email) return;
+    setResetBusy(true);
+    await performReset();
     setResetBusy(false);
     setResetSent(true);
+    pwResend.armCooldown();
   }
 
   return (
@@ -338,6 +346,19 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
               <div>
                 <p className="text-xs text-emerald-600">{t("resetSent", { email: user?.email ?? "" })}</p>
                 <SpamNotice className="mt-1" />
+                {/* Resend (brief cooldown so it can't be spammed) */}
+                <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[#6b7280]">
+                  {pwResend.resent && <span className="font-semibold text-emerald-600">{tc("resent")}</span>}
+                  <span>{tc("resendPrompt")}</span>
+                  <button
+                    type="button"
+                    onClick={() => pwResend.resend(performReset)}
+                    disabled={pwResend.cooldown > 0 || pwResend.resending}
+                    className="font-semibold text-[#009FD9] hover:underline disabled:text-[#9ca3af] disabled:no-underline disabled:cursor-not-allowed"
+                  >
+                    {pwResend.cooldown > 0 ? tc("resendIn", { seconds: pwResend.cooldown }) : pwResend.resending ? tc("resending") : tc("resend")}
+                  </button>
+                </div>
               </div>
             ) : (
               <button type="button" onClick={sendReset} disabled={resetBusy} className="self-start text-xs text-[#009FD9] hover:underline disabled:opacity-60">
