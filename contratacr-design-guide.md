@@ -1498,21 +1498,14 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
   even at full. Below the header: the **scrolling card list** (`overflow-y-auto`, `children`). Cards live
   INSIDE the sheet and NEVER bleed onto the map. Filters are reached via the **header "Filtros" drawer**
   (the in-sheet chip row was dropped Sprint 151 for a cleaner, map-dominant look).
-- **Mobile/tablet filters drawer = a LEFT SIDE DRAWER, ONE white surface, no nested card (Sprint 259, revised 270).** The `xl:hidden`
-  drawer in `search-results-layout` is a single white panel that **slides in from the LEFT** (`animate-in slide-in-from-left-full`)
-  over the page with a **dimmed backdrop** showing the map behind (tap backdrop or X to close) — it is **NOT a full-screen
-  overlay**. It's a **white card** (`bg-white rounded-r-2xl shadow-2xl`) spanning the **FULL viewport height**
-  (`absolute inset-y-0 left-0 w-[86%] max-w-sm`); the body `flex-1 min-h-0 overflow-y-auto` fills the height below the
-  pinned header and scrolls internally. The close **X lives INSIDE the card** in the top header row, and the filters start
-  at the **TOP** (content pinned up, no blank gap). (Do NOT use an auto-height `top-0 max-h-[100dvh]` panel with a
-  non-`flex-1` body — it collapses to half height with empty dimmed space below when the filters are shorter than the
-  screen. Do NOT float the X outside/above the card.) It owns the chrome: a **pinned header (the "Filtros" title left, close X right, divider below)**
-  over a **scrolling body** (`flex-1 overflow-y-auto`) where the filters sit directly on the white
-  background. It renders a **header-less `<SearchFilters hideHeader/>`** (passed as the layout's
-  `drawerFilters` prop) so there's no inner card/own header — `hideHeader` (= `inDrawer`) drops the
-  `rounded-2xl border bg-white p-4` chrome. The **xl+ desktop sidebar keeps the original `filters` node**
-  (card + header) UNCHANGED. Do NOT wrap the drawer filters in a second container or reintroduce the
-  `bg-[#f4f7fa]` outer panel (that was the old box-in-box with dead space).
+- **Mobile/tablet filters drawer (current — Sprint 274 REVERTED the Sprint 259→273 redesign).** The `xl:hidden`
+  drawer in `search-results-layout` is a left side panel `absolute inset-y-0 left-0 w-[88%] max-w-xs bg-[#f4f7fa]
+  shadow-xl overflow-y-auto p-4` over a `bg-black/40` backdrop (tap backdrop or X to close). It shows ONLY a close X at
+  the top-right, then renders **`{filters}` = the standard `<SearchFilters/>`** (same node as the desktop sidebar) which
+  supplies its OWN white card + "Filtros" header — so it intentionally reuses the sidebar's exact look (the redesign that
+  made it a single header-less surface with `drawerFilters`/`hideHeader`, a left-slide white card, and the
+  service-search ⊕ Categoría mutual-exclusivity was all reverted per the user; do NOT reintroduce those without a fresh
+  request). The xl+ desktop sidebar is `{filters}` as before.
 - **Pin ↔ sheet:** tapping a map pin dispatches a **`ccr:focus-card`** window event (detail = proId); the
   layout (mobile only, gated by `matchMedia(max-width:1023px)`) springs the sheet open to **FOCUS ≈ 0.64
   dvh** and `scrollIntoView({block:"center"})`s that card. The pin's ring highlight + mini-card popup
