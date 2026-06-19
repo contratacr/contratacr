@@ -204,6 +204,16 @@ export function BookingRequests() {
                         booking.beneficiary_phone ? t("benContact", { phone: booking.beneficiary_phone }) : null,
                       ].filter(Boolean).join(" · ")}
                     </p>
+                    {/* Beneficiary identity: VERIFIED only for a national cédula; DIMEX/none → sin verificar. */}
+                    {booking.beneficiary_cedula && detectIdType(cleanId(booking.beneficiary_cedula)) === "cedula" ? (
+                      <span className="mt-0.5 inline-flex items-center gap-1 text-[10px] font-semibold text-[#15803d]">
+                        <ShieldCheck className="h-3 w-3" /> {t("idVerified")}
+                      </span>
+                    ) : (
+                      <span className="mt-0.5 inline-flex items-center gap-1 text-[10px] font-semibold text-[#b45309]">
+                        <ShieldAlert className="h-3 w-3" /> {t("benUnverified")}
+                      </span>
+                    )}
                     <p className="text-[10px] text-[#6b7280] mt-0.5">
                       {t("bookedBy", { name: booking.client_name ?? "" })}
                       {booking.beneficiary_phone ? ` ${t("coordinateContact")}` : ""}

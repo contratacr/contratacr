@@ -1070,6 +1070,7 @@
     "idVerified": "Identidad verificada",
     "idUnverified": "Sin cédula · identidad sin verificar",
     "idUnverifiedWith": "Sin verificar: {id}",
+    "benUnverified": "Identidad sin verificar",
     "benContact": "Contacto: {phone}",
     "bookedBy": "Reservado por {name} (responsable).",
     "coordinateContact": "Coordina la cita al contacto de la persona.",

@@ -1070,6 +1070,7 @@
     "idVerified": "Identity verified",
     "idUnverified": "No ID · identity not verified",
     "idUnverifiedWith": "Not verified: {id}",
+    "benUnverified": "Identity not verified",
     "benContact": "Contact: {phone}",
     "bookedBy": "Booked by {name} (responsible).",
     "coordinateContact": "Coordinate the appointment with the person's contact.",

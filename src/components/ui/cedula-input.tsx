@@ -17,6 +17,8 @@ interface CedulaInputProps {
   /** Override the default helper text. */
   hint?: string;
   disabled?: boolean;
+  /** Override the default "Número de identificación" label (e.g. "…de la otra persona"). */
+  labelText?: string;
 }
 
 /**
@@ -33,6 +35,7 @@ export function CedulaInput({
   autoFocus,
   hint,
   disabled,
+  labelText,
 }: CedulaInputProps) {
   const t = useTranslations("identity");
   const [touched, setTouched] = useState(false);
@@ -47,7 +50,7 @@ export function CedulaInput({
   const label = (
     <span className="flex items-center justify-between gap-2">
       <span>
-        {t("idLabel")}
+        {labelText ?? t("idLabel")}
         {required ? (
           <span className="text-red-500"> *</span>
         ) : (
