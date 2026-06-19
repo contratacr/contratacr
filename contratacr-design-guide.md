@@ -1501,9 +1501,10 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 - **Mobile/tablet filters drawer = a LEFT SIDE DRAWER, ONE white surface, no nested card (Sprint 259, revised 270).** The `xl:hidden`
   drawer in `search-results-layout` is a single white panel that **slides in from the LEFT** (`animate-in slide-in-from-left-full`)
   over the page with a **dimmed backdrop** showing the map behind (tap backdrop or X to close) — it is **NOT a full-screen
-  overlay**. It's anchored **top-left** (`absolute left-0 top-0 w-[86%] max-w-sm`) and only as tall as its content
-  (`max-h-[100dvh]`, body `overflow-y-auto` with **no `flex-1`**) so there's **no dead space below the filters**; it scrolls
-  internally when taller than the viewport. It owns the chrome: a **pinned header (the "Filtros" title left, close X right, divider below)**
+  overlay**. It spans the **FULL viewport height** (`absolute inset-y-0 left-0 w-[86%] max-w-sm`); the body `flex-1 min-h-0
+  overflow-y-auto` fills the height below the pinned header and scrolls internally. (Do NOT use an auto-height `top-0
+  max-h-[100dvh]` panel with a non-`flex-1` body — it collapses to half height with empty dimmed space below when the
+  filters are shorter than the screen.) It owns the chrome: a **pinned header (the "Filtros" title left, close X right, divider below)**
   over a **scrolling body** (`flex-1 overflow-y-auto`) where the filters sit directly on the white
   background. It renders a **header-less `<SearchFilters hideHeader/>`** (passed as the layout's
   `drawerFilters` prop) so there's no inner card/own header — `hideHeader` (= `inDrawer`) drops the

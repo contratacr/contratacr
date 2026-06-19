@@ -132,16 +132,17 @@ export function SearchResultsLayout({ children, filters, drawerFilters, countLab
 
       {/* Full-filter drawer (opened from the lg–xl button OR the mobile header "Filtros").
           A LEFT SIDE DRAWER (NOT full-screen): one clean white surface that slides in from
-          the left over the page, with a dimmed backdrop showing the map behind. Anchored
-          top-left and only as tall as its content (capped at the viewport, scrolls
-          internally when taller) — no dead space below the filters. Tap backdrop or X to
-          close. Desktop (xl+) uses the sidebar, not this. */}
+          the left over the page, spanning the FULL viewport height (top to bottom), with a
+          dimmed backdrop showing the map behind. Tap backdrop or X to close. Desktop (xl+)
+          uses the sidebar, not this. */}
       {showFilters && (
         <div className="xl:hidden fixed inset-0 z-50">
           {/* Dimmed backdrop — the page/map stays visible behind it; tap to close. */}
           <div className="absolute inset-0 bg-black/40 animate-in fade-in duration-200" onClick={() => setShowFilters(false)} />
-          {/* The drawer itself — white surface, slides in from the left. */}
-          <div className="absolute left-0 top-0 flex max-h-[100dvh] w-[86%] max-w-sm flex-col rounded-br-2xl bg-white shadow-xl animate-in slide-in-from-left-full duration-300">
+          {/* The drawer itself — white surface, FULL height (`inset-y-0`), slides in from
+              the left. The body flex-fills the height below the pinned header and scrolls
+              internally, so the panel never collapses to half height. */}
+          <div className="absolute inset-y-0 left-0 flex w-[86%] max-w-sm flex-col bg-white shadow-xl animate-in slide-in-from-left-full duration-300">
             {/* Header — "Filtros" left, close X right, on one row with a divider below. */}
             <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[#e5e7eb] px-4 py-3.5">
               <h2 className="text-base font-bold text-[#111827]">{t("filters.title")}</h2>
@@ -150,10 +151,9 @@ export function SearchResultsLayout({ children, filters, drawerFilters, countLab
               </button>
             </div>
             {/* Scrolling body — filters directly on the white surface (header-less instance).
-                No flex-1, so the drawer only takes the height it needs (no dead space) and
-                scrolls internally when the content is taller than the viewport. Filters
-                apply INSTANTLY (no apply button); X + backdrop both dismiss. */}
-            <div className="min-h-0 overflow-y-auto px-4 py-4 pb-6">
+                `flex-1` fills the remaining height; `min-h-0` lets it scroll internally.
+                Filters apply INSTANTLY (no apply button); X + backdrop both dismiss. */}
+            <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 pb-6">
               {drawerFilters}
             </div>
           </div>
