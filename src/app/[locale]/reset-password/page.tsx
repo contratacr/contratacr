@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { CheckCircle2, Circle, Eye, EyeOff, ArrowRight, AlertCircle, Lock } from "lucide-react";
 import { SuccessIcon } from "@/components/ui/success-icon";
+import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
 import { Navbar } from "@/components/layout/navbar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -92,13 +93,26 @@ export default function ResetPasswordPage() {
     const { error: updateError } = await supabase.auth.updateUser({
       password: data.password,
     });
-    setSubmitting(false);
     if (updateError) {
+      setSubmitting(false);
       setError(t("error"));
       return;
     }
+    // Keep the button in its loading state through the role lookup (don't re-enable it
+    // for the async gap), then switch to the success screen.
+    // Resolve the destination panel NOW (role-aware) so we land STRAIGHT on the right
+    // dashboard. Pushing a hardcoded /dashboard/cliente made a PRO bounce
+    // cliente→profesional, flashing the wrong panel for a moment. `replace` (not push)
+    // also keeps the reset page out of history.
+    let role = (await supabase.auth.getUser()).data.user?.user_metadata?.role as string | undefined;
+    if (role !== "professional" && role !== "client") {
+      const { data: prof } = await supabase.rpc("get_my_profile");
+      const p = prof as { role?: string } | null;
+      if (p?.role === "professional" || p?.role === "client") role = p.role;
+    }
+    const panel = role === "professional" ? "profesional" : "cliente";
     setDone(true);
-    setTimeout(() => router.push("/dashboard/cliente"), 2500);
+    setTimeout(() => router.replace(`/dashboard/${panel}`), 1800);
   }
 
   if (done) {
@@ -125,9 +139,7 @@ export default function ResetPasswordPage() {
       <main className="flex-1 flex items-center justify-center py-10 px-4">
         <div className="w-full max-w-sm">
           <div className="text-center mb-8">
-            <div className="flex h-14 w-14 mx-auto items-center justify-center rounded-2xl bg-[#EBF5FB] mb-4">
-              <Lock className="h-7 w-7 text-[#009FD9]" />
-            </div>
+            <BrandIconBadge icon={Lock} size={56} className="mx-auto mb-4" />
             <ContrataCRLogo className="justify-center mb-4" />
             <h1 className="text-2xl font-bold text-[#111827]">{t("title")}</h1>
             <p className="text-[#6b7280] text-sm mt-1">
