@@ -1176,7 +1176,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                             )
                           )}
                           <PhoneInput
-                            label="Teléfono de contacto"
+                            label="Teléfono de la persona"
                             required
                             value={benPhone}
                             onChange={setBenPhone}
