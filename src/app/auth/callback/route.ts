@@ -51,6 +51,16 @@ export async function GET(request: NextRequest) {
     if (tokenHash && type === "email_change") {
       const u = data.user ?? (await supabase.auth.getUser()).data.user;
       if (u) {
+        // Keep public.profiles.email IN SYNC with the new auth email. The unique index
+        // on profiles.email (migration 007) would otherwise keep the OLD email reserved
+        // and wrongly block a future signup from reusing the freed email. This mirrors
+        // migration 065's auth.users trigger — belt-and-suspenders, harmless if both run.
+        if (u.email) {
+          try {
+            const admin = createAdminClient();
+            await admin.from("profiles").update({ email: u.email }).eq("id", u.id);
+          } catch { /* best-effort — never block the redirect over the email mirror */ }
+        }
         let role = u.user_metadata?.role as string | undefined;
         if (role !== "professional" && role !== "client") {
           const { data: prof } = await supabase.rpc("get_my_profile");
