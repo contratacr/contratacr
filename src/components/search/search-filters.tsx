@@ -19,6 +19,9 @@ import { createClient } from "@/lib/supabase/client";
 // border. We override it here (filters only) so selecting never leaves an ugly
 // outline — the open dropdown + chevron are the affordance.
 const FILTER_TRIGGER = "text-sm focus-visible:ring-0 focus-visible:border-[#e5e7eb]";
+// Sentinel for the in-dropdown "Cualquier aseguradora" reset item (Radix Select forbids
+// an empty-string value, so we map this back to "" = no insurer filter).
+const ANY_INSURER = "__any__";
 
 export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHeader = false, closable = false }: { variant?: "sidebar" | "chips"; hideSearch?: boolean; hideHeader?: boolean; closable?: boolean } = {}) {
   const router = useRouter();
@@ -238,13 +241,14 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
           </Select>
         </div>
         <div className="shrink-0 w-[170px]">
-          <Select value={aseguradora || undefined} onValueChange={(v) => { setAseguradora(v); applyFilters({ aseguradora: v }); }}>
+          <Select value={aseguradora || undefined} onValueChange={(v) => { const next = v === ANY_INSURER ? "" : v; setAseguradora(next); applyFilters({ aseguradora: next }); }}>
             <SelectTrigger className={pill}>
               <SelectValue placeholder={t("filters.anyInsurer")}>
                 {aseguradora ? insurerOptions.find((i) => i.id === aseguradora)?.label : <span className="text-[#9ca3af]">{t("filters.anyInsurer")}</span>}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
+              {aseguradora && <SelectItem value={ANY_INSURER} className="text-[#6b7280]">{t("filters.anyInsurer")}</SelectItem>}
               {insurerOptions.map((i) => <SelectItem key={i.id} value={i.id}>{i.label}</SelectItem>)}
             </SelectContent>
           </Select>
@@ -416,31 +420,26 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
           <label className={fieldLabel}>{t("filters.insurer")}</label>
           {/* Non-filtering default: nothing selected shows "Cualquier aseguradora"
               (greyed, like a placeholder, so it reads as NOT an active filter — most
-              pros don't work with insurers). Pick one to filter; X clears it. */}
-          <div className="flex items-center gap-1.5">
-            <Select value={aseguradora || undefined} onValueChange={(v) => { setAseguradora(v); applyFilters({ aseguradora: v }); }}>
-              <SelectTrigger className={`${FILTER_TRIGGER} flex-1`}>
-                <SelectValue placeholder={t("filters.anyInsurer")}>
-                  {aseguradora
-                    ? insurerOptions.find((i) => i.id === aseguradora)?.label
-                    : <span className="text-[#9ca3af]">{t("filters.anyInsurer")}</span>}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {insurerOptions.map((i) => <SelectItem key={i.id} value={i.id}>{i.label}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            {aseguradora && (
-              <button
-                type="button"
-                onClick={() => { setAseguradora(""); applyFilters({ aseguradora: "" }); }}
-                className="shrink-0 rounded-lg border border-[#e5e7eb] p-2 text-[#9ca3af] hover:text-[#374151] hover:border-[#009FD9] transition-colors"
-                aria-label={t("filters.removeInsurer")}
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
-          </div>
+              pros don't work with insurers). Pick one to filter. Clearing is the
+              in-dropdown "Cualquier aseguradora" item (shown only when one is picked) so
+              the field stays the SAME full-width size as every other filter — an external
+              X button used to shrink this control ~40px narrower than the rest. */}
+          <Select
+            value={aseguradora || undefined}
+            onValueChange={(v) => { const next = v === ANY_INSURER ? "" : v; setAseguradora(next); applyFilters({ aseguradora: next }); }}
+          >
+            <SelectTrigger className={FILTER_TRIGGER}>
+              <SelectValue placeholder={t("filters.anyInsurer")}>
+                {aseguradora
+                  ? insurerOptions.find((i) => i.id === aseguradora)?.label
+                  : <span className="text-[#9ca3af]">{t("filters.anyInsurer")}</span>}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {aseguradora && <SelectItem value={ANY_INSURER} className="text-[#6b7280]">{t("filters.anyInsurer")}</SelectItem>}
+              {insurerOptions.map((i) => <SelectItem key={i.id} value={i.id}>{i.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
