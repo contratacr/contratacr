@@ -363,10 +363,12 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     if (isCedula) setSelfCedulaLoading(true);
     const t = setTimeout(async () => {
       // Already-registered check first (the message that must show up front).
+      let taken = false;
       try {
         const a = await fetch(`/api/cedula-available?cedula=${clean}`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
         if (!active) return;
         if (a?.taken) {
+          taken = true;
           setCedulaTaken(true);
           setCedulaError("Esa cédula ya está registrada en otra cuenta. Inicia sesión en esa cuenta o usa una cédula diferente.");
         } else {
@@ -380,6 +382,11 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
         const j = await res.json().catch(() => ({}));
         // NAME only — the padrón has no birth date, so DOB never comes from here.
         setSelfCedulaName(res.ok ? (j.fullName ?? null) : null);
+        // EARLY feedback: a fully-typed national cédula that isn't in the padrón is
+        // flagged the moment the lookup resolves (~0.5s after the field is complete),
+        // not only at submit — so the client doesn't fill the whole form first. Never
+        // clobber the higher-priority "ya está registrada" message.
+        if (!taken) setCedulaError(res.ok ? null : "No encontramos esa cédula. Revisa el número e intenta de nuevo.");
       } catch { if (active) setSelfCedulaName(null); }
       finally { if (active) setSelfCedulaLoading(false); }
     }, 500);
@@ -1241,7 +1248,6 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     value={profileCedula}
                     onChange={(c) => { setProfileCedula(c); setCedulaError(null); setCedulaTaken(false); }}
                     error={cedulaError ?? undefined}
-                    hint="Solo para tu solicitud — no es una verificación de identidad."
                   />
                   {selfCedulaLoading && <p className="text-xs text-[#9ca3af] -mt-1">Buscando…</p>}
                   {!selfCedulaLoading && selfCedulaName && !nameWillChange && (
@@ -1306,7 +1312,6 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                         value={profileCedula}
                         onChange={(c) => { setProfileCedula(c); setCedulaError(null); setCedulaTaken(false); }}
                         error={cedulaError ?? undefined}
-                        hint="Solo para tu solicitud — no es una verificación de identidad."
                       />
                       {/* Padrón lookup: name MATCHES the account → silent green confirm.
                           Name DIFFERS → amber warning; the official name will prevail. */}
