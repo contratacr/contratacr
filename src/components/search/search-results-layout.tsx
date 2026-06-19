@@ -131,28 +131,29 @@ export function SearchResultsLayout({ children, filters, drawerFilters, countLab
       </div>
 
       {/* Full-filter drawer (opened from the lg–xl button OR the mobile header "Filtros").
-          A LEFT SIDE DRAWER (NOT full-screen): one clean white surface that slides in from
-          the left over the page, spanning the FULL viewport height (top to bottom), with a
-          dimmed backdrop showing the map behind. Tap backdrop or X to close. Desktop (xl+)
-          uses the sidebar, not this. */}
+          A LEFT SIDE DRAWER (NOT full-screen): a white card/panel with a shadow that slides
+          in from the left over the page, spanning the FULL viewport height, with a dimmed
+          backdrop showing the map behind. The header ("Filtros" + the close X) lives INSIDE
+          the white card at the TOP, and the filters start right below it (content pinned to
+          the top, body scrolls internally — no blank gap). Tap backdrop or X to close.
+          Desktop (xl+) uses the sidebar, not this. */}
       {showFilters && (
         <div className="xl:hidden fixed inset-0 z-50">
           {/* Dimmed backdrop — the page/map stays visible behind it; tap to close. */}
           <div className="absolute inset-0 bg-black/40 animate-in fade-in duration-200" onClick={() => setShowFilters(false)} />
-          {/* The drawer itself — white surface, FULL height (`inset-y-0`), slides in from
-              the left. The body flex-fills the height below the pinned header and scrolls
-              internally, so the panel never collapses to half height. */}
-          <div className="absolute inset-y-0 left-0 flex w-[86%] max-w-sm flex-col bg-white shadow-xl animate-in slide-in-from-left-full duration-300">
-            {/* Header — "Filtros" left, close X right, on one row with a divider below. */}
+          {/* The white card itself — FULL height (`inset-y-0`), rounded right edge + shadow.
+              `flex-col`: a pinned header, then the body flex-fills below it and scrolls. */}
+          <div className="absolute inset-y-0 left-0 flex w-[86%] max-w-sm flex-col rounded-r-2xl bg-white shadow-2xl animate-in slide-in-from-left-full duration-300">
+            {/* Header INSIDE the card, at the top — "Filtros" left, close X right, divider below. */}
             <div className="flex shrink-0 items-center justify-between gap-3 border-b border-[#e5e7eb] px-4 py-3.5">
               <h2 className="text-base font-bold text-[#111827]">{t("filters.title")}</h2>
               <button onClick={() => setShowFilters(false)} aria-label={t("close")} className="-mr-1 rounded-full p-1.5 text-[#9ca3af] transition-colors hover:bg-[#f3f4f6] hover:text-[#374151]">
                 <X className="h-5 w-5" />
               </button>
             </div>
-            {/* Scrolling body — filters directly on the white surface (header-less instance).
-                `flex-1` fills the remaining height; `min-h-0` lets it scroll internally.
-                Filters apply INSTANTLY (no apply button); X + backdrop both dismiss. */}
+            {/* Body — filters start at the TOP, directly under the header (header-less
+                instance). `flex-1 min-h-0` fills the height and scrolls internally; the
+                filters never leave a blank gap. Filters apply INSTANTLY (no apply button). */}
             <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 pb-6">
               {drawerFilters}
             </div>
