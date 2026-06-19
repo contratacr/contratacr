@@ -748,12 +748,9 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
           value={selfDobInput}
           max={new Date().toISOString().slice(0, 10)}
           onChange={(e) => setSelfDobInput(e.target.value)}
-          className="h-10 rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent"
+          className="w-full h-11 rounded-xl border border-[#e5e7eb] bg-white px-3.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
         />
-        {effectiveSelfDob && computeAge(effectiveSelfDob) && (
-          <p className="text-xs mt-1 text-[#6b7280]">{formatAge(computeAge(effectiveSelfDob))}</p>
-        )}
-        <p className="text-[11px] text-[#9ca3af] mt-1">La pedimos solo para servicios de salud. La guardamos para no volver a pedirla.</p>
+        <p className="text-[11px] text-[#9ca3af] mt-1.5">La pedimos solo para servicios de salud. La guardamos para no volver a pedirla.</p>
       </div>
     );
   }
@@ -1280,7 +1277,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                             benDobLocked ? (
                               <div className="rounded-lg bg-[#f0fdf4] border border-[#bbf7d0] px-3 py-2 flex items-center justify-between gap-2">
                                 <p className="text-xs text-[#15803d] break-words">
-                                  Fecha de nacimiento: <strong>{benDob}</strong>{computeAge(benDob) ? ` · ${formatAge(computeAge(benDob))}` : ""}{isMinorFromDob(benDob) ? " · menor de edad" : ""}
+                                  Fecha de nacimiento: <strong>{benDob}</strong>
                                 </p>
                                 <button type="button" onClick={() => setBenDobLocked(false)} className="shrink-0 text-[11px] font-semibold text-[#009FD9] hover:underline">
                                   Corregir
@@ -1296,13 +1293,8 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                                 value={benDob}
                                 max={new Date().toISOString().slice(0, 10)}
                                 onChange={(e) => setBenDob(e.target.value)}
-                                className="h-10 rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent"
+                                className="w-full h-11 rounded-xl border border-[#e5e7eb] bg-white px-3.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
                               />
-                              {benDob && computeAge(benDob) && (
-                                <p className={cn("text-xs mt-1", isMinorFromDob(benDob) ? "text-[#b45309]" : "text-[#6b7280]")}>
-                                  {formatAge(computeAge(benDob))}{isMinorFromDob(benDob) ? " · menor de edad (la cita queda marcada como 'para un menor')" : ""}
-                                </p>
-                              )}
                             </div>
                             )
                           )}
