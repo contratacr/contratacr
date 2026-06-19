@@ -272,7 +272,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
             {needsPhone && (
               <div>
                 <PhoneInput
-                  label={<>{t("phoneLabel")} <span className="text-red-500">*</span></>}
+                  label={t("phoneLabel")}
                   required
                   value={phone}
                   onChange={setPhone}

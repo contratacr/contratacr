@@ -49,6 +49,10 @@ export function IdentityField({
   const [dob, setDob] = useState<string | null>(null);
   const [manualOverride, setManualOverride] = useState(false);
   const reqId = useRef(0);
+  // The last name we AUTO-FILLED from the padrón. When the cédula changes we use it to
+  // clear the stale auto-filled name (so a different/longer ID never keeps the prior
+  // person's name); a name the user typed manually is never touched.
+  const lastAutoName = useRef("");
 
   function setStatusBoth(s: IdentityStatus) {
     setStatus(s);
@@ -58,6 +62,14 @@ export function IdentityField({
   // Debounced padrón lookup whenever a valid cédula is present.
   useEffect(() => {
     const clean = cleanId(cedula);
+    // The cédula changed → if we had auto-filled a name from it, clear that stale name
+    // (+ DOB) immediately so a different/longer ID never keeps the prior person's name.
+    if (lastAutoName.current) {
+      onFullNameChange("");
+      lastAutoName.current = "";
+      setOfficialName("");
+      setDob(null);
+    }
     if (!clean || !isValidId(clean)) {
       setStatusBoth("idle");
       setOfficialName("");
@@ -75,6 +87,7 @@ export function IdentityField({
           setDob(d ?? null);
           setManualOverride(false);
           onFullNameChange(official ?? "");
+          lastAutoName.current = official ?? "";
           onResult?.({ found: true, isAdult: !!isAdult, dob: d ?? null });
           setStatusBoth("found");
         } else {

@@ -292,8 +292,11 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   // Beneficiary cédula → padrón name auto-fill (debounced). Optional; never blocks.
   useEffect(() => {
     if (!forSomeoneElse || benHasCedula !== true) { setBenLookupName(null); setBenCedulaLoading(false); return; }
+    // The cédula changed → drop any previously auto-filled person (name + DOB) so a
+    // different/longer number never keeps the prior person's data.
+    setBenLookupName(null); setBenName(""); setBenDob("");
     const clean = cleanId(benCedula);
-    if (!isValidId(clean) || detectIdType(clean) !== "cedula") { setBenLookupName(null); setBenCedulaLoading(false); return; }
+    if (!isValidId(clean) || detectIdType(clean) !== "cedula") { setBenCedulaLoading(false); return; }
     let active = true;
     setBenCedulaLoading(true);
     const t = setTimeout(async () => {
@@ -322,7 +325,11 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   //  2) The padrón name (national cédulas only) for the match/mismatch confirm.
   useEffect(() => {
     const clean = cleanId(profileCedula);
-    if (!isValidId(clean)) { setSelfCedulaName(null); setSelfCedulaLoading(false); setCedulaTaken(false); return; }
+    // The cédula changed → drop the previously auto-filled official name + padrón DOB
+    // immediately, so switching to a different/longer ID never keeps stale data while
+    // the new lookup runs. (selfDobInput — a manual entry — is intentionally left.)
+    setSelfCedulaName(null); setSelfDob(null);
+    if (!isValidId(clean)) { setSelfCedulaLoading(false); setCedulaTaken(false); return; }
     const isCedula = detectIdType(clean) === "cedula";
     if (!isCedula) { setSelfCedulaName(null); setSelfCedulaLoading(false); }
     let active = true;
@@ -1119,7 +1126,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                           </div>
                           )}
                           <PhoneInput
-                            label="Teléfono de contacto para la cita"
+                            label="Teléfono de contacto"
                             required
                             value={benPhone}
                             onChange={setBenPhone}
