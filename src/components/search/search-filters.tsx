@@ -127,23 +127,28 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
     );
   }
 
+  // `categoria` and `q` are MUTUALLY EXCLUSIVE (Yelp-style): free text submits `q`
+  // and clears any picked `categoria`; picking a suggestion (below) does the inverse.
   function handleQueryChange(value: string) {
     setQuery(value);
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => applyFilters({ q: value }), 400);
+    debounceRef.current = setTimeout(() => { setCategory(""); applyFilters({ q: value, categoria: "" }); }, 400);
   }
 
   function handleQueryKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter") {
       if (debounceRef.current) clearTimeout(debounceRef.current);
-      applyFilters({ q: query });
+      setCategory("");
+      applyFilters({ q: query, categoria: "" });
     }
   }
 
+  // Clearing the search field removes BOTH params (no q, no categoria).
   function clearQuery() {
     setQuery("");
+    setCategory("");
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    applyFilters({ q: "" });
+    applyFilters({ q: "", categoria: "" });
   }
 
   useEffect(() => {
@@ -282,6 +287,8 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
                 if (e.key === "Enter") {
                   e.preventDefault();
                   const s = searchSug[searchActive >= 0 ? searchActive : 0];
+                  // Cancel the pending free-text debounce so it can't clear this category.
+                  if (debounceRef.current) clearTimeout(debounceRef.current);
                   setCategory(s.id); setQuery(getCategoryLabel(s.id, locale)); setSearchOpen(false);
                   applyFilters({ categoria: s.id, q: "" });
                   return;
@@ -310,7 +317,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
                     role="option"
                     aria-selected={i === searchActive}
                     onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => { setCategory(s.id); setQuery(getCategoryLabel(s.id, locale)); setSearchOpen(false); applyFilters({ categoria: s.id, q: "" }); }}
+                    onClick={() => { if (debounceRef.current) clearTimeout(debounceRef.current); setCategory(s.id); setQuery(getCategoryLabel(s.id, locale)); setSearchOpen(false); applyFilters({ categoria: s.id, q: "" }); }}
                     className={`flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm transition-colors ${i === searchActive ? "bg-[#EBF5FB]" : "hover:bg-[#f9fafb]"}`}
                   >
                     <Search className="h-4 w-4 shrink-0 text-[#009FD9]" />
@@ -495,14 +502,19 @@ export function MobileServiceSearch() {
 
   const suggestions = useMemo(() => (q.trim().length >= 2 ? searchCategories(q).slice(0, 6) : []), [q]);
 
+  // `q` and `categoria` are MUTUALLY EXCLUSIVE. Free text (or clearing) sets/removes
+  // `q` and ALWAYS drops `categoria`; picking a suggestion does the inverse.
   const pushQuery = useCallback((value: string) => {
     const next = new URLSearchParams(params.toString());
     if (value.trim()) next.set("q", value); else next.delete("q");
+    next.delete("categoria");
     next.delete("page");
     router.push(`${pathname}?${next.toString()}`);
   }, [params, router, pathname]);
 
   const pickCategory = useCallback((id: string) => {
+    // Cancel any pending free-text debounce so it can't clear this category.
+    if (debounceRef.current) clearTimeout(debounceRef.current);
     const next = new URLSearchParams(params.toString());
     next.set("categoria", id);
     next.delete("q");
