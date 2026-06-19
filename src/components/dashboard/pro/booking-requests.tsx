@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarDays, FileText, Phone, Flag, MapPin, IdCard } from "lucide-react";
+import { CalendarDays, FileText, Phone, Flag, MapPin, IdCard, ShieldCheck, ShieldAlert } from "lucide-react";
 import { getCategoryLabel } from "@/lib/data/categories";
+import { detectIdType, cleanId } from "@/lib/cedula";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -153,14 +154,32 @@ export function BookingRequests() {
                     <span className="text-[#374151]">{booking.client_phone}</span>
                   </div>
                 )}
-                {/* Client's cédula — shown whether the booking is for themselves OR a
-                    third party (the responsible client's ID). */}
-                {booking.client_cedula && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <IdCard className="h-4 w-4 text-[#6b7280] shrink-0" />
-                    <span className="text-[#374151]">{t("clientCedula", { cedula: booking.client_cedula })}</span>
-                  </div>
-                )}
+                {/* Requester identity — VERIFIED only when a national cédula (confirmed
+                    against the TSE padrón at booking) is on file; a DIMEX/foreign ID or no
+                    cédula is "sin verificar", so the pro can decide whether to contact. */}
+                {(() => {
+                  const ced = booking.client_cedula;
+                  if (ced && detectIdType(cleanId(ced)) === "cedula") {
+                    return (
+                      <div className="flex items-center gap-2 text-sm flex-wrap">
+                        <IdCard className="h-4 w-4 text-[#6b7280] shrink-0" />
+                        <span className="text-[#374151]">{t("clientCedula", { cedula: ced })}</span>
+                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#15803d]">
+                          <ShieldCheck className="h-3.5 w-3.5" /> {t("idVerified")}
+                        </span>
+                      </div>
+                    );
+                  }
+                  return (
+                    <div className="flex items-center gap-2 text-sm flex-wrap">
+                      <IdCard className="h-4 w-4 text-[#6b7280] shrink-0" />
+                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#b45309]">
+                        <ShieldAlert className="h-3.5 w-3.5" />
+                        {ced ? t("idUnverifiedWith", { id: ced }) : t("idUnverified")}
+                      </span>
+                    </div>
+                  );
+                })()}
                 {/* Client DOB — only stored/shown for HEALTH-category solicitudes. */}
                 {booking.client_dob && (
                   <div className="flex items-center gap-2 text-sm">
