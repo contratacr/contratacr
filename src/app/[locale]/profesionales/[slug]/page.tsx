@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import {
-  MapPin, Shield, ArrowLeft, Star, Briefcase, Camera,
+  MapPin, Shield, ShieldCheck, ArrowLeft, Star, Briefcase, Camera,
   Share2, Flag, ChevronDown, Lock, Phone, Building2, Award, Mail, SearchX,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -253,6 +253,22 @@ export default function ProfilePage({ params }: ProfilePageProps) {
               <ArrowLeft className="h-4 w-4" />
               {t("back")}
             </Link>
+          )}
+
+          {/* Preview + NOT verified → an informational (non-blocking) nudge: the pro is
+              still visible/bookable, but verifying earns the badge + better ranking.
+              Polished BrandIconBadge icon. Only shown in the pro's own preview. */}
+          {previewMode && professional.verificationStatus !== "verified" && (
+            <div className="mb-6 flex items-start gap-3.5 rounded-2xl border border-[#e5e7eb] bg-[#f9fafb] p-4 sm:p-5">
+              <BrandIconBadge icon={ShieldCheck} size={44} />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-[#111827]">{t("previewUnverifiedTitle")}</p>
+                <p className="mt-0.5 text-sm text-[#6b7280]">{t("previewUnverifiedBody")}</p>
+                <Link href="/dashboard/profesional?tab=verificacion" className="mt-2.5 inline-flex items-center gap-1.5 rounded-lg bg-[#009FD9] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0089bb]">
+                  <ShieldCheck className="h-4 w-4" /> {t("previewUnverifiedCta")}
+                </Link>
+              </div>
+            </div>
           )}
 
           {/* ── HEADER CARD ── identity on the left, a right-aligned stats strip. Mirrors
