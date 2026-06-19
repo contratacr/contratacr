@@ -139,10 +139,11 @@ function ProCard({
           <span className="absolute -left-1.5 -top-1.5 grid h-[18px] w-[18px] place-items-center rounded-full bg-[#162543] text-[9px] font-bold text-white ring-2 ring-white">{rank}</span>
         </div>
         <div className="min-w-0 flex-1">
-          <div className="flex items-start gap-1.5">
-            {/* Company name WRAPS (up to 2 lines) instead of truncating, so a name like
-                "SG Solutions" is never cut off when the price shares the row. */}
-            <span className="min-w-0 flex-1 break-words line-clamp-2 text-[13px] font-bold leading-tight text-[#111827]">{company}</span>
+          <div className="flex items-center gap-1.5">
+            {/* Company name stays on ONE line (truncates if ever too long) — `min-w-0
+                flex-1` lets it take the room while the price (`shrink-0`) is never
+                squeezed, so "SG Solutions" sits on a single line beside the price. */}
+            <span className="min-w-0 flex-1 truncate text-[13px] font-bold leading-tight text-[#111827]">{company}</span>
             {price ? (
               <span className="shrink-0 whitespace-nowrap text-right leading-tight">
                 <span className="text-[12px] font-bold text-[#009FD9]">{price}</span>
@@ -252,7 +253,7 @@ export function ResultsScreen({ copy = DEFAULT_RESULTS_COPY }: { copy?: ResultsC
           one WITHOUT (the WhatsApp contact path), mirroring the real mixed /buscar list. */}
       <div className="flex-1 space-y-2 overflow-hidden p-3">
         <ProCard
-          rank={1} initials="SG" image="https://res.cloudinary.com/dxxrjx2go/image/upload/v1781710352/sgimage_psyvpn.jpg" company="SG Solutions" person="Luis Sánchez" profession={copy.title}
+          rank={1} initials="SG" image="https://res.cloudinary.com/dxxrjx2go/image/upload/f_auto,q_auto/v1781846892/sgimage_psyvpn_hyyp4c.jpg" company="SG Solutions" person="Luis Sánchez" profession={copy.title}
           place="San José" address="Escazú, San José" rating="4.9" reviews={copy.reviews(48)}
           price="₡12 000" priceUnit={copy.priceUnit} verified={copy.verified} schedule={copy.days}
           viewSchedule={copy.viewSchedule} whatsapp={copy.whatsapp}
