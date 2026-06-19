@@ -1064,6 +1064,7 @@
     "forPerson": "Para: {name}",
     "otherPerson": "otra persona",
     "minor": "Menor de edad",
+    "olderAdult": "Adulto mayor",
     "benDob": "Nac.: {date}",
     "benCedula": "Cédula: {cedula}",
     "clientCedula": "Cédula: {cedula}",

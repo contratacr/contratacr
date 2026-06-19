@@ -1064,6 +1064,7 @@
     "forPerson": "For: {name}",
     "otherPerson": "another person",
     "minor": "Minor",
+    "olderAdult": "Older adult",
     "benDob": "DOB: {date}",
     "benCedula": "ID: {cedula}",
     "clientCedula": "ID: {cedula}",

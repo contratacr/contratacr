@@ -41,3 +41,18 @@ export function isMinorFromDob(dobISO: string): boolean {
   const a = computeAge(dobISO);
   return a !== null && a.years < 18;
 }
+
+/**
+ * Age bracket relevant to a MEDICAL professional, derived from a known DOB:
+ *  - "minor"      → under 18 (guardian/consent, pediatric care)
+ *  - "olderAdult" → 65 or older ("adulto mayor", CR Ley 7935 — geriatric care)
+ *  - null         → a typical adult (18–64), nothing to flag.
+ * Shown ONLY to the professional (health bookings), never as client-facing clutter.
+ */
+export function ageCategoryFromDob(dobISO: string): "minor" | "olderAdult" | null {
+  const a = computeAge(dobISO);
+  if (a === null) return null;
+  if (a.years < 18) return "minor";
+  if (a.years >= 65) return "olderAdult";
+  return null;
+}

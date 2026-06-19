@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { CalendarDays, FileText, Phone, Flag, MapPin, IdCard, ShieldCheck, ShieldAlert } from "lucide-react";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { detectIdType, cleanId } from "@/lib/cedula";
+import { ageCategoryFromDob } from "@/lib/age";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -56,6 +57,19 @@ export function BookingRequests() {
   const locale = useLocale();
   const t = useTranslations("bookingRequests");
   const dateLocale = locale === "en" ? "en-US" : "es-CR";
+
+  // Age bracket badge for a HEALTH patient (self or beneficiary), derived from the
+  // stored DOB. Shown ONLY here in the pro's panel — a minor (guardian/consent) or an
+  // older adult (geriatric care) is useful clinical context; a typical adult (18–64)
+  // shows nothing. `minorFallback` covers legacy bookings stored before a DOB was kept.
+  function ageBadge(dob?: string | null, minorFallback = false) {
+    const cat = dob ? ageCategoryFromDob(dob) : minorFallback ? "minor" : null;
+    if (!cat) return null;
+    const cls = cat === "minor"
+      ? "text-[#b45309] bg-[#fef3c7]"   // amber — needs guardian/consent
+      : "text-[#6b7280] bg-[#f3f4f6]";  // neutral grey — informational
+    return <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${cls}`}>{t(cat)}</span>;
+  }
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("activas");
@@ -180,11 +194,13 @@ export function BookingRequests() {
                     </div>
                   );
                 })()}
-                {/* Client DOB — only stored/shown for HEALTH-category solicitudes. */}
+                {/* Client DOB — only stored/shown for HEALTH-category solicitudes, with the
+                    age-bracket badge (minor / adulto mayor) when relevant. */}
                 {booking.client_dob && (
-                  <div className="flex items-center gap-2 text-sm">
+                  <div className="flex items-center gap-2 text-sm flex-wrap">
                     <CalendarDays className="h-4 w-4 text-[#6b7280] shrink-0" />
                     <span className="text-[#374151]">{t("birth", { date: booking.client_dob })}</span>
+                    {ageBadge(booking.client_dob)}
                   </div>
                 )}
 
@@ -193,9 +209,9 @@ export function BookingRequests() {
                   <div className="rounded-lg bg-[#EBF5FB] border border-[#bfdbfe] p-2.5 text-xs">
                     <p className="font-semibold text-[#0089bb] flex items-center gap-1.5 flex-wrap">
                       {t("forPerson", { name: booking.beneficiary_name || t("otherPerson") })}
-                      {booking.beneficiary_is_minor && (
-                        <span className="text-[10px] font-semibold text-[#b45309] bg-[#fef3c7] px-1.5 py-0.5 rounded-md">{t("minor")}</span>
-                      )}
+                      {/* Age bracket from the beneficiary DOB (minor OR adulto mayor); falls
+                          back to the legacy beneficiary_is_minor flag when no DOB is stored. */}
+                      {ageBadge(booking.beneficiary_dob, booking.beneficiary_is_minor)}
                     </p>
                     <p className="text-[#374151] mt-0.5">
                       {[
