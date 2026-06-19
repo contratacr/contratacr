@@ -315,7 +315,11 @@ export function AdminCase({ providerId }: { providerId: string }) {
                     <CheckCircle2 className="h-4 w-4" /> Marcar verificado
                   </button>
                 )}
-                {status !== "rejected" && (
+                {/* Rechazar (con motivo → oculta el perfil) — solo para una cuenta
+                    PENDIENTE/no verificada. Una cuenta YA VERIFICADA usa "Revocar
+                    verificación" en su lugar, así nunca se muestran dos acciones que
+                    se solapan. */}
+                {status !== "verified" && status !== "rejected" && (
                   <button
                     onClick={() => setRejectOpen(true)}
                     disabled={busy}
@@ -324,16 +328,21 @@ export function AdminCase({ providerId }: { providerId: string }) {
                     <XCircle className="h-4 w-4" /> Rechazar
                   </button>
                 )}
+                {/* Revocar — SOLO para una cuenta ya verificada → la devuelve a
+                    pendiente/sin verificar (no se oculta; sin motivo). Estilo del
+                    botón de rechazo. */}
                 {status === "verified" && (
                   <button
-                    onClick={() => setRejectOpen(true)}
+                    onClick={() => decide("revert_pending")}
                     disabled={busy}
-                    className="w-full flex items-center justify-center gap-2 h-10 rounded-xl border border-[#dc2626] text-[#dc2626] hover:bg-red-50 text-sm font-bold disabled:opacity-60"
+                    className="w-full flex items-center justify-center gap-2 h-10 rounded-xl bg-[#dc2626] hover:bg-[#b91c1c] text-white text-sm font-bold disabled:opacity-60"
                   >
                     <XCircle className="h-4 w-4" /> Revocar verificación
                   </button>
                 )}
-                {status !== "pending" && (
+                {/* Volver a pendiente — para des-rechazar una cuenta RECHAZADA. No se
+                    muestra para verificada (Revocar ya la devuelve a pendiente). */}
+                {status === "rejected" && (
                   <button
                     onClick={() => decide("revert_pending")}
                     disabled={busy}
