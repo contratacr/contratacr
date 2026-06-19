@@ -21,6 +21,7 @@ export function CategorySuggestionBox({
   cancelLabel,
   thanksLabel,
   className,
+  prominent = false,
 }: {
   notListedLabel: string;
   placeholder: string;
@@ -29,6 +30,9 @@ export function CategorySuggestionBox({
   cancelLabel: string;
   thanksLabel: string;
   className?: string;
+  /** Prominent = no loose top divider + the trigger is a pill CTA (for the /categorias
+   *  contained card). Default (compact) keeps the inline text-link style used in forms. */
+  prominent?: boolean;
 }) {
   const [suggesting, setSuggesting] = useState(false);
   const [name, setName] = useState("");
@@ -56,9 +60,9 @@ export function CategorySuggestionBox({
   }
 
   return (
-    <div className={cn("border-t border-[#f3f4f6] px-3 py-2.5", className)}>
+    <div className={cn(prominent ? "" : "border-t border-[#f3f4f6] px-3 py-2.5", className)}>
       {sent ? (
-        <p className="inline-flex items-center gap-1.5 text-xs text-[#15803d]">
+        <p className="inline-flex items-center gap-1.5 text-sm text-[#15803d]">
           <Check className="h-3.5 w-3.5" /> {thanksLabel}
         </p>
       ) : suggesting ? (
@@ -96,7 +100,11 @@ export function CategorySuggestionBox({
         <button
           type="button"
           onClick={() => setSuggesting(true)}
-          className="text-xs font-medium text-[#009FD9] hover:underline"
+          className={cn(
+            prominent
+              ? "inline-flex items-center justify-center rounded-full bg-[#009FD9] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#0089bb] transition-colors"
+              : "text-xs font-medium text-[#009FD9] hover:underline"
+          )}
         >
           {notListedLabel}
         </button>

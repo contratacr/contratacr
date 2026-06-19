@@ -258,8 +258,12 @@ export default function ProfilePage({ params }: ProfilePageProps) {
           {/* ── HEADER CARD ── identity on the left, a right-aligned stats strip. Mirrors
               the new /buscar card (circular avatar, solid-blue "Verificado" pill). No
               "destacado" ribbon. */}
-          <div className="bg-white rounded-2xl border border-[#e5e7eb] shadow-sm p-5 sm:p-6 mb-6">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative bg-white rounded-2xl border border-[#e5e7eb] shadow-sm p-5 sm:p-6 mb-6">
+            {/* Save to favorites — pinned to the TOP-RIGHT of the header card, next to the
+                rating/identity (same favorites system + self-action block as the /buscar
+                cards). A subtle bordered icon so it's discoverable without crowding. */}
+            <SaveButton pro={savedPro} isOwn={isOwn} className="absolute right-3 top-3 z-10 rounded-full border border-[#e5e7eb] bg-white !p-2 shadow-sm hover:border-[#009FD9] hover:text-[#009FD9]" />
+            <div className="flex flex-col gap-4 pr-10 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-start gap-4 min-w-0">
                 <Avatar className="h-20 w-20 sm:h-[88px] sm:w-[88px] shrink-0">
                   <AvatarImage src={professional.avatarUrl ?? undefined} alt={professional.fullName} className="object-cover" />
@@ -343,12 +347,6 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                     );
                   })()}
                 </div>
-
-                {/* Save to favorites — SAME favorites system as the /buscar cards
-                    (shared SaveButton: same storage, saved/unsaved state, and the
-                    self-action block that prevents favoriting your OWN profile).
-                    Labeled pill variant so it reads clearly on the profile. */}
-                <SaveButton pro={savedPro} isOwn={isOwn} withLabel />
 
                 {/* Schedule + booking/contact buttons — REUSES the /buscar card's
                     ProfessionalSchedule in a STACKED layout: location tabs + that location's

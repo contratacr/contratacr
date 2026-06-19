@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
-import { ChevronRight, ShieldCheck, X } from "lucide-react";
+import { ChevronRight, X } from "lucide-react";
 
 // Context-aware profile-completion (inspired by Airbnb's "complete your listing"
 // checklist + LinkedIn's profile-strength meter). The PERCENT counts only the
@@ -151,43 +151,45 @@ export function ProfileCompletion({ pro, onGo }: { pro: ProRecord; onGo: (tab: s
           once dismissed it doesn't reappear (the pro can still verify from the Verificación
           section). */}
       {showVerify && (
-        <div className="border-t border-[#f3f4f6] bg-[#f8fafc]">
-          <div className="flex items-center gap-3 px-4 sm:px-6 py-3 min-h-[56px]">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#EBF5FB] text-[#009FD9]">
-              <ShieldCheck className="h-4 w-4" />
-            </span>
-            {/* Title + benefit — tap to go to Verificación. */}
-            <button type="button" onClick={() => onGo("verificacion")} className="group min-w-0 flex-1 text-left">
-              <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm font-medium text-[#111827]">
-                <span className="group-hover:text-[#009FD9] transition-colors">{t("verifyTitle")}</span>
-                <span className="rounded-full bg-[#EBF5FB] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#009FD9]">
-                  {t("optional")}
+        // Styled IDENTICALLY to the mandatory rows above (same hollow-circle bullet,
+        // padding, divider, hover) — the ONLY differences are the "Opcional" tag and the
+        // Verificar / "Ahora no" actions. No check icon, no distinct background.
+        <ul className="border-t border-[#f3f4f6]">
+          <li className="border-b border-[#f3f4f6] last:border-b-0">
+            <div className="group flex w-full items-center gap-3 px-4 sm:px-6 py-3 min-h-[56px] transition-colors hover:bg-[#f9fbfd]">
+              <span className="h-4 w-4 shrink-0 rounded-full border-2 border-[#d1d5db] transition-colors group-hover:border-[#009FD9]" />
+              <button type="button" onClick={() => onGo("verificacion")} className="min-w-0 flex-1 text-left">
+                <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <span className="text-sm font-medium text-[#111827] group-hover:text-[#009FD9] transition-colors">{t("verifyTitle")}</span>
+                  <span className="rounded-full bg-[#EBF5FB] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#009FD9]">
+                    {t("optional")}
+                  </span>
                 </span>
-              </span>
-              <span className="block text-xs text-[#6b7280] mt-0.5 leading-snug">{t("verifyBenefit")}</span>
-            </button>
-            {/* Verificar CTA (desktop) */}
-            <button
-              type="button"
-              onClick={() => onGo("verificacion")}
-              className="hidden sm:inline-flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-[#009FD9] hover:bg-[#EBF5FB] transition-colors"
-            >
-              {t("verifyAction")}
-              <ChevronRight className="h-4 w-4" />
-            </button>
-            {/* Explicit, labeled dismiss — reads as "ignore this optional suggestion". */}
-            <button
-              type="button"
-              onClick={dismissVerify}
-              aria-label={t("dismissVerify")}
-              title={t("dismissVerify")}
-              className="inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1.5 text-xs font-medium text-[#9ca3af] hover:bg-[#e5e7eb] hover:text-[#374151] transition-colors"
-            >
-              <X className="h-3.5 w-3.5" />
-              {t("dismissVerify")}
-            </button>
-          </div>
-        </div>
+                <span className="block text-xs text-[#6b7280] mt-0.5 leading-snug">{t("verifyBenefit")}</span>
+              </button>
+              {/* Verificar CTA (desktop) — mirrors the mandatory "Completar" action. */}
+              <button
+                type="button"
+                onClick={() => onGo("verificacion")}
+                className="hidden sm:inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-[#009FD9]"
+              >
+                {t("verifyAction")}
+                <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+              </button>
+              {/* Explicit, labeled dismiss — reads as "ignore this optional suggestion". */}
+              <button
+                type="button"
+                onClick={dismissVerify}
+                aria-label={t("dismissVerify")}
+                title={t("dismissVerify")}
+                className="inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1.5 text-xs font-medium text-[#9ca3af] hover:bg-[#e5e7eb] hover:text-[#374151] transition-colors"
+              >
+                <X className="h-3.5 w-3.5" />
+                {t("dismissVerify")}
+              </button>
+            </div>
+          </li>
+        </ul>
       )}
     </section>
   );

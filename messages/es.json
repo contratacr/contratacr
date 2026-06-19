@@ -2054,6 +2054,8 @@
     "ctaSearch": "Buscar profesionales",
     "ctaContact": "Contactarnos",
     "notListed": "¿No ves tu categoría?",
+    "suggestDescription": "Cuéntanos qué servicio buscabas y lo agregamos a la lista.",
+    "suggestCta": "Sugerir una categoría",
     "suggestPlaceholder": "Nombre de la categoría",
     "suggestSend": "Enviar",
     "suggestSending": "Enviando…",

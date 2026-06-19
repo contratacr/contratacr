@@ -176,17 +176,29 @@ export default function CategoriasPage() {
               </div>
             </FadeInUp>
           ))}
-          {/* "¿No ves tu categoría?" — suggest one for admin review. */}
-          <div className="mx-auto mt-2 w-full max-w-md rounded-2xl border border-gray-100 bg-white px-6 py-5 text-center shadow-sm">
-            <CategorySuggestionBox
-              notListedLabel={tp("notListed")}
-              placeholder={tp("suggestPlaceholder")}
-              sendLabel={tp("suggestSend")}
-              sendingLabel={tp("suggestSending")}
-              cancelLabel={tp("cancel")}
-              thanksLabel={tp("suggestThanks")}
-            />
-          </div>
+          {/* "¿No ves tu categoría?" — a contained, intentional card (icon + heading +
+              description + a clear CTA), NOT a loose link under a divider. The id is the
+              scroll target the hero search jumps to when a search has no matches. */}
+          <FadeInUp delay={GROUPS.length * 30}>
+            <div id="sugerir-categoria" className="scroll-mt-24 rounded-2xl border border-gray-100 bg-white px-6 py-7 text-center shadow-sm">
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#EBF5FB] ring-1 ring-inset ring-[#009FD9]/20">
+                <Sparkles className="h-6 w-6 text-[#009FD9]" />
+              </div>
+              <h2 className="text-lg font-bold text-[#1a2744]">{tp("notListed")}</h2>
+              <p className="mx-auto mt-1 max-w-md text-sm text-gray-500">{tp("suggestDescription")}</p>
+              <div className="mx-auto mt-4 max-w-md">
+                <CategorySuggestionBox
+                  prominent
+                  notListedLabel={tp("suggestCta")}
+                  placeholder={tp("suggestPlaceholder")}
+                  sendLabel={tp("suggestSend")}
+                  sendingLabel={tp("suggestSending")}
+                  cancelLabel={tp("cancel")}
+                  thanksLabel={tp("suggestThanks")}
+                />
+              </div>
+            </div>
+          </FadeInUp>
         </div>
       </section>
 

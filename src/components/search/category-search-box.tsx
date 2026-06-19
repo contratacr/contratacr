@@ -109,12 +109,25 @@ export function CategorySearchBox({
       <AnchoredDropdown anchorRef={formRef} open={open} maxHeight={340} className="rounded-2xl border-gray-100 shadow-2xl">
         <div className="py-1.5">
           {suggestions.length === 0 ? (
-            <button
-              onMouseDown={(e) => { e.preventDefault(); go(); }}
-              className="w-full text-left px-4 py-3 text-sm text-gray-500 hover:bg-gray-50"
-            >
-              {tp("noResults")} <span className="text-[#009FD9] font-medium">{tp("viewAll")}</span>
-            </button>
+            <>
+              <button
+                onMouseDown={(e) => { e.preventDefault(); go(); }}
+                className="w-full text-left px-4 py-3 text-sm text-gray-500 hover:bg-gray-50"
+              >
+                {tp("noResults")} <span className="text-[#009FD9] font-medium">{tp("viewAll")}</span>
+              </button>
+              {/* No match → offer to suggest the category (scrolls to the contained box). */}
+              <button
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  setFocused(false);
+                  document.getElementById("sugerir-categoria")?.scrollIntoView({ behavior: "smooth", block: "center" });
+                }}
+                className="w-full border-t border-gray-50 px-4 py-3 text-left text-sm font-medium text-[#009FD9] hover:bg-gray-50"
+              >
+                {tp("notListed")}
+              </button>
+            </>
           ) : (
             suggestions.map((s, i) => (
               <button
