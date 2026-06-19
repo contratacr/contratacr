@@ -254,17 +254,6 @@ function CategoryAutocomplete({
     onNavigate?.();
   }
 
-  // "Ver todos los profesionales" — a CLEAN search: never carries the unmatched
-  // term as a `q` filter (only the province context, if any).
-  function goAll() {
-    const params = new URLSearchParams();
-    if (province) params.set("provincia", province);
-    router.push(`/buscar${params.toString() ? `?${params.toString()}` : ""}`);
-    setQ("");
-    setFocused(false);
-    onNavigate?.();
-  }
-
   function onKeyDown(e: React.KeyboardEvent) {
     if (e.key === "ArrowDown") { e.preventDefault(); setActive((a) => Math.min(a + 1, suggestions.length - 1)); }
     else if (e.key === "ArrowUp") { e.preventDefault(); setActive((a) => Math.max(a - 1, 0)); }
@@ -305,19 +294,12 @@ function CategoryAutocomplete({
         <div className="py-1.5">
           {suggestions.length === 0 ? (
             <>
-              {/* No match → consistent "No encontramos esa categoría" wording, a CLEAN
-                  "Ver todos los profesionales" link, and the SAME inline suggest flow
-                  used in crear-proyecto / agregar-profesión (submits to admin). */}
+              {/* No match → consistent "No encontramos esa categoría" wording + the SAME
+                  inline suggest flow used in crear-proyecto / agregar-profesión (submits to
+                  admin). The "Ver todos los profesionales" link was removed (sprint 305). */}
               <div className="px-4 pt-3 pb-2 text-center">
                 <p className="text-sm font-medium text-[#374151]">{ts("noResults")}</p>
                 <p className="mt-0.5 text-xs text-gray-400">{ts("noResultsHint")}</p>
-                <button
-                  type="button"
-                  onMouseDown={(e) => { e.preventDefault(); goAll(); }}
-                  className="mt-2 inline-block text-sm font-semibold text-[#009FD9] hover:underline"
-                >
-                  {t("viewAllProfessionals")}
-                </button>
               </div>
               <CategorySuggestionBox
                 notListedLabel={ts("notListed")}
@@ -376,8 +358,6 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
     setQ("");
     onNavigate();
   }
-  function goAll() { router.push("/buscar"); setQ(""); onNavigate(); }
-
   function onKeyDown(e: React.KeyboardEvent) {
     if (!filtering || matches.length === 0) {
       if (e.key === "Enter" && q.trim()) { e.preventDefault(); go(); }
@@ -430,15 +410,12 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
             ))}
           </div>
         ) : (
-          // No match → consistent wording + clean "Ver todos" + the shared suggest flow,
-          // all INSIDE this same container.
+          // No match → consistent wording + the shared suggest flow, all INSIDE this same
+          // container. The "Ver todos los profesionales" link was removed (sprint 305).
           <div className="py-1 text-center">
             <p className="text-sm font-medium text-[#374151]">{ts("noResults")}</p>
             <p className="mt-0.5 text-xs text-gray-400">{ts("noResultsHint")}</p>
-            <button type="button" onClick={goAll} className="mt-2 inline-block text-sm font-semibold text-[#009FD9] hover:underline">
-              {t("viewAllProfessionals")}
-            </button>
-            <div className="mx-auto mt-1 max-w-sm">
+            <div className="mx-auto mt-2 max-w-sm">
               <CategorySuggestionBox
                 notListedLabel={ts("notListed")}
                 placeholder={ts("suggestNamePlaceholder")}

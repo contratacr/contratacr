@@ -75,14 +75,6 @@ export function CategorySearchBox({
     setFocused(false);
   }
 
-  // "Ver todos los profesionales" → a CLEAN search (the unmatched term is NOT carried
-  // as a `q` filter, so it doesn't filter the results down to nothing).
-  function goAll() {
-    router.push("/buscar");
-    setQ("");
-    setFocused(false);
-  }
-
   function onKeyDown(e: React.KeyboardEvent) {
     if (e.key === "ArrowDown") { e.preventDefault(); setActive((a) => Math.min(a + 1, suggestions.length - 1)); }
     else if (e.key === "ArrowUp") { e.preventDefault(); setActive((a) => Math.max(a - 1, 0)); }
@@ -118,19 +110,12 @@ export function CategorySearchBox({
         <div className="py-1.5">
           {suggestions.length === 0 ? (
             <>
-              {/* No match → consistent "No encontramos esa categoría" wording + a CLEAN
-                  "Ver todos los profesionales" link + the suggest action (scrolls to the
-                  contained suggestion card below, which submits to admin). */}
+              {/* No match → consistent "No encontramos esa categoría" wording + the suggest
+                  action (scrolls to the contained suggestion card below, which submits to
+                  admin). The "Ver todos los profesionales" link was removed (sprint 305). */}
               <div className="px-4 pt-3 pb-2 text-center">
                 <p className="text-sm font-medium text-[#374151]">{tp("noResults")}</p>
                 <p className="mt-0.5 text-xs text-gray-400">{tp("noResultsHint")}</p>
-                <button
-                  type="button"
-                  onMouseDown={(e) => { e.preventDefault(); goAll(); }}
-                  className="mt-2 inline-block text-sm font-semibold text-[#009FD9] hover:underline"
-                >
-                  {tp("viewAll")}
-                </button>
               </div>
               <button
                 type="button"
