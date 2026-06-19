@@ -406,12 +406,19 @@ export function getCategoryGroupLabel(groupId: string, locale?: string): string 
 
 /* ─── Health categories (es_salud) — drive DOB behaviour. AUTHORITATIVE flag,
    never inferred from names; mirrors categories.es_salud in the DB (migration 036).
-   Only HEALTH/medical services where the patient's age matters. ─── */
+   ONLY genuinely MEDICAL/CLINICAL services (a patient is treated and clinical age
+   matters) and CARE of a vulnerable person (a minor / an older or disabled adult,
+   where the age is central to the request). Pure WELLNESS/fitness services are NOT
+   medical and must NEVER ask for a date of birth — e.g. `entrenamiento_personal`
+   (personal trainer) and `masajes` (massage) were removed for that reason. ─── */
 export const HEALTH_CATEGORY_IDS = new Set<string>([
-  "entrenamiento_personal", "nutricion", "masajes", "psicologia", "fisioterapia",
+  // Clinical / medical (patient + clinical age)
+  "nutricion", "psicologia", "fisioterapia", "enfermeria",
   "odontologia", "pediatria", "optometria",
-  "enfermeria", "medicina_domicilio", "terapia_lenguaje", "terapia_ocupacional",
-  "podologia", "acupuntura", "cuidado_adultos", "cuidado_discapacidad", "cuidado_infantil",
+  "medicina_domicilio", "terapia_lenguaje", "terapia_ocupacional",
+  "podologia", "acupuntura",
+  // Care of a vulnerable person (age is central — minor / older / disabled adult)
+  "cuidado_adultos", "cuidado_discapacidad", "cuidado_infantil",
 ]);
 
 /** True if the category is a health/medical category (DOB relevant). */
