@@ -95,7 +95,13 @@ export default function ResetPasswordPage() {
     });
     if (updateError) {
       setSubmitting(false);
-      setError(t("error"));
+      // Supabase rejects setting the SAME password as before (code "same_password" /
+      // "New password should be different from the old password.") — that is NOT an
+      // expired link, so show the correct, specific message instead of "enlace expirado".
+      const code = (updateError as { code?: string }).code ?? "";
+      const msg = (updateError.message ?? "").toLowerCase();
+      const samePw = code === "same_password" || msg.includes("should be different") || msg.includes("different from the old");
+      setError(samePw ? t("samePassword") : t("error"));
       return;
     }
     // Keep the button in its loading state through the role lookup (don't re-enable it

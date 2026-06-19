@@ -1706,6 +1706,7 @@
     "title": "New password",
     "subtitle": "Create a secure password for your ContrataCR account.",
     "error": "Couldn't update the password. The link may have expired — request a new one.",
+    "samePassword": "Your new password can't be the same as the old one. Choose a different one.",
     "newPassword": "New password",
     "confirmPassword": "Confirm password",
     "updating": "Updating…",

@@ -1706,6 +1706,7 @@
     "title": "Nueva contraseña",
     "subtitle": "Crea una contraseña segura para tu cuenta ContrataCR.",
     "error": "No se pudo actualizar la contraseña. El enlace puede haber expirado — solicita uno nuevo.",
+    "samePassword": "La nueva contraseña no puede ser igual a la anterior. Elige una diferente.",
     "newPassword": "Nueva contraseña",
     "confirmPassword": "Confirmar contraseña",
     "updating": "Actualizando…",
