@@ -340,14 +340,20 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
                 role="combobox"
                 aria-expanded={searchOpen}
                 aria-autocomplete="list"
-                // EXACT same box as the Select triggers: h-10 w-full rounded-xl border px-4.
-                // pr-9 only while there's a query (to clear the X); otherwise px-4 like the rest.
-                className={`h-10 w-full rounded-xl border border-[#e5e7eb] bg-white pl-4 text-sm text-[#111827] placeholder-[#9ca3af] transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#009FD9] ${query ? "pr-9" : "pr-4"}`}
+                // EXACT same box as the Select triggers: h-10 w-full rounded-xl border, px-4
+                // left, and pr-9 ALWAYS so the right glyph sits exactly where the dropdowns'
+                // chevron does — so this field is indistinguishable in size + layout.
+                className="h-10 w-full rounded-xl border border-[#e5e7eb] bg-white pl-4 pr-9 text-sm text-[#111827] placeholder-[#9ca3af] transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
               />
-              {query && (
-                <button onClick={() => { clearQuery(); setSearchOpen(false); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9ca3af] hover:text-[#374151] transition-colors" aria-label={t("filters.clearSearch")}>
+              {/* Right-side glyph in the SAME spot/size/color as the Select chevron
+                  (`right-4`, `h-4 w-4`, `text-[#6b7280]`): a Search icon at rest, the clear-X
+                  while typing — so all five fields share the same right affordance. */}
+              {query ? (
+                <button onClick={() => { clearQuery(); setSearchOpen(false); }} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#9ca3af] hover:text-[#374151] transition-colors" aria-label={t("filters.clearSearch")}>
                   <X className="h-4 w-4" />
                 </button>
+              ) : (
+                <Search className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6b7280]" />
               )}
               <AnchoredDropdown anchorRef={searchFieldRef} open={searchOpen && searchSug.length > 0} maxHeight={288}>
                 <ul className="py-1" role="listbox">
