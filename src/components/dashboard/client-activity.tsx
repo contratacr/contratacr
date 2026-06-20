@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import {
-  CalendarDays, Star, FolderOpen, CheckCircle2, Clock, XCircle,
+  CalendarDays, CalendarClock, Star, FolderOpen, CheckCircle2, Clock, XCircle,
   ChevronDown, ChevronUp, MapPin, Plus, Briefcase, Trash2, Flag, Search,
 } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
@@ -368,7 +368,9 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                 </div>
                                 <p className="text-sm text-[#374151] line-clamp-2 mb-1">{b.service_description}</p>
                                 {formatBookingDate(b, dateLocale) && (
-                                  <p className="text-xs text-[#6b7280]">📅 {formatBookingDate(b, dateLocale)}</p>
+                                  <p className="text-xs font-medium text-[#374151] flex items-center gap-1.5">
+                                    <CalendarClock className="h-4 w-4 text-[#009FD9] shrink-0" /> {formatBookingDate(b, dateLocale)}
+                                  </p>
                                 )}
                               </div>
                             </div>
@@ -474,6 +476,12 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                             )}
                           </div>
                           <p className="text-sm text-[#6b7280] line-clamp-2 mb-2">{project.description}</p>
+                          {/* Equivalent "date" for a project — its publish date, same clean
+                              on-brand calendar treatment as the appointment date elsewhere. */}
+                          <p className="text-xs font-medium text-[#374151] flex items-center gap-1.5 mb-2">
+                            <CalendarDays className="h-4 w-4 text-[#009FD9] shrink-0" />
+                            {t("publishedOn", { date: new Date(project.created_at).toLocaleDateString(dateLocale) })}
+                          </p>
                           <div className="flex items-center gap-3 text-xs text-[#9ca3af]">
                             {(project.provincias?.name || project.cantones?.name) && (
                               <span className="flex items-center gap-1">

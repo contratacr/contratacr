@@ -1518,6 +1518,7 @@
     "projCompleted": "Finalizado",
     "projCancelled": "Cancelado",
     "projOpen": "Abierto",
+    "publishedOn": "Publicado el {date}",
     "proposalsCount": "{count, plural, one {# propuesta} other {# propuestas}}",
     "seeLess": "Ver menos",
     "seeProposals": "Ver propuestas",

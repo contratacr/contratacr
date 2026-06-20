@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarDays, FileText, Flag, MapPin, Phone, IdCard, Check } from "lucide-react";
+import { CalendarDays, CalendarClock, FileText, Flag, MapPin, Phone, IdCard, Check } from "lucide-react";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { ageCategoryFromDob } from "@/lib/age";
 import { formatDobDMY } from "@/components/ui/date-of-birth-picker";
@@ -198,14 +198,13 @@ export function BookingRequests() {
         <div className="px-[18px] py-4 flex flex-col gap-4">
           {/* 2-3 — the appointment: featured date, then service · location + note. */}
           <div className="flex flex-col gap-3">
-            {/* 2 — appointment date FEATURED (the most important fact). */}
-            <div className="flex items-center gap-2.5">
-              <span className="h-9 w-9 rounded-[10px] bg-[#EBF5FB] flex items-center justify-center shrink-0">
-                <CalendarDays className="h-[18px] w-[18px] text-[#009FD9]" />
-              </span>
+            {/* 2 — appointment date FEATURED (the most important fact). Clean, no
+                   container — a brand-blue calendar-clock icon + eyebrow + bold date. */}
+            <div className="flex items-center gap-3">
+              <CalendarClock className="h-[22px] w-[22px] text-[#009FD9] shrink-0" strokeWidth={2} />
               <div className="min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-[0.05em] text-[#9ca3af]">{t("appointmentDateLabel")}</p>
-                <p className={dateStr ? "text-[16px] font-bold text-[#111827] mt-px" : "text-sm text-[#9ca3af] mt-px"}>
+                <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#9ca3af]">{t("appointmentDateLabel")}</p>
+                <p className={dateStr ? "text-[16px] font-bold text-[#111827] leading-tight" : "text-sm text-[#9ca3af]"}>
                   {dateStr || t("noScheduledDate")}
                 </p>
               </div>
