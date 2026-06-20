@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { PriceInput } from "@/components/ui/price-input";
 import { PhoneInput, hasPhoneNumber } from "@/components/ui/phone-input";
 import { CategorySearch } from "@/components/ui/category-search";
+import { SelectMenu } from "@/components/ui/select-menu";
 import { X } from "lucide-react";
 import { PROVINCES } from "@/lib/data/cr-geography";
 import { cn } from "@/lib/utils";
@@ -200,38 +201,32 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
               />
             </div>
 
-            {/* Location */}
+            {/* Location — the SAME polished SelectMenu popover used by the pro panel's
+                "¿En qué zonas ofreces tus servicios?" (and the Disponibilidad time picker),
+                NOT a native <select> (sprint 311), so every provincia/cantón dropdown in
+                the app opens + reads identically. A first "Todas/Todos" item resets the
+                optional filter (mirrors the old empty-option default). */}
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-sm font-medium text-[#374151] block mb-1.5">
                   {t("provincia")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
                 </label>
-                <select
-                  className={cn(inputClass, "cursor-pointer")}
+                <SelectMenu
                   value={form.provinciaId}
-                  onChange={(e) => update("provinciaId", e.target.value)}
-                >
-                  <option value="">{t("allF")}</option>
-                  {PROVINCES.map((p) => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </select>
+                  onChange={(v) => update("provinciaId", v)}
+                  options={[{ value: "", label: t("allF") }, ...PROVINCES.map((p) => ({ value: p.id, label: p.name }))]}
+                />
               </div>
               <div>
                 <label className="text-sm font-medium text-[#374151] block mb-1.5">
                   {t("canton")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
                 </label>
-                <select
-                  className={cn(inputClass, "cursor-pointer", !form.provinciaId && "opacity-50")}
+                <SelectMenu
                   value={form.cantonId}
-                  onChange={(e) => update("cantonId", e.target.value)}
+                  onChange={(v) => update("cantonId", v)}
                   disabled={!form.provinciaId}
-                >
-                  <option value="">{t("allM")}</option>
-                  {cantons.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
+                  options={[{ value: "", label: t("allM") }, ...cantons.map((c) => ({ value: c.id, label: c.name }))]}
+                />
               </div>
             </div>
 
