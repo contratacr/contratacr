@@ -889,42 +889,45 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
             "data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2"
           )}
         >
-          {/* LEFT PANEL */}
-          <div className="bg-gradient-to-br from-[#1a2744] via-[#13294a] to-[#009FD9] md:w-[320px] shrink-0 flex flex-col p-6 text-white">
+          {/* LEFT PANEL — a tasteful light brand-blue (#009FD9) tint with dark text, so the
+              verified mark can be the SAME solid-blue "Verificado" pill used on the /buscar
+              card (which sits on white) and read with the same crisp contrast. */}
+          <div className="bg-gradient-to-br from-[#EBF5FB] via-[#e3f3fb] to-[#cce7f7] md:w-[320px] shrink-0 flex flex-col p-6 text-[#111827] border-b md:border-b-0 md:border-r border-[#bfe0f3]">
             <div className="flex items-center gap-3 md:flex-col md:items-center md:gap-0">
-              <Avatar className="h-14 w-14 md:h-20 md:w-20 shrink-0">
+              <Avatar className="h-14 w-14 md:h-20 md:w-20 shrink-0 ring-2 ring-white">
                 <AvatarImage src={professional.avatarUrl} alt={professional.fullName} />
-                <AvatarFallback className="bg-white/20 text-white text-xl font-bold">
+                <AvatarFallback className="bg-[#009FD9] text-white text-xl font-bold">
                   {getInitials(professional.fullName)}
                 </AvatarFallback>
               </Avatar>
               <div className="md:mt-4 md:text-center md:w-full">
                 <div className="flex items-center gap-1.5 md:justify-center flex-wrap">
-                  <span className="font-bold text-base md:text-lg leading-tight">{professional.fullName}</span>
+                  <span className="font-bold text-base md:text-lg leading-tight text-[#111827]">{professional.fullName}</span>
                 </div>
+                {/* SAME verified mark as the /buscar card: a solid #009FD9 pill with white text. */}
                 {professional.isVerified && (
-                  <span className="mt-1 inline-flex items-center gap-1 text-[13px] font-semibold text-[#34d399] md:justify-center">
-                    <Check className="h-3.5 w-3.5" /> Verificado
+                  <span title="Identidad verificada" className="mt-1.5 inline-flex w-fit items-center rounded-full bg-[#009FD9] px-2 py-0.5 text-[10px] font-semibold text-white">
+                    Verificado
                   </span>
                 )}
-                <p className="text-sm text-white/70 mt-1 md:text-center">{categoryName}</p>
+                <p className="text-sm text-[#6b7280] mt-1 md:text-center">{categoryName}</p>
               </div>
             </div>
 
             <div className="hidden md:block mt-5 space-y-2">
-              <StarRating rating={professional.ratingAvg} showValue reviewCount={professional.reviewCount} size="sm" className="justify-center [&_span]:text-white [&_.text-\[\#9ca3af\]]:text-white/60" />
+              <StarRating rating={professional.ratingAvg} showValue reviewCount={professional.reviewCount} size="sm" className="justify-center" />
               {professional.cantonName && (
-                <div className="flex items-center gap-1.5 justify-center text-white/70 text-sm">
+                <div className="flex items-center gap-1.5 justify-center text-[#6b7280] text-sm">
                   <MapPin className="h-3.5 w-3.5" />
                   <span>{professional.cantonName}, {professional.provinceName}</span>
                 </div>
               )}
               {professional.hourlyRate && (
                 <div className="text-center">
-                  <span className="text-xs text-white/60">Desde</span>
-                  <p className="font-bold text-white text-lg">
+                  <span className="text-xs text-[#6b7280]">Desde</span>
+                  <p className="font-bold text-[#111827] text-lg">
                     ₡{professional.hourlyRate.toLocaleString("es-CR")}
-                    <span className="text-xs font-normal text-white/60">/hora</span>
+                    <span className="text-xs font-normal text-[#6b7280]">/hora</span>
                   </p>
                 </div>
               )}
@@ -933,14 +936,14 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
             {/* What happens next — genuinely useful to the client at booking time
                 (replaces the generic "sin comisiones" trust chips). */}
             <div className="hidden md:flex flex-col gap-2.5 mt-auto pt-5">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-white/50">Qué sigue</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-[#0089bb]">Qué sigue</p>
               {[
                 "Eliges fecha y hora y envías tu solicitud.",
                 "Se abre WhatsApp con el profesional para confirmar.",
                 "Coordinan precio y detalles directamente, sin intermediarios.",
               ].map((text, i) => (
-                <div key={i} className="flex items-start gap-2 text-white/70 text-xs">
-                  <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-white/15 text-[10px] font-semibold text-white">{i + 1}</span>
+                <div key={i} className="flex items-start gap-2 text-[#374151] text-xs">
+                  <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#009FD9] text-[10px] font-semibold text-white">{i + 1}</span>
                   <span className="leading-snug">{text}</span>
                 </div>
               ))}
