@@ -402,7 +402,7 @@
     "loginTitle": "Sign in",
     "loginSubtitle": "Use your ContrataCR email and password.",
     "dupTitle": "An account with this email already exists",
-    "dupBody": "Enter your password to continue, or use Google or Facebook if that's how you registered.",
+    "dupBody": "Enter your password to continue.",
     "emailLabel": "Email",
     "passwordLabel": "Password",
     "signingIn": "Signing in…",

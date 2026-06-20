@@ -417,9 +417,12 @@ export function ClientRegistrationModal({
               <div className="flex flex-col gap-5">
                 <div>
                   <h2 className="text-xl font-bold text-[#111827]">{t("loginTitle")}</h2>
-                  <p className="text-sm text-[#6b7280] mt-1">
-                    {t("loginSubtitle")}
-                  </p>
+                  {/* When we land here because the email already has an account, the amber
+                      notice below is the single, more specific explanation — so the generic
+                      subtitle is hidden to avoid two overlapping "use your password" lines. */}
+                  {!duplicateEmailDetected && (
+                    <p className="text-sm text-[#6b7280] mt-1">{t("loginSubtitle")}</p>
+                  )}
                 </div>
 
                 {duplicateEmailDetected && (
