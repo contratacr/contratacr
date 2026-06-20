@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarDays, FileText, Phone, Flag, MapPin, IdCard } from "lucide-react";
+import { CalendarDays, FileText, Flag, MapPin } from "lucide-react";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { ageCategoryFromDob } from "@/lib/age";
 import { formatDobDMY } from "@/components/ui/date-of-birth-picker";
@@ -136,6 +136,19 @@ export function BookingRequests() {
         })()
       : booking.preferred_date_text;
 
+    // First names for friendly WhatsApp greetings.
+    const cliFirst = (booking.client_name || t("thePerson")).split(" ")[0];
+    const benFirst = (booking.beneficiary_name || t("thePerson")).split(" ")[0];
+    // Contact: the REQUESTER (account holder) is the primary, always-available
+    // contact; the beneficiary is offered only when a distinct phone was given.
+    const waButton = (phone: string, first: string) => (
+      <Button size="sm" variant="whatsapp" asChild className="mt-2.5 w-full sm:w-auto">
+        <a href={getWhatsAppLink(phone, t("waMessage", { name: first }))} target="_blank" rel="noopener noreferrer">
+          <WhatsAppIcon className="h-3.5 w-3.5" /> {t("whatsappTo", { name: first })}
+        </a>
+      </Button>
+    );
+
     return (
       <Card>
         <CardContent className="p-4 sm:p-5">
@@ -150,111 +163,123 @@ export function BookingRequests() {
             </span>
           </div>
 
-          {/* Details — client, contact, what & when */}
-          <div className="space-y-2">
-                {/* When the request is for ANOTHER person, label the requester clearly as
-                    "Reservado por" (the patient is the labeled beneficiary box below). For a
-                    self booking there's just one person, so no label. */}
-                {booking.for_someone_else && booking.client_name && (
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-[#9ca3af]">{t("bookedByLabel")}</p>
-                )}
-                {(booking.client_name) && (
-                  <div className="flex items-center gap-2 text-sm flex-wrap">
-                    <Avatar className="h-6 w-6 shrink-0">
-                      <AvatarImage src={booking.profiles?.avatar_url} className="object-cover" />
-                      <AvatarFallback className="text-[10px] bg-[#EBF5FB] text-[#009FD9] font-semibold">{getInitials(booking.client_name)}</AvatarFallback>
-                    </Avatar>
-                    <span className="font-medium text-[#111827]">{booking.client_name}</span>
-                    {booking.profiles?.is_flagged && (
-                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#b45309] bg-[#fef3c7] px-1.5 py-0.5 rounded-md">
-                        ⚠ {t("flagged")}
-                      </span>
-                    )}
-                  </div>
-                )}
-                {booking.client_phone && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Phone className="h-4 w-4 text-[#6b7280] shrink-0" />
-                    <span className="text-[#374151]">{booking.client_phone}</span>
-                  </div>
-                )}
-                {/* Cédula — shown ONLY if the client provided one (no verified/unverified
-                    labels; the pro just sees the number, or a muted "Sin cédula"). */}
-                <div className="flex items-center gap-2 text-sm">
-                  <IdCard className="h-4 w-4 text-[#6b7280] shrink-0" />
-                  {booking.client_cedula
-                    ? <span className="text-[#374151]">{t("clientCedula", { cedula: booking.client_cedula })}</span>
-                    : <span className="text-[#9ca3af]">{t("noCedula")}</span>}
-                </div>
-                {/* Client DOB — only stored/shown for HEALTH-category solicitudes, with the
-                    age-bracket badge (minor / adulto mayor) when relevant. */}
-                {booking.client_dob && (
-                  <div className="flex items-center gap-2 text-sm flex-wrap">
-                    <CalendarDays className="h-4 w-4 text-[#6b7280] shrink-0" />
-                    <span className="text-[#374151]">{t("birth", { date: formatDobDMY(booking.client_dob) })}</span>
-                    {ageBadge(booking.client_dob)}
-                  </div>
-                )}
+          {/* ── PRIMARY: the appointment — WHEN (date, prominent) → WHAT (service,
+                 description) → WHO it's for. Grouped so the pro reads the booking at a
+                 glance; the request date stays in the header above. ── */}
+          <div className="space-y-2.5">
+            {/* When — appointment date/time leads (brand, bold), distinct from the
+                request date in the header. */}
+            {dateStr ? (
+              <div className="flex items-center gap-2">
+                <CalendarDays className="h-5 w-5 text-[#009FD9] shrink-0" />
+                <span className="text-[15px] font-semibold text-[#111827]">{dateStr}</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <CalendarDays className="h-5 w-5 text-[#d1d5db] shrink-0" />
+                <span className="text-sm text-[#9ca3af]">{t("noScheduledDate")}</span>
+              </div>
+            )}
 
-                {/* Beneficiary (booking for someone else) — clearly labeled "La cita es para"
-                    so the pro instantly sees the requester (above) vs the patient (here). */}
-                {booking.for_someone_else && (
-                  <div className="rounded-lg bg-[#EBF5FB] border border-[#bfdbfe] p-2.5 text-xs">
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-[#0089bb]">{t("apptForLabel")}</p>
-                    <p className="mt-0.5 font-semibold text-[#111827] flex items-center gap-1.5 flex-wrap">
-                      {booking.beneficiary_name || t("otherPerson")}
-                      {/* Age bracket from the beneficiary DOB (minor OR adulto mayor); falls
-                          back to the legacy beneficiary_is_minor flag when no DOB is stored. */}
-                      {ageBadge(booking.beneficiary_dob, booking.beneficiary_is_minor)}
-                    </p>
-                    {/* DOB · cédula (or "Sin cédula") · contact — no verified/unverified labels. */}
-                    <p className="text-[#374151] mt-0.5">
+            {/* What — profession · location the slot belonged to (migration 038). */}
+            {(booking.category_id || booking.slot_location_label) && (
+              <div className="flex items-center gap-2 text-sm flex-wrap">
+                <MapPin className="h-4 w-4 text-[#6b7280] shrink-0" />
+                <span className="text-[#374151]">
+                  {[booking.category_id ? getCategoryLabel(booking.category_id, locale) : null, booking.slot_location_label]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </span>
+              </div>
+            )}
+
+            {/* Reason / description */}
+            {booking.service_description && (
+              <div className="flex items-start gap-2 text-sm">
+                <FileText className="h-4 w-4 text-[#6b7280] shrink-0 mt-0.5" />
+                <span className="text-[#374151]">{booking.service_description}</span>
+              </div>
+            )}
+
+            {/* Who the appointment is FOR */}
+            {booking.for_someone_else ? (
+              /* Third-party → the patient, in a labeled tint box. The requester who
+                 booked is shown after the divider below. */
+              <div className="rounded-lg bg-[#EBF5FB] border border-[#bfdbfe] p-3">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-[#0089bb]">{t("apptForLabel")}</p>
+                <p className="mt-1 font-semibold text-[#111827] flex items-center gap-1.5 flex-wrap">
+                  {booking.beneficiary_name || t("otherPerson")}
+                  {/* Age bracket from the beneficiary DOB (minor OR adulto mayor); falls
+                      back to the legacy beneficiary_is_minor flag when no DOB is stored. */}
+                  {ageBadge(booking.beneficiary_dob, booking.beneficiary_is_minor)}
+                </p>
+                <p className="text-xs text-[#374151] mt-0.5">
+                  {[
+                    booking.beneficiary_dob ? t("benDob", { date: formatDobDMY(booking.beneficiary_dob) }) : null,
+                    booking.beneficiary_cedula ? t("benCedula", { cedula: booking.beneficiary_cedula }) : t("noCedula"),
+                  ].filter(Boolean).join(" · ")}
+                </p>
+                {/* Secondary contact: only when the patient has their OWN distinct phone. */}
+                {booking.beneficiary_phone && booking.beneficiary_phone !== booking.client_phone && waButton(booking.beneficiary_phone, benFirst)}
+              </div>
+            ) : (
+              /* Self → one person (requester = patient): the appointment is for them. */
+              booking.client_name && (
+                <div className="flex items-start gap-2.5 pt-0.5">
+                  <Avatar className="h-9 w-9 shrink-0">
+                    <AvatarImage src={booking.profiles?.avatar_url} className="object-cover" />
+                    <AvatarFallback className="text-xs bg-[#EBF5FB] text-[#009FD9] font-semibold">{getInitials(booking.client_name)}</AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium text-[#111827] flex items-center gap-1.5 flex-wrap">
+                      {booking.client_name}
+                      {ageBadge(booking.client_dob)}
+                      {booking.profiles?.is_flagged && (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#b45309] bg-[#fef3c7] px-1.5 py-0.5 rounded-md">⚠ {t("flagged")}</span>
+                      )}
+                    </div>
+                    <p className="text-xs text-[#6b7280] mt-0.5">
                       {[
-                        booking.beneficiary_dob ? t("benDob", { date: formatDobDMY(booking.beneficiary_dob) }) : null,
-                        booking.beneficiary_cedula ? t("benCedula", { cedula: booking.beneficiary_cedula }) : t("noCedula"),
-                        booking.beneficiary_phone ? t("benContact", { phone: booking.beneficiary_phone }) : null,
+                        booking.client_phone || null,
+                        booking.client_cedula ? t("clientCedula", { cedula: booking.client_cedula }) : t("noCedula"),
+                        booking.client_dob ? t("birth", { date: formatDobDMY(booking.client_dob) }) : null,
                       ].filter(Boolean).join(" · ")}
                     </p>
-                    {booking.beneficiary_phone && (
-                      <p className="text-[10px] text-[#6b7280] mt-1">{t("coordinateContact")}</p>
+                    {booking.client_phone && waButton(booking.client_phone, cliFirst)}
+                  </div>
+                </div>
+              )
+            )}
+          </div>
+
+          {/* ── DIVIDER + RESERVADO POR (third-party only): who actually made the
+                 booking — the responsible, reachable contact. ── */}
+          {booking.for_someone_else && booking.client_name && (
+            <div className="mt-3 pt-3 border-t border-[#f3f4f6]">
+              <p className="text-[10px] font-bold uppercase tracking-wide text-[#9ca3af]">{t("bookedByLabel")}</p>
+              <div className="flex items-start gap-2.5 mt-1.5">
+                <Avatar className="h-9 w-9 shrink-0">
+                  <AvatarImage src={booking.profiles?.avatar_url} className="object-cover" />
+                  <AvatarFallback className="text-xs bg-[#f3f4f6] text-[#6b7280] font-semibold">{getInitials(booking.client_name)}</AvatarFallback>
+                </Avatar>
+                <div className="min-w-0 flex-1">
+                  <div className="font-medium text-[#111827] flex items-center gap-1.5 flex-wrap">
+                    {booking.client_name}
+                    {booking.profiles?.is_flagged && (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#b45309] bg-[#fef3c7] px-1.5 py-0.5 rounded-md">⚠ {t("flagged")}</span>
                     )}
                   </div>
-                )}
-                {/* ── THE APPOINTMENT — separated by a divider from the people above so the
-                       pro reads "who" then "what & when" at a glance. The appointment date is
-                       the lead line (brand calendar + bold), clearly distinct from the REQUEST
-                       date in the header. ── */}
-                <div className="mt-1 space-y-2 border-t border-[#f3f4f6] pt-2.5">
-                  {dateStr ? (
-                    <div className="flex items-center gap-2 text-sm">
-                      <CalendarDays className="h-4 w-4 text-[#009FD9] shrink-0" />
-                      <span><span className="text-[#6b7280]">{t("appointmentLabel")}:</span> <strong className="font-semibold text-[#111827]">{dateStr}</strong></span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-2 text-sm">
-                      <CalendarDays className="h-4 w-4 text-[#6b7280] shrink-0" />
-                      <span className="text-[#9ca3af]">{t("noScheduledDate")}</span>
-                    </div>
-                  )}
-                  {/* Profession + location the slot belonged to (migration 038). */}
-                  {(booking.category_id || booking.slot_location_label) && (
-                    <div className="flex items-center gap-2 text-sm flex-wrap">
-                      <MapPin className="h-4 w-4 text-[#6b7280] shrink-0" />
-                      <span className="text-[#374151]">
-                        {[booking.category_id ? getCategoryLabel(booking.category_id, locale) : null, booking.slot_location_label]
-                          .filter(Boolean)
-                          .join(" · ")}
-                      </span>
-                    </div>
-                  )}
-                  {booking.service_description && (
-                    <div className="flex items-start gap-2 text-sm">
-                      <FileText className="h-4 w-4 text-[#6b7280] shrink-0 mt-0.5" />
-                      <span className="text-[#374151]">{booking.service_description}</span>
-                    </div>
-                  )}
+                  <p className="text-xs text-[#6b7280] mt-0.5">
+                    {[
+                      booking.client_phone || null,
+                      booking.client_cedula ? t("clientCedula", { cedula: booking.client_cedula }) : t("noCedula"),
+                    ].filter(Boolean).join(" · ")}
+                  </p>
+                  {booking.client_phone && waButton(booking.client_phone, cliFirst)}
                 </div>
-          </div>
+              </div>
+            </div>
+          )}
 
           {/* Actions — full-width stacked on mobile, inline (wrap) on desktop.
               Same footer shape across every status so cards stay uniform. */}
@@ -295,29 +320,6 @@ export function BookingRequests() {
                   </Button>
                 </>
               )}
-              {/* WhatsApp contact: for a third-party booking the appointment contact
-                  is the BENEFICIARY's number (that's who the service is for); else
-                  the client's. The label makes whose contact it is explicit. */}
-              {(() => {
-                const beneficiaryContact = !!booking.for_someone_else && !!booking.beneficiary_phone;
-                const contactPhone = beneficiaryContact ? booking.beneficiary_phone! : booking.client_phone;
-                if (!contactPhone) return null;
-                const contactName = beneficiaryContact
-                  ? (booking.beneficiary_name || t("appointmentPerson"))
-                  : (booking.client_name || "");
-                return (
-                  <Button size="sm" variant="whatsapp" asChild className="w-full sm:w-auto">
-                    <a
-                      href={getWhatsAppLink(contactPhone, t("waMessage", { name: contactName }))}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <WhatsAppIcon className="h-3.5 w-3.5" />
-                      {beneficiaryContact ? t("whatsappTo", { name: (booking.beneficiary_name || t("thePerson")).split(" ")[0] }) : t("whatsapp")}
-                    </a>
-                  </Button>
-                );
-              })()}
             </div>
             <button
               onClick={() => reportClient(booking)}
