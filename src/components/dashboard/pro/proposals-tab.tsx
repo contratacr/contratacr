@@ -10,7 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PriceInput } from "@/components/ui/price-input";
 import { cn, getWhatsAppLink, getInitials } from "@/lib/utils";
-import { StatusFilterTabs, PROYECTO_TABS, proyectoMatches } from "@/components/dashboard/status-filter-tabs";
+import { StatusFilterTabs, PROYECTO_TABS, proposalMatches, proposalBucket, bucketCounts } from "@/components/dashboard/status-filter-tabs";
 
 type ProposalStatus = "pending" | "accepted" | "declined";
 
@@ -99,7 +99,7 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
   const [proposalForms, setProposalForms] = useState<Record<string, { price: string; message: string }>>({});
   const [submitting, setSubmitting] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState<Set<string>>(new Set());
-  const [projectFilter, setProjectFilter] = useState("activos");
+  const [projectFilter, setProjectFilter] = useState("pendientes");
 
   async function fetchOpenProjects() {
     setLoading(true);
@@ -390,9 +390,9 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
             </div>
           ) : (
             <div className="flex flex-col gap-4">
-              <StatusFilterTabs tabs={PROYECTO_TABS} value={projectFilter} onChange={setProjectFilter} />
+              <StatusFilterTabs tabs={PROYECTO_TABS} value={projectFilter} onChange={setProjectFilter} counts={bucketCounts(myProposals.map((p) => proposalBucket(p.status, p.projects?.status)))} />
               {(() => {
-                const shown = myProposals.filter((p) => proyectoMatches(projectFilter, p.projects?.status ?? "open"));
+                const shown = myProposals.filter((p) => proposalMatches(projectFilter, p.status, p.projects?.status));
                 if (shown.length === 0) return <p className="text-sm text-[#9ca3af] text-center py-8">{t("noneInView")}</p>;
                 return shown.map((p) => (
                 <Card key={p.id}>

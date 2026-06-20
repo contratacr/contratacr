@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getWhatsAppLink, getInitials } from "@/lib/utils";
-import { StatusFilterTabs, SOLICITUD_TABS, solicitudBucket } from "@/components/dashboard/status-filter-tabs";
+import { StatusFilterTabs, SOLICITUD_TABS, solicitudBucket, bucketCounts } from "@/components/dashboard/status-filter-tabs";
 import type { BookingStatus } from "@/types";
 
 type Booking = {
@@ -133,10 +133,8 @@ export function BookingRequests() {
     );
   }
 
-  // Pendientes carries a count badge (these need the pro's action).
-  const counts = {
-    pendientes: bookings.filter((b) => solicitudBucket(b.status, b.scheduled_date) === "pendientes").length,
-  };
+  // Every tab shows its count.
+  const counts = bucketCounts(bookings.map((b) => solicitudBucket(b.status, b.scheduled_date)));
   const filtered = bookings.filter((b) => solicitudBucket(b.status, b.scheduled_date) === filter);
 
   function BookingCard({ booking }: { booking: Booking }) {

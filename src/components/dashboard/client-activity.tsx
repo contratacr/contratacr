@@ -14,7 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { cn, getInitials, getWhatsAppLink } from "@/lib/utils";
-import { StatusFilterTabs, SOLICITUD_TABS, PROYECTO_TABS, solicitudMatches, proyectoMatches } from "@/components/dashboard/status-filter-tabs";
+import { StatusFilterTabs, SOLICITUD_TABS, PROYECTO_TABS, solicitudMatches, solicitudBucket, proyectoMatches, proyectoBucket, bucketCounts } from "@/components/dashboard/status-filter-tabs";
 import { LeaveReviewModal } from "@/components/professionals/leave-review-modal";
 import { PublishProjectModal } from "@/components/projects/publish-project-modal";
 import { SavedProfessionalsTab } from "@/components/professionals/saved-professionals-tab";
@@ -119,7 +119,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   const [reviewModal, setReviewModal] = useState<{ professionalId: string; professionalName: string; bookingId?: string; projectId?: string } | null>(null);
   const [myReviews, setMyReviews] = useState<{ professional_id: string; booking_id?: string | null; project_id?: string | null; rating: number }[]>([]);
   const [bookingFilter, setBookingFilter] = useState("pendientes");
-  const [projectFilter, setProjectFilter] = useState("activos");
+  const [projectFilter, setProjectFilter] = useState("pendientes");
   const [expandedProject, setExpandedProject] = useState<string | null>(null);
   const [projectProposals, setProjectProposals] = useState<Record<string, Proposal[]>>({});
   const [showPublish, setShowPublish] = useState(false);
@@ -312,6 +312,8 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
 
   const filteredBookings = bookings.filter((b) => solicitudMatches(bookingFilter, b.status, b.scheduled_date));
   const filteredProjects = projects.filter((p) => proyectoMatches(projectFilter, p.status));
+  const bookingCounts = bucketCounts(bookings.map((b) => solicitudBucket(b.status, b.scheduled_date)));
+  const projectCounts = bucketCounts(projects.map((p) => proyectoBucket(p.status)));
 
   return (
     <>
@@ -329,7 +331,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
             </div>
           ) : (
             <>
-              <StatusFilterTabs tabs={SOLICITUD_TABS} value={bookingFilter} onChange={setBookingFilter} />
+              <StatusFilterTabs tabs={SOLICITUD_TABS} value={bookingFilter} onChange={setBookingFilter} counts={bookingCounts} />
               {filteredBookings.length === 0 ? (
                 <p className="text-sm text-[#9ca3af] text-center py-8">{t("noBookingsView")}</p>
               ) : (
@@ -425,7 +427,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
           ) : (
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between gap-2 flex-wrap">
-                <StatusFilterTabs tabs={PROYECTO_TABS} value={projectFilter} onChange={setProjectFilter} />
+                <StatusFilterTabs tabs={PROYECTO_TABS} value={projectFilter} onChange={setProjectFilter} counts={projectCounts} />
                 <Button size="sm" onClick={() => setShowPublish(true)}>
                   <Plus className="h-4 w-4" /> {t("publishProject")}
                 </Button>
