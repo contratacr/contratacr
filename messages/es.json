@@ -1076,6 +1076,7 @@
     "minor": "Menor de edad",
     "olderAdult": "Adulto mayor",
     "noCedula": "Sin cédula",
+    "noScheduledDate": "Sin fecha definida",
     "benDob": "Nac.: {date}",
     "benCedula": "Cédula: {cedula}",
     "clientCedula": "Cédula: {cedula}",

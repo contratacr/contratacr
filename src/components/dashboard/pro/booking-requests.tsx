@@ -220,29 +220,40 @@ export function BookingRequests() {
                     )}
                   </div>
                 )}
-                {booking.service_description && (
-                  <div className="flex items-start gap-2 text-sm">
-                    <FileText className="h-4 w-4 text-[#6b7280] shrink-0 mt-0.5" />
-                    <span className="text-[#374151]">{booking.service_description}</span>
-                  </div>
-                )}
-                {dateStr && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <CalendarDays className="h-4 w-4 text-[#009FD9] shrink-0" />
-                    <span className="text-[#374151]"><span className="text-[#6b7280]">{t("appointmentLabel")}:</span> <strong className="font-semibold text-[#111827]">{dateStr}</strong></span>
-                  </div>
-                )}
-                {/* Profession + location the slot belonged to (migration 038). */}
-                {(booking.category_id || booking.slot_location_label) && (
-                  <div className="flex items-center gap-2 text-sm flex-wrap">
-                    <MapPin className="h-4 w-4 text-[#6b7280] shrink-0" />
-                    <span className="text-[#374151]">
-                      {[booking.category_id ? getCategoryLabel(booking.category_id, locale) : null, booking.slot_location_label]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </span>
-                  </div>
-                )}
+                {/* ── THE APPOINTMENT — separated by a divider from the people above so the
+                       pro reads "who" then "what & when" at a glance. The appointment date is
+                       the lead line (brand calendar + bold), clearly distinct from the REQUEST
+                       date in the header. ── */}
+                <div className="mt-1 space-y-2 border-t border-[#f3f4f6] pt-2.5">
+                  {dateStr ? (
+                    <div className="flex items-center gap-2 text-sm">
+                      <CalendarDays className="h-4 w-4 text-[#009FD9] shrink-0" />
+                      <span><span className="text-[#6b7280]">{t("appointmentLabel")}:</span> <strong className="font-semibold text-[#111827]">{dateStr}</strong></span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-sm">
+                      <CalendarDays className="h-4 w-4 text-[#6b7280] shrink-0" />
+                      <span className="text-[#9ca3af]">{t("noScheduledDate")}</span>
+                    </div>
+                  )}
+                  {/* Profession + location the slot belonged to (migration 038). */}
+                  {(booking.category_id || booking.slot_location_label) && (
+                    <div className="flex items-center gap-2 text-sm flex-wrap">
+                      <MapPin className="h-4 w-4 text-[#6b7280] shrink-0" />
+                      <span className="text-[#374151]">
+                        {[booking.category_id ? getCategoryLabel(booking.category_id, locale) : null, booking.slot_location_label]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </span>
+                    </div>
+                  )}
+                  {booking.service_description && (
+                    <div className="flex items-start gap-2 text-sm">
+                      <FileText className="h-4 w-4 text-[#6b7280] shrink-0 mt-0.5" />
+                      <span className="text-[#374151]">{booking.service_description}</span>
+                    </div>
+                  )}
+                </div>
           </div>
 
           {/* Actions — full-width stacked on mobile, inline (wrap) on desktop.

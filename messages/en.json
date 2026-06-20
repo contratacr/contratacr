@@ -1076,6 +1076,7 @@
     "minor": "Minor",
     "olderAdult": "Older adult",
     "noCedula": "No ID provided",
+    "noScheduledDate": "No date set",
     "benDob": "DOB: {date}",
     "benCedula": "ID: {cedula}",
     "clientCedula": "ID: {cedula}",
