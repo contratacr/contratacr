@@ -666,8 +666,9 @@ export default function RegisterProfessionalPage() {
               p-8) on a #fafafa page, centered. The multi-step form lives inside it. */}
           <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-8">
           <div className="text-center mb-2">
-            {/* Heading matches the CURRENT step: identity / service / photo — so the
-                photo step never shows the "cuéntanos sobre tu servicio" subtitle. */}
+            {/* Heading + subtitle match the CURRENT step: step 0 = create account/identity,
+                step 1 = profession+zones+contact, step 2 = photo. Each subtitle describes its
+                own step (no generic/mismatched copy). */}
             <h1 className="text-2xl font-bold text-[#111827]">
               {step === 2 ? t("photoStepTitle") : currentUser ? t("completeProfileTitle") : t("title")}
             </h1>

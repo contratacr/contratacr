@@ -571,7 +571,7 @@
   "registration": {
     "pro": {
       "title": "Create my professional profile",
-      "subtitle": "Free. 3 steps. No credit card.",
+      "subtitle": "Create your account and verify your identity. It's free, no credit card.",
       "valNameRequired": "Full name is required",
       "valEmailRequired": "Email is required",
       "valEmailInvalid": "Enter a valid email",
