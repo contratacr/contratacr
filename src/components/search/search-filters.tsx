@@ -295,13 +295,16 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
               </button>
             )}
             {closable && (
+              // CLOSE the whole filters panel — a distinct, LARGER FILLED circle button so
+              // it never reads like the tiny in-field "clear search" X. (Clear-vs-close are
+              // two different actions; keep them visually unmistakable — sprint 327.)
               <button
                 type="button"
                 onClick={() => window.dispatchEvent(new CustomEvent("ccr:close-filters"))}
                 aria-label={t("close")}
-                className="-mr-1 rounded-full p-1 text-[#9ca3af] hover:bg-[#f3f4f6] hover:text-[#374151] transition-colors"
+                className="-mr-1 inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#f3f4f6] text-[#374151] hover:bg-[#e5e7eb] active:scale-95 transition-all"
               >
-                <X className="h-4 w-4" />
+                <X className="h-[18px] w-[18px]" />
               </button>
             )}
           </div>
@@ -352,12 +355,13 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
                 // chevron does — so this field is indistinguishable in size + layout.
                 className="h-10 w-full rounded-xl border border-[#e5e7eb] bg-white pl-4 pr-9 text-sm text-[#111827] placeholder-[#9ca3af] transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
               />
-              {/* Right-side glyph in the SAME spot/size/color as the Select chevron
-                  (`right-4`, `h-4 w-4`, `text-[#6b7280]`): a Search icon at rest, the clear-X
-                  while typing — so all five fields share the same right affordance. */}
+              {/* Right-side glyph: a Search icon at rest (matches the Select chevron spot/
+                  size/color), and while typing a SMALL, SUBTLE clear-X INSIDE the field — a
+                  tiny icon in a hover-only circle, deliberately quieter + smaller than the
+                  filled close-panel button so "clear my text" ≠ "close the panel" (sprint 327). */}
               {query ? (
-                <button onClick={() => { clearQuery(); setSearchOpen(false); }} className="absolute right-4 top-1/2 -translate-y-1/2 text-[#9ca3af] hover:text-[#374151] transition-colors" aria-label={t("filters.clearSearch")}>
-                  <X className="h-4 w-4" />
+                <button onClick={() => { clearQuery(); setSearchOpen(false); }} className="absolute right-3 top-1/2 -translate-y-1/2 inline-flex h-5 w-5 items-center justify-center rounded-full text-[#9ca3af] hover:bg-[#f3f4f6] hover:text-[#374151] transition-colors" aria-label={t("filters.clearSearch")}>
+                  <X className="h-3.5 w-3.5" />
                 </button>
               ) : (
                 <Search className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 text-[#6b7280]" />
