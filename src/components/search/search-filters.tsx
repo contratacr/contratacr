@@ -290,14 +290,16 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
           <h2 className="text-sm font-bold text-[#111827]">{t("filters.title")}</h2>
           <div className="flex items-center gap-1.5">
             {activeCount > 0 && (
-              <button onClick={clearAll} className="inline-flex items-center gap-1 text-[11px] font-medium text-[#9ca3af] hover:text-red-500 transition-colors">
-                <X className="h-3 w-3" /> {t("filters.clear")} ({activeCount})
+              // CLEAR = a LABELLED text link "Limpiar filtros (N)" — NOT a bare X (which read
+              // like a close). A modern, unambiguous "clear all filters" affordance, visually
+              // distinct from the panel-close X beside it (sprint 333).
+              <button onClick={clearAll} className="text-[12px] font-semibold text-[#009FD9] hover:underline transition-colors whitespace-nowrap">
+                {t("filters.clearAll")} ({activeCount})
               </button>
             )}
             {closable && (
-              // CLOSE the whole filters panel — a distinct, LARGER FILLED circle button so
-              // it never reads like the tiny in-field "clear search" X. (Clear-vs-close are
-              // two different actions; keep them visually unmistakable — sprint 327.)
+              // CLOSE the whole filters panel — a distinct, LARGER FILLED circle X button, so
+              // it never reads like the labelled "Limpiar filtros" clear action beside it.
               <button
                 type="button"
                 onClick={() => window.dispatchEvent(new CustomEvent("ccr:close-filters"))}
