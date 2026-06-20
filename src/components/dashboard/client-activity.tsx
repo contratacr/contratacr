@@ -14,7 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { cn, getInitials, getWhatsAppLink } from "@/lib/utils";
-import { StatusFilterTabs, SOLICITUD_TABS, PROYECTO_TABS, solicitudMatches, solicitudBucket, proyectoMatches, proyectoBucket, bucketCounts } from "@/components/dashboard/status-filter-tabs";
+import { StatusFilterTabs, SOLICITUD_TABS, PROYECTO_TABS, solicitudMatches, solicitudBucket, solicitudStatusRedundant, proyectoMatches, proyectoBucket, proyectoStatusRedundant, bucketCounts } from "@/components/dashboard/status-filter-tabs";
 import { LeaveReviewModal } from "@/components/professionals/leave-review-modal";
 import { PublishProjectModal } from "@/components/projects/publish-project-modal";
 import { SavedProfessionalsTab } from "@/components/professionals/saved-professionals-tab";
@@ -360,9 +360,11 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                       {b.professionals?.profiles?.full_name ?? t("professional")}
                                     </span>
                                   )}
-                                  <Badge variant={STATUS_VARIANT[b.status]}>
-                                    <span className="flex items-center gap-1">{STATUS_ICON[b.status]}{t(`bStatus.${b.status}`)}</span>
-                                  </Badge>
+                                  {!solicitudStatusRedundant(b.status, b.scheduled_date) && (
+                                    <Badge variant={STATUS_VARIANT[b.status]}>
+                                      <span className="flex items-center gap-1">{STATUS_ICON[b.status]}{t(`bStatus.${b.status}`)}</span>
+                                    </Badge>
+                                  )}
                                 </div>
                                 <p className="text-sm text-[#374151] line-clamp-2 mb-1">{b.service_description}</p>
                                 {formatBookingDate(b, dateLocale) && (
@@ -450,21 +452,23 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                               <Briefcase className="h-3.5 w-3.5" />
                             </span>
                             <span className="font-semibold text-sm text-[#111827]">{project.title}</span>
-                            <Badge
-                              variant={
-                                project.status === "in_progress" ? "warning"
-                                  : project.status === "awaiting_confirmation" ? "warning"
-                                  : project.status === "completed" ? "success"
-                                  : project.status === "cancelled" ? "error"
-                                  : "success"
-                              }
-                            >
-                              {project.status === "in_progress" ? t("projAssigned")
-                                : project.status === "awaiting_confirmation" ? t("projAwaiting")
-                                : project.status === "completed" ? t("projCompleted")
-                                : project.status === "cancelled" ? t("projCancelled")
-                                : t("projOpen")}
-                            </Badge>
+                            {!proyectoStatusRedundant(project.status) && (
+                              <Badge
+                                variant={
+                                  project.status === "in_progress" ? "warning"
+                                    : project.status === "awaiting_confirmation" ? "warning"
+                                    : project.status === "completed" ? "success"
+                                    : project.status === "cancelled" ? "error"
+                                    : "success"
+                                }
+                              >
+                                {project.status === "in_progress" ? t("projAssigned")
+                                  : project.status === "awaiting_confirmation" ? t("projAwaiting")
+                                  : project.status === "completed" ? t("projCompleted")
+                                  : project.status === "cancelled" ? t("projCancelled")
+                                  : t("projOpen")}
+                              </Badge>
+                            )}
                             {project.categories?.name && (
                               <Badge variant="muted" className="text-[11px]">{project.categories.name}</Badge>
                             )}

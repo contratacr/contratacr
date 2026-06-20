@@ -126,3 +126,36 @@ export function bucketCounts(buckets: string[]): Record<string, number> {
   for (const b of buckets) counts[b] = (counts[b] ?? 0) + 1;
   return counts;
 }
+
+// ── In-card status badge: REDUNDANT-status detection ────────────────────────
+// Because the view is ALWAYS inside a status tab (no all/mixed view), a card whose
+// granular status is the bucket's PRIMARY status just repeats the tab → don't show
+// the badge again. Genuine SUB-states (in_progress, awaiting_confirmation,
+// rescheduled, declined-vs-cancelled, …) return false → the badge IS still shown.
+const SOLICITUD_PRIMARY: Record<string, string[]> = {
+  pendientes: ["pending"],
+  confirmadas: ["confirmed"],
+  finalizadas: ["completed", "confirmed"], // a past confirmed also reads as finalizada
+  canceladas: ["cancelled"],
+};
+export function solicitudStatusRedundant(status: string, scheduledDate?: string | null): boolean {
+  return SOLICITUD_PRIMARY[solicitudBucket(status, scheduledDate)]?.includes(status) ?? false;
+}
+const PROYECTO_PRIMARY: Record<string, string[]> = {
+  pendientes: ["open"],
+  confirmadas: ["in_progress"],
+  finalizadas: ["completed"],
+  canceladas: ["cancelled"],
+};
+export function proyectoStatusRedundant(status: string): boolean {
+  return PROYECTO_PRIMARY[proyectoBucket(status)]?.includes(status) ?? false;
+}
+export function proposalStatusRedundant(proposalStatus: string, projectStatus?: string | null): boolean {
+  if (proposalStatus === "pending") return true; // Pendientes
+  if (proposalStatus === "declined") return true; // Canceladas (primary)
+  if (proposalStatus === "accepted") {
+    if (projectStatus === "in_progress") return true; // Confirmadas (primary)
+    if (projectStatus === "completed") return true; // Finalizadas (primary)
+  }
+  return false; // accepted+awaiting (En espera), accepted+cancelled (Cancelada) → keep
+}

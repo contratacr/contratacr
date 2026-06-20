@@ -10,7 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PriceInput } from "@/components/ui/price-input";
 import { cn, getWhatsAppLink, getInitials } from "@/lib/utils";
-import { StatusFilterTabs, PROYECTO_TABS, proposalMatches, proposalBucket, bucketCounts } from "@/components/dashboard/status-filter-tabs";
+import { StatusFilterTabs, PROYECTO_TABS, proposalMatches, proposalBucket, proposalStatusRedundant, bucketCounts } from "@/components/dashboard/status-filter-tabs";
 
 type ProposalStatus = "pending" | "accepted" | "declined";
 
@@ -430,12 +430,15 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
                         </p>
                       </div>
                       <div className="flex flex-col items-end gap-2 shrink-0">
-                        {/* For an accepted proposal the PROJECT status is the source of
-                            truth (mirrors solicitudes); otherwise the proposal status. */}
-                        {p.status === "accepted" ? (
-                          <Badge variant={projStatusVariant(p.projects?.status)}>{projStatusLabel(p.projects?.status)}</Badge>
-                        ) : (
-                          <Badge variant={STATUS_VARIANT[p.status]}>{t(`status.${p.status}`)}</Badge>
+                        {/* Status badge shown ONLY when it adds info beyond the active tab
+                            (a sub-state like "En espera de confirmación" or a project the
+                            client cancelled). When it just repeats the tab, it's hidden. */}
+                        {!proposalStatusRedundant(p.status, p.projects?.status) && (
+                          p.status === "accepted" ? (
+                            <Badge variant={projStatusVariant(p.projects?.status)}>{projStatusLabel(p.projects?.status)}</Badge>
+                          ) : (
+                            <Badge variant={STATUS_VARIANT[p.status]}>{t(`status.${p.status}`)}</Badge>
+                          )
                         )}
 
                         {p.status === "pending" && (

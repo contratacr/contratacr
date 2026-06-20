@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getWhatsAppLink, getInitials } from "@/lib/utils";
-import { StatusFilterTabs, SOLICITUD_TABS, solicitudBucket, bucketCounts } from "@/components/dashboard/status-filter-tabs";
+import { StatusFilterTabs, SOLICITUD_TABS, solicitudBucket, solicitudStatusRedundant, bucketCounts } from "@/components/dashboard/status-filter-tabs";
 import type { BookingStatus } from "@/types";
 
 type Booking = {
@@ -176,15 +176,24 @@ export function BookingRequests() {
 
     return (
       <Card className="rounded-[18px] overflow-hidden">
-        {/* 1 — status header: status pill + the REQUEST (created) date. */}
-        <div className="flex items-center justify-between gap-2.5 px-[18px] py-3.5 border-b border-[#f3f4f6]">
-          <Badge variant={STATUS_VARIANT[booking.status]} className="px-3 py-1 text-xs font-bold">
-            {t(`status.${booking.status}`)}
-          </Badge>
-          <span className="text-xs text-[#9ca3af] shrink-0">
-            {t("requestedOn", { date: new Date(booking.created_at).toLocaleDateString(dateLocale) })}
-          </span>
-        </div>
+        {/* 1 — status header: the REQUEST (created) date, plus the status pill ONLY when
+               it adds info beyond the active tab (a sub-state like "En progreso"). When the
+               status just repeats the tab it's hidden — the tab already says it. */}
+        {(() => {
+          const showStatus = !solicitudStatusRedundant(booking.status, booking.scheduled_date);
+          return (
+            <div className={`flex items-center gap-2.5 px-[18px] py-3.5 border-b border-[#f3f4f6] ${showStatus ? "justify-between" : "justify-end"}`}>
+              {showStatus && (
+                <Badge variant={STATUS_VARIANT[booking.status]} className="px-3 py-1 text-xs font-bold">
+                  {t(`status.${booking.status}`)}
+                </Badge>
+              )}
+              <span className="text-xs text-[#9ca3af] shrink-0">
+                {t("requestedOn", { date: new Date(booking.created_at).toLocaleDateString(dateLocale) })}
+              </span>
+            </div>
+          );
+        })()}
 
         <div className="px-[18px] py-4 flex flex-col gap-4">
           {/* 2-3 — the appointment: featured date, then service · location + note. */}
