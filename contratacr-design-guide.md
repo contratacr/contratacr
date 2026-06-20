@@ -22,6 +22,8 @@ Apply, in order:
 
 When in doubt, remove. If a block doesn't help the user complete their task, cut it.
 
+**Microcopy is brief.** Explanatory body text (banners, cards, status panels) should be 1–2 short sentences that say what to do + the one benefit — never a paragraph. Don't restate what an adjacent control/button already conveys (e.g. if a WhatsApp button is right there, don't also write "you can message us on WhatsApp"). The pro Verificación panel is the reference: each state reads in 1–2 lines.
+
 ---
 
 ## 1.5 Usability hard rules (R1–R10) — non-negotiable
