@@ -18,7 +18,7 @@ import { isValidId, detectIdType, cleanId } from "@/lib/cedula";
 import { computeAge, formatAge, isMinorFromDob } from "@/lib/age";
 import { anyHealthCategory, getCategoryLabel } from "@/lib/data/categories";
 import { StarRating } from "@/components/ui/star-rating";
-import { getInitials, getWhatsAppLink, buildBookingIcs } from "@/lib/utils";
+import { getInitials, getWhatsAppLink, buildBookingIcs, proDisplayName } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { isTooSoonCR } from "@/lib/time-cr";
 import { createClient } from "@/lib/supabase/client";
@@ -902,7 +902,10 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
               </Avatar>
               <div className="md:mt-4 md:text-center md:w-full">
                 <div className="flex items-center gap-1.5 md:justify-center flex-wrap">
-                  <span className="font-bold text-base md:text-lg leading-tight">{professional.fullName}</span>
+                  {/* Display-only abbreviation (drop the middle given name; keep first +
+                      both surnames) via proDisplayName — consistent with the /buscar card +
+                      public profile. The DB keeps the full official name. */}
+                  <span className="font-bold text-base md:text-lg leading-tight">{proDisplayName(professional.fullName)}</span>
                 </div>
                 {/* Verified → the SAME solid #009FD9 pill as the /buscar card. NOT verified →
                     nothing (no badge, no "sin verificar"). `isVerified` is set by BOTH callers
