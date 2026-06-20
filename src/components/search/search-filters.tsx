@@ -19,6 +19,13 @@ import { createClient } from "@/lib/supabase/client";
 // border. We override it here (filters only) so selecting never leaves an ugly
 // outline — the open dropdown + chevron are the affordance.
 const FILTER_TRIGGER = "text-sm focus-visible:ring-0 focus-visible:border-[#e5e7eb]";
+// Open menu = EXACTLY the trigger's width, flush-aligned (left+right edges line up with
+// the field) — like the "Servicio" autocomplete. By default Radix popper content sizes to
+// its OPTIONS (with a min-w), so a short list (e.g. Aseguradora) opens narrower than its
+// full-width trigger and misaligns. `--radix-select-trigger-width` is the trigger's width
+// (exposed on popper content); `min-w-0` drops the shared `min-w-[8rem]` so the match is
+// exact even for a narrow trigger. Filters only — the shared Select is untouched.
+const FILTER_CONTENT = "min-w-0 w-[var(--radix-select-trigger-width)]";
 // Sentinel for the in-dropdown "Cualquier aseguradora" reset item (Radix Select forbids
 // an empty-string value, so we map this back to "" = no insurer filter).
 const ANY_INSURER = "__any__";
@@ -210,7 +217,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
         <div className="shrink-0 w-[140px]">
           <Select value={province} onValueChange={(v) => { setProvince(v); setCanton(""); applyFilters({ provincia: v, canton: "" }); }}>
             <SelectTrigger className={pill}><SelectValue placeholder={t("filters.province")} /></SelectTrigger>
-            <SelectContent>
+            <SelectContent className={FILTER_CONTENT}>
               <SelectItem value="todas">{t("filters.allProvinces")}</SelectItem>
               {PROVINCES.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
             </SelectContent>
@@ -219,7 +226,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
         <div className="shrink-0 w-[140px]">
           <Select value={canton} onValueChange={(v) => { setCanton(v); applyFilters({ canton: v }); }} disabled={!province || cantons.length === 0}>
             <SelectTrigger className={pill}><SelectValue placeholder={!province ? t("filters.selectProvince") : t("filters.canton")} /></SelectTrigger>
-            <SelectContent>
+            <SelectContent className={FILTER_CONTENT}>
               <SelectItem value="todos">{t("filters.allCantons")}</SelectItem>
               {cantons.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
             </SelectContent>
@@ -232,7 +239,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
             applyFilters({ sortBy: v });
           }}>
             <SelectTrigger className={pill}><SelectValue /></SelectTrigger>
-            <SelectContent>
+            <SelectContent className={FILTER_CONTENT}>
               <SelectItem value="rating">{t("sort.rating")}</SelectItem>
               <SelectItem value="priceAsc">{t("sort.priceAsc")}</SelectItem>
               <SelectItem value="availability">{t("sort.availability")}</SelectItem>
@@ -247,7 +254,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
                 {aseguradora ? insurerOptions.find((i) => i.id === aseguradora)?.label : <span className="text-[#9ca3af]">{t("filters.anyInsurer")}</span>}
               </SelectValue>
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className={FILTER_CONTENT}>
               {aseguradora && <SelectItem value={ANY_INSURER} className="text-[#6b7280]">{t("filters.anyInsurer")}</SelectItem>}
               {insurerOptions.map((i) => <SelectItem key={i.id} value={i.id}>{i.label}</SelectItem>)}
             </SelectContent>
@@ -388,7 +395,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
             <SelectTrigger className={FILTER_TRIGGER}>
               <SelectValue placeholder={t("filters.allProvinces")} />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className={FILTER_CONTENT}>
               <SelectItem value="todas">{t("filters.allProvinces")}</SelectItem>
               {PROVINCES.map((p) => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
             </SelectContent>
@@ -401,7 +408,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
             <SelectTrigger className={FILTER_TRIGGER}>
               <SelectValue placeholder={!province ? t("filters.selectProvince") : t("filters.allCantons")} />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className={FILTER_CONTENT}>
               <SelectItem value="todos">{t("filters.allCantons")}</SelectItem>
               {cantons.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
             </SelectContent>
@@ -418,7 +425,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
             applyFilters({ sortBy: v });
           }}>
             <SelectTrigger className={FILTER_TRIGGER}><SelectValue /></SelectTrigger>
-            <SelectContent>
+            <SelectContent className={FILTER_CONTENT}>
               <SelectItem value="rating">{t("sort.rating")}</SelectItem>
               <SelectItem value="priceAsc">{t("sort.priceAsc")}</SelectItem>
               <SelectItem value="availability">{t("sort.availability")}</SelectItem>
@@ -446,7 +453,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
                   : <span className="text-[#9ca3af]">{t("filters.anyInsurer")}</span>}
               </SelectValue>
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className={FILTER_CONTENT}>
               {aseguradora && <SelectItem value={ANY_INSURER} className="text-[#6b7280]">{t("filters.anyInsurer")}</SelectItem>}
               {insurerOptions.map((i) => <SelectItem key={i.id} value={i.id}>{i.label}</SelectItem>)}
             </SelectContent>
