@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { ShieldCheck, Clock, XCircle, AlertCircle, CheckCircle2, Send, RefreshCw } from "lucide-react";
+import { ShieldCheck, Clock, XCircle, AlertCircle, CheckCircle2, Send } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Link } from "@/i18n/navigation";
 import { SUPPORT_WHATSAPP_NUMBER } from "@/lib/constants";
@@ -191,16 +191,12 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
         {t.rich("howItWorks", { link: (c) => <Link href="/proveedores-autorizados" className="text-[#009FD9] font-medium hover:underline">{c}</Link> })}
       </p>
 
-      {/* Pending → re-run automatic check */}
-      {status === "pending" && (
-        <button
-          onClick={() => runCheck(false)}
-          disabled={busy}
-          className="inline-flex items-center gap-2 rounded-xl bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-4 py-2.5 disabled:opacity-60"
-        >
-          <RefreshCw className="h-4 w-4" /> {busy ? t("verifying") : t("verifyNow")}
-        </button>
-      )}
+      {/* Pending no longer shows a separate "Verificar mi identidad ahora" (re-run the
+          cédula on file) button — it was redundant with the "Verifica tu identidad con tu
+          cédula" card below (sprint 332), which is the SINGLE coherent action: enter/confirm
+          your cédula → it's stored + checked against the padrón → verified instantly (or
+          left in review for DIMEX/NITE). That one card covers a pro correcting a cédula that
+          didn't auto-verify, a sin-cédula/revoked pro adding one, and a re-check. */}
 
       {/* Rejected → appeal (re-runs automatically; if it still fails → support ticket) */}
       {status === "rejected" && (
