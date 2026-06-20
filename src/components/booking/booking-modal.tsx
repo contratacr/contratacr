@@ -217,6 +217,13 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   useEffect(() => {
     if (!open) return;
     setStep("calendar");
+    // Reset the picked service so a NEW booking re-asks which profession (for a
+    // multi-profession pro) instead of locking onto the previous booking's choice.
+    // The modal stays MOUNTED between bookings, so without this the 2nd booking skipped
+    // the service-selection step until a full page refresh (re-seeds the same way the
+    // initial state does: a category context wins, a single-profession pro auto-picks,
+    // a multi-profession pro with no context → null → re-prompt).
+    setPickedCategory(initialCategoryId ?? (proProfessions.length === 1 ? proProfessions[0] : null));
     setSelectedDate(initialDate ?? "");
     setSelectedTime(initialTime ?? "");
     if (initialDate) {
