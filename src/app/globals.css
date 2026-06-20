@@ -80,6 +80,17 @@ select:focus-visible {
   outline-offset: 0;
 }
 
+/* Hide the browser's NATIVE password reveal / clear controls (Edge & IE render
+   `::-ms-reveal` / `::-ms-clear` inside `<input type="password">`). Our password
+   fields draw their OWN show/hide eye toggle, so the native one would be a SECOND,
+   out-of-sync eye — it looks like "two eyes" on registration and makes the icon read
+   "inverted" on login (the native control toggles the field without updating our
+   icon). Suppressing it leaves exactly ONE custom toggle, behaving correctly. */
+input::-ms-reveal,
+input::-ms-clear {
+  display: none;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
