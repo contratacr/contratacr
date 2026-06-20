@@ -12,6 +12,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { PhoneInput, isPhoneComplete, hasPhoneNumber } from "@/components/ui/phone-input";
+import { DateOfBirthPicker, formatDobDMY } from "@/components/ui/date-of-birth-picker";
 import { CedulaInput } from "@/components/ui/cedula-input";
 import { isValidId, detectIdType, cleanId } from "@/lib/cedula";
 import { computeAge, formatAge, isMinorFromDob } from "@/lib/age";
@@ -737,7 +738,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
       return (
         <div className="rounded-lg bg-[#f0fdf4] border border-[#bbf7d0] px-3 py-2 flex items-center justify-between gap-2">
           <p className="text-xs text-[#15803d] break-words">
-            Fecha de nacimiento: <strong>{selfDob}</strong>{computeAge(selfDob) ? ` · ${formatAge(computeAge(selfDob))}` : ""}
+            Fecha de nacimiento: <strong>{formatDobDMY(selfDob)}</strong>{computeAge(selfDob) ? ` · ${formatAge(computeAge(selfDob))}` : ""}
           </p>
           <button type="button" onClick={() => { setSelfDobInput(selfDob); setDobEditing(true); }} className="shrink-0 text-[11px] font-semibold text-[#009FD9] hover:underline">
             Corregir
@@ -750,12 +751,10 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
         <label className="text-sm font-medium text-[#374151] block mb-1.5">
           Fecha de nacimiento <span className="text-red-500">*</span>
         </label>
-        <input
-          type="date"
+        <DateOfBirthPicker
           value={selfDobInput}
           max={new Date().toISOString().slice(0, 10)}
-          onChange={(e) => setSelfDobInput(e.target.value)}
-          className="w-full h-11 rounded-xl border border-[#e5e7eb] bg-white px-3.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+          onChange={setSelfDobInput}
         />
         <p className="text-[11px] text-[#9ca3af] mt-1.5">La pedimos solo para servicios de salud. La guardamos para no volver a pedirla.</p>
       </div>
@@ -1288,7 +1287,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                             benDobLocked ? (
                               <div className="rounded-lg bg-[#f0fdf4] border border-[#bbf7d0] px-3 py-2 flex items-center justify-between gap-2">
                                 <p className="text-xs text-[#15803d] break-words">
-                                  Fecha de nacimiento: <strong>{benDob}</strong>
+                                  Fecha de nacimiento: <strong>{formatDobDMY(benDob)}</strong>
                                 </p>
                                 <button type="button" onClick={() => setBenDobLocked(false)} className="shrink-0 text-[11px] font-semibold text-[#009FD9] hover:underline">
                                   Corregir
@@ -1299,12 +1298,10 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                               <label className="text-xs font-medium text-[#374151] block mb-1.5">
                                 Fecha de nacimiento <span className="text-red-500">*</span>
                               </label>
-                              <input
-                                type="date"
+                              <DateOfBirthPicker
                                 value={benDob}
                                 max={new Date().toISOString().slice(0, 10)}
-                                onChange={(e) => setBenDob(e.target.value)}
-                                className="w-full h-11 rounded-xl border border-[#e5e7eb] bg-white px-3.5 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+                                onChange={setBenDob}
                               />
                             </div>
                             )
