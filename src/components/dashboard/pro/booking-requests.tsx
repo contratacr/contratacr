@@ -6,6 +6,7 @@ import { CalendarDays, FileText, Phone, Flag, MapPin, IdCard, ShieldCheck, Shiel
 import { getCategoryLabel } from "@/lib/data/categories";
 import { detectIdType, cleanId } from "@/lib/cedula";
 import { ageCategoryFromDob } from "@/lib/age";
+import { formatDobDMY } from "@/components/ui/date-of-birth-picker";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -62,13 +63,16 @@ export function BookingRequests() {
   // stored DOB. Shown ONLY here in the pro's panel — a minor (guardian/consent) or an
   // older adult (geriatric care) is useful clinical context; a typical adult (18–64)
   // shows nothing. `minorFallback` covers legacy bookings stored before a DOB was kept.
+  // BOTH brackets use the SAME amber "note" pill (consistent design) — only the label
+  // differs; it reads clearly on both the white card and the brand-tint beneficiary box.
   function ageBadge(dob?: string | null, minorFallback = false) {
     const cat = dob ? ageCategoryFromDob(dob) : minorFallback ? "minor" : null;
     if (!cat) return null;
-    const cls = cat === "minor"
-      ? "text-[#b45309] bg-[#fef3c7]"   // amber — needs guardian/consent
-      : "text-[#6b7280] bg-[#f3f4f6]";  // neutral grey — informational
-    return <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${cls}`}>{t(cat)}</span>;
+    return (
+      <span className="inline-flex items-center rounded-full bg-[#fef3c7] px-2 py-0.5 text-[10px] font-semibold text-[#92400e]">
+        {t(cat)}
+      </span>
+    );
   }
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
@@ -136,18 +140,25 @@ export function BookingRequests() {
     return (
       <Card>
         <CardContent className="p-4 sm:p-5">
-          {/* Header — status + created date */}
+          {/* Header — status + the REQUEST (created) date, labeled so it's never confused
+              with the appointment date shown below. */}
           <div className="flex items-center justify-between gap-2 mb-3">
             <Badge variant={STATUS_VARIANT[booking.status]}>
               {t(`status.${booking.status}`)}
             </Badge>
             <span className="text-xs text-[#9ca3af] shrink-0">
-              {new Date(booking.created_at).toLocaleDateString(dateLocale)}
+              {t("requestedOn", { date: new Date(booking.created_at).toLocaleDateString(dateLocale) })}
             </span>
           </div>
 
           {/* Details — client, contact, what & when */}
           <div className="space-y-2">
+                {/* When the request is for ANOTHER person, label the requester clearly as
+                    "Reservado por" (the patient is the labeled beneficiary box below). For a
+                    self booking there's just one person, so no label. */}
+                {booking.for_someone_else && booking.client_name && (
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-[#9ca3af]">{t("bookedByLabel")}</p>
+                )}
                 {(booking.client_name) && (
                   <div className="flex items-center gap-2 text-sm flex-wrap">
                     <Avatar className="h-6 w-6 shrink-0">
@@ -199,41 +210,42 @@ export function BookingRequests() {
                 {booking.client_dob && (
                   <div className="flex items-center gap-2 text-sm flex-wrap">
                     <CalendarDays className="h-4 w-4 text-[#6b7280] shrink-0" />
-                    <span className="text-[#374151]">{t("birth", { date: booking.client_dob })}</span>
+                    <span className="text-[#374151]">{t("birth", { date: formatDobDMY(booking.client_dob) })}</span>
                     {ageBadge(booking.client_dob)}
                   </div>
                 )}
 
-                {/* Beneficiary (booking for someone else): who the service is for */}
+                {/* Beneficiary (booking for someone else) — clearly labeled "La cita es para"
+                    so the pro instantly sees the requester (above) vs the patient (here). */}
                 {booking.for_someone_else && (
                   <div className="rounded-lg bg-[#EBF5FB] border border-[#bfdbfe] p-2.5 text-xs">
-                    <p className="font-semibold text-[#0089bb] flex items-center gap-1.5 flex-wrap">
-                      {t("forPerson", { name: booking.beneficiary_name || t("otherPerson") })}
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-[#0089bb]">{t("apptForLabel")}</p>
+                    <p className="mt-0.5 font-semibold text-[#111827] flex items-center gap-1.5 flex-wrap">
+                      {booking.beneficiary_name || t("otherPerson")}
                       {/* Age bracket from the beneficiary DOB (minor OR adulto mayor); falls
                           back to the legacy beneficiary_is_minor flag when no DOB is stored. */}
                       {ageBadge(booking.beneficiary_dob, booking.beneficiary_is_minor)}
                     </p>
                     <p className="text-[#374151] mt-0.5">
                       {[
-                        booking.beneficiary_dob ? t("benDob", { date: booking.beneficiary_dob }) : null,
+                        booking.beneficiary_dob ? t("benDob", { date: formatDobDMY(booking.beneficiary_dob) }) : null,
                         booking.beneficiary_cedula ? t("benCedula", { cedula: booking.beneficiary_cedula }) : null,
                         booking.beneficiary_phone ? t("benContact", { phone: booking.beneficiary_phone }) : null,
                       ].filter(Boolean).join(" · ")}
                     </p>
                     {/* Beneficiary identity: VERIFIED only for a national cédula; DIMEX/none → sin verificar. */}
                     {booking.beneficiary_cedula && detectIdType(cleanId(booking.beneficiary_cedula)) === "cedula" ? (
-                      <span className="mt-0.5 inline-flex items-center gap-1 text-[10px] font-semibold text-[#15803d]">
+                      <span className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold text-[#15803d]">
                         <ShieldCheck className="h-3 w-3" /> {t("idVerified")}
                       </span>
                     ) : (
-                      <span className="mt-0.5 inline-flex items-center gap-1 text-[10px] font-semibold text-[#b45309]">
+                      <span className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold text-[#b45309]">
                         <ShieldAlert className="h-3 w-3" /> {t("benUnverified")}
                       </span>
                     )}
-                    <p className="text-[10px] text-[#6b7280] mt-0.5">
-                      {t("bookedBy", { name: booking.client_name ?? "" })}
-                      {booking.beneficiary_phone ? ` ${t("coordinateContact")}` : ""}
-                    </p>
+                    {booking.beneficiary_phone && (
+                      <p className="text-[10px] text-[#6b7280] mt-1">{t("coordinateContact")}</p>
+                    )}
                   </div>
                 )}
                 {booking.service_description && (
@@ -244,8 +256,8 @@ export function BookingRequests() {
                 )}
                 {dateStr && (
                   <div className="flex items-center gap-2 text-sm">
-                    <CalendarDays className="h-4 w-4 text-[#6b7280] shrink-0" />
-                    <span className="text-[#374151]">{dateStr}</span>
+                    <CalendarDays className="h-4 w-4 text-[#009FD9] shrink-0" />
+                    <span className="text-[#374151]"><span className="text-[#6b7280]">{t("appointmentLabel")}:</span> <strong className="font-semibold text-[#111827]">{dateStr}</strong></span>
                   </div>
                 )}
                 {/* Profession + location the slot belonged to (migration 038). */}
