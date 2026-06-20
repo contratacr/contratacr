@@ -1451,6 +1451,8 @@
     "sendToReview": "Enviar a revisión",
     "hasCedulaTitle": "¿Ya tienes cédula costarricense?",
     "hasCedulaBody": "Agrégala acá y verificamos tu identidad automáticamente contra el padrón. No necesitas abrir un caso.",
+    "enterCedulaTitle": "Verifica tu identidad con tu cédula",
+    "enterCedulaBody": "Ingresa tu número de cédula y lo confirmamos automáticamente contra el padrón. Con una cédula nacional válida quedas verificado al instante y tu nombre se toma del padrón. Una identificación DIMEX/NITE queda en revisión.",
     "cedulaPlaceholder": "Número de cédula (DIMEX/NITE también)",
     "verifying": "Verificando…",
     "addAndVerify": "Agregar y verificar",

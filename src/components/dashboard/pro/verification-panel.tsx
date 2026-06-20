@@ -246,6 +246,35 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
           <WhatsAppIcon className="h-4 w-4" /> {t("supportWhatsappCase", { ref })}
         </a>
       )}
+
+      {/* Enter (or replace) a cédula to verify — for ANY non-verified pro: a REVOKED
+          account re-entering its cédula, a "sin cédula" account adding one later, or a
+          pending/rejected pro correcting it. Calls /api/add-cedula → stores it + runs the
+          padrón check: a valid NATIONAL cédula verifies instantly and overwrites the name
+          from the padrón (profiles + Auth, in run-verification); DIMEX/NITE or not-found
+          stays unverified; an invalid format errors out (no change). */}
+      {status !== "verified" && (
+        <div className="bg-white rounded-xl border border-[#e5e7eb] p-5">
+          <h3 className="font-semibold text-[#111827] text-sm mb-1">{t("enterCedulaTitle")}</h3>
+          <p className="text-xs text-[#6b7280] mb-3">{t("enterCedulaBody")}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              value={newCedula}
+              onChange={(e) => setNewCedula(e.target.value)}
+              inputMode="numeric"
+              placeholder={t("cedulaPlaceholder")}
+              className="flex-1 min-w-[200px] h-10 px-3 rounded-lg border border-[#e5e7eb] text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
+            />
+            <button
+              onClick={addCedula}
+              disabled={cedulaBusy || newCedula.replace(/\D/g, "").length < 9}
+              className="inline-flex items-center gap-2 rounded-xl bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-4 py-2.5 disabled:opacity-50"
+            >
+              <ShieldCheck className="h-4 w-4" /> {cedulaBusy ? t("verifying") : t("addAndVerify")}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

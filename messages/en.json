@@ -1451,6 +1451,8 @@
     "sendToReview": "Send for review",
     "hasCedulaTitle": "Already have a Costa Rican ID?",
     "hasCedulaBody": "Add it here and we'll verify your identity automatically against the padrón. No need to open a case.",
+    "enterCedulaTitle": "Verify your identity with your ID",
+    "enterCedulaBody": "Enter your ID number and we'll confirm it automatically against the padrón. With a valid national cédula you're verified instantly and your name is taken from the padrón. A DIMEX/NITE ID goes to review.",
     "cedulaPlaceholder": "ID number (DIMEX/NITE too)",
     "verifying": "Verifying…",
     "addAndVerify": "Add and verify",
