@@ -301,72 +301,77 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
         </div>
       )}
 
-      {/* Text search (omitted in the mobile sheet — the sheet header already has a search bar).
-          Autocompletes against OUR categories taxonomy: picking a suggestion filters by
-          `categoria`; free text still searches `q` on debounce/Enter. */}
-      {!hideSearch && (
-        <div ref={searchFieldRef} className="relative mb-3 flex items-center">
-          <Search className="pointer-events-none absolute left-3 h-4 w-4 text-[#9ca3af]" />
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => { handleQueryChange(e.target.value); setSearchActive(-1); setSearchOpen(true); }}
-            onFocus={() => { if (searchSug.length > 0) setSearchOpen(true); }}
-            onBlur={() => { searchBlurRef.current = setTimeout(() => setSearchOpen(false), 150); }}
-            onKeyDown={(e) => {
-              if (searchOpen && searchSug.length > 0) {
-                if (e.key === "ArrowDown") { e.preventDefault(); setSearchActive((i) => Math.min(i + 1, searchSug.length - 1)); return; }
-                if (e.key === "ArrowUp") { e.preventDefault(); setSearchActive((i) => Math.max(i - 1, 0)); return; }
-                // Enter resolves the partial term to the highlighted OR the FIRST (best) match
-                // and searches THAT (e.g. "electrici" → "electricista").
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  pickCategory(searchSug[searchActive >= 0 ? searchActive : 0].id);
-                  return;
-                }
-                if (e.key === "Escape") { setSearchOpen(false); return; }
-              }
-              handleQueryKeyDown(e);
-            }}
-            placeholder={t("filters.searchPlaceholder")}
-            role="combobox"
-            aria-expanded={searchOpen}
-            aria-autocomplete="list"
-            // Same h-10 white field as the Selects below (Provincia/Cantón/Ordenar/
-            // Aseguradora) so every filter control is a consistent, aligned size.
-            className="h-10 w-full rounded-xl border border-[#e5e7eb] bg-white pl-9 pr-9 text-sm text-[#111827] placeholder-[#9ca3af] transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
-          />
-          {query && (
-            <button onClick={() => { clearQuery(); setSearchOpen(false); }} className="absolute right-3 text-[#9ca3af] hover:text-[#374151] transition-colors" aria-label={t("filters.clearSearch")}>
-              <X className="h-4 w-4" />
-            </button>
-          )}
-          <AnchoredDropdown anchorRef={searchFieldRef} open={searchOpen && searchSug.length > 0} maxHeight={288}>
-            <ul className="py-1" role="listbox">
-              {searchSug.map((s, i) => (
-                <li key={s.id}>
-                  <button
-                    type="button"
-                    role="option"
-                    aria-selected={i === searchActive}
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => pickCategory(s.id)}
-                    className={`flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm transition-colors ${i === searchActive ? "bg-[#EBF5FB]" : "hover:bg-[#f9fafb]"}`}
-                  >
-                    <Search className="h-4 w-4 shrink-0 text-[#009FD9]" />
-                    <span className="truncate text-[#374151]">{getCategoryLabel(s.id, locale)}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </AnchoredDropdown>
-        </div>
-      )}
-
-      {/* Vertical stack — designed for the left sidebar (and the mobile drawer). The
-          service/category control is the unified search field ABOVE (no separate
-          "Categoría" dropdown — they were redundant; both filtered by service). */}
+      {/* Vertical stack — EVERY filter is the SAME field shape: a `fieldLabel` + an
+          `h-10 w-full rounded-xl border px-4` box, so all five line up identically (the
+          user wants them all the exact size of Aseguradora). The unified service/category
+          control is the FIRST field — a search INPUT, but boxed + padded to match the
+          Select triggers EXACTLY (it used to be a label-less, icon-indented `pl-9` input,
+          which read as a different size next to the px-4 dropdowns). */}
       <div className="flex flex-col gap-3">
+        {/* Service/category — free text OR a picked category. Same box as the Selects:
+            label + h-10 w-full px-4 (NO left search icon, so its text starts at the same
+            x as Provincia/Cantón/Ordenar/Aseguradora). */}
+        {!hideSearch && (
+          <div>
+            <label className={fieldLabel}>{t("filters.service")}</label>
+            <div ref={searchFieldRef} className="relative">
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => { handleQueryChange(e.target.value); setSearchActive(-1); setSearchOpen(true); }}
+                onFocus={() => { if (searchSug.length > 0) setSearchOpen(true); }}
+                onBlur={() => { searchBlurRef.current = setTimeout(() => setSearchOpen(false), 150); }}
+                onKeyDown={(e) => {
+                  if (searchOpen && searchSug.length > 0) {
+                    if (e.key === "ArrowDown") { e.preventDefault(); setSearchActive((i) => Math.min(i + 1, searchSug.length - 1)); return; }
+                    if (e.key === "ArrowUp") { e.preventDefault(); setSearchActive((i) => Math.max(i - 1, 0)); return; }
+                    // Enter resolves the partial term to the highlighted OR the FIRST (best)
+                    // match and searches THAT (e.g. "electrici" → "electricista").
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      pickCategory(searchSug[searchActive >= 0 ? searchActive : 0].id);
+                      return;
+                    }
+                    if (e.key === "Escape") { setSearchOpen(false); return; }
+                  }
+                  handleQueryKeyDown(e);
+                }}
+                placeholder={t("filters.searchPlaceholder")}
+                role="combobox"
+                aria-expanded={searchOpen}
+                aria-autocomplete="list"
+                // EXACT same box as the Select triggers: h-10 w-full rounded-xl border px-4.
+                // pr-9 only while there's a query (to clear the X); otherwise px-4 like the rest.
+                className={`h-10 w-full rounded-xl border border-[#e5e7eb] bg-white pl-4 text-sm text-[#111827] placeholder-[#9ca3af] transition focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#009FD9] ${query ? "pr-9" : "pr-4"}`}
+              />
+              {query && (
+                <button onClick={() => { clearQuery(); setSearchOpen(false); }} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9ca3af] hover:text-[#374151] transition-colors" aria-label={t("filters.clearSearch")}>
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+              <AnchoredDropdown anchorRef={searchFieldRef} open={searchOpen && searchSug.length > 0} maxHeight={288}>
+                <ul className="py-1" role="listbox">
+                  {searchSug.map((s, i) => (
+                    <li key={s.id}>
+                      <button
+                        type="button"
+                        role="option"
+                        aria-selected={i === searchActive}
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => pickCategory(s.id)}
+                        className={`flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-sm transition-colors ${i === searchActive ? "bg-[#EBF5FB]" : "hover:bg-[#f9fafb]"}`}
+                      >
+                        <Search className="h-4 w-4 shrink-0 text-[#009FD9]" />
+                        <span className="truncate text-[#374151]">{getCategoryLabel(s.id, locale)}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </AnchoredDropdown>
+            </div>
+          </div>
+        )}
+
         {/* Provincia + Cantón — FULL-WIDTH stacked, exactly like every other filter
             (Categoría / Ordenar / Aseguradora). The old 2-column row made each box too
             narrow for "Todas las provincias"/"Todos los cantones" (overflow) and put the
