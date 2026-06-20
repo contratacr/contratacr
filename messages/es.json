@@ -1361,7 +1361,7 @@
     "addPhoto": "Agregar foto",
     "fullName": "Nombre completo",
     "identityVerified": "Verificado",
-    "nameLockedHelp": "Tu nombre oficial proviene del padrón y no se edita aquí. ¿Error o cambio legal? <link>Escríbele a soporte</link>.",
+    "nameLockedHelp": "Tu nombre proviene de la cédula que ingresaste al crear la cuenta. ¿Un error o cambio legal? <link>Solicítalo a soporte</link>.",
     "fullNamePlaceholder": "Juan Pérez González",
     "businessName": "Nombre comercial o de tu empresa",
     "optional": "(opcional)",

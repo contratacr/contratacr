@@ -1361,7 +1361,7 @@
     "addPhoto": "Add photo",
     "fullName": "Full name",
     "identityVerified": "Verified",
-    "nameLockedHelp": "Your official name comes from the padrón and is not edited here. A mistake or legal change? <link>Write to support</link>.",
+    "nameLockedHelp": "Your name comes from the ID you entered when you created your account. A mistake or legal change? <link>Request it from support</link>.",
     "fullNamePlaceholder": "Juan Pérez González",
     "businessName": "Business or company name",
     "optional": "(optional)",

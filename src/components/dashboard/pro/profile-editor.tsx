@@ -11,6 +11,7 @@ import { LanguagesInput } from "@/components/ui/languages-input";
 import { WorkplacesPicker, type Workplace } from "@/components/maps/workplaces-picker";
 import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 import { createClient } from "@/lib/supabase/client";
+import { detectIdType } from "@/lib/cedula";
 import { Camera, X, Plus, ChevronDown, Lock, Award } from "lucide-react";
 import { InstagramIcon, FacebookIcon, TikTokIcon } from "@/components/icons/social-icons";
 import { SOCIAL_NETWORKS, cleanUsername, isValidUsername, type SocialNetwork } from "@/lib/social";
@@ -158,10 +159,22 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
     tiktok: cleanUsername(initial.social_links?.tiktok),
   });
   const [fullName, setFullName] = useState<string>(initial.profiles?.full_name ?? "");
-  // The official name is locked once verified — it's what backs the "Identidad
-  // verificada" badge (the guarantee it matches the padrón). Corrections go
-  // through admin review, not a free edit. The commercial name stays editable.
-  const nameLocked = (initial.verification_status as string) === "verified";
+  // The official name comes from the cédula entered at signup, so it's NOT editable here —
+  // EXACTLY like the client account (which locks on a national cédula). We lock when the
+  // pro is verified OR simply has a NATIONAL (padrón) cédula on file (fetched via the
+  // owner-only get_my_profile RPC, since `cedula` isn't directly selectable). A DIMEX/NITE
+  // or no cédula → manually-typed name → still editable (mirror of the client rule).
+  // Corrections to a locked name go through soporte, not a free edit.
+  const verified = (initial.verification_status as string) === "verified";
+  const [hasNationalCedula, setHasNationalCedula] = useState(false);
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.rpc("get_my_profile").then(({ data }) => {
+      const ced = (data as { cedula?: string | null } | null)?.cedula;
+      setHasNationalCedula(!!ced && detectIdType(String(ced)) === "cedula");
+    });
+  }, []);
+  const nameLocked = verified || hasNationalCedula;
   const seedProfessions: string[] =
     Array.isArray(initial.professions) && initial.professions.length > 0
       ? initial.professions
@@ -526,7 +539,9 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
               label={
                 <span className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
                   {t("fullName")}
-                  <span className="inline-flex items-center whitespace-nowrap shrink-0 text-[11px] font-semibold text-[#16a34a]">{t("identityVerified")}</span>
+                  {/* Green "Verificado" only when actually verified — a national cédula that's
+                      still pending review locks the name but doesn't claim the badge yet. */}
+                  {verified && <span className="inline-flex items-center whitespace-nowrap shrink-0 text-[11px] font-semibold text-[#16a34a]">{t("identityVerified")}</span>}
                 </span>
               }
               value={fullName}
