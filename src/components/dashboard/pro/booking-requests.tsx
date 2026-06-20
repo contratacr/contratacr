@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarDays, FileText, Phone, Flag, MapPin, IdCard, ShieldCheck, ShieldAlert } from "lucide-react";
+import { CalendarDays, FileText, Phone, Flag, MapPin, IdCard } from "lucide-react";
 import { getCategoryLabel } from "@/lib/data/categories";
-import { detectIdType, cleanId } from "@/lib/cedula";
 import { ageCategoryFromDob } from "@/lib/age";
 import { formatDobDMY } from "@/components/ui/date-of-birth-picker";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
@@ -179,32 +178,14 @@ export function BookingRequests() {
                     <span className="text-[#374151]">{booking.client_phone}</span>
                   </div>
                 )}
-                {/* Requester identity — VERIFIED only when a national cédula (confirmed
-                    against the TSE padrón at booking) is on file; a DIMEX/foreign ID or no
-                    cédula is "sin verificar", so the pro can decide whether to contact. */}
-                {(() => {
-                  const ced = booking.client_cedula;
-                  if (ced && detectIdType(cleanId(ced)) === "cedula") {
-                    return (
-                      <div className="flex items-center gap-2 text-sm flex-wrap">
-                        <IdCard className="h-4 w-4 text-[#6b7280] shrink-0" />
-                        <span className="text-[#374151]">{t("clientCedula", { cedula: ced })}</span>
-                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#15803d]">
-                          <ShieldCheck className="h-3.5 w-3.5" /> {t("idVerified")}
-                        </span>
-                      </div>
-                    );
-                  }
-                  return (
-                    <div className="flex items-center gap-2 text-sm flex-wrap">
-                      <IdCard className="h-4 w-4 text-[#6b7280] shrink-0" />
-                      <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#b45309]">
-                        <ShieldAlert className="h-3.5 w-3.5" />
-                        {ced ? t("idUnverifiedWith", { id: ced }) : t("idUnverified")}
-                      </span>
-                    </div>
-                  );
-                })()}
+                {/* Cédula — shown ONLY if the client provided one (no verified/unverified
+                    labels; the pro just sees the number, or a muted "Sin cédula"). */}
+                <div className="flex items-center gap-2 text-sm">
+                  <IdCard className="h-4 w-4 text-[#6b7280] shrink-0" />
+                  {booking.client_cedula
+                    ? <span className="text-[#374151]">{t("clientCedula", { cedula: booking.client_cedula })}</span>
+                    : <span className="text-[#9ca3af]">{t("noCedula")}</span>}
+                </div>
                 {/* Client DOB — only stored/shown for HEALTH-category solicitudes, with the
                     age-bracket badge (minor / adulto mayor) when relevant. */}
                 {booking.client_dob && (
@@ -226,23 +207,14 @@ export function BookingRequests() {
                           back to the legacy beneficiary_is_minor flag when no DOB is stored. */}
                       {ageBadge(booking.beneficiary_dob, booking.beneficiary_is_minor)}
                     </p>
+                    {/* DOB · cédula (or "Sin cédula") · contact — no verified/unverified labels. */}
                     <p className="text-[#374151] mt-0.5">
                       {[
                         booking.beneficiary_dob ? t("benDob", { date: formatDobDMY(booking.beneficiary_dob) }) : null,
-                        booking.beneficiary_cedula ? t("benCedula", { cedula: booking.beneficiary_cedula }) : null,
+                        booking.beneficiary_cedula ? t("benCedula", { cedula: booking.beneficiary_cedula }) : t("noCedula"),
                         booking.beneficiary_phone ? t("benContact", { phone: booking.beneficiary_phone }) : null,
                       ].filter(Boolean).join(" · ")}
                     </p>
-                    {/* Beneficiary identity: VERIFIED only for a national cédula; DIMEX/none → sin verificar. */}
-                    {booking.beneficiary_cedula && detectIdType(cleanId(booking.beneficiary_cedula)) === "cedula" ? (
-                      <span className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold text-[#15803d]">
-                        <ShieldCheck className="h-3 w-3" /> {t("idVerified")}
-                      </span>
-                    ) : (
-                      <span className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold text-[#b45309]">
-                        <ShieldAlert className="h-3 w-3" /> {t("benUnverified")}
-                      </span>
-                    )}
                     {booking.beneficiary_phone && (
                       <p className="text-[10px] text-[#6b7280] mt-1">{t("coordinateContact")}</p>
                     )}

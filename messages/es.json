@@ -1070,6 +1070,7 @@
     "otherPerson": "otra persona",
     "minor": "Menor de edad",
     "olderAdult": "Adulto mayor",
+    "noCedula": "Sin cédula",
     "benDob": "Nac.: {date}",
     "benCedula": "Cédula: {cedula}",
     "clientCedula": "Cédula: {cedula}",
