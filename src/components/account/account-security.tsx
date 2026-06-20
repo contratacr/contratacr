@@ -325,7 +325,7 @@ export function AccountSecuritySection({ showHeading = true }: { showHeading?: b
                 onChange={(e) => setNewPw(e.target.value)}
               />
               <button type="button" onClick={() => setShowPw((s) => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500">
-                {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {showPw ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
               </button>
             </div>
             <input

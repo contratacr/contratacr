@@ -768,7 +768,7 @@ export default function RegisterProfessionalPage() {
                       onClick={() => setShowPassword((v) => !v)}
                       className="text-gray-400 hover:text-gray-600"
                     >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      {showPassword ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                     </button>
                   }
                 />
@@ -787,7 +787,7 @@ export default function RegisterProfessionalPage() {
                     onClick={() => setShowConfirm((v) => !v)}
                     className="text-gray-400 hover:text-gray-600"
                   >
-                    {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showConfirm ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                   </button>
                 }
               />

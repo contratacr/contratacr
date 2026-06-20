@@ -175,9 +175,9 @@ export default function ResetPasswordPage() {
                     className="text-gray-400 hover:text-gray-600"
                   >
                     {showPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
                       <Eye className="h-4 w-4" />
+                    ) : (
+                      <EyeOff className="h-4 w-4" />
                     )}
                   </button>
                 }
@@ -197,9 +197,9 @@ export default function ResetPasswordPage() {
                   className="text-gray-400 hover:text-gray-600"
                 >
                   {showConfirm ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
                     <Eye className="h-4 w-4" />
+                  ) : (
+                    <EyeOff className="h-4 w-4" />
                   )}
                 </button>
               }

@@ -452,7 +452,7 @@ export function ClientRegistrationModal({
                   placeholder="••••••••"
                   rightIcon={
                     <button type="button" onClick={() => setShowLoginPw((v) => !v)} className="text-gray-400 hover:text-gray-600">
-                      {showLoginPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      {showLoginPw ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                     </button>
                   }
                 />
@@ -554,7 +554,7 @@ export function ClientRegistrationModal({
                         onChange={(e) => setPassword(e.target.value)}
                         rightIcon={
                           <button type="button" onClick={() => setShowPassword((v) => !v)} className="text-gray-400 hover:text-gray-600">
-                            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            {showPassword ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                           </button>
                         }
                       />
@@ -569,7 +569,7 @@ export function ClientRegistrationModal({
                       error={confirmPassword && password !== confirmPassword ? tRp("passwordsDontMatch") : undefined}
                       rightIcon={
                         <button type="button" onClick={() => setShowConfirm((v) => !v)} className="text-gray-400 hover:text-gray-600">
-                          {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          {showConfirm ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
                         </button>
                       }
                     />

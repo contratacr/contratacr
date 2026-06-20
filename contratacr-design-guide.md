@@ -603,6 +603,7 @@ Any "perfil completo / X% completo" prompt must be computed from fields **releva
 - The only optional phone is a **third-party/beneficiary** contact; the account holder's own phone is required.
 - No required field may submit empty — block with a **friendly Spanish inline error** (never a raw browser/DB error), and validate per field (email format, password rules, numeric phone, cédula format).
 - Use the shared primitives that already render the `*`/`(opcional)` (`Input` label, `CedulaInput`/`IdentityField`, etc.) so it's consistent everywhere.
+- **Password show/hide eye:** the icon shows the FUTURE-state affordance, matching the field state — **HIDDEN (dots) → `EyeOff` (slashed eye, "click to reveal")**, **VISIBLE (plain text) → `Eye` (open eye, "currently visible")**. So the ternary is `show ? <Eye/> : <EyeOff/>` (NOT the reverse). Same everywhere it appears: registration (cliente, profesional, booking modal), login, reset-password, change-password (account-security).
 
 Reusable label pattern:
 ```tsx
