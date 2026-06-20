@@ -201,7 +201,7 @@ export function BookingRequests() {
             {/* 2 — appointment date FEATURED (the most important fact). Clean, no
                    container — a brand-blue calendar-clock icon + eyebrow + bold date. */}
             <div className="flex items-center gap-3">
-              <CalendarClock className="h-[22px] w-[22px] text-[#009FD9] shrink-0" strokeWidth={2} />
+              <CalendarClock className="h-[22px] w-[22px] text-[#9ca3af] shrink-0" strokeWidth={2} />
               <div className="min-w-0">
                 <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#9ca3af]">{t("appointmentDateLabel")}</p>
                 <p className={dateStr ? "text-[16px] font-bold text-[#111827] leading-tight" : "text-sm text-[#9ca3af]"}>

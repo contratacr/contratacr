@@ -369,7 +369,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                 <p className="text-sm text-[#374151] line-clamp-2 mb-1">{b.service_description}</p>
                                 {formatBookingDate(b, dateLocale) && (
                                   <p className="text-xs font-medium text-[#374151] flex items-center gap-1.5">
-                                    <CalendarClock className="h-4 w-4 text-[#009FD9] shrink-0" /> {formatBookingDate(b, dateLocale)}
+                                    <CalendarClock className="h-4 w-4 text-[#9ca3af] shrink-0" /> {formatBookingDate(b, dateLocale)}
                                   </p>
                                 )}
                               </div>
@@ -479,7 +479,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                           {/* Equivalent "date" for a project — its publish date, same clean
                               on-brand calendar treatment as the appointment date elsewhere. */}
                           <p className="text-xs font-medium text-[#374151] flex items-center gap-1.5 mb-2">
-                            <CalendarDays className="h-4 w-4 text-[#009FD9] shrink-0" />
+                            <CalendarDays className="h-4 w-4 text-[#9ca3af] shrink-0" />
                             {t("publishedOn", { date: new Date(project.created_at).toLocaleDateString(dateLocale) })}
                           </p>
                           <div className="flex items-center gap-3 text-xs text-[#9ca3af]">
