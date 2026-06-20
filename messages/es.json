@@ -1069,6 +1069,7 @@
     "birth": "Nacimiento: {date}",
     "requestedOn": "Solicitada {date}",
     "appointmentLabel": "Cita",
+    "appointmentDateLabel": "Fecha de la cita",
     "bookedByLabel": "Reservado por",
     "apptForLabel": "La cita es para",
     "forPerson": "Para: {name}",
@@ -2248,6 +2249,8 @@
   },
   "statusTabs": {
     "activas": "Activas",
+    "pendientes": "Pendientes",
+    "confirmadas": "Confirmadas",
     "finalizadas": "Finalizadas",
     "canceladas": "Canceladas",
     "activos": "Activos",

@@ -1069,6 +1069,7 @@
     "birth": "Birth date: {date}",
     "requestedOn": "Requested {date}",
     "appointmentLabel": "Appointment",
+    "appointmentDateLabel": "Appointment date",
     "bookedByLabel": "Booked by",
     "apptForLabel": "Appointment is for",
     "forPerson": "For: {name}",
@@ -2248,6 +2249,8 @@
   },
   "statusTabs": {
     "activas": "Active",
+    "pendientes": "Pending",
+    "confirmadas": "Confirmed",
     "finalizadas": "Completed",
     "canceladas": "Cancelled",
     "activos": "Active",

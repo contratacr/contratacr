@@ -12,36 +12,58 @@ export function StatusFilterTabs({
   tabs,
   value,
   onChange,
+  counts,
 }: {
   tabs: readonly FilterTab[];
   value: string;
   onChange: (id: string) => void;
+  /** Optional per-tab count badge (e.g. Pendientes needing action). 0/undefined → no badge. */
+  counts?: Record<string, number>;
 }) {
   const tr = useTranslations("statusTabs");
   return (
-    <div className="flex gap-1.5 flex-wrap">
-      {tabs.map((tab) => (
-        <button
-          key={tab.id}
-          type="button"
-          onClick={() => onChange(tab.id)}
-          className={cn(
-            "px-3 py-1 rounded-full text-xs font-medium transition-colors",
-            value === tab.id ? "bg-[#009FD9] text-white" : "bg-[#f3f4f6] text-[#374151] hover:bg-[#e5e7eb]"
-          )}
-        >
-          {tr(tab.id)}
-        </button>
-      ))}
+    <div className="flex gap-2 flex-wrap">
+      {tabs.map((tab) => {
+        const active = value === tab.id;
+        const count = counts?.[tab.id] ?? 0;
+        return (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => onChange(tab.id)}
+            className={cn(
+              "inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[13px] font-semibold transition-colors",
+              active
+                ? "border-[#009FD9] bg-[#009FD9] text-white"
+                : "border-[#e5e7eb] bg-white text-[#374151] hover:bg-[#f9fafb]"
+            )}
+          >
+            {tr(tab.id)}
+            {count > 0 && (
+              <span
+                className={cn(
+                  "inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full px-1 text-[11px] font-bold leading-none",
+                  active ? "bg-white/25 text-white" : "bg-amber-50 text-amber-700"
+                )}
+              >
+                {count}
+              </span>
+            )}
+          </button>
+        );
+      })}
     </div>
   );
 }
 
-// Canonical tab sets (consistent labels everywhere). No "Todas/Todos" — the
-// status tabs already cover every lifecycle state, so an all-bucket only added
-// noise. Default to the most relevant ACTIVE tab in each consumer.
+// Canonical SOLICITUD tabs (consistent labels everywhere). "Activas" was dropped —
+// it was ambiguous (it merged Pendientes with Confirmadas). Pendientes leads (it's
+// what needs the professional's action) and carries the count badge; Confirmadas is
+// the upcoming agenda; a confirmed appointment whose date has passed falls to
+// Finalizadas automatically (see solicitudBucket).
 export const SOLICITUD_TABS: readonly FilterTab[] = [
-  { id: "activas" },
+  { id: "pendientes" },
+  { id: "confirmadas" },
   { id: "finalizadas" },
   { id: "canceladas" },
 ];
@@ -57,14 +79,29 @@ export const PROYECTO_TABS: readonly FilterTab[] = [
   { id: "cancelados" },
 ];
 
-// Status → group helpers (one source of truth for both panels).
-const SOLICITUD_ACTIVE = ["pending", "confirmed", "in_progress", "awaiting_confirmation"];
-export function solicitudMatches(filter: string, status: string): boolean {
-  if (filter === "activas") return SOLICITUD_ACTIVE.includes(status);
-  if (filter === "finalizadas") return status === "completed";
-  if (filter === "canceladas") return status === "cancelled" || status === "rescheduled";
-  return true; // todas
+// A booking's appointment day has fully passed (compared to now, end-of-day).
+function isPastAppointment(scheduledDate?: string | null): boolean {
+  if (!scheduledDate) return false;
+  const [y, m, d] = scheduledDate.split("-").map(Number);
+  if (!y || !m || !d) return false;
+  return new Date(y, m - 1, d, 23, 59, 59, 999).getTime() < Date.now();
 }
+
+// Status (+ scheduled date) → the four solicitud buckets. One source of truth for
+// both panels. A CONFIRMED/in-progress appointment whose date already passed is
+// treated as Finalizada (the pro's agenda only shows upcoming confirmadas).
+export function solicitudBucket(status: string, scheduledDate?: string | null): string {
+  if (status === "cancelled" || status === "rescheduled") return "canceladas";
+  if (status === "completed" || status === "awaiting_confirmation") return "finalizadas";
+  if (status === "pending") return "pendientes";
+  // confirmed | in_progress
+  if (isPastAppointment(scheduledDate)) return "finalizadas";
+  return "confirmadas";
+}
+export function solicitudMatches(filter: string, status: string, scheduledDate?: string | null): boolean {
+  return solicitudBucket(status, scheduledDate) === filter;
+}
+
 const PROYECTO_ACTIVE = ["open", "in_progress", "awaiting_confirmation"];
 export function proyectoMatches(filter: string, status: string): boolean {
   if (filter === "activos") return PROYECTO_ACTIVE.includes(status);

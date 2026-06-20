@@ -118,7 +118,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   const [loading, setLoading] = useState(true);
   const [reviewModal, setReviewModal] = useState<{ professionalId: string; professionalName: string; bookingId?: string; projectId?: string } | null>(null);
   const [myReviews, setMyReviews] = useState<{ professional_id: string; booking_id?: string | null; project_id?: string | null; rating: number }[]>([]);
-  const [bookingFilter, setBookingFilter] = useState("activas");
+  const [bookingFilter, setBookingFilter] = useState("pendientes");
   const [projectFilter, setProjectFilter] = useState("activos");
   const [expandedProject, setExpandedProject] = useState<string | null>(null);
   const [projectProposals, setProjectProposals] = useState<Record<string, Proposal[]>>({});
@@ -310,7 +310,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
     );
   }
 
-  const filteredBookings = bookings.filter((b) => solicitudMatches(bookingFilter, b.status));
+  const filteredBookings = bookings.filter((b) => solicitudMatches(bookingFilter, b.status, b.scheduled_date));
   const filteredProjects = projects.filter((p) => proyectoMatches(projectFilter, p.status));
 
   return (
