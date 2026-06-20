@@ -904,8 +904,10 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                 <div className="flex items-center gap-1.5 md:justify-center flex-wrap">
                   <span className="font-bold text-base md:text-lg leading-tight">{professional.fullName}</span>
                 </div>
-                {/* KEPT from sprint 317: the SAME verified mark as the /buscar card — a solid
-                    #009FD9 pill with white text (replaces the old green ✓ Verificado). */}
+                {/* Verified → the SAME solid #009FD9 pill as the /buscar card. NOT verified →
+                    nothing (no badge, no "sin verificar"). `isVerified` is set by BOTH callers
+                    (the search query from `is_verified`, kept in sync on revoke/reject; the
+                    public profile from `verificationStatus === "verified"`), so it's authoritative. */}
                 {professional.isVerified && (
                   <span title="Identidad verificada" className="mt-1.5 inline-flex w-fit items-center rounded-full bg-[#009FD9] px-2 py-0.5 text-[10px] font-semibold text-white">
                     Verificado
