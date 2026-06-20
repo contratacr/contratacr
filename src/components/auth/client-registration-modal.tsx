@@ -10,17 +10,22 @@ import {
 import { createClient } from "@/lib/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { IdentityField } from "@/components/ui/identity-field";
+import { cleanId, isValidId } from "@/lib/cedula";
 import { cn } from "@/lib/utils";
 import { ContrataCRLogo } from "@/components/landing/landing-navbar";
 import { SpamNotice } from "@/components/ui/spam-notice";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type RegisterStep = "email" | "name" | "password" | "otp";
+// Identity-FIRST, like the logged-in/no-cédula booking flow: the cédula is asked first and
+// the official name auto-fills from the padrón (or a "No tengo cédula" manual name), THEN
+// email + password — so a guest requesting a service never enters their identity twice.
+type RegisterStep = "identity" | "email" | "password" | "otp";
 type ModalView = "register" | "login";
 
 const STEP_NUM: Record<RegisterStep, number> = {
-  email: 1, name: 2, password: 3, otp: 4,
+  identity: 1, email: 2, password: 3, otp: 4,
 };
 
 export interface ClientRegistrationModalProps {
@@ -194,12 +199,14 @@ export function ClientRegistrationModal({
   const tRp = useTranslations("resetPassword");
   const locale = useLocale();
   const [view, setView] = useState<ModalView>("register");
-  const [step, setStep] = useState<RegisterStep>("email");
+  const [step, setStep] = useState<RegisterStep>("identity");
 
   // Register state
   const [email, setEmail] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [manualName, setManualName] = useState("");
+  const [fullName, setFullName] = useState("");   // auto-filled from the cédula (padrón)
+  const [manualName, setManualName] = useState(""); // typed when "No tengo cédula"
+  const [cedula, setCedula] = useState("");       // clean digits; "" when noCedula
+  const [noCedula, setNoCedula] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -216,16 +223,26 @@ export function ClientRegistrationModal({
 
   function reset() {
     setView("register");
-    setStep("email");
+    setStep("identity");
     setEmail("");
     setFullName("");
     setManualName("");
+    setCedula("");
+    setNoCedula(false);
     setPassword("");
     setConfirmPassword("");
     setLoginPassword("");
     setError(null);
     setDuplicateEmailDetected(false);
   }
+
+  // Resolved identity: a national/DIMEX cédula auto-fills `fullName` from the padrón; the
+  // "No tengo cédula" path types `manualName`. The cédula is stored ONLY when present + valid.
+  const resolvedName = (noCedula ? manualName : fullName).trim();
+  const cedulaClean = !noCedula ? cleanId(cedula) : "";
+  const identityReady = noCedula
+    ? manualName.trim().length > 1
+    : !!cedulaClean && isValidId(cedulaClean) && resolvedName.length > 1;
 
   function handleClose() {
     reset();
@@ -258,10 +275,11 @@ export function ClientRegistrationModal({
     }
     setSubmitting(true);
     setError(null);
-    const resolved = manualName.trim() || fullName;
+    const resolved = resolvedName;
     const supabase = createClient();
 
-    // No cédula at client signup — it's requested at booking time (per request).
+    // The cédula is captured cédula-FIRST in this flow (the official name auto-filled from
+    // it), so we store it on the new account — the booking then won't ask for it again.
     const { data: signUpData, error: e } = await supabase.auth.signUp({
       email,
       password,
@@ -273,8 +291,8 @@ export function ClientRegistrationModal({
         },
       },
     });
-    setSubmitting(false);
     if (e) {
+      setSubmitting(false);
       if (e.message.includes("already registered") || e.message.includes("already been registered")) {
         setDuplicateEmailDetected(true);
         setError(null);
@@ -286,25 +304,35 @@ export function ClientRegistrationModal({
     }
     // Supabase anti-enumeration: existing email → user with empty identities.
     if (Array.isArray(signUpData?.user?.identities) && signUpData!.user!.identities!.length === 0) {
+      setSubmitting(false);
       setDuplicateEmailDetected(true);
       setError(null);
       setView("login");
       return;
     }
 
-    // Save fullName to profiles via API (also handles profiles trigger gap).
+    // Save name + cédula to profiles via API (also handles the profiles trigger gap). The
+    // cédula is sent ONLY when present + valid; a "cédula ya registrada" rolls the signup back.
     if (signUpData?.user?.id) {
       try {
-        await fetch("/api/register/client", {
+        const res = await fetch("/api/register/client", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: signUpData.user.id, fullName: resolved }),
+          body: JSON.stringify({ userId: signUpData.user.id, fullName: resolved, cedula: cedulaClean || undefined }),
         });
+        const json = await res.json().catch(() => ({}));
+        if (!res.ok && json?.code === "cedula_taken") {
+          setSubmitting(false);
+          setError("Esta cédula ya está registrada. Inicia sesión.");
+          setView("login");
+          return;
+        }
       } catch {
-        // Non-fatal — name will be saved when session is established
+        // Non-fatal — name will be saved when the session is established.
       }
     }
 
+    setSubmitting(false);
     setStep("otp");
   }
 
@@ -450,14 +478,14 @@ export function ClientRegistrationModal({
                 {/* Step titles */}
                 <div>
                   <h2 className="text-xl font-bold text-[#111827]">
+                    {step === "identity" && t("titleIdentity")}
                     {step === "email" && t("titleEmail")}
-                    {step === "name" && t("titleName")}
                     {step === "password" && t("titlePassword")}
                     {step === "otp" && t("titleOtp")}
                   </h2>
                   <p className="text-sm text-[#6b7280] mt-1">
+                    {step === "identity" && t("subIdentity")}
                     {step === "email" && t("subEmail")}
-                    {step === "name" && t("subName")}
                     {step === "password" && t("subPassword")}
                     {step === "otp" && t("subOtp")}
                   </p>
@@ -469,6 +497,39 @@ export function ClientRegistrationModal({
                   </div>
                 )}
 
+                {/* STEP: identity — cédula FIRST → official name auto-fills from the padrón
+                    (read-only), OR a "No tengo cédula" manual name. Mirrors the booking
+                    flow so the guest never enters their identity twice. */}
+                {step === "identity" && (
+                  <div className="flex flex-col gap-3">
+                    {!noCedula ? (
+                      <IdentityField
+                        cedula={cedula}
+                        fullName={fullName}
+                        onCedulaChange={(c) => { setCedula(c); setError(null); }}
+                        onFullNameChange={setFullName}
+                      />
+                    ) : (
+                      <Input
+                        label={`${t("nameLabel")} *`}
+                        placeholder={t("namePlaceholder")}
+                        value={manualName}
+                        onChange={(e) => setManualName(e.target.value)}
+                        autoFocus
+                      />
+                    )}
+                    {/* Brand-blue "No tengo cédula" escape (manual name, flagged unverified),
+                        same pattern as the booking flow. */}
+                    <button
+                      type="button"
+                      onClick={() => { setNoCedula((v) => !v); setError(null); }}
+                      className="self-start text-xs font-semibold text-[#009FD9] hover:underline"
+                    >
+                      {noCedula ? t("haveCedula") : t("noCedula")}
+                    </button>
+                  </div>
+                )}
+
                 {/* STEP: email */}
                 {step === "email" && (
                   <Input
@@ -477,17 +538,6 @@ export function ClientRegistrationModal({
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="tu@email.com"
-                    autoFocus
-                  />
-                )}
-
-                {/* STEP: name — full name only (cédula is collected at booking) */}
-                {step === "name" && (
-                  <Input
-                    label={`${t("nameLabel")} *`}
-                    placeholder={t("namePlaceholder")}
-                    value={manualName}
-                    onChange={(e) => setManualName(e.target.value)}
                     autoFocus
                   />
                 )}
@@ -541,14 +591,14 @@ export function ClientRegistrationModal({
               {/* Actions */}
               {view === "register" ? (
                 <div className="flex gap-3">
-                  {step !== "email" && (
+                  {step !== "identity" && (
                     <Button
                       variant="outline"
                       size="md"
                       onClick={() => {
                         setError(null);
-                        if (step === "name") setStep("email");
-                        else if (step === "password") setStep("name");
+                        if (step === "email") setStep("identity");
+                        else if (step === "password") setStep("email");
                       }}
                     >
                       <ArrowLeft className="h-4 w-4" />
@@ -559,14 +609,14 @@ export function ClientRegistrationModal({
                     className="flex-1"
                     loading={submitting}
                     disabled={
+                      (step === "identity" && !identityReady) ||
                       (step === "email" && !email.includes("@")) ||
-                      (step === "name" && !manualName.trim()) ||
                       (step === "password" && (!isPasswordValid() || !confirmPassword))
                     }
                     onClick={() => {
                       setError(null);
-                      if (step === "email") setStep("name");
-                      else if (step === "name") setStep("password");
+                      if (step === "identity") setStep("email");
+                      else if (step === "email") setStep("password");
                       else if (step === "password") handleSignUp();
                     }}
                   >
