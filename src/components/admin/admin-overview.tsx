@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, Bell, ChevronDown, UserPlus, Users, Briefcase, ShieldCheck, ArrowUpRight, ArrowDownRight, ChevronRight } from "lucide-react";
+import { Search, ChevronDown, UserPlus, Users, Briefcase, ShieldCheck, ArrowUpRight, ArrowDownRight, ChevronRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { formatRelativeTime } from "@/lib/utils";
 import type { AdminOverview as Data, Kpi, RankItem } from "@/lib/admin/overview";
@@ -135,9 +135,9 @@ export function AdminOverview({ adminName, data }: { adminName: string; data: Da
           />
           <kbd className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rounded border border-[#e5e7eb] bg-[#f8fafc] px-1.5 py-0.5 text-[10px] font-semibold text-[#94a3b8]">⌘K</kbd>
         </div>
-        <button aria-label="Notificaciones" className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#e5e7eb] bg-white text-[#64748b] hover:bg-[#f8fafc]">
-          <Bell className="h-4 w-4" />
-        </button>
+        {/* (Removed a dead "Notificaciones" Bell button — it had no behavior and there is
+            no admin-notifications system; pending items already surface as count badges in
+            the admin sidebar nav, sprint 332.) */}
         <div className="relative shrink-0">
           <select className="h-10 appearance-none rounded-xl border border-[#e5e7eb] bg-white pl-3 pr-9 text-sm font-medium text-[#334155] focus:outline-none focus:ring-2 focus:ring-[#38bdf8] cursor-pointer">
             <option>Últimos 7 días</option>
