@@ -802,22 +802,18 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   }
 
   // "No tengo su cédula" escape for the OTHER person (mirrors the self escape): proceed
-  // without an ID, type the name manually, pro sees the person as "sin verificar".
+  // without an ID, type the name manually, pro sees the person as "sin verificar". The
+  // verbose "Enviarás la solicitud sin cédula verificada…" notice was removed (sprint 310)
+  // — it's unneeded form clutter (the pro already sees the unverified status on the
+  // received request); just the toggle-back link remains.
   function renderBenCedulaEscape() {
-    if (benNoCedula) {
-      return (
-        <div className="rounded-lg bg-white border border-[#e5e7eb] px-3 py-2.5 flex items-start gap-2">
-          <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5 text-[#6b7280]" />
-          <div className="text-xs text-[#6b7280] leading-snug break-words">
-            <p>Enviarás la solicitud <strong>sin cédula verificada</strong> de la persona. El profesional lo verá y decide si la contacta.</p>
-            <button type="button" onClick={() => toggleBenNoCedula(false)} className="mt-1 font-semibold text-[#009FD9] hover:underline">Tengo su cédula</button>
-          </div>
-        </div>
-      );
-    }
     return (
-      <button type="button" onClick={() => toggleBenNoCedula(true)} className="self-start -mt-1 text-xs font-semibold text-[#009FD9] hover:underline">
-        No tengo su cédula
+      <button
+        type="button"
+        onClick={() => toggleBenNoCedula(!benNoCedula)}
+        className="self-start -mt-1 text-xs font-semibold text-[#009FD9] hover:underline"
+      >
+        {benNoCedula ? "Tengo su cédula" : "No tengo su cédula"}
       </button>
     );
   }
@@ -1222,12 +1218,17 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
 
                   {forSomeoneElse && (
                     <div className="rounded-xl border border-[#e5e7eb] p-3 flex flex-col gap-3 bg-[#f9fafb]">
+                      {/* A single section TITLE makes clear every field below is the OTHER
+                          person's — so the labels stay simple ("Número de identificación",
+                          "Nombre completo", "Teléfono") instead of repeating "de la otra
+                          persona" on each one (sprint 310). */}
+                      <p className="text-sm font-semibold text-[#111827]">Datos de la otra persona</p>
                       {/* IDENTIFICATION FIRST (like the self flow) — the name auto-fills from
                           it below. "No tengo su cédula" lets you proceed without it. */}
                       {!benNoCedula && (
                         <>
                           <CedulaInput
-                            labelText="Número de identificación de la otra persona"
+                            labelText="Número de identificación"
                             value={benCedula}
                             onChange={setBenCedula}
                           />
@@ -1248,7 +1249,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                           resolves it; a manual field otherwise (no cédula / DIMEX / not found). */}
                       {benHasAutoName ? (
                         <div>
-                          <label className="text-xs font-medium text-[#374151] block mb-1.5">Nombre completo de la persona</label>
+                          <label className="text-xs font-medium text-[#374151] block mb-1.5">Nombre completo</label>
                           <div className="flex h-10 items-center justify-between rounded-xl border border-[#bbf7d0] bg-[#f0fdf4] px-4">
                             <span className="truncate text-sm font-medium text-[#15803d]">{benLookupName}</span>
                             <Check className="h-4 w-4 shrink-0 text-[#15803d]" />
@@ -1256,12 +1257,12 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                         </div>
                       ) : (
                         <div>
-                          <label className="text-xs font-medium text-[#374151] block mb-1.5">Nombre completo de la persona <span className="text-red-500">*</span></label>
+                          <label className="text-xs font-medium text-[#374151] block mb-1.5">Nombre completo <span className="text-red-500">*</span></label>
                           <input
                             type="text"
                             value={benName}
                             onChange={(e) => setBenName(e.target.value)}
-                            placeholder="Nombre de la persona que recibe el servicio"
+                            placeholder="Nombre y apellidos"
                             className="w-full h-10 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent"
                           />
                         </div>
@@ -1299,7 +1300,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                             )
                           )}
                           <PhoneInput
-                            label="Teléfono de la persona"
+                            label="Teléfono"
                             optional
                             value={benPhone}
                             onChange={setBenPhone}
