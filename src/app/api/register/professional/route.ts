@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient as createServerClient } from "@/lib/supabase/server";
 import { runIdentityVerification } from "@/lib/verification/run-verification";
+import { reconcileProfileEmail } from "@/lib/auth/reconcile-profile-email";
 
 export async function POST(req: Request) {
   try {
@@ -135,27 +136,37 @@ export async function POST(req: Request) {
     // ── 3. Upsert profile ─────────────────────────────────────────────────────
     //    Uses service_role so it bypasses RLS; FK is satisfied because userId
     //    was just confirmed valid by auth.getUser() above.
-    const { error: profileError } = await supabase
-      .from("profiles")
-      .upsert(
-        {
-          id: userId,
-          email,
-          full_name: fullName,
-          cedula: cedula || null,
-          role: "professional",
-          onboarding_completed: true,
-          ...(photoUrl ? { avatar_url: photoUrl } : {}),
-        },
-        { onConflict: "id" }
-      );
+    const profileRow = {
+      id: userId,
+      email,
+      full_name: fullName,
+      cedula: cedula || null,
+      role: "professional",
+      onboarding_completed: true,
+      ...(photoUrl ? { avatar_url: photoUrl } : {}),
+    };
+
+    let { error: profileError } = await supabase.from("profiles").upsert(profileRow, { onConflict: "id" });
+
+    // SELF-HEAL a STALE email collision: the email is free in Auth but a leftover profiles
+    // row still holds it from a past email change. Reconcile that row against Auth and RETRY
+    // (frees an old email even if the sync trigger/mirror never ran). See register/client.
+    if (profileError && /profiles_email_key|idx_profiles_email_unique/i.test(profileError.message)) {
+      const freed = await reconcileProfileEmail(supabase, email);
+      if (freed) {
+        ({ error: profileError } = await supabase.from("profiles").upsert(profileRow, { onConflict: "id" }));
+      }
+    }
 
     if (profileError) {
       console.error("[register/professional] profile upsert error:", profileError);
-      const friendly = /duplicate key|cedula/i.test(profileError.message)
-        ? "Esta cédula ya está registrada. Inicia sesión o recupera tu cuenta."
-        : "No pudimos crear tu cuenta. Intenta de nuevo en unos minutos.";
-      return NextResponse.json({ error: friendly }, { status: 500 });
+      const dupEmail = /profiles_email_key|idx_profiles_email_unique/i.test(profileError.message);
+      const friendly = dupEmail
+        ? "Este correo ya está registrado. Inicia sesión."
+        : /duplicate key|cedula/i.test(profileError.message)
+          ? "Esta cédula ya está registrada. Inicia sesión o recupera tu cuenta."
+          : "No pudimos crear tu cuenta. Intenta de nuevo en unos minutos.";
+      return NextResponse.json({ error: friendly, ...(dupEmail ? { code: "email_taken" } : {}) }, { status: dupEmail ? 409 : 500 });
     }
 
     // ── 4. Check if professional already exists ───────────────────────────────

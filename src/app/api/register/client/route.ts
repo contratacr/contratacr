@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient as createServerClient } from "@/lib/supabase/server";
+import { reconcileProfileEmail } from "@/lib/auth/reconcile-profile-email";
 
 export async function POST(req: Request) {
   try {
@@ -35,20 +36,35 @@ export async function POST(req: Request) {
       name = fullName ?? (adminLookup.user.user_metadata?.full_name as string) ?? "";
     }
 
-    const { error: profileError } = await supabase
-      .from("profiles")
-      .upsert(
-        {
-          id: userId,
-          email,
-          full_name: name,
-          role: "client",
-          onboarding_completed: true,
-          ...(cedula ? { cedula: String(cedula).replace(/\D/g, "") } : {}),
-          ...(phone ? { phone } : {}),
-        },
-        { onConflict: "id" }
-      );
+    const profileRow = {
+      id: userId,
+      email,
+      full_name: name,
+      role: "client",
+      onboarding_completed: true,
+      ...(cedula ? { cedula: String(cedula).replace(/\D/g, "") } : {}),
+      ...(phone ? { phone } : {}),
+    };
+
+    let { error: profileError } = await supabase.from("profiles").upsert(profileRow, { onConflict: "id" });
+
+    // Detect a genuine DUPLICATE by the UNIQUE constraint/index NAME only — never by the
+    // bare word "cedula"/"email" (a NOT-NULL or other error mentioning the column would
+    // otherwise be mislabeled as "ya está registrada").
+    const isDupCedula = (m?: string) => !!m && /profiles_cedula_key|idx_profiles_cedula_unique/i.test(m);
+    const isDupEmail = (m?: string) => !!m && /profiles_email_key|idx_profiles_email_unique/i.test(m);
+
+    // SELF-HEAL a STALE email collision: the email is free in Auth (we just created/own this
+    // auth user) but a leftover profiles row still holds it from a past email change. Reconcile
+    // that row against Auth (re-sync or delete the orphan) and RETRY — so a freed email is
+    // reusable even if the sync trigger/mirror never ran. (Fixes the "old email still blocked
+    // after an email change" bug at the source, not just for new changes.)
+    if (profileError && isDupEmail(profileError.message)) {
+      const freed = await reconcileProfileEmail(supabase, email);
+      if (freed) {
+        ({ error: profileError } = await supabase.from("profiles").upsert(profileRow, { onConflict: "id" }));
+      }
+    }
 
     if (profileError) {
       // Log the REAL DB error (the friendly message below never leaks it) so a
@@ -64,15 +80,10 @@ export async function POST(req: Request) {
         try { await supabase.auth.admin.deleteUser(userId); } catch { /* best-effort */ }
       }
 
-      // Detect a genuine DUPLICATE by the UNIQUE constraint/index NAME only — never
-      // by the bare word "cedula"/"email" (a NOT-NULL or other error mentioning the
-      // column would otherwise be mislabeled as "ya está registrada").
-      const dupCedula = /profiles_cedula_key|idx_profiles_cedula_unique/i.test(profileError.message);
-      const dupEmail = /profiles_email_key|idx_profiles_email_unique/i.test(profileError.message);
-      if (dupEmail) {
+      if (isDupEmail(profileError.message)) {
         return NextResponse.json({ error: "Este correo ya está registrado. Inicia sesión.", code: "email_taken" }, { status: 409 });
       }
-      if (dupCedula) {
+      if (isDupCedula(profileError.message)) {
         return NextResponse.json({ error: "Esta cédula ya está registrada.", code: "cedula_taken" }, { status: 409 });
       }
       return NextResponse.json({ error: "No pudimos crear tu cuenta. Intenta de nuevo en unos minutos." }, { status: 500 });
