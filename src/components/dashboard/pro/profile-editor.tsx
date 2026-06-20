@@ -532,18 +532,14 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
           />
         </div>
 
-        {/* Official name — locked once verified (backs the verified badge) */}
+        {/* Official name — locked when verified / national cédula. The "Verificado" badge
+            lives ONCE in the panel HEADER (next to the name+avatar); here the Lock icon +
+            the help text below already convey the field is official + read-only, so we do
+            NOT repeat "Verificado" in this label (sprint 323 dedup). */}
         {nameLocked ? (
           <div>
             <Input
-              label={
-                <span className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
-                  {t("fullName")}
-                  {/* Green "Verificado" only when actually verified — a national cédula that's
-                      still pending review locks the name but doesn't claim the badge yet. */}
-                  {verified && <span className="inline-flex items-center whitespace-nowrap shrink-0 text-[11px] font-semibold text-[#16a34a]">{t("identityVerified")}</span>}
-                </span>
-              }
+              label={t("fullName")}
               value={fullName}
               disabled
               rightIcon={<Lock className="h-4 w-4" />}
