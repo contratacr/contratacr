@@ -33,20 +33,17 @@ export function StatusFilterTabs({
             type="button"
             onClick={() => onChange(tab.id)}
             className={cn(
-              "inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[13px] font-semibold transition-colors",
+              "inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-[13px] font-semibold transition-colors",
               active
                 ? "border-[#009FD9] bg-[#009FD9] text-white"
                 : "border-[#e5e7eb] bg-white text-[#374151] hover:bg-[#f9fafb]"
             )}
           >
             {tr(tab.id)}
+            {/* Count: a clean, subtle muted number after the label (no heavy badge) —
+                white-dimmed on the active pill, gray on inactive; tabular for alignment. */}
             {counts && (
-              <span
-                className={cn(
-                  "inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full px-1 text-[11px] font-bold leading-none",
-                  active ? "bg-white/25 text-white" : "bg-[#eef1f4] text-[#6b7280]"
-                )}
-              >
+              <span className={cn("text-[12px] font-semibold tabular-nums", active ? "text-white/70" : "text-[#9ca3af]")}>
                 {count}
               </span>
             )}
