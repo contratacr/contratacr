@@ -562,18 +562,15 @@ export function LandingHero() {
 
   return (
     <section className="relative bg-white overflow-hidden">
-      {/* Headline + subtitle — narrower container for readability */}
-      <div className="relative mx-auto max-w-3xl px-4 sm:px-6 text-center pt-20 sm:pt-28 pb-6">
+      {/* Headline — narrower container for readability */}
+      <div className="relative mx-auto max-w-3xl px-4 sm:px-6 text-center pt-20 sm:pt-28 pb-8">
         <h1
-          className="font-extrabold text-[#1a2744] tracking-tight mb-4"
+          className="font-extrabold text-[#1a2744] tracking-tight"
           style={{ fontSize: "clamp(2rem, 5.5vw, 3.6rem)", lineHeight: 1.1 }}
         >
           <RotatingLine lines={lines} />
           <span className="block">{t("headline2")}</span>
         </h1>
-        <p className="text-base sm:text-xl text-gray-400 max-w-lg mx-auto leading-relaxed">
-          {t("subtitle")}
-        </p>
       </div>
 
       {/* ── Search bar — full-width in wider container ── */}
