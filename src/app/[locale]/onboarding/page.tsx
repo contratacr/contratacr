@@ -223,6 +223,8 @@ export default function OnboardingPage() {
             </button>
 
           </div>
+          {/* You're never boxed into one role — either action can add the other later. */}
+          <p className="text-center text-xs text-gray-400 mt-5">{tc("bothNote")}</p>
         </div>
       </main>
 

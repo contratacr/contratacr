@@ -71,7 +71,10 @@ export default function RegisterPage() {
             </Link>
           </div>
 
-          <p className="text-center text-sm text-[#6b7280] mt-8">
+          {/* You're never boxed into one role — either action can add the other later. */}
+          <p className="text-center text-xs text-[#9ca3af] mt-5">{t("bothNote")}</p>
+
+          <p className="text-center text-sm text-[#6b7280] mt-4">
             {t("haveAccount")}{" "}
             <Link href="/login" className="text-[#009FD9] font-medium hover:underline">
               {t("signIn")}
