@@ -768,6 +768,18 @@
       "forMe": "Para mí",
       "forOther": "Para otra persona"
     },
+    "forWho": {
+      "question": "¿Para quién es la cita?",
+      "questionCare": "¿Para quién es el servicio?",
+      "me": "Para mí",
+      "other": "Para otra persona",
+      "helper": "Para un menor o un familiar a tu cargo que no usa la app.",
+      "patientTitle": "Datos del paciente",
+      "personTitle": "Datos de la persona",
+      "nameLabel": "Nombre completo",
+      "namePlaceholder": "Nombre y apellidos",
+      "dobLabel": "Fecha de nacimiento"
+    },
     "step2": {
       "title": "Verifica tu identidad",
       "cedula": "Número de cédula",

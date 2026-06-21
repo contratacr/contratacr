@@ -426,6 +426,19 @@ export function isHealthCategory(id?: string | null): boolean {
   return !!id && HEALTH_CATEGORY_IDS.has(id);
 }
 
+/* ─── CARE categories — a SUBSET of health that is CARE of a person (not a clinical
+   consult). Used only to pick natural wording in the booking "¿Para quién?" block:
+   a CARE recipient is "la persona", not "el paciente" (a niñera's child isn't a
+   "patient"). Everything else in HEALTH_CATEGORY_IDS is clinical → "paciente". ─── */
+export const CARE_CATEGORY_IDS = new Set<string>([
+  "cuidado_adultos", "cuidado_discapacidad", "cuidado_infantil",
+]);
+
+/** True if the category is CARE of a person (vs a clinical consult). */
+export function isCareCategory(id?: string | null): boolean {
+  return !!id && CARE_CATEGORY_IDS.has(id);
+}
+
 /** True if ANY of the professional's categories is a health category. */
 export function anyHealthCategory(ids?: (string | null | undefined)[]): boolean {
   return (ids ?? []).some((id) => isHealthCategory(id));

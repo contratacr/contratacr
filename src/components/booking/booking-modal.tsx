@@ -11,12 +11,12 @@ import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { useTranslations, useLocale } from "next-intl";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { PhoneInput, isPhoneComplete, hasPhoneNumber } from "@/components/ui/phone-input";
+import { PhoneInput, hasPhoneNumber } from "@/components/ui/phone-input";
 import { DateOfBirthPicker, formatDobDMY } from "@/components/ui/date-of-birth-picker";
 import { CedulaInput } from "@/components/ui/cedula-input";
 import { isValidId, detectIdType, cleanId } from "@/lib/cedula";
 import { computeAge, formatAge, isMinorFromDob } from "@/lib/age";
-import { anyHealthCategory, getCategoryLabel } from "@/lib/data/categories";
+import { anyHealthCategory, isCareCategory, getCategoryLabel } from "@/lib/data/categories";
 import { StarRating } from "@/components/ui/star-rating";
 import { getInitials, getWhatsAppLink, buildBookingIcs, proDisplayName } from "@/lib/utils";
 import { cn } from "@/lib/utils";
@@ -177,25 +177,16 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   // moment it validates so the user sees it BEFORE the mismatch/confirm step.
   const [cedulaTaken, setCedulaTaken] = useState(false);
   const [checkingCedula, setCheckingCedula] = useState(false);
-  // Booking for someone else: responsible party (the account holder) vs beneficiary.
-  // The beneficiary's cédula is ALWAYS optional; a minor may be a beneficiary but
-  // never an account holder. Data minimization: only the appointment-needed info.
+  // Booking for someone else — ONLY offered for HEALTH/medical services, and ONLY for a
+  // DEPENDENT the requester books on behalf of (a child / an older or disabled relative
+  // who can't use the app). Connector data-minimization: we collect ONLY what changes
+  // what the pro does before contact — the beneficiary's NAME + DATE OF BIRTH (age =
+  // clinical triage / the minor·adulto-mayor badge). No beneficiary cédula or phone:
+  // the pro doesn't need the patient's ID to accept/prepare, and the REQUESTER (account
+  // holder) is the coordination contact. The requester stays the booking's phone/identity.
   const [forSomeoneElse, setForSomeoneElse] = useState(false);
-  // Beneficiary identification: shown FIRST (like the self flow); "No tengo su cédula"
-  // sets this true → no ID, manual name, flagged unverified to the pro (like the self
-  // no-cédula path). Replaces the old "¿La persona tiene cédula?" Sí/No question.
-  const [benNoCedula, setBenNoCedula] = useState(false);
-  const [benCedula, setBenCedula] = useState("");
   const [benName, setBenName] = useState("");
   const [benDob, setBenDob] = useState("");
-  // True when the beneficiary's DOB was AUTO-FILLED from our saved store (keyed by
-  // their cédula) → shown locked with a "Corregir" affordance instead of an open field.
-  const [benDobLocked, setBenDobLocked] = useState(false);
-  const [benPhone, setBenPhone] = useState("");
-  const [benLookupName, setBenLookupName] = useState<string | null>(null);
-  // True while a cédula lookup is in flight — used to suppress a premature
-  // "not found" flash before the lookup resolves.
-  const [benCedulaLoading, setBenCedulaLoading] = useState(false);
   // Live padrón NAME for the client's OWN cédula (the padrón has NO birth date).
   const [selfCedulaName, setSelfCedulaName] = useState<string | null>(null);
   // The account's SAVED date of birth (backend-only, from profiles.date_of_birth — NOT
@@ -238,8 +229,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     setProfileError(null);
     setAvailabilityPrivate(false);
     setForSomeoneElse(false);
-    setBenNoCedula(false);
-    setBenCedula(""); setBenName(""); setBenDob(""); setBenDobLocked(false); setBenPhone(""); setBenLookupName(null);
+    setBenName(""); setBenDob("");
     setSelfDobInput(""); setDobEditing(false); setSelfDob(null); setSubmitError(null); setNoCedula(false);
     // Reset the on-file identity so the DB is the authoritative source each open —
     // a social-login account with no cédula must always be (re)prompted.
@@ -313,53 +303,12 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     });
   }, [open, professional.id, initialDate, initialTime]);
 
-  // Beneficiary cédula → padrón name auto-fill (debounced). Optional; never blocks.
+  // "Para otra persona" only exists for HEALTH services — if the (effective) category is
+  // not health, force it back to "para mí" so a multi-profession pro who switches to a
+  // non-health service never carries a stale beneficiary selection.
   useEffect(() => {
-    if (!forSomeoneElse || benNoCedula) { setBenLookupName(null); setBenCedulaLoading(false); return; }
-    // The cédula changed → drop the previously auto-filled NAME (DOB is handled by the
-    // saved-DOB effect below) so a different number never keeps the prior person's name.
-    setBenLookupName(null); setBenName("");
-    const clean = cleanId(benCedula);
-    if (!isValidId(clean) || detectIdType(clean) !== "cedula") { setBenCedulaLoading(false); return; }
-    let active = true;
-    setBenCedulaLoading(true);
-    const t = setTimeout(async () => {
-      try {
-        const res = await fetch(`/api/cedula/${clean}`);
-        if (!active) return;
-        if (res.ok) {
-          // NAME only — the padrón has no birth date (DOB comes from our saved store).
-          const { fullName } = await res.json();
-          setBenLookupName(fullName ?? null);
-          if (fullName) setBenName(fullName);
-        } else {
-          setBenLookupName(null);
-        }
-      } catch { if (active) setBenLookupName(null); }
-      finally { if (active) setBenCedulaLoading(false); }
-    }, 500);
-    return () => { active = false; clearTimeout(t); };
-  }, [benCedula, benNoCedula, forSomeoneElse]);
-
-  // Saved beneficiary DOB by cédula → auto-fill on REUSE (own store, owner-scoped). The
-  // padrón has no birth date, so the first time it's asked manually + saved; thereafter
-  // it pre-fills (locked, with a "Corregir" affordance). MEDICAL only matters downstream.
-  useEffect(() => {
-    setBenDob(""); setBenDobLocked(false);
-    if (!forSomeoneElse || benNoCedula || !isLoggedIn) return;
-    const clean = cleanId(benCedula);
-    if (!isValidId(clean) || detectIdType(clean) !== "cedula") return;
-    let active = true;
-    createClient()
-      .from("beneficiary_dob")
-      .select("dob")
-      .eq("cedula", clean)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (active && data?.dob) { setBenDob(String(data.dob)); setBenDobLocked(true); }
-      });
-    return () => { active = false; };
-  }, [benCedula, benNoCedula, forSomeoneElse, isLoggedIn]);
+    if (!proIsHealth) { setForSomeoneElse(false); setBenName(""); setBenDob(""); }
+  }, [proIsHealth]);
 
   // Live checks for the client's own ID (guest/needs-cédula flows):
   //  1) Whether it's ALREADY linked to another account — flagged immediately so the
@@ -513,17 +462,16 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
           preferredDateText: selectedDate
             ? `${formatDateDisplay(selectedDate)}${selectedTime ? ` a las ${selectedTime}` : ""}`
             : null,
-          // Booking for someone else (responsible adult vs beneficiary).
+          // Booking for someone else (a health-only DEPENDENT). We collect ONLY the
+          // beneficiary's name + DOB — no cédula, no phone (the requester is the contact
+          // and the pro doesn't need the patient's ID to accept/prepare).
           forSomeoneElse,
           beneficiaryName: forSomeoneElse ? (benName.trim() || null) : null,
-          // Store the beneficiary ID only when it's a national cédula CONFIRMED in the
-          // padrón (benHasAutoName) or a DIMEX (foreign) — so the pro's verified/unverified
-          // badge is accurate (a typed national cédula not found in the padrón → no ID).
-          beneficiaryCedula: forSomeoneElse && !benNoCedula && (benHasAutoName || benIsForeignId) ? (cleanId(benCedula) || null) : null,
+          beneficiaryCedula: null,
+          beneficiaryPhone: null,
           // DOB only for HEALTH services (data minimization). Omitted for non-health.
           clientDob: proIsHealth && !forSomeoneElse ? (effectiveSelfDob || null) : null,
           beneficiaryDob: proIsHealth && forSomeoneElse && benDob ? benDob : null,
-          beneficiaryPhone: forSomeoneElse && benPhone.replace(/\D/g, "").length > 3 ? benPhone : null,
           beneficiaryIsMinor: proIsHealth && forSomeoneElse && benDob ? isMinorFromDob(benDob) : false,
         }),
       });
@@ -644,28 +592,20 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   // (it's no longer collected at signup). Phone is collected the same way.
   // "Needs cédula" depends on whether the account had one ON FILE (stable), NOT on
   // the live input value — otherwise typing fills profileCedula and the field
-  // vanishes mid-keystroke. Gated on profileLoaded so it never flashes either.
-  // Booking FOR ANOTHER PERSON: we don't require the account holder's OWN cédula
-  // or WhatsApp again — the appointment contact is the beneficiary's number
-  // (collected + required below). Only self-bookings require the holder's cédula.
+  // vanishes mid-keystroke. Gated on profileLoaded so it never flashes either. The
+  // holder's cédula is only adopted for SELF bookings (a beneficiary's identity never
+  // touches the account), so this stays gated on !forSomeoneElse.
   const needsCedula = isLoggedIn && profileLoaded && !hasStoredCedula && !forSomeoneElse;
-  const needsPhone = isLoggedIn && !profilePhone && !forSomeoneElse;
+  // The REQUESTER is always the coordination contact (incl. for a dependent booking,
+  // since we no longer collect a beneficiary phone) — so require a phone on file
+  // regardless of who the service is for.
+  const needsPhone = isLoggedIn && !profilePhone;
 
   // Foreign / migratory ID (DIMEX/NITE): a VALID id that is NOT in the TSE padrón, so the
   // identity can't be padrón-verified. The request still goes through, but the pro sees it
   // as "sin verificar" — same as the no-cédula path. Drives the inline note below.
   const selfIsForeignId = !!profileCedula && isValidId(cleanId(profileCedula)) && detectIdType(cleanId(profileCedula)) !== "cedula";
 
-  // Beneficiary identification (same rules as self). `benHasAutoName` = a national cédula
-  // resolved the padrón name (shown read-only); else the name is typed manually.
-  const benClean = cleanId(benCedula);
-  const benIsForeignId = !benNoCedula && !!benCedula && isValidId(benClean) && detectIdType(benClean) !== "cedula";
-  const benHasAutoName = !benNoCedula && !!benLookupName;
-  // The other person's phone is OPTIONAL (a child / older adult may have none): empty is
-  // fine; only block a PARTIALLY-typed number. >3 digits ⇒ a real number was started
-  // (more than just a country code).
-  const benHasPhone = benPhone.replace(/\D/g, "").length > 3;
-  const benPhoneOk = !benHasPhone || isPhoneComplete(benPhone);
   // Self: a national cédula resolved the official name → the name auto-fills (read-only)
   // below the ID; otherwise (no cédula / DIMEX) it's typed manually.
   const selfHasAutoName = !noCedula && !!selfCedulaName && !selfIsForeignId;
@@ -798,39 +738,6 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
       <div className="rounded-lg bg-[#fffbeb] border border-[#fde68a] px-3 py-2 -mt-1 flex items-start gap-2">
         <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5 text-[#b45309]" />
         <p className="text-xs text-[#92400e] leading-snug break-words">Identificación extranjera (DIMEX/NITE). No se verifica contra el padrón; el profesional verá tu solicitud como <strong>no verificada</strong>. Escribe tu nombre completo abajo.</p>
-      </div>
-    );
-  }
-
-  function toggleBenNoCedula(on: boolean) {
-    setBenNoCedula(on);
-    if (on) { setBenCedula(""); setBenLookupName(null); setBenName(""); }
-  }
-
-  // "No tengo su cédula" escape for the OTHER person (mirrors the self escape): proceed
-  // without an ID, type the name manually, pro sees the person as "sin verificar". The
-  // verbose "Enviarás la solicitud sin cédula verificada…" notice was removed (sprint 310)
-  // — it's unneeded form clutter (the pro already sees the unverified status on the
-  // received request); just the toggle-back link remains.
-  function renderBenCedulaEscape() {
-    return (
-      <button
-        type="button"
-        onClick={() => toggleBenNoCedula(!benNoCedula)}
-        className="self-start -mt-1 text-xs font-semibold text-[#009FD9] hover:underline"
-      >
-        {benNoCedula ? "Tengo su cédula" : "No tengo su cédula"}
-      </button>
-    );
-  }
-
-  // DIMEX/NITE note for the beneficiary.
-  function renderBenForeignIdNote() {
-    if (!benIsForeignId) return null;
-    return (
-      <div className="rounded-lg bg-[#fffbeb] border border-[#fde68a] px-3 py-2 -mt-1 flex items-start gap-2">
-        <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5 text-[#b45309]" />
-        <p className="text-xs text-[#92400e] leading-snug break-words">Identificación extranjera (DIMEX/NITE). No se verifica contra el padrón; el profesional la verá como <strong>no verificada</strong>. Escribe el nombre abajo.</p>
       </div>
     );
   }
@@ -1203,28 +1110,38 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     )}
                   </div>
 
-                  {/* ¿Para quién es la cita? — responsible adult vs beneficiary */}
-                  <div>
-                    <label className="text-sm font-medium text-[#374151] block mb-1.5">¿Para quién es la cita? <span className="text-red-500">*</span></label>
-                    <div className="grid grid-cols-2 gap-2">
-                      {([
-                        { v: false, label: "Para mí" },
-                        { v: true, label: "Para otra persona" },
-                      ] as const).map((opt) => (
-                        <button
-                          key={String(opt.v)}
-                          type="button"
-                          onClick={() => setForSomeoneElse(opt.v)}
-                          className={cn(
-                            "p-2.5 rounded-xl border-2 text-sm font-medium transition-all",
-                            forSomeoneElse === opt.v ? "border-[#009FD9] bg-[#EBF5FB] text-[#0089bb]" : "border-[#e5e7eb] text-[#374151] hover:border-[#009FD9]/40"
-                          )}
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
+                  {/* ¿Para quién? — shown ONLY for HEALTH services (a doctor/therapist/carer
+                      attends a specific person, so age = clinical triage). For every other
+                      category the service is for the requester / a place / an object, so the
+                      toggle is hidden and we collect requester data only. */}
+                  {proIsHealth && (
+                    <div>
+                      <label className="text-sm font-medium text-[#374151] block mb-1.5">
+                        {isCareCategory(effectiveCategory) ? t("forWho.questionCare") : t("forWho.question")} <span className="text-red-500">*</span>
+                      </label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {([
+                          { v: false, label: t("forWho.me") },
+                          { v: true, label: t("forWho.other") },
+                        ] as const).map((opt) => (
+                          <button
+                            key={String(opt.v)}
+                            type="button"
+                            onClick={() => setForSomeoneElse(opt.v)}
+                            className={cn(
+                              "p-2.5 rounded-xl border-2 text-sm font-medium transition-all",
+                              forSomeoneElse === opt.v ? "border-[#009FD9] bg-[#EBF5FB] text-[#0089bb]" : "border-[#e5e7eb] text-[#374151] hover:border-[#009FD9]/40"
+                            )}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                      {forSomeoneElse && (
+                        <p className="text-xs text-[#9ca3af] mt-1.5 leading-snug">{t("forWho.helper")}</p>
+                      )}
                     </div>
-                  </div>
+                  )}
 
                   {/* DOB for HEALTH services, "para mí" — ONLY when the cédula is already
                       on file (auto-filled from it, or asked once if the roll has no DOB).
@@ -1232,94 +1149,33 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                       next step (so typing it auto-fills name + DOB together). */}
                   {proIsHealth && !forSomeoneElse && hasStoredCedula && renderSelfDobField()}
 
+                  {/* Beneficiary (a HEALTH dependent) — NAME + DATE OF BIRTH only. The pro
+                      attends THIS person and the age drives triage + the minor/adulto-mayor
+                      badge; we collect nothing else (no cédula, no phone — the requester is
+                      the coordination contact). */}
                   {forSomeoneElse && (
                     <div className="rounded-xl border border-[#e5e7eb] p-3 flex flex-col gap-3 bg-[#f9fafb]">
-                      {/* A single section TITLE makes clear every field below is the OTHER
-                          person's — so the labels stay simple ("Número de identificación",
-                          "Nombre completo", "Teléfono") instead of repeating "de la otra
-                          persona" on each one (sprint 310). */}
-                      <p className="text-sm font-semibold text-[#111827]">Datos de la otra persona</p>
-                      {/* IDENTIFICATION FIRST (like the self flow) — the name auto-fills from
-                          it below. "No tengo su cédula" lets you proceed without it. */}
-                      {!benNoCedula && (
-                        <>
-                          <CedulaInput
-                            labelText="Número de identificación"
-                            value={benCedula}
-                            onChange={setBenCedula}
-                          />
-                          {/* Only show "not found" AFTER the lookup finishes — never while
-                              it's still in flight (otherwise it flashes for valid cédulas). */}
-                          {benCedula && isValidId(cleanId(benCedula)) && detectIdType(cleanId(benCedula)) === "cedula" && benCedulaLoading && (
-                            <p className="text-xs text-[#9ca3af] -mt-1">Buscando…</p>
-                          )}
-                          {benCedula && isValidId(cleanId(benCedula)) && detectIdType(cleanId(benCedula)) === "cedula" && !benCedulaLoading && !benLookupName && (
-                            <p className="text-xs text-[#b45309] -mt-1">No encontramos esa cédula. Escribe el nombre abajo.</p>
-                          )}
-                          {renderBenForeignIdNote()}
-                        </>
-                      )}
-                      {renderBenCedulaEscape()}
-
-                      {/* NAME — auto-filled (read-only) below the ID when a national cédula
-                          resolves it; a manual field otherwise (no cédula / DIMEX / not found). */}
-                      {benHasAutoName ? (
-                        <div>
-                          <label className="text-xs font-medium text-[#374151] block mb-1.5">Nombre completo</label>
-                          <div className="flex h-10 items-center justify-between rounded-xl border border-[#bbf7d0] bg-[#f0fdf4] px-4">
-                            <span className="truncate text-sm font-medium text-[#15803d]">{benLookupName}</span>
-                            <Check className="h-4 w-4 shrink-0 text-[#15803d]" />
-                          </div>
-                        </div>
-                      ) : (
-                        <div>
-                          <label className="text-xs font-medium text-[#374151] block mb-1.5">Nombre completo <span className="text-red-500">*</span></label>
-                          <input
-                            type="text"
-                            value={benName}
-                            onChange={(e) => setBenName(e.target.value)}
-                            placeholder="Nombre y apellidos"
-                            className="w-full h-10 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent"
-                          />
-                        </div>
-                      )}
-
-                      {/* The rest (DOB for health + phone) is unchanged. */}
-                      <>
-                          {/* DOB REQUIRED for HEALTH services. Padrón has no birth date, so
-                              it's asked once per person and remembered by their cédula: a
-                              SAVED value shows auto-filled + locked with "Corregir"; otherwise
-                              a manual date input. */}
-                          {proIsHealth && (
-                            benDobLocked ? (
-                              <div className="rounded-lg bg-[#f0fdf4] border border-[#bbf7d0] px-3 py-2 flex items-center justify-between gap-2">
-                                <p className="text-xs text-[#15803d] break-words">
-                                  Fecha de nacimiento: <strong>{formatDobDMY(benDob)}</strong>
-                                </p>
-                                <button type="button" onClick={() => setBenDobLocked(false)} className="shrink-0 text-[11px] font-semibold text-[#009FD9] hover:underline">
-                                  Corregir
-                                </button>
-                              </div>
-                            ) : (
-                            <div>
-                              <label className="text-xs font-medium text-[#374151] block mb-1.5">
-                                Fecha de nacimiento <span className="text-red-500">*</span>
-                              </label>
-                              <DateOfBirthPicker
-                                value={benDob}
-                                max={new Date().toISOString().slice(0, 10)}
-                                onChange={setBenDob}
-                              />
-                            </div>
-                            )
-                          )}
-                          <PhoneInput
-                            label="Teléfono"
-                            optional
-                            value={benPhone}
-                            onChange={setBenPhone}
-                          />
-                        </>
+                      <p className="text-sm font-semibold text-[#111827]">
+                        {isCareCategory(effectiveCategory) ? t("forWho.personTitle") : t("forWho.patientTitle")}
+                      </p>
+                      <div>
+                        <label className="text-xs font-medium text-[#374151] block mb-1.5">{t("forWho.nameLabel")} <span className="text-red-500">*</span></label>
+                        <input
+                          type="text"
+                          value={benName}
+                          onChange={(e) => setBenName(e.target.value)}
+                          placeholder={t("forWho.namePlaceholder")}
+                          className="w-full h-10 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-[#374151] block mb-1.5">{t("forWho.dobLabel")} <span className="text-red-500">*</span></label>
+                        <DateOfBirthPicker
+                          value={benDob}
+                          max={new Date().toISOString().slice(0, 10)}
+                          onChange={setBenDob}
+                        />
+                      </div>
                     </div>
                   )}
 
@@ -1546,21 +1402,18 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     className="flex-1"
                     disabled={
                       !description.trim()
-                      || (forSomeoneElse && (!benName.trim() || !benPhoneOk))
+                      || (forSomeoneElse && (!benName.trim() || !benDob))
                       || (proIsHealth && !forSomeoneElse && hasStoredCedula && !effectiveSelfDob)
-                      || (proIsHealth && forSomeoneElse && !benDob)
                     }
                     loading={submitting}
                     onClick={async () => {
                       if (!description.trim()) return;
-                      // Booking for someone else needs the beneficiary's name + a contact
-                      // number for the cita (cédula stays optional).
-                      if (forSomeoneElse && (!benName.trim() || !benPhoneOk)) return;
+                      // Booking for a dependent needs the beneficiary's name + DOB (age).
+                      if (forSomeoneElse && (!benName.trim() || !benDob)) return;
                       // Health services require the patient's DOB. For "para mí" we only
                       // gate HERE when the cédula is already on file; otherwise the DOB is
                       // collected with the cédula at the contact/complete step.
                       if (proIsHealth && !forSomeoneElse && hasStoredCedula && !effectiveSelfDob) return;
-                      if (proIsHealth && forSomeoneElse && !benDob) return;
                       if (isLoggedIn) {
                         if (needsCompleteStep) setStep("complete");
                         else await handleSubmit();

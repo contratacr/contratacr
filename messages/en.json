@@ -768,6 +768,18 @@
       "forMe": "For me",
       "forOther": "For someone else"
     },
+    "forWho": {
+      "question": "Who is the appointment for?",
+      "questionCare": "Who is this service for?",
+      "me": "For me",
+      "other": "For someone else",
+      "helper": "For a child or relative in your care who doesn't use the app.",
+      "patientTitle": "Patient details",
+      "personTitle": "Person's details",
+      "nameLabel": "Full name",
+      "namePlaceholder": "First and last name",
+      "dobLabel": "Date of birth"
+    },
     "step2": {
       "title": "Verify your identity",
       "cedula": "ID number (cédula)",

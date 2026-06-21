@@ -154,11 +154,10 @@ export function BookingRequests() {
     const category = booking.category_id ? getCategoryLabel(booking.category_id, locale) : null;
     const location = booking.slot_location_label || null;
 
-    // First names for friendly WhatsApp greetings.
+    // First name for the friendly WhatsApp greeting (the requester is the only contact).
     const cliFirst = (booking.client_name || t("thePerson")).split(" ")[0];
-    const benFirst = (booking.beneficiary_name || t("thePerson")).split(" ")[0];
-    // Contact: the REQUESTER (account holder) is the primary, reachable contact;
-    // the beneficiary is offered only when they gave a distinct phone.
+    // Contact: the REQUESTER (account holder) is the sole, reachable contact. A
+    // beneficiary (a health dependent) has no phone here — name + age only.
     const waButton = (phone: string, first: string) => (
       <Button variant="whatsapp" asChild className="mt-3 rounded-full">
         <a href={getWhatsAppLink(phone, t("waMessage", { name: first }))} target="_blank" rel="noopener noreferrer">
@@ -233,7 +232,9 @@ export function BookingRequests() {
                on mobile) so each side clearly holds ONE person. Self → one person, no split. */}
         {booking.for_someone_else ? (
           <div className="flex flex-col sm:flex-row">
-            {/* LEFT — the patient (service recipient) */}
+            {/* LEFT — the patient (service recipient). We collect ONLY name + age now, so
+                this side shows just that: who it's for, the age badge, and the birth date.
+                No cédula / phone / WhatsApp — the requester (right) is the contact. */}
             <div className="flex-1 min-w-0 px-[18px] py-4">
               <p className="text-[10px] font-bold uppercase tracking-[0.05em] text-[#0089bb] mb-2.5">{t("apptForLabel")}</p>
               <div className="flex items-center gap-3">
@@ -245,20 +246,11 @@ export function BookingRequests() {
                   {ageBadge(booking.beneficiary_dob, booking.beneficiary_is_minor)}
                 </p>
               </div>
-              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px] text-[#6b7280]">
-                {booking.beneficiary_dob && (
+              {booking.beneficiary_dob && (
+                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px] text-[#6b7280]">
                   <span className="inline-flex items-center gap-1.5"><CalendarDays className="h-[13px] w-[13px] text-[#9ca3af] shrink-0" />{formatDobDMY(booking.beneficiary_dob)}</span>
-                )}
-                {booking.beneficiary_dob && <span className="text-[#9ca3af]">·</span>}
-                <span className="inline-flex items-center gap-1.5"><IdCard className="h-[13px] w-[13px] text-[#9ca3af] shrink-0" />{booking.beneficiary_cedula ? t("benCedula", { cedula: booking.beneficiary_cedula }) : t("noCedula")}</span>
-                {/* Third person's phone — OPTIONAL; shown only when provided. */}
-                {booking.beneficiary_phone && <span className="text-[#9ca3af]">·</span>}
-                {booking.beneficiary_phone && (
-                  <span className="inline-flex items-center gap-1.5"><Phone className="h-[13px] w-[13px] text-[#9ca3af] shrink-0" />{booking.beneficiary_phone}</span>
-                )}
-              </div>
-              {/* WhatsApp the patient — ONLY when they gave a phone. */}
-              {booking.beneficiary_phone && waButton(booking.beneficiary_phone, benFirst)}
+                </div>
+              )}
             </div>
 
             {/* Aesthetic divider — vertical on desktop, horizontal when stacked on mobile. */}
