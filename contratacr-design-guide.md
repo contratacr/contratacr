@@ -115,7 +115,10 @@ Use the standard 4px Tailwind steps. Defaults for this app:
 
 ### Radius & elevation
 - Radius: cards/inputs/buttons `rounded-xl` (12px); chips/badges/pills `rounded-full`; small buttons `rounded-lg`. Big hero CTAs only `rounded-2xl`.
-- Borders over shadows for structure (`border border-[#e5e7eb]`). Use soft shadow (`shadow-sm`) for raised primary buttons and floating popovers/drawers only. Don't stack heavy shadows.
+- **Elevation convention — the ONE rule for card/container shadows (apply everywhere):** there is exactly ONE card elevation, **`shadow-sm`**, and a container gets it **only if it visually FLOATS as a separate, scannable/tappable ITEM**. Concretely:
+  - **Item cards → `shadow-sm`** (the **`Card` primitive**: `rounded-2xl border border-[#e5e7eb] bg-white shadow-sm`): a discrete record in a `gap`-separated list — a received **solicitud / proyecto / propuesta**, a **support ticket**, a **/buscar result**. These are the only shadowed containers.
+  - **Everything else is FLAT** — `border border-[#e5e7eb]`, **no shadow**: **form/section containers** (Mi perfil, Servicios, Disponibilidad, Cuenta y seguridad, Verificación), **single row-list containers** (notificaciones, favoritos — ONE bordered box with `divide-y` rows, not separated cards), **info/empty-state boxes**, and the **panel shell/rail**.
+  - Raised **primary buttons** + floating **popovers / drawers / modals** may also use `shadow-sm`. **Never** stack shadows or go heavier than `shadow-sm`. Borders (not shadows) carry structure; the lone `shadow-sm` only signals "this is a distinct item you act on."
 - **No nested bordered containers (standing rule).** Never wrap a bordered card inside another bordered card inside a bordered section ("boxes within boxes") — it reads cluttered and dated. **At most ONE border level deep** in any region. Separate content with **spacing, a light divider (`border-t border-[#f3f4f6]`), or typographic hierarchy (heading + muted subtext)** — not another box. Concretely: a dashboard section heading sits **directly on the page** (`#fafafa`), not inside its own card; the section's body brings only the light containers it genuinely needs (e.g. individual list/feed items, each a single bordered card). Sub-blocks of a form (e.g. "Tus profesiones" / "Tus servicios") must be styled **consistently** — either both plain (divider-separated) or both a single subtle surface — never one boxed and the other not. Prefer a soft tint surface (`bg-[#f9fafb]`, no border) over a hard border when you need to group. Apply this to BOTH dashboards and the public profile.
 
 ### Components & standards
@@ -140,7 +143,7 @@ Use the standard 4px Tailwind steps. Defaults for this app:
 
 **Chips / tags / pills**: `rounded-full px-2.5 py-0.5 text-xs font-medium`. Selectable chips (location/profession tabs): brand-tint when active (`bg-[#EBF5FB] text-[#009FD9] border border-[#bfdbfe]`), neutral when not (`bg-[#f3f4f6] text-[#6b7280] border border-[#e5e7eb]`). Overflow → a muted **"+N"** chip rather than wrapping endlessly.
 
-**Cards** (`Card`): white surface, `border border-[#e5e7eb]`, `rounded-xl`, `p-4`. In a list, cards must be **uniform height** — bound variable content (cap lists, consolidate optional rows, use `min-h-[…]`) so a sparse card matches a rich one. See §3/§4.
+**Cards** (`Card`): white surface, `border border-[#e5e7eb]`, **`rounded-2xl`**, `shadow-sm`, `p-4` — this is the **item-card** treatment (see the elevation convention in §2: only floating list items are shadowed; sections/row-lists/forms are FLAT). In a list, cards must be **uniform height** — bound variable content (cap lists, consolidate optional rows, use `min-h-[…]`) so a sparse card matches a rich one. See §3/§4.
 
 **Badges** (`Badge`): status/labels. `default` brand-tint, `success`, `warning`, `error`, `muted`, `verified` (solid brand), `featured` (solid accent). Use `verified` for "Identidad verificada".
 

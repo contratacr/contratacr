@@ -302,7 +302,7 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
           {filtered.map((tk) => {
             const hasNew = unread.has(tk.id);
             return (
-              <button key={tk.id} onClick={() => openTicket(tk.id)} className={`text-left bg-white rounded-2xl border p-4 hover:shadow-sm transition-all ${hasNew ? "border-[#bfe3f5] ring-1 ring-[#EBF5FB]" : "border-[#e5e7eb] hover:border-[#bfe3f5]"}`}>
+              <button key={tk.id} onClick={() => openTicket(tk.id)} className={`text-left bg-white rounded-2xl border p-4 shadow-sm transition-all ${hasNew ? "border-[#bfe3f5] ring-1 ring-[#EBF5FB]" : "border-[#e5e7eb] hover:border-[#bfe3f5]"}`}>
                 <div className="flex items-center gap-2 flex-wrap">
                   {hasNew && <span className="h-2 w-2 rounded-full bg-[#009FD9] shrink-0" />}
                   <p className="text-sm font-semibold text-[#111827]">{tk.subject}</p>
