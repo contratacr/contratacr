@@ -9,7 +9,7 @@ import { Modal } from "@/components/ui/modal";
 import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import { getCategoryLabel, getAllCategories, normalizeText } from "@/lib/data/categories";
+import { getCategoryLabel, getCategoryGroupLabel, getAllCategories, normalizeText } from "@/lib/data/categories";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import { PRICING_TYPES, formatServicePrice, type PricingType } from "@/lib/pricing";
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
@@ -267,6 +267,20 @@ export function ServicesEditor({
     // customCategories in deps so the list refreshes once approved customs load.
   }, [pickerQuery, professions, locale, customCategories]);
 
+  // Group the picker list by category GROUP (Hogar, Salud, Belleza…) with section
+  // headers so a profession is easy to locate. `getAllCategories()` is in group order,
+  // so we can group consecutive items; the search filter applies first, so only
+  // matching items show (under their group headers).
+  const pickerGroups = useMemo(() => {
+    const groups: { id: string; items: typeof pickerList }[] = [];
+    for (const cat of pickerList) {
+      const last = groups[groups.length - 1];
+      if (last && last.id === cat.groupId) last.items.push(cat);
+      else groups.push({ id: cat.groupId, items: [cat] });
+    }
+    return groups;
+  }, [pickerList]);
+
   if (professions.length === 0) {
     return (
       <div className="text-center py-8 rounded-xl border-2 border-dashed border-[#e5e7eb]">
@@ -464,15 +478,22 @@ export function ServicesEditor({
                 <p className="text-xs text-[#9ca3af]">{t("pickerNoResultsHint")}</p>
               </div>
             ) : (
-              pickerList.map((cat) => (
-                <button
-                  key={cat.id}
-                  type="button"
-                  onClick={() => addProfession(cat.id)}
-                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm text-[#374151] hover:bg-[#EBF5FB] hover:text-[#0089bb] transition-colors"
-                >
-                  <Plus className="h-4 w-4 shrink-0 text-[#009FD9]" /> {getCategoryLabel(cat.id, locale)}
-                </button>
+              pickerGroups.map((g) => (
+                <div key={g.id} className="mb-1 last:mb-0">
+                  <p className="px-3 pt-2.5 pb-1 text-[10px] font-bold uppercase tracking-wider text-[#9ca3af]">
+                    {getCategoryGroupLabel(g.id, locale)}
+                  </p>
+                  {g.items.map((cat) => (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => addProfession(cat.id)}
+                      className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm text-[#374151] hover:bg-[#EBF5FB] hover:text-[#0089bb] transition-colors"
+                    >
+                      <Plus className="h-4 w-4 shrink-0 text-[#009FD9]" /> {getCategoryLabel(cat.id, locale)}
+                    </button>
+                  ))}
+                </div>
               ))
             )}
 
