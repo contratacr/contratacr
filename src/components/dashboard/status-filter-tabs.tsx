@@ -14,12 +14,18 @@ export function StatusFilterTabs({
   value,
   onChange,
   counts,
+  labelFor,
+  dotFor,
 }: {
   tabs: readonly FilterTab[];
   value: string;
   onChange: (id: string) => void;
-  /** Per-tab item count. When provided, EVERY tab shows its count (including 0). */
+  /** Per-tab item count. When provided, EVERY tab shows its count (when > 0). */
   counts?: Record<string, number>;
+  /** Custom label per tab id (else the `statusTabs` i18n key is used). */
+  labelFor?: (id: string) => string;
+  /** Show a small "needs attention" red dot on a tab (e.g. an unread reply). */
+  dotFor?: (id: string) => boolean;
 }) {
   const tr = useTranslations("statusTabs");
   return (
@@ -39,7 +45,9 @@ export function StatusFilterTabs({
                 : "border-[#e5e7eb] bg-white text-[#374151] hover:bg-[#f9fafb]"
             )}
           >
-            {tr(tab.id)}
+            {labelFor ? labelFor(tab.id) : tr(tab.id)}
+            {/* Optional unread/attention dot (e.g. a new support reply in this status). */}
+            {dotFor?.(tab.id) && <span className="h-1.5 w-1.5 rounded-full bg-red-500 shrink-0" aria-hidden />}
             {/* Count: an eye-catching, on-brand pill INLINE after the label — shown only
                 when there are items (>0), so it always means "there's something here" and
                 empty tabs stay clean. High contrast on BOTH pill states: a solid brand-blue

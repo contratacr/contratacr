@@ -6,6 +6,7 @@ import { Headset, ArrowLeft, Send, User, Shield, Plus } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
 import { SupportModal } from "@/components/support/support-modal";
+import { StatusFilterTabs } from "@/components/dashboard/status-filter-tabs";
 
 type Ticket = {
   id: string;
@@ -35,6 +36,7 @@ const STATUS_COLOR: Record<string, string> = {
 // Status tabs only — no "Todas"; the three statuses cover every ticket and read
 // cleaner. Defaults to "open" (Pendiente).
 const FILTER_IDS = ["open", "in_progress", "resolved"] as const;
+const SUPPORT_TABS = FILTER_IDS.map((id) => ({ id }));
 
 export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadChange?: (n: number) => void; initialTicketId?: string | null }) {
   const { user } = useAuth();
@@ -171,6 +173,12 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
     for (const t of items) if (unread.has(t.id)) m[t.status] = (m[t.status] ?? 0) + 1;
     return m;
   }, [items, unread]);
+  // Total tickets per status → the per-tab count badge (consistent with solicitudes/proyectos).
+  const statusCounts = useMemo(() => {
+    const m: Record<string, number> = {};
+    for (const t of items) m[t.status] = (m[t.status] ?? 0) + 1;
+    return m;
+  }, [items]);
 
   // ── Thread view ──
   if (openId) {
@@ -260,27 +268,19 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
         )}
       </div>
 
-      {/* Status filter — like the admin inbox, with a "new" badge per status. Hidden
-          until loading resolves so it never flashes before the tickets arrive. */}
+      {/* Status filter — the SHARED tab style (consistent with solicitudes/proyectos):
+          per-status COUNT badge + a small red dot when that status has an unread reply.
+          Hidden until loading resolves so it never flashes before the tickets arrive. */}
       {!loading && items.length > 0 && (
-        <div className="flex items-center gap-1.5 mb-4 flex-wrap">
-          {FILTER_IDS.map((fid) => {
-            const badge = unreadByStatus[fid] ?? 0;
-            return (
-              <button
-                key={fid}
-                onClick={() => setFilter(fid)}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${filter === fid ? "bg-[#0f172a] text-white" : "bg-white text-[#374151] border border-[#e5e7eb] hover:bg-gray-50"}`}
-              >
-                {filterLabel(fid)}
-                {badge > 0 && (
-                  <span className={`inline-flex h-[16px] min-w-[16px] items-center justify-center rounded-full px-1 text-[9px] font-bold ${filter === fid ? "bg-white text-[#0f172a]" : "bg-red-500 text-white"}`}>
-                    {badge > 9 ? "9+" : badge}
-                  </span>
-                )}
-              </button>
-            );
-          })}
+        <div className="mb-4">
+          <StatusFilterTabs
+            tabs={SUPPORT_TABS}
+            value={filter}
+            onChange={setFilter}
+            counts={statusCounts}
+            labelFor={filterLabel}
+            dotFor={(id) => (unreadByStatus[id] ?? 0) > 0}
+          />
         </div>
       )}
 
@@ -306,7 +306,8 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
                 <div className="flex items-center gap-2 flex-wrap">
                   {hasNew && <span className="h-2 w-2 rounded-full bg-[#009FD9] shrink-0" />}
                   <p className="text-sm font-semibold text-[#111827]">{tk.subject}</p>
-                  <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${STATUS_COLOR[tk.status] ?? ""}`}>{statusLabel(tk.status)}</span>
+                  {/* No per-card status pill: the active status tab already says it (the
+                      list is always within ONE status filter, so it would be redundant). */}
                   {hasNew && (
                     <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#EBF5FB] text-[#0077a8]">{t("newReply")}</span>
                   )}
