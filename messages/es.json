@@ -60,7 +60,7 @@
     "resourceLinks": {
       "howItWorks": "Cómo funciona",
       "helpCenter": "Centro de ayuda",
-      "proTips": "Consejos para quienes ofrecen servicios",
+      "proTips": "Consejos para profesionales",
       "support": "Soporte"
     },
     "loginModal": {
@@ -89,11 +89,11 @@
   },
   "home": {
     "hero": {
-      "badge": "+500 perfiles verificados en Costa Rica",
+      "badge": "+500 profesionales verificados en Costa Rica",
       "title": "Encuentra el servicio",
       "titleHighlight": "que necesitas",
       "titleSuffix": "en Costa Rica",
-      "subtitle": "Conectamos clientes con perfiles verificados cerca de ti. Sin intermediarios, sin pagos en la app. Simple y confiable."
+      "subtitle": "Conectamos clientes con profesionales verificados cerca de ti. Sin intermediarios, sin pagos en la app. Simple y confiable."
     },
     "stats": {
       "professionals": "Servicios",
@@ -123,7 +123,7 @@
       },
       "step3": {
         "title": "Contactalo por WhatsApp",
-        "desc": "Un tap y hablas directo con la persona. Acuerdan precio y fecha sin intermediarios."
+        "desc": "Un tap y hablas directo con el profesional. Acuerdan precio y fecha sin intermediarios."
       }
     },
     "trust": {
@@ -156,8 +156,8 @@
       "default": "Todos los servicios",
       "withCategory": "{category}"
     },
-    "resultsIn": "{count} resultados en {location}",
-    "resultsInCR": "{count} resultados en Costa Rica",
+    "resultsIn": "{count} profesionales en {location}",
+    "resultsInCR": "{count} profesionales en Costa Rica",
     "list": "Lista",
     "map": "Mapa",
     "viewResults": "Ver resultados",
@@ -225,7 +225,7 @@
     "coverageCountry": "Atiende en todo el país",
     "coverageYourLocation": "Se desplaza a tu ubicación",
     "coverageAreas": "Se desplaza en {areas}",
-    "save": "Guardar perfil",
+    "save": "Guardar profesional",
     "unsave": "Quitar de guardados",
     "saveLabel": "Guardar",
     "savedLabel": "Guardado",
@@ -574,7 +574,7 @@
   },
   "registration": {
     "pro": {
-      "title": "Crea tu perfil para ofrecer servicios",
+      "title": "Crea tu perfil profesional para ofrecer servicios",
       "subtitle": "Crea tu cuenta y verifica tu identidad.",
       "valNameRequired": "El nombre completo es requerido",
       "valEmailRequired": "El correo es requerido",
@@ -657,7 +657,7 @@
       "errTitle": "Error al registrarse",
       "errAlreadyTitle": "Ya existe una cuenta",
       "creatingAccount": "Creando tu cuenta…",
-      "completeProfileTitle": "Completa tu perfil para ofrecer servicios",
+      "completeProfileTitle": "Completa tu perfil profesional",
       "completeProfileSubtitle": "Tu profesión, dónde ofreces tus servicios y tu WhatsApp, para que los clientes te encuentren y te contacten.",
       "photoStepTitle": "Tu foto de perfil",
       "subtitlePhoto": "Agrega una foto para que los clientes te reconozcan.",
@@ -739,7 +739,7 @@
       "publish": "Publicar una solicitud"
     },
     "pros": {
-      "title": "Para quienes ofrecen servicios",
+      "title": "Para profesionales",
       "register": "Registra tu perfil",
       "attract": "Cómo atraer clientes",
       "verification": "Verificación de identidad"
@@ -806,7 +806,7 @@
       "email": "Tu email",
       "emailHint": "Para recibir actualizaciones de tu solicitud",
       "submit": "Confirmar solicitud",
-      "note": "Serás redirigido a WhatsApp para coordinar directamente con la persona"
+      "note": "Serás redirigido a WhatsApp para coordinar directamente con el profesional"
     },
     "contact": {
       "title": "Tu información de contacto",
@@ -981,7 +981,7 @@
         }
       },
       "saved": {
-        "title": "Perfiles guardados",
+        "title": "Profesionales guardados",
         "empty": "No guardaste ningún perfil todavía",
         "emptyHint": "Guarda tus perfiles favoritos para encontrarlos fácil."
       },
@@ -1071,7 +1071,7 @@
     "modeUse": "Modo cliente",
     "modeOffer": "Modo profesional",
     "modeUseSubtitle": "Estás en tu sección de cliente: buscas y contratas servicios.",
-    "offerGateTitle": "Empieza a ofrecer tus servicios",
+    "offerGateTitle": "Empieza a ofrecer tus servicios como profesional",
     "offerGateBody": "En ContrataCR, cualquiera que ofrece un servicio es un profesional: un oficio, un cuidado, una clase o una profesión. Completa tu perfil una vez y empieza a recibir clientes.",
     "offerGateCta": "Completar mi perfil",
     "offerInviteTitle": "¿Ofreces servicios?",
@@ -1517,7 +1517,7 @@
       "cancelled": "Cancelada",
       "rescheduled": "Reprogramada"
     },
-    "cancelPrompt": "¿Por qué quieres cancelar? (se le avisa a la persona)",
+    "cancelPrompt": "¿Por qué quieres cancelar? (se le avisa al profesional)",
     "reportProPrompt": "¿Qué pasó? (no se presentó / servicio no realizado / otro). Tu reporte ayuda a la moderación.",
     "reportThanks": "Gracias. Tu reporte fue enviado al equipo de moderación.",
     "reportError": "No se pudo enviar el reporte.",
@@ -1578,7 +1578,7 @@
     "tabSupport": "Soporte",
     "tabProfile": "Mi perfil",
     "tabAccount": "Cuenta y seguridad",
-    "savedHeading": "Perfiles guardados",
+    "savedHeading": "Profesionales guardados",
     "bookingsHeading": "Mis solicitudes",
     "bookingsSubtitle": "Servicios que solicitaste.",
     "projectsHeading": "Mis solicitudes publicadas",
@@ -1695,10 +1695,10 @@
   "savedPros": {
     "viewProfile": "Ver perfil",
     "unsave": "Quitar de guardados",
-    "empty": "No tienes perfiles guardados",
+    "empty": "No tienes profesionales guardados",
     "emptySub": "Guarda los perfiles que te interesan con el ícono de marcador en sus tarjetas.",
     "searchPros": "Buscar servicios",
-    "count": "{count, plural, one {# perfil guardado} other {# perfiles guardados}}",
+    "count": "{count, plural, one {# profesional guardado} other {# profesionales guardados}}",
     "noReviews": "Sin reseñas"
   },
   "registerChoice": {
@@ -1876,7 +1876,7 @@
     "tlSoon": "Pronto — este mes",
     "tlFlexible": "Soy flexible",
     "tlPlanning": "Estoy planificando",
-    "errCategory": "Elige una categoría para que tu solicitud llegue a quienes ofrecen ese servicio.",
+    "errCategory": "Elige una categoría para que tu solicitud llegue a los profesionales que ofrecen ese servicio.",
     "errTitle": "El título es requerido.",
     "errDescription": "La descripción es requerida.",
     "errPhone": "Ingresa un número de teléfono válido.",
@@ -1885,13 +1885,13 @@
     "errPublish": "Error al publicar la solicitud. Intenta de nuevo.",
     "errUnexpected": "Error inesperado. Intenta de nuevo.",
     "successTitle": "¡Solicitud publicada!",
-    "successBody": "Quienes ofrecen ese servicio en tu zona verán tu solicitud y podrán enviarte propuestas.",
+    "successBody": "Los profesionales que ofrecen ese servicio en tu zona verán tu solicitud y podrán enviarte propuestas.",
     "viewProjects": "Ver mis solicitudes publicadas",
     "goToPanel": "Ir a mi panel",
     "title": "Publicar una solicitud",
     "subtitle": "Describe lo que necesitas y recibe propuestas de tu zona.",
     "category": "Categoría",
-    "categoryHelp": "Así dirigimos tu solicitud a quienes ofrecen ese servicio.",
+    "categoryHelp": "Así dirigimos tu solicitud a los profesionales que ofrecen ese servicio.",
     "categoryPlaceholder": "Escribe o elige una categoría",
     "projectTitle": "Título de la solicitud",
     "titlePlaceholder": "Ejemplo: Pintura de sala y comedor, 50m²",
@@ -1960,7 +1960,7 @@
     "cancel": "Cancelar",
     "success": {
       "title": "¡Solicitud publicada!",
-      "desc": "Quienes ofrecen ese servicio en tu zona verán tu solicitud y podrán enviarte propuestas.",
+      "desc": "Los profesionales que ofrecen ese servicio en tu zona verán tu solicitud y podrán enviarte propuestas.",
       "dashboard": "Ver mis solicitudes publicadas"
     }
   },
@@ -2143,12 +2143,12 @@
     "opt2Step1Title": "Describe lo que necesitas",
     "opt2Step1Sub": "Título, descripción detallada, zona y presupuesto estimado. Toma menos de 2 minutos.",
     "opt2Step2Title": "Te envían propuestas",
-    "opt2Step2Sub": "Quienes ofrecen servicios en tu zona ven tu solicitud y te envían propuestas.",
+    "opt2Step2Sub": "Los profesionales de tu zona ven tu solicitud y te envían propuestas.",
     "opt2Step3Title": "Eliges la mejor propuesta",
     "opt2Step3Sub": "Comparas precios y perfiles, aceptas la propuesta y coordinas por WhatsApp.",
     "opt2Cta": "Publicar una solicitud",
-    "prosBadge": "Para quienes ofrecen servicios",
-    "prosTitle": "¿Ofreces servicios? Registra tu perfil.",
+    "prosBadge": "Para profesionales",
+    "prosTitle": "¿Ofreces servicios? Crea tu perfil profesional.",
     "prosSubtitle": "Crea tu perfil en minutos y empieza a recibir clientes directos en Costa Rica.",
     "benefit0": "Sin comisiones",
     "benefit1": "Cédula verificada",
@@ -2165,13 +2165,13 @@
     "faqTitle": "Preguntas frecuentes",
     "faqSubtitle": "Respondemos las dudas más comunes sobre ContrataCR.",
     "faq0Q": "¿Es gratis usar ContrataCR?",
-    "faq0A": "ContrataCR conecta a quienes buscan servicios con quienes los ofrecen. No cobramos comisiones por los servicios: el pago lo acuerdas directamente con la persona, fuera de la plataforma.",
+    "faq0A": "ContrataCR conecta a quienes buscan servicios con quienes los ofrecen. No cobramos comisiones por los servicios: el pago lo acuerdas directamente con el profesional, fuera de la plataforma.",
     "faq1Q": "¿Qué significa que un perfil esté verificado?",
     "faq1A": "Confirmamos su identidad comparando la cédula con el padrón del Registro Civil (TSE). El sello 'Verificado' indica que es una persona real y verificable, no es una calificación de la calidad de su trabajo. Los perfiles verificados muestran la insignia 'Verificado'; quienes no la tienen simplemente no la muestran, sin ninguna etiqueta negativa.",
     "faq2Q": "¿Cómo coordino el servicio?",
-    "faq2A": "Te ponemos en contacto directo por WhatsApp con la persona. Sin intermediarios ni comisiones: acuerdas el precio, la fecha y el horario directamente con ella.",
+    "faq2A": "Te ponemos en contacto directo por WhatsApp con el profesional. Sin intermediarios ni comisiones: acuerdas el precio, la fecha y el horario directamente con él.",
     "faq3Q": "¿Qué es la publicación de solicitudes?",
-    "faq3A": "Puedes publicar una solicitud describiendo exactamente lo que necesitas. Quienes ofrecen ese servicio verán tu publicación y te enviarán propuestas con precio y disponibilidad. Tú eliges con quién trabajar.",
+    "faq3A": "Puedes publicar una solicitud describiendo exactamente lo que necesitas. Los profesionales que ofrecen ese servicio verán tu publicación y te enviarán propuestas con precio y disponibilidad. Tú eliges con quién trabajar.",
     "faq4Q": "¿Cómo dejo una reseña?",
     "faq4A": "Después de completar un servicio, puedes dejar una reseña desde tu panel de cliente. Las reseñas son verificadas y solo pueden hacerlas clientes que realmente usaron el servicio.",
     "ctaTitle": "¿Listo para empezar?",
@@ -2198,7 +2198,7 @@
     "faqTitle": "Preguntas frecuentes",
     "faqSubtitle": "Las consultas más comunes de nuestra comunidad.",
     "faq0Q": "¿ContrataCR cobra alguna comisión o cargo?",
-    "faq0A": "No cobramos comisiones por los servicios que contratas: el pago lo acuerdas directamente con la persona, fuera de la plataforma.",
+    "faq0A": "No cobramos comisiones por los servicios que contratas: el pago lo acuerdas directamente con el profesional, fuera de la plataforma.",
     "faq1Q": "¿Cómo empiezo a ofrecer servicios?",
     "faq1A": "Haz clic en 'Ofrecer mis servicios' en la barra de navegación. Puedes registrarte con tu correo o con Google/Facebook. El proceso tiene 2 pasos: primero seleccionas tu tipo de servicio y zona, luego subes una foto y describes tu experiencia. Toma menos de 5 minutos.",
     "faq2Q": "¿Cómo se verifica la cédula?",
@@ -2210,7 +2210,7 @@
     "faq5Q": "¿Cómo dejo una reseña?",
     "faq5A": "Después de completar un servicio, puedes dejar una reseña desde tu panel de cliente en la sección 'Solicitudes'. Solo clientes que realmente contrataron ese servicio pueden dejar reseñas — así se garantiza que son auténticas.",
     "faq6Q": "¿Qué es publicar una solicitud?",
-    "faq6A": "Publicar una solicitud es una alternativa a buscar directamente. Describes lo que necesitas (por ejemplo: 'pintura de sala 4x4m, presupuesto ₡80.000'), y quienes ofrecen ese servicio en tu zona te envían propuestas con su precio. Tú eliges con quién trabajar.",
+    "faq6A": "Publicar una solicitud es una alternativa a buscar directamente. Describes lo que necesitas (por ejemplo: 'pintura de sala 4x4m, presupuesto ₡80.000'), y los profesionales que ofrecen ese servicio en tu zona te envían propuestas con su precio. Tú eliges con quién trabajar.",
     "faq7Q": "¿Mi información personal está segura?",
     "faq7A": "Sí. Tu número de teléfono y correo nunca son visibles públicamente en la plataforma. Cuando haces contacto, lo haces vía WhatsApp de forma directa. Cumplimos con la Ley 8968 de Protección de Datos de Costa Rica.",
     "contactTitle": "¿No encontraste lo que buscas?",
@@ -2219,10 +2219,10 @@
     "contactWhatsapp": "¿Prefieres WhatsApp? Escríbenos"
   },
   "atraerClientes": {
-    "eyebrow": "Para quienes ofrecen servicios",
+    "eyebrow": "Para profesionales",
     "titleA": "Cómo atraer más clientes",
     "titleB": "en ContrataCR",
-    "subtitle": "Consejos prácticos y honestos para quienes ofrecen servicios y quieren crecer en el mercado costarricense.",
+    "subtitle": "Consejos prácticos y honestos para profesionales que quieren crecer en el mercado costarricense.",
     "tip0Title": "Usa una buena foto de perfil",
     "tip0Body": "Los clientes deciden en segundos si confiar en alguien. Una foto clara, bien iluminada y donde se vea tu cara genera mucha más confianza que un perfil sin foto o con una foto de poca calidad.",
     "tip0Highlight": "Nada de fotos borrosas, con lentes oscuros, o de fiestas.",
@@ -2348,9 +2348,9 @@
       "headingHighlight": "Tu Zona."
     },
     "carousel": {
-      "titlePre": "Servicios para",
-      "titleHighlight": "lo que necesitas",
-      "subtitle": "Explora los servicios más solicitados en Costa Rica.",
+      "titlePre": "Explora los",
+      "titleHighlight": "servicios más buscados",
+      "subtitle": "Del hogar a la salud, encuentra la categoría que necesitas en Costa Rica.",
       "viewAll": "Ver todas las categorías"
     },
     "zones": {
@@ -2372,13 +2372,13 @@
     "howItWorks": {
       "eyebrow": "Cómo funciona",
       "heading": "Así funciona ContrataCR",
-      "subtitle": "Para quienes buscan servicios y para quienes los ofrecen. Simple, transparente y seguro.",
+      "subtitle": "Para clientes y profesionales. Simple, transparente y seguro.",
       "point0Title": "Describe lo que necesitas",
       "point0Desc": "Cuéntanos qué necesitas y dónde, en tus palabras. Sin llamadas a ciegas.",
       "point1Title": "Perfiles verificados",
       "point1Desc": "Identidad confirmada contra los registros oficiales y reseñas reales de clientes.",
       "point2Title": "Coordina por WhatsApp",
-      "point2Desc": "Hablas directo con la persona para acordar fecha y precio, sin intermediarios.",
+      "point2Desc": "Hablas directo con el profesional para acordar fecha y precio, sin intermediarios.",
       "point3Title": "Con soporte cuando lo necesites",
       "point3Desc": "Deja tu reseña al terminar y, si algo no sale bien, te ayudamos.",
       "pitchTitle": "¿Ofreces servicios?",

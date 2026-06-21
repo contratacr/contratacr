@@ -11,7 +11,7 @@ const RESOURCES = [
   },
   {
     id: "para-profesionales",
-    label: "Consejos para quienes ofrecen servicios",
+    label: "Consejos para profesionales",
     description: "Estrategias prácticas para atraer más clientes en el mercado costarricense.",
     href: "/atraer-clientes",
     src: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=700&q=80",

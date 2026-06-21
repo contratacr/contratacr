@@ -60,7 +60,7 @@
     "resourceLinks": {
       "howItWorks": "How it works",
       "helpCenter": "Help center",
-      "proTips": "Tips for service providers",
+      "proTips": "Tips for professionals",
       "support": "Support"
     },
     "loginModal": {
@@ -89,11 +89,11 @@
   },
   "home": {
     "hero": {
-      "badge": "+500 verified profiles in Costa Rica",
+      "badge": "+500 verified professionals in Costa Rica",
       "title": "Find the service",
       "titleHighlight": "you need",
       "titleSuffix": "in Costa Rica",
-      "subtitle": "We connect clients with verified profiles near you. No middlemen, no in-app payments. Simple and reliable."
+      "subtitle": "We connect clients with verified professionals near you. No middlemen, no in-app payments. Simple and reliable."
     },
     "stats": {
       "professionals": "Services",
@@ -123,7 +123,7 @@
       },
       "step3": {
         "title": "Contact via WhatsApp",
-        "desc": "One tap and you're talking directly with the person. Agree on price and date with no middlemen."
+        "desc": "One tap and you're talking directly with the professional. Agree on price and date with no middlemen."
       }
     },
     "trust": {
@@ -156,8 +156,8 @@
       "default": "All services",
       "withCategory": "{category}"
     },
-    "resultsIn": "{count} results in {location}",
-    "resultsInCR": "{count} results in Costa Rica",
+    "resultsIn": "{count} professionals in {location}",
+    "resultsInCR": "{count} professionals in Costa Rica",
     "list": "List",
     "map": "Map",
     "viewResults": "View results",
@@ -225,7 +225,7 @@
     "coverageCountry": "Serves the whole country",
     "coverageYourLocation": "Travels to your location",
     "coverageAreas": "Travels in {areas}",
-    "save": "Save profile",
+    "save": "Save professional",
     "unsave": "Remove from saved",
     "saveLabel": "Save",
     "savedLabel": "Saved",
@@ -574,7 +574,7 @@
   },
   "registration": {
     "pro": {
-      "title": "Create your profile to offer services",
+      "title": "Create your professional profile to offer services",
       "subtitle": "Create your account and verify your identity.",
       "valNameRequired": "Full name is required",
       "valEmailRequired": "Email is required",
@@ -657,7 +657,7 @@
       "errTitle": "Registration error",
       "errAlreadyTitle": "Account already exists",
       "creatingAccount": "Creating your account…",
-      "completeProfileTitle": "Complete your profile to offer services",
+      "completeProfileTitle": "Complete your professional profile",
       "completeProfileSubtitle": "Your profession, where you offer your services, and your WhatsApp, so clients can find and contact you.",
       "photoStepTitle": "Your profile photo",
       "subtitlePhoto": "Add a photo so clients recognize you.",
@@ -739,7 +739,7 @@
       "publish": "Post a request"
     },
     "pros": {
-      "title": "For service providers",
+      "title": "For professionals",
       "register": "Register your profile",
       "attract": "How to attract clients",
       "verification": "Identity verification"
@@ -806,7 +806,7 @@
       "email": "Your email",
       "emailHint": "To receive updates on your request",
       "submit": "Confirm request",
-      "note": "You'll be redirected to WhatsApp to coordinate directly with the person"
+      "note": "You'll be redirected to WhatsApp to coordinate directly with the professional"
     },
     "contact": {
       "title": "Your contact information",
@@ -981,7 +981,7 @@
         }
       },
       "saved": {
-        "title": "Saved profiles",
+        "title": "Saved professionals",
         "empty": "No saved profiles yet",
         "emptyHint": "Save your favorite profiles to find them easily."
       },
@@ -1071,7 +1071,7 @@
     "modeUse": "Client mode",
     "modeOffer": "Professional mode",
     "modeUseSubtitle": "You are in your client section: searching for and hiring services.",
-    "offerGateTitle": "Start offering your services",
+    "offerGateTitle": "Start offering your services as a professional",
     "offerGateBody": "On ContrataCR, anyone who offers a service is a professional: a trade, caregiving, a class or a profession. Complete your profile once and start receiving clients.",
     "offerGateCta": "Complete my profile",
     "offerInviteTitle": "Do you offer services?",
@@ -1517,7 +1517,7 @@
       "cancelled": "Cancelled",
       "rescheduled": "Rescheduled"
     },
-    "cancelPrompt": "Why do you want to cancel? (the provider is notified)",
+    "cancelPrompt": "Why do you want to cancel? (the professional is notified)",
     "reportProPrompt": "What happened? (no-show / service not done / other). Your report helps moderation.",
     "reportThanks": "Thanks. Your report was sent to the moderation team.",
     "reportError": "Couldn't send the report.",
@@ -1578,7 +1578,7 @@
     "tabSupport": "Support",
     "tabProfile": "My profile",
     "tabAccount": "Account & security",
-    "savedHeading": "Saved profiles",
+    "savedHeading": "Saved professionals",
     "bookingsHeading": "My requests",
     "bookingsSubtitle": "Services you requested.",
     "projectsHeading": "My posted requests",
@@ -1695,10 +1695,10 @@
   "savedPros": {
     "viewProfile": "View profile",
     "unsave": "Remove from saved",
-    "empty": "You don't have any saved profiles",
+    "empty": "You don't have any saved professionals",
     "emptySub": "Save the profiles you're interested in with the bookmark icon on their cards.",
     "searchPros": "Find services",
-    "count": "{count, plural, one {# saved profile} other {# saved profiles}}",
+    "count": "{count, plural, one {# saved professional} other {# saved professionals}}",
     "noReviews": "No reviews"
   },
   "registerChoice": {
@@ -1876,7 +1876,7 @@
     "tlSoon": "Soon — this month",
     "tlFlexible": "I'm flexible",
     "tlPlanning": "I'm planning",
-    "errCategory": "Choose a category so your request reaches whoever offers that service.",
+    "errCategory": "Choose a category so your request reaches the professionals who offer that service.",
     "errTitle": "The title is required.",
     "errDescription": "The description is required.",
     "errPhone": "Enter a valid phone number.",
@@ -1885,13 +1885,13 @@
     "errPublish": "Error publishing the request. Try again.",
     "errUnexpected": "Unexpected error. Try again.",
     "successTitle": "Request published!",
-    "successBody": "People who offer that service in your area will see your request and can send you proposals.",
+    "successBody": "The professionals who offer that service in your area will see your request and can send you proposals.",
     "viewProjects": "View my posted requests",
     "goToPanel": "Go to my dashboard",
     "title": "Post a request",
     "subtitle": "Describe what you need and receive proposals from your area.",
     "category": "Category",
-    "categoryHelp": "This routes your request to whoever offers that service.",
+    "categoryHelp": "This routes your request to the professionals who offer that service.",
     "categoryPlaceholder": "Type or choose a category",
     "projectTitle": "Request title",
     "titlePlaceholder": "example: Painting living and dining room, 50m²",
@@ -1960,7 +1960,7 @@
     "cancel": "Cancel",
     "success": {
       "title": "Request posted!",
-      "desc": "People who offer that service in your area will see your request and can send you proposals.",
+      "desc": "The professionals who offer that service in your area will see your request and can send you proposals.",
       "dashboard": "View my posted requests"
     }
   },
@@ -2143,12 +2143,12 @@
     "opt2Step1Title": "Describe what you need",
     "opt2Step1Sub": "Title, detailed description, area, and estimated budget. Takes less than 2 minutes.",
     "opt2Step2Title": "You get proposals",
-    "opt2Step2Sub": "People who offer services in your area see your request and send you proposals.",
+    "opt2Step2Sub": "Professionals in your area see your request and send you proposals.",
     "opt2Step3Title": "Choose the best proposal",
     "opt2Step3Sub": "Compare prices and profiles, accept the proposal, and coordinate on WhatsApp.",
     "opt2Cta": "Post a request",
-    "prosBadge": "For service providers",
-    "prosTitle": "Do you offer services? Register your profile.",
+    "prosBadge": "For professionals",
+    "prosTitle": "Do you offer services? Create your professional profile.",
     "prosSubtitle": "Create your profile in minutes and start getting direct clients in Costa Rica.",
     "benefit0": "No commissions",
     "benefit1": "Verified ID",
@@ -2165,13 +2165,13 @@
     "faqTitle": "Frequently asked questions",
     "faqSubtitle": "We answer the most common questions about ContrataCR.",
     "faq0Q": "Is ContrataCR free to use?",
-    "faq0A": "ContrataCR connects people looking for services with people who offer them. We don't charge commissions on services: you arrange payment directly with the person, off the platform.",
+    "faq0A": "ContrataCR connects people looking for services with people who offer them. We don't charge commissions on services: you arrange payment directly with the professional, off the platform.",
     "faq1Q": "What does it mean for a profile to be verified?",
     "faq1A": "We confirm their identity by comparing the ID against the Civil Registry (TSE) records. The 'Verified' badge means the person is real and verifiable, not a rating of their work quality. Verified profiles show the 'Verified' badge; those without it simply do not show one, with no negative label.",
     "faq2Q": "How do I coordinate the service?",
-    "faq2A": "We put you in direct contact with the person via WhatsApp. No middlemen or commissions: you agree on the price, date, and time directly with them.",
+    "faq2A": "We put you in direct contact with the professional via WhatsApp. No middlemen or commissions: you agree on the price, date, and time directly with them.",
     "faq3Q": "What is request posting?",
-    "faq3A": "You can post a request describing exactly what you need. People who offer that service will see your post and send you proposals with price and availability. You choose who to work with.",
+    "faq3A": "You can post a request describing exactly what you need. The professionals who offer that service will see your post and send you proposals with price and availability. You choose who to work with.",
     "faq4Q": "How do I leave a review?",
     "faq4A": "After completing a service, you can leave a review from your client dashboard. Reviews are verified and can only be left by clients who actually used the service.",
     "ctaTitle": "Ready to get started?",
@@ -2198,7 +2198,7 @@
     "faqTitle": "Frequently asked questions",
     "faqSubtitle": "The most common questions from our community.",
     "faq0Q": "Does ContrataCR charge any commission or fee?",
-    "faq0A": "We don't charge commissions on the services you hire: you arrange payment directly with the person, off the platform.",
+    "faq0A": "We don't charge commissions on the services you hire: you arrange payment directly with the professional, off the platform.",
     "faq1Q": "How do I start offering services?",
     "faq1A": "Click 'Offer my services' in the navigation bar. You can sign up with your email or with Google/Facebook. The process has 2 steps: first you select your service type and area, then you upload a photo and describe your experience. It takes less than 5 minutes.",
     "faq2Q": "How is ID verified?",
@@ -2210,7 +2210,7 @@
     "faq5Q": "How do I leave a review?",
     "faq5A": "After completing a service, you can leave a review from your client dashboard in the 'Requests' section. Only clients who actually hired that service can leave reviews — this guarantees they are authentic.",
     "faq6Q": "What is posting a request?",
-    "faq6A": "Posting a request is an alternative to searching directly. You describe what you need (for example: 'painting a 4x4m living room, budget ₡80,000'), and people who offer that service in your area send you proposals with their price. You choose who to work with.",
+    "faq6A": "Posting a request is an alternative to searching directly. You describe what you need (for example: 'painting a 4x4m living room, budget ₡80,000'), and the professionals who offer that service in your area send you proposals with their price. You choose who to work with.",
     "faq7Q": "Is my personal information safe?",
     "faq7A": "Yes. Your phone number and email are never publicly visible on the platform. When you make contact, you do so directly via WhatsApp. We comply with Costa Rica's Data Protection Law 8968.",
     "contactTitle": "Didn't find what you were looking for?",
@@ -2219,7 +2219,7 @@
     "contactWhatsapp": "Prefer WhatsApp? Message us"
   },
   "atraerClientes": {
-    "eyebrow": "For service providers",
+    "eyebrow": "For professionals",
     "titleA": "How to attract more clients",
     "titleB": "on ContrataCR",
     "subtitle": "Practical, honest tips for people offering services who want to grow in the Costa Rican market.",
@@ -2348,9 +2348,9 @@
       "headingHighlight": "Your Area."
     },
     "carousel": {
-      "titlePre": "Services for",
-      "titleHighlight": "whatever you need",
-      "subtitle": "Explore the most-requested services in Costa Rica.",
+      "titlePre": "Explore the",
+      "titleHighlight": "most popular services",
+      "subtitle": "From home to health, find the category you need in Costa Rica.",
       "viewAll": "View all categories"
     },
     "zones": {
@@ -2372,13 +2372,13 @@
     "howItWorks": {
       "eyebrow": "How it works",
       "heading": "How ContrataCR works",
-      "subtitle": "For those looking for services and those offering them. Simple, transparent and safe.",
+      "subtitle": "For clients and professionals. Simple, transparent, and safe.",
       "point0Title": "Describe what you need",
       "point0Desc": "Tell us what you need and where, in your own words. No blind calls.",
       "point1Title": "Verified profiles",
       "point1Desc": "Identity confirmed against official records, plus real client reviews.",
       "point2Title": "Coordinate on WhatsApp",
-      "point2Desc": "Talk directly with the person to agree on date and price — no middlemen.",
+      "point2Desc": "Talk directly with the professional to agree on date and price — no middlemen.",
       "point3Title": "Support when you need it",
       "point3Desc": "Leave your review when done, and if something goes wrong, we help.",
       "pitchTitle": "Do you offer services?",
