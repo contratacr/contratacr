@@ -115,14 +115,14 @@
       "subtitle": "Simple, fast, and hassle-free",
       "step1": {
         "title": "Search for a service",
-        "desc": "Filter by category and canton to find the closest service to you."
+        "desc": "Filter by category and canton to find the closest professional to you."
       },
       "step2": {
         "title": "Review profiles",
-        "desc": "Read verified reviews, browse portfolios, and compare profiles."
+        "desc": "Read verified reviews, check the portfolio, and compare them."
       },
       "step3": {
-        "title": "Contact via WhatsApp",
+        "title": "Contact them on WhatsApp",
         "desc": "One tap and you're talking directly with the professional. Agree on price and date with no middlemen."
       }
     },
@@ -730,7 +730,7 @@
     }
   },
   "footer": {
-    "tagline": "The services marketplace made for Costa Rica. Find the ideal professional and arrange payment directly with them.",
+    "tagline": "The services marketplace made for Costa Rica. Find the ideal professional and coordinate everything directly via WhatsApp.",
     "clients": {
       "title": "For clients",
       "search": "Find services",
@@ -740,7 +740,7 @@
     },
     "pros": {
       "title": "For professionals",
-      "register": "Register your profile",
+      "register": "Offer my services",
       "attract": "How to attract clients",
       "verification": "Identity verification"
     },
@@ -2142,10 +2142,10 @@
     "eyebrow": "How it works",
     "titleA": "Two ways to find",
     "titleB": "what you need",
-    "subtitle": "ContrataCR connects clients with verified profiles in Costa Rica. You choose how you want to search.",
+    "subtitle": "ContrataCR connects clients with verified professionals in Costa Rica. You choose how to search.",
     "opt1Badge": "Option 1",
     "opt1Title": "Search for a service",
-    "opt1Desc": "Browse available profiles, review past work, and book an appointment directly.",
+    "opt1Desc": "Browse available professionals, review past work, and book an appointment directly.",
     "opt1Step1Title": "Search by category or canton",
     "opt1Step1Sub": "Filter by service type, province, and canton to find professionals near you.",
     "opt1Step2Title": "Review the verified profile",
@@ -2170,7 +2170,7 @@
     "benefit1": "Verified ID",
     "benefit2": "Direct clients",
     "benefit3": "Schedule control",
-    "prosCta": "Register",
+    "prosCta": "Offer my services",
     "projectsTitle": "How do opportunities work for you?",
     "proj0Title": "You see the opportunities",
     "proj0Sub": "Browse open opportunities filtered by your category and area.",
@@ -2183,7 +2183,7 @@
     "faq0Q": "Is ContrataCR free to use?",
     "faq0A": "ContrataCR connects people looking for services with people who offer them. We don't charge commissions on services: you arrange payment directly with the professional, off the platform.",
     "faq1Q": "What does it mean for a profile to be verified?",
-    "faq1A": "We confirm their identity by comparing the ID against the Civil Registry (TSE) records. The 'Verified' badge means the person is real and verifiable, not a rating of their work quality. Verified profiles show the 'Verified' badge; those without it simply do not show one, with no negative label.",
+    "faq1A": "We confirm their identity by comparing the ID against the Civil Registry (TSE) records. The 'Verified' badge means the person is real and verifiable, not a rating of their work quality. Verified professionals show the 'Verified' badge; those without it simply do not show one, with no negative label.",
     "faq2Q": "How do I coordinate the service?",
     "faq2A": "We put you in direct contact with the professional via WhatsApp. No middlemen or commissions: you agree on the price, date, and time directly with them.",
     "faq3Q": "What is request posting?",
@@ -2191,7 +2191,7 @@
     "faq4Q": "How do I leave a review?",
     "faq4A": "After completing a service, you can leave a review from your client dashboard. Reviews are verified and can only be left by clients who actually used the service.",
     "ctaTitle": "Ready to get started?",
-    "ctaSubtitle": "Search verified profiles in Costa Rica or post a request for free.",
+    "ctaSubtitle": "Search verified professionals in Costa Rica or post a request for free.",
     "ctaSearch": "Find services",
     "ctaPublish": "Post a request"
   },
@@ -2220,11 +2220,11 @@
     "faq2Q": "How is ID verified?",
     "faq2A": "We compare the ID against the Civil Registry (TSE) records. When it matches, the profile shows the 'Verified' badge. It's an identity check (confirming the person is real and verifiable), not a rating of work quality. Those without it simply do not show the badge, with no negative label.",
     "faq3Q": "How do I search for a service?",
-    "faq3A": "Use the search bar on the home page or the services search page. You can search by service type (plumber, psychologist, designer, etc.), by province and canton, and sort by rating. The search understands synonyms — if you type 'nanny' it will also find childcare services.",
+    "faq3A": "Use the search bar on the home page or the services search page. You can search by service type (plumber, psychologist, designer, etc.), by province and canton, and sort by rating. The search understands synonyms — if you type 'nanny' it will also find childcare professionals.",
     "faq4Q": "How do I coordinate the service?",
-    "faq4A": "Once you find the service you want, you click on the profile and we connect you directly via WhatsApp. From there you coordinate price, date, and everything you need with no middlemen.",
+    "faq4A": "Two ways. If you search directly, open the professional's profile and we connect you via WhatsApp to coordinate. If you post a request, professionals send you proposals and you coordinate via WhatsApp with whoever you choose. You agree on price, date, and details with no middlemen.",
     "faq5Q": "How do I leave a review?",
-    "faq5A": "After completing a service, you can leave a review from your client dashboard in the 'Requests' section. Only clients who actually hired that service can leave reviews — this guarantees they are authentic.",
+    "faq5A": "After a service is completed, you can leave a review from your panel, in Client mode → My requests. Only clients who actually hired that service can leave reviews — that keeps them authentic.",
     "faq6Q": "What is posting a request?",
     "faq6A": "Posting a request is an alternative to searching directly. You describe what you need (for example: 'painting a 4x4m living room, budget ₡80,000'), and the professionals who offer that service in your area send you proposals with their price. You choose who to work with.",
     "faq7Q": "Is my personal information safe?",
@@ -2243,19 +2243,19 @@
     "tip0Body": "Clients decide in seconds whether to trust someone. A clear, well-lit photo where your face is visible builds far more trust than a profile with no photo or a low-quality one.",
     "tip0Highlight": "No blurry photos, dark glasses, or party pics.",
     "tip1Title": "Verify your identity",
-    "tip1Body": "Verification confirms your identity with Costa Rica's Civil Registry (it doesn't certify the quality of your work, but it proves you're a real, verifiable person). Verified profiles appear first in results and show the 'Verified' badge. It's free.",
-    "tip1Highlight": "Verified profiles show up earlier in searches.",
+    "tip1Body": "Verification confirms your identity with Costa Rica's Civil Registry (it doesn't certify the quality of your work, but it proves you're a real, verifiable person). Verified professionals appear first in results and show the 'Verified' badge.",
+    "tip1Highlight": "Verified professionals show higher in search.",
     "tip2Title": "Post photos of past work",
     "tip2Body": "Photos of real work are your portfolio. Before hiring, clients will want to see examples of your work. A renovated kitchen, a well-kept garden, a design you made — any real photo of your work is worth a lot.",
-    "tip2Highlight": "At least 3 photos of past work to start.",
+    "tip2Highlight": "Photos of your work build more trust.",
     "tip3Title": "Reply quickly on WhatsApp",
     "tip3Body": "In Costa Rica, service coordination almost always happens on WhatsApp, and people expect quick replies. If a client messages you and you take hours to reply, they've probably already contacted someone else. Turn on notifications and reply as soon as possible.",
     "tip3Highlight": "Response speed is your biggest differentiator.",
     "tip4Title": "Ask for reviews after every job",
     "tip4Body": "Reviews are gold. After completing a job, ask the client to leave you a review on ContrataCR. A short line like 'Could you leave me a review on the platform? It really helps me get more clients' is enough. Most people are happy to do it.",
     "tip4Highlight": "",
-    "tip5Title": "Be specific about where you work",
-    "tip5Body": "Clients filter by canton. If you work in Escazú, Belén, and Santa Ana, mention it in your bio. If you cover the whole Greater Metropolitan Area, say so. The clearer you are about your coverage, the more you appear in relevant searches.",
+    "tip5Title": "Set your coverage areas",
+    "tip5Body": "Set your coverage zones (province and canton) in your profile. Clients filter by canton, so the more precise your areas, the more relevant searches you appear in. If you travel across the Greater Metropolitan Area, say so in your coverage.",
     "tip5Highlight": "",
     "tip6Title": "Write an honest, specific bio",
     "tip6Body": "Avoid generic phrases like 'I'm the best in Costa Rica' or 'I work with quality'. Instead, describe exactly what you do, how many years of experience you have, and what types of jobs are your specialty. Specificity builds trust.",
@@ -2294,7 +2294,7 @@
     "market3Body": "Costa Rican clients don't always go for the cheapest — they go for whoever conveys the most trust. A slightly higher price with good photos, reviews, and a complete profile almost always wins over a cheap profile with no information.",
     "ctaTitle": "Ready to get more clients?",
     "ctaSubtitle": "Complete your profile, verify your identity, and start appearing in searches today.",
-    "ctaRegister": "Register your profile",
+    "ctaRegister": "Offer my services",
     "ctaPanel": "Go to my dashboard"
   },
   "statusTabs": {
@@ -2365,7 +2365,7 @@
     },
     "carousel": {
       "titlePre": "Explore",
-      "titleHighlight": "services by category",
+      "titleHighlight": "by category",
       "subtitle": "From home to health, find what you need in Costa Rica.",
       "viewAll": "View all categories"
     },
@@ -2390,18 +2390,18 @@
       "heading": "How ContrataCR works",
       "subtitle": "For clients and professionals. Simple, transparent, and safe.",
       "point0Title": "Describe what you need",
-      "point0Desc": "Tell us what you need and where, in your own words. No blind calls.",
-      "point1Title": "Verified profiles",
-      "point1Desc": "Identity confirmed against official records, plus real client reviews.",
+      "point0Desc": "Search directly or post a request: describe what you need and professionals respond.",
+      "point1Title": "Verified professionals",
+      "point1Desc": "Identity confirmed with the Civil Registry, plus real client reviews.",
       "point2Title": "Coordinate on WhatsApp",
-      "point2Desc": "Talk directly with the professional to agree on date and price — no middlemen.",
+      "point2Desc": "You talk directly with the professional to coordinate the date and details, no middlemen.",
       "point3Title": "Support when you need it",
       "point3Desc": "Leave your review when done, and if something goes wrong, we help.",
       "pitchTitle": "Do you offer services?",
-      "pitchDesc": "Create your profile and receive requests from clients in your area. No commissions, and verified profiles appear first.",
+      "pitchDesc": "Create your professional profile and receive requests from clients in your area. No commissions, and verified professionals appear first.",
       "pitchCta": "Offer my services",
       "pitchHow": "How it works",
-      "mockResults": "128 services in Costa Rica",
+      "mockResults": "128 professionals in Costa Rica",
       "mockSearch": "Plumbing in San José"
     },
     "why": {
