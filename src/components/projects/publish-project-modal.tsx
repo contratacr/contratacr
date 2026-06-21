@@ -48,17 +48,35 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
   // to their profile so we never ask again.
   const [phone, setPhone] = useState("");
   const [needsPhone, setNeedsPhone] = useState(false);
+  // Whether a real phone is ALREADY on profiles.phone — if so we never re-save it.
+  const [phoneOnProfile, setPhoneOnProfile] = useState(false);
   useEffect(() => {
+    if (!user?.id) return;
     const supabase = createClient();
-    supabase.rpc("get_my_profile").then(({ data }) => {
+    let active = true;
+    (async () => {
+      const { data } = await supabase.rpc("get_my_profile");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const raw = ((data as any)?.phone as string | undefined) ?? "";
-      // A bare dial code / empty value is NOT a phone (legacy clears stored "506") → ask again.
-      const p = hasPhoneNumber(raw) ? raw : "";
+      // A bare dial code / empty value is NOT a phone (legacy clears stored "506").
+      let p = hasPhoneNumber(raw) ? raw : "";
+      const onProfile = !!p;
+      // A PROFESSIONAL's contact number lives in professionals.whatsapp, NOT
+      // profiles.phone — fall back to it so a pro who already has a number on file is
+      // never asked again (mirrors the booking modal's prefill). It's backfilled to
+      // profiles.phone on submit so the published solicitud has a reachable contact.
+      if (!p) {
+        const { data: pro } = await supabase.from("professionals").select("whatsapp").eq("profile_id", user.id).maybeSingle();
+        const wa = (pro?.whatsapp as string | undefined) ?? "";
+        if (hasPhoneNumber(wa)) p = wa;
+      }
+      if (!active) return;
       setPhone(p);
+      setPhoneOnProfile(onProfile);
       setNeedsPhone(!p);
-    });
-  }, []);
+    })();
+    return () => { active = false; };
+  }, [user?.id]);
 
   const selectedProvincia = PROVINCES.find((p) => p.id === form.provinciaId);
   const cantons = selectedProvincia?.cantons ?? [];
@@ -88,8 +106,11 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
 
     setSubmitting(true);
     try {
-      // Persist the phone to the profile (only when we prompted for it).
-      if (needsPhone && user?.id) {
+      // Persist the phone to profiles.phone when it isn't already there — either the
+      // client typed it (none on file) or we prefilled it from the pro's WhatsApp (a
+      // pro's number lives on professionals.whatsapp) — so the solicitud has a reachable
+      // contact and we never ask again.
+      if (user?.id && phone && !phoneOnProfile) {
         const supabase = createClient();
         await supabase.from("profiles").update({ phone }).eq("id", user.id);
       }
