@@ -1068,7 +1068,10 @@
     "modeUseSubtitle": "Estás buscando y contratando servicios.",
     "offerGateTitle": "Empieza a ofrecer tus servicios",
     "offerGateBody": "Es la misma cuenta. Completa tu perfil una sola vez y empieza a recibir solicitudes de clientes en todo el país.",
-    "offerGateCta": "Completar mi perfil"
+    "offerGateCta": "Completar mi perfil",
+    "offerInviteTitle": "¿Ofreces servicios?",
+    "offerInviteBody": "Crea tu perfil y empieza a recibir clientes en todo el país.",
+    "offerInviteCta": "Ofrecer mis servicios"
   },
   "bookingRequests": {
     "empty": "No tienes solicitudes todavía",
@@ -1700,10 +1703,8 @@
     "continue": "Continuar",
     "proTitle": "Ofrezco servicios",
     "proDesc": "Ofrece tus servicios y conecta con clientes en todo el país.",
-    "bothNote": "Puedes buscar servicios desde el inicio. Para ofrecer los tuyos, solo completas tu perfil cuando quieras.",
     "haveAccount": "¿Ya tienes cuenta?",
-    "signIn": "Inicia sesión",
-    "bothTitle": "Es una sola cuenta."
+    "signIn": "Inicia sesión"
   },
   "onboarding": {
     "greeting": "Hola, {name}",

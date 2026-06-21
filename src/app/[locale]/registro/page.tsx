@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { UserRoundSearch, BriefcaseBusiness, ArrowRight, ArrowLeftRight } from "lucide-react";
+import { UserRoundSearch, BriefcaseBusiness, ArrowRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -71,17 +71,10 @@ export default function RegisterPage() {
             </Link>
           </div>
 
-          {/* You're never boxed into one role — picking one is just a starting point,
-              and either action can add the other later from the panel. */}
-          <div className="mt-6 flex items-start gap-3 rounded-xl bg-[#EBF5FB] ring-1 ring-inset ring-[#009FD9]/15 px-4 py-3.5 text-left">
-            <ArrowLeftRight className="h-5 w-5 text-[#009FD9] shrink-0 mt-0.5" />
-            <p className="text-sm text-[#374151] leading-relaxed">
-              <span className="font-semibold text-[#111827]">{t("bothTitle")}</span>{" "}
-              {t("bothNote")}
-            </p>
-          </div>
-
-          <p className="text-center text-sm text-[#6b7280] mt-6">
+          {/* The registration stays clean — just the two choices. Discovering the
+              OTHER capability happens later, in the panel (the "Ofrecer servicios"
+              invitation there), not by explaining it here. */}
+          <p className="text-center text-sm text-[#6b7280] mt-8">
             {t("haveAccount")}{" "}
             <Link href="/login" className="text-[#009FD9] font-medium hover:underline">
               {t("signIn")}

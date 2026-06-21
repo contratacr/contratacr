@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Lock, Camera, X, Briefcase, Info } from "lucide-react";
-import { Link, useRouter } from "@/i18n/navigation";
+import { Lock, Camera, X, Info } from "lucide-react";
+import { Link } from "@/i18n/navigation";
 import { detectIdType } from "@/lib/cedula";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
@@ -15,18 +15,15 @@ import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guar
 
 // The SEEKER's "Mi perfil" — basic identity every account has (photo + name +
 // phone), with the same reliable autosave standard as the rest of the app. Used
-// by the unified panel's "Usar servicios" mode. When the account has NOT yet
-// unlocked offering, it also shows the "Ofrecer mis servicios" activation card.
+// by the unified panel's "Usar servicios" mode. The "Ofrecer servicios" invitation
+// lives in the panel sidebar, so it is not repeated here.
 export function BasicProfileSection({
-  canOffer,
   supportTab = "/dashboard/profesional?tab=soporte",
 }: {
-  canOffer: boolean;
   supportTab?: string;
 }) {
   const { user } = useAuth();
   const t = useTranslations("clientPage");
-  const router = useRouter();
 
   const [profileData, setProfileData] = useState<{ full_name: string; phone?: string; avatar_url?: string; cedula?: string | null } | null>(null);
   const [profileForm, setProfileForm] = useState({ full_name: "", phone: "" });
@@ -221,17 +218,8 @@ export function BasicProfileSection({
         </div>
       </div>
 
-      {/* Ofrecer mis servicios — same account, unlock the offering capability.
-          Only shown when the account hasn't unlocked offering yet. */}
-      {!canOffer && (
-        <div className="border-t border-[#f3f4f6] pt-5">
-          <h3 className="text-sm font-semibold text-[#111827]">{t("offerTitle")}</h3>
-          <p className="text-xs text-[#6b7280] mt-0.5 mb-3">{t("offerBody")}</p>
-          <Button size="sm" onClick={() => router.push("/registro/profesional")}>
-            <Briefcase className="h-4 w-4" /> {t("offerCta")}
-          </Button>
-        </div>
-      )}
+      {/* The "Ofrecer servicios" invitation lives in the panel sidebar (visible on
+          every "Usar servicios" tab), so it's not duplicated here. */}
 
       <UnsavedChangesGuard dirty={profileDirty} onSave={saveProfile} />
     </div>

@@ -375,7 +375,7 @@ export default function DashboardPage() {
 
               <div className="flex flex-col lg:flex-row gap-6">
                 {/* Sidebar nav — tabs for the active mode + a shared block. */}
-                <nav className="lg:w-60 shrink-0">
+                <nav className="lg:w-60 shrink-0 space-y-3">
                   <Card>
                     <CardContent className="p-2 space-y-3">
                       <div>
@@ -386,6 +386,21 @@ export default function DashboardPage() {
                       </div>
                     </CardContent>
                   </Card>
+
+                  {/* Discover the OTHER capability: a seeker is invited — tastefully,
+                      right where they navigate — to start offering services. */}
+                  {mode === "use" && !isProvider && (
+                    <div className="rounded-2xl border border-[#009FD9]/25 bg-[#EBF5FB] p-4">
+                      <div className="flex items-center gap-2 mb-1.5">
+                        <Sparkles className="h-4 w-4 text-[#009FD9] shrink-0" />
+                        <p className="text-sm font-bold text-[#111827]">{t("offerInviteTitle")}</p>
+                      </div>
+                      <p className="text-xs text-[#6b7280] leading-relaxed mb-3">{t("offerInviteBody")}</p>
+                      <Button size="sm" className="w-full" onClick={() => router.push("/registro/profesional")}>
+                        {t("offerInviteCta")} <ArrowRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
                 </nav>
 
                 {/* Main content */}
@@ -414,7 +429,7 @@ export default function DashboardPage() {
                           />
                         )}
                         {activeTab === "profile" && mode === "use" && (
-                          <BasicProfileSection canOffer={isProvider} />
+                          <BasicProfileSection />
                         )}
 
                         {activeTab === "services" && pro && (

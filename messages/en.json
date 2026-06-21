@@ -1068,7 +1068,10 @@
     "modeUseSubtitle": "You are searching for and hiring services.",
     "offerGateTitle": "Start offering your services",
     "offerGateBody": "It is the same account. Complete your profile once and start receiving requests from clients across the country.",
-    "offerGateCta": "Complete my profile"
+    "offerGateCta": "Complete my profile",
+    "offerInviteTitle": "Do you offer services?",
+    "offerInviteBody": "Create your profile and start receiving clients across the country.",
+    "offerInviteCta": "Offer my services"
   },
   "bookingRequests": {
     "empty": "You don't have any requests yet",
@@ -1700,10 +1703,8 @@
     "continue": "Continue",
     "proTitle": "Offering services",
     "proDesc": "Offer your services and connect with clients across the country.",
-    "bothNote": "You can search for services right away. To offer your own, just complete your profile whenever you want.",
     "haveAccount": "Already have an account?",
-    "signIn": "Sign in",
-    "bothTitle": "It is one account."
+    "signIn": "Sign in"
   },
   "onboarding": {
     "greeting": "Hi, {name}",
