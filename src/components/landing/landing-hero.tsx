@@ -17,14 +17,17 @@ import { matchProvinceCanton } from "@/lib/data/cr-geography";
 type AddressSuggestion = { type: "address"; placeId: string; label: string };
 const GMAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
 
+// Spread the rotating examples ACROSS the app's real breadth (home, care, classes,
+// health, beauty…), not just home repair — so a first-time visitor sees at a glance
+// that ContrataCR is more than a handyman app.
 const ROTATING_LINES: Record<string, string[]> = {
-  es: ["Plomería,", "Electricidad,", "Limpieza,", "Jardinería,", "Pintura,", "Niñera,", "Mudanzas,", "Fumigación,"],
-  en: ["Plumbing,", "Electrical,", "Cleaning,", "Gardening,", "Painting,", "Babysitting,", "Moving,", "Pest control,"],
+  es: ["Plomería,", "Limpieza,", "Niñera,", "Clases,", "Fisioterapia,", "Belleza,", "Electricidad,", "Cuidados,", "Jardinería,", "Mudanzas,"],
+  en: ["Plumbing,", "Cleaning,", "Babysitting,", "Classes,", "Therapy,", "Beauty,", "Electrical,", "Caregiving,", "Gardening,", "Moving,"],
 };
 
 const POPULAR_TAGS: Record<string, string[]> = {
-  es: ["Plomería", "Electricidad", "Limpieza", "Pintura", "Jardinería", "Mudanzas"],
-  en: ["Plumbing", "Electrical", "Cleaning", "Painting", "Gardening", "Moving"],
+  es: ["Plomería", "Limpieza", "Niñera", "Clases", "Fisioterapia", "Belleza"],
+  en: ["Plumbing", "Cleaning", "Babysitting", "Classes", "Therapy", "Beauty"],
 };
 
 /* ── Hero image — ONE easy-to-swap asset shown in the dome. ──
