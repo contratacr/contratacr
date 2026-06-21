@@ -222,12 +222,12 @@ export type ResultsCopy = {
 // "Así funciona" section passes locale-aware copy from why-contratacr.tsx.
 const DEFAULT_RESULTS_COPY: ResultsCopy = {
   title: "Plomería",
-  results: "128 profesionales en Costa Rica",
+  results: "128 servicios en Costa Rica",
   search: "Plomería en San José",
   verified: "Verificado",
   whatsapp: "Contáctanos por WhatsApp",
   viewSchedule: "Ver horario completo",
-  noScheduleNote: "La disponibilidad de este profesional no es pública. Contáctanos y conoce sus horarios.",
+  noScheduleNote: "La disponibilidad de este perfil no es pública. Contáctanos y conoce sus horarios.",
   priceUnit: "/hora",
   reviews: (n) => `${n} reseñas`,
   days: [

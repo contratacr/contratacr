@@ -201,7 +201,7 @@ function SuggestionsDropdown({
             )}
           </span>
           <span className="text-[10px] uppercase tracking-wide text-gray-300 shrink-0">
-            {s.type === "category" ? "Servicio" : "Profesional"}
+            {s.type === "category" ? "Servicio" : "Perfil"}
           </span>
         </button>
       ))}

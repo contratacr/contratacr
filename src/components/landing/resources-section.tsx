@@ -5,13 +5,13 @@ const RESOURCES = [
   {
     id: "como-funciona",
     label: "Cómo funciona ContrataCR",
-    description: "Conoce las dos formas de encontrar el profesional correcto para lo que necesitas.",
+    description: "Conoce las dos formas de encontrar el servicio correcto para lo que necesitas.",
     href: "/como-funciona",
     src: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=700&q=80",
   },
   {
     id: "para-profesionales",
-    label: "Consejos para profesionales",
+    label: "Consejos para quienes ofrecen servicios",
     description: "Estrategias prácticas para atraer más clientes en el mercado costarricense.",
     href: "/atraer-clientes",
     src: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=700&q=80",
