@@ -66,6 +66,10 @@ export default function ProfilePage({ params }: ProfilePageProps) {
   const [profileSlots, setProfileSlots] = useState<ScheduleSlot[]>([]);
   const [loading, setLoading] = useState(true);
   const [proNotFound, setProNotFound] = useState(false);
+  // The logged-in viewer's role-aware panel route — drives the "Volver a mi panel"
+  // button on the "Profesional no encontrado" screen so a signed-in visitor is never
+  // stranded. `null` = logged out (that screen then shows only "Buscar profesionales").
+  const [panelHref, setPanelHref] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("servicios");
   // Deep-link support: /profesionales/[slug]?tab=casos opens that tab.
   useEffect(() => { setActiveTab(initialTabFromUrl()); }, []);
@@ -128,6 +132,21 @@ export default function ProfilePage({ params }: ProfilePageProps) {
     load();
   }, [params]);
 
+  // Resolve the viewer's role-aware panel route up front (parallel, non-blocking) so the
+  // "Profesional no encontrado" screen can offer "Volver a mi panel" even though load()
+  // bails early on a missing pro. Reads ONLY the session (no avatar/profiles query).
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth
+      .getUser()
+      .then(({ data: { user } }) => {
+        if (!user) { setPanelHref(null); return; }
+        const role = (user.user_metadata?.role as string | undefined) ?? "client";
+        setPanelHref(role === "professional" ? "/dashboard/profesional" : "/dashboard/cliente");
+      })
+      .catch(() => setPanelHref(null));
+  }, []);
+
   // Close dropdown on outside click / tap / Escape
   useEffect(() => {
     function onClickOutside(e: Event) {
@@ -167,9 +186,29 @@ export default function ProfilePage({ params }: ProfilePageProps) {
           <p className="text-[#6b7280] text-sm max-w-sm">
             {t("notFoundDesc")}
           </p>
-          <Link href="/buscar" className="mt-2 inline-flex items-center gap-2 bg-[#009FD9] hover:bg-[#0089bb] text-white font-semibold px-6 py-3 rounded-full transition-colors text-sm">
-            {t("searchProfessionals")}
-          </Link>
+          {/* A logged-in visitor gets a role-aware "Volver a mi panel" (primary) so they're
+              never stranded; "Buscar profesionales" stays as the secondary. A guest sees
+              only "Buscar profesionales" (no broken panel link). Stacks full-width ~360px. */}
+          <div className="mt-2 flex flex-col sm:flex-row items-center justify-center gap-3 w-full sm:w-auto">
+            {panelHref && (
+              <Link
+                href={panelHref}
+                className="inline-flex items-center justify-center gap-2 bg-[#009FD9] hover:bg-[#0089bb] text-white font-semibold px-6 py-3 rounded-full transition-colors text-sm w-full sm:w-auto"
+              >
+                <ArrowLeft className="h-4 w-4" /> {t("backToPanel")}
+              </Link>
+            )}
+            <Link
+              href="/buscar"
+              className={
+                panelHref
+                  ? "inline-flex items-center justify-center gap-2 border border-[#e5e7eb] text-[#374151] hover:border-[#009FD9] hover:text-[#009FD9] font-semibold px-6 py-3 rounded-full transition-colors text-sm w-full sm:w-auto"
+                  : "inline-flex items-center justify-center gap-2 bg-[#009FD9] hover:bg-[#0089bb] text-white font-semibold px-6 py-3 rounded-full transition-colors text-sm w-full sm:w-auto"
+              }
+            >
+              {t("searchProfessionals")}
+            </Link>
+          </div>
         </main>
         <LandingFooter />
       </div>
