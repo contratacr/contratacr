@@ -220,6 +220,7 @@ export function ClientRegistrationModal({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [duplicateEmailDetected, setDuplicateEmailDetected] = useState(false);
+  const [checkingEmail, setCheckingEmail] = useState(false);
 
   function reset() {
     setView("register");
@@ -334,6 +335,29 @@ export function ClientRegistrationModal({
 
     setSubmitting(false);
     setStep("otp");
+  }
+
+  // Detect an existing account as soon as the EMAIL step is completed — a returning
+  // user is routed straight to login (enter password) BEFORE we ask for a password +
+  // confirm. Falls back to proceeding on any check failure (signUp still catches a dup).
+  async function emailStepContinue() {
+    setError(null);
+    setCheckingEmail(true);
+    try {
+      const res = await fetch(`/api/check-availability?email=${encodeURIComponent(email.trim())}`);
+      const json = await res.json().catch(() => ({}));
+      if (json?.emailTaken) {
+        setLoginPassword("");
+        setDuplicateEmailDetected(true);
+        setView("login");
+      } else {
+        setStep("password");
+      }
+    } catch {
+      setStep("password");
+    } finally {
+      setCheckingEmail(false);
+    }
   }
 
   // ── Login ──────────────────────────────────────────────────────────────────
@@ -468,9 +492,8 @@ export function ClientRegistrationModal({
                 >
                   {t("forgotPassword")}
                 </a>
-                <Button size="lg" loading={submitting} className="w-full" onClick={handleLogin}>
-                  {submitting ? t("signingIn") : t("signIn")}
-                </Button>
+                {/* The "Iniciar sesión" submit button lives in the footer action bar
+                    (consistent with the register flow's button) — NOT duplicated here. */}
               </div>
             )}
 
@@ -610,7 +633,7 @@ export function ClientRegistrationModal({
                   <Button
                     size="md"
                     className="flex-1"
-                    loading={submitting}
+                    loading={submitting || checkingEmail}
                     disabled={
                       (step === "identity" && !identityReady) ||
                       (step === "email" && !email.includes("@")) ||
@@ -619,7 +642,7 @@ export function ClientRegistrationModal({
                     onClick={() => {
                       setError(null);
                       if (step === "identity") setStep("email");
-                      else if (step === "email") setStep("password");
+                      else if (step === "email") emailStepContinue();
                       else if (step === "password") handleSignUp();
                     }}
                   >
