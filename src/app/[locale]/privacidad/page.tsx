@@ -31,7 +31,7 @@ const SECTIONS: LegalSection[] = [
         "Número de teléfono / WhatsApp (para coordinar servicios).",
         "Número de cédula, cuando lo proporciona al solicitar un servicio (para identificación).",
         "Ubicación o zona, cuando la indica.",
-        "Historial de solicitudes, proyectos y profesionales guardados dentro de la Plataforma.",
+        "Historial de solicitudes, solicitudes publicadas y profesionales guardados dentro de la Plataforma.",
       ] },
       { k: "sub", text: "2.3 De los Profesionales" },
       { k: "ul", items: [

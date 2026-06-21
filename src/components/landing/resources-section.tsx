@@ -5,7 +5,7 @@ const RESOURCES = [
   {
     id: "como-funciona",
     label: "Cómo funciona ContrataCR",
-    description: "Conoce las dos formas de encontrar el profesional correcto para tu proyecto.",
+    description: "Conoce las dos formas de encontrar el profesional correcto para lo que necesitas.",
     href: "/como-funciona",
     src: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=700&q=80",
   },

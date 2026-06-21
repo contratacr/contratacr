@@ -181,7 +181,7 @@ export function ExploreTabs() {
                 {tab.featured.editorial}
               </p>
               <span className="inline-flex items-center gap-1 text-white/80 text-sm font-semibold hover:text-white transition-colors">
-                Ver todos los proyectos de {tab.title.toLowerCase()}. <ArrowRight className="h-3.5 w-3.5" />
+                Ver todos los servicios de {tab.title.toLowerCase()}. <ArrowRight className="h-3.5 w-3.5" />
               </span>
             </div>
           </Link>

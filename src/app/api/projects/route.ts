@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
     }
     // Category is required — it routes the project to matching professionals.
     if (!categoryId) {
-      return NextResponse.json({ error: "Elige una categoría para tu proyecto." }, { status: 400 });
+      return NextResponse.json({ error: "Elige una categoría para tu solicitud." }, { status: 400 });
     }
 
     const supabase = await createClient();
@@ -105,7 +105,7 @@ export async function POST(req: NextRequest) {
           const rows = recipients.map((profileId) => ({
             user_id: profileId,
             type: "new_project",
-            title: "Nuevo proyecto en tu categoría",
+            title: "Nueva oportunidad en tu categoría",
             message: `Un cliente publicó "${title.trim()}" en ${label}.`,
             data: { link: "/es/dashboard/profesional?tab=proposals", project_id: data.id },
           }));
@@ -244,10 +244,10 @@ export async function PATCH(req: NextRequest) {
       .eq("id", id)
       .maybeSingle();
     if (!project || project.accepted_professional_id !== pro.id) {
-      return NextResponse.json({ error: "No autorizado para este proyecto." }, { status: 403 });
+      return NextResponse.json({ error: "No autorizado para esta solicitud." }, { status: 403 });
     }
     if (project.status !== "in_progress") {
-      return NextResponse.json({ error: "El proyecto no está en progreso." }, { status: 409 });
+      return NextResponse.json({ error: "La solicitud no está en progreso." }, { status: 409 });
     }
     await admin.from("projects").update({ status: "awaiting_confirmation", work_done_at: new Date().toISOString() }).eq("id", id);
     // Notify the client to confirm.
@@ -279,7 +279,7 @@ export async function PATCH(req: NextRequest) {
         await admin.from("notifications").insert({
           user_id: pro.profile_id,
           type: "project_completed",
-          title: "Proyecto finalizado",
+          title: "Solicitud finalizada",
           message: `El cliente confirmó la finalización de "${project.title}". ¡Buen trabajo!`,
           data: { link: "/es/dashboard/profesional?tab=proposals", project_id: id },
         });
@@ -324,8 +324,8 @@ async function notifyAssignedPro(admin: any, projectId: string, kind: "cancelled
     await admin.from("notifications").insert({
       user_id: pro.profile_id,
       type: "project_completed", // reuse an allowed project type for the channel
-      title: kind === "deleted" ? "Proyecto eliminado" : "Proyecto cancelado",
-      message: `El cliente ${kind === "deleted" ? "eliminó" : "canceló"} el proyecto "${project.title}". Ya no está activo.`,
+      title: kind === "deleted" ? "Solicitud eliminada" : "Solicitud cancelada",
+      message: `El cliente ${kind === "deleted" ? "eliminó" : "canceló"} la solicitud "${project.title}". Ya no está activa.`,
       data: { link: "/es/dashboard/profesional?tab=proposals" },
     });
   } catch (e) {

@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     const { data: project } = await createAdminClient()
       .from("projects").select("client_id").eq("id", projectId).maybeSingle();
     if (project?.client_id === session.user.id) {
-      return NextResponse.json({ error: "No puedes enviar una propuesta a tu propio proyecto." }, { status: 400 });
+      return NextResponse.json({ error: "No puedes enviar una propuesta a tu propia solicitud." }, { status: 400 });
     }
 
     const { data, error } = await supabase.from("proposals").insert({
@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
 
     if (error) {
       if (error.code === "23505") {
-        return NextResponse.json({ error: "Ya enviaste una propuesta para este proyecto" }, { status: 409 });
+        return NextResponse.json({ error: "Ya enviaste una propuesta para esta solicitud" }, { status: 409 });
       }
       return NextResponse.json({ error: error.message }, { status: 500 });
     }

@@ -46,7 +46,7 @@ export function MarqueeStrip() {
           fontFamily: "system-ui, -apple-system, sans-serif",
         }}
       >
-        Impulsando proyectos en toda Costa Rica.
+        Impulsando servicios en toda Costa Rica.
       </p>
 
       <div
