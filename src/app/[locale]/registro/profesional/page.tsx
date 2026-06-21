@@ -899,7 +899,11 @@ export default function RegisterProfessionalPage() {
 
               <div className="flex gap-3 mt-2">
                 {!currentUser && (
-                  <Button variant="outline" size="lg" type="button" onClick={() => setStep(0)}>
+                  // Going BACK keeps the non-sensitive fields (nombre, cédula, correo —
+                  // react-hook-form preserves them) but CLEARS the password + confirm so
+                  // they're re-entered (safest/cleanest; a plain password shouldn't linger
+                  // in form state across back-navigation).
+                  <Button variant="outline" size="lg" type="button" onClick={() => { form1.setValue("password", ""); form1.setValue("confirmPassword", ""); setStep(0); }}>
                     <ArrowLeft className="h-4 w-4" /> {t("back")}
                   </Button>
                 )}
