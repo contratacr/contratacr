@@ -153,7 +153,6 @@ export function BookingRequests() {
 
     const category = booking.category_id ? getCategoryLabel(booking.category_id, locale) : null;
     const location = booking.slot_location_label || null;
-    const hasMeta = !!(category || location || booking.service_description);
 
     // First names for friendly WhatsApp greetings.
     const cliFirst = (booking.client_name || t("thePerson")).split(" ")[0];
@@ -178,11 +177,12 @@ export function BookingRequests() {
       <Card className="rounded-[18px] overflow-hidden">
         {/* 1 — status header: the REQUEST (created) date, plus the status pill ONLY when
                it adds info beyond the active tab (a sub-state like "En progreso"). When the
-               status just repeats the tab it's hidden — the tab already says it. */}
+               status just repeats the tab it's hidden — the tab already says it.
+               No bottom border: whitespace alone sets it apart from the appointment below. */}
         {(() => {
           const showStatus = !solicitudStatusRedundant(booking.status, booking.scheduled_date);
           return (
-            <div className={`flex items-center gap-2.5 px-[18px] py-3.5 border-b border-[#f3f4f6] ${showStatus ? "justify-between" : "justify-end"}`}>
+            <div className={`flex items-center gap-2.5 px-[18px] pt-4 pb-1 ${showStatus ? "justify-between" : "justify-end"}`}>
               {showStatus && (
                 <Badge variant={STATUS_VARIANT[booking.status]} className="px-3 py-1 text-xs font-bold">
                   {t(`status.${booking.status}`)}
@@ -196,8 +196,9 @@ export function BookingRequests() {
         })()}
 
         {/* 2-3 — THE APPOINTMENT (shared "what & when", full width): featured date +
-               service · location + the client's note. */}
-        <div className="px-[18px] py-4 flex flex-col gap-3 border-b border-[#f3f4f6]">
+               service · location + the client's note. Rows are separated by spacing, not
+               hairlines — the bold date vs. lighter meta already reads as a hierarchy. */}
+        <div className="px-[18px] pt-2 pb-4 flex flex-col gap-2.5">
           <div className="flex items-center gap-3">
             <CalendarClock className="h-[22px] w-[22px] text-[#9ca3af] shrink-0" strokeWidth={2} />
             <div className="min-w-0">
@@ -207,8 +208,6 @@ export function BookingRequests() {
               </p>
             </div>
           </div>
-
-          {hasMeta && <div className="h-px bg-[#f3f4f6]" />}
 
           {(category || location) && (
             <div className="flex items-center gap-2.5 text-[13.5px]">
