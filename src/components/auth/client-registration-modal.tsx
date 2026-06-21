@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
-  X, Eye, EyeOff, CheckCircle2, Circle,
+  X, CheckCircle2, Circle,
   ArrowRight, ArrowLeft, AlertCircle, Loader2, RotateCcw,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
@@ -209,12 +209,9 @@ export function ClientRegistrationModal({
   const [noCedula, setNoCedula] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
 
   // Login state
   const [loginPassword, setLoginPassword] = useState("");
-  const [showLoginPw, setShowLoginPw] = useState(false);
 
   // Async states
   const [submitting, setSubmitting] = useState(false);
@@ -473,15 +470,10 @@ export function ClientRegistrationModal({
                 />
                 <Input
                   label={t("passwordLabel")}
-                  type={showLoginPw ? "text" : "password"}
+                  type="password"
                   value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
                   placeholder="••••••••"
-                  rightIcon={
-                    <button type="button" onClick={() => setShowLoginPw((v) => !v)} className="text-gray-400 hover:text-gray-600">
-                      {showLoginPw ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                    </button>
-                  }
                 />
                 {/* Forgot-password — every login surface has it. Links to the standalone
                     reset page; does NOT touch the booking flow's login (which still closes
@@ -574,30 +566,20 @@ export function ClientRegistrationModal({
                     <div>
                       <Input
                         label={t("passwordLabel")}
-                        type={showPassword ? "text" : "password"}
+                        type="password"
                         placeholder="••••••••"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        rightIcon={
-                          <button type="button" onClick={() => setShowPassword((v) => !v)} className="text-gray-400 hover:text-gray-600">
-                            {showPassword ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                          </button>
-                        }
                       />
                       <PasswordChecklist password={password} />
                     </div>
                     <Input
                       label={t("confirmPassword")}
-                      type={showConfirm ? "text" : "password"}
+                      type="password"
                       placeholder="••••••••"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       error={confirmPassword && password !== confirmPassword ? tRp("passwordsDontMatch") : undefined}
-                      rightIcon={
-                        <button type="button" onClick={() => setShowConfirm((v) => !v)} className="text-gray-400 hover:text-gray-600">
-                          {showConfirm ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                        </button>
-                      }
                     />
                   </div>
                 )}

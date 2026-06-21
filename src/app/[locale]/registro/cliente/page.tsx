@@ -279,13 +279,15 @@ export default function RegisterClientPage() {
                         required
                         minLength={8}
                       />
-                      <button
-                        type="button"
-                        onClick={() => setShowPassword((s) => !s)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9ca3af] hover:text-[#374151] transition-colors"
-                      >
-                        {showPassword ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                      </button>
+                      {password && (
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword((s) => !s)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-[#111827] hover:text-[#374151] transition-colors"
+                        >
+                          {showPassword ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
+                        </button>
+                      )}
                     </div>
                   </div>
 
@@ -301,13 +303,15 @@ export default function RegisterClientPage() {
                         required
                         minLength={8}
                       />
-                      <button
-                        type="button"
-                        onClick={() => setShowConfirm((s) => !s)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9ca3af] hover:text-[#374151] transition-colors"
-                      >
-                        {showConfirm ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                      </button>
+                      {confirmPassword && (
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirm((s) => !s)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-[#111827] hover:text-[#374151] transition-colors"
+                        >
+                          {showConfirm ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
+                        </button>
+                      )}
                     </div>
                     {confirmPassword && password !== confirmPassword && (
                       <p className="text-xs text-red-500 mt-1">{t("errPasswordMismatch")}</p>

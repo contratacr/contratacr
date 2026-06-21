@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { CheckCircle2, Circle, Eye, EyeOff, ArrowRight, AlertCircle, Lock } from "lucide-react";
+import { CheckCircle2, Circle, ArrowRight, AlertCircle, Lock } from "lucide-react";
 import { SuccessIcon } from "@/components/ui/success-icon";
 import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
 import { Navbar } from "@/components/layout/navbar";
@@ -52,8 +52,6 @@ export default function ResetPasswordPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
 
   // Built inside the component so validation messages localize (and reuse the
   // same rule labels shown in the live checklist).
@@ -164,45 +162,19 @@ export default function ResetPasswordPage() {
             <div>
               <Input
                 label={t("newPassword")}
-                type={showPassword ? "text" : "password"}
+                type="password"
                 placeholder="••••••••"
                 error={errors.password?.message}
                 {...register("password")}
-                rightIcon={
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((v) => !v)}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    {showPassword ? (
-                      <Eye className="h-4 w-4" />
-                    ) : (
-                      <EyeOff className="h-4 w-4" />
-                    )}
-                  </button>
-                }
               />
               <PasswordChecklist password={watchedPassword} />
             </div>
             <Input
               label={t("confirmPassword")}
-              type={showConfirm ? "text" : "password"}
+              type="password"
               placeholder="••••••••"
               error={errors.confirmPassword?.message}
               {...register("confirmPassword")}
-              rightIcon={
-                <button
-                  type="button"
-                  onClick={() => setShowConfirm((v) => !v)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  {showConfirm ? (
-                    <Eye className="h-4 w-4" />
-                  ) : (
-                    <EyeOff className="h-4 w-4" />
-                  )}
-                </button>
-              }
             />
             <Button type="submit" size="lg" loading={submitting} className="mt-2">
               {submitting ? (

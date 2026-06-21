@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import {
   CheckCircle2, ArrowRight, ArrowLeft, Loader2, AlertCircle,
-  Eye, EyeOff, Circle, Camera, X, Plus,
+  Circle, Camera, X, Plus,
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -257,8 +257,6 @@ export default function RegisterProfessionalPage() {
   // loader meanwhile so the form/step never flashes back (item 6).
   const [redirecting, setRedirecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
@@ -758,38 +756,20 @@ export default function RegisterProfessionalPage() {
               <div>
                 <Input
                   label={<>{t("password")} <span className="text-red-500">*</span></>}
-                  type={showPassword ? "text" : "password"}
+                  type="password"
                   placeholder={t("passwordPlaceholder")}
                   error={form1.formState.errors.password?.message}
                   {...form1.register("password")}
-                  rightIcon={
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword((v) => !v)}
-                      className="text-gray-400 hover:text-gray-600"
-                    >
-                      {showPassword ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                    </button>
-                  }
                 />
                 <PasswordChecklist password={watchedPassword} />
               </div>
 
               <Input
                 label={<>{t("confirmPassword")} <span className="text-red-500">*</span></>}
-                type={showConfirm ? "text" : "password"}
+                type="password"
                 placeholder="••••••••"
                 error={form1.formState.errors.confirmPassword?.message}
                 {...form1.register("confirmPassword")}
-                rightIcon={
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirm((v) => !v)}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    {showConfirm ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                  </button>
-                }
               />
 
               <Button type="submit" size="lg" className="mt-2">
