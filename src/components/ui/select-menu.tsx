@@ -100,9 +100,13 @@ export function SelectMenu({ value, onChange, options, placeholder, label, error
         <div
           ref={listRef}
           role="listbox"
-          // The popup is portaled to <body> (outside any Radix Dialog). Stop pointerdown so
-          // a Radix Dialog's "pointer-down-outside" doesn't treat an option click as outside
-          // and close the whole modal (e.g. the booking modal's DOB picker).
+          // The popup is portaled to <body> (outside any Radix Dialog). Two guards keep it
+          // clickable INSIDE a Radix Dialog: (1) stop pointer/mouse-down propagation; (2) the
+          // `data-selectmenu-list` marker lets a Radix `Dialog.Content` `onInteractOutside`/
+          // `onPointerDownOutside`/`onFocusOutside` call preventDefault for it, so an option
+          // click never dismisses the modal (e.g. the booking modal's DOB picker — the
+          // beneficiary case, which has no padrón auto-fill, exercises this manual path).
+          data-selectmenu-list=""
           onPointerDown={(e) => e.stopPropagation()}
           onMouseDown={(e) => e.stopPropagation()}
           style={{

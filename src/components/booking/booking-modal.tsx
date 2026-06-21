@@ -97,6 +97,14 @@ interface BookingModalProps {
   initialLocationLabel?: string | null;
 }
 
+// Radix dismiss/focus-outside guard: keep the modal open when the interaction is with
+// a body-portaled SelectMenu dropdown (its option list is marked `data-selectmenu-list`).
+// Without this, clicking a DOB day/month/year option closes the whole modal.
+function keepSelectMenuOpen(e: { detail?: { originalEvent?: Event }; target?: EventTarget | null; preventDefault: () => void }) {
+  const node = (e.detail?.originalEvent?.target ?? e.target) as HTMLElement | null;
+  if (node?.closest?.("[data-selectmenu-list]")) e.preventDefault();
+}
+
 export function BookingModal({ professional, categoryName, open, onClose, initialDate, initialTime, initialCategoryId, initialLocationId, initialLocationLabel }: BookingModalProps) {
   const t = useTranslations("booking");
   const locale = useLocale();
@@ -784,6 +792,15 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
         <Dialog.Content
+          // The SelectMenu dropdowns (DOB picker day/month/year, etc.) portal their option
+          // list to <body>, OUTSIDE this dialog. Without these guards, clicking an option
+          // registers as an "interaction outside" → the dialog dismisses, so the picker reads
+          // as "broken / won't let me select" (most visible in the beneficiary DOB, which has
+          // no padrón auto-fill and must be picked manually). preventDefault ONLY for the
+          // SelectMenu list keeps normal overlay/Escape close working.
+          onPointerDownOutside={keepSelectMenuOpen}
+          onInteractOutside={keepSelectMenuOpen}
+          onFocusOutside={keepSelectMenuOpen}
           className={cn(
             "fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2",
             "w-[95vw] max-w-4xl rounded-3xl overflow-hidden shadow-2xl",
