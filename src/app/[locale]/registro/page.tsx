@@ -41,10 +41,10 @@ export default function RegisterPage() {
                 <UserRoundSearch className="h-8 w-8 text-[#009FD9] group-hover:text-white transition-colors duration-200" />
               </div>
               <div>
-                {/* Pair the role word with the action so users learn the vocabulary:
-                    Cliente = busco servicios. */}
-                <p className="text-[11px] font-bold uppercase tracking-wider text-[#009FD9] mb-1">{t("clientRole")}</p>
-                <h2 className="text-xl font-bold text-[#111827] mb-2">{t("clientTitle")}</h2>
+                {/* The ROLE is the prominent choice; the action is supporting text:
+                    Cliente → busco servicios. */}
+                <h2 className="text-2xl font-bold text-[#111827]">{t("clientRole")}</h2>
+                <p className="text-sm font-semibold text-[#009FD9] mb-2">{t("clientTitle")}</p>
                 <p className="text-sm text-[#6b7280] leading-relaxed">
                   {t("clientDesc")}
                 </p>
@@ -63,10 +63,10 @@ export default function RegisterPage() {
                 <BriefcaseBusiness className="h-8 w-8 text-[#009FD9] group-hover:text-white transition-colors duration-200" />
               </div>
               <div>
-                {/* Profesional = ofrezco servicios — anyone who offers a service
-                    (a trade, caregiving, a class…), framed inclusively in proDesc. */}
-                <p className="text-[11px] font-bold uppercase tracking-wider text-[#009FD9] mb-1">{t("proRole")}</p>
-                <h2 className="text-xl font-bold text-[#111827] mb-2">{t("proTitle")}</h2>
+                {/* Profesional → ofrezco servicios. Anyone who offers a service (a
+                    trade, caregiving, a class…), framed inclusively in proDesc. */}
+                <h2 className="text-2xl font-bold text-[#111827]">{t("proRole")}</h2>
+                <p className="text-sm font-semibold text-[#009FD9] mb-2">{t("proTitle")}</p>
                 <p className="text-sm text-[#6b7280] leading-relaxed">
                   {t("proDesc")}
                 </p>

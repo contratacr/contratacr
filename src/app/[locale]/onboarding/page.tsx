@@ -189,8 +189,8 @@ export default function OnboardingPage() {
                 )}
               </div>
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-wider text-[#009FD9] mb-1">{tc("clientRole")}</p>
-                <h2 className="text-xl font-bold text-[#111827] mb-2">{tc("clientTitle")}</h2>
+                <h2 className="text-2xl font-bold text-[#111827]">{tc("clientRole")}</h2>
+                <p className="text-sm font-semibold text-[#009FD9] mb-2">{tc("clientTitle")}</p>
                 <p className="text-sm text-[#6b7280] leading-relaxed">
                   {tc("clientDesc")}
                 </p>
@@ -214,8 +214,8 @@ export default function OnboardingPage() {
                 )}
               </div>
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-wider text-[#009FD9] mb-1">{tc("proRole")}</p>
-                <h2 className="text-xl font-bold text-[#111827] mb-2">{tc("proTitle")}</h2>
+                <h2 className="text-2xl font-bold text-[#111827]">{tc("proRole")}</h2>
+                <p className="text-sm font-semibold text-[#009FD9] mb-2">{tc("proTitle")}</p>
                 <p className="text-sm text-[#6b7280] leading-relaxed">
                   {tc("proDesc")}
                 </p>

@@ -344,7 +344,7 @@ export function ProScreen() {
           </div>
         ))}
         <div className="rounded-xl bg-[#1a2744] px-3 py-2.5 text-center">
-          <span className="text-[11px] font-bold text-white">100% gratis · sin comisiones</span>
+          <span className="text-[11px] font-bold text-white">Sin comisiones por los servicios</span>
         </div>
       </div>
     </div>
