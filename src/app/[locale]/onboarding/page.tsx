@@ -180,7 +180,7 @@ export default function OnboardingPage() {
               disabled={!!selecting}
               className="group flex flex-col items-center gap-5 p-8 bg-white border-2 border-[#e5e7eb] rounded-2xl hover:border-[#009FD9] hover:shadow-lg transition-all duration-200 disabled:opacity-60 text-center"
             >
-              <div className="h-16 w-16 rounded-full bg-[#EBF5FB] flex items-center justify-center group-hover:bg-[#009FD9] transition-colors duration-200 shrink-0">
+              <div className="h-16 w-16 rounded-full bg-[#EBF5FB] ring-1 ring-inset ring-[#009FD9]/20 shadow-[0_10px_30px_-10px_rgba(0,159,217,0.5)] flex items-center justify-center group-hover:bg-[#009FD9] group-hover:shadow-[0_12px_34px_-10px_rgba(0,159,217,0.7)] transition-all duration-200 shrink-0">
                 {selecting === "client" ? (
                   <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
                 ) : (
@@ -204,7 +204,7 @@ export default function OnboardingPage() {
               disabled={!!selecting}
               className="group flex flex-col items-center gap-5 p-8 bg-white border-2 border-[#e5e7eb] rounded-2xl hover:border-[#009FD9] hover:shadow-lg transition-all duration-200 disabled:opacity-60 text-center"
             >
-              <div className="h-16 w-16 rounded-full bg-[#EBF5FB] flex items-center justify-center group-hover:bg-[#009FD9] transition-colors duration-200 shrink-0">
+              <div className="h-16 w-16 rounded-full bg-[#EBF5FB] ring-1 ring-inset ring-[#009FD9]/20 shadow-[0_10px_30px_-10px_rgba(0,159,217,0.5)] flex items-center justify-center group-hover:bg-[#009FD9] group-hover:shadow-[0_12px_34px_-10px_rgba(0,159,217,0.7)] transition-all duration-200 shrink-0">
                 {selecting === "professional" ? (
                   <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
                 ) : (
