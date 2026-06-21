@@ -7,7 +7,7 @@ import { useSearchParams } from "next/navigation";
 import {
   User, Image as ImageIcon, CalendarDays, Inbox, ExternalLink, Wrench,
   FolderOpen, ShieldCheck, Bell, Send, ClipboardList, Bookmark, Settings, Headset, CreditCard,
-  ArrowRight, Sparkles,
+  ArrowRight, Sparkles, Briefcase,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -382,17 +382,13 @@ export default function DashboardPage() {
                     </CardContent>
                   </Card>
 
-                  {/* Discover the OTHER capability: a seeker is invited — tastefully,
-                      right where they navigate — to start offering services. */}
+                  {/* Discover the OTHER capability: a clean button (no gray box, minimal
+                      text) inviting a seeker to start offering services. */}
                   {mode === "use" && !isProvider && (
-                    <div className="rounded-2xl border border-[#009FD9]/25 bg-[#EBF5FB] p-4">
-                      <div className="flex items-center gap-2 mb-1.5">
-                        <Sparkles className="h-4 w-4 text-[#009FD9] shrink-0" />
-                        <p className="text-sm font-bold text-[#111827]">{t("offerInviteTitle")}</p>
-                      </div>
-                      <p className="text-xs text-[#6b7280] leading-relaxed mb-3">{t("offerInviteBody")}</p>
+                    <div className="px-1">
+                      <p className="text-xs text-[#9ca3af] mb-2">{t("offerInviteTitle")}</p>
                       <Button size="sm" className="w-full" onClick={() => router.push("/registro/profesional")}>
-                        {t("offerInviteCta")} <ArrowRight className="h-4 w-4" />
+                        <Briefcase className="h-4 w-4" /> {t("offerInviteCta")}
                       </Button>
                     </div>
                   )}
