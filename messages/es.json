@@ -1688,15 +1688,16 @@
   },
   "registerChoice": {
     "title": "Crear cuenta gratis",
-    "subtitle": "¿Cómo quieres usar ContrataCR?",
+    "subtitle": "¿Por dónde quieres empezar?",
     "clientTitle": "Busco servicios",
-    "clientDesc": "Quiero contratar servicios: plomería, salud, clases, limpieza y más.",
+    "clientDesc": "Contrata plomería, salud, clases, limpieza y mucho más.",
     "continue": "Continuar",
     "proTitle": "Ofrezco servicios",
-    "proDesc": "Quiero ofrecer mis servicios y conectar con clientes en Costa Rica.",
-    "bothNote": "Puedes hacer ambas cosas: agrega la otra opción cuando quieras desde tu panel.",
+    "proDesc": "Ofrece tus servicios y conecta con clientes en todo el país.",
+    "bothNote": "Esto es solo por dónde empiezas: agrega la otra opción cuando quieras desde tu panel.",
     "haveAccount": "¿Ya tienes cuenta?",
-    "signIn": "Inicia sesión"
+    "signIn": "Inicia sesión",
+    "bothTitle": "Puedes hacer ambas cosas."
   },
   "onboarding": {
     "greeting": "Hola, {name}",

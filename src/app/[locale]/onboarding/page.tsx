@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
-import { UserRoundSearch, BriefcaseBusiness, ArrowRight } from "lucide-react";
+import { UserRoundSearch, BriefcaseBusiness, ArrowRight, ArrowLeftRight } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
@@ -223,8 +223,15 @@ export default function OnboardingPage() {
             </button>
 
           </div>
-          {/* You're never boxed into one role — either action can add the other later. */}
-          <p className="text-center text-xs text-gray-400 mt-5">{tc("bothNote")}</p>
+          {/* You're never boxed into one role — picking one is just a starting point,
+              and either action can add the other later from the panel. */}
+          <div className="mt-6 flex items-start gap-3 rounded-xl bg-[#EBF5FB] ring-1 ring-inset ring-[#009FD9]/15 px-4 py-3.5 text-left">
+            <ArrowLeftRight className="h-5 w-5 text-[#009FD9] shrink-0 mt-0.5" />
+            <p className="text-sm text-[#374151] leading-relaxed">
+              <span className="font-semibold text-[#111827]">{tc("bothTitle")}</span>{" "}
+              {tc("bothNote")}
+            </p>
+          </div>
         </div>
       </main>
 

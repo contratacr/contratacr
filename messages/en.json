@@ -1688,15 +1688,16 @@
   },
   "registerChoice": {
     "title": "Create a free account",
-    "subtitle": "How do you want to use ContrataCR?",
+    "subtitle": "Where do you want to start?",
     "clientTitle": "Looking for services",
-    "clientDesc": "I want to hire services: plumbing, health, classes, cleaning and more.",
+    "clientDesc": "Hire plumbing, health, classes, cleaning and much more.",
     "continue": "Continue",
     "proTitle": "Offering services",
-    "proDesc": "I want to offer my services and connect with clients in Costa Rica.",
-    "bothNote": "You can do both — add the other option anytime from your panel.",
+    "proDesc": "Offer your services and connect with clients across the country.",
+    "bothNote": "This is just where you start — add the other option anytime from your panel.",
     "haveAccount": "Already have an account?",
-    "signIn": "Sign in"
+    "signIn": "Sign in",
+    "bothTitle": "You can do both."
   },
   "onboarding": {
     "greeting": "Hi, {name}",
