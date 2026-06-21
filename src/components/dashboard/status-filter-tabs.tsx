@@ -48,19 +48,17 @@ export function StatusFilterTabs({
             {labelFor ? labelFor(tab.id) : tr(tab.id)}
             {/* Optional unread/attention dot (e.g. a new support reply in this status). */}
             {dotFor?.(tab.id) && <span className="h-1.5 w-1.5 rounded-full bg-red-500 shrink-0" aria-hidden />}
-            {/* Count: an eye-catching, on-brand pill INLINE after the label — shown only
-                when there are items (>0), so it always means "there's something here" and
-                empty tabs stay clean. High contrast on BOTH pill states: a solid brand-blue
-                badge on the white pill, inverted (white badge / blue number) on the active
-                blue pill. */}
+            {/* Count: a bold, color-contrasted NUMBER right after the label — NOT a circular
+                badge. A tiny pill can never perfectly optical-center a single digit (the font
+                baseline sits it ~0.5px high), and it kept reading as "off". On the SAME text
+                baseline as the label it's aligned by definition, still eye-catching (brand-blue
+                on the white pill, white on the active blue pill), and cleaner. Shown only when
+                there are items (>0), so a present number always means "there's something here". */}
             {counts && count > 0 && (
               <span
                 className={cn(
-                  // Number centred in its pill: line-height == box height (leading-5 on
-                  // h-5) + text-center handles vertical AND horizontal centering crisply,
-                  // avoiding the sub-pixel drift `leading-none` + flex left on the glyph.
-                  "inline-block h-5 leading-5 min-w-[20px] rounded-full px-1.5 text-center text-[11px] font-bold tabular-nums align-middle",
-                  active ? "bg-white text-[#009FD9]" : "bg-[#009FD9] text-white"
+                  "text-[13px] font-bold tabular-nums leading-none",
+                  active ? "text-white" : "text-[#009FD9]"
                 )}
               >
                 {count}
