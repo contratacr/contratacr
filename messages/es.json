@@ -1067,12 +1067,12 @@
     "modeOffer": "Modo profesional",
     "modeUseSubtitle": "Estás en tu sección de cliente: buscas y contratas servicios.",
     "offerGateTitle": "Empieza a ofrecer tus servicios",
-    "offerGateBody": "Es la misma cuenta. Completa tu perfil una sola vez y empieza a recibir solicitudes de clientes en todo el país.",
+    "offerGateBody": "En ContrataCR, cualquiera que ofrece un servicio es un profesional: un oficio, un cuidado, una clase o una profesión. Completa tu perfil una vez y empieza a recibir clientes.",
     "offerGateCta": "Completar mi perfil",
     "offerInviteTitle": "¿Ofreces servicios?",
-    "offerInviteBody": "Crea tu perfil y empieza a recibir clientes en todo el país.",
+    "offerInviteBody": "Ofrece tu oficio, cuidado o profesión y recibe clientes en todo el país.",
     "offerInviteCta": "Ofrecer mis servicios",
-    "modeSwitchHint": "Una cuenta, dos modos. Cambia cuando quieras."
+    "modeOfferSubtitle": "Estás en tu sección de profesional: ofreces tus servicios y recibes clientes."
   },
   "bookingRequests": {
     "empty": "No tienes solicitudes todavía",
@@ -1703,9 +1703,12 @@
     "clientDesc": "Contrata plomería, salud, clases, limpieza y mucho más.",
     "continue": "Continuar",
     "proTitle": "Ofrezco servicios",
-    "proDesc": "Ofrece tus servicios y conecta con clientes en todo el país.",
+    "proDesc": "Ofrece tu oficio, cuidado, clase o profesión y recibe clientes en todo el país.",
     "haveAccount": "¿Ya tienes cuenta?",
-    "signIn": "Inicia sesión"
+    "signIn": "Inicia sesión",
+    "clientRole": "Cliente",
+    "proRole": "Profesional",
+    "oneAccountNote": "Es una sola cuenta: después puedes cambiar de modo cuando quieras."
   },
   "onboarding": {
     "greeting": "Hola, {name}",

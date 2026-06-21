@@ -41,6 +41,9 @@ export default function RegisterPage() {
                 <UserRoundSearch className="h-8 w-8 text-[#009FD9] group-hover:text-white transition-colors duration-200" />
               </div>
               <div>
+                {/* Pair the role word with the action so users learn the vocabulary:
+                    Cliente = busco servicios. */}
+                <p className="text-[11px] font-bold uppercase tracking-wider text-[#009FD9] mb-1">{t("clientRole")}</p>
                 <h2 className="text-xl font-bold text-[#111827] mb-2">{t("clientTitle")}</h2>
                 <p className="text-sm text-[#6b7280] leading-relaxed">
                   {t("clientDesc")}
@@ -60,6 +63,9 @@ export default function RegisterPage() {
                 <BriefcaseBusiness className="h-8 w-8 text-[#009FD9] group-hover:text-white transition-colors duration-200" />
               </div>
               <div>
+                {/* Profesional = ofrezco servicios — anyone who offers a service
+                    (a trade, caregiving, a class…), framed inclusively in proDesc. */}
+                <p className="text-[11px] font-bold uppercase tracking-wider text-[#009FD9] mb-1">{t("proRole")}</p>
                 <h2 className="text-xl font-bold text-[#111827] mb-2">{t("proTitle")}</h2>
                 <p className="text-sm text-[#6b7280] leading-relaxed">
                   {t("proDesc")}
@@ -71,10 +77,10 @@ export default function RegisterPage() {
             </Link>
           </div>
 
-          {/* The registration stays clean — just the two choices. Discovering the
-              OTHER capability happens later, in the panel (the "Ofrecer servicios"
-              invitation there), not by explaining it here. */}
-          <p className="text-center text-sm text-[#6b7280] mt-8">
+          {/* One small reassuring line: it's a single account, switch modes later. */}
+          <p className="text-center text-xs text-[#9ca3af] mt-5">{t("oneAccountNote")}</p>
+
+          <p className="text-center text-sm text-[#6b7280] mt-4">
             {t("haveAccount")}{" "}
             <Link href="/login" className="text-[#009FD9] font-medium hover:underline">
               {t("signIn")}

@@ -1067,12 +1067,12 @@
     "modeOffer": "Professional mode",
     "modeUseSubtitle": "You are in your client section: searching for and hiring services.",
     "offerGateTitle": "Start offering your services",
-    "offerGateBody": "It is the same account. Complete your profile once and start receiving requests from clients across the country.",
+    "offerGateBody": "On ContrataCR, anyone who offers a service is a professional: a trade, caregiving, a class or a profession. Complete your profile once and start receiving clients.",
     "offerGateCta": "Complete my profile",
     "offerInviteTitle": "Do you offer services?",
-    "offerInviteBody": "Create your profile and start receiving clients across the country.",
+    "offerInviteBody": "Offer your trade, caregiving or profession and get clients across the country.",
     "offerInviteCta": "Offer my services",
-    "modeSwitchHint": "One account, two modes. Switch anytime."
+    "modeOfferSubtitle": "You are in your professional section: you offer your services and receive clients."
   },
   "bookingRequests": {
     "empty": "You don't have any requests yet",
@@ -1703,9 +1703,12 @@
     "clientDesc": "Hire plumbing, health, classes, cleaning and much more.",
     "continue": "Continue",
     "proTitle": "Offering services",
-    "proDesc": "Offer your services and connect with clients across the country.",
+    "proDesc": "Offer your trade, caregiving, class or profession and get clients across the country.",
     "haveAccount": "Already have an account?",
-    "signIn": "Sign in"
+    "signIn": "Sign in",
+    "clientRole": "Client",
+    "proRole": "Professional",
+    "oneAccountNote": "It is one account: you can switch modes whenever you want."
   },
   "onboarding": {
     "greeting": "Hi, {name}",

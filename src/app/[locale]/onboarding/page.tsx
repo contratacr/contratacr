@@ -189,6 +189,7 @@ export default function OnboardingPage() {
                 )}
               </div>
               <div>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-[#009FD9] mb-1">{tc("clientRole")}</p>
                 <h2 className="text-xl font-bold text-[#111827] mb-2">{tc("clientTitle")}</h2>
                 <p className="text-sm text-[#6b7280] leading-relaxed">
                   {tc("clientDesc")}
@@ -213,6 +214,7 @@ export default function OnboardingPage() {
                 )}
               </div>
               <div>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-[#009FD9] mb-1">{tc("proRole")}</p>
                 <h2 className="text-xl font-bold text-[#111827] mb-2">{tc("proTitle")}</h2>
                 <p className="text-sm text-[#6b7280] leading-relaxed">
                   {tc("proDesc")}
@@ -224,8 +226,8 @@ export default function OnboardingPage() {
             </button>
 
           </div>
-          {/* The chooser stays clean — discovering the OTHER capability happens
-              later in the panel, not by explaining it here. */}
+          {/* One small reassuring line: it's a single account, switch modes later. */}
+          <p className="text-center text-xs text-gray-400 mt-5">{tc("oneAccountNote")}</p>
         </div>
       </main>
 
