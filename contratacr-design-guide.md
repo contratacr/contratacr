@@ -43,6 +43,8 @@ These are **enforceable acceptance criteria**, not suggestions. Every screen mus
 
 **Off-limits to UI/usability passes:** the cédula/padrón verification flow (`/api/cedula/[id]`, `identity-verifier.ts`, `run-verification.ts`, the `IdentityField` fetch/branching), auth, booking, and payment logic. If a usability fix would require touching those, **flag it — do not change it.**
 
+> **PENDING DECISION — solicitud accept-required vs auto-confirm (sprint 389, recommendation only, no code yet).** Recommended: **AUTO-CONFIRM** (a slot-bound solicitud auto-confirms + occupies the slot + frees it on cancel; pro keeps a one-tap "Liberar horario"). Rationale: the slot is ALREADY occupied at REQUEST time (`pending` blocks it in the `api/bookings` POST guard + the `takenFor` feed) and the client can WhatsApp immediately, so the in-app "accept" (`pending→confirmed`) is friction with no added slot protection — consistent with the connector model (real coordination is on WhatsApp). **Must-fix with it:** the double-booking guard is a non-atomic check-then-insert with NO unique constraint — add a **partial unique index** on `(professional_id, scheduled_date, scheduled_time) WHERE status IN ('pending','confirmed','in_progress') AND scheduled_date IS NOT NULL`. "Confirmada" then means "slot reserved — coordina por WhatsApp", not "pro approved you". Awaiting owner sign-off before implementing.
+
 ---
 
 ## 2. Design tokens
