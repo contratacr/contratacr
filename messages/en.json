@@ -1063,8 +1063,8 @@
       "insurers": "List your insurers",
       "insurersBenefit": "Patients filter by their insurance: showing up there brings more appointments."
     },
-    "modeUse": "Use services",
-    "modeOffer": "Offer services",
+    "modeUse": "Looking for services",
+    "modeOffer": "Offering services",
     "modeUseSubtitle": "You are searching for and hiring services.",
     "offerGateTitle": "Start offering your services",
     "offerGateBody": "It is the same account. Complete your profile once and start receiving requests from clients across the country.",

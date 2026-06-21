@@ -1063,8 +1063,8 @@
       "insurers": "Indica tus aseguradoras",
       "insurersBenefit": "Los pacientes filtran por su seguro: aparecer ahí te trae más citas."
     },
-    "modeUse": "Usar servicios",
-    "modeOffer": "Ofrecer servicios",
+    "modeUse": "Busco servicios",
+    "modeOffer": "Ofrezco servicios",
     "modeUseSubtitle": "Estás buscando y contratando servicios.",
     "offerGateTitle": "Empieza a ofrecer tus servicios",
     "offerGateBody": "Es la misma cuenta. Completa tu perfil una sola vez y empieza a recibir solicitudes de clientes en todo el país.",
