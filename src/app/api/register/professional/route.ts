@@ -169,6 +169,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: friendly, ...(dupEmail ? { code: "email_taken" } : {}) }, { status: dupEmail ? 409 : 500 });
     }
 
+    // ONE account, ONE phone (shared across both modes): the contact number entered
+    // here also becomes the ACCOUNT phone (`profiles.phone`), so it pre-fills in
+    // "Busco servicios" (seeking) mode too — not just the offering profile's
+    // `professionals.whatsapp`. Only backfill when the account has NO phone yet, so
+    // we never clobber a number the user already saved as a client/seeker.
+    if (whatsapp) {
+      await supabase.from("profiles").update({ phone: whatsapp }).eq("id", userId).is("phone", null);
+    }
+
     // ── 4. Check if professional already exists ───────────────────────────────
     const { data: existingPro } = await supabase
       .from("professionals")

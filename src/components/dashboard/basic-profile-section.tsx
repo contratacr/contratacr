@@ -52,14 +52,27 @@ export function BasicProfileSection({
   const loadProfile = useCallback(() => {
     if (!user) return;
     const supabase = createClient();
-    supabase.rpc("get_my_profile").then(({ data }) => {
-      if (data) {
-        setProfileData(data);
-        setProfileAvatar(data.avatar_url ?? null);
-        // Never clobber an in-progress edit (token refresh / profile-updated re-fetch).
-        if (!profileDirtyRef.current) {
-          setProfileForm({ full_name: data.full_name ?? "", phone: data.phone ?? "" });
+    supabase.rpc("get_my_profile").then(async ({ data }) => {
+      if (!data) return;
+      let phone = data.phone ?? "";
+      // ONE account, ONE phone (shared across both modes): if the account has no
+      // phone on file yet, fall back to the offering profile's WhatsApp — the number
+      // entered at "Ofrezco servicios" registration lives on professionals.whatsapp —
+      // so it pre-fills here too, then backfill it to profiles.phone so it's truly
+      // shared and asked only once.
+      if (!hasPhoneNumber(phone)) {
+        const { data: pro } = await supabase.from("professionals").select("whatsapp").eq("profile_id", user.id).maybeSingle();
+        const wa = (pro?.whatsapp as string | undefined) ?? "";
+        if (hasPhoneNumber(wa)) {
+          phone = wa;
+          void supabase.from("profiles").update({ phone: wa }).eq("id", user.id);
         }
+      }
+      setProfileData({ ...data, phone });
+      setProfileAvatar(data.avatar_url ?? null);
+      // Never clobber an in-progress edit (token refresh / profile-updated re-fetch).
+      if (!profileDirtyRef.current) {
+        setProfileForm({ full_name: data.full_name ?? "", phone });
       }
     });
   }, [user]);
