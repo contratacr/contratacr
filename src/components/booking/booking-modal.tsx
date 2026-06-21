@@ -123,6 +123,17 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   );
   const effectiveCategory = initialCategoryId ?? pickedCategory ?? null;
   const needsProfessionPick = !effectiveCategory && proProfessions.length > 1;
+
+  // Profession shown UNDER the name: the RELEVANT one for the current context —
+  //  • filtered (initialCategoryId) or selected (pickedCategory) → that profession;
+  //  • no specific context + multiple professions → the main one + "+N" so the client
+  //    sees the pro offers several (not just the principal);
+  //  • single profession → its name (the `categoryName` the caller passed).
+  const headerProfession = effectiveCategory
+    ? getCategoryLabel(effectiveCategory, locale)
+    : proProfessions.length > 1
+      ? `${getCategoryLabel(proProfessions[0], locale)} +${proProfessions.length - 1}`
+      : categoryName;
   const proIsHealth = anyHealthCategory(effectiveCategory ? [effectiveCategory] : []);
 
   const today = new Date();
@@ -840,7 +851,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     Verificado
                   </span>
                 )}
-                <p className="text-sm text-white/70 mt-1 md:text-center">{categoryName}</p>
+                <p className="text-sm text-white/70 mt-1 md:text-center">{headerProfession}</p>
               </div>
             </div>
 
