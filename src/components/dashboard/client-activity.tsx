@@ -430,12 +430,15 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
             </div>
           ) : (
             <div className="flex flex-col gap-3">
-              <div className="flex items-center justify-between gap-2 flex-wrap">
-                <StatusFilterTabs tabs={PROYECTO_TABS} value={projectFilter} onChange={setProjectFilter} counts={projectCounts} />
-                <Button size="sm" onClick={() => setShowPublish(true)}>
+              {/* Primary action on its OWN row (full-width on mobile, right-aligned on
+                  desktop) so it never competes with / wraps awkwardly under the four status
+                  pills — those then sit cleanly on their own line below. */}
+              <div className="flex justify-end">
+                <Button size="sm" className="w-full sm:w-auto" onClick={() => setShowPublish(true)}>
                   <Plus className="h-4 w-4" /> {t("publishProject")}
                 </Button>
               </div>
+              <StatusFilterTabs tabs={PROYECTO_TABS} value={projectFilter} onChange={setProjectFilter} counts={projectCounts} />
               {filteredProjects.length === 0 && (
                 <p className="text-sm text-[#9ca3af] text-center py-8">{t("noProjectsView")}</p>
               )}
