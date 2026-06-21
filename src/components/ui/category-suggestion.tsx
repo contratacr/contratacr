@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -43,10 +43,23 @@ export function CategorySuggestionBox({
   const [name, setName] = useState("");
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     onActiveChange?.(suggesting || sent);
   }, [suggesting, sent, onActiveChange]);
+
+  // When the box EXPANDS (the inline name input opens) it usually sits at the bottom of
+  // a scroll area (the category dropdown / the publish form body), so the revealed input
+  // + Enviar button land below the fold. Smooth-scroll the box into view so the user sees
+  // everything without scrolling by hand (rAF lets the expanded content lay out first).
+  useEffect(() => {
+    if (!suggesting) return;
+    const id = requestAnimationFrame(() => {
+      rootRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [suggesting]);
 
   async function send() {
     const clean = name.trim();
@@ -69,7 +82,7 @@ export function CategorySuggestionBox({
   }
 
   return (
-    <div className={cn(prominent ? "" : "border-t border-[#f3f4f6] px-3 py-2.5", className)}>
+    <div ref={rootRef} className={cn(prominent ? "" : "border-t border-[#f3f4f6] px-3 py-2.5", className)}>
       {sent ? (
         <p className="inline-flex items-center gap-1.5 text-sm text-[#15803d]">
           <Check className="h-3.5 w-3.5" /> {thanksLabel}
