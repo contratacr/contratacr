@@ -56,7 +56,10 @@ export function StatusFilterTabs({
             {counts && count > 0 && (
               <span
                 className={cn(
-                  "inline-flex items-center justify-center min-w-[20px] h-5 rounded-full px-1.5 text-[11px] font-bold leading-none tabular-nums",
+                  // Number centred in its pill: line-height == box height (leading-5 on
+                  // h-5) + text-center handles vertical AND horizontal centering crisply,
+                  // avoiding the sub-pixel drift `leading-none` + flex left on the glyph.
+                  "inline-block h-5 leading-5 min-w-[20px] rounded-full px-1.5 text-center text-[11px] font-bold tabular-nums align-middle",
                   active ? "bg-white text-[#009FD9]" : "bg-[#009FD9] text-white"
                 )}
               >
