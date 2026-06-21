@@ -254,9 +254,18 @@ export function BookingRequests() {
                   <IdCard className="h-[13px] w-[13px] text-[#9ca3af] shrink-0" />
                   {booking.beneficiary_cedula ? t("benCedula", { cedula: booking.beneficiary_cedula }) : t("noCedula")}
                 </span>
+                {/* The third person's phone is OPTIONAL — show it here (grouped with their
+                    info) only when the requester provided one; never an empty phone. */}
+                {booking.beneficiary_phone && <span className="text-[#9ca3af]">·</span>}
+                {booking.beneficiary_phone && (
+                  <span className="inline-flex items-center gap-1.5">
+                    <Phone className="h-[13px] w-[13px] text-[#9ca3af] shrink-0" />
+                    {booking.beneficiary_phone}
+                  </span>
+                )}
               </div>
-              {/* Secondary contact: only when the patient has their OWN distinct phone. */}
-              {booking.beneficiary_phone && booking.beneficiary_phone !== booking.client_phone && waButton(booking.beneficiary_phone, benFirst)}
+              {/* WhatsApp this person — ONLY when they gave a phone. */}
+              {booking.beneficiary_phone && waButton(booking.beneficiary_phone, benFirst)}
             </div>
           )}
 
@@ -312,6 +321,8 @@ export function BookingRequests() {
                   </div>
                 </div>
               </div>
+              {/* WhatsApp the requester — ALWAYS available (their phone is required). */}
+              {booking.client_phone && waButton(booking.client_phone, cliFirst)}
             </div>
           )}
         </div>
@@ -343,14 +354,6 @@ export function BookingRequests() {
                   {t("cancel")}
                 </Button>
               </>
-            )}
-            {/* Contact the requester (who booked) — to the RIGHT of Cancelar. */}
-            {booking.client_phone && (
-              <Button variant="whatsapp" asChild className="rounded-full px-5">
-                <a href={getWhatsAppLink(booking.client_phone, t("waMessage", { name: cliFirst }))} target="_blank" rel="noopener noreferrer">
-                  <WhatsAppIcon className="h-4 w-4" /> {t("whatsappTo", { name: cliFirst })}
-                </a>
-              </Button>
             )}
           </div>
           <button
