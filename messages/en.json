@@ -1720,15 +1720,12 @@
     "title": "Create your account",
     "subtitle": "Where do you want to start?",
     "clientTitle": "Looking for services",
-    "clientDesc": "Hire plumbing, health, classes, cleaning and much more.",
     "continue": "Continue",
     "proTitle": "Offering services",
-    "proDesc": "Offer your trade, caregiving, class or profession and get clients across the country.",
     "haveAccount": "Already have an account?",
     "signIn": "Sign in",
     "clientRole": "Client",
-    "proRole": "Professional",
-    "oneAccountNote": "It is one account: you can switch modes whenever you want."
+    "proRole": "Professional"
   },
   "onboarding": {
     "greeting": "Hi, {name}",
@@ -2365,7 +2362,6 @@
     "carousel": {
       "titlePre": "Explore",
       "titleHighlight": "by category",
-      "subtitle": "From home to health, find what you need in Costa Rica.",
       "viewAll": "View all categories"
     },
     "zones": {
@@ -2393,9 +2389,9 @@
       "point1Title": "Verified professionals",
       "point1Desc": "Identity confirmed with the Civil Registry, plus real client reviews.",
       "point2Title": "Coordinate on WhatsApp",
-      "point2Desc": "You talk directly with the professional to coordinate the date and details, no middlemen.",
-      "point3Title": "Support when you need it",
-      "point3Desc": "Leave your review when done, and if something goes wrong, we help.",
+      "point2Desc": "Check the professional's availability in the app and coordinate the details directly via WhatsApp.",
+      "point3Title": "Leave your review",
+      "point3Desc": "When you're done, share your experience. Real reviews help other clients choose better.",
       "pitchTitle": "Do you offer services?",
       "pitchDesc": "Create your professional profile and receive requests from clients in your area. No commissions, and verified professionals appear first.",
       "pitchCta": "Offer my services",

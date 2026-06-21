@@ -190,10 +190,7 @@ export default function OnboardingPage() {
               </div>
               <div>
                 <h2 className="text-2xl font-bold text-[#111827]">{tc("clientRole")}</h2>
-                <p className="text-sm font-semibold text-[#009FD9] mb-2">{tc("clientTitle")}</p>
-                <p className="text-sm text-[#6b7280] leading-relaxed">
-                  {tc("clientDesc")}
-                </p>
+                <p className="text-sm font-semibold text-[#009FD9]">{tc("clientTitle")}</p>
               </div>
               <span className="flex items-center gap-1.5 text-sm font-semibold text-[#009FD9] opacity-0 group-hover:opacity-100 transition-opacity">
                 {tc("continue")} <ArrowRight className="h-4 w-4" />
@@ -215,10 +212,7 @@ export default function OnboardingPage() {
               </div>
               <div>
                 <h2 className="text-2xl font-bold text-[#111827]">{tc("proRole")}</h2>
-                <p className="text-sm font-semibold text-[#009FD9] mb-2">{tc("proTitle")}</p>
-                <p className="text-sm text-[#6b7280] leading-relaxed">
-                  {tc("proDesc")}
-                </p>
+                <p className="text-sm font-semibold text-[#009FD9]">{tc("proTitle")}</p>
               </div>
               <span className="flex items-center gap-1.5 text-sm font-semibold text-[#009FD9] opacity-0 group-hover:opacity-100 transition-opacity">
                 {tc("continue")} <ArrowRight className="h-4 w-4" />
@@ -226,8 +220,6 @@ export default function OnboardingPage() {
             </button>
 
           </div>
-          {/* One small reassuring line: it's a single account, switch modes later. */}
-          <p className="text-center text-xs text-gray-400 mt-5">{tc("oneAccountNote")}</p>
         </div>
       </main>
 

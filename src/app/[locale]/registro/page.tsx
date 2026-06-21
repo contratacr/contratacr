@@ -44,10 +44,7 @@ export default function RegisterPage() {
                 {/* The ROLE is the prominent choice; the action is supporting text:
                     Cliente → busco servicios. */}
                 <h2 className="text-2xl font-bold text-[#111827]">{t("clientRole")}</h2>
-                <p className="text-sm font-semibold text-[#009FD9] mb-2">{t("clientTitle")}</p>
-                <p className="text-sm text-[#6b7280] leading-relaxed">
-                  {t("clientDesc")}
-                </p>
+                <p className="text-sm font-semibold text-[#009FD9]">{t("clientTitle")}</p>
               </div>
               <span className="flex items-center gap-1.5 text-sm font-semibold text-[#009FD9] opacity-0 group-hover:opacity-100 transition-opacity">
                 {t("continue")} <ArrowRight className="h-4 w-4" />
@@ -63,13 +60,9 @@ export default function RegisterPage() {
                 <BriefcaseBusiness className="h-8 w-8 text-[#009FD9] group-hover:text-white transition-colors duration-200" />
               </div>
               <div>
-                {/* Profesional → ofrezco servicios. Anyone who offers a service (a
-                    trade, caregiving, a class…), framed inclusively in proDesc. */}
+                {/* Profesional → ofrezco servicios. */}
                 <h2 className="text-2xl font-bold text-[#111827]">{t("proRole")}</h2>
-                <p className="text-sm font-semibold text-[#009FD9] mb-2">{t("proTitle")}</p>
-                <p className="text-sm text-[#6b7280] leading-relaxed">
-                  {t("proDesc")}
-                </p>
+                <p className="text-sm font-semibold text-[#009FD9]">{t("proTitle")}</p>
               </div>
               <span className="flex items-center gap-1.5 text-sm font-semibold text-[#009FD9] opacity-0 group-hover:opacity-100 transition-opacity">
                 {t("continue")} <ArrowRight className="h-4 w-4" />
@@ -77,10 +70,7 @@ export default function RegisterPage() {
             </Link>
           </div>
 
-          {/* One small reassuring line: it's a single account, switch modes later. */}
-          <p className="text-center text-xs text-[#9ca3af] mt-5">{t("oneAccountNote")}</p>
-
-          <p className="text-center text-sm text-[#6b7280] mt-4">
+          <p className="text-center text-sm text-[#6b7280] mt-8">
             {t("haveAccount")}{" "}
             <Link href="/login" className="text-[#009FD9] font-medium hover:underline">
               {t("signIn")}

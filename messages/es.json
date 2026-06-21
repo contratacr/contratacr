@@ -1720,15 +1720,12 @@
     "title": "Crear cuenta",
     "subtitle": "¿Por dónde quieres empezar?",
     "clientTitle": "Busco servicios",
-    "clientDesc": "Contrata plomería, salud, clases, limpieza y mucho más.",
     "continue": "Continuar",
     "proTitle": "Ofrezco servicios",
-    "proDesc": "Ofrece tu oficio, cuidado, clase o profesión y recibe clientes en todo el país.",
     "haveAccount": "¿Ya tienes cuenta?",
     "signIn": "Inicia sesión",
     "clientRole": "Cliente",
-    "proRole": "Profesional",
-    "oneAccountNote": "Es una sola cuenta: después puedes cambiar de modo cuando quieras."
+    "proRole": "Profesional"
   },
   "onboarding": {
     "greeting": "Hola, {name}",
@@ -2365,7 +2362,6 @@
     "carousel": {
       "titlePre": "Explora",
       "titleHighlight": "por categoría",
-      "subtitle": "Del hogar a la salud, encuentra lo que necesitas en Costa Rica.",
       "viewAll": "Ver todas las categorías"
     },
     "zones": {
@@ -2393,9 +2389,9 @@
       "point1Title": "Profesionales verificados",
       "point1Desc": "Identidad confirmada con el Registro Civil y reseñas reales de clientes.",
       "point2Title": "Coordina por WhatsApp",
-      "point2Desc": "Hablas directo con el profesional para coordinar la fecha y los detalles, sin intermediarios.",
-      "point3Title": "Con soporte cuando lo necesites",
-      "point3Desc": "Deja tu reseña al terminar y, si algo no sale bien, te ayudamos.",
+      "point2Desc": "Consultas su disponibilidad en la app y coordinas los detalles directamente por WhatsApp.",
+      "point3Title": "Deja tu reseña",
+      "point3Desc": "Al terminar, comparte tu experiencia. Las reseñas reales ayudan a otros clientes a elegir mejor.",
       "pitchTitle": "¿Ofreces servicios?",
       "pitchDesc": "Crea tu perfil profesional y recibe solicitudes de clientes de tu zona. Sin comisiones, y los profesionales verificados aparecen primero.",
       "pitchCta": "Ofrecer mis servicios",

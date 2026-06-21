@@ -15,7 +15,6 @@ export async function ProsSection() {
           <h2 className="text-3xl sm:text-4xl font-extrabold text-[#1a2744] leading-tight">
             {t("titlePre")} <span className="text-[#009FD9]">{t("titleHighlight")}</span>
           </h2>
-          <p className="text-gray-500 mt-2">{t("subtitle")}</p>
         </div>
       </div>
 
