@@ -665,15 +665,10 @@ export default function RegisterProfessionalPage() {
               p-8) on a #fafafa page, centered. The multi-step form lives inside it. */}
           <div className="bg-white rounded-3xl shadow-sm border border-[#e5e7eb] p-8">
           <div className="text-center mb-2">
-            {/* Heading + subtitle match the CURRENT step: step 0 = create account/identity,
-                step 1 = profession+zones+contact, step 2 = photo. Each subtitle describes its
-                own step (no generic/mismatched copy). */}
+            {/* Heading only — the per-step subtitles were filler (minimal-text principle). */}
             <h1 className="text-2xl font-bold text-[#111827]">
               {step === 2 ? t("photoStepTitle") : currentUser ? t("completeProfileTitle") : t("title")}
             </h1>
-            <p className="text-[#6b7280] text-sm mt-1">
-              {step === 2 ? t("subtitlePhoto") : step === 0 ? t("subtitle") : t("completeProfileSubtitle")}
-            </p>
           </div>
           <StepIndicator current={indicatorStep} labels={stepLabels} />
 
@@ -833,7 +828,6 @@ export default function RegisterProfessionalPage() {
                 <label className="text-sm font-medium text-[#374151] block mb-1.5">
                   {t("professionPrincipal")} <span className="text-red-500">*</span>
                 </label>
-                <p className="text-xs text-[#9ca3af] mb-1.5">{t("professionHelp")}</p>
                 <CategorySearch
                   value={form2.watch("category") ?? ""}
                   onChange={(v) => form2.setValue("category", v, { shouldValidate: true })}
@@ -889,7 +883,6 @@ export default function RegisterProfessionalPage() {
                 <label className="text-sm font-medium text-[#374151]">
                   {t("workplacesLabel")} <span className="text-red-500">*</span>
                 </label>
-                <p className="text-xs text-[#9ca3af]">{t("workplacesHelp")}</p>
                 <WorkplacesPicker value={workplaces} onChange={(n) => { setWorkplaces(n); setLocationError(null); }} />
               </div>
 

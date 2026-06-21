@@ -574,8 +574,7 @@
   },
   "registration": {
     "pro": {
-      "title": "Crea tu perfil profesional para ofrecer servicios",
-      "subtitle": "Crea tu cuenta y verifica tu identidad.",
+      "title": "Crea tu cuenta profesional",
       "valNameRequired": "El nombre completo es requerido",
       "valEmailRequired": "El correo es requerido",
       "valEmailInvalid": "Ingresa un correo válido",
@@ -658,9 +657,7 @@
       "errAlreadyTitle": "Ya existe una cuenta",
       "creatingAccount": "Creando tu cuenta…",
       "completeProfileTitle": "Completa tu perfil profesional",
-      "completeProfileSubtitle": "Tu profesión, dónde ofreces tus servicios y tu WhatsApp, para que los clientes te encuentren y te contacten.",
       "photoStepTitle": "Tu foto de perfil",
-      "subtitlePhoto": "Agrega una foto para que los clientes te reconozcan.",
       "oauthConfirmed": "Identidad confirmada por Google / Facebook",
       "confirmPassword": "Confirmar contraseña",
       "termsLabel": "Términos",
@@ -670,7 +667,6 @@
       "usesAccountId": "{name} · usamos la identificación de tu cuenta",
       "yourAccount": "Tu cuenta",
       "professionPrincipal": "Tu profesión principal",
-      "professionHelp": "Ejemplo: Nutricionista, Electricista.",
       "searchProfession": "Busca tu profesión",
       "remove": "Quitar",
       "searchAnotherProfession": "Busca otra profesión…",
@@ -684,7 +680,6 @@
       "fixedMode": "Trabajo desde un lugar fijo",
       "fixedModeSub": "Taller, consultorio, local o estudio",
       "workplacesLabel": "¿En qué zonas ofreces tus servicios?",
-      "workplacesHelp": "Define dónde apareces cuando los clientes buscan.",
       "coverageLabel": "Zonas a las que te desplazas",
       "coverageHelp": "Elige las provincias y cantones donde atiendes. Apareces en los resultados de búsqueda de cada una.",
       "uploadingPhoto": "Subiendo foto…",
@@ -1038,7 +1033,7 @@
     "completion": {
       "completeTitle": "¡Tu perfil está completo!",
       "title": "Completa tu perfil",
-      "completeSubtitle": "Tu perfil ya está activo. Mejóralo con estos pasos opcionales para atraer más clientes.",
+      "completeSubtitle": "Tu perfil ya está listo para recibir clientes.",
       "subtitle": "Un perfil completo genera más confianza y te trae más clientes.",
       "stepsLeft": "{count, plural, one {Te falta # paso} other {Te faltan # pasos}}",
       "completeAction": "Completar",
@@ -1061,12 +1056,7 @@
       "whatsapp": "Confirma tu número de WhatsApp",
       "whatsappBenefit": "Es la vía principal por la que los clientes te contactan.",
       "insurers": "Indica tus aseguradoras",
-      "insurersBenefit": "Los pacientes filtran por su seguro: aparecer ahí te trae más citas.",
-      "availabilityTitle": "Agrega tu disponibilidad",
-      "availabilityBenefit": "Publica tus horarios para que los clientes te agenden directo.",
-      "portfolioTitle": "Agrega casos de éxito",
-      "portfolioBenefit": "Sube fotos de tus trabajos: generan confianza y atraen más clientes.",
-      "optionalAction": "Agregar"
+      "insurersBenefit": "Los pacientes filtran por su seguro: aparecer ahí te trae más citas."
     },
     "modeUse": "Modo cliente",
     "modeOffer": "Modo profesional",

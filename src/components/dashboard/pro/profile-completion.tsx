@@ -66,48 +66,26 @@ export function ProfileCompletion({ pro, onGo }: { pro: ProRecord; onGo: (tab: s
   const missing = items.filter((i) => !i.done);
   const complete = percent === 100;
 
-  // OPTIONAL extras (identity verification + profile ENHANCEMENTS) are dismissible and
-  // must NOT keep nagging once dismissed (persisted per-pro). NONE count toward the % —
-  // activation stays focused on the essentials. The enhancements (Disponibilidad, Casos
-  // de éxito) are surfaced only AFTER the profile is complete (post-activation), framed
-  // as optional improvements; identity verification can also show during activation.
+  // The ONLY optional step in the completion flow is identity VERIFICATION (sprint 396 —
+  // kept the flow short; Disponibilidad and Casos de éxito are NOT flow steps, they're
+  // discoverable as their own sidebar tabs in Modo profesional). Dismissible, never nags
+  // again, and NEVER counts toward the %.
   const proId = typeof pro.id === "string" ? pro.id : "";
-  const [dismissed, setDismissed] = useState<Record<string, boolean>>({});
+  const [dismissedVerify, setDismissedVerify] = useState(false);
   useEffect(() => {
     if (typeof window === "undefined") return;
-    try {
-      setDismissed({
-        verify: localStorage.getItem(`contratacr_verify_dismissed_${proId}`) === "1",
-        availability: localStorage.getItem(`contratacr_availability_dismissed_${proId}`) === "1",
-        portfolio: localStorage.getItem(`contratacr_portfolio_dismissed_${proId}`) === "1",
-      });
-    } catch { /* noop */ }
+    try { setDismissedVerify(localStorage.getItem(`contratacr_verify_dismissed_${proId}`) === "1"); } catch { /* noop */ }
   }, [proId]);
-  function dismiss(key: string) {
-    setDismissed((d) => ({ ...d, [key]: true }));
-    try { localStorage.setItem(`contratacr_${key}_dismissed_${proId}`, "1"); } catch { /* noop */ }
+  function dismiss() {
+    setDismissedVerify(true);
+    try { localStorage.setItem(`contratacr_verify_dismissed_${proId}`, "1"); } catch { /* noop */ }
   }
 
-  // "Done" detection for the optional enhancements, from the pro record:
-  //  • Disponibilidad — a WhatsApp-only pro (availability_public === false) deliberately
-  //    has no public agenda → treat as done/N-A; otherwise done once a weekly schedule exists.
-  //  • Casos de éxito — done once the portfolio has any item.
-  const isNonEmpty = (v: unknown) =>
-    Array.isArray(v) ? v.length > 0 : !!v && typeof v === "object" ? Object.keys(v as object).length > 0 : false;
-  const availabilityDone = pro.availability_public === false || isNonEmpty(pro.availability);
-  const portfolioDone = hasLen(pro.portfolio_urls) || hasLen(pro.portfolio_items);
-
-  // Optional rows to render. Verification can appear during activation; the profile
-  // ENHANCEMENTS appear only once the essentials are complete (low-friction activation).
   const optionalItems: { key: string; titleKey: string; benefitKey: string; tab: string; actionKey: string }[] = [];
-  if (!verified && !dismissed.verify)
+  if (!verified && !dismissedVerify)
     optionalItems.push({ key: "verify", titleKey: "verifyTitle", benefitKey: "verifyBenefit", tab: "verificacion", actionKey: "verifyAction" });
-  if (complete && !availabilityDone && !dismissed.availability)
-    optionalItems.push({ key: "availability", titleKey: "availabilityTitle", benefitKey: "availabilityBenefit", tab: "availability", actionKey: "optionalAction" });
-  if (complete && !portfolioDone && !dismissed.portfolio)
-    optionalItems.push({ key: "portfolio", titleKey: "portfolioTitle", benefitKey: "portfolioBenefit", tab: "photos", actionKey: "optionalAction" });
 
-  // Nothing left to nudge: essentials complete AND no optional extras pending.
+  // Nothing left to nudge: essentials complete AND verification done/dismissed.
   if (complete && optionalItems.length === 0) return null;
 
   return (
@@ -200,7 +178,7 @@ export function ProfileCompletion({ pro, onGo }: { pro: ProRecord; onGo: (tab: s
                 </button>
                 <button
                   type="button"
-                  onClick={() => dismiss(opt.key)}
+                  onClick={dismiss}
                   aria-label={t("dismissVerify")}
                   title={t("dismissVerify")}
                   className="inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1.5 text-xs font-medium text-[#9ca3af] hover:bg-[#e5e7eb] hover:text-[#374151] transition-colors"

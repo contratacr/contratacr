@@ -574,8 +574,7 @@
   },
   "registration": {
     "pro": {
-      "title": "Create your professional profile to offer services",
-      "subtitle": "Create your account and verify your identity.",
+      "title": "Create your professional account",
       "valNameRequired": "Full name is required",
       "valEmailRequired": "Email is required",
       "valEmailInvalid": "Enter a valid email",
@@ -658,9 +657,7 @@
       "errAlreadyTitle": "Account already exists",
       "creatingAccount": "Creating your account…",
       "completeProfileTitle": "Complete your professional profile",
-      "completeProfileSubtitle": "Your profession, where you offer your services, and your WhatsApp, so clients can find and contact you.",
       "photoStepTitle": "Your profile photo",
-      "subtitlePhoto": "Add a photo so clients recognize you.",
       "oauthConfirmed": "Identity confirmed via Google / Facebook",
       "confirmPassword": "Confirm password",
       "termsLabel": "Terms",
@@ -670,7 +667,6 @@
       "usesAccountId": "{name} · we use your account's ID",
       "yourAccount": "Your account",
       "professionPrincipal": "Your main profession",
-      "professionHelp": "Example: Nutritionist, Electrician.",
       "searchProfession": "Search your profession",
       "remove": "Remove",
       "searchAnotherProfession": "Search another profession…",
@@ -684,7 +680,6 @@
       "fixedMode": "I work from a fixed place",
       "fixedModeSub": "Workshop, office, shop or studio",
       "workplacesLabel": "Where do you offer your services?",
-      "workplacesHelp": "Defines where you appear when clients search.",
       "coverageLabel": "Areas you travel to",
       "coverageHelp": "Choose the provinces and cantones you serve. You appear in each one's search results.",
       "uploadingPhoto": "Uploading photo…",
@@ -1038,7 +1033,7 @@
     "completion": {
       "completeTitle": "Your profile is complete!",
       "title": "Complete your profile",
-      "completeSubtitle": "Your profile is active. Improve it with these optional steps to attract more clients.",
+      "completeSubtitle": "Your profile is ready to receive clients.",
       "subtitle": "A complete profile builds trust and brings you more clients.",
       "stepsLeft": "{count, plural, one {# step left} other {# steps left}}",
       "completeAction": "Complete",
@@ -1061,12 +1056,7 @@
       "whatsapp": "Confirm your WhatsApp number",
       "whatsappBenefit": "It's the main way clients contact you.",
       "insurers": "List your insurers",
-      "insurersBenefit": "Patients filter by their insurance: showing up there brings more appointments.",
-      "availabilityTitle": "Add your availability",
-      "availabilityBenefit": "Publish your hours so clients can book you directly.",
-      "portfolioTitle": "Add success stories",
-      "portfolioBenefit": "Upload photos of your work: they build trust and attract more clients.",
-      "optionalAction": "Add"
+      "insurersBenefit": "Patients filter by their insurance: showing up there brings more appointments."
     },
     "modeUse": "Client mode",
     "modeOffer": "Professional mode",
