@@ -66,24 +66,49 @@ export function ProfileCompletion({ pro, onGo }: { pro: ProRecord; onGo: (tab: s
   const missing = items.filter((i) => !i.done);
   const complete = percent === 100;
 
-  // The OPTIONAL identity-verification invite is dismissible and must NOT keep nagging
-  // once dismissed (persisted per-pro). The pro can still verify anytime from the
-  // Verificación section. Verification never counts toward the % (it's separate/optional).
+  // OPTIONAL extras (identity verification + profile ENHANCEMENTS) are dismissible and
+  // must NOT keep nagging once dismissed (persisted per-pro). NONE count toward the % —
+  // activation stays focused on the essentials. The enhancements (Disponibilidad, Casos
+  // de éxito) are surfaced only AFTER the profile is complete (post-activation), framed
+  // as optional improvements; identity verification can also show during activation.
   const proId = typeof pro.id === "string" ? pro.id : "";
-  const [dismissedVerify, setDismissedVerify] = useState(false);
+  const [dismissed, setDismissed] = useState<Record<string, boolean>>({});
   useEffect(() => {
     if (typeof window === "undefined") return;
-    try { setDismissedVerify(localStorage.getItem(`contratacr_verify_dismissed_${proId}`) === "1"); } catch { /* noop */ }
+    try {
+      setDismissed({
+        verify: localStorage.getItem(`contratacr_verify_dismissed_${proId}`) === "1",
+        availability: localStorage.getItem(`contratacr_availability_dismissed_${proId}`) === "1",
+        portfolio: localStorage.getItem(`contratacr_portfolio_dismissed_${proId}`) === "1",
+      });
+    } catch { /* noop */ }
   }, [proId]);
-  function dismissVerify() {
-    setDismissedVerify(true);
-    try { localStorage.setItem(`contratacr_verify_dismissed_${proId}`, "1"); } catch { /* noop */ }
+  function dismiss(key: string) {
+    setDismissed((d) => ({ ...d, [key]: true }));
+    try { localStorage.setItem(`contratacr_${key}_dismissed_${proId}`, "1"); } catch { /* noop */ }
   }
-  const showVerify = !verified && !dismissedVerify;
 
-  // Nothing left to nudge: the profile is complete AND verification is either done or
-  // has been dismissed. (Verification is OPTIONAL — its absence never blocks "complete".)
-  if (complete && !showVerify) return null;
+  // "Done" detection for the optional enhancements, from the pro record:
+  //  • Disponibilidad — a WhatsApp-only pro (availability_public === false) deliberately
+  //    has no public agenda → treat as done/N-A; otherwise done once a weekly schedule exists.
+  //  • Casos de éxito — done once the portfolio has any item.
+  const isNonEmpty = (v: unknown) =>
+    Array.isArray(v) ? v.length > 0 : !!v && typeof v === "object" ? Object.keys(v as object).length > 0 : false;
+  const availabilityDone = pro.availability_public === false || isNonEmpty(pro.availability);
+  const portfolioDone = hasLen(pro.portfolio_urls) || hasLen(pro.portfolio_items);
+
+  // Optional rows to render. Verification can appear during activation; the profile
+  // ENHANCEMENTS appear only once the essentials are complete (low-friction activation).
+  const optionalItems: { key: string; titleKey: string; benefitKey: string; tab: string; actionKey: string }[] = [];
+  if (!verified && !dismissed.verify)
+    optionalItems.push({ key: "verify", titleKey: "verifyTitle", benefitKey: "verifyBenefit", tab: "verificacion", actionKey: "verifyAction" });
+  if (complete && !availabilityDone && !dismissed.availability)
+    optionalItems.push({ key: "availability", titleKey: "availabilityTitle", benefitKey: "availabilityBenefit", tab: "availability", actionKey: "optionalAction" });
+  if (complete && !portfolioDone && !dismissed.portfolio)
+    optionalItems.push({ key: "portfolio", titleKey: "portfolioTitle", benefitKey: "portfolioBenefit", tab: "photos", actionKey: "optionalAction" });
+
+  // Nothing left to nudge: essentials complete AND no optional extras pending.
+  if (complete && optionalItems.length === 0) return null;
 
   return (
     <section className="rounded-2xl border border-[#e5e7eb] bg-white overflow-hidden mb-6">
@@ -145,50 +170,47 @@ export function ProfileCompletion({ pro, onGo }: { pro: ProRecord; onGo: (tab: s
         </ul>
       )}
 
-      {/* Identity verification — a SEPARATE, OPTIONAL opportunity (never part of the % and
-          never framed as "missing"). Dismiss is an explicit, LABELED "✕ Ahora no" control
-          (not a bare corner ×) so it clearly reads as "ignore this optional suggestion";
-          once dismissed it doesn't reappear (the pro can still verify from the Verificación
-          section). */}
-      {showVerify && (
-        // Styled IDENTICALLY to the mandatory rows above (same hollow-circle bullet,
-        // padding, divider, hover) — the ONLY differences are the "Opcional" tag and the
-        // Verificar / "Ahora no" actions. No check icon, no distinct background.
+      {/* OPTIONAL extras — identity verification + profile ENHANCEMENTS (Disponibilidad,
+          Casos de éxito). Styled IDENTICALLY to the required rows (same hollow-circle
+          bullet, padding, divider, hover) — the ONLY differences are the "Opcional" tag,
+          the action CTA, and an explicit LABELED "✕ Ahora no" dismiss (so it reads as
+          "ignore this optional suggestion", not "missing"). None affect the %. */}
+      {optionalItems.length > 0 && (
         <ul className="border-t border-[#f3f4f6]">
-          <li className="border-b border-[#f3f4f6] last:border-b-0">
-            <div className="group flex w-full items-center gap-3 px-4 sm:px-6 py-3 min-h-[56px] transition-colors hover:bg-[#f9fbfd]">
-              <span className="h-4 w-4 shrink-0 rounded-full border-2 border-[#d1d5db] transition-colors group-hover:border-[#009FD9]" />
-              <button type="button" onClick={() => onGo("verificacion")} className="min-w-0 flex-1 text-left">
-                <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <span className="text-sm font-medium text-[#111827] group-hover:text-[#009FD9] transition-colors">{t("verifyTitle")}</span>
-                  <span className="rounded-full bg-[#EBF5FB] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#009FD9]">
-                    {t("optional")}
+          {optionalItems.map((opt) => (
+            <li key={opt.key} className="border-b border-[#f3f4f6] last:border-b-0">
+              <div className="group flex w-full items-center gap-3 px-4 sm:px-6 py-3 min-h-[56px] transition-colors hover:bg-[#f9fbfd]">
+                <span className="h-4 w-4 shrink-0 rounded-full border-2 border-[#d1d5db] transition-colors group-hover:border-[#009FD9]" />
+                <button type="button" onClick={() => onGo(opt.tab)} className="min-w-0 flex-1 text-left">
+                  <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                    <span className="text-sm font-medium text-[#111827] group-hover:text-[#009FD9] transition-colors">{t(opt.titleKey)}</span>
+                    <span className="rounded-full bg-[#EBF5FB] px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#009FD9]">
+                      {t("optional")}
+                    </span>
                   </span>
-                </span>
-                <span className="block text-xs text-[#6b7280] mt-0.5 leading-snug">{t("verifyBenefit")}</span>
-              </button>
-              {/* Verificar CTA (desktop) — mirrors the mandatory "Completar" action. */}
-              <button
-                type="button"
-                onClick={() => onGo("verificacion")}
-                className="hidden sm:inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-[#009FD9]"
-              >
-                {t("verifyAction")}
-                <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-              </button>
-              {/* Explicit, labeled dismiss — reads as "ignore this optional suggestion". */}
-              <button
-                type="button"
-                onClick={dismissVerify}
-                aria-label={t("dismissVerify")}
-                title={t("dismissVerify")}
-                className="inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1.5 text-xs font-medium text-[#9ca3af] hover:bg-[#e5e7eb] hover:text-[#374151] transition-colors"
-              >
-                <X className="h-3.5 w-3.5" />
-                {t("dismissVerify")}
-              </button>
-            </div>
-          </li>
+                  <span className="block text-xs text-[#6b7280] mt-0.5 leading-snug">{t(opt.benefitKey)}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onGo(opt.tab)}
+                  className="hidden sm:inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-[#009FD9]"
+                >
+                  {t(opt.actionKey)}
+                  <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => dismiss(opt.key)}
+                  aria-label={t("dismissVerify")}
+                  title={t("dismissVerify")}
+                  className="inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1.5 text-xs font-medium text-[#9ca3af] hover:bg-[#e5e7eb] hover:text-[#374151] transition-colors"
+                >
+                  <X className="h-3.5 w-3.5" />
+                  {t("dismissVerify")}
+                </button>
+              </div>
+            </li>
+          ))}
         </ul>
       )}
     </section>

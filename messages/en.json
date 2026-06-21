@@ -1038,7 +1038,7 @@
     "completion": {
       "completeTitle": "Your profile is complete!",
       "title": "Complete your profile",
-      "completeSubtitle": "Your profile is ready to receive clients.",
+      "completeSubtitle": "Your profile is active. Improve it with these optional steps to attract more clients.",
       "subtitle": "A complete profile builds trust and brings you more clients.",
       "stepsLeft": "{count, plural, one {# step left} other {# steps left}}",
       "completeAction": "Complete",
@@ -1061,7 +1061,12 @@
       "whatsapp": "Confirm your WhatsApp number",
       "whatsappBenefit": "It's the main way clients contact you.",
       "insurers": "List your insurers",
-      "insurersBenefit": "Patients filter by their insurance: showing up there brings more appointments."
+      "insurersBenefit": "Patients filter by their insurance: showing up there brings more appointments.",
+      "availabilityTitle": "Add your availability",
+      "availabilityBenefit": "Publish your hours so clients can book you directly.",
+      "portfolioTitle": "Add success stories",
+      "portfolioBenefit": "Upload photos of your work: they build trust and attract more clients.",
+      "optionalAction": "Add"
     },
     "modeUse": "Client mode",
     "modeOffer": "Professional mode",

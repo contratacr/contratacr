@@ -1038,7 +1038,7 @@
     "completion": {
       "completeTitle": "¡Tu perfil está completo!",
       "title": "Completa tu perfil",
-      "completeSubtitle": "Tu perfil ya está listo para recibir clientes.",
+      "completeSubtitle": "Tu perfil ya está activo. Mejóralo con estos pasos opcionales para atraer más clientes.",
       "subtitle": "Un perfil completo genera más confianza y te trae más clientes.",
       "stepsLeft": "{count, plural, one {Te falta # paso} other {Te faltan # pasos}}",
       "completeAction": "Completar",
@@ -1061,7 +1061,12 @@
       "whatsapp": "Confirma tu número de WhatsApp",
       "whatsappBenefit": "Es la vía principal por la que los clientes te contactan.",
       "insurers": "Indica tus aseguradoras",
-      "insurersBenefit": "Los pacientes filtran por su seguro: aparecer ahí te trae más citas."
+      "insurersBenefit": "Los pacientes filtran por su seguro: aparecer ahí te trae más citas.",
+      "availabilityTitle": "Agrega tu disponibilidad",
+      "availabilityBenefit": "Publica tus horarios para que los clientes te agenden directo.",
+      "portfolioTitle": "Agrega casos de éxito",
+      "portfolioBenefit": "Sube fotos de tus trabajos: generan confianza y atraen más clientes.",
+      "optionalAction": "Agregar"
     },
     "modeUse": "Modo cliente",
     "modeOffer": "Modo profesional",
