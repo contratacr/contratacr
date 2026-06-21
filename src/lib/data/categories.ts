@@ -35,6 +35,9 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
       { id: "gypsum", label: "Gypsum / Drywall", keywords: ["cielo raso", "tabiques", "divisiones", "drywall", "tablaroca", "plycem"] },
       { id: "servicio_gas", label: "Servicio de gas", keywords: ["gas", "cilindro de gas", "tanque de gas", "recarga de gas", "instalacion de gas", "tropigas", "zeta gas", "gas licuado"] },
       { id: "reparacion_electrodomesticos", label: "Reparación de electrodomésticos", keywords: ["electrodomesticos", "refrigeradora", "refri", "lavadora", "secadora", "microondas", "cocina electrica", "lavaplatos", "reparacion de linea blanca"] },
+      { id: "ingenieria_civil", label: "Ingeniería civil", keywords: ["ingeniero", "estructuras", "planos", "calculo estructural", "obra civil"] },
+      { id: "arquitectura", label: "Arquitectura", keywords: ["arquitecto", "diseno arquitectonico", "planos", "renders", "diseño de casa"] },
+      { id: "topografia", label: "Topografía", keywords: ["topografo", "levantamiento topografico", "catastro", "mediciones", "plano catastral"] },
     ],
   },
   {
@@ -82,14 +85,11 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
   },
   {
     id: "profesional",
-    label: "Negocios y profesiones",
+    label: "Servicios empresariales",
     emoji: "💼",
     items: [
       { id: "contabilidad", label: "Contabilidad y finanzas", keywords: ["contador", "CPA", "finanzas", "declaracion de renta", "tributacion", "libros contables", "impuestos", "hacienda"] },
       { id: "legal", label: "Abogados y servicios legales", keywords: ["abogado", "notario", "asesor legal", "juridico", "contratos", "derecho", "bufete", "tramites"] },
-      { id: "ingenieria_civil", label: "Ingeniería civil", keywords: ["ingeniero", "estructuras", "planos", "calculo estructural", "obra civil"] },
-      { id: "arquitectura", label: "Arquitectura", keywords: ["arquitecto", "diseno arquitectonico", "planos", "renders", "diseño de casa"] },
-      { id: "topografia", label: "Topografía", keywords: ["topografo", "levantamiento topografico", "catastro", "mediciones", "plano catastral"] },
       { id: "consultoria", label: "Consultoría empresarial", keywords: ["consultor", "asesor de negocios", "estrategia empresarial", "gestion", "plan de negocios"] },
       { id: "traduccion", label: "Traducción e interpretación", keywords: ["traductor", "interprete", "traduccion", "idiomas", "english", "frances"] },
       { id: "recursos_humanos", label: "Recursos humanos", keywords: ["reclutamiento", "seleccion de personal", "RRHH", "HR", "planilla", "nomina"] },
@@ -108,7 +108,7 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
       { id: "entrenamiento_deportivo", label: "Entrenamiento deportivo", keywords: ["entrenador de futbol", "coach deportivo", "futbol", "natacion", "tenis", "baloncesto", "deporte", "preparador fisico", "atletismo"] },
       { id: "nutricion", label: "Nutrición y dietética", keywords: ["nutricionista", "dietista", "dieta", "alimentacion saludable", "plan de comida", "bajar de peso"] },
       { id: "masajes", label: "Masajes terapéuticos", keywords: ["masajista", "masaje terapeutico", "relajante", "deportivo", "descontracturante", "reflexologia"] },
-      { id: "psicologia", label: "Psicología y terapia", keywords: ["psicologo", "terapeuta", "salud mental", "terapia", "counseling", "ansiedad", "depresion", "bienestar emocional"] },
+      { id: "psicologia", label: "Psicología", keywords: ["psicologo", "terapeuta", "salud mental", "terapia", "counseling", "ansiedad", "depresion", "bienestar emocional"] },
       { id: "fisioterapia", label: "Fisioterapia", keywords: ["fisioterapeuta", "rehabilitacion", "terapia fisica", "kinesiologia", "dolor de espalda"] },
       { id: "odontologia", label: "Odontología", keywords: ["dentista", "odontologo", "dientes", "muela", "limpieza dental", "ortodoncia", "endodoncia", "caries"] },
       { id: "pediatria", label: "Pediatría", keywords: ["pediatra", "medico de ninos", "salud infantil", "control de nino sano", "vacunas", "bebe"] },
@@ -335,7 +335,7 @@ export const CATEGORY_LABELS_EN: Record<string, string> = {
   // Salud y bienestar
   entrenamiento_personal: "Personal training", entrenamiento_deportivo: "Sports training",
   nutricion: "Nutrition & dietetics",
-  masajes: "Therapeutic massage", psicologia: "Psychology & therapy", fisioterapia: "Physical therapy",
+  masajes: "Therapeutic massage", psicologia: "Psychology", fisioterapia: "Physical therapy",
   odontologia: "Dentistry", pediatria: "Pediatrics", optometria: "Optometry",
   enfermeria: "Home nursing", medicina_domicilio: "General medicine",
   terapia_lenguaje: "Speech therapy", terapia_ocupacional: "Occupational therapy",
@@ -370,7 +370,7 @@ export const CATEGORY_LABELS_EN: Record<string, string> = {
 
 export const CATEGORY_GROUP_LABELS_EN: Record<string, string> = {
   hogar: "Home & construction", jardin: "Garden & outdoor", limpieza: "Cleaning",
-  tecnologia: "Technology", profesional: "Business & professions", salud: "Health & wellness",
+  tecnologia: "Technology", profesional: "Business services", salud: "Health & wellness",
   belleza: "Beauty & aesthetics", educacion: "Education & classes",
   transporte: "Moving & transport", eventos: "Events", seguridad: "Security",
   automotriz: "Automotive",
