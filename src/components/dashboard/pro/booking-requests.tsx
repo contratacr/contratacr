@@ -312,7 +312,6 @@ export function BookingRequests() {
                   </div>
                 </div>
               </div>
-              {booking.client_phone && waButton(booking.client_phone, cliFirst)}
             </div>
           )}
         </div>
@@ -344,6 +343,14 @@ export function BookingRequests() {
                   {t("cancel")}
                 </Button>
               </>
+            )}
+            {/* Contact the requester (who booked) — to the RIGHT of Cancelar. */}
+            {booking.client_phone && (
+              <Button variant="whatsapp" asChild className="rounded-full px-5">
+                <a href={getWhatsAppLink(booking.client_phone, t("waMessage", { name: cliFirst }))} target="_blank" rel="noopener noreferrer">
+                  <WhatsAppIcon className="h-4 w-4" /> {t("whatsappTo", { name: cliFirst })}
+                </a>
+              </Button>
             )}
           </div>
           <button
