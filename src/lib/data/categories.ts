@@ -74,7 +74,7 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
       { id: "domotica", label: "Domótica / Smart home", keywords: ["automatizacion del hogar", "smart home", "IoT", "casa inteligente"] },
       { id: "desarrollo_web", label: "Desarrollo web", keywords: ["programador web", "pagina web", "website", "desarrollador", "WordPress", "React", "programacion"] },
       { id: "diseno_grafico", label: "Diseño gráfico", keywords: ["disenador", "logos", "branding", "publicidad", "arte", "identidad visual", "flyers"] },
-      { id: "diseno_apps", label: "Diseño de apps", keywords: ["aplicacion movil", "app", "iOS", "Android", "programador", "desarrollo movil"] },
+      { id: "diseno_apps", label: "Desarrollo de apps", keywords: ["aplicacion movil", "app", "iOS", "Android", "programador", "desarrollo movil", "diseño de apps"] },
       { id: "soporte_tecnico", label: "Soporte técnico", keywords: ["IT", "soporte", "tecnico", "help desk", "mantenimiento de equipo", "asistencia tecnica"] },
       { id: "impresion_3d", label: "Impresión 3D", keywords: ["impresion tridimensional", "FDM", "prototipo", "modelado 3D"] },
       { id: "audio_video", label: "Audio y video profesional", keywords: ["sonido", "video", "instalacion AV", "pantallas", "proyectores", "sala de cine"] },
@@ -82,7 +82,7 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
   },
   {
     id: "profesional",
-    label: "Servicios profesionales",
+    label: "Negocios y profesiones",
     emoji: "💼",
     items: [
       { id: "contabilidad", label: "Contabilidad y finanzas", keywords: ["contador", "CPA", "finanzas", "declaracion de renta", "tributacion", "libros contables", "impuestos", "hacienda"] },
@@ -323,7 +323,7 @@ export const CATEGORY_LABELS_EN: Record<string, string> = {
   // Tecnología
   reparacion_computadoras: "Computer repair", redes_internet: "Networks & internet",
   camaras_seguridad: "Security cameras (CCTV)", domotica: "Smart home automation",
-  desarrollo_web: "Web development", diseno_grafico: "Graphic design", diseno_apps: "App design",
+  desarrollo_web: "Web development", diseno_grafico: "Graphic design", diseno_apps: "App development",
   soporte_tecnico: "Tech support", audio_video: "Professional audio & video",
   // Servicios profesionales
   contabilidad: "Accounting & finance", legal: "Lawyers & legal services",
@@ -370,7 +370,7 @@ export const CATEGORY_LABELS_EN: Record<string, string> = {
 
 export const CATEGORY_GROUP_LABELS_EN: Record<string, string> = {
   hogar: "Home & construction", jardin: "Garden & outdoor", limpieza: "Cleaning",
-  tecnologia: "Technology", profesional: "Professional services", salud: "Health & wellness",
+  tecnologia: "Technology", profesional: "Business & professions", salud: "Health & wellness",
   belleza: "Beauty & aesthetics", educacion: "Education & classes",
   transporte: "Moving & transport", eventos: "Events", seguridad: "Security",
   automotriz: "Automotive",
