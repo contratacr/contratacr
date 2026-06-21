@@ -7,7 +7,7 @@ import { useSearchParams } from "next/navigation";
 import {
   User, Image as ImageIcon, CalendarDays, Inbox, ExternalLink, Wrench,
   FolderOpen, ShieldCheck, Bell, Send, ClipboardList, Bookmark, Settings, Headset, CreditCard,
-  ArrowRight, Sparkles,
+  ArrowRight, Sparkles, ArrowLeftRight, Briefcase,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -266,25 +266,41 @@ export default function DashboardPage() {
     );
   }
 
-  // The Airbnb-style mode switch: a segmented control flipping the whole panel
-  // between using services and offering them.
+  // The mode switch: a segmented toggle that reads as TWO sections the user owns
+  // and can flip between — not a fixed "what I am" label. Both options are always
+  // visible (so the inactive one is plainly "the other section you can switch to"),
+  // each with its own icon, the active one filled, plus a one-line hint that says
+  // it's one account with two modes you can change anytime.
+  const MODE_META: Record<Mode, { label: string; icon: React.ReactNode }> = {
+    use: { label: t("modeUse"), icon: <User className="h-4 w-4" /> },
+    offer: { label: t("modeOffer"), icon: <Briefcase className="h-4 w-4" /> },
+  };
   const modeSwitch = (
-    <div className="inline-flex w-full sm:w-auto rounded-xl bg-[#f3f4f6] p-1">
-      {([
-        { key: "use" as Mode, label: t("modeUse") },
-        { key: "offer" as Mode, label: t("modeOffer") },
-      ]).map(({ key, label }) => (
-        <button
-          key={key}
-          onClick={() => switchMode(key)}
-          className={cn(
-            "flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap",
-            mode === key ? "bg-white text-[#009FD9] shadow-sm" : "text-[#6b7280] hover:text-[#374151]"
-          )}
-        >
-          {label}
-        </button>
-      ))}
+    <div>
+      <p className="text-xs text-[#6b7280] mb-1.5 flex items-center gap-1.5">
+        <ArrowLeftRight className="h-3.5 w-3.5 text-[#9ca3af] shrink-0" />
+        {t("modeSwitchHint")}
+      </p>
+      <div role="tablist" aria-label={t("modeSwitchHint")} className="inline-flex w-full sm:w-auto rounded-xl bg-[#f3f4f6] p-1 gap-1">
+        {(["use", "offer"] as Mode[]).map((key) => {
+          const active = mode === key;
+          return (
+            <button
+              key={key}
+              role="tab"
+              aria-selected={active}
+              onClick={() => switchMode(key)}
+              className={cn(
+                "flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap",
+                active ? "bg-white text-[#009FD9] shadow-sm" : "text-[#6b7280] hover:text-[#374151] hover:bg-white/60"
+              )}
+            >
+              {MODE_META[key].icon}
+              {MODE_META[key].label}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 

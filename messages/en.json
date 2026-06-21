@@ -1063,15 +1063,16 @@
       "insurers": "List your insurers",
       "insurersBenefit": "Patients filter by their insurance: showing up there brings more appointments."
     },
-    "modeUse": "Looking for services",
-    "modeOffer": "Offering services",
-    "modeUseSubtitle": "You are searching for and hiring services.",
+    "modeUse": "Client mode",
+    "modeOffer": "Professional mode",
+    "modeUseSubtitle": "You are in your client section: searching for and hiring services.",
     "offerGateTitle": "Start offering your services",
     "offerGateBody": "It is the same account. Complete your profile once and start receiving requests from clients across the country.",
     "offerGateCta": "Complete my profile",
     "offerInviteTitle": "Do you offer services?",
     "offerInviteBody": "Create your profile and start receiving clients across the country.",
-    "offerInviteCta": "Offer my services"
+    "offerInviteCta": "Offer my services",
+    "modeSwitchHint": "One account, two modes. Switch anytime."
   },
   "bookingRequests": {
     "empty": "You don't have any requests yet",
