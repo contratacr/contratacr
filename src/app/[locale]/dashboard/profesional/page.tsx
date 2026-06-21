@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { useLocale, useTranslations } from "next-intl";
-import { isSigningOut, signOutToHome } from "@/lib/auth/sign-out";
+import { useTranslations } from "next-intl";
+import { isSigningOut } from "@/lib/auth/sign-out";
 import { useSearchParams } from "next/navigation";
 import {
-  User, Image as ImageIcon, CalendarDays, Inbox, LogOut, ExternalLink, Wrench,
+  User, Image as ImageIcon, CalendarDays, Inbox, ExternalLink, Wrench,
   FolderOpen, ShieldCheck, Bell, Send, ClipboardList, Bookmark, Settings, Headset, CreditCard,
   ArrowRight, Sparkles,
 } from "lucide-react";
@@ -93,7 +93,6 @@ export default function DashboardPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const t = useTranslations("proPanel");
-  const locale = useLocale();
   const activeTab = (searchParams.get("tab") as Tab) ?? "profile";
   const modeParam = searchParams.get("mode");
 
@@ -119,10 +118,10 @@ export default function DashboardPage() {
     : (modeParam === "offer" || modeParam === "use") ? modeParam
     : isProvider ? "offer" : "use";
 
-  // Suppress the login-redirect while signing out → straight to main, no /login flash.
-  const signingOut = useRef(false);
+  // Suppress the login-redirect while signing out (from the navbar menu) → straight
+  // to main, no /login flash. Logout lives only in the navbar profile menu now.
   useEffect(() => {
-    if (!authLoading && !user && !signingOut.current && !isSigningOut()) router.push("/login");
+    if (!authLoading && !user && !isSigningOut()) router.push("/login");
   }, [user, authLoading, router]);
 
   // Deep-link focus: `?tab=profile&focus=location` opens the editor at that field.
@@ -220,10 +219,6 @@ export default function DashboardPage() {
     setRefreshKey((k) => k + 1);
   }
 
-  async function handleSignOut() {
-    signingOut.current = true;
-    await signOutToHome(locale);
-  }
 
   if (authLoading || loading || !user) {
     return (
@@ -328,20 +323,17 @@ export default function DashboardPage() {
                 {mode === "use" && <p className="text-xs text-[#9ca3af] mt-1">{t("modeUseSubtitle")}</p>}
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              {mode === "offer" && pro?.slug && (
+            {/* Logout lives ONLY in the navbar profile menu — not duplicated here. */}
+            {mode === "offer" && pro?.slug && (
+              <div className="flex items-center gap-2">
                 <Button variant="outline" size="sm" asChild>
                   <a href={`/es/profesionales/${pro.slug}?preview=1`}>
                     <ExternalLink className="h-4 w-4" />
                     {t("viewAsClient")}
                   </a>
                 </Button>
-              )}
-              <Button variant="ghost" size="sm" onClick={handleSignOut}>
-                <LogOut className="h-4 w-4" />
-                {t("signOut")}
-              </Button>
-            </div>
+              </div>
+            )}
           </div>
 
           {/* Mode switch — one account, two capabilities. */}
