@@ -118,7 +118,8 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   const [loading, setLoading] = useState(true);
   const [reviewModal, setReviewModal] = useState<{ professionalId: string; professionalName: string; bookingId?: string; projectId?: string } | null>(null);
   const [myReviews, setMyReviews] = useState<{ professional_id: string; booking_id?: string | null; project_id?: string | null; rating: number }[]>([]);
-  const [bookingFilter, setBookingFilter] = useState("pendientes");
+  // Bookings auto-confirm now (no "pendientes" bucket) → default to Confirmadas.
+  const [bookingFilter, setBookingFilter] = useState("confirmadas");
   const [projectFilter, setProjectFilter] = useState("pendientes");
   const [expandedProject, setExpandedProject] = useState<string | null>(null);
   const [projectProposals, setProjectProposals] = useState<Record<string, Proposal[]>>({});

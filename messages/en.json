@@ -814,8 +814,8 @@
       "namePlaceholder": "Your name"
     },
     "success": {
-      "title": "Request sent!",
-      "desc": "Your request has been registered. You can continue coordinating via WhatsApp.",
+      "title": "Request confirmed!",
+      "desc": "Your request is confirmed. Coordinate the details directly via WhatsApp with the professional.",
       "whatsapp": "Continue on WhatsApp",
       "close": "Done"
     },
@@ -1127,7 +1127,24 @@
     "reportError": "Couldn't send the report. Try again.",
     "waMessage": "Hi {name}, I'm contacting you about the request on ContrataCR.",
     "appointmentPerson": "the appointment person",
-    "thePerson": "the person"
+    "thePerson": "the person",
+    "reschedule": "Reschedule",
+    "cancelTitle": "Why are you cancelling?",
+    "cancelHint": "The client is notified with the reason. The slot is freed.",
+    "cancelR1": "I am not available",
+    "cancelR2": "Outside my service area",
+    "cancelR3": "The client is not responding",
+    "cancelReasonPlaceholder": "Reason (optional)",
+    "cancelConfirm": "Cancel request",
+    "reschedTitle": "Propose a new time",
+    "reschedDateLabel": "New date",
+    "reschedTimeLabel": "New time",
+    "reschedConfirm": "Propose time",
+    "reschedNeed": "Choose a date and time.",
+    "reschedError": "Could not reschedule. Please try again.",
+    "reschedHint": "The client is sent the proposal; coordinate the details via WhatsApp.",
+    "back": "Back",
+    "unverified": "Unverified"
   },
   "photoGallery": {
     "intro": "Up to {max} photos total.",
@@ -1928,7 +1945,8 @@
       "booking_cancelled": "Request cancelled",
       "review_request": "Leave your review",
       "proposal_received": "New proposal",
-      "proposal_accepted": "Proposal accepted!"
+      "proposal_accepted": "Proposal accepted!",
+      "booking_rescheduled": "New time proposed"
     }
   },
   "projects": {

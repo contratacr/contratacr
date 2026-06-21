@@ -71,17 +71,25 @@ export function StatusFilterTabs({
   );
 }
 
-// The ONE canonical 4-bucket tab set, shared by solicitudes AND proyectos so the
-// two read identically. "Activas/Activos" was dropped — it was ambiguous (it merged
-// pendientes with confirmadas). Pendientes leads (it's what needs action).
+// PROYECTOS / PROPUESTAS keep the 4 buckets — "Pendientes" is still real there (a
+// published solicitud is OPEN/receiving propuestas; a pro's propuesta is awaiting a
+// decision). Pendientes leads (it's what needs action).
 const STATUS_TABS: readonly FilterTab[] = [
   { id: "pendientes" },
   { id: "confirmadas" },
   { id: "finalizadas" },
   { id: "canceladas" },
 ];
-export const SOLICITUD_TABS = STATUS_TABS;
 export const PROYECTO_TABS = STATUS_TABS;
+
+// SOLICITUDES (bookings) — bookings now AUTO-CONFIRM (no manual-accept "pendiente"
+// step), so the solicitud tabs drop "Pendientes": Confirmadas (active/upcoming) ·
+// Finalizadas · Canceladas. Any legacy `pending` booking is bucketed as Confirmada.
+export const SOLICITUD_TABS: readonly FilterTab[] = [
+  { id: "confirmadas" },
+  { id: "finalizadas" },
+  { id: "canceladas" },
+];
 
 // A booking's appointment day has fully passed (compared to now, end-of-day).
 function isPastAppointment(scheduledDate?: string | null): boolean {
@@ -97,8 +105,8 @@ function isPastAppointment(scheduledDate?: string | null): boolean {
 export function solicitudBucket(status: string, scheduledDate?: string | null): string {
   if (status === "cancelled" || status === "rescheduled") return "canceladas";
   if (status === "completed" || status === "awaiting_confirmation") return "finalizadas";
-  if (status === "pending") return "pendientes";
   if (isPastAppointment(scheduledDate)) return "finalizadas";
+  // pending (legacy) + confirmed + in_progress are all active → Confirmadas.
   return "confirmadas";
 }
 export function solicitudMatches(filter: string, status: string, scheduledDate?: string | null): boolean {
@@ -147,8 +155,7 @@ export function bucketCounts(buckets: string[]): Record<string, number> {
 // the badge again. Genuine SUB-states (in_progress, awaiting_confirmation,
 // rescheduled, declined-vs-cancelled, …) return false → the badge IS still shown.
 const SOLICITUD_PRIMARY: Record<string, string[]> = {
-  pendientes: ["pending"],
-  confirmadas: ["confirmed"],
+  confirmadas: ["confirmed", "pending"], // both read as an active "Confirmada"
   finalizadas: ["completed", "confirmed"], // a past confirmed also reads as finalizada
   canceladas: ["cancelled"],
 };

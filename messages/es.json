@@ -814,8 +814,8 @@
       "namePlaceholder": "Tu nombre"
     },
     "success": {
-      "title": "¡Solicitud enviada!",
-      "desc": "Tu solicitud fue registrada. Ahora puedes continuar la coordinación por WhatsApp.",
+      "title": "¡Solicitud confirmada!",
+      "desc": "Tu solicitud quedó confirmada. Coordina los detalles directamente por WhatsApp con el profesional.",
       "whatsapp": "Continuar por WhatsApp",
       "close": "Listo"
     },
@@ -1127,7 +1127,24 @@
     "reportError": "No se pudo enviar el reporte. Intenta de nuevo.",
     "waMessage": "Hola {name}, te contacto por la solicitud en ContrataCR.",
     "appointmentPerson": "la persona de la cita",
-    "thePerson": "la persona"
+    "thePerson": "la persona",
+    "reschedule": "Reprogramar",
+    "cancelTitle": "¿Por qué cancelas?",
+    "cancelHint": "Se le avisa al cliente con el motivo. El horario queda libre.",
+    "cancelR1": "No tengo disponibilidad",
+    "cancelR2": "No es mi área de servicio",
+    "cancelR3": "El cliente no responde",
+    "cancelReasonPlaceholder": "Motivo (opcional)",
+    "cancelConfirm": "Cancelar solicitud",
+    "reschedTitle": "Proponer un nuevo horario",
+    "reschedDateLabel": "Nueva fecha",
+    "reschedTimeLabel": "Nueva hora",
+    "reschedConfirm": "Proponer horario",
+    "reschedNeed": "Elige una fecha y una hora.",
+    "reschedError": "No se pudo reprogramar. Intenta de nuevo.",
+    "reschedHint": "Se le propone al cliente; coordinen los detalles por WhatsApp.",
+    "back": "Volver",
+    "unverified": "Sin verificar"
   },
   "photoGallery": {
     "intro": "Máximo {max} fotos en total.",
@@ -1928,7 +1945,8 @@
       "booking_cancelled": "Solicitud cancelada",
       "review_request": "Deja tu reseña",
       "proposal_received": "Nueva propuesta",
-      "proposal_accepted": "¡Propuesta aceptada!"
+      "proposal_accepted": "¡Propuesta aceptada!",
+      "booking_rescheduled": "Nuevo horario propuesto"
     }
   },
   "projects": {

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { notifyNewBooking, notifyBookingStatusChange } from "@/lib/notifications";
+import { notifyNewBooking, notifyBookingStatusChange, notifyBookingRescheduled } from "@/lib/notifications";
 
 // Lazy auto-confirm: a booking the pro marked "trabajo realizado" auto-completes
 // 7 days after work_done_at if the client never confirmed. Best-effort.
@@ -51,7 +51,9 @@ export async function POST(req: NextRequest) {
 
     // No double-booking: if this request targets a specific slot, reject it when
     // another active booking already holds that pro + date + time. (Cancelled /
-    // completed bookings free the slot again, so they don't count here.)
+    // completed bookings free the slot again, so they don't count here.) This is the
+    // FAST-PATH check; the migration-069 partial unique index is the ATOMIC guard
+    // that wins a true race (the loser's INSERT hits 23505 → handled below).
     if (scheduledDate && scheduledTime) {
       const admin = createAdminClient();
       const { data: clash } = await admin
@@ -81,7 +83,10 @@ export async function POST(req: NextRequest) {
       preferred_date_text: preferredDateText ?? null,
       scheduled_date: scheduledDate ?? null,
       scheduled_time: scheduledTime ?? null,
-      status: "pending",
+      // AUTO-CONFIRM: a solicitud in an available slot is confirmed immediately and
+      // holds the slot — no manual "accept" step. The professional manages exceptions
+      // (decline an unverified/unwanted client, reschedule) from their panel + WhatsApp.
+      status: "confirmed",
     };
     // Beneficiary fields (booking for someone else) — optional; retried-away if
     // the columns aren't migrated yet (migration 032).
@@ -108,6 +113,16 @@ export async function POST(req: NextRequest) {
     let { data, error } = await adminInsert.from("bookings").insert({ ...baseBooking, ...beneficiaryFields }).select("id").single();
     if (error && /for_someone_else|beneficiary_|client_dob|category_id|slot_location|column|schema cache|PGRST204|could not find/i.test(error.message)) {
       ({ data, error } = await adminInsert.from("bookings").insert(baseBooking).select("id").single());
+    }
+
+    // ATOMIC double-booking guard (migration 069): a concurrent request that won the
+    // race already holds this slot → our INSERT violates the partial unique index
+    // (23505). Return the same friendly 409 as the fast-path check above.
+    if (error && ((error as { code?: string }).code === "23505" || /duplicate key|unique|bookings_active_slot/i.test(error.message))) {
+      return NextResponse.json(
+        { error: "Ese horario acaba de ser reservado. Elige otra hora disponible." },
+        { status: 409 }
+      );
     }
 
     if (error) {
@@ -243,7 +258,10 @@ export async function GET(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   const body = await req.json();
-  const { id, status, cancelReason } = body;
+  const { id, status, cancelReason, scheduledDate, scheduledTime } = body;
+  // A reschedule carries a new slot (the pro proposes a different time); the booking
+  // stays active ("confirmed") at the new time and the client is notified.
+  const isReschedule = !!scheduledDate && !!scheduledTime;
 
   const supabase = await createClient();
   const { data: { session } } = await supabase.auth.getSession();
@@ -283,18 +301,32 @@ export async function PATCH(req: NextRequest) {
     update.cancelled_by = isOwnerPro ? "professional" : "client";
     if (typeof cancelReason === "string" && cancelReason.trim()) update.cancel_reason = cancelReason.trim();
   }
+  // Reschedule → move the booking to the new slot (the migration-069 unique index
+  // keeps it atomic: if that slot is already taken, the UPDATE hits 23505 → 409).
+  if (isReschedule) {
+    update.scheduled_date = scheduledDate;
+    update.scheduled_time = scheduledTime;
+  }
 
   let { error } = await admin.from("bookings").update(update).eq("id", id);
+  // Slot already taken (atomic guard) → friendly 409, before the column-retry below.
+  if (error && ((error as { code?: string }).code === "23505" || /duplicate key|unique|bookings_active_slot/i.test(error.message))) {
+    return NextResponse.json({ error: "Ese horario ya está reservado. Elige otra hora." }, { status: 409 });
+  }
   // Retry without the new lifecycle columns if not migrated yet.
   if (error && /work_done_at|completed_at|cancelled_by|cancel_reason|column|schema cache|PGRST204/i.test(error.message)) {
-    ({ error } = await admin.from("bookings").update({ status, updated_at: now }).eq("id", id));
+    const fallback: Record<string, unknown> = { status, updated_at: now };
+    if (isReschedule) { fallback.scheduled_date = scheduledDate; fallback.scheduled_time = scheduledTime; }
+    ({ error } = await admin.from("bookings").update(fallback).eq("id", id));
   }
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   // Notify the OTHER party on every state change (best-effort, never blocks).
-  if (status === "confirmed" || status === "cancelled") {
-    await notifyBookingStatusChange(id, status);
+  if (isReschedule) {
+    await notifyBookingRescheduled(id);
+  } else if (status === "confirmed" || status === "cancelled") {
+    await notifyBookingStatusChange(id, status, typeof cancelReason === "string" ? cancelReason : undefined);
   }
   // In-app notification to the other side for the new lifecycle states.
   try {

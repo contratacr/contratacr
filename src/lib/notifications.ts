@@ -95,7 +95,8 @@ export async function notifyNewBooking({
  */
 export async function notifyBookingStatusChange(
   bookingId: string,
-  status: "confirmed" | "cancelled"
+  status: "confirmed" | "cancelled",
+  reason?: string
 ): Promise<void> {
   try {
     const admin = createAdminClient();
@@ -123,9 +124,10 @@ export async function notifyBookingStatusChange(
 
     const verb = status === "confirmed" ? "confirmó" : "canceló";
     const title = status === "confirmed" ? "Solicitud confirmada" : "Solicitud cancelada";
-    const message = whenText
+    const reasonText = status === "cancelled" && reason && reason.trim() ? ` Motivo: ${reason.trim()}` : "";
+    const message = (whenText
       ? `${proName} ${verb} tu solicitud de '${service}' para el ${whenText}.`
-      : `${proName} ${verb} tu solicitud de '${service}'.`;
+      : `${proName} ${verb} tu solicitud de '${service}'.`) + reasonText;
 
     // 1. In-app notification to the client (with click-through link)
     if (booking.client_id) {
@@ -157,6 +159,57 @@ export async function notifyBookingStatusChange(
     }
   } catch (err) {
     console.error("[notifyBookingStatusChange] failed:", err);
+  }
+}
+
+/**
+ * Notify a client that the professional proposed a NEW time for their booking
+ * (reschedule). In-app + WhatsApp/email fallback. The real coordination still
+ * happens over WhatsApp; this just surfaces the proposed new slot. Never throws.
+ */
+export async function notifyBookingRescheduled(bookingId: string): Promise<void> {
+  try {
+    const admin = createAdminClient();
+    const { data: booking } = await admin
+      .from("bookings")
+      .select(
+        `client_id, client_name, client_email, client_phone,
+         service_description, scheduled_date, scheduled_time, preferred_date_text,
+         professionals(profiles(full_name))`
+      )
+      .eq("id", bookingId)
+      .maybeSingle();
+    if (!booking) return;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const proName: string = (booking.professionals as any)?.profiles?.full_name ?? "El profesional";
+    const service = booking.service_description ?? "tu servicio";
+    const whenText = formatBookingWhen(
+      booking.scheduled_date as string | null,
+      booking.scheduled_time as string | null,
+      booking.preferred_date_text as string | null
+    );
+    const title = "Nuevo horario propuesto";
+    const message = whenText
+      ? `${proName} propuso un nuevo horario para '${service}': ${whenText}. Coordina los detalles por WhatsApp.`
+      : `${proName} propuso un nuevo horario para '${service}'. Coordina los detalles por WhatsApp.`;
+
+    if (booking.client_id) {
+      await admin.from("notifications").insert({
+        user_id: booking.client_id,
+        type: "booking_rescheduled",
+        title,
+        message,
+        data: { link: "/es/dashboard/profesional?tab=sent_bookings", booking_id: bookingId },
+      });
+    }
+
+    const clientFirst = (booking.client_name as string | null)?.split(" ")[0] ?? "";
+    const greeting = clientFirst ? `Hola ${clientFirst}, ` : "Hola, ";
+    const wa = await sendWhatsAppText(booking.client_phone as string | undefined, `${greeting}${message} — ContrataCR`);
+    await recordDelivery(admin, bookingId, "whatsapp", wa.status, wa.detail);
+  } catch (err) {
+    console.error("[notifyBookingRescheduled] failed:", err);
   }
 }
 

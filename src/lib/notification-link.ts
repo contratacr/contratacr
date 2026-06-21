@@ -23,6 +23,7 @@ const CLIENT_TYPES = new Set([
   "booking_cancelled",
   "booking_rescheduled",
   "booking_completed",
+  "booking_rescheduled", // the professional proposed a new time
   "review_request",
   "proposal_received",  // a professional sent a proposal to your project
 ]);
