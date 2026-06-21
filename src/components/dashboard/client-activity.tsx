@@ -574,9 +574,14 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                     {proposal.professionals?.profiles?.full_name}
                                   </p>
                                 )}
-                                {proposal.price && (
-                                  <p className="text-xs text-[#009FD9] font-medium">₡{proposal.price.toLocaleString("es-CR")}</p>
-                                )}
+                                {/* Price OR "a convenir" — informal pros often price after
+                                    seeing the job, so an empty price reads as "to be agreed",
+                                    never a blank. */}
+                                <p className="text-xs font-medium">
+                                  {proposal.price
+                                    ? <span className="text-[#009FD9]">₡{proposal.price.toLocaleString("es-CR")}</span>
+                                    : <span className="text-[#9ca3af]">{t("priceTBD")}</span>}
+                                </p>
                                 <p className="text-xs text-[#6b7280] mt-0.5 line-clamp-2">{proposal.message}</p>
                               </div>
                             </div>

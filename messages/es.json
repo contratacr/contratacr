@@ -1165,6 +1165,8 @@
     },
     "projectFallback": "Solicitud",
     "yourPriceLabel": "Tu precio:",
+    "priceTBD": "Precio a convenir",
+    "priceHint": "Déjalo en blanco para acordar el precio al ver el trabajo.",
     "edit": "Editar",
     "cancel": "Cancelar",
     "cancelConfirm": "¿Cancelar esta propuesta?",
@@ -1546,6 +1548,7 @@
     "whatsapp": "WhatsApp",
     "waProposal": "Hola, te escribo por tu propuesta en ContrataCR para la solicitud \"{title}\".",
     "noProposalsYet": "Sin propuestas todavía.",
+    "priceTBD": "Precio a convenir",
     "seeUnchosen": "Ver propuestas no elegidas ({count})"
   },
   "clientPage": {

@@ -346,6 +346,7 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
                               value={form.price}
                               onChange={(v) => updateForm(project.id, "price", v)}
                             />
+                            <p className="text-[11px] text-[#9ca3af] mt-1">{t("priceHint")}</p>
                           </div>
                           <div>
                             <label className="text-xs font-medium text-[#374151] block mb-1.5">
@@ -420,11 +421,12 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
                           </p>
                         )}
                         <p className="text-xs text-[#6b7280] line-clamp-2 mb-2">{p.message}</p>
-                        {p.price && (
-                          <p className="text-xs text-[#374151]">
-                            {t("yourPriceLabel")} <span className="font-medium">₡{p.price.toLocaleString("es-CR")}</span>
-                          </p>
-                        )}
+                        <p className="text-xs text-[#374151]">
+                          {t("yourPriceLabel")}{" "}
+                          {p.price
+                            ? <span className="font-medium">₡{p.price.toLocaleString("es-CR")}</span>
+                            : <span className="text-[#9ca3af]">{t("priceTBD")}</span>}
+                        </p>
                         <p className="text-xs text-[#9ca3af] mt-1">
                           {new Date(p.created_at).toLocaleDateString(dateLocale)}
                         </p>
