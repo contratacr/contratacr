@@ -195,137 +195,132 @@ export function BookingRequests() {
           );
         })()}
 
-        <div className="px-[18px] py-4 flex flex-col gap-4">
-          {/* 2-3 — the appointment: featured date, then service · location + note. */}
-          <div className="flex flex-col gap-3">
-            {/* 2 — appointment date FEATURED (the most important fact). Clean, no
-                   container — a brand-blue calendar-clock icon + eyebrow + bold date. */}
-            <div className="flex items-center gap-3">
-              <CalendarClock className="h-[22px] w-[22px] text-[#9ca3af] shrink-0" strokeWidth={2} />
-              <div className="min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#9ca3af]">{t("appointmentDateLabel")}</p>
-                <p className={dateStr ? "text-[16px] font-bold text-[#111827] leading-tight" : "text-sm text-[#9ca3af]"}>
-                  {dateStr || t("noScheduledDate")}
-                </p>
-              </div>
+        {/* 2-3 — THE APPOINTMENT (shared "what & when", full width): featured date +
+               service · location + the client's note. */}
+        <div className="px-[18px] py-4 flex flex-col gap-3 border-b border-[#f3f4f6]">
+          <div className="flex items-center gap-3">
+            <CalendarClock className="h-[22px] w-[22px] text-[#9ca3af] shrink-0" strokeWidth={2} />
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#9ca3af]">{t("appointmentDateLabel")}</p>
+              <p className={dateStr ? "text-[16px] font-bold text-[#111827] leading-tight" : "text-sm text-[#9ca3af]"}>
+                {dateStr || t("noScheduledDate")}
+              </p>
             </div>
-
-            {hasMeta && <div className="h-px bg-[#f3f4f6]" />}
-
-            {/* 3 — service · location (pin) */}
-            {(category || location) && (
-              <div className="flex items-center gap-2.5 text-[13.5px]">
-                <MapPin className="h-4 w-4 text-[#9ca3af] shrink-0" />
-                <span className="min-w-0">
-                  {category && <span className="text-[#374151]">{category}</span>}
-                  {category && location && <span className="text-[#9ca3af]"> · </span>}
-                  {location && <span className="text-[#9ca3af]">{location}</span>}
-                </span>
-              </div>
-            )}
-
-            {/* 3 — client note (document) */}
-            {booking.service_description && (
-              <div className="flex items-start gap-2.5 text-[13.5px]">
-                <FileText className="h-4 w-4 text-[#9ca3af] shrink-0 mt-0.5" />
-                <span className="text-[#374151] min-w-0">{booking.service_description}</span>
-              </div>
-            )}
           </div>
 
-          {/* 4 — LA CITA ES PARA (only when the appointment is for someone else): the
-                 patient / service recipient, in a tinted block. */}
-          {booking.for_someone_else && (
-            <div className="rounded-[14px] bg-[#EBF5FB] border border-[#bfdbfe] px-4 py-3.5">
-              <p className="text-[10px] font-bold uppercase tracking-[0.05em] text-[#0089bb]">{t("apptForLabel")}</p>
-              <p className="text-[17px] font-bold text-[#111827] mt-1 mb-1.5 flex items-center gap-2 flex-wrap">
-                {booking.beneficiary_name || t("otherPerson")}
-                {ageBadge(booking.beneficiary_dob, booking.beneficiary_is_minor)}
-              </p>
-              <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1 text-[12.5px] text-[#374151]">
-                {booking.beneficiary_dob && (
-                  <span className="inline-flex items-center gap-1.5">
-                    <CalendarDays className="h-[13px] w-[13px] text-[#9ca3af] shrink-0" />
-                    {formatDobDMY(booking.beneficiary_dob)}
-                  </span>
-                )}
-                {booking.beneficiary_dob && <span className="text-[#9ca3af]">·</span>}
-                <span className="inline-flex items-center gap-1.5">
-                  <IdCard className="h-[13px] w-[13px] text-[#9ca3af] shrink-0" />
-                  {booking.beneficiary_cedula ? t("benCedula", { cedula: booking.beneficiary_cedula }) : t("noCedula")}
-                </span>
-                {/* The third person's phone is OPTIONAL — show it here (grouped with their
-                    info) only when the requester provided one; never an empty phone. */}
-                {booking.beneficiary_phone && <span className="text-[#9ca3af]">·</span>}
-                {booking.beneficiary_phone && (
-                  <span className="inline-flex items-center gap-1.5">
-                    <Phone className="h-[13px] w-[13px] text-[#9ca3af] shrink-0" />
-                    {booking.beneficiary_phone}
-                  </span>
-                )}
-              </div>
-              {/* WhatsApp this person — ONLY when they gave a phone. */}
-              {booking.beneficiary_phone && waButton(booking.beneficiary_phone, benFirst)}
+          {hasMeta && <div className="h-px bg-[#f3f4f6]" />}
+
+          {(category || location) && (
+            <div className="flex items-center gap-2.5 text-[13.5px]">
+              <MapPin className="h-4 w-4 text-[#9ca3af] shrink-0" />
+              <span className="min-w-0">
+                {category && <span className="text-[#374151]">{category}</span>}
+                {category && location && <span className="text-[#9ca3af]"> · </span>}
+                {location && <span className="text-[#9ca3af]">{location}</span>}
+              </span>
             </div>
           )}
 
-          {/* 5 — the person who made the request. For a third-party booking this is the
-                 "Reservado por" contact (whom the pro coordinates with). For a self
-                 booking this same person is the patient, so the eyebrow is omitted. */}
-          {booking.client_name && (
-            <div>
-              {booking.for_someone_else && (
-                <p className="text-[10px] font-bold uppercase tracking-[0.05em] text-[#9ca3af] mb-2.5">{t("bookedByLabel")}</p>
-              )}
+          {booking.service_description && (
+            <div className="flex items-start gap-2.5 text-[13.5px]">
+              <FileText className="h-4 w-4 text-[#9ca3af] shrink-0 mt-0.5" />
+              <span className="text-[#374151] min-w-0">{booking.service_description}</span>
+            </div>
+          )}
+        </div>
+
+        {/* 4-5 — THE PEOPLE. Third-party → a LEFT/RIGHT split ("La cita es para" | "Reservado
+               por") with an aesthetic divider (vertical on desktop, horizontal when it stacks
+               on mobile) so each side clearly holds ONE person. Self → one person, no split. */}
+        {booking.for_someone_else ? (
+          <div className="flex flex-col sm:flex-row">
+            {/* LEFT — the patient (service recipient) */}
+            <div className="flex-1 min-w-0 px-[18px] py-4">
+              <p className="text-[10px] font-bold uppercase tracking-[0.05em] text-[#0089bb] mb-2.5">{t("apptForLabel")}</p>
+              <div className="flex items-center gap-3">
+                <span className="h-10 w-10 rounded-full bg-[#EBF5FB] text-[#009FD9] text-sm font-bold flex items-center justify-center shrink-0">
+                  {getInitials(booking.beneficiary_name || "?")}
+                </span>
+                <p className="text-[15px] font-bold text-[#111827] min-w-0 flex items-center gap-2 flex-wrap">
+                  {booking.beneficiary_name || t("otherPerson")}
+                  {ageBadge(booking.beneficiary_dob, booking.beneficiary_is_minor)}
+                </p>
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px] text-[#6b7280]">
+                {booking.beneficiary_dob && (
+                  <span className="inline-flex items-center gap-1.5"><CalendarDays className="h-[13px] w-[13px] text-[#9ca3af] shrink-0" />{formatDobDMY(booking.beneficiary_dob)}</span>
+                )}
+                {booking.beneficiary_dob && <span className="text-[#9ca3af]">·</span>}
+                <span className="inline-flex items-center gap-1.5"><IdCard className="h-[13px] w-[13px] text-[#9ca3af] shrink-0" />{booking.beneficiary_cedula ? t("benCedula", { cedula: booking.beneficiary_cedula }) : t("noCedula")}</span>
+                {/* Third person's phone — OPTIONAL; shown only when provided. */}
+                {booking.beneficiary_phone && <span className="text-[#9ca3af]">·</span>}
+                {booking.beneficiary_phone && (
+                  <span className="inline-flex items-center gap-1.5"><Phone className="h-[13px] w-[13px] text-[#9ca3af] shrink-0" />{booking.beneficiary_phone}</span>
+                )}
+              </div>
+              {/* WhatsApp the patient — ONLY when they gave a phone. */}
+              {booking.beneficiary_phone && waButton(booking.beneficiary_phone, benFirst)}
+            </div>
+
+            {/* Aesthetic divider — vertical on desktop, horizontal when stacked on mobile. */}
+            <div className="border-t border-[#f3f4f6] sm:border-t-0 sm:border-l shrink-0" />
+
+            {/* RIGHT — who booked (the coordination contact) */}
+            <div className="flex-1 min-w-0 px-[18px] py-4">
+              <p className="text-[10px] font-bold uppercase tracking-[0.05em] text-[#9ca3af] mb-2.5">{t("bookedByLabel")}</p>
+              <div className="flex items-center gap-3">
+                <Avatar className="h-10 w-10 shrink-0">
+                  <AvatarImage src={booking.profiles?.avatar_url} className="object-cover" />
+                  <AvatarFallback className="text-sm font-bold bg-[#f3f4f6] text-[#6b7280]">{getInitials(booking.client_name || "?")}</AvatarFallback>
+                </Avatar>
+                <p className="text-[15px] font-bold text-[#111827] min-w-0 flex items-center gap-2 flex-wrap">
+                  {booking.client_name}
+                  {flaggedPill}
+                </p>
+              </div>
+              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px] text-[#6b7280]">
+                {booking.client_phone && (
+                  <span className="inline-flex items-center gap-1.5"><Phone className="h-[13px] w-[13px] text-[#9ca3af] shrink-0" />{booking.client_phone}</span>
+                )}
+                {booking.client_phone && <span className="text-[#9ca3af]">·</span>}
+                <span className="inline-flex items-center gap-1.5"><IdCard className="h-[13px] w-[13px] text-[#9ca3af] shrink-0" />{booking.client_cedula ? t("clientCedula", { cedula: booking.client_cedula }) : t("noCedula")}</span>
+              </div>
+              {/* WhatsApp the requester — ALWAYS (their phone is required). */}
+              {booking.client_phone && waButton(booking.client_phone, cliFirst)}
+            </div>
+          </div>
+        ) : (
+          /* SELF — one person (requester = patient): no split. */
+          booking.client_name && (
+            <div className="px-[18px] py-4">
               <div className="flex items-center gap-3">
                 <Avatar className="h-11 w-11 shrink-0">
                   <AvatarImage src={booking.profiles?.avatar_url} className="object-cover" />
-                  <AvatarFallback
-                    className={
-                      booking.for_someone_else
-                        ? "text-sm font-bold bg-[#f3f4f6] text-[#6b7280]"
-                        : "text-sm font-bold bg-[#EBF5FB] text-[#009FD9]"
-                    }
-                  >
-                    {getInitials(booking.client_name)}
-                  </AvatarFallback>
+                  <AvatarFallback className="text-sm font-bold bg-[#EBF5FB] text-[#009FD9]">{getInitials(booking.client_name)}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <p className="text-[15px] font-bold text-[#111827] flex items-center gap-2 flex-wrap">
                     {booking.client_name}
-                    {!booking.for_someone_else && ageBadge(booking.client_dob)}
+                    {ageBadge(booking.client_dob)}
                     {flaggedPill}
                   </p>
-                  <div className="mt-0.5 flex flex-wrap items-center gap-x-3.5 gap-y-1 text-[12.5px] text-[#6b7280]">
+                  <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px] text-[#6b7280]">
                     {booking.client_phone && (
-                      <span className="inline-flex items-center gap-1.5">
-                        <Phone className="h-[13px] w-[13px] text-[#9ca3af] shrink-0" />
-                        {booking.client_phone}
-                      </span>
+                      <span className="inline-flex items-center gap-1.5"><Phone className="h-[13px] w-[13px] text-[#9ca3af] shrink-0" />{booking.client_phone}</span>
                     )}
                     {booking.client_phone && <span className="text-[#9ca3af]">·</span>}
-                    <span className="inline-flex items-center gap-1.5">
-                      <IdCard className="h-[13px] w-[13px] text-[#9ca3af] shrink-0" />
-                      {booking.client_cedula ? t("clientCedula", { cedula: booking.client_cedula }) : t("noCedula")}
-                    </span>
-                    {/* Self booking → this person is the patient, so show their DOB here. */}
-                    {!booking.for_someone_else && booking.client_dob && (
-                      <>
-                        <span className="text-[#9ca3af]">·</span>
-                        <span className="inline-flex items-center gap-1.5">
-                          <CalendarDays className="h-[13px] w-[13px] text-[#9ca3af] shrink-0" />
-                          {formatDobDMY(booking.client_dob)}
-                        </span>
-                      </>
+                    <span className="inline-flex items-center gap-1.5"><IdCard className="h-[13px] w-[13px] text-[#9ca3af] shrink-0" />{booking.client_cedula ? t("clientCedula", { cedula: booking.client_cedula }) : t("noCedula")}</span>
+                    {booking.client_dob && <span className="text-[#9ca3af]">·</span>}
+                    {booking.client_dob && (
+                      <span className="inline-flex items-center gap-1.5"><CalendarDays className="h-[13px] w-[13px] text-[#9ca3af] shrink-0" />{formatDobDMY(booking.client_dob)}</span>
                     )}
                   </div>
                 </div>
               </div>
-              {/* WhatsApp the requester — ALWAYS available (their phone is required). */}
               {booking.client_phone && waButton(booking.client_phone, cliFirst)}
             </div>
-          )}
-        </div>
+          )
+        )}
 
         {/* 6 — actions */}
         <div className="px-[18px] py-3.5 border-t border-[#f3f4f6] flex flex-col gap-3">
