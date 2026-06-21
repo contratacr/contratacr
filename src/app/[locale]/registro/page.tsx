@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Search, Briefcase, ArrowRight } from "lucide-react";
+import { UserRoundSearch, BriefcaseBusiness, ArrowRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -38,7 +38,7 @@ export default function RegisterPage() {
               className="group flex flex-col items-center gap-5 p-8 bg-white border-2 border-[#e5e7eb] rounded-2xl hover:border-[#009FD9] hover:shadow-lg transition-all duration-200 text-center"
             >
               <div className="h-16 w-16 rounded-full bg-[#EBF5FB] flex items-center justify-center group-hover:bg-[#009FD9] transition-colors duration-200 shrink-0">
-                <Search className="h-8 w-8 text-[#009FD9] group-hover:text-white transition-colors duration-200" />
+                <UserRoundSearch className="h-8 w-8 text-[#009FD9] group-hover:text-white transition-colors duration-200" />
               </div>
               <div>
                 <h2 className="text-xl font-bold text-[#111827] mb-2">{t("clientTitle")}</h2>
@@ -57,7 +57,7 @@ export default function RegisterPage() {
               className="group flex flex-col items-center gap-5 p-8 bg-white border-2 border-[#e5e7eb] rounded-2xl hover:border-[#009FD9] hover:shadow-lg transition-all duration-200 text-center"
             >
               <div className="h-16 w-16 rounded-full bg-[#EBF5FB] flex items-center justify-center group-hover:bg-[#009FD9] transition-colors duration-200 shrink-0">
-                <Briefcase className="h-8 w-8 text-[#009FD9] group-hover:text-white transition-colors duration-200" />
+                <BriefcaseBusiness className="h-8 w-8 text-[#009FD9] group-hover:text-white transition-colors duration-200" />
               </div>
               <div>
                 <h2 className="text-xl font-bold text-[#111827] mb-2">{t("proTitle")}</h2>

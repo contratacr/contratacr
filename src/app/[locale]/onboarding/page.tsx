@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
-import { Search, Briefcase, ArrowRight } from "lucide-react";
+import { UserRoundSearch, BriefcaseBusiness, ArrowRight } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
@@ -184,7 +184,7 @@ export default function OnboardingPage() {
                 {selecting === "client" ? (
                   <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
                 ) : (
-                  <Search className="h-8 w-8 text-[#009FD9] group-hover:text-white transition-colors duration-200" />
+                  <UserRoundSearch className="h-8 w-8 text-[#009FD9] group-hover:text-white transition-colors duration-200" />
                 )}
               </div>
               <div>
@@ -208,7 +208,7 @@ export default function OnboardingPage() {
                 {selecting === "professional" ? (
                   <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
                 ) : (
-                  <Briefcase className="h-8 w-8 text-[#009FD9] group-hover:text-white transition-colors duration-200" />
+                  <BriefcaseBusiness className="h-8 w-8 text-[#009FD9] group-hover:text-white transition-colors duration-200" />
                 )}
               </div>
               <div>
