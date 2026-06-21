@@ -105,8 +105,9 @@ export default function OnboardingPage() {
       console.error("[onboarding] profile upsert failed:", err);
     }
 
-    // Clients go straight to their dashboard (cédula collected later at booking).
-    window.location.assign(role === "professional" ? "/es/registro/profesional" : "/es/dashboard/cliente");
+    // "Ofrezco" → complete the professional profile to unlock offering. "Busco" →
+    // straight into the unified panel (it opens in "Usar servicios" mode).
+    window.location.assign(role === "professional" ? "/es/registro/profesional" : "/es/dashboard/profesional");
   }
 
   // Loader until we KNOW this is a new user (existing users are redirected above) —

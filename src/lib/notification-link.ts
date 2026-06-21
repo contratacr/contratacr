@@ -43,9 +43,9 @@ export function notificationContextLabel(type: string): string | null {
   return null;
 }
 
-// For a professional, the client-area + soporte sections live INSIDE the unified
-// professional dashboard, not in a separate client panel.
-function remapClientLinkForPro(link: string): string {
+// Everyone uses the ONE unified panel; the "Usar servicios" sections live under
+// their own tabs there. Remap any legacy client-panel deep link into it.
+function remapClientLink(link: string): string {
   return link
     .replace("/dashboard/cliente?tab=bookings", "/dashboard/profesional?tab=sent_bookings")
     .replace("/dashboard/cliente?tab=projects", "/dashboard/profesional?tab=sent_projects")
@@ -54,19 +54,18 @@ function remapClientLinkForPro(link: string): string {
     .replace("/dashboard/cliente?tab=soporte", "/dashboard/profesional?tab=soporte");
 }
 
-export function notificationHref(n: NotificationLinkInput, role?: string): string {
-  const isPro = role === "professional";
-
+// `role` is accepted for signature compatibility but no longer needed: there is a
+// single panel and each tab implies its own mode.
+export function notificationHref(n: NotificationLinkInput, _role?: string): string {
   // An explicit link stored at creation time wins — but only if it's a well-formed
   // internal path. Anything stale/garbage falls through to the type-based routing
-  // below (always a live dashboard tab), so a click never dead-ends. For a
-  // professional we route client-context deep links into the unified dashboard.
+  // below (always a live dashboard tab), so a click never dead-ends.
   if (n.data?.link && n.data.link.startsWith("/")) {
-    return isPro ? remapClientLinkForPro(n.data.link) : n.data.link;
+    return remapClientLink(n.data.link);
   }
 
   switch (n.type) {
-    // Professional context
+    // Offer-capability context (offer-only tabs → the panel opens in offer mode)
     case "booking_received":
       return "/es/dashboard/profesional?tab=bookings";
     case "proposal_accepted":
@@ -74,17 +73,17 @@ export function notificationHref(n: NotificationLinkInput, role?: string): strin
     case "new_project":
       return "/es/dashboard/profesional?tab=proposals";
 
-    // Client context — unified dashboard for pros, client dashboard otherwise
+    // Seek-capability context (use-only tabs → the panel opens in use mode)
     case "booking_confirmed":
     case "booking_cancelled":
     case "booking_rescheduled":
     case "booking_completed":
     case "review_request":
-      return isPro ? "/es/dashboard/profesional?tab=sent_bookings" : "/es/dashboard/cliente?tab=bookings";
+      return "/es/dashboard/profesional?tab=sent_bookings";
     case "proposal_received":
-      return isPro ? "/es/dashboard/profesional?tab=sent_projects" : "/es/dashboard/cliente?tab=projects";
+      return "/es/dashboard/profesional?tab=sent_projects";
 
     default:
-      return isPro ? "/es/dashboard/profesional?tab=notifications" : "/es/dashboard/cliente?tab=notifications";
+      return "/es/dashboard/profesional?tab=notifications";
   }
 }

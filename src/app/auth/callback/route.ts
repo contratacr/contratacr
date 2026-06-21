@@ -61,18 +61,12 @@ export async function GET(request: NextRequest) {
             await admin.from("profiles").update({ email: u.email }).eq("id", u.id);
           } catch { /* best-effort — never block the redirect over the email mirror */ }
         }
-        let role = u.user_metadata?.role as string | undefined;
-        if (role !== "professional" && role !== "client") {
-          const { data: prof } = await supabase.rpc("get_my_profile");
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const p = prof as any;
-          if (p?.role === "professional" || p?.role === "client") role = p.role;
-        }
-        const panel = role === "professional" ? "profesional" : "cliente";
         // Preserve the UI locale the user changed their email from (stashed in
         // user_metadata by account-security — the static email template can't know it).
         const lc = u.user_metadata?.email_change_locale === "en" ? "en" : "es";
-        return NextResponse.redirect(`${origin}/${lc}/dashboard/${panel}?tab=cuenta&emailChanged=1`);
+        // One unified panel for everyone — land on "Cuenta y seguridad" with the
+        // success flag intact (a single hop keeps the emailChanged banner).
+        return NextResponse.redirect(`${origin}/${lc}/dashboard/profesional?tab=cuenta&emailChanged=1`);
       }
       // No session in THIS browser (token consumed AND logged out here) → the change is
       // already applied, so route to login to sign in with the new email (not main).
@@ -126,15 +120,11 @@ export async function GET(request: NextRequest) {
       // whose metadata predates the flag, fall back to the SECURITY DEFINER RPC
       // (`get_my_profile`) which returns the full row regardless of column grants.
       let onboardingDone = data.user.user_metadata?.onboarding_completed === true;
-      let role = data.user.user_metadata?.role as string | undefined;
-      if (!onboardingDone || (role !== "professional" && role !== "client")) {
+      if (!onboardingDone) {
         const { data: prof } = await supabase.rpc("get_my_profile");
-        if (prof) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const p = prof as any;
-          if (p.onboarding_completed) onboardingDone = true;
-          if (p.role === "professional" || p.role === "client") role = p.role;
-        }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const p = prof as any;
+        if (p?.onboarding_completed) onboardingDone = true;
       }
 
       if (!onboardingDone) {
@@ -142,13 +132,14 @@ export async function GET(request: NextRequest) {
         return NextResponse.redirect(`${origin}/es/onboarding`);
       }
 
-      // The "Publicar proyecto" CTA carries ?next=projects → land on the role-aware
-      // "Mis proyectos publicados" section after authenticating.
+      // The "Publicar proyecto" CTA carries ?next=projects → land on "Mis solicitudes
+      // publicadas" after authenticating. Everyone lands on the ONE unified panel; it
+      // opens in the right mode itself.
+      // "sent_projects" is a use-mode tab, so it works for any account.
       const wantProjects = next === "projects";
-      const destPath =
-        role === "professional"
-          ? wantProjects ? "/es/dashboard/profesional?tab=sent_projects" : "/es/dashboard/profesional"
-          : wantProjects ? "/es/dashboard/cliente?tab=projects" : "/es/dashboard/cliente";
+      const destPath = wantProjects
+        ? "/es/dashboard/profesional?tab=sent_projects"
+        : "/es/dashboard/profesional";
 
       // Cédula is NOT required up-front for clients — it is requested later, at
       // the moment they book/request a service (see the booking flow). So we no

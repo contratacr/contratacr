@@ -74,7 +74,8 @@ export function useRedirectIfRegistered(): { checking: boolean } {
             await supabase.auth.updateUser({ data: { onboarding_completed: true, ...(role ? { role } : {}) } });
           } catch { /* best-effort */ }
         }
-        window.location.assign(`/${locale}/dashboard/${role === "professional" ? "profesional" : "cliente"}`);
+        // One unified panel for everyone; it opens in the right mode by itself.
+        window.location.assign(`/${locale}/dashboard/profesional`);
         return;
       }
 

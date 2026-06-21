@@ -1062,7 +1062,13 @@
       "whatsappBenefit": "It's the main way clients contact you.",
       "insurers": "List your insurers",
       "insurersBenefit": "Patients filter by their insurance: showing up there brings more appointments."
-    }
+    },
+    "modeUse": "Use services",
+    "modeOffer": "Offer services",
+    "modeUseSubtitle": "You are searching for and hiring services.",
+    "offerGateTitle": "Start offering your services",
+    "offerGateBody": "It is the same account. Complete your profile once and start receiving requests from clients across the country.",
+    "offerGateCta": "Complete my profile"
   },
   "bookingRequests": {
     "empty": "You don't have any requests yet",
@@ -1694,10 +1700,10 @@
     "continue": "Continue",
     "proTitle": "Offering services",
     "proDesc": "Offer your services and connect with clients across the country.",
-    "bothNote": "This is just where you start — add the other option anytime from your panel.",
+    "bothNote": "You can search for services right away. To offer your own, just complete your profile whenever you want.",
     "haveAccount": "Already have an account?",
     "signIn": "Sign in",
-    "bothTitle": "You can do both."
+    "bothTitle": "It is one account."
   },
   "onboarding": {
     "greeting": "Hi, {name}",

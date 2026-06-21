@@ -7,6 +7,7 @@ import { useSearchParams } from "next/navigation";
 import {
   User, Image as ImageIcon, CalendarDays, Inbox, LogOut, ExternalLink, Wrench,
   FolderOpen, ShieldCheck, Bell, Send, ClipboardList, Bookmark, Settings, Headset, CreditCard,
+  ArrowRight, Sparkles,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -24,6 +25,7 @@ import { BookingRequests } from "@/components/dashboard/pro/booking-requests";
 import { ProposalsTab } from "@/components/dashboard/pro/proposals-tab";
 import { VerificationPanel } from "@/components/dashboard/pro/verification-panel";
 import { ClientActivity } from "@/components/dashboard/client-activity";
+import { BasicProfileSection } from "@/components/dashboard/basic-profile-section";
 import { NotificationsList } from "@/components/notifications/notifications-list";
 import { AccountSecuritySection } from "@/components/account/account-security";
 import { CloseAccountSection } from "@/components/account/close-account-section";
@@ -32,18 +34,22 @@ import { SubscriptionPanel } from "@/components/dashboard/pro/subscription-panel
 import { PAYMENTS_ENABLED } from "@/lib/payments/config";
 import { createClient } from "@/lib/supabase/client";
 import { getInitials } from "@/lib/utils";
+import { canOffer } from "@/lib/auth/capabilities";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 
-// Unified professional dashboard (Mercado Libre-style): ONE account, two clearly
-// labeled groups — "Mi perfil profesional" (acting as a professional) and
-// "Contratar servicios" (acting as a client) — plus a single notifications stream.
+// ONE unified panel for every account (Airbnb model). A MODE SWITCH flips between
+// "Usar servicios" (the seek capability — always available) and "Ofrecer servicios"
+// (the offer capability — unlocked by completing the professional profile). There
+// is no separate client panel; everyone lives here.
 type Tab =
   | "profile" | "services" | "photos" | "availability" | "bookings" | "proposals" | "verificacion"
   | "suscripcion"
   | "sent_bookings" | "sent_projects" | "saved"
   | "notifications" | "soporte" | "cuenta";
+
+type Mode = "use" | "offer";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ProData = Record<string, any>;
@@ -65,41 +71,53 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
   cuenta: <Settings className="h-4 w-4" />,
 };
 
-// Tabs that show a one-line context note under the section title (translated via
-// proPanel.subtitles.<tab>), so it's always obvious which role a section belongs to.
+// Tabs that show a one-line context note under the section title.
 const TABS_WITH_SUBTITLE = new Set<Tab>(["bookings", "proposals", "sent_bookings", "sent_projects", "saved"]);
 
-// Sidebar layout — two labeled groups + a standalone notifications entry. The
-// "Suscripción" tab only appears when PAYMENTS_ENABLED is on; with the flag off it
-// is never in the nav and its content branch never renders (invisible to users).
-const GROUP_PRO: Tab[] = [
+// Mode membership. The first three render only in "offer" mode, the next three
+// only in "use" mode; "profile" + the shared tabs are valid in both, so the mode
+// for those is taken from the URL (?mode=) or defaults to the account's capability.
+const OFFER_ONLY = new Set<Tab>(["services", "photos", "availability", "bookings", "proposals", "verificacion", "suscripcion"]);
+const USE_ONLY = new Set<Tab>(["sent_bookings", "sent_projects", "saved"]);
+
+// Sidebar order per mode (+ a shared block appended below).
+const OFFER_TABS: Tab[] = [
   "profile", "services", "photos", "availability", "bookings", "proposals", "verificacion",
   ...(PAYMENTS_ENABLED ? (["suscripcion"] as Tab[]) : []),
 ];
-const GROUP_CLIENT: Tab[] = ["sent_bookings", "sent_projects", "saved"];
+const USE_TABS: Tab[] = ["profile", "sent_bookings", "sent_projects", "saved"];
+const SHARED_TABS: Tab[] = ["notifications", "soporte", "cuenta"];
 
-export default function ProDashboardPage() {
+export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const t = useTranslations("proPanel");
   const locale = useLocale();
   const activeTab = (searchParams.get("tab") as Tab) ?? "profile";
+  const modeParam = searchParams.get("mode");
 
   const [pro, setPro] = useState<ProData | null>(null);
+  const [profile, setProfile] = useState<{ full_name?: string; avatar_url?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
   const [supportUnread, setSupportUnread] = useState(0);
-  // A "Completa tu perfil" item the user clicked — drives the profile editor to
-  // open the right section + scroll to the field. `key` changes per click so
-  // re-clicking the same item re-triggers the scroll.
   const [profileFocus, setProfileFocus] = useState<{ field: string; key: number } | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
-  // Count of consecutive "no pro row" fetches. A freshly-created account can lag
-  // (replication/RLS) — we retry a few times before bouncing to registration so
-  // the panel never flashes back to the registration flow (item 6).
   const [noProTries, setNoProTries] = useState(0);
+
+  // The account CAN offer if it has a professional profile (authoritative once
+  // loaded) — fall back to the metadata capability for an instant first paint.
+  const isProvider = !!pro || canOffer(user);
+
+  // Which mode is active. Mode-specific tabs decide it directly (so existing deep
+  // links keep working); ambiguous tabs use ?mode= or the account's capability.
+  const mode: Mode =
+    OFFER_ONLY.has(activeTab) ? "offer"
+    : USE_ONLY.has(activeTab) ? "use"
+    : (modeParam === "offer" || modeParam === "use") ? modeParam
+    : isProvider ? "offer" : "use";
 
   // Suppress the login-redirect while signing out → straight to main, no /login flash.
   const signingOut = useRef(false);
@@ -107,10 +125,7 @@ export default function ProDashboardPage() {
     if (!authLoading && !user && !signingOut.current && !isSigningOut()) router.push("/login");
   }, [user, authLoading, router]);
 
-  // Deep-link focus: `?tab=profile&focus=location` (e.g. Disponibilidad's "Agregar
-  // lugar") lands the pro on the profile editor with that section auto-opened +
-  // scrolled. We mirror the param into `profileFocus` (which ProfileEditor consumes),
-  // then strip it so a refresh doesn't re-scroll and the URL stays clean.
+  // Deep-link focus: `?tab=profile&focus=location` opens the editor at that field.
   useEffect(() => {
     const focus = searchParams.get("focus");
     if (!focus) return;
@@ -134,13 +149,22 @@ export default function ProDashboardPage() {
     setLoading(false);
   }, [user]);
 
-  // Re-fetch pro data whenever the tab changes OR refreshKey increments.
   useEffect(() => {
     if (!user) return;
     fetchPro();
   }, [user, activeTab, refreshKey, fetchPro]);
 
-  // Unread notifications badge (both professional + client notifications — one stream).
+  // Base profile (name/avatar) for the header — works for seekers with no pro row.
+  useEffect(() => {
+    if (!user) return;
+    const supabase = createClient();
+    const load = () => supabase.rpc("get_my_profile").then(({ data }) => { if (data) setProfile(data); });
+    load();
+    window.addEventListener("ccr:profile-updated", load);
+    return () => window.removeEventListener("ccr:profile-updated", load);
+  }, [user, refreshKey]);
+
+  // Unread notifications badge (both capabilities — one stream).
   useEffect(() => {
     if (!user) return;
     const supabase = createClient();
@@ -165,10 +189,13 @@ export default function ProDashboardPage() {
       .then(({ count }) => setSupportUnread(count ?? 0));
   }, [user, activeTab, refreshKey]);
 
-  // No professional record yet — send them to finish registration. Declared
-  // BEFORE any early return so the hook order stays stable across renders.
+  // Inconsistent state ONLY: metadata says this account can offer, but no pro row
+  // exists yet. A freshly-created pro account can lag (replication/RLS) — retry a
+  // few times, then send them to finish the professional profile. A genuine seeker
+  // (cannot offer) is never bounced; a missing pro row is normal for them.
   useEffect(() => {
     if (authLoading || loading || pro || !user) return;
+    if (!canOffer(user)) return;
     if (noProTries < 4) {
       const id = setTimeout(() => fetchPro(), 700);
       return () => clearTimeout(id);
@@ -178,14 +205,15 @@ export default function ProDashboardPage() {
 
   function setTab(tab: Tab) {
     const params = new URLSearchParams({ tab });
-    // `scroll: false` stops Next's default jump-to-top on navigation — otherwise
-    // it fires AFTER our scroll-to-section and bounces the user back up.
+    // Ambiguous tabs (profile + shared) keep the current mode so the switch stays put.
+    if (!OFFER_ONLY.has(tab) && !USE_ONLY.has(tab)) params.set("mode", mode);
     router.push(`/dashboard/profesional?${params}`, { scroll: false });
-    // Always bring the chosen section into view. On mobile the menu sits ABOVE the
-    // content; on desktop the "Completa tu perfil" widget sits above the row and
-    // vanishes on navigate (shifting the layout up) — without this, selecting an
-    // item felt like nothing happened. `scroll-mt` on the content clears the header.
     requestAnimationFrame(() => contentRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  }
+
+  function switchMode(next: Mode) {
+    if (next === mode) return;
+    router.push(`/dashboard/profesional?tab=profile&mode=${next}`, { scroll: false });
   }
 
   function handleSaved() {
@@ -193,16 +221,10 @@ export default function ProDashboardPage() {
   }
 
   async function handleSignOut() {
-    signingOut.current = true; // local guard for THIS page; `signOutToHome` flags it globally too
+    signingOut.current = true;
     await signOutToHome(locale);
   }
 
-  // `!user` is part of this guard ON PURPOSE: on sign-out, `useAuth` (a per-component
-  // hook, not a context) fires `setUser(null)` in this still-mounted page BEFORE the
-  // logout hard-navigation unloads it. `pro` is still populated (its refetch effect
-  // early-returns on null user, so it never clears), so without this guard the body
-  // would render and `user!.id` below (profile tab) would throw `null.id` → error
-  // boundary ("Algo salió mal"). The effect above redirects to /login meanwhile.
   if (authLoading || loading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -211,14 +233,19 @@ export default function ProDashboardPage() {
     );
   }
 
-  // No professional record — redirect handled by the effect above.
-  if (!pro) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
-      </div>
-    );
-  }
+  const displayName =
+    profile?.full_name ||
+    pro?.profiles?.full_name ||
+    (user.user_metadata?.full_name as string) ||
+    user.email?.split("@")[0] ||
+    "";
+  const headerAvatar = profile?.avatar_url || pro?.profiles?.avatar_url || null;
+
+  // Offer mode without a pro row: a genuine seeker (cannot offer) sees the
+  // activation gate; an account that CAN offer but whose row is still loading
+  // (replication lag) sees a spinner instead of a misleading gate.
+  const showOfferGate = mode === "offer" && !pro && !canOffer(user);
+  const offerLoading = mode === "offer" && !pro && canOffer(user);
 
   function navButton(tab: Tab) {
     const badge = tab === "notifications" ? unreadCount : tab === "soporte" ? supportUnread : 0;
@@ -244,43 +271,65 @@ export default function ProDashboardPage() {
     );
   }
 
+  // The Airbnb-style mode switch: a segmented control flipping the whole panel
+  // between using services and offering them.
+  const modeSwitch = (
+    <div className="inline-flex w-full sm:w-auto rounded-xl bg-[#f3f4f6] p-1">
+      {([
+        { key: "use" as Mode, label: t("modeUse") },
+        { key: "offer" as Mode, label: t("modeOffer") },
+      ]).map(({ key, label }) => (
+        <button
+          key={key}
+          onClick={() => switchMode(key)}
+          className={cn(
+            "flex-1 sm:flex-none px-4 py-2 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap",
+            mode === key ? "bg-white text-[#009FD9] shadow-sm" : "text-[#6b7280] hover:text-[#374151]"
+          )}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
       <Navbar />
       <main className="flex-1">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header */}
-          <div className="flex items-center justify-between mb-8 flex-wrap gap-4">
+          <div className="flex items-center justify-between mb-5 flex-wrap gap-4">
             <div className="flex items-center gap-4">
               <Avatar className="h-14 w-14">
-                <AvatarImage src={pro.profiles?.avatar_url} />
+                <AvatarImage src={headerAvatar ?? undefined} />
                 <AvatarFallback className="bg-[#EBF5FB] text-[#009FD9] font-bold">
-                  {getInitials(pro.profiles?.full_name ?? "?")}
+                  {getInitials(displayName || "?")}
                 </AvatarFallback>
               </Avatar>
               <div>
-                <h1 className="text-xl font-bold text-[#111827]">{pro.profiles?.full_name}</h1>
-                <div className="flex items-center gap-2 mt-1 flex-wrap">
-                  {pro.verification_status === "verified" ? (
-                    <Badge variant="verified">{t("identityVerified")}</Badge>
-                  ) : (
-                    // NOT verified → mirror the "Verificado" pill (same shape/size) but
-                    // a neutral grey "Sin verificar"; still clickable to open the
-                    // Verificación tab. Public view shows NO label (no negative tag).
-                    <button
-                      type="button"
-                      onClick={() => setTab("verificacion")}
-                      title={t("verifyInvite")}
-                      className="inline-flex items-center rounded-full border border-[#e5e7eb] bg-[#f3f4f6] px-2.5 py-0.5 text-xs font-medium text-[#6b7280] hover:bg-[#e5e7eb] transition-colors"
-                    >
-                      {t("notVerifiedBadge")}
-                    </button>
-                  )}
-                </div>
+                <h1 className="text-xl font-bold text-[#111827]">{displayName}</h1>
+                {mode === "offer" && pro && (
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                    {pro.verification_status === "verified" ? (
+                      <Badge variant="verified">{t("identityVerified")}</Badge>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setTab("verificacion")}
+                        title={t("verifyInvite")}
+                        className="inline-flex items-center rounded-full border border-[#e5e7eb] bg-[#f3f4f6] px-2.5 py-0.5 text-xs font-medium text-[#6b7280] hover:bg-[#e5e7eb] transition-colors"
+                      >
+                        {t("notVerifiedBadge")}
+                      </button>
+                    )}
+                  </div>
+                )}
+                {mode === "use" && <p className="text-xs text-[#9ca3af] mt-1">{t("modeUseSubtitle")}</p>}
               </div>
             </div>
             <div className="flex items-center gap-2">
-              {pro.slug && (
+              {mode === "offer" && pro?.slug && (
                 <Button variant="outline" size="sm" asChild>
                   <a href={`/es/profesionales/${pro.slug}?preview=1`}>
                     <ExternalLink className="h-4 w-4" />
@@ -295,132 +344,144 @@ export default function ProDashboardPage() {
             </div>
           </div>
 
-          {/* Profile-completion — prominent, full-width at the TOP of the dashboard.
-              The component hides itself once everything is done + verified. */}
-          <ProfileCompletion pro={pro} onGo={(tab, field) => { setTab(tab as Tab); if (field) setProfileFocus({ field, key: Date.now() }); }} />
+          {/* Mode switch — one account, two capabilities. */}
+          <div className="mb-6">{modeSwitch}</div>
 
-          <div className="flex flex-col lg:flex-row gap-6">
-            {/* Sidebar nav — two clearly-labeled role groups */}
-            <nav className="lg:w-60 shrink-0">
-              <Card>
-                <CardContent className="p-2 space-y-3">
-                  <div>
-                    <p className="px-3 pt-1 pb-1.5 text-[10px] font-bold text-[#9ca3af] uppercase tracking-widest">
-                      {t("groupPro")}
-                    </p>
-                    {GROUP_PRO.map(navButton)}
-                  </div>
-                  <div className="border-t border-[#f3f4f6] pt-2">
-                    <p className="px-3 pt-1 pb-1.5 text-[10px] font-bold text-[#9ca3af] uppercase tracking-widest">
-                      {t("groupClient")}
-                    </p>
-                    {GROUP_CLIENT.map(navButton)}
-                  </div>
-                  <div className="border-t border-[#f3f4f6] pt-2">
-                    {navButton("notifications")}
-                    {navButton("soporte")}
-                    {navButton("cuenta")}
-                  </div>
-                </CardContent>
-              </Card>
-            </nav>
-
-            {/* Main content */}
-            <div ref={contentRef} className="flex-1 scroll-mt-20 lg:scroll-mt-0">
-              {/* SaveStatusProvider lets each editor REPORT its autosave state up to the
-                  section title row (HeaderSaveStatus), so "Guardado" shows inline with the
-                  title and never pushes the content below it (no layout jump). */}
-              <SaveStatusProvider>
-              <Card>
-                <CardHeader className="px-6 pt-6 pb-3">
-                  {/* `relative` anchors the autosave status as an ABSOLUTE OVERLAY (top-right);
-                      `pr-28` reserves room so the title text never runs under it. The overlay
-                      is out of flow → it can never push/reflow the content below (no jump). */}
-                  <div className="relative">
-                    <h2 className="text-lg font-semibold text-[#111827] pr-28">{activeTab === "services" ? t("servicesHeading") : t(`tabs.${activeTab}`)}</h2>
-                    <HeaderSaveStatus />
-                  </div>
-                  {TABS_WITH_SUBTITLE.has(activeTab) && (
-                    <p className="text-sm text-[#6b7280] mt-0.5">{t(`subtitles.${activeTab}`)}</p>
-                  )}
-                </CardHeader>
-                <CardContent className="px-6 pt-1 pb-6">
-                  {activeTab === "profile" && (
-                    <ProfileEditor
-                      professionalId={pro.id}
-                      profileId={user.id}
-                      initial={pro}
-                      onSaved={handleSaved}
-                      focusField={profileFocus?.field ?? null}
-                      focusKey={profileFocus?.key}
-                    />
-                  )}
-                  {activeTab === "services" && (
-                    <ServicesEditor
-                      professionalId={pro.id}
-                      primaryCategory={pro.category_id}
-                      initialProfessions={pro.professions ?? []}
-                      initialServices={pro.services ?? []}
-                      onSaved={handleSaved}
-                    />
-                  )}
-                  {activeTab === "photos" && (
-                    <PhotoGallery
-                      professionalId={pro.id}
-                      initialUrls={pro.portfolio_urls ?? []}
-                      initialItems={pro.portfolio_items ?? undefined}
-                      professions={(pro.professions && pro.professions.length > 0) ? pro.professions : (pro.category_id ? [pro.category_id] : [])}
-                      services={pro.services ?? []}
-                      onSaved={handleSaved}
-                    />
-                  )}
-                  {activeTab === "availability" && (
-                    <AvailabilityEditor
-                      professionalId={pro.id}
-                      initialPublic={pro.availability_public ?? true}
-                      initialContactPreference={pro.contact_preference ?? "ambas"}
-                      workplaces={pro.workplaces ?? []}
-                      coverageAreas={pro.coverage_areas ?? []}
-                      travels={String(pro.service_type ?? "").includes("mobile")}
-                      onSaved={handleSaved}
-                    />
-                  )}
-                  {/* Subscription — gated by the feature flag; never renders while off. */}
-                  {activeTab === "suscripcion" && PAYMENTS_ENABLED && <SubscriptionPanel />}
-                  {activeTab === "bookings" && <BookingRequests />}
-                  {activeTab === "proposals" && (
-                    <ProposalsTab categoryId={pro.category_id} services={pro.services ?? []} />
-                  )}
-                  {activeTab === "verificacion" && (
-                    <VerificationPanel
-                      professionalId={pro.id}
-                      status={pro.verification_status ?? "pending"}
-                      reason={pro.verification_reason}
-                      noCrId={pro.no_cr_id ?? false}
-                      onSaved={handleSaved}
-                    />
-                  )}
-
-                  {/* "Contratar servicios" — same account, acting as a client */}
-                  {activeTab === "sent_bookings" && <ClientActivity section="bookings" />}
-                  {activeTab === "sent_projects" && <ClientActivity section="projects" />}
-                  {activeTab === "saved" && <ClientActivity section="saved" />}
-
-                  {activeTab === "notifications" && <NotificationsList />}
-
-                  {activeTab === "soporte" && <SupportTickets onUnreadChange={setSupportUnread} initialTicketId={searchParams.get("ticket")} />}
-
-                  {activeTab === "cuenta" && (
-                    <div className="space-y-6">
-                      <AccountSecuritySection showHeading={false} />
-                      <CloseAccountSection />
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-              </SaveStatusProvider>
+          {/* Offer mode, provider row still loading → spinner (avoids gate flash). */}
+          {offerLoading ? (
+            <div className="flex items-center justify-center py-20">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
             </div>
-          </div>
+          ) : /* Offer mode, not yet a provider → activation gate. */
+          showOfferGate ? (
+            <Card>
+              <CardContent className="px-6 py-12 flex flex-col items-center text-center">
+                <div className="h-16 w-16 rounded-full bg-[#EBF5FB] ring-1 ring-inset ring-[#009FD9]/20 flex items-center justify-center mb-5">
+                  <Sparkles className="h-8 w-8 text-[#009FD9]" />
+                </div>
+                <h2 className="text-xl font-bold text-[#111827] mb-2">{t("offerGateTitle")}</h2>
+                <p className="text-sm text-[#6b7280] max-w-md mb-6 leading-relaxed">{t("offerGateBody")}</p>
+                <Button onClick={() => router.push("/registro/profesional")}>
+                  {t("offerGateCta")} <ArrowRight className="h-4 w-4" />
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              {/* Profile-completion — offer mode only, hides itself once complete. */}
+              {mode === "offer" && pro && (
+                <ProfileCompletion pro={pro} onGo={(tab, field) => { setTab(tab as Tab); if (field) setProfileFocus({ field, key: Date.now() }); }} />
+              )}
+
+              <div className="flex flex-col lg:flex-row gap-6">
+                {/* Sidebar nav — tabs for the active mode + a shared block. */}
+                <nav className="lg:w-60 shrink-0">
+                  <Card>
+                    <CardContent className="p-2 space-y-3">
+                      <div>
+                        {(mode === "offer" ? OFFER_TABS : USE_TABS).map(navButton)}
+                      </div>
+                      <div className="border-t border-[#f3f4f6] pt-2">
+                        {SHARED_TABS.map(navButton)}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </nav>
+
+                {/* Main content */}
+                <div ref={contentRef} className="flex-1 scroll-mt-20 lg:scroll-mt-0">
+                  <SaveStatusProvider>
+                    <Card>
+                      <CardHeader className="px-6 pt-6 pb-3">
+                        <div className="relative">
+                          <h2 className="text-lg font-semibold text-[#111827] pr-28">{activeTab === "services" ? t("servicesHeading") : t(`tabs.${activeTab}`)}</h2>
+                          <HeaderSaveStatus />
+                        </div>
+                        {TABS_WITH_SUBTITLE.has(activeTab) && (
+                          <p className="text-sm text-[#6b7280] mt-0.5">{t(`subtitles.${activeTab}`)}</p>
+                        )}
+                      </CardHeader>
+                      <CardContent className="px-6 pt-1 pb-6">
+                        {/* MI PERFIL — pro editor in offer mode, basic identity in use mode. */}
+                        {activeTab === "profile" && mode === "offer" && pro && (
+                          <ProfileEditor
+                            professionalId={pro.id}
+                            profileId={user.id}
+                            initial={pro}
+                            onSaved={handleSaved}
+                            focusField={profileFocus?.field ?? null}
+                            focusKey={profileFocus?.key}
+                          />
+                        )}
+                        {activeTab === "profile" && mode === "use" && (
+                          <BasicProfileSection canOffer={isProvider} />
+                        )}
+
+                        {activeTab === "services" && pro && (
+                          <ServicesEditor
+                            professionalId={pro.id}
+                            primaryCategory={pro.category_id}
+                            initialProfessions={pro.professions ?? []}
+                            initialServices={pro.services ?? []}
+                            onSaved={handleSaved}
+                          />
+                        )}
+                        {activeTab === "photos" && pro && (
+                          <PhotoGallery
+                            professionalId={pro.id}
+                            initialUrls={pro.portfolio_urls ?? []}
+                            initialItems={pro.portfolio_items ?? undefined}
+                            professions={(pro.professions && pro.professions.length > 0) ? pro.professions : (pro.category_id ? [pro.category_id] : [])}
+                            services={pro.services ?? []}
+                            onSaved={handleSaved}
+                          />
+                        )}
+                        {activeTab === "availability" && pro && (
+                          <AvailabilityEditor
+                            professionalId={pro.id}
+                            initialPublic={pro.availability_public ?? true}
+                            initialContactPreference={pro.contact_preference ?? "ambas"}
+                            workplaces={pro.workplaces ?? []}
+                            coverageAreas={pro.coverage_areas ?? []}
+                            travels={String(pro.service_type ?? "").includes("mobile")}
+                            onSaved={handleSaved}
+                          />
+                        )}
+                        {activeTab === "suscripcion" && PAYMENTS_ENABLED && <SubscriptionPanel />}
+                        {activeTab === "bookings" && <BookingRequests />}
+                        {activeTab === "proposals" && pro && (
+                          <ProposalsTab categoryId={pro.category_id} services={pro.services ?? []} />
+                        )}
+                        {activeTab === "verificacion" && pro && (
+                          <VerificationPanel
+                            professionalId={pro.id}
+                            status={pro.verification_status ?? "pending"}
+                            reason={pro.verification_reason}
+                            noCrId={pro.no_cr_id ?? false}
+                            onSaved={handleSaved}
+                          />
+                        )}
+
+                        {/* "Usar servicios" — the seek capability. */}
+                        {activeTab === "sent_bookings" && <ClientActivity section="bookings" />}
+                        {activeTab === "sent_projects" && <ClientActivity section="projects" />}
+                        {activeTab === "saved" && <ClientActivity section="saved" />}
+
+                        {activeTab === "notifications" && <NotificationsList />}
+                        {activeTab === "soporte" && <SupportTickets onUnreadChange={setSupportUnread} initialTicketId={searchParams.get("ticket")} />}
+                        {activeTab === "cuenta" && (
+                          <div className="space-y-6">
+                            <AccountSecuritySection showHeading={false} />
+                            <CloseAccountSection />
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </SaveStatusProvider>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </main>
       <LandingFooter />

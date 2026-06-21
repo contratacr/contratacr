@@ -505,6 +505,7 @@ export default function RegisterProfessionalPage() {
               // — so it is never auto-verified against the padrón.
               cedula: (noCrId || identityMismatch) ? null : step1Data.cedula.replace(/\D/g, ""),
               role: "professional",
+              is_provider: true,
               onboarding_completed: true,
             },
           },
@@ -582,7 +583,7 @@ export default function RegisterProfessionalPage() {
         // and back never reverts to the role-selection screen (and a converted
         // client stays professional across sessions).
         try {
-          await supabase.auth.updateUser({ data: { role: "professional", onboarding_completed: true } });
+          await supabase.auth.updateUser({ data: { role: "professional", is_provider: true, onboarding_completed: true } });
         } catch { /* best-effort */ }
         // Show the full-screen loader BEFORE navigating so the photo step never
         // flashes back. Hard navigation so the refreshed session (new role) is read.

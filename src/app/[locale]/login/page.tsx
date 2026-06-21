@@ -111,27 +111,9 @@ export default function LoginPage() {
       setError(t("loginError"));
       return;
     }
-    // Resolve the role AUTHORITATIVELY so every login lands on the right panel.
-    // user_metadata.role is often missing/stale (it isn't set for every account),
-    // which used to dump professionals onto the client panel — so fall back to the
-    // profiles table, and finally to the existence of a professionals row.
-    let role = authData.user?.user_metadata?.role as string | undefined;
-    if (role !== "professional" && role !== "client" && authData.user) {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", authData.user.id)
-        .maybeSingle();
-      role = (profile?.role as string | undefined) ?? role;
-      if (!role) {
-        const { data: pro } = await supabase
-          .from("professionals")
-          .select("id")
-          .eq("profile_id", authData.user.id)
-          .maybeSingle();
-        if (pro) role = "professional";
-      }
-    }
+    // Every account uses the ONE unified panel ("Mi panel"); it opens in the right
+    // MODE on its own (offer if the account can offer, otherwise use), so login no
+    // longer needs to resolve a role to pick a panel.
     // Optional post-login destination — see `meaningfulRedirect`: ONLY a /dashboard
     // deep-link (incl. support-ticket links the proxy preserves) or the "projects"
     // alias is honored; a generic/public target (the navbar "Ingresar" current-path,
@@ -151,10 +133,8 @@ export default function LoginPage() {
     }
     const dest =
       redirect === "projects"
-        ? role === "professional"
-          ? "/dashboard/profesional?tab=sent_projects"
-          : "/dashboard/cliente?tab=projects"
-        : `/dashboard/${role === "professional" ? "profesional" : "cliente"}`;
+        ? "/dashboard/profesional?tab=sent_projects"
+        : "/dashboard/profesional";
     window.location.href = `/${locale}${dest}`;
   }
 

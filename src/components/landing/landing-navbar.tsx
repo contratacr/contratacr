@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { signOutToHome } from "@/lib/auth/sign-out";
 import { useAuth } from "@/hooks/use-auth";
+import { canOffer } from "@/lib/auth/capabilities";
 import { getInitials } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { NotificationBell } from "@/components/notifications/notification-bell";
@@ -557,7 +558,7 @@ function AccountMenu({
           </p>
           {!isPro && (
             <a
-              href={`${clientPanelHref}?tab=bookings`}
+              href={clientPanelHref}
               onClick={() => setOpen(false)}
               className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
             >
@@ -675,22 +676,23 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
   // ?redirect= via the proxy and are still honored by /login.
   const loginHref = "/login";
 
-  const role = user?.user_metadata?.role as string | undefined;
-  const isPro = role === "professional";
+  // `isPro` = the account can OFFER services (Airbnb "host" capability). It only
+  // controls menu LABELS/grouping now — everyone uses the ONE unified panel.
+  const isPro = canOffer(user);
   const initials = getInitials(user?.user_metadata?.full_name ?? user?.email ?? "?");
   const displayName = (user?.user_metadata?.full_name as string) || (user?.user_metadata?.name as string) || user?.email?.split("@")[0] || "";
 
-  // A professional is a superset of a client. For a professional the client
-  // ("Contratar servicios") sections live INSIDE the unified pro dashboard, so a
-  // pro never switches panels; a plain client uses the client dashboard.
-  const proPanelHref = `/${locale}/dashboard/profesional`;
-  const clientPanelHref = `/${locale}/dashboard/cliente`;
-  const primaryPanelHref = isPro ? proPanelHref : clientPanelHref;
-  const sentBookingsHref = isPro ? `${proPanelHref}?tab=sent_bookings` : `${clientPanelHref}?tab=bookings`;
-  const sentProjectsHref = isPro ? `${proPanelHref}?tab=sent_projects` : `${clientPanelHref}?tab=projects`;
-  const savedHref = isPro ? `${proPanelHref}?tab=saved` : `${clientPanelHref}?tab=saved`;
-  const accountHref = isPro ? `${proPanelHref}?tab=cuenta` : `${clientPanelHref}?tab=profile`;
-  const notificationsHref = isPro ? `${proPanelHref}?tab=notifications` : `${clientPanelHref}?tab=notifications`;
+  // ONE unified panel ("Mi panel") for every account; it opens in the right mode
+  // by itself. The "Usar servicios" sections live under their own tabs there.
+  const panelHref = `/${locale}/dashboard/profesional`;
+  const proPanelHref = panelHref;
+  const clientPanelHref = panelHref;
+  const primaryPanelHref = panelHref;
+  const sentBookingsHref = `${panelHref}?tab=sent_bookings`;
+  const sentProjectsHref = `${panelHref}?tab=sent_projects`;
+  const savedHref = `${panelHref}?tab=saved`;
+  const accountHref = `${panelHref}?tab=cuenta`;
+  const notificationsHref = `${panelHref}?tab=notifications`;
   // Unread notifications count for the account menu + mobile drawer link badges
   // (the bell handles its own live updates; this refreshes when those open).
   const [notifUnread, setNotifUnread] = useState(0);
