@@ -190,7 +190,7 @@
       "insurer": "Insurer",
       "anyInsurer": "Any insurer",
       "removeInsurer": "Remove insurer filter",
-      "nearMe": "Find services near me",
+      "nearMe": "Search professionals near me",
       "nearMeActive": "Near me (on)",
       "verifiedOnly": "Verified only",
       "geoUnsupported": "Your browser doesn't allow location. Use the province or cantón search.",
@@ -701,7 +701,7 @@
     },
     "client": {
       "title": "Create client account",
-      "subtitle": "Find services near you. Free.",
+      "subtitle": "Find professionals near you. Free.",
       "oauthBanner": "Identity confirmed",
       "fullName": "Full name",
       "fullNamePlaceholder": "Your full name",
@@ -730,7 +730,7 @@
     }
   },
   "footer": {
-    "tagline": "The services marketplace exclusively for Costa Rica. Find the ideal expert and arrange payment directly with them.",
+    "tagline": "The services marketplace made for Costa Rica. Find the ideal professional and arrange payment directly with them.",
     "clients": {
       "title": "For clients",
       "search": "Find services",
@@ -1070,14 +1070,12 @@
     },
     "modeUse": "Client mode",
     "modeOffer": "Professional mode",
-    "modeUseSubtitle": "You are in your client section: searching for and hiring services.",
     "offerGateTitle": "Start offering your services as a professional",
     "offerGateBody": "On ContrataCR, anyone who offers a service is a professional: a trade, caregiving, a class or a profession. Complete your profile once and start receiving clients.",
     "offerGateCta": "Complete my profile",
     "offerInviteTitle": "Do you offer services?",
     "offerInviteBody": "Offer your trade, caregiving or profession and get clients across the country.",
-    "offerInviteCta": "Offer my services",
-    "modeOfferSubtitle": "You are in your professional section: you offer your services and receive clients."
+    "offerInviteCta": "Offer my services"
   },
   "bookingRequests": {
     "empty": "You don't have any requests yet",
@@ -1787,7 +1785,7 @@
     "goToPanel": "Go to my dashboard",
     "searchPros": "Find services",
     "title": "Create a client account",
-    "subtitle": "Find services near you. Free.",
+    "subtitle": "Find professionals near you. Free.",
     "identityConfirmed": "Identity confirmed",
     "fullName": "Full name",
     "namePlaceholder": "Your first and last name",
@@ -2131,7 +2129,7 @@
     "opt1Title": "Search for a service",
     "opt1Desc": "Browse available profiles, review past work, and book an appointment directly.",
     "opt1Step1Title": "Search by category or canton",
-    "opt1Step1Sub": "Filter by service type, province, and canton to find services near you.",
+    "opt1Step1Sub": "Filter by service type, province, and canton to find professionals near you.",
     "opt1Step2Title": "Review the verified profile",
     "opt1Step2Sub": "Success stories, real client reviews, and verified ID.",
     "opt1Step3Title": "Book and coordinate directly",
@@ -2336,7 +2334,7 @@
   "landing": {
     "hero": {
       "headline2": "made easy.",
-      "subtitle": "Home, health, caregiving, classes and much more: describe what you need and we connect you with the right service.",
+      "subtitle": "Home, health, caregiving, classes and much more: describe what you need and we connect you with the right professional.",
       "searchPlaceholder": "What service are you looking for?",
       "searchPlaceholderShort": "What do you need?",
       "location": "Location",
@@ -2348,26 +2346,26 @@
       "headingHighlight": "Your Area."
     },
     "carousel": {
-      "titlePre": "Explore the",
-      "titleHighlight": "most popular services",
-      "subtitle": "From home to health, find the category you need in Costa Rica.",
+      "titlePre": "Explore",
+      "titleHighlight": "services by category",
+      "subtitle": "From home to health, find what you need in Costa Rica.",
       "viewAll": "View all categories"
     },
     "zones": {
       "eyebrow": "Local coverage",
-      "heading": "Find services in your area",
-      "subtitle": "Tap your province on the map, narrow by canton, or let us locate you. Services near you, across the country.",
+      "heading": "Find professionals in your area",
+      "subtitle": "Tap your province on the map, narrow by canton, or let us locate you. Professionals near you, across the country.",
       "mapAria": "Map of Costa Rica by province",
       "coverageCount": "{count, plural, one {# canton covered} other {# cantons covered}}",
       "noPros": "No services yet",
-      "viewPros": "View services",
-      "cantonsWithPros": "Cantons with services",
-      "emptyTitle": "No services in {province} yet.",
+      "viewPros": "View professionals",
+      "cantonsWithPros": "Cantons with professionals",
+      "emptyTitle": "No professionals in {province} yet.",
       "emptyDesc": "We're growing area by area. Try another province or explore all available services.",
       "useLocation": "Use my location",
       "geoUnsupported": "Your browser doesn't allow location. Choose your province on the map.",
       "geoFailed": "We couldn't get your location. Choose your province on the map.",
-      "disclaimer": "We don't promise nationwide coverage: we only show those who actually work in your area."
+      "disclaimer": "We don't promise nationwide coverage: we only show the professionals who actually work in your area."
     },
     "howItWorks": {
       "eyebrow": "How it works",
@@ -2392,7 +2390,7 @@
       "heading": "Why customers choose ContrataCR.",
       "subtitle": "Every day, thousands of Costa Ricans trust ContrataCR to find the service they need — and we back them on every one.",
       "feature0Title": "Get to a hire faster.",
-      "feature0Desc": "Share details about what you need in your own words and we'll find the right service for the job in your area.",
+      "feature0Desc": "Share details about what you need in your own words and we'll find the right professional for the job in your area.",
       "feature1Title": "Only local, verified pros.",
       "feature1Desc": "We only show profiles with verified ID that you can hire in your canton.",
       "feature2Title": "A job done right — guaranteed.",

@@ -324,10 +324,6 @@ export default function DashboardPage() {
                     )}
                   </div>
                 )}
-                {/* The active-mode subtitle teaches each section: cliente = busco
-                    servicios, profesional = ofrezco servicios. */}
-                {mode === "use" && <p className="text-xs text-[#9ca3af] mt-1">{t("modeUseSubtitle")}</p>}
-                {mode === "offer" && pro && <p className="text-xs text-[#9ca3af] mt-1">{t("modeOfferSubtitle")}</p>}
               </div>
             </div>
             {/* Logout lives ONLY in the navbar profile menu — not duplicated here. */}

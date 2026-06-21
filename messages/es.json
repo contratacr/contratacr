@@ -190,7 +190,7 @@
       "insurer": "Aseguradora",
       "anyInsurer": "Cualquier aseguradora",
       "removeInsurer": "Quitar filtro de aseguradora",
-      "nearMe": "Buscar servicios cerca de mí",
+      "nearMe": "Buscar profesionales cerca de mí",
       "nearMeActive": "Cerca de mí (activo)",
       "verifiedOnly": "Solo verificados",
       "geoUnsupported": "Tu navegador no permite ubicación. Usa la búsqueda por provincia o cantón.",
@@ -701,7 +701,7 @@
     },
     "client": {
       "title": "Crear cuenta de cliente",
-      "subtitle": "Encuentra servicios cerca de ti. Gratis.",
+      "subtitle": "Encuentra profesionales cerca de ti. Gratis.",
       "oauthBanner": "Identidad confirmada",
       "fullName": "Nombre completo",
       "fullNamePlaceholder": "Tu nombre completo",
@@ -730,7 +730,7 @@
     }
   },
   "footer": {
-    "tagline": "El mercado de servicios exclusivo para Costa Rica. Encuentra al experto ideal y acuerda el pago directamente con él.",
+    "tagline": "El mercado de servicios hecho para Costa Rica. Encuentra al profesional ideal y acuerda el pago directamente con él.",
     "clients": {
       "title": "Para clientes",
       "search": "Buscar servicios",
@@ -1070,14 +1070,12 @@
     },
     "modeUse": "Modo cliente",
     "modeOffer": "Modo profesional",
-    "modeUseSubtitle": "Estás en tu sección de cliente: buscas y contratas servicios.",
     "offerGateTitle": "Empieza a ofrecer tus servicios como profesional",
     "offerGateBody": "En ContrataCR, cualquiera que ofrece un servicio es un profesional: un oficio, un cuidado, una clase o una profesión. Completa tu perfil una vez y empieza a recibir clientes.",
     "offerGateCta": "Completar mi perfil",
     "offerInviteTitle": "¿Ofreces servicios?",
     "offerInviteBody": "Ofrece tu oficio, cuidado o profesión y recibe clientes en todo el país.",
-    "offerInviteCta": "Ofrecer mis servicios",
-    "modeOfferSubtitle": "Estás en tu sección de profesional: ofreces tus servicios y recibes clientes."
+    "offerInviteCta": "Ofrecer mis servicios"
   },
   "bookingRequests": {
     "empty": "No tienes solicitudes todavía",
@@ -1787,7 +1785,7 @@
     "goToPanel": "Ir a mi panel",
     "searchPros": "Buscar servicios",
     "title": "Crear cuenta de cliente",
-    "subtitle": "Encuentra servicios cerca de ti. Gratis.",
+    "subtitle": "Encuentra profesionales cerca de ti. Gratis.",
     "identityConfirmed": "Identidad confirmada",
     "fullName": "Nombre completo",
     "namePlaceholder": "Tu nombre y apellidos",
@@ -2131,7 +2129,7 @@
     "opt1Title": "Busca un servicio",
     "opt1Desc": "Explora los perfiles disponibles, revisa trabajos anteriores y agenda una cita directamente.",
     "opt1Step1Title": "Busca por categoría o cantón",
-    "opt1Step1Sub": "Filtra por tipo de servicio, provincia y cantón para encontrar servicios cerca de ti.",
+    "opt1Step1Sub": "Filtra por tipo de servicio, provincia y cantón para encontrar profesionales cerca de ti.",
     "opt1Step2Title": "Revisa el perfil verificado",
     "opt1Step2Sub": "Casos de éxito, reseñas de clientes reales y cédula verificada.",
     "opt1Step3Title": "Agenda y coordina directamente",
@@ -2336,7 +2334,7 @@
   "landing": {
     "hero": {
       "headline2": "sin complicaciones.",
-      "subtitle": "Hogar, salud, cuidados, clases y mucho más: describe lo que necesitas y te conectamos con el servicio ideal.",
+      "subtitle": "Hogar, salud, cuidados, clases y mucho más: describe lo que necesitas y te conectamos con el profesional ideal.",
       "searchPlaceholder": "¿Qué servicio estás buscando?",
       "searchPlaceholderShort": "¿Qué necesitas?",
       "location": "Ubicación",
@@ -2348,26 +2346,26 @@
       "headingHighlight": "Tu Zona."
     },
     "carousel": {
-      "titlePre": "Explora los",
-      "titleHighlight": "servicios más buscados",
-      "subtitle": "Del hogar a la salud, encuentra la categoría que necesitas en Costa Rica.",
+      "titlePre": "Explora",
+      "titleHighlight": "servicios por categoría",
+      "subtitle": "Del hogar a la salud, encuentra lo que necesitas en Costa Rica.",
       "viewAll": "Ver todas las categorías"
     },
     "zones": {
       "eyebrow": "Cobertura local",
-      "heading": "Encuentra servicios en tu zona",
-      "subtitle": "Toca tu provincia en el mapa, afina por cantón o deja que te ubiquemos. Servicios cerca de ti, en distintas zonas del país.",
+      "heading": "Encuentra profesionales en tu zona",
+      "subtitle": "Toca tu provincia en el mapa, afina por cantón o deja que te ubiquemos. Profesionales cerca de ti, en distintas zonas del país.",
       "mapAria": "Mapa de Costa Rica por provincia",
       "coverageCount": "{count, plural, one {# cantón con cobertura} other {# cantones con cobertura}}",
       "noPros": "Aún sin servicios",
-      "viewPros": "Ver servicios",
-      "cantonsWithPros": "Cantones con servicios",
-      "emptyTitle": "Aún no hay servicios en {province}.",
+      "viewPros": "Ver profesionales",
+      "cantonsWithPros": "Cantones con profesionales",
+      "emptyTitle": "Aún no hay profesionales en {province}.",
       "emptyDesc": "Estamos creciendo zona por zona. Prueba otra provincia o explora todos los servicios disponibles.",
       "useLocation": "Usar mi ubicación",
       "geoUnsupported": "Tu navegador no permite ubicación. Elige tu provincia en el mapa.",
       "geoFailed": "No pudimos obtener tu ubicación. Elige tu provincia en el mapa.",
-      "disclaimer": "No prometemos cobertura en todo el país: te mostramos solo a quienes realmente trabajan en tu zona."
+      "disclaimer": "No prometemos cobertura en todo el país: te mostramos solo a los profesionales que realmente trabajan en tu zona."
     },
     "howItWorks": {
       "eyebrow": "Cómo funciona",
@@ -2392,7 +2390,7 @@
       "heading": "Por qué los clientes eligen ContrataCR.",
       "subtitle": "Cada día, miles de ticos confían en ContrataCR para encontrar el servicio que necesitan — y los respaldamos en cada uno.",
       "feature0Title": "Llega a una contratación más rápido.",
-      "feature0Desc": "Describe lo que necesitas con tus palabras y encontramos el servicio ideal para el trabajo en tu zona.",
+      "feature0Desc": "Describe lo que necesitas con tus palabras y encontramos al profesional ideal para el trabajo en tu zona.",
       "feature1Title": "Solo ves perfiles locales y verificados.",
       "feature1Desc": "Solo mostramos perfiles con cédula verificada que puedes contratar en tu cantón.",
       "feature2Title": "Un trabajo bien hecho — respaldado.",
