@@ -11,6 +11,7 @@ import {
   Home,
   Leaf,
   Sparkles,
+  FolderPlus,
   Laptop,
   Briefcase,
   Heart,
@@ -181,9 +182,8 @@ export default function CategoriasPage() {
               scroll target the hero search jumps to when a search has no matches. */}
           <FadeInUp delay={GROUPS.length * 30}>
             <div id="sugerir-categoria" className="scroll-mt-24 rounded-2xl border border-gray-100 bg-white px-6 py-7 text-center shadow-sm">
-              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#EBF5FB] ring-1 ring-inset ring-[#009FD9]/20">
-                <Sparkles className="h-6 w-6 text-[#009FD9]" />
-              </div>
+              {/* Flat on-brand icon — no tinted/gray container (sprint 399). */}
+              <FolderPlus className="mx-auto mb-2.5 h-7 w-7 text-[#009FD9]" strokeWidth={1.75} />
               <h2 className="text-lg font-bold text-[#1a2744]">{tp("notListed")}</h2>
               <p className="mx-auto mt-1 max-w-md text-sm text-gray-500">{tp("suggestDescription")}</p>
               <div className="mx-auto mt-4 max-w-md">
