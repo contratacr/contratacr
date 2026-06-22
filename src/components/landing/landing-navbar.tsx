@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import {
   X, Menu, ChevronDown, Search, MapPin,
-  LayoutDashboard, LogOut, Bookmark, CalendarDays, FolderOpen, UserPlus, Briefcase, Compass, Settings, Bell, Globe, ArrowLeftRight, Inbox,
+  LayoutDashboard, LogOut, Bookmark, CalendarDays, FolderOpen, UserPlus, Briefcase, Compass, Settings, Bell, Globe, Inbox,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -554,9 +554,8 @@ function AccountMenu({
           {isPro && (
             <button
               onClick={() => { setOpen(false); onSwitchMode(mode === "offer" ? "use" : "offer"); }}
-              className="w-full flex items-center gap-2.5 px-3 py-2 text-sm font-semibold text-[#009FD9] hover:bg-[#EBF5FB] transition-colors"
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm font-semibold text-[#009FD9] hover:bg-[#EBF5FB] transition-colors"
             >
-              <ArrowLeftRight className="h-4 w-4" />
               <span className="flex-1 text-left">{mode === "offer" ? t("switchToClient") : t("switchToPro")}</span>
               {otherModeUnread > 0 && (
                 <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">{otherModeUnread > 9 ? "9+" : otherModeUnread}</span>
@@ -1305,8 +1304,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                 {/* FULL MODE SWITCH (providers) — flips the whole experience; the badge
                     surfaces the other mode's unread without switching. */}
                 {isPro && (
-                  <button onClick={() => switchMode(mode === "offer" ? "use" : "offer")} className="w-full flex items-center gap-3 px-2 py-2.5 rounded-lg text-sm font-semibold text-[#009FD9] hover:bg-[#EBF5FB] transition-colors">
-                    <ArrowLeftRight className="h-4 w-4 shrink-0" />
+                  <button onClick={() => switchMode(mode === "offer" ? "use" : "offer")} className="w-full flex items-center gap-2 px-2 py-2.5 rounded-lg text-sm font-semibold text-[#009FD9] hover:bg-[#EBF5FB] transition-colors">
                     <span className="flex-1 text-left">{mode === "offer" ? t("switchToClient") : t("switchToPro")}</span>
                     {otherModeUnread > 0 && (
                       <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white shrink-0">{otherModeUnread > 9 ? "9+" : otherModeUnread}</span>

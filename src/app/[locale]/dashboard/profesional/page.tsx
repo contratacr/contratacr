@@ -36,6 +36,7 @@ import { createClient } from "@/lib/supabase/client";
 import { getInitials } from "@/lib/utils";
 import { canOffer } from "@/lib/auth/capabilities";
 import { useMode, type Mode } from "@/hooks/use-mode";
+import { notificationContext } from "@/lib/notification-link";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
@@ -92,6 +93,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const t = useTranslations("proPanel");
+  const tHeader = useTranslations("header");
   const activeTab = (searchParams.get("tab") as Tab) ?? "profile";
 
   const [pro, setPro] = useState<ProData | null>(null);
@@ -99,6 +101,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [otherModeUnread, setOtherModeUnread] = useState(0);
   const [supportUnread, setSupportUnread] = useState(0);
   const [profileFocus, setProfileFocus] = useState<{ field: string; key: number } | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -167,17 +170,29 @@ export default function DashboardPage() {
     return () => window.removeEventListener("ccr:profile-updated", load);
   }, [user, refreshKey]);
 
-  // Unread notifications badge (both capabilities — one stream).
+  // Unread notifications, bucketed by mode (per-mode model): the sidebar Notificaciones
+  // badge shows the ACTIVE mode's unread (its own + account-level), and the switch shows
+  // the OTHER mode's pending count so the user is aware without switching.
   useEffect(() => {
     if (!user) return;
     const supabase = createClient();
     supabase
       .from("notifications")
-      .select("id", { count: "exact" })
+      .select("type")
       .eq("user_id", user.id)
       .eq("read", false)
-      .then(({ count }) => setUnreadCount(count ?? 0));
-  }, [user, activeTab, refreshKey]);
+      .then(({ data }) => {
+        let pro = 0, cli = 0, neu = 0;
+        for (const n of data ?? []) {
+          const ctx = notificationContext(n.type as string);
+          if (ctx === "professional") pro++;
+          else if (ctx === "client") cli++;
+          else neu++;
+        }
+        setUnreadCount((mode === "offer" ? pro : cli) + neu);
+        setOtherModeUnread(mode === "offer" ? cli : pro);
+      });
+  }, [user, activeTab, refreshKey, mode]);
 
   // Unread support replies → badge on the Soporte sidebar item.
   useEffect(() => {
@@ -211,6 +226,15 @@ export default function DashboardPage() {
     // also re-asserts its mode via the effect above, keeping the navbar switch in sync.
     router.push(`/dashboard/profesional?tab=${tab}`, { scroll: false });
     requestAnimationFrame(() => contentRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  }
+
+  // Full mode switch from inside the panel (same action as the navbar). Resets to the
+  // shared "profile" tab so a mode-specific tab from the old world doesn't force the mode
+  // back (the deep-link override only applies while on an offer-only/use-only tab).
+  function switchMode(next: Mode) {
+    if (next === mode) return;
+    setMode(next);
+    router.push("/dashboard/profesional?tab=profile", { scroll: false });
   }
 
   function handleSaved() {
@@ -318,7 +342,22 @@ export default function DashboardPage() {
             )}
           </div>
 
-          <div className="mb-6" />
+          {/* FULL mode switch, also surfaced HERE (not just the navbar menu) so it's easy to
+              find — especially on mobile, where this sits right under the header. Text-only
+              (no icon), full-width on mobile; the badge shows the other world's unread. */}
+          {isProvider && (
+            <div className="mb-6">
+              <button
+                onClick={() => switchMode(mode === "offer" ? "use" : "offer")}
+                className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-[#009FD9]/40 bg-white px-4 py-2.5 text-sm font-semibold text-[#009FD9] hover:bg-[#EBF5FB] transition-colors"
+              >
+                {mode === "offer" ? tHeader("switchToClient") : tHeader("switchToPro")}
+                {otherModeUnread > 0 && (
+                  <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">{otherModeUnread > 9 ? "9+" : otherModeUnread}</span>
+                )}
+              </button>
+            </div>
+          )}
 
           {/* Offer mode, provider row still loading → spinner (avoids gate flash). */}
           {offerLoading ? (
