@@ -90,6 +90,9 @@
     "switchToClient": "Cambiar a cliente",
     "proMode": "Modo profesional",
     "clientMode": "Modo cliente",
+    "modeClientShort": "Cliente",
+    "modeProShort": "Profesional",
+    "modeSwitchAria": "Cambiar entre modo cliente y modo profesional",
     "receivedRequests": "Solicitudes recibidas",
     "myProposals": "Mis propuestas"
   },

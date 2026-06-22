@@ -112,6 +112,72 @@ function LanguageTogglePill() {
   );
 }
 
+/* ─── Mode segmented control (Cliente ⇆ Profesional) ───
+   The canonical pattern for switching between two views/contexts: BOTH modes
+   shown side by side, the active one FILLED (brand), the inactive one muted but
+   clearly tappable — tapping it switches the whole experience. (Carbon-style
+   content switcher / iOS segmented control.) Accessible (role=tablist/tab,
+   ArrowLeft/Right operable), smooth fill transition, fits the navbar at ~360px.
+   `block` makes the two segments share the full width (used in the account menu
+   + mobile drawer); the inline default is used in the navbar bar. */
+function ModeSwitcher({
+  mode, onSwitch, otherModeUnread, block = false, className,
+}: {
+  mode: Mode;
+  onSwitch: (m: Mode) => void;
+  otherModeUnread: number;
+  block?: boolean;
+  className?: string;
+}) {
+  const t = useTranslations("header");
+  const segments: { value: Mode; label: string }[] = [
+    { value: "use", label: t("modeClientShort") },
+    { value: "offer", label: t("modeProShort") },
+  ];
+  function onKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "ArrowLeft") { e.preventDefault(); onSwitch("use"); }
+    else if (e.key === "ArrowRight") { e.preventDefault(); onSwitch("offer"); }
+  }
+  return (
+    <div
+      role="tablist"
+      aria-label={t("modeSwitchAria")}
+      onKeyDown={onKeyDown}
+      className={cn(
+        "inline-flex shrink-0 items-center gap-0.5 rounded-full bg-[#f3f4f6] p-0.5 select-none",
+        block && "flex w-full",
+        className,
+      )}
+    >
+      {segments.map((seg) => {
+        const active = mode === seg.value;
+        return (
+          <button
+            key={seg.value}
+            role="tab"
+            type="button"
+            aria-selected={active}
+            tabIndex={active ? 0 : -1}
+            onClick={() => onSwitch(seg.value)}
+            className={cn(
+              "relative inline-flex items-center justify-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-semibold whitespace-nowrap transition-all duration-200",
+              block && "flex-1",
+              active
+                ? "bg-[#008ce0] text-white shadow-[0_1px_3px_rgba(0,0,0,0.15)]"
+                : "text-[#6b7280] hover:text-[#162543]",
+            )}
+          >
+            {seg.label}
+            {!active && otherModeUnread > 0 && (
+              <span className="inline-flex h-[16px] min-w-[16px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[9px] font-bold leading-none text-white">{otherModeUnread > 9 ? "9+" : otherModeUnread}</span>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 /* ─── Header data ───
    The "Categorías" mega-menu shows a CURATED set of real categories — every
    `id` below is verified against `categories.ts` (the single source of truth),
@@ -549,23 +615,12 @@ function AccountMenu({
             <p className="text-xs text-[#9ca3af] truncate">{user.email}</p>
           </div>
 
-          {/* MODE SWITCH — a short, clearly-tappable pill button (just the action toward the
-              other mode); the CURRENT mode is the section eyebrow below. Providers only. */}
+          {/* MODE SWITCH — the SAME segmented control (both modes visible, tap to switch).
+              Providers only; a client-only account just sees the "Mi cuenta" heading. */}
           {isPro ? (
-            <>
-              <div className="px-3 pt-1 pb-1.5">
-                <button
-                  onClick={() => { setOpen(false); onSwitchMode(mode === "offer" ? "use" : "offer"); }}
-                  className="flex w-full items-center justify-center gap-2 rounded-full bg-[#EBF5FB] px-4 py-2 text-[13px] font-semibold text-[#162543] ring-1 ring-inset ring-[#009FD9]/25 hover:bg-[#e1eefb] hover:ring-[#009FD9]/45 active:scale-[0.98] transition-all"
-                >
-                  {mode === "offer" ? t("switchToClient") : t("switchToPro")}
-                  {otherModeUnread > 0 && (
-                    <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold leading-none text-white">{otherModeUnread > 9 ? "9+" : otherModeUnread}</span>
-                  )}
-                </button>
-              </div>
-              <p className="px-3 pt-1 pb-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{mode === "offer" ? t("proMode") : t("clientMode")}</p>
-            </>
+            <div className="px-3 pt-1 pb-2">
+              <ModeSwitcher mode={mode} onSwitch={(m) => { setOpen(false); onSwitchMode(m); }} otherModeUnread={otherModeUnread} block />
+            </div>
           ) : (
             <p className="px-3 pt-2 pb-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t("myAccount")}</p>
           )}
@@ -924,20 +979,11 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                 )}
               </Link>
 
-              {/* MOBILE mode switch — RIGHT in the navbar bar (lg:hidden), so providers can flip
-                  the whole experience without opening any menu. Text-based, brand-tint pill with
-                  the other-mode unread badge; only for accounts with both modes. */}
+              {/* MOBILE mode switch — the SAME SEGMENTED CONTROL right in the navbar bar
+                  (lg:hidden), so providers flip the whole experience without opening any menu.
+                  Both modes visible; only for accounts with both modes. */}
               {user && isPro && !mobileInline && (
-                <button
-                  onClick={() => switchMode(mode === "offer" ? "use" : "offer")}
-                  aria-label={mode === "offer" ? t("switchToClient") : t("switchToPro")}
-                  className="lg:hidden inline-flex shrink-0 items-center gap-1.5 rounded-full bg-[#EBF5FB] px-3 py-1.5 text-[11px] font-semibold text-[#162543] ring-1 ring-inset ring-[#009FD9]/20 hover:bg-[#e1eefb] active:scale-[0.98] transition-all whitespace-nowrap"
-                >
-                  {mode === "offer" ? t("switchToClient") : t("switchToPro")}
-                  {otherModeUnread > 0 && (
-                    <span className="inline-flex h-[16px] min-w-[16px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[9px] font-bold leading-none text-white">{otherModeUnread > 9 ? "9+" : otherModeUnread}</span>
-                  )}
-                </button>
+                <ModeSwitcher mode={mode} onSwitch={switchMode} otherModeUnread={otherModeUnread} className="lg:hidden" />
               )}
 
               {/* MOBILE inline slot (search + filters) — only when provided, only <lg. */}
@@ -1041,18 +1087,10 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                         {t("offerServices")}
                       </Link>
                     )}
-                    {/* DESKTOP mode switch — right in the navbar bar (providers only): flip the
-                        whole experience from anywhere. Text-based brand-tint pill + unread badge. */}
+                    {/* DESKTOP mode switch — a SEGMENTED CONTROL right in the navbar bar
+                        (providers only): both modes visible, tap to flip the whole experience. */}
                     {isPro && (
-                      <button
-                        onClick={() => switchMode(mode === "offer" ? "use" : "offer")}
-                        className="inline-flex items-center gap-1.5 rounded-full bg-[#EBF5FB] px-3.5 py-1.5 text-[13px] font-semibold text-[#162543] ring-1 ring-inset ring-[#009FD9]/20 hover:bg-[#e1eefb] hover:ring-[#009FD9]/40 active:scale-[0.98] transition-all whitespace-nowrap"
-                      >
-                        {mode === "offer" ? t("switchToClient") : t("switchToPro")}
-                        {otherModeUnread > 0 && (
-                          <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold leading-none text-white">{otherModeUnread > 9 ? "9+" : otherModeUnread}</span>
-                        )}
-                      </button>
+                      <ModeSwitcher mode={mode} onSwitch={switchMode} otherModeUnread={otherModeUnread} className="mr-1" />
                     )}
                     <a
                       href={primaryPanelHref}
@@ -1334,17 +1372,11 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     <p className="text-xs text-gray-400 truncate">{user.email}</p>
                   </div>
                 </div>
-                {/* MODE SWITCH — a short, clearly-tappable pill button; current mode = eyebrow below. */}
+                {/* MODE SWITCH — the SAME segmented control (both modes visible, tap to switch). */}
                 {isPro ? (
-                  <>
-                    <button onClick={() => switchMode(mode === "offer" ? "use" : "offer")} className="flex w-full items-center justify-center gap-2 mb-1 rounded-full bg-[#EBF5FB] px-4 py-2.5 text-sm font-semibold text-[#162543] ring-1 ring-inset ring-[#009FD9]/25 hover:bg-[#e1eefb] active:scale-[0.98] transition-all">
-                      {mode === "offer" ? t("switchToClient") : t("switchToPro")}
-                      {otherModeUnread > 0 && (
-                        <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold leading-none text-white">{otherModeUnread > 9 ? "9+" : otherModeUnread}</span>
-                      )}
-                    </button>
-                    <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{mode === "offer" ? t("proMode") : t("clientMode")}</p>
-                  </>
+                  <div className="mb-1.5 px-1">
+                    <ModeSwitcher mode={mode} onSwitch={switchMode} otherModeUnread={otherModeUnread} block />
+                  </div>
                 ) : (
                   <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t("myAccount")}</p>
                 )}

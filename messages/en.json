@@ -90,6 +90,9 @@
     "switchToClient": "Switch to client",
     "proMode": "Professional mode",
     "clientMode": "Client mode",
+    "modeClientShort": "Client",
+    "modeProShort": "Professional",
+    "modeSwitchAria": "Switch between client and professional mode",
     "receivedRequests": "Requests received",
     "myProposals": "My proposals"
   },

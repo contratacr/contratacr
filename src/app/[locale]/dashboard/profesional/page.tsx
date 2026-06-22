@@ -102,7 +102,6 @@ export default function DashboardPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const t = useTranslations("proPanel");
-  const tHeader = useTranslations("header");
   const activeTab = (searchParams.get("tab") as Tab) ?? "profile";
 
   const [pro, setPro] = useState<ProData | null>(null);
@@ -110,7 +109,6 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [otherModeUnread, setOtherModeUnread] = useState(0);
   const [supportUnread, setSupportUnread] = useState(0);
   const [profileFocus, setProfileFocus] = useState<{ field: string; key: number } | null>(null);
   // Mobile "Más" bottom-sheet (the overflow of the bottom nav bar).
@@ -201,7 +199,6 @@ export default function DashboardPage() {
           else neu++;
         }
         setUnreadCount((mode === "offer" ? pro : cli) + neu);
-        setOtherModeUnread(mode === "offer" ? cli : pro);
       });
   }, [user, activeTab, refreshKey, mode]);
 
@@ -242,15 +239,6 @@ export default function DashboardPage() {
     // fought the fixed mobile bottom bar (its backdrop-blur made "Más" flicker / feel covered
     // during the animated scroll); an instant window scroll never interferes with it.
     requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "auto" }));
-  }
-
-  // Full mode switch from inside the panel (same action as the navbar). Resets to the
-  // shared "profile" tab so a mode-specific tab from the old world doesn't force the mode
-  // back (the deep-link override only applies while on an offer-only/use-only tab).
-  function switchMode(next: Mode) {
-    if (next === mode) return;
-    setMode(next);
-    router.push("/dashboard/profesional?tab=profile", { scroll: false });
   }
 
   function handleSaved() {
@@ -376,23 +364,8 @@ export default function DashboardPage() {
             )}
           </div>
 
-          {/* FULL mode switch, also surfaced HERE (not just the navbar menu) so it's easy to
-              find — especially on mobile, where this sits right under the header. Text-only
-              (no icon), same brand-tint chip + brand-blue count pill as the navbar; full-width
-              on mobile. */}
-          {isProvider && (
-            <div className="mb-6">
-              <button
-                onClick={() => switchMode(mode === "offer" ? "use" : "offer")}
-                className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-full bg-[#EBF5FB] px-5 py-2 text-sm font-semibold text-[#162543] ring-1 ring-inset ring-[#009FD9]/25 hover:bg-[#e1eefb] hover:ring-[#009FD9]/45 active:scale-[0.98] transition-all"
-              >
-                {mode === "offer" ? tHeader("switchToClient") : tHeader("switchToPro")}
-                {otherModeUnread > 0 && (
-                  <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold leading-none text-white">{otherModeUnread > 9 ? "9+" : otherModeUnread}</span>
-                )}
-              </button>
-            </div>
-          )}
+          {/* The mode switch lives ONLY in the navbar (a segmented control) now — not here.
+              The panel just reflects the current mode via the header eyebrow above. */}
 
           {/* Offer mode, provider row still loading → spinner (avoids gate flash). */}
           {offerLoading ? (
