@@ -57,25 +57,20 @@ export function StatusFilterTabs({
   );
 }
 
-// PROYECTOS / PROPUESTAS keep the 4 buckets — "Pendientes" is still real there (a
-// published solicitud is OPEN/receiving propuestas; a pro's propuesta is awaiting a
-// decision). Pendientes leads (it's what needs action).
+// ONE consistent set everywhere (sprint 430): bookings AUTO-CONFIRM and published
+// solicitudes are simply live until they finish, so there is no real "Pendiente"
+// stage anymore. The three lifecycles (bookings, published projects, a pro's
+// proposals) all use **Activas · Finalizadas · Canceladas** — "Activas" replaces the
+// old "Confirmadas"/"Pendientes" (an active/ongoing item), so the names match the
+// auto-confirm reality and read the same across solicitudes recibidas, mis
+// publicaciones and oportunidades.
 const STATUS_TABS: readonly FilterTab[] = [
-  { id: "pendientes" },
-  { id: "confirmadas" },
+  { id: "activas" },
   { id: "finalizadas" },
   { id: "canceladas" },
 ];
 export const PROYECTO_TABS = STATUS_TABS;
-
-// SOLICITUDES (bookings) — bookings now AUTO-CONFIRM (no manual-accept "pendiente"
-// step), so the solicitud tabs drop "Pendientes": Confirmadas (active/upcoming) ·
-// Finalizadas · Canceladas. Any legacy `pending` booking is bucketed as Confirmada.
-export const SOLICITUD_TABS: readonly FilterTab[] = [
-  { id: "confirmadas" },
-  { id: "finalizadas" },
-  { id: "canceladas" },
-];
+export const SOLICITUD_TABS = STATUS_TABS;
 
 // A booking's appointment day has fully passed (compared to now, end-of-day).
 function isPastAppointment(scheduledDate?: string | null): boolean {
@@ -92,8 +87,8 @@ export function solicitudBucket(status: string, scheduledDate?: string | null): 
   if (status === "cancelled" || status === "rescheduled") return "canceladas";
   if (status === "completed" || status === "awaiting_confirmation") return "finalizadas";
   if (isPastAppointment(scheduledDate)) return "finalizadas";
-  // pending (legacy) + confirmed + in_progress are all active → Confirmadas.
-  return "confirmadas";
+  // pending (legacy) + confirmed + in_progress are all active → Activas.
+  return "activas";
 }
 export function solicitudMatches(filter: string, status: string, scheduledDate?: string | null): boolean {
   return solicitudBucket(status, scheduledDate) === filter;
@@ -105,8 +100,8 @@ export function solicitudMatches(filter: string, status: string, scheduledDate?:
 export function proyectoBucket(status: string): string {
   if (status === "cancelled") return "canceladas";
   if (status === "completed") return "finalizadas";
-  if (status === "in_progress" || status === "awaiting_confirmation") return "confirmadas";
-  return "pendientes"; // open / anything else
+  // open (receiving propuestas) + in_progress + awaiting are all live → Activas.
+  return "activas";
 }
 export function proyectoMatches(filter: string, status: string): boolean {
   return proyectoBucket(status) === filter;
@@ -118,11 +113,11 @@ export function proyectoMatches(filter: string, status: string): boolean {
 // the proposal was accepted.
 export function proposalBucket(proposalStatus: string, projectStatus?: string | null): string {
   if (proposalStatus === "declined") return "canceladas";
-  if (proposalStatus === "pending") return "pendientes";
+  if (proposalStatus === "pending") return "activas"; // your live proposal (awaiting a decision)
   // accepted → follow the project
   if (projectStatus === "cancelled") return "canceladas";
   if (projectStatus === "completed") return "finalizadas";
-  return "confirmadas";
+  return "activas";
 }
 export function proposalMatches(filter: string, proposalStatus: string, projectStatus?: string | null): boolean {
   return proposalBucket(proposalStatus, projectStatus) === filter;
@@ -130,7 +125,7 @@ export function proposalMatches(filter: string, proposalStatus: string, projectS
 
 // Build a {bucket: count} map for the count badges. Pass the items' resolved buckets.
 export function bucketCounts(buckets: string[]): Record<string, number> {
-  const counts: Record<string, number> = { pendientes: 0, confirmadas: 0, finalizadas: 0, canceladas: 0 };
+  const counts: Record<string, number> = { activas: 0, finalizadas: 0, canceladas: 0 };
   for (const b of buckets) counts[b] = (counts[b] ?? 0) + 1;
   return counts;
 }
@@ -141,7 +136,7 @@ export function bucketCounts(buckets: string[]): Record<string, number> {
 // the badge again. Genuine SUB-states (in_progress, awaiting_confirmation,
 // rescheduled, declined-vs-cancelled, …) return false → the badge IS still shown.
 const SOLICITUD_PRIMARY: Record<string, string[]> = {
-  confirmadas: ["confirmed", "pending"], // both read as an active "Confirmada"
+  activas: ["confirmed", "pending"], // both read as an active appointment
   finalizadas: ["completed", "confirmed"], // a past confirmed also reads as finalizada
   canceladas: ["cancelled"],
 };
@@ -149,8 +144,9 @@ export function solicitudStatusRedundant(status: string, scheduledDate?: string 
   return SOLICITUD_PRIMARY[solicitudBucket(status, scheduledDate)]?.includes(status) ?? false;
 }
 const PROYECTO_PRIMARY: Record<string, string[]> = {
-  pendientes: ["open"],
-  confirmadas: ["in_progress"],
+  // `open` is intentionally NOT primary → an open (receiving-propuestas) project keeps
+  // its "Abierto" badge inside Activas, distinct from an assigned (in_progress) one.
+  activas: ["in_progress"],
   finalizadas: ["completed"],
   canceladas: ["cancelled"],
 };
@@ -158,11 +154,12 @@ export function proyectoStatusRedundant(status: string): boolean {
   return PROYECTO_PRIMARY[proyectoBucket(status)]?.includes(status) ?? false;
 }
 export function proposalStatusRedundant(proposalStatus: string, projectStatus?: string | null): boolean {
-  if (proposalStatus === "pending") return true; // Pendientes
   if (proposalStatus === "declined") return true; // Canceladas (primary)
   if (proposalStatus === "accepted") {
-    if (projectStatus === "in_progress") return true; // Confirmadas (primary)
+    if (projectStatus === "in_progress") return true; // Activas (primary)
     if (projectStatus === "completed") return true; // Finalizadas (primary)
   }
-  return false; // accepted+awaiting (En espera), accepted+cancelled (Cancelada) → keep
+  // pending (En espera, awaiting a decision) + accepted+awaiting + accepted+cancelled →
+  // keep the sub-state badge so the live "Activas" tab still distinguishes them.
+  return false;
 }

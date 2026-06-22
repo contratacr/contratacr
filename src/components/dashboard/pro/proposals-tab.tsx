@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { FolderOpen, Send, ChevronDown, ChevronUp } from "lucide-react";
+import { FolderOpen, Send, ChevronDown } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -99,7 +99,7 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
   const [proposalForms, setProposalForms] = useState<Record<string, { price: string; message: string }>>({});
   const [submitting, setSubmitting] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState<Set<string>>(new Set());
-  const [projectFilter, setProjectFilter] = useState("pendientes");
+  const [projectFilter, setProjectFilter] = useState("activas");
 
   async function fetchOpenProjects() {
     setLoading(true);
@@ -264,49 +264,56 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
                 const alreadySubmitted = submitted.has(project.id);
                 const form = proposalForms[project.id] ?? { price: "", message: "" };
                 const proposalCount = project.proposals?.length ?? 0;
+                const budgetText = (project.budget_min || project.budget_max)
+                  ? (project.budget_min && project.budget_max
+                      ? t("range", { min: `₡${project.budget_min.toLocaleString("es-CR")}`, max: `₡${project.budget_max.toLocaleString("es-CR")}` })
+                      : project.budget_min
+                      ? t("from", { amount: `₡${project.budget_min.toLocaleString("es-CR")}` })
+                      : t("upTo", { amount: `₡${project.budget_max!.toLocaleString("es-CR")}` }))
+                  : t("budgetTBD");
+                const hasZoneDeadline = (project.provincias?.name || project.cantones?.name) || project.timeline;
 
                 return (
                   <Card key={project.id}>
-                    <CardContent className="p-4 flex flex-col gap-2.5">
-                      {/* MODERN COMPACT LEAD CARD (consistent with Solicitudes recibidas): (1) the
-                          request title + who posted it; (2) the PRESUPUESTO highlighted as the scan
-                          anchor + zona/plazo; (3) a short description; (4) the count + "Proponer". */}
-                      <div className="flex items-start gap-2.5">
-                        <Avatar className="h-10 w-10 shrink-0">
-                          <AvatarImage src={project.profiles?.avatar_url} className="object-cover" />
-                          <AvatarFallback className="text-sm bg-[#EBF5FB] text-[#009FD9] font-bold">
-                            {getInitials(project.profiles?.full_name ?? "?")}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-2">
-                            <p className="text-[15px] font-bold text-[#111827] min-w-0">{project.title}</p>
-                            {alreadySubmitted ? (
-                              <Badge variant="success" className="shrink-0">{t("alreadyProposed")}</Badge>
-                            ) : project.categories?.name ? (
-                              <Badge variant="muted" className="shrink-0 text-[11px]">{project.categories.name}</Badge>
-                            ) : null}
-                          </div>
-                          {project.profiles?.full_name && (
-                            <p className="mt-0.5 text-[12.5px] text-[#6b7280] truncate">{project.profiles.full_name}</p>
-                          )}
+                    {/* EXPANDABLE OPORTUNIDAD (sprint 430): COLLAPSED shows essentials — title ·
+                        presupuesto · estado/categoría. Tapping reveals who posted, zona·plazo, the
+                        full description, the proposals count, and the "Proponer" form. */}
+                    <button
+                      type="button"
+                      onClick={() => setExpandedProject(isExpanded ? null : project.id)}
+                      aria-expanded={isExpanded}
+                      className="w-full text-left p-4 flex items-start gap-2.5 hover:bg-[#fafafa] transition-colors"
+                    >
+                      <Avatar className="h-10 w-10 shrink-0">
+                        <AvatarImage src={project.profiles?.avatar_url} className="object-cover" />
+                        <AvatarFallback className="text-sm bg-[#EBF5FB] text-[#009FD9] font-bold">
+                          {getInitials(project.profiles?.full_name ?? "?")}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <span className="text-[15px] font-bold text-[#111827] min-w-0">{project.title}</span>
+                          {alreadySubmitted ? (
+                            <Badge variant="success" className="shrink-0">{t("alreadyProposed")}</Badge>
+                          ) : project.categories?.name ? (
+                            <Badge variant="muted" className="shrink-0 text-[11px]">{project.categories.name}</Badge>
+                          ) : null}
                         </div>
-                      </div>
-
-                      {/* Presupuesto highlight — the number the pro decides on. */}
-                      <div className="rounded-xl border border-[#eef0f2] bg-[#f9fafb] px-3 py-2.5">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.05em] text-[#9ca3af]">{t("fieldBudget").replace(":", "")}</p>
-                        <p className="mt-0.5 text-[15px] font-bold text-[#111827] leading-tight">
-                          {(project.budget_min || project.budget_max)
-                            ? (project.budget_min && project.budget_max
-                                ? t("range", { min: `₡${project.budget_min.toLocaleString("es-CR")}`, max: `₡${project.budget_max.toLocaleString("es-CR")}` })
-                                : project.budget_min
-                                ? t("from", { amount: `₡${project.budget_min.toLocaleString("es-CR")}` })
-                                : t("upTo", { amount: `₡${project.budget_max!.toLocaleString("es-CR")}` }))
-                            : <span className="text-[#9ca3af] font-semibold">{t("budgetTBD")}</span>}
+                        <p className="mt-0.5 text-[13px] truncate">
+                          <span className="text-[#9ca3af]">{t("fieldBudget")}</span>{" "}
+                          <span className="font-semibold text-[#111827]">{budgetText}</span>
                         </p>
-                        {((project.provincias?.name || project.cantones?.name) || project.timeline) && (
-                          <p className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[12.5px] text-[#6b7280]">
+                      </div>
+                      <ChevronDown className={cn("h-4 w-4 text-[#9ca3af] shrink-0 mt-0.5 transition-transform duration-200", isExpanded && "rotate-180")} />
+                    </button>
+
+                    {isExpanded && (
+                      <div className="px-4 pb-4 pt-3 border-t border-[#f3f4f6] flex flex-col gap-2.5">
+                        {project.profiles?.full_name && (
+                          <p className="text-[12.5px] text-[#6b7280] truncate">{project.profiles.full_name}</p>
+                        )}
+                        {hasZoneDeadline && (
+                          <p className="flex flex-wrap gap-x-3 gap-y-0.5 text-[12.5px] text-[#6b7280]">
                             {(project.provincias?.name || project.cantones?.name) && (
                               <span><span className="text-[#9ca3af]">{t("fieldZone")}</span> {[project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ")}</span>
                             )}
@@ -315,63 +322,48 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
                             )}
                           </p>
                         )}
-                      </div>
-
-                      {/* Description — lean by default (2 lines); the full text is read on the
-                          project itself / when proposing. */}
-                      {project.description && (
-                        <p className="text-[13px] text-[#374151] line-clamp-2">{project.description}</p>
-                      )}
-
-                      {/* Footer — proposals count + the "Proponer" action. */}
-                      <div className="flex items-center justify-between gap-2">
+                        {project.description && (
+                          <p className="text-[13px] text-[#374151] whitespace-pre-line">{project.description}</p>
+                        )}
                         <span className="text-xs text-[#9ca3af]">{t("proposalsCount", { count: proposalCount })}</span>
+
                         {!alreadySubmitted && (
-                          <button
-                            onClick={() => setExpandedProject(isExpanded ? null : project.id)}
-                            className="inline-flex items-center gap-1 rounded-full bg-[#EBF5FB] px-3.5 py-1.5 text-[13px] font-semibold text-[#0089bb] hover:bg-[#dceafc] transition-colors shrink-0"
-                          >
-                            {isExpanded ? (<>{t("close")} <ChevronUp className="h-4 w-4" /></>) : (<>{t("propose")} <ChevronDown className="h-4 w-4" /></>)}
-                          </button>
+                          <div className="pt-2 border-t border-[#f3f4f6] flex flex-col gap-3">
+                            <div>
+                              <label className="text-xs font-medium text-[#374151] block mb-1.5">
+                                {t("yourPrice")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
+                              </label>
+                              <PriceInput
+                                placeholder={t("pricePlaceholder")}
+                                value={form.price}
+                                onChange={(v) => updateForm(project.id, "price", v)}
+                              />
+                              <p className="text-[11px] text-[#9ca3af] mt-1">{t("priceHint")}</p>
+                            </div>
+                            <div>
+                              <label className="text-xs font-medium text-[#374151] block mb-1.5">
+                                {t("yourMessage")} <span className="text-red-500">*</span>
+                              </label>
+                              <textarea
+                                placeholder={t("messagePlaceholder")}
+                                value={form.message}
+                                onChange={(e) => updateForm(project.id, "message", e.target.value)}
+                                className={`${inputClass} min-h-[100px] resize-none`}
+                              />
+                            </div>
+                            <Button
+                              size="sm"
+                              onClick={() => submitProposal(project.id)}
+                              disabled={!form.message.trim() || submitting === project.id}
+                              loading={submitting === project.id}
+                              className="w-full"
+                            >
+                              {t("sendProposal")}
+                            </Button>
+                          </div>
                         )}
                       </div>
-
-                      {isExpanded && !alreadySubmitted && (
-                        <div className="mt-4 pt-4 border-t border-[#f3f4f6] flex flex-col gap-3">
-                          <div>
-                            <label className="text-xs font-medium text-[#374151] block mb-1.5">
-                              {t("yourPrice")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
-                            </label>
-                            <PriceInput
-                              placeholder={t("pricePlaceholder")}
-                              value={form.price}
-                              onChange={(v) => updateForm(project.id, "price", v)}
-                            />
-                            <p className="text-[11px] text-[#9ca3af] mt-1">{t("priceHint")}</p>
-                          </div>
-                          <div>
-                            <label className="text-xs font-medium text-[#374151] block mb-1.5">
-                              {t("yourMessage")} <span className="text-red-500">*</span>
-                            </label>
-                            <textarea
-                              placeholder={t("messagePlaceholder")}
-                              value={form.message}
-                              onChange={(e) => updateForm(project.id, "message", e.target.value)}
-                              className={`${inputClass} min-h-[100px] resize-none`}
-                            />
-                          </div>
-                          <Button
-                            size="sm"
-                            onClick={() => submitProposal(project.id)}
-                            disabled={!form.message.trim() || submitting === project.id}
-                            loading={submitting === project.id}
-                            className="w-full"
-                          >
-                            {t("sendProposal")}
-                          </Button>
-                        </div>
-                      )}
-                    </CardContent>
+                    )}
                   </Card>
                 );
               })}

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarDays, FolderOpen, ChevronDown, ChevronUp } from "lucide-react";
+import { CalendarDays, FolderOpen, ChevronDown } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -105,9 +105,9 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   const [loading, setLoading] = useState(true);
   const [reviewModal, setReviewModal] = useState<{ professionalId: string; professionalName: string; bookingId?: string; projectId?: string } | null>(null);
   const [myReviews, setMyReviews] = useState<{ professional_id: string; booking_id?: string | null; project_id?: string | null; rating: number }[]>([]);
-  // Bookings auto-confirm now (no "pendientes" bucket) → default to Confirmadas.
-  const [bookingFilter, setBookingFilter] = useState("confirmadas");
-  const [projectFilter, setProjectFilter] = useState("pendientes");
+  // One unified filter set (sprint 430): Activas · Finalizadas · Canceladas.
+  const [bookingFilter, setBookingFilter] = useState("activas");
+  const [projectFilter, setProjectFilter] = useState("activas");
   const [expandedProject, setExpandedProject] = useState<string | null>(null);
   const [projectProposals, setProjectProposals] = useState<Record<string, Proposal[]>>({});
   const [showPublish, setShowPublish] = useState(false);
@@ -434,62 +434,60 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
 
                 return (
                   <Card key={project.id}>
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap mb-1">
-                            <span className="font-semibold text-sm text-[#111827]">{project.title}</span>
-                            {!proyectoStatusRedundant(project.status) && (
-                              <Badge
-                                variant={
-                                  project.status === "in_progress" ? "warning"
-                                    : project.status === "awaiting_confirmation" ? "warning"
-                                    : project.status === "completed" ? "success"
-                                    : project.status === "cancelled" ? "error"
-                                    : "success"
-                                }
-                              >
-                                {project.status === "in_progress" ? t("projAssigned")
-                                  : project.status === "awaiting_confirmation" ? t("projAwaiting")
-                                  : project.status === "completed" ? t("projCompleted")
-                                  : project.status === "cancelled" ? t("projCancelled")
-                                  : t("projOpen")}
-                              </Badge>
-                            )}
-                            {project.categories?.name && (
-                              <Badge variant="muted" className="text-[11px]">{project.categories.name}</Badge>
-                            )}
-                          </div>
-                          <p className="text-sm text-[#6b7280] line-clamp-2 mb-2">{project.description}</p>
-                          {/* Zero icons: publish date + zone + proposals as muted TEXT LABELS. */}
-                          <p className="text-xs text-[#374151] mb-2">
-                            <span className="text-[#9ca3af]">{t("fieldPublished")}</span> <span className="font-medium">{new Date(project.created_at).toLocaleDateString(dateLocale)}</span>
-                          </p>
-                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#9ca3af]">
-                            {(project.provincias?.name || project.cantones?.name) && (
-                              <span><span className="text-[#9ca3af]">{t("fieldZone")}</span> {[project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ")}</span>
-                            )}
-                            <span>{t("proposalsCount", { count: proposalCount })}</span>
-                          </div>
+                    {/* EXPANDABLE PUBLICACIÓN (sprint 430): COLLAPSED shows title · estado ·
+                        nº de propuestas; tapping reveals the description, zona, fecha, the actions
+                        and the propuestas list (accept/decline). */}
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (!isExpanded && proposalCount > 0) await loadProposals(project.id);
+                        setExpandedProject(isExpanded ? null : project.id);
+                      }}
+                      aria-expanded={isExpanded}
+                      className="w-full text-left p-4 flex items-start gap-2.5 hover:bg-[#fafafa] transition-colors"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-semibold text-sm text-[#111827]">{project.title}</span>
+                          {!proyectoStatusRedundant(project.status) && (
+                            <Badge
+                              variant={
+                                project.status === "in_progress" ? "warning"
+                                  : project.status === "awaiting_confirmation" ? "warning"
+                                  : project.status === "completed" ? "success"
+                                  : project.status === "cancelled" ? "error"
+                                  : "success"
+                              }
+                            >
+                              {project.status === "in_progress" ? t("projAssigned")
+                                : project.status === "awaiting_confirmation" ? t("projAwaiting")
+                                : project.status === "completed" ? t("projCompleted")
+                                : project.status === "cancelled" ? t("projCancelled")
+                                : t("projOpen")}
+                            </Badge>
+                          )}
+                          {project.categories?.name && (
+                            <Badge variant="muted" className="text-[11px]">{project.categories.name}</Badge>
+                          )}
                         </div>
-                        {proposalCount > 0 && (
-                          <button
-                            onClick={async () => {
-                              if (!isExpanded) await loadProposals(project.id);
-                              setExpandedProject(isExpanded ? null : project.id);
-                            }}
-                            className="flex items-center gap-1 text-sm font-medium text-[#009FD9] hover:underline shrink-0"
-                          >
-                            {isExpanded ? (
-                              <>{t("seeLess")} <ChevronUp className="h-4 w-4" /></>
-                            ) : (
-                              <>{t("seeProposals")} <ChevronDown className="h-4 w-4" /></>
-                            )}
-                          </button>
-                        )}
+                        <p className="mt-0.5 text-xs text-[#9ca3af]">{t("proposalsCount", { count: proposalCount })}</p>
                       </div>
+                      <ChevronDown className={`h-4 w-4 text-[#9ca3af] shrink-0 mt-0.5 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`} />
+                    </button>
 
-                      <div className="mt-3 flex flex-wrap gap-2">
+                    {isExpanded && (
+                      <div className="px-4 pb-4 pt-3 border-t border-[#f3f4f6] flex flex-col gap-2.5">
+                        {project.description && (
+                          <p className="text-sm text-[#6b7280] whitespace-pre-line">{project.description}</p>
+                        )}
+                        <p className="text-xs text-[#374151]">
+                          <span className="text-[#9ca3af]">{t("fieldPublished")}</span> <span className="font-medium">{new Date(project.created_at).toLocaleDateString(dateLocale)}</span>
+                        </p>
+                        {(project.provincias?.name || project.cantones?.name) && (
+                          <p className="text-xs text-[#9ca3af]"><span className="text-[#9ca3af]">{t("fieldZone")}</span> {[project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ")}</p>
+                        )}
+
+                      <div className="mt-1 flex flex-wrap gap-2">
                         {project.status === "open" && (
                           <Button size="sm" variant="outline" onClick={() => updateProjectStatus(project.id, "cancelled")}>
                             {t("cancelProject")}
@@ -607,7 +605,8 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                           </div>
                         );
                       })()}
-                    </CardContent>
+                      </div>
+                    )}
                   </Card>
                 );
               })}

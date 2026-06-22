@@ -86,7 +86,9 @@ export function BookingRequests() {
   }
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("confirmadas");
+  const [filter, setFilter] = useState("activas");
+  // Accordion: at most one card expanded at a time (essentials collapsed by default).
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   // Inline "manage exception" panels (the pro's tools instead of an accept gate):
   // cancel-with-reason and reschedule. One open at a time, keyed by booking id.
@@ -96,17 +98,6 @@ export function BookingRequests() {
   const [reTime, setReTime] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [actionError, setActionError] = useState("");
-  // The compact "Más" overflow menu (secondary actions), one open at a time by id.
-  const [menuFor, setMenuFor] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!menuFor) return;
-    function onDown(e: MouseEvent) {
-      if (!(e.target as HTMLElement).closest("[data-card-menu]")) setMenuFor(null);
-    }
-    document.addEventListener("mousedown", onDown);
-    return () => document.removeEventListener("mousedown", onDown);
-  }, [menuFor]);
 
   function openAction(id: string, mode: "cancel" | "reschedule") {
     setActionFor({ id, mode });
@@ -242,124 +233,113 @@ export function BookingRequests() {
 
     // An ACTIVE booking (still upcoming/ongoing) gets the manage tools.
     const isActive = (["pending", "confirmed", "in_progress"] as string[]).includes(booking.status);
+    const expanded = expandedId === booking.id;
+    const panelOpen = actionFor?.id === booking.id;
 
     return (
       <Card className="rounded-2xl overflow-hidden">
-        {/* MODERN LEAD CARD: (1) who — the booker as the header (avatar + name + identity +
-            status); (2) "Para otra persona" callout when applicable; (3) the appointment
-            highlighted as the scan anchor; (4) the note. Zero icons; muted text labels. */}
-        <div className="px-4 pt-3.5 pb-3 flex flex-col gap-2.5">
-          {/* 1 — booker header */}
-          <div className="flex items-start gap-2.5">
-            <Avatar className="h-10 w-10 shrink-0">
-              <AvatarImage src={booking.profiles?.avatar_url} className="object-cover" />
-              <AvatarFallback className="text-sm font-bold bg-[#EBF5FB] text-[#009FD9]">{getInitials(booking.client_name || "?")}</AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-2">
-                <p className="text-[15px] font-bold text-[#111827] min-w-0 flex items-center gap-2 flex-wrap">
-                  {booking.client_name || t("thePerson")}
-                  {!booking.for_someone_else && ageBadge(booking.client_dob)}
-                  {unverifiedPill}
-                  {flaggedPill}
+        {/* EXPANDABLE LEAD CARD (sprint 430): COLLAPSED shows only essentials (who · when ·
+            status + unverified). Tapping reveals the full identity, the "para otra persona"
+            callout, servicio·zona, the note, and the management ACTIONS. Zero icons; text labels. */}
+        <button
+          type="button"
+          onClick={() => setExpandedId(expanded ? null : booking.id)}
+          aria-expanded={expanded}
+          className="w-full text-left px-4 py-3 flex items-center gap-2.5 hover:bg-[#fafafa] transition-colors"
+        >
+          <Avatar className="h-10 w-10 shrink-0">
+            <AvatarImage src={booking.profiles?.avatar_url} className="object-cover" />
+            <AvatarFallback className="text-sm font-bold bg-[#EBF5FB] text-[#009FD9]">{getInitials(booking.client_name || "?")}</AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[15px] font-bold text-[#111827] min-w-0 flex items-center gap-2 flex-wrap">
+                {booking.client_name || t("thePerson")}
+                {!booking.for_someone_else && ageBadge(booking.client_dob)}
+                {unverifiedPill}
+                {flaggedPill}
+              </span>
+              {!solicitudStatusRedundant(booking.status, booking.scheduled_date) && (
+                <Badge variant={STATUS_VARIANT[booking.status]} className="shrink-0 px-2.5 py-0.5 text-[11px] font-bold">{t(`status.${booking.status}`)}</Badge>
+              )}
+            </div>
+            <p className="mt-0.5 text-[13px] truncate">
+              <span className="text-[#9ca3af]">{t("fieldDate")}</span>{" "}
+              <span className={dateStr ? "font-semibold text-[#111827]" : "text-[#9ca3af]"}>{dateStr || t("noScheduledDate")}</span>
+            </p>
+          </div>
+          <ChevronDown className={cn("h-4 w-4 text-[#9ca3af] shrink-0 transition-transform duration-200", expanded && "rotate-180")} />
+        </button>
+
+        {expanded && (
+          <div className="px-4 pb-3.5 pt-3 border-t border-[#f3f4f6] flex flex-col gap-2.5">
+            {/* identity + request date */}
+            {(booking.client_phone || cedulaFmt) && (
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[12.5px] text-[#6b7280]">
+                {booking.client_phone && (<span><span className="text-[#9ca3af]">{t("fieldPhone")}</span> {booking.client_phone}</span>)}
+                {cedulaFmt && (<span><span className="text-[#9ca3af]">{t("fieldCedula")}</span> {cedulaFmt}</span>)}
+              </div>
+            )}
+            <p className="text-[11px] text-[#9ca3af]">{t("requestedOn", { date: new Date(booking.created_at).toLocaleDateString(dateLocale) })}</p>
+
+            {/* "Para otra persona" callout (the patient: name + age + DOB) */}
+            {booking.for_someone_else && (
+              <div className="rounded-xl bg-[#EBF5FB] px-3 py-2">
+                <p className="text-[10px] font-bold uppercase tracking-[0.05em] text-[#0089bb]">{t("apptForLabel")}</p>
+                <p className="mt-0.5 text-sm font-bold text-[#111827] flex items-center gap-2 flex-wrap">
+                  {booking.beneficiary_name || t("otherPerson")}
+                  {ageBadge(booking.beneficiary_dob, booking.beneficiary_is_minor)}
                 </p>
-                {!solicitudStatusRedundant(booking.status, booking.scheduled_date) && (
-                  <Badge variant={STATUS_VARIANT[booking.status]} className="shrink-0 px-2.5 py-0.5 text-[11px] font-bold">{t(`status.${booking.status}`)}</Badge>
+                {booking.beneficiary_dob && (
+                  <p className="mt-0.5 text-[12px] text-[#6b7280]"><span className="text-[#9ca3af]">{t("fieldBirth")}</span> {formatDobDMY(booking.beneficiary_dob)}</p>
                 )}
               </div>
-              {(booking.client_phone || cedulaFmt) && (
-                <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[12.5px] text-[#6b7280]">
-                  {booking.client_phone && (<span><span className="text-[#9ca3af]">{t("fieldPhone")}</span> {booking.client_phone}</span>)}
-                  {cedulaFmt && (<span><span className="text-[#9ca3af]">{t("fieldCedula")}</span> {cedulaFmt}</span>)}
-                </div>
-              )}
-              <p className="mt-0.5 text-[11px] text-[#9ca3af]">{t("requestedOn", { date: new Date(booking.created_at).toLocaleDateString(dateLocale) })}</p>
-            </div>
-          </div>
+            )}
 
-          {/* 2 — "Para otra persona" callout (the patient: name + age + DOB) */}
-          {booking.for_someone_else && (
-            <div className="rounded-xl bg-[#EBF5FB] px-3 py-2">
-              <p className="text-[10px] font-bold uppercase tracking-[0.05em] text-[#0089bb]">{t("apptForLabel")}</p>
-              <p className="mt-0.5 text-sm font-bold text-[#111827] flex items-center gap-2 flex-wrap">
-                {booking.beneficiary_name || t("otherPerson")}
-                {ageBadge(booking.beneficiary_dob, booking.beneficiary_is_minor)}
-              </p>
-              {booking.beneficiary_dob && (
-                <p className="mt-0.5 text-[12px] text-[#6b7280]"><span className="text-[#9ca3af]">{t("fieldBirth")}</span> {formatDobDMY(booking.beneficiary_dob)}</p>
-              )}
-            </div>
-          )}
-
-          {/* 3 — appointment highlight (the scan anchor: a big bold date) */}
-          <div className="rounded-xl border border-[#eef0f2] bg-[#f9fafb] px-3 py-2.5">
-            <p className="text-[10px] font-bold uppercase tracking-[0.05em] text-[#9ca3af]">{t("appointmentDateLabel")}</p>
-            <p className={dateStr ? "mt-0.5 text-[15px] font-bold text-[#111827] leading-tight" : "mt-0.5 text-sm text-[#9ca3af]"}>{dateStr || t("noScheduledDate")}</p>
+            {/* servicio · zona */}
             {(category || location) && (
-              <p className="mt-1 text-[12.5px] text-[#6b7280]">
+              <p className="text-[12.5px] text-[#6b7280]">
+                <span className="text-[#9ca3af]">{t("fieldService")}</span>{" "}
                 {category && <span className="font-medium text-[#374151]">{category}</span>}
                 {category && location && <span className="text-[#9ca3af]"> · </span>}
                 {location && <span>{location}</span>}
               </p>
             )}
-          </div>
 
-          {/* 4 — note */}
-          {booking.service_description && (
-            <p className="text-[13px] text-[#374151] flex flex-wrap items-baseline gap-x-1.5">
-              <span className="text-[#9ca3af] shrink-0">{t("fieldNote")}</span>
-              <span className="min-w-0">{booking.service_description}</span>
-            </p>
-          )}
-        </div>
+            {/* note */}
+            {booking.service_description && (
+              <p className="text-[13px] text-[#374151] flex flex-wrap items-baseline gap-x-1.5">
+                <span className="text-[#9ca3af] shrink-0">{t("fieldNote")}</span>
+                <span className="min-w-0">{booking.service_description}</span>
+              </p>
+            )}
 
-        {/* 6 — actions, COMPACT. Auto-confirm means there's no "accept" — the pro manages the
-               booking. To keep the card dense, the ONE primary (WhatsApp) is a small button;
-               the secondaries (Marcar completado / Reprogramar / Cancelar / Reportar) tuck into
-               a tidy "Más" overflow menu instead of dominating the card. */}
-        <div className="px-4 py-2.5 border-t border-[#f3f4f6] flex flex-col gap-2.5">
-          {booking.status === "awaiting_confirmation" && (
-            <p className="text-xs text-[#b45309] bg-[#fffbeb] border border-[#fde68a] rounded-lg px-2.5 py-2">
-              {t("awaitingConfirmNote")}
-            </p>
-          )}
+            {booking.status === "awaiting_confirmation" && (
+              <p className="text-xs text-[#b45309] bg-[#fffbeb] border border-[#fde68a] rounded-lg px-2.5 py-2">
+                {t("awaitingConfirmNote")}
+              </p>
+            )}
 
-          {actionFor?.id !== booking.id && (
-            <div className="flex items-center gap-2">
-              {waHref && (
-                <Button variant="whatsapp" size="sm" asChild className="rounded-full px-4">
-                  <a href={waHref} target="_blank" rel="noopener noreferrer">
-                    <WhatsAppIcon className="h-4 w-4" /> {t("whatsappTo", { name: cliFirst })}
-                  </a>
-                </Button>
-              )}
-              <div className="relative ml-auto" data-card-menu>
-                <button
-                  type="button"
-                  onClick={() => setMenuFor(menuFor === booking.id ? null : booking.id)}
-                  aria-haspopup="menu"
-                  aria-expanded={menuFor === booking.id}
-                  className="inline-flex items-center gap-1 rounded-full border border-[#e5e7eb] h-8 px-3 text-xs font-semibold text-[#374151] hover:bg-[#f3f4f6] transition-colors"
-                >
-                  {t("moreActions")}
-                  <ChevronDown className={cn("h-3.5 w-3.5 text-[#9ca3af] transition-transform duration-200", menuFor === booking.id && "rotate-180")} />
-                </button>
-                {menuFor === booking.id && (
-                  <div role="menu" className="absolute right-0 top-full mt-1.5 z-20 w-48 rounded-xl border border-gray-100 bg-white py-1 shadow-xl">
-                    {isActive && (
-                      <>
-                        <button role="menuitem" onClick={() => { setMenuFor(null); updateStatus(booking.id, "awaiting_confirmation"); }} className="block w-full px-3.5 py-2 text-left text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors">{t("markCompleted")}</button>
-                        <button role="menuitem" onClick={() => { setMenuFor(null); openAction(booking.id, "reschedule"); }} className="block w-full px-3.5 py-2 text-left text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors">{t("reschedule")}</button>
-                        <button role="menuitem" onClick={() => { setMenuFor(null); openAction(booking.id, "cancel"); }} className="block w-full px-3.5 py-2 text-left text-sm text-red-600 hover:bg-red-50 transition-colors">{t("cancel")}</button>
-                        <div className="my-1 border-t border-gray-50" />
-                      </>
-                    )}
-                    <button role="menuitem" onClick={() => { setMenuFor(null); reportClient(booking); }} className="block w-full px-3.5 py-2 text-left text-sm text-[#9ca3af] hover:bg-[#f9fafb] transition-colors">{t("reportClient")}</button>
-                  </div>
+            {/* ACTIONS — only shown once expanded (not crammed by default). */}
+            {!panelOpen && (
+              <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                {waHref && (
+                  <Button variant="whatsapp" size="sm" asChild className="rounded-full px-4">
+                    <a href={waHref} target="_blank" rel="noopener noreferrer">
+                      <WhatsAppIcon className="h-4 w-4" /> {t("whatsappTo", { name: cliFirst })}
+                    </a>
+                  </Button>
                 )}
+                {isActive && (
+                  <>
+                    <Button size="sm" className="rounded-full px-4" onClick={() => updateStatus(booking.id, "awaiting_confirmation")}>{t("markCompleted")}</Button>
+                    <Button size="sm" variant="outline" className="rounded-full px-4" onClick={() => openAction(booking.id, "reschedule")}>{t("reschedule")}</Button>
+                    <Button size="sm" variant="outline" className="rounded-full px-4 text-red-600 border-red-200 hover:bg-red-50" onClick={() => openAction(booking.id, "cancel")}>{t("cancel")}</Button>
+                  </>
+                )}
+                <button onClick={() => reportClient(booking)} className="ml-auto self-center text-xs font-semibold text-[#9ca3af] hover:text-red-500 transition-colors">{t("reportClient")}</button>
               </div>
-            </div>
-          )}
+            )}
 
           {/* Cancel-with-reason panel — preset chips fill the note; the client is
               notified with the motivo; the slot is freed. */}
@@ -433,7 +413,8 @@ export function BookingRequests() {
               </div>
             </div>
           )}
-        </div>
+          </div>
+        )}
       </Card>
     );
   }
