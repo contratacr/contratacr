@@ -1001,6 +1001,7 @@ backdrop (click to close) + centered white `rounded-2xl shadow-2xl` dialog, **pi
 closes on **X / Cancelar / backdrop / Esc**, locks background scroll, and is a **full-width bottom
 sheet on mobile** (`rounded-t-2xl`, `items-end`). On success it calls `onSuccess` (the panel
 refreshes its list) and closes — it **never navigates** to a separate page.
+- **The description field's copy is BRIEF and inviting, not a checklist (sprint 448).** Label is just **"Descripción"** (NOT "Descripción detallada" — "detallada" contradicts brevity), and the placeholder is a light, general prompt + ONE short example: **"Cuéntanos brevemente qué necesitas. Ejemplo: Pintar la sala y el comedor, unos 50 m²."** (en "Tell us briefly what you need. Example: …"). Do NOT reinstate the old "Describe el trabajo, materiales, dimensiones, condiciones especiales, etc." list — listing many things to include feels like a chore, fights the 500-char limit, and clashes with the app's minimal-text approach (Costa Ricans favor brevity; the app is a connector — fine detail gets coordinated on WhatsApp). The same brief copy lives in BOTH namespaces (`publicarProyecto.descriptionPlaceholder` used by the modal, and `projects.descPlaceholder` for the legacy page) so they never diverge.
 - **The old `/publicar-proyecto` route is now a server REDIRECTOR**, not a form: logged-out →
   `/login?redirect=projects`; logged-in → the role-aware projects section (`profesional?tab=sent_projects`
   / `cliente?tab=projects`). All "Publicar un proyecto" links (footer, /como-funciona CTAs) keep
