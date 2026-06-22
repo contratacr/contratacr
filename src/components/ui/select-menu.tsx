@@ -100,12 +100,19 @@ export function SelectMenu({ value, onChange, options, placeholder, label, error
         <div
           ref={listRef}
           role="listbox"
-          // The popup is portaled to <body> (outside any Radix Dialog). Two guards keep it
-          // clickable INSIDE a Radix Dialog: (1) stop pointer/mouse-down propagation; (2) the
-          // `data-selectmenu-list` marker lets a Radix `Dialog.Content` `onInteractOutside`/
-          // `onPointerDownOutside`/`onFocusOutside` call preventDefault for it, so an option
-          // click never dismisses the modal (e.g. the booking modal's DOB picker — the
-          // beneficiary case, which has no padrón auto-fill, exercises this manual path).
+          // The popup is portaled to <body> (outside any Radix Dialog). THREE things keep it
+          // clickable INSIDE a Radix MODAL Dialog:
+          //   (1) `pointerEvents: "auto"` — a modal `Dialog.Content` (DismissableLayer with
+          //       disableOutsidePointerEvents) sets `body { pointer-events: none }` while open
+          //       and re-enables it only on the dialog layer. This list is portaled to <body>,
+          //       OUTSIDE that layer, so without this it inherits pointer-events:none and every
+          //       option is pointer-dead — clicks pass through and onClick never fires. THIS was
+          //       the real "DOB picker won't let me select a date" bug (affects para mí AND para
+          //       otra persona — same component, same modal).
+          //   (2) stop pointer/mouse-down propagation; and
+          //   (3) the `data-selectmenu-list` marker, which lets a Radix `Dialog.Content`
+          //       `onInteractOutside`/`onPointerDownOutside`/`onFocusOutside` preventDefault for
+          //       it — so now that the option click DOES fire, it doesn't dismiss the modal.
           data-selectmenu-list=""
           onPointerDown={(e) => e.stopPropagation()}
           onMouseDown={(e) => e.stopPropagation()}
@@ -118,6 +125,8 @@ export function SelectMenu({ value, onChange, options, placeholder, label, error
             maxWidth: "min(20rem, calc(100vw - 1.5rem))",
             maxHeight: pos.maxH,
             zIndex: 9999,
+            // See (1) above — without this the list is unclickable inside a modal Radix Dialog.
+            pointerEvents: "auto",
           }}
           className="overflow-y-auto overscroll-contain rounded-xl border border-[#e5e7eb] bg-white py-1 shadow-xl"
         >
