@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import {
   X, Menu, ChevronDown, Search, MapPin,
-  LayoutDashboard, LogOut, Bookmark, CalendarDays, FolderOpen, UserPlus, Briefcase, Compass, Settings, Bell, Globe, Inbox,
+  LayoutDashboard, LogOut, Bookmark, CalendarDays, FolderOpen, UserPlus, Briefcase, Compass, Settings, Bell, Globe, Inbox, Check,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -62,13 +62,16 @@ export function ContrataCRLogo({ className, chip = false, size = "md" }: { class
   );
 }
 
-/* ─── Language Toggle Pill ─── */
-function LanguageTogglePill() {
-  const locale = useLocale();
+/* ─── Language switch — shared locale-change helper ─── */
+const LANGS = [
+  { code: "es", label: "Español" },
+  { code: "en", label: "English" },
+] as const;
+
+function useSwitchLang() {
   const router = useRouter();
   const pathname = usePathname();
-
-  function switchLang(lang: string) {
+  return (lang: string) => {
     if (typeof window !== "undefined") {
       localStorage.setItem("contratacr_lang", lang);
       // Persist as the NEXT_LOCALE cookie so the choice survives a fresh visit
@@ -76,38 +79,93 @@ function LanguageTogglePill() {
       document.cookie = `NEXT_LOCALE=${lang}; path=/; max-age=31536000; samesite=lax`;
     }
     router.replace(pathname, { locale: lang });
-  }
+  };
+}
 
+/* ─── Language menu (DESKTOP navbar) ───
+   Deliberately NOT a segmented control (so it never competes with the prominent
+   MODE segmented control). A discreet, quiet **globe + current code** trigger
+   that opens a tiny dropdown to pick the language — language is set rarely, so
+   it stays subordinate and out of the way. */
+function LanguageMenu() {
+  const locale = useLocale();
+  const switchLang = useSwitchLang();
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    function onOutside(e: Event) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", onOutside);
+    document.addEventListener("touchstart", onOutside);
+    return () => {
+      document.removeEventListener("mousedown", onOutside);
+      document.removeEventListener("touchstart", onOutside);
+    };
+  }, []);
   return (
-    // Globe icon makes it instantly readable as a LANGUAGE control; both
-    // languages stay visible with the active one highlighted (brand) and the
-    // other clearly tappable. Compact + responsive (fits ~360px).
-    <div
-      role="group"
-      aria-label="Cambiar idioma / Change language"
-      className="inline-flex items-center gap-1 rounded-full border border-gray-200 bg-white pl-2 pr-0.5 py-0.5 shrink-0"
-    >
-      <Globe className="h-3.5 w-3.5 text-gray-400 shrink-0" aria-hidden />
-      <div className="inline-flex rounded-full overflow-hidden text-[12px] font-semibold">
-        {["es", "en"].map((lang) => {
-          const active = locale === lang;
-          return (
-            <button
-              key={lang}
-              onClick={() => switchLang(lang)}
-              aria-pressed={active}
-              aria-label={lang === "es" ? "Español" : "English"}
-              title={lang === "es" ? "Español" : "English"}
-              className={cn(
-                "px-2 py-0.5 rounded-full transition-colors",
-                active ? "bg-[#009FD9] text-white" : "text-gray-500 hover:text-[#1a2744]"
-              )}
-            >
-              {lang.toUpperCase()}
-            </button>
-          );
-        })}
-      </div>
+    <div ref={ref} className="relative shrink-0">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label="Cambiar idioma / Change language"
+        className="inline-flex items-center gap-1 rounded-full px-2 py-1.5 text-[12px] font-semibold text-gray-500 hover:text-[#1a2744] hover:bg-gray-50 transition-colors"
+      >
+        <Globe className="h-4 w-4 text-gray-400" aria-hidden />
+        {locale.toUpperCase()}
+        <ChevronDown className={cn("h-3 w-3 text-gray-400 transition-transform duration-200", open && "rotate-180")} />
+      </button>
+      {open && (
+        <div role="menu" className="absolute right-0 top-full mt-1.5 w-36 rounded-xl border border-gray-100 bg-white py-1 shadow-xl z-50">
+          {LANGS.map((l) => {
+            const active = locale === l.code;
+            return (
+              <button
+                key={l.code}
+                role="menuitemradio"
+                aria-checked={active}
+                onClick={() => { setOpen(false); switchLang(l.code); }}
+                className={cn(
+                  "flex w-full items-center justify-between gap-2 px-3 py-2 text-sm transition-colors",
+                  active ? "bg-[#EBF5FB] font-semibold text-[#009FD9]" : "text-[#374151] hover:bg-gray-50",
+                )}
+              >
+                {l.label}
+                {active && <Check className="h-4 w-4" />}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── Language inline (mobile profile menu + hamburger drawer) ───
+   Discreet plain-text pair (current = brand-blue, other = grey) — distinct from
+   the mode segmented control's pill track; fits a vertical menu row cleanly. */
+function LanguageInline({ className }: { className?: string }) {
+  const locale = useLocale();
+  const switchLang = useSwitchLang();
+  return (
+    <div className={cn("flex items-center gap-3", className)} role="group" aria-label="Cambiar idioma / Change language">
+      {LANGS.map((l) => {
+        const active = locale === l.code;
+        return (
+          <button
+            key={l.code}
+            onClick={() => switchLang(l.code)}
+            aria-pressed={active}
+            className={cn(
+              "text-sm transition-colors",
+              active ? "font-semibold text-[#009FD9]" : "text-gray-500 hover:text-[#1a2744]",
+            )}
+          >
+            {l.label}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -119,13 +177,14 @@ function LanguageTogglePill() {
    content switcher / iOS segmented control.) Accessible (role=tablist/tab,
    ArrowLeft/Right operable), smooth fill transition, fits the navbar at ~360px.
    `block` makes the two segments share the full width (used in the account menu
-   + mobile drawer); the inline default is used in the navbar bar. */
+   + mobile drawer); the inline default is used in the navbar bar.
+   NO notification badge — context switchers stay clean; notifications live in the
+   bell (modern-app practice). */
 function ModeSwitcher({
-  mode, onSwitch, otherModeUnread, block = false, className,
+  mode, onSwitch, block = false, className,
 }: {
   mode: Mode;
   onSwitch: (m: Mode) => void;
-  otherModeUnread: number;
   block?: boolean;
   className?: string;
 }) {
@@ -168,9 +227,6 @@ function ModeSwitcher({
             )}
           >
             {seg.label}
-            {!active && otherModeUnread > 0 && (
-              <span className="inline-flex h-[16px] min-w-[16px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[9px] font-bold leading-none text-white">{otherModeUnread > 9 ? "9+" : otherModeUnread}</span>
-            )}
           </button>
         );
       })}
@@ -553,7 +609,6 @@ interface AccountMenuProps {
   notificationsHref: string;
   accountHref: string;
   notifUnread: number;
-  otherModeUnread: number;
   onSwitchMode: (m: Mode) => void;
   onSignOut: () => void;
   onOpen?: () => void;
@@ -562,7 +617,7 @@ interface AccountMenuProps {
 function AccountMenu({
   user, isPro, mode, displayName, avatarUrl, avatarReady, initials,
   panelHref, bookingsHref, proposalsHref, sentBookingsHref, sentProjectsHref,
-  savedHref, notificationsHref, accountHref, notifUnread, otherModeUnread,
+  savedHref, notificationsHref, accountHref, notifUnread,
   onSwitchMode, onSignOut, onOpen,
 }: AccountMenuProps) {
   const t = useTranslations("header");
@@ -619,7 +674,7 @@ function AccountMenu({
               Providers only; a client-only account just sees the "Mi cuenta" heading. */}
           {isPro ? (
             <div className="px-3 pt-1 pb-2">
-              <ModeSwitcher mode={mode} onSwitch={(m) => { setOpen(false); onSwitchMode(m); }} otherModeUnread={otherModeUnread} block />
+              <ModeSwitcher mode={mode} onSwitch={(m) => { setOpen(false); onSwitchMode(m); }} block />
             </div>
           ) : (
             <p className="px-3 pt-2 pb-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t("myAccount")}</p>
@@ -692,6 +747,14 @@ function AccountMenu({
               {t("offerServices")}
             </Link>
           )}
+
+          {/* Language — MOBILE only here (desktop has the discreet globe in the navbar bar).
+              Quiet inline pair so the rarely-used control stays in the profile menu. */}
+          <div className="lg:hidden flex items-center gap-2.5 px-3 py-2 mt-1 border-t border-gray-50">
+            <Globe className="h-4 w-4 text-gray-400 shrink-0" />
+            <span className="flex-1 text-sm text-[#374151]">{t("language")}</span>
+            <LanguageInline />
+          </div>
 
           <button
             onClick={onSignOut}
@@ -800,9 +863,9 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
       });
   }, [user]);
   useEffect(() => { refreshNotifUnread(); }, [refreshNotifUnread, mobileOpen]);
-  // The active mode's unread (its own + account-level), and the other mode's pure count.
+  // The active mode's unread (its own + account-level) → the bell + the menu's
+  // Notificaciones badge. The mode switch itself stays clean (no badge).
   const activeUnread = (mode === "offer" ? proUnread : clientUnread) + neutralUnread;
-  const otherModeUnread = mode === "offer" ? clientUnread : proUnread;
 
   const compactSuggestions = useMemo(() => matchCategories(searchQuery), [searchQuery]);
   const navLocSug = useMemo(() => searchLocations(navLocation), [navLocation]);
@@ -983,7 +1046,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                   (lg:hidden), so providers flip the whole experience without opening any menu.
                   Both modes visible; only for accounts with both modes. */}
               {user && isPro && !mobileInline && (
-                <ModeSwitcher mode={mode} onSwitch={switchMode} otherModeUnread={otherModeUnread} className="lg:hidden" />
+                <ModeSwitcher mode={mode} onSwitch={switchMode} className="lg:hidden" />
               )}
 
               {/* MOBILE inline slot (search + filters) — only when provided, only <lg. */}
@@ -1090,7 +1153,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     {/* DESKTOP mode switch — a SEGMENTED CONTROL right in the navbar bar
                         (providers only): both modes visible, tap to flip the whole experience. */}
                     {isPro && (
-                      <ModeSwitcher mode={mode} onSwitch={switchMode} otherModeUnread={otherModeUnread} className="mr-1" />
+                      <ModeSwitcher mode={mode} onSwitch={switchMode} className="mr-1" />
                     )}
                     <a
                       href={primaryPanelHref}
@@ -1116,7 +1179,6 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                       notificationsHref={notificationsHref}
                       accountHref={accountHref}
                       notifUnread={activeUnread}
-                      otherModeUnread={otherModeUnread}
                       onSwitchMode={switchMode}
                       onSignOut={handleSignOut}
                       onOpen={refreshNotifUnread}
@@ -1138,7 +1200,9 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     </Link>
                   </>
                 )}
-                <LanguageTogglePill />
+                {/* Discreet, quiet globe + code dropdown — visually subordinate to the
+                    prominent MODE segmented control (never a competing toggle). */}
+                <LanguageMenu />
               </div>
 
               {/* Mobile toggle — only OPENS the drawer; the drawer has the single X. */}
@@ -1289,7 +1353,6 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     notificationsHref={notificationsHref}
                     accountHref={accountHref}
                     notifUnread={activeUnread}
-                    otherModeUnread={otherModeUnread}
                     onSwitchMode={switchMode}
                     onSignOut={handleSignOut}
                     onOpen={refreshNotifUnread}
@@ -1375,7 +1438,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                 {/* MODE SWITCH — the SAME segmented control (both modes visible, tap to switch). */}
                 {isPro ? (
                   <div className="mb-1.5 px-1">
-                    <ModeSwitcher mode={mode} onSwitch={switchMode} otherModeUnread={otherModeUnread} block />
+                    <ModeSwitcher mode={mode} onSwitch={switchMode} block />
                   </div>
                 ) : (
                   <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t("myAccount")}</p>
@@ -1490,11 +1553,11 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
               )}
             </div>
 
-            {/* Idioma */}
+            {/* Idioma — discreet inline text pair (not a segmented toggle). */}
             <div className="border-t border-gray-100 pt-4">
               <div className="flex items-center justify-between px-1">
                 <span className="text-xs text-gray-400 font-medium">{t("language")}</span>
-                <LanguageTogglePill />
+                <LanguageInline />
               </div>
             </div>
 
