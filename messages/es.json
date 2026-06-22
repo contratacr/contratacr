@@ -37,8 +37,8 @@
     "account": "Cuenta",
     "sentRequests": "Mis solicitudes enviadas",
     "myRequests": "Mis solicitudes",
-    "publishedProjects": "Mis solicitudes publicadas",
-    "myProjects": "Mis solicitudes publicadas",
+    "publishedProjects": "Mis publicaciones",
+    "myProjects": "Mis publicaciones",
     "favorites": "Mis favoritos",
     "notifications": "Notificaciones",
     "accountSecurity": "Cuenta y seguridad",
@@ -946,7 +946,7 @@
       "title": "Panel del cliente",
       "nav": {
         "bookings": "Solicitudes",
-        "projects": "Solicitudes publicadas",
+        "projects": "Publicaciones",
         "saved": "Guardados",
         "notifications": "Notificaciones",
         "profile": "Mi perfil"
@@ -969,7 +969,7 @@
         }
       },
       "projects": {
-        "title": "Mis solicitudes publicadas",
+        "title": "Mis publicaciones",
         "publish": "Publicar una solicitud",
         "empty": "Todavía no has publicado ninguna solicitud",
         "emptyHint": "Publica una solicitud para recibir propuestas.",
@@ -1025,7 +1025,7 @@
       "verificacion": "Verificación",
       "suscripcion": "Suscripción",
       "sent_bookings": "Mis solicitudes",
-      "sent_projects": "Mis solicitudes publicadas",
+      "sent_projects": "Mis publicaciones",
       "saved": "Mis favoritos",
       "notifications": "Notificaciones",
       "soporte": "Soporte",
@@ -1079,7 +1079,7 @@
       "bookings": "Solicitudes",
       "proposals": "Oportunidades",
       "sent_bookings": "Solicitudes",
-      "sent_projects": "Publicadas",
+      "sent_projects": "Publicaciones",
       "more": "Más",
       "saved": "Favoritos",
       "moreTitle": "Más opciones"
@@ -1612,7 +1612,7 @@
     "searchPros": "Buscar servicios",
     "signOut": "Salir",
     "tabBookings": "Solicitudes",
-    "tabProjects": "Solicitudes publicadas",
+    "tabProjects": "Publicaciones",
     "tabSaved": "Guardados",
     "tabNotifications": "Notificaciones",
     "tabSupport": "Soporte",
@@ -1621,7 +1621,7 @@
     "savedHeading": "Profesionales guardados",
     "bookingsHeading": "Mis solicitudes",
     "bookingsSubtitle": "Servicios que solicitaste.",
-    "projectsHeading": "Mis solicitudes publicadas",
+    "projectsHeading": "Mis publicaciones",
     "projectsSubtitle": "Solicitudes que publicaste para recibir propuestas.",
     "notificationsHeading": "Notificaciones",
     "supportHeading": "Soporte",
@@ -1923,7 +1923,7 @@
     "errUnexpected": "Error inesperado. Intenta de nuevo.",
     "successTitle": "¡Solicitud publicada!",
     "successBody": "Los profesionales que ofrecen ese servicio en tu zona verán tu solicitud y podrán enviarte propuestas.",
-    "viewProjects": "Ver mis solicitudes publicadas",
+    "viewProjects": "Ver mis publicaciones",
     "goToPanel": "Ir a mi panel",
     "title": "Publicar una solicitud",
     "subtitle": "Describe lo que necesitas y recibe propuestas de tu zona.",
@@ -2000,7 +2000,7 @@
     "success": {
       "title": "¡Solicitud publicada!",
       "desc": "Los profesionales que ofrecen ese servicio en tu zona verán tu solicitud y podrán enviarte propuestas.",
-      "dashboard": "Ver mis solicitudes publicadas"
+      "dashboard": "Ver mis publicaciones"
     }
   },
   "categories": {

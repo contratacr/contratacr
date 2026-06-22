@@ -37,8 +37,8 @@
     "account": "Account",
     "sentRequests": "My sent requests",
     "myRequests": "My requests",
-    "publishedProjects": "My posted requests",
-    "myProjects": "My posted requests",
+    "publishedProjects": "My posts",
+    "myProjects": "My posts",
     "favorites": "My favorites",
     "notifications": "Notifications",
     "accountSecurity": "Account & security",
@@ -946,7 +946,7 @@
       "title": "Client dashboard",
       "nav": {
         "bookings": "Requests",
-        "projects": "Posted requests",
+        "projects": "Posts",
         "saved": "Saved",
         "notifications": "Notifications",
         "profile": "My profile"
@@ -969,7 +969,7 @@
         }
       },
       "projects": {
-        "title": "My posted requests",
+        "title": "My posts",
         "publish": "Post a request",
         "empty": "You haven't posted any requests yet",
         "emptyHint": "Post a request to receive proposals.",
@@ -1025,7 +1025,7 @@
       "verificacion": "Verification",
       "suscripcion": "Subscription",
       "sent_bookings": "My requests",
-      "sent_projects": "My posted requests",
+      "sent_projects": "My posts",
       "saved": "My favorites",
       "notifications": "Notifications",
       "soporte": "Support",
@@ -1079,7 +1079,7 @@
       "bookings": "Requests",
       "proposals": "Opportunities",
       "sent_bookings": "Requests",
-      "sent_projects": "Published",
+      "sent_projects": "Posts",
       "more": "More",
       "saved": "Saved",
       "moreTitle": "More options"
@@ -1612,7 +1612,7 @@
     "searchPros": "Find services",
     "signOut": "Sign out",
     "tabBookings": "Requests",
-    "tabProjects": "Posted requests",
+    "tabProjects": "Posts",
     "tabSaved": "Saved",
     "tabNotifications": "Notifications",
     "tabSupport": "Support",
@@ -1621,7 +1621,7 @@
     "savedHeading": "Saved professionals",
     "bookingsHeading": "My requests",
     "bookingsSubtitle": "Services you requested.",
-    "projectsHeading": "My posted requests",
+    "projectsHeading": "My posts",
     "projectsSubtitle": "Requests you posted to receive proposals.",
     "notificationsHeading": "Notifications",
     "supportHeading": "Support",
@@ -1923,7 +1923,7 @@
     "errUnexpected": "Unexpected error. Try again.",
     "successTitle": "Request published!",
     "successBody": "The professionals who offer that service in your area will see your request and can send you proposals.",
-    "viewProjects": "View my posted requests",
+    "viewProjects": "View my posts",
     "goToPanel": "Go to my dashboard",
     "title": "Post a request",
     "subtitle": "Describe what you need and receive proposals from your area.",
@@ -2000,7 +2000,7 @@
     "success": {
       "title": "Request posted!",
       "desc": "The professionals who offer that service in your area will see your request and can send you proposals.",
-      "dashboard": "View my posted requests"
+      "dashboard": "View my posts"
     }
   },
   "categories": {
