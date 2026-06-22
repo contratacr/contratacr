@@ -90,10 +90,13 @@ const SHARED_TABS: Tab[] = ["notifications", "soporte", "cuenta"];
 
 // MOBILE bottom-nav (native-app tab bar, icon + label): the most-used sections per mode sit
 // in the fixed bottom bar (left→right); everything else (setup + shared) lives behind "Más".
-// Offer has many sections → 3 primary + Más (so "Oportunidades" stays legible at ~360px);
-// the lighter "use" mode fits its 4 sections + Más. Item counts adapt per mode — never scroll.
+// BOTH modes use 4 sections + Más = 5 slots (consistent; 5 fits cleanly at ~360px). Offer:
+// Perfil · Profesiones · Solicitudes recibidas · Oportunidades + Más (Profesiones is the pro's
+// core "what I offer" tab, after the two lead sections); the rest (Casos de éxito, Disponibilidad,
+// Verificación, Suscripción + shared) live in "Más". Use: Perfil · Solicitudes · Publicaciones ·
+// Favoritos + Más. Item count matches per mode — never a horizontal scroll.
 const MOBILE_PRIMARY: Record<Mode, Tab[]> = {
-  offer: ["profile", "bookings", "proposals"],
+  offer: ["profile", "services", "bookings", "proposals"],
   use: ["profile", "sent_bookings", "sent_projects", "saved"],
 };
 
