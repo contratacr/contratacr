@@ -1224,7 +1224,8 @@
     "fieldZone": "Zona:",
     "fieldDeadline": "Plazo:",
     "fieldBudget": "Presupuesto:",
-    "fieldPhone": "Tel:"
+    "fieldPhone": "Tel:",
+    "budgetTBD": "A convenir"
   },
   "servicesEditor": {
     "servicesOf": "Servicios de",

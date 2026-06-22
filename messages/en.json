@@ -1224,7 +1224,8 @@
     "fieldZone": "Area:",
     "fieldDeadline": "Timeline:",
     "fieldBudget": "Budget:",
-    "fieldPhone": "Phone:"
+    "fieldPhone": "Phone:",
+    "budgetTBD": "To be agreed"
   },
   "servicesEditor": {
     "servicesOf": "Services of",

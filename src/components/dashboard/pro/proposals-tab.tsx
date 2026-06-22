@@ -267,66 +267,71 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
 
                 return (
                   <Card key={project.id}>
-                    <CardContent className="p-5">
-                      <div className="flex items-start justify-between gap-3">
+                    <CardContent className="p-[18px] flex flex-col gap-3.5">
+                      {/* MODERN LEAD CARD (consistent with Solicitudes recibidas): (1) the request
+                          title + who posted it; (2) the PRESUPUESTO highlighted as the scan anchor
+                          + zona/plazo; (3) the description; (4) the count + "Proponer" action. */}
+                      <div className="flex items-start gap-3">
+                        <Avatar className="h-11 w-11 shrink-0">
+                          <AvatarImage src={project.profiles?.avatar_url} className="object-cover" />
+                          <AvatarFallback className="text-sm bg-[#EBF5FB] text-[#009FD9] font-bold">
+                            {getInitials(project.profiles?.full_name ?? "?")}
+                          </AvatarFallback>
+                        </Avatar>
                         <div className="flex-1 min-w-0">
-                          {/* Lead with the project CREATOR's photo + name — consistent with
-                              "solicitudes recibidas" — instead of a generic gray work icon. */}
-                          <div className="flex items-start gap-2.5 mb-1.5">
-                            <Avatar className="h-9 w-9 shrink-0">
-                              <AvatarImage src={project.profiles?.avatar_url} className="object-cover" />
-                              <AvatarFallback className="text-[11px] bg-[#EBF5FB] text-[#009FD9] font-semibold">
-                                {getInitials(project.profiles?.full_name ?? "?")}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="font-semibold text-[#111827] text-sm">{project.title}</span>
-                                {project.categories?.name && (
-                                  <Badge variant="muted" className="text-[11px]">{project.categories.name}</Badge>
-                                )}
-                              </div>
-                              {project.profiles?.full_name && (
-                                <p className="text-xs text-[#6b7280] mt-0.5 truncate">{project.profiles.full_name}</p>
-                              )}
-                            </div>
+                          <div className="flex items-start justify-between gap-2">
+                            <p className="text-[15px] font-bold text-[#111827] min-w-0">{project.title}</p>
+                            {alreadySubmitted ? (
+                              <Badge variant="success" className="shrink-0">{t("alreadyProposed")}</Badge>
+                            ) : project.categories?.name ? (
+                              <Badge variant="muted" className="shrink-0 text-[11px]">{project.categories.name}</Badge>
+                            ) : null}
                           </div>
-                          <p className="text-sm text-[#6b7280] line-clamp-2 mb-2">{project.description}</p>
-                          {/* Zero icons: zone · timeline · budget · proposals as muted TEXT LABELS. */}
-                          <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-[#6b7280]">
+                          {project.profiles?.full_name && (
+                            <p className="mt-0.5 text-[12.5px] text-[#6b7280] truncate">{project.profiles.full_name}</p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Presupuesto highlight — the number the pro decides on. */}
+                      <div className="rounded-xl border border-[#eef0f2] bg-[#f9fafb] px-3.5 py-3">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.05em] text-[#9ca3af]">{t("fieldBudget").replace(":", "")}</p>
+                        <p className="mt-0.5 text-[16px] font-bold text-[#111827] leading-tight">
+                          {(project.budget_min || project.budget_max)
+                            ? (project.budget_min && project.budget_max
+                                ? t("range", { min: `₡${project.budget_min.toLocaleString("es-CR")}`, max: `₡${project.budget_max.toLocaleString("es-CR")}` })
+                                : project.budget_min
+                                ? t("from", { amount: `₡${project.budget_min.toLocaleString("es-CR")}` })
+                                : t("upTo", { amount: `₡${project.budget_max!.toLocaleString("es-CR")}` }))
+                            : <span className="text-[#9ca3af] font-semibold">{t("budgetTBD")}</span>}
+                        </p>
+                        {((project.provincias?.name || project.cantones?.name) || project.timeline) && (
+                          <p className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[12.5px] text-[#6b7280]">
                             {(project.provincias?.name || project.cantones?.name) && (
                               <span><span className="text-[#9ca3af]">{t("fieldZone")}</span> {[project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ")}</span>
                             )}
                             {project.timeline && (
                               <span><span className="text-[#9ca3af]">{t("fieldDeadline")}</span> {project.timeline}</span>
                             )}
-                            {(project.budget_min || project.budget_max) && (
-                              <span>
-                                <span className="text-[#9ca3af]">{t("fieldBudget")}</span>{" "}
-                                {project.budget_min && project.budget_max
-                                  ? t("range", { min: `₡${project.budget_min.toLocaleString("es-CR")}`, max: `₡${project.budget_max.toLocaleString("es-CR")}` })
-                                  : project.budget_min
-                                  ? t("from", { amount: `₡${project.budget_min.toLocaleString("es-CR")}` })
-                                  : t("upTo", { amount: `₡${project.budget_max!.toLocaleString("es-CR")}` })}
-                              </span>
-                            )}
-                            <span className="text-[#9ca3af]">{t("proposalsCount", { count: proposalCount })}</span>
-                          </div>
-                        </div>
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Description */}
+                      {project.description && (
+                        <p className="text-[13px] text-[#374151] line-clamp-3">{project.description}</p>
+                      )}
+
+                      {/* Footer — proposals count + the "Proponer" action. */}
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs text-[#9ca3af]">{t("proposalsCount", { count: proposalCount })}</span>
                         {!alreadySubmitted && (
                           <button
                             onClick={() => setExpandedProject(isExpanded ? null : project.id)}
-                            className="flex items-center gap-1 text-sm font-medium text-[#009FD9] hover:underline shrink-0"
+                            className="inline-flex items-center gap-1 rounded-full bg-[#EBF5FB] px-3.5 py-1.5 text-[13px] font-semibold text-[#0089bb] hover:bg-[#dceafc] transition-colors shrink-0"
                           >
-                            {isExpanded ? (
-                              <>{t("close")} <ChevronUp className="h-4 w-4" /></>
-                            ) : (
-                              <>{t("propose")} <ChevronDown className="h-4 w-4" /></>
-                            )}
+                            {isExpanded ? (<>{t("close")} <ChevronUp className="h-4 w-4" /></>) : (<>{t("propose")} <ChevronDown className="h-4 w-4" /></>)}
                           </button>
-                        )}
-                        {alreadySubmitted && (
-                          <Badge variant="success">{t("alreadyProposed")}</Badge>
                         )}
                       </div>
 

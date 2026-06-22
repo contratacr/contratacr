@@ -233,132 +233,74 @@ export function BookingRequests() {
     const isActive = (["pending", "confirmed", "in_progress"] as string[]).includes(booking.status);
 
     return (
-      <Card className="rounded-[18px] overflow-hidden">
-        {/* 1 — status header: the REQUEST (created) date, plus the status pill ONLY when
-               it adds info beyond the active tab (a sub-state like "En progreso"). When the
-               status just repeats the tab it's hidden — the tab already says it.
-               No bottom border: whitespace alone sets it apart from the appointment below. */}
-        {(() => {
-          const showStatus = !solicitudStatusRedundant(booking.status, booking.scheduled_date);
-          return (
-            <div className={`flex items-center gap-2.5 px-[18px] pt-4 pb-1 ${showStatus ? "justify-between" : "justify-end"}`}>
-              {showStatus && (
-                <Badge variant={STATUS_VARIANT[booking.status]} className="px-3 py-1 text-xs font-bold">
-                  {t(`status.${booking.status}`)}
-                </Badge>
+      <Card className="rounded-2xl overflow-hidden">
+        {/* MODERN LEAD CARD: (1) who — the booker as the header (avatar + name + identity +
+            status); (2) "Para otra persona" callout when applicable; (3) the appointment
+            highlighted as the scan anchor; (4) the note. Zero icons; muted text labels. */}
+        <div className="px-[18px] pt-4 pb-3.5 flex flex-col gap-3.5">
+          {/* 1 — booker header */}
+          <div className="flex items-start gap-3">
+            <Avatar className="h-11 w-11 shrink-0">
+              <AvatarImage src={booking.profiles?.avatar_url} className="object-cover" />
+              <AvatarFallback className="text-sm font-bold bg-[#EBF5FB] text-[#009FD9]">{getInitials(booking.client_name || "?")}</AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-[15px] font-bold text-[#111827] min-w-0 flex items-center gap-2 flex-wrap">
+                  {booking.client_name || t("thePerson")}
+                  {!booking.for_someone_else && ageBadge(booking.client_dob)}
+                  {unverifiedPill}
+                  {flaggedPill}
+                </p>
+                {!solicitudStatusRedundant(booking.status, booking.scheduled_date) && (
+                  <Badge variant={STATUS_VARIANT[booking.status]} className="shrink-0 px-2.5 py-0.5 text-[11px] font-bold">{t(`status.${booking.status}`)}</Badge>
+                )}
+              </div>
+              {(booking.client_phone || cedulaFmt) && (
+                <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[12.5px] text-[#6b7280]">
+                  {booking.client_phone && (<span><span className="text-[#9ca3af]">{t("fieldPhone")}</span> {booking.client_phone}</span>)}
+                  {cedulaFmt && (<span><span className="text-[#9ca3af]">{t("fieldCedula")}</span> {cedulaFmt}</span>)}
+                </div>
               )}
-              <span className="text-xs text-[#9ca3af] shrink-0">
-                {t("requestedOn", { date: new Date(booking.created_at).toLocaleDateString(dateLocale) })}
-              </span>
+              <p className="mt-0.5 text-[11px] text-[#9ca3af]">{t("requestedOn", { date: new Date(booking.created_at).toLocaleDateString(dateLocale) })}</p>
             </div>
-          );
-        })()}
+          </div>
 
-        {/* 2-3 — THE APPOINTMENT (what & when). Zero icons: each field is a muted TEXT LABEL
-               ("Fecha:", "Servicio:", …) + value; the date value stays bold as the scan anchor. */}
-        <div className="px-[18px] pt-2 pb-4 flex flex-col gap-1.5 text-[13.5px]">
-          <p className="flex flex-wrap items-baseline gap-x-1.5">
-            <span className="text-[#9ca3af]">{t("fieldDate")}</span>
-            <span className={dateStr ? "font-bold text-[#111827]" : "text-[#9ca3af]"}>{dateStr || t("noScheduledDate")}</span>
-          </p>
-          {category && (
-            <p className="flex flex-wrap items-baseline gap-x-1.5">
-              <span className="text-[#9ca3af]">{t("fieldService")}</span>
-              <span className="font-medium text-[#374151] min-w-0">{category}</span>
-            </p>
+          {/* 2 — "Para otra persona" callout (the patient: name + age + DOB) */}
+          {booking.for_someone_else && (
+            <div className="rounded-xl bg-[#EBF5FB] px-3.5 py-2.5">
+              <p className="text-[10px] font-bold uppercase tracking-[0.05em] text-[#0089bb]">{t("apptForLabel")}</p>
+              <p className="mt-0.5 text-sm font-bold text-[#111827] flex items-center gap-2 flex-wrap">
+                {booking.beneficiary_name || t("otherPerson")}
+                {ageBadge(booking.beneficiary_dob, booking.beneficiary_is_minor)}
+              </p>
+              {booking.beneficiary_dob && (
+                <p className="mt-0.5 text-[12px] text-[#6b7280]"><span className="text-[#9ca3af]">{t("fieldBirth")}</span> {formatDobDMY(booking.beneficiary_dob)}</p>
+              )}
+            </div>
           )}
-          {location && (
-            <p className="flex flex-wrap items-baseline gap-x-1.5">
-              <span className="text-[#9ca3af]">{t("fieldZone")}</span>
-              <span className="text-[#6b7280] min-w-0">{location}</span>
-            </p>
-          )}
+
+          {/* 3 — appointment highlight (the scan anchor: a big bold date) */}
+          <div className="rounded-xl border border-[#eef0f2] bg-[#f9fafb] px-3.5 py-3">
+            <p className="text-[10px] font-bold uppercase tracking-[0.05em] text-[#9ca3af]">{t("appointmentDateLabel")}</p>
+            <p className={dateStr ? "mt-0.5 text-[16px] font-bold text-[#111827] leading-tight" : "mt-0.5 text-sm text-[#9ca3af]"}>{dateStr || t("noScheduledDate")}</p>
+            {(category || location) && (
+              <p className="mt-1.5 text-[12.5px] text-[#6b7280]">
+                {category && <span className="font-medium text-[#374151]">{category}</span>}
+                {category && location && <span className="text-[#9ca3af]"> · </span>}
+                {location && <span>{location}</span>}
+              </p>
+            )}
+          </div>
+
+          {/* 4 — note */}
           {booking.service_description && (
-            <p className="flex flex-wrap items-baseline gap-x-1.5">
+            <p className="text-[13px] text-[#374151] flex flex-wrap items-baseline gap-x-1.5">
               <span className="text-[#9ca3af] shrink-0">{t("fieldNote")}</span>
-              <span className="text-[#374151] min-w-0">{booking.service_description}</span>
+              <span className="min-w-0">{booking.service_description}</span>
             </p>
           )}
         </div>
-
-        {/* 4-5 — THE PERSON(S). Identity is reduced to what the pro acts on: a name and,
-               when no cédula is on file, the single "Sin verificar" pill (the cédula NUMBER
-               is never shown — the pro doesn't read it; the verified/unverified state is the
-               signal). SELF (the common case) = one compact person. PARA OTRA PERSONA (health
-               minority) = the patient as the headline (name + age badge + DOB) and a compact
-               "Reservado por …" contact line — no two-column split, no second avatar. */}
-        {booking.for_someone_else ? (
-          <div className="px-[18px] py-4 flex flex-col gap-3">
-            {/* The patient (service recipient) — we collect ONLY name + DOB now. */}
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.05em] text-[#0089bb] mb-2">{t("apptForLabel")}</p>
-              <div className="flex items-center gap-3">
-                <span className="h-10 w-10 rounded-full bg-[#EBF5FB] text-[#009FD9] text-sm font-bold flex items-center justify-center shrink-0">
-                  {getInitials(booking.beneficiary_name || "?")}
-                </span>
-                <div className="min-w-0">
-                  <p className="text-[15px] font-bold text-[#111827] flex items-center gap-2 flex-wrap">
-                    {booking.beneficiary_name || t("otherPerson")}
-                    {ageBadge(booking.beneficiary_dob, booking.beneficiary_is_minor)}
-                  </p>
-                  {booking.beneficiary_dob && (
-                    <p className="mt-0.5 text-[12.5px] text-[#6b7280] flex flex-wrap items-baseline gap-x-1.5">
-                      <span className="text-[#9ca3af]">{t("fieldBirth")}</span>{formatDobDMY(booking.beneficiary_dob)}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* The requester (account holder) — the only reachable contact. Compact line + WhatsApp. */}
-            <div className="border-t border-[#f3f4f6] pt-3">
-              <p className="text-[12.5px] text-[#6b7280] flex flex-wrap items-center gap-x-2 gap-y-1">
-                <span className="text-[#9ca3af]">{t("bookedByLabel")}</span>
-                <span className="font-semibold text-[#374151]">{booking.client_name}</span>
-                {booking.client_phone && <span className="text-[#9ca3af]">·</span>}
-                {booking.client_phone && (
-                  <span><span className="text-[#9ca3af]">{t("fieldPhone")}</span> {booking.client_phone}</span>
-                )}
-                {cedulaFmt && <span className="text-[#9ca3af]">·</span>}
-                {cedulaFmt && (
-                  <span><span className="text-[#9ca3af]">{t("fieldCedula")}</span> {cedulaFmt}</span>
-                )}
-                {unverifiedPill}
-                {flaggedPill}
-              </p>
-            </div>
-          </div>
-        ) : (
-          /* SELF — one person (requester = patient): name + phone; actions in the footer. */
-          booking.client_name && (
-            <div className="px-[18px] py-4">
-              <div className="flex items-center gap-3">
-                <Avatar className="h-11 w-11 shrink-0">
-                  <AvatarImage src={booking.profiles?.avatar_url} className="object-cover" />
-                  <AvatarFallback className="text-sm font-bold bg-[#EBF5FB] text-[#009FD9]">{getInitials(booking.client_name)}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[15px] font-bold text-[#111827] flex items-center gap-2 flex-wrap">
-                    {booking.client_name}
-                    {ageBadge(booking.client_dob)}
-                    {unverifiedPill}
-                    {flaggedPill}
-                  </p>
-                  {(booking.client_phone || cedulaFmt) && (
-                    <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[12.5px] text-[#6b7280]">
-                      {booking.client_phone && (
-                        <span><span className="text-[#9ca3af]">{t("fieldPhone")}</span> {booking.client_phone}</span>
-                      )}
-                      {cedulaFmt && (
-                        <span><span className="text-[#9ca3af]">{t("fieldCedula")}</span> {cedulaFmt}</span>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )
-        )}
 
         {/* 6 — actions. Auto-confirm means there's no "accept" — the pro MANAGES the
                booking: mark it done, reschedule, or cancel-with-reason (decline). */}
