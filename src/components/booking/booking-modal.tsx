@@ -1216,7 +1216,11 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                       placeholder={t("step4.descPlaceholder")}
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
+                      maxLength={500}
                     />
+                    {description.length >= 500 && (
+                      <p className="mt-1 text-xs text-[#b45309]">{t("charLimit", { max: 500 })}</p>
+                    )}
                   </div>
                 </div>
               )}

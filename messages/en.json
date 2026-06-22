@@ -826,7 +826,8 @@
     "back": "Back",
     "continue": "Continue",
     "close": "Close",
-    "requestService": "Request service"
+    "requestService": "Request service",
+    "charLimit": "You've reached the {max}-character limit."
   },
   "dashboard": {
     "pro": {
@@ -1239,7 +1240,8 @@
     "fieldDeadline": "Timeline:",
     "fieldBudget": "Budget:",
     "fieldPhone": "Phone:",
-    "budgetTBD": "To be agreed"
+    "budgetTBD": "To be agreed",
+    "charLimit": "You've reached the {max}-character limit."
   },
   "servicesEditor": {
     "servicesOf": "Services of",
@@ -1968,7 +1970,8 @@
     "cancel": "Cancel",
     "close": "Close",
     "publishing": "Publishing...",
-    "publish": "Post a request"
+    "publish": "Post a request",
+    "charLimit": "You've reached the {max}-character limit."
   },
   "notifications": {
     "title": "Notifications",

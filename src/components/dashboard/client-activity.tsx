@@ -402,7 +402,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                         {expandedBooking === b.id && (
                           <div className="px-4 pb-4 pt-3 border-t border-[#f3f4f6] flex flex-col gap-2.5">
                             {b.service_description && (
-                              <p className="text-sm text-[#374151] whitespace-pre-line">{b.service_description}</p>
+                              <p className="text-sm text-[#374151] whitespace-pre-line break-words">{b.service_description}</p>
                             )}
                             {/* Pro cancelled → show why (so the client knows + can re-book). */}
                             {b.status === "cancelled" && b.cancelled_by === "professional" && (
@@ -517,7 +517,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
-                          <span className="text-[15px] font-semibold text-[#111827] min-w-0">{project.title}</span>
+                          <span className="text-[15px] font-semibold text-[#111827] min-w-0 truncate">{project.title}</span>
                           {!proyectoStatusRedundant(project.status) ? (
                             <Badge
                               className="shrink-0 text-[11px] font-semibold"
@@ -550,7 +550,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                     {isExpanded && (
                       <div className="px-4 pb-4 pt-3 border-t border-[#f3f4f6] flex flex-col gap-2.5">
                         {project.description && (
-                          <p className="text-sm text-[#6b7280] whitespace-pre-line">{project.description}</p>
+                          <p className="text-sm text-[#6b7280] whitespace-pre-line break-words">{project.description}</p>
                         )}
                         <p className="text-xs text-[#374151]">
                           <span className="text-[#6b7280]">{t("fieldPublished")}</span> <span className="font-medium">{new Date(project.created_at).toLocaleDateString(dateLocale)}</span>
@@ -625,7 +625,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                     ? <span className="text-[#009FD9]">₡{proposal.price.toLocaleString("es-CR")}</span>
                                     : <span className="text-[#6b7280]">{t("priceTBD")}</span>}
                                 </p>
-                                <p className="text-xs text-[#6b7280] mt-0.5 line-clamp-2">{proposal.message}</p>
+                                <p className="text-xs text-[#6b7280] mt-0.5 line-clamp-2 break-words">{proposal.message}</p>
                               </div>
                             </div>
                             <div className="flex flex-col gap-1.5 shrink-0">

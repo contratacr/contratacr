@@ -826,7 +826,8 @@
     "back": "Atrás",
     "continue": "Continuar",
     "close": "Cerrar",
-    "requestService": "Solicitar servicio"
+    "requestService": "Solicitar servicio",
+    "charLimit": "Has alcanzado el límite de {max} caracteres."
   },
   "dashboard": {
     "pro": {
@@ -1239,7 +1240,8 @@
     "fieldDeadline": "Plazo:",
     "fieldBudget": "Presupuesto:",
     "fieldPhone": "Tel:",
-    "budgetTBD": "A convenir"
+    "budgetTBD": "A convenir",
+    "charLimit": "Has alcanzado el límite de {max} caracteres."
   },
   "servicesEditor": {
     "servicesOf": "Servicios de",
@@ -1968,7 +1970,8 @@
     "cancel": "Cancelar",
     "close": "Cerrar",
     "publishing": "Publicando...",
-    "publish": "Publicar una solicitud"
+    "publish": "Publicar una solicitud",
+    "charLimit": "Has alcanzado el límite de {max} caracteres."
   },
   "notifications": {
     "title": "Notificaciones",

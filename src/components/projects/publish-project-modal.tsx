@@ -218,8 +218,13 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
                 placeholder={t("descriptionPlaceholder")}
                 value={form.description}
                 onChange={(e) => update("description", e.target.value)}
+                maxLength={1000}
                 required
               />
+              {/* Limit message ONLY once the cap is reached — silent otherwise (no counter). */}
+              {form.description.length >= 1000 && (
+                <p className="mt-1 text-xs text-[#b45309]">{t("charLimit", { max: 1000 })}</p>
+              )}
             </div>
 
             {/* Location — the SAME polished SelectMenu popover used by the pro panel's

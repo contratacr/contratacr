@@ -292,7 +292,7 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
                       </Avatar>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
-                          <span className="text-[15px] font-semibold text-[#111827] min-w-0">{project.title}</span>
+                          <span className="text-[15px] font-semibold text-[#111827] min-w-0 truncate">{project.title}</span>
                           {alreadySubmitted ? (
                             <Badge variant="success" className="shrink-0 text-[11px] font-semibold">{t("alreadyProposed")}</Badge>
                           ) : project.categories?.name ? (
@@ -323,7 +323,7 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
                           </p>
                         )}
                         {project.description && (
-                          <p className="text-[13px] text-[#374151] whitespace-pre-line">{project.description}</p>
+                          <p className="text-[13px] text-[#374151] whitespace-pre-line break-words">{project.description}</p>
                         )}
                         <span className="text-xs text-[#6b7280]">{t("proposalsCount", { count: proposalCount })}</span>
 
@@ -348,8 +348,12 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
                                 placeholder={t("messagePlaceholder")}
                                 value={form.message}
                                 onChange={(e) => updateForm(project.id, "message", e.target.value)}
+                                maxLength={800}
                                 className={`${inputClass} min-h-[100px] resize-none`}
                               />
+                              {form.message.length >= 800 && (
+                                <p className="mt-1 text-xs text-[#b45309]">{t("charLimit", { max: 800 })}</p>
+                              )}
                             </div>
                             <Button
                               size="sm"
@@ -412,7 +416,7 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
                             <span className="text-[#6b7280]">{t("fieldPhone")}</span> {p.projects.profiles.phone}
                           </p>
                         )}
-                        <p className="text-xs text-[#6b7280] line-clamp-2 mb-2">{p.message}</p>
+                        <p className="text-xs text-[#6b7280] line-clamp-2 mb-2 break-words">{p.message}</p>
                         <p className="text-xs text-[#374151]">
                           {t("yourPriceLabel")}{" "}
                           {p.price
@@ -481,8 +485,12 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
                           <textarea
                             value={editForm.message}
                             onChange={(e) => setEditForm((f) => ({ ...f, message: e.target.value }))}
+                            maxLength={800}
                             className={`${inputClass} min-h-[90px] resize-none`}
                           />
+                          {editForm.message.length >= 800 && (
+                            <p className="mt-1 text-xs text-[#b45309]">{t("charLimit", { max: 800 })}</p>
+                          )}
                         </div>
                         <div className="flex gap-2">
                           <Button size="sm" onClick={() => saveEdit(p.id)} disabled={!editForm.message.trim()}>{t("save")}</Button>
