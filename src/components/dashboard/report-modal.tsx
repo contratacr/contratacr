@@ -74,7 +74,7 @@ export function ReportModal({
           maxLength={300}
           rows={2}
           placeholder={detailsPlaceholder}
-          className="mt-3 w-full rounded-xl border border-[#e5e7eb] bg-white px-3 py-2 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent resize-none"
+          className="mt-3 w-full rounded-xl border border-[#e5e7eb] bg-white px-3 py-2 text-sm text-[#111827] placeholder:text-[#9ca3af] break-words focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent resize-none"
         />
 
         <div className="mt-4 flex gap-2">

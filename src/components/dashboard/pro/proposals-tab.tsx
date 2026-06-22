@@ -218,7 +218,7 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
   }
 
   const inputClass =
-    "w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-2.5 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
+    "w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-2.5 text-sm text-[#111827] placeholder:text-[#9ca3af] break-words focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
 
   if (loading) {
     return (
@@ -348,11 +348,11 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
                                 placeholder={t("messagePlaceholder")}
                                 value={form.message}
                                 onChange={(e) => updateForm(project.id, "message", e.target.value)}
-                                maxLength={800}
+                                maxLength={500}
                                 className={`${inputClass} min-h-[100px] resize-none`}
                               />
-                              {form.message.length >= 800 && (
-                                <p className="mt-1 text-xs text-[#b45309]">{t("charLimit", { max: 800 })}</p>
+                              {form.message.length >= 500 && (
+                                <p className="mt-1 text-xs text-[#b45309]">{t("charLimit", { max: 500 })}</p>
                               )}
                             </div>
                             <Button
@@ -485,11 +485,11 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
                           <textarea
                             value={editForm.message}
                             onChange={(e) => setEditForm((f) => ({ ...f, message: e.target.value }))}
-                            maxLength={800}
+                            maxLength={500}
                             className={`${inputClass} min-h-[90px] resize-none`}
                           />
-                          {editForm.message.length >= 800 && (
-                            <p className="mt-1 text-xs text-[#b45309]">{t("charLimit", { max: 800 })}</p>
+                          {editForm.message.length >= 500 && (
+                            <p className="mt-1 text-xs text-[#b45309]">{t("charLimit", { max: 500 })}</p>
                           )}
                         </div>
                         <div className="flex gap-2">

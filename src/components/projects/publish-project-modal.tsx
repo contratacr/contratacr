@@ -214,16 +214,16 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
                 {t("description")} <span className="text-red-500">*</span>
               </label>
               <textarea
-                className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] min-h-[120px] resize-none focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+                className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] min-h-[120px] resize-none break-words focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
                 placeholder={t("descriptionPlaceholder")}
                 value={form.description}
                 onChange={(e) => update("description", e.target.value)}
-                maxLength={1000}
+                maxLength={500}
                 required
               />
               {/* Limit message ONLY once the cap is reached — silent otherwise (no counter). */}
-              {form.description.length >= 1000 && (
-                <p className="mt-1 text-xs text-[#b45309]">{t("charLimit", { max: 1000 })}</p>
+              {form.description.length >= 500 && (
+                <p className="mt-1 text-xs text-[#b45309]">{t("charLimit", { max: 500 })}</p>
               )}
             </div>
 

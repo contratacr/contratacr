@@ -376,7 +376,8 @@ export function BookingRequests() {
                 onChange={(e) => setReason(e.target.value)}
                 placeholder={t("cancelReasonPlaceholder")}
                 rows={2}
-                className="w-full rounded-xl border border-[#e5e7eb] bg-white px-3 py-2 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent resize-none"
+                maxLength={300}
+                className="w-full rounded-xl border border-[#e5e7eb] bg-white px-3 py-2 text-sm text-[#111827] placeholder:text-[#9ca3af] break-words focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent resize-none"
               />
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" className="rounded-full" onClick={closeAction} disabled={submitting}>{t("back")}</Button>

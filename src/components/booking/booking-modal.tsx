@@ -1212,14 +1212,14 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                       {t("step4.description")} <span className="text-red-500">*</span>
                     </label>
                     <textarea
-                      className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] min-h-[110px] resize-none focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+                      className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] min-h-[110px] resize-none break-words focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
                       placeholder={t("step4.descPlaceholder")}
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
-                      maxLength={500}
+                      maxLength={300}
                     />
-                    {description.length >= 500 && (
-                      <p className="mt-1 text-xs text-[#b45309]">{t("charLimit", { max: 500 })}</p>
+                    {description.length >= 300 && (
+                      <p className="mt-1 text-xs text-[#b45309]">{t("charLimit", { max: 300 })}</p>
                     )}
                   </div>
                 </div>
