@@ -344,16 +344,17 @@ export default function DashboardPage() {
 
           {/* FULL mode switch, also surfaced HERE (not just the navbar menu) so it's easy to
               find — especially on mobile, where this sits right under the header. Text-only
-              (no icon), full-width on mobile; the badge shows the other world's unread. */}
+              (no icon), same brand-tint chip + brand-blue count pill as the navbar; full-width
+              on mobile. */}
           {isProvider && (
             <div className="mb-6">
               <button
                 onClick={() => switchMode(mode === "offer" ? "use" : "offer")}
-                className="flex w-full sm:w-auto items-center justify-center gap-2 rounded-xl border border-[#009FD9]/40 bg-white px-4 py-2.5 text-sm font-semibold text-[#009FD9] hover:bg-[#EBF5FB] transition-colors"
+                className="flex w-full sm:w-auto items-center justify-center gap-2.5 rounded-xl bg-[#EBF5FB] px-5 py-2.5 text-sm font-semibold text-[#162543] hover:bg-[#d8eafb] transition-colors"
               >
                 {mode === "offer" ? tHeader("switchToClient") : tHeader("switchToPro")}
                 {otherModeUnread > 0 && (
-                  <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">{otherModeUnread > 9 ? "9+" : otherModeUnread}</span>
+                  <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#009FD9] px-1.5 text-[11px] font-bold leading-none text-white">{otherModeUnread > 9 ? "9+" : otherModeUnread}</span>
                 )}
               </button>
             </div>

@@ -549,18 +549,21 @@ function AccountMenu({
             <p className="text-xs text-[#9ca3af] truncate">{user.email}</p>
           </div>
 
-          {/* FULL MODE SWITCH (providers only) — flips the whole experience to the other
-              world; the badge surfaces the other mode's unread so awareness needs no switch. */}
+          {/* FULL MODE SWITCH (providers only) — a clean brand-tint chip (Airbnb-style switch,
+              ContrataCR colors); the solid brand-blue count pill surfaces the other mode's
+              unread so awareness needs no switch. */}
           {isPro && (
-            <button
-              onClick={() => { setOpen(false); onSwitchMode(mode === "offer" ? "use" : "offer"); }}
-              className="w-full flex items-center gap-2 px-3 py-2 text-sm font-semibold text-[#009FD9] hover:bg-[#EBF5FB] transition-colors"
-            >
-              <span className="flex-1 text-left">{mode === "offer" ? t("switchToClient") : t("switchToPro")}</span>
-              {otherModeUnread > 0 && (
-                <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">{otherModeUnread > 9 ? "9+" : otherModeUnread}</span>
-              )}
-            </button>
+            <div className="px-2 pt-0.5 pb-1.5">
+              <button
+                onClick={() => { setOpen(false); onSwitchMode(mode === "offer" ? "use" : "offer"); }}
+                className="w-full flex items-center justify-between gap-3 rounded-xl bg-[#EBF5FB] px-3 py-2.5 text-sm font-semibold text-[#162543] hover:bg-[#d8eafb] transition-colors"
+              >
+                <span className="text-left">{mode === "offer" ? t("switchToClient") : t("switchToPro")}</span>
+                {otherModeUnread > 0 && (
+                  <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#009FD9] px-1.5 text-[11px] font-bold leading-none text-white">{otherModeUnread > 9 ? "9+" : otherModeUnread}</span>
+                )}
+              </button>
+            </div>
           )}
 
           <p className="px-3 pt-2 pb-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
@@ -1301,13 +1304,13 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     <p className="text-xs text-gray-400 truncate">{user.email}</p>
                   </div>
                 </div>
-                {/* FULL MODE SWITCH (providers) — flips the whole experience; the badge
-                    surfaces the other mode's unread without switching. */}
+                {/* FULL MODE SWITCH (providers) — same brand-tint chip + brand-blue count pill
+                    as the desktop menu, full-width here; surfaces the other mode's unread. */}
                 {isPro && (
-                  <button onClick={() => switchMode(mode === "offer" ? "use" : "offer")} className="w-full flex items-center gap-2 px-2 py-2.5 rounded-lg text-sm font-semibold text-[#009FD9] hover:bg-[#EBF5FB] transition-colors">
-                    <span className="flex-1 text-left">{mode === "offer" ? t("switchToClient") : t("switchToPro")}</span>
+                  <button onClick={() => switchMode(mode === "offer" ? "use" : "offer")} className="w-full flex items-center justify-between gap-3 mb-1.5 rounded-xl bg-[#EBF5FB] px-3 py-2.5 text-sm font-semibold text-[#162543] hover:bg-[#d8eafb] transition-colors">
+                    <span className="text-left">{mode === "offer" ? t("switchToClient") : t("switchToPro")}</span>
                     {otherModeUnread > 0 && (
-                      <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white shrink-0">{otherModeUnread > 9 ? "9+" : otherModeUnread}</span>
+                      <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#009FD9] px-1.5 text-[11px] font-bold leading-none text-white shrink-0">{otherModeUnread > 9 ? "9+" : otherModeUnread}</span>
                     )}
                   </button>
                 )}
