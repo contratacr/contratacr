@@ -37,6 +37,8 @@ type Booking = {
   scheduled_time?: string;
   status: BookingStatus;
   created_at: string;
+  cancel_reason?: string | null;
+  cancelled_by?: string | null;
   professionals?: {
     slug: string;
     whatsapp?: string;
@@ -116,6 +118,10 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   // slot for the same pro → old slot freed, new slot taken (atomic). The pro does NOT
   // reschedule (they cancel + coordinate via WhatsApp) — see sprint 433.
   const [reschedule, setReschedule] = useState<{ id: string; professionalId: string; when: string | null } | null>(null);
+  // CLIENT cancel confirm dialog (optional note).
+  const [cancelTarget, setCancelTarget] = useState<string | null>(null);
+  const [cancelNote, setCancelNote] = useState("");
+  const [cancelling, setCancelling] = useState(false);
 
   const fetchSection = useCallback(async () => {
     if (!user) return;
@@ -151,14 +157,21 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
     return myReviews.find((r) => r.project_id === projectId);
   }
 
-  async function cancelBooking(id: string) {
-    const reason = window.prompt(t("cancelPrompt")) ?? "";
+  // CLIENT cancel — low-friction: a clean confirm dialog with an OPTIONAL note (no
+  // forced reason; the slot frees + the pro is notified either way). Sprint 434.
+  async function confirmCancelBooking() {
+    if (!cancelTarget) return;
+    setCancelling(true);
+    const note = cancelNote.trim();
     await fetch("/api/bookings", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, status: "cancelled", cancelReason: reason.trim() || undefined }),
+      body: JSON.stringify({ id: cancelTarget, status: "cancelled", cancelReason: note || undefined }),
     });
-    setBookings((prev) => prev.map((b) => (b.id === id ? { ...b, status: "cancelled" } : b)));
+    setBookings((prev) => prev.map((b) => (b.id === cancelTarget ? { ...b, status: "cancelled" } : b)));
+    setCancelling(false);
+    setCancelTarget(null);
+    setCancelNote("");
   }
 
   async function confirmBookingDone(id: string) {
@@ -363,6 +376,15 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                     <span className="text-[#9ca3af]">{t("fieldDate")}</span> <span className="font-medium">{formatBookingDate(b, dateLocale)}</span>
                                   </p>
                                 )}
+                                {/* Pro cancelled → show why (so the client knows + can re-book). */}
+                                {b.status === "cancelled" && b.cancelled_by === "professional" && (
+                                  <div className="mt-1.5 rounded-lg bg-[#fef2f2] border border-[#fee2e2] px-2.5 py-1.5">
+                                    <p className="text-[11px] font-semibold text-[#b91c1c]">{t("proCancelled")}</p>
+                                    {b.cancel_reason && (
+                                      <p className="mt-0.5 text-xs text-[#374151]"><span className="text-[#9ca3af]">{t("fieldReason")}</span> {b.cancel_reason}</p>
+                                    )}
+                                  </div>
+                                )}
                               </div>
                             </div>
                             <div className="flex flex-col gap-2 shrink-0">
@@ -380,7 +402,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                 <Button size="sm" variant="outline" onClick={() => setReschedule({ id: b.id, professionalId: b.professional_id, when: formatBookingDate(b, dateLocale) })}>{t("reschedule")}</Button>
                               )}
                               {["pending", "confirmed", "in_progress"].includes(b.status) && (
-                                <Button size="sm" variant="outline" onClick={() => cancelBooking(b.id)}>{t("cancel")}</Button>
+                                <Button size="sm" variant="outline" onClick={() => { setCancelTarget(b.id); setCancelNote(""); }}>{t("cancel")}</Button>
                               )}
                               {b.professionals?.whatsapp && b.status !== "cancelled" && b.status !== "completed" && (
                                 <Button size="sm" variant="whatsapp" asChild>
@@ -651,6 +673,29 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
           onClose={() => setReschedule(null)}
           onDone={fetchSection}
         />
+      )}
+
+      {/* CLIENT cancel — clean confirm dialog; the note is OPTIONAL (low-friction). */}
+      {cancelTarget && (
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => !cancelling && setCancelTarget(null)} aria-hidden />
+          <div role="dialog" aria-modal="true" aria-label={t("cancelTitle")} className="relative w-full sm:max-w-sm bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl p-5 pb-[max(env(safe-area-inset-bottom),1.25rem)]">
+            <h2 className="text-base font-bold text-[#111827]">{t("cancelTitle")}</h2>
+            <p className="mt-1 text-sm text-[#6b7280]">{t("cancelBody")}</p>
+            <label className="mt-4 block text-xs font-medium text-[#374151]">{t("cancelNoteLabel")}</label>
+            <textarea
+              value={cancelNote}
+              onChange={(e) => setCancelNote(e.target.value)}
+              rows={2}
+              placeholder={t("cancelNotePlaceholder")}
+              className="mt-1 w-full rounded-xl border border-[#e5e7eb] bg-white px-3 py-2 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent resize-none"
+            />
+            <div className="mt-4 flex gap-2">
+              <Button variant="outline" size="sm" className="flex-1 rounded-full" onClick={() => setCancelTarget(null)} disabled={cancelling}>{t("cancelBack")}</Button>
+              <Button size="sm" className="flex-1 rounded-full bg-red-600 hover:bg-red-700" onClick={confirmCancelBooking} disabled={cancelling} loading={cancelling}>{t("cancelConfirm")}</Button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );

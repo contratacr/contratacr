@@ -1607,7 +1607,15 @@
     "fieldZone": "Area:",
     "fieldPublished": "Published:",
     "fieldProposals": "Proposals:",
-    "reschedule": "Reschedule"
+    "reschedule": "Reschedule",
+    "cancelTitle": "Cancel this request?",
+    "cancelBody": "The time slot will be freed and the professional will be notified.",
+    "cancelNoteLabel": "Reason (optional)",
+    "cancelNotePlaceholder": "Add a reason if you want.",
+    "cancelBack": "Back",
+    "cancelConfirm": "Yes, cancel",
+    "proCancelled": "Cancelled by the professional",
+    "fieldReason": "Reason:"
   },
   "clientPage": {
     "greeting": "Hi, {name} 👋",

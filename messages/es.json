@@ -1607,7 +1607,15 @@
     "fieldZone": "Zona:",
     "fieldPublished": "Publicado:",
     "fieldProposals": "Propuestas:",
-    "reschedule": "Reprogramar"
+    "reschedule": "Reprogramar",
+    "cancelTitle": "¿Cancelar esta solicitud?",
+    "cancelBody": "Se liberará el horario y se le avisará al profesional.",
+    "cancelNoteLabel": "Motivo (opcional)",
+    "cancelNotePlaceholder": "Agrega un motivo si lo deseas.",
+    "cancelBack": "Volver",
+    "cancelConfirm": "Sí, cancelar",
+    "proCancelled": "Cancelada por el profesional",
+    "fieldReason": "Motivo:"
   },
   "clientPage": {
     "greeting": "Hola, {name} 👋",
