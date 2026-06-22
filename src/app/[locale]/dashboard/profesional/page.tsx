@@ -586,7 +586,8 @@ export default function DashboardPage() {
           <div className="absolute inset-x-0 bottom-0 max-h-[78vh] overflow-y-auto rounded-t-2xl bg-white shadow-2xl pb-[env(safe-area-inset-bottom)] animate-in slide-in-from-bottom duration-200">
             <div className="sticky top-0 bg-white pt-2">
               <div className="mx-auto h-1 w-10 rounded-full bg-[#e5e7eb]" />
-              <p className="px-4 pt-2.5 pb-2 text-sm font-semibold text-[#111827]">{t("bottomNav.more")}</p>
+              {/* NOT the bare "Más" (that's just the button label) — a clearer sheet title. */}
+              <p className="px-4 pt-2.5 pb-2 text-sm font-semibold text-[#111827]">{t("bottomNav.moreTitle")}</p>
             </div>
             <div className="p-2 pt-0">
               {moreTabs.map((tab) => {
