@@ -233,10 +233,15 @@ export default function DashboardPage() {
   }, [authLoading, loading, pro, user, router, noProTries, fetchPro]);
 
   function setTab(tab: Tab) {
+    setMoreOpen(false);
+    if (tab === activeTab) return;
     // Mode is persisted globally now, so the tab alone is enough — a mode-specific tab
     // also re-asserts its mode via the effect above, keeping the navbar switch in sync.
     router.push(`/dashboard/profesional?tab=${tab}`, { scroll: false });
-    requestAnimationFrame(() => contentRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    // Reset to the top of the new section INSTANTLY via the window. A smooth scrollIntoView
+    // fought the fixed mobile bottom bar (its backdrop-blur made "Más" flicker / feel covered
+    // during the animated scroll); an instant window scroll never interferes with it.
+    requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "auto" }));
   }
 
   // Full mode switch from inside the panel (same action as the navbar). Resets to the
@@ -538,7 +543,7 @@ export default function DashboardPage() {
           thumb-reachable, always visible while in the panel; replaces the sidebar on phones.
           A capped item set per mode (+ "Más") means it ALWAYS fits — never a horizontal scroll. */}
       <nav
-        className="lg:hidden fixed bottom-0 inset-x-0 z-40 flex items-stretch border-t border-[#e5e7eb] bg-white/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)]"
+        className="lg:hidden fixed bottom-0 inset-x-0 z-40 flex items-stretch border-t border-[#e5e7eb] bg-white shadow-[0_-2px_10px_rgba(15,23,42,0.05)] pb-[env(safe-area-inset-bottom)]"
         aria-label={t("title")}
       >
         {primaryTabs.map((tab) => {
