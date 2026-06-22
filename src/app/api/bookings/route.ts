@@ -323,9 +323,12 @@ export async function PATCH(req: NextRequest) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   // Notify the OTHER party on every state change (best-effort, never blocks).
+  // `notifyBookingStatusChange` always notifies the CLIENT, so only fire it for a
+  // PRO-initiated cancel (the pro telling the client). A CLIENT-initiated cancel
+  // notifies the PRO instead (in the in-app block below) — never the client itself.
   if (isReschedule) {
     await notifyBookingRescheduled(id);
-  } else if (status === "confirmed" || status === "cancelled") {
+  } else if (status === "confirmed" || (status === "cancelled" && isOwnerPro)) {
     await notifyBookingStatusChange(id, status, typeof cancelReason === "string" ? cancelReason : undefined);
   }
   // In-app notification to the other side for the new lifecycle states.
@@ -343,6 +346,21 @@ export async function PATCH(req: NextRequest) {
       const { data: pr } = await admin.from("professionals").select("profile_id").eq("id", bookingRow.professional_id).maybeSingle();
       if (pr?.profile_id) {
         await admin.from("notifications").insert({ user_id: pr.profile_id, type: "booking_update", title: "El cliente confirmó la finalización", message: "La solicitud quedó finalizada." });
+      }
+    }
+    // Client cancelled their own booking → notify the professional (their slot freed),
+    // with the motivo if the client added one. Links to Solicitudes recibidas.
+    if (isOwnerClient && status === "cancelled") {
+      const { data: pr } = await admin.from("professionals").select("profile_id").eq("id", bookingRow.professional_id).maybeSingle();
+      if (pr?.profile_id) {
+        const motivo = typeof cancelReason === "string" && cancelReason.trim() ? ` Motivo: ${cancelReason.trim()}` : "";
+        await admin.from("notifications").insert({
+          user_id: pr.profile_id,
+          type: "booking_update",
+          title: "El cliente canceló la solicitud",
+          message: `El cliente canceló su solicitud. El horario quedó libre.${motivo}`,
+          data: { link: "/es/dashboard/profesional?tab=bookings", booking_id: id },
+        });
       }
     }
   } catch (e) { console.error("[PATCH /api/bookings] notify:", e); }
