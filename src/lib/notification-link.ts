@@ -15,15 +15,14 @@ const PRO_TYPES = new Set([
   "booking_received",   // a client requested your service
   "proposal_accepted",  // a client accepted your proposal
   "new_project",        // a new project you can bid on
+  "booking_rescheduled", // the CLIENT moved their appointment to a new slot (sprint 433)
 ]);
 
 // Notification types raised about the user's own activity AS A CLIENT.
 const CLIENT_TYPES = new Set([
   "booking_confirmed",
   "booking_cancelled",
-  "booking_rescheduled",
   "booking_completed",
-  "booking_rescheduled", // the professional proposed a new time
   "review_request",
   "proposal_received",  // a professional sent a proposal to your project
 ]);
@@ -88,9 +87,11 @@ export function notificationHref(n: NotificationLinkInput, _role?: string): stri
       return "/es/dashboard/profesional?tab=proposals";
 
     // Seek-capability context (use-only tabs → the panel opens in use mode)
+    case "booking_rescheduled":
+      // The client reschedules → the PRO is notified; open Solicitudes recibidas.
+      return "/es/dashboard/profesional?tab=bookings";
     case "booking_confirmed":
     case "booking_cancelled":
-    case "booking_rescheduled":
     case "booking_completed":
     case "review_request":
       return "/es/dashboard/profesional?tab=sent_bookings";

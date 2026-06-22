@@ -14,6 +14,7 @@ import { getInitials, getWhatsAppLink } from "@/lib/utils";
 import { StatusFilterTabs, SOLICITUD_TABS, PROYECTO_TABS, solicitudMatches, solicitudBucket, solicitudStatusRedundant, proyectoMatches, proyectoBucket, proyectoStatusRedundant, bucketCounts } from "@/components/dashboard/status-filter-tabs";
 import { LeaveReviewModal } from "@/components/professionals/leave-review-modal";
 import { PublishProjectModal } from "@/components/projects/publish-project-modal";
+import { RescheduleModal } from "@/components/booking/reschedule-modal";
 import { SavedProfessionalsTab } from "@/components/professionals/saved-professionals-tab";
 import type { BookingStatus } from "@/types";
 
@@ -111,6 +112,10 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   const [expandedProject, setExpandedProject] = useState<string | null>(null);
   const [projectProposals, setProjectProposals] = useState<Record<string, Proposal[]>>({});
   const [showPublish, setShowPublish] = useState(false);
+  // CLIENT reschedule: the client (owner of the appointment) picks another available
+  // slot for the same pro → old slot freed, new slot taken (atomic). The pro does NOT
+  // reschedule (they cancel + coordinate via WhatsApp) — see sprint 433.
+  const [reschedule, setReschedule] = useState<{ id: string; professionalId: string; when: string | null } | null>(null);
 
   const fetchSection = useCallback(async () => {
     if (!user) return;
@@ -370,6 +375,9 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                 <Button variant="outline" size="sm" onClick={() => setReviewModal({ professionalId: b.professional_id, professionalName: b.professionals?.profiles?.full_name ?? t("professional"), bookingId: b.id })}>
                                   {rev ? t("editReview") : t("leaveReview")}
                                 </Button>
+                              )}
+                              {["pending", "confirmed", "in_progress"].includes(b.status) && (
+                                <Button size="sm" variant="outline" onClick={() => setReschedule({ id: b.id, professionalId: b.professional_id, when: formatBookingDate(b, dateLocale) })}>{t("reschedule")}</Button>
                               )}
                               {["pending", "confirmed", "in_progress"].includes(b.status) && (
                                 <Button size="sm" variant="outline" onClick={() => cancelBooking(b.id)}>{t("cancel")}</Button>
@@ -632,6 +640,17 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
           separate page), and refreshes this list on a successful publish. */}
       {showPublish && (
         <PublishProjectModal onClose={() => setShowPublish(false)} onSuccess={refreshProjects} />
+      )}
+
+      {/* CLIENT reschedule — pick a new available slot for the same pro (atomic swap). */}
+      {reschedule && (
+        <RescheduleModal
+          professionalId={reschedule.professionalId}
+          bookingId={reschedule.id}
+          currentWhen={reschedule.when}
+          onClose={() => setReschedule(null)}
+          onDone={fetchSection}
+        />
       )}
     </>
   );

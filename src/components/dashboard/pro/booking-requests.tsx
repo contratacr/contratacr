@@ -90,18 +90,15 @@ export function BookingRequests() {
   // Accordion: at most one card expanded at a time (essentials collapsed by default).
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  // Inline "manage exception" panels (the pro's tools instead of an accept gate):
-  // cancel-with-reason and reschedule. One open at a time, keyed by booking id.
-  const [actionFor, setActionFor] = useState<{ id: string; mode: "cancel" | "reschedule" } | null>(null);
+  // Inline cancel-with-reason panel — the pro's only exception tool (the pro does NOT
+  // reschedule; sprint 433). One open at a time, keyed by booking id.
+  const [actionFor, setActionFor] = useState<{ id: string; mode: "cancel" } | null>(null);
   const [reason, setReason] = useState("");
-  const [reDate, setReDate] = useState("");
-  const [reTime, setReTime] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [actionError, setActionError] = useState("");
 
-  function openAction(id: string, mode: "cancel" | "reschedule") {
+  function openAction(id: string, mode: "cancel") {
     setActionFor({ id, mode });
-    setReason(""); setReDate(""); setReTime(""); setActionError("");
+    setReason("");
   }
   function closeAction() { setActionFor(null); }
 
@@ -132,25 +129,6 @@ export function BookingRequests() {
       body: JSON.stringify({ id, status: "cancelled", cancelReason: motivo || undefined }),
     });
     setBookings((prev) => prev.map((b) => (b.id === id ? { ...b, status: "cancelled" as BookingStatus } : b)));
-    setSubmitting(false); closeAction();
-  }
-
-  // Reschedule — the pro proposes a new slot; the client is notified to coordinate.
-  async function submitReschedule(id: string) {
-    if (!reDate || !reTime) { setActionError(t("reschedNeed")); return; }
-    setSubmitting(true); setActionError("");
-    const res = await fetch("/api/bookings", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, status: "confirmed", scheduledDate: reDate, scheduledTime: reTime }),
-    });
-    if (!res.ok) {
-      const j = await res.json().catch(() => ({}));
-      setActionError(j.error || t("reschedError"));
-      setSubmitting(false);
-      return;
-    }
-    setBookings((prev) => prev.map((b) => (b.id === id ? { ...b, scheduled_date: reDate, scheduled_time: reTime } : b)));
     setSubmitting(false); closeAction();
   }
 
@@ -336,11 +314,11 @@ export function BookingRequests() {
                   )}
                   {isActive && (
                     <>
+                      {/* The pro does NOT reschedule (it would impose a time on the client). They
+                          mark it done or cancel-with-reason, and coordinate any new time via
+                          WhatsApp; the CLIENT reschedules their own appointment (sprint 433). */}
                       <Button size="sm" className="w-full sm:w-auto rounded-full px-4" onClick={() => updateStatus(booking.id, "awaiting_confirmation")}>{t("markCompleted")}</Button>
-                      <div className="grid grid-cols-2 gap-2 sm:contents">
-                        <Button size="sm" variant="outline" className="w-full sm:w-auto rounded-full px-4" onClick={() => openAction(booking.id, "reschedule")}>{t("reschedule")}</Button>
-                        <Button size="sm" variant="outline" className="w-full sm:w-auto rounded-full px-4 text-red-600 border-red-200 hover:bg-red-50" onClick={() => openAction(booking.id, "cancel")}>{t("cancel")}</Button>
-                      </div>
+                      <Button size="sm" variant="outline" className="w-full sm:w-auto rounded-full px-4 text-red-600 border-red-200 hover:bg-red-50" onClick={() => openAction(booking.id, "cancel")}>{t("cancel")}</Button>
                     </>
                   )}
                 </div>
@@ -380,42 +358,6 @@ export function BookingRequests() {
                 <Button variant="outline" size="sm" className="rounded-full" onClick={closeAction} disabled={submitting}>{t("back")}</Button>
                 <Button size="sm" className="rounded-full bg-red-600 hover:bg-red-700" onClick={() => submitCancel(booking.id)} disabled={submitting}>
                   {t("cancelConfirm")}
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* Reschedule panel — propose a new slot; the client is notified to coordinate. */}
-          {actionFor?.id === booking.id && actionFor.mode === "reschedule" && (
-            <div className="rounded-xl border border-[#e5e7eb] bg-[#fafafa] p-3 flex flex-col gap-2.5">
-              <p className="text-sm font-semibold text-[#111827]">{t("reschedTitle")}</p>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="text-xs font-medium text-[#374151] mb-1 block">{t("reschedDateLabel")}</label>
-                  <input
-                    type="date"
-                    value={reDate}
-                    min={new Date().toISOString().slice(0, 10)}
-                    onChange={(e) => setReDate(e.target.value)}
-                    className="w-full h-9 rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-[#374151] mb-1 block">{t("reschedTimeLabel")}</label>
-                  <input
-                    type="time"
-                    value={reTime}
-                    onChange={(e) => setReTime(e.target.value)}
-                    className="w-full h-9 rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent"
-                  />
-                </div>
-              </div>
-              {actionError && <p className="text-xs text-red-600">{actionError}</p>}
-              <p className="text-xs text-[#9ca3af]">{t("reschedHint")}</p>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="rounded-full" onClick={closeAction} disabled={submitting}>{t("back")}</Button>
-                <Button size="sm" className="rounded-full" onClick={() => submitReschedule(booking.id)} disabled={submitting}>
-                  {t("reschedConfirm")}
                 </Button>
               </div>
             </div>

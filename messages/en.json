@@ -1606,7 +1606,8 @@
     "fieldDate": "Date:",
     "fieldZone": "Area:",
     "fieldPublished": "Published:",
-    "fieldProposals": "Proposals:"
+    "fieldProposals": "Proposals:",
+    "reschedule": "Reschedule"
   },
   "clientPage": {
     "greeting": "Hi, {name} 👋",
@@ -2461,5 +2462,17 @@
     "saving": "Saving…",
     "saved": "Saved",
     "unsaved": "Unsaved"
+  },
+  "reschedule": {
+    "title": "Reschedule appointment",
+    "current": "Current: {when}",
+    "pickTime": "Pick a time",
+    "noSlots": "No times available that day",
+    "privateNote": "This professional coordinates their schedule via WhatsApp. Message them to change the appointment.",
+    "noAvailability": "This professional has no available times right now.",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "taken": "That time was just booked. Pick another time.",
+    "error": "Couldn't reschedule. Please try again."
   }
 }

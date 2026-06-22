@@ -1606,7 +1606,8 @@
     "fieldDate": "Fecha:",
     "fieldZone": "Zona:",
     "fieldPublished": "Publicado:",
-    "fieldProposals": "Propuestas:"
+    "fieldProposals": "Propuestas:",
+    "reschedule": "Reprogramar"
   },
   "clientPage": {
     "greeting": "Hola, {name} 👋",
@@ -2461,5 +2462,17 @@
     "saving": "Guardando…",
     "saved": "Guardado",
     "unsaved": "Sin guardar"
+  },
+  "reschedule": {
+    "title": "Reprogramar cita",
+    "current": "Actual: {when}",
+    "pickTime": "Elige una hora",
+    "noSlots": "No hay horarios disponibles ese día",
+    "privateNote": "Este profesional coordina sus horarios por WhatsApp. Escríbele para cambiar la cita.",
+    "noAvailability": "Este profesional no tiene horarios disponibles por ahora.",
+    "confirm": "Confirmar",
+    "cancel": "Cancelar",
+    "taken": "Ese horario ya está reservado. Elige otra hora.",
+    "error": "No se pudo reprogramar. Intenta de nuevo."
   }
 }
