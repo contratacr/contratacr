@@ -7,7 +7,7 @@ import { useSearchParams } from "next/navigation";
 import {
   User, Image as ImageIcon, CalendarDays, Inbox, ExternalLink, Wrench,
   FolderOpen, ShieldCheck, Bell, Send, ClipboardList, Bookmark, Settings, Headset, CreditCard,
-  ArrowRight, Sparkles,
+  ArrowRight, Sparkles, MoreHorizontal,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -88,12 +88,13 @@ const OFFER_TABS: Tab[] = [
 const USE_TABS: Tab[] = ["profile", "sent_bookings", "sent_projects", "saved"];
 const SHARED_TABS: Tab[] = ["notifications", "soporte", "cuenta"];
 
-// MOBILE bottom-nav (native-app tab bar): the 3 most-used sections per mode sit in the
-// fixed bottom bar (left→right); everything else (setup + shared) lives behind "Más".
-// 3 + Más = 4 items keeps the long Spanish labels (e.g. "Oportunidades") legible at ~360px.
+// MOBILE bottom-nav (native-app tab bar, icon + label): the most-used sections per mode sit
+// in the fixed bottom bar (left→right); everything else (setup + shared) lives behind "Más".
+// Offer has many sections → 3 primary + Más (so "Oportunidades" stays legible at ~360px);
+// the lighter "use" mode fits its 4 sections + Más. Item counts adapt per mode — never scroll.
 const MOBILE_PRIMARY: Record<Mode, Tab[]> = {
   offer: ["profile", "bookings", "proposals"],
-  use: ["profile", "sent_bookings", "sent_projects"],
+  use: ["profile", "sent_bookings", "sent_projects", "saved"],
 };
 
 export default function DashboardPage() {
@@ -533,8 +534,9 @@ export default function DashboardPage() {
         <LandingFooter />
       </div>
 
-      {/* MOBILE bottom nav bar — a native-app tab bar (3 primary sections + "Más"). Fixed,
-          thumb-reachable, always visible while in the panel; replaces the sidebar on phones. */}
+      {/* MOBILE bottom nav bar — a native-app tab bar (icon + label, Instagram-style). Fixed,
+          thumb-reachable, always visible while in the panel; replaces the sidebar on phones.
+          A capped item set per mode (+ "Más") means it ALWAYS fits — never a horizontal scroll. */}
       <nav
         className="lg:hidden fixed bottom-0 inset-x-0 z-40 flex items-stretch border-t border-[#e5e7eb] bg-white/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)]"
         aria-label={t("title")}
@@ -547,12 +549,12 @@ export default function DashboardPage() {
               onClick={() => { setMoreOpen(false); setTab(tab); }}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "relative flex-1 flex items-center justify-center px-1 py-3 text-[11px] font-semibold leading-none transition-colors",
-                active ? "text-[#009FD9]" : "text-[#6b7280]"
+                "flex-1 flex flex-col items-center justify-center gap-1 px-0.5 pt-2 pb-1.5 transition-colors",
+                active ? "text-[#009FD9]" : "text-[#6b7280] hover:text-[#374151]"
               )}
             >
-              {active && <span className="absolute top-0 inset-x-5 h-0.5 rounded-full bg-[#009FD9]" />}
-              <span className="truncate">{t(`bottomNav.${tab}`)}</span>
+              <span className="[&>svg]:!h-[22px] [&>svg]:!w-[22px]">{TAB_ICONS[tab]}</span>
+              <span className="text-[10px] font-semibold leading-none max-w-full truncate">{t(`bottomNav.${tab}`)}</span>
             </button>
           );
         })}
@@ -560,15 +562,15 @@ export default function DashboardPage() {
           onClick={() => setMoreOpen(true)}
           aria-current={activeInMore ? "page" : undefined}
           className={cn(
-            "relative flex-1 flex items-center justify-center px-1 py-3 text-[11px] font-semibold leading-none transition-colors",
-            (moreOpen || activeInMore) ? "text-[#009FD9]" : "text-[#6b7280]"
+            "flex-1 flex flex-col items-center justify-center gap-1 px-0.5 pt-2 pb-1.5 transition-colors",
+            (moreOpen || activeInMore) ? "text-[#009FD9]" : "text-[#6b7280] hover:text-[#374151]"
           )}
         >
-          {activeInMore && !moreOpen && <span className="absolute top-0 inset-x-5 h-0.5 rounded-full bg-[#009FD9]" />}
           <span className="relative">
-            {t("bottomNav.more")}
-            {moreHasBadge && <span className="absolute -right-2.5 -top-1 h-1.5 w-1.5 rounded-full bg-[#009FD9]" />}
+            <MoreHorizontal className="h-[22px] w-[22px]" />
+            {moreHasBadge && <span className="absolute -right-1 -top-0.5 h-2 w-2 rounded-full bg-[#009FD9] ring-2 ring-white" />}
           </span>
+          <span className="text-[10px] font-semibold leading-none">{t("bottomNav.more")}</span>
         </button>
       </nav>
 
@@ -590,11 +592,12 @@ export default function DashboardPage() {
                     key={tab}
                     onClick={() => { setMoreOpen(false); setTab(tab); }}
                     className={cn(
-                      "w-full flex items-center justify-between gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium transition-colors",
+                      "w-full flex items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium transition-colors",
                       active ? "bg-[#EBF5FB] text-[#009FD9]" : "text-[#374151] hover:bg-[#f3f4f6]"
                     )}
                   >
-                    <span>{tab === "services" ? t("servicesHeading") : t(`tabs.${tab}`)}</span>
+                    <span className={cn("shrink-0", active ? "text-[#009FD9]" : "text-[#9ca3af]")}>{TAB_ICONS[tab]}</span>
+                    <span className="flex-1">{tab === "services" ? t("servicesHeading") : t(`tabs.${tab}`)}</span>
                     {badge > 0 && (
                       <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#009FD9] px-1.5 text-[11px] font-bold text-white">{badge > 9 ? "9+" : badge}</span>
                     )}

@@ -1077,7 +1077,8 @@
       "proposals": "Opportunities",
       "sent_bookings": "Requests",
       "sent_projects": "Published",
-      "more": "More"
+      "more": "More",
+      "saved": "Saved"
     }
   },
   "bookingRequests": {

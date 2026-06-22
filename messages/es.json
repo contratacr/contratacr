@@ -1077,7 +1077,8 @@
       "proposals": "Oportunidades",
       "sent_bookings": "Solicitudes",
       "sent_projects": "Publicadas",
-      "more": "Más"
+      "more": "Más",
+      "saved": "Favoritos"
     }
   },
   "bookingRequests": {
