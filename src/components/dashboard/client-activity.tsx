@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { getInitials, getWhatsAppLink, cn } from "@/lib/utils";
 import { StatusFilterTabs, SOLICITUD_TABS, PROYECTO_TABS, solicitudMatches, solicitudBucket, solicitudStatusRedundant, proyectoMatches, proyectoBucket, proyectoStatusRedundant, bucketCounts } from "@/components/dashboard/status-filter-tabs";
 import { CardActionsMenu, type CardAction } from "@/components/dashboard/card-actions-menu";
+import { ReportModal } from "@/components/dashboard/report-modal";
 import { LeaveReviewModal } from "@/components/professionals/leave-review-modal";
 import { PublishProjectModal } from "@/components/projects/publish-project-modal";
 import { RescheduleModal } from "@/components/booking/reschedule-modal";
@@ -133,6 +134,8 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   // Delete-publicación confirm dialog (clean modal, not a browser confirm()).
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  // "Reportar profesional" clean modal (replaces the old window.prompt), keyed by booking id.
+  const [reportProFor, setReportProFor] = useState<string | null>(null);
 
   const fetchSection = useCallback(async () => {
     if (!user) return;
@@ -198,13 +201,12 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
     if (b) setReviewModal({ professionalId: b.professional_id, professionalName: b.professionals?.profiles?.full_name ?? t("professional"), bookingId: id });
   }
 
-  async function reportProfessional(bookingId: string) {
-    const reason = window.prompt(t("reportProPrompt"));
-    if (!reason || !reason.trim()) return;
+  async function submitReportPro(reason: string) {
+    if (!reportProFor) return;
     const res = await fetch("/api/report-professional", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ bookingId, reason: reason.trim() }),
+      body: JSON.stringify({ bookingId: reportProFor, reason }),
     });
     alert(res.ok ? t("reportThanks") : t("reportError"));
   }
@@ -433,7 +435,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                 menu.push({ label: t("reschedule"), onClick: () => setReschedule({ id: b.id, professionalId: b.professional_id, when: formatBookingDate(b, dateLocale) }) });
                                 menu.push({ label: t("cancel"), onClick: () => { setCancelTarget(b.id); setCancelNote(""); }, destructive: true });
                               }
-                              menu.push({ label: t("report"), onClick: () => reportProfessional(b.id), destructive: true });
+                              menu.push({ label: t("report"), onClick: () => setReportProFor(b.id), destructive: true });
 
                               let primary: ReactNode = null;
                               if (b.status === "awaiting_confirmation") {
@@ -744,6 +746,20 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
             </div>
           </div>
         </div>
+      )}
+
+      {/* REPORT professional — clean on-brand modal (replaces window.prompt). */}
+      {reportProFor && (
+        <ReportModal
+          title={t("reportTitle")}
+          body={t("reportBody")}
+          reasons={[t("reportR1"), t("reportR2"), t("reportR3"), t("reportR4")]}
+          detailsPlaceholder={t("reportDetails")}
+          backLabel={t("cancelBack")}
+          submitLabel={t("reportSubmit")}
+          onClose={() => setReportProFor(null)}
+          onSubmit={submitReportPro}
+        />
       )}
     </>
   );

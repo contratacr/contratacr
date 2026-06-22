@@ -1170,7 +1170,15 @@
     "actions": "Acciones",
     "contactPhone": "Teléfono",
     "contactCedula": "Cédula",
-    "noteEyebrow": "Nota del cliente"
+    "noteEyebrow": "Nota del cliente",
+    "reportTitle": "Reportar cliente",
+    "reportBody": "Tu reporte es confidencial y nos ayuda a mantener ContrataCR seguro.",
+    "reportR1": "No se presentó",
+    "reportR2": "Datos falsos",
+    "reportR3": "Trato irrespetuoso",
+    "reportR4": "Otro",
+    "reportDetails": "Detalles (opcional)",
+    "reportSubmit": "Reportar"
   },
   "photoGallery": {
     "intro": "Máximo {max} fotos en total.",
@@ -1628,7 +1636,15 @@
     "deleteTitle": "¿Eliminar esta solicitud?",
     "deleteBody": "Esta acción no se puede deshacer.",
     "viewProfile": "Ver perfil",
-    "actions": "Acciones"
+    "actions": "Acciones",
+    "reportTitle": "Reportar profesional",
+    "reportBody": "Tu reporte es confidencial y nos ayuda a mantener ContrataCR seguro.",
+    "reportR1": "No se presentó",
+    "reportR2": "Trabajo deficiente",
+    "reportR3": "Trato irrespetuoso",
+    "reportR4": "Otro",
+    "reportDetails": "Detalles (opcional)",
+    "reportSubmit": "Reportar"
   },
   "clientPage": {
     "greeting": "Hola, {name} 👋",

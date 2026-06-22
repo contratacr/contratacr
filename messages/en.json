@@ -1170,7 +1170,15 @@
     "actions": "Actions",
     "contactPhone": "Phone",
     "contactCedula": "ID",
-    "noteEyebrow": "Client's note"
+    "noteEyebrow": "Client's note",
+    "reportTitle": "Report client",
+    "reportBody": "Your report is confidential and helps keep ContrataCR safe.",
+    "reportR1": "No-show",
+    "reportR2": "False information",
+    "reportR3": "Disrespectful",
+    "reportR4": "Other",
+    "reportDetails": "Details (optional)",
+    "reportSubmit": "Report"
   },
   "photoGallery": {
     "intro": "Up to {max} photos total.",
@@ -1628,7 +1636,15 @@
     "deleteTitle": "Delete this request?",
     "deleteBody": "This can't be undone.",
     "viewProfile": "View profile",
-    "actions": "Actions"
+    "actions": "Actions",
+    "reportTitle": "Report professional",
+    "reportBody": "Your report is confidential and helps keep ContrataCR safe.",
+    "reportR1": "No-show",
+    "reportR2": "Poor work",
+    "reportR3": "Disrespectful",
+    "reportR4": "Other",
+    "reportDetails": "Details (optional)",
+    "reportSubmit": "Report"
   },
   "clientPage": {
     "greeting": "Hi, {name} 👋",

@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getWhatsAppLink, getInitials, cn } from "@/lib/utils";
 import { StatusFilterTabs, SOLICITUD_TABS, solicitudBucket, solicitudStatusRedundant, bucketCounts } from "@/components/dashboard/status-filter-tabs";
 import { CardActionsMenu, type CardAction } from "@/components/dashboard/card-actions-menu";
+import { ReportModal } from "@/components/dashboard/report-modal";
 import type { BookingStatus } from "@/types";
 
 type Booking = {
@@ -99,6 +100,8 @@ export function BookingRequests() {
   const [filter, setFilter] = useState("activas");
   // Accordion: at most one card expanded at a time (essentials collapsed by default).
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  // "Reportar cliente" clean modal (replaces the old window.prompt), one at a time.
+  const [reportFor, setReportFor] = useState<Booking | null>(null);
 
   // Inline cancel-with-reason panel — the pro's only exception tool (the pro does NOT
   // reschedule; sprint 433). One open at a time, keyed by booking id.
@@ -142,13 +145,12 @@ export function BookingRequests() {
     setSubmitting(false); closeAction();
   }
 
-  async function reportClient(booking: Booking) {
-    const reason = window.prompt(t("reportPrompt"));
-    if (!reason || !reason.trim()) return;
+  async function submitReport(reason: string) {
+    if (!reportFor) return;
     const res = await fetch("/api/report-client", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ bookingId: booking.id, clientId: booking.client_id ?? null, reason: reason.trim() }),
+      body: JSON.stringify({ bookingId: reportFor.id, clientId: reportFor.client_id ?? null, reason }),
     });
     if (res.ok) alert(t("reportThanks"));
     else alert(t("reportError"));
@@ -346,7 +348,7 @@ export function BookingRequests() {
                   { label: t("markCompleted"), onClick: () => updateStatus(booking.id, "awaiting_confirmation") },
                   { label: t("cancel"), onClick: () => openAction(booking.id, "cancel"), destructive: true },
                 ] : []),
-                { label: t("reportClient"), onClick: () => reportClient(booking), destructive: true },
+                { label: t("reportClient"), onClick: () => setReportFor(booking), destructive: true },
               ];
               return (
                 <div className="flex items-center gap-2 pt-0.5">
@@ -399,6 +401,19 @@ export function BookingRequests() {
         <div className="flex flex-col gap-3">
           {filtered.map((b) => <BookingCard key={b.id} booking={b} />)}
         </div>
+      )}
+
+      {reportFor && (
+        <ReportModal
+          title={t("reportTitle")}
+          body={t("reportBody")}
+          reasons={[t("reportR1"), t("reportR2"), t("reportR3"), t("reportR4")]}
+          detailsPlaceholder={t("reportDetails")}
+          backLabel={t("back")}
+          submitLabel={t("reportSubmit")}
+          onClose={() => setReportFor(null)}
+          onSubmit={submitReport}
+        />
       )}
     </div>
   );
