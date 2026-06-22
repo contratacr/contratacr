@@ -1615,7 +1615,7 @@
     "identityVerifiedHelp": "Your identity was confirmed against the padrón from your ID. We only show the last digits.",
     "identityPendingHelp": "We registered your ID. IDs not in the padrón (DIMEX/NITE) are reviewed manually.",
     "offerTitle": "Do you offer services?",
-    "offerBody": "Start offering services with your same account. Just add your info (professions and work locations) and keep everything you already have as a client.",
+    "offerBody": "Use your same account — no need to start over.",
     "offerCta": "Offer my services",
     "photoError": "Couldn't upload the photo. Try again.",
     "photoAlt": "Profile photo",

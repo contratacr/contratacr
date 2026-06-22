@@ -2,12 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Lock, Camera, X, Info } from "lucide-react";
-import { Link } from "@/i18n/navigation";
+import { Lock, Camera, X, Info, Briefcase } from "lucide-react";
+import { Link, useRouter } from "@/i18n/navigation";
 import { detectIdType } from "@/lib/cedula";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { canOffer } from "@/lib/auth/capabilities";
 import { cn, getInitials } from "@/lib/utils";
 import { PhoneInput, hasPhoneNumber } from "@/components/ui/phone-input";
 import { SaveStatus } from "@/components/dashboard/save-status";
@@ -23,7 +24,11 @@ export function BasicProfileSection({
   supportTab?: string;
 }) {
   const { user } = useAuth();
+  const router = useRouter();
   const t = useTranslations("clientPage");
+  // A client-only account (offering not unlocked) gets the "Ofrecer mis servicios"
+  // invitation at the END of this section — that's how they start offering.
+  const userCanOffer = canOffer(user);
 
   const [profileData, setProfileData] = useState<{ full_name: string; phone?: string; avatar_url?: string; cedula?: string | null } | null>(null);
   const [profileForm, setProfileForm] = useState({ full_name: "", phone: "" });
@@ -231,8 +236,18 @@ export function BasicProfileSection({
         </div>
       </div>
 
-      {/* The "Ofrecer servicios" invitation lives in the panel sidebar (visible on
-          every "Usar servicios" tab), so it's not duplicated here. */}
+      {/* Ofrecer mis servicios — at the END of "Mi perfil". A client-only account
+          discovers offering here (same account, no mode switch yet — this is how they
+          start). Hidden once the account can offer. Minimal: a short prompt + button. */}
+      {!userCanOffer && (
+        <div className="border-t border-[#f3f4f6] pt-5">
+          <h3 className="text-sm font-semibold text-[#111827]">{t("offerTitle")}</h3>
+          <p className="text-xs text-[#6b7280] mt-0.5 mb-3">{t("offerBody")}</p>
+          <Button size="sm" onClick={() => router.push("/registro/profesional")}>
+            <Briefcase className="h-4 w-4" /> {t("offerCta")}
+          </Button>
+        </div>
+      )}
 
       <UnsavedChangesGuard dirty={profileDirty} onSave={saveProfile} />
     </div>

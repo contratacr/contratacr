@@ -566,8 +566,10 @@ function AccountMenu({
             </div>
           )}
 
+          {/* The "Modo …" heading only when there are two modes to switch between; a
+              client-only account sees a plain "Mi cuenta" (no "modo" wording). */}
           <p className="px-3 pt-2 pb-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-            {mode === "offer" ? t("proMode") : t("clientMode")}
+            {isPro ? (mode === "offer" ? t("proMode") : t("clientMode")) : t("myAccount")}
           </p>
           <a
             href={panelHref}
@@ -1314,7 +1316,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     )}
                   </button>
                 )}
-                <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{mode === "offer" ? t("proMode") : t("clientMode")}</p>
+                <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{isPro ? (mode === "offer" ? t("proMode") : t("clientMode")) : t("myAccount")}</p>
                 <a href={primaryPanelHref} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-2 py-2.5 rounded-lg text-sm font-semibold text-[#111827] hover:bg-gray-50 transition-colors">
                   <LayoutDashboard className="h-4 w-4 text-[#009FD9] shrink-0" /> {t("myPanel")}
                 </a>

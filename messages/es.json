@@ -1615,7 +1615,7 @@
     "identityVerifiedHelp": "Tu identidad fue confirmada con el padrón a partir de tu cédula. Solo mostramos los últimos dígitos.",
     "identityPendingHelp": "Registramos tu identificación. Las cédulas que no están en el padrón (DIMEX/NITE) se revisan manualmente.",
     "offerTitle": "¿Ofreces servicios?",
-    "offerBody": "Empieza a ofrecer servicios con tu misma cuenta. Solo agregas tu información (profesiones y lugares de trabajo) y conservas todo lo que ya tienes como cliente.",
+    "offerBody": "Hazlo con tu misma cuenta, sin empezar de cero.",
     "offerCta": "Ofrecer mis servicios",
     "photoError": "No se pudo subir la foto. Intenta de nuevo.",
     "photoAlt": "Foto de perfil",

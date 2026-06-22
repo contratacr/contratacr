@@ -7,7 +7,7 @@ import { useSearchParams } from "next/navigation";
 import {
   User, Image as ImageIcon, CalendarDays, Inbox, ExternalLink, Wrench,
   FolderOpen, ShieldCheck, Bell, Send, ClipboardList, Bookmark, Settings, Headset, CreditCard,
-  ArrowRight, Sparkles, Briefcase,
+  ArrowRight, Sparkles,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -306,10 +306,14 @@ export default function DashboardPage() {
                 </AvatarFallback>
               </Avatar>
               <div>
-                {/* Which world you're in — the switch itself lives in the navbar menu. */}
-                <p className="text-[11px] font-bold uppercase tracking-wide text-[#009FD9]">
-                  {mode === "offer" ? t("modeOffer") : t("modeUse")}
-                </p>
+                {/* The "Modo …" label only makes sense when there are TWO modes to switch
+                    between. A client-only account (offering not unlocked) has just one side,
+                    so it shows only the name — no "modo" wording, no switch. */}
+                {isProvider && (
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-[#009FD9]">
+                    {mode === "offer" ? t("modeOffer") : t("modeUse")}
+                  </p>
+                )}
                 <h1 className="text-xl font-bold text-[#111827]">{displayName}</h1>
                 {mode === "offer" && pro && (
                   <div className="flex items-center gap-2 mt-1 flex-wrap">
@@ -400,16 +404,8 @@ export default function DashboardPage() {
                     </CardContent>
                   </Card>
 
-                  {/* Discover the OTHER capability: a clean button (no gray box, minimal
-                      text) inviting a seeker to start offering services. */}
-                  {mode === "use" && !isProvider && (
-                    <div className="px-1">
-                      <p className="text-xs text-[#9ca3af] mb-2">{t("offerInviteTitle")}</p>
-                      <Button size="sm" className="w-full" onClick={() => router.push("/registro/profesional")}>
-                        <Briefcase className="h-4 w-4" /> {t("offerInviteCta")}
-                      </Button>
-                    </div>
-                  )}
+                  {/* The "Ofrecer mis servicios" invitation lives at the END of "Mi perfil"
+                      (BasicProfileSection) for a client-only account — not here in the sidebar. */}
                 </nav>
 
                 {/* Main content */}
