@@ -472,7 +472,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                         </div>
                         <p className="mt-0.5 text-xs text-[#9ca3af]">{t("proposalsCount", { count: proposalCount })}</p>
                       </div>
-                      <ChevronDown className={`h-4 w-4 text-[#9ca3af] shrink-0 mt-0.5 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`} />
+                      <ChevronDown className={`h-5 w-5 text-[#9ca3af] shrink-0 mt-0.5 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`} />
                     </button>
 
                     {isExpanded && (
@@ -487,39 +487,44 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                           <p className="text-xs text-[#9ca3af]"><span className="text-[#9ca3af]">{t("fieldZone")}</span> {[project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ")}</p>
                         )}
 
-                      <div className="mt-1 flex flex-wrap gap-2">
-                        {project.status === "open" && (
-                          <Button size="sm" variant="outline" onClick={() => updateProjectStatus(project.id, "cancelled")}>
-                            {t("cancelProject")}
-                          </Button>
-                        )}
-                        {project.status === "cancelled" && (
-                          <Button size="sm" variant="outline" onClick={() => updateProjectStatus(project.id, "open")}>
-                            {t("reopenProject")}
-                          </Button>
-                        )}
-                        {project.status === "awaiting_confirmation" && (
-                          <Button size="sm" onClick={() => confirmProjectCompletion(project.id)}>
-                            {t("confirmCompletion")}
-                          </Button>
-                        )}
-                        {(project.status === "in_progress" || project.status === "awaiting_confirmation") && (
-                          <Button size="sm" variant="outline" className="text-red-500 hover:bg-red-50" onClick={() => updateProjectStatus(project.id, "cancelled")}>
-                            {t("cancelProject")}
-                          </Button>
-                        )}
-                        {project.status === "completed" && (() => {
-                          const rev = projectReview(project.id);
-                          return (
-                            <Button size="sm" variant="outline" onClick={() => reviewProjectPro(project.id)}>
-                              {rev ? t("editReview") : t("leaveReview")}
+                      {/* ACTIONS — same layout as the other sections: primary action(s) full-width
+                          on mobile, one tidy wrapping row on desktop; the destructive minor action
+                          (Eliminar) is a quiet text link below. */}
+                      <div className="flex flex-col gap-2">
+                        <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
+                          {project.status === "open" && (
+                            <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => updateProjectStatus(project.id, "cancelled")}>
+                              {t("cancelProject")}
                             </Button>
-                          );
-                        })()}
+                          )}
+                          {project.status === "cancelled" && (
+                            <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => updateProjectStatus(project.id, "open")}>
+                              {t("reopenProject")}
+                            </Button>
+                          )}
+                          {project.status === "awaiting_confirmation" && (
+                            <Button size="sm" className="w-full sm:w-auto" onClick={() => confirmProjectCompletion(project.id)}>
+                              {t("confirmCompletion")}
+                            </Button>
+                          )}
+                          {(project.status === "in_progress" || project.status === "awaiting_confirmation") && (
+                            <Button size="sm" variant="outline" className="w-full sm:w-auto text-red-500 border-red-200 hover:bg-red-50" onClick={() => updateProjectStatus(project.id, "cancelled")}>
+                              {t("cancelProject")}
+                            </Button>
+                          )}
+                          {project.status === "completed" && (() => {
+                            const rev = projectReview(project.id);
+                            return (
+                              <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => reviewProjectPro(project.id)}>
+                                {rev ? t("editReview") : t("leaveReview")}
+                              </Button>
+                            );
+                          })()}
+                        </div>
                         {project.status !== "in_progress" && project.status !== "awaiting_confirmation" && (
-                          <Button size="sm" variant="ghost" className="text-red-500 hover:bg-red-50" onClick={() => deleteProject(project.id)}>
+                          <button onClick={() => deleteProject(project.id)} className="self-start text-xs font-semibold text-[#9ca3af] hover:text-red-500 transition-colors">
                             {t("delete")}
-                          </Button>
+                          </button>
                         )}
                       </div>
 

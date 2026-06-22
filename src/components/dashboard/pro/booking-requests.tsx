@@ -268,7 +268,7 @@ export function BookingRequests() {
               <span className={dateStr ? "font-semibold text-[#111827]" : "text-[#9ca3af]"}>{dateStr || t("noScheduledDate")}</span>
             </p>
           </div>
-          <ChevronDown className={cn("h-4 w-4 text-[#9ca3af] shrink-0 transition-transform duration-200", expanded && "rotate-180")} />
+          <ChevronDown className={cn("h-5 w-5 text-[#9ca3af] shrink-0 transition-transform duration-200", expanded && "rotate-180")} />
         </button>
 
         {expanded && (
@@ -320,24 +320,31 @@ export function BookingRequests() {
               </p>
             )}
 
-            {/* ACTIONS — only shown once expanded (not crammed by default). */}
+            {/* ACTIONS — revealed on expand. CONSISTENT layout (all 3 sections): the primary
+                action(s) go full-width on mobile, the two outline secondaries share a 2-col row,
+                and everything collapses to ONE tidy wrapping row on desktop (sm:contents). The
+                quiet/destructive minor action (Reportar) is a text link below. */}
             {!panelOpen && (
-              <div className="flex flex-wrap items-center gap-2 pt-0.5">
-                {waHref && (
-                  <Button variant="whatsapp" size="sm" asChild className="rounded-full px-4">
-                    <a href={waHref} target="_blank" rel="noopener noreferrer">
-                      <WhatsAppIcon className="h-4 w-4" /> {t("whatsappTo", { name: cliFirst })}
-                    </a>
-                  </Button>
-                )}
-                {isActive && (
-                  <>
-                    <Button size="sm" className="rounded-full px-4" onClick={() => updateStatus(booking.id, "awaiting_confirmation")}>{t("markCompleted")}</Button>
-                    <Button size="sm" variant="outline" className="rounded-full px-4" onClick={() => openAction(booking.id, "reschedule")}>{t("reschedule")}</Button>
-                    <Button size="sm" variant="outline" className="rounded-full px-4 text-red-600 border-red-200 hover:bg-red-50" onClick={() => openAction(booking.id, "cancel")}>{t("cancel")}</Button>
-                  </>
-                )}
-                <button onClick={() => reportClient(booking)} className="ml-auto self-center text-xs font-semibold text-[#9ca3af] hover:text-red-500 transition-colors">{t("reportClient")}</button>
+              <div className="flex flex-col gap-2 pt-0.5">
+                <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
+                  {waHref && (
+                    <Button variant="whatsapp" size="sm" asChild className="w-full sm:w-auto rounded-full px-4">
+                      <a href={waHref} target="_blank" rel="noopener noreferrer">
+                        <WhatsAppIcon className="h-4 w-4" /> {t("whatsappTo", { name: cliFirst })}
+                      </a>
+                    </Button>
+                  )}
+                  {isActive && (
+                    <>
+                      <Button size="sm" className="w-full sm:w-auto rounded-full px-4" onClick={() => updateStatus(booking.id, "awaiting_confirmation")}>{t("markCompleted")}</Button>
+                      <div className="grid grid-cols-2 gap-2 sm:contents">
+                        <Button size="sm" variant="outline" className="w-full sm:w-auto rounded-full px-4" onClick={() => openAction(booking.id, "reschedule")}>{t("reschedule")}</Button>
+                        <Button size="sm" variant="outline" className="w-full sm:w-auto rounded-full px-4 text-red-600 border-red-200 hover:bg-red-50" onClick={() => openAction(booking.id, "cancel")}>{t("cancel")}</Button>
+                      </div>
+                    </>
+                  )}
+                </div>
+                <button onClick={() => reportClient(booking)} className="self-start text-xs font-semibold text-[#9ca3af] hover:text-red-500 transition-colors">{t("reportClient")}</button>
               </div>
             )}
 

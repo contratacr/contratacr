@@ -304,7 +304,7 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
                           <span className="font-semibold text-[#111827]">{budgetText}</span>
                         </p>
                       </div>
-                      <ChevronDown className={cn("h-4 w-4 text-[#9ca3af] shrink-0 mt-0.5 transition-transform duration-200", isExpanded && "rotate-180")} />
+                      <ChevronDown className={cn("h-5 w-5 text-[#9ca3af] shrink-0 mt-0.5 transition-transform duration-200", isExpanded && "rotate-180")} />
                     </button>
 
                     {isExpanded && (
