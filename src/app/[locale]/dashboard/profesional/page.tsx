@@ -7,7 +7,7 @@ import { useSearchParams } from "next/navigation";
 import {
   User, Image as ImageIcon, CalendarDays, Inbox, ExternalLink, Wrench,
   FolderOpen, ShieldCheck, Bell, Send, ClipboardList, Bookmark, Settings, Headset, CreditCard,
-  ArrowRight, Sparkles, MoreHorizontal,
+  ArrowRight, Sparkles, MoreHorizontal, X,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -569,9 +569,15 @@ export default function DashboardPage() {
           <div className="absolute inset-0 bg-black/40 animate-in fade-in-0" onClick={() => setMoreOpen(false)} aria-hidden />
           <div className="absolute inset-x-0 bottom-0 max-h-[78vh] overflow-y-auto rounded-t-2xl bg-white shadow-2xl pb-[env(safe-area-inset-bottom)] animate-in slide-in-from-bottom duration-200">
             <div className="sticky top-0 bg-white pt-2">
-              <div className="mx-auto h-1 w-10 rounded-full bg-[#e5e7eb]" />
-              {/* NOT the bare "Más" (that's just the button label) — a clearer sheet title. */}
-              <p className="px-4 pt-2.5 pb-2 text-sm font-semibold text-[#111827]">{t("bottomNav.moreTitle")}</p>
+              {/* Drag handle (tap to close too) + a clear X — standard bottom-sheet dismissal. */}
+              <button onClick={() => setMoreOpen(false)} aria-label={t("bottomNav.close")} className="mx-auto block h-1 w-10 rounded-full bg-[#d1d5db]" />
+              <div className="flex items-center justify-between px-4 pt-2 pb-2">
+                {/* NOT the bare "Más" (that's just the button label) — a clearer sheet title. */}
+                <p className="text-sm font-semibold text-[#111827]">{t("bottomNav.moreTitle")}</p>
+                <button onClick={() => setMoreOpen(false)} aria-label={t("bottomNav.close")} className="-mr-1.5 p-1.5 rounded-lg text-[#6b7280] hover:bg-[#f3f4f6] transition-colors">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
             </div>
             <div className="p-2 pt-0">
               {moreTabs.map((tab) => {

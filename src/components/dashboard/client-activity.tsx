@@ -122,6 +122,9 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   const [cancelTarget, setCancelTarget] = useState<string | null>(null);
   const [cancelNote, setCancelNote] = useState("");
   const [cancelling, setCancelling] = useState(false);
+  // Delete-publicación confirm dialog (clean modal, not a browser confirm()).
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchSection = useCallback(async () => {
     if (!user) return;
@@ -230,15 +233,19 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
     reviewProjectPro(projectId);
   }
 
-  async function deleteProject(projectId: string) {
-    if (!confirm(t("deleteProjectConfirm"))) return;
-    const res = await fetch(`/api/projects?id=${projectId}`, { method: "DELETE" });
+  async function confirmDeleteProject() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    const res = await fetch(`/api/projects?id=${deleteTarget}`, { method: "DELETE" });
     if (!res.ok) {
       const j = await res.json().catch(() => ({}));
       alert(j.error ?? t("deleteProjectError"));
+      setDeleting(false);
       return;
     }
-    setProjects((prev) => prev.filter((p) => p.id !== projectId));
+    setProjects((prev) => prev.filter((p) => p.id !== deleteTarget));
+    setDeleting(false);
+    setDeleteTarget(null);
   }
 
   async function loadProposals(projectId: string) {
@@ -442,11 +449,11 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
             </div>
           ) : (
             <div className="flex flex-col gap-3">
-              {/* Primary action on its OWN row (full-width on mobile, right-aligned on
-                  desktop) so it never competes with / wraps awkwardly under the four status
-                  pills — those then sit cleanly on their own line below. */}
+              {/* PRIMARY action — prominent on its OWN row (full-width on mobile, right-aligned
+                  on desktop) above the filters, so creating a new publicación is clearly the main
+                  CTA and never competes with the per-card secondary actions. */}
               <div className="flex justify-end">
-                <Button size="sm" className="w-full sm:w-auto" onClick={() => setShowPublish(true)}>
+                <Button className="w-full sm:w-auto rounded-full px-5" onClick={() => setShowPublish(true)}>
                   {t("publishProject")}
                 </Button>
               </div>
@@ -517,39 +524,42 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                       {/* ACTIONS — same layout as the other sections: primary action(s) full-width
                           on mobile, one tidy wrapping row on desktop; the destructive minor action
                           (Eliminar) is a quiet text link below. */}
+                      {/* ACTIONS — consistent pill treatment (sprint 437): the status's primary
+                          action full-width on mobile / one wrapping row on desktop; "Eliminar" is a
+                          quiet destructive text link opening a clean confirm modal. */}
                       <div className="flex flex-col gap-2">
                         <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
                           {project.status === "open" && (
-                            <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => updateProjectStatus(project.id, "cancelled")}>
+                            <Button size="sm" variant="outline" className="w-full sm:w-auto rounded-full px-4 text-red-600 border-red-200 hover:bg-red-50" onClick={() => updateProjectStatus(project.id, "cancelled")}>
                               {t("cancelProject")}
                             </Button>
                           )}
                           {project.status === "cancelled" && (
-                            <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => updateProjectStatus(project.id, "open")}>
+                            <Button size="sm" variant="outline" className="w-full sm:w-auto rounded-full px-4" onClick={() => updateProjectStatus(project.id, "open")}>
                               {t("reopenProject")}
                             </Button>
                           )}
                           {project.status === "awaiting_confirmation" && (
-                            <Button size="sm" className="w-full sm:w-auto" onClick={() => confirmProjectCompletion(project.id)}>
+                            <Button size="sm" className="w-full sm:w-auto rounded-full px-4" onClick={() => confirmProjectCompletion(project.id)}>
                               {t("confirmCompletion")}
                             </Button>
                           )}
                           {(project.status === "in_progress" || project.status === "awaiting_confirmation") && (
-                            <Button size="sm" variant="outline" className="w-full sm:w-auto text-red-500 border-red-200 hover:bg-red-50" onClick={() => updateProjectStatus(project.id, "cancelled")}>
+                            <Button size="sm" variant="outline" className="w-full sm:w-auto rounded-full px-4 text-red-600 border-red-200 hover:bg-red-50" onClick={() => updateProjectStatus(project.id, "cancelled")}>
                               {t("cancelProject")}
                             </Button>
                           )}
                           {project.status === "completed" && (() => {
                             const rev = projectReview(project.id);
                             return (
-                              <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => reviewProjectPro(project.id)}>
+                              <Button size="sm" variant="outline" className="w-full sm:w-auto rounded-full px-4" onClick={() => reviewProjectPro(project.id)}>
                                 {rev ? t("editReview") : t("leaveReview")}
                               </Button>
                             );
                           })()}
                         </div>
                         {project.status !== "in_progress" && project.status !== "awaiting_confirmation" && (
-                          <button onClick={() => deleteProject(project.id)} className="self-start text-xs font-semibold text-[#6b7280] hover:text-red-500 transition-colors">
+                          <button onClick={() => setDeleteTarget(project.id)} className="self-start text-xs font-semibold text-[#6b7280] hover:text-red-600 transition-colors">
                             {t("delete")}
                           </button>
                         )}
@@ -690,6 +700,21 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
             <div className="mt-4 flex gap-2">
               <Button variant="outline" size="sm" className="flex-1 rounded-full" onClick={() => setCancelTarget(null)} disabled={cancelling}>{t("cancelBack")}</Button>
               <Button size="sm" className="flex-1 rounded-full bg-red-600 hover:bg-red-700" onClick={confirmCancelBooking} disabled={cancelling} loading={cancelling}>{t("cancelConfirm")}</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DELETE publicación — clean on-brand confirm modal (replaces window.confirm). */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => !deleting && setDeleteTarget(null)} aria-hidden />
+          <div role="dialog" aria-modal="true" aria-label={t("deleteTitle")} className="relative w-full sm:max-w-sm bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl p-5 pb-[max(env(safe-area-inset-bottom),1.25rem)]">
+            <h2 className="text-base font-bold text-[#111827]">{t("deleteTitle")}</h2>
+            <p className="mt-1 text-sm text-[#6b7280]">{t("deleteBody")}</p>
+            <div className="mt-4 flex gap-2">
+              <Button variant="outline" size="sm" className="flex-1 rounded-full" onClick={() => setDeleteTarget(null)} disabled={deleting}>{t("cancelBack")}</Button>
+              <Button size="sm" className="flex-1 rounded-full bg-red-600 hover:bg-red-700" onClick={confirmDeleteProject} disabled={deleting} loading={deleting}>{t("delete")}</Button>
             </div>
           </div>
         </div>
