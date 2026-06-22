@@ -304,7 +304,7 @@ export default function DashboardPage() {
         <span className="relative">
           {TAB_ICONS[tab]}
           {badge > 0 && (
-            <span className="absolute -top-2 -right-2.5 flex h-[16px] min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold leading-none text-white ring-2 ring-white">
+            <span className="absolute -top-2 -right-2.5 flex h-[16px] min-w-[16px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[9px] font-bold leading-none text-white ring-2 ring-white">
               {badge > 9 ? "9+" : badge}
             </span>
           )}

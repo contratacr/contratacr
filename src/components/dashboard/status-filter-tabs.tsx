@@ -13,14 +13,14 @@ export function StatusFilterTabs({
   tabs,
   value,
   onChange,
-  counts,
   labelFor,
   dotFor,
 }: {
   tabs: readonly FilterTab[];
   value: string;
   onChange: (id: string) => void;
-  /** Per-tab item count. When provided, EVERY tab shows its count (when > 0). */
+  /** Accepted for back-compat (callers still pass it) but NO LONGER rendered — per-filter
+   *  count badges were removed in sprint 419 for a cleaner, modern look. */
   counts?: Record<string, number>;
   /** Custom label per tab id (else the `statusTabs` i18n key is used). */
   labelFor?: (id: string) => string;
@@ -29,42 +29,28 @@ export function StatusFilterTabs({
 }) {
   const tr = useTranslations("statusTabs");
   return (
-    // Each filter is a small vertical stack: a per-filter COUNT BADGE (notification-style,
-    // brand-colored) ABOVE its pill, so every filter shows how many items it holds at a
-    // glance. The row WRAPS (so the floating badges are never clipped and nothing overflows
-    // at ~360px) — 3–4 stacks wrap cleanly onto a second line on a phone.
-    <div className="flex flex-wrap gap-x-2.5 gap-y-2.5">
+    // Clean filter chips, no per-filter count badges (sprint 419) — modern apps reserve
+    // count badges for real notifications (the bell), not every filter. A wrapping row so
+    // nothing overflows at ~360px.
+    <div className="flex flex-wrap gap-2">
       {tabs.map((tab) => {
         const active = value === tab.id;
-        const count = counts?.[tab.id] ?? 0;
         return (
-          <div key={tab.id} className="flex flex-col items-center gap-1">
-            {/* Count badge above the pill — brand-blue when it has items, muted when empty. */}
-            {counts && (
-              <span
-                className={cn(
-                  "inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1.5 text-[11px] font-bold leading-none tabular-nums",
-                  count > 0 ? "bg-[#009FD9] text-white" : "bg-[#f3f4f6] text-[#9ca3af]"
-                )}
-              >
-                {count}
-              </span>
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => onChange(tab.id)}
+            className={cn(
+              "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-4 py-2 text-[13px] font-semibold transition-colors",
+              active
+                ? "border-[#009FD9] bg-[#009FD9] text-white"
+                : "border-[#e5e7eb] bg-white text-[#374151] hover:bg-[#f9fafb]"
             )}
-            <button
-              type="button"
-              onClick={() => onChange(tab.id)}
-              className={cn(
-                "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-4 py-2 text-[13px] font-semibold transition-colors",
-                active
-                  ? "border-[#009FD9] bg-[#009FD9] text-white"
-                  : "border-[#e5e7eb] bg-white text-[#374151] hover:bg-[#f9fafb]"
-              )}
-            >
-              {labelFor ? labelFor(tab.id) : tr(tab.id)}
-              {/* Optional unread/attention dot (e.g. a new support reply in this status). */}
-              {dotFor?.(tab.id) && <span className="h-1.5 w-1.5 rounded-full bg-red-500 shrink-0" aria-hidden />}
-            </button>
-          </div>
+          >
+            {labelFor ? labelFor(tab.id) : tr(tab.id)}
+            {/* Optional unread/attention dot (e.g. a new support reply) — brand-blue, on-brand. */}
+            {dotFor?.(tab.id) && <span className="h-1.5 w-1.5 rounded-full bg-[#009FD9] shrink-0" aria-hidden />}
+          </button>
         );
       })}
     </div>

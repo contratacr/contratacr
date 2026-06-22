@@ -616,7 +616,7 @@ function AccountMenu({
             <Bell className="h-4 w-4 text-gray-400" />
             <span className="flex-1">{t("notifications")}</span>
             {notifUnread > 0 && (
-              <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">{notifUnread > 9 ? "9+" : notifUnread}</span>
+              <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold text-white">{notifUnread > 9 ? "9+" : notifUnread}</span>
             )}
           </a>
           <a
@@ -1378,7 +1378,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                   <Bell className="h-4 w-4 text-gray-400 shrink-0" />
                   <span className="flex-1">{t("notifications")}</span>
                   {activeUnread > 0 && (
-                    <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white shrink-0">{activeUnread > 9 ? "9+" : activeUnread}</span>
+                    <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold text-white shrink-0">{activeUnread > 9 ? "9+" : activeUnread}</span>
                   )}
                 </a>
                 {!isPro && (
