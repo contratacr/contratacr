@@ -29,7 +29,10 @@ export function StatusFilterTabs({
 }) {
   const tr = useTranslations("statusTabs");
   return (
-    <div className="flex gap-2 flex-wrap">
+    // Mobile: a single horizontal-scroll row (so 3–4 long Spanish labels never wrap or
+    // overflow the layout at ~360px); the hidden scrollbar + partially-visible next pill
+    // hint that it scrolls. Desktop: a normal wrapping row (they all fit on one line).
+    <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-0.5 sm:flex-wrap sm:overflow-x-visible">
       {tabs.map((tab) => {
         const active = value === tab.id;
         const count = counts?.[tab.id] ?? 0;
@@ -39,7 +42,7 @@ export function StatusFilterTabs({
             type="button"
             onClick={() => onChange(tab.id)}
             className={cn(
-              "inline-flex items-center gap-2 rounded-full border px-4 py-2 text-[13px] font-semibold transition-colors",
+              "inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2 text-[13px] font-semibold transition-colors",
               active
                 ? "border-[#009FD9] bg-[#009FD9] text-white"
                 : "border-[#e5e7eb] bg-white text-[#374151] hover:bg-[#f9fafb]"

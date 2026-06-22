@@ -204,15 +204,11 @@ export function BookingRequests() {
 
     // First name for the friendly WhatsApp greeting (the requester is the only contact).
     const cliFirst = (booking.client_name || t("thePerson")).split(" ")[0];
-    // Contact: the REQUESTER (account holder) is the sole, reachable contact. A
-    // beneficiary (a health dependent) has no phone here — name + age only.
-    const waButton = (phone: string, first: string) => (
-      <Button variant="whatsapp" asChild className="mt-3 rounded-full">
-        <a href={getWhatsAppLink(phone, t("waMessage", { name: first }))} target="_blank" rel="noopener noreferrer">
-          <WhatsAppIcon className="h-4 w-4" /> {t("whatsappTo", { name: first })}
-        </a>
-      </Button>
-    );
+    // Contact: the REQUESTER (account holder) is the sole, reachable contact. The WhatsApp
+    // button now lives in the unified action row (footer), not next to the contact line.
+    const waHref = booking.client_phone
+      ? getWhatsAppLink(booking.client_phone, t("waMessage", { name: cliFirst }))
+      : null;
 
     const flaggedPill = booking.profiles?.is_flagged ? (
       <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#b45309] bg-[#fef3c7] px-1.5 py-0.5 rounded-md">
@@ -327,11 +323,10 @@ export function BookingRequests() {
                 {unverifiedPill}
                 {flaggedPill}
               </p>
-              {booking.client_phone && waButton(booking.client_phone, cliFirst)}
             </div>
           </div>
         ) : (
-          /* SELF — one person (requester = patient): name + phone + WhatsApp, nothing else. */
+          /* SELF — one person (requester = patient): name + phone; actions in the footer. */
           booking.client_name && (
             <div className="px-[18px] py-4">
               <div className="flex items-center gap-3">
@@ -353,7 +348,6 @@ export function BookingRequests() {
                   )}
                 </div>
               </div>
-              {booking.client_phone && waButton(booking.client_phone, cliFirst)}
             </div>
           )
         )}
@@ -367,17 +361,37 @@ export function BookingRequests() {
             </p>
           )}
 
-          {isActive && actionFor?.id !== booking.id && (
-            <div className="flex flex-wrap gap-2.5">
-              <Button className="rounded-full px-5" onClick={() => updateStatus(booking.id, "awaiting_confirmation")}>
-                <Check className="h-4 w-4" /> {t("markCompleted")}
-              </Button>
-              <Button variant="outline" className="rounded-full px-5" onClick={() => openAction(booking.id, "reschedule")}>
-                <CalendarClock className="h-4 w-4" /> {t("reschedule")}
-              </Button>
-              <Button variant="outline" className="rounded-full px-5 text-red-600 border-red-200 hover:bg-red-50" onClick={() => openAction(booking.id, "cancel")}>
-                {t("cancel")}
-              </Button>
+          {/* One tidy action group with clear hierarchy. WhatsApp (contact) is the primary
+              and stays available for any booking; Marcar completado is the other primary;
+              Reprogramar + Cancelar are lighter secondaries — for ACTIVE bookings only.
+              Mobile: the two primaries stack full-width and the two secondaries share a
+              2-col row. Desktop: a single wrapping row. Hidden while a panel is open. */}
+          {actionFor?.id !== booking.id && (waHref || isActive) && (
+            <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
+              {waHref && (
+                <Button variant="whatsapp" asChild className="w-full sm:w-auto rounded-full px-5">
+                  <a href={waHref} target="_blank" rel="noopener noreferrer">
+                    <WhatsAppIcon className="h-4 w-4" /> {t("whatsappTo", { name: cliFirst })}
+                  </a>
+                </Button>
+              )}
+              {isActive && (
+                <>
+                  <Button className="w-full sm:w-auto rounded-full px-5" onClick={() => updateStatus(booking.id, "awaiting_confirmation")}>
+                    <Check className="h-4 w-4" /> {t("markCompleted")}
+                  </Button>
+                  {/* Secondaries: a 2-col row on mobile; on desktop the wrapper dissolves
+                      (sm:contents) so both join the single wrapping action row. */}
+                  <div className="grid grid-cols-2 gap-2 sm:contents">
+                    <Button variant="outline" className="rounded-full px-5 sm:w-auto" onClick={() => openAction(booking.id, "reschedule")}>
+                      <CalendarClock className="h-4 w-4" /> {t("reschedule")}
+                    </Button>
+                    <Button variant="outline" className="rounded-full px-5 sm:w-auto text-red-600 border-red-200 hover:bg-red-50" onClick={() => openAction(booking.id, "cancel")}>
+                      {t("cancel")}
+                    </Button>
+                  </div>
+                </>
+              )}
             </div>
           )}
 
