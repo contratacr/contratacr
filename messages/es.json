@@ -86,8 +86,8 @@
       "checkEmailConfirm": "¡Revisa tu correo para confirmar tu cuenta!",
       "emailAlreadyExists": "Ya existe una cuenta con este correo. Inicia sesión con tu contraseña, o con Google o Facebook si así te registraste."
     },
-    "switchToPro": "Cambiar a modo profesional",
-    "switchToClient": "Cambiar a modo cliente",
+    "switchToPro": "Cambiar a profesional",
+    "switchToClient": "Cambiar a cliente",
     "proMode": "Modo profesional",
     "clientMode": "Modo cliente",
     "receivedRequests": "Solicitudes recibidas",

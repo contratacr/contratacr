@@ -549,24 +549,23 @@ function AccountMenu({
             <p className="text-xs text-[#9ca3af] truncate">{user.email}</p>
           </div>
 
-          {/* FULL MODE SWITCH — a premium CONTEXT-SWITCHER card (modern-app pattern: a distinct
-              card showing the CURRENT mode as an eyebrow + the switch action + the other mode's
-              unread pill). Providers only; a client-only account sees a plain "Mi cuenta". */}
+          {/* MODE SWITCH — a short, clearly-tappable pill button (just the action toward the
+              other mode); the CURRENT mode is the section eyebrow below. Providers only. */}
           {isPro ? (
-            <div className="px-2 pt-0.5 pb-2">
-              <button
-                onClick={() => { setOpen(false); onSwitchMode(mode === "offer" ? "use" : "offer"); }}
-                className="group flex w-full items-center justify-between gap-3 rounded-xl bg-[#EBF5FB] px-3.5 py-2.5 text-left ring-1 ring-inset ring-[#009FD9]/20 transition-all hover:bg-[#e1eefb] hover:ring-[#009FD9]/40 active:scale-[0.99]"
-              >
-                <span className="min-w-0">
-                  <span className="block text-[10px] font-bold uppercase tracking-wider text-[#0089bb]">{mode === "offer" ? t("proMode") : t("clientMode")}</span>
-                  <span className="block text-sm font-bold text-[#162543] leading-tight">{mode === "offer" ? t("switchToClient") : t("switchToPro")}</span>
-                </span>
-                {otherModeUnread > 0 && (
-                  <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#009FD9] px-1.5 text-[11px] font-bold leading-none text-white shrink-0">{otherModeUnread > 9 ? "9+" : otherModeUnread}</span>
-                )}
-              </button>
-            </div>
+            <>
+              <div className="px-3 pt-1 pb-1.5">
+                <button
+                  onClick={() => { setOpen(false); onSwitchMode(mode === "offer" ? "use" : "offer"); }}
+                  className="flex w-full items-center justify-center gap-2 rounded-full bg-[#EBF5FB] px-4 py-2 text-[13px] font-semibold text-[#162543] ring-1 ring-inset ring-[#009FD9]/25 hover:bg-[#e1eefb] hover:ring-[#009FD9]/45 active:scale-[0.98] transition-all"
+                >
+                  {mode === "offer" ? t("switchToClient") : t("switchToPro")}
+                  {otherModeUnread > 0 && (
+                    <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold leading-none text-white">{otherModeUnread > 9 ? "9+" : otherModeUnread}</span>
+                  )}
+                </button>
+              </div>
+              <p className="px-3 pt-1 pb-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{mode === "offer" ? t("proMode") : t("clientMode")}</p>
+            </>
           ) : (
             <p className="px-3 pt-2 pb-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t("myAccount")}</p>
           )}
@@ -1335,17 +1334,17 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     <p className="text-xs text-gray-400 truncate">{user.email}</p>
                   </div>
                 </div>
-                {/* FULL MODE SWITCH — the same premium context-switcher card, full-width. */}
+                {/* MODE SWITCH — a short, clearly-tappable pill button; current mode = eyebrow below. */}
                 {isPro ? (
-                  <button onClick={() => switchMode(mode === "offer" ? "use" : "offer")} className="group flex w-full items-center justify-between gap-3 mb-1 rounded-xl bg-[#EBF5FB] px-3.5 py-2.5 text-left ring-1 ring-inset ring-[#009FD9]/20 transition-all hover:bg-[#e1eefb] hover:ring-[#009FD9]/40 active:scale-[0.99]">
-                    <span className="min-w-0">
-                      <span className="block text-[10px] font-bold uppercase tracking-wider text-[#0089bb]">{mode === "offer" ? t("proMode") : t("clientMode")}</span>
-                      <span className="block text-sm font-bold text-[#162543] leading-tight">{mode === "offer" ? t("switchToClient") : t("switchToPro")}</span>
-                    </span>
-                    {otherModeUnread > 0 && (
-                      <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#009FD9] px-1.5 text-[11px] font-bold leading-none text-white shrink-0">{otherModeUnread > 9 ? "9+" : otherModeUnread}</span>
-                    )}
-                  </button>
+                  <>
+                    <button onClick={() => switchMode(mode === "offer" ? "use" : "offer")} className="flex w-full items-center justify-center gap-2 mb-1 rounded-full bg-[#EBF5FB] px-4 py-2.5 text-sm font-semibold text-[#162543] ring-1 ring-inset ring-[#009FD9]/25 hover:bg-[#e1eefb] active:scale-[0.98] transition-all">
+                      {mode === "offer" ? t("switchToClient") : t("switchToPro")}
+                      {otherModeUnread > 0 && (
+                        <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold leading-none text-white">{otherModeUnread > 9 ? "9+" : otherModeUnread}</span>
+                      )}
+                    </button>
+                    <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{mode === "offer" ? t("proMode") : t("clientMode")}</p>
+                  </>
                 ) : (
                   <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t("myAccount")}</p>
                 )}

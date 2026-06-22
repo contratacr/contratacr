@@ -337,8 +337,13 @@ export default function DashboardPage() {
                 </AvatarFallback>
               </Avatar>
               <div>
-                {/* Just the name here — the mode context lives in the switch card below (for
-                    providers). A client-only account never sees any "modo" wording. */}
+                {/* Current mode = a small eyebrow (so the switch button below stays short, just
+                    the action). A client-only account never sees any "modo" wording. */}
+                {isProvider && (
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-[#009FD9]">
+                    {mode === "offer" ? t("modeOffer") : t("modeUse")}
+                  </p>
+                )}
                 <h1 className="text-xl font-bold text-[#111827]">{displayName}</h1>
                 {mode === "offer" && pro && (
                   <div className="flex items-center gap-2 mt-1 flex-wrap">
@@ -379,14 +384,11 @@ export default function DashboardPage() {
             <div className="mb-6">
               <button
                 onClick={() => switchMode(mode === "offer" ? "use" : "offer")}
-                className="group flex w-full sm:w-auto items-center justify-between gap-4 rounded-xl bg-[#EBF5FB] px-4 py-2.5 text-left ring-1 ring-inset ring-[#009FD9]/20 transition-all hover:bg-[#e1eefb] hover:ring-[#009FD9]/40 active:scale-[0.99]"
+                className="inline-flex w-full sm:w-auto items-center justify-center gap-2 rounded-full bg-[#EBF5FB] px-5 py-2 text-sm font-semibold text-[#162543] ring-1 ring-inset ring-[#009FD9]/25 hover:bg-[#e1eefb] hover:ring-[#009FD9]/45 active:scale-[0.98] transition-all"
               >
-                <span className="min-w-0">
-                  <span className="block text-[10px] font-bold uppercase tracking-wider text-[#0089bb]">{mode === "offer" ? t("modeOffer") : t("modeUse")}</span>
-                  <span className="block text-sm font-bold text-[#162543] leading-tight">{mode === "offer" ? tHeader("switchToClient") : tHeader("switchToPro")}</span>
-                </span>
+                {mode === "offer" ? tHeader("switchToClient") : tHeader("switchToPro")}
                 {otherModeUnread > 0 && (
-                  <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#009FD9] px-1.5 text-[11px] font-bold leading-none text-white shrink-0">{otherModeUnread > 9 ? "9+" : otherModeUnread}</span>
+                  <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold leading-none text-white">{otherModeUnread > 9 ? "9+" : otherModeUnread}</span>
                 )}
               </button>
             </div>
