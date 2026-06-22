@@ -549,28 +549,27 @@ function AccountMenu({
             <p className="text-xs text-[#9ca3af] truncate">{user.email}</p>
           </div>
 
-          {/* FULL MODE SWITCH (providers only) — a clean brand-tint chip (Airbnb-style switch,
-              ContrataCR colors); the solid brand-blue count pill surfaces the other mode's
-              unread so awareness needs no switch. */}
-          {isPro && (
-            <div className="px-2 pt-0.5 pb-1.5">
+          {/* FULL MODE SWITCH — a premium CONTEXT-SWITCHER card (modern-app pattern: a distinct
+              card showing the CURRENT mode as an eyebrow + the switch action + the other mode's
+              unread pill). Providers only; a client-only account sees a plain "Mi cuenta". */}
+          {isPro ? (
+            <div className="px-2 pt-0.5 pb-2">
               <button
                 onClick={() => { setOpen(false); onSwitchMode(mode === "offer" ? "use" : "offer"); }}
-                className="w-full flex items-center justify-between gap-3 rounded-xl bg-[#EBF5FB] px-3 py-2.5 text-sm font-semibold text-[#162543] hover:bg-[#d8eafb] transition-colors"
+                className="group flex w-full items-center justify-between gap-3 rounded-xl bg-[#EBF5FB] px-3.5 py-2.5 text-left ring-1 ring-inset ring-[#009FD9]/20 transition-all hover:bg-[#e1eefb] hover:ring-[#009FD9]/40 active:scale-[0.99]"
               >
-                <span className="text-left">{mode === "offer" ? t("switchToClient") : t("switchToPro")}</span>
+                <span className="min-w-0">
+                  <span className="block text-[10px] font-bold uppercase tracking-wider text-[#0089bb]">{mode === "offer" ? t("proMode") : t("clientMode")}</span>
+                  <span className="block text-sm font-bold text-[#162543] leading-tight">{mode === "offer" ? t("switchToClient") : t("switchToPro")}</span>
+                </span>
                 {otherModeUnread > 0 && (
-                  <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#009FD9] px-1.5 text-[11px] font-bold leading-none text-white">{otherModeUnread > 9 ? "9+" : otherModeUnread}</span>
+                  <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#009FD9] px-1.5 text-[11px] font-bold leading-none text-white shrink-0">{otherModeUnread > 9 ? "9+" : otherModeUnread}</span>
                 )}
               </button>
             </div>
+          ) : (
+            <p className="px-3 pt-2 pb-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t("myAccount")}</p>
           )}
-
-          {/* The "Modo …" heading only when there are two modes to switch between; a
-              client-only account sees a plain "Mi cuenta" (no "modo" wording). */}
-          <p className="px-3 pt-2 pb-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-            {isPro ? (mode === "offer" ? t("proMode") : t("clientMode")) : t("myAccount")}
-          </p>
           <a
             href={panelHref}
             onClick={() => setOpen(false)}
@@ -1306,17 +1305,20 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     <p className="text-xs text-gray-400 truncate">{user.email}</p>
                   </div>
                 </div>
-                {/* FULL MODE SWITCH (providers) — same brand-tint chip + brand-blue count pill
-                    as the desktop menu, full-width here; surfaces the other mode's unread. */}
-                {isPro && (
-                  <button onClick={() => switchMode(mode === "offer" ? "use" : "offer")} className="w-full flex items-center justify-between gap-3 mb-1.5 rounded-xl bg-[#EBF5FB] px-3 py-2.5 text-sm font-semibold text-[#162543] hover:bg-[#d8eafb] transition-colors">
-                    <span className="text-left">{mode === "offer" ? t("switchToClient") : t("switchToPro")}</span>
+                {/* FULL MODE SWITCH — the same premium context-switcher card, full-width. */}
+                {isPro ? (
+                  <button onClick={() => switchMode(mode === "offer" ? "use" : "offer")} className="group flex w-full items-center justify-between gap-3 mb-1 rounded-xl bg-[#EBF5FB] px-3.5 py-2.5 text-left ring-1 ring-inset ring-[#009FD9]/20 transition-all hover:bg-[#e1eefb] hover:ring-[#009FD9]/40 active:scale-[0.99]">
+                    <span className="min-w-0">
+                      <span className="block text-[10px] font-bold uppercase tracking-wider text-[#0089bb]">{mode === "offer" ? t("proMode") : t("clientMode")}</span>
+                      <span className="block text-sm font-bold text-[#162543] leading-tight">{mode === "offer" ? t("switchToClient") : t("switchToPro")}</span>
+                    </span>
                     {otherModeUnread > 0 && (
                       <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#009FD9] px-1.5 text-[11px] font-bold leading-none text-white shrink-0">{otherModeUnread > 9 ? "9+" : otherModeUnread}</span>
                     )}
                   </button>
+                ) : (
+                  <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t("myAccount")}</p>
                 )}
-                <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{isPro ? (mode === "offer" ? t("proMode") : t("clientMode")) : t("myAccount")}</p>
                 <a href={primaryPanelHref} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-2 py-2.5 rounded-lg text-sm font-semibold text-[#111827] hover:bg-gray-50 transition-colors">
                   <LayoutDashboard className="h-4 w-4 text-[#009FD9] shrink-0" /> {t("myPanel")}
                 </a>
