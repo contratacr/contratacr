@@ -68,6 +68,22 @@ export function SelectMenu({ value, onChange, options, placeholder, label, error
     el?.scrollIntoView({ block: "center" });
   }, [open, pos]);
 
+  // Mouse-wheel scroll INSIDE the list. The list is portaled to <body>, OUTSIDE a Radix
+  // MODAL Dialog's `react-remove-scroll`, which attaches a non-passive `wheel` listener on
+  // `document` and preventDefault()s wheel events whose target is outside the modal — so the
+  // portaled list (e.g. the DOB year list) couldn't scroll on wheel at all. We attach a
+  // native wheel listener on the LIST itself: it runs at the target, BEFORE react-remove-
+  // scroll's document-level bubble listener, and stopPropagation() keeps that listener from
+  // ever cancelling it — so the list scrolls natively (overscroll-contain stops chaining).
+  // Harmless outside a dialog (just keeps the page still while hovering the open list).
+  useEffect(() => {
+    const el = listRef.current;
+    if (!open || !pos || !el) return;
+    const onWheel = (e: WheelEvent) => { e.stopPropagation(); };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [open, pos]);
+
   return (
     <div ref={rootRef} className={cn("flex flex-col gap-1", className)}>
       {label && <label htmlFor={id} className="text-xs font-medium text-[#6b7280]">{label}</label>}
