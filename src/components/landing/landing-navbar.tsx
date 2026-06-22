@@ -913,9 +913,10 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
               style={{ opacity: compact ? 0 : 1, pointerEvents: compact ? "none" : "auto" }}
             >
               <Link href="/" aria-label="ContrataCR inicio" className="shrink-0">
-                {mobileInline ? (
+                {(mobileInline || (user && isPro)) ? (
                   <>
-                    {/* Compact mark on mobile (saves room for the inline search), full logo on desktop. */}
+                    {/* Compact mark on mobile (saves room for the inline search OR the mode
+                        switch), full logo on desktop. */}
                     <ContrataCRMark className="h-8 w-8 lg:hidden" />
                     <span className="hidden lg:inline-flex"><ContrataCRLogo size="lg" /></span>
                   </>
@@ -923,6 +924,22 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                   <ContrataCRLogo size="lg" />
                 )}
               </Link>
+
+              {/* MOBILE mode switch — RIGHT in the navbar bar (lg:hidden), so providers can flip
+                  the whole experience without opening any menu. Text-based, brand-tint pill with
+                  the other-mode unread badge; only for accounts with both modes. */}
+              {user && isPro && !mobileInline && (
+                <button
+                  onClick={() => switchMode(mode === "offer" ? "use" : "offer")}
+                  aria-label={mode === "offer" ? t("switchToClient") : t("switchToPro")}
+                  className="lg:hidden inline-flex shrink-0 items-center gap-1.5 rounded-full bg-[#EBF5FB] px-3 py-1.5 text-[11px] font-semibold text-[#162543] ring-1 ring-inset ring-[#009FD9]/20 hover:bg-[#e1eefb] active:scale-[0.98] transition-all whitespace-nowrap"
+                >
+                  {mode === "offer" ? t("switchToClient") : t("switchToPro")}
+                  {otherModeUnread > 0 && (
+                    <span className="inline-flex h-[16px] min-w-[16px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[9px] font-bold leading-none text-white">{otherModeUnread > 9 ? "9+" : otherModeUnread}</span>
+                  )}
+                </button>
+              )}
 
               {/* MOBILE inline slot (search + filters) — only when provided, only <lg. */}
               {mobileInline && (
@@ -1024,6 +1041,19 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                         <Briefcase className="h-4 w-4" />
                         {t("offerServices")}
                       </Link>
+                    )}
+                    {/* DESKTOP mode switch — right in the navbar bar (providers only): flip the
+                        whole experience from anywhere. Text-based brand-tint pill + unread badge. */}
+                    {isPro && (
+                      <button
+                        onClick={() => switchMode(mode === "offer" ? "use" : "offer")}
+                        className="inline-flex items-center gap-1.5 rounded-full bg-[#EBF5FB] px-3.5 py-1.5 text-[13px] font-semibold text-[#162543] ring-1 ring-inset ring-[#009FD9]/20 hover:bg-[#e1eefb] hover:ring-[#009FD9]/40 active:scale-[0.98] transition-all whitespace-nowrap"
+                      >
+                        {mode === "offer" ? t("switchToClient") : t("switchToPro")}
+                        {otherModeUnread > 0 && (
+                          <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold leading-none text-white">{otherModeUnread > 9 ? "9+" : otherModeUnread}</span>
+                        )}
+                      </button>
                     )}
                     <a
                       href={primaryPanelHref}
