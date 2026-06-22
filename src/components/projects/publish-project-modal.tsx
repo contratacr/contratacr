@@ -218,12 +218,14 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
                 placeholder={t("descriptionPlaceholder")}
                 value={form.description}
                 onChange={(e) => update("description", e.target.value)}
-                maxLength={500}
+                maxLength={300}
                 required
               />
-              {/* Limit message ONLY once the cap is reached — silent otherwise (no counter). */}
-              {form.description.length >= 500 && (
-                <p className="mt-1 text-xs text-[#b45309]">{t("charLimit", { max: 500 })}</p>
+              {/* Limit message ONLY once the cap is reached — silent otherwise (no counter).
+                  300 is the SAME cap as the direct-booking note (sprint 449) — both fields ask
+                  the client to "describe briefly what you need", so they share one coherent limit. */}
+              {form.description.length >= 300 && (
+                <p className="mt-1 text-xs text-[#b45309]">{t("charLimit", { max: 300 })}</p>
               )}
             </div>
 

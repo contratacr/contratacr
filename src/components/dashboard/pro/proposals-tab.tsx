@@ -1,16 +1,17 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { FolderOpen, Send, ChevronDown } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PriceInput } from "@/components/ui/price-input";
 import { cn, getWhatsAppLink, getInitials } from "@/lib/utils";
 import { StatusFilterTabs, PROYECTO_TABS, proposalMatches, proposalBucket, proposalStatusRedundant, bucketCounts } from "@/components/dashboard/status-filter-tabs";
+import { CardActionsMenu, type CardAction } from "@/components/dashboard/card-actions-menu";
 
 type ProposalStatus = "pending" | "accepted" | "declined";
 
@@ -168,8 +169,14 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
     setSubmitting(null);
   }
 
+  // Mis propuestas is a collapsible accordion (sprint 449) — same card language as the
+  // other panel sections (one open at a time).
+  const [expandedMine, setExpandedMine] = useState<string | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<{ price: string; message: string }>({ price: "", message: "" });
+  // Withdraw-a-proposal clean confirm modal (replaces the old browser confirm()).
+  const [withdrawTarget, setWithdrawTarget] = useState<MyProposal | null>(null);
+  const [withdrawing, setWithdrawing] = useState(false);
 
   function startEdit(p: MyProposal) {
     setEditing(p.id);
@@ -188,10 +195,15 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
     }
   }
 
-  async function cancelProposal(id: string) {
-    if (!confirm(t("cancelConfirm"))) return;
-    const res = await fetch(`/api/proposals?id=${id}`, { method: "DELETE" });
-    if (res.ok) setMyProposals((prev) => prev.filter((p) => p.id !== id));
+  // Withdraw (retirar) a sent proposal — confirmed via a clean on-brand modal, not a
+  // browser confirm(). Deletes the proposal so the client no longer sees it.
+  async function confirmWithdraw() {
+    if (!withdrawTarget) return;
+    setWithdrawing(true);
+    const res = await fetch(`/api/proposals?id=${withdrawTarget.id}`, { method: "DELETE" });
+    if (res.ok) setMyProposals((prev) => prev.filter((p) => p.id !== withdrawTarget.id));
+    setWithdrawing(false);
+    setWithdrawTarget(null);
   }
 
   async function markWorkDone(projectId: string) {
@@ -397,119 +409,155 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
               {(() => {
                 const shown = myProposals.filter((p) => proposalMatches(projectFilter, p.status, p.projects?.status));
                 if (shown.length === 0) return <p className="text-sm text-[#6b7280] text-center py-8">{t("noneInView")}</p>;
-                return shown.map((p) => (
-                <Card key={p.id}>
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm text-[#111827] mb-1 [overflow-wrap:anywhere]">
-                          {p.projects?.title ?? t("projectFallback")}
-                        </p>
-                        {p.projects?.profiles?.full_name && (
-                          <div className="flex items-center gap-2 mb-2">
-                            <Avatar className="h-6 w-6">
-                              <AvatarImage src={p.projects.profiles.avatar_url} />
-                              <AvatarFallback className="text-[10px] bg-[#EBF5FB] text-[#009FD9] font-semibold">
-                                {getInitials(p.projects.profiles.full_name)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span className="text-xs font-medium text-[#374151]">{p.projects.profiles.full_name}</span>
+                return shown.map((p) => {
+                  const isOpen = expandedMine === p.id;
+                  const ps = p.projects?.status;
+                  const phone = p.projects?.profiles?.phone;
+                  const clientName = p.projects?.profiles?.full_name;
+                  const wa = p.status === "accepted" && ps !== "cancelled" && phone
+                    ? getWhatsAppLink(phone, t("waMessage", { name: (clientName ?? "").split(" ")[0], title: p.projects?.title ?? "" }))
+                    : null;
+                  const sentDate = new Date(p.created_at).toLocaleDateString(dateLocale, { day: "numeric", month: "short", year: "numeric" });
+                  return (
+                    <Card key={p.id}>
+                      {/* COLLAPSED header — client avatar + project title (primary) + a status chip
+                          (a SENT proposal genuinely IS "Pendiente" until the client decides — unlike
+                          auto-confirm bookings — so that badge is kept here); key fact = YOUR price; a
+                          2-line message preview while collapsed. Same card language as the rest. */}
+                      <button
+                        type="button"
+                        onClick={() => setExpandedMine(isOpen ? null : p.id)}
+                        aria-expanded={isOpen}
+                        className={cn("w-full text-left p-4 flex items-start gap-2.5 hover:bg-[#fafafa] transition-colors", isOpen ? "rounded-t-2xl" : "rounded-2xl")}
+                      >
+                        <Avatar className="h-10 w-10 shrink-0">
+                          <AvatarImage src={p.projects?.profiles?.avatar_url} />
+                          <AvatarFallback className="text-sm bg-[#EBF5FB] text-[#009FD9] font-bold">
+                            {getInitials(clientName ?? "?")}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2">
+                            <span className="text-[15px] font-semibold text-[#111827] min-w-0 truncate">{p.projects?.title ?? t("projectFallback")}</span>
+                            {!proposalStatusRedundant(p.status, ps) && (
+                              p.status === "accepted" ? (
+                                <Badge variant={projStatusVariant(ps)} className="shrink-0 text-[11px] font-semibold">{projStatusLabel(ps)}</Badge>
+                              ) : (
+                                <Badge variant={STATUS_VARIANT[p.status]} className="shrink-0 text-[11px] font-semibold">{t(`status.${p.status}`)}</Badge>
+                              )
+                            )}
                           </div>
-                        )}
-                        {/* Client contact — shown to the pro once their proposal is accepted. */}
-                        {p.status === "accepted" && p.projects?.profiles?.phone && (
-                          <p className="text-xs text-[#374151] mb-2">
-                            <span className="text-[#6b7280]">{t("fieldPhone")}</span> {p.projects.profiles.phone}
+                          <p className="mt-0.5 text-[13px] truncate">
+                            <span className="text-[#6b7280]">{t("yourPriceLabel")}</span>{" "}
+                            {p.price
+                              ? <span className="font-medium text-[#374151]">₡{p.price.toLocaleString("es-CR")}</span>
+                              : <span className="text-[#6b7280]">{t("priceTBD")}</span>}
                           </p>
-                        )}
-                        <p className="text-xs text-[#6b7280] line-clamp-2 mb-2 [overflow-wrap:anywhere]">{p.message}</p>
-                        <p className="text-xs text-[#374151]">
-                          {t("yourPriceLabel")}{" "}
-                          {p.price
-                            ? <span className="font-medium">₡{p.price.toLocaleString("es-CR")}</span>
-                            : <span className="text-[#6b7280]">{t("priceTBD")}</span>}
-                        </p>
-                        <p className="text-xs text-[#6b7280] mt-1">
-                          {new Date(p.created_at).toLocaleDateString(dateLocale)}
-                        </p>
-                      </div>
-                      <div className="flex flex-col items-end gap-2 shrink-0">
-                        {/* Status badge shown ONLY when it adds info beyond the active tab
-                            (a sub-state like "En espera de confirmación" or a project the
-                            client cancelled). When it just repeats the tab, it's hidden. */}
-                        {!proposalStatusRedundant(p.status, p.projects?.status) && (
-                          p.status === "accepted" ? (
-                            <Badge variant={projStatusVariant(p.projects?.status)}>{projStatusLabel(p.projects?.status)}</Badge>
-                          ) : (
-                            <Badge variant={STATUS_VARIANT[p.status]}>{t(`status.${p.status}`)}</Badge>
-                          )
-                        )}
-
-                        {p.status === "pending" && (
-                          <div className="flex gap-1.5">
-                            <Button size="sm" variant="outline" onClick={() => startEdit(p)}>{t("edit")}</Button>
-                            <Button size="sm" variant="ghost" className="text-red-500 hover:bg-red-50" onClick={() => cancelProposal(p.id)}>{t("cancel")}</Button>
-                          </div>
-                        )}
-
-                        {/* Accepted + still active → contact + mark work done. Cancelled
-                            by the client → no actions (auto-loses the accepted state). */}
-                        {p.status === "accepted" && p.projects?.status !== "cancelled" && p.projects?.profiles?.phone && (
-                          <Button size="sm" variant="whatsapp" asChild>
-                            <a
-                              href={getWhatsAppLink(
-                                p.projects.profiles.phone,
-                                t("waMessage", { name: p.projects.profiles.full_name.split(" ")[0], title: p.projects.title })
-                              )}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <WhatsAppIcon className="h-3.5 w-3.5" />
-                              {t("whatsapp")}
-                            </a>
-                          </Button>
-                        )}
-                        {p.status === "accepted" && p.projects?.status === "in_progress" && (
-                          <Button size="sm" onClick={() => markWorkDone(p.project_id)}>
-                            {t("markCompleted")}
-                          </Button>
-                        )}
-                        {p.status === "accepted" && p.projects?.status === "cancelled" && (
-                          <span className="text-xs text-red-500">{t("clientCancelled")}</span>
-                        )}
-                      </div>
-                    </div>
-
-                    {editing === p.id && (
-                      <div className="mt-4 pt-4 border-t border-[#f3f4f6] flex flex-col gap-3">
-                        <div>
-                          <label className="text-xs font-medium text-[#374151] block mb-1.5">{t("yourPrice")} <span className="text-[#6b7280] font-normal">{t("optional")}</span></label>
-                          <PriceInput placeholder={t("pricePlaceholder")} value={editForm.price} onChange={(v) => setEditForm((f) => ({ ...f, price: v }))} />
-                        </div>
-                        <div>
-                          <label className="text-xs font-medium text-[#374151] block mb-1.5">{t("yourMessage")} <span className="text-red-500">*</span></label>
-                          <textarea
-                            value={editForm.message}
-                            onChange={(e) => setEditForm((f) => ({ ...f, message: e.target.value }))}
-                            maxLength={500}
-                            className={`${inputClass} min-h-[90px] resize-none`}
-                          />
-                          {editForm.message.length >= 500 && (
-                            <p className="mt-1 text-xs text-[#b45309]">{t("charLimit", { max: 500 })}</p>
+                          {!isOpen && p.message && (
+                            <p className="mt-1 text-[13px] text-[#6b7280] leading-snug line-clamp-2 [overflow-wrap:anywhere]">{p.message}</p>
                           )}
                         </div>
-                        <div className="flex gap-2">
-                          <Button size="sm" onClick={() => saveEdit(p.id)} disabled={!editForm.message.trim()}>{t("save")}</Button>
-                          <Button size="sm" variant="ghost" onClick={() => setEditing(null)}>{t("cancel")}</Button>
+                        <ChevronDown className={cn("h-5 w-5 text-[#9ca3af] shrink-0 mt-0.5 transition-transform duration-200", isOpen && "rotate-180")} />
+                      </button>
+
+                      {isOpen && (
+                        <div className="px-4 pb-4 pt-3 border-t border-[#f3f4f6] flex flex-col gap-2.5">
+                          {clientName && <p className="text-[12.5px] text-[#6b7280] truncate">{clientName}</p>}
+                          {p.message && <p className="text-[13px] text-[#374151] whitespace-pre-line [overflow-wrap:anywhere]">{p.message}</p>}
+                          <p className="text-[11px] text-[#9ca3af]">{t("sentOn", { date: sentDate })}</p>
+                          {/* Client contact — revealed once the proposal is accepted (still active). */}
+                          {p.status === "accepted" && ps !== "cancelled" && phone && (
+                            <p className="text-xs text-[#374151]"><span className="text-[#6b7280]">{t("fieldPhone")}</span> {phone}</p>
+                          )}
+                          {/* Client cancelled the request after accepting → tell the pro (no actions). */}
+                          {p.status === "accepted" && ps === "cancelled" && (
+                            <div className="rounded-lg bg-[#fef2f2] border border-[#fee2e2] px-2.5 py-1.5">
+                              <p className="text-[11px] font-semibold text-[#b91c1c]">{t("clientCancelled")}</p>
+                            </div>
+                          )}
+
+                          {/* ACTIONS — PRIMARY visible + "···" overflow menu (consistent with the
+                              other sections). pending → Editar propuesta (primary) + Retirar (menu,
+                              destructive); accepted+active → Contactar cliente (WhatsApp primary) +
+                              Marcar completado (menu, while in progress); finalizada / rechazada /
+                              cliente-canceló → no actions. */}
+                          {(() => {
+                            const menu: CardAction[] = [];
+                            let primary: ReactNode = null;
+                            if (p.status === "pending") {
+                              primary = <Button size="sm" variant="outline" className="flex-1 sm:flex-none rounded-full px-4" onClick={() => startEdit(p)}>{t("editProposal")}</Button>;
+                              menu.push({ label: t("withdraw"), onClick: () => setWithdrawTarget(p), destructive: true });
+                            } else if (p.status === "accepted") {
+                              if (wa) {
+                                primary = (
+                                  <Button variant="whatsapp" size="sm" asChild className="flex-1 sm:flex-none rounded-full px-4">
+                                    <a href={wa} target="_blank" rel="noopener noreferrer"><WhatsAppIcon className="h-4 w-4" /> {t("contactClient")}</a>
+                                  </Button>
+                                );
+                              }
+                              if (ps === "in_progress") menu.push({ label: t("markCompleted"), onClick: () => markWorkDone(p.project_id) });
+                            }
+                            if (!primary && menu.length === 0) return null;
+                            return (
+                              <div className="flex items-center gap-2">
+                                {primary}
+                                {menu.length > 0 && (
+                                  <div className={primary ? "" : "ml-auto"}>
+                                    <CardActionsMenu actions={menu} label={t("actions")} />
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
+
+                          {/* Inline edit form (pending only) */}
+                          {editing === p.id && (
+                            <div className="mt-2 pt-3 border-t border-[#f3f4f6] flex flex-col gap-3">
+                              <div>
+                                <label className="text-xs font-medium text-[#374151] block mb-1.5">{t("yourPrice")} <span className="text-[#6b7280] font-normal">{t("optional")}</span></label>
+                                <PriceInput placeholder={t("pricePlaceholder")} value={editForm.price} onChange={(v) => setEditForm((f) => ({ ...f, price: v }))} />
+                              </div>
+                              <div>
+                                <label className="text-xs font-medium text-[#374151] block mb-1.5">{t("yourMessage")} <span className="text-red-500">*</span></label>
+                                <textarea
+                                  value={editForm.message}
+                                  onChange={(e) => setEditForm((f) => ({ ...f, message: e.target.value }))}
+                                  maxLength={500}
+                                  className={`${inputClass} min-h-[90px] resize-none`}
+                                />
+                                {editForm.message.length >= 500 && (
+                                  <p className="mt-1 text-xs text-[#b45309]">{t("charLimit", { max: 500 })}</p>
+                                )}
+                              </div>
+                              <div className="flex gap-2">
+                                <Button size="sm" onClick={() => saveEdit(p.id)} disabled={!editForm.message.trim()}>{t("save")}</Button>
+                                <Button size="sm" variant="ghost" onClick={() => setEditing(null)}>{t("cancel")}</Button>
+                              </div>
+                            </div>
+                          )}
                         </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-                ));
+                      )}
+                    </Card>
+                  );
+                });
               })()}
             </div>
           )}
+        </div>
+      )}
+
+      {/* WITHDRAW proposal — clean on-brand confirm modal (replaces window.confirm). */}
+      {withdrawTarget && (
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => !withdrawing && setWithdrawTarget(null)} aria-hidden />
+          <div role="dialog" aria-modal="true" aria-label={t("withdrawTitle")} className="relative w-full sm:max-w-sm bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl p-5 pb-[max(env(safe-area-inset-bottom),1.25rem)]">
+            <h2 className="text-base font-bold text-[#111827]">{t("withdrawTitle")}</h2>
+            <p className="mt-1 text-sm text-[#6b7280]">{t("withdrawBody")}</p>
+            <div className="mt-4 flex gap-2">
+              <Button variant="outline" size="sm" className="flex-1 rounded-full" onClick={() => setWithdrawTarget(null)} disabled={withdrawing}>{t("back")}</Button>
+              <Button size="sm" className="flex-1 rounded-full bg-red-600 hover:bg-red-700" onClick={confirmWithdraw} disabled={withdrawing} loading={withdrawing}>{t("withdrawConfirm")}</Button>
+            </div>
+          </div>
         </div>
       )}
     </div>
