@@ -304,10 +304,10 @@ export function BookingRequests() {
               </p>
             )}
 
-            {/* ACTIONS — revealed on expand. CONSISTENT layout (all 3 sections): the primary
-                action(s) go full-width on mobile, the two outline secondaries share a 2-col row,
-                and everything collapses to ONE tidy wrapping row on desktop (sm:contents). The
-                quiet/destructive minor action (Reportar) is a text link below. */}
+            {/* ACTIONS — revealed on expand. WhatsApp is the full-width primary on mobile; then
+                "Marcar completado" (left) + "Cancelar" (right) ALWAYS share ONE row on mobile via a
+                2-col grid that dissolves into the single wrapping row on desktop (sm:contents). The
+                pro does NOT reschedule (sprint 433); Reportar is a quiet text link below. */}
             {!panelOpen && (
               <div className="flex flex-col gap-2 pt-0.5">
                 <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
@@ -319,13 +319,10 @@ export function BookingRequests() {
                     </Button>
                   )}
                   {isActive && (
-                    <>
-                      {/* The pro does NOT reschedule (it would impose a time on the client). They
-                          mark it done or cancel-with-reason, and coordinate any new time via
-                          WhatsApp; the CLIENT reschedules their own appointment (sprint 433). */}
-                      <Button size="sm" className="w-full sm:w-auto rounded-full px-4" onClick={() => updateStatus(booking.id, "awaiting_confirmation")}>{t("markCompleted")}</Button>
-                      <Button size="sm" variant="outline" className="w-full sm:w-auto rounded-full px-4 text-red-600 border-red-200 hover:bg-red-50" onClick={() => openAction(booking.id, "cancel")}>{t("cancel")}</Button>
-                    </>
+                    <div className="grid grid-cols-2 gap-2 sm:contents">
+                      <Button size="sm" className="w-full sm:w-auto rounded-full px-3" onClick={() => updateStatus(booking.id, "awaiting_confirmation")}>{t("markCompleted")}</Button>
+                      <Button size="sm" variant="outline" className="w-full sm:w-auto rounded-full px-3 text-red-600 border-red-200 hover:bg-red-50" onClick={() => openAction(booking.id, "cancel")}>{t("cancel")}</Button>
+                    </div>
                   )}
                 </div>
                 <button onClick={() => reportClient(booking)} className="self-start text-xs font-semibold text-[#6b7280] hover:text-red-500 transition-colors">{t("reportClient")}</button>

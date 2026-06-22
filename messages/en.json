@@ -1127,7 +1127,7 @@
     "awaitingConfirmNote": "Waiting for the client to confirm completion. It auto-confirms in 7 days.",
     "confirm": "Confirm",
     "cancel": "Cancel",
-    "markCompleted": "Mark as completed",
+    "markCompleted": "Mark completed",
     "inProgress": "In progress",
     "markWorkDone": "Mark work done",
     "whatsapp": "WhatsApp",
