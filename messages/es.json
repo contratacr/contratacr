@@ -85,7 +85,13 @@
       "wrongCredentials": "Correo o contraseña incorrectos. Si te registraste con Google o Facebook, entra con ese botón.",
       "checkEmailConfirm": "¡Revisa tu correo para confirmar tu cuenta!",
       "emailAlreadyExists": "Ya existe una cuenta con este correo. Inicia sesión con tu contraseña, o con Google o Facebook si así te registraste."
-    }
+    },
+    "switchToPro": "Cambiar a modo profesional",
+    "switchToClient": "Cambiar a modo cliente",
+    "proMode": "Modo profesional",
+    "clientMode": "Modo cliente",
+    "receivedRequests": "Solicitudes recibidas",
+    "myProposals": "Mis propuestas"
   },
   "home": {
     "hero": {
@@ -1933,7 +1939,8 @@
       "proposal_received": "Nueva propuesta",
       "proposal_accepted": "¡Propuesta aceptada!",
       "booking_rescheduled": "Nuevo horario propuesto"
-    }
+    },
+    "viewAll": "Ver todas"
   },
   "projects": {
     "title": "Publicar una solicitud",

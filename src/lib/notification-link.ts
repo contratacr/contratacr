@@ -35,6 +35,19 @@ export function notificationContext(type: string): NotificationContext {
   return null;
 }
 
+/**
+ * Whether a notification is VISIBLE in the given mode (Airbnb full-switch model).
+ * Professional-context notifications show only in "offer"; client-context only in
+ * "use"; support + unknown (account-level) are visible in BOTH so they're never
+ * hidden by the active mode.
+ */
+export function notificationInMode(type: string, mode: "use" | "offer"): boolean {
+  const ctx = notificationContext(type);
+  if (ctx === "professional") return mode === "offer";
+  if (ctx === "client") return mode === "use";
+  return true;
+}
+
 /** Short tag shown on each notification so the role context is always obvious. */
 export function notificationContextLabel(type: string): string | null {
   const ctx = notificationContext(type);

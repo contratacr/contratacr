@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import {
   X, Menu, ChevronDown, Search, MapPin,
-  LayoutDashboard, LogOut, Bookmark, CalendarDays, FolderOpen, UserPlus, Briefcase, Compass, Settings, Bell, Globe,
+  LayoutDashboard, LogOut, Bookmark, CalendarDays, FolderOpen, UserPlus, Briefcase, Compass, Settings, Bell, Globe, ArrowLeftRight, Inbox,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -12,6 +12,8 @@ import { createClient } from "@/lib/supabase/client";
 import { signOutToHome } from "@/lib/auth/sign-out";
 import { useAuth } from "@/hooks/use-auth";
 import { canOffer } from "@/lib/auth/capabilities";
+import { useMode, type Mode } from "@/hooks/use-mode";
+import { notificationContext } from "@/lib/notification-link";
 import { getInitials } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { NotificationBell } from "@/components/notifications/notification-bell";
@@ -471,26 +473,31 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
 interface AccountMenuProps {
   user: { email?: string | null };
   isPro: boolean;
+  mode: Mode;
   displayName: string;
   avatarUrl: string | null;
   avatarReady: boolean;
   initials: string;
-  proPanelHref: string;
-  clientPanelHref: string;
+  panelHref: string;
+  bookingsHref: string;
+  proposalsHref: string;
   sentBookingsHref: string;
   sentProjectsHref: string;
   savedHref: string;
   notificationsHref: string;
   accountHref: string;
   notifUnread: number;
+  otherModeUnread: number;
+  onSwitchMode: (m: Mode) => void;
   onSignOut: () => void;
   onOpen?: () => void;
 }
 
 function AccountMenu({
-  user, isPro, displayName, avatarUrl, avatarReady, initials,
-  proPanelHref, clientPanelHref, sentBookingsHref, sentProjectsHref,
-  savedHref, notificationsHref, accountHref, notifUnread, onSignOut, onOpen,
+  user, isPro, mode, displayName, avatarUrl, avatarReady, initials,
+  panelHref, bookingsHref, proposalsHref, sentBookingsHref, sentProjectsHref,
+  savedHref, notificationsHref, accountHref, notifUnread, otherModeUnread,
+  onSwitchMode, onSignOut, onOpen,
 }: AccountMenuProps) {
   const t = useTranslations("header");
   const [open, setOpen] = useState(false);
@@ -542,54 +549,62 @@ function AccountMenu({
             <p className="text-xs text-[#9ca3af] truncate">{user.email}</p>
           </div>
 
+          {/* FULL MODE SWITCH (providers only) — flips the whole experience to the other
+              world; the badge surfaces the other mode's unread so awareness needs no switch. */}
           {isPro && (
-            <a
-              href={proPanelHref}
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
+            <button
+              onClick={() => { setOpen(false); onSwitchMode(mode === "offer" ? "use" : "offer"); }}
+              className="w-full flex items-center gap-2.5 px-3 py-2 text-sm font-semibold text-[#009FD9] hover:bg-[#EBF5FB] transition-colors"
             >
-              <LayoutDashboard className="h-4 w-4 text-[#009FD9]" />
-              {t("myPanel")}
-            </a>
+              <ArrowLeftRight className="h-4 w-4" />
+              <span className="flex-1 text-left">{mode === "offer" ? t("switchToClient") : t("switchToPro")}</span>
+              {otherModeUnread > 0 && (
+                <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">{otherModeUnread > 9 ? "9+" : otherModeUnread}</span>
+              )}
+            </button>
           )}
 
           <p className="px-3 pt-2 pb-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
-            {isPro ? t("hireServices") : t("myAccount")}
+            {mode === "offer" ? t("proMode") : t("clientMode")}
           </p>
-          {!isPro && (
-            <a
-              href={clientPanelHref}
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
-            >
-              <LayoutDashboard className="h-4 w-4 text-[#009FD9]" />
-              {t("myPanel")}
-            </a>
+          <a
+            href={panelHref}
+            onClick={() => setOpen(false)}
+            className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
+          >
+            <LayoutDashboard className="h-4 w-4 text-[#009FD9]" />
+            {t("myPanel")}
+          </a>
+
+          {/* Mode-specific quick links — the menu is the active world, Airbnb-style. */}
+          {mode === "offer" ? (
+            <>
+              <a href={bookingsHref} onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors">
+                <Inbox className="h-4 w-4 text-gray-400" />
+                {t("receivedRequests")}
+              </a>
+              <a href={proposalsHref} onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors">
+                <FolderOpen className="h-4 w-4 text-gray-400" />
+                {t("myProposals")}
+              </a>
+            </>
+          ) : (
+            <>
+              <a href={sentBookingsHref} onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors">
+                <CalendarDays className="h-4 w-4 text-gray-400" />
+                {t("myRequests")}
+              </a>
+              <a href={sentProjectsHref} onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors">
+                <FolderOpen className="h-4 w-4 text-gray-400" />
+                {t("myProjects")}
+              </a>
+              <a href={savedHref} onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors">
+                <Bookmark className="h-4 w-4 text-gray-400" />
+                {t("favorites")}
+              </a>
+            </>
           )}
-          <a
-            href={sentBookingsHref}
-            onClick={() => setOpen(false)}
-            className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
-          >
-            <CalendarDays className="h-4 w-4 text-gray-400" />
-            {isPro ? t("sentRequests") : t("myRequests")}
-          </a>
-          <a
-            href={sentProjectsHref}
-            onClick={() => setOpen(false)}
-            className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
-          >
-            <FolderOpen className="h-4 w-4 text-gray-400" />
-            {isPro ? t("publishedProjects") : t("myProjects")}
-          </a>
-          <a
-            href={savedHref}
-            onClick={() => setOpen(false)}
-            className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors"
-          >
-            <Bookmark className="h-4 w-4 text-gray-400" />
-            {t("favorites")}
-          </a>
+
           <a
             href={notificationsHref}
             onClick={() => setOpen(false)}
@@ -685,28 +700,52 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
   // ONE unified panel ("Mi panel") for every account; it opens in the right mode
   // by itself. The "Usar servicios" sections live under their own tabs there.
   const panelHref = `/${locale}/dashboard/profesional`;
-  const proPanelHref = panelHref;
-  const clientPanelHref = panelHref;
   const primaryPanelHref = panelHref;
+  const bookingsHref = `${panelHref}?tab=bookings`;
+  const proposalsHref = `${panelHref}?tab=proposals`;
   const sentBookingsHref = `${panelHref}?tab=sent_bookings`;
   const sentProjectsHref = `${panelHref}?tab=sent_projects`;
   const savedHref = `${panelHref}?tab=saved`;
   const accountHref = `${panelHref}?tab=cuenta`;
   const notificationsHref = `${panelHref}?tab=notifications`;
-  // Unread notifications count for the account menu + mobile drawer link badges
-  // (the bell handles its own live updates; this refreshes when those open).
-  const [notifUnread, setNotifUnread] = useState(0);
+
+  // Airbnb FULL mode switch — flips the whole experience (panel sections + bell).
+  const { mode, setMode } = useMode(isPro);
+  function switchMode(next: Mode) {
+    setMode(next);
+    router.push("/dashboard/profesional?tab=profile");
+    setMobileOpen(false);
+  }
+
+  // Unread counts, split by mode (the bell handles its own live updates; this refreshes
+  // when the menu/drawer opens). Professional + client notifications drive the active-mode
+  // badge and the OTHER-mode awareness badge on the switch; support/unknown show in both.
+  const [proUnread, setProUnread] = useState(0);
+  const [clientUnread, setClientUnread] = useState(0);
+  const [neutralUnread, setNeutralUnread] = useState(0);
   const refreshNotifUnread = useCallback(() => {
-    if (!user) { setNotifUnread(0); return; }
+    if (!user) { setProUnread(0); setClientUnread(0); setNeutralUnread(0); return; }
     const supabase = createClient();
     supabase
       .from("notifications")
-      .select("id", { count: "exact", head: true })
+      .select("type")
       .eq("user_id", user.id)
       .eq("read", false)
-      .then(({ count }) => setNotifUnread(count ?? 0));
+      .then(({ data }) => {
+        let pro = 0, cli = 0, neu = 0;
+        for (const n of data ?? []) {
+          const ctx = notificationContext(n.type as string);
+          if (ctx === "professional") pro++;
+          else if (ctx === "client") cli++;
+          else neu++;
+        }
+        setProUnread(pro); setClientUnread(cli); setNeutralUnread(neu);
+      });
   }, [user]);
   useEffect(() => { refreshNotifUnread(); }, [refreshNotifUnread, mobileOpen]);
+  // The active mode's unread (its own + account-level), and the other mode's pure count.
+  const activeUnread = (mode === "offer" ? proUnread : clientUnread) + neutralUnread;
+  const otherModeUnread = mode === "offer" ? clientUnread : proUnread;
 
   const compactSuggestions = useMemo(() => matchCategories(searchQuery), [searchQuery]);
   const navLocSug = useMemo(() => searchLocations(navLocation), [navLocation]);
@@ -993,18 +1032,22 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     <AccountMenu
                       user={user}
                       isPro={isPro}
+                      mode={mode}
                       displayName={displayName}
                       avatarUrl={avatarUrl}
                       avatarReady={avatarReady}
                       initials={initials}
-                      proPanelHref={proPanelHref}
-                      clientPanelHref={clientPanelHref}
+                      panelHref={panelHref}
+                      bookingsHref={bookingsHref}
+                      proposalsHref={proposalsHref}
                       sentBookingsHref={sentBookingsHref}
                       sentProjectsHref={sentProjectsHref}
                       savedHref={savedHref}
                       notificationsHref={notificationsHref}
                       accountHref={accountHref}
-                      notifUnread={notifUnread}
+                      notifUnread={activeUnread}
+                      otherModeUnread={otherModeUnread}
+                      onSwitchMode={switchMode}
                       onSignOut={handleSignOut}
                       onOpen={refreshNotifUnread}
                     />
@@ -1162,18 +1205,22 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                   <AccountMenu
                     user={user}
                     isPro={isPro}
+                    mode={mode}
                     displayName={displayName}
                     avatarUrl={avatarUrl}
                     avatarReady={avatarReady}
                     initials={initials}
-                    proPanelHref={proPanelHref}
-                    clientPanelHref={clientPanelHref}
+                    panelHref={panelHref}
+                    bookingsHref={bookingsHref}
+                    proposalsHref={proposalsHref}
                     sentBookingsHref={sentBookingsHref}
                     sentProjectsHref={sentProjectsHref}
                     savedHref={savedHref}
                     notificationsHref={notificationsHref}
                     accountHref={accountHref}
-                    notifUnread={notifUnread}
+                    notifUnread={activeUnread}
+                    otherModeUnread={otherModeUnread}
+                    onSwitchMode={switchMode}
                     onSignOut={handleSignOut}
                     onOpen={refreshNotifUnread}
                   />
@@ -1255,24 +1302,48 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     <p className="text-xs text-gray-400 truncate">{user.email}</p>
                   </div>
                 </div>
-                <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t("myAccount")}</p>
+                {/* FULL MODE SWITCH (providers) — flips the whole experience; the badge
+                    surfaces the other mode's unread without switching. */}
+                {isPro && (
+                  <button onClick={() => switchMode(mode === "offer" ? "use" : "offer")} className="w-full flex items-center gap-3 px-2 py-2.5 rounded-lg text-sm font-semibold text-[#009FD9] hover:bg-[#EBF5FB] transition-colors">
+                    <ArrowLeftRight className="h-4 w-4 shrink-0" />
+                    <span className="flex-1 text-left">{mode === "offer" ? t("switchToClient") : t("switchToPro")}</span>
+                    {otherModeUnread > 0 && (
+                      <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white shrink-0">{otherModeUnread > 9 ? "9+" : otherModeUnread}</span>
+                    )}
+                  </button>
+                )}
+                <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{mode === "offer" ? t("proMode") : t("clientMode")}</p>
                 <a href={primaryPanelHref} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-2 py-2.5 rounded-lg text-sm font-semibold text-[#111827] hover:bg-gray-50 transition-colors">
                   <LayoutDashboard className="h-4 w-4 text-[#009FD9] shrink-0" /> {t("myPanel")}
                 </a>
-                <a href={sentBookingsHref} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-2 py-2.5 rounded-lg text-sm text-[#374151] hover:bg-gray-50 transition-colors">
-                  <CalendarDays className="h-4 w-4 text-gray-400 shrink-0" /> {isPro ? t("sentRequests") : t("myRequests")}
-                </a>
-                <a href={sentProjectsHref} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-2 py-2.5 rounded-lg text-sm text-[#374151] hover:bg-gray-50 transition-colors">
-                  <FolderOpen className="h-4 w-4 text-gray-400 shrink-0" /> {isPro ? t("publishedProjects") : t("myProjects")}
-                </a>
-                <a href={savedHref} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-2 py-2.5 rounded-lg text-sm text-[#374151] hover:bg-gray-50 transition-colors">
-                  <Bookmark className="h-4 w-4 text-gray-400 shrink-0" /> {t("favorites")}
-                </a>
+                {mode === "offer" ? (
+                  <>
+                    <a href={bookingsHref} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-2 py-2.5 rounded-lg text-sm text-[#374151] hover:bg-gray-50 transition-colors">
+                      <Inbox className="h-4 w-4 text-gray-400 shrink-0" /> {t("receivedRequests")}
+                    </a>
+                    <a href={proposalsHref} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-2 py-2.5 rounded-lg text-sm text-[#374151] hover:bg-gray-50 transition-colors">
+                      <FolderOpen className="h-4 w-4 text-gray-400 shrink-0" /> {t("myProposals")}
+                    </a>
+                  </>
+                ) : (
+                  <>
+                    <a href={sentBookingsHref} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-2 py-2.5 rounded-lg text-sm text-[#374151] hover:bg-gray-50 transition-colors">
+                      <CalendarDays className="h-4 w-4 text-gray-400 shrink-0" /> {t("myRequests")}
+                    </a>
+                    <a href={sentProjectsHref} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-2 py-2.5 rounded-lg text-sm text-[#374151] hover:bg-gray-50 transition-colors">
+                      <FolderOpen className="h-4 w-4 text-gray-400 shrink-0" /> {t("myProjects")}
+                    </a>
+                    <a href={savedHref} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-2 py-2.5 rounded-lg text-sm text-[#374151] hover:bg-gray-50 transition-colors">
+                      <Bookmark className="h-4 w-4 text-gray-400 shrink-0" /> {t("favorites")}
+                    </a>
+                  </>
+                )}
                 <a href={notificationsHref} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-2 py-2.5 rounded-lg text-sm text-[#374151] hover:bg-gray-50 transition-colors">
                   <Bell className="h-4 w-4 text-gray-400 shrink-0" />
                   <span className="flex-1">{t("notifications")}</span>
-                  {notifUnread > 0 && (
-                    <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white shrink-0">{notifUnread > 9 ? "9+" : notifUnread}</span>
+                  {activeUnread > 0 && (
+                    <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white shrink-0">{activeUnread > 9 ? "9+" : activeUnread}</span>
                   )}
                 </a>
                 {!isPro && (

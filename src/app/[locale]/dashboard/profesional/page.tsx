@@ -35,6 +35,7 @@ import { PAYMENTS_ENABLED } from "@/lib/payments/config";
 import { createClient } from "@/lib/supabase/client";
 import { getInitials } from "@/lib/utils";
 import { canOffer } from "@/lib/auth/capabilities";
+import { useMode, type Mode } from "@/hooks/use-mode";
 import { useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
@@ -48,8 +49,6 @@ type Tab =
   | "suscripcion"
   | "sent_bookings" | "sent_projects" | "saved"
   | "notifications" | "soporte" | "cuenta";
-
-type Mode = "use" | "offer";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ProData = Record<string, any>;
@@ -94,7 +93,6 @@ export default function DashboardPage() {
   const searchParams = useSearchParams();
   const t = useTranslations("proPanel");
   const activeTab = (searchParams.get("tab") as Tab) ?? "profile";
-  const modeParam = searchParams.get("mode");
 
   const [pro, setPro] = useState<ProData | null>(null);
   const [profile, setProfile] = useState<{ full_name?: string; avatar_url?: string } | null>(null);
@@ -110,13 +108,19 @@ export default function DashboardPage() {
   // loaded) — fall back to the metadata capability for an instant first paint.
   const isProvider = !!pro || canOffer(user);
 
-  // Which mode is active. Mode-specific tabs decide it directly (so existing deep
-  // links keep working); ambiguous tabs use ?mode= or the account's capability.
-  const mode: Mode =
-    OFFER_ONLY.has(activeTab) ? "offer"
-    : USE_ONLY.has(activeTab) ? "use"
-    : (modeParam === "offer" || modeParam === "use") ? modeParam
-    : isProvider ? "offer" : "use";
+  // Airbnb FULL switch: the active mode is the GLOBAL (persisted) mode shared with the
+  // navbar + bell. A mode-specific tab in the URL (a deep link from a notification or a
+  // navbar quick link) overrides it — and is persisted below so everything stays in sync.
+  // A non-provider has no offer world → always "use".
+  const { mode: globalMode, setMode } = useMode(isProvider);
+  const urlForcedMode: Mode | null =
+    OFFER_ONLY.has(activeTab) ? "offer" : USE_ONLY.has(activeTab) ? "use" : null;
+  const mode: Mode = !isProvider ? "use" : urlForcedMode ?? globalMode;
+
+  // When a deep link forces a mode, adopt it globally so the navbar switch + bell follow.
+  useEffect(() => {
+    if (isProvider && urlForcedMode && urlForcedMode !== globalMode) setMode(urlForcedMode);
+  }, [isProvider, urlForcedMode, globalMode, setMode]);
 
   // Suppress the login-redirect while signing out (from the navbar menu) → straight
   // to main, no /login flash. Logout lives only in the navbar profile menu now.
@@ -203,16 +207,10 @@ export default function DashboardPage() {
   }, [authLoading, loading, pro, user, router, noProTries, fetchPro]);
 
   function setTab(tab: Tab) {
-    const params = new URLSearchParams({ tab });
-    // Ambiguous tabs (profile + shared) keep the current mode so the switch stays put.
-    if (!OFFER_ONLY.has(tab) && !USE_ONLY.has(tab)) params.set("mode", mode);
-    router.push(`/dashboard/profesional?${params}`, { scroll: false });
+    // Mode is persisted globally now, so the tab alone is enough — a mode-specific tab
+    // also re-asserts its mode via the effect above, keeping the navbar switch in sync.
+    router.push(`/dashboard/profesional?tab=${tab}`, { scroll: false });
     requestAnimationFrame(() => contentRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
-  }
-
-  function switchMode(next: Mode) {
-    if (next === mode) return;
-    router.push(`/dashboard/profesional?tab=profile&mode=${next}`, { scroll: false });
   }
 
   function handleSaved() {
@@ -266,31 +264,8 @@ export default function DashboardPage() {
     );
   }
 
-  // The mode switch: a clean segmented toggle between the user's two sections.
-  // Both options are always visible (the inactive one is plainly "the other section
-  // you can switch to"); the active one is filled. No icons, no hint line — the
-  // active-mode subtitle in the header teaches what each section is.
-  const modeSwitch = (
-    <div role="tablist" aria-label={`${t("modeUse")} / ${t("modeOffer")}`} className="inline-flex w-full sm:w-auto rounded-xl bg-[#f3f4f6] p-1 gap-1">
-      {(["use", "offer"] as Mode[]).map((key) => {
-        const active = mode === key;
-        return (
-          <button
-            key={key}
-            role="tab"
-            aria-selected={active}
-            onClick={() => switchMode(key)}
-            className={cn(
-              "flex-1 sm:flex-none px-5 py-2 rounded-lg text-sm font-semibold transition-colors whitespace-nowrap",
-              active ? "bg-white text-[#009FD9] shadow-sm" : "text-[#6b7280] hover:text-[#374151] hover:bg-white/60"
-            )}
-          >
-            {key === "use" ? t("modeUse") : t("modeOffer")}
-          </button>
-        );
-      })}
-    </div>
-  );
+  // No in-panel mode toggle anymore (Airbnb FULL switch): the switch lives in the navbar
+  // account menu and flips the whole experience. The panel just reflects the active mode.
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
@@ -307,6 +282,10 @@ export default function DashboardPage() {
                 </AvatarFallback>
               </Avatar>
               <div>
+                {/* Which world you're in — the switch itself lives in the navbar menu. */}
+                <p className="text-[11px] font-bold uppercase tracking-wide text-[#009FD9]">
+                  {mode === "offer" ? t("modeOffer") : t("modeUse")}
+                </p>
                 <h1 className="text-xl font-bold text-[#111827]">{displayName}</h1>
                 {mode === "offer" && pro && (
                   <div className="flex items-center gap-2 mt-1 flex-wrap">
@@ -339,8 +318,7 @@ export default function DashboardPage() {
             )}
           </div>
 
-          {/* Mode switch — one account, two capabilities. */}
-          <div className="mb-6">{modeSwitch}</div>
+          <div className="mb-6" />
 
           {/* Offer mode, provider row still loading → spinner (avoids gate flash). */}
           {offerLoading ? (

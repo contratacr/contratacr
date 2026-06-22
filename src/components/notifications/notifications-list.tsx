@@ -7,7 +7,9 @@ import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { cn, formatRelativeTime } from "@/lib/utils";
-import { notificationHref } from "@/lib/notification-link";
+import { notificationHref, notificationInMode } from "@/lib/notification-link";
+import { useMode } from "@/hooks/use-mode";
+import { canOffer } from "@/lib/auth/capabilities";
 
 type Notification = {
   id: string;
@@ -25,6 +27,9 @@ export function NotificationsList() {
   const { user } = useAuth();
   const t = useTranslations("notifications");
   const locale = useLocale();
+  // Per-mode (Airbnb full switch): the panel tab shows ONLY the active mode's
+  // notifications, matching the navbar bell.
+  const { mode } = useMode(canOffer(user));
   const [items, setItems] = useState<Notification[]>([]);
   const [busy, setBusy] = useState(true);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -41,13 +46,17 @@ export function NotificationsList() {
       .then(({ data }) => { setItems(data ?? []); setBusy(false); });
   }, [user]);
 
-  const unread = items.filter((n) => !n.read).length;
+  // Only the active mode's notifications are shown / acted on here.
+  const visible = items.filter((n) => notificationInMode(n.type, mode));
+  const unread = visible.filter((n) => !n.read).length;
 
   async function markAllRead() {
     if (!user) return;
+    const ids = visible.filter((n) => !n.read).map((n) => n.id);
+    if (ids.length === 0) return;
     const supabase = createClient();
-    await supabase.from("notifications").update({ read: true }).eq("user_id", user.id).eq("read", false);
-    setItems((prev) => prev.map((n) => ({ ...n, read: true })));
+    await supabase.from("notifications").update({ read: true }).in("id", ids);
+    setItems((prev) => prev.map((n) => (ids.includes(n.id) ? { ...n, read: true } : n)));
     window.dispatchEvent(new CustomEvent("notificationsChanged"));
   }
 
@@ -80,16 +89,18 @@ export function NotificationsList() {
 
   async function doDeleteAll() {
     setConfirmDelete(false);
-    if (!user || items.length === 0) return;
-    setItems([]);
+    if (!user || visible.length === 0) return;
+    // Delete only the CURRENT mode's notifications (the list is per-mode).
+    const ids = visible.map((n) => n.id);
+    setItems((prev) => prev.filter((n) => !ids.includes(n.id)));
     window.dispatchEvent(new CustomEvent("notificationsChanged"));
     const supabase = createClient();
-    await supabase.from("notifications").delete().eq("user_id", user.id);
+    await supabase.from("notifications").delete().in("id", ids);
   }
 
   return (
     <div>
-      {items.length > 0 && (
+      {visible.length > 0 && (
         <div className="flex justify-end items-center gap-4 mb-3">
           {unread > 0 && (
             <button onClick={markAllRead} className="flex items-center gap-1.5 text-sm text-[#009FD9] hover:underline">
@@ -119,14 +130,14 @@ export function NotificationsList() {
       <div className="bg-white rounded-2xl border border-[#e5e7eb] overflow-hidden">
         {busy ? (
           <div className="py-16 flex justify-center"><div className="h-7 w-7 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" /></div>
-        ) : items.length === 0 ? (
+        ) : visible.length === 0 ? (
           <div className="text-center py-16">
             <Bell className="h-10 w-10 text-[#e5e7eb] mx-auto mb-3" />
             <p className="text-sm text-[#6b7280]">{t("noneList")}</p>
           </div>
         ) : (
           <ul>
-            {items.map((n) => (
+            {visible.map((n) => (
               <li key={n.id} className={cn("relative group border-b border-[#f3f4f6] last:border-0", !n.read && "bg-[#f0f9f6]")}>
                 <button onClick={() => open(n)} className="w-full text-left px-4 py-3 pr-16 hover:bg-[#f9fafb] transition-colors">
                   {/* No role icon/tag — the title/message already make the context

@@ -85,7 +85,13 @@
       "wrongCredentials": "Incorrect email or password. If you signed up with Google or Facebook, use that button to log in.",
       "checkEmailConfirm": "Check your email to confirm your account!",
       "emailAlreadyExists": "An account with this email already exists. Log in with your password, or with Google or Facebook if that's how you signed up."
-    }
+    },
+    "switchToPro": "Switch to professional mode",
+    "switchToClient": "Switch to client mode",
+    "proMode": "Professional mode",
+    "clientMode": "Client mode",
+    "receivedRequests": "Requests received",
+    "myProposals": "My proposals"
   },
   "home": {
     "hero": {
@@ -1933,7 +1939,8 @@
       "proposal_received": "New proposal",
       "proposal_accepted": "Proposal accepted!",
       "booking_rescheduled": "New time proposed"
-    }
+    },
+    "viewAll": "View all"
   },
   "projects": {
     "title": "Post a request",

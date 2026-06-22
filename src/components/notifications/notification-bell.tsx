@@ -6,7 +6,9 @@ import { useTranslations, useLocale } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { cn, formatRelativeTime } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
-import { notificationHref } from "@/lib/notification-link";
+import { notificationHref, notificationInMode } from "@/lib/notification-link";
+import { useMode } from "@/hooks/use-mode";
+import { canOffer } from "@/lib/auth/capabilities";
 
 type Notification = {
   id: string;
@@ -22,6 +24,9 @@ export function NotificationBell() {
   const { user } = useAuth();
   const t = useTranslations("notifications");
   const locale = useLocale();
+  // Per-mode bell (Airbnb full switch): show ONLY the active mode's notifications
+  // (professional ones in "offer", client ones in "use"; support/account ones in both).
+  const { mode } = useMode(canOffer(user));
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -36,7 +41,9 @@ export function NotificationBell() {
     `nb-${Math.random().toString(36).slice(2)}-${Date.now().toString(36)}`
   );
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  // Only the active mode's notifications drive the bell (list + unread badge).
+  const visible = notifications.filter((n) => notificationInMode(n.type, mode));
+  const unreadCount = visible.filter((n) => !n.read).length;
 
   // Re-pullable so the badge can refresh whenever notifications change anywhere
   // (the in-panel list marks read / deletes, another tab, etc.).
@@ -116,13 +123,12 @@ export function NotificationBell() {
 
   async function markAllRead() {
     if (!user) return;
+    // Mark only the CURRENT mode's unread (the bell is per-mode now).
+    const ids = visible.filter((n) => !n.read).map((n) => n.id);
+    if (ids.length === 0) return;
     const supabase = createClient();
-    await supabase
-      .from("notifications")
-      .update({ read: true })
-      .eq("user_id", user.id)
-      .eq("read", false);
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    await supabase.from("notifications").update({ read: true }).in("id", ids);
+    setNotifications((prev) => prev.map((n) => (ids.includes(n.id) ? { ...n, read: true } : n)));
     window.dispatchEvent(new CustomEvent("notificationsChanged"));
   }
 
@@ -148,13 +154,9 @@ export function NotificationBell() {
 
   if (!user) return null;
 
-  // "Ver todas" opens the Notifications SECTION inside the user's own panel
-  // (not a separate page), routed by role.
-  const role = user.user_metadata?.role as string | undefined;
-  const allNotificationsHref =
-    role === "professional"
-      ? "/es/dashboard/profesional?tab=notifications"
-      : "/es/dashboard/cliente?tab=notifications";
+  // "Ver todas" opens the Notifications SECTION inside the ONE unified panel — it
+  // shows the SAME active mode (no longer ambiguous: the bell is per-mode now).
+  const allNotificationsHref = `/${locale}/dashboard/profesional?tab=notifications`;
 
   return (
     <div className="relative" ref={panelRef}>
@@ -187,14 +189,14 @@ export function NotificationBell() {
           </div>
 
           <div className="max-h-80 overflow-y-auto">
-            {notifications.length === 0 ? (
+            {visible.length === 0 ? (
               <div className="text-center py-8">
                 <Bell className="h-8 w-8 text-[#e5e7eb] mx-auto mb-2" />
                 <p className="text-sm text-[#9ca3af]">{t("empty")}</p>
               </div>
             ) : (
               <ul>
-                {notifications.map((n) => (
+                {visible.map((n) => (
                   <li
                     key={n.id}
                     className={cn(
@@ -240,7 +242,7 @@ export function NotificationBell() {
             href={allNotificationsHref}
             className="block text-center px-4 py-2.5 border-t border-[#f3f4f6] text-sm font-medium text-[#009FD9] hover:bg-[#f9fafb] transition-colors"
           >
-            Ver todas
+            {t("viewAll")}
           </a>
         </div>
       )}
