@@ -253,7 +253,7 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
             <div className="text-center py-16">
               <FolderOpen className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
               <p className="font-medium text-[#374151]">{t("emptyBrowse")}</p>
-              <p className="text-sm text-[#9ca3af] mt-1">{t("emptyBrowseSub")}</p>
+              <p className="text-sm text-[#6b7280] mt-1">{t("emptyBrowseSub")}</p>
             </div>
           ) : (
             <div className="flex flex-col gap-3">
@@ -300,11 +300,11 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
                           ) : null}
                         </div>
                         <p className="mt-0.5 text-[13px] truncate">
-                          <span className="text-[#9ca3af]">{t("fieldBudget")}</span>{" "}
+                          <span className="text-[#6b7280]">{t("fieldBudget")}</span>{" "}
                           <span className="font-semibold text-[#111827]">{budgetText}</span>
                         </p>
                       </div>
-                      <ChevronDown className={cn("h-5 w-5 text-[#9ca3af] shrink-0 mt-0.5 transition-transform duration-200", isExpanded && "rotate-180")} />
+                      <ChevronDown className={cn("h-5 w-5 text-[#6b7280] shrink-0 mt-0.5 transition-transform duration-200", isExpanded && "rotate-180")} />
                     </button>
 
                     {isExpanded && (
@@ -315,30 +315,30 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
                         {hasZoneDeadline && (
                           <p className="flex flex-wrap gap-x-3 gap-y-0.5 text-[12.5px] text-[#6b7280]">
                             {(project.provincias?.name || project.cantones?.name) && (
-                              <span><span className="text-[#9ca3af]">{t("fieldZone")}</span> {[project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ")}</span>
+                              <span><span className="text-[#6b7280]">{t("fieldZone")}</span> {[project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ")}</span>
                             )}
                             {project.timeline && (
-                              <span><span className="text-[#9ca3af]">{t("fieldDeadline")}</span> {project.timeline}</span>
+                              <span><span className="text-[#6b7280]">{t("fieldDeadline")}</span> {project.timeline}</span>
                             )}
                           </p>
                         )}
                         {project.description && (
                           <p className="text-[13px] text-[#374151] whitespace-pre-line">{project.description}</p>
                         )}
-                        <span className="text-xs text-[#9ca3af]">{t("proposalsCount", { count: proposalCount })}</span>
+                        <span className="text-xs text-[#6b7280]">{t("proposalsCount", { count: proposalCount })}</span>
 
                         {!alreadySubmitted && (
                           <div className="pt-2 border-t border-[#f3f4f6] flex flex-col gap-3">
                             <div>
                               <label className="text-xs font-medium text-[#374151] block mb-1.5">
-                                {t("yourPrice")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
+                                {t("yourPrice")} <span className="text-[#6b7280] font-normal">{t("optional")}</span>
                               </label>
                               <PriceInput
                                 placeholder={t("pricePlaceholder")}
                                 value={form.price}
                                 onChange={(v) => updateForm(project.id, "price", v)}
                               />
-                              <p className="text-[11px] text-[#9ca3af] mt-1">{t("priceHint")}</p>
+                              <p className="text-[11px] text-[#6b7280] mt-1">{t("priceHint")}</p>
                             </div>
                             <div>
                               <label className="text-xs font-medium text-[#374151] block mb-1.5">
@@ -379,14 +379,14 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
             <div className="text-center py-16">
               <Send className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
               <p className="font-medium text-[#374151]">{t("emptyMine")}</p>
-              <p className="text-sm text-[#9ca3af] mt-1">{t("emptyMineSub")}</p>
+              <p className="text-sm text-[#6b7280] mt-1">{t("emptyMineSub")}</p>
             </div>
           ) : (
             <div className="flex flex-col gap-3">
               <StatusFilterTabs tabs={PROYECTO_TABS} value={projectFilter} onChange={setProjectFilter} counts={bucketCounts(myProposals.map((p) => proposalBucket(p.status, p.projects?.status)))} />
               {(() => {
                 const shown = myProposals.filter((p) => proposalMatches(projectFilter, p.status, p.projects?.status));
-                if (shown.length === 0) return <p className="text-sm text-[#9ca3af] text-center py-8">{t("noneInView")}</p>;
+                if (shown.length === 0) return <p className="text-sm text-[#6b7280] text-center py-8">{t("noneInView")}</p>;
                 return shown.map((p) => (
                 <Card key={p.id}>
                   <CardContent className="p-4">
@@ -409,7 +409,7 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
                         {/* Client contact — shown to the pro once their proposal is accepted. */}
                         {p.status === "accepted" && p.projects?.profiles?.phone && (
                           <p className="text-xs text-[#374151] mb-2">
-                            <span className="text-[#9ca3af]">{t("fieldPhone")}</span> {p.projects.profiles.phone}
+                            <span className="text-[#6b7280]">{t("fieldPhone")}</span> {p.projects.profiles.phone}
                           </p>
                         )}
                         <p className="text-xs text-[#6b7280] line-clamp-2 mb-2">{p.message}</p>
@@ -417,9 +417,9 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
                           {t("yourPriceLabel")}{" "}
                           {p.price
                             ? <span className="font-medium">₡{p.price.toLocaleString("es-CR")}</span>
-                            : <span className="text-[#9ca3af]">{t("priceTBD")}</span>}
+                            : <span className="text-[#6b7280]">{t("priceTBD")}</span>}
                         </p>
-                        <p className="text-xs text-[#9ca3af] mt-1">
+                        <p className="text-xs text-[#6b7280] mt-1">
                           {new Date(p.created_at).toLocaleDateString(dateLocale)}
                         </p>
                       </div>
@@ -473,7 +473,7 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
                     {editing === p.id && (
                       <div className="mt-4 pt-4 border-t border-[#f3f4f6] flex flex-col gap-3">
                         <div>
-                          <label className="text-xs font-medium text-[#374151] block mb-1.5">{t("yourPrice")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span></label>
+                          <label className="text-xs font-medium text-[#374151] block mb-1.5">{t("yourPrice")} <span className="text-[#6b7280] font-normal">{t("optional")}</span></label>
                           <PriceInput placeholder={t("pricePlaceholder")} value={editForm.price} onChange={(v) => setEditForm((f) => ({ ...f, price: v }))} />
                         </div>
                         <div>

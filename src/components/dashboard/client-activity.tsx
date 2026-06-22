@@ -330,7 +330,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
             <div className="text-center py-14 rounded-2xl border border-dashed border-[#e5e7eb] bg-white">
               <CalendarDays className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
               <p className="font-semibold text-[#374151]">{t("bEmpty")}</p>
-              <p className="text-sm text-[#9ca3af] mt-1">{t("bEmptySub")}</p>
+              <p className="text-sm text-[#6b7280] mt-1">{t("bEmptySub")}</p>
               <Button className="mt-5" asChild>
                 <a href="/buscar">{t("searchPros")}</a>
               </Button>
@@ -339,84 +339,81 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
             <>
               <StatusFilterTabs tabs={SOLICITUD_TABS} value={bookingFilter} onChange={setBookingFilter} counts={bookingCounts} />
               {filteredBookings.length === 0 ? (
-                <p className="text-sm text-[#9ca3af] text-center py-8">{t("noBookingsView")}</p>
+                <p className="text-sm text-[#6b7280] text-center py-8">{t("noBookingsView")}</p>
               ) : (
                 <div className="flex flex-col gap-3">
                   {filteredBookings.map((b) => {
                     const rev = b.status === "completed" ? bookingReview(b.id) : undefined;
                     return (
                       <Card key={b.id}>
-                        <CardContent className="p-4">
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="flex items-start gap-3 flex-1 min-w-0">
-                              <Avatar className="h-10 w-10 shrink-0">
-                                <AvatarImage src={b.professionals?.profiles?.avatar_url} />
-                                <AvatarFallback className="bg-[#EBF5FB] text-[#009FD9] text-xs font-semibold">
-                                  {getInitials(b.professionals?.profiles?.full_name ?? "?")}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 flex-wrap mb-1">
-                                  {b.professionals?.slug ? (
-                                    <Link href={`/profesionales/${b.professionals.slug}`} className="text-sm font-semibold text-[#111827] hover:text-[#009FD9] hover:underline">
-                                      {b.professionals?.profiles?.full_name ?? t("professional")}
-                                    </Link>
-                                  ) : (
-                                    <span className="text-sm font-semibold text-[#111827]">
-                                      {b.professionals?.profiles?.full_name ?? t("professional")}
-                                    </span>
-                                  )}
-                                  {!solicitudStatusRedundant(b.status, b.scheduled_date) && (
-                                    <Badge variant={STATUS_VARIANT[b.status]}>{t(`bStatus.${b.status}`)}</Badge>
-                                  )}
-                                </div>
-                                <p className="text-sm text-[#374151] line-clamp-2 mb-1">{b.service_description}</p>
-                                {formatBookingDate(b, dateLocale) && (
-                                  <p className="text-xs text-[#374151]">
-                                    <span className="text-[#9ca3af]">{t("fieldDate")}</span> <span className="font-medium">{formatBookingDate(b, dateLocale)}</span>
-                                  </p>
+                        <CardContent className="p-4 flex flex-col gap-3">
+                          <div className="flex items-start gap-3">
+                            <Avatar className="h-10 w-10 shrink-0">
+                              <AvatarImage src={b.professionals?.profiles?.avatar_url} />
+                              <AvatarFallback className="bg-[#EBF5FB] text-[#009FD9] text-xs font-semibold">
+                                {getInitials(b.professionals?.profiles?.full_name ?? "?")}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap mb-1">
+                                {b.professionals?.slug ? (
+                                  <Link href={`/profesionales/${b.professionals.slug}`} className="text-sm font-semibold text-[#111827] hover:text-[#009FD9] hover:underline">
+                                    {b.professionals?.profiles?.full_name ?? t("professional")}
+                                  </Link>
+                                ) : (
+                                  <span className="text-sm font-semibold text-[#111827]">
+                                    {b.professionals?.profiles?.full_name ?? t("professional")}
+                                  </span>
                                 )}
-                                {/* Pro cancelled → show why (so the client knows + can re-book). */}
-                                {b.status === "cancelled" && b.cancelled_by === "professional" && (
-                                  <div className="mt-1.5 rounded-lg bg-[#fef2f2] border border-[#fee2e2] px-2.5 py-1.5">
-                                    <p className="text-[11px] font-semibold text-[#b91c1c]">{t("proCancelled")}</p>
-                                    {b.cancel_reason && (
-                                      <p className="mt-0.5 text-xs text-[#374151]"><span className="text-[#9ca3af]">{t("fieldReason")}</span> {b.cancel_reason}</p>
-                                    )}
-                                  </div>
+                                {!solicitudStatusRedundant(b.status, b.scheduled_date) && (
+                                  <Badge variant={STATUS_VARIANT[b.status]}>{t(`bStatus.${b.status}`)}</Badge>
                                 )}
                               </div>
+                              <p className="text-sm text-[#374151] line-clamp-2 mb-1">{b.service_description}</p>
+                              {formatBookingDate(b, dateLocale) && (
+                                <p className="text-xs text-[#374151]">
+                                  <span className="text-[#6b7280]">{t("fieldDate")}</span> <span className="font-medium">{formatBookingDate(b, dateLocale)}</span>
+                                </p>
+                              )}
+                              {/* Pro cancelled → show why (so the client knows + can re-book). */}
+                              {b.status === "cancelled" && b.cancelled_by === "professional" && (
+                                <div className="mt-1.5 rounded-lg bg-[#fef2f2] border border-[#fee2e2] px-2.5 py-1.5">
+                                  <p className="text-[11px] font-semibold text-[#b91c1c]">{t("proCancelled")}</p>
+                                  {b.cancel_reason && (
+                                    <p className="mt-0.5 text-xs text-[#374151]"><span className="text-[#6b7280]">{t("fieldReason")}</span> {b.cancel_reason}</p>
+                                  )}
+                                </div>
+                              )}
                             </div>
-                            <div className="flex flex-col gap-2 shrink-0">
-                              {b.status === "awaiting_confirmation" && (
-                                <Button size="sm" onClick={() => confirmBookingDone(b.id)}>
-                                  {t("confirmCompletion")}
-                                </Button>
-                              )}
-                              {b.status === "completed" && (
-                                <Button variant="outline" size="sm" onClick={() => setReviewModal({ professionalId: b.professional_id, professionalName: b.professionals?.profiles?.full_name ?? t("professional"), bookingId: b.id })}>
-                                  {rev ? t("editReview") : t("leaveReview")}
-                                </Button>
-                              )}
-                              {["pending", "confirmed", "in_progress"].includes(b.status) && (
-                                <Button size="sm" variant="outline" onClick={() => setReschedule({ id: b.id, professionalId: b.professional_id, when: formatBookingDate(b, dateLocale) })}>{t("reschedule")}</Button>
-                              )}
-                              {["pending", "confirmed", "in_progress"].includes(b.status) && (
-                                <Button size="sm" variant="outline" onClick={() => { setCancelTarget(b.id); setCancelNote(""); }}>{t("cancel")}</Button>
-                              )}
+                          </div>
+
+                          {/* Actions — IDENTICAL layout/treatment to the pro's Solicitudes recibidas
+                              (sprint 437 consistency): primary full-width on mobile, the two outline
+                              secondaries share a 2-col row, ONE wrapping row on desktop; Reportar is a
+                              quiet text link. Shared Cancelar = red-outline pill, WhatsApp = green pill. */}
+                          <div className="flex flex-col gap-2">
+                            <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
                               {b.professionals?.whatsapp && b.status !== "cancelled" && b.status !== "completed" && (
-                                <Button size="sm" variant="whatsapp" asChild>
+                                <Button variant="whatsapp" size="sm" asChild className="w-full sm:w-auto rounded-full px-4">
                                   <a href={getWhatsAppLink(b.professionals.whatsapp, t("waBooking"))} target="_blank" rel="noopener noreferrer">
-                                    <WhatsAppIcon className="h-3.5 w-3.5" /> {t("contact")}
+                                    <WhatsAppIcon className="h-4 w-4" /> {t("contact")}
                                   </a>
                                 </Button>
                               )}
-                              {/* Reporting available in every state — a no-show or
-                                  abusive professional can happen before confirmation too. */}
-                              <button onClick={() => reportProfessional(b.id)} className="text-xs text-[#9ca3af] hover:text-red-500 transition-colors">
-                                {t("report")}
-                              </button>
+                              {b.status === "awaiting_confirmation" && (
+                                <Button size="sm" className="w-full sm:w-auto rounded-full px-4" onClick={() => confirmBookingDone(b.id)}>{t("confirmCompletion")}</Button>
+                              )}
+                              {b.status === "completed" && (
+                                <Button variant="outline" size="sm" className="w-full sm:w-auto rounded-full px-4" onClick={() => setReviewModal({ professionalId: b.professional_id, professionalName: b.professionals?.profiles?.full_name ?? t("professional"), bookingId: b.id })}>{rev ? t("editReview") : t("leaveReview")}</Button>
+                              )}
+                              {["pending", "confirmed", "in_progress"].includes(b.status) && (
+                                <div className="grid grid-cols-2 gap-2 sm:contents">
+                                  <Button size="sm" variant="outline" className="w-full sm:w-auto rounded-full px-4" onClick={() => setReschedule({ id: b.id, professionalId: b.professional_id, when: formatBookingDate(b, dateLocale) })}>{t("reschedule")}</Button>
+                                  <Button size="sm" variant="outline" className="w-full sm:w-auto rounded-full px-4 text-red-600 border-red-200 hover:bg-red-50" onClick={() => { setCancelTarget(b.id); setCancelNote(""); }}>{t("cancel")}</Button>
+                                </div>
+                              )}
                             </div>
+                            <button onClick={() => reportProfessional(b.id)} className="self-start text-xs font-semibold text-[#6b7280] hover:text-red-500 transition-colors">{t("report")}</button>
                           </div>
                         </CardContent>
                       </Card>
@@ -436,7 +433,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
             <div className="text-center py-14 rounded-2xl border border-dashed border-[#e5e7eb] bg-white">
               <FolderOpen className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
               <p className="font-semibold text-[#374151]">{t("pEmpty")}</p>
-              <p className="text-sm text-[#9ca3af] mt-1">
+              <p className="text-sm text-[#6b7280] mt-1">
                 {t("pEmptySub")}
               </p>
               <Button className="mt-5" onClick={() => setShowPublish(true)}>
@@ -455,7 +452,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
               </div>
               <StatusFilterTabs tabs={PROYECTO_TABS} value={projectFilter} onChange={setProjectFilter} counts={projectCounts} />
               {filteredProjects.length === 0 && (
-                <p className="text-sm text-[#9ca3af] text-center py-8">{t("noProjectsView")}</p>
+                <p className="text-sm text-[#6b7280] text-center py-8">{t("noProjectsView")}</p>
               )}
               {filteredProjects.map((project) => {
                 const isExpanded = expandedProject === project.id;
@@ -500,9 +497,9 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                             <Badge variant="muted" className="text-[11px]">{project.categories.name}</Badge>
                           )}
                         </div>
-                        <p className="mt-0.5 text-xs text-[#9ca3af]">{t("proposalsCount", { count: proposalCount })}</p>
+                        <p className="mt-0.5 text-xs text-[#6b7280]">{t("proposalsCount", { count: proposalCount })}</p>
                       </div>
-                      <ChevronDown className={`h-5 w-5 text-[#9ca3af] shrink-0 mt-0.5 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`} />
+                      <ChevronDown className={`h-5 w-5 text-[#6b7280] shrink-0 mt-0.5 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`} />
                     </button>
 
                     {isExpanded && (
@@ -511,10 +508,10 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                           <p className="text-sm text-[#6b7280] whitespace-pre-line">{project.description}</p>
                         )}
                         <p className="text-xs text-[#374151]">
-                          <span className="text-[#9ca3af]">{t("fieldPublished")}</span> <span className="font-medium">{new Date(project.created_at).toLocaleDateString(dateLocale)}</span>
+                          <span className="text-[#6b7280]">{t("fieldPublished")}</span> <span className="font-medium">{new Date(project.created_at).toLocaleDateString(dateLocale)}</span>
                         </p>
                         {(project.provincias?.name || project.cantones?.name) && (
-                          <p className="text-xs text-[#9ca3af]"><span className="text-[#9ca3af]">{t("fieldZone")}</span> {[project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ")}</p>
+                          <p className="text-xs text-[#6b7280]"><span className="text-[#6b7280]">{t("fieldZone")}</span> {[project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ")}</p>
                         )}
 
                       {/* ACTIONS — same layout as the other sections: primary action(s) full-width
@@ -552,7 +549,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                           })()}
                         </div>
                         {project.status !== "in_progress" && project.status !== "awaiting_confirmation" && (
-                          <button onClick={() => deleteProject(project.id)} className="self-start text-xs font-semibold text-[#9ca3af] hover:text-red-500 transition-colors">
+                          <button onClick={() => deleteProject(project.id)} className="self-start text-xs font-semibold text-[#6b7280] hover:text-red-500 transition-colors">
                             {t("delete")}
                           </button>
                         )}
@@ -590,7 +587,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                 <p className="text-xs font-medium">
                                   {proposal.price
                                     ? <span className="text-[#009FD9]">₡{proposal.price.toLocaleString("es-CR")}</span>
-                                    : <span className="text-[#9ca3af]">{t("priceTBD")}</span>}
+                                    : <span className="text-[#6b7280]">{t("priceTBD")}</span>}
                                 </p>
                                 <p className="text-xs text-[#6b7280] mt-0.5 line-clamp-2">{proposal.message}</p>
                               </div>
@@ -625,7 +622,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                         return (
                           <div className="mt-4 pt-4 border-t border-[#f3f4f6] flex flex-col gap-3">
                             {proposalList.length === 0 ? (
-                              <p className="text-sm text-[#9ca3af] text-center py-2">{t("noProposalsYet")}</p>
+                              <p className="text-sm text-[#6b7280] text-center py-2">{t("noProposalsYet")}</p>
                             ) : (
                               <>
                                 {primary.map(renderProposal)}

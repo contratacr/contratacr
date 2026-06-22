@@ -156,7 +156,7 @@ export function BookingRequests() {
       <div className="text-center py-16">
         <CalendarDays className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
         <h3 className="font-semibold text-[#374151] mb-1">{t("empty")}</h3>
-        <p className="text-sm text-[#9ca3af]">{t("emptySub")}</p>
+        <p className="text-sm text-[#6b7280]">{t("emptySub")}</p>
       </div>
     );
   }
@@ -241,11 +241,11 @@ export function BookingRequests() {
               )}
             </div>
             <p className="mt-0.5 text-[13px] truncate">
-              <span className="text-[#9ca3af]">{t("fieldDate")}</span>{" "}
-              <span className={dateStr ? "font-semibold text-[#111827]" : "text-[#9ca3af]"}>{dateStr || t("noScheduledDate")}</span>
+              <span className="text-[#6b7280]">{t("fieldDate")}</span>{" "}
+              <span className={dateStr ? "font-semibold text-[#111827]" : "text-[#6b7280]"}>{dateStr || t("noScheduledDate")}</span>
             </p>
           </div>
-          <ChevronDown className={cn("h-5 w-5 text-[#9ca3af] shrink-0 transition-transform duration-200", expanded && "rotate-180")} />
+          <ChevronDown className={cn("h-5 w-5 text-[#6b7280] shrink-0 transition-transform duration-200", expanded && "rotate-180")} />
         </button>
 
         {expanded && (
@@ -253,11 +253,11 @@ export function BookingRequests() {
             {/* identity + request date */}
             {(booking.client_phone || cedulaFmt) && (
               <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[12.5px] text-[#6b7280]">
-                {booking.client_phone && (<span><span className="text-[#9ca3af]">{t("fieldPhone")}</span> {booking.client_phone}</span>)}
-                {cedulaFmt && (<span><span className="text-[#9ca3af]">{t("fieldCedula")}</span> {cedulaFmt}</span>)}
+                {booking.client_phone && (<span><span className="text-[#6b7280]">{t("fieldPhone")}</span> {booking.client_phone}</span>)}
+                {cedulaFmt && (<span><span className="text-[#6b7280]">{t("fieldCedula")}</span> {cedulaFmt}</span>)}
               </div>
             )}
-            <p className="text-[11px] text-[#9ca3af]">{t("requestedOn", { date: new Date(booking.created_at).toLocaleDateString(dateLocale) })}</p>
+            <p className="text-[11px] text-[#6b7280]">{t("requestedOn", { date: new Date(booking.created_at).toLocaleDateString(dateLocale) })}</p>
 
             {/* "Para otra persona" callout (the patient: name + AGE in years; a "Menor de
                 edad" badge ONLY for a minor — adults just show the age, no badge). */}
@@ -274,7 +274,7 @@ export function BookingRequests() {
                     )}
                   </p>
                   {beneAge !== null && (
-                    <p className="mt-0.5 text-[12px] text-[#6b7280]"><span className="text-[#9ca3af]">{t("fieldAge")}</span> {t("yearsOld", { count: beneAge })}</p>
+                    <p className="mt-0.5 text-[12px] text-[#6b7280]"><span className="text-[#6b7280]">{t("fieldAge")}</span> {t("yearsOld", { count: beneAge })}</p>
                   )}
                 </div>
               );
@@ -283,9 +283,9 @@ export function BookingRequests() {
             {/* servicio · zona */}
             {(category || location) && (
               <p className="text-[12.5px] text-[#6b7280]">
-                <span className="text-[#9ca3af]">{t("fieldService")}</span>{" "}
+                <span className="text-[#6b7280]">{t("fieldService")}</span>{" "}
                 {category && <span className="font-medium text-[#374151]">{category}</span>}
-                {category && location && <span className="text-[#9ca3af]"> · </span>}
+                {category && location && <span className="text-[#6b7280]"> · </span>}
                 {location && <span>{location}</span>}
               </p>
             )}
@@ -293,7 +293,7 @@ export function BookingRequests() {
             {/* note */}
             {booking.service_description && (
               <p className="text-[13px] text-[#374151] flex flex-wrap items-baseline gap-x-1.5">
-                <span className="text-[#9ca3af] shrink-0">{t("fieldNote")}</span>
+                <span className="text-[#6b7280] shrink-0">{t("fieldNote")}</span>
                 <span className="min-w-0">{booking.service_description}</span>
               </p>
             )}
@@ -328,7 +328,7 @@ export function BookingRequests() {
                     </>
                   )}
                 </div>
-                <button onClick={() => reportClient(booking)} className="self-start text-xs font-semibold text-[#9ca3af] hover:text-red-500 transition-colors">{t("reportClient")}</button>
+                <button onClick={() => reportClient(booking)} className="self-start text-xs font-semibold text-[#6b7280] hover:text-red-500 transition-colors">{t("reportClient")}</button>
               </div>
             )}
 
@@ -362,7 +362,7 @@ export function BookingRequests() {
     <div className="space-y-4">
       <StatusFilterTabs tabs={SOLICITUD_TABS} value={filter} onChange={setFilter} counts={counts} />
       {filtered.length === 0 ? (
-        <p className="text-sm text-[#9ca3af] text-center py-8">{t("noneInView")}</p>
+        <p className="text-sm text-[#6b7280] text-center py-8">{t("noneInView")}</p>
       ) : (
         <div className="flex flex-col gap-3">
           {filtered.map((b) => <BookingCard key={b.id} booking={b} />)}
