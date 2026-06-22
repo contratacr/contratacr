@@ -41,16 +41,17 @@ type Booking = {
   beneficiary_is_minor?: boolean;
 };
 
-// Status pill colour: Pendiente=amber, Confirmada/En progreso=blue tint,
-// Finalizada/Esperando=green, Cancelada=red, Reprogramada=grey.
+// ONE shared status→colour mapping (sprint 440), identical to the client side:
+// active/upcoming = brand-blue (default), awaiting confirmation = amber, finished =
+// green, cancelled = red, reprogramada = grey.
 const STATUS_VARIANT: Record<BookingStatus, "warning" | "success" | "error" | "default" | "muted"> = {
   pending: "warning",
   confirmed: "default",
   in_progress: "default",
-  awaiting_confirmation: "success",
+  awaiting_confirmation: "warning",
+  completed: "success",
   cancelled: "error",
   rescheduled: "muted",
-  completed: "success",
 };
 
 // "13:00" → "1:00 pm" (12-hour, matches the prototype).
@@ -230,22 +231,22 @@ export function BookingRequests() {
           </Avatar>
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-[15px] font-bold text-[#111827] min-w-0 flex items-center gap-2 flex-wrap">
+              <span className="text-[15px] font-semibold text-[#111827] min-w-0 flex items-center gap-2 flex-wrap">
                 {booking.client_name || t("thePerson")}
                 {!booking.for_someone_else && ageBadge(booking.client_dob)}
                 {unverifiedPill}
                 {flaggedPill}
               </span>
               {!solicitudStatusRedundant(booking.status, booking.scheduled_date) && (
-                <Badge variant={STATUS_VARIANT[booking.status]} className="shrink-0 px-2.5 py-0.5 text-[11px] font-bold">{t(`status.${booking.status}`)}</Badge>
+                <Badge variant={STATUS_VARIANT[booking.status]} className="shrink-0 px-2.5 py-0.5 text-[11px] font-semibold">{t(`status.${booking.status}`)}</Badge>
               )}
             </div>
             <p className="mt-0.5 text-[13px] truncate">
               <span className="text-[#6b7280]">{t("fieldDate")}</span>{" "}
-              <span className={dateStr ? "font-semibold text-[#111827]" : "text-[#6b7280]"}>{dateStr || t("noScheduledDate")}</span>
+              <span className={dateStr ? "font-medium text-[#374151]" : "text-[#6b7280]"}>{dateStr || t("noScheduledDate")}</span>
             </p>
           </div>
-          <ChevronDown className={cn("h-5 w-5 text-[#6b7280] shrink-0 transition-transform duration-200", expanded && "rotate-180")} />
+          <ChevronDown className={cn("h-5 w-5 text-[#9ca3af] shrink-0 transition-transform duration-200", expanded && "rotate-180")} />
         </button>
 
         {expanded && (

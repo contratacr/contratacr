@@ -292,19 +292,19 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
                       </Avatar>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
-                          <span className="text-[15px] font-bold text-[#111827] min-w-0">{project.title}</span>
+                          <span className="text-[15px] font-semibold text-[#111827] min-w-0">{project.title}</span>
                           {alreadySubmitted ? (
-                            <Badge variant="success" className="shrink-0">{t("alreadyProposed")}</Badge>
+                            <Badge variant="success" className="shrink-0 text-[11px] font-semibold">{t("alreadyProposed")}</Badge>
                           ) : project.categories?.name ? (
-                            <Badge variant="muted" className="shrink-0 text-[11px]">{project.categories.name}</Badge>
+                            <Badge variant="muted" className="shrink-0 text-[11px] font-semibold">{project.categories.name}</Badge>
                           ) : null}
                         </div>
                         <p className="mt-0.5 text-[13px] truncate">
                           <span className="text-[#6b7280]">{t("fieldBudget")}</span>{" "}
-                          <span className="font-semibold text-[#111827]">{budgetText}</span>
+                          <span className="font-medium text-[#374151]">{budgetText}</span>
                         </p>
                       </div>
-                      <ChevronDown className={cn("h-5 w-5 text-[#6b7280] shrink-0 mt-0.5 transition-transform duration-200", isExpanded && "rotate-180")} />
+                      <ChevronDown className={cn("h-5 w-5 text-[#9ca3af] shrink-0 mt-0.5 transition-transform duration-200", isExpanded && "rotate-180")} />
                     </button>
 
                     {isExpanded && (

@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { CalendarDays, FolderOpen, ChevronDown } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "@/i18n/navigation";
@@ -74,16 +74,19 @@ type Proposal = {
   };
 };
 
+// ONE shared status→colour mapping (sprint 440), identical to the pro side so a
+// booking's state reads the SAME everywhere: ACTIVE/upcoming = brand-blue (default),
+// transitional (awaiting confirmation) = amber, FINISHED = green, cancelled = red.
+// (Previously active states were green "success" — reading as done/closed — and the
+// finished state was muted grey: the open-vs-closed state looked inverted.)
 const STATUS_VARIANT: Record<BookingStatus, "warning" | "success" | "error" | "default" | "muted"> = {
   pending: "warning",
-  confirmed: "success",
-  in_progress: "success",
+  confirmed: "default",
+  in_progress: "default",
   awaiting_confirmation: "warning",
-  // Finalizada is a settled/terminal state → neutral badge, consistent with the
-  // other statuses (no prominent brand-blue box).
-  completed: "muted",
+  completed: "success",
   cancelled: "error",
-  rescheduled: "warning",
+  rescheduled: "muted",
 };
 
 function formatBookingDate(b: Booking, dateLocale: string) {
@@ -112,6 +115,9 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   const [bookingFilter, setBookingFilter] = useState("activas");
   const [projectFilter, setProjectFilter] = useState("activas");
   const [expandedProject, setExpandedProject] = useState<string | null>(null);
+  // Mis solicitudes is now a collapsible accordion too (sprint 440) — same card language
+  // as Solicitudes recibidas / Oportunidades / Mis publicaciones.
+  const [expandedBooking, setExpandedBooking] = useState<string | null>(null);
   const [projectProposals, setProjectProposals] = useState<Record<string, Proposal[]>>({});
   const [showPublish, setShowPublish] = useState(false);
   // CLIENT reschedule: the client (owner of the appointment) picks another available
@@ -353,76 +359,91 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                     const rev = b.status === "completed" ? bookingReview(b.id) : undefined;
                     return (
                       <Card key={b.id}>
-                        <CardContent className="p-4 flex flex-col gap-3">
-                          <div className="flex items-start gap-3">
-                            <Avatar className="h-10 w-10 shrink-0">
-                              <AvatarImage src={b.professionals?.profiles?.avatar_url} />
-                              <AvatarFallback className="bg-[#EBF5FB] text-[#009FD9] text-xs font-semibold">
-                                {getInitials(b.professionals?.profiles?.full_name ?? "?")}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap mb-1">
-                                {b.professionals?.slug ? (
-                                  <Link href={`/profesionales/${b.professionals.slug}`} className="text-sm font-semibold text-[#111827] hover:text-[#009FD9] hover:underline">
-                                    {b.professionals?.profiles?.full_name ?? t("professional")}
-                                  </Link>
-                                ) : (
-                                  <span className="text-sm font-semibold text-[#111827]">
-                                    {b.professionals?.profiles?.full_name ?? t("professional")}
-                                  </span>
-                                )}
-                                {!solicitudStatusRedundant(b.status, b.scheduled_date) && (
-                                  <Badge variant={STATUS_VARIANT[b.status]}>{t(`bStatus.${b.status}`)}</Badge>
+                        {/* COLLAPSED header — SAME card language as the other 3 sections: avatar +
+                            pro name (primary, semibold) + status chip on the right; "Fecha: {cita}"
+                            key line. Tap to reveal the full description, cancel reason + actions. */}
+                        <button
+                          type="button"
+                          onClick={() => setExpandedBooking(expandedBooking === b.id ? null : b.id)}
+                          aria-expanded={expandedBooking === b.id}
+                          className="w-full text-left p-4 flex items-center gap-2.5 hover:bg-[#fafafa] transition-colors"
+                        >
+                          <Avatar className="h-10 w-10 shrink-0">
+                            <AvatarImage src={b.professionals?.profiles?.avatar_url} />
+                            <AvatarFallback className="bg-[#EBF5FB] text-[#009FD9] text-xs font-semibold">
+                              {getInitials(b.professionals?.profiles?.full_name ?? "?")}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-[15px] font-semibold text-[#111827] min-w-0 truncate">
+                                {b.professionals?.profiles?.full_name ?? t("professional")}
+                              </span>
+                              {!solicitudStatusRedundant(b.status, b.scheduled_date) && (
+                                <Badge variant={STATUS_VARIANT[b.status]} className="shrink-0 text-[11px] font-semibold">{t(`bStatus.${b.status}`)}</Badge>
+                              )}
+                            </div>
+                            <p className="mt-0.5 text-[13px] truncate">
+                              {formatBookingDate(b, dateLocale) ? (
+                                <>
+                                  <span className="text-[#6b7280]">{t("fieldDate")}</span>{" "}
+                                  <span className="font-medium text-[#374151]">{formatBookingDate(b, dateLocale)}</span>
+                                </>
+                              ) : (
+                                <span className="text-[#374151]">{b.service_description}</span>
+                              )}
+                            </p>
+                          </div>
+                          <ChevronDown className={`h-5 w-5 text-[#9ca3af] shrink-0 transition-transform duration-200 ${expandedBooking === b.id ? "rotate-180" : ""}`} />
+                        </button>
+
+                        {expandedBooking === b.id && (
+                          <div className="px-4 pb-4 pt-3 border-t border-[#f3f4f6] flex flex-col gap-2.5">
+                            {b.service_description && (
+                              <p className="text-sm text-[#374151] whitespace-pre-line">{b.service_description}</p>
+                            )}
+                            {b.professionals?.slug && (
+                              <Link href={`/profesionales/${b.professionals.slug}`} className="self-start text-xs font-semibold text-[#009FD9] hover:underline">{t("viewProfile")}</Link>
+                            )}
+                            {/* Pro cancelled → show why (so the client knows + can re-book). */}
+                            {b.status === "cancelled" && b.cancelled_by === "professional" && (
+                              <div className="rounded-lg bg-[#fef2f2] border border-[#fee2e2] px-2.5 py-1.5">
+                                <p className="text-[11px] font-semibold text-[#b91c1c]">{t("proCancelled")}</p>
+                                {b.cancel_reason && (
+                                  <p className="mt-0.5 text-xs text-[#374151]"><span className="text-[#6b7280]">{t("fieldReason")}</span> {b.cancel_reason}</p>
                                 )}
                               </div>
-                              <p className="text-sm text-[#374151] line-clamp-2 mb-1">{b.service_description}</p>
-                              {formatBookingDate(b, dateLocale) && (
-                                <p className="text-xs text-[#374151]">
-                                  <span className="text-[#6b7280]">{t("fieldDate")}</span> <span className="font-medium">{formatBookingDate(b, dateLocale)}</span>
-                                </p>
-                              )}
-                              {/* Pro cancelled → show why (so the client knows + can re-book). */}
-                              {b.status === "cancelled" && b.cancelled_by === "professional" && (
-                                <div className="mt-1.5 rounded-lg bg-[#fef2f2] border border-[#fee2e2] px-2.5 py-1.5">
-                                  <p className="text-[11px] font-semibold text-[#b91c1c]">{t("proCancelled")}</p>
-                                  {b.cancel_reason && (
-                                    <p className="mt-0.5 text-xs text-[#374151]"><span className="text-[#6b7280]">{t("fieldReason")}</span> {b.cancel_reason}</p>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          </div>
+                            )}
 
-                          {/* Actions — IDENTICAL layout/treatment to the pro's Solicitudes recibidas
-                              (sprint 437 consistency): primary full-width on mobile, the two outline
-                              secondaries share a 2-col row, ONE wrapping row on desktop; Reportar is a
-                              quiet text link. Shared Cancelar = red-outline pill, WhatsApp = green pill. */}
-                          <div className="flex flex-col gap-2">
-                            <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
-                              {b.professionals?.whatsapp && b.status !== "cancelled" && b.status !== "completed" && (
-                                <Button variant="whatsapp" size="sm" asChild className="w-full sm:w-auto rounded-full px-4">
-                                  <a href={getWhatsAppLink(b.professionals.whatsapp, t("waBooking"))} target="_blank" rel="noopener noreferrer">
-                                    <WhatsAppIcon className="h-4 w-4" /> {t("contact")}
-                                  </a>
-                                </Button>
-                              )}
-                              {b.status === "awaiting_confirmation" && (
-                                <Button size="sm" className="w-full sm:w-auto rounded-full px-4" onClick={() => confirmBookingDone(b.id)}>{t("confirmCompletion")}</Button>
-                              )}
-                              {b.status === "completed" && (
-                                <Button variant="outline" size="sm" className="w-full sm:w-auto rounded-full px-4" onClick={() => setReviewModal({ professionalId: b.professional_id, professionalName: b.professionals?.profiles?.full_name ?? t("professional"), bookingId: b.id })}>{rev ? t("editReview") : t("leaveReview")}</Button>
-                              )}
-                              {["pending", "confirmed", "in_progress"].includes(b.status) && (
-                                <div className="grid grid-cols-2 gap-2 sm:contents">
-                                  <Button size="sm" variant="outline" className="w-full sm:w-auto rounded-full px-4" onClick={() => setReschedule({ id: b.id, professionalId: b.professional_id, when: formatBookingDate(b, dateLocale) })}>{t("reschedule")}</Button>
-                                  <Button size="sm" variant="outline" className="w-full sm:w-auto rounded-full px-4 text-red-600 border-red-200 hover:bg-red-50" onClick={() => { setCancelTarget(b.id); setCancelNote(""); }}>{t("cancel")}</Button>
-                                </div>
-                              )}
+                            {/* Actions — IDENTICAL layout/treatment to the pro's Solicitudes recibidas:
+                                primary full-width on mobile, the two outline secondaries share a 2-col
+                                row, ONE wrapping row on desktop; Reportar is a quiet text link. */}
+                            <div className="flex flex-col gap-2">
+                              <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
+                                {b.professionals?.whatsapp && b.status !== "cancelled" && b.status !== "completed" && (
+                                  <Button variant="whatsapp" size="sm" asChild className="w-full sm:w-auto rounded-full px-4">
+                                    <a href={getWhatsAppLink(b.professionals.whatsapp, t("waBooking"))} target="_blank" rel="noopener noreferrer">
+                                      <WhatsAppIcon className="h-4 w-4" /> {t("contact")}
+                                    </a>
+                                  </Button>
+                                )}
+                                {b.status === "awaiting_confirmation" && (
+                                  <Button size="sm" className="w-full sm:w-auto rounded-full px-4" onClick={() => confirmBookingDone(b.id)}>{t("confirmCompletion")}</Button>
+                                )}
+                                {b.status === "completed" && (
+                                  <Button variant="outline" size="sm" className="w-full sm:w-auto rounded-full px-4" onClick={() => setReviewModal({ professionalId: b.professional_id, professionalName: b.professionals?.profiles?.full_name ?? t("professional"), bookingId: b.id })}>{rev ? t("editReview") : t("leaveReview")}</Button>
+                                )}
+                                {["pending", "confirmed", "in_progress"].includes(b.status) && (
+                                  <div className="grid grid-cols-2 gap-2 sm:contents">
+                                    <Button size="sm" variant="outline" className="w-full sm:w-auto rounded-full px-4" onClick={() => setReschedule({ id: b.id, professionalId: b.professional_id, when: formatBookingDate(b, dateLocale) })}>{t("reschedule")}</Button>
+                                    <Button size="sm" variant="outline" className="w-full sm:w-auto rounded-full px-4 text-red-600 border-red-200 hover:bg-red-50" onClick={() => { setCancelTarget(b.id); setCancelNote(""); }}>{t("cancel")}</Button>
+                                  </div>
+                                )}
+                              </div>
+                              <button onClick={() => reportProfessional(b.id)} className="self-start text-xs font-semibold text-[#6b7280] hover:text-red-500 transition-colors">{t("report")}</button>
                             </div>
-                            <button onClick={() => reportProfessional(b.id)} className="self-start text-xs font-semibold text-[#6b7280] hover:text-red-500 transition-colors">{t("report")}</button>
                           </div>
-                        </CardContent>
+                        )}
                       </Card>
                     );
                   })}
@@ -481,16 +502,17 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                       className="w-full text-left p-4 flex items-start gap-2.5 hover:bg-[#fafafa] transition-colors"
                     >
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-semibold text-sm text-[#111827]">{project.title}</span>
-                          {!proyectoStatusRedundant(project.status) && (
+                        <div className="flex items-start justify-between gap-2">
+                          <span className="text-[15px] font-semibold text-[#111827] min-w-0">{project.title}</span>
+                          {!proyectoStatusRedundant(project.status) ? (
                             <Badge
+                              className="shrink-0 text-[11px] font-semibold"
                               variant={
                                 project.status === "in_progress" ? "warning"
                                   : project.status === "awaiting_confirmation" ? "warning"
                                   : project.status === "completed" ? "success"
                                   : project.status === "cancelled" ? "error"
-                                  : "success"
+                                  : "default"
                               }
                             >
                               {project.status === "in_progress" ? t("projAssigned")
@@ -499,14 +521,16 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                 : project.status === "cancelled" ? t("projCancelled")
                                 : t("projOpen")}
                             </Badge>
-                          )}
-                          {project.categories?.name && (
-                            <Badge variant="muted" className="text-[11px]">{project.categories.name}</Badge>
-                          )}
+                          ) : project.categories?.name ? (
+                            <Badge variant="muted" className="shrink-0 text-[11px] font-semibold">{project.categories.name}</Badge>
+                          ) : null}
                         </div>
-                        <p className="mt-0.5 text-xs text-[#6b7280]">{t("proposalsCount", { count: proposalCount })}</p>
+                        <p className="mt-0.5 text-[13px] truncate">
+                          <span className="text-[#6b7280]">{t("fieldProposals")}</span>{" "}
+                          <span className="font-medium text-[#374151]">{proposalCount}</span>
+                        </p>
                       </div>
-                      <ChevronDown className={`h-5 w-5 text-[#6b7280] shrink-0 mt-0.5 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`} />
+                      <ChevronDown className={`h-5 w-5 text-[#9ca3af] shrink-0 mt-0.5 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`} />
                     </button>
 
                     {isExpanded && (

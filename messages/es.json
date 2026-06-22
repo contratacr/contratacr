@@ -1620,7 +1620,8 @@
     "proCancelled": "Cancelada por el profesional",
     "fieldReason": "Motivo:",
     "deleteTitle": "¿Eliminar esta solicitud?",
-    "deleteBody": "Esta acción no se puede deshacer."
+    "deleteBody": "Esta acción no se puede deshacer.",
+    "viewProfile": "Ver perfil"
   },
   "clientPage": {
     "greeting": "Hola, {name} 👋",

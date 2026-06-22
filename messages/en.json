@@ -1620,7 +1620,8 @@
     "proCancelled": "Cancelled by the professional",
     "fieldReason": "Reason:",
     "deleteTitle": "Delete this request?",
-    "deleteBody": "This can't be undone."
+    "deleteBody": "This can't be undone.",
+    "viewProfile": "View profile"
   },
   "clientPage": {
     "greeting": "Hi, {name} 👋",
