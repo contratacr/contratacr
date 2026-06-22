@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarDays, CalendarClock, FileText, Flag, MapPin, Phone, IdCard, Check } from "lucide-react";
+import { CalendarDays, CalendarClock, FileText, Flag, MapPin, Phone, Check } from "lucide-react";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { ageCategoryFromDob } from "@/lib/age";
 import { formatDobDMY } from "@/components/ui/date-of-birth-picker";
@@ -257,14 +257,14 @@ export function BookingRequests() {
                service · location + the client's note. Rows are separated by spacing, not
                hairlines — the bold date vs. lighter meta already reads as a hierarchy. */}
         <div className="px-[18px] pt-2 pb-4 flex flex-col gap-2.5">
+          {/* The appointment date is the scan anchor: a calendar icon + the bold date is
+              self-evident, so no "Fecha de la cita" label is needed (the muted "Solicitada …"
+              in the header already distinguishes the request date). */}
           <div className="flex items-center gap-3">
             <CalendarClock className="h-[22px] w-[22px] text-[#9ca3af] shrink-0" strokeWidth={2} />
-            <div className="min-w-0">
-              <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#9ca3af]">{t("appointmentDateLabel")}</p>
-              <p className={dateStr ? "text-[16px] font-bold text-[#111827] leading-tight" : "text-sm text-[#9ca3af]"}>
-                {dateStr || t("noScheduledDate")}
-              </p>
-            </div>
+            <p className={dateStr ? "text-[16px] font-bold text-[#111827] leading-tight" : "text-sm text-[#9ca3af]"}>
+              {dateStr || t("noScheduledDate")}
+            </p>
           </div>
 
           {(category || location) && (
@@ -286,62 +286,52 @@ export function BookingRequests() {
           )}
         </div>
 
-        {/* 4-5 — THE PEOPLE. Third-party → a LEFT/RIGHT split ("La cita es para" | "Reservado
-               por") with an aesthetic divider (vertical on desktop, horizontal when it stacks
-               on mobile) so each side clearly holds ONE person. Self → one person, no split. */}
+        {/* 4-5 — THE PERSON(S). Identity is reduced to what the pro acts on: a name and,
+               when no cédula is on file, the single "Sin verificar" pill (the cédula NUMBER
+               is never shown — the pro doesn't read it; the verified/unverified state is the
+               signal). SELF (the common case) = one compact person. PARA OTRA PERSONA (health
+               minority) = the patient as the headline (name + age badge + DOB) and a compact
+               "Reservado por …" contact line — no two-column split, no second avatar. */}
         {booking.for_someone_else ? (
-          <div className="flex flex-col sm:flex-row">
-            {/* LEFT — the patient (service recipient). We collect ONLY name + age now, so
-                this side shows just that: who it's for, the age badge, and the birth date.
-                No cédula / phone / WhatsApp — the requester (right) is the contact. */}
-            <div className="flex-1 min-w-0 px-[18px] py-4">
-              <p className="text-[10px] font-bold uppercase tracking-[0.05em] text-[#0089bb] mb-2.5">{t("apptForLabel")}</p>
+          <div className="px-[18px] py-4 flex flex-col gap-3">
+            {/* The patient (service recipient) — we collect ONLY name + DOB now. */}
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.05em] text-[#0089bb] mb-2">{t("apptForLabel")}</p>
               <div className="flex items-center gap-3">
                 <span className="h-10 w-10 rounded-full bg-[#EBF5FB] text-[#009FD9] text-sm font-bold flex items-center justify-center shrink-0">
                   {getInitials(booking.beneficiary_name || "?")}
                 </span>
-                <p className="text-[15px] font-bold text-[#111827] min-w-0 flex items-center gap-2 flex-wrap">
-                  {booking.beneficiary_name || t("otherPerson")}
-                  {ageBadge(booking.beneficiary_dob, booking.beneficiary_is_minor)}
-                </p>
-              </div>
-              {booking.beneficiary_dob && (
-                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px] text-[#6b7280]">
-                  <span className="inline-flex items-center gap-1.5"><CalendarDays className="h-[13px] w-[13px] text-[#9ca3af] shrink-0" />{formatDobDMY(booking.beneficiary_dob)}</span>
+                <div className="min-w-0">
+                  <p className="text-[15px] font-bold text-[#111827] flex items-center gap-2 flex-wrap">
+                    {booking.beneficiary_name || t("otherPerson")}
+                    {ageBadge(booking.beneficiary_dob, booking.beneficiary_is_minor)}
+                  </p>
+                  {booking.beneficiary_dob && (
+                    <p className="mt-0.5 inline-flex items-center gap-1.5 text-[12.5px] text-[#6b7280]">
+                      <CalendarDays className="h-[13px] w-[13px] text-[#9ca3af] shrink-0" />{formatDobDMY(booking.beneficiary_dob)}
+                    </p>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
 
-            {/* Aesthetic divider — vertical on desktop, horizontal when stacked on mobile. */}
-            <div className="border-t border-[#f3f4f6] sm:border-t-0 sm:border-l shrink-0" />
-
-            {/* RIGHT — who booked (the coordination contact) */}
-            <div className="flex-1 min-w-0 px-[18px] py-4">
-              <p className="text-[10px] font-bold uppercase tracking-[0.05em] text-[#9ca3af] mb-2.5">{t("bookedByLabel")}</p>
-              <div className="flex items-center gap-3">
-                <Avatar className="h-10 w-10 shrink-0">
-                  <AvatarImage src={booking.profiles?.avatar_url} className="object-cover" />
-                  <AvatarFallback className="text-sm font-bold bg-[#f3f4f6] text-[#6b7280]">{getInitials(booking.client_name || "?")}</AvatarFallback>
-                </Avatar>
-                <p className="text-[15px] font-bold text-[#111827] min-w-0 flex items-center gap-2 flex-wrap">
-                  {booking.client_name}
-                  {unverifiedPill}
-                  {flaggedPill}
-                </p>
-              </div>
-              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px] text-[#6b7280]">
+            {/* The requester (account holder) — the only reachable contact. Compact line + WhatsApp. */}
+            <div className="border-t border-[#f3f4f6] pt-3">
+              <p className="text-[12.5px] text-[#6b7280] flex flex-wrap items-center gap-x-2 gap-y-1">
+                <span className="text-[#9ca3af]">{t("bookedByLabel")}</span>
+                <span className="font-semibold text-[#374151]">{booking.client_name}</span>
+                {booking.client_phone && <span className="text-[#9ca3af]">·</span>}
                 {booking.client_phone && (
                   <span className="inline-flex items-center gap-1.5"><Phone className="h-[13px] w-[13px] text-[#9ca3af] shrink-0" />{booking.client_phone}</span>
                 )}
-                {booking.client_phone && <span className="text-[#9ca3af]">·</span>}
-                <span className="inline-flex items-center gap-1.5"><IdCard className="h-[13px] w-[13px] text-[#9ca3af] shrink-0" />{booking.client_cedula ? t("clientCedula", { cedula: booking.client_cedula }) : t("noCedula")}</span>
-              </div>
-              {/* WhatsApp the requester — ALWAYS (their phone is required). */}
+                {unverifiedPill}
+                {flaggedPill}
+              </p>
               {booking.client_phone && waButton(booking.client_phone, cliFirst)}
             </div>
           </div>
         ) : (
-          /* SELF — one person (requester = patient): no split. */
+          /* SELF — one person (requester = patient): name + phone + WhatsApp, nothing else. */
           booking.client_name && (
             <div className="px-[18px] py-4">
               <div className="flex items-center gap-3">
@@ -356,17 +346,11 @@ export function BookingRequests() {
                     {unverifiedPill}
                     {flaggedPill}
                   </p>
-                  <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px] text-[#6b7280]">
-                    {booking.client_phone && (
-                      <span className="inline-flex items-center gap-1.5"><Phone className="h-[13px] w-[13px] text-[#9ca3af] shrink-0" />{booking.client_phone}</span>
-                    )}
-                    {booking.client_phone && <span className="text-[#9ca3af]">·</span>}
-                    <span className="inline-flex items-center gap-1.5"><IdCard className="h-[13px] w-[13px] text-[#9ca3af] shrink-0" />{booking.client_cedula ? t("clientCedula", { cedula: booking.client_cedula }) : t("noCedula")}</span>
-                    {booking.client_dob && <span className="text-[#9ca3af]">·</span>}
-                    {booking.client_dob && (
-                      <span className="inline-flex items-center gap-1.5"><CalendarDays className="h-[13px] w-[13px] text-[#9ca3af] shrink-0" />{formatDobDMY(booking.client_dob)}</span>
-                    )}
-                  </div>
+                  {booking.client_phone && (
+                    <p className="mt-0.5 inline-flex items-center gap-1.5 text-[12.5px] text-[#6b7280]">
+                      <Phone className="h-[13px] w-[13px] text-[#9ca3af] shrink-0" />{booking.client_phone}
+                    </p>
+                  )}
                 </div>
               </div>
               {booking.client_phone && waButton(booking.client_phone, cliFirst)}
