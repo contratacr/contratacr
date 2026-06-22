@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarDays, CalendarClock, FileText, Flag, MapPin, Phone, Check } from "lucide-react";
+import { CalendarDays, CalendarClock, FileText, Flag, MapPin, Phone, IdCard, Check } from "lucide-react";
 import { getCategoryLabel } from "@/lib/data/categories";
+import { formatId } from "@/lib/cedula";
 import { ageCategoryFromDob } from "@/lib/age";
 import { formatDobDMY } from "@/components/ui/date-of-birth-picker";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
@@ -209,6 +210,10 @@ export function BookingRequests() {
     const waHref = booking.client_phone
       ? getWhatsAppLink(booking.client_phone, t("waMessage", { name: cliFirst }))
       : null;
+    // The BOOKER's identification (always the client who reserved — never the beneficiary,
+    // who only has name + DOB). Shown formatted as a CR ID so the pro can confirm who they
+    // booked. Absent → no cédula on file → the "Sin verificar" pill speaks instead.
+    const cedulaFmt = booking.client_cedula ? formatId(String(booking.client_cedula)) : null;
 
     const flaggedPill = booking.profiles?.is_flagged ? (
       <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#b45309] bg-[#fef3c7] px-1.5 py-0.5 rounded-md">
@@ -320,6 +325,10 @@ export function BookingRequests() {
                 {booking.client_phone && (
                   <span className="inline-flex items-center gap-1.5"><Phone className="h-[13px] w-[13px] text-[#9ca3af] shrink-0" />{booking.client_phone}</span>
                 )}
+                {cedulaFmt && <span className="text-[#9ca3af]">·</span>}
+                {cedulaFmt && (
+                  <span className="inline-flex items-center gap-1.5"><IdCard className="h-[13px] w-[13px] text-[#9ca3af] shrink-0" />{cedulaFmt}</span>
+                )}
                 {unverifiedPill}
                 {flaggedPill}
               </p>
@@ -341,10 +350,15 @@ export function BookingRequests() {
                     {unverifiedPill}
                     {flaggedPill}
                   </p>
-                  {booking.client_phone && (
-                    <p className="mt-0.5 inline-flex items-center gap-1.5 text-[12.5px] text-[#6b7280]">
-                      <Phone className="h-[13px] w-[13px] text-[#9ca3af] shrink-0" />{booking.client_phone}
-                    </p>
+                  {(booking.client_phone || cedulaFmt) && (
+                    <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[12.5px] text-[#6b7280]">
+                      {booking.client_phone && (
+                        <span className="inline-flex items-center gap-1.5"><Phone className="h-[13px] w-[13px] text-[#9ca3af] shrink-0" />{booking.client_phone}</span>
+                      )}
+                      {cedulaFmt && (
+                        <span className="inline-flex items-center gap-1.5"><IdCard className="h-[13px] w-[13px] text-[#9ca3af] shrink-0" />{cedulaFmt}</span>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
