@@ -1139,7 +1139,14 @@
     "reschedError": "No se pudo reprogramar. Intenta de nuevo.",
     "reschedHint": "Se le propone al cliente; coordinen los detalles por WhatsApp.",
     "back": "Volver",
-    "unverified": "Sin verificar"
+    "unverified": "Sin verificar",
+    "fieldDate": "Fecha:",
+    "fieldService": "Servicio:",
+    "fieldZone": "Zona:",
+    "fieldNote": "Nota:",
+    "fieldPhone": "Tel:",
+    "fieldCedula": "Cédula:",
+    "fieldBirth": "Nacimiento:"
   },
   "photoGallery": {
     "intro": "Máximo {max} fotos en total.",
@@ -1204,7 +1211,11 @@
     "from": "Desde {amount}",
     "upTo": "Hasta {amount}",
     "range": "{min} – {max}",
-    "matchesServices": "Coincide con tus servicios"
+    "matchesServices": "Coincide con tus servicios",
+    "fieldZone": "Zona:",
+    "fieldDeadline": "Plazo:",
+    "fieldBudget": "Presupuesto:",
+    "fieldPhone": "Tel:"
   },
   "servicesEditor": {
     "servicesOf": "Servicios de",
@@ -1574,7 +1585,11 @@
     "waProposal": "Hola, te escribo por tu propuesta en ContrataCR para la solicitud \"{title}\".",
     "noProposalsYet": "Sin propuestas todavía.",
     "priceTBD": "Precio a convenir",
-    "seeUnchosen": "Ver propuestas no elegidas ({count})"
+    "seeUnchosen": "Ver propuestas no elegidas ({count})",
+    "fieldDate": "Fecha:",
+    "fieldZone": "Zona:",
+    "fieldPublished": "Publicado:",
+    "fieldProposals": "Propuestas:"
   },
   "clientPage": {
     "greeting": "Hola, {name} 👋",

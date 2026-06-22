@@ -29,45 +29,42 @@ export function StatusFilterTabs({
 }) {
   const tr = useTranslations("statusTabs");
   return (
-    // Mobile: a single horizontal-scroll row (so 3–4 long Spanish labels never wrap or
-    // overflow the layout at ~360px); the hidden scrollbar + partially-visible next pill
-    // hint that it scrolls. Desktop: a normal wrapping row (they all fit on one line).
-    <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-0.5 sm:flex-wrap sm:overflow-x-visible">
+    // Each filter is a small vertical stack: a per-filter COUNT BADGE (notification-style,
+    // brand-colored) ABOVE its pill, so every filter shows how many items it holds at a
+    // glance. The row WRAPS (so the floating badges are never clipped and nothing overflows
+    // at ~360px) — 3–4 stacks wrap cleanly onto a second line on a phone.
+    <div className="flex flex-wrap gap-x-2.5 gap-y-2.5">
       {tabs.map((tab) => {
         const active = value === tab.id;
         const count = counts?.[tab.id] ?? 0;
         return (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => onChange(tab.id)}
-            className={cn(
-              "inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2 text-[13px] font-semibold transition-colors",
-              active
-                ? "border-[#009FD9] bg-[#009FD9] text-white"
-                : "border-[#e5e7eb] bg-white text-[#374151] hover:bg-[#f9fafb]"
-            )}
-          >
-            {labelFor ? labelFor(tab.id) : tr(tab.id)}
-            {/* Optional unread/attention dot (e.g. a new support reply in this status). */}
-            {dotFor?.(tab.id) && <span className="h-1.5 w-1.5 rounded-full bg-red-500 shrink-0" aria-hidden />}
-            {/* Count: a bold, color-contrasted NUMBER right after the label — NOT a circular
-                badge. A tiny pill can never perfectly optical-center a single digit (the font
-                baseline sits it ~0.5px high), and it kept reading as "off". On the SAME text
-                baseline as the label it's aligned by definition, still eye-catching (brand-blue
-                on the white pill, white on the active blue pill), and cleaner. Shown only when
-                there are items (>0), so a present number always means "there's something here". */}
-            {counts && count > 0 && (
+          <div key={tab.id} className="flex flex-col items-center gap-1">
+            {/* Count badge above the pill — brand-blue when it has items, muted when empty. */}
+            {counts && (
               <span
                 className={cn(
-                  "text-[13px] font-bold tabular-nums leading-none",
-                  active ? "text-white" : "text-[#009FD9]"
+                  "inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1.5 text-[11px] font-bold leading-none tabular-nums",
+                  count > 0 ? "bg-[#009FD9] text-white" : "bg-[#f3f4f6] text-[#9ca3af]"
                 )}
               >
                 {count}
               </span>
             )}
-          </button>
+            <button
+              type="button"
+              onClick={() => onChange(tab.id)}
+              className={cn(
+                "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-4 py-2 text-[13px] font-semibold transition-colors",
+                active
+                  ? "border-[#009FD9] bg-[#009FD9] text-white"
+                  : "border-[#e5e7eb] bg-white text-[#374151] hover:bg-[#f9fafb]"
+              )}
+            >
+              {labelFor ? labelFor(tab.id) : tr(tab.id)}
+              {/* Optional unread/attention dot (e.g. a new support reply in this status). */}
+              {dotFor?.(tab.id) && <span className="h-1.5 w-1.5 rounded-full bg-red-500 shrink-0" aria-hidden />}
+            </button>
+          </div>
         );
       })}
     </div>

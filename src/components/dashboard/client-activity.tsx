@@ -2,10 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import {
-  CalendarDays, CalendarClock, Star, FolderOpen, CheckCircle2, Clock, XCircle,
-  ChevronDown, ChevronUp, MapPin, Plus, Briefcase, Trash2, Flag, Search,
-} from "lucide-react";
+import { CalendarDays, FolderOpen, ChevronDown, ChevronUp } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
-import { cn, getInitials, getWhatsAppLink } from "@/lib/utils";
+import { getInitials, getWhatsAppLink } from "@/lib/utils";
 import { StatusFilterTabs, SOLICITUD_TABS, PROYECTO_TABS, solicitudMatches, solicitudBucket, solicitudStatusRedundant, proyectoMatches, proyectoBucket, proyectoStatusRedundant, bucketCounts } from "@/components/dashboard/status-filter-tabs";
 import { LeaveReviewModal } from "@/components/professionals/leave-review-modal";
 import { PublishProjectModal } from "@/components/projects/publish-project-modal";
@@ -72,16 +69,6 @@ type Proposal = {
     profiles: { full_name: string; avatar_url?: string };
     categories: { name: string };
   };
-};
-
-const STATUS_ICON: Record<BookingStatus, React.ReactNode> = {
-  pending: <Clock className="h-3.5 w-3.5" />,
-  confirmed: <CheckCircle2 className="h-3.5 w-3.5" />,
-  in_progress: <Clock className="h-3.5 w-3.5" />,
-  awaiting_confirmation: <Clock className="h-3.5 w-3.5" />,
-  completed: <CheckCircle2 className="h-3.5 w-3.5" />,
-  cancelled: <XCircle className="h-3.5 w-3.5" />,
-  rescheduled: <Clock className="h-3.5 w-3.5" />,
 };
 
 const STATUS_VARIANT: Record<BookingStatus, "warning" | "success" | "error" | "default" | "muted"> = {
@@ -327,7 +314,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
               <p className="font-semibold text-[#374151]">{t("bEmpty")}</p>
               <p className="text-sm text-[#9ca3af] mt-1">{t("bEmptySub")}</p>
               <Button className="mt-5" asChild>
-                <a href="/buscar"><Search className="h-4 w-4" /> {t("searchPros")}</a>
+                <a href="/buscar">{t("searchPros")}</a>
               </Button>
             </div>
           ) : (
@@ -362,15 +349,13 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                     </span>
                                   )}
                                   {!solicitudStatusRedundant(b.status, b.scheduled_date) && (
-                                    <Badge variant={STATUS_VARIANT[b.status]}>
-                                      <span className="flex items-center gap-1">{STATUS_ICON[b.status]}{t(`bStatus.${b.status}`)}</span>
-                                    </Badge>
+                                    <Badge variant={STATUS_VARIANT[b.status]}>{t(`bStatus.${b.status}`)}</Badge>
                                   )}
                                 </div>
                                 <p className="text-sm text-[#374151] line-clamp-2 mb-1">{b.service_description}</p>
                                 {formatBookingDate(b, dateLocale) && (
-                                  <p className="text-xs font-medium text-[#374151] flex items-center gap-1.5">
-                                    <CalendarClock className="h-4 w-4 text-[#9ca3af] shrink-0" /> {formatBookingDate(b, dateLocale)}
+                                  <p className="text-xs text-[#374151]">
+                                    <span className="text-[#9ca3af]">{t("fieldDate")}</span> <span className="font-medium">{formatBookingDate(b, dateLocale)}</span>
                                   </p>
                                 )}
                               </div>
@@ -378,12 +363,11 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                             <div className="flex flex-col gap-2 shrink-0">
                               {b.status === "awaiting_confirmation" && (
                                 <Button size="sm" onClick={() => confirmBookingDone(b.id)}>
-                                  <CheckCircle2 className="h-3.5 w-3.5" /> {t("confirmCompletion")}
+                                  {t("confirmCompletion")}
                                 </Button>
                               )}
                               {b.status === "completed" && (
                                 <Button variant="outline" size="sm" onClick={() => setReviewModal({ professionalId: b.professional_id, professionalName: b.professionals?.profiles?.full_name ?? t("professional"), bookingId: b.id })}>
-                                  <Star className={cn("h-3.5 w-3.5", rev && "fill-yellow-400 text-yellow-400")} />
                                   {rev ? t("editReview") : t("leaveReview")}
                                 </Button>
                               )}
@@ -399,8 +383,8 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                               )}
                               {/* Reporting available in every state — a no-show or
                                   abusive professional can happen before confirmation too. */}
-                              <button onClick={() => reportProfessional(b.id)} className="inline-flex items-center justify-center gap-1.5 text-xs text-[#9ca3af] hover:text-red-500 transition-colors">
-                                <Flag className="h-3.5 w-3.5" /> {t("report")}
+                              <button onClick={() => reportProfessional(b.id)} className="text-xs text-[#9ca3af] hover:text-red-500 transition-colors">
+                                {t("report")}
                               </button>
                             </div>
                           </div>
@@ -426,7 +410,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                 {t("pEmptySub")}
               </p>
               <Button className="mt-5" onClick={() => setShowPublish(true)}>
-                <Plus className="h-4 w-4" /> {t("publishProject")}
+                {t("publishProject")}
               </Button>
             </div>
           ) : (
@@ -436,7 +420,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                   pills — those then sit cleanly on their own line below. */}
               <div className="flex justify-end">
                 <Button size="sm" className="w-full sm:w-auto" onClick={() => setShowPublish(true)}>
-                  <Plus className="h-4 w-4" /> {t("publishProject")}
+                  {t("publishProject")}
                 </Button>
               </div>
               <StatusFilterTabs tabs={PROYECTO_TABS} value={projectFilter} onChange={setProjectFilter} counts={projectCounts} />
@@ -454,9 +438,6 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap mb-1">
-                            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-[#EBF5FB] text-[#009FD9] shrink-0">
-                              <Briefcase className="h-3.5 w-3.5" />
-                            </span>
                             <span className="font-semibold text-sm text-[#111827]">{project.title}</span>
                             {!proyectoStatusRedundant(project.status) && (
                               <Badge
@@ -480,18 +461,13 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                             )}
                           </div>
                           <p className="text-sm text-[#6b7280] line-clamp-2 mb-2">{project.description}</p>
-                          {/* Equivalent "date" for a project — its publish date, same clean
-                              on-brand calendar treatment as the appointment date elsewhere. */}
-                          <p className="text-xs font-medium text-[#374151] flex items-center gap-1.5 mb-2">
-                            <CalendarDays className="h-4 w-4 text-[#9ca3af] shrink-0" />
-                            {t("publishedOn", { date: new Date(project.created_at).toLocaleDateString(dateLocale) })}
+                          {/* Zero icons: publish date + zone + proposals as muted TEXT LABELS. */}
+                          <p className="text-xs text-[#374151] mb-2">
+                            <span className="text-[#9ca3af]">{t("fieldPublished")}</span> <span className="font-medium">{new Date(project.created_at).toLocaleDateString(dateLocale)}</span>
                           </p>
-                          <div className="flex items-center gap-3 text-xs text-[#9ca3af]">
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#9ca3af]">
                             {(project.provincias?.name || project.cantones?.name) && (
-                              <span className="flex items-center gap-1">
-                                <MapPin className="h-3 w-3" />
-                                {[project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ")}
-                              </span>
+                              <span><span className="text-[#9ca3af]">{t("fieldZone")}</span> {[project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ")}</span>
                             )}
                             <span>{t("proposalsCount", { count: proposalCount })}</span>
                           </div>
@@ -526,7 +502,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                         )}
                         {project.status === "awaiting_confirmation" && (
                           <Button size="sm" onClick={() => confirmProjectCompletion(project.id)}>
-                            <CheckCircle2 className="h-4 w-4" /> {t("confirmCompletion")}
+                            {t("confirmCompletion")}
                           </Button>
                         )}
                         {(project.status === "in_progress" || project.status === "awaiting_confirmation") && (
@@ -538,13 +514,13 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                           const rev = projectReview(project.id);
                           return (
                             <Button size="sm" variant="outline" onClick={() => reviewProjectPro(project.id)}>
-                              <Star className={cn("h-3.5 w-3.5", rev && "fill-yellow-400 text-yellow-400")} /> {rev ? t("editReview") : t("leaveReview")}
+                              {rev ? t("editReview") : t("leaveReview")}
                             </Button>
                           );
                         })()}
                         {project.status !== "in_progress" && project.status !== "awaiting_confirmation" && (
                           <Button size="sm" variant="ghost" className="text-red-500 hover:bg-red-50" onClick={() => deleteProject(project.id)}>
-                            <Trash2 className="h-4 w-4" /> {t("delete")}
+                            {t("delete")}
                           </Button>
                         )}
                       </div>
@@ -594,9 +570,8 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                 </>
                               )}
                               {proposal.status === "accepted" && (
-                                <span className="inline-flex items-center justify-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold px-3 py-1 leading-none">
-                                  <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
-                                  <span>{finalized ? t("finalized") : t("accepted")}</span>
+                                <span className="inline-flex items-center justify-center rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold px-3 py-1 leading-none">
+                                  {finalized ? t("finalized") : t("accepted")}
                                 </span>
                               )}
                               {proposal.status === "declined" && <Badge variant="error">{t("declined")}</Badge>}

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarDays, CalendarClock, FileText, Flag, MapPin, Phone, IdCard, Check } from "lucide-react";
+import { CalendarDays } from "lucide-react";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { formatId } from "@/lib/cedula";
 import { ageCategoryFromDob } from "@/lib/age";
@@ -254,36 +254,30 @@ export function BookingRequests() {
           );
         })()}
 
-        {/* 2-3 — THE APPOINTMENT (shared "what & when", full width): featured date +
-               service · location + the client's note. Rows are separated by spacing, not
-               hairlines — the bold date vs. lighter meta already reads as a hierarchy. */}
-        <div className="px-[18px] pt-2 pb-4 flex flex-col gap-2.5">
-          {/* The appointment date is the scan anchor: a calendar icon + the bold date is
-              self-evident, so no "Fecha de la cita" label is needed (the muted "Solicitada …"
-              in the header already distinguishes the request date). */}
-          <div className="flex items-center gap-3">
-            <CalendarClock className="h-[22px] w-[22px] text-[#9ca3af] shrink-0" strokeWidth={2} />
-            <p className={dateStr ? "text-[16px] font-bold text-[#111827] leading-tight" : "text-sm text-[#9ca3af]"}>
-              {dateStr || t("noScheduledDate")}
+        {/* 2-3 — THE APPOINTMENT (what & when). Zero icons: each field is a muted TEXT LABEL
+               ("Fecha:", "Servicio:", …) + value; the date value stays bold as the scan anchor. */}
+        <div className="px-[18px] pt-2 pb-4 flex flex-col gap-1.5 text-[13.5px]">
+          <p className="flex flex-wrap items-baseline gap-x-1.5">
+            <span className="text-[#9ca3af]">{t("fieldDate")}</span>
+            <span className={dateStr ? "font-bold text-[#111827]" : "text-[#9ca3af]"}>{dateStr || t("noScheduledDate")}</span>
+          </p>
+          {category && (
+            <p className="flex flex-wrap items-baseline gap-x-1.5">
+              <span className="text-[#9ca3af]">{t("fieldService")}</span>
+              <span className="font-medium text-[#374151] min-w-0">{category}</span>
             </p>
-          </div>
-
-          {(category || location) && (
-            <div className="flex items-center gap-2.5 text-[13.5px]">
-              <MapPin className="h-4 w-4 text-[#9ca3af] shrink-0" />
-              <span className="min-w-0">
-                {category && <span className="text-[#374151]">{category}</span>}
-                {category && location && <span className="text-[#9ca3af]"> · </span>}
-                {location && <span className="text-[#9ca3af]">{location}</span>}
-              </span>
-            </div>
           )}
-
+          {location && (
+            <p className="flex flex-wrap items-baseline gap-x-1.5">
+              <span className="text-[#9ca3af]">{t("fieldZone")}</span>
+              <span className="text-[#6b7280] min-w-0">{location}</span>
+            </p>
+          )}
           {booking.service_description && (
-            <div className="flex items-start gap-2.5 text-[13.5px]">
-              <FileText className="h-4 w-4 text-[#9ca3af] shrink-0 mt-0.5" />
+            <p className="flex flex-wrap items-baseline gap-x-1.5">
+              <span className="text-[#9ca3af] shrink-0">{t("fieldNote")}</span>
               <span className="text-[#374151] min-w-0">{booking.service_description}</span>
-            </div>
+            </p>
           )}
         </div>
 
@@ -308,8 +302,8 @@ export function BookingRequests() {
                     {ageBadge(booking.beneficiary_dob, booking.beneficiary_is_minor)}
                   </p>
                   {booking.beneficiary_dob && (
-                    <p className="mt-0.5 inline-flex items-center gap-1.5 text-[12.5px] text-[#6b7280]">
-                      <CalendarDays className="h-[13px] w-[13px] text-[#9ca3af] shrink-0" />{formatDobDMY(booking.beneficiary_dob)}
+                    <p className="mt-0.5 text-[12.5px] text-[#6b7280] flex flex-wrap items-baseline gap-x-1.5">
+                      <span className="text-[#9ca3af]">{t("fieldBirth")}</span>{formatDobDMY(booking.beneficiary_dob)}
                     </p>
                   )}
                 </div>
@@ -323,11 +317,11 @@ export function BookingRequests() {
                 <span className="font-semibold text-[#374151]">{booking.client_name}</span>
                 {booking.client_phone && <span className="text-[#9ca3af]">·</span>}
                 {booking.client_phone && (
-                  <span className="inline-flex items-center gap-1.5"><Phone className="h-[13px] w-[13px] text-[#9ca3af] shrink-0" />{booking.client_phone}</span>
+                  <span><span className="text-[#9ca3af]">{t("fieldPhone")}</span> {booking.client_phone}</span>
                 )}
                 {cedulaFmt && <span className="text-[#9ca3af]">·</span>}
                 {cedulaFmt && (
-                  <span className="inline-flex items-center gap-1.5"><IdCard className="h-[13px] w-[13px] text-[#9ca3af] shrink-0" />{cedulaFmt}</span>
+                  <span><span className="text-[#9ca3af]">{t("fieldCedula")}</span> {cedulaFmt}</span>
                 )}
                 {unverifiedPill}
                 {flaggedPill}
@@ -353,10 +347,10 @@ export function BookingRequests() {
                   {(booking.client_phone || cedulaFmt) && (
                     <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[12.5px] text-[#6b7280]">
                       {booking.client_phone && (
-                        <span className="inline-flex items-center gap-1.5"><Phone className="h-[13px] w-[13px] text-[#9ca3af] shrink-0" />{booking.client_phone}</span>
+                        <span><span className="text-[#9ca3af]">{t("fieldPhone")}</span> {booking.client_phone}</span>
                       )}
                       {cedulaFmt && (
-                        <span className="inline-flex items-center gap-1.5"><IdCard className="h-[13px] w-[13px] text-[#9ca3af] shrink-0" />{cedulaFmt}</span>
+                        <span><span className="text-[#9ca3af]">{t("fieldCedula")}</span> {cedulaFmt}</span>
                       )}
                     </div>
                   )}
@@ -392,13 +386,13 @@ export function BookingRequests() {
               {isActive && (
                 <>
                   <Button className="w-full sm:w-auto rounded-full px-5" onClick={() => updateStatus(booking.id, "awaiting_confirmation")}>
-                    <Check className="h-4 w-4" /> {t("markCompleted")}
+                    {t("markCompleted")}
                   </Button>
                   {/* Secondaries: a 2-col row on mobile; on desktop the wrapper dissolves
                       (sm:contents) so both join the single wrapping action row. */}
                   <div className="grid grid-cols-2 gap-2 sm:contents">
                     <Button variant="outline" className="rounded-full px-5 sm:w-auto" onClick={() => openAction(booking.id, "reschedule")}>
-                      <CalendarClock className="h-4 w-4" /> {t("reschedule")}
+                      {t("reschedule")}
                     </Button>
                     <Button variant="outline" className="rounded-full px-5 sm:w-auto text-red-600 border-red-200 hover:bg-red-50" onClick={() => openAction(booking.id, "cancel")}>
                       {t("cancel")}
@@ -484,9 +478,9 @@ export function BookingRequests() {
 
           <button
             onClick={() => reportClient(booking)}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#9ca3af] hover:text-red-500 transition-colors self-start"
+            className="text-xs font-semibold text-[#9ca3af] hover:text-red-500 transition-colors self-start"
           >
-            <Flag className="h-3.5 w-3.5" /> {t("reportClient")}
+            {t("reportClient")}
           </button>
         </div>
       </Card>

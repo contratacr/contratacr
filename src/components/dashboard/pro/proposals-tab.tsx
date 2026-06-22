@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { FolderOpen, Send, ChevronDown, ChevronUp, MapPin, Clock, Coins, CheckCircle2, Phone } from "lucide-react";
+import { FolderOpen, Send, ChevronDown, ChevronUp } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -292,22 +292,17 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
                             </div>
                           </div>
                           <p className="text-sm text-[#6b7280] line-clamp-2 mb-2">{project.description}</p>
-                          <div className="flex flex-wrap gap-3 text-xs text-[#9ca3af]">
+                          {/* Zero icons: zone · timeline · budget · proposals as muted TEXT LABELS. */}
+                          <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-[#6b7280]">
                             {(project.provincias?.name || project.cantones?.name) && (
-                              <span className="flex items-center gap-1">
-                                <MapPin className="h-3 w-3" />
-                                {[project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ")}
-                              </span>
+                              <span><span className="text-[#9ca3af]">{t("fieldZone")}</span> {[project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ")}</span>
                             )}
                             {project.timeline && (
-                              <span className="flex items-center gap-1">
-                                <Clock className="h-3 w-3" />
-                                {project.timeline}
-                              </span>
+                              <span><span className="text-[#9ca3af]">{t("fieldDeadline")}</span> {project.timeline}</span>
                             )}
                             {(project.budget_min || project.budget_max) && (
-                              <span className="flex items-center gap-1">
-                                <Coins className="h-3 w-3" />
+                              <span>
+                                <span className="text-[#9ca3af]">{t("fieldBudget")}</span>{" "}
                                 {project.budget_min && project.budget_max
                                   ? t("range", { min: `₡${project.budget_min.toLocaleString("es-CR")}`, max: `₡${project.budget_max.toLocaleString("es-CR")}` })
                                   : project.budget_min
@@ -315,7 +310,7 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
                                   : t("upTo", { amount: `₡${project.budget_max!.toLocaleString("es-CR")}` })}
                               </span>
                             )}
-                            <span>{t("proposalsCount", { count: proposalCount })}</span>
+                            <span className="text-[#9ca3af]">{t("proposalsCount", { count: proposalCount })}</span>
                           </div>
                         </div>
                         {!alreadySubmitted && (
@@ -366,7 +361,6 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
                             loading={submitting === project.id}
                             className="w-full"
                           >
-                            <Send className="h-4 w-4" />
                             {t("sendProposal")}
                           </Button>
                         </div>
@@ -416,8 +410,8 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
                         )}
                         {/* Client contact — shown to the pro once their proposal is accepted. */}
                         {p.status === "accepted" && p.projects?.profiles?.phone && (
-                          <p className="text-xs text-[#374151] mb-2 flex items-center gap-1.5">
-                            <Phone className="h-3 w-3 text-[#6b7280]" /> {p.projects.profiles.phone}
+                          <p className="text-xs text-[#374151] mb-2">
+                            <span className="text-[#9ca3af]">{t("fieldPhone")}</span> {p.projects.profiles.phone}
                           </p>
                         )}
                         <p className="text-xs text-[#6b7280] line-clamp-2 mb-2">{p.message}</p>
@@ -469,7 +463,7 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
                         )}
                         {p.status === "accepted" && p.projects?.status === "in_progress" && (
                           <Button size="sm" onClick={() => markWorkDone(p.project_id)}>
-                            <CheckCircle2 className="h-3.5 w-3.5" /> {t("markCompleted")}
+                            {t("markCompleted")}
                           </Button>
                         )}
                         {p.status === "accepted" && p.projects?.status === "cancelled" && (

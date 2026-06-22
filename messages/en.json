@@ -1139,7 +1139,14 @@
     "reschedError": "Could not reschedule. Please try again.",
     "reschedHint": "The client is sent the proposal; coordinate the details via WhatsApp.",
     "back": "Back",
-    "unverified": "Unverified"
+    "unverified": "Unverified",
+    "fieldDate": "Date:",
+    "fieldService": "Service:",
+    "fieldZone": "Area:",
+    "fieldNote": "Note:",
+    "fieldPhone": "Phone:",
+    "fieldCedula": "ID:",
+    "fieldBirth": "Birth:"
   },
   "photoGallery": {
     "intro": "Up to {max} photos total.",
@@ -1204,7 +1211,11 @@
     "from": "From {amount}",
     "upTo": "Up to {amount}",
     "range": "{min} – {max}",
-    "matchesServices": "Matches your services"
+    "matchesServices": "Matches your services",
+    "fieldZone": "Area:",
+    "fieldDeadline": "Timeline:",
+    "fieldBudget": "Budget:",
+    "fieldPhone": "Phone:"
   },
   "servicesEditor": {
     "servicesOf": "Services of",
@@ -1574,7 +1585,11 @@
     "waProposal": "Hi, I'm writing about your proposal on ContrataCR for the request \"{title}\".",
     "noProposalsYet": "No proposals yet.",
     "priceTBD": "Price to be agreed",
-    "seeUnchosen": "See proposals not chosen ({count})"
+    "seeUnchosen": "See proposals not chosen ({count})",
+    "fieldDate": "Date:",
+    "fieldZone": "Area:",
+    "fieldPublished": "Published:",
+    "fieldProposals": "Proposals:"
   },
   "clientPage": {
     "greeting": "Hi, {name} 👋",
