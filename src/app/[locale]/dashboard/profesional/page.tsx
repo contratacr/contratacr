@@ -90,14 +90,14 @@ const SHARED_TABS: Tab[] = ["notifications", "soporte", "cuenta"];
 
 // MOBILE bottom-nav (native-app tab bar, icon + label): the most-used sections per mode sit
 // in the fixed bottom bar (left→right); everything else (setup + shared) lives behind "Más".
-// BOTH modes use 4 sections + Más = 5 slots (consistent; 5 fits cleanly at ~360px). Offer:
-// Perfil · Profesiones · Solicitudes recibidas · Oportunidades + Más (Profesiones is the pro's
-// core "what I offer" tab, after the two lead sections); the rest (Casos de éxito, Disponibilidad,
-// Verificación, Suscripción + shared) live in "Más". Use: Perfil · Solicitudes · Publicaciones ·
-// Favoritos + Más. Item count matches per mode — never a horizontal scroll.
+// BOTH modes use 3 sections + Notificaciones + Más = 5 slots (sprint 432: Notificaciones got a
+// DEDICATED spot with its own unread badge, so "Más" no longer carries a notification dot).
+// Offer: Perfil · Solicitudes recibidas · Oportunidades · Notificaciones + Más (Profesiones moved
+// to "Más"). Use: Perfil · Mis solicitudes · Mis publicaciones · Notificaciones + Más (Favoritos
+// moved to "Más"). The rest (offer setup + shared Soporte/Cuenta, etc.) live in "Más".
 const MOBILE_PRIMARY: Record<Mode, Tab[]> = {
-  offer: ["profile", "services", "bookings", "proposals"],
-  use: ["profile", "sent_bookings", "sent_projects", "saved"],
+  offer: ["profile", "bookings", "proposals", "notifications"],
+  use: ["profile", "sent_bookings", "sent_projects", "notifications"],
 };
 
 export default function DashboardPage() {
@@ -279,12 +279,13 @@ export default function DashboardPage() {
   const showOfferGate = mode === "offer" && !pro && !canOffer(user);
   const offerLoading = mode === "offer" && !pro && canOffer(user);
 
-  // Mobile bottom-nav split: the mode's 3 primary tabs in the bar, the rest under "Más".
+  // Mobile bottom-nav split: the mode's primary tabs in the bar (incl. the shared
+  // "notifications" tab, which now has a dedicated slot), the rest under "Más".
   const modeTabs = mode === "offer" ? OFFER_TABS : USE_TABS;
-  const primaryTabs = MOBILE_PRIMARY[mode].filter((tab) => modeTabs.includes(tab));
-  const moreTabs = [...modeTabs, ...SHARED_TABS].filter((tab) => !primaryTabs.includes(tab));
+  const barTabs = [...modeTabs, ...SHARED_TABS];
+  const primaryTabs = MOBILE_PRIMARY[mode].filter((tab) => barTabs.includes(tab));
+  const moreTabs = barTabs.filter((tab) => !primaryTabs.includes(tab));
   const activeInMore = moreTabs.includes(activeTab);
-  const moreHasBadge = unreadCount > 0 || supportUnread > 0;
 
   function navButton(tab: Tab) {
     const badge = tab === "notifications" ? unreadCount : tab === "soporte" ? supportUnread : 0;
@@ -536,7 +537,13 @@ export default function DashboardPage() {
                 active ? "text-[#009FD9]" : "text-[#6b7280] hover:text-[#374151]"
               )}
             >
-              <span className="[&>svg]:!h-[22px] [&>svg]:!w-[22px]">{TAB_ICONS[tab]}</span>
+              <span className="relative [&>svg]:!h-[22px] [&>svg]:!w-[22px]">
+                {TAB_ICONS[tab]}
+                {/* Dedicated, mode-scoped unread badge on the Notificaciones tab. */}
+                {tab === "notifications" && unreadCount > 0 && (
+                  <span className="absolute -right-2 -top-1 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[9px] font-bold leading-none text-white ring-2 ring-white">{unreadCount > 9 ? "9+" : unreadCount}</span>
+                )}
+              </span>
               <span className="text-[10px] font-semibold leading-none max-w-full truncate">{t(`bottomNav.${tab}`)}</span>
             </button>
           );
@@ -549,10 +556,9 @@ export default function DashboardPage() {
             (moreOpen || activeInMore) ? "text-[#009FD9]" : "text-[#6b7280] hover:text-[#374151]"
           )}
         >
-          <span className="relative">
-            <MoreHorizontal className="h-[22px] w-[22px]" />
-            {moreHasBadge && <span className="absolute -right-1 -top-0.5 h-2 w-2 rounded-full bg-[#009FD9] ring-2 ring-white" />}
-          </span>
+          {/* "Más" no longer carries a notification dot — notifications now have their own
+              dedicated bottom-bar slot (sprint 432). */}
+          <MoreHorizontal className="h-[22px] w-[22px]" />
           <span className="text-[10px] font-semibold leading-none">{t("bottomNav.more")}</span>
         </button>
       </nav>
