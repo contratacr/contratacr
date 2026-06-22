@@ -256,7 +256,7 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
               <p className="text-sm text-[#9ca3af] mt-1">{t("emptyBrowseSub")}</p>
             </div>
           ) : (
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-3">
               {/* Surface projects that match the pro's services first (stable sort,
                   no visible badge). */}
               {[...openProjects].sort((a, b) => Number(matchesServices(b)) - Number(matchesServices(a))).map((project) => {
@@ -267,12 +267,12 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
 
                 return (
                   <Card key={project.id}>
-                    <CardContent className="p-[18px] flex flex-col gap-3.5">
-                      {/* MODERN LEAD CARD (consistent with Solicitudes recibidas): (1) the request
-                          title + who posted it; (2) the PRESUPUESTO highlighted as the scan anchor
-                          + zona/plazo; (3) the description; (4) the count + "Proponer" action. */}
-                      <div className="flex items-start gap-3">
-                        <Avatar className="h-11 w-11 shrink-0">
+                    <CardContent className="p-4 flex flex-col gap-2.5">
+                      {/* MODERN COMPACT LEAD CARD (consistent with Solicitudes recibidas): (1) the
+                          request title + who posted it; (2) the PRESUPUESTO highlighted as the scan
+                          anchor + zona/plazo; (3) a short description; (4) the count + "Proponer". */}
+                      <div className="flex items-start gap-2.5">
+                        <Avatar className="h-10 w-10 shrink-0">
                           <AvatarImage src={project.profiles?.avatar_url} className="object-cover" />
                           <AvatarFallback className="text-sm bg-[#EBF5FB] text-[#009FD9] font-bold">
                             {getInitials(project.profiles?.full_name ?? "?")}
@@ -294,9 +294,9 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
                       </div>
 
                       {/* Presupuesto highlight — the number the pro decides on. */}
-                      <div className="rounded-xl border border-[#eef0f2] bg-[#f9fafb] px-3.5 py-3">
+                      <div className="rounded-xl border border-[#eef0f2] bg-[#f9fafb] px-3 py-2.5">
                         <p className="text-[10px] font-bold uppercase tracking-[0.05em] text-[#9ca3af]">{t("fieldBudget").replace(":", "")}</p>
-                        <p className="mt-0.5 text-[16px] font-bold text-[#111827] leading-tight">
+                        <p className="mt-0.5 text-[15px] font-bold text-[#111827] leading-tight">
                           {(project.budget_min || project.budget_max)
                             ? (project.budget_min && project.budget_max
                                 ? t("range", { min: `₡${project.budget_min.toLocaleString("es-CR")}`, max: `₡${project.budget_max.toLocaleString("es-CR")}` })
@@ -317,9 +317,10 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
                         )}
                       </div>
 
-                      {/* Description */}
+                      {/* Description — lean by default (2 lines); the full text is read on the
+                          project itself / when proposing. */}
                       {project.description && (
-                        <p className="text-[13px] text-[#374151] line-clamp-3">{project.description}</p>
+                        <p className="text-[13px] text-[#374151] line-clamp-2">{project.description}</p>
                       )}
 
                       {/* Footer — proposals count + the "Proponer" action. */}
@@ -389,14 +390,14 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
               <p className="text-sm text-[#9ca3af] mt-1">{t("emptyMineSub")}</p>
             </div>
           ) : (
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-3">
               <StatusFilterTabs tabs={PROYECTO_TABS} value={projectFilter} onChange={setProjectFilter} counts={bucketCounts(myProposals.map((p) => proposalBucket(p.status, p.projects?.status)))} />
               {(() => {
                 const shown = myProposals.filter((p) => proposalMatches(projectFilter, p.status, p.projects?.status));
                 if (shown.length === 0) return <p className="text-sm text-[#9ca3af] text-center py-8">{t("noneInView")}</p>;
                 return shown.map((p) => (
                 <Card key={p.id}>
-                  <CardContent className="p-5">
+                  <CardContent className="p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-sm text-[#111827] mb-1">

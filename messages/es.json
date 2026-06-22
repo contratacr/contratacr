@@ -1130,6 +1130,7 @@
     "whatsapp": "WhatsApp",
     "whatsappTo": "WhatsApp a {name}",
     "reportClient": "Reportar cliente",
+    "moreActions": "Más",
     "reportPrompt": "¿Por qué reportas a este cliente? (no se presentó, datos falsos, trato irrespetuoso, etc.)",
     "reportThanks": "Gracias. Tu reporte fue enviado al equipo de moderación.",
     "reportError": "No se pudo enviar el reporte. Intenta de nuevo.",
