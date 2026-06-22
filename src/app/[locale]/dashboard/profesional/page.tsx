@@ -416,8 +416,9 @@ export default function DashboardPage() {
                       (BasicProfileSection) for a client-only account — not here in the sidebar. */}
                 </nav>
 
-                {/* Main content */}
-                <div ref={contentRef} className="flex-1 scroll-mt-20 lg:scroll-mt-0">
+                {/* Main content — min-w-0 so a long unbroken string inside a card can't
+                    grow this flex column past the available width and break the page. */}
+                <div ref={contentRef} className="flex-1 min-w-0 scroll-mt-20 lg:scroll-mt-0">
                   <SaveStatusProvider>
                     <Card>
                       <CardHeader className="px-6 pt-6 pb-3">

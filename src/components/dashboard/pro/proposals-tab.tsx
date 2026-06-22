@@ -303,6 +303,12 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
                           <span className="text-[#6b7280]">{t("fieldBudget")}</span>{" "}
                           <span className="font-medium text-[#374151]">{budgetText}</span>
                         </p>
+                        {/* Description preview (collapsed only) — clamped to 2 lines for a
+                            uniform, compact list; full text shows on expand. overflow-wrap:anywhere
+                            breaks long unbroken strings so the card never grows past its column. */}
+                        {!isExpanded && project.description && (
+                          <p className="mt-1 text-[13px] text-[#6b7280] leading-snug line-clamp-2 [overflow-wrap:anywhere]">{project.description}</p>
+                        )}
                       </div>
                       <ChevronDown className={cn("h-5 w-5 text-[#9ca3af] shrink-0 mt-0.5 transition-transform duration-200", isExpanded && "rotate-180")} />
                     </button>
@@ -323,7 +329,7 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
                           </p>
                         )}
                         {project.description && (
-                          <p className="text-[13px] text-[#374151] whitespace-pre-line break-words">{project.description}</p>
+                          <p className="text-[13px] text-[#374151] whitespace-pre-line [overflow-wrap:anywhere]">{project.description}</p>
                         )}
                         <span className="text-xs text-[#6b7280]">{t("proposalsCount", { count: proposalCount })}</span>
 
@@ -396,7 +402,7 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm text-[#111827] mb-1">
+                        <p className="font-medium text-sm text-[#111827] mb-1 [overflow-wrap:anywhere]">
                           {p.projects?.title ?? t("projectFallback")}
                         </p>
                         {p.projects?.profiles?.full_name && (
@@ -416,7 +422,7 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
                             <span className="text-[#6b7280]">{t("fieldPhone")}</span> {p.projects.profiles.phone}
                           </p>
                         )}
-                        <p className="text-xs text-[#6b7280] line-clamp-2 mb-2 break-words">{p.message}</p>
+                        <p className="text-xs text-[#6b7280] line-clamp-2 mb-2 [overflow-wrap:anywhere]">{p.message}</p>
                         <p className="text-xs text-[#374151]">
                           {t("yourPriceLabel")}{" "}
                           {p.price

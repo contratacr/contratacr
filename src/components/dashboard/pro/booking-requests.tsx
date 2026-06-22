@@ -329,7 +329,7 @@ export function BookingRequests() {
             {booking.service_description && (
               <div className="rounded-r-lg border-l-[3px] border-[#009FD9]/40 bg-[#f9fafb] py-2 pl-3 pr-3">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("noteEyebrow")}</p>
-                <p className="mt-0.5 text-[13px] text-[#374151] leading-snug break-words whitespace-pre-line">{booking.service_description}</p>
+                <p className="mt-0.5 text-[13px] text-[#374151] leading-snug whitespace-pre-line [overflow-wrap:anywhere]">{booking.service_description}</p>
               </div>
             )}
 

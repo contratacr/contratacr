@@ -404,7 +404,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                         {expandedBooking === b.id && (
                           <div className="px-4 pb-4 pt-3 border-t border-[#f3f4f6] flex flex-col gap-2.5">
                             {b.service_description && (
-                              <p className="text-sm text-[#374151] whitespace-pre-line break-words">{b.service_description}</p>
+                              <p className="text-sm text-[#374151] whitespace-pre-line [overflow-wrap:anywhere]">{b.service_description}</p>
                             )}
                             {/* Pro cancelled → show why (so the client knows + can re-book). */}
                             {b.status === "cancelled" && b.cancelled_by === "professional" && (
@@ -545,6 +545,13 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                           <span className="text-[#6b7280]">{t("fieldProposals")}</span>{" "}
                           <span className="font-medium text-[#374151]">{proposalCount}</span>
                         </p>
+                        {/* Description preview (collapsed only) — clamped to 2 lines so every
+                            list card stays a uniform, compact height; the full text shows when
+                            the card is expanded. overflow-wrap:anywhere breaks long unbroken
+                            strings so the card never grows wider than its column. */}
+                        {!isExpanded && project.description && (
+                          <p className="mt-1 text-[13px] text-[#6b7280] leading-snug line-clamp-2 [overflow-wrap:anywhere]">{project.description}</p>
+                        )}
                       </div>
                       <ChevronDown className={`h-5 w-5 text-[#9ca3af] shrink-0 mt-0.5 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`} />
                     </button>
@@ -552,7 +559,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                     {isExpanded && (
                       <div className="px-4 pb-4 pt-3 border-t border-[#f3f4f6] flex flex-col gap-2.5">
                         {project.description && (
-                          <p className="text-sm text-[#6b7280] whitespace-pre-line break-words">{project.description}</p>
+                          <p className="text-sm text-[#6b7280] whitespace-pre-line [overflow-wrap:anywhere]">{project.description}</p>
                         )}
                         <p className="text-xs text-[#374151]">
                           <span className="text-[#6b7280]">{t("fieldPublished")}</span> <span className="font-medium">{new Date(project.created_at).toLocaleDateString(dateLocale)}</span>
@@ -627,7 +634,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                     ? <span className="text-[#009FD9]">₡{proposal.price.toLocaleString("es-CR")}</span>
                                     : <span className="text-[#6b7280]">{t("priceTBD")}</span>}
                                 </p>
-                                <p className="text-xs text-[#6b7280] mt-0.5 line-clamp-2 break-words">{proposal.message}</p>
+                                <p className="text-xs text-[#6b7280] mt-0.5 line-clamp-2 [overflow-wrap:anywhere]">{proposal.message}</p>
                               </div>
                             </div>
                             <div className="flex flex-col gap-1.5 shrink-0">
