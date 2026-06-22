@@ -833,7 +833,14 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
   const { mode, setMode } = useMode(isPro);
   function switchMode(next: Mode) {
     setMode(next);
-    router.push("/dashboard/profesional?tab=profile");
+    // Land on the NEW mode's MAIN section — a mode-SPECIFIC tab (not the neutral
+    // "profile"). This is required for correctness: if you switch FROM a mode-specific
+    // tab (e.g. Solicitudes recibidas, an offer-only tab), the panel's deep-link guard
+    // re-derives the mode from the still-current URL tab and would revert the switch the
+    // moment it re-renders. Landing on the destination mode's own tab makes that guard
+    // REINFORCE the new mode (offer→Solicitudes recibidas, use→Mis solicitudes) so the
+    // switch always sticks from ANY section, and you arrive somewhere useful.
+    router.push(next === "offer" ? "/dashboard/profesional?tab=bookings" : "/dashboard/profesional?tab=sent_bookings");
     setMobileOpen(false);
   }
 
