@@ -75,9 +75,9 @@ export const CATEGORY_GROUPS: CategoryGroup[] = [
       { id: "redes_internet", label: "Redes e internet", keywords: ["WiFi", "router", "red", "cableado estructurado", "internet", "fibra"] },
       { id: "camaras_seguridad", label: "Cámaras de seguridad CCTV", keywords: ["CCTV", "vigilancia", "camaras", "circuito cerrado", "DVR", "NVR"] },
       { id: "domotica", label: "Domótica / Smart home", keywords: ["automatizacion del hogar", "smart home", "IoT", "casa inteligente"] },
-      { id: "desarrollo_web", label: "Desarrollo web", keywords: ["programador web", "pagina web", "website", "desarrollador", "WordPress", "React", "programacion"] },
+      { id: "desarrollo_web", label: "Desarrollo web", keywords: ["programador web", "pagina web", "sitio web", "website", "aplicacion web", "web app", "desarrollador", "WordPress", "React", "programacion"] },
       { id: "diseno_grafico", label: "Diseño gráfico", keywords: ["disenador", "logos", "branding", "publicidad", "arte", "identidad visual", "flyers"] },
-      { id: "diseno_apps", label: "Desarrollo de apps", keywords: ["aplicacion movil", "app", "iOS", "Android", "programador", "desarrollo movil", "diseño de apps"] },
+      { id: "diseno_apps", label: "Desarrollo de apps móviles", keywords: ["aplicacion movil", "app", "apps", "iOS", "Android", "programador", "desarrollo movil", "diseño de apps", "app movil"] },
       { id: "soporte_tecnico", label: "Soporte técnico", keywords: ["IT", "soporte", "tecnico", "help desk", "mantenimiento de equipo", "asistencia tecnica"] },
       { id: "impresion_3d", label: "Impresión 3D", keywords: ["impresion tridimensional", "FDM", "prototipo", "modelado 3D"] },
       { id: "audio_video", label: "Audio y video profesional", keywords: ["sonido", "video", "instalacion AV", "pantallas", "proyectores", "sala de cine"] },
@@ -323,7 +323,7 @@ export const CATEGORY_LABELS_EN: Record<string, string> = {
   // Tecnología
   reparacion_computadoras: "Computer repair", redes_internet: "Networks & internet",
   camaras_seguridad: "Security cameras (CCTV)", domotica: "Smart home automation",
-  desarrollo_web: "Web development", diseno_grafico: "Graphic design", diseno_apps: "App development",
+  desarrollo_web: "Web development", diseno_grafico: "Graphic design", diseno_apps: "Mobile app development",
   soporte_tecnico: "Tech support", audio_video: "Professional audio & video",
   // Servicios profesionales
   contabilidad: "Accounting & finance", legal: "Lawyers & legal services",
