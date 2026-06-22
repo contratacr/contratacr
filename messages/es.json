@@ -1103,7 +1103,7 @@
     },
     "flagged": "Cliente reportado",
     "birth": "Nacimiento: {date}",
-    "requestedOn": "Solicitada {date}",
+    "requestedOn": "Solicitada el {date}",
     "appointmentLabel": "Cita",
     "appointmentDateLabel": "Fecha de la cita",
     "bookedByLabel": "Reservado por",
@@ -1166,7 +1166,10 @@
     "fieldBirth": "Nacimiento:",
     "fieldAge": "Edad:",
     "yearsOld": "{count, plural, one {# año} other {# años}}",
-    "actions": "Acciones"
+    "actions": "Acciones",
+    "contactPhone": "Teléfono",
+    "contactCedula": "Cédula",
+    "noteEyebrow": "Nota del cliente"
   },
   "photoGallery": {
     "intro": "Máximo {max} fotos en total.",

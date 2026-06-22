@@ -1103,7 +1103,7 @@
     },
     "flagged": "Reported client",
     "birth": "Birth date: {date}",
-    "requestedOn": "Requested {date}",
+    "requestedOn": "Requested on {date}",
     "appointmentLabel": "Appointment",
     "appointmentDateLabel": "Appointment date",
     "bookedByLabel": "Booked by",
@@ -1166,7 +1166,10 @@
     "fieldBirth": "Birth:",
     "fieldAge": "Age:",
     "yearsOld": "{count, plural, one {# year old} other {# years old}}",
-    "actions": "Actions"
+    "actions": "Actions",
+    "contactPhone": "Phone",
+    "contactCedula": "ID",
+    "noteEyebrow": "Client's note"
   },
   "photoGallery": {
     "intro": "Up to {max} photos total.",

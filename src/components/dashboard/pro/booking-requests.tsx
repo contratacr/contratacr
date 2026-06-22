@@ -55,6 +55,15 @@ const STATUS_VARIANT: Record<BookingStatus, "warning" | "success" | "error" | "d
   rescheduled: "muted",
 };
 
+// "50688888888" / "88888888" → "+506 8888 8888" (readable). Non-standard → as-is.
+function formatPhoneCR(raw?: string | null): string | null {
+  if (!raw) return null;
+  const d = String(raw).replace(/\D/g, "");
+  const local = d.length === 11 && d.startsWith("506") ? d.slice(3) : d;
+  if (local.length === 8) return `+506 ${local.slice(0, 4)} ${local.slice(4)}`;
+  return String(raw);
+}
+
 // "13:00" → "1:00 pm" (12-hour, matches the prototype).
 function to12h(time?: string): string | null {
   if (!time) return null;
@@ -195,6 +204,8 @@ export function BookingRequests() {
     // who only has name + DOB). Shown formatted as a CR ID so the pro can confirm who they
     // booked. Absent → no cédula on file → the "Sin verificar" pill speaks instead.
     const cedulaFmt = booking.client_cedula ? formatId(String(booking.client_cedula)) : null;
+    const phoneFmt = formatPhoneCR(booking.client_phone);
+    const requestedDate = new Date(booking.created_at).toLocaleDateString(dateLocale, { day: "numeric", month: "short", year: "numeric" });
 
     const flaggedPill = booking.profiles?.is_flagged ? (
       <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#b45309] bg-[#fef3c7] px-1.5 py-0.5 rounded-md">
@@ -255,52 +266,69 @@ export function BookingRequests() {
 
         {expanded && (
           <div className="px-4 pb-3.5 pt-3 border-t border-[#f3f4f6] flex flex-col gap-2.5">
-            {/* identity + request date */}
-            {(booking.client_phone || cedulaFmt) && (
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[12.5px] text-[#6b7280]">
-                {booking.client_phone && (<span><span className="text-[#6b7280]">{t("fieldPhone")}</span> {booking.client_phone}</span>)}
-                {cedulaFmt && (<span><span className="text-[#6b7280]">{t("fieldCedula")}</span> {cedulaFmt}</span>)}
-              </div>
-            )}
-            <p className="text-[11px] text-[#6b7280]">{t("requestedOn", { date: new Date(booking.created_at).toLocaleDateString(dateLocale) })}</p>
+            {/* REDESIGNED request info (sprint 443) — organised, not a flat "label: value" dump.
+                (1) the patient callout when the cita is for someone else; (2) a tidy DETAILS card
+                = the SERVICE (navy headline) + location, then the booker's CONTACT (phone · cédula)
+                with eyebrow labels; (3) a muted "Solicitada el …" meta; (4) the client's NOTE as a
+                quote. Zero icons; on-brand navy/blue/grey; scans cleanly on ~360px + desktop. */}
 
-            {/* "Para otra persona" callout (the patient: name + AGE in years; a "Menor de
-                edad" badge ONLY for a minor — adults just show the age, no badge). */}
+            {/* 1 — "Para otra persona" callout (patient: name + AGE in years; "Menor de edad" only) */}
             {booking.for_someone_else && (() => {
               const beneAge = booking.beneficiary_dob ? computeAge(booking.beneficiary_dob)?.years ?? null : null;
               const beneMinor = booking.beneficiary_dob ? isMinorFromDob(booking.beneficiary_dob) : !!booking.beneficiary_is_minor;
               return (
-                <div className="rounded-xl bg-[#EBF5FB] px-3 py-2">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.05em] text-[#0089bb]">{t("apptForLabel")}</p>
-                  <p className="mt-0.5 text-sm font-bold text-[#111827] flex items-center gap-2 flex-wrap">
+                <div className="rounded-xl bg-[#EBF5FB] px-3.5 py-2.5">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#0089bb]">{t("apptForLabel")}</p>
+                  <p className="mt-0.5 text-sm font-semibold text-[#111827] flex items-center gap-2 flex-wrap">
                     {booking.beneficiary_name || t("otherPerson")}
                     {beneMinor && (
                       <span className="inline-flex items-center rounded-full bg-[#fef3c7] px-2 py-0.5 text-[10px] font-semibold text-[#92400e]">{t("minor")}</span>
                     )}
                   </p>
                   {beneAge !== null && (
-                    <p className="mt-0.5 text-[12px] text-[#6b7280]"><span className="text-[#6b7280]">{t("fieldAge")}</span> {t("yearsOld", { count: beneAge })}</p>
+                    <p className="mt-0.5 text-[12px] text-[#6b7280]"><span className="text-[#9ca3af]">{t("fieldAge")}</span> {t("yearsOld", { count: beneAge })}</p>
                   )}
                 </div>
               );
             })()}
 
-            {/* servicio · zona */}
-            {(category || location) && (
-              <p className="text-[12.5px] text-[#6b7280]">
-                <span className="text-[#6b7280]">{t("fieldService")}</span>{" "}
-                {category && <span className="font-medium text-[#374151]">{category}</span>}
-                {category && location && <span className="text-[#6b7280]"> · </span>}
-                {location && <span>{location}</span>}
-              </p>
+            {/* 2 — DETAILS card: service + location, then booker contact */}
+            {(category || location || phoneFmt || cedulaFmt) && (
+              <div className="rounded-xl border border-[#eef0f2] bg-[#f9fafb] overflow-hidden">
+                {(category || location) && (
+                  <div className="px-3.5 py-3">
+                    {category && <p className="text-sm font-semibold text-[#162543] leading-snug">{category}</p>}
+                    {location && <p className={category ? "mt-0.5 text-[12.5px] text-[#6b7280]" : "text-[12.5px] text-[#6b7280]"}>{location}</p>}
+                  </div>
+                )}
+                {(phoneFmt || cedulaFmt) && (
+                  <div className={cn("grid grid-cols-2 gap-x-4 px-3.5 py-3", (category || location) && "border-t border-[#eef0f2]")}>
+                    {phoneFmt && (
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("contactPhone")}</p>
+                        <p className="mt-0.5 text-[13px] font-medium text-[#374151] truncate">{phoneFmt}</p>
+                      </div>
+                    )}
+                    {cedulaFmt && (
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("contactCedula")}</p>
+                        <p className="mt-0.5 text-[13px] font-medium text-[#374151] truncate">{cedulaFmt}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             )}
 
-            {/* note */}
+            {/* 3 — requested-on meta */}
+            <p className="text-[11px] text-[#9ca3af]">{t("requestedOn", { date: requestedDate })}</p>
+
+            {/* 4 — note, presented as the client's message (quote with a brand left-accent) */}
             {booking.service_description && (
-              <p className="text-[13px] text-[#374151] flex flex-wrap items-baseline gap-x-1.5">
-                <span className="text-[#6b7280] shrink-0">{t("fieldNote")}</span>
-                <span className="min-w-0">{booking.service_description}</span>
-              </p>
+              <div className="rounded-r-lg border-l-[3px] border-[#009FD9]/40 bg-[#f9fafb] py-2 pl-3 pr-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("noteEyebrow")}</p>
+                <p className="mt-0.5 text-[13px] text-[#374151] leading-snug">{booking.service_description}</p>
+              </div>
             )}
 
             {booking.status === "awaiting_confirmation" && (
