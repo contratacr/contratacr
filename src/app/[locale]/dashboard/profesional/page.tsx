@@ -88,6 +88,14 @@ const OFFER_TABS: Tab[] = [
 const USE_TABS: Tab[] = ["profile", "sent_bookings", "sent_projects", "saved"];
 const SHARED_TABS: Tab[] = ["notifications", "soporte", "cuenta"];
 
+// MOBILE bottom-nav (native-app tab bar): the 3 most-used sections per mode sit in the
+// fixed bottom bar (left→right); everything else (setup + shared) lives behind "Más".
+// 3 + Más = 4 items keeps the long Spanish labels (e.g. "Oportunidades") legible at ~360px.
+const MOBILE_PRIMARY: Record<Mode, Tab[]> = {
+  offer: ["profile", "bookings", "proposals"],
+  use: ["profile", "sent_bookings", "sent_projects"],
+};
+
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
@@ -104,6 +112,8 @@ export default function DashboardPage() {
   const [otherModeUnread, setOtherModeUnread] = useState(0);
   const [supportUnread, setSupportUnread] = useState(0);
   const [profileFocus, setProfileFocus] = useState<{ field: string; key: number } | null>(null);
+  // Mobile "Más" bottom-sheet (the overflow of the bottom nav bar).
+  const [moreOpen, setMoreOpen] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const [noProTries, setNoProTries] = useState(0);
 
@@ -241,6 +251,14 @@ export default function DashboardPage() {
     setRefreshKey((k) => k + 1);
   }
 
+  // Lock the page behind the mobile "Más" sheet while it's open.
+  useEffect(() => {
+    if (!moreOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, [moreOpen]);
+
 
   if (authLoading || loading || !user) {
     return (
@@ -263,6 +281,13 @@ export default function DashboardPage() {
   // (replication lag) sees a spinner instead of a misleading gate.
   const showOfferGate = mode === "offer" && !pro && !canOffer(user);
   const offerLoading = mode === "offer" && !pro && canOffer(user);
+
+  // Mobile bottom-nav split: the mode's 3 primary tabs in the bar, the rest under "Más".
+  const modeTabs = mode === "offer" ? OFFER_TABS : USE_TABS;
+  const primaryTabs = MOBILE_PRIMARY[mode].filter((tab) => modeTabs.includes(tab));
+  const moreTabs = [...modeTabs, ...SHARED_TABS].filter((tab) => !primaryTabs.includes(tab));
+  const activeInMore = moreTabs.includes(activeTab);
+  const moreHasBadge = unreadCount > 0 || supportUnread > 0;
 
   function navButton(tab: Tab) {
     const badge = tab === "notifications" ? unreadCount : tab === "soporte" ? supportUnread : 0;
@@ -295,7 +320,7 @@ export default function DashboardPage() {
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
       <Navbar />
       <main className="flex-1">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-24 lg:pb-8">
           {/* Header */}
           <div className="flex items-center justify-between mb-5 flex-wrap gap-4">
             <div className="flex items-center gap-4">
@@ -388,8 +413,9 @@ export default function DashboardPage() {
               )}
 
               <div className="flex flex-col lg:flex-row gap-6">
-                {/* Sidebar nav — tabs for the active mode + a shared block. */}
-                <nav className="lg:w-60 shrink-0 space-y-3">
+                {/* Sidebar nav (DESKTOP only) — tabs for the active mode + a shared block.
+                    On mobile this is replaced by the fixed bottom nav bar below. */}
+                <nav className="hidden lg:block lg:w-60 shrink-0 space-y-3">
                   <Card>
                     <CardContent className="p-2 space-y-3">
                       <div>
@@ -501,7 +527,84 @@ export default function DashboardPage() {
           )}
         </div>
       </main>
-      <LandingFooter />
+
+      {/* Footer — hidden on mobile inside the panel: the bottom nav bar takes its place. */}
+      <div className="hidden lg:block">
+        <LandingFooter />
+      </div>
+
+      {/* MOBILE bottom nav bar — a native-app tab bar (3 primary sections + "Más"). Fixed,
+          thumb-reachable, always visible while in the panel; replaces the sidebar on phones. */}
+      <nav
+        className="lg:hidden fixed bottom-0 inset-x-0 z-40 flex items-stretch border-t border-[#e5e7eb] bg-white/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)]"
+        aria-label={t("title")}
+      >
+        {primaryTabs.map((tab) => {
+          const active = activeTab === tab && !moreOpen;
+          return (
+            <button
+              key={tab}
+              onClick={() => { setMoreOpen(false); setTab(tab); }}
+              aria-current={active ? "page" : undefined}
+              className={cn(
+                "relative flex-1 flex items-center justify-center px-1 py-3 text-[11px] font-semibold leading-none transition-colors",
+                active ? "text-[#009FD9]" : "text-[#6b7280]"
+              )}
+            >
+              {active && <span className="absolute top-0 inset-x-5 h-0.5 rounded-full bg-[#009FD9]" />}
+              <span className="truncate">{t(`bottomNav.${tab}`)}</span>
+            </button>
+          );
+        })}
+        <button
+          onClick={() => setMoreOpen(true)}
+          aria-current={activeInMore ? "page" : undefined}
+          className={cn(
+            "relative flex-1 flex items-center justify-center px-1 py-3 text-[11px] font-semibold leading-none transition-colors",
+            (moreOpen || activeInMore) ? "text-[#009FD9]" : "text-[#6b7280]"
+          )}
+        >
+          {activeInMore && !moreOpen && <span className="absolute top-0 inset-x-5 h-0.5 rounded-full bg-[#009FD9]" />}
+          <span className="relative">
+            {t("bottomNav.more")}
+            {moreHasBadge && <span className="absolute -right-2.5 -top-1 h-1.5 w-1.5 rounded-full bg-[#009FD9]" />}
+          </span>
+        </button>
+      </nav>
+
+      {/* "Más" bottom sheet — the overflow sections (setup + shared), reachable from the bar. */}
+      {moreOpen && (
+        <div className="lg:hidden fixed inset-0 z-50">
+          <div className="absolute inset-0 bg-black/40 animate-in fade-in-0" onClick={() => setMoreOpen(false)} aria-hidden />
+          <div className="absolute inset-x-0 bottom-0 max-h-[78vh] overflow-y-auto rounded-t-2xl bg-white shadow-2xl pb-[env(safe-area-inset-bottom)] animate-in slide-in-from-bottom duration-200">
+            <div className="sticky top-0 bg-white pt-2">
+              <div className="mx-auto h-1 w-10 rounded-full bg-[#e5e7eb]" />
+              <p className="px-4 pt-2.5 pb-2 text-sm font-semibold text-[#111827]">{t("bottomNav.more")}</p>
+            </div>
+            <div className="p-2 pt-0">
+              {moreTabs.map((tab) => {
+                const badge = tab === "notifications" ? unreadCount : tab === "soporte" ? supportUnread : 0;
+                const active = activeTab === tab;
+                return (
+                  <button
+                    key={tab}
+                    onClick={() => { setMoreOpen(false); setTab(tab); }}
+                    className={cn(
+                      "w-full flex items-center justify-between gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium transition-colors",
+                      active ? "bg-[#EBF5FB] text-[#009FD9]" : "text-[#374151] hover:bg-[#f3f4f6]"
+                    )}
+                  >
+                    <span>{tab === "services" ? t("servicesHeading") : t(`tabs.${tab}`)}</span>
+                    {badge > 0 && (
+                      <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#009FD9] px-1.5 text-[11px] font-bold text-white">{badge > 9 ? "9+" : badge}</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

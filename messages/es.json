@@ -1070,7 +1070,15 @@
     "offerGateBody": "En ContrataCR, cualquiera que ofrece un servicio es un profesional: un oficio, un cuidado, una clase o una profesión. Completa tu perfil una vez y empieza a recibir clientes.",
     "offerGateCta": "Completar mi perfil",
     "offerInviteTitle": "¿Ofreces servicios?",
-    "offerInviteCta": "Ofrecer mis servicios"
+    "offerInviteCta": "Ofrecer mis servicios",
+    "bottomNav": {
+      "profile": "Perfil",
+      "bookings": "Solicitudes",
+      "proposals": "Oportunidades",
+      "sent_bookings": "Solicitudes",
+      "sent_projects": "Publicadas",
+      "more": "Más"
+    }
   },
   "bookingRequests": {
     "empty": "No tienes solicitudes todavía",

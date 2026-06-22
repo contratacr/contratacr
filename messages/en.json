@@ -1070,7 +1070,15 @@
     "offerGateBody": "On ContrataCR, anyone who offers a service is a professional: a trade, caregiving, a class or a profession. Complete your profile once and start receiving clients.",
     "offerGateCta": "Complete my profile",
     "offerInviteTitle": "Do you offer services?",
-    "offerInviteCta": "Offer my services"
+    "offerInviteCta": "Offer my services",
+    "bottomNav": {
+      "profile": "Profile",
+      "bookings": "Requests",
+      "proposals": "Opportunities",
+      "sent_bookings": "Requests",
+      "sent_projects": "Published",
+      "more": "More"
+    }
   },
   "bookingRequests": {
     "empty": "You don't have any requests yet",
