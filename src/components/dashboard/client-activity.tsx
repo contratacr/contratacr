@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { getInitials, getWhatsAppLink, cn } from "@/lib/utils";
 import { StatusFilterTabs, SOLICITUD_TABS, PROYECTO_TABS, solicitudMatches, solicitudBucket, solicitudStatusRedundant, proyectoMatches, proyectoBucket, proyectoStatusRedundant, bucketCounts } from "@/components/dashboard/status-filter-tabs";
@@ -105,6 +105,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   const { user } = useAuth();
   const t = useTranslations("clientActivity");
   const locale = useLocale();
+  const router = useRouter();
   const dateLocale = locale === "en" ? "en-US" : "es-CR";
 
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -403,9 +404,6 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                             {b.service_description && (
                               <p className="text-sm text-[#374151] whitespace-pre-line">{b.service_description}</p>
                             )}
-                            {b.professionals?.slug && (
-                              <Link href={`/profesionales/${b.professionals.slug}`} className="self-start text-xs font-semibold text-[#009FD9] hover:underline">{t("viewProfile")}</Link>
-                            )}
                             {/* Pro cancelled → show why (so the client knows + can re-book). */}
                             {b.status === "cancelled" && b.cancelled_by === "professional" && (
                               <div className="rounded-lg bg-[#fef2f2] border border-[#fee2e2] px-2.5 py-1.5">
@@ -424,7 +422,12 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                               const isActiveB = ["pending", "confirmed", "in_progress"].includes(b.status);
                               const wa = b.professionals?.whatsapp && b.status !== "cancelled" && b.status !== "completed"
                                 ? getWhatsAppLink(b.professionals.whatsapp, t("waBooking")) : null;
+                              const slug = b.professionals?.slug;
                               const menu: CardAction[] = [];
+                              // "Ver perfil" lives in the menu (sprint 442): the name itself can't be a
+                              // link — the whole collapsed header is the expand toggle (consistent with
+                              // the other 3 sections) — so the profile is reached from here, cleanly.
+                              if (slug) menu.push({ label: t("viewProfile"), onClick: () => router.push(`/profesionales/${slug}`) });
                               if (b.status === "awaiting_confirmation" && wa) menu.push({ label: t("contact"), onClick: () => window.open(wa, "_blank", "noopener,noreferrer") });
                               if (isActiveB) {
                                 menu.push({ label: t("reschedule"), onClick: () => setReschedule({ id: b.id, professionalId: b.professional_id, when: formatBookingDate(b, dateLocale) }) });
