@@ -282,7 +282,7 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
                       type="button"
                       onClick={() => setExpandedProject(isExpanded ? null : project.id)}
                       aria-expanded={isExpanded}
-                      className="w-full text-left p-4 flex items-start gap-2.5 hover:bg-[#fafafa] transition-colors"
+                      className={cn("w-full text-left p-4 flex items-start gap-2.5 hover:bg-[#fafafa] transition-colors", isExpanded ? "rounded-t-2xl" : "rounded-2xl")}
                     >
                       <Avatar className="h-10 w-10 shrink-0">
                         <AvatarImage src={project.profiles?.avatar_url} className="object-cover" />

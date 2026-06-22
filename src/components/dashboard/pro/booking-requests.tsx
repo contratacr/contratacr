@@ -13,6 +13,7 @@ import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getWhatsAppLink, getInitials, cn } from "@/lib/utils";
 import { StatusFilterTabs, SOLICITUD_TABS, solicitudBucket, solicitudStatusRedundant, bucketCounts } from "@/components/dashboard/status-filter-tabs";
+import { CardActionsMenu, type CardAction } from "@/components/dashboard/card-actions-menu";
 import type { BookingStatus } from "@/types";
 
 type Booking = {
@@ -215,15 +216,18 @@ export function BookingRequests() {
     const panelOpen = actionFor?.id === booking.id;
 
     return (
-      <Card className="rounded-2xl overflow-hidden">
+      <Card className="rounded-2xl">
         {/* EXPANDABLE LEAD CARD (sprint 430): COLLAPSED shows only essentials (who · when ·
             status + unverified). Tapping reveals the full identity, the "para otra persona"
-            callout, servicio·zona, the note, and the management ACTIONS. Zero icons; text labels. */}
+            callout, servicio·zona, the note, and the management ACTIONS. Zero icons; text labels.
+            The button gets the card's rounded corners (rounded-2xl collapsed / rounded-t when
+            expanded) so its hover bg never squares off the corners — sprint 441 (no overflow-hidden,
+            which would clip the actions menu). */}
         <button
           type="button"
           onClick={() => setExpandedId(expanded ? null : booking.id)}
           aria-expanded={expanded}
-          className="w-full text-left px-4 py-3 flex items-center gap-2.5 hover:bg-[#fafafa] transition-colors"
+          className={cn("w-full text-left px-4 py-3 flex items-center gap-2.5 hover:bg-[#fafafa] transition-colors", expanded ? "rounded-t-2xl" : "rounded-2xl")}
         >
           <Avatar className="h-10 w-10 shrink-0">
             <AvatarImage src={booking.profiles?.avatar_url} className="object-cover" />
@@ -305,30 +309,32 @@ export function BookingRequests() {
               </p>
             )}
 
-            {/* ACTIONS — revealed on expand. WhatsApp is the full-width primary on mobile; then
-                "Marcar completado" (left) + "Cancelar" (right) ALWAYS share ONE row on mobile via a
-                2-col grid that dissolves into the single wrapping row on desktop (sm:contents). The
-                pro does NOT reschedule (sprint 433); Reportar is a quiet text link below. */}
-            {!panelOpen && (
-              <div className="flex flex-col gap-2 pt-0.5">
-                <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
+            {/* ACTIONS (sprint 441) — clean PRIMARY-visible + overflow MENU pattern. The most-used
+                action (WhatsApp, contacting the client) stays a 1-tap visible button; the secondary
+                management actions (Marcar completado · Cancelar · Reportar) live in the "···" menu. */}
+            {!panelOpen && (() => {
+              const menuActions: CardAction[] = [
+                ...(isActive ? [
+                  { label: t("markCompleted"), onClick: () => updateStatus(booking.id, "awaiting_confirmation") },
+                  { label: t("cancel"), onClick: () => openAction(booking.id, "cancel"), destructive: true },
+                ] : []),
+                { label: t("reportClient"), onClick: () => reportClient(booking), destructive: true },
+              ];
+              return (
+                <div className="flex items-center gap-2 pt-0.5">
                   {waHref && (
-                    <Button variant="whatsapp" size="sm" asChild className="w-full sm:w-auto rounded-full px-4">
+                    <Button variant="whatsapp" size="sm" asChild className="flex-1 sm:flex-none rounded-full px-4">
                       <a href={waHref} target="_blank" rel="noopener noreferrer">
                         <WhatsAppIcon className="h-4 w-4" /> {t("whatsappTo", { name: cliFirst })}
                       </a>
                     </Button>
                   )}
-                  {isActive && (
-                    <div className="grid grid-cols-2 gap-2 sm:contents">
-                      <Button size="sm" className="w-full sm:w-auto rounded-full px-3" onClick={() => updateStatus(booking.id, "awaiting_confirmation")}>{t("markCompleted")}</Button>
-                      <Button size="sm" variant="outline" className="w-full sm:w-auto rounded-full px-3 text-red-600 border-red-200 hover:bg-red-50" onClick={() => openAction(booking.id, "cancel")}>{t("cancel")}</Button>
-                    </div>
-                  )}
+                  <div className={waHref ? "" : "ml-auto"}>
+                    <CardActionsMenu actions={menuActions} label={t("actions")} />
+                  </div>
                 </div>
-                <button onClick={() => reportClient(booking)} className="self-start text-xs font-semibold text-[#6b7280] hover:text-red-500 transition-colors">{t("reportClient")}</button>
-              </div>
-            )}
+              );
+            })()}
 
           {/* Cancel-with-reason panel — preset chips fill the note; the client is
               notified with the motivo; the slot is freed. */}

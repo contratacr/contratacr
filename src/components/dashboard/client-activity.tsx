@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { CalendarDays, FolderOpen, ChevronDown } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
@@ -10,8 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
-import { getInitials, getWhatsAppLink } from "@/lib/utils";
+import { getInitials, getWhatsAppLink, cn } from "@/lib/utils";
 import { StatusFilterTabs, SOLICITUD_TABS, PROYECTO_TABS, solicitudMatches, solicitudBucket, solicitudStatusRedundant, proyectoMatches, proyectoBucket, proyectoStatusRedundant, bucketCounts } from "@/components/dashboard/status-filter-tabs";
+import { CardActionsMenu, type CardAction } from "@/components/dashboard/card-actions-menu";
 import { LeaveReviewModal } from "@/components/professionals/leave-review-modal";
 import { PublishProjectModal } from "@/components/projects/publish-project-modal";
 import { RescheduleModal } from "@/components/booking/reschedule-modal";
@@ -366,7 +367,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                           type="button"
                           onClick={() => setExpandedBooking(expandedBooking === b.id ? null : b.id)}
                           aria-expanded={expandedBooking === b.id}
-                          className="w-full text-left p-4 flex items-center gap-2.5 hover:bg-[#fafafa] transition-colors"
+                          className={cn("w-full text-left p-4 flex items-center gap-2.5 hover:bg-[#fafafa] transition-colors", expandedBooking === b.id ? "rounded-t-2xl" : "rounded-2xl")}
                         >
                           <Avatar className="h-10 w-10 shrink-0">
                             <AvatarImage src={b.professionals?.profiles?.avatar_url} />
@@ -415,33 +416,43 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                               </div>
                             )}
 
-                            {/* Actions — IDENTICAL layout/treatment to the pro's Solicitudes recibidas:
-                                primary full-width on mobile, the two outline secondaries share a 2-col
-                                row, ONE wrapping row on desktop; Reportar is a quiet text link. */}
-                            <div className="flex flex-col gap-2">
-                              <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
-                                {b.professionals?.whatsapp && b.status !== "cancelled" && b.status !== "completed" && (
-                                  <Button variant="whatsapp" size="sm" asChild className="w-full sm:w-auto rounded-full px-4">
-                                    <a href={getWhatsAppLink(b.professionals.whatsapp, t("waBooking"))} target="_blank" rel="noopener noreferrer">
-                                      <WhatsAppIcon className="h-4 w-4" /> {t("contact")}
-                                    </a>
+                            {/* Actions (sprint 441) — PRIMARY visible + "···" overflow menu. The
+                                primary is the most-useful action for the state (Contactar by WhatsApp
+                                while active; Confirmar finalización while awaiting; Dejar reseña once
+                                done). Reprogramar / Cancelar / Reportar live in the menu. */}
+                            {(() => {
+                              const isActiveB = ["pending", "confirmed", "in_progress"].includes(b.status);
+                              const wa = b.professionals?.whatsapp && b.status !== "cancelled" && b.status !== "completed"
+                                ? getWhatsAppLink(b.professionals.whatsapp, t("waBooking")) : null;
+                              const menu: CardAction[] = [];
+                              if (b.status === "awaiting_confirmation" && wa) menu.push({ label: t("contact"), onClick: () => window.open(wa, "_blank", "noopener,noreferrer") });
+                              if (isActiveB) {
+                                menu.push({ label: t("reschedule"), onClick: () => setReschedule({ id: b.id, professionalId: b.professional_id, when: formatBookingDate(b, dateLocale) }) });
+                                menu.push({ label: t("cancel"), onClick: () => { setCancelTarget(b.id); setCancelNote(""); }, destructive: true });
+                              }
+                              menu.push({ label: t("report"), onClick: () => reportProfessional(b.id), destructive: true });
+
+                              let primary: ReactNode = null;
+                              if (b.status === "awaiting_confirmation") {
+                                primary = <Button size="sm" className="flex-1 sm:flex-none rounded-full px-4" onClick={() => confirmBookingDone(b.id)}>{t("confirmCompletion")}</Button>;
+                              } else if (b.status === "completed") {
+                                primary = <Button variant="outline" size="sm" className="flex-1 sm:flex-none rounded-full px-4" onClick={() => setReviewModal({ professionalId: b.professional_id, professionalName: b.professionals?.profiles?.full_name ?? t("professional"), bookingId: b.id })}>{rev ? t("editReview") : t("leaveReview")}</Button>;
+                              } else if (wa) {
+                                primary = (
+                                  <Button variant="whatsapp" size="sm" asChild className="flex-1 sm:flex-none rounded-full px-4">
+                                    <a href={wa} target="_blank" rel="noopener noreferrer"><WhatsAppIcon className="h-4 w-4" /> {t("contact")}</a>
                                   </Button>
-                                )}
-                                {b.status === "awaiting_confirmation" && (
-                                  <Button size="sm" className="w-full sm:w-auto rounded-full px-4" onClick={() => confirmBookingDone(b.id)}>{t("confirmCompletion")}</Button>
-                                )}
-                                {b.status === "completed" && (
-                                  <Button variant="outline" size="sm" className="w-full sm:w-auto rounded-full px-4" onClick={() => setReviewModal({ professionalId: b.professional_id, professionalName: b.professionals?.profiles?.full_name ?? t("professional"), bookingId: b.id })}>{rev ? t("editReview") : t("leaveReview")}</Button>
-                                )}
-                                {["pending", "confirmed", "in_progress"].includes(b.status) && (
-                                  <div className="grid grid-cols-2 gap-2 sm:contents">
-                                    <Button size="sm" variant="outline" className="w-full sm:w-auto rounded-full px-4" onClick={() => setReschedule({ id: b.id, professionalId: b.professional_id, when: formatBookingDate(b, dateLocale) })}>{t("reschedule")}</Button>
-                                    <Button size="sm" variant="outline" className="w-full sm:w-auto rounded-full px-4 text-red-600 border-red-200 hover:bg-red-50" onClick={() => { setCancelTarget(b.id); setCancelNote(""); }}>{t("cancel")}</Button>
+                                );
+                              }
+                              return (
+                                <div className="flex items-center gap-2">
+                                  {primary}
+                                  <div className={primary ? "" : "ml-auto"}>
+                                    <CardActionsMenu actions={menu} label={t("actions")} />
                                   </div>
-                                )}
-                              </div>
-                              <button onClick={() => reportProfessional(b.id)} className="self-start text-xs font-semibold text-[#6b7280] hover:text-red-500 transition-colors">{t("report")}</button>
-                            </div>
+                                </div>
+                              );
+                            })()}
                           </div>
                         )}
                       </Card>
@@ -499,7 +510,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                         setExpandedProject(isExpanded ? null : project.id);
                       }}
                       aria-expanded={isExpanded}
-                      className="w-full text-left p-4 flex items-start gap-2.5 hover:bg-[#fafafa] transition-colors"
+                      className={cn("w-full text-left p-4 flex items-start gap-2.5 hover:bg-[#fafafa] transition-colors", isExpanded ? "rounded-t-2xl" : "rounded-2xl")}
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
@@ -545,49 +556,37 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                           <p className="text-xs text-[#6b7280]"><span className="text-[#6b7280]">{t("fieldZone")}</span> {[project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ")}</p>
                         )}
 
-                      {/* ACTIONS — same layout as the other sections: primary action(s) full-width
-                          on mobile, one tidy wrapping row on desktop; the destructive minor action
-                          (Eliminar) is a quiet text link below. */}
-                      {/* ACTIONS — consistent pill treatment (sprint 437): the status's primary
-                          action full-width on mobile / one wrapping row on desktop; "Eliminar" is a
-                          quiet destructive text link opening a clean confirm modal. */}
-                      <div className="flex flex-col gap-2">
-                        <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
-                          {project.status === "open" && (
-                            <Button size="sm" variant="outline" className="w-full sm:w-auto rounded-full px-4 text-red-600 border-red-200 hover:bg-red-50" onClick={() => updateProjectStatus(project.id, "cancelled")}>
-                              {t("cancelProject")}
-                            </Button>
-                          )}
-                          {project.status === "cancelled" && (
-                            <Button size="sm" variant="outline" className="w-full sm:w-auto rounded-full px-4" onClick={() => updateProjectStatus(project.id, "open")}>
-                              {t("reopenProject")}
-                            </Button>
-                          )}
-                          {project.status === "awaiting_confirmation" && (
-                            <Button size="sm" className="w-full sm:w-auto rounded-full px-4" onClick={() => confirmProjectCompletion(project.id)}>
-                              {t("confirmCompletion")}
-                            </Button>
-                          )}
-                          {(project.status === "in_progress" || project.status === "awaiting_confirmation") && (
-                            <Button size="sm" variant="outline" className="w-full sm:w-auto rounded-full px-4 text-red-600 border-red-200 hover:bg-red-50" onClick={() => updateProjectStatus(project.id, "cancelled")}>
-                              {t("cancelProject")}
-                            </Button>
-                          )}
-                          {project.status === "completed" && (() => {
-                            const rev = projectReview(project.id);
-                            return (
-                              <Button size="sm" variant="outline" className="w-full sm:w-auto rounded-full px-4" onClick={() => reviewProjectPro(project.id)}>
-                                {rev ? t("editReview") : t("leaveReview")}
-                              </Button>
-                            );
-                          })()}
-                        </div>
-                        {project.status !== "in_progress" && project.status !== "awaiting_confirmation" && (
-                          <button onClick={() => setDeleteTarget(project.id)} className="self-start text-xs font-semibold text-[#6b7280] hover:text-red-600 transition-colors">
-                            {t("delete")}
-                          </button>
-                        )}
-                      </div>
+                      {/* ACTIONS (sprint 441) — PRIMARY visible + "···" overflow menu. The propuestas
+                          list IS the content for an open publicación (no primary button); a status with
+                          a clear CTA (Confirmar finalización / Dejar reseña / Reabrir) shows it as the
+                          primary. Cancelar publicación + Eliminar (destructive) live in the menu. */}
+                      {(() => {
+                        const st = project.status;
+                        const menu: CardAction[] = [];
+                        if (st === "open" || st === "in_progress" || st === "awaiting_confirmation") {
+                          menu.push({ label: t("cancelProject"), onClick: () => updateProjectStatus(project.id, "cancelled"), destructive: true });
+                        }
+                        if (st !== "in_progress" && st !== "awaiting_confirmation") {
+                          menu.push({ label: t("delete"), onClick: () => setDeleteTarget(project.id), destructive: true });
+                        }
+                        let primary: ReactNode = null;
+                        if (st === "awaiting_confirmation") {
+                          primary = <Button size="sm" className="flex-1 sm:flex-none rounded-full px-4" onClick={() => confirmProjectCompletion(project.id)}>{t("confirmCompletion")}</Button>;
+                        } else if (st === "completed") {
+                          const rev = projectReview(project.id);
+                          primary = <Button variant="outline" size="sm" className="flex-1 sm:flex-none rounded-full px-4" onClick={() => reviewProjectPro(project.id)}>{rev ? t("editReview") : t("leaveReview")}</Button>;
+                        } else if (st === "cancelled") {
+                          primary = <Button variant="outline" size="sm" className="flex-1 sm:flex-none rounded-full px-4" onClick={() => updateProjectStatus(project.id, "open")}>{t("reopenProject")}</Button>;
+                        }
+                        return (
+                          <div className="flex items-center gap-2">
+                            {primary}
+                            <div className={primary ? "" : "ml-auto"}>
+                              <CardActionsMenu actions={menu} label={t("actions")} />
+                            </div>
+                          </div>
+                        );
+                      })()}
 
                       {isExpanded && proposalList && (() => {
                         const finalized = project.status === "completed";

@@ -1165,7 +1165,8 @@
     "fieldCedula": "ID:",
     "fieldBirth": "Birth:",
     "fieldAge": "Age:",
-    "yearsOld": "{count, plural, one {# year old} other {# years old}}"
+    "yearsOld": "{count, plural, one {# year old} other {# years old}}",
+    "actions": "Actions"
   },
   "photoGallery": {
     "intro": "Up to {max} photos total.",
@@ -1621,7 +1622,8 @@
     "fieldReason": "Reason:",
     "deleteTitle": "Delete this request?",
     "deleteBody": "This can't be undone.",
-    "viewProfile": "View profile"
+    "viewProfile": "View profile",
+    "actions": "Actions"
   },
   "clientPage": {
     "greeting": "Hi, {name} 👋",
