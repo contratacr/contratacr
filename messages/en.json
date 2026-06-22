@@ -1162,7 +1162,9 @@
     "fieldNote": "Note:",
     "fieldPhone": "Phone:",
     "fieldCedula": "ID:",
-    "fieldBirth": "Birth:"
+    "fieldBirth": "Birth:",
+    "fieldAge": "Age:",
+    "yearsOld": "{count, plural, one {# year old} other {# years old}}"
   },
   "photoGallery": {
     "intro": "Up to {max} photos total.",

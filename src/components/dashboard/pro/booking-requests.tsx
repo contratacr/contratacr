@@ -5,8 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { CalendarDays, ChevronDown } from "lucide-react";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { formatId } from "@/lib/cedula";
-import { ageCategoryFromDob } from "@/lib/age";
-import { formatDobDMY } from "@/components/ui/date-of-birth-picker";
+import { ageCategoryFromDob, computeAge, isMinorFromDob } from "@/lib/age";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -260,19 +259,26 @@ export function BookingRequests() {
             )}
             <p className="text-[11px] text-[#9ca3af]">{t("requestedOn", { date: new Date(booking.created_at).toLocaleDateString(dateLocale) })}</p>
 
-            {/* "Para otra persona" callout (the patient: name + age + DOB) */}
-            {booking.for_someone_else && (
-              <div className="rounded-xl bg-[#EBF5FB] px-3 py-2">
-                <p className="text-[10px] font-bold uppercase tracking-[0.05em] text-[#0089bb]">{t("apptForLabel")}</p>
-                <p className="mt-0.5 text-sm font-bold text-[#111827] flex items-center gap-2 flex-wrap">
-                  {booking.beneficiary_name || t("otherPerson")}
-                  {ageBadge(booking.beneficiary_dob, booking.beneficiary_is_minor)}
-                </p>
-                {booking.beneficiary_dob && (
-                  <p className="mt-0.5 text-[12px] text-[#6b7280]"><span className="text-[#9ca3af]">{t("fieldBirth")}</span> {formatDobDMY(booking.beneficiary_dob)}</p>
-                )}
-              </div>
-            )}
+            {/* "Para otra persona" callout (the patient: name + AGE in years; a "Menor de
+                edad" badge ONLY for a minor — adults just show the age, no badge). */}
+            {booking.for_someone_else && (() => {
+              const beneAge = booking.beneficiary_dob ? computeAge(booking.beneficiary_dob)?.years ?? null : null;
+              const beneMinor = booking.beneficiary_dob ? isMinorFromDob(booking.beneficiary_dob) : !!booking.beneficiary_is_minor;
+              return (
+                <div className="rounded-xl bg-[#EBF5FB] px-3 py-2">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.05em] text-[#0089bb]">{t("apptForLabel")}</p>
+                  <p className="mt-0.5 text-sm font-bold text-[#111827] flex items-center gap-2 flex-wrap">
+                    {booking.beneficiary_name || t("otherPerson")}
+                    {beneMinor && (
+                      <span className="inline-flex items-center rounded-full bg-[#fef3c7] px-2 py-0.5 text-[10px] font-semibold text-[#92400e]">{t("minor")}</span>
+                    )}
+                  </p>
+                  {beneAge !== null && (
+                    <p className="mt-0.5 text-[12px] text-[#6b7280]"><span className="text-[#9ca3af]">{t("fieldAge")}</span> {t("yearsOld", { count: beneAge })}</p>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* servicio · zona */}
             {(category || location) && (
@@ -331,21 +337,6 @@ export function BookingRequests() {
           {actionFor?.id === booking.id && actionFor.mode === "cancel" && (
             <div className="rounded-xl border border-[#e5e7eb] bg-[#fafafa] p-3 flex flex-col gap-2.5">
               <p className="text-sm font-semibold text-[#111827]">{t("cancelTitle")}</p>
-              <div className="flex flex-wrap gap-2">
-                {[t("cancelR1"), t("cancelR2"), t("cancelR3")].map((label) => (
-                  <button
-                    key={label}
-                    type="button"
-                    onClick={() => setReason(label)}
-                    className={cn(
-                      "rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
-                      reason === label ? "border-[#009FD9] bg-[#EBF5FB] text-[#0089bb]" : "border-[#e5e7eb] bg-white text-[#374151] hover:bg-[#f3f4f6]"
-                    )}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
               <textarea
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
@@ -353,7 +344,6 @@ export function BookingRequests() {
                 rows={2}
                 className="w-full rounded-xl border border-[#e5e7eb] bg-white px-3 py-2 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent resize-none"
               />
-              <p className="text-xs text-[#9ca3af]">{t("cancelHint")}</p>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" className="rounded-full" onClick={closeAction} disabled={submitting}>{t("back")}</Button>
                 <Button size="sm" className="rounded-full bg-red-600 hover:bg-red-700" onClick={() => submitCancel(booking.id)} disabled={submitting}>
