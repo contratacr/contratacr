@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarDays, FolderOpen, ChevronDown } from "lucide-react";
+import { CalendarDays, FolderOpen, ChevronDown, Plus } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -486,11 +486,13 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
             </div>
           ) : (
             <div className="flex flex-col gap-3">
-              {/* PRIMARY action — prominent on its OWN row (full-width on mobile, right-aligned
-                  on desktop) above the filters, so creating a new publicación is clearly the main
-                  CTA and never competes with the per-card secondary actions. */}
-              <div className="flex justify-end">
-                <Button className="w-full sm:w-auto rounded-full px-5" onClick={() => setShowPublish(true)}>
+              {/* PRIMARY action — DESKTOP: a prominent right-aligned button above the filters
+                  (no bottom nav bar there, so a top button is the cleanest, most visible spot).
+                  MOBILE uses the floating action button below instead (thumb-reachable while
+                  scrolling, clear of the fixed bottom nav bar) — so this row is hidden on phones
+                  to avoid a redundant second publish button. */}
+              <div className="hidden lg:flex justify-end">
+                <Button className="rounded-full px-5" onClick={() => setShowPublish(true)}>
                   {t("publishProject")}
                 </Button>
               </div>
@@ -687,6 +689,22 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                   </Card>
                 );
               })}
+
+              {/* MOBILE floating action button (FAB) — the section's PRIMARY action. A top
+                  button isn't thumb-reachable once you scroll a long list, so on phones the
+                  publish CTA floats bottom-right, offset ABOVE the fixed bottom nav bar
+                  (z-30 < the bar's z-40, and bottom = bar height + a gap) so it's always
+                  reachable while scrolling and NEVER overlaps/hides behind the bar. Desktop
+                  uses the top button above instead (this is lg:hidden). */}
+              <button
+                type="button"
+                onClick={() => setShowPublish(true)}
+                aria-label={t("publishProject")}
+                className="lg:hidden fixed right-4 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-30 inline-flex items-center gap-2 rounded-full bg-[#009FD9] px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-[#009FD9]/30 transition-transform active:scale-95 hover:bg-[#0089bb]"
+              >
+                <Plus className="h-5 w-5" />
+                {t("publishShort")}
+              </button>
             </div>
           )}
         </div>

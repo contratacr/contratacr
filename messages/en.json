@@ -1605,6 +1605,7 @@
     "pEmpty": "You haven't published any requests yet",
     "pEmptySub": "Post what you need and receive several proposals.",
     "publishProject": "Post a request",
+    "publishShort": "Post",
     "noProjectsView": "No requests in this view.",
     "projAssigned": "In progress · Assigned",
     "projAwaiting": "Awaiting your confirmation",
