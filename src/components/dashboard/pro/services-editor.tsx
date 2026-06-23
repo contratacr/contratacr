@@ -289,20 +289,28 @@ export function ServicesEditor({
       {professions.map((prof, i) => {
         const profServices = services.filter((s) => effectiveCategory(s) === prof);
         const isPrincipal = i === 0;
+        // Entry price for this profession (cheapest priced service) — a marketplace-style
+        // "Desde ₡X" summary; derived from existing data, shown only when something is priced.
+        const pricedAmounts = profServices.map((s) => s.priceAmount).filter((n): n is number => typeof n === "number" && n > 0);
+        const fromAmount = pricedAmounts.length ? Math.min(...pricedAmounts) : null;
         return (
-          <section key={prof} className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white">
-            {/* Profession header (tinted bar) */}
-            <div className="flex items-start justify-between gap-3 border-b border-[#eef0f2] bg-[#f9fafb] px-4 sm:px-5 py-3.5">
+          <section key={prof} className={cn("overflow-hidden rounded-2xl border bg-white shadow-sm", isPrincipal ? "border-[#bfdbfe]" : "border-[#e5e7eb]")}>
+            {/* Profession header — the PRINCIPAL profession gets a subtle brand tint + navy name
+                so the main area the pro offers clearly stands out; the rest stay neutral grey. */}
+            <div className={cn("flex items-start justify-between gap-3 border-b px-4 sm:px-5 py-4", isPrincipal ? "border-[#dcebf6] bg-[#EBF5FB]" : "border-[#eef0f2] bg-[#f9fafb]")}>
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="text-base font-bold leading-tight text-[#111827] [overflow-wrap:anywhere]">{getCategoryLabel(prof, locale)}</h3>
-                  {isPrincipal && <span className="shrink-0 rounded-full bg-[#EBF5FB] px-2 py-0.5 text-[10px] font-semibold text-[#0089bb]">{t("principal")}</span>}
+                  <h3 className="text-base font-bold leading-tight text-[#162543] [overflow-wrap:anywhere]">{getCategoryLabel(prof, locale)}</h3>
+                  {isPrincipal && <span className="shrink-0 rounded-full bg-white px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#0089bb] ring-1 ring-inset ring-[#009FD9]/25">{t("principal")}</span>}
                 </div>
-                <p className="mt-0.5 text-xs text-[#6b7280]">{t("servicesPublished", { count: profServices.length })}</p>
+                <p className="mt-1 text-xs text-[#6b7280]">
+                  {t("servicesPublished", { count: profServices.length })}
+                  {fromAmount != null && <> · <span className="font-medium text-[#374151]">{t("priceFrom", { amount: fromAmount.toLocaleString("es-CR") })}</span></>}
+                </p>
               </div>
-              <div className="flex items-center gap-1 shrink-0">
+              <div className="flex items-center gap-1.5 shrink-0">
                 {!isPrincipal && (
-                  <button type="button" onClick={() => makePrincipal(prof)} className="rounded-lg px-2 py-1 text-xs font-medium text-[#009FD9] hover:bg-[#EBF5FB] transition-colors">
+                  <button type="button" onClick={() => makePrincipal(prof)} className="rounded-full border border-[#e5e7eb] bg-white px-3 py-1 text-xs font-semibold text-[#0089bb] hover:border-[#009FD9] hover:bg-[#EBF5FB] transition-colors">
                     {t("makePrincipal")}
                   </button>
                 )}

@@ -1269,6 +1269,7 @@
   "servicesEditor": {
     "servicesOf": "Services of",
     "addPrice": "Add price",
+    "priceFrom": "From ₡{amount}",
     "reorderHint": "Drag to reorder",
     "servicesCount": "{count, plural, =0 {No services yet} one {# service} other {# services}}",
     "addFirstInProfession": "Add your first service in {profession}",
