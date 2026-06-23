@@ -1196,7 +1196,20 @@
     "addPhoto": "Agregar foto",
     "remove": "Eliminar",
     "maxAlert": "Puedes subir un máximo de {max} fotos en total.",
-    "uploadError": "No se pudo subir la foto."
+    "uploadError": "No se pudo subir la foto.",
+    "edit": "Editar",
+    "addDetails": "Agregar detalles",
+    "detailsTitle": "Detalles del caso de éxito",
+    "titleField": "Título",
+    "titlePlaceholder": "Ejemplo: Sitio web corporativo",
+    "descField": "Descripción",
+    "descPlaceholder": "Cuéntanos brevemente qué hiciste.",
+    "clientField": "Cliente",
+    "clientPlaceholder": "Ejemplo: Empresa XYZ",
+    "dateField": "Fecha",
+    "datePlaceholder": "Ejemplo: Mayo 2024",
+    "save": "Guardar",
+    "cancel": "Cancelar"
   },
   "unsavedGuard": {
     "title": "Tienes cambios sin guardar",

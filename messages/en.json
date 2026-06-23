@@ -1196,7 +1196,20 @@
     "addPhoto": "Add photo",
     "remove": "Remove",
     "maxAlert": "You can upload a maximum of {max} photos total.",
-    "uploadError": "Couldn't upload the photo."
+    "uploadError": "Couldn't upload the photo.",
+    "edit": "Edit",
+    "addDetails": "Add details",
+    "detailsTitle": "Success story details",
+    "titleField": "Title",
+    "titlePlaceholder": "Example: Corporate website",
+    "descField": "Description",
+    "descPlaceholder": "Tell us briefly what you did.",
+    "clientField": "Client",
+    "clientPlaceholder": "Example: XYZ Company",
+    "dateField": "Date",
+    "datePlaceholder": "Example: May 2024",
+    "save": "Save",
+    "cancel": "Cancel"
   },
   "unsavedGuard": {
     "title": "You have unsaved changes",
