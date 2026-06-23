@@ -43,7 +43,7 @@ export function CardActionsMenu({ actions, label }: { actions: CardAction[]; lab
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label={label}
-        className="inline-flex h-8 items-center justify-center gap-1.5 rounded-full border border-[#e5e7eb] px-2.5 sm:px-3.5 text-xs font-semibold text-[#374151] hover:bg-[#f3f4f6] transition-colors"
+        className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-[#e5e7eb] px-2.5 sm:px-3.5 text-xs font-semibold text-[#374151] hover:bg-[#f3f4f6] transition-colors"
       >
         <MoreHorizontal className="h-4 w-4 sm:hidden" />
         <span className="hidden sm:inline">{label}</span>

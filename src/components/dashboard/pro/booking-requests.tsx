@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarDays, ChevronDown } from "lucide-react";
+import { CalendarDays, ChevronDown, CalendarClock } from "lucide-react";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { formatId } from "@/lib/cedula";
 import { ageCategoryFromDob, computeAge, isMinorFromDob } from "@/lib/age";
@@ -253,7 +253,7 @@ export function BookingRequests() {
               itself), and a muted "servicio · nota" snippet on line 3 for instant context. */}
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
-              <span className="text-[15px] font-semibold text-[#111827] min-w-0 flex items-center gap-2 flex-wrap">
+              <span className="text-[15px] font-semibold text-[#162543] min-w-0 flex items-center gap-2 flex-wrap">
                 {booking.client_name || t("thePerson")}
                 {!booking.for_someone_else && ageBadge(booking.client_dob)}
                 {unverifiedPill}
@@ -263,8 +263,10 @@ export function BookingRequests() {
                 <Badge variant={STATUS_VARIANT[booking.status]} className="shrink-0 px-2.5 py-0.5 text-[11px] font-semibold">{t(`status.${booking.status}`)}</Badge>
               )}
             </div>
-            <p className="mt-0.5 text-[13px] truncate">
-              <span className={dateStr ? "font-medium text-[#374151]" : "text-[#6b7280]"}>{dateStr || t("noScheduledDate")}</span>
+            {/* Appointment date with a quiet grey calendar icon. */}
+            <p className="mt-0.5 flex items-center gap-1.5 text-[13px] min-w-0">
+              <CalendarClock className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+              <span className={cn("truncate", dateStr ? "font-medium text-[#374151]" : "text-[#6b7280]")}>{dateStr || t("noScheduledDate")}</span>
             </p>
             {snippet && <p className="mt-0.5 text-[12px] text-[#6b7280] truncate">{snippet}</p>}
           </div>
@@ -360,7 +362,7 @@ export function BookingRequests() {
               return (
                 <div className="flex items-center gap-2 pt-0.5">
                   {waHref && (
-                    <Button variant="whatsapp" size="sm" asChild className="flex-1 sm:flex-none rounded-full px-4">
+                    <Button variant="whatsapp" size="sm" asChild className="flex-1 sm:flex-none rounded-lg px-4">
                       <a href={waHref} target="_blank" rel="noopener noreferrer">
                         <WhatsAppIcon className="h-4 w-4" /> {t("whatsappTo", { name: cliFirst })}
                       </a>
@@ -387,8 +389,8 @@ export function BookingRequests() {
                 className="w-full rounded-xl border border-[#e5e7eb] bg-white px-3 py-2 text-sm text-[#111827] placeholder:text-[#9ca3af] break-words focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent resize-none"
               />
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="rounded-full" onClick={closeAction} disabled={submitting}>{t("back")}</Button>
-                <Button size="sm" className="rounded-full bg-red-600 hover:bg-red-700" onClick={() => submitCancel(booking.id)} disabled={submitting}>
+                <Button variant="outline" size="sm" className="rounded-lg" onClick={closeAction} disabled={submitting}>{t("back")}</Button>
+                <Button size="sm" className="rounded-lg bg-red-600 hover:bg-red-700" onClick={() => submitCancel(booking.id)} disabled={submitting}>
                   {t("cancelConfirm")}
                 </Button>
               </div>

@@ -443,12 +443,12 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
 
                               let primary: ReactNode = null;
                               if (b.status === "awaiting_confirmation") {
-                                primary = <Button size="sm" className="flex-1 sm:flex-none rounded-full px-4" onClick={() => confirmBookingDone(b.id)}>{t("confirmCompletion")}</Button>;
+                                primary = <Button size="sm" className="flex-1 sm:flex-none rounded-lg px-4" onClick={() => confirmBookingDone(b.id)}>{t("confirmCompletion")}</Button>;
                               } else if (b.status === "completed") {
-                                primary = <Button variant="outline" size="sm" className="flex-1 sm:flex-none rounded-full px-4" onClick={() => setReviewModal({ professionalId: b.professional_id, professionalName: b.professionals?.profiles?.full_name ?? t("professional"), bookingId: b.id })}>{rev ? t("editReview") : t("leaveReview")}</Button>;
+                                primary = <Button variant="outline" size="sm" className="flex-1 sm:flex-none rounded-lg px-4" onClick={() => setReviewModal({ professionalId: b.professional_id, professionalName: b.professionals?.profiles?.full_name ?? t("professional"), bookingId: b.id })}>{rev ? t("editReview") : t("leaveReview")}</Button>;
                               } else if (wa) {
                                 primary = (
-                                  <Button variant="whatsapp" size="sm" asChild className="flex-1 sm:flex-none rounded-full px-4">
+                                  <Button variant="whatsapp" size="sm" asChild className="flex-1 sm:flex-none rounded-lg px-4">
                                     <a href={wa} target="_blank" rel="noopener noreferrer"><WhatsAppIcon className="h-4 w-4" /> {t("contact")}</a>
                                   </Button>
                                 );
@@ -587,12 +587,12 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                         }
                         let primary: ReactNode = null;
                         if (st === "awaiting_confirmation") {
-                          primary = <Button size="sm" className="flex-1 sm:flex-none rounded-full px-4" onClick={() => confirmProjectCompletion(project.id)}>{t("confirmCompletion")}</Button>;
+                          primary = <Button size="sm" className="flex-1 sm:flex-none rounded-lg px-4" onClick={() => confirmProjectCompletion(project.id)}>{t("confirmCompletion")}</Button>;
                         } else if (st === "completed") {
                           const rev = projectReview(project.id);
-                          primary = <Button variant="outline" size="sm" className="flex-1 sm:flex-none rounded-full px-4" onClick={() => reviewProjectPro(project.id)}>{rev ? t("editReview") : t("leaveReview")}</Button>;
+                          primary = <Button variant="outline" size="sm" className="flex-1 sm:flex-none rounded-lg px-4" onClick={() => reviewProjectPro(project.id)}>{rev ? t("editReview") : t("leaveReview")}</Button>;
                         } else if (st === "cancelled") {
-                          primary = <Button variant="outline" size="sm" className="flex-1 sm:flex-none rounded-full px-4" onClick={() => updateProjectStatus(project.id, "open")}>{t("reopenProject")}</Button>;
+                          primary = <Button variant="outline" size="sm" className="flex-1 sm:flex-none rounded-lg px-4" onClick={() => updateProjectStatus(project.id, "open")}>{t("reopenProject")}</Button>;
                         }
                         return (
                           <div className="flex items-center gap-2">

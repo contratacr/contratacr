@@ -588,12 +588,12 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                             const menu: CardAction[] = [];
                             let primary: ReactNode = null;
                             if (p.status === "pending") {
-                              primary = <Button size="sm" variant="outline" className="flex-1 sm:flex-none rounded-full px-4" onClick={() => startEdit(p)}>{t("editProposal")}</Button>;
+                              primary = <Button size="sm" variant="outline" className="flex-1 sm:flex-none rounded-lg px-4" onClick={() => startEdit(p)}>{t("editProposal")}</Button>;
                               menu.push({ label: t("withdraw"), onClick: () => setWithdrawTarget(p), destructive: true });
                             } else if (p.status === "accepted") {
                               if (wa) {
                                 primary = (
-                                  <Button variant="whatsapp" size="sm" asChild className="flex-1 sm:flex-none rounded-full px-4">
+                                  <Button variant="whatsapp" size="sm" asChild className="flex-1 sm:flex-none rounded-lg px-4">
                                     <a href={wa} target="_blank" rel="noopener noreferrer"><WhatsAppIcon className="h-4 w-4" /> {t("contactClient")}</a>
                                   </Button>
                                 );
