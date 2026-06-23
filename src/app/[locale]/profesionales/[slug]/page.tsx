@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { StarRating } from "@/components/ui/star-rating";
 import { getInitials, getWhatsAppLink, proDisplayName, cn } from "@/lib/utils";
 import { getCategoryLabel } from "@/lib/data/categories";
-import { casoProfession } from "@/lib/services";
+import { casoProfession, countCases } from "@/lib/services";
 import { formatPricingTier, primaryPricingLabel } from "@/lib/pricing";
 import { languageLabel } from "@/lib/data/languages";
 import { insurerLabel } from "@/lib/data/insurers";
@@ -231,6 +231,9 @@ export default function ProfilePage({ params }: ProfilePageProps) {
   const placeAddress = locationText;
 
   const hasCasos = !!professional.portfolioUrls && professional.portfolioUrls.length > 0;
+  // Count CASES, not photos: 1 caso de éxito with 3 photos must read "1", not "3"
+  // (portfolioUrls is the flattened photo list). See countCases().
+  const casosCount = countCases(professional.portfolioItems, professional.portfolioUrls);
   const certificationsList = (professional.certifications ?? []).filter((c) => c?.name?.trim());
   const hasCerts = certificationsList.length > 0;
   // Group certifications by profession (legacy untagged → principal profession).
@@ -358,7 +361,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                   <button type="button" onClick={() => setActiveTab("casos")} className="text-center">
                     <div className="flex items-center justify-center gap-1">
                       <Camera className="h-4 w-4 text-[#009FD9]" />
-                      <span className="text-[15px] font-bold text-[#111827]">{professional.portfolioUrls?.length ?? 0}</span>
+                      <span className="text-[15px] font-bold text-[#111827]">{casosCount}</span>
                     </div>
                     <p className="mt-0.5 text-[11px] text-[#9ca3af]">{t("statCasos")}</p>
                   </button>

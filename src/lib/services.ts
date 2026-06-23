@@ -32,6 +32,28 @@ export function casoProfession(
   return cat || primaryProfession || "";
 }
 
+/**
+ * Count CASES (not photos) for "casos de éxito". A NEW-shape item (it has a `photos[]`
+ * array) is ONE case no matter how many photos it holds; legacy loose `{url}` photos group
+ * into cases of up to 3 (the per-case photo limit). Pure-legacy data (only `portfolio_urls`,
+ * no items) → ceil(photos / 3). So a pro with 1 case of 3 photos counts as **1**, never 3 —
+ * `portfolio_urls` is the flattened PHOTO list and must NOT be used as the case count.
+ */
+export function countCases(items?: readonly unknown[] | null, urls?: readonly unknown[] | null): number {
+  const list = Array.isArray(items) ? items : [];
+  if (list.length > 0) {
+    let cases = 0;
+    let legacyPhotos = 0;
+    for (const raw of list) {
+      const it = raw as { photos?: unknown; url?: string } | null;
+      if (it && Array.isArray(it.photos)) cases++;
+      else if (it && it.url) legacyPhotos++;
+    }
+    return cases + Math.ceil(legacyPhotos / 3);
+  }
+  return Math.ceil((urls?.length ?? 0) / 3);
+}
+
 export function serviceLabelMap(services: ServiceLike[]): Map<string, string> {
   const norm = (s: string) => s.trim().toLowerCase();
   const counts = new Map<string, number>();
