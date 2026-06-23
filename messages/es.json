@@ -1268,6 +1268,8 @@
   },
   "servicesEditor": {
     "servicesOf": "Servicios de",
+    "addPrice": "Agregar precio",
+    "reorderHint": "Arrastra para ordenar",
     "servicesCount": "{count, plural, =0 {Sin servicios todavía} one {# servicio} other {# servicios}}",
     "addFirstInProfession": "Agrega tu primer servicio en {profession}",
     "addFirstHelp": "Lista lo que ofreces con su precio para que los clientes sepan qué esperar.",

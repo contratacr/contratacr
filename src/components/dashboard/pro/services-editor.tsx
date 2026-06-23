@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Plus, Trash2, Pencil, ChevronRight, Search } from "lucide-react";
+import { Plus, Trash2, Pencil, ChevronRight, Search, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PriceInput } from "@/components/ui/price-input";
 import { Modal } from "@/components/ui/modal";
@@ -76,6 +76,10 @@ export function ServicesEditor({
 
   // Master–detail: which profession's services are shown on the right.
   const [selectedProfession, setSelectedProfession] = useState<string>(seedProfessions[0] ?? "");
+  // Drag-to-reorder services (desktop): the service being dragged + the one hovered over.
+  // The services array order = how they appear on the public profile.
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [overId, setOverId] = useState<string | null>(null);
 
   // Add-profession picker (modal)
   const [showPicker, setShowPicker] = useState(false);
@@ -255,6 +259,21 @@ export function ServicesEditor({
     await persist(professions, next);
   }
 
+  // Move the dragged service to the target's position in the FULL services array. Both are
+  // in the same profession (same detail list), so a global splice preserves every other
+  // profession's relative order while updating this one's display order; then persist.
+  function reorderServices(draggedId: string, targetId: string) {
+    if (draggedId === targetId) return;
+    const from = services.findIndex((s) => s.id === draggedId);
+    const to = services.findIndex((s) => s.id === targetId);
+    if (from < 0 || to < 0) return;
+    const next = [...services];
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved);
+    setServices(next);
+    persist(professions, next);
+  }
+
   // Professions available to add (taxonomy minus the ones already added), filtered
   // by the picker's search (label + keywords, accent-insensitive).
   const pickerList = useMemo(() => {
@@ -414,16 +433,49 @@ export function ServicesEditor({
               </button>
             ) : (
               <>
-                {detailServices.map((svc) => (
-                  /* Catalog-style service row (Fiverr/Shopify product-row pattern): name + brief,
-                     the PRICE as a brand-tint TAG chip below, and quiet edit/delete actions that
-                     gain emphasis on hover. `min-w-0` + `break-words` keep long names inside the row. */
-                  <div key={svc.id} className="group flex items-start justify-between gap-3 rounded-xl border border-[#e5e7eb] p-3.5 transition-all hover:border-[#009FD9]/50 hover:shadow-sm">
+                {/* Reorder discoverability — desktop only (drag works with a mouse; the grip is
+                    hidden on touch where HTML5 drag doesn't fire). */}
+                {detailServices.length > 1 && (
+                  <p className="hidden lg:flex items-center gap-1 text-[11px] text-[#9ca3af]">
+                    <GripVertical className="h-3 w-3" /> {t("reorderHint")}
+                  </p>
+                )}
+                {detailServices.map((svc) => {
+                  const isDragging = dragId === svc.id;
+                  const isOver = !!dragId && dragId !== svc.id && overId === svc.id;
+                  return (
+                  /* Catalog-style service row (Fiverr/Shopify product-row pattern): a desktop DRAG
+                     HANDLE (order = public display order), name + brief, the PRICE as a brand-tint
+                     TAG chip (or an amber "Agregar precio" nudge when missing), and quiet
+                     edit/delete actions. `min-w-0` + `break-words` keep long names inside the row. */
+                  <div
+                    key={svc.id}
+                    draggable
+                    onDragStart={(e) => { setDragId(svc.id); e.dataTransfer.effectAllowed = "move"; }}
+                    onDragOver={(e) => { if (!dragId) return; e.preventDefault(); setOverId(svc.id); }}
+                    onDragLeave={() => setOverId((o) => (o === svc.id ? null : o))}
+                    onDrop={(e) => { e.preventDefault(); if (dragId) reorderServices(dragId, svc.id); setDragId(null); setOverId(null); }}
+                    onDragEnd={() => { setDragId(null); setOverId(null); }}
+                    className={cn(
+                      "group flex items-start gap-2.5 rounded-xl border p-3.5 transition-all",
+                      isOver ? "border-[#009FD9] ring-2 ring-[#009FD9]/30" : "border-[#e5e7eb] hover:border-[#009FD9]/50 hover:shadow-sm",
+                      isDragging && "opacity-40"
+                    )}
+                  >
+                    <GripVertical className="mt-0.5 hidden h-4 w-4 shrink-0 cursor-grab text-[#cbd5e1] transition-colors group-hover:text-[#9ca3af] active:cursor-grabbing lg:block" aria-hidden />
                     <div className="min-w-0 flex-1">
                       <p className="break-words text-sm font-semibold text-[#111827]">{svc.name}</p>
                       {svc.description && <p className="mt-0.5 break-words text-xs text-[#6b7280] line-clamp-2">{svc.description}</p>}
-                      {svc.price && (
+                      {svc.price ? (
                         <span className="mt-2 inline-flex max-w-full items-center rounded-full bg-[#EBF5FB] px-2.5 py-1 text-xs font-semibold text-[#0089bb] [overflow-wrap:anywhere]">{svc.price}</span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => openEdit(svc)}
+                          className="mt-2 inline-flex items-center gap-1 rounded-full bg-[#fef3c7] px-2.5 py-1 text-xs font-semibold text-[#92400e] hover:bg-[#fde68a] transition-colors"
+                        >
+                          <Plus className="h-3 w-3" /> {t("addPrice")}
+                        </button>
                       )}
                     </div>
                     {/* Actions: fixed, top-aligned with the name; quiet by default, brand/red on hover. */}
@@ -436,7 +488,8 @@ export function ServicesEditor({
                       </button>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
 
                 <button
                   type="button"
