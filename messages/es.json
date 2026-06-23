@@ -1343,6 +1343,8 @@
     "otherNamePlaceholder": "Ej. Vendedor de botellas",
     "otherHelp": "Escríbelo con las palabras que tus clientes buscarían. Así aparecerás en los resultados de búsqueda.",
     "servicesPublished": "{count, plural, =0 {Sin servicios publicados} one {# servicio publicado} other {# servicios publicados}}",
+    "statusActive": "Activa",
+    "statusInactive": "Inactiva",
     "newServiceShort": "Nuevo servicio",
     "inProfession": "en {profession}",
     "nameField": "Nombre del servicio",

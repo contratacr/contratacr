@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Plus, Trash2, Pencil, Search } from "lucide-react";
+import { Plus, Trash2, Pencil, Search, Home, Trees, Sparkles, Laptop, Briefcase, Stethoscope, Scissors, GraduationCap, Truck, PartyPopper, ShieldCheck, Car, Wrench, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PriceInput } from "@/components/ui/price-input";
 import { Modal } from "@/components/ui/modal";
@@ -38,6 +38,23 @@ interface ServicesEditorProps {
 function genId() {
   return `svc_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 }
+
+// One restrained GREY icon per category GROUP (the serious brand avoids colorful
+// per-category icons — so these render grey/brand-tint, not the mockup's color tints).
+const GROUP_ICON: Record<string, LucideIcon> = {
+  hogar: Home,
+  jardin: Trees,
+  limpieza: Sparkles,
+  tecnologia: Laptop,
+  profesional: Briefcase,
+  salud: Stethoscope,
+  belleza: Scissors,
+  educacion: GraduationCap,
+  transporte: Truck,
+  eventos: PartyPopper,
+  seguridad: ShieldCheck,
+  automotriz: Car,
+};
 
 // Price units offered in the service modal's <select> (the "Precio a consultar"
 // checkbox covers a_convenir separately, so it's excluded here).
@@ -269,6 +286,14 @@ export function ServicesEditor({
     return groups;
   }, [pickerList]);
 
+  // category id → its group id, so each profession card can show its group's grey icon.
+  const catGroup = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const c of getAllCategories()) m.set(c.id, c.groupId);
+    return m;
+    // customCategories in deps so newly approved customs resolve their group too.
+  }, [customCategories]);
+
   if (professions.length === 0) {
     return (
       <div className="text-center py-8 rounded-xl border-2 border-dashed border-[#e5e7eb]">
@@ -293,20 +318,32 @@ export function ServicesEditor({
         // "Desde ₡X" summary; derived from existing data, shown only when something is priced.
         const pricedAmounts = profServices.map((s) => s.priceAmount).filter((n): n is number => typeof n === "number" && n > 0);
         const fromAmount = pricedAmounts.length ? Math.min(...pricedAmounts) : null;
+        const Icon = GROUP_ICON[catGroup.get(prof) ?? ""] ?? Wrench;
+        // "Activa" = the profession has at least one published service (the clients can see
+        // something); otherwise "Inactiva". Derived, not a stored toggle.
+        const isActive = profServices.length > 0;
         return (
           <section key={prof} className={cn("overflow-hidden rounded-2xl border bg-white shadow-sm", isPrincipal ? "border-[#bfdbfe]" : "border-[#e5e7eb]")}>
             {/* Profession header — the PRINCIPAL profession gets a subtle brand tint + navy name
                 so the main area the pro offers clearly stands out; the rest stay neutral grey. */}
             <div className={cn("flex items-start justify-between gap-3 border-b px-4 sm:px-5 py-4", isPrincipal ? "border-[#dcebf6] bg-[#EBF5FB]" : "border-[#eef0f2] bg-[#f9fafb]")}>
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="text-base font-bold leading-tight text-[#162543] [overflow-wrap:anywhere]">{getCategoryLabel(prof, locale)}</h3>
-                  {isPrincipal && <span className="shrink-0 rounded-full bg-white px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#0089bb] ring-1 ring-inset ring-[#009FD9]/25">{t("principal")}</span>}
+              <div className="flex min-w-0 items-start gap-3">
+                {/* Group icon in a tidy circle (grey; brand-blue only on the principal). */}
+                <span className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white ring-1 ring-inset", isPrincipal ? "text-[#0089bb] ring-[#bfdbfe]" : "text-[#6b7280] ring-[#eef0f2]")}>
+                  <Icon className="h-5 w-5" />
+                </span>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-base font-bold leading-tight text-[#162543] [overflow-wrap:anywhere]">{getCategoryLabel(prof, locale)}</h3>
+                    {isPrincipal && <span className="shrink-0 rounded-full bg-white px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#0089bb] ring-1 ring-inset ring-[#009FD9]/25">{t("principal")}</span>}
+                  </div>
+                  <p className="mt-1 text-xs text-[#6b7280]">
+                    {t("servicesPublished", { count: profServices.length })}
+                    {fromAmount != null && <> · <span className="font-medium text-[#374151]">{t("priceFrom", { amount: fromAmount.toLocaleString("es-CR") })}</span></>}
+                    {" · "}
+                    <span className={isActive ? "font-semibold text-[#16a34a]" : "text-[#9ca3af]"}>{isActive ? t("statusActive") : t("statusInactive")}</span>
+                  </p>
                 </div>
-                <p className="mt-1 text-xs text-[#6b7280]">
-                  {t("servicesPublished", { count: profServices.length })}
-                  {fromAmount != null && <> · <span className="font-medium text-[#374151]">{t("priceFrom", { amount: fromAmount.toLocaleString("es-CR") })}</span></>}
-                </p>
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
                 {!isPrincipal && (
