@@ -166,15 +166,17 @@ function ProCard({
           {/* Profession chip + reviews sit DIRECTLY under the name (mirrors the real
               /buscar card: company → personal name → profession → reviews, all grouped
               in the column beside the avatar — Sprint 175). */}
-          <span className="mt-1.5 inline-block w-fit rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[9px] font-medium text-[#6b7280]">{profession}</span>
-          {/* Example service categories under the profession — small brand-tint chips. */}
+          {/* A card with service categories shows THEM as the chips (same grey chip
+              style) instead of a single profession chip; otherwise the profession chip. */}
           {categories && categories.length > 0 ? (
-            <div className="mt-1 flex flex-wrap gap-1">
+            <div className="mt-1.5 flex flex-wrap gap-1">
               {categories.map((c) => (
-                <span key={c} className="inline-block rounded-full bg-[#EBF5FB] px-1.5 py-0.5 text-[8px] font-medium leading-none text-[#0089bb]">{c}</span>
+                <span key={c} className="inline-block w-fit rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[9px] font-medium text-[#6b7280]">{c}</span>
               ))}
             </div>
-          ) : null}
+          ) : (
+            <span className="mt-1.5 inline-block w-fit rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[9px] font-medium text-[#6b7280]">{profession}</span>
+          )}
           <div className="mt-1 flex items-center gap-1 text-[10px]">
             <Star className="h-2.5 w-2.5 fill-[#ff9b32] text-[#ff9b32]" />
             <span className="font-bold text-[#111827]">{rating}</span>

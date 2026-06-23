@@ -1158,9 +1158,10 @@ preview of the CURRENT product, not a stylized fake. Rules:
   never a green check/text and never inline; **price = blue ₡amount + grey unit, OR a
   TEXT price (e.g. "Precio a consultar") rendered WHOLE IN GREY with no unit** (mirrors the
   real card — a non-₡ price has no "/" and isn't a blue number); grey profession chip
-  (with optional small **brand-tint service-category chips** beneath it — `bg-[#EBF5FB]
-  text-[#0089bb] text-[8px]`, on the hero card only so the fixed-height phone never clips
-  the 2nd card); orange-star (`#ff9b32`) rating + **grey `(N reseñas)` in
+  — OR, when a card lists service categories, **those categories AS the chips** (the SAME
+  grey chip style, `bg-[#f3f4f6] text-[#6b7280] text-[9px]`, wrapping) IN PLACE OF a single
+  profession chip (hero card only, so the fixed-height phone never clips the 2nd card);
+  orange-star (`#ff9b32`) rating + **grey `(N reseñas)` in
   parens** (not a blue link); a **Doctoralia-style location TAB** (brand-blue, underlined,
   on a hairline divider) + address line. Then EITHER the **3-day availability strip**
   (hero) + a SINGLE filled **"Ver horario completo"** button — the booking entry point;
@@ -1171,10 +1172,12 @@ preview of the CURRENT product, not a stylized fake. Rules:
   card changes, update the mockup to match.
 - **Example content (illustrative — sprint 454):** the mockup features a **"Tecnología"**
   professional (locale-aware "Technology" in EN; the search reads "Tecnología en San José").
-  The hero card shows **3 example service-category chips** — *Reparación de computadoras ·
-  Redes e internet · Cámaras de seguridad* — and a **"Precio a consultar"** price (grey). This
-  is DEMO content; if it's changed keep it honest + fitting the phone (don't add categories to
-  both cards — the phone height is fixed and would clip).
+  The hero (SG) card replaces its single profession chip with **3 service-category chips** —
+  *Reparación de computadoras · Redes e internet · Cámaras de seguridad* — in the SAME grey
+  chip style (no separate "Tecnología" chip on that card; the 2nd card still shows the plain
+  "Tecnología" profession chip), plus a **"Precio a consultar"** price (grey). This is DEMO
+  content; if it's changed keep it honest + fitting the phone (categories on the hero card
+  only — the phone height is fixed and would clip otherwise).
 - **Example name:** the sample SG card is **"SG Solutions"** (company/brand) with the
   personal name **"Luis Sánchez"** below it. The card's company name **wraps**
   (`break-words line-clamp-2`) — NEVER `truncate` — so it's never cut off when the price
