@@ -1182,6 +1182,12 @@
   },
   "photoGallery": {
     "intro": "Up to {max} photos total.",
+    "dropTitle": "Drag your photos here",
+    "dropOr": "or",
+    "dropBrowse": "Choose from your device",
+    "dropHint": "JPG or PNG · up to {max} photos",
+    "dropActive": "Drop to upload",
+    "addMore": "Add more",
     "noServices": "First add your <strong>professions</strong> in the <strong>Professions</strong> tab. Then you can upload success stories under each.",
     "otherWorks": "Other work",
     "addPhoto": "Add photo",

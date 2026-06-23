@@ -1182,6 +1182,12 @@
   },
   "photoGallery": {
     "intro": "Máximo {max} fotos en total.",
+    "dropTitle": "Arrastra tus fotos aquí",
+    "dropOr": "o",
+    "dropBrowse": "Selecciona desde tu dispositivo",
+    "dropHint": "JPG o PNG · hasta {max} fotos",
+    "dropActive": "Suelta para subir",
+    "addMore": "Agregar más",
     "noServices": "Primero agrega tus <strong>profesiones</strong> en la pestaña <strong>Profesiones</strong>. Luego podrás subir casos de éxito en cada una.",
     "otherWorks": "Otros trabajos",
     "addPhoto": "Agregar foto",

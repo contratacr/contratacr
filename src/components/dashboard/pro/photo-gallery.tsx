@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Upload, X, Loader2 } from "lucide-react";
+import { ImageUp, X, Loader2 } from "lucide-react";
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -40,6 +40,8 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
     : initialUrls.map((url) => ({ url, profession: undefined }));
   const [items, setItems] = useState<PortfolioItem[]>(seed);
   const [uploadingFor, setUploadingFor] = useState<string | null>(null);
+  // Drag-and-drop: which profession group is currently being dragged over (Airbnb-style dropzone).
+  const [dragGroup, setDragGroup] = useState<string | null>(null);
   // App-wide autosave feedback.
   const [saving, setSaving] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
@@ -152,6 +154,15 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
         const list = itemsFor(g.id);
         const canAdd = g.id !== "__other__" && items.length < MAX_PORTFOLIO_PHOTOS;
         const isUploadingHere = uploadingFor === g.id;
+        const isDragHere = dragGroup === g.id;
+        const openPicker = () => { pendingProfessionRef.current = g.id; inputRef.current?.click(); };
+        // Drag-and-drop handlers for THIS profession group. The `contains(relatedTarget)`
+        // check keeps the highlight steady as the cursor moves over child elements (no flicker).
+        const dnd = canAdd ? {
+          onDragOver: (e: React.DragEvent) => { if (uploadingFor) return; e.preventDefault(); setDragGroup(g.id); },
+          onDragLeave: (e: React.DragEvent) => { if (e.currentTarget.contains(e.relatedTarget as Node)) return; setDragGroup((cur) => (cur === g.id ? null : cur)); },
+          onDrop: (e: React.DragEvent) => { e.preventDefault(); setDragGroup(null); if (!uploadingFor && e.dataTransfer.files?.length) handleUpload(e.dataTransfer.files, g.id); },
+        } : {};
         return (
           <div key={g.id}>
             <div className="mb-2">
@@ -160,42 +171,77 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
                 {list.length > 0 && <span className="ml-1.5 text-[11px] font-normal text-[#9ca3af]">({list.length})</span>}
               </h4>
             </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {list.map((it) => (
-                <div key={it.url} className="relative group aspect-square rounded-2xl overflow-hidden border border-[#e5e7eb]">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={cldThumb(it.url, 400)} alt="" className="w-full h-full object-cover" />
-                  <button
-                    onClick={() => removePhoto(it.url)}
-                    className="absolute top-2 right-2 h-7 w-7 rounded-full bg-black/60 text-white flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                    aria-label={t("remove")}
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              ))}
 
-              {canAdd && (
-                <button
-                  onClick={() => { pendingProfessionRef.current = g.id; inputRef.current?.click(); }}
-                  disabled={!!uploadingFor}
-                  className={cn(
-                    "aspect-square rounded-2xl border-2 border-dashed border-[#d1d5db] flex flex-col items-center justify-center gap-2",
-                    "hover:border-[#009FD9] hover:bg-[#EBF5FB] transition-all cursor-pointer",
-                    !!uploadingFor && "opacity-50 cursor-not-allowed"
-                  )}
-                >
-                  {isUploadingHere ? (
-                    <Loader2 className="h-6 w-6 text-[#009FD9] animate-spin" />
-                  ) : (
-                    <>
-                      <Upload className="h-6 w-6 text-[#9ca3af]" />
-                      <span className="text-xs text-[#6b7280]">{t("addPhoto")}</span>
-                    </>
-                  )}
-                </button>
-              )}
-            </div>
+            {list.length === 0 && canAdd ? (
+              /* EMPTY profession → a prominent drag-and-drop zone (Airbnb/Dropbox-style):
+                 cloud-image icon, "Arrastra tus fotos aquí", a browse button + format hint.
+                 The whole zone is clickable AND a drop target; it highlights while dragging. */
+              <button
+                type="button"
+                {...dnd}
+                onClick={openPicker}
+                disabled={!!uploadingFor}
+                className={cn(
+                  "w-full rounded-2xl border-2 border-dashed px-4 py-9 flex flex-col items-center justify-center text-center gap-2.5 transition-colors",
+                  isDragHere ? "border-[#009FD9] bg-[#EBF5FB]" : "border-[#d1d5db] hover:border-[#009FD9] hover:bg-[#f9fbfe]",
+                  !!uploadingFor && "opacity-60 cursor-not-allowed"
+                )}
+              >
+                <span className="pointer-events-none flex flex-col items-center gap-2.5">
+                  <span className="grid h-12 w-12 place-items-center rounded-full bg-[#EBF5FB] text-[#009FD9]">
+                    {isUploadingHere ? <Loader2 className="h-6 w-6 animate-spin" /> : <ImageUp className="h-6 w-6" />}
+                  </span>
+                  <span className="block">
+                    <span className="block text-sm font-semibold text-[#111827]">{isDragHere ? t("dropActive") : t("dropTitle")}</span>
+                    <span className="mt-0.5 block text-xs text-[#9ca3af]">{t("dropOr")}</span>
+                  </span>
+                  <span className="inline-flex items-center rounded-full border border-[#e5e7eb] bg-white px-4 py-1.5 text-[13px] font-semibold text-[#374151]">
+                    {t("dropBrowse")}
+                  </span>
+                  <span className="block text-[11px] text-[#9ca3af]">{t("dropHint", { max: MAX_PORTFOLIO_PHOTOS })}</span>
+                </span>
+              </button>
+            ) : (
+              /* Photos present → an Instagram-style grid; the grid is itself a drop target
+                 (ring highlight while dragging) and ends with an "Agregar más" dropzone tile. */
+              <div {...dnd} className={cn("grid grid-cols-2 sm:grid-cols-3 gap-3 rounded-2xl transition-shadow", isDragHere && "ring-2 ring-[#009FD9] ring-offset-2")}>
+                {list.map((it) => (
+                  <div key={it.url} className="relative group aspect-square rounded-2xl overflow-hidden border border-[#e5e7eb]">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={cldThumb(it.url, 400)} alt="" className="w-full h-full object-cover" />
+                    <button
+                      onClick={() => removePhoto(it.url)}
+                      className="absolute top-2 right-2 h-7 w-7 rounded-full bg-black/55 text-white flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                      aria-label={t("remove")}
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
+
+                {canAdd && (
+                  <button
+                    type="button"
+                    onClick={openPicker}
+                    disabled={!!uploadingFor}
+                    className={cn(
+                      "aspect-square rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-1.5 transition-colors cursor-pointer",
+                      isDragHere ? "border-[#009FD9] bg-[#EBF5FB]" : "border-[#d1d5db] hover:border-[#009FD9] hover:bg-[#f9fbfe]",
+                      !!uploadingFor && "opacity-50 cursor-not-allowed"
+                    )}
+                  >
+                    {isUploadingHere ? (
+                      <Loader2 className="h-6 w-6 text-[#009FD9] animate-spin" />
+                    ) : (
+                      <>
+                        <ImageUp className="h-6 w-6 text-[#9ca3af]" />
+                        <span className="text-xs text-[#6b7280]">{t("addMore")}</span>
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         );
       })}
