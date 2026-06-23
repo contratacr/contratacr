@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Lock, Camera, X, Info, Briefcase } from "lucide-react";
+import { Lock, Camera, X, Info, Briefcase, ShieldCheck } from "lucide-react";
 import { Link, useRouter } from "@/i18n/navigation";
-import { detectIdType } from "@/lib/cedula";
+import { detectIdType, cleanId, isValidId, formatId } from "@/lib/cedula";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -41,6 +41,38 @@ export function BasicProfileSection({
   const [photoUploading, setPhotoUploading] = useState(false);
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
+  // Cédula verification (cliente verificado): enter cédula → padrón lookup → confirm name.
+  const [cedInput, setCedInput] = useState("");
+  const [cedBusy, setCedBusy] = useState(false);
+  const [cedError, setCedError] = useState<string | null>(null);
+  const [cedFound, setCedFound] = useState<{ id: string; name: string } | null>(null);
+
+  async function verifyCedula() {
+    const id = cleanId(cedInput);
+    if (!isValidId(id)) { setCedError(t("cedulaInvalid")); return; }
+    setCedBusy(true); setCedError(null); setCedFound(null);
+    try {
+      const res = await fetch(`/api/cedula/${id}`);
+      const data = await res.json();
+      if (data.found && data.fullName) setCedFound({ id, name: data.fullName as string });
+      else setCedError(data.error || t("cedulaNotFound"));
+    } catch {
+      setCedError(t("cedulaNotFound"));
+    } finally {
+      setCedBusy(false);
+    }
+  }
+  async function confirmCedula() {
+    if (!cedFound || !user) return;
+    setCedBusy(true);
+    const supabase = createClient();
+    await supabase.from("profiles").update({ cedula: cedFound.id, full_name: cedFound.name }).eq("id", user.id);
+    await supabase.auth.updateUser({ data: { full_name: cedFound.name } });
+    setProfileData((prev) => (prev ? { ...prev, cedula: cedFound.id, full_name: cedFound.name } : prev));
+    setProfileForm((f) => ({ ...f, full_name: cedFound.name }));
+    setCedFound(null); setCedInput(""); setCedBusy(false);
+    window.dispatchEvent(new Event("ccr:profile-updated"));
+  }
 
   function touchProfile() {
     setProfileSaved(false);
@@ -234,6 +266,49 @@ export function BasicProfileSection({
             <span>{t("phoneNotice")}</span>
           </p>
         </div>
+
+        {/* Cédula → cliente verificado. Verified = a green badge; otherwise an input +
+            padrón lookup + confirm. The same approach used elsewhere in the app. */}
+        {cedulaVerified ? (
+          <div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+            <ShieldCheck className="h-5 w-5 shrink-0 text-emerald-600" />
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-emerald-800">{t("clientVerified")}</p>
+              <p className="text-xs text-emerald-700">{t("clientVerifiedSub", { cedula: formatId(savedCedula) })}</p>
+            </div>
+          </div>
+        ) : (
+          <div>
+            <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-[#374151]">
+              {t("cedulaLabel")} <span className="font-normal text-[#9ca3af]">{t("optional")}</span>
+            </label>
+            <p className="mb-2 text-xs text-[#6b7280]">{t("cedulaHelp")}</p>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                inputMode="numeric"
+                value={cedInput}
+                onChange={(e) => { setCedInput(e.target.value); setCedError(null); }}
+                placeholder={t("cedulaPlaceholder")}
+                className={cn(inputClass, "flex-1")}
+              />
+              <Button type="button" onClick={verifyCedula} loading={cedBusy && !cedFound} disabled={!isValidId(cleanId(cedInput)) || cedBusy}>
+                {t("verify")}
+              </Button>
+            </div>
+            {cedError && <p className="mt-1.5 text-xs text-red-500">{cedError}</p>}
+            {cedFound && (
+              <div className="mt-3 rounded-xl border border-[#e5e7eb] bg-[#f9fafb] p-3">
+                <p className="text-xs text-[#6b7280]">{t("cedulaConfirmName")}</p>
+                <p className="mt-0.5 text-sm font-semibold text-[#162543]">{cedFound.name}</p>
+                <div className="mt-2.5 flex gap-2">
+                  <Button type="button" size="sm" onClick={confirmCedula} loading={cedBusy}>{t("cedulaConfirmYes")}</Button>
+                  <Button type="button" size="sm" variant="ghost" onClick={() => setCedFound(null)} disabled={cedBusy}>{t("cedulaConfirmNo")}</Button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Ofrecer mis servicios — at the END of "Mi perfil". A client-only account
