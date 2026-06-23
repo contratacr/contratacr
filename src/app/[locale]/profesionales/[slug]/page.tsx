@@ -23,6 +23,7 @@ import { languageLabel } from "@/lib/data/languages";
 import { insurerLabel } from "@/lib/data/insurers";
 import { ReviewSection } from "@/components/professionals/review-section";
 import { ProfileGallery } from "@/components/professionals/profile-gallery";
+import { CaseLikeButton } from "@/components/professionals/case-like-button";
 import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
 import { ReportProfileModal } from "@/components/professionals/report-profile-modal";
 import { createClient } from "@/lib/supabase/client";
@@ -583,12 +584,12 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                           const raw: any[] = (professional.portfolioItems && professional.portfolioItems.length > 0)
                             ? professional.portfolioItems
                             : (professional.portfolioUrls ?? []).map((url) => ({ url }));
-                          type Caso = { id: string; profession: string; title?: string; recipient?: string; date?: string; photos: string[] };
+                          type Caso = { id: string; profession: string; title?: string; recipient?: string; date?: string; photos: string[]; likes?: number; likeable?: boolean };
                           const caseList: Caso[] = [];
                           const legacyByProf = new Map<string, string[]>();
                           for (const it of raw) {
-                            if (Array.isArray(it?.photos)) {
-                              caseList.push({ id: String(it.id ?? caseList.length), profession: it.profession ?? primaryProf, title: it.title, recipient: it.recipient, date: it.date, photos: it.photos });
+                            if (Array.isArray(it?.photos) && it.id) {
+                              caseList.push({ id: String(it.id), profession: it.profession ?? primaryProf, title: it.title, recipient: it.recipient, date: it.date, photos: it.photos, likes: Number(it.likes) || 0, likeable: true });
                             } else if (it?.url) {
                               const prof = profOf(it) || primaryProf || "";
                               const arr = legacyByProf.get(prof) ?? []; arr.push(it.url); legacyByProf.set(prof, arr);
@@ -616,6 +617,11 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                                 </div>
                               )}
                               <ProfileGallery urls={c.photos} />
+                              {c.likeable && (
+                                <div className="mt-3 flex justify-end">
+                                  <CaseLikeButton professionalId={professional.id} caseId={c.id} initialLikes={c.likes ?? 0} label={t("likeLabel")} />
+                                </div>
+                              )}
                             </div>
                           );
 
