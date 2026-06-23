@@ -147,9 +147,11 @@ export function NotificationsList() {
                     <span className="mt-1.5 flex h-2 w-2 shrink-0 items-center justify-center">
                       {!n.read && <span className="h-2 w-2 rounded-full bg-[#319278]" />}
                     </span>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-[#111827]">{n.title}</p>
-                      <p className="text-xs text-[#6b7280] mt-0.5">{n.message}</p>
+                    <div className="min-w-0 flex-1">
+                      {/* overflow-wrap:anywhere breaks long unbroken strings; line-clamp keeps
+                          every row a uniform, compact height (full text on open). */}
+                      <p className="text-sm font-medium text-[#111827] [overflow-wrap:anywhere] line-clamp-2">{n.title}</p>
+                      <p className="text-xs text-[#6b7280] mt-0.5 [overflow-wrap:anywhere] line-clamp-2">{n.message}</p>
                       <p className="text-xs text-[#9ca3af] mt-1">{formatRelativeTime(n.created_at, locale)}</p>
                     </div>
                   </div>

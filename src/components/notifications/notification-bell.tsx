@@ -212,11 +212,13 @@ export function NotificationBell() {
                         {!n.read && (
                           <span className="mt-1.5 h-2 w-2 rounded-full bg-[#319278] shrink-0" />
                         )}
-                        <div className={cn("min-w-0", !n.read ? "" : "ml-4")}>
+                        <div className={cn("min-w-0 flex-1", !n.read ? "" : "ml-4")}>
                           {/* No role tag — the title/message already make the
-                              context clear; clicking still routes correctly. */}
-                          <p className="text-sm font-medium text-[#111827]">{n.title}</p>
-                          <p className="text-xs text-[#6b7280] mt-0.5">{n.message}</p>
+                              context clear; clicking still routes correctly.
+                              overflow-wrap:anywhere + line-clamp keep long/unbroken
+                              text inside the row (full text on open). */}
+                          <p className="text-sm font-medium text-[#111827] [overflow-wrap:anywhere] line-clamp-2">{n.title}</p>
+                          <p className="text-xs text-[#6b7280] mt-0.5 [overflow-wrap:anywhere] line-clamp-2">{n.message}</p>
                           <p className="text-xs text-[#9ca3af] mt-1">
                             {formatRelativeTime(n.created_at, locale)}
                           </p>
