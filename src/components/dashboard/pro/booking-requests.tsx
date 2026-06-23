@@ -294,17 +294,19 @@ export function BookingRequests() {
               );
             })()}
 
-            {/* 2 — DETAILS card: service + location, then booker contact */}
-            {(category || location || phoneFmt || cedulaFmt) && (
-              <div className="rounded-xl border border-[#eef0f2] bg-[#f9fafb] overflow-hidden">
+            {/* 2 — DETAILS card (ONE organised block, hairline-divided): the SERVICE headline +
+                location, the booker's CONTACT (phone · cédula), and a quiet "Solicitada el …"
+                footer — so the details read as one tidy card, not blocks floating apart. */}
+            {(category || location || phoneFmt || cedulaFmt || requestedDate) && (
+              <div className="rounded-xl border border-[#eef0f2] bg-[#f9fafb] overflow-hidden divide-y divide-[#eef0f2]">
                 {(category || location) && (
                   <div className="px-3.5 py-3">
-                    {category && <p className="text-sm font-semibold text-[#162543] leading-snug">{category}</p>}
-                    {location && <p className={category ? "mt-0.5 text-[12.5px] text-[#6b7280]" : "text-[12.5px] text-[#6b7280]"}>{location}</p>}
+                    {category && <p className="text-[15px] font-semibold text-[#162543] leading-snug [overflow-wrap:anywhere]">{category}</p>}
+                    {location && <p className="mt-0.5 text-[12.5px] text-[#6b7280] [overflow-wrap:anywhere]">{location}</p>}
                   </div>
                 )}
                 {(phoneFmt || cedulaFmt) && (
-                  <div className={cn("grid grid-cols-2 gap-x-4 px-3.5 py-3", (category || location) && "border-t border-[#eef0f2]")}>
+                  <div className="grid grid-cols-2 gap-x-4 px-3.5 py-3">
                     {phoneFmt && (
                       <div className="min-w-0">
                         <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("contactPhone")}</p>
@@ -319,17 +321,17 @@ export function BookingRequests() {
                     )}
                   </div>
                 )}
+                <div className="px-3.5 py-2.5">
+                  <p className="text-[11px] text-[#9ca3af]">{t("requestedOn", { date: requestedDate })}</p>
+                </div>
               </div>
             )}
 
-            {/* 3 — requested-on meta */}
-            <p className="text-[11px] text-[#9ca3af]">{t("requestedOn", { date: requestedDate })}</p>
-
-            {/* 4 — note, presented as the client's message (quote with a brand left-accent) */}
+            {/* 3 — the client's NOTE, as their message: a crisp WHITE card with a brand left-accent. */}
             {booking.service_description && (
-              <div className="rounded-r-lg border-l-[3px] border-[#009FD9]/40 bg-[#f9fafb] py-2 pl-3 pr-3">
+              <div className="rounded-lg border border-[#e5e7eb] border-l-[3px] border-l-[#009FD9]/60 bg-white px-3.5 py-2.5">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("noteEyebrow")}</p>
-                <p className="mt-0.5 text-[13px] text-[#374151] leading-snug whitespace-pre-line [overflow-wrap:anywhere]">{booking.service_description}</p>
+                <p className="mt-1 text-[13px] text-[#374151] leading-relaxed whitespace-pre-line [overflow-wrap:anywhere]">{booking.service_description}</p>
               </div>
             )}
 
