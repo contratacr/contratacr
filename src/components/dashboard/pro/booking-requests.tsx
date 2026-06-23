@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { CalendarDays, ChevronDown, CalendarClock, Phone, IdCard } from "lucide-react";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { formatId } from "@/lib/cedula";
-import { ageCategoryFromDob, computeAge, isMinorFromDob } from "@/lib/age";
+import { ageCategoryFromDob, computeAge } from "@/lib/age";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -89,11 +89,9 @@ export function BookingRequests() {
   function ageBadge(dob?: string | null, minorFallback = false) {
     const cat = dob ? ageCategoryFromDob(dob) : minorFallback ? "minor" : null;
     if (!cat) return null;
-    return (
-      <span className="inline-flex items-center rounded-full bg-[#fef3c7] px-2 py-0.5 text-[10px] font-semibold text-[#92400e]">
-        {t(cat)}
-      </span>
-    );
+    // Use the shared Badge ("warning" amber) so the clinical age flag (Menor de edad /
+    // Adulto mayor) matches every other status badge instead of a one-off smaller pill.
+    return <Badge variant="warning" className="text-[11px] font-semibold">{t(cat)}</Badge>;
   }
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
@@ -284,15 +282,12 @@ export function BookingRequests() {
             {/* 1 — "Para otra persona" callout (patient: name + AGE in years; "Menor de edad" only) */}
             {booking.for_someone_else && (() => {
               const beneAge = booking.beneficiary_dob ? computeAge(booking.beneficiary_dob)?.years ?? null : null;
-              const beneMinor = booking.beneficiary_dob ? isMinorFromDob(booking.beneficiary_dob) : !!booking.beneficiary_is_minor;
               return (
                 <div className="rounded-xl bg-[#EBF5FB] px-3.5 py-2.5">
                   <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#0089bb]">{t("apptForLabel")}</p>
                   <p className="mt-0.5 text-sm font-semibold text-[#111827] flex items-center gap-2 flex-wrap">
                     {booking.beneficiary_name || t("otherPerson")}
-                    {beneMinor && (
-                      <span className="inline-flex items-center rounded-full bg-[#fef3c7] px-2 py-0.5 text-[10px] font-semibold text-[#92400e]">{t("minor")}</span>
-                    )}
+                    {ageBadge(booking.beneficiary_dob, !!booking.beneficiary_is_minor)}
                   </p>
                   {beneAge !== null && (
                     <p className="mt-0.5 text-[12px] text-[#6b7280]"><span className="text-[#9ca3af]">{t("fieldAge")}</span> {t("yearsOld", { count: beneAge })}</p>

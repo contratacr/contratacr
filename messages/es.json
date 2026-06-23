@@ -1266,7 +1266,7 @@
     "emptyMineSub": "Explora las oportunidades disponibles y envía tu primera propuesta.",
     "noneInView": "No hay oportunidades en esta vista.",
     "status": {
-      "pending": "En espera",
+      "pending": "Esperando respuesta",
       "accepted": "Aceptada",
       "declined": "Rechazada"
     },
