@@ -377,7 +377,7 @@ Simplified for non-technical pros (Uber/Airbnb pattern: **structured field first
   full "Contáctanos por WhatsApp"/"Contáctanos por llamada" labels and the blue-filled Llamar. **NO
   "Solicitar servicio" on the profile** (the WhatsApp/Llamar buttons replace it; Sprint 181). The
   profile fetches `availability_slots` itself (`profileSlots`). Verificación (Sobre mí) + the header
-  use the canonical blue `Badge variant="verified"` pill — never green text.
+  use the canonical blue `Badge variant="verified"` pill — never green text. **The CLIENT panel's verified state mirrors the PRO's exactly (sprint 507):** the SAME green status card + white circular `ShieldCheck` badge + the **"Verificado"** `Badge variant="verified"` chip + the same wording (**"Tu identidad está verificada"** / "Tu cédula coincide con los registros oficiales.") — **NEVER "Cliente verificado"** and **NEVER the full cédula number** in that display. One consistent verification treatment across client + pro.
 - **No standalone "Disponibilidad" TAB on the public profile.** The contact card already shows the
   schedule (location tabs + 3-day strip + booking/contact), so a separate Disponibilidad section would
   only duplicate it — the profile content tabs are **Servicios · Casos de éxito? · Formación? ·

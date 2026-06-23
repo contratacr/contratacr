@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Lock, Camera, X, Info, Briefcase, ShieldCheck } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Link, useRouter } from "@/i18n/navigation";
-import { detectIdType, cleanId, isValidId, formatId } from "@/lib/cedula";
+import { detectIdType, cleanId, isValidId } from "@/lib/cedula";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -270,11 +271,19 @@ export function BasicProfileSection({
         {/* Cédula → cliente verificado. Verified = a green badge; otherwise an input +
             padrón lookup + confirm. The same approach used elsewhere in the app. */}
         {cedulaVerified ? (
-          <div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
-            <ShieldCheck className="h-5 w-5 shrink-0 text-emerald-600" />
+          // SAME "Verificado" treatment as the professional account (verification-panel.tsx):
+          // a green status card + white ShieldCheck badge + the canonical "Verificado" chip.
+          // NEVER "Cliente verificado" and NEVER the cédula number.
+          <div className="flex items-start gap-3.5 rounded-2xl border border-[#bbf7d0] bg-[#f0fdf4] p-4 sm:p-5">
+            <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white text-[#16a34a] shadow-sm ring-1 ring-inset ring-black/5">
+              <ShieldCheck className="h-5 w-5" />
+            </span>
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-emerald-800">{t("clientVerified")}</p>
-              <p className="text-xs text-emerald-700">{t("clientVerifiedSub", { cedula: formatId(savedCedula) })}</p>
+              <p className="font-bold leading-snug text-[#15803d]">{t("clientVerified")}</p>
+              <p className="mt-1 text-sm leading-relaxed text-[#166534]">{t("clientVerifiedSub")}</p>
+              <span className="mt-3 flex">
+                <Badge variant="verified" className="gap-1.5 px-3 py-1 text-[13px]"><ShieldCheck className="h-3.5 w-3.5" /> {t("verifiedChip")}</Badge>
+              </span>
             </div>
           </div>
         ) : (
