@@ -480,7 +480,11 @@ export default function DashboardPage() {
                         {activeTab === "suscripcion" && PAYMENTS_ENABLED && <SubscriptionPanel />}
                         {activeTab === "bookings" && <BookingRequests />}
                         {activeTab === "proposals" && pro && (
-                          <ProposalsTab categoryId={pro.category_id} services={pro.services ?? []} />
+                          <ProposalsTab
+                            categoryId={pro.category_id}
+                            professions={(pro.professions && pro.professions.length > 0) ? pro.professions : (pro.category_id ? [pro.category_id] : [])}
+                            services={pro.services ?? []}
+                          />
                         )}
                         {activeTab === "verificacion" && pro && (
                           <VerificationPanel

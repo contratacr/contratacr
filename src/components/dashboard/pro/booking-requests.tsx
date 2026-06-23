@@ -242,7 +242,7 @@ export function BookingRequests() {
           type="button"
           onClick={() => setExpandedId(expanded ? null : booking.id)}
           aria-expanded={expanded}
-          className={cn("w-full text-left px-4 py-3 flex items-center gap-2.5 hover:bg-[#fafafa] transition-colors", expanded ? "rounded-t-2xl" : "rounded-2xl")}
+          className={cn("w-full text-left p-4 flex items-start gap-2.5 hover:bg-[#fafafa] transition-colors", expanded ? "rounded-t-2xl" : "rounded-2xl")}
         >
           <Avatar className="h-10 w-10 shrink-0">
             <AvatarImage src={booking.profiles?.avatar_url} className="object-cover" />
@@ -253,7 +253,7 @@ export function BookingRequests() {
               itself), and a muted "servicio · nota" snippet on line 3 for instant context. */}
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
-              <span className="text-[15px] font-semibold text-[#111827] min-w-0 flex items-center gap-2 flex-wrap">
+              <span className="text-[15px] font-semibold text-[#162543] min-w-0 flex items-center gap-2 flex-wrap">
                 {booking.client_name || t("thePerson")}
                 {!booking.for_someone_else && ageBadge(booking.client_dob)}
                 {unverifiedPill}
@@ -264,11 +264,11 @@ export function BookingRequests() {
               )}
             </div>
             <p className="mt-0.5 text-[13px] truncate">
-              <span className={dateStr ? "font-medium text-[#374151]" : "text-[#6b7280]"}>{dateStr || t("noScheduledDate")}</span>
+              <span className={dateStr ? "font-semibold text-[#162543]" : "text-[#6b7280]"}>{dateStr || t("noScheduledDate")}</span>
             </p>
             {snippet && <p className="mt-0.5 text-[12px] text-[#6b7280] truncate">{snippet}</p>}
           </div>
-          <ChevronDown className={cn("h-5 w-5 text-[#9ca3af] shrink-0 transition-transform duration-200", expanded && "rotate-180")} />
+          <ChevronDown className={cn("h-5 w-5 text-[#9ca3af] shrink-0 mt-0.5 transition-transform duration-200", expanded && "rotate-180")} />
         </button>
 
         {expanded && (

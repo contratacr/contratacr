@@ -356,7 +356,7 @@ export function ServicesEditor({
                     <div key={svc.id} className="group flex items-center gap-3 rounded-xl border border-[#e5e7eb] px-3.5 py-3 transition-colors hover:bg-[#fafafa]">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-baseline gap-3">
-                          <p className="min-w-0 flex-1 truncate text-sm font-semibold text-[#111827]">{svc.name}</p>
+                          <p className="min-w-0 flex-1 truncate text-sm font-semibold text-[#162543]">{svc.name}</p>
                           {svc.price ? (
                             <span className="shrink-0 text-sm font-semibold text-[#0089bb]">{svc.price}</span>
                           ) : (
