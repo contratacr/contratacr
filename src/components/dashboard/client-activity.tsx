@@ -390,14 +390,14 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                             {/* Appointment date with a grey calendar icon (no "Fecha:" label). */}
                             {formatBookingDate(b, dateLocale) && (
                               <p className="mt-0.5 flex items-center gap-1.5 text-[13px] min-w-0">
-                                <CalendarClock className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                                <CalendarClock className="h-3.5 w-3.5 shrink-0 text-[#374151]" />
                                 <span className="truncate font-medium text-[#374151]">{formatBookingDate(b, dateLocale)}</span>
                               </p>
                             )}
                             {/* The profession the request was for (grey wrench). */}
                             {b.professionals?.categories?.name && (
                               <p className="mt-0.5 flex items-center gap-1.5 text-[12px] text-[#6b7280] min-w-0">
-                                <Wrench className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                                <Wrench className="h-3.5 w-3.5 shrink-0 text-[#374151]" />
                                 <span className="truncate">{b.professionals.categories.name}</span>
                               </p>
                             )}
@@ -549,8 +549,8 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                         </div>
                         {/* Propuestas count + publish date — each with a quiet grey icon, well-spaced. */}
                         <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[#6b7280]">
-                          <span className="inline-flex items-center gap-1.5"><MessageSquare className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" /> {t("proposalsCount", { count: proposalCount })}</span>
-                          <span className="inline-flex items-center gap-1.5"><CalendarDays className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" /> {t("publishedOn", { date: new Date(project.created_at).toLocaleDateString(dateLocale, { day: "numeric", month: "short", year: "numeric" }).replace(".", "") })}</span>
+                          <span className="inline-flex items-center gap-1.5"><MessageSquare className="h-3.5 w-3.5 shrink-0 text-[#374151]" /> {t("proposalsCount", { count: proposalCount })}</span>
+                          <span className="inline-flex items-center gap-1.5"><CalendarDays className="h-3.5 w-3.5 shrink-0 text-[#374151]" /> {t("publishedOn", { date: new Date(project.created_at).toLocaleDateString(dateLocale, { day: "numeric", month: "short", year: "numeric" }).replace(".", "") })}</span>
                         </p>
                         {/* Description preview (collapsed only) — clamped to 2 lines so every
                             list card stays a uniform, compact height; the full text shows when
@@ -569,7 +569,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                           <p className="text-sm text-[#6b7280] whitespace-pre-line [overflow-wrap:anywhere]">{project.description}</p>
                         )}
                         {(project.provincias?.name || project.cantones?.name) && (
-                          <p className="flex items-center gap-1.5 text-xs text-[#6b7280]"><MapPin className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" /> {[project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ")}</p>
+                          <p className="flex items-center gap-1.5 text-xs text-[#6b7280]"><MapPin className="h-3.5 w-3.5 shrink-0 text-[#374151]" /> {[project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ")}</p>
                         )}
 
                       {/* ACTIONS (sprint 441) — PRIMARY visible + "···" overflow menu. The propuestas

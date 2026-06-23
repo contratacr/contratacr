@@ -32,10 +32,10 @@ function SavedProCard({ pro, onUnsave }: { pro: SavedPro; onUnsave: (id: string)
         </div>
         <div className="flex items-center gap-3 mt-0.5 flex-wrap">
           <span className="flex items-center gap-1 text-xs text-[#6b7280]">
-            <Wrench className="h-3 w-3 shrink-0 text-[#9ca3af]" /> {tCat(pro.categoryId)}
+            <Wrench className="h-3 w-3 shrink-0 text-[#374151]" /> {tCat(pro.categoryId)}
           </span>
           <span className="flex items-center gap-1 text-xs text-[#6b7280]">
-            <MapPin className="h-3 w-3 shrink-0 text-[#9ca3af]" />
+            <MapPin className="h-3 w-3 shrink-0 text-[#374151]" />
             {pro.cantonName}, {pro.provinceName}
           </span>
         </div>

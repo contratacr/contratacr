@@ -265,7 +265,7 @@ export function BookingRequests() {
             </div>
             {/* Appointment date with a quiet grey calendar icon. */}
             <p className="mt-0.5 flex items-center gap-1.5 text-[13px] min-w-0">
-              <CalendarClock className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+              <CalendarClock className="h-3.5 w-3.5 shrink-0 text-[#374151]" />
               <span className={cn("truncate", dateStr ? "font-medium text-[#374151]" : "text-[#6b7280]")}>{dateStr || t("noScheduledDate")}</span>
             </p>
             {snippet && <p className="mt-0.5 text-[12px] text-[#6b7280] truncate">{snippet}</p>}
@@ -316,7 +316,7 @@ export function BookingRequests() {
                   <div className="grid grid-cols-2 gap-x-4 px-3.5 py-3">
                     {phoneFmt && (
                       <div className="flex min-w-0 items-center gap-2">
-                        <Phone className="h-4 w-4 shrink-0 text-[#9ca3af]" />
+                        <Phone className="h-4 w-4 shrink-0 text-[#374151]" />
                         <div className="min-w-0">
                           <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("contactPhone")}</p>
                           <p className="mt-0.5 text-[13px] font-medium text-[#374151] truncate">{phoneFmt}</p>
@@ -325,7 +325,7 @@ export function BookingRequests() {
                     )}
                     {cedulaFmt && (
                       <div className="flex min-w-0 items-center gap-2">
-                        <IdCard className="h-4 w-4 shrink-0 text-[#9ca3af]" />
+                        <IdCard className="h-4 w-4 shrink-0 text-[#374151]" />
                         <div className="min-w-0">
                           <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("contactCedula")}</p>
                           <p className="mt-0.5 text-[13px] font-medium text-[#374151] truncate">{cedulaFmt}</p>

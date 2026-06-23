@@ -205,13 +205,13 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
                 {c.title && <p className="mt-0.5 line-clamp-1 text-[15px] font-bold text-[#162543] [overflow-wrap:anywhere]">{c.title}</p>}
                 {c.recipient && (
                   <p className="mt-0.5 line-clamp-2 inline-flex items-start gap-1 text-xs text-[#6b7280] [overflow-wrap:anywhere]">
-                    <User2 className="mt-0.5 h-3 w-3 shrink-0 text-[#9ca3af]" /> {c.recipient}
+                    <User2 className="mt-0.5 h-3 w-3 shrink-0 text-[#374151]" /> {c.recipient}
                   </p>
                 )}
                 <div className="mt-3 flex items-center justify-between gap-2 border-t border-[#f3f4f6] pt-2.5">
                   <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-[#9ca3af]">
-                    {c.date && <span className="inline-flex items-center gap-1"><CalendarDays className="h-3 w-3" /> {c.date}</span>}
-                    {typeof c.likes === "number" && c.likes > 0 && <span className="inline-flex items-center gap-1"><Heart className="h-3 w-3" /> {c.likes}</span>}
+                    {c.date && <span className="inline-flex items-center gap-1"><CalendarDays className="h-3 w-3 text-[#374151]" /> {c.date}</span>}
+                    {typeof c.likes === "number" && c.likes > 0 && <span className="inline-flex items-center gap-1"><Heart className="h-3 w-3 text-[#374151]" /> {c.likes}</span>}
                   </div>
                   <div className="flex shrink-0 items-center gap-0.5">
                     <button onClick={() => openEdit(c)} className="flex h-7 w-7 items-center justify-center rounded-lg text-[#6b7280] hover:bg-[#EBF5FB] hover:text-[#009FD9] transition-colors" title={t("edit")} aria-label={t("edit")}><Pencil className="h-3.5 w-3.5" /></button>

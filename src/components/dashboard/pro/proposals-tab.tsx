@@ -304,9 +304,9 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
             </div>
             <h3 className="mt-1.5 text-[18px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere]">{project.title}</h3>
             <p className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[12.5px] text-[#6b7280]">
-              {zona && <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5 text-[#9ca3af]" />{zona}</span>}
+              {zona && <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5 text-[#374151]" />{zona}</span>}
               {zona && <span aria-hidden>·</span>}
-              <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5 text-[#9ca3af]" />{t("postedAgo", { time: relativeTime(project.created_at) })}</span>
+              <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5 text-[#374151]" />{t("postedAgo", { time: relativeTime(project.created_at) })}</span>
             </p>
           </div>
 
@@ -319,7 +319,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
 
           <div className="grid grid-cols-1 divide-y divide-[#eef0f2] overflow-hidden rounded-xl border border-[#eef0f2] bg-[#f9fafb] sm:grid-cols-2 sm:divide-x sm:divide-y-0">
             <div className="flex items-center gap-2.5 px-3.5 py-3">
-              <Wallet className="h-4 w-4 shrink-0 text-[#9ca3af]" />
+              <Wallet className="h-4 w-4 shrink-0 text-[#374151]" />
               <div className="min-w-0">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("budgetLabel")}</p>
                 <p className="text-[13px] font-semibold text-[#0089bb] [overflow-wrap:anywhere]">{budgetTextFor(project)}</p>
@@ -327,7 +327,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
             </div>
             {project.timeline && (
               <div className="flex items-center gap-2.5 px-3.5 py-3">
-                <CalendarClock className="h-4 w-4 shrink-0 text-[#9ca3af]" />
+                <CalendarClock className="h-4 w-4 shrink-0 text-[#374151]" />
                 <div className="min-w-0">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("timelineLabel")}</p>
                   <p className="text-[13px] font-medium text-[#374151] [overflow-wrap:anywhere]">{project.timeline}</p>
@@ -539,7 +539,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                             )}
                           </div>
                           <p className="mt-0.5 flex items-center gap-1.5 text-[13px] min-w-0">
-                            <Wallet className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                            <Wallet className="h-3.5 w-3.5 shrink-0 text-[#374151]" />
                             <span className="min-w-0 truncate">
                               <span className="text-[#6b7280]">{t("yourPriceLabel")}</span>{" "}
                               {p.price
@@ -558,7 +558,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                         <div className="px-4 pb-4 pt-3 border-t border-[#f3f4f6] flex flex-col gap-2.5">
                           {clientName && <p className="text-[12.5px] text-[#6b7280] truncate">{clientName}</p>}
                           {p.message && <p className="text-[13px] text-[#374151] whitespace-pre-line [overflow-wrap:anywhere]">{p.message}</p>}
-                          <p className="flex items-center gap-1.5 text-[11px] text-[#9ca3af]"><CalendarDays className="h-3.5 w-3.5 shrink-0" /> {t("sentOn", { date: sentDate })}</p>
+                          <p className="flex items-center gap-1.5 text-[11px] text-[#9ca3af]"><CalendarDays className="h-3.5 w-3.5 shrink-0 text-[#374151]" /> {t("sentOn", { date: sentDate })}</p>
                           {/* Client contact — revealed once the proposal is accepted (still active). */}
                           {p.status === "accepted" && ps !== "cancelled" && phone && (
                             <p className="text-xs text-[#374151]"><span className="text-[#6b7280]">{t("fieldPhone")}</span> {phone}</p>
