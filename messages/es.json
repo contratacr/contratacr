@@ -1426,6 +1426,7 @@
     "alwaysSubAll": "Se repite automáticamente cada semana.",
     "presetTypical": "Aplicar Lunes a viernes, 8:00AM – 5:00PM",
     "applySchedule": "Aplicar horario",
+    "applyScheduleHelp": "Aplica el mismo horario a toda la semana (toma el primer día configurado, o de 8 AM a 5 PM si está vacío).",
     "blockLocationAria": "Ubicación de este horario",
     "excLocationAria": "Ubicación de las excepciones",
     "apptDuration": "Cada cita dura",

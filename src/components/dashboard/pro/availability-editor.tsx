@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import { Plus, X, Lock, Loader2, MapPin, ChevronDown, ChevronLeft, ChevronRight, Calendar, CalendarClock, Pencil, Trash2, Copy } from "lucide-react";
+import { Plus, X, Lock, Loader2, MapPin, ChevronDown, ChevronLeft, ChevronRight, Calendar, CalendarClock, Pencil, Trash2 } from "lucide-react";
 import { type ContactPreference } from "@/lib/constants";
 import { crTodayISO, isTooSoonCR } from "@/lib/time-cr";
 import { TimeSelect, to12h } from "@/components/ui/time-select";
@@ -478,17 +478,23 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
     persistDay(weekday, blocksFor(weekday).filter((b) => b.id !== id));
   }
 
-  // "Igual a todos los días": make EVERY weekday a copy of this one (all its blocks +
-  // their locations). Blocked if the source day itself puts the pro in two places.
-  async function copyToAll(weekday: number) {
-    const src = blocksFor(weekday).filter(isCompleteFranja).map((b) => ({ locationId: b.locationId, start: b.start, end: b.end }));
-    if (src.length === 0) return;
+  // ONE way to apply a schedule to the WHOLE week (replaces the per-day "Igual a todos los
+  // días" — sprint 488). Uses the FIRST configured day as the template; from scratch it
+  // falls back to the typical Mon–Fri 8AM–5PM. Blocked if it would put the pro in two
+  // places at once. (Each day's hours still expand into 1-hour bookable slots downstream.)
+  async function applySchedule() {
+    let template: { locationId: string; start: string; end: string }[] | null = null;
     for (const wd of WEEKDAY_ORDER) {
-      const c = validateDayBlocks(wd, src.map((s) => ({ id: genId(), ...s })));
+      const b = blocksFor(wd).filter(isCompleteFranja);
+      if (b.length > 0) { template = b.map((x) => ({ locationId: x.locationId, start: x.start, end: x.end })); break; }
+    }
+    if (!template) { await presetWeekdays8to5(); return; }
+    for (const wd of WEEKDAY_ORDER) {
+      const c = validateDayBlocks(wd, template.map((s) => ({ id: genId(), ...s })));
       if (c) { setConflict(c); return; }
     }
     const next: WeeklyRow[] = [];
-    for (const wd of WEEKDAY_ORDER) for (const s of src) next.push({ location_id: s.locationId, category_id: null, weekday: wd, start: s.start, end: s.end, slot_minutes: durationPref });
+    for (const wd of WEEKDAY_ORDER) for (const s of template) next.push({ location_id: s.locationId, category_id: null, weekday: wd, start: s.start, end: s.end, slot_minutes: durationPref });
     setWeekly(next);
     const supabase = createClient();
     await supabase.from("availability_weekly").delete().eq("professional_id", professionalId);
@@ -679,17 +685,20 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
               </div>
             </div>
 
-            {/* Quick win: one-tap typical workweek (Mon–Fri 8 AM–5 PM). Styled as a clear
-                on-brand shortcut pill — leading icon + action verb so it reads as a
-                one-click preset, not a static label. */}
-            <button
-              type="button"
-              onClick={presetWeekdays8to5}
-              className="mb-3.5 inline-flex items-center gap-2 rounded-lg border border-[#bfdbfe] bg-white px-3.5 py-2 text-sm font-semibold text-[#008ce0] transition-colors hover:border-[#008ce0] hover:bg-[#EBF5FB]"
-            >
-              <CalendarClock className="h-4 w-4" />
-              {t("applySchedule")}
-            </button>
+            {/* ONE control to apply a schedule to the whole week (the merged "configure once →
+                apply to all days"): a clear blue button + a one-line hint. Replaces the per-day
+                "Igual a todos los días" duplication. */}
+            <div className="mb-3.5">
+              <button
+                type="button"
+                onClick={applySchedule}
+                className="inline-flex items-center gap-2 rounded-lg border border-[#bfdbfe] bg-white px-3.5 py-2 text-sm font-semibold text-[#008ce0] transition-colors hover:border-[#008ce0] hover:bg-[#EBF5FB]"
+              >
+                <CalendarClock className="h-4 w-4" />
+                {t("applySchedule")}
+              </button>
+              <p className="mt-1.5 text-xs text-[#6b7280]">{t("applyScheduleHelp")}</p>
+            </div>
 
             <div className="flex flex-col divide-y divide-[#f3f4f6]">
               {WEEKDAY_ORDER.map((wd) => {
@@ -756,14 +765,12 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                         </div>
                       )}
                     </div>
-                    {/* Per-day actions, to the RIGHT of the time row (stack below on mobile). */}
+                    {/* Per-day action — only "+ Agregar franja", to the RIGHT of the time row
+                        (stack below on mobile). The "apply to all days" lives ONCE above now. */}
                     {on && (
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 sm:shrink-0 sm:justify-end sm:pt-1.5">
                         <button type="button" onClick={() => addBlock(wd)} className="inline-flex items-center gap-1 text-xs font-medium text-[#009FD9] hover:underline cursor-pointer">
                           <Plus className="h-3.5 w-3.5" /> {t("addFranja")}
-                        </button>
-                        <button type="button" onClick={() => copyToAll(wd)} className="inline-flex items-center gap-1 text-xs font-medium text-[#6b7280] hover:text-[#111827] cursor-pointer">
-                          <Copy className="h-3.5 w-3.5" /> {t("sameAllDays")}
                         </button>
                       </div>
                     )}

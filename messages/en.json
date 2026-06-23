@@ -1426,6 +1426,7 @@
     "alwaysSubAll": "Repeats automatically every week.",
     "presetTypical": "Apply Monday to Friday, 8:00AM – 5:00PM",
     "applySchedule": "Apply schedule",
+    "applyScheduleHelp": "Applies the same hours to the whole week (uses your first configured day, or 8 AM–5 PM if empty).",
     "blockLocationAria": "Location for this time block",
     "excLocationAria": "Location for exceptions",
     "apptDuration": "Each appointment lasts",
