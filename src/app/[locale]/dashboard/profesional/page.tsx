@@ -453,6 +453,7 @@ export default function DashboardPage() {
                             primaryCategory={pro.category_id}
                             initialProfessions={pro.professions ?? []}
                             initialServices={pro.services ?? []}
+                            initialItems={pro.portfolio_items ?? []}
                             onSaved={handleSaved}
                           />
                         )}
