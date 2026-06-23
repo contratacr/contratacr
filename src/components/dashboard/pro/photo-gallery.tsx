@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { ImageUp, X, Loader2, Plus, Pencil, Trash2, Images, CalendarDays, User2, Heart } from "lucide-react";
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
@@ -81,7 +81,8 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
   const primary = professions[0];
 
   const [cases, setCases] = useState<SuccessCase[]>(() => seedCases(initialItems, initialUrls, services, primary));
-  const [activeProf, setActiveProf] = useState<string>("all");
+  // Filter is always a real profession (no "Todas") — defaults to the first.
+  const [activeProf, setActiveProf] = useState<string>(professions[0] ?? "");
   const [saving, setSaving] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
   useReportSaveStatus(saving, justSaved);
@@ -90,6 +91,12 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
   const [draft, setDraft] = useState<SuccessCase | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // Keep the active filter valid if the pro's professions change (e.g. after editing
+  // services) — fall back to the first so cases never silently disappear.
+  useEffect(() => {
+    if (professions.length > 0 && !professions.includes(activeProf)) setActiveProf(professions[0]);
+  }, [professions, activeProf]);
 
   const label = (id: string) => getCategoryLabel(id, locale);
   const countFor = (prof: string) => cases.filter((c) => c.profession === prof).length;
@@ -112,7 +119,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
   }
 
   function openAdd() {
-    const prof = activeProf !== "all" && professions.includes(activeProf) ? activeProf : primary ?? "";
+    const prof = professions.includes(activeProf) ? activeProf : primary ?? "";
     setDraft({ id: genId(), profession: prof, photos: [] });
   }
   function openEdit(c: SuccessCase) { setDraft({ ...c, photos: [...c.photos] }); }
@@ -144,8 +151,8 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
   }
   async function deleteCase(id: string) { await persist(cases.filter((c) => c.id !== id)); }
 
-  const shownCases = activeProf === "all" ? cases : cases.filter((c) => c.profession === activeProf);
-  const addProf = activeProf !== "all" && professions.includes(activeProf) ? activeProf : primary ?? "";
+  const shownCases = cases.filter((c) => c.profession === activeProf);
+  const addProf = professions.includes(activeProf) ? activeProf : primary ?? "";
   const addFull = !!addProf && countFor(addProf) >= MAX_CASES_PER_PROFESSION;
   const draftIsEdit = !!draft && cases.some((c) => c.id === draft.id);
 
@@ -160,7 +167,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
       {/* Filter by profession (with counts) — only when the pro has 2+ professions. */}
       {professions.length > 1 && (
         <div className="flex flex-wrap gap-2">
-          {[{ id: "all", n: cases.length }, ...professions.map((p) => ({ id: p, n: countFor(p) }))].map((tab) => {
+          {professions.map((p) => ({ id: p, n: countFor(p) })).map((tab) => {
             const active = activeProf === tab.id;
             return (
               <button
@@ -169,7 +176,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
                 onClick={() => setActiveProf(tab.id)}
                 className={cn("inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 py-1.5 text-[13px] font-semibold transition-colors", active ? "border-[#009FD9] bg-[#009FD9] text-white" : "border-[#e5e7eb] bg-white text-[#374151] hover:bg-[#f9fafb]")}
               >
-                {tab.id === "all" ? t("filterAll") : label(tab.id)}
+                {label(tab.id)}
                 <span className={cn("text-[11px] font-bold tabular-nums", active ? "text-white/90" : "text-[#9ca3af]")}>({tab.n})</span>
               </button>
             );
