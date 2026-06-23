@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarDays, ChevronDown, CalendarClock } from "lucide-react";
+import { CalendarDays, ChevronDown, CalendarClock, Phone, IdCard } from "lucide-react";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { formatId } from "@/lib/cedula";
 import { ageCategoryFromDob, computeAge, isMinorFromDob } from "@/lib/age";
@@ -315,15 +315,21 @@ export function BookingRequests() {
                 {(phoneFmt || cedulaFmt) && (
                   <div className="grid grid-cols-2 gap-x-4 px-3.5 py-3">
                     {phoneFmt && (
-                      <div className="min-w-0">
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("contactPhone")}</p>
-                        <p className="mt-0.5 text-[13px] font-medium text-[#374151] truncate">{phoneFmt}</p>
+                      <div className="flex min-w-0 items-center gap-2">
+                        <Phone className="h-4 w-4 shrink-0 text-[#9ca3af]" />
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("contactPhone")}</p>
+                          <p className="mt-0.5 text-[13px] font-medium text-[#374151] truncate">{phoneFmt}</p>
+                        </div>
                       </div>
                     )}
                     {cedulaFmt && (
-                      <div className="min-w-0">
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("contactCedula")}</p>
-                        <p className="mt-0.5 text-[13px] font-medium text-[#374151] truncate">{cedulaFmt}</p>
+                      <div className="flex min-w-0 items-center gap-2">
+                        <IdCard className="h-4 w-4 shrink-0 text-[#9ca3af]" />
+                        <div className="min-w-0">
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("contactCedula")}</p>
+                          <p className="mt-0.5 text-[13px] font-medium text-[#374151] truncate">{cedulaFmt}</p>
+                        </div>
                       </div>
                     )}
                   </div>
