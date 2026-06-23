@@ -248,7 +248,12 @@ export async function DELETE(req: NextRequest) {
   if (!prop || prop.professional_id !== pro.id) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   if (prop.status !== "pending") return NextResponse.json({ error: "Solo puedes cancelar una propuesta pendiente." }, { status: 409 });
 
-  const { error } = await supabase.from("proposals").delete().eq("id", id);
+  // Delete via the service-role client: an RLS-bound delete silently affects 0 rows when
+  // no DELETE policy covers the professional, so "Retirar propuesta" appeared to work but
+  // never persisted (same class of bug as the PATCH edit above). Ownership + pending are
+  // already verified above, so this is safe.
+  const admin = createAdminClient();
+  const { error } = await admin.from("proposals").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ success: true });
 }

@@ -12,7 +12,6 @@ import { PriceInput } from "@/components/ui/price-input";
 import { cn, getWhatsAppLink, getInitials } from "@/lib/utils";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { StatusFilterTabs, PROYECTO_TABS, proposalMatches, proposalBucket, proposalStatusRedundant, bucketCounts } from "@/components/dashboard/status-filter-tabs";
-import { CardActionsMenu, type CardAction } from "@/components/dashboard/card-actions-menu";
 
 type ProposalStatus = "pending" | "accepted" | "declined";
 
@@ -219,7 +218,13 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
     if (!withdrawTarget) return;
     setWithdrawing(true);
     const res = await fetch(`/api/proposals?id=${withdrawTarget.id}`, { method: "DELETE" });
-    if (res.ok) setMyProposals((prev) => prev.filter((p) => p.id !== withdrawTarget.id));
+    if (res.ok) {
+      setMyProposals((prev) => prev.filter((p) => p.id !== withdrawTarget.id));
+      // Retiring frees the opportunity: drop it from the "already-proposed" set so it
+      // reappears in Oportunidades (the browse list hides only still-proposed projects,
+      // and refetches mine=true on every switch back, so the project is available again).
+      setSubmitted((prev) => { const next = new Set(prev); next.delete(withdrawTarget.project_id); return next; });
+    }
     setWithdrawing(false);
     setWithdrawTarget(null);
   }
@@ -570,38 +575,28 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                             </div>
                           )}
 
-                          {/* ACTIONS — PRIMARY visible + "···" overflow menu (consistent with the
-                              other sections). pending → Editar propuesta (primary) + Retirar (menu,
-                              destructive); accepted+active → Contactar cliente (WhatsApp primary) +
-                              Marcar completado (menu, while in progress); finalizada / rechazada /
+                          {/* ACTIONS — surfaced as DIRECT buttons (no "···" overflow menu): a lone
+                              action shouldn't hide behind a menu. pending → Editar propuesta + Retirar
+                              propuesta (red, destructive); accepted+active → Contactar cliente (WhatsApp)
+                              + Marcar completado (while in progress); finalizada / rechazada /
                               cliente-canceló → no actions. */}
                           {(() => {
-                            const menu: CardAction[] = [];
-                            let primary: ReactNode = null;
+                            const actions: ReactNode[] = [];
                             if (p.status === "pending") {
-                              primary = <Button size="sm" variant="outline" className="flex-1 sm:flex-none rounded-lg px-4" onClick={() => startEdit(p)}>{t("editProposal")}</Button>;
-                              menu.push({ label: t("withdraw"), onClick: () => setWithdrawTarget(p), destructive: true });
+                              actions.push(<Button key="edit" size="sm" variant="outline" className="flex-1 sm:flex-none rounded-lg px-4" onClick={() => startEdit(p)}>{t("editProposal")}</Button>);
+                              actions.push(<Button key="withdraw" size="sm" variant="outline" className="flex-1 sm:flex-none rounded-lg px-4 border-[#fecaca] text-[#dc2626] hover:bg-[#fef2f2] hover:text-[#b91c1c] hover:border-[#fca5a5]" onClick={() => setWithdrawTarget(p)}>{t("withdraw")}</Button>);
                             } else if (p.status === "accepted") {
                               if (wa) {
-                                primary = (
-                                  <Button variant="whatsapp" size="sm" asChild className="flex-1 sm:flex-none rounded-lg px-4">
+                                actions.push(
+                                  <Button key="wa" variant="whatsapp" size="sm" asChild className="flex-1 sm:flex-none rounded-lg px-4">
                                     <a href={wa} target="_blank" rel="noopener noreferrer"><WhatsAppIcon className="h-4 w-4" /> {t("contactClient")}</a>
                                   </Button>
                                 );
                               }
-                              if (ps === "in_progress") menu.push({ label: t("markCompleted"), onClick: () => markWorkDone(p.project_id) });
+                              if (ps === "in_progress") actions.push(<Button key="done" size="sm" variant="outline" className="flex-1 sm:flex-none rounded-lg px-4" onClick={() => markWorkDone(p.project_id)}>{t("markCompleted")}</Button>);
                             }
-                            if (!primary && menu.length === 0) return null;
-                            return (
-                              <div className="flex items-center gap-2">
-                                {primary}
-                                {menu.length > 0 && (
-                                  <div className={primary ? "" : "ml-auto"}>
-                                    <CardActionsMenu actions={menu} label={t("actions")} />
-                                  </div>
-                                )}
-                              </div>
-                            );
+                            if (actions.length === 0) return null;
+                            return <div className="flex flex-wrap items-center gap-2">{actions}</div>;
                           })()}
 
                           {/* Inline edit form (pending only) */}
