@@ -21,6 +21,7 @@ export type SuccessCase = {
   id: string;
   profession: string;   // category id
   title?: string;       // the service done
+  description?: string; // a short pitch shown to clients on the public case card
   recipient?: string;   // for whom (name / short description)
   date?: string;        // when (free text, e.g. "Mayo 2024")
   photos: string[];     // up to MAX_PHOTOS_PER_CASE
@@ -203,6 +204,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
               <div className="flex flex-1 flex-col p-3.5">
                 <p className="text-[11px] font-semibold text-[#0089bb]">{label(c.profession)}</p>
                 {c.title && <p className="mt-0.5 line-clamp-1 text-[15px] font-bold text-[#162543] [overflow-wrap:anywhere]">{c.title}</p>}
+                {c.description && <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-[#6b7280] [overflow-wrap:anywhere]">{c.description}</p>}
                 {c.recipient && (
                   <p className="mt-0.5 line-clamp-2 inline-flex items-start gap-1 text-xs text-[#6b7280] [overflow-wrap:anywhere]">
                     <User2 className="mt-0.5 h-3 w-3 shrink-0 text-[#374151]" /> {c.recipient}
@@ -282,6 +284,10 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
             <div>
               <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("caseTitle")}</label>
               <input value={draft.title ?? ""} onChange={(e) => setDraft((d) => (d ? { ...d, title: e.target.value } : d))} placeholder={t("caseTitlePlaceholder")} maxLength={80} className={inputClass} />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("caseDescription")}</label>
+              <textarea value={draft.description ?? ""} onChange={(e) => setDraft((d) => (d ? { ...d, description: e.target.value } : d))} placeholder={t("caseDescriptionPlaceholder")} maxLength={200} rows={3} className="w-full rounded-xl border border-[#e5e7eb] bg-white px-3.5 py-2.5 text-sm text-[#111827] placeholder:text-[#9ca3af] resize-none focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all" />
             </div>
             <div>
               <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("caseRecipient")}</label>

@@ -526,6 +526,8 @@
     "otherWorks": "Other work",
     "noCasos": "No past work added yet.",
     "likeLabel": "Like",
+    "casosAll": "All",
+    "casosPhotos": "{count, plural, one {# photo} other {# photos}}",
     "certsSubtitle": "Courses, degrees and certificates listed on the profile.",
     "subRating": {
       "price": "Price",
@@ -1207,6 +1209,8 @@
     "casePhotos": "Photos (up to {max})",
     "caseTitle": "Service done",
     "caseTitlePlaceholder": "Example: Corporate website",
+    "caseDescription": "Description",
+    "caseDescriptionPlaceholder": "Tell clients what you did in this project.",
     "caseRecipient": "For whom",
     "caseRecipientPlaceholder": "Example: XYZ Company",
     "caseDate": "Date",

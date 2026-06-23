@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import {
   MapPin, Shield, ArrowLeft, Star, Briefcase, Camera,
-  Share2, Flag, ChevronDown, Lock, Phone, Building2, Award, Mail, SearchX, User2, CalendarDays,
+  Share2, Flag, ChevronDown, Lock, Phone, Building2, Award, Mail, SearchX,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { InstagramIcon, FacebookIcon, TikTokIcon } from "@/components/icons/social-icons";
@@ -22,8 +22,7 @@ import { formatPricingTier, primaryPricingLabel } from "@/lib/pricing";
 import { languageLabel } from "@/lib/data/languages";
 import { insurerLabel } from "@/lib/data/insurers";
 import { ReviewSection } from "@/components/professionals/review-section";
-import { ProfileGallery } from "@/components/professionals/profile-gallery";
-import { CaseLikeButton } from "@/components/professionals/case-like-button";
+import { CaseShowcase } from "@/components/professionals/case-showcase";
 import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
 import { ReportProfileModal } from "@/components/professionals/report-profile-modal";
 import { createClient } from "@/lib/supabase/client";
@@ -584,12 +583,12 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                           const raw: any[] = (professional.portfolioItems && professional.portfolioItems.length > 0)
                             ? professional.portfolioItems
                             : (professional.portfolioUrls ?? []).map((url) => ({ url }));
-                          type Caso = { id: string; profession: string; title?: string; recipient?: string; date?: string; photos: string[]; likes?: number; likeable?: boolean };
+                          type Caso = { id: string; profession: string; title?: string; description?: string; recipient?: string; date?: string; photos: string[]; likes?: number; likeable?: boolean };
                           const caseList: Caso[] = [];
                           const legacyByProf = new Map<string, string[]>();
                           for (const it of raw) {
                             if (Array.isArray(it?.photos) && it.id) {
-                              caseList.push({ id: String(it.id), profession: it.profession ?? primaryProf, title: it.title, recipient: it.recipient, date: it.date, photos: it.photos, likes: Number(it.likes) || 0, likeable: true });
+                              caseList.push({ id: String(it.id), profession: it.profession ?? primaryProf, title: it.title, description: it.description, recipient: it.recipient, date: it.date, photos: it.photos, likes: Number(it.likes) || 0, likeable: true });
                             } else if (it?.url) {
                               const prof = profOf(it) || primaryProf || "";
                               const arr = legacyByProf.get(prof) ?? []; arr.push(it.url); legacyByProf.set(prof, arr);
@@ -598,45 +597,8 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                           for (const [prof, photos] of legacyByProf) {
                             for (let i = 0; i < photos.length; i += 3) caseList.push({ id: `${prof}_${i}`, profession: prof, photos: photos.slice(i, i + 3) });
                           }
-                          // Professions (in order) that actually have cases, then any "other".
-                          const tagged = profsOrder.filter((cat) => caseList.some((c) => c.profession === cat));
-                          const otherProfs = [...new Set(caseList.map((c) => c.profession))].filter((p) => !profsOrder.includes(p));
-                          const order = [...tagged, ...otherProfs];
-
-                          const renderCase = (c: Caso) => (
-                            <div key={c.id} className="rounded-2xl border border-[#e5e7eb] p-4">
-                              {(c.title || c.recipient || c.date) && (
-                                <div className="mb-3">
-                                  {c.title && <p className="text-[15px] font-bold text-[#162543] [overflow-wrap:anywhere]">{c.title}</p>}
-                                  {(c.recipient || c.date) && (
-                                    <p className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-[#6b7280]">
-                                      {c.recipient && <span className="inline-flex items-center gap-1 [overflow-wrap:anywhere]"><User2 className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" /> {c.recipient}</span>}
-                                      {c.date && <span className="inline-flex items-center gap-1"><CalendarDays className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" /> {c.date}</span>}
-                                    </p>
-                                  )}
-                                </div>
-                              )}
-                              <ProfileGallery urls={c.photos} />
-                              {c.likeable && (
-                                <div className="mt-3 flex justify-end">
-                                  <CaseLikeButton professionalId={professional.id} caseId={c.id} initialLikes={c.likes ?? 0} label={t("likeLabel")} />
-                                </div>
-                              )}
-                            </div>
-                          );
-
-                          return (
-                            <div className="flex flex-col gap-6">
-                              {order.map((cat) => (
-                                <div key={cat}>
-                                  <h3 className="mb-2.5 text-sm font-semibold text-[#162543]">{profsOrder.includes(cat) ? getCategoryLabel(cat, locale) : t("otherWorks")}</h3>
-                                  <div className="flex flex-col gap-4">
-                                    {caseList.filter((c) => c.profession === cat).map(renderCase)}
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          );
+                          // Client-facing showcase: profession filter + a polished case-card grid.
+                          return <CaseShowcase professionalId={professional.id} cases={caseList} professions={profsOrder} />;
                         })()
                       ) : (
                         <p className="text-sm text-[#9ca3af]">{t("noCasos")}</p>

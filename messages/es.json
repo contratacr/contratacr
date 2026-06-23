@@ -526,6 +526,8 @@
     "otherWorks": "Otros trabajos",
     "noCasos": "Todavía no hay casos de éxito.",
     "likeLabel": "Me gusta",
+    "casosAll": "Todos",
+    "casosPhotos": "{count, plural, one {# foto} other {# fotos}}",
     "certsSubtitle": "Cursos, títulos y certificados indicados en el perfil.",
     "subRating": {
       "price": "Precio",
@@ -1207,6 +1209,8 @@
     "casePhotos": "Fotos (hasta {max})",
     "caseTitle": "Servicio realizado",
     "caseTitlePlaceholder": "Ejemplo: Sitio web corporativo",
+    "caseDescription": "Descripción",
+    "caseDescriptionPlaceholder": "Cuéntales a tus clientes qué hiciste en este trabajo.",
     "caseRecipient": "Para quién",
     "caseRecipientPlaceholder": "Ejemplo: Empresa XYZ",
     "caseDate": "Fecha",
