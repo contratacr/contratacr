@@ -13,42 +13,77 @@ export function StatusFilterTabs({
   tabs,
   value,
   onChange,
+  counts,
   labelFor,
   dotFor,
+  variant = "underline",
 }: {
   tabs: readonly FilterTab[];
   value: string;
   onChange: (id: string) => void;
-  /** Accepted for back-compat (callers still pass it) but NO LONGER rendered — per-filter
-   *  count badges were removed in sprint 419 for a cleaner, modern look. */
+  /** Per-filter item counts → rendered as a small badge after the label (sprint 479,
+   *  owner reference image). Only shown in the "underline" variant when count > 0. */
   counts?: Record<string, number>;
   /** Custom label per tab id (else the `statusTabs` i18n key is used). */
   labelFor?: (id: string) => string;
   /** Show a small "needs attention" red dot on a tab (e.g. an unread reply). */
   dotFor?: (id: string) => boolean;
+  /** "underline" (default) = status tabs with count badges; "pills" = filter chips
+   *  (e.g. the profession filter), no counts. */
+  variant?: "underline" | "pills";
 }) {
   const tr = useTranslations("statusTabs");
+  const label = (id: string) => (labelFor ? labelFor(id) : tr(id));
+
+  // PILLS — rounded chips, no counts (used for the profession filter). A wrapping row.
+  if (variant === "pills") {
+    return (
+      <div className="flex flex-wrap gap-2">
+        {tabs.map((tab) => {
+          const active = value === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => onChange(tab.id)}
+              className={cn(
+                "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-4 py-2 text-[13px] font-semibold transition-colors",
+                active ? "border-[#009FD9] bg-[#009FD9] text-white" : "border-[#e5e7eb] bg-white text-[#374151] hover:bg-[#f9fafb]"
+              )}
+            >
+              {label(tab.id)}
+              {dotFor?.(tab.id) && <span className="h-1.5 w-1.5 rounded-full bg-[#009FD9] shrink-0" aria-hidden />}
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // UNDERLINE — status tabs with a clean count badge after each label (owner image):
+  // active = brand-blue underline + blue text + a filled blue count pill; inactive = grey
+  // text + a light-grey count pill. A wrapping row sharing one bottom hairline.
   return (
-    // Clean filter chips, no per-filter count badges (sprint 419) — modern apps reserve
-    // count badges for real notifications (the bell), not every filter. A wrapping row so
-    // nothing overflows at ~360px.
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap items-center gap-x-5 gap-y-1 border-b border-[#eef0f2]">
       {tabs.map((tab) => {
         const active = value === tab.id;
+        const count = counts?.[tab.id] ?? 0;
         return (
           <button
             key={tab.id}
             type="button"
             onClick={() => onChange(tab.id)}
             className={cn(
-              "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-4 py-2 text-[13px] font-semibold transition-colors",
-              active
-                ? "border-[#009FD9] bg-[#009FD9] text-white"
-                : "border-[#e5e7eb] bg-white text-[#374151] hover:bg-[#f9fafb]"
+              "-mb-px inline-flex items-center gap-2 whitespace-nowrap border-b-2 pb-2.5 pt-1 text-[14px] font-semibold transition-colors",
+              active ? "border-[#009FD9] text-[#009FD9]" : "border-transparent text-[#6b7280] hover:text-[#162543]"
             )}
           >
-            {labelFor ? labelFor(tab.id) : tr(tab.id)}
-            {/* Optional unread/attention dot (e.g. a new support reply) — brand-blue, on-brand. */}
+            {label(tab.id)}
+            {count > 0 && (
+              <span className={cn("inline-flex min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-[11px] font-bold leading-5 tabular-nums", active ? "bg-[#009FD9] text-white" : "bg-[#f3f4f6] text-[#6b7280]")}>
+                {count}
+              </span>
+            )}
             {dotFor?.(tab.id) && <span className="h-1.5 w-1.5 rounded-full bg-[#009FD9] shrink-0" aria-hidden />}
           </button>
         );

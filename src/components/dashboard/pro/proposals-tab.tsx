@@ -425,7 +425,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
             <div className="flex flex-col gap-3">
               {/* Filter by the pro's professions — only when they have more than one. */}
               {showProfFilter && (
-                <StatusFilterTabs tabs={profTabs} value={profFilter} onChange={setProfFilter} labelFor={profLabel} />
+                <StatusFilterTabs tabs={profTabs} value={profFilter} onChange={setProfFilter} labelFor={profLabel} variant="pills" />
               )}
               {(() => {
                 // Hide opportunities already proposed to (they live in "Mis propuestas") and
