@@ -118,12 +118,12 @@ export function SearchScreen() {
 // booking entry point; the old separate "Solicitar servicio" button no longer exists —
 // OR (no public schedule) the coral contact note + a filled WhatsApp button.
 function ProCard({
-  rank, initials, image, company, person, profession, place, address,
+  rank, initials, image, company, person, profession, categories, place, address,
   rating, reviews, price, priceUnit, verified,
   schedule, viewSchedule, whatsapp, noScheduleNote,
 }: {
   rank: number;
-  initials: string; image?: string; company: string; person?: string; profession: string;
+  initials: string; image?: string; company: string; person?: string; profession: string; categories?: string[];
   place: string; address?: string;
   rating: string; reviews: string; price: string; priceUnit?: string; verified: string;
   schedule?: { label: string; times: string[] }[];
@@ -147,8 +147,16 @@ function ProCard({
             <span className="min-w-0 flex-1 truncate text-[13px] font-bold leading-tight text-[#111827]">{company}</span>
             {price ? (
               <span className="shrink-0 whitespace-nowrap leading-tight">
-                <span className="text-[10px] font-bold text-[#009FD9]">{price}</span>
-                {priceUnit ? <span className="text-[8px] font-medium text-[#9ca3af]"> {priceUnit}</span> : null}
+                {/* A ₡ amount renders blue + grey unit; a TEXT price ("Precio a consultar")
+                    renders whole in grey, no unit — mirroring the real /buscar card. */}
+                {price.includes("₡") ? (
+                  <>
+                    <span className="text-[10px] font-bold text-[#009FD9]">{price}</span>
+                    {priceUnit ? <span className="text-[8px] font-medium text-[#9ca3af]"> {priceUnit}</span> : null}
+                  </>
+                ) : (
+                  <span className="text-[9px] font-semibold text-[#6b7280]">{price}</span>
+                )}
               </span>
             ) : null}
           </div>
@@ -159,6 +167,14 @@ function ProCard({
               /buscar card: company → personal name → profession → reviews, all grouped
               in the column beside the avatar — Sprint 175). */}
           <span className="mt-1.5 inline-block w-fit rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[9px] font-medium text-[#6b7280]">{profession}</span>
+          {/* Example service categories under the profession — small brand-tint chips. */}
+          {categories && categories.length > 0 ? (
+            <div className="mt-1 flex flex-wrap gap-1">
+              {categories.map((c) => (
+                <span key={c} className="inline-block rounded-full bg-[#EBF5FB] px-1.5 py-0.5 text-[8px] font-medium leading-none text-[#0089bb]">{c}</span>
+              ))}
+            </div>
+          ) : null}
           <div className="mt-1 flex items-center gap-1 text-[10px]">
             <Star className="h-2.5 w-2.5 fill-[#ff9b32] text-[#ff9b32]" />
             <span className="font-bold text-[#111827]">{rating}</span>
@@ -212,8 +228,8 @@ function ProCard({
 }
 
 export type ResultsCopy = {
-  title: string; results: string; search: string; verified: string;
-  whatsapp: string; viewSchedule: string; noScheduleNote: string; priceUnit: string;
+  title: string; categories: string[]; results: string; search: string; verified: string;
+  whatsapp: string; viewSchedule: string; noScheduleNote: string; priceUnit: string; priceOnRequest: string;
   reviews: (n: number) => string;
   days: { label: string; times: string[] }[];
 };
@@ -221,14 +237,16 @@ export type ResultsCopy = {
 // Spanish defaults so the dead SHOWCASE_SCREENS reference still renders; the live
 // "Así funciona" section passes locale-aware copy from why-contratacr.tsx.
 const DEFAULT_RESULTS_COPY: ResultsCopy = {
-  title: "Plomería",
+  title: "Tecnología",
+  categories: ["Reparación de computadoras", "Redes e internet", "Cámaras de seguridad"],
   results: "128 servicios en Costa Rica",
-  search: "Plomería en San José",
+  search: "Tecnología en San José",
   verified: "Verificado",
   whatsapp: "Contáctanos por WhatsApp",
   viewSchedule: "Ver horario completo",
   noScheduleNote: "La disponibilidad de este perfil no es pública. Contáctanos y conoce sus horarios.",
   priceUnit: "/hora",
+  priceOnRequest: "Precio a consultar",
   reviews: (n) => `${n} reseñas`,
   days: [
     { label: "Hoy", times: ["9:00", "14:00"] },
@@ -253,15 +271,15 @@ export function ResultsScreen({ copy = DEFAULT_RESULTS_COPY }: { copy?: ResultsC
           one WITHOUT (the WhatsApp contact path), mirroring the real mixed /buscar list. */}
       <div className="flex-1 space-y-2 overflow-hidden p-3">
         <ProCard
-          rank={1} initials="SG" image="https://res.cloudinary.com/dxxrjx2go/image/upload/f_auto,q_auto/v1781846892/sgimage_psyvpn_hyyp4c.jpg" company="SG Solutions" person="Luis Sánchez" profession={copy.title}
+          rank={1} initials="SG" image="https://res.cloudinary.com/dxxrjx2go/image/upload/f_auto,q_auto/v1781846892/sgimage_psyvpn_hyyp4c.jpg" company="SG Solutions" person="Luis Sánchez" profession={copy.title} categories={copy.categories}
           place="San José" address="Escazú, San José" rating="4.9" reviews={copy.reviews(48)}
-          price="₡12 000" priceUnit={copy.priceUnit} verified={copy.verified} schedule={copy.days}
+          price={copy.priceOnRequest} verified={copy.verified} schedule={copy.days}
           viewSchedule={copy.viewSchedule} whatsapp={copy.whatsapp}
         />
         <ProCard
           rank={2} initials="AM" image="https://randomuser.me/api/portraits/women/68.jpg" company="Ana Mora" profession={copy.title}
           place="Heredia" address="Heredia centro" rating="4.8" reviews={copy.reviews(31)}
-          price="₡10 000" priceUnit={copy.priceUnit} verified={copy.verified}
+          price={copy.priceOnRequest} verified={copy.verified}
           viewSchedule={copy.viewSchedule} whatsapp={copy.whatsapp} noScheduleNote={copy.noScheduleNote}
         />
       </div>

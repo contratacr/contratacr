@@ -21,7 +21,6 @@ export async function WhyContratacr() {
   const t = await getTranslations("landing.howItWorks");
   const tCard = await getTranslations("card");
   const tSched = await getTranslations("schedule");
-  const tCat = await getTranslations("categories");
   const locale = await getLocale();
 
   // Locale-aware copy for the in-phone /buscar preview. Reuses the SAME strings
@@ -39,8 +38,15 @@ export async function WhyContratacr() {
       times: i === 3 ? ["10:00"] : ["9:00", "14:00"],
     };
   });
+  // The phone mockup features a "Tecnología" professional (illustrative content only) with
+  // three example service categories and a "precio a consultar" price. Locale-aware so EN reads right.
+  const mockProfession = locale === "en" ? "Technology" : "Tecnología";
+  const mockCategories = locale === "en"
+    ? ["Computer repair", "Networks & internet", "Security cameras"]
+    : ["Reparación de computadoras", "Redes e internet", "Cámaras de seguridad"];
   const resultsCopy: ResultsCopy = {
-    title: tCat("plomeria"),
+    title: mockProfession,
+    categories: mockCategories,
     results: t("mockResults"),
     search: t("mockSearch"),
     verified: tCard("verifiedShort"),
@@ -48,6 +54,7 @@ export async function WhyContratacr() {
     viewSchedule: tSched("viewFullSchedule"),
     noScheduleNote: tSched("availabilityHiddenNote"),
     priceUnit: tCard("perHour"),
+    priceOnRequest: tCard("priceOnRequest"),
     reviews: (n: number) => tCard("reviewsCount", { count: n }),
     days,
   };

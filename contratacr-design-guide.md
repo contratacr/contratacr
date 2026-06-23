@@ -1155,8 +1155,12 @@ preview of the CURRENT product, not a stylized fake. Rules:
   **navy ranking badge** (`#162543`, white number, `ring-2 ring-white`) that mirrors
   its map pin; the SAME **solid brand-blue "Verificado" pill** (`Badge variant="verified"`
   = `bg-[#009FD9] text-white`, `verifiedShort`) **on its OWN line** under the name —
-  never a green check/text and never inline; **price = blue amount + grey unit**;
-  grey profession chip; orange-star (`#ff9b32`) rating + **grey `(N reseñas)` in
+  never a green check/text and never inline; **price = blue ₡amount + grey unit, OR a
+  TEXT price (e.g. "Precio a consultar") rendered WHOLE IN GREY with no unit** (mirrors the
+  real card — a non-₡ price has no "/" and isn't a blue number); grey profession chip
+  (with optional small **brand-tint service-category chips** beneath it — `bg-[#EBF5FB]
+  text-[#0089bb] text-[8px]`, on the hero card only so the fixed-height phone never clips
+  the 2nd card); orange-star (`#ff9b32`) rating + **grey `(N reseñas)` in
   parens** (not a blue link); a **Doctoralia-style location TAB** (brand-blue, underlined,
   on a hairline divider) + address line. Then EITHER the **3-day availability strip**
   (hero) + a SINGLE filled **"Ver horario completo"** button — the booking entry point;
@@ -1165,6 +1169,12 @@ preview of the CURRENT product, not a stylized fake. Rules:
   `CalendarDays`) + a filled **WhatsApp** (`#25D366`) button. The live `ResultsScreen`
   shows BOTH variants (one of each card) to mirror the real mixed list. When the real
   card changes, update the mockup to match.
+- **Example content (illustrative — sprint 454):** the mockup features a **"Tecnología"**
+  professional (locale-aware "Technology" in EN; the search reads "Tecnología en San José").
+  The hero card shows **3 example service-category chips** — *Reparación de computadoras ·
+  Redes e internet · Cámaras de seguridad* — and a **"Precio a consultar"** price (grey). This
+  is DEMO content; if it's changed keep it honest + fitting the phone (don't add categories to
+  both cards — the phone height is fixed and would clip).
 - **Example name:** the sample SG card is **"SG Solutions"** (company/brand) with the
   personal name **"Luis Sánchez"** below it. The card's company name **wraps**
   (`break-words line-clamp-2`) — NEVER `truncate` — so it's never cut off when the price
