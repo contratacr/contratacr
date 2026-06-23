@@ -1091,13 +1091,6 @@
   },
   "bookingRequests": {
     "empty": "No tienes solicitudes todavía",
-    "agenda": {
-      "today": "Hoy",
-      "tomorrow": "Mañana",
-      "week": "Esta semana",
-      "later": "Más adelante",
-      "nodate": "Sin fecha definida"
-    },
     "emptySub": "Cuando los clientes te contacten, aparecerán aquí.",
     "noneInView": "No hay solicitudes en esta vista.",
     "status": {
@@ -1266,8 +1259,6 @@
     "upTo": "Hasta {amount}",
     "range": "{min} – {max}",
     "matchesServices": "Coincide con tus servicios",
-    "matchShort": "Para ti",
-    "publishedAgo": "Publicado {ago}",
     "fieldZone": "Zona:",
     "fieldDeadline": "Plazo:",
     "fieldBudget": "Presupuesto:",

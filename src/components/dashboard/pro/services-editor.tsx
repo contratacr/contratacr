@@ -10,8 +10,6 @@ import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { getCategoryLabel, getCategoryGroupLabel, getAllCategories, normalizeText } from "@/lib/data/categories";
-import { casoProfession } from "@/lib/services";
-import { cldThumb } from "@/lib/cloudinary";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import { PRICING_TYPES, formatServicePrice, type PricingType } from "@/lib/pricing";
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
@@ -34,8 +32,6 @@ interface ServicesEditorProps {
   primaryCategory?: string;
   initialProfessions?: string[];
   initialServices?: ProService[];
-  /** Casos de éxito photos — used to show a thumbnail on each service row (visual catalog). */
-  initialItems?: { url: string; profession?: string; serviceId?: string }[];
   onSaved?: () => void;
 }
 
@@ -63,7 +59,6 @@ export function ServicesEditor({
   primaryCategory,
   initialProfessions = [],
   initialServices = [],
-  initialItems = [],
   onSaved,
 }: ServicesEditorProps) {
   const locale = useLocale();
@@ -298,8 +293,6 @@ export function ServicesEditor({
         // "Desde ₡X" summary; derived from existing data, shown only when something is priced.
         const pricedAmounts = profServices.map((s) => s.priceAmount).filter((n): n is number => typeof n === "number" && n > 0);
         const fromAmount = pricedAmounts.length ? Math.min(...pricedAmounts) : null;
-        // This profession's Casos de éxito photos (for service-row thumbnails).
-        const profPhotos = initialItems.filter((it) => casoProfession(it, services, primary) === prof).map((it) => it.url);
         return (
           <section key={prof} className={cn("overflow-hidden rounded-2xl border bg-white shadow-sm", isPrincipal ? "border-[#bfdbfe]" : "border-[#e5e7eb]")}>
             {/* Profession header — the PRINCIPAL profession gets a subtle brand tint + navy name
@@ -352,22 +345,11 @@ export function ServicesEditor({
                 </button>
               ) : (
                 <>
-                  {profServices.map((svc, idx) => {
-                    // Thumbnail from this profession's Casos de éxito — prefer a photo tagged to
-                    // THIS service (legacy), else cycle the profession's photos so the list reads
-                    // like a visual catalog (Etsy/Fiverr/Airbnb). No photos → text-only row.
-                    const thumb = profPhotos.length
-                      ? (initialItems.find((it) => it.serviceId === svc.id)?.url ?? profPhotos[idx % profPhotos.length])
-                      : null;
-                    return (
-                    /* Catalog-style service row (Fiverr/Shopify): thumbnail + name + brief, the PRICE
-                       as a brand-tint TAG chip (or an amber "Agregar precio" nudge when missing), and
+                  {profServices.map((svc) => (
+                    /* Catalog-style service row (Fiverr/Shopify): name + brief, the PRICE as a
+                       brand-tint TAG chip (or an amber "Agregar precio" nudge when missing), and
                        quiet edit/delete actions. `min-w-0` + `break-words` keep long names inside. */
-                    <div key={svc.id} className="group flex items-start gap-3 rounded-xl border border-[#e5e7eb] p-3 sm:p-3.5 transition-all hover:border-[#009FD9]/50 hover:shadow-sm">
-                      {thumb && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={cldThumb(thumb, 140)} alt="" className="h-14 w-14 shrink-0 rounded-lg border border-[#e5e7eb] object-cover" />
-                      )}
+                    <div key={svc.id} className="group flex items-start gap-2.5 rounded-xl border border-[#e5e7eb] p-3.5 transition-all hover:border-[#009FD9]/50 hover:shadow-sm">
                       <div className="min-w-0 flex-1">
                         <p className="break-words text-sm font-semibold text-[#111827]">{svc.name}</p>
                         {svc.description && <p className="mt-0.5 break-words text-xs text-[#6b7280] line-clamp-2">{svc.description}</p>}
@@ -392,8 +374,7 @@ export function ServicesEditor({
                         </button>
                       </div>
                     </div>
-                    );
-                  })}
+                  ))}
 
                   <button
                     type="button"

@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PriceInput } from "@/components/ui/price-input";
-import { cn, getWhatsAppLink, getInitials, formatRelativeTime } from "@/lib/utils";
+import { cn, getWhatsAppLink, getInitials } from "@/lib/utils";
 import { StatusFilterTabs, PROYECTO_TABS, proposalMatches, proposalBucket, proposalStatusRedundant, bucketCounts } from "@/components/dashboard/status-filter-tabs";
 import { CardActionsMenu, type CardAction } from "@/components/dashboard/card-actions-menu";
 
@@ -284,8 +284,6 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
                       : t("upTo", { amount: `₡${project.budget_max!.toLocaleString("es-CR")}` }))
                   : t("budgetTBD");
                 const hasZoneDeadline = (project.provincias?.name || project.cantones?.name) || project.timeline;
-                const isMatch = !alreadySubmitted && matchesServices(project);
-                const zona = [project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ");
 
                 return (
                   <Card key={project.id}>
@@ -307,31 +305,22 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
                           <span className="text-[15px] font-semibold text-[#111827] min-w-0 truncate">{project.title}</span>
-                          {/* Top-right badge: already-proposed > "Para ti" (matches the pro's
-                              services — surfaced like LinkedIn's "Top match") > categoría. */}
                           {alreadySubmitted ? (
                             <Badge variant="success" className="shrink-0 text-[11px] font-semibold">{t("alreadyProposed")}</Badge>
-                          ) : isMatch ? (
-                            <span className="shrink-0 inline-flex items-center rounded-full bg-[#EBF5FB] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#0089bb] ring-1 ring-inset ring-[#009FD9]/25">{t("matchShort")}</span>
                           ) : project.categories?.name ? (
                             <Badge variant="muted" className="shrink-0 text-[11px] font-semibold">{project.categories.name}</Badge>
                           ) : null}
                         </div>
-                        {/* Meta chips (Upwork / LinkedIn-Jobs job-card style): presupuesto (brand) · zona · plazo. */}
-                        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                          <span className="inline-flex max-w-full items-center rounded-full bg-[#EBF5FB] px-2 py-0.5 text-[11px] font-semibold text-[#0089bb] [overflow-wrap:anywhere]">{budgetText}</span>
-                          {zona && <span className="inline-flex max-w-full items-center rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-medium text-[#6b7280] [overflow-wrap:anywhere]">{zona}</span>}
-                          {project.timeline && <span className="inline-flex max-w-full items-center rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-medium text-[#6b7280] [overflow-wrap:anywhere]">{project.timeline}</span>}
-                        </div>
-                        {/* Description preview (collapsed only) — clamped to 2 lines; full text on expand. */}
-                        {!isExpanded && project.description && (
-                          <p className="mt-1.5 text-[13px] text-[#6b7280] leading-snug line-clamp-2 [overflow-wrap:anywhere]">{project.description}</p>
-                        )}
-                        {/* Freshness + competition (Indeed "posted X ago" / Upwork proposal count). */}
-                        <p className="mt-1.5 text-[11px] text-[#9ca3af]">
-                          {t("publishedAgo", { ago: formatRelativeTime(project.created_at, locale) })}
-                          {proposalCount > 0 && <> · {t("proposalsCount", { count: proposalCount })}</>}
+                        <p className="mt-0.5 text-[13px] truncate">
+                          <span className="text-[#6b7280]">{t("fieldBudget")}</span>{" "}
+                          <span className="font-medium text-[#374151]">{budgetText}</span>
                         </p>
+                        {/* Description preview (collapsed only) — clamped to 2 lines for a
+                            uniform, compact list; full text shows on expand. overflow-wrap:anywhere
+                            breaks long unbroken strings so the card never grows past its column. */}
+                        {!isExpanded && project.description && (
+                          <p className="mt-1 text-[13px] text-[#6b7280] leading-snug line-clamp-2 [overflow-wrap:anywhere]">{project.description}</p>
+                        )}
                       </div>
                       <ChevronDown className={cn("h-5 w-5 text-[#9ca3af] shrink-0 mt-0.5 transition-transform duration-200", isExpanded && "rotate-180")} />
                     </button>
