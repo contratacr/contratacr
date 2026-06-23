@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarDays, FolderOpen, ChevronDown, Plus } from "lucide-react";
+import { CalendarDays, FolderOpen, ChevronDown, Plus, CalendarClock, Wrench, MessageSquare, MapPin } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -94,9 +94,9 @@ const STATUS_VARIANT: Record<BookingStatus, "warning" | "success" | "error" | "d
 function formatBookingDate(b: Booking, dateLocale: string) {
   if (b.scheduled_date) {
     const [y, m, d] = b.scheduled_date.split("-").map(Number);
-    const label = new Date(y, m - 1, d).toLocaleDateString(dateLocale, {
-      weekday: "short", day: "numeric", month: "short",
-    });
+    const label = new Date(y, m - 1, d)
+      .toLocaleDateString(dateLocale, { day: "numeric", month: "short", year: "numeric" })
+      .replace(".", "");
     return b.scheduled_time ? `${label} · ${b.scheduled_time}` : label;
   }
   return b.preferred_date_text ?? null;
@@ -370,7 +370,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                           type="button"
                           onClick={() => setExpandedBooking(expandedBooking === b.id ? null : b.id)}
                           aria-expanded={expandedBooking === b.id}
-                          className={cn("w-full text-left p-4 flex items-center gap-2.5 hover:bg-[#fafafa] transition-colors", expandedBooking === b.id ? "rounded-t-2xl" : "rounded-2xl")}
+                          className={cn("w-full text-left p-4 flex items-start gap-3 hover:bg-[#fafafa] transition-colors", expandedBooking === b.id ? "rounded-t-2xl" : "rounded-2xl")}
                         >
                           <Avatar className="h-10 w-10 shrink-0">
                             <AvatarImage src={b.professionals?.profiles?.avatar_url} />
@@ -379,26 +379,30 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between gap-2">
-                              <span className="text-[15px] font-semibold text-[#111827] min-w-0 truncate">
+                            <div className="flex items-start justify-between gap-2">
+                              <span className="text-[15px] font-semibold text-[#162543] min-w-0 truncate">
                                 {b.professionals?.profiles?.full_name ?? t("professional")}
                               </span>
                               {!solicitudStatusRedundant(b.status, b.scheduled_date) && (
                                 <Badge variant={STATUS_VARIANT[b.status]} className="shrink-0 text-[11px] font-semibold">{t(`bStatus.${b.status}`)}</Badge>
                               )}
                             </div>
-                            <p className="mt-0.5 text-[13px] truncate">
-                              {formatBookingDate(b, dateLocale) ? (
-                                <>
-                                  <span className="text-[#6b7280]">{t("fieldDate")}</span>{" "}
-                                  <span className="font-medium text-[#374151]">{formatBookingDate(b, dateLocale)}</span>
-                                </>
-                              ) : (
-                                <span className="text-[#374151]">{b.service_description}</span>
-                              )}
-                            </p>
+                            {/* Appointment date with a grey calendar icon (no "Fecha:" label). */}
+                            {formatBookingDate(b, dateLocale) && (
+                              <p className="mt-0.5 flex items-center gap-1.5 text-[13px] min-w-0">
+                                <CalendarClock className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                                <span className="truncate font-medium text-[#374151]">{formatBookingDate(b, dateLocale)}</span>
+                              </p>
+                            )}
+                            {/* The profession the request was for (grey wrench). */}
+                            {b.professionals?.categories?.name && (
+                              <p className="mt-0.5 flex items-center gap-1.5 text-[12px] text-[#6b7280] min-w-0">
+                                <Wrench className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                                <span className="truncate">{b.professionals.categories.name}</span>
+                              </p>
+                            )}
                           </div>
-                          <ChevronDown className={`h-5 w-5 text-[#9ca3af] shrink-0 transition-transform duration-200 ${expandedBooking === b.id ? "rotate-180" : ""}`} />
+                          <ChevronDown className={`h-5 w-5 text-[#9ca3af] shrink-0 mt-0.5 transition-transform duration-200 ${expandedBooking === b.id ? "rotate-180" : ""}`} />
                         </button>
 
                         {expandedBooking === b.id && (
@@ -521,7 +525,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
-                          <span className="text-[15px] font-semibold text-[#111827] min-w-0 truncate">{project.title}</span>
+                          <span className="text-[15px] font-semibold text-[#162543] min-w-0 truncate">{project.title}</span>
                           {!proyectoStatusRedundant(project.status) ? (
                             <Badge
                               className="shrink-0 text-[11px] font-semibold"
@@ -543,9 +547,10 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                             <Badge variant="muted" className="shrink-0 text-[11px] font-semibold">{project.categories.name}</Badge>
                           ) : null}
                         </div>
-                        <p className="mt-0.5 text-[13px] truncate">
-                          <span className="text-[#6b7280]">{t("fieldProposals")}</span>{" "}
-                          <span className="font-medium text-[#374151]">{proposalCount}</span>
+                        {/* Propuestas count + publish date — each with a quiet grey icon, well-spaced. */}
+                        <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[#6b7280]">
+                          <span className="inline-flex items-center gap-1.5"><MessageSquare className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" /> {t("proposalsCount", { count: proposalCount })}</span>
+                          <span className="inline-flex items-center gap-1.5"><CalendarDays className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" /> {t("publishedOn", { date: new Date(project.created_at).toLocaleDateString(dateLocale, { day: "numeric", month: "short", year: "numeric" }).replace(".", "") })}</span>
                         </p>
                         {/* Description preview (collapsed only) — clamped to 2 lines so every
                             list card stays a uniform, compact height; the full text shows when
@@ -563,11 +568,8 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                         {project.description && (
                           <p className="text-sm text-[#6b7280] whitespace-pre-line [overflow-wrap:anywhere]">{project.description}</p>
                         )}
-                        <p className="text-xs text-[#374151]">
-                          <span className="text-[#6b7280]">{t("fieldPublished")}</span> <span className="font-medium">{new Date(project.created_at).toLocaleDateString(dateLocale)}</span>
-                        </p>
                         {(project.provincias?.name || project.cantones?.name) && (
-                          <p className="text-xs text-[#6b7280]"><span className="text-[#6b7280]">{t("fieldZone")}</span> {[project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ")}</p>
+                          <p className="flex items-center gap-1.5 text-xs text-[#6b7280]"><MapPin className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" /> {[project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ")}</p>
                         )}
 
                       {/* ACTIONS (sprint 441) — PRIMARY visible + "···" overflow menu. The propuestas
