@@ -2039,6 +2039,9 @@
     "deleteAllBody": "Esta acción no se puede deshacer.",
     "cancel": "Cancelar",
     "noneList": "No tienes notificaciones.",
+    "filterAll": "Todas",
+    "filterUnread": "No leídas",
+    "noUnread": "No tienes notificaciones sin leer.",
     "types": {
       "booking_received": "Nueva solicitud",
       "booking_confirmed": "Solicitud confirmada",

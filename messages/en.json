@@ -2039,6 +2039,9 @@
     "deleteAllBody": "This action can't be undone.",
     "cancel": "Cancel",
     "noneList": "You have no notifications.",
+    "filterAll": "All",
+    "filterUnread": "Unread",
+    "noUnread": "You have no unread notifications.",
     "types": {
       "booking_received": "New request",
       "booking_confirmed": "Request confirmed",

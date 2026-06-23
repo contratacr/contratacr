@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { Bell, CheckCheck, Check, Trash2, AlertTriangle } from "lucide-react";
+import { Bell, CheckCheck, Check, Trash2, AlertTriangle, CalendarClock, FolderOpen, Star, Headset, type LucideIcon } from "lucide-react";
 import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
+import { StatusFilterTabs } from "@/components/dashboard/status-filter-tabs";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { cn, formatRelativeTime } from "@/lib/utils";
@@ -21,6 +22,17 @@ type Notification = {
   data?: { link?: string } | null;
 };
 
+// Tasteful per-TYPE leading icon so a reserva vs a propuesta vs a reseña reads at a
+// glance (grey, in a neutral circle — serious brand, not colorful).
+const NOTIF_TABS = [{ id: "all" }, { id: "unread" }] as const;
+function notifIcon(type: string): LucideIcon {
+  if (type.startsWith("booking")) return CalendarClock;
+  if (type === "proposal_accepted" || type === "proposal_received" || type === "new_project") return FolderOpen;
+  if (type === "review_request") return Star;
+  if (type === "support_reply") return Headset;
+  return Bell;
+}
+
 // Shared notifications list — used by the dedicated /notificaciones page and the
 // professional panel tab so both roles get the same notifications experience.
 export function NotificationsList() {
@@ -33,6 +45,7 @@ export function NotificationsList() {
   const [items, setItems] = useState<Notification[]>([]);
   const [busy, setBusy] = useState(true);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [notifFilter, setNotifFilter] = useState<string>("all");
 
   useEffect(() => {
     if (!user) return;
@@ -49,6 +62,8 @@ export function NotificationsList() {
   // Only the active mode's notifications are shown / acted on here.
   const visible = items.filter((n) => notificationInMode(n.type, mode));
   const unread = visible.filter((n) => !n.read).length;
+  // Light, useful filter: all vs unread (notifications are already mode-scoped).
+  const shown = notifFilter === "unread" ? visible.filter((n) => !n.read) : visible;
 
   async function markAllRead() {
     if (!user) return;
@@ -101,15 +116,24 @@ export function NotificationsList() {
   return (
     <div>
       {visible.length > 0 && (
-        <div className="flex justify-end items-center gap-4 mb-3">
-          {unread > 0 && (
-            <button onClick={markAllRead} className="flex items-center gap-1.5 text-sm text-[#009FD9] hover:underline">
-              <CheckCheck className="h-4 w-4" /> {t("markAllRead")}
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+          <StatusFilterTabs
+            tabs={NOTIF_TABS}
+            value={notifFilter}
+            onChange={setNotifFilter}
+            labelFor={(id) => (id === "all" ? t("filterAll") : t("filterUnread"))}
+            counts={{ all: visible.length, unread }}
+          />
+          <div className="flex items-center gap-4">
+            {unread > 0 && (
+              <button onClick={markAllRead} className="flex items-center gap-1.5 text-sm text-[#009FD9] hover:underline">
+                <CheckCheck className="h-4 w-4" /> {t("markAllRead")}
+              </button>
+            )}
+            <button onClick={() => setConfirmDelete(true)} className="flex items-center gap-1.5 text-sm text-red-500 hover:underline">
+              <Trash2 className="h-4 w-4" /> {t("deleteAll")}
             </button>
-          )}
-          <button onClick={() => setConfirmDelete(true)} className="flex items-center gap-1.5 text-sm text-red-500 hover:underline">
-            <Trash2 className="h-4 w-4" /> {t("deleteAll")}
-          </button>
+          </div>
         </div>
       )}
 
@@ -130,27 +154,30 @@ export function NotificationsList() {
       <div className="bg-white rounded-2xl border border-[#e5e7eb] overflow-hidden">
         {busy ? (
           <div className="py-16 flex justify-center"><div className="h-7 w-7 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" /></div>
-        ) : visible.length === 0 ? (
+        ) : shown.length === 0 ? (
           <div className="text-center py-16">
             <Bell className="h-10 w-10 text-[#e5e7eb] mx-auto mb-3" />
-            <p className="text-sm text-[#6b7280]">{t("noneList")}</p>
+            <p className="text-sm text-[#6b7280]">{visible.length === 0 ? t("noneList") : t("noUnread")}</p>
           </div>
         ) : (
           <ul>
-            {visible.map((n) => (
-              <li key={n.id} className={cn("relative group border-b border-[#f3f4f6] last:border-0", !n.read && "bg-[#f0f9f6]")}>
+            {shown.map((n) => {
+              const Icon = notifIcon(n.type);
+              return (
+              <li key={n.id} className={cn("relative group border-b border-[#f3f4f6] last:border-0", !n.read && "bg-[#f3f9fd]")}>
                 <button onClick={() => open(n)} className="w-full text-left px-4 py-3 pr-16 hover:bg-[#f9fafb] transition-colors">
-                  {/* No role icon/tag — the title/message already make the context
-                      clear. A quiet unread dot is the only leading indicator; its
-                      column width is reserved so read/unread rows stay aligned. */}
-                  <div className="flex items-start gap-2.5">
-                    <span className="mt-1.5 flex h-2 w-2 shrink-0 items-center justify-center">
-                      {!n.read && <span className="h-2 w-2 rounded-full bg-[#319278]" />}
-                    </span>
+                  {/* Per-type leading icon (grey circle) + a brand-blue unread dot at its corner. */}
+                  <div className="flex items-start gap-3">
+                    <div className="relative shrink-0">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f3f4f6] text-[#6b7280]">
+                        <Icon className="h-4 w-4" />
+                      </span>
+                      {!n.read && <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#009FD9] ring-2 ring-white" />}
+                    </div>
                     <div className="min-w-0 flex-1">
                       {/* overflow-wrap:anywhere breaks long unbroken strings; line-clamp keeps
                           every row a uniform, compact height (full text on open). */}
-                      <p className="text-sm font-medium text-[#111827] [overflow-wrap:anywhere] line-clamp-2">{n.title}</p>
+                      <p className={cn("text-sm [overflow-wrap:anywhere] line-clamp-2", n.read ? "font-medium text-[#374151]" : "font-semibold text-[#162543]")}>{n.title}</p>
                       <p className="text-xs text-[#6b7280] mt-0.5 [overflow-wrap:anywhere] line-clamp-2">{n.message}</p>
                       <p className="text-xs text-[#9ca3af] mt-1">{formatRelativeTime(n.created_at, locale)}</p>
                     </div>
@@ -169,7 +196,8 @@ export function NotificationsList() {
                   </button>
                 </div>
               </li>
-            ))}
+              );
+            })}
           </ul>
         )}
       </div>
