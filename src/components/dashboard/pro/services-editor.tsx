@@ -315,7 +315,7 @@ export function ServicesEditor({
             >
               <span className="flex items-center gap-1.5">
                 <span className="truncate text-sm font-semibold text-[#111827]">{getCategoryLabel(prof, locale)}</span>
-                {i === 0 && <span className="shrink-0 text-xs font-medium text-[#009FD9]">{t("principal")}</span>}
+                {i === 0 && <span className="shrink-0 rounded-full bg-[#EBF5FB] px-1.5 py-0.5 text-[10px] font-semibold text-[#0089bb]">{t("principal")}</span>}
               </span>
               <span className="mt-0.5 block text-[11px] text-[#9ca3af]">{t("servicesCount", { count })}</span>
             </button>
@@ -349,7 +349,7 @@ export function ServicesEditor({
                 <span className="min-w-0 flex-1">
                   <span className="flex items-center gap-1.5">
                     <span className="text-sm font-semibold text-[#111827] truncate">{getCategoryLabel(prof, locale)}</span>
-                    {i === 0 && <span className="shrink-0 text-xs font-medium text-[#009FD9]">{t("principal")}</span>}
+                    {i === 0 && <span className="shrink-0 rounded-full bg-[#EBF5FB] px-1.5 py-0.5 text-[10px] font-semibold text-[#0089bb]">{t("principal")}</span>}
                   </span>
                   <span className="mt-0.5 block text-[11px] text-[#9ca3af]">{t("servicesCount", { count })}</span>
                 </span>
@@ -415,20 +415,23 @@ export function ServicesEditor({
             ) : (
               <>
                 {detailServices.map((svc) => (
-                  <div key={svc.id} className="flex items-start justify-between gap-3 rounded-xl border border-[#e5e7eb] p-3.5">
-                    {/* `min-w-0` + `break-words` let a long name (even one unbroken word) WRAP within its
-                        own column instead of overflowing onto the price. */}
+                  /* Catalog-style service row (Fiverr/Shopify product-row pattern): name + brief,
+                     the PRICE as a brand-tint TAG chip below, and quiet edit/delete actions that
+                     gain emphasis on hover. `min-w-0` + `break-words` keep long names inside the row. */
+                  <div key={svc.id} className="group flex items-start justify-between gap-3 rounded-xl border border-[#e5e7eb] p-3.5 transition-all hover:border-[#009FD9]/50 hover:shadow-sm">
                     <div className="min-w-0 flex-1">
                       <p className="break-words text-sm font-semibold text-[#111827]">{svc.name}</p>
                       {svc.description && <p className="mt-0.5 break-words text-xs text-[#6b7280] line-clamp-2">{svc.description}</p>}
+                      {svc.price && (
+                        <span className="mt-2 inline-flex max-w-full items-center rounded-full bg-[#EBF5FB] px-2.5 py-1 text-xs font-semibold text-[#0089bb] [overflow-wrap:anywhere]">{svc.price}</span>
+                      )}
                     </div>
-                    {/* Price + actions: fixed width, right-aligned, top-aligned with the name; never shrinks. */}
-                    <div className="flex shrink-0 items-center gap-2">
-                      {svc.price && <span className="max-w-[10rem] break-words text-right text-sm font-semibold text-[#009FD9]">{svc.price}</span>}
-                      <button onClick={() => openEdit(svc)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#f3f4f6] text-[#6b7280] hover:bg-[#EBF5FB] hover:text-[#009FD9] transition-colors" title={t("edit")} aria-label={t("edit")}>
+                    {/* Actions: fixed, top-aligned with the name; quiet by default, brand/red on hover. */}
+                    <div className="flex shrink-0 items-center gap-1.5">
+                      <button onClick={() => openEdit(svc)} className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9ca3af] hover:bg-[#EBF5FB] hover:text-[#009FD9] transition-colors" title={t("edit")} aria-label={t("edit")}>
                         <Pencil className="h-3.5 w-3.5" />
                       </button>
-                      <button onClick={() => handleDelete(svc.id)} className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#f3f4f6] text-[#6b7280] hover:bg-red-50 hover:text-red-500 transition-colors" title={t("delete")} aria-label={t("delete")}>
+                      <button onClick={() => handleDelete(svc.id)} className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9ca3af] hover:bg-red-50 hover:text-red-500 transition-colors" title={t("delete")} aria-label={t("delete")}>
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
