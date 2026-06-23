@@ -729,20 +729,20 @@ export default function ProfilePage({ params }: ProfilePageProps) {
 
                     return (
                       <div className="flex flex-col gap-5">
-                        {/* Bio as a brand-tint quote block (owner mockup). */}
+                        {/* Bio as a brand-tint quote block — a bold FILLED quote glyph (owner image). */}
                         {professional.bio && (
                           <div className="flex gap-3.5 rounded-2xl bg-[#EBF5FB] p-5 sm:p-6">
-                            <Quote className="h-7 w-7 shrink-0 text-[#009FD9]" />
+                            <Quote className="h-8 w-8 shrink-0 fill-[#009FD9] text-[#009FD9]" />
                             <p className="text-[15px] text-[#374151] leading-relaxed whitespace-pre-line [overflow-wrap:anywhere]">{professional.bio}</p>
                           </div>
                         )}
-                        {/* Facts: a hairline-divided 2-col grid of brand-tint icon cards. */}
+                        {/* Facts: BORDERLESS soft-tint cards in a 2-col grid (no dividers/borders). */}
                         {facts.length > 0 && (
-                          <div className="grid grid-cols-1 gap-px overflow-hidden rounded-2xl border border-[#eef0f2] bg-[#eef0f2] sm:grid-cols-2">
+                          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                             {facts.map((f, i) => {
                               const spanFull = i === facts.length - 1 && facts.length % 2 === 1;
                               return (
-                                <div key={f.key} className={cn("flex items-start gap-3.5 bg-white p-4 sm:p-5", spanFull && "sm:col-span-2")}>
+                                <div key={f.key} className={cn("flex items-start gap-3.5 rounded-2xl bg-[#f9fafb] p-4 sm:p-5", spanFull && "sm:col-span-2")}>
                                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#EBF5FB] text-[#009FD9]">{f.icon}</span>
                                   <div className="min-w-0 flex-1">
                                     <p className="text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">{f.label}</p>
