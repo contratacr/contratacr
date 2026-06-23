@@ -1815,7 +1815,7 @@
     "unsave": "Remove from saved",
     "empty": "You don't have any saved professionals",
     "emptySub": "Save the profiles you're interested in with the bookmark icon on their cards.",
-    "searchPros": "Find services",
+    "searchPros": "Find professionals",
     "count": "{count, plural, one {# saved professional} other {# saved professionals}}",
     "noReviews": "No reviews"
   },

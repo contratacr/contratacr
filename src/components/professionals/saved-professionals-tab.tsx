@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Bookmark, MapPin, Star, CheckCircle2, ExternalLink } from "lucide-react";
+import { Bookmark, MapPin, Star, CheckCircle2, ExternalLink, Wrench } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import { getSavedPros, unsavePro, type SavedPro } from "./save-button";
@@ -15,16 +15,9 @@ function SavedProCard({ pro, onUnsave }: { pro: SavedPro; onUnsave: (id: string)
     <div className="p-4 flex items-center gap-4 hover:bg-[#fafafa] transition-colors">
       {/* Avatar */}
       <div className="relative shrink-0">
-        <div
-          className="h-14 w-14 rounded-2xl flex items-center justify-center text-lg font-bold text-white"
-          style={{
-            background: pro.avatarUrl
-              ? undefined
-              : "linear-gradient(135deg, #009FD9, #0089bb)",
-          }}
-        >
+        <div className="h-14 w-14 overflow-hidden rounded-2xl flex items-center justify-center text-lg font-bold bg-[#EBF5FB] text-[#009FD9]">
           {pro.avatarUrl ? (
-            <img src={pro.avatarUrl} alt={pro.fullName} className="w-full h-full object-cover rounded-2xl" />
+            <img src={pro.avatarUrl} alt={pro.fullName} className="w-full h-full object-cover" />
           ) : (
             pro.fullName.split(" ").map((n) => n[0]).join("").slice(0, 2)
           )}
@@ -34,15 +27,15 @@ function SavedProCard({ pro, onUnsave }: { pro: SavedPro; onUnsave: (id: string)
       {/* Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="font-semibold text-[#111827] text-sm">{pro.fullName}</span>
+          <span className="font-semibold text-[#162543] text-sm">{pro.fullName}</span>
           {pro.isVerified && <CheckCircle2 className="h-3.5 w-3.5 text-[#009FD9] shrink-0" />}
         </div>
         <div className="flex items-center gap-3 mt-0.5 flex-wrap">
-          <span className="text-xs text-[#6b7280]">
-            {pro.categoryIcon} {tCat(pro.categoryId)}
+          <span className="flex items-center gap-1 text-xs text-[#6b7280]">
+            <Wrench className="h-3 w-3 shrink-0 text-[#9ca3af]" /> {tCat(pro.categoryId)}
           </span>
-          <span className="flex items-center gap-0.5 text-xs text-[#6b7280]">
-            <MapPin className="h-3 w-3" />
+          <span className="flex items-center gap-1 text-xs text-[#6b7280]">
+            <MapPin className="h-3 w-3 shrink-0 text-[#9ca3af]" />
             {pro.cantonName}, {pro.provinceName}
           </span>
         </div>

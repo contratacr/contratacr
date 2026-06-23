@@ -1815,7 +1815,7 @@
     "unsave": "Quitar de guardados",
     "empty": "No tienes profesionales guardados",
     "emptySub": "Guarda los perfiles que te interesan con el ícono de marcador en sus tarjetas.",
-    "searchPros": "Buscar servicios",
+    "searchPros": "Buscar profesionales",
     "count": "{count, plural, one {# profesional guardado} other {# profesionales guardados}}",
     "noReviews": "Sin reseñas"
   },
