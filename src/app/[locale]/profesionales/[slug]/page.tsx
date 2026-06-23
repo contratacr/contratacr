@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, type ReactNode } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import {
-  MapPin, Shield, ArrowLeft, Star, Briefcase, Camera,
+  MapPin, Shield, ShieldCheck, ArrowLeft, Star, Briefcase, Camera, Coins, Languages, Quote,
   Share2, Flag, ChevronDown, Lock, Phone, Building2, Award, Mail, SearchX,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +15,7 @@ import { LandingFooter } from "@/components/landing/landing-footer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { StarRating } from "@/components/ui/star-rating";
-import { getInitials, getWhatsAppLink, proDisplayName } from "@/lib/utils";
+import { getInitials, getWhatsAppLink, proDisplayName, cn } from "@/lib/utils";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { casoProfession } from "@/lib/services";
 import { formatPricingTier, primaryPricingLabel } from "@/lib/pricing";
@@ -675,98 +675,85 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                   )}
 
                   {/* ── TAB: Sobre mí ── */}
-                  {activeTab === "sobre" && (
-                    <div className="flex flex-col gap-5">
-                      {/* Lead: the bio reads as the intro paragraph. */}
-                      {professional.bio && (
-                        <p className="text-[15px] text-[#374151] leading-relaxed whitespace-pre-line">{professional.bio}</p>
-                      )}
+                  {activeTab === "sobre" && (() => {
+                    // Facts in display order — each = brand-tint icon + uppercase label + value
+                    // + an optional caption, laid out in a hairline-divided grid (owner mockup).
+                    const rate = professional.hourlyRate
+                      ? `₡${professional.hourlyRate.toLocaleString(locale === "en" ? "en-US" : "es-CR")}${t("perHour")}`
+                      : null;
+                    const hasWork = !!(professional.workplaces && professional.workplaces.length > 0);
+                    type Fact = { key: string; icon: ReactNode; label: string; value: ReactNode; caption?: ReactNode };
+                    const facts: Fact[] = [];
+                    if (professional.verificationStatus === "verified") facts.push({
+                      key: "verif", icon: <ShieldCheck className="h-5 w-5" />, label: t("verification"),
+                      value: <Badge variant="verified">{t("identityVerified")}</Badge>, caption: t("verificationCaption"),
+                    });
+                    if (expYears > 0) facts.push({
+                      key: "exp", icon: <Briefcase className="h-5 w-5" />, label: t("experienceLabel"), value: t("yearsValue", { years: expYears }),
+                    });
+                    if (professional.languages && professional.languages.length > 0) facts.push({
+                      key: "lang", icon: <Languages className="h-5 w-5" />, label: t("languages"),
+                      value: professional.languages.map((l) => languageLabel(l, locale)).join(" · "), caption: t("languagesCaption"),
+                    });
+                    if (professional.insuranceNetworks && professional.insuranceNetworks.length > 0) facts.push({
+                      key: "ins", icon: <Shield className="h-5 w-5" />, label: t("insurers"),
+                      value: professional.insuranceNetworks.map((id) => insurerLabel(id)).join(" · "),
+                    });
+                    if (professional.pricing && professional.pricing.length > 0) {
+                      facts.push({
+                        key: "price", icon: <Coins className="h-5 w-5" />, label: t("prices"),
+                        value: <span className="flex flex-col gap-0.5">{professional.pricing.map((tier) => <span key={tier.id}>{formatPricingTier(tier)}</span>)}</span>,
+                        caption: t("pricesRefCaption"),
+                      });
+                    } else if (rate) {
+                      facts.push({ key: "rate", icon: <Coins className="h-5 w-5" />, label: t("baseRate"), value: rate, caption: t("baseRateCaption") });
+                    }
+                    if (locationText || hasWork) facts.push({
+                      key: "loc", icon: <MapPin className="h-5 w-5" />,
+                      label: hasWork ? t("workplaces") : t("location"),
+                      value: locationText || professional.workplaces?.[0]?.name || "",
+                      caption: hasWork ? (
+                        <span className="flex flex-col gap-1.5">
+                          {professional.workplaces!.map((w, i) => (
+                            <span key={w.id ?? i} className="[overflow-wrap:anywhere]">
+                              <span className="font-medium text-[#374151]">{w.name}</span>
+                              {w.address && w.address !== w.name && <span className="mt-0.5 block text-[#9ca3af]">{w.address}</span>}
+                            </span>
+                          ))}
+                        </span>
+                      ) : undefined,
+                    });
 
-                      {/* Facts grid: each is a small uppercase muted LABEL with the
-                          value left-aligned beneath it — uniform, left-reading, no
-                          per-row dividers or boxes (only one hairline separating the
-                          bio). Long/multi-value facts (lugares, precios) span the full
-                          width so they never crowd against the right edge. */}
-                      <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-5 border-t border-[#f3f4f6] pt-5">
-                        {/* Verificación row only for verified pros — unverified show
-                            nothing (no negative label). */}
-                        {professional.verificationStatus === "verified" && (
-                          <div className="flex flex-col gap-1">
-                            <dt className="text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">{t("verification")}</dt>
-                            <dd>
-                              {/* Same canonical blue "Verificado" pill as the header card and
-                                  the pro's panel (not green text) — consistent everywhere. */}
-                              <Badge variant="verified">{t("identityVerified")}</Badge>
-                            </dd>
+                    return (
+                      <div className="flex flex-col gap-5">
+                        {/* Bio as a brand-tint quote block (owner mockup). */}
+                        {professional.bio && (
+                          <div className="flex gap-3.5 rounded-2xl bg-[#EBF5FB] p-5 sm:p-6">
+                            <Quote className="h-7 w-7 shrink-0 text-[#009FD9]" />
+                            <p className="text-[15px] text-[#374151] leading-relaxed whitespace-pre-line [overflow-wrap:anywhere]">{professional.bio}</p>
                           </div>
                         )}
-
-                        {expYears > 0 && (
-                          <div className="flex flex-col gap-1">
-                            <dt className="text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">{t("experienceLabel")}</dt>
-                            <dd className="text-sm font-medium text-[#111827]">{t("yearsValue", { years: expYears })}</dd>
+                        {/* Facts: a hairline-divided 2-col grid of brand-tint icon cards. */}
+                        {facts.length > 0 && (
+                          <div className="grid grid-cols-1 gap-px overflow-hidden rounded-2xl border border-[#eef0f2] bg-[#eef0f2] sm:grid-cols-2">
+                            {facts.map((f, i) => {
+                              const spanFull = i === facts.length - 1 && facts.length % 2 === 1;
+                              return (
+                                <div key={f.key} className={cn("flex items-start gap-3.5 bg-white p-4 sm:p-5", spanFull && "sm:col-span-2")}>
+                                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#EBF5FB] text-[#009FD9]">{f.icon}</span>
+                                  <div className="min-w-0 flex-1">
+                                    <p className="text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">{f.label}</p>
+                                    <div className="mt-1 text-[15px] font-bold text-[#162543] [overflow-wrap:anywhere]">{f.value}</div>
+                                    {f.caption && <div className="mt-1 text-xs leading-relaxed text-[#6b7280] [overflow-wrap:anywhere]">{f.caption}</div>}
+                                  </div>
+                                </div>
+                              );
+                            })}
                           </div>
                         )}
-
-                        {locationText && (
-                          <div className="flex flex-col gap-1">
-                            <dt className="text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">{t("location")}</dt>
-                            <dd className="text-sm font-medium text-[#111827]">{locationText}</dd>
-                          </div>
-                        )}
-
-                        {professional.languages && professional.languages.length > 0 && (
-                          <div className="flex flex-col gap-1">
-                            <dt className="text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">{t("languages")}</dt>
-                            <dd className="text-sm font-medium text-[#111827]">
-                              {professional.languages.map((l) => languageLabel(l, locale)).join(" · ")}
-                            </dd>
-                          </div>
-                        )}
-
-                        {professional.insuranceNetworks && professional.insuranceNetworks.length > 0 && (
-                          <div className="flex flex-col gap-1">
-                            <dt className="text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">{t("insurers")}</dt>
-                            <dd className="text-sm font-medium text-[#111827]">
-                              {professional.insuranceNetworks.map((id) => insurerLabel(id)).join(" · ")}
-                            </dd>
-                          </div>
-                        )}
-
-                        {professional.pricing && professional.pricing.length > 0 ? (
-                          <div className="flex flex-col gap-1 sm:col-span-2">
-                            <dt className="text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">{t("prices")}</dt>
-                            <dd className="flex flex-col gap-0.5">
-                              {professional.pricing.map((tier) => (
-                                <span key={tier.id} className="text-sm font-medium text-[#111827]">{formatPricingTier(tier)}</span>
-                              ))}
-                            </dd>
-                          </div>
-                        ) : professional.hourlyRate ? (
-                          <div className="flex flex-col gap-1">
-                            <dt className="text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">{t("baseRate")}</dt>
-                            <dd className="text-sm font-medium text-[#111827]">₡{professional.hourlyRate.toLocaleString(locale === "en" ? "en-US" : "es-CR")}{t("perHour")}</dd>
-                          </div>
-                        ) : null}
-
-                        {professional.workplaces && professional.workplaces.length > 0 && (
-                          <div className="flex flex-col gap-1 sm:col-span-2">
-                            <dt className="text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">{t("workplaces")}</dt>
-                            <dd className="flex flex-col gap-1.5">
-                              {professional.workplaces.map((w, i) => (
-                                <span key={w.id ?? i} className="text-sm">
-                                  <span className="font-medium text-[#111827]">{w.name}</span>
-                                  {w.address && w.address !== w.name && (
-                                    <span className="block text-xs text-[#9ca3af]">{w.address}</span>
-                                  )}
-                                </span>
-                              ))}
-                            </dd>
-                          </div>
-                        )}
-                      </dl>
-                    </div>
-                  )}
+                      </div>
+                    );
+                  })()}
 
                 </div>
               </div>
