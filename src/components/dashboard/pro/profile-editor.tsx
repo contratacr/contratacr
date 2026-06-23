@@ -480,7 +480,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
   useReportSaveStatus(saving || autoSaving, saved, dirty);
 
   return (
-    <div className="flex flex-col gap-4 max-w-lg">
+    <div className="flex flex-col gap-4 w-full max-w-lg mx-auto">
       {error && (
         <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-600">
           {error}
