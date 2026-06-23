@@ -125,8 +125,8 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
     return Object.fromEntries(professions.map((p) => [p, visible.filter((o) => o.category_id === p).length]));
   }, [openProjects, submitted, dismissed, professions]);
 
-  async function fetchOpenProjects() {
-    setLoading(true);
+  async function fetchOpenProjects(silent = false) {
+    if (!silent) setLoading(true);
     const url = `/api/projects?role=professional${categoryId ? `&category=${categoryId}` : ""}`;
     // Fetch open projects + this pro's existing proposals so we can flag the
     // projects they already proposed to (no duplicate proposals allowed).
@@ -138,15 +138,15 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
     const { proposals } = await mineRes.json().catch(() => ({ proposals: [] }));
     setOpenProjects(projects ?? []);
     setSubmitted(new Set<string>((proposals ?? []).map((p: { project_id: string }) => p.project_id)));
-    setLoading(false);
+    if (!silent) setLoading(false);
   }
 
-  async function fetchMyProposals() {
-    setLoading(true);
+  async function fetchMyProposals(silent = false) {
+    if (!silent) setLoading(true);
     const res = await fetch("/api/proposals?mine=true");
     const { proposals } = await res.json();
     setMyProposals(proposals ?? []);
-    setLoading(false);
+    if (!silent) setLoading(false);
   }
 
   useEffect(() => {
@@ -155,12 +155,14 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view]);
 
-  // Refetch when the pro returns to the tab/window so a project cancelled or
-  // deleted by the client updates automatically (no stale "Aceptada").
+  // SILENTLY revalidate when the pro returns to the tab/window — so a project the client
+  // cancelled/deleted updates in the background, WITHOUT a jarring reload. The `silent` flag
+  // skips the loading state, so the current view (selection, expanded card, scroll) is
+  // preserved on refocus (the old non-silent refetch flashed the whole list as "loading").
   useEffect(() => {
     function onFocus() {
       if (document.visibilityState === "visible") {
-        if (view === "browse") fetchOpenProjects(); else fetchMyProposals();
+        if (view === "browse") fetchOpenProjects(true); else fetchMyProposals(true);
       }
     }
     window.addEventListener("focus", onFocus);
