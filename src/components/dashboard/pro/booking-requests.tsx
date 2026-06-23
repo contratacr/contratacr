@@ -194,6 +194,8 @@ export function BookingRequests() {
 
     const category = booking.category_id ? getCategoryLabel(booking.category_id, locale) : null;
     const location = booking.slot_location_label || null;
+    // Inbox snippet (Superhuman/Gmail): "servicio · nota" — the one-line context preview.
+    const snippet = [category, booking.service_description].filter(Boolean).join(" · ");
 
     // First name for the friendly WhatsApp greeting (the requester is the only contact).
     const cliFirst = (booking.client_name || t("thePerson")).split(" ")[0];
@@ -246,8 +248,11 @@ export function BookingRequests() {
             <AvatarImage src={booking.profiles?.avatar_url} className="object-cover" />
             <AvatarFallback className="text-sm font-bold bg-[#EBF5FB] text-[#009FD9]">{getInitials(booking.client_name || "?")}</AvatarFallback>
           </Avatar>
+          {/* INBOX ROW (Superhuman/Gmail hierarchy): bold name (+ pills) and the status on line 1,
+              the APPOINTMENT date prominent on line 2 (no "Fecha:" label — the date speaks for
+              itself), and a muted "servicio · nota" snippet on line 3 for instant context. */}
           <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between gap-2">
+            <div className="flex items-start justify-between gap-2">
               <span className="text-[15px] font-semibold text-[#111827] min-w-0 flex items-center gap-2 flex-wrap">
                 {booking.client_name || t("thePerson")}
                 {!booking.for_someone_else && ageBadge(booking.client_dob)}
@@ -259,9 +264,9 @@ export function BookingRequests() {
               )}
             </div>
             <p className="mt-0.5 text-[13px] truncate">
-              <span className="text-[#6b7280]">{t("fieldDate")}</span>{" "}
               <span className={dateStr ? "font-medium text-[#374151]" : "text-[#6b7280]"}>{dateStr || t("noScheduledDate")}</span>
             </p>
+            {snippet && <p className="mt-0.5 text-[12px] text-[#6b7280] truncate">{snippet}</p>}
           </div>
           <ChevronDown className={cn("h-5 w-5 text-[#9ca3af] shrink-0 transition-transform duration-200", expanded && "rotate-180")} />
         </button>

@@ -283,7 +283,7 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
                       ? t("from", { amount: `₡${project.budget_min.toLocaleString("es-CR")}` })
                       : t("upTo", { amount: `₡${project.budget_max!.toLocaleString("es-CR")}` }))
                   : t("budgetTBD");
-                const hasZoneDeadline = (project.provincias?.name || project.cantones?.name) || project.timeline;
+                const zona = [project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ");
 
                 return (
                   <Card key={project.id}>
@@ -311,13 +311,14 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
                             <Badge variant="muted" className="shrink-0 text-[11px] font-semibold">{project.categories.name}</Badge>
                           ) : null}
                         </div>
+                        {/* Decision line (Upwork): the BUDGET is the key decision — brand-blue +
+                            prominent — with zona · plazo trailing as muted secondary. No loud chips. */}
                         <p className="mt-0.5 text-[13px] truncate">
-                          <span className="text-[#6b7280]">{t("fieldBudget")}</span>{" "}
-                          <span className="font-medium text-[#374151]">{budgetText}</span>
+                          <span className="font-semibold text-[#0089bb]">{budgetText}</span>
+                          {zona && <span className="text-[#6b7280]"> · {zona}</span>}
+                          {project.timeline && <span className="text-[#6b7280]"> · {project.timeline}</span>}
                         </p>
-                        {/* Description preview (collapsed only) — clamped to 2 lines for a
-                            uniform, compact list; full text shows on expand. overflow-wrap:anywhere
-                            breaks long unbroken strings so the card never grows past its column. */}
+                        {/* Scope preview (collapsed only) — 2-line snippet; full text on expand. */}
                         {!isExpanded && project.description && (
                           <p className="mt-1 text-[13px] text-[#6b7280] leading-snug line-clamp-2 [overflow-wrap:anywhere]">{project.description}</p>
                         )}
@@ -329,16 +330,6 @@ export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
                       <div className="px-4 pb-4 pt-3 border-t border-[#f3f4f6] flex flex-col gap-2.5">
                         {project.profiles?.full_name && (
                           <p className="text-[12.5px] text-[#6b7280] truncate">{project.profiles.full_name}</p>
-                        )}
-                        {hasZoneDeadline && (
-                          <p className="flex flex-wrap gap-x-3 gap-y-0.5 text-[12.5px] text-[#6b7280]">
-                            {(project.provincias?.name || project.cantones?.name) && (
-                              <span><span className="text-[#6b7280]">{t("fieldZone")}</span> {[project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ")}</span>
-                            )}
-                            {project.timeline && (
-                              <span><span className="text-[#6b7280]">{t("fieldDeadline")}</span> {project.timeline}</span>
-                            )}
-                          </p>
                         )}
                         {project.description && (
                           <p className="text-[13px] text-[#374151] whitespace-pre-line [overflow-wrap:anywhere]">{project.description}</p>

@@ -349,23 +349,23 @@ export function ServicesEditor({
                     /* Catalog-style service row (Fiverr/Shopify): name + brief, the PRICE as a
                        brand-tint TAG chip (or an amber "Agregar precio" nudge when missing), and
                        quiet edit/delete actions. `min-w-0` + `break-words` keep long names inside. */
-                    <div key={svc.id} className="group flex items-start gap-2.5 rounded-xl border border-[#e5e7eb] p-3.5 transition-all hover:border-[#009FD9]/50 hover:shadow-sm">
+                    /* ALIGNED-TABLE row (Stripe Dashboard / Apple Settings "label : value"):
+                       name on the left, the PRICE right-aligned in its own column so prices line
+                       up vertically down the list; the brief is a muted 1-line subline; edit/delete
+                       are quiet — always visible on mobile, revealed on hover on desktop. */
+                    <div key={svc.id} className="group flex items-center gap-3 rounded-xl border border-[#e5e7eb] px-3.5 py-3 transition-colors hover:bg-[#fafafa]">
                       <div className="min-w-0 flex-1">
-                        <p className="break-words text-sm font-semibold text-[#111827]">{svc.name}</p>
-                        {svc.description && <p className="mt-0.5 break-words text-xs text-[#6b7280] line-clamp-2">{svc.description}</p>}
-                        {svc.price ? (
-                          <span className="mt-2 inline-flex max-w-full items-center rounded-full bg-[#EBF5FB] px-2.5 py-1 text-xs font-semibold text-[#0089bb] [overflow-wrap:anywhere]">{svc.price}</span>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => openEdit(svc)}
-                            className="mt-2 inline-flex items-center gap-1 rounded-full bg-[#fef3c7] px-2.5 py-1 text-xs font-semibold text-[#92400e] hover:bg-[#fde68a] transition-colors"
-                          >
-                            <Plus className="h-3 w-3" /> {t("addPrice")}
-                          </button>
-                        )}
+                        <div className="flex items-baseline gap-3">
+                          <p className="min-w-0 flex-1 truncate text-sm font-semibold text-[#111827]">{svc.name}</p>
+                          {svc.price ? (
+                            <span className="shrink-0 text-sm font-semibold text-[#0089bb]">{svc.price}</span>
+                          ) : (
+                            <button type="button" onClick={() => openEdit(svc)} className="shrink-0 text-xs font-semibold text-[#b45309] hover:underline">{t("addPrice")}</button>
+                          )}
+                        </div>
+                        {svc.description && <p className="mt-0.5 truncate text-xs text-[#6b7280]">{svc.description}</p>}
                       </div>
-                      <div className="flex shrink-0 items-center gap-1.5">
+                      <div className="flex shrink-0 items-center gap-0.5 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
                         <button onClick={() => openEdit(svc)} className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9ca3af] hover:bg-[#EBF5FB] hover:text-[#009FD9] transition-colors" title={t("edit")} aria-label={t("edit")}>
                           <Pencil className="h-3.5 w-3.5" />
                         </button>
