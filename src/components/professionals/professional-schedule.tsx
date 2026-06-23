@@ -409,6 +409,23 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
       {t("viewFullSchedule")}
     </button>
   );
+  // "Llamar" link — FILLED (a primary contact action, e.g. in the no-schedule state) or
+  // OUTLINED/secondary (when it sits BELOW "Ver horario completo"). Calls are blocked on
+  // the pro's OWN card (shows a self note instead). Rendered only when showCall is true.
+  const renderCall = (secondary: boolean) => (
+    <a
+      href={isOwn ? undefined : telHref}
+      onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.call); } : (e) => e.stopPropagation()}
+      className={`w-full inline-flex items-center justify-center gap-1.5 rounded-full py-2.5 text-[13px] font-semibold transition-colors ${
+        secondary
+          ? "border border-[#e5e7eb] bg-white text-[#374151] hover:bg-[#f9fafb]"
+          : "bg-[#009FD9] text-white hover:bg-[#0089bb]"
+      }`}
+    >
+      {/* Profile page uses the short label "Llamar"; /buscar keeps "Contáctanos por llamada". */}
+      <Phone className="h-4 w-4" /> {stacked ? t("callShort") : t("call")}
+    </a>
+  );
   const contactButtons = (
     <>
       {showWa && (
@@ -423,20 +440,8 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
           <WhatsAppIcon className="h-4 w-4" /> {stacked ? t("whatsappShort") : t("whatsapp")}
         </a>
       )}
-      {showCall && (
-        <a
-          href={isOwn ? undefined : telHref}
-          onClick={isOwn ? (e) => { e.preventDefault(); e.stopPropagation(); setSelfMsg(SELF_MSG.call); } : (e) => e.stopPropagation()}
-          className={`w-full inline-flex items-center justify-center gap-1.5 rounded-full py-2.5 text-[13px] font-semibold transition-colors ${
-            stacked
-              ? "border border-[#e5e7eb] bg-white text-[#374151] hover:bg-[#f9fafb]"
-              : "bg-[#009FD9] text-white hover:bg-[#0089bb]"
-          }`}
-        >
-          {/* Profile page uses the short label "Llamar"; /buscar keeps "Contáctanos por llamada". */}
-          <Phone className="h-4 w-4" /> {stacked ? t("callShort") : t("call")}
-        </a>
-      )}
+      {/* No-schedule state: filled on /buscar, outlined on the profile contact card. */}
+      {showCall && renderCall(stacked)}
     </>
   );
 
@@ -568,7 +573,16 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
             blank strip beside the full-width buttons). Content stays full-width. */}
         <div className="relative z-10 flex min-w-0 flex-col gap-3 border-t border-[#e5e7eb] pt-3 lg:justify-center lg:border-t-0 lg:border-l lg:border-[#e5e7eb] lg:pt-6 lg:pl-4">
           {scheduleBody}
-          {hasSchedule ? verHorarioButton : contactButtons}
+          {/* A pro who enabled "Permitir contacto por llamada" should ALWAYS surface a
+              "Llamar" option on their /buscar card — even when a bookable schedule funnels
+              into "Ver horario completo" (which otherwise replaced the contact buttons).
+              The call sits as an outlined secondary action below the primary schedule CTA. */}
+          {hasSchedule ? (
+            <>
+              {verHorarioButton}
+              {showCall && renderCall(true)}
+            </>
+          ) : contactButtons}
         </div>
       </div>
 
