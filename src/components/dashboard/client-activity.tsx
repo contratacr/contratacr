@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarDays, FolderOpen, ChevronDown, Plus, CalendarClock, Wrench, MessageSquare, MapPin } from "lucide-react";
+import { CalendarDays, FolderOpen, ChevronDown, Plus, CalendarClock, Wrench, Users, MapPin } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -549,7 +549,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                         </div>
                         {/* Propuestas count + publish date — each with a quiet grey icon, well-spaced. */}
                         <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[#6b7280]">
-                          <span className="inline-flex items-center gap-1.5"><MessageSquare className="h-3.5 w-3.5 shrink-0 text-[#374151]" /> {t("proposalsCount", { count: proposalCount })}</span>
+                          <span className="inline-flex items-center gap-1.5"><Users className="h-3.5 w-3.5 shrink-0 text-[#374151]" /> {t("proposalsCount", { count: proposalCount })}</span>
                           <span className="inline-flex items-center gap-1.5"><CalendarDays className="h-3.5 w-3.5 shrink-0 text-[#374151]" /> {t("publishedOn", { date: new Date(project.created_at).toLocaleDateString(dateLocale, { day: "numeric", month: "short", year: "numeric" }).replace(".", "") })}</span>
                         </p>
                         {/* Description preview (collapsed only) — clamped to 2 lines so every
