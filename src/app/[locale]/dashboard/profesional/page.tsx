@@ -440,7 +440,6 @@ export default function DashboardPage() {
                             onSaved={handleSaved}
                             focusField={profileFocus?.field ?? null}
                             focusKey={profileFocus?.key}
-                            onNavigate={(tab) => setTab(tab as Tab)}
                           />
                         )}
                         {activeTab === "profile" && mode === "use" && (

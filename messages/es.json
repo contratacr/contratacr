@@ -1439,17 +1439,6 @@
     "blockedRemove": "Eliminar"
   },
   "profileEditor": {
-    "snapshotNameFallback": "Tu nombre",
-    "snapshotNoProfession": "Agrega tu profesión",
-    "snapshotNoZone": "Agrega tu zona de trabajo",
-    "groupIdentity": "Tu información",
-    "groupReach": "Ubicación y contacto",
-    "groupExtra": "Detalles adicionales",
-    "groupManage": "Gestionar",
-    "linkServices": "Profesiones y servicios",
-    "linkCasos": "Casos de éxito",
-    "linkAvailability": "Disponibilidad",
-    "linkVerification": "Verificación",
     "secBasic": "Datos básicos",
     "secBasicDesc": "Foto, nombre y descripción",
     "secProfessions": "Profesiones",
