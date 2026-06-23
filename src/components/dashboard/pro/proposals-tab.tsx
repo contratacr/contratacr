@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { FolderOpen, Send, ChevronDown, MapPin, CalendarClock, Wallet, Search } from "lucide-react";
+import { FolderOpen, Send, ChevronDown } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,7 +10,6 @@ import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PriceInput } from "@/components/ui/price-input";
 import { cn, getWhatsAppLink, getInitials } from "@/lib/utils";
-import { getCategoryLabel } from "@/lib/data/categories";
 import { StatusFilterTabs, PROYECTO_TABS, proposalMatches, proposalBucket, proposalStatusRedundant, bucketCounts } from "@/components/dashboard/status-filter-tabs";
 import { CardActionsMenu, type CardAction } from "@/components/dashboard/card-actions-menu";
 
@@ -26,7 +25,6 @@ type MyProposal = {
   projects?: {
     title: string;
     status: string;
-    category_id?: string | null;
     profiles: { full_name: string; phone?: string; avatar_url?: string };
   };
 };
@@ -39,7 +37,6 @@ type OpenProject = {
   budget_max?: number;
   timeline?: string;
   created_at: string;
-  category_id?: string | null;
   categories?: { name: string };
   provincias?: { name: string };
   cantones?: { name: string };
@@ -64,23 +61,13 @@ function projStatusVariant(status?: string): "warning" | "success" | "error" | "
 
 interface ProposalsTabProps {
   categoryId?: string;
-  /** The professions on the pro's profile — used to FILTER opportunities and sent
-   *  proposals by profession (the filter only appears when there's more than one). */
-  professions?: string[];
   /** The pro's services — used to SURFACE projects whose text matches them. */
   services?: { name?: string }[];
 }
 
-export function ProposalsTab({ categoryId, professions = [], services = [] }: ProposalsTabProps) {
+export function ProposalsTab({ categoryId, services = [] }: ProposalsTabProps) {
   const t = useTranslations("proposalsTab");
   const locale = useLocale();
-
-  // Filter by profession (both views). "all" = every profession; otherwise a single
-  // category id. Only surfaced when the pro has more than one profession.
-  const [profFilter, setProfFilter] = useState<string>("all");
-  const profTabs = useMemo(() => [{ id: "all" }, ...professions.map((p) => ({ id: p }))], [professions]);
-  const profLabel = (id: string) => (id === "all" ? t("allProfessions") : getCategoryLabel(id, locale));
-  const showProfFilter = professions.length > 1;
 
   // Significant words (≥4 chars) from the pro's service names — used to flag
   // projects whose title/description mention what the pro actually offers, and to
@@ -110,9 +97,6 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
   const [myProposals, setMyProposals] = useState<MyProposal[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedProject, setExpandedProject] = useState<string | null>(null);
-  // Desktop master–detail: which opportunity is shown in the right detail pane (mobile
-  // uses the inline accordion via expandedProject instead).
-  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [proposalForms, setProposalForms] = useState<Record<string, { price: string; message: string }>>({});
   const [submitting, setSubmitting] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState<Set<string>>(new Set());
@@ -248,144 +232,6 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
   const inputClass =
     "w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-2.5 text-sm text-[#111827] placeholder:text-[#9ca3af] break-words focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
 
-  // "Publicada hace X" (from created_at) and a recency flag for the "Nueva" chip.
-  function relativeTime(iso: string): string {
-    const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
-    if (mins < 60) return t("agoNow");
-    const hours = Math.floor(mins / 60);
-    if (hours < 24) return t("agoHours", { count: hours });
-    return t("agoDays", { count: Math.floor(hours / 24) });
-  }
-  const isNew = (iso: string) => Date.now() - new Date(iso).getTime() < 48 * 3600 * 1000;
-
-  function budgetTextFor(project: OpenProject): string {
-    if (project.budget_min && project.budget_max)
-      return t("range", { min: `₡${project.budget_min.toLocaleString("es-CR")}`, max: `₡${project.budget_max.toLocaleString("es-CR")}` });
-    if (project.budget_min) return t("from", { amount: `₡${project.budget_min.toLocaleString("es-CR")}` });
-    if (project.budget_max) return t("upTo", { amount: `₡${project.budget_max.toLocaleString("es-CR")}` });
-    return t("budgetTBD");
-  }
-
-  // The detail pane (Upwork/job-board): shown in the desktop right column AND inline on
-  // mobile (accordion). Header (badges + title + zona·publicada) → "el cliente espera"
-  // callout → description → budget·fecha meta → client → the proposal form (or the
-  // already-sent note). Same data, same submit handler as before.
-  function renderDetail(project: OpenProject) {
-    const alreadySubmitted = submitted.has(project.id);
-    const form = proposalForms[project.id] ?? { price: "", message: "" };
-    const zona = [project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ");
-    return (
-      <div className="flex flex-col">
-        <div className="flex flex-col gap-3.5 p-4 sm:p-5">
-          <div className="flex items-start gap-3">
-            <Avatar className="h-11 w-11 shrink-0">
-              <AvatarImage src={project.profiles?.avatar_url} className="object-cover" />
-              <AvatarFallback className="text-sm bg-[#EBF5FB] text-[#009FD9] font-bold">{getInitials(project.profiles?.full_name ?? "?")}</AvatarFallback>
-            </Avatar>
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-1.5">
-                {isNew(project.created_at) && <Badge variant="default" className="text-[10px] font-semibold">{t("new")}</Badge>}
-                {alreadySubmitted && <Badge variant="success" className="text-[10px] font-semibold">{t("alreadyProposed")}</Badge>}
-              </div>
-              <h3 className="mt-1 text-[18px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere]">{project.title}</h3>
-              <p className="mt-0.5 text-[12.5px] text-[#6b7280]">
-                {zona && <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5 text-[#9ca3af]" />{zona}</span>}
-                {zona && " · "}{t("postedAgo", { time: relativeTime(project.created_at) })}
-              </p>
-            </div>
-          </div>
-
-          {/* Motivational callout — a single brand accent, not a colorful icon. */}
-          <div className="flex items-start gap-2.5 rounded-xl bg-[#EBF5FB] px-3.5 py-3">
-            <Search className="mt-0.5 h-4 w-4 shrink-0 text-[#0089bb]" />
-            <div className="min-w-0">
-              <p className="text-[13px] font-semibold text-[#162543]">{t("waitingTitle")}</p>
-              <p className="text-[12px] text-[#6b7280]">{t("waitingBody")}</p>
-            </div>
-          </div>
-
-          {project.description && (
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#9ca3af]">{t("projectDescription")}</p>
-              <p className="mt-1 text-[13px] leading-relaxed text-[#374151] whitespace-pre-line [overflow-wrap:anywhere]">{project.description}</p>
-            </div>
-          )}
-
-          {/* Budget · desired date (real fields only — no "preferencia" we don't store). */}
-          <div className="grid grid-cols-1 divide-y divide-[#eef0f2] overflow-hidden rounded-xl border border-[#eef0f2] bg-[#f9fafb] sm:grid-cols-2 sm:divide-x sm:divide-y-0">
-            <div className="flex items-center gap-2.5 px-3.5 py-3">
-              <Wallet className="h-4 w-4 shrink-0 text-[#9ca3af]" />
-              <div className="min-w-0">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("budgetLabel")}</p>
-                <p className="truncate text-[13px] font-semibold text-[#0089bb]">{budgetTextFor(project)}</p>
-              </div>
-            </div>
-            {project.timeline && (
-              <div className="flex items-center gap-2.5 px-3.5 py-3">
-                <CalendarClock className="h-4 w-4 shrink-0 text-[#9ca3af]" />
-                <div className="min-w-0">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("timelineLabel")}</p>
-                  <p className="truncate text-[13px] font-medium text-[#374151]">{project.timeline}</p>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {project.profiles?.full_name && (
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#9ca3af]">{t("clientInfo")}</p>
-              <div className="mt-1.5 flex items-center gap-2.5">
-                <Avatar className="h-8 w-8 shrink-0">
-                  <AvatarImage src={project.profiles.avatar_url} className="object-cover" />
-                  <AvatarFallback className="text-[11px] bg-[#EBF5FB] text-[#009FD9] font-bold">{getInitials(project.profiles.full_name)}</AvatarFallback>
-                </Avatar>
-                <p className="min-w-0 truncate text-[13px] font-medium text-[#374151]">{project.profiles.full_name}</p>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Footer — the proposal form (tip + price + message + Enviar), or the sent note. */}
-        <div className="border-t border-[#f3f4f6] bg-[#fafbfc] p-4 sm:p-5">
-          {alreadySubmitted ? (
-            <p className="text-center text-[13px] text-[#6b7280]">{t("alreadyProposedNote")}</p>
-          ) : (
-            <div className="flex flex-col gap-3">
-              <p className="text-[12px] text-[#6b7280]"><span className="font-semibold text-[#162543]">{t("tipLabel")}</span> {t("tipBody")}</p>
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-[#374151]">
-                  {t("yourPrice")} <span className="font-normal text-[#6b7280]">{t("optional")}</span>
-                </label>
-                <PriceInput value={form.price} onChange={(v) => updateForm(project.id, "price", v)} />
-              </div>
-              <div>
-                <label className="mb-1.5 block text-xs font-medium text-[#374151]">
-                  {t("yourMessage")} <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  value={form.message}
-                  onChange={(e) => updateForm(project.id, "message", e.target.value)}
-                  maxLength={500}
-                  className={`${inputClass} min-h-[100px] resize-none`}
-                />
-                {form.message.length >= 500 && <p className="mt-1 text-xs text-[#b45309]">{t("charLimit", { max: 500 })}</p>}
-              </div>
-              <Button
-                onClick={() => submitProposal(project.id)}
-                disabled={!form.message.trim() || submitting === project.id}
-                loading={submitting === project.id}
-                className="w-full"
-              >
-                {t("sendProposal")}
-              </Button>
-              <p className="text-center text-[11px] text-[#9ca3af]">{t("proposalFree")}</p>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-
   if (loading) {
     return (
       <div className="flex justify-center py-12">
@@ -423,90 +269,117 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
             </div>
           ) : (
             <div className="flex flex-col gap-3">
-              {/* Filter by the pro's professions (only when they have more than one). The
-                  server already scopes opportunities to their professions; this lets them
-                  narrow to one at a time. */}
-              {showProfFilter && (
-                <StatusFilterTabs tabs={profTabs} value={profFilter} onChange={setProfFilter} labelFor={profLabel} />
-              )}
-              {(() => {
-              // Filter by the selected profession, then surface projects that match the
-              // pro's services first (stable sort, no visible badge).
-              const list = [...openProjects]
-                .filter((project) => profFilter === "all" || project.category_id === profFilter)
-                .sort((a, b) => Number(matchesServices(b)) - Number(matchesServices(a)));
-              if (list.length === 0) return <p className="text-sm text-[#6b7280] text-center py-8">{t("noneInView")}</p>;
-              // Desktop: the active opportunity drives the right detail pane (default = first).
-              const activeProject = list.find((p) => p.id === selectedId) ?? list[0];
-              const newCount = list.filter((p) => isNew(p.created_at) && !submitted.has(p.id)).length;
+              {/* Surface projects that match the pro's services first (stable sort,
+                  no visible badge). */}
+              {[...openProjects].sort((a, b) => Number(matchesServices(b)) - Number(matchesServices(a))).map((project) => {
+                const isExpanded = expandedProject === project.id;
+                const alreadySubmitted = submitted.has(project.id);
+                const form = proposalForms[project.id] ?? { price: "", message: "" };
+                const proposalCount = project.proposals?.length ?? 0;
+                const budgetText = (project.budget_min || project.budget_max)
+                  ? (project.budget_min && project.budget_max
+                      ? t("range", { min: `₡${project.budget_min.toLocaleString("es-CR")}`, max: `₡${project.budget_max.toLocaleString("es-CR")}` })
+                      : project.budget_min
+                      ? t("from", { amount: `₡${project.budget_min.toLocaleString("es-CR")}` })
+                      : t("upTo", { amount: `₡${project.budget_max!.toLocaleString("es-CR")}` }))
+                  : t("budgetTBD");
+                const zona = [project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ");
 
-              return (
-                /* MASTER–DETAIL (Upwork/job-board, owner's mockup): a compact LIST on the left and
-                   the selected opportunity's DETAIL on the right (desktop); on mobile it's a single
-                   column where tapping a card expands the same detail inline (accordion). */
-                <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)] lg:items-start lg:gap-5">
-                  {/* LEFT — list */}
-                  <div className="flex flex-col gap-2.5 lg:min-w-0">
-                    <div className="flex items-center justify-between px-1">
-                      <p className="text-[13px] font-semibold text-[#162543]">{t("availableTitle")}</p>
-                      {newCount > 0 && <span className="text-[11px] font-semibold text-[#0089bb]">{t("newCount", { count: newCount })}</span>}
-                    </div>
-                    {list.map((project) => {
-                      const isExpanded = expandedProject === project.id;
-                      const isActive = activeProject?.id === project.id;
-                      const alreadySubmitted = submitted.has(project.id);
-                      const zona = [project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ");
-                      return (
-                        <Card
-                          key={project.id}
-                          className={cn("transition-colors", isActive && "lg:border-[#009FD9] lg:bg-[#f8fcff] lg:ring-1 lg:ring-[#009FD9]/30")}
-                        >
-                          <button
-                            type="button"
-                            onClick={() => { setSelectedId(project.id); setExpandedProject(isExpanded ? null : project.id); }}
-                            aria-expanded={isExpanded}
-                            className={cn("flex w-full items-start gap-3 p-3.5 text-left transition-colors hover:bg-[#fafafa]", isExpanded ? "rounded-t-2xl lg:rounded-2xl" : "rounded-2xl")}
-                          >
-                            {/* The selected card in the desktop list carries a brand-blue left accent. */}
-                            <span className={cn("hidden w-1 self-stretch rounded-full lg:block", isActive ? "bg-[#009FD9]" : "bg-transparent")} aria-hidden />
-                            <Avatar className="h-10 w-10 shrink-0">
-                              <AvatarImage src={project.profiles?.avatar_url} className="object-cover" />
-                              <AvatarFallback className="text-sm bg-[#EBF5FB] text-[#009FD9] font-bold">{getInitials(project.profiles?.full_name ?? "?")}</AvatarFallback>
-                            </Avatar>
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-start justify-between gap-2">
-                                <span className="min-w-0 truncate text-[14px] font-semibold text-[#162543]">{project.title}</span>
-                                {alreadySubmitted ? (
-                                  <Badge variant="success" className="shrink-0 text-[10px] font-semibold">{t("sentShort")}</Badge>
-                                ) : isNew(project.created_at) ? (
-                                  <Badge variant="default" className="shrink-0 text-[10px] font-semibold">{t("new")}</Badge>
-                                ) : null}
-                              </div>
-                              {(zona || project.timeline) && (
-                                <p className="mt-0.5 truncate text-[12px] text-[#6b7280]">{[zona, project.timeline].filter(Boolean).join(" · ")}</p>
-                              )}
-                              <div className="mt-1 flex items-center justify-between gap-2">
-                                <span className="min-w-0 truncate text-[13px] font-semibold text-[#0089bb]">{budgetTextFor(project)}</span>
-                                <span className="shrink-0 text-[11px] text-[#9ca3af]">{relativeTime(project.created_at)}</span>
-                              </div>
+                return (
+                  <Card key={project.id}>
+                    {/* EXPANDABLE OPORTUNIDAD (sprint 430): COLLAPSED shows essentials — title ·
+                        presupuesto · estado/categoría. Tapping reveals who posted, zona·plazo, the
+                        full description, the proposals count, and the "Proponer" form. */}
+                    <button
+                      type="button"
+                      onClick={() => setExpandedProject(isExpanded ? null : project.id)}
+                      aria-expanded={isExpanded}
+                      className={cn("w-full text-left p-4 flex items-start gap-2.5 hover:bg-[#fafafa] transition-colors", isExpanded ? "rounded-t-2xl" : "rounded-2xl")}
+                    >
+                      <Avatar className="h-10 w-10 shrink-0">
+                        <AvatarImage src={project.profiles?.avatar_url} className="object-cover" />
+                        <AvatarFallback className="text-sm bg-[#EBF5FB] text-[#009FD9] font-bold">
+                          {getInitials(project.profiles?.full_name ?? "?")}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <span className="text-[15px] font-semibold text-[#111827] min-w-0 truncate">{project.title}</span>
+                          {alreadySubmitted ? (
+                            <Badge variant="success" className="shrink-0 text-[11px] font-semibold">{t("alreadyProposed")}</Badge>
+                          ) : project.categories?.name ? (
+                            <Badge variant="muted" className="shrink-0 text-[11px] font-semibold">{project.categories.name}</Badge>
+                          ) : null}
+                        </div>
+                        {/* Decision line (Upwork): the BUDGET is the key decision — brand-blue +
+                            prominent — with zona · plazo trailing as muted secondary. No loud chips. */}
+                        <p className="mt-0.5 text-[13px] truncate">
+                          <span className="font-semibold text-[#0089bb]">{budgetText}</span>
+                          {zona && <span className="text-[#6b7280]"> · {zona}</span>}
+                          {project.timeline && <span className="text-[#6b7280]"> · {project.timeline}</span>}
+                        </p>
+                        {/* Scope preview (collapsed only) — 2-line snippet; full text on expand. */}
+                        {!isExpanded && project.description && (
+                          <p className="mt-1 text-[13px] text-[#6b7280] leading-snug line-clamp-2 [overflow-wrap:anywhere]">{project.description}</p>
+                        )}
+                      </div>
+                      <ChevronDown className={cn("h-5 w-5 text-[#9ca3af] shrink-0 mt-0.5 transition-transform duration-200", isExpanded && "rotate-180")} />
+                    </button>
+
+                    {isExpanded && (
+                      <div className="px-4 pb-4 pt-3 border-t border-[#f3f4f6] flex flex-col gap-2.5">
+                        {project.profiles?.full_name && (
+                          <p className="text-[12.5px] text-[#6b7280] truncate">{project.profiles.full_name}</p>
+                        )}
+                        {project.description && (
+                          <p className="text-[13px] text-[#374151] whitespace-pre-line [overflow-wrap:anywhere]">{project.description}</p>
+                        )}
+                        <span className="text-xs text-[#6b7280]">{t("proposalsCount", { count: proposalCount })}</span>
+
+                        {!alreadySubmitted && (
+                          <div className="pt-2 border-t border-[#f3f4f6] flex flex-col gap-3">
+                            <div>
+                              <label className="text-xs font-medium text-[#374151] block mb-1.5">
+                                {t("yourPrice")} <span className="text-[#6b7280] font-normal">{t("optional")}</span>
+                              </label>
+                              <PriceInput
+                                placeholder={t("pricePlaceholder")}
+                                value={form.price}
+                                onChange={(v) => updateForm(project.id, "price", v)}
+                              />
+                              <p className="text-[11px] text-[#6b7280] mt-1">{t("priceHint")}</p>
                             </div>
-                          </button>
-                          {/* MOBILE inline detail (accordion) — hidden on desktop (right pane shows it). */}
-                          {isExpanded && (
-                            <div className="border-t border-[#f3f4f6] lg:hidden">{renderDetail(project)}</div>
-                          )}
-                        </Card>
-                      );
-                    })}
-                  </div>
-
-                  {/* RIGHT — detail pane (desktop only) */}
-                  <div className="hidden lg:block lg:sticky lg:top-4">
-                    {activeProject && <Card className="overflow-hidden">{renderDetail(activeProject)}</Card>}
-                  </div>
-                </div>
-              );
-              })()}
+                            <div>
+                              <label className="text-xs font-medium text-[#374151] block mb-1.5">
+                                {t("yourMessage")} <span className="text-red-500">*</span>
+                              </label>
+                              <textarea
+                                placeholder={t("messagePlaceholder")}
+                                value={form.message}
+                                onChange={(e) => updateForm(project.id, "message", e.target.value)}
+                                maxLength={500}
+                                className={`${inputClass} min-h-[100px] resize-none`}
+                              />
+                              {form.message.length >= 500 && (
+                                <p className="mt-1 text-xs text-[#b45309]">{t("charLimit", { max: 500 })}</p>
+                              )}
+                            </div>
+                            <Button
+                              size="sm"
+                              onClick={() => submitProposal(project.id)}
+                              disabled={!form.message.trim() || submitting === project.id}
+                              loading={submitting === project.id}
+                              className="w-full"
+                            >
+                              {t("sendProposal")}
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </Card>
+                );
+              })}
             </div>
           )}
         </div>
@@ -523,18 +396,9 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
             </div>
           ) : (
             <div className="flex flex-col gap-3">
-              {/* Filter sent proposals by the pro's professions (only when more than one),
-                  then by lifecycle status — same chips/order as the rest of the panel. */}
-              {showProfFilter && (
-                <StatusFilterTabs tabs={profTabs} value={profFilter} onChange={setProfFilter} labelFor={profLabel} />
-              )}
+              <StatusFilterTabs tabs={PROYECTO_TABS} value={projectFilter} onChange={setProjectFilter} counts={bucketCounts(myProposals.map((p) => proposalBucket(p.status, p.projects?.status)))} />
               {(() => {
-                const profScoped = myProposals.filter((p) => profFilter === "all" || p.projects?.category_id === profFilter);
-                return (
-                  <>
-                    <StatusFilterTabs tabs={PROYECTO_TABS} value={projectFilter} onChange={setProjectFilter} counts={bucketCounts(profScoped.map((p) => proposalBucket(p.status, p.projects?.status)))} />
-                    {(() => {
-                const shown = profScoped.filter((p) => proposalMatches(projectFilter, p.status, p.projects?.status));
+                const shown = myProposals.filter((p) => proposalMatches(projectFilter, p.status, p.projects?.status));
                 if (shown.length === 0) return <p className="text-sm text-[#6b7280] text-center py-8">{t("noneInView")}</p>;
                 return shown.map((p) => {
                   const isOpen = expandedMine === p.id;
@@ -565,7 +429,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                         </Avatar>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2">
-                            <span className="text-[15px] font-semibold text-[#162543] min-w-0 truncate">{p.projects?.title ?? t("projectFallback")}</span>
+                            <span className="text-[15px] font-semibold text-[#111827] min-w-0 truncate">{p.projects?.title ?? t("projectFallback")}</span>
                             {!proposalStatusRedundant(p.status, ps) && (
                               p.status === "accepted" ? (
                                 <Badge variant={projStatusVariant(ps)} className="shrink-0 text-[11px] font-semibold">{projStatusLabel(ps)}</Badge>
@@ -577,7 +441,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                           <p className="mt-0.5 text-[13px] truncate">
                             <span className="text-[#6b7280]">{t("yourPriceLabel")}</span>{" "}
                             {p.price
-                              ? <span className="font-semibold text-[#0089bb]">₡{p.price.toLocaleString("es-CR")}</span>
+                              ? <span className="font-medium text-[#374151]">₡{p.price.toLocaleString("es-CR")}</span>
                               : <span className="text-[#6b7280]">{t("priceTBD")}</span>}
                           </p>
                           {!isOpen && p.message && (
@@ -625,23 +489,6 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                               if (ps === "in_progress") menu.push({ label: t("markCompleted"), onClick: () => markWorkDone(p.project_id) });
                             }
                             if (!primary && menu.length === 0) return null;
-                            // A LONE action is shown as a direct button — never hidden behind a
-                            // one-item "···" menu. (Multiple → primary + overflow, as below.)
-                            if (!primary && menu.length === 1) {
-                              const only = menu[0];
-                              return (
-                                <div className="flex items-center gap-2">
-                                  <Button
-                                    size="sm"
-                                    variant={only.destructive ? "outline" : "default"}
-                                    className={cn("flex-1 sm:flex-none rounded-full px-4", only.destructive && "border-red-200 text-red-600 hover:bg-red-50")}
-                                    onClick={only.onClick}
-                                  >
-                                    {only.label}
-                                  </Button>
-                                </div>
-                              );
-                            }
                             return (
                               <div className="flex items-center gap-2">
                                 {primary}
@@ -659,7 +506,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                             <div className="mt-2 pt-3 border-t border-[#f3f4f6] flex flex-col gap-3">
                               <div>
                                 <label className="text-xs font-medium text-[#374151] block mb-1.5">{t("yourPrice")} <span className="text-[#6b7280] font-normal">{t("optional")}</span></label>
-                                <PriceInput value={editForm.price} onChange={(v) => setEditForm((f) => ({ ...f, price: v }))} />
+                                <PriceInput placeholder={t("pricePlaceholder")} value={editForm.price} onChange={(v) => setEditForm((f) => ({ ...f, price: v }))} />
                               </div>
                               <div>
                                 <label className="text-xs font-medium text-[#374151] block mb-1.5">{t("yourMessage")} <span className="text-red-500">*</span></label>
@@ -684,9 +531,6 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                     </Card>
                   );
                 });
-                    })()}
-                  </>
-                );
               })()}
             </div>
           )}

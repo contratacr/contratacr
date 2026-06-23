@@ -1,10 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarDays, ChevronDown, Clock, MapPin, Phone, IdCard } from "lucide-react";
+import { CalendarDays, ChevronDown } from "lucide-react";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { formatId } from "@/lib/cedula";
 import { ageCategoryFromDob, computeAge, isMinorFromDob } from "@/lib/age";
@@ -83,8 +81,6 @@ export function BookingRequests() {
   const locale = useLocale();
   const t = useTranslations("bookingRequests");
   const dateLocale = locale === "en" ? "en-US" : "es-CR";
-  // Same path (with locale) so the "Actualizar disponibilidad" shortcut just swaps ?tab=.
-  const pathname = usePathname();
 
   // Age bracket badge for a HEALTH patient (self or beneficiary), derived from the
   // stored DOB. Shown ONLY here in the pro's panel — a minor (guardian/consent) or an
@@ -185,29 +181,21 @@ export function BookingRequests() {
   function BookingCard({ booking }: { booking: Booking }) {
     // Appointment date — "Mar, 23 jun · 1:00 pm" (capitalised weekday, 12-hour time),
     // distinct from the REQUEST date in the status header.
-    // Appointment date + time shown SEPARATELY (with quiet grey calendar/clock icons),
-    // mirroring the dashboard mockup; falls back to the free-text preferred date.
-    const apptDate = (() => {
-      if (!booking.scheduled_date) return null;
+    const dateStr = (() => {
+      if (!booking.scheduled_date) return booking.preferred_date_text || null;
       const [y, m, d] = booking.scheduled_date.split("-").map(Number);
       const dt = new Date(y, m - 1, d);
-      return dt.toLocaleDateString(dateLocale, { day: "numeric", month: "short", year: "numeric" }).replace(".", "");
+      const wdRaw = dt.toLocaleDateString(dateLocale, { weekday: "short" }).replace(".", "");
+      const wd = wdRaw.charAt(0).toUpperCase() + wdRaw.slice(1);
+      const dm = dt.toLocaleDateString(dateLocale, { day: "numeric", month: "short" }).replace(".", "");
+      const time = to12h(booking.scheduled_time);
+      return `${wd}, ${dm}${time ? ` · ${time}` : ""}`;
     })();
-    const apptTime = to12h(booking.scheduled_time);
-    const apptFallback = !booking.scheduled_date ? (booking.preferred_date_text || null) : null;
-    const hasWhen = !!(apptDate || apptFallback);
 
     const category = booking.category_id ? getCategoryLabel(booking.category_id, locale) : null;
     const location = booking.slot_location_label || null;
-
-    // A small status dot on the avatar — a quiet "live" cue (active=green, awaiting=amber,
-    // done=emerald, cancelled=red, reprogramada=grey), NOT a second status label.
-    const dotColor =
-      booking.status === "awaiting_confirmation" ? "#f59e0b"
-      : booking.status === "completed" ? "#10b981"
-      : booking.status === "cancelled" ? "#ef4444"
-      : booking.status === "rescheduled" ? "#9ca3af"
-      : "#22c55e";
+    // Inbox snippet (Superhuman/Gmail): "servicio · nota" — the one-line context preview.
+    const snippet = [category, booking.service_description].filter(Boolean).join(" · ");
 
     // First name for the friendly WhatsApp greeting (the requester is the only contact).
     const cliFirst = (booking.client_name || t("thePerson")).split(" ")[0];
@@ -254,21 +242,18 @@ export function BookingRequests() {
           type="button"
           onClick={() => setExpandedId(expanded ? null : booking.id)}
           aria-expanded={expanded}
-          className={cn("w-full text-left p-4 flex items-start gap-3 hover:bg-[#fafafa] transition-colors", expanded ? "rounded-t-2xl" : "rounded-2xl")}
+          className={cn("w-full text-left px-4 py-3 flex items-center gap-2.5 hover:bg-[#fafafa] transition-colors", expanded ? "rounded-t-2xl" : "rounded-2xl")}
         >
-          <div className="relative shrink-0">
-            <Avatar className="h-11 w-11">
-              <AvatarImage src={booking.profiles?.avatar_url} className="object-cover" />
-              <AvatarFallback className="text-sm font-bold bg-[#EBF5FB] text-[#009FD9]">{getInitials(booking.client_name || "?")}</AvatarFallback>
-            </Avatar>
-            <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full ring-2 ring-white" style={{ backgroundColor: dotColor }} aria-hidden />
-          </div>
-          {/* CARD ROW (dashboard mockup): bold navy name (+ pills) and the status on line 1; the
-              APPOINTMENT date + time on line 2 with quiet grey calendar/clock icons; a muted
-              "profesión · Solicitada el …" line 3 for context. */}
+          <Avatar className="h-10 w-10 shrink-0">
+            <AvatarImage src={booking.profiles?.avatar_url} className="object-cover" />
+            <AvatarFallback className="text-sm font-bold bg-[#EBF5FB] text-[#009FD9]">{getInitials(booking.client_name || "?")}</AvatarFallback>
+          </Avatar>
+          {/* INBOX ROW (Superhuman/Gmail hierarchy): bold name (+ pills) and the status on line 1,
+              the APPOINTMENT date prominent on line 2 (no "Fecha:" label — the date speaks for
+              itself), and a muted "servicio · nota" snippet on line 3 for instant context. */}
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
-              <span className="text-[15px] font-semibold text-[#162543] min-w-0 flex items-center gap-2 flex-wrap">
+              <span className="text-[15px] font-semibold text-[#111827] min-w-0 flex items-center gap-2 flex-wrap">
                 {booking.client_name || t("thePerson")}
                 {!booking.for_someone_else && ageBadge(booking.client_dob)}
                 {unverifiedPill}
@@ -278,27 +263,12 @@ export function BookingRequests() {
                 <Badge variant={STATUS_VARIANT[booking.status]} className="shrink-0 px-2.5 py-0.5 text-[11px] font-semibold">{t(`status.${booking.status}`)}</Badge>
               )}
             </div>
-            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px]">
-              <span className="inline-flex min-w-0 items-center gap-1.5">
-                <CalendarDays className="h-4 w-4 shrink-0 text-[#9ca3af]" />
-                <span className={cn("truncate", hasWhen ? "font-semibold text-[#162543]" : "text-[#6b7280]")}>{apptDate || apptFallback || t("noScheduledDate")}</span>
-              </span>
-              {apptTime && (
-                <span className="inline-flex items-center gap-1.5">
-                  <Clock className="h-4 w-4 shrink-0 text-[#9ca3af]" />
-                  <span className="font-medium text-[#374151]">{apptTime}</span>
-                </span>
-              )}
-            </div>
-            {(category || requestedDate) && (
-              <p className="mt-1 truncate text-[12px] text-[#6b7280]">
-                {category}
-                {category && requestedDate && " · "}
-                {requestedDate && <span className="text-[#9ca3af]">{t("requestedOn", { date: requestedDate })}</span>}
-              </p>
-            )}
+            <p className="mt-0.5 text-[13px] truncate">
+              <span className={dateStr ? "font-medium text-[#374151]" : "text-[#6b7280]"}>{dateStr || t("noScheduledDate")}</span>
+            </p>
+            {snippet && <p className="mt-0.5 text-[12px] text-[#6b7280] truncate">{snippet}</p>}
           </div>
-          <ChevronDown className={cn("h-5 w-5 text-[#9ca3af] shrink-0 mt-1 transition-transform duration-200", expanded && "rotate-180")} />
+          <ChevronDown className={cn("h-5 w-5 text-[#9ca3af] shrink-0 transition-transform duration-200", expanded && "rotate-180")} />
         </button>
 
         {expanded && (
@@ -329,54 +299,46 @@ export function BookingRequests() {
               );
             })()}
 
-            {/* TWO-COLUMN detail (dashboard mockup): LEFT = "Proyecto solicitado" (service headline +
-                location + the booker's CONTACT box + a quiet "Solicitada el …") | RIGHT = "Nota del
-                cliente". One bordered card, split by a hairline that goes horizontal when it stacks
-                on mobile and vertical on desktop. */}
-            <div className="flex flex-col overflow-hidden rounded-xl border border-[#eef0f2] bg-white divide-y divide-[#eef0f2] lg:flex-row lg:divide-x lg:divide-y-0">
-              {/* LEFT — Proyecto solicitado */}
-              <div className="min-w-0 flex-1 p-4">
-                <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#9ca3af]">{t("requestedProject")}</p>
-                {category && <h4 className="mt-1 text-[17px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere]">{category}</h4>}
-                {location && (
-                  <p className="mt-1.5 inline-flex items-center gap-1.5 text-[13px] text-[#6b7280] [overflow-wrap:anywhere]">
-                    <MapPin className="h-4 w-4 shrink-0 text-[#9ca3af]" /> {location}
-                  </p>
+            {/* 2 — DETAILS card (ONE organised block, hairline-divided): the SERVICE headline +
+                location, the booker's CONTACT (phone · cédula), and a quiet "Solicitada el …"
+                footer — so the details read as one tidy card, not blocks floating apart. */}
+            {(category || location || phoneFmt || cedulaFmt || requestedDate) && (
+              <div className="rounded-xl border border-[#eef0f2] bg-[#f9fafb] overflow-hidden divide-y divide-[#eef0f2]">
+                {(category || location) && (
+                  <div className="px-3.5 py-3">
+                    {category && <p className="text-[15px] font-semibold text-[#162543] leading-snug [overflow-wrap:anywhere]">{category}</p>}
+                    {location && <p className="mt-0.5 text-[12.5px] text-[#6b7280] [overflow-wrap:anywhere]">{location}</p>}
+                  </div>
                 )}
                 {(phoneFmt || cedulaFmt) && (
-                  <div className="mt-3 flex divide-x divide-[#eef0f2] overflow-hidden rounded-xl border border-[#eef0f2] bg-[#f9fafb]">
+                  <div className="grid grid-cols-2 gap-x-4 px-3.5 py-3">
                     {phoneFmt && (
-                      <div className="flex min-w-0 flex-1 items-center gap-2.5 px-3.5 py-3">
-                        <Phone className="h-4 w-4 shrink-0 text-[#9ca3af]" />
-                        <div className="min-w-0">
-                          <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("contactPhone")}</p>
-                          <p className="mt-0.5 truncate text-[13px] font-medium text-[#374151]">{phoneFmt}</p>
-                        </div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("contactPhone")}</p>
+                        <p className="mt-0.5 text-[13px] font-medium text-[#374151] truncate">{phoneFmt}</p>
                       </div>
                     )}
                     {cedulaFmt && (
-                      <div className="flex min-w-0 flex-1 items-center gap-2.5 px-3.5 py-3">
-                        <IdCard className="h-4 w-4 shrink-0 text-[#9ca3af]" />
-                        <div className="min-w-0">
-                          <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("contactCedula")}</p>
-                          <p className="mt-0.5 truncate text-[13px] font-medium text-[#374151]">{cedulaFmt}</p>
-                        </div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("contactCedula")}</p>
+                        <p className="mt-0.5 text-[13px] font-medium text-[#374151] truncate">{cedulaFmt}</p>
                       </div>
                     )}
                   </div>
                 )}
-                <p className="mt-3 text-[11px] text-[#9ca3af]">{t("requestedOn", { date: requestedDate })}</p>
+                <div className="px-3.5 py-2.5">
+                  <p className="text-[11px] text-[#9ca3af]">{t("requestedOn", { date: requestedDate })}</p>
+                </div>
               </div>
-              {/* RIGHT — Nota del cliente */}
-              <div className="shrink-0 p-4 lg:w-[42%]">
-                <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#9ca3af]">{t("noteEyebrow")}</p>
-                {booking.service_description ? (
-                  <p className="mt-1 text-[13px] leading-relaxed text-[#374151] whitespace-pre-line [overflow-wrap:anywhere]">{booking.service_description}</p>
-                ) : (
-                  <p className="mt-1 text-[13px] text-[#9ca3af]">{t("noNote")}</p>
-                )}
+            )}
+
+            {/* 3 — the client's NOTE, as their message: a crisp WHITE card with a brand left-accent. */}
+            {booking.service_description && (
+              <div className="rounded-lg border border-[#e5e7eb] border-l-[3px] border-l-[#009FD9]/60 bg-white px-3.5 py-2.5">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("noteEyebrow")}</p>
+                <p className="mt-1 text-[13px] text-[#374151] leading-relaxed whitespace-pre-line [overflow-wrap:anywhere]">{booking.service_description}</p>
               </div>
-            </div>
+            )}
 
             {booking.status === "awaiting_confirmation" && (
               <p className="text-xs text-[#b45309] bg-[#fffbeb] border border-[#fde68a] rounded-lg px-2.5 py-2">
@@ -440,16 +402,7 @@ export function BookingRequests() {
 
   return (
     <div className="space-y-4">
-      {/* Filter tabs + a contextual "Actualizar disponibilidad" shortcut (mockup header action). */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <StatusFilterTabs tabs={SOLICITUD_TABS} value={filter} onChange={setFilter} counts={counts} />
-        <Link
-          href={`${pathname}?tab=availability`}
-          className="inline-flex shrink-0 items-center justify-center gap-2 self-start rounded-full bg-[#009FD9] px-4 py-2 text-[13px] font-semibold text-white transition-colors hover:bg-[#0089bb] sm:self-auto"
-        >
-          <CalendarDays className="h-4 w-4" /> {t("updateAvailability")}
-        </Link>
-      </div>
+      <StatusFilterTabs tabs={SOLICITUD_TABS} value={filter} onChange={setFilter} counts={counts} />
       {filtered.length === 0 ? (
         <p className="text-sm text-[#6b7280] text-center py-8">{t("noneInView")}</p>
       ) : (

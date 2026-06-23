@@ -424,7 +424,7 @@ export default function DashboardPage() {
                     <Card>
                       <CardHeader className="px-6 pt-6 pb-3">
                         <div className="relative">
-                          <h2 className="text-lg font-bold text-[#162543] pr-28">{activeTab === "services" ? t("servicesHeading") : t(`tabs.${activeTab}`)}</h2>
+                          <h2 className="text-lg font-semibold text-[#111827] pr-28">{activeTab === "services" ? t("servicesHeading") : t(`tabs.${activeTab}`)}</h2>
                           <HeaderSaveStatus />
                         </div>
                         {TABS_WITH_SUBTITLE.has(activeTab) && (
@@ -480,11 +480,7 @@ export default function DashboardPage() {
                         {activeTab === "suscripcion" && PAYMENTS_ENABLED && <SubscriptionPanel />}
                         {activeTab === "bookings" && <BookingRequests />}
                         {activeTab === "proposals" && pro && (
-                          <ProposalsTab
-                            categoryId={pro.category_id}
-                            professions={(pro.professions && pro.professions.length > 0) ? pro.professions : (pro.category_id ? [pro.category_id] : [])}
-                            services={pro.services ?? []}
-                          />
+                          <ProposalsTab categoryId={pro.category_id} services={pro.services ?? []} />
                         )}
                         {activeTab === "verificacion" && pro && (
                           <VerificationPanel

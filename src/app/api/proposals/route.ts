@@ -91,7 +91,7 @@ export async function GET(req: NextRequest) {
     if (projIds.length > 0) {
       const { data: projs } = await admin
         .from("projects")
-        .select("id, title, status, client_id, category_id, profiles:client_id(full_name, avatar_url, phone)")
+        .select("id, title, status, client_id, profiles:client_id(full_name, avatar_url, phone)")
         .in("id", projIds);
       for (const pj of projs ?? []) projMap[pj.id] = pj;
     }
@@ -105,7 +105,7 @@ export async function GET(req: NextRequest) {
         const profiles = p.status === "accepted"
           ? prof
           : prof ? { full_name: prof.full_name, avatar_url: prof.avatar_url } : prof;
-        p.projects = { title: pj.title, status: pj.status, category_id: pj.category_id ?? null, profiles };
+        p.projects = { title: pj.title, status: pj.status, profiles };
       } else {
         p.projects = null;
       }

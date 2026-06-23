@@ -619,14 +619,9 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
       {/* ── Disponibilidad privada ─────────────────────────────────────────── */}
       <div className="rounded-2xl border border-[#e5e7eb] p-4 sm:p-5">
         <div className="flex items-center justify-between gap-4">
-          <div className="flex min-w-0 items-center gap-3">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#f3f4f6] text-[#6b7280]">
-              <Lock className="h-5 w-5" />
-            </span>
-            <div className="min-w-0">
-              <p className="text-[15px] font-bold text-[#162543]">{t("privateLabel")}</p>
-              <p className="mt-0.5 text-xs text-[#6b7280]">{isPublic ? t("privateSubPublic") : t("privateSubPrivate")}</p>
-            </div>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-[#111827]">{t("privateLabel")}</p>
+            <p className="mt-0.5 text-xs text-[#6b7280]">{isPublic ? t("privateSubPublic") : t("privateSubPrivate")}</p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             {savingVisibility && <Loader2 className="h-4 w-4 animate-spin text-[#009FD9]" />}
@@ -664,7 +659,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
           <div className="rounded-2xl border border-[#e5e7eb] p-4 sm:p-5">
             <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
               <div className="min-w-0">
-                <h3 className="text-[15px] font-bold text-[#162543]">{t("alwaysTitle")}</h3>
+                <h3 className="text-sm font-semibold text-[#111827]">{t("alwaysTitle")}</h3>
                 <p className="mt-0.5 text-xs text-[#6b7280]">{t("alwaysSubAll")}</p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
@@ -775,7 +770,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
           <div className="rounded-2xl border border-[#e5e7eb] p-4 sm:p-5">
             <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
               <div className="min-w-0">
-                <h3 className="text-[15px] font-bold text-[#162543]">{t("diffDayTitle")}</h3>
+                <h3 className="text-sm font-semibold text-[#111827]">{t("diffDayTitle")}</h3>
                 <p className="mt-0.5 text-xs text-[#6b7280]">{t("diffDaySub")}</p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -805,20 +800,17 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                   const dt = new Date(y, m - 1, d);
                   const monthShort = dt.toLocaleDateString(dateLocale, { month: "short" }).replace(".", "").toUpperCase();
                   const weekdayLong = dt.toLocaleDateString(dateLocale, { weekday: "long" });
+                  const summary = mode === "closed" ? t("excClosedLabel") : `${mode === "custom" ? t("excCustomLabel") : t("excExtraLabel")} · ${times}`;
                   return (
                     <div key={date} className="flex items-center gap-3 rounded-xl border border-[#e5e7eb] p-2.5">
                       <div className="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-lg bg-[#f9fafb]">
                         <span className="text-[9px] font-bold uppercase text-[#009FD9] leading-none">{monthShort}</span>
-                        <span className="text-base font-bold text-[#162543] leading-tight">{d}</span>
+                        <span className="text-base font-bold text-[#111827] leading-tight">{d}</span>
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold text-[#162543] capitalize">{weekdayLong}</p>
-                        <p className="text-xs text-[#6b7280] truncate">{mode === "closed" ? t("allDay") : times}</p>
+                        <p className="text-sm font-semibold text-[#111827] capitalize">{weekdayLong}</p>
+                        <p className="text-xs text-[#6b7280] truncate">{summary}</p>
                       </div>
-                      {/* Status pill (mockup): a date with hours is "Disponible", a closed day is "Cerrado". */}
-                      <span className={cn("shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold", mode === "closed" ? "bg-[#f3f4f6] text-[#6b7280]" : "bg-emerald-50 text-emerald-700")}>
-                        {mode === "closed" ? t("pillClosed") : t("pillAvailable")}
-                      </span>
                       <button type="button" onClick={() => setDayModal({ date })} className="flex h-8 w-8 items-center justify-center rounded-lg text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#111827] transition-colors" aria-label={t("edit")}>
                         <Pencil className="h-4 w-4" />
                       </button>

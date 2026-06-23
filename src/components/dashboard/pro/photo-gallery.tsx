@@ -2,10 +2,8 @@
 
 import { useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { ImageUp, X, Loader2, Pencil } from "lucide-react";
+import { ImageUp, X, Loader2 } from "lucide-react";
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
-import { Modal } from "@/components/ui/modal";
-import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 import { MAX_PORTFOLIO_PHOTOS, cldThumb } from "@/lib/cloudinary";
@@ -15,19 +13,8 @@ import { casoProfession, type ServiceLike } from "@/lib/services";
 
 // Casos de éxito (work photos) are organized BY PROFESSION (category). An item stores its
 // `profession`; the legacy `serviceId` is kept for back-compat (existing photos derive their
-// profession from the service's category — see `casoProfession`). The optional caption fields
-// (title/description/client/date) turn a photo into a "caso de éxito" card (owner's mockup);
-// they live in the same `portfolio_items` JSON column, so no migration — and stay optional, so
-// a bare photo still renders fine and the public profile is unaffected.
-export type PortfolioItem = {
-  url: string;
-  serviceId?: string;
-  profession?: string;
-  title?: string;
-  description?: string;
-  client?: string;
-  date?: string;
-};
+// profession from the service's category — see `casoProfession`).
+export type PortfolioItem = { url: string; serviceId?: string; profession?: string };
 
 interface PhotoGalleryProps {
   professionalId: string;
@@ -136,31 +123,6 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
     await persist(items.filter((it) => it.url !== url));
   }
 
-  // Caption editor (turns a photo into a "caso de éxito" card): title + description +
-  // client + date, all optional. Keyed by the photo url.
-  const [editingUrl, setEditingUrl] = useState<string | null>(null);
-  const [caption, setCaption] = useState<{ title: string; description: string; client: string; date: string }>({ title: "", description: "", client: "", date: "" });
-  function openCaption(it: PortfolioItem) {
-    setEditingUrl(it.url);
-    setCaption({ title: it.title ?? "", description: it.description ?? "", client: it.client ?? "", date: it.date ?? "" });
-  }
-  async function saveCaption() {
-    if (!editingUrl) return;
-    const next = items.map((it) =>
-      it.url === editingUrl
-        ? {
-            ...it,
-            title: caption.title.trim() || undefined,
-            description: caption.description.trim() || undefined,
-            client: caption.client.trim() || undefined,
-            date: caption.date.trim() || undefined,
-          }
-        : it
-    );
-    setEditingUrl(null);
-    await persist(next);
-  }
-
   // App-wide autosave: report status to the section title row (inline, no layout shift).
   useReportSaveStatus(saving || !!uploadingFor, justSaved);
 
@@ -240,47 +202,22 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
                 </span>
               </button>
             ) : (
-              /* Photos present → a CASE-CARD grid (owner's mockup): each card = the photo + its
-                 profession tag + optional title/description/client·date caption, with edit/delete.
-                 The grid is itself a drop target (ring highlight) and ends with an "Agregar más" tile. */
-              <div {...dnd} className={cn("grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 rounded-2xl transition-shadow", isDragHere && "ring-2 ring-[#009FD9] ring-offset-2")}>
-                {list.map((it) => {
-                  const hasCaption = !!(it.title || it.description || it.client || it.date);
-                  return (
-                    <div key={it.url} className="group flex flex-col overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white">
-                      <div className="relative aspect-[4/3]">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={cldThumb(it.url, 600)} alt={it.title ?? ""} className="h-full w-full object-cover" />
-                        <div className="absolute right-2 top-2 flex gap-1.5 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100">
-                          <button onClick={() => openCaption(it)} className="flex h-7 w-7 items-center justify-center rounded-full bg-black/55 text-white transition-colors hover:bg-black/75" aria-label={t("edit")}>
-                            <Pencil className="h-3.5 w-3.5" />
-                          </button>
-                          <button onClick={() => removePhoto(it.url)} className="flex h-7 w-7 items-center justify-center rounded-full bg-black/55 text-white transition-colors hover:bg-red-600" aria-label={t("remove")}>
-                            <X className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                      <div className="flex flex-1 flex-col p-3">
-                        {g.id !== "__other__" && <p className="text-[11px] font-semibold text-[#0089bb]">{g.label}</p>}
-                        {hasCaption ? (
-                          <>
-                            {it.title && <p className="mt-0.5 line-clamp-1 text-sm font-bold text-[#162543] [overflow-wrap:anywhere]">{it.title}</p>}
-                            {it.description && <p className="mt-0.5 line-clamp-2 text-xs text-[#6b7280] [overflow-wrap:anywhere]">{it.description}</p>}
-                            {(it.client || it.date) && (
-                              <div className="mt-2 flex items-center gap-1.5 text-[11px] text-[#9ca3af]">
-                                {it.client && <span className="min-w-0 truncate font-medium text-[#374151]">{it.client}</span>}
-                                {it.client && it.date && <span aria-hidden>·</span>}
-                                {it.date && <span className="shrink-0">{it.date}</span>}
-                              </div>
-                            )}
-                          </>
-                        ) : (
-                          <button onClick={() => openCaption(it)} className="mt-0.5 self-start text-xs font-semibold text-[#0089bb] hover:underline">{t("addDetails")}</button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+              /* Photos present → an Instagram-style grid; the grid is itself a drop target
+                 (ring highlight while dragging) and ends with an "Agregar más" dropzone tile. */
+              <div {...dnd} className={cn("grid grid-cols-2 sm:grid-cols-3 gap-3 rounded-2xl transition-shadow", isDragHere && "ring-2 ring-[#009FD9] ring-offset-2")}>
+                {list.map((it) => (
+                  <div key={it.url} className="relative group aspect-square rounded-2xl overflow-hidden border border-[#e5e7eb]">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={cldThumb(it.url, 400)} alt="" className="w-full h-full object-cover" />
+                    <button
+                      onClick={() => removePhoto(it.url)}
+                      className="absolute top-2 right-2 h-7 w-7 rounded-full bg-black/55 text-white flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                      aria-label={t("remove")}
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ))}
 
                 {canAdd && (
                   <button
@@ -288,7 +225,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
                     onClick={openPicker}
                     disabled={!!uploadingFor}
                     className={cn(
-                      "flex min-h-[180px] flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-dashed transition-colors cursor-pointer",
+                      "aspect-square rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-1.5 transition-colors cursor-pointer",
                       isDragHere ? "border-[#009FD9] bg-[#EBF5FB]" : "border-[#d1d5db] hover:border-[#009FD9] hover:bg-[#f9fbfe]",
                       !!uploadingFor && "opacity-50 cursor-not-allowed"
                     )}
@@ -308,68 +245,6 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
           </div>
         );
       })}
-
-      {/* Caption editor — adds the "caso de éxito" details (all optional). */}
-      {editingUrl && (
-        <Modal
-          onClose={() => setEditingUrl(null)}
-          title={t("detailsTitle")}
-          closeLabel={t("cancel")}
-          footer={
-            <>
-              <Button type="button" variant="outline" onClick={() => setEditingUrl(null)}>{t("cancel")}</Button>
-              <Button type="button" onClick={saveCaption} loading={saving}>{t("save")}</Button>
-            </>
-          }
-        >
-          <div className="flex flex-col gap-4">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={cldThumb(editingUrl, 600)} alt="" className="h-40 w-full rounded-xl border border-[#e5e7eb] object-cover" />
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("titleField")}</label>
-              <input
-                value={caption.title}
-                onChange={(e) => setCaption((c) => ({ ...c, title: e.target.value }))}
-                placeholder={t("titlePlaceholder")}
-                maxLength={80}
-                className="h-11 w-full rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
-              />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("descField")}</label>
-              <textarea
-                value={caption.description}
-                onChange={(e) => setCaption((c) => ({ ...c, description: e.target.value }))}
-                placeholder={t("descPlaceholder")}
-                maxLength={160}
-                className="min-h-[80px] w-full resize-none rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
-              />
-            </div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("clientField")}</label>
-                <input
-                  value={caption.client}
-                  onChange={(e) => setCaption((c) => ({ ...c, client: e.target.value }))}
-                  placeholder={t("clientPlaceholder")}
-                  maxLength={60}
-                  className="h-11 w-full rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
-                />
-              </div>
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("dateField")}</label>
-                <input
-                  value={caption.date}
-                  onChange={(e) => setCaption((c) => ({ ...c, date: e.target.value }))}
-                  placeholder={t("datePlaceholder")}
-                  maxLength={20}
-                  className="h-11 w-full rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
-                />
-              </div>
-            </div>
-          </div>
-        </Modal>
-      )}
     </div>
   );
 }
