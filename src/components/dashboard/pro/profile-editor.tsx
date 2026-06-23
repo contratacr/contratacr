@@ -12,7 +12,8 @@ import { WorkplacesPicker, type Workplace } from "@/components/maps/workplaces-p
 import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 import { createClient } from "@/lib/supabase/client";
 import { detectIdType } from "@/lib/cedula";
-import { Camera, X, Plus, ChevronDown, Lock, Award } from "lucide-react";
+import { Camera, X, Plus, ChevronDown, ChevronRight, Lock, Award } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { InstagramIcon, FacebookIcon, TikTokIcon } from "@/components/icons/social-icons";
 import { SOCIAL_NETWORKS, cleanUsername, isValidUsername, type SocialNetwork } from "@/lib/social";
 import { Link } from "@/i18n/navigation";
@@ -21,7 +22,7 @@ import { getProvinceById, getCantonById } from "@/lib/data/cr-geography";
 import { AseguradorasInput } from "@/components/ui/aseguradoras-input";
 import { getCategoryLabel, anyHealthCategory } from "@/lib/data/categories";
 import type { Certification } from "@/components/professionals/professional-card";
-import { cn } from "@/lib/utils";
+import { cn, getInitials } from "@/lib/utils";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type ProData = Record<string, any>;
@@ -35,6 +36,9 @@ interface ProfileEditorProps {
    *  and scrolls to the field. `focusKey` changes on every click so repeats fire. */
   focusField?: string | null;
   focusKey?: number;
+  /** Navigate to a sibling panel tab (Profesiones / Casos de éxito / Disponibilidad /
+   *  Verificación) from the "Gestionar" quick-links. Optional — links hide if absent. */
+  onNavigate?: (tab: string) => void;
 }
 
 // "Completa tu perfil" field → which collapsible section holds it.
@@ -108,9 +112,10 @@ function seedZones(init: ProData): Workplace[] {
   return out;
 }
 
-export function ProfileEditor({ professionalId, profileId, initial, onSaved, focusField, focusKey }: ProfileEditorProps) {
+export function ProfileEditor({ professionalId, profileId, initial, onSaved, focusField, focusKey, onNavigate }: ProfileEditorProps) {
   const locale = useLocale();
   const t = useTranslations("profileEditor");
+  const tp = useTranslations("proPanel");
   // Which collapsible sections are open. Empty = all collapsed (default), so a
   // pro lands on a tidy, scannable list and opens what they want.
   const [openSections, setOpenSections] = useState<Set<string>>(new Set());
@@ -476,13 +481,54 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
   // App-wide autosave: report status to the section title row (inline, no layout shift).
   useReportSaveStatus(saving || autoSaving, saved, dirty);
 
+  // Snapshot values — the key, public-facing info shown at a glance (live-updates as
+  // the pro edits the photo/name/profession/zone below).
+  const professionLabel = professions.map((p) => getCategoryLabel(p, locale)).filter(Boolean).join(" · ");
+  const primaryZone = workplaces[0]?.name
+    ? workplaces.length > 1 ? `${workplaces[0].name} +${workplaces.length - 1}` : workplaces[0].name
+    : "";
+
   return (
-    <div className="flex flex-col gap-3 max-w-lg">
+    <div className="flex flex-col gap-5 max-w-lg">
       {error && (
         <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-600">
           {error}
         </div>
       )}
+
+      {/* ── Profile snapshot — an at-a-glance summary of how the pro appears to clients
+             (the public-facing differentiators: profesión · zona · verificación). Read-only;
+             every field is edited in the grouped sections below. ── */}
+      <div className="rounded-2xl border border-[#e5e7eb] bg-white p-4 flex items-start gap-3.5">
+        <div className="h-16 w-16 shrink-0 overflow-hidden rounded-full border border-[#e5e7eb] bg-[#EBF5FB]">
+          {avatarPreview ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={avatarPreview} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-lg font-bold text-[#009FD9]">
+              {getInitials(fullName || "?")}
+            </div>
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3 className="min-w-0 truncate text-base font-bold text-[#111827]">{fullName || t("snapshotNameFallback")}</h3>
+            <Badge variant={verified ? "verified" : "muted"} className="shrink-0 text-[11px] font-semibold">
+              {verified ? tp("identityVerified") : tp("notVerifiedBadge")}
+            </Badge>
+          </div>
+          <p className="mt-1 truncate text-[13px] font-semibold text-[#0089bb]">
+            {professionLabel || t("snapshotNoProfession")}
+          </p>
+          <p className="mt-0.5 truncate text-[12.5px] text-[#6b7280]">
+            {primaryZone || t("snapshotNoZone")}
+          </p>
+        </div>
+      </div>
+
+      {/* ── Tu información ─────────────────────────────────────────────── */}
+      <div className="flex flex-col gap-2.5">
+        <p className="px-1 text-[11px] font-bold uppercase tracking-wide text-[#9ca3af]">{t("groupIdentity")}</p>
 
       {/* ── Datos básicos ─────────────────────────────────────────────── */}
       <Section id="basic" title={t("secBasic")} desc={t("secBasicDesc")} open={openSections.has("basic")} onToggle={toggleSection}>
@@ -632,6 +678,11 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
           );
         })}
       </Section>
+      </div>
+
+      {/* ── Ubicación y contacto ──────────────────────────────────────── */}
+      <div className="flex flex-col gap-2.5">
+        <p className="px-1 text-[11px] font-bold uppercase tracking-wide text-[#9ca3af]">{t("groupReach")}</p>
 
       {/* ── Ubicación y cobertura ─────────────────────────────────────── */}
       <Section id="location" title={t("secLocation")} desc={t("secLocationDesc")} open={openSections.has("location")} onToggle={toggleSection}>
@@ -733,6 +784,11 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
           </div>
         )}
       </Section>
+      </div>
+
+      {/* ── Detalles adicionales ──────────────────────────────────────── */}
+      <div className="flex flex-col gap-2.5">
+        <p className="px-1 text-[11px] font-bold uppercase tracking-wide text-[#9ca3af]">{t("groupExtra")}</p>
 
       {/* ── Redes sociales — USERNAME only; we build the link (additive to casos). ── */}
       <Section id="social" title={t("secSocial")} desc={t("secSocialDesc")} open={openSections.has("social")} onToggle={toggleSection}>
@@ -794,6 +850,33 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
           </div>
         )}
       </Section>
+      </div>
+
+      {/* ── Gestionar — clean, discoverable entry points to the related panel sections
+             (each managed in its own tab). Hidden if the panel didn't pass onNavigate. ── */}
+      {onNavigate && (
+        <div className="flex flex-col gap-2.5">
+          <p className="px-1 text-[11px] font-bold uppercase tracking-wide text-[#9ca3af]">{t("groupManage")}</p>
+          <div className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white divide-y divide-[#f3f4f6]">
+            {([
+              ["services", t("linkServices")],
+              ["photos", t("linkCasos")],
+              ["availability", t("linkAvailability")],
+              ["verificacion", t("linkVerification")],
+            ] as const).map(([tab, label]) => (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => onNavigate(tab)}
+                className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-[#fafafa]"
+              >
+                <span className="text-sm font-medium text-[#374151]">{label}</span>
+                <ChevronRight className="h-4 w-4 shrink-0 text-[#9ca3af]" />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Contact preference lives in the Disponibilidad tab now. */}
 
