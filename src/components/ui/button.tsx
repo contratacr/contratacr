@@ -26,7 +26,7 @@ const buttonVariants = cva(
           "bg-[#25d366] text-white hover:bg-[#1da851] focus-visible:ring-[#25d366]",
       },
       size: {
-        sm: "h-8 px-3 text-xs rounded-lg",
+        sm: "h-9 px-3.5 text-[13px] rounded-lg",
         md: "h-10 px-5",
         lg: "h-12 px-7 text-base rounded-2xl",
         xl: "h-14 px-8 text-lg rounded-2xl",

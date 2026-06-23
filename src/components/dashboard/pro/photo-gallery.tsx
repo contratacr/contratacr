@@ -214,8 +214,8 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
                     {typeof c.likes === "number" && c.likes > 0 && <span className="inline-flex items-center gap-1"><Heart className="h-3 w-3 text-[#374151]" /> {c.likes}</span>}
                   </div>
                   <div className="flex shrink-0 items-center gap-0.5">
-                    <button onClick={() => openEdit(c)} className="flex h-7 w-7 items-center justify-center rounded-lg text-[#6b7280] hover:bg-[#EBF5FB] hover:text-[#009FD9] transition-colors" title={t("edit")} aria-label={t("edit")}><Pencil className="h-3.5 w-3.5" /></button>
-                    <button onClick={() => deleteCase(c.id)} className="flex h-7 w-7 items-center justify-center rounded-lg text-[#6b7280] hover:bg-red-50 hover:text-red-500 transition-colors" title={t("remove")} aria-label={t("remove")}><Trash2 className="h-3.5 w-3.5" /></button>
+                    <button onClick={() => openEdit(c)} className="flex h-8 w-8 items-center justify-center rounded-lg text-[#6b7280] hover:bg-[#EBF5FB] hover:text-[#009FD9] transition-colors" title={t("edit")} aria-label={t("edit")}><Pencil className="h-3.5 w-3.5" /></button>
+                    <button onClick={() => deleteCase(c.id)} className="flex h-8 w-8 items-center justify-center rounded-lg text-[#6b7280] hover:bg-red-50 hover:text-red-500 transition-colors" title={t("remove")} aria-label={t("remove")}><Trash2 className="h-3.5 w-3.5" /></button>
                   </div>
                 </div>
               </div>
