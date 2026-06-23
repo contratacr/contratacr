@@ -53,18 +53,21 @@ const FIELD_SECTION: Record<string, string> = {
 function Section({ id, title, desc, open, onToggle, autosave = true, children }: { id: string; title: string; desc?: string; open: boolean; onToggle: (id: string) => void; autosave?: boolean; children: React.ReactNode }) {
   const t = useTranslations("profileEditor");
   return (
-    <div id={`sec-${id}`} className="rounded-2xl border border-[#e5e7eb] bg-white overflow-hidden scroll-mt-24">
+    <div id={`sec-${id}`} className={cn("rounded-2xl border bg-white overflow-hidden scroll-mt-24 transition-all duration-200", open ? "border-[#009FD9]/30 shadow-sm" : "border-[#e5e7eb]")}>
       <button
         type="button"
         onClick={() => onToggle(id)}
-        className="w-full flex items-center justify-between gap-3 px-4 py-3.5 text-left hover:bg-[#fafafa] transition-colors"
+        className={cn("w-full flex items-center justify-between gap-3 px-4 py-3.5 text-left transition-colors", open ? "bg-[#f6fbfe]" : "hover:bg-[#fafafa]")}
         aria-expanded={open}
       >
         <div className="min-w-0">
           <p className="text-[15px] font-semibold text-[#111827] leading-tight">{title}</p>
           {desc && <p className="text-xs text-[#6b7280] mt-1">{desc}</p>}
         </div>
-        <ChevronDown className={cn("h-5 w-5 text-[#9ca3af] shrink-0 transition-transform duration-200", open && "rotate-180")} />
+        {/* Chevron in a circular badge that turns brand-tint when the section is open. */}
+        <span className={cn("grid h-7 w-7 shrink-0 place-items-center rounded-full transition-colors", open ? "bg-[#EBF5FB] text-[#009FD9]" : "bg-[#f3f4f6] text-[#9ca3af]")}>
+          <ChevronDown className={cn("h-4 w-4 transition-transform duration-200", open && "rotate-180")} />
+        </span>
       </button>
       {open && (
         <div className="px-4 pb-4 pt-3.5 flex flex-col gap-4 border-t border-[#f3f4f6]">
