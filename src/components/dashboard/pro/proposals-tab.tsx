@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { FolderOpen, Send, ChevronDown, MapPin, Wallet, CalendarClock, FileSearch, Lightbulb, Clock, EyeOff } from "lucide-react";
+import { FolderOpen, Send, ChevronDown, MapPin, Wallet, CalendarClock, CalendarDays, FileSearch, Lightbulb, Clock, EyeOff } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -538,7 +538,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                         </Avatar>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2">
-                            <span className="text-[15px] font-semibold text-[#111827] min-w-0 truncate">{p.projects?.title ?? t("projectFallback")}</span>
+                            <span className="text-[15px] font-semibold text-[#162543] min-w-0 truncate">{p.projects?.title ?? t("projectFallback")}</span>
                             {!proposalStatusRedundant(p.status, ps) && (
                               p.status === "accepted" ? (
                                 <Badge variant={projStatusVariant(ps)} className="shrink-0 text-[11px] font-semibold">{projStatusLabel(ps)}</Badge>
@@ -547,11 +547,14 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                               )
                             )}
                           </div>
-                          <p className="mt-0.5 text-[13px] truncate">
-                            <span className="text-[#6b7280]">{t("yourPriceLabel")}</span>{" "}
-                            {p.price
-                              ? <span className="font-medium text-[#374151]">₡{p.price.toLocaleString("es-CR")}</span>
-                              : <span className="text-[#6b7280]">{t("priceTBD")}</span>}
+                          <p className="mt-0.5 flex items-center gap-1.5 text-[13px] min-w-0">
+                            <Wallet className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                            <span className="min-w-0 truncate">
+                              <span className="text-[#6b7280]">{t("yourPriceLabel")}</span>{" "}
+                              {p.price
+                                ? <span className="font-semibold text-[#0089bb]">₡{p.price.toLocaleString("es-CR")}</span>
+                                : <span className="text-[#6b7280]">{t("priceTBD")}</span>}
+                            </span>
                           </p>
                           {!isOpen && p.message && (
                             <p className="mt-1 text-[13px] text-[#6b7280] leading-snug line-clamp-2 [overflow-wrap:anywhere]">{p.message}</p>
@@ -564,7 +567,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                         <div className="px-4 pb-4 pt-3 border-t border-[#f3f4f6] flex flex-col gap-2.5">
                           {clientName && <p className="text-[12.5px] text-[#6b7280] truncate">{clientName}</p>}
                           {p.message && <p className="text-[13px] text-[#374151] whitespace-pre-line [overflow-wrap:anywhere]">{p.message}</p>}
-                          <p className="text-[11px] text-[#9ca3af]">{t("sentOn", { date: sentDate })}</p>
+                          <p className="flex items-center gap-1.5 text-[11px] text-[#9ca3af]"><CalendarDays className="h-3.5 w-3.5 shrink-0" /> {t("sentOn", { date: sentDate })}</p>
                           {/* Client contact — revealed once the proposal is accepted (still active). */}
                           {p.status === "accepted" && ps !== "cancelled" && phone && (
                             <p className="text-xs text-[#374151]"><span className="text-[#6b7280]">{t("fieldPhone")}</span> {phone}</p>
