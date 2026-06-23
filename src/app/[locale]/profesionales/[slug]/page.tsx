@@ -221,7 +221,8 @@ export default function ProfilePage({ params }: ProfilePageProps) {
     t("waPrefill", { name: professional.fullName.split(" ")[0] })
   );
 
-  const services = professional.services ?? [];
+  // Hide services the pro marked INACTIVE (paused) — clients only see active ones.
+  const services = (professional.services ?? []).filter((s) => (s as { active?: boolean }).active !== false);
   const visibleServices = showAllServices ? services : services.slice(0, 5);
   const locationText = [professional.cantonName, professional.provinceName].filter(Boolean).join(", ");
   // Fallback location tab/address for the contact-card schedule (when the pro has no named

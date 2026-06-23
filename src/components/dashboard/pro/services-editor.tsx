@@ -2,10 +2,11 @@
 
 import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Plus, Trash2, Pencil, Search } from "lucide-react";
+import { Plus, Trash2, Pencil, Search, Home, Trees, Sparkles, Laptop, Briefcase, Stethoscope, Scissors, GraduationCap, Truck, PartyPopper, ShieldCheck, Car, Wrench, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PriceInput } from "@/components/ui/price-input";
 import { Modal } from "@/components/ui/modal";
+import { StatusFilterTabs } from "@/components/dashboard/status-filter-tabs";
 import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
@@ -25,6 +26,9 @@ export type ProService = {
   // Which profession this service belongs to (a category id). Defaults to the
   // primary profession for legacy services created before multi-profession.
   category?: string;
+  // Active/inactive toggle (sprint 486). An INACTIVE service is "paused" — kept in the
+  // editor but HIDDEN from clients (public profile). Undefined/true = active (back-compat).
+  active?: boolean;
 };
 
 interface ServicesEditorProps {
@@ -38,6 +42,13 @@ interface ServicesEditorProps {
 function genId() {
   return `svc_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 }
+
+// One restrained GREY icon per category GROUP (serious brand — grey, not color tints).
+const GROUP_ICON: Record<string, LucideIcon> = {
+  hogar: Home, jardin: Trees, limpieza: Sparkles, tecnologia: Laptop, profesional: Briefcase,
+  salud: Stethoscope, belleza: Scissors, educacion: GraduationCap, transporte: Truck,
+  eventos: PartyPopper, seguridad: ShieldCheck, automotriz: Car,
+};
 
 // Price units offered in the service modal's <select> (the "Precio a consultar"
 // checkbox covers a_convenir separately, so it's excluded here).
@@ -73,6 +84,8 @@ export function ServicesEditor({
 
   const [professions, setProfessions] = useState<string[]>(seedProfessions);
   const [services, setServices] = useState<ProService[]>(initialServices);
+  // Filter-by-profession: show ONE profession's services at a time (not all on one screen).
+  const [activeProf, setActiveProf] = useState<string>(seedProfessions[0] ?? "");
 
   // Add-profession picker (modal)
   const [showPicker, setShowPicker] = useState(false);
@@ -243,6 +256,13 @@ export function ServicesEditor({
     await persist(professions, next);
   }
 
+  // Toggle a service active/inactive (inactive = paused, hidden from clients).
+  function toggleActive(id: string) {
+    const next = services.map((s) => (s.id === id ? { ...s, active: s.active === false } : s));
+    setServices(next);
+    persist(professions, next);
+  }
+
   // Professions available to add (taxonomy minus the ones already added), filtered
   // by the picker's search (label + keywords, accent-insensitive).
   const pickerList = useMemo(() => {
@@ -269,6 +289,17 @@ export function ServicesEditor({
     return groups;
   }, [pickerList]);
 
+  // category id → its group id, so each profession card shows its group's grey icon.
+  const catGroup = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const c of getAllCategories()) m.set(c.id, c.groupId);
+    return m;
+  }, [customCategories]);
+
+  // Which profession's services are shown (filter-by-profession; falls back to the first).
+  const shownProf = professions.includes(activeProf) ? activeProf : professions[0];
+  const profTabs = professions.map((p) => ({ id: p }));
+
   if (professions.length === 0) {
     return (
       <div className="text-center py-8 rounded-xl border-2 border-dashed border-[#e5e7eb]">
@@ -286,9 +317,15 @@ export function ServicesEditor({
        count + make-principal/remove) over its OWN services list + "Agregar servicio". A single
        "Agregar profesión" closes the stack. Works the same on mobile + desktop (just narrower). */
     <div className="flex flex-col gap-4">
-      {professions.map((prof, i) => {
+      {/* Filter by profession — view ONE profession's services at a time (only when >1). */}
+      {professions.length > 1 && (
+        <StatusFilterTabs tabs={profTabs} value={shownProf} onChange={setActiveProf} labelFor={(id) => getCategoryLabel(id, locale)} variant="pills" />
+      )}
+      {professions.filter((p) => professions.length === 1 || p === shownProf).map((prof) => {
+        const i = professions.indexOf(prof);
         const profServices = services.filter((s) => effectiveCategory(s) === prof);
         const isPrincipal = i === 0;
+        const Icon = GROUP_ICON[catGroup.get(prof) ?? ""] ?? Wrench;
         // Entry price for this profession (cheapest priced service) — a marketplace-style
         // "Desde ₡X" summary; derived from existing data, shown only when something is priced.
         const pricedAmounts = profServices.map((s) => s.priceAmount).filter((n): n is number => typeof n === "number" && n > 0);
@@ -298,15 +335,21 @@ export function ServicesEditor({
             {/* Profession header — the PRINCIPAL profession gets a subtle brand tint + navy name
                 so the main area the pro offers clearly stands out; the rest stay neutral grey. */}
             <div className={cn("flex items-start justify-between gap-3 border-b px-4 sm:px-5 py-4", isPrincipal ? "border-[#dcebf6] bg-[#EBF5FB]" : "border-[#eef0f2] bg-[#f9fafb]")}>
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="text-base font-bold leading-tight text-[#162543] [overflow-wrap:anywhere]">{getCategoryLabel(prof, locale)}</h3>
-                  {isPrincipal && <span className="shrink-0 rounded-full bg-white px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#0089bb] ring-1 ring-inset ring-[#009FD9]/25">{t("principal")}</span>}
+              <div className="flex min-w-0 items-start gap-3">
+                {/* Group icon in a tidy circle (grey; brand-blue only on the principal). */}
+                <span className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white ring-1 ring-inset", isPrincipal ? "text-[#0089bb] ring-[#bfdbfe]" : "text-[#6b7280] ring-[#eef0f2]")}>
+                  <Icon className="h-5 w-5" />
+                </span>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-base font-bold leading-tight text-[#162543] [overflow-wrap:anywhere]">{getCategoryLabel(prof, locale)}</h3>
+                    {isPrincipal && <span className="shrink-0 rounded-full bg-white px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#0089bb] ring-1 ring-inset ring-[#009FD9]/25">{t("principal")}</span>}
+                  </div>
+                  <p className="mt-1 text-xs text-[#6b7280]">
+                    {t("servicesPublished", { count: profServices.length })}
+                    {fromAmount != null && <> · <span className="font-medium text-[#374151]">{t("priceFrom", { amount: fromAmount.toLocaleString("es-CR") })}</span></>}
+                  </p>
                 </div>
-                <p className="mt-1 text-xs text-[#6b7280]">
-                  {t("servicesPublished", { count: profServices.length })}
-                  {fromAmount != null && <> · <span className="font-medium text-[#374151]">{t("priceFrom", { amount: fromAmount.toLocaleString("es-CR") })}</span></>}
-                </p>
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
                 {!isPrincipal && (
@@ -345,25 +388,32 @@ export function ServicesEditor({
                 </button>
               ) : (
                 <>
-                  {profServices.map((svc) => (
-                    /* Catalog-style service row (Fiverr/Shopify): name + brief, the PRICE as a
-                       brand-tint TAG chip (or an amber "Agregar precio" nudge when missing), and
-                       quiet edit/delete actions. `min-w-0` + `break-words` keep long names inside. */
-                    /* ALIGNED-TABLE row (Stripe Dashboard / Apple Settings "label : value"):
-                       name on the left, the PRICE right-aligned in its own column so prices line
-                       up vertically down the list; the brief is a muted 1-line subline; edit/delete
-                       are quiet — always visible on mobile, revealed on hover on desktop. */
-                    <div key={svc.id} className="group flex items-center gap-3 rounded-xl border border-[#e5e7eb] px-3.5 py-3 transition-colors hover:bg-[#fafafa]">
+                  {profServices.map((svc) => {
+                    // Active (default) vs paused. Inactive rows dim + read "Inactivo" and are
+                    // hidden from clients on the public profile.
+                    const isActiveSvc = svc.active !== false;
+                    return (
+                    /* ALIGNED-TABLE row (Stripe/Apple "label : value"): name left + PRICE right;
+                       a muted 1-line brief; an active/inactive toggle; quiet edit/delete (always
+                       visible on mobile, hover-revealed on desktop). */
+                    <div key={svc.id} className={cn("group flex items-center gap-3 rounded-xl border px-3.5 py-3 transition-colors", isActiveSvc ? "border-[#e5e7eb] hover:bg-[#fafafa]" : "border-[#e5e7eb] bg-[#f9fafb]")}>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-baseline gap-3">
-                          <p className="min-w-0 flex-1 truncate text-sm font-semibold text-[#111827]">{svc.name}</p>
+                          <p className={cn("min-w-0 flex-1 truncate text-sm font-semibold", isActiveSvc ? "text-[#162543]" : "text-[#9ca3af]")}>{svc.name}</p>
                           {svc.price ? (
-                            <span className="shrink-0 text-sm font-semibold text-[#0089bb]">{svc.price}</span>
+                            <span className={cn("shrink-0 text-sm font-semibold", isActiveSvc ? "text-[#0089bb]" : "text-[#9ca3af]")}>{svc.price}</span>
                           ) : (
                             <button type="button" onClick={() => openEdit(svc)} className="shrink-0 text-xs font-semibold text-[#b45309] hover:underline">{t("addPrice")}</button>
                           )}
                         </div>
                         {svc.description && <p className="mt-0.5 truncate text-xs text-[#6b7280]">{svc.description}</p>}
+                        {/* Active/inactive toggle — a paused service is hidden from clients. */}
+                        <button type="button" role="switch" aria-checked={isActiveSvc} onClick={() => toggleActive(svc.id)} className="mt-1.5 inline-flex items-center gap-1.5" title={isActiveSvc ? t("svcActive") : t("svcInactive")}>
+                          <span className={cn("relative h-4 w-7 rounded-full transition-colors", isActiveSvc ? "bg-[#009FD9]" : "bg-[#d1d5db]")}>
+                            <span className={cn("absolute top-0.5 h-3 w-3 rounded-full bg-white transition-all", isActiveSvc ? "left-[14px]" : "left-0.5")} />
+                          </span>
+                          <span className={cn("text-[11px] font-semibold", isActiveSvc ? "text-[#16a34a]" : "text-[#9ca3af]")}>{isActiveSvc ? t("svcActive") : t("svcInactive")}</span>
+                        </button>
                       </div>
                       <div className="flex shrink-0 items-center gap-0.5 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
                         <button onClick={() => openEdit(svc)} className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9ca3af] hover:bg-[#EBF5FB] hover:text-[#009FD9] transition-colors" title={t("edit")} aria-label={t("edit")}>
@@ -374,7 +424,8 @@ export function ServicesEditor({
                         </button>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
 
                   <button
                     type="button"
