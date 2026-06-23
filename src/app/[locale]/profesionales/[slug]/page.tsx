@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import {
   MapPin, Shield, ArrowLeft, Star, Briefcase, Camera,
-  Share2, Flag, ChevronDown, Lock, Phone, Building2, Award, Mail, SearchX,
+  Share2, Flag, ChevronDown, Lock, Phone, Building2, Award, Mail, SearchX, User2, CalendarDays,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { InstagramIcon, FacebookIcon, TikTokIcon } from "@/components/icons/social-icons";
@@ -569,38 +569,67 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                       </div>
                       {hasCasos ? (
                         (() => {
-                          const items = professional.portfolioItems && professional.portfolioItems.length > 0
-                            ? professional.portfolioItems
-                            : professional.portfolioUrls!.map((url) => ({ url, serviceId: undefined as string | undefined, profession: undefined as string | undefined }));
-                          // Group by PROFESSION (category). Existing photos derive their profession
-                          // from the legacy serviceId's service category (casoProfession) — lossless.
+                          // NEW per-profession CASE model (sprint 493): each caso has a service title,
+                          // recipient, date and up to 3 photos. Reads BOTH shapes — new cases (have
+                          // `photos[]`) and legacy photos (`{url}`, grouped by profession into cases).
                           const svcs = professional.services ?? [];
                           const profsOrder = (professional.professions && professional.professions.length > 0)
                             ? professional.professions
                             : (professional.categoryId ? [professional.categoryId] : []);
                           const primaryProf = profsOrder[0] ?? "";
-                          const profSet = new Set(profsOrder);
-                          const profOf = (it: { serviceId?: string; profession?: string }) => casoProfession(it, svcs, primaryProf);
-                          // Professions (in order) that actually have photos.
-                          const tagged = profsOrder.filter((cat) => items.some((it) => profOf(it) === cat));
-                          const other = items.filter((it) => { const p = profOf(it); return !p || !profSet.has(p); });
-                          // No profession tags at all → single gallery (back-compat).
-                          if (tagged.length === 0) return <ProfileGallery urls={items.map((it) => it.url)} />;
-                          return (
-                            <>
-                              {tagged.map((cat) => (
-                                <div key={cat}>
-                                  <h3 className="text-sm font-semibold text-[#111827] mb-2">{getCategoryLabel(cat, locale)}</h3>
-                                  <ProfileGallery urls={items.filter((it) => profOf(it) === cat).map((it) => it.url)} />
-                                </div>
-                              ))}
-                              {other.length > 0 && (
-                                <div>
-                                  <h3 className="text-sm font-semibold text-[#111827] mb-2">{t("otherWorks")}</h3>
-                                  <ProfileGallery urls={other.map((it) => it.url)} />
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          const profOf = (it: any) => casoProfession(it, svcs, primaryProf);
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          const raw: any[] = (professional.portfolioItems && professional.portfolioItems.length > 0)
+                            ? professional.portfolioItems
+                            : (professional.portfolioUrls ?? []).map((url) => ({ url }));
+                          type Caso = { id: string; profession: string; title?: string; recipient?: string; date?: string; photos: string[] };
+                          const caseList: Caso[] = [];
+                          const legacyByProf = new Map<string, string[]>();
+                          for (const it of raw) {
+                            if (Array.isArray(it?.photos)) {
+                              caseList.push({ id: String(it.id ?? caseList.length), profession: it.profession ?? primaryProf, title: it.title, recipient: it.recipient, date: it.date, photos: it.photos });
+                            } else if (it?.url) {
+                              const prof = profOf(it) || primaryProf || "";
+                              const arr = legacyByProf.get(prof) ?? []; arr.push(it.url); legacyByProf.set(prof, arr);
+                            }
+                          }
+                          for (const [prof, photos] of legacyByProf) {
+                            for (let i = 0; i < photos.length; i += 3) caseList.push({ id: `${prof}_${i}`, profession: prof, photos: photos.slice(i, i + 3) });
+                          }
+                          // Professions (in order) that actually have cases, then any "other".
+                          const tagged = profsOrder.filter((cat) => caseList.some((c) => c.profession === cat));
+                          const otherProfs = [...new Set(caseList.map((c) => c.profession))].filter((p) => !profsOrder.includes(p));
+                          const order = [...tagged, ...otherProfs];
+
+                          const renderCase = (c: Caso) => (
+                            <div key={c.id} className="rounded-2xl border border-[#e5e7eb] p-4">
+                              {(c.title || c.recipient || c.date) && (
+                                <div className="mb-3">
+                                  {c.title && <p className="text-[15px] font-bold text-[#162543] [overflow-wrap:anywhere]">{c.title}</p>}
+                                  {(c.recipient || c.date) && (
+                                    <p className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-[#6b7280]">
+                                      {c.recipient && <span className="inline-flex items-center gap-1 [overflow-wrap:anywhere]"><User2 className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" /> {c.recipient}</span>}
+                                      {c.date && <span className="inline-flex items-center gap-1"><CalendarDays className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" /> {c.date}</span>}
+                                    </p>
+                                  )}
                                 </div>
                               )}
-                            </>
+                              <ProfileGallery urls={c.photos} />
+                            </div>
+                          );
+
+                          return (
+                            <div className="flex flex-col gap-6">
+                              {order.map((cat) => (
+                                <div key={cat}>
+                                  <h3 className="mb-2.5 text-sm font-semibold text-[#162543]">{profsOrder.includes(cat) ? getCategoryLabel(cat, locale) : t("otherWorks")}</h3>
+                                  <div className="flex flex-col gap-4">
+                                    {caseList.filter((c) => c.profession === cat).map(renderCase)}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
                           );
                         })()
                       ) : (

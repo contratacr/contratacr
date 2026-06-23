@@ -2,86 +2,106 @@
 
 import { useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { ImageUp, X, Loader2 } from "lucide-react";
+import { ImageUp, X, Loader2, Plus, Pencil, Trash2, Images, CalendarDays, User2, Heart } from "lucide-react";
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
+import { Modal } from "@/components/ui/modal";
+import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
-import { MAX_PORTFOLIO_PHOTOS, cldThumb } from "@/lib/cloudinary";
+import { cldThumb } from "@/lib/cloudinary";
 import { IMAGE_ACCEPT } from "@/lib/upload-validation";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { casoProfession, type ServiceLike } from "@/lib/services";
 
-// Casos de éxito (work photos) are organized BY PROFESSION (category). An item stores its
-// `profession`; the legacy `serviceId` is kept for back-compat (existing photos derive their
-// profession from the service's category — see `casoProfession`).
-export type PortfolioItem = { url: string; serviceId?: string; profession?: string };
+// NEW per-profession model (sprint 493): a "caso de éxito" is a CASE (service done · for whom ·
+// when · up to 3 photos), and there can be up to 3 cases PER PROFESSION (the old overall limit of
+// 5 is gone). Stored in `portfolio_items` (JSON). `portfolio_urls` is kept (flattened, capped at 5)
+// only to satisfy the legacy DB CHECK + search thumbnails.
+export type SuccessCase = {
+  id: string;
+  profession: string;   // category id
+  title?: string;       // the service done
+  recipient?: string;   // for whom (name / short description)
+  date?: string;        // when (free text, e.g. "Mayo 2024")
+  photos: string[];     // up to MAX_PHOTOS_PER_CASE
+  likes?: number;       // public likes (read-only here)
+};
+// Legacy item shape (photos-only) — read for back-compat so nothing is lost.
+type LegacyItem = { url?: string; serviceId?: string; profession?: string };
+
+export const MAX_CASES_PER_PROFESSION = 3;
+export const MAX_PHOTOS_PER_CASE = 3;
 
 interface PhotoGalleryProps {
   professionalId: string;
   initialUrls?: string[];
-  initialItems?: PortfolioItem[];
-  /** The pro's professions (category ids) — the sections casos are grouped under. */
+  initialItems?: (SuccessCase | LegacyItem)[];
+  /** The pro's professions (category ids) — cases are organized per profession. */
   professions?: string[];
   /** The pro's services — only used to DERIVE the profession of legacy serviceId-tagged photos. */
   services?: ServiceLike[];
   onSaved?: () => void;
 }
 
-// Casos de éxito are grouped PER PROFESSION (category). Stored as portfolio_items
-// [{ url, profession, serviceId? }]; portfolio_urls (flat) kept for back-compat and the
-// 5-photo DB CHECK.
+function genId() {
+  return `case_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+}
+
+// Read BOTH shapes: new cases (have `photos[]`) pass through; legacy photos (`{url}`) are grouped
+// by profession into untitled cases (≤3 photos each) so existing work is never lost.
+export function seedCases(items: (SuccessCase | LegacyItem)[] | undefined, urls: string[], services: ServiceLike[], primary?: string): SuccessCase[] {
+  const list = Array.isArray(items) && items.length > 0 ? items : urls.map((url) => ({ url }));
+  const cases: SuccessCase[] = [];
+  const legacyByProf = new Map<string, string[]>();
+  for (const it of list) {
+    if (it && Array.isArray((it as SuccessCase).photos)) {
+      const c = it as SuccessCase;
+      cases.push({ ...c, photos: c.photos.slice(0, MAX_PHOTOS_PER_CASE) });
+    } else {
+      const li = it as LegacyItem;
+      if (!li.url) continue;
+      const prof = casoProfession(li, services, primary) || primary || "";
+      const arr = legacyByProf.get(prof) ?? [];
+      arr.push(li.url);
+      legacyByProf.set(prof, arr);
+    }
+  }
+  for (const [prof, photos] of legacyByProf) {
+    for (let i = 0; i < photos.length; i += MAX_PHOTOS_PER_CASE) {
+      cases.push({ id: genId(), profession: prof, photos: photos.slice(i, i + MAX_PHOTOS_PER_CASE) });
+    }
+  }
+  return cases;
+}
+
 export function PhotoGallery({ professionalId, initialUrls = [], initialItems, professions = [], services = [], onSaved }: PhotoGalleryProps) {
   const locale = useLocale();
   const t = useTranslations("photoGallery");
   const rich = { strong: (c: React.ReactNode) => <strong>{c}</strong> };
-  // Seed items from the tagged column, falling back to untagged flat urls.
-  const seed: PortfolioItem[] = Array.isArray(initialItems) && initialItems.length > 0
-    ? initialItems
-    : initialUrls.map((url) => ({ url, profession: undefined }));
-  const [items, setItems] = useState<PortfolioItem[]>(seed);
-  const [uploadingFor, setUploadingFor] = useState<string | null>(null);
-  // Drag-and-drop: which profession group is currently being dragged over (Airbnb-style dropzone).
-  const [dragGroup, setDragGroup] = useState<string | null>(null);
-  // App-wide autosave feedback.
+  const primary = professions[0];
+
+  const [cases, setCases] = useState<SuccessCase[]>(() => seedCases(initialItems, initialUrls, services, primary));
+  const [activeProf, setActiveProf] = useState<string>("all");
   const [saving, setSaving] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const pendingProfessionRef = useRef<string | undefined>(undefined);
+  useReportSaveStatus(saving, justSaved);
 
-  const primary = professions[0];
-  const profSet = new Set(professions);
-  // The PROFESSION (category) a photo belongs to — explicit, else derived from its legacy
-  // serviceId's service category, else the primary profession.
-  const profOf = (it: PortfolioItem) => casoProfession(it, services, primary);
+  // The add/edit case modal — `draft != null` means open.
+  const [draft, setDraft] = useState<SuccessCase | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
-  // One section per PROFESSION (category), plus an "Otros trabajos" bucket for photos whose
-  // profession isn't one of the current professions (e.g. from a removed profession) so none
-  // are ever lost.
-  const groups: { id: string; label: string }[] = professions.map((cat) => ({
-    id: cat,
-    label: getCategoryLabel(cat, locale),
-  }));
-  const hasOther = items.some((it) => { const p = profOf(it); return !p || !profSet.has(p); });
-  if (hasOther) groups.push({ id: "__other__", label: t("otherWorks") });
+  const label = (id: string) => getCategoryLabel(id, locale);
+  const countFor = (prof: string) => cases.filter((c) => c.profession === prof).length;
+  const inputClass = "h-11 w-full rounded-xl border border-[#e5e7eb] bg-white px-3.5 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
 
-  function itemsFor(groupId: string): PortfolioItem[] {
-    if (groupId === "__other__") return items.filter((it) => { const p = profOf(it); return !p || !profSet.has(p); });
-    return items.filter((it) => profOf(it) === groupId);
-  }
-
-  async function persist(next: PortfolioItem[]) {
-    // Persist the derived profession on every item (lossless lazy migration; serviceId kept).
-    const normalized = next.map((it) => ({ ...it, profession: profOf(it) || undefined }));
-    next = normalized;
-    setItems(next);
+  async function persist(next: SuccessCase[]) {
+    setCases(next);
     setSaving(true);
     const supabase = createClient();
-    const urls = next.map((it) => it.url);
-    let { error } = await supabase
-      .from("professionals")
-      .update({ portfolio_items: next, portfolio_urls: urls })
-      .eq("id", professionalId);
-    // Retry without the tagged column if it isn't migrated yet.
+    // portfolio_urls (capped at 5) keeps the legacy DB CHECK + search thumbnails happy.
+    const urls = next.flatMap((c) => c.photos).slice(0, 5);
+    let { error } = await supabase.from("professionals").update({ portfolio_items: next, portfolio_urls: urls }).eq("id", professionalId);
     if (error && /portfolio_items|column|schema cache|PGRST204|could not find/i.test(error.message)) {
       ({ error } = await supabase.from("professionals").update({ portfolio_urls: urls }).eq("id", professionalId));
     }
@@ -91,160 +111,182 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
     onSaved?.();
   }
 
-  async function handleUpload(files: FileList, profession: string | undefined) {
-    const remaining = MAX_PORTFOLIO_PHOTOS - items.length;
+  function openAdd() {
+    const prof = activeProf !== "all" && professions.includes(activeProf) ? activeProf : primary ?? "";
+    setDraft({ id: genId(), profession: prof, photos: [] });
+  }
+  function openEdit(c: SuccessCase) { setDraft({ ...c, photos: [...c.photos] }); }
+
+  async function uploadPhotos(files: FileList) {
+    if (!draft) return;
+    const remaining = MAX_PHOTOS_PER_CASE - draft.photos.length;
     const toUpload = Array.from(files).slice(0, Math.max(0, remaining));
-    if (toUpload.length === 0) {
-      alert(t("maxAlert", { max: MAX_PORTFOLIO_PHOTOS }));
-      return;
-    }
-    // Casos de éxito are grouped by PROFESSION — the photo is tagged with the chosen profession.
-    setUploadingFor(profession ?? "__none__");
+    if (toUpload.length === 0) { alert(t("maxPhotosAlert", { max: MAX_PHOTOS_PER_CASE })); return; }
+    setUploading(true);
     try {
-      const uploaded: PortfolioItem[] = [];
+      const urls: string[] = [];
       for (const file of toUpload) {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("type", "portfolio");
-        const res = await fetch("/api/upload/photo", { method: "POST", body: formData });
+        const fd = new FormData(); fd.append("file", file); fd.append("type", "portfolio");
+        const res = await fetch("/api/upload/photo", { method: "POST", body: fd });
         const data = await res.json();
-        if (data.url) uploaded.push({ url: data.url, profession });
-        else alert(data.error ?? t("uploadError"));
+        if (data.url) urls.push(data.url); else alert(data.error ?? t("uploadError"));
       }
-      if (uploaded.length > 0) await persist([...items, ...uploaded]);
-    } catch {
-      alert(t("uploadError"));
-    } finally {
-      setUploadingFor(null);
-    }
+      if (urls.length) setDraft((d) => (d ? { ...d, photos: [...d.photos, ...urls].slice(0, MAX_PHOTOS_PER_CASE) } : d));
+    } catch { alert(t("uploadError")); } finally { setUploading(false); }
   }
 
-  async function removePhoto(url: string) {
-    await persist(items.filter((it) => it.url !== url));
+  async function saveCase() {
+    if (!draft || draft.photos.length === 0) return;
+    const exists = cases.some((c) => c.id === draft.id);
+    const next = exists ? cases.map((c) => (c.id === draft.id ? draft : c)) : [...cases, draft];
+    setDraft(null);
+    await persist(next);
   }
+  async function deleteCase(id: string) { await persist(cases.filter((c) => c.id !== id)); }
 
-  // App-wide autosave: report status to the section title row (inline, no layout shift).
-  useReportSaveStatus(saving || !!uploadingFor, justSaved);
+  const shownCases = activeProf === "all" ? cases : cases.filter((c) => c.profession === activeProf);
+  const addProf = activeProf !== "all" && professions.includes(activeProf) ? activeProf : primary ?? "";
+  const addFull = !!addProf && countFor(addProf) >= MAX_CASES_PER_PROFESSION;
+  const draftIsEdit = !!draft && cases.some((c) => c.id === draft.id);
 
   return (
-    <div className="flex flex-col gap-6">
-      <p className="text-sm text-[#6b7280]">
-        {t.rich("intro", { ...rich, max: MAX_PORTFOLIO_PHOTOS })}
-      </p>
+    <div className="flex flex-col gap-5">
+      <p className="text-sm text-[#6b7280]">{t.rich("introCases", { ...rich, perProf: MAX_CASES_PER_PROFESSION, perCase: MAX_PHOTOS_PER_CASE })}</p>
 
       {professions.length === 0 && (
-        <div className="rounded-xl bg-[#fffbeb] border border-[#fde68a] p-4 text-sm text-[#92400e]">
-          {t.rich("noServices", rich)}
+        <div className="rounded-xl bg-[#fffbeb] border border-[#fde68a] p-4 text-sm text-[#92400e]">{t.rich("noServices", rich)}</div>
+      )}
+
+      {/* Filter by profession (with counts) — only when the pro has 2+ professions. */}
+      {professions.length > 1 && (
+        <div className="flex flex-wrap gap-2">
+          {[{ id: "all", n: cases.length }, ...professions.map((p) => ({ id: p, n: countFor(p) }))].map((tab) => {
+            const active = activeProf === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveProf(tab.id)}
+                className={cn("inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 py-1.5 text-[13px] font-semibold transition-colors", active ? "border-[#009FD9] bg-[#009FD9] text-white" : "border-[#e5e7eb] bg-white text-[#374151] hover:bg-[#f9fafb]")}
+              >
+                {tab.id === "all" ? t("filterAll") : label(tab.id)}
+                <span className={cn("text-[11px] font-bold tabular-nums", active ? "text-white/90" : "text-[#9ca3af]")}>({tab.n})</span>
+              </button>
+            );
+          })}
         </div>
       )}
 
-      <input
-        ref={inputRef}
-        type="file"
-        accept={IMAGE_ACCEPT}
-        multiple
-        className="hidden"
-        onChange={(e) => {
-          if (e.target.files && e.target.files.length > 0) handleUpload(e.target.files, pendingProfessionRef.current);
-          e.target.value = "";
-        }}
-      />
-
-      {groups.map((g) => {
-        const list = itemsFor(g.id);
-        const canAdd = g.id !== "__other__" && items.length < MAX_PORTFOLIO_PHOTOS;
-        const isUploadingHere = uploadingFor === g.id;
-        const isDragHere = dragGroup === g.id;
-        const openPicker = () => { pendingProfessionRef.current = g.id; inputRef.current?.click(); };
-        // Drag-and-drop handlers for THIS profession group. The `contains(relatedTarget)`
-        // check keeps the highlight steady as the cursor moves over child elements (no flicker).
-        const dnd = canAdd ? {
-          onDragOver: (e: React.DragEvent) => { if (uploadingFor) return; e.preventDefault(); setDragGroup(g.id); },
-          onDragLeave: (e: React.DragEvent) => { if (e.currentTarget.contains(e.relatedTarget as Node)) return; setDragGroup((cur) => (cur === g.id ? null : cur)); },
-          onDrop: (e: React.DragEvent) => { e.preventDefault(); setDragGroup(null); if (!uploadingFor && e.dataTransfer.files?.length) handleUpload(e.dataTransfer.files, g.id); },
-        } : {};
-        return (
-          <div key={g.id}>
-            <div className="mb-2">
-              <h4 className="text-sm font-semibold text-[#111827]">
-                {g.label}
-                {list.length > 0 && <span className="ml-1.5 text-[11px] font-normal text-[#9ca3af]">({list.length})</span>}
-              </h4>
-            </div>
-
-            {list.length === 0 && canAdd ? (
-              /* EMPTY profession → a prominent drag-and-drop zone (Airbnb/Dropbox-style):
-                 cloud-image icon, "Arrastra tus fotos aquí", a browse button + format hint.
-                 The whole zone is clickable AND a drop target; it highlights while dragging. */
-              <button
-                type="button"
-                {...dnd}
-                onClick={openPicker}
-                disabled={!!uploadingFor}
-                className={cn(
-                  "w-full rounded-2xl border-2 border-dashed px-4 py-9 flex flex-col items-center justify-center text-center gap-2.5 transition-colors",
-                  isDragHere ? "border-[#009FD9] bg-[#EBF5FB]" : "border-[#d1d5db] hover:border-[#009FD9] hover:bg-[#f9fbfe]",
-                  !!uploadingFor && "opacity-60 cursor-not-allowed"
+      {/* Case grid (matches the panel mockup). */}
+      {shownCases.length > 0 && (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {shownCases.map((c) => (
+            <div key={c.id} className="flex flex-col overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+              <div className="relative aspect-[4/3] bg-[#f3f4f6]">
+                {c.photos[0] && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={cldThumb(c.photos[0], 600)} alt={c.title ?? ""} className="h-full w-full object-cover" />
                 )}
-              >
-                <span className="pointer-events-none flex flex-col items-center gap-2.5">
-                  <span className="grid h-12 w-12 place-items-center rounded-full bg-[#EBF5FB] text-[#009FD9]">
-                    {isUploadingHere ? <Loader2 className="h-6 w-6 animate-spin" /> : <ImageUp className="h-6 w-6" />}
+                {c.photos.length > 0 && (
+                  <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full bg-black/55 px-2 py-0.5 text-[11px] font-semibold text-white">
+                    <Images className="h-3 w-3" /> {t("photosCount", { count: c.photos.length })}
                   </span>
-                  <span className="block">
-                    <span className="block text-sm font-semibold text-[#111827]">{isDragHere ? t("dropActive") : t("dropTitle")}</span>
-                    <span className="mt-0.5 block text-xs text-[#9ca3af]">{t("dropOr")}</span>
-                  </span>
-                  <span className="inline-flex items-center rounded-full border border-[#e5e7eb] bg-white px-4 py-1.5 text-[13px] font-semibold text-[#374151]">
-                    {t("dropBrowse")}
-                  </span>
-                  <span className="block text-[11px] text-[#9ca3af]">{t("dropHint", { max: MAX_PORTFOLIO_PHOTOS })}</span>
-                </span>
-              </button>
-            ) : (
-              /* Photos present → an Instagram-style grid; the grid is itself a drop target
-                 (ring highlight while dragging) and ends with an "Agregar más" dropzone tile. */
-              <div {...dnd} className={cn("grid grid-cols-2 sm:grid-cols-3 gap-3 rounded-2xl transition-shadow", isDragHere && "ring-2 ring-[#009FD9] ring-offset-2")}>
-                {list.map((it) => (
-                  <div key={it.url} className="relative group aspect-square rounded-2xl overflow-hidden border border-[#e5e7eb]">
+                )}
+              </div>
+              <div className="flex flex-1 flex-col p-3.5">
+                <p className="text-[11px] font-semibold text-[#0089bb]">{label(c.profession)}</p>
+                {c.title && <p className="mt-0.5 line-clamp-1 text-[15px] font-bold text-[#162543] [overflow-wrap:anywhere]">{c.title}</p>}
+                {c.recipient && (
+                  <p className="mt-0.5 line-clamp-2 inline-flex items-start gap-1 text-xs text-[#6b7280] [overflow-wrap:anywhere]">
+                    <User2 className="mt-0.5 h-3 w-3 shrink-0 text-[#9ca3af]" /> {c.recipient}
+                  </p>
+                )}
+                <div className="mt-3 flex items-center justify-between gap-2 border-t border-[#f3f4f6] pt-2.5">
+                  <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-[#9ca3af]">
+                    {c.date && <span className="inline-flex items-center gap-1"><CalendarDays className="h-3 w-3" /> {c.date}</span>}
+                    {typeof c.likes === "number" && c.likes > 0 && <span className="inline-flex items-center gap-1"><Heart className="h-3 w-3" /> {c.likes}</span>}
+                  </div>
+                  <div className="flex shrink-0 items-center gap-0.5">
+                    <button onClick={() => openEdit(c)} className="flex h-7 w-7 items-center justify-center rounded-lg text-[#6b7280] hover:bg-[#EBF5FB] hover:text-[#009FD9] transition-colors" title={t("edit")} aria-label={t("edit")}><Pencil className="h-3.5 w-3.5" /></button>
+                    <button onClick={() => deleteCase(c.id)} className="flex h-7 w-7 items-center justify-center rounded-lg text-[#6b7280] hover:bg-red-50 hover:text-red-500 transition-colors" title={t("remove")} aria-label={t("remove")}><Trash2 className="h-3.5 w-3.5" /></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Agregar nuevo caso de éxito (dashed, full width). */}
+      <button
+        type="button"
+        onClick={openAdd}
+        disabled={addFull || professions.length === 0}
+        className={cn("flex w-full flex-col items-center gap-1 rounded-2xl border-2 border-dashed py-6 text-center transition-colors", addFull || professions.length === 0 ? "cursor-not-allowed border-[#e5e7eb] opacity-60" : "border-[#bfdbfe] hover:border-[#009FD9] hover:bg-[#EBF5FB]")}
+      >
+        <span className="inline-flex items-center gap-2 text-sm font-semibold text-[#0089bb]"><Plus className="h-4 w-4" /> {t("addCase")}</span>
+        <span className="text-xs text-[#9ca3af]">{addFull ? t("maxCasesHint", { max: MAX_CASES_PER_PROFESSION }) : t("addCaseHint")}</span>
+      </button>
+
+      {/* ── Add / edit case ─────────────────────────────────────────────── */}
+      {draft && (
+        <Modal
+          onClose={() => setDraft(null)}
+          title={draftIsEdit ? t("editCase") : t("newCase")}
+          closeLabel={t("cancel")}
+          footer={
+            <>
+              <Button type="button" variant="outline" onClick={() => setDraft(null)}>{t("cancel")}</Button>
+              <Button type="button" onClick={saveCase} loading={saving} disabled={draft.photos.length === 0}>{t("save")}</Button>
+            </>
+          }
+        >
+          <div className="flex flex-col gap-4">
+            {professions.length > 1 && (
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("caseProfession")}</label>
+                <select value={draft.profession} onChange={(e) => setDraft((d) => (d ? { ...d, profession: e.target.value } : d))} className={cn(inputClass, "cursor-pointer")}>
+                  {professions.map((p) => <option key={p} value={p}>{label(p)}</option>)}
+                </select>
+              </div>
+            )}
+
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("casePhotos", { max: MAX_PHOTOS_PER_CASE })}</label>
+              <div className="grid grid-cols-3 gap-2">
+                {draft.photos.map((url) => (
+                  <div key={url} className="relative aspect-square overflow-hidden rounded-xl border border-[#e5e7eb]">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={cldThumb(it.url, 400)} alt="" className="w-full h-full object-cover" />
-                    <button
-                      onClick={() => removePhoto(it.url)}
-                      className="absolute top-2 right-2 h-7 w-7 rounded-full bg-black/55 text-white flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                      aria-label={t("remove")}
-                    >
-                      <X className="h-3.5 w-3.5" />
+                    <img src={cldThumb(url, 400)} alt="" className="h-full w-full object-cover" />
+                    <button type="button" onClick={() => setDraft((d) => (d ? { ...d, photos: d.photos.filter((u) => u !== url) } : d))} className="absolute right-1.5 top-1.5 flex h-6 w-6 items-center justify-center rounded-full bg-black/55 text-white hover:bg-red-600" aria-label={t("remove")}>
+                      <X className="h-3 w-3" />
                     </button>
                   </div>
                 ))}
-
-                {canAdd && (
-                  <button
-                    type="button"
-                    onClick={openPicker}
-                    disabled={!!uploadingFor}
-                    className={cn(
-                      "aspect-square rounded-2xl border-2 border-dashed flex flex-col items-center justify-center gap-1.5 transition-colors cursor-pointer",
-                      isDragHere ? "border-[#009FD9] bg-[#EBF5FB]" : "border-[#d1d5db] hover:border-[#009FD9] hover:bg-[#f9fbfe]",
-                      !!uploadingFor && "opacity-50 cursor-not-allowed"
-                    )}
-                  >
-                    {isUploadingHere ? (
-                      <Loader2 className="h-6 w-6 text-[#009FD9] animate-spin" />
-                    ) : (
-                      <>
-                        <ImageUp className="h-6 w-6 text-[#9ca3af]" />
-                        <span className="text-xs text-[#6b7280]">{t("addMore")}</span>
-                      </>
-                    )}
+                {draft.photos.length < MAX_PHOTOS_PER_CASE && (
+                  <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading} className="flex aspect-square flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-[#d1d5db] text-[#9ca3af] transition-colors hover:border-[#009FD9] hover:bg-[#f9fbfe]">
+                    {uploading ? <Loader2 className="h-5 w-5 animate-spin text-[#009FD9]" /> : <><ImageUp className="h-5 w-5" /><span className="text-[11px]">{t("addPhoto")}</span></>}
                   </button>
                 )}
               </div>
-            )}
+              <input ref={fileRef} type="file" accept={IMAGE_ACCEPT} multiple className="hidden" onChange={(e) => { if (e.target.files?.length) uploadPhotos(e.target.files); e.target.value = ""; }} />
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("caseTitle")}</label>
+              <input value={draft.title ?? ""} onChange={(e) => setDraft((d) => (d ? { ...d, title: e.target.value } : d))} placeholder={t("caseTitlePlaceholder")} maxLength={80} className={inputClass} />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("caseRecipient")}</label>
+              <input value={draft.recipient ?? ""} onChange={(e) => setDraft((d) => (d ? { ...d, recipient: e.target.value } : d))} placeholder={t("caseRecipientPlaceholder")} maxLength={120} className={inputClass} />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("caseDate")}</label>
+              <input value={draft.date ?? ""} onChange={(e) => setDraft((d) => (d ? { ...d, date: e.target.value } : d))} placeholder={t("caseDatePlaceholder")} maxLength={20} className={inputClass} />
+            </div>
           </div>
-        );
-      })}
+        </Modal>
+      )}
     </div>
   );
 }
