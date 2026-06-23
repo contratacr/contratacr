@@ -53,24 +53,24 @@ const FIELD_SECTION: Record<string, string> = {
 function Section({ id, title, desc, open, onToggle, autosave = true, children }: { id: string; title: string; desc?: string; open: boolean; onToggle: (id: string) => void; autosave?: boolean; children: React.ReactNode }) {
   const t = useTranslations("profileEditor");
   return (
-    <div id={`sec-${id}`} className={cn("rounded-2xl border bg-white overflow-hidden scroll-mt-24 transition-all duration-200", open ? "border-[#009FD9]/30 shadow-sm" : "border-[#e5e7eb]")}>
+    // A borderless ROW inside the shared settings card (the card + divide-y dividers live in
+    // the editor's wrapper). Tappable header (white, hover tint) + an inline field area set
+    // off by a hairline; the open header gets a faint tint so the active row is obvious.
+    <div id={`sec-${id}`} className="scroll-mt-24">
       <button
         type="button"
         onClick={() => onToggle(id)}
-        className={cn("w-full flex items-center justify-between gap-3 px-4 py-3.5 text-left transition-colors", open ? "bg-[#f6fbfe]" : "hover:bg-[#fafafa]")}
+        className={cn("w-full flex items-center justify-between gap-3 px-4 sm:px-5 py-4 text-left transition-colors", open ? "bg-[#fafafa]" : "hover:bg-[#fafafa]")}
         aria-expanded={open}
       >
         <div className="min-w-0">
           <p className="text-[15px] font-semibold text-[#111827] leading-tight">{title}</p>
           {desc && <p className="text-xs text-[#6b7280] mt-1">{desc}</p>}
         </div>
-        {/* Chevron in a circular badge that turns brand-tint when the section is open. */}
-        <span className={cn("grid h-7 w-7 shrink-0 place-items-center rounded-full transition-colors", open ? "bg-[#EBF5FB] text-[#009FD9]" : "bg-[#f3f4f6] text-[#9ca3af]")}>
-          <ChevronDown className={cn("h-4 w-4 transition-transform duration-200", open && "rotate-180")} />
-        </span>
+        <ChevronDown className={cn("h-5 w-5 text-[#9ca3af] shrink-0 transition-transform duration-200", open && "rotate-180")} />
       </button>
       {open && (
-        <div className="px-4 pb-4 pt-3.5 flex flex-col gap-4 border-t border-[#f3f4f6]">
+        <div className="px-4 sm:px-5 pb-5 pt-4 flex flex-col gap-4 border-t border-[#f3f4f6]">
           {children}
           {/* These sections autosave (via `touch()`); reassure the pro consistently —
               same spot (bottom of the open section) and style in every section. */}
@@ -480,13 +480,16 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
   useReportSaveStatus(saving || autoSaving, saved, dirty);
 
   return (
-    <div className="flex flex-col gap-3 max-w-lg">
+    <div className="flex flex-col gap-4 max-w-lg">
       {error && (
         <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-3 text-sm text-red-600">
           {error}
         </div>
       )}
 
+      {/* ONE cohesive settings card (instead of 6 separate boxes) — the sections are
+          divider-separated rows; each expands inline into a soft inset field panel. */}
+      <div className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm divide-y divide-[#eef0f2]">
       {/* ── Datos básicos ─────────────────────────────────────────────── */}
       <Section id="basic" title={t("secBasic")} desc={t("secBasicDesc")} open={openSections.has("basic")} onToggle={toggleSection}>
         {/* Photo — explicit buttons, no hover-to-change */}
@@ -797,6 +800,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
           </div>
         )}
       </Section>
+      </div>
 
       {/* Contact preference lives in the Disponibilidad tab now. */}
 

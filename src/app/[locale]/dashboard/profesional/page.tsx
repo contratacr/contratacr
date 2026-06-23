@@ -319,59 +319,54 @@ export default function DashboardPage() {
       <Navbar />
       <main className="flex-1">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-24 lg:pb-8">
-          {/* Header — a polished profile-header CARD (subtle brand gradient + soft accent,
-              larger rounded avatar with a white ring, bold navy name, a refined "modo" chip
-              and verification badge). Same elements as before — purely a visual upgrade. */}
-          <div className="relative mb-6 overflow-hidden rounded-2xl border border-[#e5e7eb] bg-gradient-to-br from-[#EBF5FB] to-white shadow-sm">
-            <div aria-hidden className="pointer-events-none absolute -right-12 -top-12 h-36 w-36 rounded-full bg-[#009FD9]/10 blur-3xl" />
-            <div className="relative flex items-start justify-between gap-4 flex-wrap p-5 sm:p-6">
-              <div className="flex items-center gap-4 min-w-0">
-                <Avatar className="h-16 w-16 sm:h-20 sm:w-20 shrink-0 ring-4 ring-white shadow-md">
-                  <AvatarImage src={headerAvatar ?? undefined} />
-                  <AvatarFallback className="bg-[#162543] text-white text-lg font-bold">
-                    {getInitials(displayName || "?")}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="min-w-0">
-                  {/* Current mode = a small chip (so the switch button below stays short, just
-                      the action). A client-only account never sees any "modo" wording. */}
-                  {isProvider && (
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/80 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#0089bb] ring-1 ring-inset ring-[#009FD9]/20">
-                      <span className="h-1.5 w-1.5 rounded-full bg-[#009FD9]" />
-                      {mode === "offer" ? t("modeOffer") : t("modeUse")}
-                    </span>
-                  )}
-                  <h1 className="mt-1.5 truncate text-2xl font-extrabold leading-tight text-[#162543]">{displayName}</h1>
-                  {mode === "offer" && pro && (
-                    <div className="flex items-center gap-2 mt-2 flex-wrap">
-                      {pro.verification_status === "verified" ? (
-                        <Badge variant="verified">{t("identityVerified")}</Badge>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => setTab("verificacion")}
-                          title={t("verifyInvite")}
-                          className="inline-flex items-center rounded-full border border-[#e5e7eb] bg-white px-2.5 py-0.5 text-xs font-medium text-[#6b7280] hover:bg-[#f3f4f6] transition-colors"
-                        >
-                          {t("notVerifiedBadge")}
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </div>
+          {/* Header — clean, restrained (serious tone): a modest larger avatar with a hairline
+              ring, a bold navy name, the plain "modo" eyebrow + verification badge, set off from
+              the content by a single hairline divider. No gradient/decoration. */}
+          <div className="mb-6 flex items-start justify-between gap-4 flex-wrap border-b border-[#e5e7eb] pb-5">
+            <div className="flex items-center gap-4 min-w-0">
+              <Avatar className="h-16 w-16 shrink-0 ring-1 ring-[#e5e7eb]">
+                <AvatarImage src={headerAvatar ?? undefined} />
+                <AvatarFallback className="bg-[#EBF5FB] text-[#009FD9] font-bold text-lg">
+                  {getInitials(displayName || "?")}
+                </AvatarFallback>
+              </Avatar>
+              <div className="min-w-0">
+                {/* Current mode = a small eyebrow. A client-only account never sees "modo" wording. */}
+                {isProvider && (
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-[#009FD9]">
+                    {mode === "offer" ? t("modeOffer") : t("modeUse")}
+                  </p>
+                )}
+                <h1 className="truncate text-2xl font-bold leading-tight text-[#162543]">{displayName}</h1>
+                {mode === "offer" && pro && (
+                  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                    {pro.verification_status === "verified" ? (
+                      <Badge variant="verified">{t("identityVerified")}</Badge>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setTab("verificacion")}
+                        title={t("verifyInvite")}
+                        className="inline-flex items-center rounded-full border border-[#e5e7eb] bg-[#f3f4f6] px-2.5 py-0.5 text-xs font-medium text-[#6b7280] hover:bg-[#e5e7eb] transition-colors"
+                      >
+                        {t("notVerifiedBadge")}
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
-              {/* Logout lives ONLY in the navbar profile menu — not duplicated here. */}
-              {mode === "offer" && pro?.slug && (
-                <div className="flex items-center gap-2 shrink-0">
-                  <Button variant="outline" size="sm" asChild className="bg-white/70 backdrop-blur-sm">
-                    <a href={`/es/profesionales/${pro.slug}?preview=1`}>
-                      <ExternalLink className="h-4 w-4" />
-                      {t("viewAsClient")}
-                    </a>
-                  </Button>
-                </div>
-              )}
             </div>
+            {/* Logout lives ONLY in the navbar profile menu — not duplicated here. */}
+            {mode === "offer" && pro?.slug && (
+              <div className="flex items-center gap-2 shrink-0">
+                <Button variant="outline" size="sm" asChild>
+                  <a href={`/es/profesionales/${pro.slug}?preview=1`}>
+                    <ExternalLink className="h-4 w-4" />
+                    {t("viewAsClient")}
+                  </a>
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* The mode switch lives ONLY in the navbar (a segmented control) now — not here.
