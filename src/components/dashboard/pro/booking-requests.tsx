@@ -43,6 +43,22 @@ type Booking = {
   beneficiary_is_minor?: boolean;
 };
 
+// Agenda buckets for the "Activas" filter (Calendly/Google-Calendar style grouping) — a
+// booking's scheduled day → today / tomorrow / this week / later / no-date, in that order.
+const AGENDA_BUCKETS = ["today", "tomorrow", "week", "later", "nodate"] as const;
+function agendaBucket(scheduledDate?: string | null): string {
+  if (!scheduledDate) return "nodate";
+  const [y, m, d] = scheduledDate.split("-").map(Number);
+  if (!y || !m || !d) return "nodate";
+  const date = new Date(y, m - 1, d); date.setHours(0, 0, 0, 0);
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const diff = Math.round((date.getTime() - today.getTime()) / 86_400_000);
+  if (diff <= 0) return "today";
+  if (diff === 1) return "tomorrow";
+  if (diff <= 7) return "week";
+  return "later";
+}
+
 // ONE shared status→colour mapping (sprint 440), identical to the client side:
 // active/upcoming = brand-blue (default), awaiting confirmation = amber, finished =
 // green, cancelled = red, reprogramada = grey.
@@ -400,6 +416,25 @@ export function BookingRequests() {
       <StatusFilterTabs tabs={SOLICITUD_TABS} value={filter} onChange={setFilter} counts={counts} />
       {filtered.length === 0 ? (
         <p className="text-sm text-[#6b7280] text-center py-8">{t("noneInView")}</p>
+      ) : filter === "activas" ? (
+        /* AGENDA view (Calendly/Google Calendar): group upcoming requests by day bucket so
+           the pro instantly sees today's + tomorrow's appointments. Only for "Activas"
+           (Finalizadas/Canceladas are history → a flat list). */
+        <div className="flex flex-col gap-5">
+          {AGENDA_BUCKETS.map((bk) => {
+            const items = filtered.filter((b) => agendaBucket(b.scheduled_date) === bk);
+            if (items.length === 0) return null;
+            return (
+              <div key={bk} className="flex flex-col gap-3">
+                <div className="flex items-center gap-2 px-0.5">
+                  <h4 className="text-[11px] font-bold uppercase tracking-wide text-[#9ca3af]">{t(`agenda.${bk}`)}</h4>
+                  <span className="inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#f3f4f6] px-1 text-[10px] font-bold text-[#6b7280]">{items.length}</span>
+                </div>
+                {items.map((b) => <BookingCard key={b.id} booking={b} />)}
+              </div>
+            );
+          })}
+        </div>
       ) : (
         <div className="flex flex-col gap-3">
           {filtered.map((b) => <BookingCard key={b.id} booking={b} />)}
