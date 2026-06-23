@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { FolderOpen, Send, ChevronDown, MapPin, Wallet, CalendarClock, CalendarDays, FileSearch, Lightbulb, Clock, EyeOff } from "lucide-react";
+import { FolderOpen, Send, ChevronDown, MapPin, Wallet, CalendarClock, CalendarDays, Clock, EyeOff } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -74,9 +74,10 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
   const t = useTranslations("proposalsTab");
   const locale = useLocale();
 
-  // Filter "Oportunidades" by profession — only surfaced when the pro has 2+ professions.
-  const profTabs = useMemo(() => [{ id: "all" }, ...professions.map((p) => ({ id: p }))], [professions]);
-  const profLabel = (id: string) => (id === "all" ? t("allProfessions") : getCategoryLabel(id, locale));
+  // Filter "Oportunidades" by profession — the user's ACTUAL professions only (no "all"
+  // option); only surfaced when they have 2+ (defaults to the first profession).
+  const profTabs = useMemo(() => professions.map((p) => ({ id: p })), [professions]);
+  const profLabel = (id: string) => getCategoryLabel(id, locale);
   const showProfFilter = professions.length > 1;
 
   // Significant words (≥4 chars) from the pro's service names — used to flag
@@ -113,9 +114,11 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
   const [projectFilter, setProjectFilter] = useState("activas");
   // Oportunidades browse: which profession is filtered, which card drives the desktop
   // detail pane, and the locally-dismissed ("No me interesa") opportunities.
-  const [profFilter, setProfFilter] = useState<string>("all");
+  const [profFilter, setProfFilter] = useState<string>("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
+  // The active profession (no "all"): the chosen one, else the first profession.
+  const activeProf = professions.includes(profFilter) ? profFilter : (professions[0] ?? "");
 
   async function fetchOpenProjects() {
     setLoading(true);
@@ -307,15 +310,6 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
             </p>
           </div>
 
-          {/* Motivational callout — a single brand accent icon, not a colorful one. */}
-          <div className="flex items-start gap-2.5 rounded-xl bg-[#EBF5FB] px-3.5 py-3">
-            <FileSearch className="mt-0.5 h-4 w-4 shrink-0 text-[#0089bb]" />
-            <div className="min-w-0">
-              <p className="text-[13px] font-semibold text-[#162543]">{t("waitingTitle")}</p>
-              <p className="text-[12px] text-[#6b7280]">{t("waitingBody")}</p>
-            </div>
-          </div>
-
           {project.description && (
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#9ca3af]">{t("projectDescription")}</p>
@@ -328,7 +322,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
               <Wallet className="h-4 w-4 shrink-0 text-[#9ca3af]" />
               <div className="min-w-0">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("budgetLabel")}</p>
-                <p className="truncate text-[13px] font-semibold text-[#0089bb]">{budgetTextFor(project)}</p>
+                <p className="text-[13px] font-semibold text-[#0089bb] [overflow-wrap:anywhere]">{budgetTextFor(project)}</p>
               </div>
             </div>
             {project.timeline && (
@@ -336,7 +330,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                 <CalendarClock className="h-4 w-4 shrink-0 text-[#9ca3af]" />
                 <div className="min-w-0">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("timelineLabel")}</p>
-                  <p className="truncate text-[13px] font-medium text-[#374151]">{project.timeline}</p>
+                  <p className="text-[13px] font-medium text-[#374151] [overflow-wrap:anywhere]">{project.timeline}</p>
                 </div>
               </div>
             )}
@@ -361,10 +355,6 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
             <p className="text-center text-[13px] text-[#6b7280]">{t("alreadyProposedNote")}</p>
           ) : (
             <div className="flex flex-col gap-3">
-              <div className="flex items-start gap-2.5">
-                <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-[#0089bb]" />
-                <p className="text-[12px] text-[#6b7280]"><span className="font-semibold text-[#162543]">{t("tipLabel")}</span> {t("tipBody")}</p>
-              </div>
               <div>
                 <label className="mb-1.5 block text-xs font-medium text-[#374151]">{t("yourPrice")} <span className="font-normal text-[#6b7280]">{t("optional")}</span></label>
                 <PriceInput value={form.price} onChange={(v) => updateForm(project.id, "price", v)} />
@@ -375,7 +365,6 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                 {form.message.length >= 500 && <p className="mt-1 text-xs text-[#b45309]">{t("charLimit", { max: 500 })}</p>}
               </div>
               <Button onClick={() => submitProposal(project.id)} disabled={!form.message.trim() || submitting === project.id} loading={submitting === project.id} className="w-full">{t("sendProposal")}</Button>
-              <p className="text-center text-[11px] text-[#9ca3af]">{t("proposalFree")}</p>
               <button type="button" onClick={() => dismissOpportunity(project.id)} className="mx-auto inline-flex items-center gap-1.5 text-[12px] font-medium text-[#9ca3af] transition-colors hover:text-[#6b7280]">
                 <EyeOff className="h-3.5 w-3.5" /> {t("dismiss")}
               </button>
@@ -425,14 +414,15 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
             <div className="flex flex-col gap-3">
               {/* Filter by the pro's professions — only when they have more than one. */}
               {showProfFilter && (
-                <StatusFilterTabs tabs={profTabs} value={profFilter} onChange={setProfFilter} labelFor={profLabel} variant="pills" />
+                <StatusFilterTabs tabs={profTabs} value={activeProf} onChange={setProfFilter} labelFor={profLabel} variant="pills" />
               )}
               {(() => {
                 // Hide opportunities already proposed to (they live in "Mis propuestas") and
-                // ones the pro dismissed; then filter by profession; surface service matches first.
+                // ones the pro dismissed; show the active profession's projects (+ uncategorized,
+                // visible to everyone); surface service matches first.
                 const list = openProjects
                   .filter((p) => !submitted.has(p.id) && !dismissed.has(p.id))
-                  .filter((p) => profFilter === "all" || p.category_id === profFilter)
+                  .filter((p) => !p.category_id || p.category_id === activeProf)
                   .sort((a, b) => Number(matchesServices(b)) - Number(matchesServices(a)));
                 if (list.length === 0) return <p className="text-sm text-[#6b7280] text-center py-12">{t("noneInView")}</p>;
                 // Desktop: the active opportunity drives the right detail pane (default = first).
@@ -468,13 +458,14 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-start justify-between gap-2">
                                   {/* No profession on the card (it's implicit from the feed/filter). */}
-                                  <span className="min-w-0 truncate text-[14px] font-semibold text-[#162543]">{project.title}</span>
+                                  <span className="min-w-0 line-clamp-2 text-[14px] font-semibold text-[#162543] [overflow-wrap:anywhere]">{project.title}</span>
                                   {isToday(project.created_at) && <Badge variant="success" className="shrink-0 text-[10px] font-semibold">{t("new")}</Badge>}
                                 </div>
-                                {(zona || project.timeline) && <p className="mt-0.5 truncate text-[12px] text-[#6b7280]">{[zona, project.timeline].filter(Boolean).join(" · ")}</p>}
-                                <div className="mt-1 flex items-center justify-between gap-2">
-                                  <span className="min-w-0 truncate text-[13px] font-semibold text-[#0089bb]">{budgetTextFor(project)}</span>
-                                  <span className="shrink-0 text-[11px] text-[#9ca3af]">{relativeTime(project.created_at)}</span>
+                                {(zona || project.timeline) && <p className="mt-0.5 text-[12px] text-[#6b7280] [overflow-wrap:anywhere]">{[zona, project.timeline].filter(Boolean).join(" · ")}</p>}
+                                {/* Budget + relative time wrap together so neither (esp. "hace …") is ever clipped. */}
+                                <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                                  <span className="text-[13px] font-semibold text-[#0089bb] [overflow-wrap:anywhere]">{budgetTextFor(project)}</span>
+                                  <span className="text-[11px] text-[#9ca3af]">· {relativeTime(project.created_at)}</span>
                                 </div>
                               </div>
                             </button>
