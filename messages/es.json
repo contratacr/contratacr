@@ -1423,6 +1423,7 @@
     "alwaysSub": "En {place} · se repite automáticamente cada semana.",
     "alwaysSubAll": "Se repite automáticamente cada semana.",
     "presetTypical": "Aplicar Lunes a viernes, 8:00AM – 5:00PM",
+    "applySchedule": "Aplicar horario",
     "blockLocationAria": "Ubicación de este horario",
     "excLocationAria": "Ubicación de las excepciones",
     "apptDuration": "Cada cita dura",

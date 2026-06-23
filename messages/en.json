@@ -1423,6 +1423,7 @@
     "alwaysSub": "At {place} · repeats automatically every week.",
     "alwaysSubAll": "Repeats automatically every week.",
     "presetTypical": "Apply Monday to Friday, 8:00AM – 5:00PM",
+    "applySchedule": "Apply schedule",
     "blockLocationAria": "Location for this time block",
     "excLocationAria": "Location for exceptions",
     "apptDuration": "Each appointment lasts",

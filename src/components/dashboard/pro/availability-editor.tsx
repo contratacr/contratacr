@@ -619,9 +619,15 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
       {/* ── Disponibilidad privada ─────────────────────────────────────────── */}
       <div className="rounded-2xl border border-[#e5e7eb] p-4 sm:p-5">
         <div className="flex items-center justify-between gap-4">
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-[#111827]">{t("privateLabel")}</p>
-            <p className="mt-0.5 text-xs text-[#6b7280]">{isPublic ? t("privateSubPublic") : t("privateSubPrivate")}</p>
+          <div className="flex min-w-0 items-center gap-3">
+            {/* Blue padlock — signals this controls PRIVATE availability. */}
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EBF5FB] text-[#009FD9]">
+              <Lock className="h-5 w-5" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-[#111827]">{t("privateLabel")}</p>
+              <p className="mt-0.5 text-xs text-[#6b7280]">{isPublic ? t("privateSubPublic") : t("privateSubPrivate")}</p>
+            </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             {savingVisibility && <Loader2 className="h-4 w-4 animate-spin text-[#009FD9]" />}
@@ -679,12 +685,10 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
             <button
               type="button"
               onClick={presetWeekdays8to5}
-              className="group mb-3.5 inline-flex items-center gap-2 rounded-full border border-[#bfdbfe] bg-[#EBF5FB] py-2 pl-2.5 pr-3.5 text-xs font-semibold text-[#162543] shadow-sm transition-colors hover:border-[#93c5fd] hover:bg-[#dcedfa]"
+              className="mb-3.5 inline-flex items-center gap-2 rounded-lg border border-[#bfdbfe] bg-white px-3.5 py-2 text-sm font-semibold text-[#008ce0] transition-colors hover:border-[#008ce0] hover:bg-[#EBF5FB]"
             >
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#008ce0] text-white">
-                <CalendarClock className="h-3 w-3" />
-              </span>
-              {t("presetTypical")}
+              <CalendarClock className="h-4 w-4" />
+              {t("applySchedule")}
             </button>
 
             <div className="flex flex-col divide-y divide-[#f3f4f6]">
@@ -749,17 +753,20 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                               </div>
                             );
                           })}
-                          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 pt-0.5">
-                            <button type="button" onClick={() => addBlock(wd)} className="inline-flex items-center gap-1 text-xs font-medium text-[#009FD9] hover:underline cursor-pointer">
-                              <Plus className="h-3.5 w-3.5" /> {t("addFranja")}
-                            </button>
-                            <button type="button" onClick={() => copyToAll(wd)} className="inline-flex items-center gap-1 text-xs font-medium text-[#6b7280] hover:text-[#111827] cursor-pointer">
-                              <Copy className="h-3.5 w-3.5" /> {t("sameAllDays")}
-                            </button>
-                          </div>
                         </div>
                       )}
                     </div>
+                    {/* Per-day actions, to the RIGHT of the time row (stack below on mobile). */}
+                    {on && (
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 sm:shrink-0 sm:justify-end sm:pt-1.5">
+                        <button type="button" onClick={() => addBlock(wd)} className="inline-flex items-center gap-1 text-xs font-medium text-[#009FD9] hover:underline cursor-pointer">
+                          <Plus className="h-3.5 w-3.5" /> {t("addFranja")}
+                        </button>
+                        <button type="button" onClick={() => copyToAll(wd)} className="inline-flex items-center gap-1 text-xs font-medium text-[#6b7280] hover:text-[#111827] cursor-pointer">
+                          <Copy className="h-3.5 w-3.5" /> {t("sameAllDays")}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 );
               })}
