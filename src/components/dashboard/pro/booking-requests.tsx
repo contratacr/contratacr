@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarDays, ChevronDown, CalendarClock, Phone, IdCard } from "lucide-react";
+import { CalendarDays, ChevronDown, CalendarClock, Clock, Phone, IdCard } from "lucide-react";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { formatId } from "@/lib/cedula";
 import { ageCategoryFromDob, computeAge } from "@/lib/age";
@@ -273,6 +273,14 @@ export function BookingRequests() {
 
         {expanded && (
           <div className="px-4 pb-3.5 pt-3 border-t border-[#f3f4f6] flex flex-col gap-2.5">
+            {/* When the request came in — a quiet meta line at the TOP of the details (sprint 501;
+                was buried at the END of the contact card). Distinct from the appointment date
+                (shown collapsed) and from the contact/service info below. */}
+            {requestedDate && (
+              <p className="flex items-center gap-1.5 text-[11px] text-[#9ca3af]">
+                <Clock className="h-3.5 w-3.5 shrink-0 text-[#374151]" /> {t("requestedOn", { date: requestedDate })}
+              </p>
+            )}
             {/* REDESIGNED request info (sprint 443) — organised, not a flat "label: value" dump.
                 (1) the patient callout when the cita is for someone else; (2) a tidy DETAILS card
                 = the SERVICE (navy headline) + location, then the booker's CONTACT (phone · cédula)
@@ -297,9 +305,9 @@ export function BookingRequests() {
             })()}
 
             {/* 2 — DETAILS card (ONE organised block, hairline-divided): the SERVICE headline +
-                location, the booker's CONTACT (phone · cédula), and a quiet "Solicitada el …"
-                footer — so the details read as one tidy card, not blocks floating apart. */}
-            {(category || location || phoneFmt || cedulaFmt || requestedDate) && (
+                location and the booker's CONTACT (phone · cédula). The request date ("Solicitada el …")
+                moved to a quiet meta line at the TOP of the expanded panel (sprint 501), not buried here. */}
+            {(category || location || phoneFmt || cedulaFmt) && (
               <div className="rounded-xl border border-[#eef0f2] bg-[#f9fafb] overflow-hidden divide-y divide-[#eef0f2]">
                 {(category || location) && (
                   <div className="px-3.5 py-3">
@@ -329,13 +337,12 @@ export function BookingRequests() {
                     )}
                   </div>
                 )}
-                <div className="px-3.5 py-2.5">
-                  <p className="text-[11px] text-[#9ca3af]">{t("requestedOn", { date: requestedDate })}</p>
-                </div>
               </div>
             )}
 
-            {/* 3 — the client's NOTE, as their message: a crisp WHITE card with a brand left-accent. */}
+            {/* 3 — the client's NOTE, in its OWN separate field — a crisp WHITE card with a brand
+                left-accent + a "NOTA DEL CLIENTE" eyebrow, visually distinct from the grey
+                service/contact details card above so it clearly reads as their message. */}
             {booking.service_description && (
               <div className="rounded-lg border border-[#e5e7eb] border-l-[3px] border-l-[#009FD9]/60 bg-white px-3.5 py-2.5">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("noteEyebrow")}</p>
