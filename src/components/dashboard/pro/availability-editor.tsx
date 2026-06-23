@@ -669,12 +669,15 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
               No "HORARIO PARA" tabs, no "ocupado en otra ubicación" hint — overlaps
               are visible at a glance. */}
           <div className="rounded-2xl border border-[#e5e7eb] p-4 sm:p-5">
-            <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
+            {/* ONE compact row: the schedule summary (left) + "Cada cita dura" select + the
+                "Aplicar horario" button (right). Wraps gracefully on small screens. The button's
+                behavior hint lives in its tooltip so the row stays a single line. */}
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
               <div className="min-w-0">
                 <h3 className="text-sm font-semibold text-[#111827]">{t("alwaysTitle")}</h3>
                 <p className="mt-0.5 text-xs text-[#6b7280]">{t("alwaysSubAll")}</p>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
+              <div className="flex flex-wrap items-center gap-2">
                 <label className="text-xs font-medium text-[#6b7280]">{t("apptDuration")}</label>
                 <div className="relative">
                   <select value={activeDuration} onChange={(e) => setDuration(Number(e.target.value))} className={selectClass}>
@@ -682,22 +685,18 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                   </select>
                   <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9ca3af]" />
                 </div>
+                {/* "Aplicar horario" — applies the first configured day (or Mon–Fri 8AM–5PM) to
+                    the whole week; blue icon + text. Hint in the tooltip to keep the row compact. */}
+                <button
+                  type="button"
+                  onClick={applySchedule}
+                  title={t("applyScheduleHelp")}
+                  className="inline-flex items-center gap-2 rounded-lg border border-[#bfdbfe] bg-white px-3.5 py-2 text-sm font-semibold text-[#008ce0] transition-colors hover:border-[#008ce0] hover:bg-[#EBF5FB]"
+                >
+                  <CalendarClock className="h-4 w-4" />
+                  {t("applySchedule")}
+                </button>
               </div>
-            </div>
-
-            {/* ONE control to apply a schedule to the whole week (the merged "configure once →
-                apply to all days"): a clear blue button + a one-line hint. Replaces the per-day
-                "Igual a todos los días" duplication. */}
-            <div className="mb-3.5">
-              <button
-                type="button"
-                onClick={applySchedule}
-                className="inline-flex items-center gap-2 rounded-lg border border-[#bfdbfe] bg-white px-3.5 py-2 text-sm font-semibold text-[#008ce0] transition-colors hover:border-[#008ce0] hover:bg-[#EBF5FB]"
-              >
-                <CalendarClock className="h-4 w-4" />
-                {t("applySchedule")}
-              </button>
-              <p className="mt-1.5 text-xs text-[#6b7280]">{t("applyScheduleHelp")}</p>
             </div>
 
             <div className="flex flex-col divide-y divide-[#f3f4f6]">
