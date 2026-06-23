@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { ImageUp, X, Loader2, Plus, Pencil, Trash2, Images, CalendarDays, User2, Heart } from "lucide-react";
+import { ImageUp, X, Loader2, Plus, Pencil, Trash2, Images, CalendarDays, Heart } from "lucide-react";
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
@@ -206,9 +206,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
                 {c.title && <p className="mt-0.5 line-clamp-1 text-[15px] font-bold text-[#162543] [overflow-wrap:anywhere]">{c.title}</p>}
                 {c.description && <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-[#6b7280] [overflow-wrap:anywhere]">{c.description}</p>}
                 {c.recipient && (
-                  <p className="mt-0.5 line-clamp-2 inline-flex items-start gap-1 text-xs text-[#6b7280] [overflow-wrap:anywhere]">
-                    <User2 className="mt-0.5 h-3 w-3 shrink-0 text-[#374151]" /> {c.recipient}
-                  </p>
+                  <p className="mt-0.5 line-clamp-1 text-xs text-[#6b7280] [overflow-wrap:anywhere]">{c.recipient}</p>
                 )}
                 <div className="mt-3 flex items-center justify-between gap-2 border-t border-[#f3f4f6] pt-2.5">
                   <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-[#9ca3af]">

@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 import { Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Public "Me gusta" on a caso de éxito. One like per browser (localStorage guard); optimistic
-// +1, then reconciles with the server count. The professional sees the total on their own cases.
+// Public "Me gusta" on a caso de éxito — a SINGLE clickable heart, nothing more (no label,
+// no count, no pill). One like per browser (localStorage guard), optimistic, persisted via
+// the API. The professional sees the like TOTAL on their own panel cards; a visitor just
+// taps the heart. Styling/position come from `className` (used as an overlay on the cover).
 const KEY = "cc_liked_cases";
 function likedSet(): Set<string> {
   try { return new Set<string>(JSON.parse(localStorage.getItem(KEY) || "[]")); } catch { return new Set(); }
@@ -14,35 +16,34 @@ function likedSet(): Set<string> {
 export function CaseLikeButton({
   professionalId,
   caseId,
-  initialLikes = 0,
   label,
+  className,
 }: {
   professionalId: string;
   caseId: string;
-  initialLikes?: number;
   label: string;
+  className?: string;
 }) {
-  const [likes, setLikes] = useState(initialLikes);
   const [liked, setLiked] = useState(false);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => { setLiked(likedSet().has(caseId)); }, [caseId]);
 
-  async function toggle() {
+  async function toggle(e: MouseEvent) {
+    // The heart sits over the cover (which opens the lightbox) — don't trigger that.
+    e.preventDefault();
+    e.stopPropagation();
     if (liked || busy) return;
     setBusy(true);
-    setLiked(true);
-    setLikes((n) => n + 1); // optimistic
+    setLiked(true); // optimistic
     try {
       const s = likedSet(); s.add(caseId);
       try { localStorage.setItem(KEY, JSON.stringify([...s])); } catch { /* ignore */ }
-      const res = await fetch("/api/portfolio-like", {
+      await fetch("/api/portfolio-like", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ professionalId, caseId }),
       });
-      const data = await res.json().catch(() => null);
-      if (res.ok && data && typeof data.likes === "number") setLikes(data.likes);
     } catch { /* keep optimistic */ } finally { setBusy(false); }
   }
 
@@ -54,14 +55,9 @@ export function CaseLikeButton({
       aria-pressed={liked}
       aria-label={label}
       title={label}
-      className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] font-semibold transition-colors",
-        liked ? "border-[#fecdd3] bg-[#fff1f2] text-[#e11d48]" : "border-[#e5e7eb] bg-white text-[#6b7280] hover:border-[#fecdd3] hover:text-[#e11d48]",
-        !liked && !busy && "cursor-pointer"
-      )}
+      className={cn("transition-colors", !liked && !busy && "cursor-pointer", className)}
     >
-      <Heart className={cn("h-4 w-4", liked && "fill-current")} />
-      {likes > 0 ? <span className="tabular-nums">{likes}</span> : <span>{label}</span>}
+      <Heart className={cn("h-5 w-5 transition-transform", liked && "fill-current text-[#e11d48]")} />
     </button>
   );
 }

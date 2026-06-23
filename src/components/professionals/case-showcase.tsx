@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Images, User2, CalendarDays, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Images, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { cldThumb, cldLarge } from "@/lib/cloudinary";
 import { CaseLikeButton } from "@/components/professionals/case-like-button";
@@ -37,7 +37,8 @@ export function CaseShowcase({
   const locale = useLocale();
   const t = useTranslations("profile");
   const tg = useTranslations("gallery");
-  const [active, setActive] = useState<string>("all");
+  // Filter is always a real profession (no "Todas") — defaults to the first with cases.
+  const [active, setActive] = useState<string>(professions[0] ?? "");
   // The opened case's photos + current index — null when the lightbox is closed.
   const [box, setBox] = useState<{ photos: string[]; i: number } | null>(null);
 
@@ -53,9 +54,13 @@ export function CaseShowcase({
     const extras = [...new Set(cases.map((c) => c.profession))].filter((p) => p && !professions.includes(p));
     return [...inOrder, ...extras];
   }, [professions, cases]);
+  // Keep the active filter valid (no "Todas") — fall back to the first profession with cases.
+  useEffect(() => {
+    if (distinctProfs.length > 0 && !distinctProfs.includes(active)) setActive(distinctProfs[0]);
+  }, [distinctProfs, active]);
   const showFilter = distinctProfs.length > 1;
   const countFor = (p: string) => cases.filter((c) => c.profession === p).length;
-  const shown = active === "all" ? cases : cases.filter((c) => c.profession === active);
+  const shown = cases.filter((c) => c.profession === active);
 
   // ── Lightbox nav (Esc / ← / →) ──
   const close = useCallback(() => setBox(null), []);
@@ -76,7 +81,7 @@ export function CaseShowcase({
     <div className="flex flex-col gap-5">
       {showFilter && (
         <div className="flex flex-wrap gap-2">
-          {[{ id: "all", n: cases.length }, ...distinctProfs.map((p) => ({ id: p, n: countFor(p) }))].map((tab) => {
+          {distinctProfs.map((p) => ({ id: p, n: countFor(p) })).map((tab) => {
             const on = active === tab.id;
             return (
               <button
@@ -88,7 +93,7 @@ export function CaseShowcase({
                   on ? "border-[#009FD9] bg-[#009FD9] text-white" : "border-[#e5e7eb] bg-white text-[#374151] hover:bg-[#f9fafb]"
                 )}
               >
-                {tab.id === "all" ? t("casosAll") : profLabel(tab.id)}
+                {profLabel(tab.id)}
                 <span className={cn("text-[11px] font-bold tabular-nums", on ? "text-white/90" : "text-[#9ca3af]")}>({tab.n})</span>
               </button>
             );
@@ -98,9 +103,8 @@ export function CaseShowcase({
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {shown.map((c) => {
-          const hasFooter = !!(c.recipient || c.date || c.likeable);
           return (
-            <div key={c.id} className="flex flex-col overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm transition-shadow hover:shadow-md">
+            <div key={c.id} className="relative flex flex-col overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm transition-shadow hover:shadow-md">
               {c.photos[0] && (
                 <button
                   type="button"
@@ -117,27 +121,25 @@ export function CaseShowcase({
                   )}
                 </button>
               )}
+              {/* Just a clickable heart, overlaid on the photo (top-right) — clean + minimal. */}
+              {c.likeable && (
+                <CaseLikeButton
+                  professionalId={professionalId}
+                  caseId={c.id}
+                  label={t("likeLabel")}
+                  className="absolute right-2.5 top-2.5 z-10 grid h-9 w-9 place-items-center rounded-full bg-white/90 text-[#6b7280] shadow-sm backdrop-blur hover:bg-white hover:text-[#e11d48]"
+                />
+              )}
               <div className="flex flex-1 flex-col p-4">
                 <p className="text-[11px] font-semibold text-[#0089bb]">{profLabel(c.profession)}</p>
-                {c.title && <p className="mt-0.5 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere]">{c.title}</p>}
+                {c.title && <p className="mt-0.5 line-clamp-1 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere]">{c.title}</p>}
                 {c.description && <p className="mt-1 line-clamp-2 text-[13px] leading-relaxed text-[#6b7280] [overflow-wrap:anywhere]">{c.description}</p>}
-                {hasFooter && (
-                  <div className="mt-3 flex items-center justify-between gap-2 border-t border-[#f3f4f6] pt-3">
-                    <div className="flex min-w-0 items-center gap-2">
-                      {c.recipient ? (
-                        <>
-                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#f3f4f6] text-[#374151]"><User2 className="h-3.5 w-3.5" /></span>
-                          <div className="min-w-0 leading-tight">
-                            <p className="truncate text-[12px] font-medium text-[#374151] [overflow-wrap:anywhere]">{c.recipient}</p>
-                            {c.date && <p className="truncate text-[11px] text-[#9ca3af]">{c.date}</p>}
-                          </div>
-                        </>
-                      ) : c.date ? (
-                        <span className="inline-flex items-center gap-1.5 text-[12px] text-[#6b7280]"><CalendarDays className="h-3.5 w-3.5 shrink-0 text-[#374151]" /> {c.date}</span>
-                      ) : null}
-                    </div>
-                    {c.likeable && <CaseLikeButton professionalId={professionalId} caseId={c.id} initialLikes={c.likes ?? 0} label={t("likeLabel")} />}
-                  </div>
+                {(c.recipient || c.date) && (
+                  <p className="mt-2.5 flex flex-wrap items-baseline gap-x-1.5 text-[12px] [overflow-wrap:anywhere]">
+                    {c.recipient && <span className="font-medium text-[#374151]">{c.recipient}</span>}
+                    {c.recipient && c.date && <span className="text-[#d1d5db]">·</span>}
+                    {c.date && <span className="text-[#9ca3af]">{c.date}</span>}
+                  </p>
                 )}
               </div>
             </div>
