@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Plus, Trash2, Pencil, Search, Home, Trees, Sparkles, Laptop, Briefcase, Stethoscope, Scissors, GraduationCap, Truck, PartyPopper, ShieldCheck, Car, Wrench, type LucideIcon } from "lucide-react";
+import { Plus, Trash2, Pencil, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PriceInput } from "@/components/ui/price-input";
 import { Modal } from "@/components/ui/modal";
@@ -42,13 +42,6 @@ interface ServicesEditorProps {
 function genId() {
   return `svc_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 }
-
-// One restrained GREY icon per category GROUP (serious brand — grey, not color tints).
-const GROUP_ICON: Record<string, LucideIcon> = {
-  hogar: Home, jardin: Trees, limpieza: Sparkles, tecnologia: Laptop, profesional: Briefcase,
-  salud: Stethoscope, belleza: Scissors, educacion: GraduationCap, transporte: Truck,
-  eventos: PartyPopper, seguridad: ShieldCheck, automotriz: Car,
-};
 
 // Price units offered in the service modal's <select> (the "Precio a consultar"
 // checkbox covers a_convenir separately, so it's excluded here).
@@ -289,13 +282,6 @@ export function ServicesEditor({
     return groups;
   }, [pickerList]);
 
-  // category id → its group id, so each profession card shows its group's grey icon.
-  const catGroup = useMemo(() => {
-    const m = new Map<string, string>();
-    for (const c of getAllCategories()) m.set(c.id, c.groupId);
-    return m;
-  }, [customCategories]);
-
   // Which profession's services are shown (filter-by-profession; falls back to the first).
   const shownProf = professions.includes(activeProf) ? activeProf : professions[0];
   const profTabs = professions.map((p) => ({ id: p }));
@@ -325,7 +311,6 @@ export function ServicesEditor({
         const i = professions.indexOf(prof);
         const profServices = services.filter((s) => effectiveCategory(s) === prof);
         const isPrincipal = i === 0;
-        const Icon = GROUP_ICON[catGroup.get(prof) ?? ""] ?? Wrench;
         // Entry price for this profession (cheapest priced service) — a marketplace-style
         // "Desde ₡X" summary; derived from existing data, shown only when something is priced.
         const pricedAmounts = profServices.map((s) => s.priceAmount).filter((n): n is number => typeof n === "number" && n > 0);
@@ -335,21 +320,16 @@ export function ServicesEditor({
             {/* Profession header — the PRINCIPAL profession gets a subtle brand tint + navy name
                 so the main area the pro offers clearly stands out; the rest stay neutral grey. */}
             <div className={cn("flex items-start justify-between gap-3 border-b px-4 sm:px-5 py-4", isPrincipal ? "border-[#dcebf6] bg-[#EBF5FB]" : "border-[#eef0f2] bg-[#f9fafb]")}>
-              <div className="flex min-w-0 items-start gap-3">
-                {/* Group icon in a tidy circle (grey; brand-blue only on the principal). */}
-                <span className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white ring-1 ring-inset", isPrincipal ? "text-[#0089bb] ring-[#bfdbfe]" : "text-[#6b7280] ring-[#eef0f2]")}>
-                  <Icon className="h-5 w-5" />
-                </span>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-base font-bold leading-tight text-[#162543] [overflow-wrap:anywhere]">{getCategoryLabel(prof, locale)}</h3>
-                    {isPrincipal && <span className="shrink-0 rounded-full bg-white px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#0089bb] ring-1 ring-inset ring-[#009FD9]/25">{t("principal")}</span>}
-                  </div>
-                  <p className="mt-1 text-xs text-[#6b7280]">
-                    {t("servicesPublished", { count: profServices.length })}
-                    {fromAmount != null && <> · <span className="font-medium text-[#374151]">{t("priceFrom", { amount: fromAmount.toLocaleString("es-CR") })}</span></>}
-                  </p>
+              {/* No icon on the profession — text-only (owner preference). */}
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-base font-bold leading-tight text-[#162543] [overflow-wrap:anywhere]">{getCategoryLabel(prof, locale)}</h3>
+                  {isPrincipal && <span className="shrink-0 rounded-full bg-white px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#0089bb] ring-1 ring-inset ring-[#009FD9]/25">{t("principal")}</span>}
                 </div>
+                <p className="mt-1 text-xs text-[#6b7280]">
+                  {t("servicesPublished", { count: profServices.length })}
+                  {fromAmount != null && <> · <span className="font-medium text-[#374151]">{t("priceFrom", { amount: fromAmount.toLocaleString("es-CR") })}</span></>}
+                </p>
               </div>
               <div className="flex items-center gap-1.5 shrink-0">
                 {!isPrincipal && (
@@ -393,10 +373,9 @@ export function ServicesEditor({
                     // hidden from clients on the public profile.
                     const isActiveSvc = svc.active !== false;
                     return (
-                    /* ALIGNED-TABLE row (Stripe/Apple "label : value"): name left + PRICE right;
-                       a muted 1-line brief; an active/inactive toggle; quiet edit/delete (always
-                       visible on mobile, hover-revealed on desktop). */
-                    <div key={svc.id} className={cn("group flex items-center gap-3 rounded-xl border px-3.5 py-3 transition-colors", isActiveSvc ? "border-[#e5e7eb] hover:bg-[#fafafa]" : "border-[#e5e7eb] bg-[#f9fafb]")}>
+                    /* ALIGNED row: name left + PRICE right + a muted 1-line brief; ALWAYS-visible
+                       edit/delete; the active/inactive toggle at the FAR RIGHT (end) of the row. */
+                    <div key={svc.id} className={cn("flex items-center gap-2.5 rounded-xl border px-3.5 py-3 transition-colors", isActiveSvc ? "border-[#e5e7eb]" : "border-[#e5e7eb] bg-[#f9fafb]")}>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-baseline gap-3">
                           <p className={cn("min-w-0 flex-1 truncate text-sm font-semibold", isActiveSvc ? "text-[#162543]" : "text-[#9ca3af]")}>{svc.name}</p>
@@ -407,22 +386,23 @@ export function ServicesEditor({
                           )}
                         </div>
                         {svc.description && <p className="mt-0.5 truncate text-xs text-[#6b7280]">{svc.description}</p>}
-                        {/* Active/inactive toggle — a paused service is hidden from clients. */}
-                        <button type="button" role="switch" aria-checked={isActiveSvc} onClick={() => toggleActive(svc.id)} className="mt-1.5 inline-flex items-center gap-1.5" title={isActiveSvc ? t("svcActive") : t("svcInactive")}>
-                          <span className={cn("relative h-4 w-7 rounded-full transition-colors", isActiveSvc ? "bg-[#009FD9]" : "bg-[#d1d5db]")}>
-                            <span className={cn("absolute top-0.5 h-3 w-3 rounded-full bg-white transition-all", isActiveSvc ? "left-[14px]" : "left-0.5")} />
-                          </span>
-                          <span className={cn("text-[11px] font-semibold", isActiveSvc ? "text-[#16a34a]" : "text-[#9ca3af]")}>{isActiveSvc ? t("svcActive") : t("svcInactive")}</span>
-                        </button>
                       </div>
-                      <div className="flex shrink-0 items-center gap-0.5 opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
-                        <button onClick={() => openEdit(svc)} className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9ca3af] hover:bg-[#EBF5FB] hover:text-[#009FD9] transition-colors" title={t("edit")} aria-label={t("edit")}>
+                      {/* Edit / delete — ALWAYS visible (not hover-only; works on mobile too). */}
+                      <div className="flex shrink-0 items-center gap-0.5">
+                        <button onClick={() => openEdit(svc)} className="flex h-8 w-8 items-center justify-center rounded-lg text-[#6b7280] hover:bg-[#EBF5FB] hover:text-[#009FD9] transition-colors" title={t("edit")} aria-label={t("edit")}>
                           <Pencil className="h-3.5 w-3.5" />
                         </button>
-                        <button onClick={() => handleDelete(svc.id)} className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9ca3af] hover:bg-red-50 hover:text-red-500 transition-colors" title={t("delete")} aria-label={t("delete")}>
+                        <button onClick={() => handleDelete(svc.id)} className="flex h-8 w-8 items-center justify-center rounded-lg text-[#6b7280] hover:bg-red-50 hover:text-red-500 transition-colors" title={t("delete")} aria-label={t("delete")}>
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       </div>
+                      {/* Active/inactive toggle — FAR RIGHT, end of the row (label on desktop). */}
+                      <button type="button" role="switch" aria-checked={isActiveSvc} onClick={() => toggleActive(svc.id)} className="flex shrink-0 items-center gap-1.5" title={isActiveSvc ? t("svcActive") : t("svcInactive")} aria-label={isActiveSvc ? t("svcActive") : t("svcInactive")}>
+                        <span className={cn("relative h-4 w-7 rounded-full transition-colors", isActiveSvc ? "bg-[#009FD9]" : "bg-[#d1d5db]")}>
+                          <span className={cn("absolute top-0.5 h-3 w-3 rounded-full bg-white transition-all", isActiveSvc ? "left-[14px]" : "left-0.5")} />
+                        </span>
+                        <span className={cn("hidden text-[11px] font-semibold sm:inline", isActiveSvc ? "text-[#16a34a]" : "text-[#9ca3af]")}>{isActiveSvc ? t("svcActive") : t("svcInactive")}</span>
+                      </button>
                     </div>
                     );
                   })}
