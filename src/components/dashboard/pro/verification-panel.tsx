@@ -7,6 +7,7 @@ import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Link } from "@/i18n/navigation";
 import { SUPPORT_WHATSAPP_NUMBER } from "@/lib/constants";
 import { caseRef, type VerificationStatus } from "@/lib/verification";
+import { cn } from "@/lib/utils";
 
 interface Props {
   professionalId: string;
@@ -111,40 +112,40 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
         )}
 
         {/* WhatsApp follow-up to track the case */}
-        <a href={waUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-[#25D366] hover:bg-[#1eb456] text-white text-sm font-bold px-4 py-2.5">
+        <a href={waUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-full bg-[#25D366] hover:bg-[#1eb456] text-white text-sm font-bold px-5 py-2.5">
           <WhatsAppIcon className="h-4 w-4" /> {t("waFollowUp", { ref })}
         </a>
 
         {/* Appeal → straight to support (no padrón re-run for no-ID cases) */}
         {status !== "under_appeal" && (
-          <div className="bg-white rounded-xl border border-[#e5e7eb] p-5">
-            <h3 className="font-semibold text-[#111827] text-sm mb-1">{t("manualReviewTitle")}</h3>
+          <div className="bg-white rounded-2xl border border-[#e5e7eb] p-5 shadow-sm">
+            <h3 className="text-[15px] font-bold text-[#162543] mb-1">{t("manualReviewTitle")}</h3>
             <p className="text-xs text-[#6b7280] mb-3">{t("manualReviewBody")}</p>
             <textarea
               value={appeal}
               onChange={(e) => setAppeal(e.target.value)}
               rows={3}
               placeholder={t("manualReviewPlaceholder")}
-              className="w-full rounded-lg border border-[#e5e7eb] p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
+              className="w-full rounded-xl border border-[#e5e7eb] p-3 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
             />
-            <button onClick={() => runCheck(true)} disabled={busy} className="mt-3 inline-flex items-center gap-2 rounded-xl bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-4 py-2.5 disabled:opacity-60">
+            <button onClick={() => runCheck(true)} disabled={busy} className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 disabled:opacity-60">
               <Send className="h-4 w-4" /> {busy ? t("sending") : t("sendToReview")}
             </button>
           </div>
         )}
 
         {/* Add-cédula-later — runs the normal padrón verification automatically */}
-        <div className="bg-white rounded-xl border border-[#e5e7eb] p-5">
-          <h3 className="font-semibold text-[#111827] text-sm mb-1">{t("hasCedulaTitle")}</h3>
+        <div className="bg-white rounded-2xl border border-[#e5e7eb] p-5 shadow-sm">
+          <h3 className="text-[15px] font-bold text-[#162543] mb-1">{t("hasCedulaTitle")}</h3>
           <p className="text-xs text-[#6b7280] mb-3">{t("hasCedulaBody")}</p>
           <div className="flex flex-wrap items-center gap-2">
             <input
               value={newCedula}
               onChange={(e) => setNewCedula(e.target.value)}
               placeholder={t("cedulaPlaceholder")}
-              className="flex-1 min-w-[200px] h-10 px-3 rounded-lg border border-[#e5e7eb] text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
+              className="flex-1 min-w-[200px] h-11 px-4 rounded-xl border border-[#e5e7eb] text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
             />
-            <button onClick={addCedula} disabled={cedulaBusy || newCedula.replace(/\D/g, "").length < 9} className="inline-flex items-center gap-2 rounded-xl bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-4 py-2.5 disabled:opacity-50">
+            <button onClick={addCedula} disabled={cedulaBusy || newCedula.replace(/\D/g, "").length < 9} className="inline-flex items-center gap-2 rounded-full bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 disabled:opacity-50">
               <ShieldCheck className="h-4 w-4" /> {cedulaBusy ? t("verifying") : t("addAndVerify")}
             </button>
           </div>
@@ -200,8 +201,8 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
 
       {/* Rejected → appeal (re-runs automatically; if it still fails → support ticket) */}
       {status === "rejected" && (
-        <div className="bg-white rounded-xl border border-[#e5e7eb] p-5">
-          <h3 className="font-semibold text-[#111827] text-sm mb-1">{t("appealTitle")}</h3>
+        <div className="bg-white rounded-2xl border border-[#e5e7eb] p-5 shadow-sm">
+          <h3 className="text-[15px] font-bold text-[#162543] mb-1">{t("appealTitle")}</h3>
           <p className="text-xs text-[#6b7280] mb-3">
             {t("appealBody")}
           </p>
@@ -210,13 +211,13 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
             onChange={(e) => setAppeal(e.target.value)}
             rows={4}
             placeholder={t("appealPlaceholder")}
-            className="w-full rounded-lg border border-[#e5e7eb] p-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
+            className="w-full rounded-xl border border-[#e5e7eb] p-3 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
           />
           <div className="flex flex-wrap gap-2 mt-3">
             <button
               onClick={() => runCheck(true)}
               disabled={busy}
-              className="inline-flex items-center gap-2 rounded-xl bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-4 py-2.5 disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-full bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 disabled:opacity-60"
             >
               <Send className="h-4 w-4" /> {busy ? t("sending") : t("appealReverify")}
             </button>
@@ -224,7 +225,7 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
               href={waUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-xl bg-[#25D366] hover:bg-[#1eb456] text-white text-sm font-bold px-4 py-2.5"
+              className="inline-flex items-center gap-2 rounded-full bg-[#25D366] hover:bg-[#1eb456] text-white text-sm font-bold px-5 py-2.5"
             >
               <WhatsAppIcon className="h-4 w-4" /> {t("supportWhatsapp")}
             </a>
@@ -237,7 +238,7 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
           href={waUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 rounded-xl bg-[#25D366] hover:bg-[#1eb456] text-white text-sm font-bold px-4 py-2.5"
+          className="inline-flex items-center gap-2 rounded-full bg-[#25D366] hover:bg-[#1eb456] text-white text-sm font-bold px-5 py-2.5"
         >
           <WhatsAppIcon className="h-4 w-4" /> {t("supportWhatsappCase", { ref })}
         </a>
@@ -250,8 +251,8 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
           from the padrón (profiles + Auth, in run-verification); DIMEX/NITE or not-found
           stays unverified; an invalid format errors out (no change). */}
       {status !== "verified" && (
-        <div className="bg-white rounded-xl border border-[#e5e7eb] p-5">
-          <h3 className="font-semibold text-[#111827] text-sm mb-1">{t("enterCedulaTitle")}</h3>
+        <div className="bg-white rounded-2xl border border-[#e5e7eb] p-5 shadow-sm">
+          <h3 className="text-[15px] font-bold text-[#162543] mb-1">{t("enterCedulaTitle")}</h3>
           <p className="text-xs text-[#6b7280] mb-3">{t("enterCedulaBody")}</p>
           <div className="flex flex-wrap items-center gap-2">
             <input
@@ -259,12 +260,12 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
               onChange={(e) => setNewCedula(e.target.value)}
               inputMode="numeric"
               placeholder={t("cedulaPlaceholder")}
-              className="flex-1 min-w-[200px] h-10 px-3 rounded-lg border border-[#e5e7eb] text-sm focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
+              className="flex-1 min-w-[200px] h-11 px-4 rounded-xl border border-[#e5e7eb] text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
             />
             <button
               onClick={addCedula}
               disabled={cedulaBusy || newCedula.replace(/\D/g, "").length < 9}
-              className="inline-flex items-center gap-2 rounded-xl bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-4 py-2.5 disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-full bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 disabled:opacity-50"
             >
               <ShieldCheck className="h-4 w-4" /> {cedulaBusy ? t("verifying") : t("addAndVerify")}
             </button>
@@ -275,6 +276,9 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
   );
 }
 
+// Polished status card: a white circular icon badge (icon in the tone colour) beside a
+// bold title + body, on a soft tinted card. Replaces the flat colored box for a cleaner,
+// more premium status treatment (the colour still carries the verified/pending/rejected meaning).
 function Banner({
   tone,
   icon,
@@ -286,18 +290,22 @@ function Banner({
   title: string;
   children: React.ReactNode;
 }) {
-  const tones: Record<string, string> = {
-    green: "bg-[#f0fdf4] border-[#bbf7d0] text-[#15803d]",
-    gray: "bg-[#f9fafb] border-[#e5e7eb] text-[#374151]",
-    amber: "bg-[#fffbeb] border-[#fde68a] text-[#92400e]",
-    red: "bg-[#fef2f2] border-[#fecaca] text-[#b91c1c]",
+  const tones: Record<string, { card: string; badge: string; title: string; body: string }> = {
+    green: { card: "border-[#bbf7d0] bg-[#f0fdf4]", badge: "text-[#16a34a]", title: "text-[#15803d]", body: "text-[#166534]" },
+    gray: { card: "border-[#e5e7eb] bg-[#f9fafb]", badge: "text-[#6b7280]", title: "text-[#374151]", body: "text-[#4b5563]" },
+    amber: { card: "border-[#fde68a] bg-[#fffbeb]", badge: "text-[#d97706]", title: "text-[#92400e]", body: "text-[#92400e]" },
+    red: { card: "border-[#fecaca] bg-[#fef2f2]", badge: "text-[#dc2626]", title: "text-[#b91c1c]", body: "text-[#7f1d1d]" },
   };
+  const c = tones[tone];
   return (
-    <div className={`rounded-xl border p-4 ${tones[tone]}`}>
-      <div className="flex items-center gap-2 font-semibold">
-        {icon} {title}
+    <div className={cn("flex items-start gap-3.5 rounded-2xl border p-4 sm:p-5", c.card)}>
+      <span className={cn("grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white shadow-sm ring-1 ring-inset ring-black/5", c.badge)}>
+        {icon}
+      </span>
+      <div className="min-w-0">
+        <p className={cn("font-bold leading-snug", c.title)}>{title}</p>
+        <div className={cn("mt-1 text-sm leading-relaxed [overflow-wrap:anywhere]", c.body)}>{children}</div>
       </div>
-      <div className="text-sm mt-1.5 leading-relaxed">{children}</div>
     </div>
   );
 }
