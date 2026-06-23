@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { ImageUp, X, Loader2, Plus, Pencil, Trash2, Images, CalendarDays, Heart } from "lucide-react";
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
+import { StatusFilterTabs } from "@/components/dashboard/status-filter-tabs";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
@@ -165,24 +166,16 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
         <div className="rounded-xl bg-[#fffbeb] border border-[#fde68a] p-4 text-sm text-[#92400e]">{t.rich("noServices", rich)}</div>
       )}
 
-      {/* Filter by profession (with counts) — only when the pro has 2+ professions. */}
+      {/* Filter by profession — underline tabs + count badges (shared StatusFilterTabs);
+          only when the pro has 2+ professions. */}
       {professions.length > 1 && (
-        <div className="flex flex-wrap gap-2">
-          {professions.map((p) => ({ id: p, n: countFor(p) })).map((tab) => {
-            const active = activeProf === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActiveProf(tab.id)}
-                className={cn("inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 py-1.5 text-[13px] font-semibold transition-colors", active ? "border-[#009FD9] bg-[#009FD9] text-white" : "border-[#e5e7eb] bg-white text-[#374151] hover:bg-[#f9fafb]")}
-              >
-                {label(tab.id)}
-                <span className={cn("text-[11px] font-bold tabular-nums", active ? "text-white/90" : "text-[#9ca3af]")}>({tab.n})</span>
-              </button>
-            );
-          })}
-        </div>
+        <StatusFilterTabs
+          tabs={professions.map((p) => ({ id: p }))}
+          value={activeProf}
+          onChange={setActiveProf}
+          labelFor={label}
+          counts={Object.fromEntries(professions.map((p) => [p, countFor(p)]))}
+        />
       )}
 
       {/* Case grid (matches the panel mockup). */}

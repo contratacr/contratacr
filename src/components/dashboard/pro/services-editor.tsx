@@ -285,6 +285,8 @@ export function ServicesEditor({
   // Which profession's services are shown (filter-by-profession; falls back to the first).
   const shownProf = professions.includes(activeProf) ? activeProf : professions[0];
   const profTabs = professions.map((p) => ({ id: p }));
+  // Count of precios under each servicio → the count badge on its filter tab.
+  const profCounts = Object.fromEntries(professions.map((p) => [p, services.filter((s) => effectiveCategory(s) === p).length]));
 
   if (professions.length === 0) {
     return (
@@ -305,7 +307,7 @@ export function ServicesEditor({
     <div className="flex flex-col gap-4">
       {/* Filter by profession — view ONE profession's services at a time (only when >1). */}
       {professions.length > 1 && (
-        <StatusFilterTabs tabs={profTabs} value={shownProf} onChange={setActiveProf} labelFor={(id) => getCategoryLabel(id, locale)} variant="pills" />
+        <StatusFilterTabs tabs={profTabs} value={shownProf} onChange={setActiveProf} labelFor={(id) => getCategoryLabel(id, locale)} counts={profCounts} />
       )}
       {professions.filter((p) => professions.length === 1 || p === shownProf).map((prof) => {
         const i = professions.indexOf(prof);

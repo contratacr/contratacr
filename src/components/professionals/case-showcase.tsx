@@ -6,6 +6,7 @@ import { Images, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { cldThumb, cldLarge } from "@/lib/cloudinary";
 import { CaseLikeButton } from "@/components/professionals/case-like-button";
+import { StatusFilterTabs } from "@/components/dashboard/status-filter-tabs";
 import { cn } from "@/lib/utils";
 
 export type ShowcaseCase = {
@@ -80,25 +81,13 @@ export function CaseShowcase({
   return (
     <div className="flex flex-col gap-5">
       {showFilter && (
-        <div className="flex flex-wrap gap-2">
-          {distinctProfs.map((p) => ({ id: p, n: countFor(p) })).map((tab) => {
-            const on = active === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActive(tab.id)}
-                className={cn(
-                  "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-3.5 py-1.5 text-[13px] font-semibold transition-colors",
-                  on ? "border-[#009FD9] bg-[#009FD9] text-white" : "border-[#e5e7eb] bg-white text-[#374151] hover:bg-[#f9fafb]"
-                )}
-              >
-                {profLabel(tab.id)}
-                <span className={cn("text-[11px] font-bold tabular-nums", on ? "text-white/90" : "text-[#9ca3af]")}>({tab.n})</span>
-              </button>
-            );
-          })}
-        </div>
+        <StatusFilterTabs
+          tabs={distinctProfs.map((p) => ({ id: p }))}
+          value={active}
+          onChange={setActive}
+          labelFor={profLabel}
+          counts={Object.fromEntries(distinctProfs.map((p) => [p, countFor(p)]))}
+        />
       )}
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">

@@ -118,6 +118,12 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   // The active profession (no "all"): the chosen one, else the first profession.
   const activeProf = professions.includes(profFilter) ? profFilter : (professions[0] ?? "");
+  // Count of AVAILABLE opportunities per profession (excludes proposed/dismissed) → the
+  // count badge on each filter tab.
+  const profCounts = useMemo(() => {
+    const visible = openProjects.filter((p) => !submitted.has(p.id) && !dismissed.has(p.id));
+    return Object.fromEntries(professions.map((p) => [p, visible.filter((o) => o.category_id === p).length]));
+  }, [openProjects, submitted, dismissed, professions]);
 
   async function fetchOpenProjects() {
     setLoading(true);
@@ -419,7 +425,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
             <div className="flex flex-col gap-3">
               {/* Filter by the pro's professions — only when they have more than one. */}
               {showProfFilter && (
-                <StatusFilterTabs tabs={profTabs} value={activeProf} onChange={setProfFilter} labelFor={profLabel} variant="pills" />
+                <StatusFilterTabs tabs={profTabs} value={activeProf} onChange={setProfFilter} labelFor={profLabel} counts={profCounts} />
               )}
               {(() => {
                 // Hide opportunities already proposed to (they live in "Mis propuestas") and
