@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { ShieldCheck, Clock, XCircle, AlertCircle, CheckCircle2, Send } from "lucide-react";
+import { ShieldCheck, Clock, XCircle, AlertCircle, CheckCircle2, Send, HelpCircle, ArrowRight } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
+import { Badge } from "@/components/ui/badge";
 import { Link } from "@/i18n/navigation";
 import { SUPPORT_WHATSAPP_NUMBER } from "@/lib/constants";
 import { caseRef, type VerificationStatus } from "@/lib/verification";
@@ -160,6 +161,10 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
       {status === "verified" && (
         <Banner tone="green" icon={<ShieldCheck className="h-5 w-5" />} title={t("verifiedTitle")}>
           {t.rich("verifiedBody", rich)}
+          {/* Show the actual badge clients see — makes "la insignia Verificado" concrete. */}
+          <span className="mt-3 flex">
+            <Badge variant="verified" className="gap-1.5 px-3 py-1 text-[13px]"><ShieldCheck className="h-3.5 w-3.5" /> {t("verifiedChip")}</Badge>
+          </span>
         </Banner>
       )}
       {status === "pending" && (
@@ -188,9 +193,16 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
         </div>
       )}
 
-      <p className="text-sm text-[#6b7280]">
-        {t.rich("howItWorks", { link: (c) => <Link href="/proveedores-autorizados" className="text-[#009FD9] font-medium hover:underline">{c}</Link> })}
-      </p>
+      {/* "¿Qué es la verificación?" — a clear, tappable link row (help icon + arrow),
+          not a flat grey line, so it reads as a distinct "learn more" affordance. */}
+      <Link
+        href="/proveedores-autorizados"
+        className="group flex items-center gap-2.5 rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm font-medium text-[#374151] transition-colors hover:border-[#009FD9] hover:bg-[#f9fbfe]"
+      >
+        <HelpCircle className="h-[18px] w-[18px] shrink-0 text-[#009FD9]" />
+        <span className="flex-1 [overflow-wrap:anywhere]">{t.rich("howItWorks", { link: (c) => <>{c}</> })}</span>
+        <ArrowRight className="h-4 w-4 shrink-0 text-[#9ca3af] transition-transform group-hover:translate-x-0.5" />
+      </Link>
 
       {/* Pending no longer shows a separate "Verificar mi identidad ahora" (re-run the
           cédula on file) button — it was redundant with the "Verifica tu identidad con tu

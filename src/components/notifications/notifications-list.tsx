@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { Bell, CheckCheck, Check, Trash2, AlertTriangle, CalendarClock, FolderOpen, Star, Headset, type LucideIcon } from "lucide-react";
+import { Bell, CheckCheck, Check, Trash2, AlertTriangle } from "lucide-react";
 import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
 import { StatusFilterTabs } from "@/components/dashboard/status-filter-tabs";
 import { createClient } from "@/lib/supabase/client";
@@ -22,16 +22,11 @@ type Notification = {
   data?: { link?: string } | null;
 };
 
-// Tasteful per-TYPE leading icon so a reserva vs a propuesta vs a reseña reads at a
-// glance (grey, in a neutral circle — serious brand, not colorful).
+// ONE consistent notification icon everywhere — the Bell, matching the panel-nav
+// "Notificaciones" item + the navbar bell (sprint 500). Replaces the per-type icons:
+// the kind of notification is already clear from its title/text, and a single shared
+// icon reads as "this is your notifications", consistent across the app.
 const NOTIF_TABS = [{ id: "all" }, { id: "unread" }] as const;
-function notifIcon(type: string): LucideIcon {
-  if (type.startsWith("booking")) return CalendarClock;
-  if (type === "proposal_accepted" || type === "proposal_received" || type === "new_project") return FolderOpen;
-  if (type === "review_request") return Star;
-  if (type === "support_reply") return Headset;
-  return Bell;
-}
 
 // Shared notifications list — used by the dedicated /notificaciones page and the
 // professional panel tab so both roles get the same notifications experience.
@@ -162,7 +157,6 @@ export function NotificationsList() {
         ) : (
           <ul>
             {shown.map((n) => {
-              const Icon = notifIcon(n.type);
               return (
               <li key={n.id} className={cn("relative group border-b border-[#f3f4f6] last:border-0", !n.read && "bg-[#f3f9fd]")}>
                 <button onClick={() => open(n)} className="w-full text-left px-4 py-3 pr-16 hover:bg-[#f9fafb] transition-colors">
@@ -170,7 +164,7 @@ export function NotificationsList() {
                   <div className="flex items-start gap-3">
                     <div className="relative shrink-0">
                       <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f3f4f6] text-[#374151]">
-                        <Icon className="h-4 w-4" />
+                        <Bell className="h-4 w-4" />
                       </span>
                       {!n.read && <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#009FD9] ring-2 ring-white" />}
                     </div>

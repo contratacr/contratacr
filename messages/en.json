@@ -1616,6 +1616,7 @@
     "addAndVerify": "Add and verify",
     "verifiedTitle": "Your identity is verified",
     "verifiedBody": "Your ID matches the official records. The <strong>Verified</strong> badge appears on your profile and in results.",
+    "verifiedChip": "Verified",
     "pendingBody": "You're not verified yet, so you appear without the <strong>Verified</strong> badge and lower in results. Verifying is optional, but it helps you stand out.",
     "underAppealBody": "It didn't match on the automatic re-check, so we opened a support case. We'll let you know the result.",
     "rejectedBody": "Your account is still active. Fix what's indicated and appeal for a new review.",

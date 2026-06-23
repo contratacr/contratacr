@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { FolderOpen, Send, ChevronDown, MapPin, Wallet, CalendarClock, CalendarDays, Clock, EyeOff } from "lucide-react";
+import { FolderOpen, Send, ChevronDown, MapPin, Coins, CalendarClock, CalendarDays, Clock, EyeOff } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -324,7 +324,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
 
           <div className="grid grid-cols-1 divide-y divide-[#eef0f2] overflow-hidden rounded-xl border border-[#eef0f2] bg-[#f9fafb] sm:grid-cols-2 sm:divide-x sm:divide-y-0">
             <div className="flex items-center gap-2.5 px-3.5 py-3">
-              <Wallet className="h-4 w-4 shrink-0 text-[#374151]" />
+              <Coins className="h-4 w-4 shrink-0 text-[#374151]" />
               <div className="min-w-0">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("budgetLabel")}</p>
                 <p className="text-[13px] font-semibold text-[#0089bb] [overflow-wrap:anywhere]">{budgetTextFor(project)}</p>
@@ -544,7 +544,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                             )}
                           </div>
                           <p className="mt-0.5 flex items-center gap-1.5 text-[13px] min-w-0">
-                            <Wallet className="h-3.5 w-3.5 shrink-0 text-[#374151]" />
+                            <Coins className="h-3.5 w-3.5 shrink-0 text-[#374151]" />
                             <span className="min-w-0 truncate">
                               <span className="text-[#6b7280]">{t("yourPriceLabel")}</span>{" "}
                               {p.price
