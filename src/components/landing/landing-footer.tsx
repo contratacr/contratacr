@@ -5,6 +5,8 @@ import { Link } from "@/i18n/navigation";
 import { ContrataCRLogo } from "./landing-navbar";
 import { SmartRegisterLink } from "@/components/layout/smart-register-link";
 import { SupportLink } from "@/components/support/support-link";
+import { useAuth } from "@/hooks/use-auth";
+import { canOffer } from "@/lib/auth/capabilities";
 
 function InstagramIcon() {
   return (
@@ -70,6 +72,8 @@ const COLUMNS = [
 
 export function LandingFooter() {
   const t = useTranslations("footer");
+  const { user } = useAuth();
+  const panelHref = canOffer(user) ? "/dashboard/profesional" : "/dashboard/cliente";
   return (
     <footer className="bg-[#111827] text-white">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-14 pb-8">
@@ -109,6 +113,13 @@ export function LandingFooter() {
                 {t(col.headingKey)}
               </h3>
               <ul className="space-y-3">
+                {col.headingKey === "support.title" && user && (
+                  <li>
+                    <Link href={panelHref} className="text-sm text-white/60 hover:text-white transition-colors">
+                      {t("support.panel")}
+                    </Link>
+                  </li>
+                )}
                 {col.links.map(({ key, href }) => (
                   <li key={key}>
                     {href === "/registro/profesional" ? (

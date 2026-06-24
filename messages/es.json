@@ -767,6 +767,7 @@
     },
     "support": {
       "title": "Ayuda y soporte",
+      "panel": "Mi panel",
       "help": "Centro de ayuda",
       "contact": "Centro de soporte"
     },

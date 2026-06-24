@@ -767,6 +767,7 @@
     },
     "support": {
       "title": "Help & support",
+      "panel": "My dashboard",
       "help": "Help center",
       "contact": "Support center"
     },
