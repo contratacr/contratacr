@@ -26,6 +26,7 @@ import { ProposalsTab } from "@/components/dashboard/pro/proposals-tab";
 import { VerificationPanel } from "@/components/dashboard/pro/verification-panel";
 import { ClientActivity } from "@/components/dashboard/client-activity";
 import { BasicProfileSection } from "@/components/dashboard/basic-profile-section";
+import { detectIdType } from "@/lib/cedula";
 import { NotificationsList } from "@/components/notifications/notifications-list";
 import { AccountSecuritySection } from "@/components/account/account-security";
 import { CloseAccountSection } from "@/components/account/close-account-section";
@@ -108,7 +109,7 @@ export default function DashboardPage() {
   const activeTab = (searchParams.get("tab") as Tab) ?? "profile";
 
   const [pro, setPro] = useState<ProData | null>(null);
-  const [profile, setProfile] = useState<{ full_name?: string; avatar_url?: string } | null>(null);
+  const [profile, setProfile] = useState<{ full_name?: string; avatar_url?: string; cedula?: string | null } | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -272,6 +273,9 @@ export default function DashboardPage() {
     user.email?.split("@")[0] ||
     "";
   const headerAvatar = profile?.avatar_url || pro?.profiles?.avatar_url || null;
+  // Client (use mode) identity: verified via cédula (saved at solicitud/booking or before).
+  // Drives the "Verificado" badge below the name — the SAME badge the pro side uses.
+  const clientVerified = !!profile?.cedula && detectIdType(String(profile.cedula)) === "cedula";
 
   // Offer mode without a pro row: a genuine seeker (cannot offer) sees the
   // activation gate; an account that CAN offer but whose row is still loading
@@ -352,6 +356,13 @@ export default function DashboardPage() {
                         {t("notVerifiedBadge")}
                       </button>
                     )}
+                  </div>
+                )}
+                {/* Client (use mode): the cédula "Verificado" badge below the name — IDENTICAL
+                    to the pro side, shown ONLY when verified (no "sin verificar" state, no cédula). */}
+                {mode === "use" && clientVerified && (
+                  <div className="mt-1.5">
+                    <Badge variant="verified">{t("identityVerified")}</Badge>
                   </div>
                 )}
               </div>
