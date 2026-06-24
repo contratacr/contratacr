@@ -24,7 +24,9 @@ export type ShowcaseCase = {
 // Client-facing "Casos de éxito" showcase (the public profile). A profession filter
 // ("Todos" + per-profession counts) over a grid of case cards — cover photo + N-fotos
 // badge + profession tag + title + short description + recipient/date + "Me gusta".
-// Tapping a card opens a photo lightbox (same carousel as ProfileGallery).
+// Tapping a card opens a spacious CASE-DETAIL modal (sprint 527): the full info (service ·
+// recipient · date · description) beside a LARGER, browsable photo viewer — an overlay in
+// the same page, not a separate route.
 export function CaseShowcase({
   professionalId,
   cases,
@@ -40,8 +42,9 @@ export function CaseShowcase({
   const tg = useTranslations("gallery");
   // Filter is always a real profession (no "Todas") — defaults to the first with cases.
   const [active, setActive] = useState<string>(professions[0] ?? "");
-  // The opened case's photos + current index — null when the lightbox is closed.
-  const [box, setBox] = useState<{ photos: string[]; i: number } | null>(null);
+  // The opened case (detail modal) + the current photo index — null when closed.
+  const [detail, setDetail] = useState<ShowcaseCase | null>(null);
+  const [pi, setPi] = useState(0);
 
   const profLabel = useCallback(
     (p: string) => getCategoryLabel(p, locale) || t("otherWorks"),
@@ -63,12 +66,13 @@ export function CaseShowcase({
   const countFor = (p: string) => cases.filter((c) => c.profession === p).length;
   const shown = cases.filter((c) => c.profession === active);
 
-  // ── Lightbox nav (Esc / ← / →) ──
-  const close = useCallback(() => setBox(null), []);
-  const prev = useCallback(() => setBox((b) => (b ? { ...b, i: (b.i - 1 + b.photos.length) % b.photos.length } : b)), []);
-  const next = useCallback(() => setBox((b) => (b ? { ...b, i: (b.i + 1) % b.photos.length } : b)), []);
+  // ── Detail modal nav (Esc / ← / →) ──
+  function openCase(c: ShowcaseCase) { setDetail(c); setPi(0); }
+  const close = useCallback(() => setDetail(null), []);
+  const prev = useCallback(() => { if (detail) setPi((i) => (i - 1 + detail.photos.length) % detail.photos.length); }, [detail]);
+  const next = useCallback(() => { if (detail) setPi((i) => (i + 1) % detail.photos.length); }, [detail]);
   useEffect(() => {
-    if (!box) return;
+    if (!detail) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") close();
       else if (e.key === "ArrowLeft") prev();
@@ -76,7 +80,7 @@ export function CaseShowcase({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [box, close, prev, next]);
+  }, [detail, close, prev, next]);
 
   return (
     <div className="flex flex-col gap-5">
@@ -93,14 +97,16 @@ export function CaseShowcase({
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {shown.map((c) => {
           return (
-            <div key={c.id} className="relative flex flex-col overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm transition-shadow hover:shadow-md">
+            <div
+              key={c.id}
+              onClick={() => openCase(c)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openCase(c); } }}
+              className="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm transition-shadow hover:shadow-md"
+            >
               {c.photos[0] && (
-                <button
-                  type="button"
-                  onClick={() => setBox({ photos: c.photos, i: 0 })}
-                  className="group relative block aspect-[4/3] overflow-hidden bg-[#f3f4f6]"
-                  aria-label={c.title || tg("workAlt", { n: 1 })}
-                >
+                <div className="relative block aspect-[4/3] overflow-hidden bg-[#f3f4f6]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={cldThumb(c.photos[0], 600)} alt={c.title ?? ""} loading="lazy" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" />
                   {c.photos.length > 1 && (
@@ -108,16 +114,19 @@ export function CaseShowcase({
                       <Images className="h-3 w-3" /> {t("casosPhotos", { count: c.photos.length })}
                     </span>
                   )}
-                </button>
+                </div>
               )}
-              {/* Just a clickable heart, overlaid on the photo (top-right) — clean + minimal. */}
+              {/* Just a clickable heart, overlaid on the photo (top-right) — clean + minimal.
+                  It stops propagation so liking never opens the detail modal. */}
               {c.likeable && (
-                <CaseLikeButton
-                  professionalId={professionalId}
-                  caseId={c.id}
-                  label={t("likeLabel")}
-                  className="absolute right-2.5 top-2.5 z-10 grid h-9 w-9 place-items-center rounded-full bg-white/90 text-[#6b7280] shadow-sm backdrop-blur hover:bg-white hover:text-[#e11d48]"
-                />
+                <div onClick={(e) => e.stopPropagation()}>
+                  <CaseLikeButton
+                    professionalId={professionalId}
+                    caseId={c.id}
+                    label={t("likeLabel")}
+                    className="absolute right-2.5 top-2.5 z-10 grid h-9 w-9 place-items-center rounded-full bg-white/90 text-[#6b7280] shadow-sm backdrop-blur hover:bg-white hover:text-[#e11d48]"
+                  />
+                </div>
               )}
               <div className="flex flex-1 flex-col p-4">
                 <p className="text-[11px] font-semibold text-[#0089bb]">{profLabel(c.profession)}</p>
@@ -136,27 +145,79 @@ export function CaseShowcase({
         })}
       </div>
 
-      {/* ── Lightbox carousel ── */}
-      {box && (
-        <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/85 p-4" onClick={close}>
-          <button onClick={close} className="absolute right-4 top-4 text-white/80 hover:text-white" aria-label={tg("close")}>
-            <X className="h-7 w-7" />
-          </button>
-          {box.photos.length > 1 && (
-            <button onClick={(e) => { e.stopPropagation(); prev(); }} className="absolute left-4 p-2 text-white/80 hover:text-white" aria-label={tg("prev")}>
-              <ChevronLeft className="h-8 w-8" />
-            </button>
-          )}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={cldLarge(box.photos[box.i], 1280)} alt={tg("workAlt", { n: box.i + 1 })} className="max-h-[85vh] max-w-[90vw] rounded-lg object-contain" onClick={(e) => e.stopPropagation()} />
-          {box.photos.length > 1 && (
-            <button onClick={(e) => { e.stopPropagation(); next(); }} className="absolute right-4 p-2 text-white/80 hover:text-white" aria-label={tg("next")}>
-              <ChevronRight className="h-8 w-8" />
-            </button>
-          )}
-          {box.photos.length > 1 && <span className="absolute bottom-4 text-sm text-white/70">{box.i + 1} / {box.photos.length}</span>}
-        </div>
-      )}
+      {/* ── Case DETAIL modal (overlay, same page) — large browsable photos + full info ── */}
+      {detail && (() => {
+        const c = detail;
+        const photos = c.photos;
+        const cur = photos[pi] ?? photos[0];
+        return (
+          <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/70 p-4 sm:p-6" onClick={close}>
+            <div
+              className="relative flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl sm:flex-row"
+              onClick={(e) => e.stopPropagation()}
+              role="dialog"
+              aria-modal="true"
+              aria-label={c.title || profLabel(c.profession)}
+            >
+              <button
+                onClick={close}
+                aria-label={tg("close")}
+                className="absolute right-3 top-3 z-20 grid h-9 w-9 place-items-center rounded-full bg-black/45 text-white transition-colors hover:bg-black/65 sm:bg-white/90 sm:text-[#374151] sm:hover:bg-white"
+              >
+                <X className="h-5 w-5" />
+              </button>
+
+              {/* PHOTO viewer — larger, browsable (arrows + thumbnails). */}
+              {cur && (
+                <div className="relative flex shrink-0 items-center justify-center bg-[#0b0b0b] sm:w-3/5">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={cldLarge(cur, 1280)} alt={tg("workAlt", { n: pi + 1 })} className="max-h-[42vh] w-full object-contain sm:max-h-[90vh]" />
+                  {photos.length > 1 && (
+                    <>
+                      <button onClick={prev} aria-label={tg("prev")} className="absolute left-2 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-black/45 text-white hover:bg-black/65">
+                        <ChevronLeft className="h-6 w-6" />
+                      </button>
+                      <button onClick={next} aria-label={tg("next")} className="absolute right-2 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-black/45 text-white hover:bg-black/65">
+                        <ChevronRight className="h-6 w-6" />
+                      </button>
+                      <span className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-black/55 px-2 py-0.5 text-[11px] font-semibold text-white">{pi + 1} / {photos.length}</span>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {/* INFO — the service, recipient, date + full description, with room to breathe. */}
+              <div className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto p-5 sm:p-6">
+                <span className="inline-flex w-fit rounded-full bg-[#EBF5FB] px-2.5 py-1 text-[11px] font-bold text-[#0089bb]">{profLabel(c.profession)}</span>
+                {c.title && <h3 className="text-xl font-bold leading-snug text-[#162543] [overflow-wrap:anywhere]">{c.title}</h3>}
+                {(c.recipient || c.date) && (
+                  <p className="flex flex-wrap items-baseline gap-x-1.5 text-[13px] [overflow-wrap:anywhere]">
+                    {c.recipient && <span className="font-medium text-[#374151]">{c.recipient}</span>}
+                    {c.recipient && c.date && <span className="text-[#d1d5db]">·</span>}
+                    {c.date && <span className="text-[#9ca3af]">{c.date}</span>}
+                  </p>
+                )}
+                {c.description && <p className="whitespace-pre-line text-[14px] leading-relaxed text-[#4b5563] [overflow-wrap:anywhere]">{c.description}</p>}
+                {photos.length > 1 && (
+                  <div className="mt-1 flex flex-wrap gap-2">
+                    {photos.map((p, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => setPi(idx)}
+                        aria-label={tg("workAlt", { n: idx + 1 })}
+                        className={cn("h-14 w-14 overflow-hidden rounded-lg border-2 transition-all", idx === pi ? "border-[#009FD9]" : "border-transparent opacity-60 hover:opacity-100")}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={cldThumb(p, 160)} alt="" className="h-full w-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
