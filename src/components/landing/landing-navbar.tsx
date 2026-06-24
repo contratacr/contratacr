@@ -20,7 +20,7 @@ import { NotificationBell } from "@/components/notifications/notification-bell";
 import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
 import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { SupportLink } from "@/components/support/support-link";
-import { ALL_CATEGORIES, searchCategories, normalizeText, getCategoryLabel, getCategoryGroupLabel } from "@/lib/data/categories";
+import { ALL_CATEGORIES, CATEGORY_GROUPS, searchCategories, normalizeText, getCategoryLabel, getCategoryGroupLabel } from "@/lib/data/categories";
 import { searchLocations, resolveLocation, type LocationSuggestion } from "@/lib/data/location-search";
 
 /* ─── Brand mark (the square "CR" icon) ─── */
@@ -186,49 +186,9 @@ function LanguageInline({ className }: { className?: string }) {
    and removing it freed the navbar room to restore the "ContrataCR" wordmark on mobile. */
 
 /* ─── Header data ───
-   The "Categorías" mega-menu shows a CURATED set of real categories — every
-   `id` below is verified against `categories.ts` (the single source of truth),
-   so each link lands on the correct /buscar?categoria=<id> filter. The full
-   taxonomy is reachable via the autocomplete search + "Ver todas". */
-type CatLink = { label: string; id: string };
-// `groupKey` resolves to header.catGroups.<groupKey> for the (translated)
-// column heading. The per-link `label` stays in Spanish for now — the category
-// taxonomy is translated app-wide in its own pass (getCategoryLabel).
-const CATEGORY_COLUMNS: { groupKey: string; links: CatLink[] }[] = [
-  {
-    groupKey: "home",
-    links: [
-      { label: "Plomería",            id: "plomeria" },
-      { label: "Electricidad",        id: "electricidad" },
-      { label: "Pintura",             id: "pintura" },
-      { label: "Carpintería",         id: "carpinteria" },
-      { label: "Remodelación",        id: "remodelacion" },
-      { label: "Limpieza del hogar",  id: "limpieza" },
-    ],
-  },
-  {
-    groupKey: "outdoor",
-    links: [
-      { label: "Jardinería",            id: "jardineria" },
-      { label: "Construcción",          id: "construccion" },
-      { label: "Impermeabilización",    id: "impermeabilizacion" },
-      { label: "Poda de árboles",       id: "poda_arboles" },
-      { label: "Limpieza de piscinas",  id: "limpieza_piscinas" },
-      { label: "Mudanzas",              id: "mudanzas" },
-    ],
-  },
-  {
-    groupKey: "more",
-    links: [
-      { label: "Soporte técnico",          id: "soporte_tecnico" },
-      { label: "Cámaras de seguridad",     id: "camaras_seguridad" },
-      { label: "Mecánica automotriz",      id: "mecanica" },
-      { label: "Belleza y barbería",       id: "peluqueria" },
-      { label: "Cuidado infantil / Niñera", id: "cuidado_infantil" },
-      { label: "Fumigación",               id: "fumigacion" },
-    ],
-  },
-];
+   The "Categorías" mega-menu (desktop) is built from the FULL catalog `CATEGORY_GROUPS`
+   (sprint 525) — every group + its categories, organized with group headers. On mobile the
+   drawer shows just a single "Categorías" link → /categorias. */
 
 // `key` resolves to header.resourceLinks.<key> for the translated label.
 const RESOURCES_LINKS: { key: string; href: string }[] = [
@@ -504,18 +464,20 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
           </div>
         )
       ) : (
-        <div className="grid grid-cols-3 gap-6">
-          {CATEGORY_COLUMNS.map((col) => (
-            <div key={col.groupKey}>
-              <h4 className="mb-3 text-[10px] font-bold uppercase tracking-widest text-gray-400">{t(`catGroups.${col.groupKey}`)}</h4>
-              <ul className="space-y-2.5">
-                {col.links.map((link) => (
-                  <li key={link.id}>
+        // The COMPLETE catalog organized by GROUP (all 12 catalog groups, each a section with
+        // its categories) — a multi-column flow + scroll so the full list is browsable + scannable.
+        <div className="max-h-[64vh] overflow-y-auto pr-1 [column-count:3] [column-gap:1.5rem]">
+          {CATEGORY_GROUPS.map((g) => (
+            <div key={g.id} className="mb-5 break-inside-avoid">
+              <h4 className="mb-2.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">{getCategoryGroupLabel(g.id, locale)}</h4>
+              <ul className="space-y-2">
+                {g.items.map((it) => (
+                  <li key={it.id}>
                     <button
-                      onClick={() => go(link.id)}
-                      className="block text-left text-sm leading-tight text-gray-600 transition-colors hover:text-[#009FD9]"
+                      onClick={() => go(it.id)}
+                      className="block text-left text-[13px] leading-tight text-gray-600 transition-colors hover:text-[#009FD9]"
                     >
-                      {getCategoryLabel(link.id, locale)}
+                      {getCategoryLabel(it.id, locale)}
                     </button>
                   </li>
                 ))}
@@ -858,11 +820,6 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
     closeTimer.current = setTimeout(() => setOpenMenu(null), 120);
   }
 
-  function goToCategory(id: string) {
-    setOpenMenu(null);
-    setMobileOpen(false);
-    router.push(`/buscar?categoria=${id}`);
-  }
 
   // Build params from current state and navigate. Runs ONLY on Buscar/Enter.
   function runCompactSearch() {
@@ -1009,7 +966,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
 
                   {openMenu === "categorias" && (
                     <div
-                      className="absolute top-full left-0 mt-1.5 bg-white rounded-2xl shadow-2xl border border-gray-100 p-5 z-50 w-[680px]"
+                      className="absolute top-full left-0 mt-1.5 bg-white rounded-2xl shadow-2xl border border-gray-100 p-5 z-50 w-[720px]"
                       style={{ animation: "tab-cards-in 0.15s ease both" }}
                     >
                       {/* ONE container: typing in the search FILTERS the categories in place. */}
@@ -1412,24 +1369,15 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
               </div>
             )}
 
-            {/* CATEGORÍAS */}
+            {/* CATEGORÍAS — on mobile this is just a SINGLE link to the full categories page
+                (no inline category list; the complete grouped browse lives on /categorias). */}
             <div className="mb-5">
-              <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t("categories")}</p>
-              {CATEGORY_COLUMNS.flatMap((col) => col.links).slice(0, 9).map((link) => (
-                <button
-                  key={link.id}
-                  onClick={() => goToCategory(link.id)}
-                  className="w-full text-left text-sm text-gray-600 hover:text-[#009FD9] transition-colors leading-tight block px-2 py-2"
-                >
-                  {getCategoryLabel(link.id, locale)}
-                </button>
-              ))}
               <Link
                 href="/categorias"
                 onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-1.5 px-2 py-2 text-sm font-semibold text-[#009FD9]"
+                className="flex items-center gap-3 px-2 py-2.5 rounded-lg text-sm font-semibold text-[#111827] hover:bg-gray-50 transition-colors"
               >
-                <Compass className="h-4 w-4" /> {t("viewAllCategories")}
+                <Compass className="h-4 w-4 text-[#009FD9] shrink-0" /> {t("categories")}
               </Link>
             </div>
 
