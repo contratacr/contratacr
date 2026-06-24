@@ -302,22 +302,22 @@ export function ServicesEditor({
                 <section
                   key={prof}
                   className={cn(
-                    "relative flex flex-col rounded-2xl border bg-white p-4 shadow-sm transition-shadow sm:p-5",
+                    "flex flex-col rounded-2xl border bg-white p-4 shadow-sm transition-shadow sm:p-5",
                     isActive ? "border-[#e5e7eb] hover:shadow-md" : "border-[#e5e7eb] bg-[#fafbfc]"
                   )}
                 >
-                  {isPrincipal && (
-                    <span className="absolute right-4 top-4 shrink-0 rounded-full bg-[#EBF5FB] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#0089bb] sm:right-5 sm:top-5">
-                      {t("principal")}
-                    </span>
-                  )}
                   {/* Header: focal name + price on the left, active toggle pinned far right. */}
                   <div className="flex items-start justify-between gap-3">
-                    <div className={cn("min-w-0", isPrincipal && "pr-20")}>
+                    <div className="min-w-0">
                       <h3 className={cn("text-[16px] font-bold leading-tight [overflow-wrap:anywhere]", isActive ? "text-[#162543]" : "text-[#9ca3af]")}>
                         {getCategoryLabel(prof, locale)}
                       </h3>
                       <p className={cn("mt-1.5 text-[13px] font-semibold", isActive ? "text-[#0089bb]" : "text-[#9ca3af]")}>{priceLabel}</p>
+                      {isPrincipal && (
+                        <span className="mt-2 inline-flex w-fit rounded-full bg-[#EBF5FB] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#0089bb]">
+                          {t("principal")}
+                        </span>
+                      )}
                     </div>
                     {/* Active/inactive toggle — FAR RIGHT (end of the header row). */}
                     <button
@@ -364,9 +364,9 @@ export function ServicesEditor({
                           onClick={() => makePrincipal(prof)}
                           title={t("makePrincipal")}
                           aria-label={t("makePrincipal")}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#9ca3af] transition-colors hover:bg-[#EBF5FB] hover:text-[#0089bb]"
+                          className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-[#6b7280] transition-colors hover:bg-[#EBF5FB] hover:text-[#0089bb]"
                         >
-                          <Star className="h-4 w-4" />
+                          <Star className="h-3.5 w-3.5" /> {t("makePrincipal")}
                         </button>
                       )}
                       {professions.length > 1 && (
