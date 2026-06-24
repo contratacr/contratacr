@@ -53,8 +53,8 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("open");
   // Ticket ids with an UNREAD admin reply (from the notifications table) → drives
-  // the per-ticket "Nueva respuesta" marker, the per-status badges, and the
-  // dashboard Soporte badge (via onUnreadChange).
+  // the per-ticket "Nueva respuesta" marker and the dashboard Soporte badge
+  // (via onUnreadChange). Filter tabs keep only their normal item count.
   const [unread, setUnread] = useState<Set<string>>(new Set());
 
   const [openId, setOpenId] = useState<string | null>(null);
@@ -168,11 +168,6 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
     () => items.filter((t) => t.status === filter),
     [items, filter]
   );
-  const unreadByStatus = useMemo(() => {
-    const m: Record<string, number> = {};
-    for (const t of items) if (unread.has(t.id)) m[t.status] = (m[t.status] ?? 0) + 1;
-    return m;
-  }, [items, unread]);
   // Total tickets per status → the per-tab count badge (consistent with solicitudes/proyectos).
   const statusCounts = useMemo(() => {
     const m: Record<string, number> = {};
@@ -269,8 +264,8 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
       </div>
 
       {/* Status filter — the SHARED tab style (consistent with solicitudes/proyectos):
-          per-status COUNT badge + a small red dot when that status has an unread reply.
-          Hidden until loading resolves so it never flashes before the tickets arrive. */}
+          per-status COUNT badge only. Hidden until loading resolves so it never
+          flashes before the tickets arrive. */}
       {!loading && items.length > 0 && (
         <div className="mb-4">
           <StatusFilterTabs
@@ -279,7 +274,6 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
             onChange={setFilter}
             counts={statusCounts}
             labelFor={filterLabel}
-            dotFor={(id) => (unreadByStatus[id] ?? 0) > 0}
           />
         </div>
       )}
