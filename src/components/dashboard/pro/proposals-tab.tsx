@@ -411,43 +411,28 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                       const isExpanded = expandedProject === project.id;
                       const zona = [project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ");
                       return (
-                        <Card key={project.id} className="overflow-hidden transition-shadow hover:shadow-md">
+                        <Card key={project.id} className="transition-shadow hover:shadow-md">
                           <button
                             type="button"
                             onClick={() => setExpandedProject(isExpanded ? null : project.id)}
                             aria-expanded={isExpanded}
-                            className="w-full p-4 text-left transition-colors hover:bg-[#fafafa] sm:p-5"
+                            className={cn("flex w-full flex-col gap-2.5 p-4 text-left transition-colors hover:bg-[#fafafa] sm:p-5", isExpanded ? "rounded-t-2xl" : "rounded-2xl")}
                           >
-                            <div className="flex items-start gap-3">
-                              <div className="min-w-0 flex-1">
-                                <div className="flex items-start justify-between gap-2 sm:hidden">
-                                  <span className="min-w-0 flex-1 line-clamp-2 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere]">{project.title}</span>
-                                  <span className="flex shrink-0 items-center gap-1.5">
-                                    {isToday(project.created_at) && <Badge variant="success" className="text-[10px] font-semibold">{t("new")}</Badge>}
-                                    <ChevronDown className={cn("h-4 w-4 text-[#9ca3af] transition-transform", isExpanded && "rotate-180")} />
-                                  </span>
-                                </div>
-                                <div className="hidden items-start justify-between gap-4 sm:flex">
-                                  <span className="min-w-0 flex-1 line-clamp-2 text-[16px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere]">{project.title}</span>
-                                  <span className="flex shrink-0 items-center gap-1.5">
-                                    {isToday(project.created_at) && <Badge variant="success" className="text-[10px] font-semibold">{t("new")}</Badge>}
-                                    <ChevronDown className={cn("h-4 w-4 text-[#9ca3af] transition-transform", isExpanded && "rotate-180")} />
-                                  </span>
-                                </div>
-                                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[#6b7280]">
-                                  {zona && <span className="inline-flex items-center gap-1 [overflow-wrap:anywhere]"><MapPin className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />{zona}</span>}
-                                  {project.timeline && <span className="inline-flex items-center gap-1 [overflow-wrap:anywhere]"><CalendarClock className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />{project.timeline}</span>}
-                                  <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />{relativeTime(project.created_at)}</span>
-                                </div>
-                              </div>
-                              <div className="hidden shrink-0 rounded-xl bg-[#f8fbfd] px-3 py-2 text-right ring-1 ring-[#e8eef3] sm:block">
-                                <p className="text-[10px] font-semibold uppercase tracking-[0.05em] text-[#9ca3af]">{t("budgetLabel")}</p>
-                                <p className="mt-0.5 max-w-[150px] text-[14px] font-bold leading-snug text-[#0089bb] [overflow-wrap:anywhere]">{budgetTextFor(project)}</p>
-                              </div>
+                            <div className="flex items-start justify-between gap-2.5">
+                              <span className="min-w-0 flex-1 line-clamp-2 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere]">{project.title}</span>
+                              <span className="flex shrink-0 items-center gap-1.5">
+                                {isToday(project.created_at) && <Badge variant="success" className="text-[10px] font-semibold">{t("new")}</Badge>}
+                                <ChevronDown className={cn("h-4 w-4 text-[#9ca3af] transition-transform", isExpanded && "rotate-180")} />
+                              </span>
                             </div>
-                            <p className="mt-2 text-[15px] font-bold text-[#0089bb] [overflow-wrap:anywhere] sm:hidden">{budgetTextFor(project)}</p>
+                            <p className="text-[15px] font-bold text-[#0089bb] [overflow-wrap:anywhere]">{budgetTextFor(project)}</p>
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[#6b7280]">
+                              {zona && <span className="inline-flex items-center gap-1 [overflow-wrap:anywhere]"><MapPin className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />{zona}</span>}
+                              {project.timeline && <span className="inline-flex items-center gap-1 [overflow-wrap:anywhere]"><CalendarClock className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />{project.timeline}</span>}
+                              <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />{relativeTime(project.created_at)}</span>
+                            </div>
                             {project.profiles?.full_name && (
-                              <div className="mt-3 flex items-center gap-2 border-t border-[#f3f4f6] pt-3">
+                              <div className="flex items-center gap-2 border-t border-[#f3f4f6] pt-2.5">
                                 <Avatar className="h-6 w-6 shrink-0">
                                   <AvatarImage src={project.profiles?.avatar_url} className="object-cover" />
                                   <AvatarFallback className="bg-[#EBF5FB] text-[9px] font-bold text-[#009FD9]">{getInitials(project.profiles.full_name)}</AvatarFallback>
