@@ -139,14 +139,12 @@ function ProCard({
           <span className="absolute -left-1.5 -top-1.5 grid h-[18px] w-[18px] place-items-center rounded-full bg-[#162543] text-[9px] font-bold text-white ring-2 ring-white">{rank}</span>
         </div>
         <div className="min-w-0 flex-1">
-          {/* Company name + price (₡/hora) share ONE line again: the name takes the room
-              (`flex-1 truncate`) and the price is `shrink-0` and SMALL so "SG Solutions"
-              (and the rank-2 name) still show in full while the per-hour price sits beside
-              the name as intended. */}
-          <div className="flex items-center gap-1.5">
-            <span className="min-w-0 flex-1 truncate text-[13px] font-bold leading-tight text-[#111827]">{company}</span>
+          {/* Keep the company name readable in the miniature: price sits below so
+              names like "SG Solutions" do not get cut by the compact phone width. */}
+          <div>
+            <span className="block text-[13px] font-bold leading-tight text-[#111827] [overflow-wrap:anywhere]">{company}</span>
             {price ? (
-              <span className="shrink-0 whitespace-nowrap leading-tight">
+              <span className="mt-0.5 block whitespace-nowrap leading-tight">
                 {/* A ₡ amount renders blue + grey unit; a TEXT price ("Precio a consultar")
                     renders whole in grey, no unit — mirroring the real /buscar card. */}
                 {price.includes("₡") ? (
