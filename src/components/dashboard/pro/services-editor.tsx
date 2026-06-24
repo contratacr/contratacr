@@ -340,6 +340,20 @@ export function ServicesEditor({
                     <p className="mt-3 text-[13px] italic leading-relaxed text-[#9ca3af]">{t("noDescriptionYet")}</p>
                   )}
 
+                  <div className="mt-3 min-h-[18px]">
+                    {isPrincipal ? (
+                      <span className="text-xs font-bold text-[#0089bb]">{t("principal")}</span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => makePrincipal(prof)}
+                        className="text-left text-xs font-bold text-[#0089bb] underline-offset-4 transition-colors hover:text-[#0077a3] hover:underline"
+                      >
+                        {t("makePrincipal")}
+                      </button>
+                    )}
+                  </div>
+
                   {/* Actions group — separated by a hairline. The PRIMARY "Editar información"
                       is isolated on the left so it's identical on every card; secondary actions
                       stay in the right cluster. */}
@@ -352,19 +366,6 @@ export function ServicesEditor({
                       <Pencil className="h-3.5 w-3.5" /> {t("editInfo")}
                     </button>
                     <div className="ml-auto flex items-center gap-0.5">
-                      {isPrincipal ? (
-                        <span className="inline-flex h-8 items-center rounded-lg bg-[#EBF5FB] px-2.5 text-xs font-bold text-[#0089bb]">
-                          {t("principal")}
-                        </span>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => makePrincipal(prof)}
-                          className="inline-flex h-8 items-center rounded-lg border border-[#bfdbfe] px-2.5 text-xs font-bold text-[#0089bb] transition-colors hover:bg-[#EBF5FB]"
-                        >
-                          {t("makePrincipal")}
-                        </button>
-                      )}
                       {professions.length > 1 && (
                         <button
                           type="button"
