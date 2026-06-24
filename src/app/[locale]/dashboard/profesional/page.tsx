@@ -462,7 +462,19 @@ export default function DashboardPage() {
                     <Card>
                       <CardHeader className="px-6 pt-6 pb-3">
                         <div className="relative">
-                          <h2 className="text-lg font-semibold text-[#111827] pr-28">{activeTab === "services" ? t("servicesHeading") : t(`tabs.${activeTab}`)}</h2>
+                          <div className="flex min-w-0 items-center gap-2 pr-28">
+                            <h2 className="min-w-0 truncate text-lg font-semibold text-[#111827]">{activeTab === "services" ? t("servicesHeading") : t(`tabs.${activeTab}`)}</h2>
+                            {activeTab === "profile" && mode === "offer" && pro?.slug && (
+                              <a
+                                href={`/es/profesionales/${pro.slug}?preview=1`}
+                                aria-label={t("viewPublicProfile")}
+                                title={t("viewPublicProfile")}
+                                className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[#6b7280] transition-colors hover:bg-[#f3f4f6] hover:text-[#009FD9]"
+                              >
+                                <ExternalLink className="h-4 w-4" />
+                              </a>
+                            )}
+                          </div>
                           <HeaderSaveStatus />
                         </div>
                         {TABS_WITH_SUBTITLE.has(activeTab) && (
@@ -472,26 +484,14 @@ export default function DashboardPage() {
                       <CardContent className="px-6 pt-1 pb-6">
                         {/* MI PERFIL — pro editor in offer mode, basic identity in use mode. */}
                         {activeTab === "profile" && mode === "offer" && pro && (
-                          <div className="space-y-4">
-                            {pro.slug && (
-                              <div className="flex justify-end">
-                                <Button variant="outline" size="sm" asChild className="rounded-lg">
-                                  <a href={`/es/profesionales/${pro.slug}?preview=1`}>
-                                    <ExternalLink className="h-4 w-4" />
-                                    {t("viewPublicProfile")}
-                                  </a>
-                                </Button>
-                              </div>
-                            )}
-                            <ProfileEditor
-                              professionalId={pro.id}
-                              profileId={user.id}
-                              initial={pro}
-                              onSaved={handleSaved}
-                              focusField={profileFocus?.field ?? null}
-                              focusKey={profileFocus?.key}
-                            />
-                          </div>
+                          <ProfileEditor
+                            professionalId={pro.id}
+                            profileId={user.id}
+                            initial={pro}
+                            onSaved={handleSaved}
+                            focusField={profileFocus?.field ?? null}
+                            focusKey={profileFocus?.key}
+                          />
                         )}
                         {activeTab === "profile" && mode === "use" && (
                           <BasicProfileSection />
