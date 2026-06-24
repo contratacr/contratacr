@@ -302,23 +302,21 @@ export function ServicesEditor({
                 <section
                   key={prof}
                   className={cn(
-                    "flex flex-col rounded-2xl border bg-white p-4 shadow-sm transition-shadow sm:p-5",
+                    "relative flex flex-col rounded-2xl border bg-white p-4 shadow-sm transition-shadow sm:p-5",
                     isActive ? "border-[#e5e7eb] hover:shadow-md" : "border-[#e5e7eb] bg-[#fafbfc]"
                   )}
                 >
+                  {isPrincipal && (
+                    <span className="absolute right-4 top-4 shrink-0 rounded-full bg-[#EBF5FB] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#0089bb] sm:right-5 sm:top-5">
+                      {t("principal")}
+                    </span>
+                  )}
                   {/* Header: focal name + price on the left, active toggle pinned far right. */}
                   <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className={cn("text-[16px] font-bold leading-tight [overflow-wrap:anywhere]", isActive ? "text-[#162543]" : "text-[#9ca3af]")}>
-                          {getCategoryLabel(prof, locale)}
-                        </h3>
-                        {isPrincipal && (
-                          <span className="shrink-0 rounded-full bg-[#EBF5FB] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#0089bb]">
-                            {t("principal")}
-                          </span>
-                        )}
-                      </div>
+                    <div className={cn("min-w-0", isPrincipal && "pr-20")}>
+                      <h3 className={cn("text-[16px] font-bold leading-tight [overflow-wrap:anywhere]", isActive ? "text-[#162543]" : "text-[#9ca3af]")}>
+                        {getCategoryLabel(prof, locale)}
+                      </h3>
                       <p className={cn("mt-1.5 text-[13px] font-semibold", isActive ? "text-[#0089bb]" : "text-[#9ca3af]")}>{priceLabel}</p>
                     </div>
                     {/* Active/inactive toggle — FAR RIGHT (end of the header row). */}
