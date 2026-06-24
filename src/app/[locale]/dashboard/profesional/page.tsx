@@ -378,12 +378,6 @@ export default function DashboardPage() {
                 </AvatarFallback>
               </Avatar>
               <div className="min-w-0 flex-1">
-                {/* Current mode = a small eyebrow. A client-only account never sees "modo" wording. */}
-                {isProvider && (
-                  <p className="text-[11px] font-bold uppercase tracking-wide text-[#009FD9]">
-                    {mode === "offer" ? t("modeOffer") : t("modeUse")}
-                  </p>
-                )}
                 {/* Mobile shows first name + both surnames; desktop shows the full name. */}
                 <h1 className="text-xl sm:text-2xl font-bold leading-tight text-[#162543] [overflow-wrap:anywhere]">
                   <span className="sm:hidden">{proDisplayName(displayName || "")}</span>
@@ -456,7 +450,7 @@ export default function DashboardPage() {
                       <div>
                         {(mode === "offer" ? OFFER_TABS : USE_TABS).map(navButton)}
                       </div>
-                      <div className="border-t border-[#f3f4f6] pt-2">
+                      <div>
                         {SHARED_TABS.map(navButton)}
                       </div>
                     </CardContent>
