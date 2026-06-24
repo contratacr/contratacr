@@ -454,30 +454,39 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                         const zona = [project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ");
                         return (
                           <Card key={project.id} className={cn("transition-shadow hover:shadow-md", isActive && "lg:border-[#009FD9] lg:bg-[#f8fcff] lg:ring-1 lg:ring-[#009FD9]/30")}>
+                            {/* JOB-FOCUSED card (sprint 529): the TITLE is the focal element, the
+                                BUDGET prominent right under it (the pro decides on those two), then a
+                                clean meta row (zona · plazo · relative time), and the CLIENT as a quiet
+                                tertiary footer — so an opportunity reads at a glance as "a job to bid on". */}
                             <button
                               type="button"
                               onClick={() => { setSelectedId(project.id); setExpandedProject(isExpanded ? null : project.id); }}
                               aria-expanded={isExpanded}
-                              className={cn("flex w-full items-start gap-3.5 p-4 text-left transition-colors hover:bg-[#fafafa]", isExpanded ? "rounded-t-2xl lg:rounded-2xl" : "rounded-2xl")}
+                              className={cn("flex w-full flex-col gap-2.5 p-4 text-left transition-colors hover:bg-[#fafafa] sm:p-5", isExpanded ? "rounded-t-2xl lg:rounded-2xl" : "rounded-2xl")}
                             >
-                              <span className={cn("hidden w-1 self-stretch rounded-full lg:block", isActive ? "bg-[#009FD9]" : "bg-transparent")} aria-hidden />
-                              <Avatar className="h-11 w-11 shrink-0">
-                                <AvatarImage src={project.profiles?.avatar_url} className="object-cover" />
-                                <AvatarFallback className="text-sm bg-[#EBF5FB] text-[#009FD9] font-bold">{getInitials(project.profiles?.full_name ?? "?")}</AvatarFallback>
-                              </Avatar>
-                              <div className="min-w-0 flex-1">
-                                <div className="flex items-start justify-between gap-2">
-                                  {/* No profession on the card (it's implicit from the feed/filter). */}
-                                  <span className="min-w-0 line-clamp-2 text-[15px] font-bold text-[#162543] [overflow-wrap:anywhere]">{project.title}</span>
-                                  {isToday(project.created_at) && <Badge variant="success" className="shrink-0 text-[10px] font-semibold">{t("new")}</Badge>}
-                                </div>
-                                {(zona || project.timeline) && <p className="mt-1 text-[12px] text-[#6b7280] [overflow-wrap:anywhere]">{[zona, project.timeline].filter(Boolean).join(" · ")}</p>}
-                                {/* Budget + relative time wrap together so neither (esp. "hace …") is ever clipped. */}
-                                <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                                  <span className="text-[13px] font-semibold text-[#0089bb] [overflow-wrap:anywhere]">{budgetTextFor(project)}</span>
-                                  <span className="text-[11px] text-[#9ca3af]">· {relativeTime(project.created_at)}</span>
-                                </div>
+                              {/* Title (focal) + "Nueva" */}
+                              <div className="flex items-start justify-between gap-2.5">
+                                <span className="min-w-0 flex-1 line-clamp-2 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere]">{project.title}</span>
+                                {isToday(project.created_at) && <Badge variant="success" className="shrink-0 text-[10px] font-semibold">{t("new")}</Badge>}
                               </div>
+                              {/* Budget — the prominent decision number. */}
+                              <p className="text-[15px] font-bold text-[#0089bb] [overflow-wrap:anywhere]">{budgetTextFor(project)}</p>
+                              {/* Meta — zona · plazo · relative time, quiet grey with small icons. */}
+                              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[#6b7280]">
+                                {zona && <span className="inline-flex items-center gap-1 [overflow-wrap:anywhere]"><MapPin className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />{zona}</span>}
+                                {project.timeline && <span className="inline-flex items-center gap-1 [overflow-wrap:anywhere]"><CalendarClock className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />{project.timeline}</span>}
+                                <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />{relativeTime(project.created_at)}</span>
+                              </div>
+                              {/* Client — quiet tertiary footer, separated by a hairline. */}
+                              {project.profiles?.full_name && (
+                                <div className="flex items-center gap-2 border-t border-[#f3f4f6] pt-2.5">
+                                  <Avatar className="h-6 w-6 shrink-0">
+                                    <AvatarImage src={project.profiles?.avatar_url} className="object-cover" />
+                                    <AvatarFallback className="bg-[#EBF5FB] text-[9px] font-bold text-[#009FD9]">{getInitials(project.profiles.full_name)}</AvatarFallback>
+                                  </Avatar>
+                                  <span className="min-w-0 truncate text-[12px] text-[#6b7280]">{project.profiles.full_name}</span>
+                                </div>
+                              )}
                             </button>
                             {isExpanded && <div className="border-t border-[#f3f4f6] lg:hidden">{renderDetail(project)}</div>}
                           </Card>

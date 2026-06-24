@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarDays, ChevronDown, CalendarClock, Clock, Phone, IdCard } from "lucide-react";
+import { CalendarDays, ChevronDown, CalendarClock, Clock, Phone, IdCard, Wrench } from "lucide-react";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { formatId } from "@/lib/cedula";
 import { ageCategoryFromDob, computeAge } from "@/lib/age";
@@ -193,8 +193,6 @@ export function BookingRequests() {
 
     const category = booking.category_id ? getCategoryLabel(booking.category_id, locale) : null;
     const location = booking.slot_location_label || null;
-    // Inbox snippet (Superhuman/Gmail): "servicio · nota" — the one-line context preview.
-    const snippet = [category, booking.service_description].filter(Boolean).join(" · ");
 
     // First name for the friendly WhatsApp greeting (the requester is the only contact).
     const cliFirst = (booking.client_name || t("thePerson")).split(" ")[0];
@@ -267,7 +265,13 @@ export function BookingRequests() {
               <CalendarClock className="h-3.5 w-3.5 shrink-0 text-[#374151]" />
               <span className={cn("truncate", dateStr ? "font-medium text-[#374151]" : "text-[#6b7280]")}>{dateStr || t("noScheduledDate")}</span>
             </p>
-            {snippet && <p className="mt-1 text-[12px] text-[#6b7280] truncate">{snippet}</p>}
+            {/* The service requested (grey wrench) — mirrors the client's Mis solicitudes card. */}
+            {category && (
+              <p className="mt-1 flex items-center gap-1.5 text-[12px] text-[#6b7280] min-w-0">
+                <Wrench className="h-3.5 w-3.5 shrink-0 text-[#374151]" />
+                <span className="truncate">{category}</span>
+              </p>
+            )}
           </div>
           <ChevronDown className={cn("h-5 w-5 text-[#9ca3af] shrink-0 transition-transform duration-200", expanded && "rotate-180")} />
         </button>
