@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Bell, CheckCheck, Check, Trash2, AlertTriangle } from "lucide-react";
 import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
-import { StatusFilterTabs } from "@/components/dashboard/status-filter-tabs";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { cn, formatRelativeTime } from "@/lib/utils";
@@ -26,7 +25,6 @@ type Notification = {
 // "Notificaciones" item + the navbar bell (sprint 500). Replaces the per-type icons:
 // the kind of notification is already clear from its title/text, and a single shared
 // icon reads as "this is your notifications", consistent across the app.
-const NOTIF_TABS = [{ id: "all" }, { id: "unread" }] as const;
 
 // Shared notifications list — used by the dedicated /notificaciones page and the
 // professional panel tab so both roles get the same notifications experience.
@@ -40,7 +38,6 @@ export function NotificationsList() {
   const [items, setItems] = useState<Notification[]>([]);
   const [busy, setBusy] = useState(true);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [notifFilter, setNotifFilter] = useState<string>("all");
 
   useEffect(() => {
     if (!user) return;
@@ -57,8 +54,9 @@ export function NotificationsList() {
   // Only the active mode's notifications are shown / acted on here.
   const visible = items.filter((n) => notificationInMode(n.type, mode));
   const unread = visible.filter((n) => !n.read).length;
-  // Light, useful filter: all vs unread (notifications are already mode-scoped).
-  const shown = notifFilter === "unread" ? visible.filter((n) => !n.read) : visible;
+  // NO "todas / no leídas" filter (sprint 516): it added a tab row of clutter without
+  // real value — unread is already conveyed by the row highlight + dot + "Marcar todas
+  // como leídas", the list is mode-scoped + short, and each title makes its type obvious.
 
   async function markAllRead() {
     if (!user) return;
@@ -111,24 +109,15 @@ export function NotificationsList() {
   return (
     <div>
       {visible.length > 0 && (
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-          <StatusFilterTabs
-            tabs={NOTIF_TABS}
-            value={notifFilter}
-            onChange={setNotifFilter}
-            labelFor={(id) => (id === "all" ? t("filterAll") : t("filterUnread"))}
-            counts={{ all: visible.length, unread }}
-          />
-          <div className="flex items-center gap-4">
-            {unread > 0 && (
-              <button onClick={markAllRead} className="flex items-center gap-1.5 text-sm text-[#009FD9] hover:underline">
-                <CheckCheck className="h-4 w-4" /> {t("markAllRead")}
-              </button>
-            )}
-            <button onClick={() => setConfirmDelete(true)} className="flex items-center gap-1.5 text-sm text-red-500 hover:underline">
-              <Trash2 className="h-4 w-4" /> {t("deleteAll")}
+        <div className="mb-3 flex flex-wrap items-center justify-end gap-x-4 gap-y-2">
+          {unread > 0 && (
+            <button onClick={markAllRead} className="flex items-center gap-1.5 text-sm text-[#009FD9] hover:underline">
+              <CheckCheck className="h-4 w-4" /> {t("markAllRead")}
             </button>
-          </div>
+          )}
+          <button onClick={() => setConfirmDelete(true)} className="flex items-center gap-1.5 text-sm text-red-500 hover:underline">
+            <Trash2 className="h-4 w-4" /> {t("deleteAll")}
+          </button>
         </div>
       )}
 
@@ -149,14 +138,14 @@ export function NotificationsList() {
       <div className="bg-white rounded-2xl border border-[#e5e7eb] overflow-hidden">
         {busy ? (
           <div className="py-16 flex justify-center"><div className="h-7 w-7 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" /></div>
-        ) : shown.length === 0 ? (
+        ) : visible.length === 0 ? (
           <div className="text-center py-16">
             <Bell className="h-10 w-10 text-[#e5e7eb] mx-auto mb-3" />
-            <p className="text-sm text-[#6b7280]">{visible.length === 0 ? t("noneList") : t("noUnread")}</p>
+            <p className="text-sm text-[#6b7280]">{t("noneList")}</p>
           </div>
         ) : (
           <ul>
-            {shown.map((n) => {
+            {visible.map((n) => {
               return (
               <li key={n.id} className={cn("relative group border-b border-[#f3f4f6] last:border-0", !n.read && "bg-[#f3f9fd]")}>
                 <button onClick={() => open(n)} className="w-full text-left px-4 py-3 pr-16 hover:bg-[#f9fafb] transition-colors">
