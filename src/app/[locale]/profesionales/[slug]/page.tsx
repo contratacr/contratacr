@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, type ReactNode } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import {
-  MapPin, Shield, ShieldCheck, ArrowLeft, Star, Briefcase, Camera, Coins, Languages, Quote,
+  MapPin, Shield, ShieldCheck, ArrowLeft, Star, Briefcase, Camera, Coins, Languages,
   Share2, Flag, ChevronDown, Lock, Phone, Building2, Award, Mail, SearchX,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -766,11 +766,11 @@ export default function ProfilePage({ params }: ProfilePageProps) {
 
                     return (
                       <div className="flex flex-col gap-5">
-                        {/* Bio as a brand-tint quote block — a bold FILLED quote glyph (owner image). */}
+                        {/* Bio — clean, well-spaced paragraph in a soft brand-tint card. NO quote
+                            icon (owner: dropped it); the text is the person's intro, presented simply. */}
                         {professional.bio && (
-                          <div className="flex gap-3.5 rounded-2xl bg-[#EBF5FB] p-5 sm:p-6">
-                            <Quote className="h-8 w-8 shrink-0 fill-[#009FD9] text-[#009FD9]" />
-                            <p className="text-[15px] text-[#374151] leading-relaxed whitespace-pre-line [overflow-wrap:anywhere]">{professional.bio}</p>
+                          <div className="rounded-2xl bg-[#EBF5FB] p-5 sm:p-6">
+                            <p className="text-[15px] leading-relaxed text-[#374151] whitespace-pre-line [overflow-wrap:anywhere]">{professional.bio}</p>
                           </div>
                         )}
                         {/* Facts: BORDERLESS soft-tint cards in a 2-col grid (no dividers/borders). */}
