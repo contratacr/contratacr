@@ -389,10 +389,9 @@ export default function DashboardPage() {
               <div className="ml-auto flex shrink-0 flex-col items-end gap-2.5">
                 <ModeSwitcher mode={mode} onSwitch={handleSwitchMode} className="w-[236px]" block />
                 {mode === "offer" && pro?.slug && (
-                  <Button variant="outline" size="sm" asChild className="w-auto max-w-[236px]">
-                    <a href={`/es/profesionales/${pro.slug}?preview=1`} className="min-w-0">
+                  <Button variant="outline" size="icon" asChild className="h-8 w-8 rounded-full" title={t("viewAsClient")}>
+                    <a href={`/es/profesionales/${pro.slug}?preview=1`} aria-label={t("viewAsClient")}>
                       <ExternalLink className="h-4 w-4" />
-                      <span className="truncate">{t("viewAsClient")}</span>
                     </a>
                   </Button>
                 )}
