@@ -542,8 +542,8 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-2">
-                            <span className="text-[15px] font-bold text-[#162543] min-w-0 line-clamp-2 [overflow-wrap:anywhere]">{p.projects?.title ?? t("projectFallback")}</span>
+                          <div className="flex items-start justify-between gap-2.5">
+                            <span className="min-w-0 flex-1 text-[15px] font-bold text-[#162543] line-clamp-2 [overflow-wrap:anywhere]">{p.projects?.title ?? t("projectFallback")}</span>
                             {!proposalStatusRedundant(p.status, ps) && (
                               p.status === "accepted" ? (
                                 <Badge variant={projStatusVariant(ps)} className="shrink-0 text-[11px] font-semibold">{projStatusLabel(ps)}</Badge>

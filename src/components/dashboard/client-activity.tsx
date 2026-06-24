@@ -402,7 +402,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                           </Avatar>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between gap-2">
-                              <span className="text-[15px] font-bold text-[#162543] min-w-0 line-clamp-2 [overflow-wrap:anywhere]">
+                              <span className="min-w-0 flex-1 text-[15px] font-bold text-[#162543] line-clamp-2 [overflow-wrap:anywhere]">
                                 {b.professionals?.profiles?.full_name ?? t("professional")}
                               </span>
                               {!solicitudStatusRedundant(b.status, b.scheduled_date) && (
@@ -527,7 +527,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                               return (
                                 <div className="flex items-center gap-2">
                                   {primary}
-                                  <div className={primary ? "" : "ml-auto"}>
+                                  <div className="ml-auto">
                                     <CardActionsMenu actions={menu} label={t("actions")} />
                                   </div>
                                 </div>
@@ -596,7 +596,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
-                          <span className="text-[15px] font-bold text-[#162543] min-w-0 line-clamp-2 [overflow-wrap:anywhere]">{project.title}</span>
+                          <span className="min-w-0 flex-1 text-[15px] font-bold text-[#162543] line-clamp-2 [overflow-wrap:anywhere]">{project.title}</span>
                           {!proyectoStatusRedundant(project.status) ? (
                             <Badge
                               className="shrink-0 text-[11px] font-semibold"
@@ -668,7 +668,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                         return (
                           <div className="flex items-center gap-2">
                             {primary}
-                            <div className={primary ? "" : "ml-auto"}>
+                            <div className="ml-auto">
                               <CardActionsMenu actions={menu} label={t("actions")} />
                             </div>
                           </div>
