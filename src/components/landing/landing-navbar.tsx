@@ -1288,7 +1288,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
           {/* Scrollable content — clearly grouped sections; account surfaced first */}
           <div className="flex-1 overflow-y-auto px-4 py-4">
             {/* Smart search on mobile */}
-            <div className="mb-5">
+            <div className="mb-4">
               <CategoryAutocomplete
                 placeholder={t("searchServicePlaceholderShort")}
                 size="lg"
@@ -1299,7 +1299,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
             {/* MI CUENTA — surfaced right after the search so a logged-in user reaches
                 their panel fast. Role-aware (pro keeps the unified panel). */}
             {user && (
-              <div className="mb-5">
+              <div className="mb-4">
                 <div className="flex items-center gap-3 px-2 pb-3 mb-1 border-b border-gray-100">
                   {!avatarReady ? (
                     <span className="block h-9 w-9 animate-pulse rounded-full bg-gray-200" />
@@ -1361,24 +1361,12 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
               </div>
             )}
 
-            {/* CATEGORÍAS — on mobile this is just a SINGLE link to the full categories page
-                (no inline category list; the complete grouped browse lives on /categorias). */}
-            <div className="mb-5">
-              <Link
-                href="/categorias"
-                onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-3 px-2 py-2.5 rounded-lg text-sm font-semibold text-[#111827] hover:bg-gray-50 transition-colors"
-              >
-                <Compass className="h-4 w-4 text-[#009FD9] shrink-0" /> {t("categories")}
-              </Link>
-            </div>
-
             {/* CUENTA (logged-OUT) — account actions sit right after browse, clearly
                 visible but not first: new clients register when they REQUEST a
                 service (no "register as client" here), so only Ingresar (returning)
                 + Registrarse como profesional (people who offer services). */}
             {!user && (
-              <div className="mb-5">
+              <div className="mb-4">
                 <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t("account")}</p>
                 <div className="flex flex-col gap-2 px-1 pt-1">
                   <Link href={loginHref} onClick={() => setMobileOpen(false)}
@@ -1394,9 +1382,16 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
               </div>
             )}
 
-            {/* RECURSOS */}
-            <div className="mb-5">
+            {/* RECURSOS — includes Categorías so browse/help links read as one compact group. */}
+            <div className="mb-4">
               <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t("resources")}</p>
+              <Link
+                href="/categorias"
+                onClick={() => setMobileOpen(false)}
+                className="flex items-center gap-3 px-2 py-2.5 rounded-lg text-sm font-semibold text-[#111827] hover:bg-gray-50 transition-colors"
+              >
+                <Compass className="h-4 w-4 text-[#009FD9] shrink-0" /> {t("categories")}
+              </Link>
               {RESOURCES_LINKS.map((link) =>
                 link.key === "support" ? (
                   <SupportLink

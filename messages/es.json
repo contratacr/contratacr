@@ -348,7 +348,7 @@
     "send": "Enviar",
     "cancel": "Cancelar",
     "notListed": "Sugerir categoría",
-    "back": "Volver a categor?as",
+    "back": "Volver a categorias",
     "optionsCount": "{count, plural, one {# opci?n} other {# opciones}}"
   },
   "gallery": {
@@ -1401,7 +1401,7 @@
     "offerDescPlaceholder": "¿Qué incluye este servicio? Describe brevemente lo que ofreces.",
     "emptyTitle": "Aún no ofreces servicios",
     "emptyHelp": "Agrega los servicios que ofreces desde nuestro catálogo.",
-    "pickerBack": "Volver a categor?as",
+    "pickerBack": "Volver a categorias",
     "pickerOptionsCount": "{count, plural, one {# opci?n} other {# opciones}}"
   },
   "availabilityEditor": {
