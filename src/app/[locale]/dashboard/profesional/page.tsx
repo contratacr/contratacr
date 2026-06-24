@@ -378,9 +378,9 @@ export default function DashboardPage() {
                   <span className="sm:hidden">{proDisplayName(displayName || "")}</span>
                   <span className="hidden sm:inline">{displayName}</span>
                 </h1>
-                {mode === "offer" && pro && (
-                  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                    {pro.verification_status === "verified" ? (
+                <div className="mt-1.5 flex min-h-[22px] flex-wrap items-center gap-2">
+                  {mode === "offer" && pro && (
+                    pro.verification_status === "verified" ? (
                       <Badge variant="verified">{t("identityVerified")}</Badge>
                     ) : (
                       <button
@@ -391,16 +391,14 @@ export default function DashboardPage() {
                       >
                         {t("notVerifiedBadge")}
                       </button>
-                    )}
-                  </div>
-                )}
-                {/* Client (use mode): the cédula "Verificado" badge below the name — IDENTICAL
-                    to the pro side, shown ONLY when verified (no "sin verificar" state, no cédula). */}
-                {mode === "use" && clientVerified && (
-                  <div className="mt-1.5">
+                    )
+                  )}
+                  {/* Client (use mode): the cédula "Verificado" badge below the name — IDENTICAL
+                      to the pro side, shown ONLY when verified (no "sin verificar" state, no cédula). */}
+                  {mode === "use" && clientVerified && (
                     <Badge variant="verified">{t("identityVerified")}</Badge>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </div>
           </div>
