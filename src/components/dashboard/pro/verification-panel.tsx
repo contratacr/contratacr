@@ -119,9 +119,9 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
 
         {/* Appeal → straight to support (no padrón re-run for no-ID cases) */}
         {status !== "under_appeal" && (
-          <div className="bg-white rounded-2xl border border-[#e5e7eb] p-5 shadow-sm">
-            <h3 className="text-[15px] font-bold text-[#162543] mb-1">{t("manualReviewTitle")}</h3>
-            <p className="text-xs text-[#6b7280] mb-3">{t("manualReviewBody")}</p>
+          <div className="bg-white rounded-2xl border border-[#e5e7eb] p-5 sm:p-6 shadow-sm">
+            <h3 className="text-[15px] font-bold text-[#162543] mb-1.5">{t("manualReviewTitle")}</h3>
+            <p className="text-[13px] leading-relaxed text-[#6b7280] mb-4">{t("manualReviewBody")}</p>
             <textarea
               value={appeal}
               onChange={(e) => setAppeal(e.target.value)}
@@ -136,9 +136,9 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
         )}
 
         {/* Add-cédula-later — runs the normal padrón verification automatically */}
-        <div className="bg-white rounded-2xl border border-[#e5e7eb] p-5 shadow-sm">
-          <h3 className="text-[15px] font-bold text-[#162543] mb-1">{t("hasCedulaTitle")}</h3>
-          <p className="text-xs text-[#6b7280] mb-3">{t("hasCedulaBody")}</p>
+        <div className="bg-white rounded-2xl border border-[#e5e7eb] p-5 sm:p-6 shadow-sm">
+          <h3 className="text-[15px] font-bold text-[#162543] mb-1.5">{t("hasCedulaTitle")}</h3>
+          <p className="text-[13px] leading-relaxed text-[#6b7280] mb-4">{t("hasCedulaBody")}</p>
           <div className="flex flex-wrap items-center gap-2">
             <input
               value={newCedula}
@@ -162,7 +162,7 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
         <Banner tone="green" icon={<ShieldCheck className="h-5 w-5" />} title={t("verifiedTitle")}>
           {t.rich("verifiedBody", rich)}
           {/* Show the actual badge clients see — makes "la insignia Verificado" concrete. */}
-          <span className="mt-3 flex">
+          <span className="mt-3.5 flex">
             <Badge variant="verified" className="gap-1.5 px-3 py-1 text-[13px]"><ShieldCheck className="h-3.5 w-3.5" /> {t("verifiedChip")}</Badge>
           </span>
         </Banner>
@@ -197,9 +197,9 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
           not a flat grey line, so it reads as a distinct "learn more" affordance. */}
       <Link
         href="/proveedores-autorizados"
-        className="group flex items-center gap-2.5 rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm font-medium text-[#374151] transition-colors hover:border-[#009FD9] hover:bg-[#f9fbfe]"
+        className="group flex items-center gap-3 rounded-2xl border border-[#e5e7eb] bg-white px-4 py-3.5 text-sm font-medium text-[#374151] shadow-sm transition-all hover:border-[#009FD9] hover:bg-[#f9fbfe] hover:shadow-md"
       >
-        <HelpCircle className="h-[18px] w-[18px] shrink-0 text-[#009FD9]" />
+        <HelpCircle className="h-5 w-5 shrink-0 text-[#009FD9]" />
         <span className="flex-1 [overflow-wrap:anywhere]">{t.rich("howItWorks", { link: (c) => <>{c}</> })}</span>
         <ArrowRight className="h-4 w-4 shrink-0 text-[#9ca3af] transition-transform group-hover:translate-x-0.5" />
       </Link>
@@ -213,9 +213,9 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
 
       {/* Rejected → appeal (re-runs automatically; if it still fails → support ticket) */}
       {status === "rejected" && (
-        <div className="bg-white rounded-2xl border border-[#e5e7eb] p-5 shadow-sm">
-          <h3 className="text-[15px] font-bold text-[#162543] mb-1">{t("appealTitle")}</h3>
-          <p className="text-xs text-[#6b7280] mb-3">
+        <div className="bg-white rounded-2xl border border-[#e5e7eb] p-5 sm:p-6 shadow-sm">
+          <h3 className="text-[15px] font-bold text-[#162543] mb-1.5">{t("appealTitle")}</h3>
+          <p className="text-[13px] leading-relaxed text-[#6b7280] mb-4">
             {t("appealBody")}
           </p>
           <textarea
@@ -263,9 +263,9 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
           from the padrón (profiles + Auth, in run-verification); DIMEX/NITE or not-found
           stays unverified; an invalid format errors out (no change). */}
       {status !== "verified" && (
-        <div className="bg-white rounded-2xl border border-[#e5e7eb] p-5 shadow-sm">
-          <h3 className="text-[15px] font-bold text-[#162543] mb-1">{t("enterCedulaTitle")}</h3>
-          <p className="text-xs text-[#6b7280] mb-3">{t("enterCedulaBody")}</p>
+        <div className="bg-white rounded-2xl border border-[#e5e7eb] p-5 sm:p-6 shadow-sm">
+          <h3 className="text-[15px] font-bold text-[#162543] mb-1.5">{t("enterCedulaTitle")}</h3>
+          <p className="text-[13px] leading-relaxed text-[#6b7280] mb-4">{t("enterCedulaBody")}</p>
           <div className="flex flex-wrap items-center gap-2">
             <input
               value={newCedula}
@@ -310,13 +310,13 @@ function Banner({
   };
   const c = tones[tone];
   return (
-    <div className={cn("flex items-start gap-3.5 rounded-2xl border p-4 sm:p-5", c.card)}>
-      <span className={cn("grid h-11 w-11 shrink-0 place-items-center rounded-full bg-white shadow-sm ring-1 ring-inset ring-black/5", c.badge)}>
+    <div className={cn("flex items-start gap-4 rounded-2xl border p-5 sm:p-6", c.card)}>
+      <span className={cn("grid h-12 w-12 shrink-0 place-items-center rounded-full bg-white shadow-sm ring-1 ring-inset ring-black/5", c.badge)}>
         {icon}
       </span>
-      <div className="min-w-0">
-        <p className={cn("font-bold leading-snug", c.title)}>{title}</p>
-        <div className={cn("mt-1 text-sm leading-relaxed [overflow-wrap:anywhere]", c.body)}>{children}</div>
+      <div className="min-w-0 flex-1">
+        <p className={cn("text-[15px] sm:text-base font-bold leading-snug", c.title)}>{title}</p>
+        <div className={cn("mt-1.5 text-sm leading-relaxed [overflow-wrap:anywhere]", c.body)}>{children}</div>
       </div>
     </div>
   );

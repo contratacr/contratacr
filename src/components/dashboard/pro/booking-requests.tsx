@@ -229,7 +229,7 @@ export function BookingRequests() {
     const panelOpen = actionFor?.id === booking.id;
 
     return (
-      <Card className="rounded-2xl">
+      <Card className="rounded-2xl hover:shadow-md">
         {/* EXPANDABLE LEAD CARD (sprint 430): COLLAPSED shows only essentials (who · when ·
             status + unverified). Tapping reveals the full identity, the "para otra persona"
             callout, servicio·zona, the note, and the management ACTIONS. Zero icons; text labels.
@@ -240,9 +240,9 @@ export function BookingRequests() {
           type="button"
           onClick={() => setExpandedId(expanded ? null : booking.id)}
           aria-expanded={expanded}
-          className={cn("w-full text-left px-4 py-3 flex items-center gap-2.5 hover:bg-[#fafafa] transition-colors", expanded ? "rounded-t-2xl" : "rounded-2xl")}
+          className={cn("w-full text-left px-4 py-4 sm:px-5 flex items-center gap-3.5 hover:bg-[#fafafa] transition-colors", expanded ? "rounded-t-2xl" : "rounded-2xl")}
         >
-          <Avatar className="h-10 w-10 shrink-0">
+          <Avatar className="h-11 w-11 shrink-0">
             <AvatarImage src={booking.profiles?.avatar_url} className="object-cover" />
             <AvatarFallback className="text-sm font-bold bg-[#EBF5FB] text-[#009FD9]">{getInitials(booking.client_name || "?")}</AvatarFallback>
           </Avatar>
@@ -251,7 +251,7 @@ export function BookingRequests() {
               itself), and a muted "servicio · nota" snippet on line 3 for instant context. */}
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
-              <span className="text-[15px] font-semibold text-[#162543] min-w-0 flex items-center gap-2 flex-wrap">
+              <span className="text-[15px] font-bold text-[#162543] min-w-0 flex items-center gap-2 flex-wrap">
                 {booking.client_name || t("thePerson")}
                 {!booking.for_someone_else && ageBadge(booking.client_dob)}
                 {unverifiedPill}
@@ -262,17 +262,17 @@ export function BookingRequests() {
               )}
             </div>
             {/* Appointment date with a quiet grey calendar icon. */}
-            <p className="mt-0.5 flex items-center gap-1.5 text-[13px] min-w-0">
+            <p className="mt-1 flex items-center gap-1.5 text-[13px] min-w-0">
               <CalendarClock className="h-3.5 w-3.5 shrink-0 text-[#374151]" />
               <span className={cn("truncate", dateStr ? "font-medium text-[#374151]" : "text-[#6b7280]")}>{dateStr || t("noScheduledDate")}</span>
             </p>
-            {snippet && <p className="mt-0.5 text-[12px] text-[#6b7280] truncate">{snippet}</p>}
+            {snippet && <p className="mt-1 text-[12px] text-[#6b7280] truncate">{snippet}</p>}
           </div>
           <ChevronDown className={cn("h-5 w-5 text-[#9ca3af] shrink-0 transition-transform duration-200", expanded && "rotate-180")} />
         </button>
 
         {expanded && (
-          <div className="px-4 pb-3.5 pt-3 border-t border-[#f3f4f6] flex flex-col gap-2.5">
+          <div className="px-4 pb-5 pt-4 sm:px-5 border-t border-[#f3f4f6] flex flex-col gap-3.5">
             {/* When the request came in — a quiet meta line at the TOP of the details (sprint 501;
                 was buried at the END of the contact card). Distinct from the appointment date
                 (shown collapsed) and from the contact/service info below. */}
@@ -291,7 +291,7 @@ export function BookingRequests() {
             {booking.for_someone_else && (() => {
               const beneAge = booking.beneficiary_dob ? computeAge(booking.beneficiary_dob)?.years ?? null : null;
               return (
-                <div className="rounded-xl bg-[#EBF5FB] px-3.5 py-2.5">
+                <div className="rounded-xl bg-[#EBF5FB] px-4 py-3">
                   <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#0089bb]">{t("apptForLabel")}</p>
                   <p className="mt-0.5 text-sm font-semibold text-[#111827] flex items-center gap-2 flex-wrap">
                     {booking.beneficiary_name || t("otherPerson")}
@@ -310,13 +310,13 @@ export function BookingRequests() {
             {(category || location || phoneFmt || cedulaFmt) && (
               <div className="rounded-xl border border-[#eef0f2] bg-[#f9fafb] overflow-hidden divide-y divide-[#eef0f2]">
                 {(category || location) && (
-                  <div className="px-3.5 py-3">
+                  <div className="px-4 py-3.5">
                     {category && <p className="text-[15px] font-semibold text-[#162543] leading-snug [overflow-wrap:anywhere]">{category}</p>}
                     {location && <p className="mt-0.5 text-[12.5px] text-[#6b7280] [overflow-wrap:anywhere]">{location}</p>}
                   </div>
                 )}
                 {(phoneFmt || cedulaFmt) && (
-                  <div className="grid grid-cols-2 gap-x-4 px-3.5 py-3">
+                  <div className="grid grid-cols-2 gap-x-4 px-4 py-3.5">
                     {phoneFmt && (
                       <div className="flex min-w-0 items-center gap-2">
                         <Phone className="h-4 w-4 shrink-0 text-[#374151]" />
@@ -344,7 +344,7 @@ export function BookingRequests() {
                 left-accent + a "NOTA DEL CLIENTE" eyebrow, visually distinct from the grey
                 service/contact details card above so it clearly reads as their message. */}
             {booking.service_description && (
-              <div className="rounded-lg border border-[#e5e7eb] border-l-[3px] border-l-[#009FD9]/60 bg-white px-3.5 py-2.5">
+              <div className="rounded-xl border border-[#e5e7eb] border-l-[3px] border-l-[#009FD9]/60 bg-white px-4 py-3">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("noteEyebrow")}</p>
                 <p className="mt-1 text-[13px] text-[#374151] leading-relaxed whitespace-pre-line [overflow-wrap:anywhere]">{booking.service_description}</p>
               </div>
@@ -411,12 +411,12 @@ export function BookingRequests() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       <StatusFilterTabs tabs={SOLICITUD_TABS} value={filter} onChange={setFilter} counts={counts} />
       {filtered.length === 0 ? (
         <p className="text-sm text-[#6b7280] text-center py-8">{t("noneInView")}</p>
       ) : (
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3.5">
           {filtered.map((b) => <BookingCard key={b.id} booking={b} />)}
         </div>
       )}

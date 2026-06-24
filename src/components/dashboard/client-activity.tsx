@@ -358,21 +358,21 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
               {filteredBookings.length === 0 ? (
                 <p className="text-sm text-[#6b7280] text-center py-8">{t("noBookingsView")}</p>
               ) : (
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-3.5">
                   {filteredBookings.map((b) => {
                     const rev = b.status === "completed" ? bookingReview(b.id) : undefined;
                     return (
-                      <Card key={b.id}>
+                      <Card key={b.id} className="hover:shadow-md">
                         {/* COLLAPSED header — SAME card language as the other 3 sections: avatar +
-                            pro name (primary, semibold) + status chip on the right; "Fecha: {cita}"
+                            pro name (primary, bold) + status chip on the right; "Fecha: {cita}"
                             key line. Tap to reveal the full description, cancel reason + actions. */}
                         <button
                           type="button"
                           onClick={() => setExpandedBooking(expandedBooking === b.id ? null : b.id)}
                           aria-expanded={expandedBooking === b.id}
-                          className={cn("w-full text-left p-4 flex items-start gap-3 hover:bg-[#fafafa] transition-colors", expandedBooking === b.id ? "rounded-t-2xl" : "rounded-2xl")}
+                          className={cn("w-full text-left p-4 sm:p-5 flex items-start gap-3.5 hover:bg-[#fafafa] transition-colors", expandedBooking === b.id ? "rounded-t-2xl" : "rounded-2xl")}
                         >
-                          <Avatar className="h-10 w-10 shrink-0">
+                          <Avatar className="h-11 w-11 shrink-0">
                             <AvatarImage src={b.professionals?.profiles?.avatar_url} />
                             <AvatarFallback className="bg-[#EBF5FB] text-[#009FD9] text-xs font-semibold">
                               {getInitials(b.professionals?.profiles?.full_name ?? "?")}
@@ -380,7 +380,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                           </Avatar>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between gap-2">
-                              <span className="text-[15px] font-semibold text-[#162543] min-w-0 truncate">
+                              <span className="text-[15px] font-bold text-[#162543] min-w-0 truncate">
                                 {b.professionals?.profiles?.full_name ?? t("professional")}
                               </span>
                               {!solicitudStatusRedundant(b.status, b.scheduled_date) && (
@@ -389,14 +389,14 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                             </div>
                             {/* Appointment date with a grey calendar icon (no "Fecha:" label). */}
                             {formatBookingDate(b, dateLocale) && (
-                              <p className="mt-0.5 flex items-center gap-1.5 text-[13px] min-w-0">
+                              <p className="mt-1 flex items-center gap-1.5 text-[13px] min-w-0">
                                 <CalendarClock className="h-3.5 w-3.5 shrink-0 text-[#374151]" />
                                 <span className="truncate font-medium text-[#374151]">{formatBookingDate(b, dateLocale)}</span>
                               </p>
                             )}
                             {/* The profession the request was for (grey wrench). */}
                             {b.professionals?.categories?.name && (
-                              <p className="mt-0.5 flex items-center gap-1.5 text-[12px] text-[#6b7280] min-w-0">
+                              <p className="mt-1 flex items-center gap-1.5 text-[12px] text-[#6b7280] min-w-0">
                                 <Wrench className="h-3.5 w-3.5 shrink-0 text-[#374151]" />
                                 <span className="truncate">{b.professionals.categories.name}</span>
                               </p>
@@ -406,7 +406,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                         </button>
 
                         {expandedBooking === b.id && (
-                          <div className="px-4 pb-4 pt-3 border-t border-[#f3f4f6] flex flex-col gap-2.5">
+                          <div className="px-4 pb-5 pt-4 sm:px-5 border-t border-[#f3f4f6] flex flex-col gap-3.5">
                             {b.service_description && (
                               <p className="text-sm text-[#374151] whitespace-pre-line [overflow-wrap:anywhere]">{b.service_description}</p>
                             )}
@@ -489,7 +489,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
               </Button>
             </div>
           ) : (
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3.5">
               {/* PRIMARY action — DESKTOP: a prominent right-aligned button above the filters
                   (no bottom nav bar there, so a top button is the cleanest, most visible spot).
                   MOBILE uses the floating action button below instead (thumb-reachable while
@@ -510,7 +510,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                 const proposalCount = project.proposals?.length ?? 0;
 
                 return (
-                  <Card key={project.id}>
+                  <Card key={project.id} className="hover:shadow-md">
                     {/* EXPANDABLE PUBLICACIÓN (sprint 430): COLLAPSED shows title · estado ·
                         nº de propuestas; tapping reveals the description, zona, fecha, the actions
                         and the propuestas list (accept/decline). */}
@@ -521,11 +521,11 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                         setExpandedProject(isExpanded ? null : project.id);
                       }}
                       aria-expanded={isExpanded}
-                      className={cn("w-full text-left p-4 flex items-start gap-2.5 hover:bg-[#fafafa] transition-colors", isExpanded ? "rounded-t-2xl" : "rounded-2xl")}
+                      className={cn("w-full text-left p-4 sm:p-5 flex items-start gap-2.5 hover:bg-[#fafafa] transition-colors", isExpanded ? "rounded-t-2xl" : "rounded-2xl")}
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
-                          <span className="text-[15px] font-semibold text-[#162543] min-w-0 truncate">{project.title}</span>
+                          <span className="text-[15px] font-bold text-[#162543] min-w-0 truncate">{project.title}</span>
                           {!proyectoStatusRedundant(project.status) ? (
                             <Badge
                               className="shrink-0 text-[11px] font-semibold"
@@ -564,7 +564,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                     </button>
 
                     {isExpanded && (
-                      <div className="px-4 pb-4 pt-3 border-t border-[#f3f4f6] flex flex-col gap-2.5">
+                      <div className="px-4 pb-5 pt-4 sm:px-5 border-t border-[#f3f4f6] flex flex-col gap-3.5">
                         {project.description && (
                           <p className="text-sm text-[#6b7280] whitespace-pre-line [overflow-wrap:anywhere]">{project.description}</p>
                         )}
@@ -612,7 +612,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                         const primary = finalized && accepted.length > 0 ? accepted : proposalList;
 
                         const renderProposal = (proposal: Proposal) => (
-                          <div key={proposal.id} className="flex items-start justify-between gap-3 p-3 rounded-xl bg-[#f9fafb] border border-[#e5e7eb]">
+                          <div key={proposal.id} className="flex items-start justify-between gap-3 p-3.5 rounded-xl bg-[#f9fafb] border border-[#e5e7eb]">
                             <div className="flex items-start gap-2 flex-1 min-w-0">
                               <Avatar className="h-8 w-8 shrink-0">
                                 <AvatarImage src={proposal.professionals?.profiles?.avatar_url} />

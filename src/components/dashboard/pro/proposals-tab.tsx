@@ -309,7 +309,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
     const zona = [project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ");
     return (
       <div className="flex flex-col">
-        <div className="flex flex-col gap-3.5 p-4 sm:p-5">
+        <div className="flex flex-col gap-4 p-5 sm:p-6">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-1.5">
               {isToday(project.created_at) && <Badge variant="success" className="text-[10px] font-semibold">{t("new")}</Badge>}
@@ -331,7 +331,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
           )}
 
           <div className="grid grid-cols-1 divide-y divide-[#eef0f2] overflow-hidden rounded-xl border border-[#eef0f2] bg-[#f9fafb] sm:grid-cols-2 sm:divide-x sm:divide-y-0">
-            <div className="flex items-center gap-2.5 px-3.5 py-3">
+            <div className="flex items-center gap-2.5 px-4 py-3.5">
               <Coins className="h-4 w-4 shrink-0 text-[#374151]" />
               <div className="min-w-0">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("budgetLabel")}</p>
@@ -339,7 +339,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
               </div>
             </div>
             {project.timeline && (
-              <div className="flex items-center gap-2.5 px-3.5 py-3">
+              <div className="flex items-center gap-2.5 px-4 py-3.5">
                 <CalendarClock className="h-4 w-4 shrink-0 text-[#374151]" />
                 <div className="min-w-0">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("timelineLabel")}</p>
@@ -363,7 +363,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
           )}
         </div>
 
-        <div className="border-t border-[#f3f4f6] bg-[#fafbfc] p-4 sm:p-5">
+        <div className="border-t border-[#f3f4f6] bg-[#fafbfc] p-5 sm:p-6">
           {alreadySubmitted ? (
             <p className="text-center text-[13px] text-[#6b7280]">{t("alreadyProposedNote")}</p>
           ) : (
@@ -424,7 +424,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
               <p className="text-sm text-[#6b7280] mt-1">{t("emptyBrowseSub")}</p>
             </div>
           ) : (
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-4">
               {/* Filter by the pro's professions — only when they have more than one. */}
               {showProfFilter && (
                 <StatusFilterTabs tabs={profTabs} value={activeProf} onChange={setProfFilter} labelFor={profLabel} counts={profCounts} />
@@ -445,8 +445,8 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                   /* MASTER–DETAIL (Upwork/job-board): a compact LIST on the left + the selected
                      opportunity's DETAIL on the right (desktop); on mobile it's one column where
                      tapping a card expands the SAME detail inline (accordion). */
-                  <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)] lg:items-start lg:gap-5">
-                    <div className="flex flex-col gap-2.5 lg:min-w-0">
+                  <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)] lg:items-start lg:gap-6">
+                    <div className="flex flex-col gap-3 lg:min-w-0">
                       <div className="flex items-center justify-between px-1">
                         <p className="text-[13px] font-semibold text-[#162543]">{t("availableTitle")}</p>
                         {newCount > 0 && <span className="rounded-full bg-[#EBF5FB] px-2 py-0.5 text-[11px] font-semibold text-[#0089bb]">{t("newCount", { count: newCount })}</span>}
@@ -456,25 +456,25 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                         const isActive = activeProject?.id === project.id;
                         const zona = [project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ");
                         return (
-                          <Card key={project.id} className={cn("transition-colors", isActive && "lg:border-[#009FD9] lg:bg-[#f8fcff] lg:ring-1 lg:ring-[#009FD9]/30")}>
+                          <Card key={project.id} className={cn("transition-shadow hover:shadow-md", isActive && "lg:border-[#009FD9] lg:bg-[#f8fcff] lg:ring-1 lg:ring-[#009FD9]/30")}>
                             <button
                               type="button"
                               onClick={() => { setSelectedId(project.id); setExpandedProject(isExpanded ? null : project.id); }}
                               aria-expanded={isExpanded}
-                              className={cn("flex w-full items-start gap-3 p-3.5 text-left transition-colors hover:bg-[#fafafa]", isExpanded ? "rounded-t-2xl lg:rounded-2xl" : "rounded-2xl")}
+                              className={cn("flex w-full items-start gap-3.5 p-4 text-left transition-colors hover:bg-[#fafafa]", isExpanded ? "rounded-t-2xl lg:rounded-2xl" : "rounded-2xl")}
                             >
                               <span className={cn("hidden w-1 self-stretch rounded-full lg:block", isActive ? "bg-[#009FD9]" : "bg-transparent")} aria-hidden />
-                              <Avatar className="h-10 w-10 shrink-0">
+                              <Avatar className="h-11 w-11 shrink-0">
                                 <AvatarImage src={project.profiles?.avatar_url} className="object-cover" />
                                 <AvatarFallback className="text-sm bg-[#EBF5FB] text-[#009FD9] font-bold">{getInitials(project.profiles?.full_name ?? "?")}</AvatarFallback>
                               </Avatar>
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-start justify-between gap-2">
                                   {/* No profession on the card (it's implicit from the feed/filter). */}
-                                  <span className="min-w-0 line-clamp-2 text-[14px] font-semibold text-[#162543] [overflow-wrap:anywhere]">{project.title}</span>
+                                  <span className="min-w-0 line-clamp-2 text-[15px] font-bold text-[#162543] [overflow-wrap:anywhere]">{project.title}</span>
                                   {isToday(project.created_at) && <Badge variant="success" className="shrink-0 text-[10px] font-semibold">{t("new")}</Badge>}
                                 </div>
-                                {(zona || project.timeline) && <p className="mt-0.5 text-[12px] text-[#6b7280] [overflow-wrap:anywhere]">{[zona, project.timeline].filter(Boolean).join(" · ")}</p>}
+                                {(zona || project.timeline) && <p className="mt-1 text-[12px] text-[#6b7280] [overflow-wrap:anywhere]">{[zona, project.timeline].filter(Boolean).join(" · ")}</p>}
                                 {/* Budget + relative time wrap together so neither (esp. "hace …") is ever clipped. */}
                                 <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
                                   <span className="text-[13px] font-semibold text-[#0089bb] [overflow-wrap:anywhere]">{budgetTextFor(project)}</span>
@@ -508,7 +508,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
               <p className="text-sm text-[#6b7280] mt-1">{t("emptyMineSub")}</p>
             </div>
           ) : (
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-4">
               <StatusFilterTabs tabs={PROYECTO_TABS} value={projectFilter} onChange={setProjectFilter} counts={bucketCounts(myProposals.map((p) => proposalBucket(p.status, p.projects?.status)))} />
               {(() => {
                 const shown = myProposals.filter((p) => proposalMatches(projectFilter, p.status, p.projects?.status));
@@ -523,7 +523,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                     : null;
                   const sentDate = new Date(p.created_at).toLocaleDateString(dateLocale, { day: "numeric", month: "short", year: "numeric" });
                   return (
-                    <Card key={p.id}>
+                    <Card key={p.id} className="hover:shadow-md">
                       {/* COLLAPSED header — client avatar + project title (primary) + a status chip
                           (a SENT proposal genuinely IS "Pendiente" until the client decides — unlike
                           auto-confirm bookings — so that badge is kept here); key fact = YOUR price; a
@@ -532,9 +532,9 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                         type="button"
                         onClick={() => setExpandedMine(isOpen ? null : p.id)}
                         aria-expanded={isOpen}
-                        className={cn("w-full text-left p-4 flex items-start gap-2.5 hover:bg-[#fafafa] transition-colors", isOpen ? "rounded-t-2xl" : "rounded-2xl")}
+                        className={cn("w-full text-left p-4 sm:p-5 flex items-start gap-3.5 hover:bg-[#fafafa] transition-colors", isOpen ? "rounded-t-2xl" : "rounded-2xl")}
                       >
-                        <Avatar className="h-10 w-10 shrink-0">
+                        <Avatar className="h-11 w-11 shrink-0">
                           <AvatarImage src={p.projects?.profiles?.avatar_url} />
                           <AvatarFallback className="text-sm bg-[#EBF5FB] text-[#009FD9] font-bold">
                             {getInitials(clientName ?? "?")}
@@ -542,7 +542,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                         </Avatar>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2">
-                            <span className="text-[15px] font-semibold text-[#162543] min-w-0 truncate">{p.projects?.title ?? t("projectFallback")}</span>
+                            <span className="text-[15px] font-bold text-[#162543] min-w-0 truncate">{p.projects?.title ?? t("projectFallback")}</span>
                             {!proposalStatusRedundant(p.status, ps) && (
                               p.status === "accepted" ? (
                                 <Badge variant={projStatusVariant(ps)} className="shrink-0 text-[11px] font-semibold">{projStatusLabel(ps)}</Badge>
@@ -551,7 +551,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                               )
                             )}
                           </div>
-                          <p className="mt-0.5 flex items-center gap-1.5 text-[13px] min-w-0">
+                          <p className="mt-1 flex items-center gap-1.5 text-[13px] min-w-0">
                             <Coins className="h-3.5 w-3.5 shrink-0 text-[#374151]" />
                             <span className="min-w-0 truncate">
                               <span className="text-[#6b7280]">{t("yourPriceLabel")}</span>{" "}
@@ -568,7 +568,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                       </button>
 
                       {isOpen && (
-                        <div className="px-4 pb-4 pt-3 border-t border-[#f3f4f6] flex flex-col gap-2.5">
+                        <div className="px-4 pb-5 pt-4 sm:px-5 border-t border-[#f3f4f6] flex flex-col gap-3.5">
                           {clientName && <p className="text-[12.5px] text-[#6b7280] truncate">{clientName}</p>}
                           {p.message && <p className="text-[13px] text-[#374151] whitespace-pre-line [overflow-wrap:anywhere]">{p.message}</p>}
                           <p className="flex items-center gap-1.5 text-[11px] text-[#9ca3af]"><CalendarDays className="h-3.5 w-3.5 shrink-0 text-[#374151]" /> {t("sentOn", { date: sentDate })}</p>
