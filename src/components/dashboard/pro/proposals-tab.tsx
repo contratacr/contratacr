@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { FolderOpen, Send, ChevronDown, MapPin, Coins, CalendarClock, CalendarDays, Clock, EyeOff } from "lucide-react";
+import { FolderOpen, Send, ChevronDown, MapPin, CalendarClock, CalendarDays, Clock, EyeOff } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -506,8 +506,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                               )
                             )}
                           </div>
-                          <p className="mt-1 flex items-center gap-1.5 text-[13px] min-w-0">
-                            <Coins className="h-3.5 w-3.5 shrink-0 text-[#374151]" />
+                          <p className="mt-1 text-[13px] min-w-0">
                             <span className="min-w-0 truncate">
                               <span className="text-[#6b7280]">{t("yourPriceLabel")}</span>{" "}
                               {p.price
