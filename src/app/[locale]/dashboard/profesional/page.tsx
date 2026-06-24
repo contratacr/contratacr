@@ -432,14 +432,14 @@ export default function DashboardPage() {
                 <nav className="hidden lg:block lg:w-60 shrink-0 space-y-3">
                   <Card>
                     <CardContent className="p-2 space-y-3">
-                      <div>
-                        {(mode === "offer" ? OFFER_TABS : USE_TABS).map(navButton)}
-                      </div>
                       {isProvider && (
-                        <div className="border-t border-[#f3f4f6] pt-2">
+                        <div>
                           {modePanelButton()}
                         </div>
                       )}
+                      <div>
+                        {(mode === "offer" ? OFFER_TABS : USE_TABS).map(navButton)}
+                      </div>
                       <div className="border-t border-[#f3f4f6] pt-2">
                         {SHARED_TABS.map(navButton)}
                       </div>
