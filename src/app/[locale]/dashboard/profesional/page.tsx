@@ -342,6 +342,22 @@ export default function DashboardPage() {
     );
   }
 
+  function modeBottomNavButton() {
+    const next: Mode = mode === "offer" ? "use" : "offer";
+    return (
+      <button
+        type="button"
+        onClick={() => { setMoreOpen(false); handleSwitchMode(next); }}
+        className="flex flex-1 flex-col items-center justify-center gap-1 px-0.5 pt-2 pb-1.5 text-[#374151] transition-colors hover:text-[#111827]"
+      >
+        <Repeat2 className="h-[22px] w-[22px]" />
+        <span className="max-w-full truncate text-[10px] font-semibold leading-none">
+          {next === "offer" ? t("panelProfessional") : t("panelClient")}
+        </span>
+      </button>
+    );
+  }
+
   // Mode switching is now a compact navigation action ("Panel cliente/profesional")
   // instead of a large header control, so the identity header stays clean.
 
@@ -433,7 +449,7 @@ export default function DashboardPage() {
                   <Card>
                     <CardContent className="p-2 space-y-3">
                       {isProvider && (
-                        <div>
+                        <div className="border-b border-[#f3f4f6] pb-2">
                           {modePanelButton()}
                         </div>
                       )}
@@ -576,6 +592,7 @@ export default function DashboardPage() {
         className="lg:hidden fixed bottom-0 inset-x-0 z-40 flex items-stretch border-t border-[#e5e7eb] bg-white shadow-[0_-2px_10px_rgba(15,23,42,0.05)] pb-[env(safe-area-inset-bottom)]"
         aria-label={t("title")}
       >
+        {isProvider && modeBottomNavButton()}
         {primaryTabs.map((tab) => {
           const active = activeTab === tab && !moreOpen;
           return (
@@ -631,11 +648,6 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="p-2 pt-0">
-              {isProvider && (
-                <div className="border-b border-[#f3f4f6] pb-2 mb-2">
-                  {modePanelButton({ mobile: true })}
-                </div>
-              )}
               {moreTabs.map((tab) => {
                 const badge = tab === "notifications" ? unreadCount : tab === "soporte" ? supportUnread : 0;
                 const active = activeTab === tab;
