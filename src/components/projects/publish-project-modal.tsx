@@ -3,13 +3,12 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { IdentityInfoBlock } from "@/components/ui/identity-info-block";
 import { PriceInput } from "@/components/ui/price-input";
 import { PhoneInput, hasPhoneNumber } from "@/components/ui/phone-input";
 import { CedulaInput } from "@/components/ui/cedula-input";
 import { CategorySearch } from "@/components/ui/category-search";
 import { SelectMenu } from "@/components/ui/select-menu";
-import { Loader2, X } from "lucide-react";
+import { Loader2, ShieldAlert, X } from "lucide-react";
 import { PROVINCES } from "@/lib/data/cr-geography";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
@@ -49,7 +48,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
   const [clientName, setClientName] = useState("");
   const [identityLookup, setIdentityLookup] = useState<"idle" | "loading" | "found" | "notfound">("idle");
   const [officialName, setOfficialName] = useState("");
-  const [identityDob, setIdentityDob] = useState<string | null>(null);
+  const [noCedula, setNoCedula] = useState(false);
   const [published, setPublished] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const { user } = useAuth();
@@ -100,7 +99,6 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
   useEffect(() => {
     const cedula = cleanId(form.cedula);
     setOfficialName("");
-    setIdentityDob(null);
     if (!isValidId(cedula) || detectIdType(cedula) !== "cedula") {
       setIdentityLookup("idle");
       return;
@@ -114,7 +112,6 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
         if (!active) return;
         if (res.ok && data?.fullName) {
           setOfficialName(data.fullName);
-          setIdentityDob(data.dob ?? null);
           setClientName(data.fullName);
           setIdentityLookup("found");
         } else {
@@ -152,7 +149,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
     if (!form.categoryId) { setError(t("errCategory")); return; }
     if (!form.title.trim()) { setError(t("errTitle")); return; }
     if (!form.description.trim()) { setError(t("errDescription")); return; }
-    if (!isValidId(form.cedula)) { setError(t("errCedula")); return; }
+    if (!noCedula && !isValidId(form.cedula)) { setError(t("errCedula")); return; }
     if (needsPhone && phone.replace(/\D/g, "").length < 8) { setError(t("errPhone")); return; }
 
     setSubmitting(true);
@@ -175,7 +172,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
           budgetMin: form.budgetMin || null,
           budgetMax: form.budgetMax || null,
           timeline: form.timeline || null,
-          cedula: form.cedula,
+          cedula: noCedula ? "" : form.cedula,
           fullName: clientName,
         }),
       });
@@ -291,24 +288,39 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
               )}
             </div>
 
-            <CedulaInput
-              value={form.cedula}
-              onChange={(cedula) => update("cedula", cedula)}
-              required
-              hint={t("cedulaHelp")}
-            />
-            {identityLookup === "loading" && (
-              <div className="flex items-center gap-2 text-sm text-[#6b7280]">
-                <Loader2 className="h-4 w-4 animate-spin" /> {ti("searching")}
-              </div>
+            {!noCedula && (
+              <>
+                <CedulaInput
+                  value={form.cedula}
+                  onChange={(cedula) => update("cedula", cedula)}
+                  required
+                  hint={t("cedulaHelp")}
+                />
+                {identityLookup === "loading" && (
+                  <div className="flex items-center gap-2 text-sm text-[#6b7280]">
+                    <Loader2 className="h-4 w-4 animate-spin" /> {ti("searching")}
+                  </div>
+                )}
+                {identityLookup === "found" && officialName && (
+                  <div className="rounded-lg bg-[#fffbeb] border border-[#fde68a] px-3 py-2.5 flex items-start gap-2">
+                    <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5 text-[#b45309]" />
+                    <p className="text-xs text-[#92400e] leading-snug break-words">
+                      {t.rich("cedulaOwnerWarning", { name: officialName, strong: (c) => <strong>{c}</strong> })}
+                    </p>
+                  </div>
+                )}
+                <button type="button" onClick={() => setNoCedula(true)} className="self-start -mt-1 text-xs font-semibold text-[#009FD9] hover:underline">
+                  {t("noCedula")}
+                </button>
+              </>
             )}
-            {identityLookup === "found" && officialName && (
-              <IdentityInfoBlock fullName={officialName} cedula={form.cedula} dob={identityDob} />
-            )}
-            {identityLookup !== "found" && clientName && (
-              <div className="rounded-xl bg-[#f9fafb] px-4 py-3">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("clientName")}</p>
-                <p className="mt-0.5 text-sm font-semibold text-[#111827] [overflow-wrap:anywhere]">{clientName}</p>
+            {noCedula && (
+              <div className="rounded-lg bg-[#f9fafb] border border-[#e5e7eb] px-3 py-2.5 flex items-start gap-2">
+                <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5 text-[#6b7280]" />
+                <div className="text-xs text-[#6b7280] leading-snug break-words">
+                  <p>{t.rich("noCedulaNotice", { strong: (c) => <strong>{c}</strong> })}</p>
+                  <button type="button" onClick={() => setNoCedula(false)} className="mt-1 font-semibold text-[#009FD9] hover:underline">{t("haveCedula")}</button>
+                </div>
               </div>
             )}
 

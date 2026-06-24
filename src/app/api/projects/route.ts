@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
     if (!categoryId) {
       return NextResponse.json({ error: "Elige una categoria para tu solicitud." }, { status: 400 });
     }
-    if (!cedula || !isValidId(cedula)) {
+    if (cedula && !isValidId(cedula)) {
       return NextResponse.json({ error: "Ingresa un numero de identificacion valido." }, { status: 400 });
     }
 
@@ -65,14 +65,16 @@ export async function POST(req: NextRequest) {
     const uid = session.user.id;
     const admin = createAdminClient();
 
-    const { data: dupe } = await admin
-      .from("profiles")
-      .select("id")
-      .eq("cedula", cedula)
-      .neq("id", uid)
-      .maybeSingle();
-    if (dupe) {
-      return NextResponse.json({ error: "Esta identificacion ya esta registrada en ContrataCR." }, { status: 409 });
+    if (cedula) {
+      const { data: dupe } = await admin
+        .from("profiles")
+        .select("id")
+        .eq("cedula", cedula)
+        .neq("id", uid)
+        .maybeSingle();
+      if (dupe) {
+        return NextResponse.json({ error: "Esta identificacion ya esta registrada en ContrataCR." }, { status: 409 });
+      }
     }
 
     const { data: existingProfile } = await admin
@@ -84,18 +86,20 @@ export async function POST(req: NextRequest) {
     let clientIdentityStatus: ClientIdentityStatus = "unverified";
     let officialName: string | null = null;
     let identityProvider: string | null = null;
-    const idType = detectIdType(cedula);
-    if (idType === "cedula") {
-      const result = await getIdentityVerifier().lookup(cedula);
-      identityProvider = result.provider;
-      if (result.found) {
-        clientIdentityStatus = "verified";
-        officialName = result.fullName ?? null;
+    if (cedula) {
+      const idType = detectIdType(cedula);
+      if (idType === "cedula") {
+        const result = await getIdentityVerifier().lookup(cedula);
+        identityProvider = result.provider;
+        if (result.found) {
+          clientIdentityStatus = "verified";
+          officialName = result.fullName ?? null;
+        } else {
+          clientIdentityStatus = "unverified";
+        }
       } else {
-        clientIdentityStatus = "unverified";
+        clientIdentityStatus = "pending";
       }
-    } else {
-      clientIdentityStatus = "pending";
     }
 
     // Ensure the profiles row exists before inserting (client_id FK requires it).
@@ -113,7 +117,7 @@ export async function POST(req: NextRequest) {
                  session.user.email?.split("@")[0] || "",
       role: existingProfile?.role || (session.user.user_metadata?.role as string) || "client",
       onboarding_completed: true,
-      cedula,
+      ...(cedula ? { cedula } : {}),
       client_identity_status: clientIdentityStatus,
       client_identity_verified_at: clientIdentityStatus === "verified" ? new Date().toISOString() : null,
       client_identity_provider: identityProvider,
