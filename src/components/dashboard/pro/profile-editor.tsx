@@ -50,8 +50,7 @@ const FIELD_SECTION: Record<string, string> = {
 // it's quick to scan and edit. Presentation only; all fields still live in the
 // same form/state and save identically. CONTROLLED by the editor so a
 // "Completa tu perfil" item can open the right section and scroll to its field.
-function Section({ id, title, desc, open, onToggle, autosave = true, children }: { id: string; title: string; desc?: string; open: boolean; onToggle: (id: string) => void; autosave?: boolean; children: React.ReactNode }) {
-  const t = useTranslations("profileEditor");
+function Section({ id, title, desc, open, onToggle, children }: { id: string; title: string; desc?: string; open: boolean; onToggle: (id: string) => void; children: React.ReactNode }) {
   return (
     // A borderless ROW inside the shared settings card (the card + divide-y dividers live in
     // the editor's wrapper). Tappable header (white, hover tint) + an inline field area set
@@ -72,9 +71,6 @@ function Section({ id, title, desc, open, onToggle, autosave = true, children }:
       {open && (
         <div className="px-4 sm:px-5 pb-5 pt-4 flex flex-col gap-4 border-t border-[#f3f4f6]">
           {children}
-          {/* These sections autosave (via `touch()`); reassure the pro consistently —
-              same spot (bottom of the open section) and style in every section. */}
-          {autosave && <p className="text-xs text-[#9ca3af]">{t("autosaveNote")}</p>}
         </div>
       )}
     </div>
