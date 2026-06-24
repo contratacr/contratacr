@@ -1026,6 +1026,7 @@
   },
   "proPanel": {
     "viewAsClient": "Ver cómo me ven los clientes",
+    "publicPreview": "Vista pública",
     "signOut": "Salir",
     "identityVerified": "Verificado",
     "notVerifiedBadge": "Sin verificar",

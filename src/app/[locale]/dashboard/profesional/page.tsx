@@ -336,7 +336,7 @@ export default function DashboardPage() {
           {/* Header — clean, restrained (serious tone): a modest larger avatar with a hairline
               ring, a bold navy name, the plain "modo" eyebrow + verification badge, set off from
               the content by a single hairline divider. No gradient/decoration. */}
-          <div className="mb-6 flex items-start justify-between gap-4 flex-wrap border-b border-[#e5e7eb] pb-5">
+          <div className="mb-6 flex flex-col gap-4 border-b border-[#e5e7eb] pb-5 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex min-w-0 flex-1 items-center gap-4">
               <Avatar className="h-16 w-16 shrink-0 ring-1 ring-[#e5e7eb]">
                 <AvatarImage src={headerAvatar ?? undefined} />
@@ -344,7 +344,7 @@ export default function DashboardPage() {
                   {getInitials(displayName || "?")}
                 </AvatarFallback>
               </Avatar>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 {/* Current mode = a small eyebrow. A client-only account never sees "modo" wording. */}
                 {isProvider && (
                   <p className="text-[11px] font-bold uppercase tracking-wide text-[#009FD9]">
@@ -353,7 +353,7 @@ export default function DashboardPage() {
                 )}
                 {/* Mobile shows a SHORT name (first name + first surname) so the official
                     name never hard-cuts at ~360px; desktop shows the full name. */}
-                <h1 className="truncate text-xl sm:text-2xl font-bold leading-tight text-[#162543]">
+                <h1 className="text-xl sm:text-2xl font-bold leading-tight text-[#162543] [overflow-wrap:anywhere]">
                   <span className="sm:hidden">{shortDisplayName(displayName || "")}</span>
                   <span className="hidden sm:inline">{displayName}</span>
                 </h1>
@@ -386,12 +386,13 @@ export default function DashboardPage() {
                 providers only, both worlds in one tap) over the "Ver perfil como cliente"
                 action. Logout lives ONLY in the navbar profile menu. */}
             {isProvider && (
-              <div className="ml-auto flex shrink-0 flex-col items-end gap-2.5">
+              <div className="flex w-full shrink-0 flex-col items-stretch gap-2 sm:w-auto sm:items-end">
                 <ModeSwitcher mode={mode} onSwitch={handleSwitchMode} className="w-[236px]" block />
                 {mode === "offer" && pro?.slug && (
-                  <Button variant="outline" size="icon" asChild className="h-8 w-8 rounded-full" title={t("viewAsClient")}>
+                  <Button variant="outline" size="sm" asChild className="h-8 w-full rounded-lg px-2.5 text-xs sm:w-auto" title={t("viewAsClient")}>
                     <a href={`/es/profesionales/${pro.slug}?preview=1`} aria-label={t("viewAsClient")}>
                       <ExternalLink className="h-4 w-4" />
+                      {t("publicPreview")}
                     </a>
                   </Button>
                 )}
