@@ -5,7 +5,9 @@
     "resend": "Reenviar correo",
     "resendIn": "Reenviar en {seconds} s",
     "resending": "Reenviando…",
-    "resent": "Correo reenviado"
+    "resent": "Correo reenviado",
+    "seeMore": "Ver más",
+    "seeLess": "Ver menos"
   },
   "nav": {
     "search": "Buscar",

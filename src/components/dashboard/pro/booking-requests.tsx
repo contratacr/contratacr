@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getWhatsAppLink, getInitials, cn } from "@/lib/utils";
 import { StatusFilterTabs, SOLICITUD_TABS, solicitudBucket, solicitudStatusRedundant, bucketCounts } from "@/components/dashboard/status-filter-tabs";
 import { CardActionsMenu, type CardAction } from "@/components/dashboard/card-actions-menu";
+import { ExpandableText } from "@/components/ui/expandable-text";
 import { ReportModal } from "@/components/dashboard/report-modal";
 import type { BookingStatus } from "@/types";
 
@@ -251,7 +252,7 @@ export function BookingRequests() {
               itself), and a muted "servicio · nota" snippet on line 3 for instant context. */}
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
-              <span className="text-[15px] font-bold text-[#162543] min-w-0 flex items-center gap-2 flex-wrap">
+              <span className="text-[15px] font-bold text-[#162543] min-w-0 flex items-center gap-2 flex-wrap [overflow-wrap:anywhere]">
                 {booking.client_name || t("thePerson")}
                 {!booking.for_someone_else && ageBadge(booking.client_dob)}
                 {unverifiedPill}
@@ -346,7 +347,7 @@ export function BookingRequests() {
             {booking.service_description && (
               <div className="rounded-xl border border-[#e5e7eb] border-l-[3px] border-l-[#009FD9]/60 bg-white px-4 py-3">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("noteEyebrow")}</p>
-                <p className="mt-1 text-[13px] text-[#374151] leading-relaxed whitespace-pre-line [overflow-wrap:anywhere]">{booking.service_description}</p>
+                <ExpandableText text={booking.service_description} lines={5} className="mt-1" />
               </div>
             )}
 

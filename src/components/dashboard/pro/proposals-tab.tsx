@@ -12,6 +12,7 @@ import { PriceInput } from "@/components/ui/price-input";
 import { cn, getWhatsAppLink, getInitials } from "@/lib/utils";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { StatusFilterTabs, PROYECTO_TABS, proposalMatches, proposalBucket, proposalStatusRedundant, bucketCounts } from "@/components/dashboard/status-filter-tabs";
+import { ExpandableText } from "@/components/ui/expandable-text";
 
 type ProposalStatus = "pending" | "accepted" | "declined";
 
@@ -326,7 +327,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
           {project.description && (
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#9ca3af]">{t("projectDescription")}</p>
-              <p className="mt-1 text-[13px] leading-relaxed text-[#374151] whitespace-pre-line [overflow-wrap:anywhere]">{project.description}</p>
+              <ExpandableText text={project.description} lines={6} className="mt-1" />
             </div>
           )}
 
@@ -542,7 +543,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                         </Avatar>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2">
-                            <span className="text-[15px] font-bold text-[#162543] min-w-0 truncate">{p.projects?.title ?? t("projectFallback")}</span>
+                            <span className="text-[15px] font-bold text-[#162543] min-w-0 line-clamp-2 [overflow-wrap:anywhere]">{p.projects?.title ?? t("projectFallback")}</span>
                             {!proposalStatusRedundant(p.status, ps) && (
                               p.status === "accepted" ? (
                                 <Badge variant={projStatusVariant(ps)} className="shrink-0 text-[11px] font-semibold">{projStatusLabel(ps)}</Badge>
@@ -570,7 +571,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                       {isOpen && (
                         <div className="px-4 pb-5 pt-4 sm:px-5 border-t border-[#f3f4f6] flex flex-col gap-3.5">
                           {clientName && <p className="text-[12.5px] text-[#6b7280] truncate">{clientName}</p>}
-                          {p.message && <p className="text-[13px] text-[#374151] whitespace-pre-line [overflow-wrap:anywhere]">{p.message}</p>}
+                          {p.message && <ExpandableText text={p.message} lines={5} />}
                           <p className="flex items-center gap-1.5 text-[11px] text-[#9ca3af]"><CalendarDays className="h-3.5 w-3.5 shrink-0 text-[#374151]" /> {t("sentOn", { date: sentDate })}</p>
                           {/* Client contact — revealed once the proposal is accepted (still active). */}
                           {p.status === "accepted" && ps !== "cancelled" && phone && (
