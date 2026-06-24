@@ -457,7 +457,7 @@ export default function DashboardPage() {
                 <div ref={contentRef} className="flex-1 min-w-0 scroll-mt-20 lg:scroll-mt-0">
                   <SaveStatusProvider>
                     <Card>
-                      <CardHeader className="px-6 pt-6 pb-3">
+                      <CardHeader className="px-4 pt-4 pb-2 sm:px-6 sm:pt-6 sm:pb-3">
                         <div className="relative">
                           <div className="flex min-w-0 items-center gap-2 pr-28">
                             <h2 className="min-w-0 truncate text-lg font-semibold text-[#111827]">{activeTab === "services" ? t("servicesHeading") : t(`tabs.${activeTab}`)}</h2>
@@ -475,10 +475,10 @@ export default function DashboardPage() {
                           <HeaderSaveStatus />
                         </div>
                         {TABS_WITH_SUBTITLE.has(activeTab) && (
-                          <p className="text-sm text-[#6b7280] mt-0.5">{t(`subtitles.${activeTab}`)}</p>
+                          <p className="mt-0.5 text-sm text-[#6b7280]">{t(`subtitles.${activeTab}`)}</p>
                         )}
                       </CardHeader>
-                      <CardContent className="px-6 pt-1 pb-6">
+                      <CardContent className="px-4 pt-0 pb-4 sm:px-6 sm:pt-1 sm:pb-6">
                         {/* MI PERFIL — pro editor in offer mode, basic identity in use mode. */}
                         {activeTab === "profile" && mode === "offer" && pro && (
                           <ProfileEditor
