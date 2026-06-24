@@ -7,7 +7,7 @@ import { useSearchParams } from "next/navigation";
 import {
   User, Image as ImageIcon, CalendarDays, Inbox, ExternalLink, Wrench,
   FolderOpen, ShieldCheck, Bell, Send, ClipboardList, Bookmark, Settings, Headset, CreditCard,
-  ArrowRight, Sparkles, MoreHorizontal, X,
+  ArrowRight, Sparkles, MoreHorizontal, X, Repeat2,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -314,7 +314,7 @@ export default function DashboardPage() {
         <span className="relative">
           {TAB_ICONS[tab]}
           {badge > 0 && (
-            <span className="absolute -top-2 -right-2.5 flex h-[16px] min-w-[16px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[9px] font-bold leading-none text-white ring-2 ring-white">
+            <span className="absolute -right-2.5 -top-2 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-[#009FD9] px-1 text-center text-[9px] font-bold leading-none text-white ring-2 ring-white">
               {badge > 9 ? "9+" : badge}
             </span>
           )}
@@ -336,7 +336,7 @@ export default function DashboardPage() {
           "text-[#374151] hover:bg-[#f3f4f6]"
         )}
       >
-        <span className="shrink-0 text-[#9ca3af]">{next === "offer" ? <Wrench className="h-4 w-4" /> : <User className="h-4 w-4" />}</span>
+        <span className="shrink-0 text-[#111827]"><Repeat2 className="h-4 w-4" /></span>
         <span className="flex-1">{next === "offer" ? t("panelProfessional") : t("panelClient")}</span>
       </button>
     );
@@ -651,7 +651,7 @@ export default function DashboardPage() {
                     <span className={cn("shrink-0", active ? "text-[#009FD9]" : "text-[#9ca3af]")}>{TAB_ICONS[tab]}</span>
                     <span className="flex-1">{tab === "services" ? t("servicesHeading") : t(`tabs.${tab}`)}</span>
                     {badge > 0 && (
-                      <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-[#009FD9] px-1.5 text-[11px] font-bold text-white">{badge > 9 ? "9+" : badge}</span>
+                      <span className="grid h-5 min-w-5 place-items-center rounded-full bg-[#009FD9] px-1.5 text-center text-[11px] font-bold leading-none text-white">{badge > 9 ? "9+" : badge}</span>
                     )}
                   </button>
                 );
