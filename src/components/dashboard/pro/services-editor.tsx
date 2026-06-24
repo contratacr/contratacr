@@ -313,21 +313,6 @@ export function ServicesEditor({
                         {getCategoryLabel(prof, locale)}
                       </h3>
                       <p className={cn("mt-1.5 text-[13px] font-semibold", isActive ? "text-[#0089bb]" : "text-[#9ca3af]")}>{priceLabel}</p>
-                      <div className="mt-2 min-h-[22px]">
-                        {isPrincipal ? (
-                          <span className="inline-flex h-[22px] w-fit items-center rounded-full bg-[#EBF5FB] px-2 text-[10px] font-bold uppercase tracking-wide text-[#0089bb]">
-                            {t("principal")}
-                          </span>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => makePrincipal(prof)}
-                            className="inline-flex h-[22px] w-fit items-center rounded-full border border-[#e5e7eb] px-2 text-[10px] font-bold uppercase tracking-wide text-[#6b7280] transition-colors hover:border-[#bfdbfe] hover:bg-[#EBF5FB] hover:text-[#0089bb]"
-                          >
-                            {t("makePrincipal")}
-                          </button>
-                        )}
-                      </div>
                     </div>
                     {/* Active/inactive toggle — FAR RIGHT (end of the header row). */}
                     <button
@@ -367,6 +352,19 @@ export function ServicesEditor({
                       <Pencil className="h-3.5 w-3.5" /> {t("editInfo")}
                     </button>
                     <div className="ml-auto flex items-center gap-0.5">
+                      {isPrincipal ? (
+                        <span className="inline-flex h-8 items-center rounded-lg bg-[#EBF5FB] px-2.5 text-xs font-bold text-[#0089bb]">
+                          {t("principal")}
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => makePrincipal(prof)}
+                          className="inline-flex h-8 items-center rounded-lg border border-[#bfdbfe] px-2.5 text-xs font-bold text-[#0089bb] transition-colors hover:bg-[#EBF5FB]"
+                        >
+                          {t("makePrincipal")}
+                        </button>
+                      )}
                       {professions.length > 1 && (
                         <button
                           type="button"
