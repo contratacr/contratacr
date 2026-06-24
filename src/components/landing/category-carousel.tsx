@@ -1,32 +1,34 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import Image from "next/image";
 import { useLocale } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { getCategoryLabel } from "@/lib/data/categories";
+import { ServiceImage } from "@/components/professionals/service-image";
 
 /* ONE single staggered (zigzag) carousel. All cards live in ONE track that
    moves as a single unit (the up/down offset is purely visual). Motion is
    TRANSFORM-based with a float accumulator — NOT native scrollLeft (which
    browsers round to integers, so a sub-pixel/frame auto-scroll never moves).
    Auto-scrolls continuously + can be driven by drag/swipe or arrow buttons;
-   auto pauses on hover/interaction and respects prefers-reduced-motion. */
-const CLOUD = "dxxrjx2go";
-// f_auto + q_auto + DPR-aware sizing handled by next/image `sizes`; base kept
-// modest (≤600w) so mobile never pulls a heavy image while the track moves.
-const catImg = (id: string) =>
-  `https://res.cloudinary.com/${CLOUD}/image/upload/f_auto,q_auto,c_fill,g_auto,w_600,h_400/contratacr/categorias/${id}`;
+   auto pauses on hover/interaction and respects prefers-reduced-motion.
 
-// Finalized CR categories with matching self-hosted imagery. ONE track, all
-// distinct — a single set is far wider than any viewport, so the off-screen
+   Sprint 520: the card VISUAL is the shared <ServiceImage> system (the SAME one the
+   public profile uses) — a real category photo where available, a branded gradient +
+   group icon fallback otherwise — so the carousel is the platform's image SHOWCASE and
+   never shows a broken tile. */
+
+// A broad, cross-group SELECTION of services to showcase (spanning hogar/jardín/limpieza/
+// tecnología/empresarial/salud/belleza/eventos/seguridad/automotriz). Each → /buscar?categoria.
+// One track, all distinct — a single set is far wider than any viewport, so the off-screen
 // duplicate (for the seamless loop) never shows on screen.
 const HOME_CATEGORIES = [
   "limpieza", "plomeria", "electricidad", "jardineria", "pintura", "carpinteria",
-  "construccion", "cerrajeria", "mudanzas", "mecanica", "peluqueria",
-  "entrenamiento_personal", "masajes", "psicologia", "desarrollo_web",
-  "contabilidad", "marketing_digital", "fotografia", "dj_sonido",
+  "construccion", "cerrajeria", "remodelacion", "mudanzas", "mecanica", "peluqueria",
+  "entrenamiento_personal", "masajes", "psicologia", "desarrollo_web", "soporte_tecnico",
+  "contabilidad", "marketing_digital", "fotografia", "dj_sonido", "camaras_seguridad",
+  "poda_arboles", "limpieza_piscinas", "fisioterapia", "nutricion",
 ];
 
 // Time-based (px per MILLISECOND) so the speed is identical on 60/90/120 Hz
@@ -58,15 +60,9 @@ function Card({ id, lifted, onLinkClick }: { id: string; lifted: boolean; onLink
         // layer; hover still scales fine (auto-promoted on hover, desktop only).
         className="group relative block w-[248px] h-[168px] sm:w-[300px] sm:h-[200px] rounded-lg overflow-hidden shadow-[0_2px_8px_rgba(0,0,0,0.10)] sm:shadow-[0_4px_16px_rgba(0,0,0,0.10)] select-none transition-transform duration-300 ease-out hover:scale-[1.04] hover:z-10"
       >
-        <Image
-          src={catImg(id)}
-          alt={label}
-          fill
-          draggable={false}
-          loading="lazy"
-          className="object-cover pointer-events-none"
-          sizes="(max-width: 640px) 250px, 300px"
-        />
+        {/* Shared ServiceImage system: real photo where available, branded gradient + group
+            icon fallback otherwise (no icon badge here — the dark overlay + label carry it). */}
+        <ServiceImage categoryId={id} badge={false} className="pointer-events-none absolute inset-0 h-full w-full" />
         <div
           className="absolute inset-0"
           style={{ background: "linear-gradient(to top, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.18) 58%, transparent 100%)" }}

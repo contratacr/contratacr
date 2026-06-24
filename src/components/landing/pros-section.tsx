@@ -4,8 +4,8 @@ import { ArrowRight } from "lucide-react";
 import { CategoryCarousel } from "@/components/landing/category-carousel";
 
 /* "Profesionales para cada proyecto" — heading + ONE staggered category
-   carousel (see category-carousel.tsx). Self-hosted Cloudinary images, each
-   card → /buscar?categoria=<id>. No "available online" badge. */
+   carousel (see category-carousel.tsx). Card visuals use the shared ServiceImage
+   system (real photo or branded gradient fallback); each card → /buscar?categoria=<id>. */
 export async function ProsSection() {
   const t = await getTranslations("landing.carousel");
   return (
