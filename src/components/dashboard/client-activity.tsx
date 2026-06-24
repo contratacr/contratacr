@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarDays, FolderOpen, ChevronDown, Plus, CalendarClock, Wrench, Users, MapPin } from "lucide-react";
+import { CalendarDays, FolderOpen, ChevronDown, Plus, CalendarClock, Wrench, Users, MapPin, ExternalLink } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
+import { getCategoryLabel } from "@/lib/data/categories";
+import { ageCategoryFromDob, computeAge } from "@/lib/age";
 import { getInitials, getWhatsAppLink, cn } from "@/lib/utils";
 import { StatusFilterTabs, SOLICITUD_TABS, PROYECTO_TABS, solicitudMatches, solicitudBucket, solicitudStatusRedundant, proyectoMatches, proyectoBucket, proyectoStatusRedundant, bucketCounts } from "@/components/dashboard/status-filter-tabs";
 import { CardActionsMenu, type CardAction } from "@/components/dashboard/card-actions-menu";
@@ -42,11 +44,18 @@ type Booking = {
   created_at: string;
   cancel_reason?: string | null;
   cancelled_by?: string | null;
+  // The specific service the request is for + who it's for (a dependent/"otra persona").
+  category_id?: string | null;
+  for_someone_else?: boolean;
+  beneficiary_name?: string | null;
+  beneficiary_dob?: string | null;
+  beneficiary_is_minor?: boolean;
   professionals?: {
     slug: string;
     whatsapp?: string;
+    category_id?: string | null;
     profiles: { full_name: string; avatar_url?: string };
-    categories: { id: string; name: string };
+    categories?: { id: string; name: string };
   };
 };
 
@@ -109,6 +118,18 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   const locale = useLocale();
   const router = useRouter();
   const dateLocale = locale === "en" ? "en-US" : "es-CR";
+
+  // The service a booking is for (the specific category requested, else the pro's primary).
+  function bookingServiceLabel(b: Booking): string | null {
+    const id = b.category_id || b.professionals?.category_id;
+    return id ? getCategoryLabel(id, locale) : (b.professionals?.categories?.name ?? null);
+  }
+  // Amber age flag (Menor de edad / Adulto mayor) — same treatment as the pro side.
+  function ageBadge(dob?: string | null, minorFallback = false) {
+    const cat = dob ? ageCategoryFromDob(dob) : minorFallback ? "minor" : null;
+    if (!cat) return null;
+    return <Badge variant="warning" className="text-[11px] font-semibold">{t(cat)}</Badge>;
+  }
 
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -395,11 +416,18 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                 <span className="truncate font-medium text-[#374151]">{formatBookingDate(b, dateLocale)}</span>
                               </p>
                             )}
-                            {/* The profession the request was for (grey wrench). */}
-                            {b.professionals?.categories?.name && (
+                            {/* The service the request was for (grey wrench). */}
+                            {bookingServiceLabel(b) && (
                               <p className="mt-1 flex items-center gap-1.5 text-[12px] text-[#6b7280] min-w-0">
                                 <Wrench className="h-3.5 w-3.5 shrink-0 text-[#374151]" />
-                                <span className="truncate">{b.professionals.categories.name}</span>
+                                <span className="truncate">{bookingServiceLabel(b)}</span>
+                              </p>
+                            )}
+                            {/* For someone else — a quiet at-a-glance hint. */}
+                            {b.for_someone_else && (
+                              <p className="mt-1 flex items-center gap-1.5 text-[12px] text-[#6b7280] min-w-0">
+                                <Users className="h-3.5 w-3.5 shrink-0 text-[#374151]" />
+                                <span className="truncate">{t("forOtherPerson")}</span>
                               </p>
                             )}
                           </div>
@@ -408,6 +436,48 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
 
                         {expandedBooking === b.id && (
                           <div className="px-4 pb-5 pt-4 sm:px-5 border-t border-[#f3f4f6] flex flex-col gap-3.5">
+                            {/* WHO it was requested TO (the professional — clickable to their
+                                profile) + WHICH service — one tidy grouped block. */}
+                            <div className="overflow-hidden rounded-xl border border-[#eef0f2] bg-[#f9fafb] divide-y divide-[#eef0f2]">
+                              {b.professionals?.slug && (
+                                <Link href={`/profesionales/${b.professionals.slug}`} className="group flex items-center gap-3 px-4 py-3 transition-colors hover:bg-[#f3f8fc]">
+                                  <Avatar className="h-9 w-9 shrink-0">
+                                    <AvatarImage src={b.professionals?.profiles?.avatar_url} />
+                                    <AvatarFallback className="bg-[#EBF5FB] text-[#009FD9] text-[11px] font-bold">{getInitials(b.professionals?.profiles?.full_name ?? "?")}</AvatarFallback>
+                                  </Avatar>
+                                  <div className="min-w-0 flex-1">
+                                    <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("requestedToLabel")}</p>
+                                    <p className="truncate text-sm font-semibold text-[#162543] transition-colors group-hover:text-[#009FD9] [overflow-wrap:anywhere]">{b.professionals?.profiles?.full_name ?? t("professional")}</p>
+                                  </div>
+                                  <ExternalLink className="h-4 w-4 shrink-0 text-[#9ca3af] transition-colors group-hover:text-[#009FD9]" />
+                                </Link>
+                              )}
+                              {bookingServiceLabel(b) && (
+                                <div className="px-4 py-3">
+                                  <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("serviceField")}</p>
+                                  <p className="mt-0.5 text-[13px] font-medium text-[#374151] [overflow-wrap:anywhere]">{bookingServiceLabel(b)}</p>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* "La cita es para" — beneficiary (name + age + Menor de edad badge),
+                                same treatment as the pro's Solicitudes recibidas. */}
+                            {b.for_someone_else && (() => {
+                              const beneAge = b.beneficiary_dob ? computeAge(b.beneficiary_dob)?.years ?? null : null;
+                              return (
+                                <div className="rounded-xl bg-[#EBF5FB] px-4 py-3">
+                                  <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#0089bb]">{t("apptForLabel")}</p>
+                                  <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm font-semibold text-[#111827]">
+                                    {b.beneficiary_name || t("otherPerson")}
+                                    {ageBadge(b.beneficiary_dob, !!b.beneficiary_is_minor)}
+                                  </p>
+                                  {beneAge !== null && (
+                                    <p className="mt-0.5 text-[12px] text-[#6b7280]"><span className="text-[#9ca3af]">{t("fieldAge")}</span> {t("yearsOld", { count: beneAge })}</p>
+                                  )}
+                                </div>
+                              );
+                            })()}
+
                             {b.service_description && (
                               <ExpandableText text={b.service_description} lines={5} />
                             )}
