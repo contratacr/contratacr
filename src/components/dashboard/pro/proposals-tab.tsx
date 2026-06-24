@@ -113,10 +113,9 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
   const [submitting, setSubmitting] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState<Set<string>>(new Set());
   const [projectFilter, setProjectFilter] = useState("activas");
-  // Oportunidades browse: which profession is filtered, which card drives the desktop
-  // detail pane, and the locally-dismissed ("No me interesa") opportunities.
+  // Oportunidades browse: which profession is filtered and the locally-dismissed
+  // ("No me interesa") opportunities.
   const [profFilter, setProfFilter] = useState<string>("");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   // The active profession (no "all"): the chosen one, else the first profession.
   const activeProf = professions.includes(profFilter) ? profFilter : (professions[0] ?? "");
@@ -276,7 +275,6 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
       try { localStorage.setItem(DISMISS_KEY, JSON.stringify([...next])); } catch {}
       return next;
     });
-    setSelectedId((cur) => (cur === id ? null : cur));
     setExpandedProject((cur) => (cur === id ? null : cur));
   }
 
@@ -300,32 +298,16 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
     return t("clientIdentityUnverified");
   }
 
-  // The opportunity DETAIL (Upwork/job-board) — rendered in the desktop right pane AND
-  // inline on mobile (accordion). Header (badges + title + zona·publicada) → "el cliente
-  // espera" callout → description → budget·fecha meta → client → the proposal FORM (tip +
-  // price + message + Enviar + "No me interesa"), or the "ya enviaste" note. Tasteful icons:
-  // GREY for the meta (wallet/calendar/location/clock), BRAND-BLUE for the two accents
-  // (callout + consejo). Same submit handler/state as before.
+  // Expanded opportunity content: only what is NOT already present in the
+  // closed summary card. Summary owns title, budget, zone, timeline, posted time
+  // and client name. Expanded owns description, client identity status and the
+  // proposal form/actions.
   function renderDetail(project: OpenProject) {
     const alreadySubmitted = submitted.has(project.id);
     const form = proposalForms[project.id] ?? { price: "", message: "" };
-    const zona = [project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ");
     return (
       <div className="flex flex-col">
         <div className="flex flex-col gap-4 p-5 sm:p-6">
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-1.5">
-              {isToday(project.created_at) && <Badge variant="success" className="text-[10px] font-semibold">{t("new")}</Badge>}
-              {project.timeline && <Badge variant="muted" className="text-[10px] font-semibold">{project.timeline}</Badge>}
-            </div>
-            <h3 className="mt-1.5 text-[18px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere]">{project.title}</h3>
-            <p className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[12.5px] text-[#6b7280]">
-              {zona && <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5 text-[#374151]" />{zona}</span>}
-              {zona && <span aria-hidden>·</span>}
-              <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5 text-[#374151]" />{t("postedAgo", { time: relativeTime(project.created_at) })}</span>
-            </p>
-          </div>
-
           {project.description && (
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#9ca3af]">{t("projectDescription")}</p>
@@ -333,35 +315,9 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
             </div>
           )}
 
-          <div className="grid grid-cols-1 divide-y divide-[#eef0f2] overflow-hidden rounded-xl border border-[#eef0f2] bg-[#f9fafb] sm:grid-cols-2 sm:divide-x sm:divide-y-0">
-            <div className="flex items-center gap-2.5 px-4 py-3.5">
-              <Coins className="h-4 w-4 shrink-0 text-[#374151]" />
-              <div className="min-w-0">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("budgetLabel")}</p>
-                <p className="text-[13px] font-semibold text-[#0089bb] [overflow-wrap:anywhere]">{budgetTextFor(project)}</p>
-              </div>
-            </div>
-            {project.timeline && (
-              <div className="flex items-center gap-2.5 px-4 py-3.5">
-                <CalendarClock className="h-4 w-4 shrink-0 text-[#374151]" />
-                <div className="min-w-0">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("timelineLabel")}</p>
-                  <p className="text-[13px] font-medium text-[#374151] [overflow-wrap:anywhere]">{project.timeline}</p>
-                </div>
-              </div>
-            )}
-          </div>
-
           {project.profiles?.full_name && (
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#9ca3af]">{t("clientInfo")}</p>
-              <div className="mt-1.5 flex items-center gap-2.5">
-                <Avatar className="h-8 w-8 shrink-0">
-                  <AvatarImage src={project.profiles.avatar_url} className="object-cover" />
-                  <AvatarFallback className="text-[11px] bg-[#EBF5FB] text-[#009FD9] font-bold">{getInitials(project.profiles.full_name)}</AvatarFallback>
-                </Avatar>
-                <p className="min-w-0 truncate text-[13px] font-medium text-[#374151]">{project.profiles.full_name}</p>
-              </div>
               <p className="mt-1 text-[12px] font-medium text-[#6b7280]">
                 {clientIdentityText(project.client_identity_status)}
               </p>
@@ -444,67 +400,51 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                   .filter((p) => !p.category_id || p.category_id === activeProf)
                   .sort((a, b) => Number(matchesServices(b)) - Number(matchesServices(a)));
                 if (list.length === 0) return <p className="text-sm text-[#6b7280] text-center py-12">{t("noneInView")}</p>;
-                // Desktop: the active opportunity drives the right detail pane (default = first).
-                const activeProject = list.find((p) => p.id === selectedId) ?? list[0];
                 const newCount = list.filter((p) => isToday(p.created_at)).length;
                 return (
-                  /* MASTER–DETAIL (Upwork/job-board): a compact LIST on the left + the selected
-                     opportunity's DETAIL on the right (desktop); on mobile it's one column where
-                     tapping a card expands the SAME detail inline (accordion). */
-                  <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)] lg:items-start lg:gap-6">
-                    <div className="flex flex-col gap-3 lg:min-w-0">
-                      <div className="flex items-center justify-between px-1">
-                        <p className="text-[13px] font-semibold text-[#162543]">{t("availableTitle")}</p>
-                        {newCount > 0 && <span className="rounded-full bg-[#EBF5FB] px-2 py-0.5 text-[11px] font-semibold text-[#0089bb]">{t("newCount", { count: newCount })}</span>}
-                      </div>
-                      {list.map((project) => {
-                        const isExpanded = expandedProject === project.id;
-                        const isActive = activeProject?.id === project.id;
-                        const zona = [project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ");
-                        return (
-                          <Card key={project.id} className={cn("transition-shadow hover:shadow-md", isActive && "lg:border-[#009FD9] lg:bg-[#f8fcff] lg:ring-1 lg:ring-[#009FD9]/30")}>
-                            {/* JOB-FOCUSED card (sprint 529): the TITLE is the focal element, the
-                                BUDGET prominent right under it (the pro decides on those two), then a
-                                clean meta row (zona · plazo · relative time), and the CLIENT as a quiet
-                                tertiary footer — so an opportunity reads at a glance as "a job to bid on". */}
-                            <button
-                              type="button"
-                              onClick={() => { setSelectedId(project.id); setExpandedProject(isExpanded ? null : project.id); }}
-                              aria-expanded={isExpanded}
-                              className={cn("flex w-full flex-col gap-2.5 p-4 text-left transition-colors hover:bg-[#fafafa] sm:p-5", isExpanded ? "rounded-t-2xl lg:rounded-2xl" : "rounded-2xl")}
-                            >
-                              {/* Title (focal) + "Nueva" */}
-                              <div className="flex items-start justify-between gap-2.5">
-                                <span className="min-w-0 flex-1 line-clamp-2 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere]">{project.title}</span>
-                                {isToday(project.created_at) && <Badge variant="success" className="shrink-0 text-[10px] font-semibold">{t("new")}</Badge>}
-                              </div>
-                              {/* Budget — the prominent decision number. */}
-                              <p className="text-[15px] font-bold text-[#0089bb] [overflow-wrap:anywhere]">{budgetTextFor(project)}</p>
-                              {/* Meta — zona · plazo · relative time, quiet grey with small icons. */}
-                              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[#6b7280]">
-                                {zona && <span className="inline-flex items-center gap-1 [overflow-wrap:anywhere]"><MapPin className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />{zona}</span>}
-                                {project.timeline && <span className="inline-flex items-center gap-1 [overflow-wrap:anywhere]"><CalendarClock className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />{project.timeline}</span>}
-                                <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />{relativeTime(project.created_at)}</span>
-                              </div>
-                              {/* Client — quiet tertiary footer, separated by a hairline. */}
-                              {project.profiles?.full_name && (
-                                <div className="flex items-center gap-2 border-t border-[#f3f4f6] pt-2.5">
-                                  <Avatar className="h-6 w-6 shrink-0">
-                                    <AvatarImage src={project.profiles?.avatar_url} className="object-cover" />
-                                    <AvatarFallback className="bg-[#EBF5FB] text-[9px] font-bold text-[#009FD9]">{getInitials(project.profiles.full_name)}</AvatarFallback>
-                                  </Avatar>
-                                  <span className="min-w-0 truncate text-[12px] text-[#6b7280]">{project.profiles.full_name}</span>
-                                </div>
-                              )}
-                            </button>
-                            {isExpanded && <div className="border-t border-[#f3f4f6] lg:hidden">{renderDetail(project)}</div>}
-                          </Card>
-                        );
-                      })}
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center justify-between px-1">
+                      <p className="text-[13px] font-semibold text-[#162543]">{t("availableTitle")}</p>
+                      {newCount > 0 && <span className="rounded-full bg-[#EBF5FB] px-2 py-0.5 text-[11px] font-semibold text-[#0089bb]">{t("newCount", { count: newCount })}</span>}
                     </div>
-                    <div className="hidden lg:block lg:sticky lg:top-4">
-                      {activeProject && <Card className="overflow-hidden">{renderDetail(activeProject)}</Card>}
-                    </div>
+                    {list.map((project) => {
+                      const isExpanded = expandedProject === project.id;
+                      const zona = [project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ");
+                      return (
+                        <Card key={project.id} className="transition-shadow hover:shadow-md">
+                          <button
+                            type="button"
+                            onClick={() => setExpandedProject(isExpanded ? null : project.id)}
+                            aria-expanded={isExpanded}
+                            className={cn("flex w-full flex-col gap-2.5 p-4 text-left transition-colors hover:bg-[#fafafa] sm:p-5", isExpanded ? "rounded-t-2xl" : "rounded-2xl")}
+                          >
+                            <div className="flex items-start justify-between gap-2.5">
+                              <span className="min-w-0 flex-1 line-clamp-2 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere]">{project.title}</span>
+                              <span className="flex shrink-0 items-center gap-1.5">
+                                {isToday(project.created_at) && <Badge variant="success" className="text-[10px] font-semibold">{t("new")}</Badge>}
+                                <ChevronDown className={cn("h-4 w-4 text-[#9ca3af] transition-transform", isExpanded && "rotate-180")} />
+                              </span>
+                            </div>
+                            <p className="text-[15px] font-bold text-[#0089bb] [overflow-wrap:anywhere]">{budgetTextFor(project)}</p>
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[#6b7280]">
+                              {zona && <span className="inline-flex items-center gap-1 [overflow-wrap:anywhere]"><MapPin className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />{zona}</span>}
+                              {project.timeline && <span className="inline-flex items-center gap-1 [overflow-wrap:anywhere]"><CalendarClock className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />{project.timeline}</span>}
+                              <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />{relativeTime(project.created_at)}</span>
+                            </div>
+                            {project.profiles?.full_name && (
+                              <div className="flex items-center gap-2 border-t border-[#f3f4f6] pt-2.5">
+                                <Avatar className="h-6 w-6 shrink-0">
+                                  <AvatarImage src={project.profiles?.avatar_url} className="object-cover" />
+                                  <AvatarFallback className="bg-[#EBF5FB] text-[9px] font-bold text-[#009FD9]">{getInitials(project.profiles.full_name)}</AvatarFallback>
+                                </Avatar>
+                                <span className="min-w-0 truncate text-[12px] text-[#6b7280]">{project.profiles.full_name}</span>
+                              </div>
+                            )}
+                          </button>
+                          {isExpanded && <div className="border-t border-[#f3f4f6]">{renderDetail(project)}</div>}
+                        </Card>
+                      );
+                    })}
                   </div>
                 );
               })()}

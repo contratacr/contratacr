@@ -1284,7 +1284,7 @@
     "emptyMineSub": "Browse available opportunities and send your first proposal.",
     "noneInView": "No opportunities in this view.",
     "status": {
-      "pending": "Awaiting reply",
+      "pending": "Pending",
       "accepted": "Accepted",
       "declined": "Declined"
     },
