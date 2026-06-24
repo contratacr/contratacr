@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Plus, Trash2, Pencil, Search, Star } from "lucide-react";
+import { Plus, Trash2, Pencil, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PriceInput } from "@/components/ui/price-input";
 import { Modal } from "@/components/ui/modal";
@@ -313,11 +313,21 @@ export function ServicesEditor({
                         {getCategoryLabel(prof, locale)}
                       </h3>
                       <p className={cn("mt-1.5 text-[13px] font-semibold", isActive ? "text-[#0089bb]" : "text-[#9ca3af]")}>{priceLabel}</p>
-                      {isPrincipal && (
-                        <span className="mt-2 inline-flex w-fit rounded-full bg-[#EBF5FB] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#0089bb]">
-                          {t("principal")}
-                        </span>
-                      )}
+                      <div className="mt-2 min-h-[22px]">
+                        {isPrincipal ? (
+                          <span className="inline-flex h-[22px] w-fit items-center rounded-full bg-[#EBF5FB] px-2 text-[10px] font-bold uppercase tracking-wide text-[#0089bb]">
+                            {t("principal")}
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => makePrincipal(prof)}
+                            className="inline-flex h-[22px] w-fit items-center rounded-full border border-[#e5e7eb] px-2 text-[10px] font-bold uppercase tracking-wide text-[#6b7280] transition-colors hover:border-[#bfdbfe] hover:bg-[#EBF5FB] hover:text-[#0089bb]"
+                          >
+                            {t("makePrincipal")}
+                          </button>
+                        )}
+                      </div>
                     </div>
                     {/* Active/inactive toggle — FAR RIGHT (end of the header row). */}
                     <button
@@ -346,9 +356,8 @@ export function ServicesEditor({
                   )}
 
                   {/* Actions group — separated by a hairline. The PRIMARY "Editar información"
-                      is ISOLATED on the left so it's IDENTICAL on every card (same label, style,
-                      position) regardless of service count; the secondary actions (make-principal ·
-                      delete) are uniform icon buttons in the right cluster. */}
+                      is isolated on the left so it's identical on every card; secondary actions
+                      stay in the right cluster. */}
                   <div className="mt-4 flex items-center gap-1.5 border-t border-[#f3f4f6] pt-3">
                     <button
                       type="button"
@@ -358,17 +367,6 @@ export function ServicesEditor({
                       <Pencil className="h-3.5 w-3.5" /> {t("editInfo")}
                     </button>
                     <div className="ml-auto flex items-center gap-0.5">
-                      {!isPrincipal && (
-                        <button
-                          type="button"
-                          onClick={() => makePrincipal(prof)}
-                          title={t("makePrincipal")}
-                          aria-label={t("makePrincipal")}
-                          className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-[#6b7280] transition-colors hover:bg-[#EBF5FB] hover:text-[#0089bb]"
-                        >
-                          <Star className="h-3.5 w-3.5" /> {t("makePrincipal")}
-                        </button>
-                      )}
                       {professions.length > 1 && (
                         <button
                           type="button"
