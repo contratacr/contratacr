@@ -34,7 +34,7 @@ import { SupportTickets } from "@/components/support/support-tickets";
 import { SubscriptionPanel } from "@/components/dashboard/pro/subscription-panel";
 import { PAYMENTS_ENABLED } from "@/lib/payments/config";
 import { createClient } from "@/lib/supabase/client";
-import { getInitials, proDisplayName } from "@/lib/utils";
+import { getInitials } from "@/lib/utils";
 import { canOffer } from "@/lib/auth/capabilities";
 import { useMode, type Mode } from "@/hooks/use-mode";
 import { notificationContext } from "@/lib/notification-link";
@@ -373,10 +373,9 @@ export default function DashboardPage() {
                 </AvatarFallback>
               </Avatar>
               <div className="min-w-0 flex-1">
-                {/* Mobile shows first name + both surnames; desktop shows the full name. */}
+                {/* Show the full account name; allow wrapping on mobile instead of truncating. */}
                 <h1 className="text-xl sm:text-2xl font-bold leading-tight text-[#162543] [overflow-wrap:anywhere]">
-                  <span className="sm:hidden">{proDisplayName(displayName || "")}</span>
-                  <span className="hidden sm:inline">{displayName}</span>
+                  {displayName}
                 </h1>
                 <div className="mt-1.5 flex min-h-[22px] flex-wrap items-center gap-2">
                   {mode === "offer" && pro && (
