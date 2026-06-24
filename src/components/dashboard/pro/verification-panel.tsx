@@ -2,13 +2,11 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { ShieldCheck, Clock, XCircle, AlertCircle, CheckCircle2, Send, HelpCircle, ArrowRight } from "lucide-react";
+import { ShieldCheck, Send } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
-import { Badge } from "@/components/ui/badge";
 import { Link } from "@/i18n/navigation";
 import { SUPPORT_WHATSAPP_NUMBER } from "@/lib/constants";
 import { caseRef, type VerificationStatus } from "@/lib/verification";
-import { cn } from "@/lib/utils";
 
 interface Props {
   professionalId: string;
@@ -91,25 +89,23 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
     return (
       <div className="space-y-5">
         {status === "rejected" ? (
-          <Banner tone="red" icon={<XCircle className="h-5 w-5" />} title={t("rejectedTitle")}>
+          <StatusText title={t("rejectedTitle")}>
             {reason ? <span className="block">{t("reason", { reason })}</span> : t("noReason")}
             <span className="block mt-1">{t("rejectedNoCrBody")}</span>
-          </Banner>
+          </StatusText>
         ) : status === "under_appeal" ? (
-          <Banner tone="amber" icon={<Clock className="h-5 w-5" />} title={t("underAppealTitle")}>
+          <StatusText title={t("underAppealTitle")}>
             {t("underAppealNoCrBody")}
-          </Banner>
+          </StatusText>
         ) : (
-          <Banner tone="amber" icon={<AlertCircle className="h-5 w-5" />} title={t("unverifiedTitle")}>
+          <StatusText title={t("unverifiedTitle")}>
             {t.rich("noCrUnverifiedBody", rich)}
-          </Banner>
+          </StatusText>
         )}
 
-        {note && <Banner tone="green" icon={<CheckCircle2 className="h-5 w-5" />} title={t("resultTitle")}>{note}</Banner>}
+        {note && <StatusText title={t("resultTitle")}>{note}</StatusText>}
         {error && (
-          <div className="flex items-center gap-2 p-2.5 bg-red-50 border border-red-100 rounded-lg text-xs text-red-600">
-            <AlertCircle className="h-3.5 w-3.5 shrink-0" /> {error}
-          </div>
+          <p className="text-xs font-medium text-red-600 [overflow-wrap:anywhere]">{error}</p>
         )}
 
         {/* WhatsApp follow-up to track the case */}
@@ -157,51 +153,37 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
 
   return (
     <div className="space-y-5">
-      {/* Status banner */}
       {status === "verified" && (
-        <Banner tone="green" icon={<ShieldCheck className="h-5 w-5" />} title={t("verifiedTitle")}>
+        <StatusText title={t("verifiedTitle")}>
           {t.rich("verifiedBody", rich)}
-          {/* Show the actual badge clients see — makes "la insignia Verificado" concrete. */}
-          <span className="mt-3.5 flex">
-            <Badge variant="verified" className="gap-1.5 px-3 py-1 text-[13px]"><ShieldCheck className="h-3.5 w-3.5" /> {t("verifiedChip")}</Badge>
-          </span>
-        </Banner>
+          <span className="mt-2 block text-sm font-semibold text-[#162543]">{t("verifiedChip")}</span>
+        </StatusText>
       )}
       {status === "pending" && (
-        <Banner tone="amber" icon={<AlertCircle className="h-5 w-5" />} title={t("unverifiedTitle")}>
+        <StatusText title={t("unverifiedTitle")}>
           {t.rich("pendingBody", rich)}
-        </Banner>
+        </StatusText>
       )}
       {status === "under_appeal" && (
-        <Banner tone="amber" icon={<Clock className="h-5 w-5" />} title={t("underAppealTitle")}>
+        <StatusText title={t("underAppealTitle")}>
           {t("underAppealBody")}
-        </Banner>
+        </StatusText>
       )}
       {status === "rejected" && (
-        <Banner tone="red" icon={<XCircle className="h-5 w-5" />} title={t("rejectedTitle")}>
+        <StatusText title={t("rejectedTitle")}>
           {reason ? <span className="block">{t("reason", { reason })}</span> : t("noReason")}
           <span className="block mt-1">{t("rejectedBody")}</span>
-        </Banner>
+        </StatusText>
       )}
 
-      {note && (
-        <Banner tone="green" icon={<CheckCircle2 className="h-5 w-5" />} title={t("resultTitle")}>{note}</Banner>
-      )}
-      {error && (
-        <div className="flex items-center gap-2 p-2.5 bg-red-50 border border-red-100 rounded-lg text-xs text-red-600">
-          <AlertCircle className="h-3.5 w-3.5 shrink-0" /> {error}
-        </div>
-      )}
+      {note && <StatusText title={t("resultTitle")}>{note}</StatusText>}
+      {error && <p className="text-xs font-medium text-red-600 [overflow-wrap:anywhere]">{error}</p>}
 
-      {/* "¿Qué es la verificación?" — a clear, tappable link row (help icon + arrow),
-          not a flat grey line, so it reads as a distinct "learn more" affordance. */}
       <Link
         href="/proveedores-autorizados"
-        className="group flex items-center gap-3 rounded-2xl border border-[#e5e7eb] bg-white px-4 py-3.5 text-sm font-medium text-[#374151] shadow-sm transition-all hover:border-[#009FD9] hover:bg-[#f9fbfe] hover:shadow-md"
+        className="inline-flex text-sm font-semibold text-[#009FD9] transition-colors hover:text-[#0089bb] hover:underline"
       >
-        <HelpCircle className="h-5 w-5 shrink-0 text-[#009FD9]" />
-        <span className="flex-1 [overflow-wrap:anywhere]">{t.rich("howItWorks", { link: (c) => <>{c}</> })}</span>
-        <ArrowRight className="h-4 w-4 shrink-0 text-[#9ca3af] transition-transform group-hover:translate-x-0.5" />
+        {t.rich("howItWorks", { link: (c) => <>{c}</> })}
       </Link>
 
       {/* Pending no longer shows a separate "Verificar mi identidad ahora" (re-run the
@@ -288,36 +270,17 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
   );
 }
 
-// Polished status card: a white circular icon badge (icon in the tone colour) beside a
-// bold title + body, on a soft tinted card. Replaces the flat colored box for a cleaner,
-// more premium status treatment (the colour still carries the verified/pending/rejected meaning).
-function Banner({
-  tone,
-  icon,
+function StatusText({
   title,
   children,
 }: {
-  tone: "green" | "gray" | "amber" | "red";
-  icon: React.ReactNode;
   title: string;
   children: React.ReactNode;
 }) {
-  const tones: Record<string, { card: string; badge: string; title: string; body: string }> = {
-    green: { card: "border-[#bbf7d0] bg-[#f0fdf4]", badge: "text-[#16a34a]", title: "text-[#15803d]", body: "text-[#166534]" },
-    gray: { card: "border-[#e5e7eb] bg-[#f9fafb]", badge: "text-[#6b7280]", title: "text-[#374151]", body: "text-[#4b5563]" },
-    amber: { card: "border-[#fde68a] bg-[#fffbeb]", badge: "text-[#d97706]", title: "text-[#92400e]", body: "text-[#92400e]" },
-    red: { card: "border-[#fecaca] bg-[#fef2f2]", badge: "text-[#dc2626]", title: "text-[#b91c1c]", body: "text-[#7f1d1d]" },
-  };
-  const c = tones[tone];
   return (
-    <div className={cn("flex items-start gap-4 rounded-2xl border p-5 sm:p-6", c.card)}>
-      <span className={cn("grid h-12 w-12 shrink-0 place-items-center rounded-full bg-white shadow-sm ring-1 ring-inset ring-black/5", c.badge)}>
-        {icon}
-      </span>
-      <div className="min-w-0 flex-1">
-        <p className={cn("text-[15px] sm:text-base font-bold leading-snug", c.title)}>{title}</p>
-        <div className={cn("mt-1.5 text-sm leading-relaxed [overflow-wrap:anywhere]", c.body)}>{children}</div>
-      </div>
+    <div>
+      <p className="text-[15px] sm:text-base font-bold leading-snug text-[#162543]">{title}</p>
+      <div className="mt-1.5 text-sm leading-relaxed text-[#4b5563] [overflow-wrap:anywhere]">{children}</div>
     </div>
   );
 }
