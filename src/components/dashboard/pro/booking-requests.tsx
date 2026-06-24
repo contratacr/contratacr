@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getWhatsAppLink, getInitials, cn } from "@/lib/utils";
+import { getWhatsAppLink, getInitials, cn, formatRelativeOrDate } from "@/lib/utils";
 import { StatusFilterTabs, SOLICITUD_TABS, solicitudBucket, solicitudStatusRedundant, bucketCounts } from "@/components/dashboard/status-filter-tabs";
 import { CardActionsMenu, type CardAction } from "@/components/dashboard/card-actions-menu";
 import { ExpandableText } from "@/components/ui/expandable-text";
@@ -208,7 +208,7 @@ export function BookingRequests() {
     // booked. Absent → no cédula on file → the "Sin verificar" pill speaks instead.
     const cedulaFmt = booking.client_cedula ? formatId(String(booking.client_cedula)) : null;
     const phoneFmt = formatPhoneCR(booking.client_phone);
-    const requestedDate = new Date(booking.created_at).toLocaleDateString(dateLocale, { day: "numeric", month: "short", year: "numeric" });
+    const requestedDate = formatRelativeOrDate(booking.created_at, locale);
 
     const flaggedPill = booking.profiles?.is_flagged ? (
       <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#b45309] bg-[#fef3c7] px-1.5 py-0.5 rounded-md">

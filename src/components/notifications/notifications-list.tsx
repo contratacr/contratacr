@@ -6,7 +6,7 @@ import { Bell, CheckCheck, Check, Trash2, AlertTriangle } from "lucide-react";
 import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { cn, formatRelativeTime } from "@/lib/utils";
+import { cn, formatRelativeOrDate } from "@/lib/utils";
 import { notificationHref, notificationInMode } from "@/lib/notification-link";
 import { useMode } from "@/hooks/use-mode";
 import { canOffer } from "@/lib/auth/capabilities";
@@ -162,7 +162,7 @@ export function NotificationsList() {
                           every row a uniform, compact height (full text on open). */}
                       <p className={cn("text-sm [overflow-wrap:anywhere] line-clamp-2", n.read ? "font-medium text-[#374151]" : "font-semibold text-[#162543]")}>{n.title}</p>
                       <p className="text-xs text-[#6b7280] mt-0.5 [overflow-wrap:anywhere] line-clamp-2">{n.message}</p>
-                      <p className="text-xs text-[#9ca3af] mt-1">{formatRelativeTime(n.created_at, locale)}</p>
+                      <p className="text-xs text-[#9ca3af] mt-1">{formatRelativeOrDate(n.created_at, locale)}</p>
                     </div>
                   </div>
                 </button>

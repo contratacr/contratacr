@@ -12,7 +12,7 @@ import { Link, useRouter } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { ageCategoryFromDob, computeAge } from "@/lib/age";
-import { getInitials, getWhatsAppLink, cn } from "@/lib/utils";
+import { getInitials, getWhatsAppLink, cn, formatRelativeOrDate } from "@/lib/utils";
 import { StatusFilterTabs, SOLICITUD_TABS, PROYECTO_TABS, solicitudMatches, solicitudBucket, solicitudStatusRedundant, proyectoMatches, proyectoBucket, proyectoStatusRedundant, bucketCounts } from "@/components/dashboard/status-filter-tabs";
 import { CardActionsMenu, type CardAction } from "@/components/dashboard/card-actions-menu";
 import { ExpandableText } from "@/components/ui/expandable-text";
@@ -621,7 +621,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                         {/* Propuestas count + publish date — each with a quiet grey icon, well-spaced. */}
                         <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[#6b7280]">
                           <span className="inline-flex items-center gap-1.5"><Users className="h-3.5 w-3.5 shrink-0 text-[#374151]" /> {t("proposalsCount", { count: proposalCount })}</span>
-                          <span className="inline-flex items-center gap-1.5"><CalendarDays className="h-3.5 w-3.5 shrink-0 text-[#374151]" /> {t("publishedOn", { date: new Date(project.created_at).toLocaleDateString(dateLocale, { day: "numeric", month: "short", year: "numeric" }).replace(".", "") })}</span>
+                          <span className="inline-flex items-center gap-1.5"><CalendarDays className="h-3.5 w-3.5 shrink-0 text-[#374151]" /> {t("publishedOn", { date: formatRelativeOrDate(project.created_at, locale) })}</span>
                         </p>
                         {/* Description preview (collapsed only) — clamped to 2 lines so every
                             list card stays a uniform, compact height; the full text shows when

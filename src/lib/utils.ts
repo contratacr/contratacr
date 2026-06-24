@@ -103,6 +103,27 @@ export function formatRelativeTime(date: string | Date, locale: string = "es"): 
   return d.toLocaleDateString(en ? "en-US" : "es-CR", { day: "numeric", month: "short", year: "numeric" });
 }
 
+/**
+ * Relative time for PANEL date labels (sprint 528): escalates minutes → hours → days, then
+ * shows the ACTUAL DATE once it reaches ~1 week (the owner's spec). Use with a context prefix
+ * ("Enviada {x}", "Solicitada {x}", "Publicado {x}", the opportunity post time, notifications).
+ * Only for PAST events (created/sent/published) — not future appointment dates.
+ */
+export function formatRelativeOrDate(date: string | Date, locale: string = "es"): string {
+  const d = typeof date === "string" ? new Date(date) : date;
+  const en = locale === "en";
+  const sec = Math.floor((Date.now() - d.getTime()) / 1000);
+  if (sec < 60) return en ? "just now" : "hace un momento";
+  const min = Math.floor(sec / 60);
+  if (min < 60) return en ? `${min} minute${min !== 1 ? "s" : ""} ago` : `hace ${min} minuto${min !== 1 ? "s" : ""}`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return en ? `${hr} hour${hr !== 1 ? "s" : ""} ago` : `hace ${hr} hora${hr !== 1 ? "s" : ""}`;
+  const day = Math.floor(hr / 24);
+  if (day < 7) return en ? `${day} day${day !== 1 ? "s" : ""} ago` : `hace ${day} día${day !== 1 ? "s" : ""}`;
+  // ~1 week or more → the actual date (e.g. "22 jun 2026"), never "hace N semanas/meses".
+  return d.toLocaleDateString(en ? "en-US" : "es-CR", { day: "numeric", month: "short", year: "numeric" }).replace(".", "");
+}
+
 export function getInitials(name: string) {
   return name
     .split(" ")

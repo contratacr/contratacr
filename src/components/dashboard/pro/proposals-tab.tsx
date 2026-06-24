@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PriceInput } from "@/components/ui/price-input";
-import { cn, getWhatsAppLink, getInitials } from "@/lib/utils";
+import { cn, getWhatsAppLink, getInitials, formatRelativeOrDate } from "@/lib/utils";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { StatusFilterTabs, PROYECTO_TABS, proposalMatches, proposalBucket, proposalStatusRedundant, bucketCounts } from "@/components/dashboard/status-filter-tabs";
 import { ExpandableText } from "@/components/ui/expandable-text";
@@ -282,14 +282,10 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
   // CR calendar day (so "Nueva" means posted TODAY in Costa Rica, not a UTC day).
   const crDay = (d: Date) => d.toLocaleDateString("en-CA", { timeZone: "America/Costa_Rica" });
   const isToday = (iso: string) => crDay(new Date(iso)) === crDay(new Date());
-  // "hace 1 h" / "hace 3 días" / "hace 2 semanas" / "hace 1 mes" — from the post date.
+  // Relative time → "hace 30 minutos" / "hace 2 horas" / "hace 3 días", then the actual
+  // DATE once it's ~1 week old (shared helper, sprint 528). The "Nueva" badge still flags today.
   function relativeTime(iso: string): string {
-    const hours = Math.floor((Date.now() - new Date(iso).getTime()) / 3600000);
-    if (hours < 24) return t("agoHours", { count: Math.max(1, hours) });
-    const days = Math.floor(hours / 24);
-    if (days < 7) return t("agoDays", { count: days });
-    if (days < 30) return t("agoWeeks", { count: Math.floor(days / 7) });
-    return t("agoMonths", { count: Math.max(1, Math.floor(days / 30)) });
+    return formatRelativeOrDate(iso, locale);
   }
   function budgetTextFor(p: OpenProject): string {
     if (p.budget_min && p.budget_max) return t("range", { min: `₡${p.budget_min.toLocaleString("es-CR")}`, max: `₡${p.budget_max.toLocaleString("es-CR")}` });
@@ -522,7 +518,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                   const wa = p.status === "accepted" && ps !== "cancelled" && phone
                     ? getWhatsAppLink(phone, t("waMessage", { name: (clientName ?? "").split(" ")[0], title: p.projects?.title ?? "" }))
                     : null;
-                  const sentDate = new Date(p.created_at).toLocaleDateString(dateLocale, { day: "numeric", month: "short", year: "numeric" });
+                  const sentDate = formatRelativeOrDate(p.created_at, locale);
                   return (
                     <Card key={p.id} className="hover:shadow-md">
                       {/* COLLAPSED header — client avatar + project title (primary) + a status chip
