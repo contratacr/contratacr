@@ -156,7 +156,6 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
       {status === "verified" && (
         <StatusText title={t("verifiedTitle")}>
           {t.rich("verifiedBody", rich)}
-          <span className="mt-2 block text-sm font-semibold text-[#162543]">{t("verifiedChip")}</span>
         </StatusText>
       )}
       {status === "pending" && (
