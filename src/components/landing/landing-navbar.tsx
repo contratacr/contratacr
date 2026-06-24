@@ -180,59 +180,10 @@ function LanguageInline({ className }: { className?: string }) {
    + mobile drawer); the inline default is used in the navbar bar.
    NO notification badge — context switchers stay clean; notifications live in the
    bell (modern-app practice). */
-function ModeSwitcher({
-  mode, onSwitch, block = false, className,
-}: {
-  mode: Mode;
-  onSwitch: (m: Mode) => void;
-  block?: boolean;
-  className?: string;
-}) {
-  const t = useTranslations("header");
-  const segments: { value: Mode; label: string }[] = [
-    { value: "use", label: t("modeClientShort") },
-    { value: "offer", label: t("modeProShort") },
-  ];
-  function onKeyDown(e: React.KeyboardEvent) {
-    if (e.key === "ArrowLeft") { e.preventDefault(); onSwitch("use"); }
-    else if (e.key === "ArrowRight") { e.preventDefault(); onSwitch("offer"); }
-  }
-  return (
-    <div
-      role="tablist"
-      aria-label={t("modeSwitchAria")}
-      onKeyDown={onKeyDown}
-      className={cn(
-        "inline-flex shrink-0 items-center gap-0.5 rounded-full bg-[#f3f4f6] p-0.5 select-none",
-        block && "flex w-full",
-        className,
-      )}
-    >
-      {segments.map((seg) => {
-        const active = mode === seg.value;
-        return (
-          <button
-            key={seg.value}
-            role="tab"
-            type="button"
-            aria-selected={active}
-            tabIndex={active ? 0 : -1}
-            onClick={() => onSwitch(seg.value)}
-            className={cn(
-              "relative inline-flex items-center justify-center gap-1.5 rounded-full px-3.5 py-1.5 text-[13px] font-semibold whitespace-nowrap transition-all duration-200",
-              block && "flex-1",
-              active
-                ? "bg-[#008ce0] text-white shadow-[0_1px_3px_rgba(0,0,0,0.15)]"
-                : "text-[#6b7280] hover:text-[#162543]",
-            )}
-          >
-            {seg.label}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
+/* The mode switch (Cliente/Profesional segmented control) was REMOVED from the navbar +
+   responsive menu in sprint 518 — it now lives ONLY inside "Mi panel"
+   (`@/components/ui/mode-switcher`). Anyone wanting to switch goes to their panel anyway,
+   and removing it freed the navbar room to restore the "ContrataCR" wordmark on mobile. */
 
 /* ─── Header data ───
    The "Categorías" mega-menu shows a CURATED set of real categories — every
@@ -609,7 +560,6 @@ interface AccountMenuProps {
   notificationsHref: string;
   accountHref: string;
   notifUnread: number;
-  onSwitchMode: (m: Mode) => void;
   onSignOut: () => void;
   onOpen?: () => void;
 }
@@ -618,7 +568,7 @@ function AccountMenu({
   user, isPro, mode, displayName, avatarUrl, avatarReady, initials,
   panelHref, bookingsHref, proposalsHref, sentBookingsHref, sentProjectsHref,
   savedHref, notificationsHref, accountHref, notifUnread,
-  onSwitchMode, onSignOut, onOpen,
+  onSignOut, onOpen,
 }: AccountMenuProps) {
   const t = useTranslations("header");
   const [open, setOpen] = useState(false);
@@ -670,15 +620,9 @@ function AccountMenu({
             <p className="text-xs text-[#9ca3af] truncate">{user.email}</p>
           </div>
 
-          {/* MODE SWITCH — the SAME segmented control (both modes visible, tap to switch).
-              Providers only; a client-only account just sees the "Mi cuenta" heading. */}
-          {isPro ? (
-            <div className="px-3 pt-1 pb-2">
-              <ModeSwitcher mode={mode} onSwitch={(m) => { setOpen(false); onSwitchMode(m); }} block />
-            </div>
-          ) : (
-            <p className="px-3 pt-2 pb-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t("myAccount")}</p>
-          )}
+          {/* Mode switch removed from the account menu (sprint 518) — it lives inside "Mi panel".
+              The menu just shows the "Mi cuenta" heading; its quick links still reflect the mode. */}
+          <p className="px-3 pt-2 pb-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t("myAccount")}</p>
           <a
             href={panelHref}
             onClick={() => setOpen(false)}
@@ -829,20 +773,10 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
   const accountHref = `${panelHref}?tab=cuenta`;
   const notificationsHref = `${panelHref}?tab=notifications`;
 
-  // Airbnb FULL mode switch — flips the whole experience (panel sections + bell).
-  const { mode, setMode } = useMode(isPro);
-  function switchMode(next: Mode) {
-    setMode(next);
-    // Land on the NEW mode's MAIN section — a mode-SPECIFIC tab (not the neutral
-    // "profile"). This is required for correctness: if you switch FROM a mode-specific
-    // tab (e.g. Solicitudes recibidas, an offer-only tab), the panel's deep-link guard
-    // re-derives the mode from the still-current URL tab and would revert the switch the
-    // moment it re-renders. Landing on the destination mode's own tab makes that guard
-    // REINFORCE the new mode (offer→Solicitudes recibidas, use→Mis solicitudes) so the
-    // switch always sticks from ANY section, and you arrive somewhere useful.
-    router.push(next === "offer" ? "/dashboard/profesional?tab=bookings" : "/dashboard/profesional?tab=sent_bookings");
-    setMobileOpen(false);
-  }
+  // Airbnb FULL mode switch — flips the whole experience (panel sections + bell). The
+  // SWITCH UI now lives ONLY inside "Mi panel" (sprint 518); the navbar just READS the
+  // active mode to show the right quick links + bell.
+  const { mode } = useMode(isPro);
 
   // Unread counts, split by mode (the bell handles its own live updates; this refreshes
   // when the menu/drawer opens). Professional + client notifications drive the active-mode
@@ -1037,24 +971,19 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
               style={{ opacity: compact ? 0 : 1, pointerEvents: compact ? "none" : "auto" }}
             >
               <Link href="/" aria-label="ContrataCR inicio" className="shrink-0">
-                {(mobileInline || (user && isPro)) ? (
+                {mobileInline ? (
                   <>
-                    {/* Compact mark on mobile (saves room for the inline search OR the mode
-                        switch), full logo on desktop. */}
+                    {/* Compact mark on mobile ONLY when the inline search is present (it needs the
+                        row); the full logo + wordmark on desktop. */}
                     <ContrataCRMark className="h-8 w-8 lg:hidden" />
                     <span className="hidden lg:inline-flex"><ContrataCRLogo size="lg" /></span>
                   </>
                 ) : (
+                  /* Mode switch left the navbar (sprint 518) → there's room for the FULL logo +
+                     "ContrataCR" wordmark on mobile again. */
                   <ContrataCRLogo size="lg" />
                 )}
               </Link>
-
-              {/* MOBILE mode switch — the SAME SEGMENTED CONTROL right in the navbar bar
-                  (lg:hidden), so providers flip the whole experience without opening any menu.
-                  Both modes visible; only for accounts with both modes. */}
-              {user && isPro && !mobileInline && (
-                <ModeSwitcher mode={mode} onSwitch={switchMode} className="lg:hidden" />
-              )}
 
               {/* MOBILE inline slot (search + filters) — only when provided, only <lg. */}
               {mobileInline && (
@@ -1157,11 +1086,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                         {t("offerServices")}
                       </Link>
                     )}
-                    {/* DESKTOP mode switch — a SEGMENTED CONTROL right in the navbar bar
-                        (providers only): both modes visible, tap to flip the whole experience. */}
-                    {isPro && (
-                      <ModeSwitcher mode={mode} onSwitch={switchMode} className="mr-1" />
-                    )}
+                    {/* Mode switch removed from the navbar (sprint 518) — it lives inside "Mi panel". */}
                     <a
                       href={primaryPanelHref}
                       className="text-sm font-medium px-3 py-2 text-[#374151] hover:text-[#1a2744] transition-colors whitespace-nowrap"
@@ -1186,7 +1111,6 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                       notificationsHref={notificationsHref}
                       accountHref={accountHref}
                       notifUnread={activeUnread}
-                      onSwitchMode={switchMode}
                       onSignOut={handleSignOut}
                       onOpen={refreshNotifUnread}
                     />
@@ -1360,7 +1284,6 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     notificationsHref={notificationsHref}
                     accountHref={accountHref}
                     notifUnread={activeUnread}
-                    onSwitchMode={switchMode}
                     onSignOut={handleSignOut}
                     onOpen={refreshNotifUnread}
                   />
@@ -1442,14 +1365,10 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     <p className="text-xs text-gray-400 truncate">{user.email}</p>
                   </div>
                 </div>
-                {/* MODE SWITCH — the SAME segmented control (both modes visible, tap to switch). */}
-                {isPro ? (
-                  <div className="mb-1.5 px-1">
-                    <ModeSwitcher mode={mode} onSwitch={switchMode} block />
-                  </div>
-                ) : (
-                  <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t("myAccount")}</p>
-                )}
+                {/* Mode switch removed from the responsive menu (sprint 518) — it lives inside
+                    "Mi panel". The drawer just shows the "Mi cuenta" heading; its links reflect
+                    the active mode. */}
+                <p className="px-2 py-1 text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t("myAccount")}</p>
                 <a href={primaryPanelHref} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-2 py-2.5 rounded-lg text-sm font-semibold text-[#111827] hover:bg-gray-50 transition-colors">
                   <LayoutDashboard className="h-4 w-4 text-[#009FD9] shrink-0" /> {t("myPanel")}
                 </a>

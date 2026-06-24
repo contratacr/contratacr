@@ -34,8 +34,9 @@ import { SupportTickets } from "@/components/support/support-tickets";
 import { SubscriptionPanel } from "@/components/dashboard/pro/subscription-panel";
 import { PAYMENTS_ENABLED } from "@/lib/payments/config";
 import { createClient } from "@/lib/supabase/client";
-import { getInitials } from "@/lib/utils";
+import { getInitials, shortDisplayName } from "@/lib/utils";
 import { canOffer } from "@/lib/auth/capabilities";
+import { ModeSwitcher } from "@/components/ui/mode-switcher";
 import { useMode, type Mode } from "@/hooks/use-mode";
 import { notificationContext } from "@/lib/notification-link";
 import { useRouter } from "@/i18n/navigation";
@@ -245,6 +246,15 @@ export default function DashboardPage() {
     requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: "auto" }));
   }
 
+  // The mode switch now lives in the panel header (sprint 518). Switching flips the global
+  // mode AND lands on the destination mode's MAIN tab — which re-asserts the mode via the
+  // urlForcedMode effect, so a switch from ANY section (incl. a mode-specific one) sticks.
+  function handleSwitchMode(next: Mode) {
+    if (next === mode) return;
+    setMode(next);
+    setTab(next === "offer" ? "bookings" : "sent_bookings");
+  }
+
   function handleSaved() {
     setRefreshKey((k) => k + 1);
   }
@@ -341,7 +351,12 @@ export default function DashboardPage() {
                     {mode === "offer" ? t("modeOffer") : t("modeUse")}
                   </p>
                 )}
-                <h1 className="truncate text-2xl font-bold leading-tight text-[#162543]">{displayName}</h1>
+                {/* Mobile shows a SHORT name (first name + first surname) so the official
+                    name never hard-cuts at ~360px; desktop shows the full name. */}
+                <h1 className="truncate text-xl sm:text-2xl font-bold leading-tight text-[#162543]">
+                  <span className="sm:hidden">{shortDisplayName(displayName || "")}</span>
+                  <span className="hidden sm:inline">{displayName}</span>
+                </h1>
                 {mode === "offer" && pro && (
                   <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                     {pro.verification_status === "verified" ? (
@@ -367,21 +382,23 @@ export default function DashboardPage() {
                 )}
               </div>
             </div>
-            {/* Logout lives ONLY in the navbar profile menu — not duplicated here. */}
-            {mode === "offer" && pro?.slug && (
-              <div className="flex items-center gap-2 shrink-0">
-                <Button variant="outline" size="sm" asChild>
-                  <a href={`/es/profesionales/${pro.slug}?preview=1`}>
-                    <ExternalLink className="h-4 w-4" />
-                    {t("viewAsClient")}
-                  </a>
-                </Button>
+            {/* Right header block — the MODE SWITCH (sprint 518: moved here from the navbar;
+                providers only, both worlds in one tap) over the "Ver perfil como cliente"
+                action. Logout lives ONLY in the navbar profile menu. */}
+            {isProvider && (
+              <div className="flex flex-col items-stretch gap-2.5 shrink-0 sm:items-end">
+                <ModeSwitcher mode={mode} onSwitch={handleSwitchMode} />
+                {mode === "offer" && pro?.slug && (
+                  <Button variant="outline" size="sm" asChild className="w-full sm:w-auto">
+                    <a href={`/es/profesionales/${pro.slug}?preview=1`}>
+                      <ExternalLink className="h-4 w-4" />
+                      {t("viewAsClient")}
+                    </a>
+                  </Button>
+                )}
               </div>
             )}
           </div>
-
-          {/* The mode switch lives ONLY in the navbar (a segmented control) now — not here.
-              The panel just reflects the current mode via the header eyebrow above. */}
 
           {/* Offer mode, provider row still loading → spinner (avoids gate flash). */}
           {offerLoading ? (

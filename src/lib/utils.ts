@@ -122,3 +122,14 @@ export function proDisplayName(full: string) {
   if (w.length <= 3) return w.join(" ");
   return `${w[0]} ${w[w.length - 2]} ${w[w.length - 1]}`;
 }
+
+/** SHORT display name for tight spots (e.g. the panel header on mobile, where the full
+ *  official name gets cut off): first given name + FIRST surname only. CR padrón names are
+ *  "Nombre1 [Nombre2] Apellido1 Apellido2" → the first surname is the penultimate word. So
+ *  "Isaac Alberto Sánchez Monge" → "Isaac Sánchez"; "Isaac Sánchez Monge" → "Isaac Sánchez";
+ *  ≤2 words stay as-is ("Isaac Sánchez"); a single word stays as-is. */
+export function shortDisplayName(full: string) {
+  const w = (full ?? "").trim().split(/\s+/).filter(Boolean);
+  if (w.length <= 2) return w.join(" ");
+  return `${w[0]} ${w[w.length - 2]}`;
+}
