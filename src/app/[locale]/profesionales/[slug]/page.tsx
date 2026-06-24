@@ -28,6 +28,7 @@ import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
 import { ReportProfileModal } from "@/components/professionals/report-profile-modal";
 import { createClient } from "@/lib/supabase/client";
 import { ProfessionalSchedule, type ScheduleSlot } from "@/components/professionals/professional-schedule";
+import { BookingModal } from "@/components/booking/booking-modal";
 import { ClientRegistrationModal } from "@/components/auth/client-registration-modal";
 import { SelfActionModal, SELF_MSG } from "@/components/professionals/self-action-modal";
 import { SaveButton, type SavedPro } from "@/components/professionals/save-button";
@@ -97,6 +98,12 @@ export default function ProfilePage({ params }: ProfilePageProps) {
   const [reportOpen, setReportOpen] = useState(false);
   // Own-profile self-actions are blocked with a friendly modal (buttons stay visible).
   const [selfMsg, setSelfMsg] = useState<string | null>(null);
+  // "Solicitar servicio" (per service card) → the SAME existing request flow as the
+  // contact card: bookable pros open the booking modal (registration-gated for guests);
+  // WhatsApp-only pros open WhatsApp. `bookingCat` carries the card's service as context.
+  const [bookingCat, setBookingCat] = useState<string | null>(null);
+  const [bookingOpen, setBookingOpen] = useState(false);
+  const [bookingReg, setBookingReg] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -248,6 +255,18 @@ export default function ProfilePage({ params }: ProfilePageProps) {
   })();
   // A pro viewing their OWN public profile cannot request a service from themselves.
   const isOwn = !!viewerId && viewerId === professional.profileId;
+
+  // "Solicitar servicio" routing — mirrors the contact card's logic: a bookable pro
+  // (public availability + not WhatsApp-only) opens the booking flow (registration-gated
+  // for guests); otherwise it falls back to WhatsApp, exactly as the app handles it.
+  const canBookService = (professional.availabilityPublic ?? true) && (professional.contactPreference ?? "ambas") !== "solo_whatsapp";
+  function requestService(cat: string) {
+    if (isOwn) { setSelfMsg(SELF_MSG.request); return; }
+    setBookingCat(cat);
+    if (!canBookService) { if (waLink) window.open(waLink, "_blank"); return; }
+    if (isAuthenticated) setBookingOpen(true);
+    else setBookingReg(true);
+  }
 
   // Favorites: the SAME system as the /buscar cards. Keyed on `professional.id`
   // (the professionals row id the card also uses), so saving here reflects on the
@@ -541,32 +560,32 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             {cats.map((cat) => {
                               const items = byCat.get(cat) ?? [];
+                              // ONE clean summary per service: its description + price (the model is
+                              // services-only). No icon overlay on the photo; the action is a single
+                              // "Solicitar servicio" that enters the existing request flow.
+                              const rep = items.find((s) => s.description) ?? items.find((s) => s.price) ?? items[0];
+                              const priced = items.find((s) => s.price && (s as { priceType?: string }).priceType !== "a_convenir");
+                              const priceLabel = priced?.price ?? t("priceConsult");
                               return (
                                 <div key={cat} className="flex flex-col overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm transition-shadow hover:shadow-md">
-                                  <ServiceImage categoryId={cat} className="aspect-[16/9]" />
-                                  <div className="flex flex-1 flex-col p-4">
+                                  <ServiceImage categoryId={cat} className="aspect-[16/9]" badge={false} />
+                                  <div className="flex flex-1 flex-col p-5">
                                     <p className="text-[16px] font-bold text-[#162543] [overflow-wrap:anywhere]">{getCategoryLabel(cat, locale)}</p>
-                                    {items.length > 0 ? (
-                                      <div className="mt-2.5 flex flex-col divide-y divide-[#f3f4f6]">
-                                        {items.slice(0, 4).map((s) => (
-                                          <div key={s.id} className="flex items-start justify-between gap-3 py-1.5">
-                                            <div className="min-w-0">
-                                              <p className="text-[13px] font-medium text-[#374151] [overflow-wrap:anywhere]">{s.name}</p>
-                                              {s.description && <p className="line-clamp-1 text-[11px] text-[#9ca3af] [overflow-wrap:anywhere]">{s.description}</p>}
-                                            </div>
-                                            {s.price && <span className="shrink-0 text-[13px] font-semibold text-[#0089bb] [overflow-wrap:anywhere]">{s.price}</span>}
-                                          </div>
-                                        ))}
-                                        {items.length > 4 && <p className="pt-1.5 text-[11px] text-[#9ca3af]">{t("morePrices", { count: items.length - 4 })}</p>}
-                                      </div>
+                                    {rep?.description ? (
+                                      <p className="mt-2 line-clamp-2 text-[13px] leading-relaxed text-[#6b7280] [overflow-wrap:anywhere]">{rep.description}</p>
                                     ) : (
                                       <p className="mt-2 text-[13px] text-[#9ca3af]">{t("askForDetails")}</p>
                                     )}
-                                    {waLink && (
-                                      <a href={waLink} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center justify-center gap-2 rounded-lg bg-[#25d366] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#1da851]">
-                                        {t("serviceContact")}
-                                      </a>
-                                    )}
+                                    <p className="mt-3 text-[15px] font-bold text-[#0089bb] [overflow-wrap:anywhere]">{priceLabel}</p>
+                                    <button
+                                      type="button"
+                                      onClick={() => requestService(cat)}
+                                      className="mt-auto pt-4"
+                                    >
+                                      <span className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#009FD9] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#0089bb]">
+                                        {t("serviceRequest")}
+                                      </span>
+                                    </button>
                                   </div>
                                 </div>
                               );
@@ -783,6 +802,22 @@ export default function ProfilePage({ params }: ProfilePageProps) {
           </div>
         </div>
       </main>
+
+      {/* "Solicitar servicio" (service cards) — the existing booking flow, registration-gated
+          for guests. Carries the card's service as the booking context. */}
+      <ClientRegistrationModal
+        open={bookingReg}
+        onClose={() => setBookingReg(false)}
+        onSuccess={() => { setBookingReg(false); setBookingOpen(true); }}
+        professionalName={professional.fullName}
+      />
+      <BookingModal
+        professional={professional}
+        categoryName={bookingCat ? tCat(bookingCat as Parameters<typeof tCat>[0]) : ""}
+        open={bookingOpen}
+        onClose={() => setBookingOpen(false)}
+        initialCategoryId={bookingCat}
+      />
 
       {reportOpen && (
         <ReportProfileModal

@@ -519,6 +519,8 @@
     "morePrices": "+{count} más",
     "askForDetails": "Escríbeme para conocer los detalles.",
     "serviceContact": "Contactar por WhatsApp",
+    "serviceRequest": "Solicitar servicio",
+    "priceConsult": "A convenir",
     "noServices": "Todavía no hay servicios específicos agregados.",
     "consult": "Consultar",
     "viewLess": "Ver menos",
@@ -1384,7 +1386,13 @@
     "descPlaceholderShort": "¿Qué incluye este servicio?",
     "priceRef": "Precio de referencia",
     "aConsultarLabel": "Precio a consultar (no mostrar monto)",
-    "amountPlaceholder": "12 000"
+    "amountPlaceholder": "12 000",
+    "editInfo": "Editar información",
+    "priceConsult": "A convenir",
+    "noDescriptionYet": "Agrega una breve descripción de lo que ofreces en este servicio.",
+    "offerDescPlaceholder": "¿Qué incluye este servicio? Describe brevemente lo que ofreces.",
+    "emptyTitle": "Aún no ofreces servicios",
+    "emptyHelp": "Agrega los servicios que ofreces desde nuestro catálogo."
   },
   "availabilityEditor": {
     "interval30": "Cada 30 min",

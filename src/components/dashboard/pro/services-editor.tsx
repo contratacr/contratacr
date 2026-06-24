@@ -6,7 +6,6 @@ import { Plus, Trash2, Pencil, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PriceInput } from "@/components/ui/price-input";
 import { Modal } from "@/components/ui/modal";
-import { StatusFilterTabs } from "@/components/dashboard/status-filter-tabs";
 import { ServiceImage } from "@/components/professionals/service-image";
 import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { cn } from "@/lib/utils";
@@ -24,8 +23,8 @@ export type ProService = {
   priceAmount?: number;    // colones (optional)
   priceType?: PricingType; // por_hora | por_proyecto | …
   years?: number;          // years of experience in THIS service (optional)
-  // Which profession this service belongs to (a category id). Defaults to the
-  // primary profession for legacy services created before multi-profession.
+  // Which service (category id) this info belongs to. The model is SERVICES-ONLY:
+  // each service the pro offers = one catalog category, with ONE info object.
   category?: string;
   // Active/inactive toggle (sprint 486). An INACTIVE service is "paused" — kept in the
   // editor but HIDDEN from clients (public profile). Undefined/true = active (back-compat).
@@ -49,15 +48,14 @@ function genId() {
 const PRICE_UNITS = PRICING_TYPES.filter((p) => p.value !== "a_convenir");
 
 interface ServiceFormState {
-  name: string;
   description: string;
   priceUnit: PricingType;   // a non-a_convenir unit (por_hora, por_proyecto, …)
   priceAmount: string;
   aConsultar: boolean;      // "Precio a consultar" → persists as priceType a_convenir
-  years: string;            // preserved from existing data (no input in the new modal)
+  years: string;
 }
 
-const EMPTY_FORM: ServiceFormState = { name: "", description: "", priceUnit: "por_hora", priceAmount: "", aConsultar: false, years: "" };
+const EMPTY_FORM: ServiceFormState = { description: "", priceUnit: "por_hora", priceAmount: "", aConsultar: false, years: "" };
 
 export function ServicesEditor({
   professionalId,
@@ -68,7 +66,6 @@ export function ServicesEditor({
 }: ServicesEditorProps) {
   const locale = useLocale();
   const t = useTranslations("servicesEditor");
-  const rich = { strong: (c: React.ReactNode) => <strong>{c}</strong> };
   const seedProfessions =
     initialProfessions.length > 0
       ? initialProfessions
@@ -76,40 +73,46 @@ export function ServicesEditor({
         ? [primaryCategory]
         : [];
 
+  // The pro's SERVICES = a list of catalog category ids (services-only model).
   const [professions, setProfessions] = useState<string[]>(seedProfessions);
+  // Per-service INFO objects (one per service/category — consolidated on edit).
   const [services, setServices] = useState<ProService[]>(initialServices);
-  // Filter-by-profession: show ONE profession's services at a time (not all on one screen).
-  const [activeProf, setActiveProf] = useState<string>(seedProfessions[0] ?? "");
 
-  // Add-profession picker (modal)
+  // Add-service picker (modal)
   const [showPicker, setShowPicker] = useState(false);
   const [pickerQuery, setPickerQuery] = useState("");
-  // Admin-approved custom categories — selectable as professions too.
+  // Admin-approved custom categories — selectable as services too.
   const customCategories = useCustomCategories();
-  // "¿No ves tu profesión?" lives in the shared <CategorySuggestionBox> (same
-  // component the publicar-proyecto picker uses), so its state is self-contained
-  // and resets each time the modal re-mounts.
   function closePicker() {
     setShowPicker(false);
     setPickerQuery("");
   }
 
-  // Service form (modal). Empty formCategory + null editingId = closed.
-  const [formCategory, setFormCategory] = useState<string>("");
-  const [editingId, setEditingId] = useState<string | null>(null);
+  // Service info form (modal). editCategory = "" → closed.
+  const [editCategory, setEditCategory] = useState<string>("");
   const [form, setForm] = useState<ServiceFormState>(EMPTY_FORM);
   const [formError, setFormError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
   // App-wide autosave: report status to the section title row (inline, no layout shift).
-  // Called BEFORE the early "no professions" return so the hook order stays stable.
   useReportSaveStatus(saving, saved);
 
   const primary = professions[0];
 
   function effectiveCategory(s: ProService): string {
     return s.category ?? primary ?? "";
+  }
+
+  // The single INFO object for a service (the first match; legacy multiples are
+  // consolidated into one the next time the pro saves that service).
+  function serviceInfo(prof: string): ProService | undefined {
+    return services.find((s) => effectiveCategory(s) === prof);
+  }
+  // A service is active unless ALL of its info rows are explicitly inactive.
+  function serviceActive(prof: string): boolean {
+    const items = services.filter((s) => effectiveCategory(s) === prof);
+    return items.length === 0 ? true : items.some((s) => s.active !== false);
   }
 
   async function persist(nextProfessions: string[], nextServices: ProService[]) {
@@ -129,7 +132,8 @@ export function ServicesEditor({
     onSaved?.();
   }
 
-  function addProfession(id: string) {
+  // Add a service from the catalog picker.
+  function addService(id: string) {
     if (!id || professions.includes(id)) return;
     const next = [...professions, id];
     setProfessions(next);
@@ -137,7 +141,7 @@ export function ServicesEditor({
     persist(next, services);
   }
 
-  // Make a profession the PRINCIPAL one (index 0 = principal everywhere).
+  // Make a service the PRINCIPAL one (index 0 = principal everywhere — drives card price).
   function makePrincipal(id: string) {
     if (professions[0] === id) return;
     const next = [id, ...professions.filter((p) => p !== id)];
@@ -145,56 +149,56 @@ export function ServicesEditor({
     persist(next, services);
   }
 
-  function removeProfession(id: string) {
-    if (professions.length <= 1) return; // keep at least one
+  // Remove a service entirely (the category + its info). Keep at least one service.
+  function removeService(id: string) {
+    if (professions.length <= 1) return;
     const next = professions.filter((p) => p !== id);
-    // Reassign any services from the removed profession to the new primary.
-    const nextServices = services.map((s) =>
-      effectiveCategory(s) === id ? { ...s, category: next[0] } : s
-    );
+    const nextServices = services.filter((s) => effectiveCategory(s) !== id);
     setProfessions(next);
     setServices(nextServices);
     persist(next, nextServices);
   }
 
-  function openAdd(category: string) {
-    setEditingId(null);
-    setFormCategory(category);
-    setForm(EMPTY_FORM);
-    setFormError(null);
+  // Toggle a service active/inactive (inactive = paused, hidden from clients). Stored on
+  // the service's info — created on the fly when the service has no info object yet.
+  function toggleServiceActive(prof: string) {
+    const items = services.filter((s) => effectiveCategory(s) === prof);
+    const nextActive = !serviceActive(prof);
+    let next: ProService[];
+    if (items.length === 0) {
+      next = [...services, { id: genId(), name: getCategoryLabel(prof, locale), category: prof, active: nextActive }];
+    } else {
+      next = services.map((s) => (effectiveCategory(s) === prof ? { ...s, active: nextActive } : s));
+    }
+    setServices(next);
+    persist(professions, next);
   }
 
-  function openEdit(svc: ProService) {
-    setEditingId(svc.id);
-    setFormCategory(effectiveCategory(svc));
-    const isAsk = svc.priceType === "a_convenir";
+  // Open the info editor for a service, pre-filled from its current info.
+  function openEditInfo(prof: string) {
+    const rep = serviceInfo(prof);
+    const isAsk = rep?.priceType === "a_convenir";
     setForm({
-      name: svc.name,
-      description: svc.description ?? "",
-      priceUnit: svc.priceType && !isAsk ? svc.priceType : "por_hora",
-      priceAmount: svc.priceAmount != null ? String(svc.priceAmount) : "",
+      description: rep?.description ?? "",
+      priceUnit: rep?.priceType && !isAsk ? rep.priceType : "por_hora",
+      priceAmount: rep?.priceAmount != null ? String(rep.priceAmount) : "",
       aConsultar: isAsk,
-      years: svc.years != null ? String(svc.years) : "",
+      years: rep?.years != null ? String(rep.years) : "",
     });
     setFormError(null);
+    setEditCategory(prof);
   }
 
   function cancelForm() {
-    setEditingId(null);
-    setFormCategory("");
+    setEditCategory("");
     setForm(EMPTY_FORM);
     setFormError(null);
   }
 
-  const formOpen = editingId !== null || formCategory !== "";
+  const formOpen = editCategory !== "";
 
   async function handleFormSave() {
-    if (!form.name.trim()) {
-      setFormError(t("nameRequired"));
-      return;
-    }
-    // Don't silently default to "Consultar precio": require an explicit price OR the
-    // deliberate "Precio a consultar" choice.
+    // Require an explicit price OR the deliberate "Precio a consultar" choice.
     if (!form.aConsultar && !form.priceAmount.trim()) {
       setFormError(t("priceRequired"));
       return;
@@ -208,57 +212,28 @@ export function ServicesEditor({
     const priceDisplay = formatServicePrice(amount, priceType) ?? undefined;
     const years = form.years.trim() ? Number(form.years.replace(/\D/g, "")) : undefined;
 
-    let next: ProService[];
-    if (editingId) {
-      next = services.map((s) =>
-        s.id === editingId
-          ? {
-              ...s,
-              name: form.name.trim(),
-              description: form.description.trim() || undefined,
-              priceAmount: amount,
-              priceType,
-              price: priceDisplay,
-              years,
-              category: formCategory || s.category,
-            }
-          : s
-      );
-    } else {
-      next = [
-        ...services,
-        {
-          id: genId(),
-          name: form.name.trim(),
-          description: form.description.trim() || undefined,
-          priceAmount: amount,
-          priceType,
-          price: priceDisplay,
-          years,
-          category: formCategory || primary,
-        },
-      ];
-    }
+    // Consolidate this service's category to exactly ONE info object — preserving the
+    // existing id (caso de éxito linkage), display name and active state.
+    const rep = serviceInfo(editCategory);
+    const info: ProService = {
+      id: rep?.id ?? genId(),
+      name: rep?.name?.trim() || getCategoryLabel(editCategory, locale),
+      description: form.description.trim() || undefined,
+      priceAmount: amount,
+      priceType,
+      price: priceDisplay,
+      years,
+      category: editCategory,
+      active: rep?.active ?? true,
+    };
+    const next = [...services.filter((s) => effectiveCategory(s) !== editCategory), info];
     setServices(next);
     cancelForm();
     await persist(professions, next);
   }
 
-  async function handleDelete(id: string) {
-    const next = services.filter((s) => s.id !== id);
-    setServices(next);
-    await persist(professions, next);
-  }
-
-  // Toggle a service active/inactive (inactive = paused, hidden from clients).
-  function toggleActive(id: string) {
-    const next = services.map((s) => (s.id === id ? { ...s, active: s.active === false } : s));
-    setServices(next);
-    persist(professions, next);
-  }
-
-  // Professions available to add (taxonomy minus the ones already added), filtered
-  // by the picker's search (label + keywords, accent-insensitive).
+  // Services available to add (taxonomy minus the ones already added), filtered by the
+  // picker's search (label + keywords, accent-insensitive).
   const pickerList = useMemo(() => {
     const base = getAllCategories().filter((c) => !professions.includes(c.id));
     const q = normalizeText(pickerQuery.trim());
@@ -269,10 +244,7 @@ export function ServicesEditor({
     // customCategories in deps so the list refreshes once approved customs load.
   }, [pickerQuery, professions, locale, customCategories]);
 
-  // Group the picker list by category GROUP (Hogar, Salud, Belleza…) with section
-  // headers so a profession is easy to locate. `getAllCategories()` is in group order,
-  // so we can group consecutive items; the search filter applies first, so only
-  // matching items show (under their group headers).
+  // Group the picker list by category GROUP (Hogar, Salud, Belleza…) with section headers.
   const pickerGroups = useMemo(() => {
     const groups: { id: string; items: typeof pickerList }[] = [];
     for (const cat of pickerList) {
@@ -283,161 +255,135 @@ export function ServicesEditor({
     return groups;
   }, [pickerList]);
 
-  // Which profession's services are shown (filter-by-profession; falls back to the first).
-  const shownProf = professions.includes(activeProf) ? activeProf : professions[0];
-  const profTabs = professions.map((p) => ({ id: p }));
-  // Count of precios under each servicio → the count badge on its filter tab.
-  const profCounts = Object.fromEntries(professions.map((p) => [p, services.filter((s) => effectiveCategory(s) === p).length]));
-
-  if (professions.length === 0) {
-    return (
-      <div className="text-center py-8 rounded-xl border-2 border-dashed border-[#e5e7eb]">
-        <p className="text-sm text-[#6b7280]">{t.rich("noProfession", rich)}</p>
-      </div>
-    );
-  }
-
   const inputClass =
     "w-full h-11 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
 
+  // ── The elegant, single list-level "Agregar servicio" action (opens the catalog). ──
+  const addServiceButton = (
+    <button
+      type="button"
+      onClick={() => { setShowPicker(true); setPickerQuery(""); }}
+      className="group flex w-full items-center justify-center gap-2.5 rounded-2xl border border-[#bfdbfe] bg-[#f8fbfe] py-4 text-sm font-bold text-[#0089bb] shadow-sm transition-all hover:border-[#009FD9] hover:bg-[#EBF5FB] hover:shadow"
+    >
+      <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#009FD9] text-white shadow-sm transition-transform group-hover:scale-105">
+        <Plus className="h-4 w-4" strokeWidth={2.5} />
+      </span>
+      {t("addProfession")}
+    </button>
+  );
+
   return (
-    /* ONE clean vertical stack of per-profession CARDS (no master–detail / horizontal tabs).
-       Each profession is a self-contained container: a tinted header (name + "Principal" pill +
-       count + make-principal/remove) over its OWN services list + "Agregar servicio". A single
-       "Agregar profesión" closes the stack. Works the same on mobile + desktop (just narrower). */
     <div className="flex flex-col gap-4">
-      {/* Filter by profession — view ONE profession's services at a time (only when >1). */}
-      {professions.length > 1 && (
-        <StatusFilterTabs tabs={profTabs} value={shownProf} onChange={setActiveProf} labelFor={(id) => getCategoryLabel(id, locale)} counts={profCounts} />
-      )}
-      {professions.filter((p) => professions.length === 1 || p === shownProf).map((prof) => {
-        const i = professions.indexOf(prof);
-        const profServices = services.filter((s) => effectiveCategory(s) === prof);
-        const isPrincipal = i === 0;
-        // Entry price for this profession (cheapest priced service) — a marketplace-style
-        // "Desde ₡X" summary; derived from existing data, shown only when something is priced.
-        const pricedAmounts = profServices.map((s) => s.priceAmount).filter((n): n is number => typeof n === "number" && n > 0);
-        const fromAmount = pricedAmounts.length ? Math.min(...pricedAmounts) : null;
-        return (
-          <section key={prof} className={cn("overflow-hidden rounded-2xl border bg-white shadow-sm", isPrincipal ? "border-[#bfdbfe]" : "border-[#e5e7eb]")}>
-            {/* Image-based services (sprint 512): the category's catalog photo (or branded
-                fallback) banners each servicio card — the same image clients see on the profile. */}
-            <ServiceImage categoryId={prof} className="h-28 w-full" />
-            {/* Profession header — the PRINCIPAL profession gets a subtle brand tint + navy name
-                so the main area the pro offers clearly stands out; the rest stay neutral grey. */}
-            <div className={cn("flex items-start justify-between gap-3 border-b px-4 sm:px-5 py-4", isPrincipal ? "border-[#dcebf6] bg-[#EBF5FB]" : "border-[#eef0f2] bg-[#f9fafb]")}>
-              {/* No icon on the profession — text-only (owner preference). */}
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="text-base font-bold leading-tight text-[#162543] [overflow-wrap:anywhere]">{getCategoryLabel(prof, locale)}</h3>
-                  {isPrincipal && <span className="shrink-0 rounded-full bg-white px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#0089bb] ring-1 ring-inset ring-[#009FD9]/25">{t("principal")}</span>}
-                </div>
-                <p className="mt-1 text-xs text-[#6b7280]">
-                  {t("servicesPublished", { count: profServices.length })}
-                  {fromAmount != null && <> · <span className="font-medium text-[#374151]">{t("priceFrom", { amount: fromAmount.toLocaleString("es-CR") })}</span></>}
-                </p>
-              </div>
-              <div className="flex items-center gap-1.5 shrink-0">
-                {!isPrincipal && (
-                  <button type="button" onClick={() => makePrincipal(prof)} className="rounded-full border border-[#e5e7eb] bg-white px-3 py-1 text-xs font-semibold text-[#0089bb] hover:border-[#009FD9] hover:bg-[#EBF5FB] transition-colors">
-                    {t("makePrincipal")}
-                  </button>
-                )}
-                {professions.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeProfession(prof)}
-                    aria-label={t("removeProfession")}
-                    title={t("removeProfession")}
-                    className="flex h-8 w-8 items-center justify-center rounded-lg text-[#9ca3af] hover:bg-red-50 hover:text-red-500 transition-colors"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* This profession's services */}
-            <div className="flex flex-col gap-2.5 p-3 sm:p-4">
-              {profServices.length === 0 ? (
-                /* Empty → a dashed "add your first service" card that IS the add affordance. */
-                <button
-                  type="button"
-                  onClick={() => openAdd(prof)}
-                  className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-[#bfdbfe] bg-[#f9fafb] px-4 py-7 text-center transition-colors hover:border-[#009FD9] hover:bg-[#EBF5FB]"
+      {professions.length === 0 ? (
+        /* No services yet → a calm, actionable empty state. */
+        <div className="rounded-2xl border border-dashed border-[#dbe3ea] bg-[#fbfcfe] px-6 py-10 text-center">
+          <span className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-[#EBF5FB]">
+            <Plus className="h-6 w-6 text-[#009FD9]" />
+          </span>
+          <p className="text-[15px] font-bold text-[#162543]">{t("emptyTitle")}</p>
+          <p className="mx-auto mt-1 max-w-xs text-sm text-[#6b7280]">{t("emptyHelp")}</p>
+          <div className="mx-auto mt-5 max-w-xs">{addServiceButton}</div>
+        </div>
+      ) : (
+        <>
+          {/* ONE service per card: name + price (focal), description, then clearly grouped
+              actions. No catalog image in the panel (it's for the public profile only). */}
+          <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
+            {professions.map((prof) => {
+              const isPrincipal = professions.indexOf(prof) === 0;
+              const info = serviceInfo(prof);
+              const isActive = serviceActive(prof);
+              const priceLabel = info?.price && info.priceType !== "a_convenir" ? info.price : t("priceConsult");
+              return (
+                <section
+                  key={prof}
+                  className={cn(
+                    "flex flex-col rounded-2xl border bg-white p-4 shadow-sm transition-shadow sm:p-5",
+                    isActive ? "border-[#e5e7eb] hover:shadow-md" : "border-[#e5e7eb] bg-[#fafbfc]"
+                  )}
                 >
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm">
-                    <Plus className="h-5 w-5 text-[#009FD9]" />
-                  </span>
-                  <span className="text-sm font-semibold text-[#0089bb]">{t("addFirstInProfession", { profession: getCategoryLabel(prof, locale) })}</span>
-                  <span className="max-w-xs text-xs text-[#9ca3af]">{t("addFirstHelp")}</span>
-                </button>
-              ) : (
-                <>
-                  {profServices.map((svc) => {
-                    // Active (default) vs paused. Inactive rows dim + read "Inactivo" and are
-                    // hidden from clients on the public profile.
-                    const isActiveSvc = svc.active !== false;
-                    return (
-                    /* ALIGNED row: name left + PRICE right + a muted 1-line brief; ALWAYS-visible
-                       edit/delete; the active/inactive toggle at the FAR RIGHT (end) of the row. */
-                    <div key={svc.id} className={cn("flex items-center gap-2.5 rounded-xl border px-3.5 py-3 transition-colors", isActiveSvc ? "border-[#e5e7eb]" : "border-[#e5e7eb] bg-[#f9fafb]")}>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-baseline gap-3">
-                          <p className={cn("min-w-0 flex-1 truncate text-sm font-semibold", isActiveSvc ? "text-[#162543]" : "text-[#9ca3af]")}>{svc.name}</p>
-                          {svc.price ? (
-                            <span className={cn("shrink-0 text-sm font-semibold", isActiveSvc ? "text-[#0089bb]" : "text-[#9ca3af]")}>{svc.price}</span>
-                          ) : (
-                            <button type="button" onClick={() => openEdit(svc)} className="shrink-0 text-xs font-semibold text-[#b45309] hover:underline">{t("addPrice")}</button>
-                          )}
-                        </div>
-                        {svc.description && <p className="mt-0.5 truncate text-xs text-[#6b7280]">{svc.description}</p>}
+                  {/* Header: focal name + price on the left, active toggle pinned far right. */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className={cn("text-[16px] font-bold leading-tight [overflow-wrap:anywhere]", isActive ? "text-[#162543]" : "text-[#9ca3af]")}>
+                          {getCategoryLabel(prof, locale)}
+                        </h3>
+                        {isPrincipal && (
+                          <span className="shrink-0 rounded-full bg-[#EBF5FB] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#0089bb]">
+                            {t("principal")}
+                          </span>
+                        )}
                       </div>
-                      {/* Edit / delete — ALWAYS visible (not hover-only; works on mobile too). */}
-                      <div className="flex shrink-0 items-center gap-0.5">
-                        <button onClick={() => openEdit(svc)} className="flex h-8 w-8 items-center justify-center rounded-lg text-[#6b7280] hover:bg-[#EBF5FB] hover:text-[#009FD9] transition-colors" title={t("edit")} aria-label={t("edit")}>
-                          <Pencil className="h-3.5 w-3.5" />
-                        </button>
-                        <button onClick={() => handleDelete(svc.id)} className="flex h-8 w-8 items-center justify-center rounded-lg text-[#6b7280] hover:bg-red-50 hover:text-red-500 transition-colors" title={t("delete")} aria-label={t("delete")}>
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                      {/* Active/inactive toggle — FAR RIGHT, end of the row (label on desktop). */}
-                      <button type="button" role="switch" aria-checked={isActiveSvc} onClick={() => toggleActive(svc.id)} className="flex shrink-0 items-center gap-1.5" title={isActiveSvc ? t("svcActive") : t("svcInactive")} aria-label={isActiveSvc ? t("svcActive") : t("svcInactive")}>
-                        <span className={cn("relative h-4 w-7 rounded-full transition-colors", isActiveSvc ? "bg-[#009FD9]" : "bg-[#d1d5db]")}>
-                          <span className={cn("absolute top-0.5 h-3 w-3 rounded-full bg-white transition-all", isActiveSvc ? "left-[14px]" : "left-0.5")} />
-                        </span>
-                        <span className={cn("hidden text-[11px] font-semibold sm:inline", isActiveSvc ? "text-[#16a34a]" : "text-[#9ca3af]")}>{isActiveSvc ? t("svcActive") : t("svcInactive")}</span>
-                      </button>
+                      <p className={cn("mt-1.5 text-[13px] font-semibold", isActive ? "text-[#0089bb]" : "text-[#9ca3af]")}>{priceLabel}</p>
                     </div>
-                    );
-                  })}
+                    {/* Active/inactive toggle — FAR RIGHT (end of the header row). */}
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={isActive}
+                      onClick={() => toggleServiceActive(prof)}
+                      className="flex shrink-0 items-center gap-1.5"
+                      title={isActive ? t("svcActive") : t("svcInactive")}
+                      aria-label={isActive ? t("svcActive") : t("svcInactive")}
+                    >
+                      <span className={cn("relative h-4 w-7 rounded-full transition-colors", isActive ? "bg-[#009FD9]" : "bg-[#d1d5db]")}>
+                        <span className={cn("absolute top-0.5 h-3 w-3 rounded-full bg-white transition-all", isActive ? "left-[14px]" : "left-0.5")} />
+                      </span>
+                      <span className={cn("hidden text-[11px] font-semibold sm:inline", isActive ? "text-[#16a34a]" : "text-[#9ca3af]")}>
+                        {isActive ? t("svcActive") : t("svcInactive")}
+                      </span>
+                    </button>
+                  </div>
 
-                  <button
-                    type="button"
-                    onClick={() => openAdd(prof)}
-                    className="w-full rounded-xl border border-dashed border-[#bfdbfe] py-2.5 text-sm font-semibold text-[#0089bb] hover:border-[#009FD9] hover:bg-[#EBF5FB] transition-colors flex items-center justify-center gap-2"
-                  >
-                    <Plus className="h-4 w-4" /> {t("addService")}
-                  </button>
-                </>
-              )}
-            </div>
-          </section>
-        );
-      })}
+                  {/* Description group — calm supporting text (or a gentle prompt). */}
+                  {info?.description ? (
+                    <p className="mt-3 line-clamp-3 text-[13px] leading-relaxed text-[#6b7280] [overflow-wrap:anywhere]">{info.description}</p>
+                  ) : (
+                    <p className="mt-3 text-[13px] italic leading-relaxed text-[#9ca3af]">{t("noDescriptionYet")}</p>
+                  )}
 
-      {/* Add another profession — ONE clear full-width action below the stack. */}
-      <button
-        type="button"
-        onClick={() => { setShowPicker(true); setPickerQuery(""); }}
-        className="w-full rounded-2xl border border-dashed border-[#cbd5e1] py-3.5 text-sm font-semibold text-[#0089bb] hover:border-[#009FD9] hover:bg-[#EBF5FB] transition-all flex items-center justify-center gap-2"
-      >
-        <Plus className="h-4 w-4" /> {t("addProfession")}
-      </button>
+                  {/* Actions group — separated by a hairline, always visible (mobile too). */}
+                  <div className="mt-4 flex items-center gap-1.5 border-t border-[#f3f4f6] pt-3">
+                    <button
+                      type="button"
+                      onClick={() => openEditInfo(prof)}
+                      className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[13px] font-semibold text-[#0089bb] transition-colors hover:bg-[#EBF5FB]"
+                    >
+                      <Pencil className="h-3.5 w-3.5" /> {t("editInfo")}
+                    </button>
+                    {!isPrincipal && (
+                      <button
+                        type="button"
+                        onClick={() => makePrincipal(prof)}
+                        className="hidden rounded-lg px-2.5 py-1.5 text-[13px] font-semibold text-[#6b7280] transition-colors hover:bg-[#f3f4f6] hover:text-[#374151] sm:inline-flex"
+                      >
+                        {t("makePrincipal")}
+                      </button>
+                    )}
+                    {professions.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeService(prof)}
+                        title={t("removeProfession")}
+                        aria-label={t("removeProfession")}
+                        className="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#9ca3af] transition-colors hover:bg-red-50 hover:text-red-500"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                </section>
+              );
+            })}
+          </div>
 
+          {/* The single, elegant list-level add action. */}
+          {addServiceButton}
+        </>
+      )}
 
-      {/* ── Add-profession picker ─────────────────────────────────────── */}
+      {/* ── Add-service picker (image catalog) ─────────────────────────── */}
       {showPicker && (
         <Modal
           onClose={closePicker}
@@ -458,8 +404,6 @@ export function ServicesEditor({
             </div>
           </div>
           <div className="px-3 py-2 sm:px-4">
-            {/* No match → a clear two-line message that points to the suggestion box below
-                (matches the publicar-proyecto category picker's empty state). */}
             {pickerList.length === 0 ? (
               <div className="px-3 py-4 text-center">
                 <p className="mb-1 text-sm font-medium text-[#374151]">{t("pickerNoResults")}</p>
@@ -471,14 +415,13 @@ export function ServicesEditor({
                   <p className="px-1 pt-2.5 pb-2 text-[10px] font-bold uppercase tracking-wider text-[#9ca3af]">
                     {getCategoryGroupLabel(g.id, locale)}
                   </p>
-                  {/* Image-based catalog browse (sprint 514): each category is a photo tile (real
-                      catalog image or branded fallback) — tap to add it as a servicio. */}
+                  {/* Image-based catalog browse: each category is a photo tile — tap to add it. */}
                   <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
                     {g.items.map((cat) => (
                       <button
                         key={cat.id}
                         type="button"
-                        onClick={() => addProfession(cat.id)}
+                        onClick={() => addService(cat.id)}
                         className="group flex flex-col overflow-hidden rounded-xl border border-[#e5e7eb] bg-white text-left transition-all hover:border-[#009FD9] hover:shadow-sm"
                       >
                         <ServiceImage categoryId={cat.id} className="aspect-[16/10]" badge={false} />
@@ -493,10 +436,7 @@ export function ServicesEditor({
               ))
             )}
 
-            {/* "¿No ves tu profesión?" — the SAME shared component the
-                publicar-proyecto picker uses: type → submit → admin reviews →
-                on approval it becomes a real, selectable profession. No "otro"
-                selectable, so there's no "otro"-to-"otro" auto-matching. */}
+            {/* "¿No ves tu servicio?" — type → submit → admin reviews → becomes selectable. */}
             <CategorySuggestionBox
               className="mt-1"
               notListedLabel={t("notListed")}
@@ -510,18 +450,18 @@ export function ServicesEditor({
         </Modal>
       )}
 
-      {/* ── Add / edit service ────────────────────────────────────────── */}
+      {/* ── Edit a service's information ──────────────────────────────── */}
       {formOpen && (
         <Modal
           onClose={cancelForm}
-          title={editingId ? t("editService") : t("newServiceShort")}
-          subtitle={t("inProfession", { profession: getCategoryLabel(formCategory, locale) })}
+          title={t("editInfo")}
+          subtitle={getCategoryLabel(editCategory, locale)}
           closeLabel={t("cancel")}
           footer={
             <>
               <Button type="button" variant="outline" onClick={cancelForm}>{t("cancel")}</Button>
-              <Button type="button" onClick={handleFormSave} loading={saving} disabled={!form.name.trim() || saving}>
-                {editingId ? t("saveChanges") : t("addServiceBtn")}
+              <Button type="button" onClick={handleFormSave} loading={saving} disabled={saving}>
+                {t("saveChanges")}
               </Button>
             </>
           }
@@ -532,27 +472,15 @@ export function ServicesEditor({
             )}
 
             <div>
-              <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("nameField")}</label>
-              <input
-                className={inputClass}
-                placeholder={formCategory === "otro" ? t("otherNamePlaceholder") : t("namePlaceholderShort")}
-                value={form.name}
-                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                autoFocus
-              />
-              {/* For "otro", clarify it's free text AND that clients find it by searching. */}
-              {formCategory === "otro" && (
-                <p className="mt-1.5 text-xs text-[#9ca3af]">{t("otherHelp")}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-[#374151]">{t("descBrief")}</label>
+              <label className="mb-1.5 block text-sm font-medium text-[#374151]">
+                {t("descBrief")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
+              </label>
               <textarea
-                className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] min-h-[88px] resize-none focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
-                placeholder={t("descPlaceholderShort")}
+                className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] min-h-[96px] resize-none focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+                placeholder={t("offerDescPlaceholder")}
                 value={form.description}
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+                autoFocus
               />
             </div>
 
@@ -586,6 +514,19 @@ export function ServicesEditor({
                 />
                 <span className="text-sm text-[#374151]">{t("aConsultarLabel")}</span>
               </label>
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-[#374151]">
+                {t("yearsLabel")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
+              </label>
+              <input
+                className={inputClass}
+                inputMode="numeric"
+                placeholder={t("yearsPlaceholder")}
+                value={form.years}
+                onChange={(e) => setForm((f) => ({ ...f, years: e.target.value.replace(/\D/g, "") }))}
+              />
             </div>
           </div>
         </Modal>

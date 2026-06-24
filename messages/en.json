@@ -519,6 +519,8 @@
     "morePrices": "+{count} more",
     "askForDetails": "Message me for the details.",
     "serviceContact": "Contact on WhatsApp",
+    "serviceRequest": "Request service",
+    "priceConsult": "On request",
     "noServices": "No specific services added yet.",
     "consult": "Ask",
     "viewLess": "Show less",
@@ -1384,7 +1386,13 @@
     "descPlaceholderShort": "What does this service include?",
     "priceRef": "Reference price",
     "aConsultarLabel": "Price on request (don't show amount)",
-    "amountPlaceholder": "12 000"
+    "amountPlaceholder": "12 000",
+    "editInfo": "Edit details",
+    "priceConsult": "On request",
+    "noDescriptionYet": "Add a short description of what you offer in this service.",
+    "offerDescPlaceholder": "What does this service include? Briefly describe what you offer.",
+    "emptyTitle": "You don't offer any services yet",
+    "emptyHelp": "Add the services you offer from our catalog."
   },
   "availabilityEditor": {
     "interval30": "Every 30 min",
