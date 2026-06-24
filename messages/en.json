@@ -2095,6 +2095,7 @@
     "noCedula": "I don't have an ID",
     "noCedulaNotice": "You'll send your request <strong>without a verified ID</strong>. The professional will see that and decide whether to contact you.",
     "haveCedula": "I have an ID",
+    "savedCedulaNotice": "We'll use the <strong>ID saved on your account</strong> for this request.",
     "identityPendingNotice": "Request published. Your ID is pending review and professionals will see that status.",
     "identityUnverifiedNotice": "Request published. We could not confirm that ID in the registry; your identity will appear as unverified.",
     "provincia": "Province",

@@ -49,6 +49,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
   const [identityLookup, setIdentityLookup] = useState<"idle" | "loading" | "found" | "notfound">("idle");
   const [officialName, setOfficialName] = useState("");
   const [noCedula, setNoCedula] = useState(false);
+  const [savedCedula, setSavedCedula] = useState("");
   const [published, setPublished] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const { user } = useAuth();
@@ -87,7 +88,10 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
       if (!active) return;
       setPhone(p);
       if (fullName) setClientName(fullName);
-      setForm((f) => (f.cedula ? f : { ...f, cedula }));
+      if (cedula) {
+        setSavedCedula(cedula);
+        setForm((f) => (f.cedula ? f : { ...f, cedula }));
+      }
       setPhoneOnProfile(onProfile);
       setNeedsPhone(!p);
     })();
@@ -149,7 +153,8 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
     if (!form.categoryId) { setError(t("errCategory")); return; }
     if (!form.title.trim()) { setError(t("errTitle")); return; }
     if (!form.description.trim()) { setError(t("errDescription")); return; }
-    if (!noCedula && !isValidId(form.cedula)) { setError(t("errCedula")); return; }
+    const cedulaForSubmit = savedCedula || form.cedula;
+    if (!savedCedula && !noCedula && !isValidId(cedulaForSubmit)) { setError(t("errCedula")); return; }
     if (needsPhone && phone.replace(/\D/g, "").length < 8) { setError(t("errPhone")); return; }
 
     setSubmitting(true);
@@ -172,7 +177,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
           budgetMin: form.budgetMin || null,
           budgetMax: form.budgetMax || null,
           timeline: form.timeline || null,
-          cedula: noCedula ? "" : form.cedula,
+          cedula: noCedula && !savedCedula ? "" : cedulaForSubmit,
           fullName: clientName,
         }),
       });
@@ -288,7 +293,13 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
               )}
             </div>
 
-            {!noCedula && (
+            {savedCedula ? (
+              <div className="rounded-lg bg-[#f9fafb] border border-[#e5e7eb] px-3 py-2.5">
+                <p className="text-xs text-[#6b7280] leading-snug break-words">
+                  {t.rich("savedCedulaNotice", { strong: (c) => <strong>{c}</strong> })}
+                </p>
+              </div>
+            ) : !noCedula && (
               <>
                 <CedulaInput
                   value={form.cedula}
@@ -314,7 +325,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
                 </button>
               </>
             )}
-            {noCedula && (
+            {!savedCedula && noCedula && (
               <div className="rounded-lg bg-[#f9fafb] border border-[#e5e7eb] px-3 py-2.5 flex items-start gap-2">
                 <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5 text-[#6b7280]" />
                 <div className="text-xs text-[#6b7280] leading-snug break-words">
