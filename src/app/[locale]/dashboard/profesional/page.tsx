@@ -347,7 +347,7 @@ export default function DashboardPage() {
       >
         <Repeat2 className="h-[22px] w-[22px]" />
         <span className="max-w-full truncate text-[10px] font-semibold leading-none">
-          {next === "offer" ? t("panelProfessionalShort") : t("panelClientShort")}
+          {next === "offer" ? t("panelProfessional") : t("panelClient")}
         </span>
       </button>
     );
