@@ -7,9 +7,10 @@ import { Button } from "@/components/ui/button";
 import { PriceInput } from "@/components/ui/price-input";
 import { Modal } from "@/components/ui/modal";
 import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
+import { CategoryGroupPicker, type CategoryPickerGroup } from "@/components/ui/category-group-picker";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import { getCategoryLabel, getCategoryGroupLabel, getAllCategories, normalizeText } from "@/lib/data/categories";
+import { getCategoryLabel, getAllCategories, normalizeText } from "@/lib/data/categories";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import { PRICING_TYPES, formatServicePrice, type PricingType } from "@/lib/pricing";
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
@@ -80,11 +81,13 @@ export function ServicesEditor({
   // Add-service picker (modal)
   const [showPicker, setShowPicker] = useState(false);
   const [pickerQuery, setPickerQuery] = useState("");
+  const [activePickerGroupId, setActivePickerGroupId] = useState<string | null>(null);
   // Admin-approved custom categories — selectable as services too.
   const customCategories = useCustomCategories();
   function closePicker() {
     setShowPicker(false);
     setPickerQuery("");
+    setActivePickerGroupId(null);
   }
 
   // Service info form (modal). editCategory = "" → closed.
@@ -246,8 +249,8 @@ export function ServicesEditor({
   }, [pickerQuery, professions, locale, customCategories]);
 
   // Group the picker list by category GROUP (Hogar, Salud, Belleza…) with section headers.
-  const pickerGroups = useMemo(() => {
-    const groups: { id: string; items: typeof pickerList }[] = [];
+  const pickerGroups = useMemo<CategoryPickerGroup[]>(() => {
+    const groups: CategoryPickerGroup[] = [];
     for (const cat of pickerList) {
       const last = groups[groups.length - 1];
       if (last && last.id === cat.groupId) last.items.push(cat);
@@ -263,7 +266,7 @@ export function ServicesEditor({
   const addServiceButton = (
     <button
       type="button"
-      onClick={() => { setShowPicker(true); setPickerQuery(""); }}
+      onClick={() => { setShowPicker(true); setPickerQuery(""); setActivePickerGroupId(null); }}
       className="group flex w-full items-center justify-center gap-2.5 rounded-2xl border border-[#bfdbfe] bg-[#f8fbfe] py-4 text-sm font-bold text-[#0089bb] shadow-sm transition-all hover:border-[#009FD9] hover:bg-[#EBF5FB] hover:shadow"
     >
       <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#009FD9] text-white shadow-sm transition-transform group-hover:scale-105">
@@ -404,7 +407,7 @@ export function ServicesEditor({
               <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9ca3af]" />
               <input
                 value={pickerQuery}
-                onChange={(e) => setPickerQuery(e.target.value)}
+                onChange={(e) => { setPickerQuery(e.target.value); setActivePickerGroupId(null); }}
                 placeholder={t("pickerSearch")}
                 autoFocus
                 className="w-full h-11 rounded-xl border border-[#e5e7eb] bg-white pl-9 pr-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
@@ -417,30 +420,31 @@ export function ServicesEditor({
                 <p className="mb-1 text-sm font-medium text-[#374151]">{t("pickerNoResults")}</p>
                 <p className="text-xs text-[#9ca3af]">{t("pickerNoResultsHint")}</p>
               </div>
+            ) : pickerQuery.trim() ? (
+              <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                {pickerList.map((cat) => (
+                  <button
+                    key={cat.id}
+                    type="button"
+                    onClick={() => addService(cat.id)}
+                    className="group flex items-center justify-between gap-2 rounded-xl border border-[#e5e7eb] bg-white px-3.5 py-2.5 text-left text-sm font-medium text-[#374151] transition-all hover:border-[#009FD9] hover:bg-[#f8fbfe] hover:text-[#0089bb]"
+                  >
+                    <span className="min-w-0 [overflow-wrap:anywhere]">{getCategoryLabel(cat.id, locale)}</span>
+                    <Plus className="h-4 w-4 shrink-0 text-[#009FD9]" />
+                  </button>
+                ))}
+              </div>
             ) : (
-              pickerGroups.map((g) => (
-                <div key={g.id} className="mb-3 last:mb-0">
-                  <p className="px-1 pt-2.5 pb-2 text-[10px] font-bold uppercase tracking-wider text-[#9ca3af]">
-                    {getCategoryGroupLabel(g.id, locale)}
-                  </p>
-                  {/* Clean TEXT catalog (no images in the panel — sprint 519): each category is a
-                      tidy row; tap to add it (then you go straight to editing its info). Images
-                      live only on the landing carousel + the public profile. */}
-                  <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-                    {g.items.map((cat) => (
-                      <button
-                        key={cat.id}
-                        type="button"
-                        onClick={() => addService(cat.id)}
-                        className="group flex items-center justify-between gap-2 rounded-xl border border-[#e5e7eb] bg-white px-3.5 py-2.5 text-left text-sm font-medium text-[#374151] transition-all hover:border-[#009FD9] hover:bg-[#f8fbfe] hover:text-[#0089bb]"
-                      >
-                        <span className="line-clamp-1 [overflow-wrap:anywhere]">{getCategoryLabel(cat.id, locale)}</span>
-                        <Plus className="h-4 w-4 shrink-0 text-[#009FD9]" />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              ))
+              <CategoryGroupPicker
+                groups={pickerGroups}
+                activeGroupId={activePickerGroupId}
+                onActiveGroupChange={setActivePickerGroupId}
+                onSelect={addService}
+                backLabel={t("pickerBack")}
+                countLabel={(count) => t("pickerOptionsCount", { count })}
+                optionAction={<Plus className="h-4 w-4 shrink-0 text-[#009FD9]" />}
+                optionClassName="rounded-xl border border-[#e5e7eb] bg-white hover:border-[#009FD9] hover:bg-[#f8fbfe]"
+              />
             )}
 
             {/* "¿No ves tu servicio?" — type → submit → admin reviews → becomes selectable. */}

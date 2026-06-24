@@ -7,6 +7,7 @@ import { Search, X, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAnchoredPosition } from "@/components/ui/anchored-dropdown";
 import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
+import { CategoryGroupPicker, type CategoryPickerGroup } from "@/components/ui/category-group-picker";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import {
   CATEGORY_GROUPS,
@@ -39,6 +40,7 @@ export function CategorySearch({
   const customCategories = useCustomCategories();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -59,6 +61,7 @@ export function CategorySearch({
       if (containerRef.current?.contains(t) || panelRef.current?.contains(t)) return;
       setOpen(false);
       setQuery("");
+      setActiveGroupId(null);
     }
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -67,7 +70,7 @@ export function CategorySearch({
   // Close on Escape
   useEffect(() => {
     function handler(e: KeyboardEvent) {
-      if (e.key === "Escape") { setOpen(false); setQuery(""); }
+      if (e.key === "Escape") { setOpen(false); setQuery(""); setActiveGroupId(null); }
     }
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
@@ -77,6 +80,7 @@ export function CategorySearch({
     onChange(id);
     setOpen(false);
     setQuery("");
+    setActiveGroupId(null);
   }
 
   function handleClear(e: React.MouseEvent) {
@@ -84,6 +88,7 @@ export function CategorySearch({
     onChange("");
     setQuery("");
     setOpen(false);
+    setActiveGroupId(null);
   }
 
   function openDropdown() {
@@ -120,6 +125,10 @@ export function CategorySearch({
         ...CATEGORY_GROUPS.map((g) => [g.label, g.items.map((i) => ({ ...i, groupId: g.id, groupLabel: g.label }))] as [string, typeof results]),
         ...(customCategories.length ? [["Otras categorías", customCategories] as [string, typeof results]] : []),
       ];
+  const browseGroups: CategoryPickerGroup[] = [
+    ...CATEGORY_GROUPS.map((g) => ({ id: g.id, label: g.label, items: g.items })),
+    ...(customCategories.length ? [{ id: "otras", label: "Otras categorías", items: customCategories }] : []),
+  ];
 
   return (
     <div ref={containerRef} className={cn("relative", className)}>
@@ -196,7 +205,7 @@ export function CategorySearch({
                 <p className="text-xs text-[#9ca3af]">{t("noResultsHint")}</p>
               </div>
             ) : (
-              grouped.map(([groupLabel, items]) => (
+              query ? grouped.map(([groupLabel, items]) => (
                 <div key={groupLabel}>
                   <p className="px-3 pt-3 pb-1 text-[10px] font-bold text-[#9ca3af] uppercase tracking-widest">
                     {items[0]?.groupId ? getCategoryGroupLabel(items[0].groupId, locale) : groupLabel}
@@ -221,7 +230,17 @@ export function CategorySearch({
                     </button>
                   ))}
                 </div>
-              ))
+              )) : (
+                <CategoryGroupPicker
+                  groups={browseGroups}
+                  activeGroupId={activeGroupId}
+                  onActiveGroupChange={setActiveGroupId}
+                  onSelect={handleSelect}
+                  selectedId={value}
+                  backLabel={t("back")}
+                  countLabel={(count) => t("optionsCount", { count })}
+                />
+              )
             )}
 
             {/* "¿No ves tu categoría?" — the ONE escape hatch (no selectable

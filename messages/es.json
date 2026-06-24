@@ -347,7 +347,9 @@
     "sending": "Enviando…",
     "send": "Enviar",
     "cancel": "Cancelar",
-    "notListed": "Sugerir categoría"
+    "notListed": "Sugerir categoría",
+    "back": "Volver a categor?as",
+    "optionsCount": "{count, plural, one {# opci?n} other {# opciones}}"
   },
   "gallery": {
     "workAlt": "Trabajo {n}",
@@ -1398,7 +1400,9 @@
     "noDescriptionYet": "Agrega una breve descripción de lo que ofreces en este servicio.",
     "offerDescPlaceholder": "¿Qué incluye este servicio? Describe brevemente lo que ofreces.",
     "emptyTitle": "Aún no ofreces servicios",
-    "emptyHelp": "Agrega los servicios que ofreces desde nuestro catálogo."
+    "emptyHelp": "Agrega los servicios que ofreces desde nuestro catálogo.",
+    "pickerBack": "Volver a categor?as",
+    "pickerOptionsCount": "{count, plural, one {# opci?n} other {# opciones}}"
   },
   "availabilityEditor": {
     "interval30": "Cada 30 min",
@@ -2318,7 +2322,8 @@
     "suggestSend": "Enviar",
     "suggestSending": "Enviando…",
     "cancel": "Cancelar",
-    "suggestThanks": "Gracias. Enviamos tu sugerencia al equipo para revisión."
+    "suggestThanks": "Gracias. Enviamos tu sugerencia al equipo para revisión.",
+    "optionsCount": "{count, plural, one {# opci?n} other {# opciones}}"
   },
   "comoFunciona": {
     "eyebrow": "Cómo funciona",

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -21,6 +22,7 @@ import {
   CalendarDays,
   Shield,
   Car,
+  ChevronDown,
 } from "lucide-react";
 
 const GROUPS = [
@@ -121,6 +123,7 @@ export default function CategoriasPage() {
   const t = useTranslations("categories");
   const tg = useTranslations("categoryGroups");
   const tp = useTranslations("categoriesPage");
+  const [activeGroup, setActiveGroup] = useState<string | null>(null);
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
@@ -148,21 +151,32 @@ export default function CategoriasPage() {
       {/* Categories by group */}
       <section className="pb-24 px-4 bg-[#f4f7fa]">
         <div className="mx-auto max-w-6xl pt-8 flex flex-col gap-10">
-          {GROUPS.map((group, gi) => (
+          {GROUPS.map((group, gi) => {
+            const open = activeGroup === group.key;
+            return (
             <FadeInUp key={group.key} delay={gi * 30}>
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                 {/* Group header */}
-                <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100 bg-[#f8fafc]">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#EBF5FB]">
+                <button
+                  type="button"
+                  onClick={() => setActiveGroup(open ? null : group.key)}
+                  aria-expanded={open}
+                  className="flex w-full items-center gap-3 px-5 py-4 text-left transition-colors hover:bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#009FD9]/20 sm:px-6"
+                >
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#EBF5FB]">
                     <group.Icon className="h-5 w-5 text-[#009FD9]" />
                   </div>
-                  <h2 className="text-base font-bold text-[#1a2744]">
-                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                    {tg(group.key as any)}
-                  </h2>
-                </div>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-base font-bold text-[#1a2744] [overflow-wrap:anywhere]">
+                      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                      {tg(group.key as any)}
+                    </span>
+                    <span className="mt-0.5 block text-xs text-gray-400">{tp("optionsCount", { count: group.ids.length })}</span>
+                  </span>
+                  <ChevronDown className={`h-4 w-4 shrink-0 text-[#009FD9] transition-transform ${open ? "rotate-180" : ""}`} />
+                </button>
                 {/* Category links grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-0 divide-x divide-y divide-gray-50">
+                {open && <div className="grid grid-cols-1 gap-0 divide-y divide-gray-50 border-t border-gray-100 sm:grid-cols-2 sm:divide-x md:grid-cols-3 lg:grid-cols-4">
                   {group.ids.map((id) => (
                     <Link
                       key={id}
@@ -173,10 +187,10 @@ export default function CategoriasPage() {
                       {t(id as any)}
                     </Link>
                   ))}
-                </div>
+                </div>}
               </div>
             </FadeInUp>
-          ))}
+          )})}
           {/* "¿No ves tu categoría?" — a contained, intentional card (icon + heading +
               description + a clear CTA), NOT a loose link under a divider. The id is the
               scroll target the hero search jumps to when a search has no matches. */}

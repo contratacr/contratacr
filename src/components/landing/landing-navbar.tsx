@@ -19,6 +19,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
 import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
+import { CategoryGroupPicker } from "@/components/ui/category-group-picker";
 import { SupportLink } from "@/components/support/support-link";
 import { ALL_CATEGORIES, CATEGORY_GROUPS, searchCategories, normalizeText, getCategoryLabel, getCategoryGroupLabel } from "@/lib/data/categories";
 import { searchLocations, resolveLocation, type LocationSuggestion } from "@/lib/data/location-search";
@@ -381,6 +382,7 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
   const router = useRouter();
   const [q, setQ] = useState("");
   const [active, setActive] = useState(0);
+  const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const matches = useMemo(() => matchCategories(q, 18), [q]);
   const filtering = q.trim().length > 0;
@@ -392,6 +394,7 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
     else if (q.trim()) router.push(`/buscar?q=${encodeURIComponent(q.trim())}`);
     else router.push("/buscar");
     setQ("");
+    setActiveGroupId(null);
     onNavigate();
   }
   function onKeyDown(e: React.KeyboardEvent) {
@@ -414,14 +417,14 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
           ref={inputRef}
           type="text"
           value={q}
-          onChange={(e) => setQ(e.target.value)}
+          onChange={(e) => { setQ(e.target.value); setActiveGroupId(null); }}
           onKeyDown={onKeyDown}
           placeholder={t("searchServicePlaceholder")}
           aria-label={t("searchServiceAria")}
           className="ml-2 min-w-0 flex-1 bg-transparent text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none"
         />
         {q && (
-          <button type="button" onClick={() => { setQ(""); inputRef.current?.focus(); }} className="ml-2 text-gray-400 hover:text-gray-600" aria-label={ts("cancel")}>
+          <button type="button" onClick={() => { setQ(""); setActiveGroupId(null); inputRef.current?.focus(); }} className="ml-2 text-gray-400 hover:text-gray-600" aria-label={ts("cancel")}>
             <X className="h-4 w-4" />
           </button>
         )}
@@ -464,26 +467,15 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
           </div>
         )
       ) : (
-        // The COMPLETE catalog organized by GROUP (all 12 catalog groups, each a section with
-        // its categories) — a multi-column flow + scroll so the full list is browsable + scannable.
-        <div className="max-h-[64vh] overflow-y-auto pr-1 [column-count:3] [column-gap:1.5rem]">
-          {CATEGORY_GROUPS.map((g) => (
-            <div key={g.id} className="mb-5 break-inside-avoid">
-              <h4 className="mb-2.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">{getCategoryGroupLabel(g.id, locale)}</h4>
-              <ul className="space-y-2">
-                {g.items.map((it) => (
-                  <li key={it.id}>
-                    <button
-                      onClick={() => go(it.id)}
-                      className="block text-left text-[13px] leading-tight text-gray-600 transition-colors hover:text-[#009FD9]"
-                    >
-                      {getCategoryLabel(it.id, locale)}
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+        <div className="max-h-[64vh] overflow-y-auto pr-1">
+          <CategoryGroupPicker
+            groups={CATEGORY_GROUPS}
+            activeGroupId={activeGroupId}
+            onActiveGroupChange={setActiveGroupId}
+            onSelect={go}
+            backLabel={ts("back")}
+            countLabel={(count) => ts("optionsCount", { count })}
+          />
         </div>
       )}
 
