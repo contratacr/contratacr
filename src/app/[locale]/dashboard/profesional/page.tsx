@@ -34,7 +34,7 @@ import { SupportTickets } from "@/components/support/support-tickets";
 import { SubscriptionPanel } from "@/components/dashboard/pro/subscription-panel";
 import { PAYMENTS_ENABLED } from "@/lib/payments/config";
 import { createClient } from "@/lib/supabase/client";
-import { getInitials, shortDisplayName } from "@/lib/utils";
+import { getInitials, proDisplayName } from "@/lib/utils";
 import { canOffer } from "@/lib/auth/capabilities";
 import { ModeSwitcher } from "@/components/ui/mode-switcher";
 import { useMode, type Mode } from "@/hooks/use-mode";
@@ -351,10 +351,9 @@ export default function DashboardPage() {
                     {mode === "offer" ? t("modeOffer") : t("modeUse")}
                   </p>
                 )}
-                {/* Mobile shows a SHORT name (first name + first surname) so the official
-                    name never hard-cuts at ~360px; desktop shows the full name. */}
+                {/* Mobile shows first name + both surnames; desktop shows the full name. */}
                 <h1 className="text-xl sm:text-2xl font-bold leading-tight text-[#162543] [overflow-wrap:anywhere]">
-                  <span className="sm:hidden">{shortDisplayName(displayName || "")}</span>
+                  <span className="sm:hidden">{proDisplayName(displayName || "")}</span>
                   <span className="hidden sm:inline">{displayName}</span>
                 </h1>
                 {mode === "offer" && pro && (
@@ -386,10 +385,10 @@ export default function DashboardPage() {
                 providers only, both worlds in one tap) over the "Ver perfil como cliente"
                 action. Logout lives ONLY in the navbar profile menu. */}
             {isProvider && (
-              <div className="flex w-full shrink-0 flex-col items-stretch gap-2 sm:w-auto sm:items-end">
-                <ModeSwitcher mode={mode} onSwitch={handleSwitchMode} className="w-[236px]" block />
+              <div className="flex w-full shrink-0 items-center gap-2 sm:w-auto sm:flex-col sm:items-end">
+                <ModeSwitcher mode={mode} onSwitch={handleSwitchMode} className="min-w-0 flex-1 sm:w-[236px] sm:flex-none" block />
                 {mode === "offer" && pro?.slug && (
-                  <Button variant="outline" size="sm" asChild className="h-8 w-full rounded-lg px-2.5 text-xs sm:w-auto" title={t("viewAsClient")}>
+                  <Button variant="outline" size="sm" asChild className="h-9 shrink-0 rounded-full px-3 text-xs sm:h-8" title={t("viewAsClient")}>
                     <a href={`/es/profesionales/${pro.slug}?preview=1`} aria-label={t("viewAsClient")}>
                       <ExternalLink className="h-4 w-4" />
                       {t("publicPreview")}
