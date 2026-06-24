@@ -31,7 +31,7 @@ export type SuccessCase = {
 // Legacy item shape (photos-only) — read for back-compat so nothing is lost.
 type LegacyItem = { url?: string; serviceId?: string; profession?: string };
 
-export const MAX_CASES_PER_PROFESSION = 3;
+export const MAX_CASES_PER_PROFESSION = 2;
 export const MAX_PHOTOS_PER_CASE = 3;
 
 interface PhotoGalleryProps {
@@ -180,7 +180,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
 
       {/* Case grid (matches the panel mockup). */}
       {shownCases.length > 0 && (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {shownCases.map((c) => (
             <div key={c.id} className="flex flex-col overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
               <div className="relative aspect-[4/3] bg-[#f3f4f6]">

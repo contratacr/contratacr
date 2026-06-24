@@ -312,7 +312,7 @@ export function BookingRequests() {
             {/* 2 — DETAILS card (ONE organised block, hairline-divided): the SERVICE headline +
                 location and the booker's CONTACT (phone · cédula). The request date ("Solicitada el …")
                 moved to a quiet meta line at the TOP of the expanded panel (sprint 501), not buried here. */}
-            {(category || location || phoneFmt || cedulaFmt) && (
+            {(category || location || phoneFmt || cedulaFmt || booking.service_description) && (
               <div className="rounded-xl border border-[#eef0f2] bg-[#f9fafb] overflow-hidden divide-y divide-[#eef0f2]">
                 {(category || location) && (
                   <div className="px-4 py-3.5">
@@ -342,16 +342,12 @@ export function BookingRequests() {
                     )}
                   </div>
                 )}
-              </div>
-            )}
-
-            {/* 3 — the client's NOTE, in its OWN separate field — a crisp WHITE card with a brand
-                left-accent + a "NOTA DEL CLIENTE" eyebrow, visually distinct from the grey
-                service/contact details card above so it clearly reads as their message. */}
-            {booking.service_description && (
-              <div className="rounded-xl border border-[#e5e7eb] border-l-[3px] border-l-[#009FD9]/60 bg-white px-4 py-3">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("noteEyebrow")}</p>
-                <ExpandableText text={booking.service_description} lines={5} className="mt-1" />
+                {booking.service_description && (
+                  <div className="px-4 py-3.5">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("noteEyebrow")}</p>
+                    <ExpandableText text={booking.service_description} lines={2} className="mt-1" />
+                  </div>
+                )}
               </div>
             )}
 

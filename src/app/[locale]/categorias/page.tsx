@@ -161,7 +161,7 @@ export default function CategoriasPage() {
                   type="button"
                   onClick={() => setActiveGroup(open ? null : group.key)}
                   aria-expanded={open}
-                  className="flex w-full items-center gap-3 px-5 py-4 text-left transition-colors hover:bg-[#f8fafc] focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#009FD9]/20 sm:px-6"
+                  className="flex w-full items-center gap-3 px-5 py-4 text-left transition-colors hover:bg-[#f8fafc] focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#009FD9]/20 sm:px-6"
                 >
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#EBF5FB]">
                     <group.Icon className="h-5 w-5 text-[#009FD9]" />

@@ -23,7 +23,6 @@ import { languageLabel } from "@/lib/data/languages";
 import { insurerLabel } from "@/lib/data/insurers";
 import { ReviewSection } from "@/components/professionals/review-section";
 import { CaseShowcase } from "@/components/professionals/case-showcase";
-import { ServiceImage } from "@/components/professionals/service-image";
 import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
 import { ReportProfileModal } from "@/components/professionals/report-profile-modal";
 import { createClient } from "@/lib/supabase/client";
@@ -536,8 +535,8 @@ export default function ProfilePage({ params }: ProfilePageProps) {
 
                   {/* ── TAB: Servicios ── */}
                   {activeTab === "servicios" && (() => {
-                    // Image-based service cards (owner mockup): ONE card per service CATEGORY
-                    // (the pro's professions), each with the catalog photo + its priced offerings.
+                    // Text-only service cards: ONE card per service CATEGORY (the pro's professions),
+                    // with its description, price and request action. Images belong to casos/photos.
                     const profs = (professional.professions && professional.professions.length > 0)
                       ? professional.professions
                       : (professional.categoryId ? [professional.categoryId] : []);
@@ -567,9 +566,8 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                               const priced = items.find((s) => s.price && (s as { priceType?: string }).priceType !== "a_convenir");
                               const priceLabel = priced?.price ?? t("priceConsult");
                               return (
-                                <div key={cat} className="flex flex-col overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm transition-shadow hover:shadow-md">
-                                  <ServiceImage categoryId={cat} className="aspect-[16/9]" badge={false} />
-                                  <div className="flex flex-1 flex-col p-5">
+                                <div key={cat} className="flex flex-col rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
+                                  <div className="flex flex-1 flex-col">
                                     <p className="text-[16px] font-bold text-[#162543] [overflow-wrap:anywhere]">{getCategoryLabel(cat, locale)}</p>
                                     {rep?.description ? (
                                       <p className="mt-2 line-clamp-2 text-[13px] leading-relaxed text-[#6b7280] [overflow-wrap:anywhere]">{rep.description}</p>
@@ -577,11 +575,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                                       <p className="mt-2 text-[13px] text-[#9ca3af]">{t("askForDetails")}</p>
                                     )}
                                     <p className="mt-3 text-[15px] font-bold text-[#0089bb] [overflow-wrap:anywhere]">{priceLabel}</p>
-                                    <button
-                                      type="button"
-                                      onClick={() => requestService(cat)}
-                                      className="mt-auto pt-4"
-                                    >
+                                    <button type="button" onClick={() => requestService(cat)} className="mt-auto pt-4">
                                       <span className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#009FD9] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#0089bb]">
                                         {t("serviceRequest")}
                                       </span>
