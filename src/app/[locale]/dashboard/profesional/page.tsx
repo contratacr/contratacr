@@ -89,16 +89,11 @@ const OFFER_TABS: Tab[] = [
 const USE_TABS: Tab[] = ["profile", "sent_bookings", "sent_projects", "saved"];
 const SHARED_TABS: Tab[] = ["notifications", "soporte", "cuenta"];
 
-// MOBILE bottom-nav (native-app tab bar, icon + label): the most-used sections per mode sit
-// in the fixed bottom bar (left→right); everything else (setup + shared) lives behind "Más".
-// BOTH modes use 3 sections + Notificaciones + Más = 5 slots (sprint 432: Notificaciones got a
-// DEDICATED spot with its own unread badge, so "Más" no longer carries a notification dot).
-// Offer: Perfil · Solicitudes recibidas · Oportunidades · Notificaciones + Más (Profesiones moved
-// to "Más"). Use: Perfil · Mis solicitudes · Mis publicaciones · Notificaciones + Más (Favoritos
-// moved to "Más"). The rest (offer setup + shared Soporte/Cuenta, etc.) live in "Más".
+// MOBILE bottom-nav: daily operational sections only. Profile/setup/shared options
+// live behind "Más"; the mode switch is a visible first slot.
 const MOBILE_PRIMARY: Record<Mode, Tab[]> = {
-  offer: ["profile", "bookings", "proposals", "notifications"],
-  use: ["profile", "sent_bookings", "sent_projects", "notifications"],
+  offer: ["bookings", "proposals", "notifications"],
+  use: ["sent_bookings", "sent_projects", "notifications"],
 };
 
 export default function DashboardPage() {
@@ -352,7 +347,7 @@ export default function DashboardPage() {
       >
         <Repeat2 className="h-[22px] w-[22px]" />
         <span className="max-w-full truncate text-[10px] font-semibold leading-none">
-          {next === "offer" ? t("panelProfessional") : t("panelClient")}
+          {next === "offer" ? t("panelProfessionalShort") : t("panelClientShort")}
         </span>
       </button>
     );

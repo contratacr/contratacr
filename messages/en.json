@@ -1030,6 +1030,8 @@
     "viewPublicProfile": "View public profile",
     "panelClient": "Client dashboard",
     "panelProfessional": "Professional dashboard",
+    "panelClientShort": "Client",
+    "panelProfessionalShort": "Pro",
     "signOut": "Sign out",
     "identityVerified": "Verified",
     "notVerifiedBadge": "Not verified",
@@ -1050,7 +1052,7 @@
       "sent_bookings": "My requests",
       "sent_projects": "My posts",
       "saved": "My favorites",
-      "notifications": "Notifications",
+      "notifications": "Alerts",
       "soporte": "Support",
       "cuenta": "Account & security"
     },
