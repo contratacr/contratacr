@@ -2091,6 +2091,7 @@
     "description": "Descripción",
     "descriptionPlaceholder": "Cuéntanos brevemente qué necesitas. Ejemplo: Pintar la sala y el comedor, unos 50 m².",
     "cedulaHelp": "Verificamos tu identidad para que los profesionales sepan con quién coordinan.",
+    "clientName": "Nombre completo",
     "identityPendingNotice": "Solicitud publicada. Tu identificación queda pendiente de revisión y así se mostrará a los profesionales.",
     "identityUnverifiedNotice": "Solicitud publicada. No pudimos confirmar esa cédula en el padrón; tu identidad se mostrará como no verificada.",
     "provincia": "Provincia",

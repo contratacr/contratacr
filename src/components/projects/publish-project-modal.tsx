@@ -3,17 +3,18 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
+import { IdentityInfoBlock } from "@/components/ui/identity-info-block";
 import { PriceInput } from "@/components/ui/price-input";
 import { PhoneInput, hasPhoneNumber } from "@/components/ui/phone-input";
 import { CedulaInput } from "@/components/ui/cedula-input";
 import { CategorySearch } from "@/components/ui/category-search";
 import { SelectMenu } from "@/components/ui/select-menu";
-import { X } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { PROVINCES } from "@/lib/data/cr-geography";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { isValidId } from "@/lib/cedula";
+import { cleanId, detectIdType, isValidId } from "@/lib/cedula";
 
 // "Publicar proyecto" as a MODAL (was a standalone page). Same fields, validation
 // and submit logic as the old publish-form — only the container changed to a modal:
@@ -23,6 +24,7 @@ import { isValidId } from "@/lib/cedula";
 // it does NOT navigate to a separate page.
 export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => void; onSuccess?: () => void }) {
   const t = useTranslations("publicarProyecto");
+  const ti = useTranslations("identity");
 
   const TIMELINES = [
     { value: "Urgente (esta semana)", label: t("tlUrgent") },
@@ -44,6 +46,10 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
   });
   const [error, setError] = useState<string | null>(null);
   const [identityNotice, setIdentityNotice] = useState<string | null>(null);
+  const [clientName, setClientName] = useState("");
+  const [identityLookup, setIdentityLookup] = useState<"idle" | "loading" | "found" | "notfound">("idle");
+  const [officialName, setOfficialName] = useState("");
+  const [identityDob, setIdentityDob] = useState<string | null>(null);
   const [published, setPublished] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const { user } = useAuth();
@@ -65,6 +71,8 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
       const raw = ((data as any)?.phone as string | undefined) ?? "";
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const cedula = ((data as any)?.cedula as string | undefined) ?? "";
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const fullName = ((data as any)?.full_name as string | undefined) ?? "";
       // A bare dial code / empty value is NOT a phone (legacy clears stored "506").
       let p = hasPhoneNumber(raw) ? raw : "";
       const onProfile = !!p;
@@ -79,12 +87,45 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
       }
       if (!active) return;
       setPhone(p);
+      if (fullName) setClientName(fullName);
       setForm((f) => (f.cedula ? f : { ...f, cedula }));
       setPhoneOnProfile(onProfile);
       setNeedsPhone(!p);
     })();
     return () => { active = false; };
   }, [user?.id]);
+
+  // Smart identity lookup while typing: national cédulas auto-fill the official
+  // full name from the padrón before submit. The API verifies again server-side.
+  useEffect(() => {
+    const cedula = cleanId(form.cedula);
+    setOfficialName("");
+    setIdentityDob(null);
+    if (!isValidId(cedula) || detectIdType(cedula) !== "cedula") {
+      setIdentityLookup("idle");
+      return;
+    }
+    let active = true;
+    setIdentityLookup("loading");
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/cedula/${cedula}`);
+        const data = await res.json().catch(() => ({}));
+        if (!active) return;
+        if (res.ok && data?.fullName) {
+          setOfficialName(data.fullName);
+          setIdentityDob(data.dob ?? null);
+          setClientName(data.fullName);
+          setIdentityLookup("found");
+        } else {
+          setIdentityLookup("notfound");
+        }
+      } catch {
+        if (active) setIdentityLookup("notfound");
+      }
+    }, 450);
+    return () => { active = false; clearTimeout(timer); };
+  }, [form.cedula]);
 
   const selectedProvincia = PROVINCES.find((p) => p.id === form.provinciaId);
   const cantons = selectedProvincia?.cantons ?? [];
@@ -135,6 +176,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
           budgetMax: form.budgetMax || null,
           timeline: form.timeline || null,
           cedula: form.cedula,
+          fullName: clientName,
         }),
       });
 
@@ -255,6 +297,20 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
               required
               hint={t("cedulaHelp")}
             />
+            {identityLookup === "loading" && (
+              <div className="flex items-center gap-2 text-sm text-[#6b7280]">
+                <Loader2 className="h-4 w-4 animate-spin" /> {ti("searching")}
+              </div>
+            )}
+            {identityLookup === "found" && officialName && (
+              <IdentityInfoBlock fullName={officialName} cedula={form.cedula} dob={identityDob} />
+            )}
+            {identityLookup !== "found" && clientName && (
+              <div className="rounded-xl bg-[#f9fafb] px-4 py-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("clientName")}</p>
+                <p className="mt-0.5 text-sm font-semibold text-[#111827] [overflow-wrap:anywhere]">{clientName}</p>
+              </div>
+            )}
 
             {/* Location — the SAME polished SelectMenu popover used by the pro panel's
                 "¿En qué zonas ofreces tus servicios?" (and the Disponibilidad time picker),

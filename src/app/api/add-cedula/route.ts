@@ -47,5 +47,9 @@ export async function POST(req: Request) {
   await db.from("professionals").update({ no_cr_id: false }).eq("id", pro.id);
 
   const outcome = await runIdentityVerification(pro.id);
+  await db.from("profiles").update({
+    client_identity_status: outcome === "verified" ? "verified" : "pending",
+    client_identity_verified_at: outcome === "verified" ? new Date().toISOString() : null,
+  }).eq("id", user.id);
   return NextResponse.json({ ok: true, outcome });
 }

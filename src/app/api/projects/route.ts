@@ -45,6 +45,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { title, description, categoryId, provinciaId, cantonId, budgetMin, budgetMax, timeline } = body;
     const cedula = cleanId(typeof body.cedula === "string" ? body.cedula : "");
+    const requestedFullName = typeof body.fullName === "string" ? body.fullName.trim() : "";
 
     if (!title?.trim() || !description?.trim()) {
       return NextResponse.json({ error: "Titulo y descripcion son requeridos" }, { status: 400 });
@@ -74,6 +75,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Esta identificacion ya esta registrada en ContrataCR." }, { status: 409 });
     }
 
+    const { data: existingProfile } = await admin
+      .from("profiles")
+      .select("full_name, role")
+      .eq("id", uid)
+      .maybeSingle();
+
     let clientIdentityStatus: ClientIdentityStatus = "unverified";
     let officialName: string | null = null;
     let identityProvider: string | null = null;
@@ -99,10 +106,12 @@ export async function POST(req: NextRequest) {
       id: uid,
       email: session.user.email ?? "",
       full_name: officialName ||
+                 existingProfile?.full_name ||
+                 requestedFullName ||
                  (session.user.user_metadata?.full_name as string) ||
                  (session.user.user_metadata?.name as string) ||
                  session.user.email?.split("@")[0] || "",
-      role: (session.user.user_metadata?.role as string) || "client",
+      role: existingProfile?.role || (session.user.user_metadata?.role as string) || "client",
       onboarding_completed: true,
       cedula,
       client_identity_status: clientIdentityStatus,
