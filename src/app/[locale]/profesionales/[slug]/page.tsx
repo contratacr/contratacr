@@ -23,6 +23,7 @@ import { languageLabel } from "@/lib/data/languages";
 import { insurerLabel } from "@/lib/data/insurers";
 import { ReviewSection } from "@/components/professionals/review-section";
 import { CaseShowcase } from "@/components/professionals/case-showcase";
+import { ServiceImage } from "@/components/professionals/service-image";
 import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
 import { ReportProfileModal } from "@/components/professionals/report-profile-modal";
 import { createClient } from "@/lib/supabase/client";
@@ -91,7 +92,6 @@ export default function ProfilePage({ params }: ProfilePageProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [viewerId, setViewerId] = useState<string | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [showAllServices, setShowAllServices] = useState(false);
   const [showRegistration, setShowRegistration] = useState(false);
   const [slug, setSlug] = useState("");
   const [reportOpen, setReportOpen] = useState(false);
@@ -223,7 +223,6 @@ export default function ProfilePage({ params }: ProfilePageProps) {
 
   // Hide services the pro marked INACTIVE (paused) — clients only see active ones.
   const services = (professional.services ?? []).filter((s) => (s as { active?: boolean }).active !== false);
-  const visibleServices = showAllServices ? services : services.slice(0, 5);
   const locationText = [professional.cantonName, professional.provinceName].filter(Boolean).join(", ");
   // Fallback location tab/address for the contact-card schedule (when the pro has no named
   // workplaces) — same data the /buscar card passes to ProfessionalSchedule.
@@ -517,47 +516,66 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                 <div className="p-6">
 
                   {/* ── TAB: Servicios ── */}
-                  {activeTab === "servicios" && (
-                    <div>
-                      <h2 className="text-lg font-semibold text-[#111827] mb-5">{t("servicesOffered")}</h2>
-                      {services.length === 0 ? (
-                        <p className="text-sm text-[#9ca3af] py-4 text-center">
-                          {t("noServices")}
-                        </p>
-                      ) : (
-                        <>
-                          <div className="flex flex-col divide-y divide-[#f3f4f6]">
-                            {visibleServices.map((svc) => (
-                              <div key={svc.id} className="py-3.5">
-                                <div className="flex items-start justify-between gap-3">
-                                  {/* `min-w-0` + `break-words` let a long name WRAP within its column
-                                      instead of overflowing onto the price (never overlap). */}
-                                  <div className="flex-1 min-w-0">
-                                    <p className="break-words text-sm font-semibold text-[#111827]">{svc.name}</p>
-                                    {svc.description && (
-                                      <p className="break-words text-xs text-[#6b7280] mt-0.5 leading-relaxed">{svc.description}</p>
+                  {activeTab === "servicios" && (() => {
+                    // Image-based service cards (owner mockup): ONE card per service CATEGORY
+                    // (the pro's professions), each with the catalog photo + its priced offerings.
+                    const profs = (professional.professions && professional.professions.length > 0)
+                      ? professional.professions
+                      : (professional.categoryId ? [professional.categoryId] : []);
+                    const byCat = new Map<string, typeof services>();
+                    for (const s of services) {
+                      const cat = (s as { category?: string }).category || profs[0] || "otro";
+                      const arr = byCat.get(cat) ?? []; arr.push(s); byCat.set(cat, arr);
+                    }
+                    // Cards = the pro's professions (even with no priced offering yet) + any extra
+                    // categories that DO have offerings; de-duplicated, professions first.
+                    const cats = [...profs, ...[...byCat.keys()].filter((c) => !profs.includes(c))]
+                      .filter((c, i, a) => a.indexOf(c) === i);
+                    return (
+                      <div>
+                        <h2 className="text-lg font-semibold text-[#111827] mb-1">{t("servicesOffered")}</h2>
+                        <p className="text-sm text-[#6b7280] mb-5">{t("servicesOfferedSub")}</p>
+                        {cats.length === 0 ? (
+                          <p className="text-sm text-[#9ca3af] py-4 text-center">{t("noServices")}</p>
+                        ) : (
+                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                            {cats.map((cat) => {
+                              const items = byCat.get(cat) ?? [];
+                              return (
+                                <div key={cat} className="flex flex-col overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm transition-shadow hover:shadow-md">
+                                  <ServiceImage categoryId={cat} className="aspect-[16/9]" />
+                                  <div className="flex flex-1 flex-col p-4">
+                                    <p className="text-[16px] font-bold text-[#162543] [overflow-wrap:anywhere]">{getCategoryLabel(cat, locale)}</p>
+                                    {items.length > 0 ? (
+                                      <div className="mt-2.5 flex flex-col divide-y divide-[#f3f4f6]">
+                                        {items.slice(0, 4).map((s) => (
+                                          <div key={s.id} className="flex items-start justify-between gap-3 py-1.5">
+                                            <div className="min-w-0">
+                                              <p className="text-[13px] font-medium text-[#374151] [overflow-wrap:anywhere]">{s.name}</p>
+                                              {s.description && <p className="line-clamp-1 text-[11px] text-[#9ca3af] [overflow-wrap:anywhere]">{s.description}</p>}
+                                            </div>
+                                            {s.price && <span className="shrink-0 text-[13px] font-semibold text-[#0089bb] [overflow-wrap:anywhere]">{s.price}</span>}
+                                          </div>
+                                        ))}
+                                        {items.length > 4 && <p className="pt-1.5 text-[11px] text-[#9ca3af]">{t("morePrices", { count: items.length - 4 })}</p>}
+                                      </div>
+                                    ) : (
+                                      <p className="mt-2 text-[13px] text-[#9ca3af]">{t("askForDetails")}</p>
+                                    )}
+                                    {waLink && (
+                                      <a href={waLink} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex items-center justify-center gap-2 rounded-lg bg-[#25d366] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#1da851]">
+                                        {t("serviceContact")}
+                                      </a>
                                     )}
                                   </div>
-                                  {svc.price ? (
-                                    <span className="max-w-[10rem] shrink-0 break-words text-right text-sm font-semibold text-[#009FD9]">{svc.price}</span>
-                                  ) : (
-                                    <button className="text-xs font-semibold text-[#009FD9] hover:underline shrink-0">
-                                      {t("consult")}
-                                    </button>
-                                  )}
                                 </div>
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
-                          {services.length > 5 && (
-                            <Button variant="outline" size="sm" className="mt-4" onClick={() => setShowAllServices(v => !v)}>
-                              {showAllServices ? t("viewLess") : t("viewMore", { count: services.length - 5 })}
-                            </Button>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  )}
+                        )}
+                      </div>
+                    );
+                  })()}
 
                   {/* "Disponibilidad" is NOT a content tab — the contact card already
                       shows the schedule (3-day strip + booking/contact), so a separate

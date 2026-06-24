@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { PriceInput } from "@/components/ui/price-input";
 import { Modal } from "@/components/ui/modal";
 import { StatusFilterTabs } from "@/components/dashboard/status-filter-tabs";
+import { ServiceImage } from "@/components/professionals/service-image";
 import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
@@ -319,6 +320,9 @@ export function ServicesEditor({
         const fromAmount = pricedAmounts.length ? Math.min(...pricedAmounts) : null;
         return (
           <section key={prof} className={cn("overflow-hidden rounded-2xl border bg-white shadow-sm", isPrincipal ? "border-[#bfdbfe]" : "border-[#e5e7eb]")}>
+            {/* Image-based services (sprint 512): the category's catalog photo (or branded
+                fallback) banners each servicio card — the same image clients see on the profile. */}
+            <ServiceImage categoryId={prof} className="h-28 w-full" />
             {/* Profession header — the PRINCIPAL profession gets a subtle brand tint + navy name
                 so the main area the pro offers clearly stands out; the rest stay neutral grey. */}
             <div className={cn("flex items-start justify-between gap-3 border-b px-4 sm:px-5 py-4", isPrincipal ? "border-[#dcebf6] bg-[#EBF5FB]" : "border-[#eef0f2] bg-[#f9fafb]")}>

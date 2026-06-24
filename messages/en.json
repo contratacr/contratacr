@@ -515,6 +515,10 @@
       "sobre": "About"
     },
     "servicesOffered": "Services offered",
+    "servicesOfferedSub": "Professional solutions tailored to your needs.",
+    "morePrices": "+{count} more",
+    "askForDetails": "Message me for the details.",
+    "serviceContact": "Contact on WhatsApp",
     "noServices": "No specific services added yet.",
     "consult": "Ask",
     "viewLess": "Show less",
