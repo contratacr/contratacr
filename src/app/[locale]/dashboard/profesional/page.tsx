@@ -337,7 +337,7 @@ export default function DashboardPage() {
               ring, a bold navy name, the plain "modo" eyebrow + verification badge, set off from
               the content by a single hairline divider. No gradient/decoration. */}
           <div className="mb-6 flex items-start justify-between gap-4 flex-wrap border-b border-[#e5e7eb] pb-5">
-            <div className="flex items-center gap-4 min-w-0">
+            <div className="flex min-w-0 flex-1 items-center gap-4">
               <Avatar className="h-16 w-16 shrink-0 ring-1 ring-[#e5e7eb]">
                 <AvatarImage src={headerAvatar ?? undefined} />
                 <AvatarFallback className="bg-[#EBF5FB] text-[#009FD9] font-bold text-lg">
@@ -386,13 +386,13 @@ export default function DashboardPage() {
                 providers only, both worlds in one tap) over the "Ver perfil como cliente"
                 action. Logout lives ONLY in the navbar profile menu. */}
             {isProvider && (
-              <div className="flex flex-col items-stretch gap-2.5 shrink-0 sm:items-end">
-                <ModeSwitcher mode={mode} onSwitch={handleSwitchMode} />
+              <div className="ml-auto flex shrink-0 flex-col items-end gap-2.5">
+                <ModeSwitcher mode={mode} onSwitch={handleSwitchMode} className="w-[236px]" block />
                 {mode === "offer" && pro?.slug && (
-                  <Button variant="outline" size="sm" asChild className="w-full sm:w-auto">
-                    <a href={`/es/profesionales/${pro.slug}?preview=1`}>
+                  <Button variant="outline" size="sm" asChild className="w-auto max-w-[236px]">
+                    <a href={`/es/profesionales/${pro.slug}?preview=1`} className="min-w-0">
                       <ExternalLink className="h-4 w-4" />
-                      {t("viewAsClient")}
+                      <span className="truncate">{t("viewAsClient")}</span>
                     </a>
                   </Button>
                 )}
