@@ -2,11 +2,10 @@
 
 import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Plus, Trash2, Pencil, Search } from "lucide-react";
+import { Plus, Trash2, Pencil, Search, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PriceInput } from "@/components/ui/price-input";
 import { Modal } from "@/components/ui/modal";
-import { ServiceImage } from "@/components/professionals/service-image";
 import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
@@ -132,13 +131,15 @@ export function ServicesEditor({
     onSaved?.();
   }
 
-  // Add a service from the catalog picker.
+  // Add a service from the catalog picker → then go STRAIGHT to editing its information
+  // (price/description/años), so the pro is never left on an "what now?" state.
   function addService(id: string) {
     if (!id || professions.includes(id)) return;
     const next = [...professions, id];
     setProfessions(next);
     closePicker();
     persist(next, services);
+    openEditInfo(id);
   }
 
   // Make a service the PRINCIPAL one (index 0 = principal everywhere — drives card price).
@@ -343,7 +344,10 @@ export function ServicesEditor({
                     <p className="mt-3 text-[13px] italic leading-relaxed text-[#9ca3af]">{t("noDescriptionYet")}</p>
                   )}
 
-                  {/* Actions group — separated by a hairline, always visible (mobile too). */}
+                  {/* Actions group — separated by a hairline. The PRIMARY "Editar información"
+                      is ISOLATED on the left so it's IDENTICAL on every card (same label, style,
+                      position) regardless of service count; the secondary actions (make-principal ·
+                      delete) are uniform icon buttons in the right cluster. */}
                   <div className="mt-4 flex items-center gap-1.5 border-t border-[#f3f4f6] pt-3">
                     <button
                       type="button"
@@ -352,26 +356,30 @@ export function ServicesEditor({
                     >
                       <Pencil className="h-3.5 w-3.5" /> {t("editInfo")}
                     </button>
-                    {!isPrincipal && (
-                      <button
-                        type="button"
-                        onClick={() => makePrincipal(prof)}
-                        className="hidden rounded-lg px-2.5 py-1.5 text-[13px] font-semibold text-[#6b7280] transition-colors hover:bg-[#f3f4f6] hover:text-[#374151] sm:inline-flex"
-                      >
-                        {t("makePrincipal")}
-                      </button>
-                    )}
-                    {professions.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeService(prof)}
-                        title={t("removeProfession")}
-                        aria-label={t("removeProfession")}
-                        className="ml-auto inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#9ca3af] transition-colors hover:bg-red-50 hover:text-red-500"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    )}
+                    <div className="ml-auto flex items-center gap-0.5">
+                      {!isPrincipal && (
+                        <button
+                          type="button"
+                          onClick={() => makePrincipal(prof)}
+                          title={t("makePrincipal")}
+                          aria-label={t("makePrincipal")}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#9ca3af] transition-colors hover:bg-[#EBF5FB] hover:text-[#0089bb]"
+                        >
+                          <Star className="h-4 w-4" />
+                        </button>
+                      )}
+                      {professions.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => removeService(prof)}
+                          title={t("removeProfession")}
+                          aria-label={t("removeProfession")}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#9ca3af] transition-colors hover:bg-red-50 hover:text-red-500"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </section>
               );
@@ -415,20 +423,19 @@ export function ServicesEditor({
                   <p className="px-1 pt-2.5 pb-2 text-[10px] font-bold uppercase tracking-wider text-[#9ca3af]">
                     {getCategoryGroupLabel(g.id, locale)}
                   </p>
-                  {/* Image-based catalog browse: each category is a photo tile — tap to add it. */}
-                  <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+                  {/* Clean TEXT catalog (no images in the panel — sprint 519): each category is a
+                      tidy row; tap to add it (then you go straight to editing its info). Images
+                      live only on the landing carousel + the public profile. */}
+                  <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
                     {g.items.map((cat) => (
                       <button
                         key={cat.id}
                         type="button"
                         onClick={() => addService(cat.id)}
-                        className="group flex flex-col overflow-hidden rounded-xl border border-[#e5e7eb] bg-white text-left transition-all hover:border-[#009FD9] hover:shadow-sm"
+                        className="group flex items-center justify-between gap-2 rounded-xl border border-[#e5e7eb] bg-white px-3.5 py-2.5 text-left text-sm font-medium text-[#374151] transition-all hover:border-[#009FD9] hover:bg-[#f8fbfe] hover:text-[#0089bb]"
                       >
-                        <ServiceImage categoryId={cat.id} className="aspect-[16/10]" badge={false} />
-                        <span className="flex items-center justify-between gap-1.5 px-2.5 py-2 text-[12.5px] font-semibold text-[#374151] group-hover:text-[#0089bb]">
-                          <span className="line-clamp-2 [overflow-wrap:anywhere]">{getCategoryLabel(cat.id, locale)}</span>
-                          <Plus className="h-4 w-4 shrink-0 text-[#009FD9]" />
-                        </span>
+                        <span className="line-clamp-1 [overflow-wrap:anywhere]">{getCategoryLabel(cat.id, locale)}</span>
+                        <Plus className="h-4 w-4 shrink-0 text-[#009FD9]" />
                       </button>
                     ))}
                   </div>
