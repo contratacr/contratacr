@@ -467,20 +467,28 @@ export function ServicesEditor({
               </div>
             ) : (
               pickerGroups.map((g) => (
-                <div key={g.id} className="mb-1 last:mb-0">
-                  <p className="px-3 pt-2.5 pb-1 text-[10px] font-bold uppercase tracking-wider text-[#9ca3af]">
+                <div key={g.id} className="mb-3 last:mb-0">
+                  <p className="px-1 pt-2.5 pb-2 text-[10px] font-bold uppercase tracking-wider text-[#9ca3af]">
                     {getCategoryGroupLabel(g.id, locale)}
                   </p>
-                  {g.items.map((cat) => (
-                    <button
-                      key={cat.id}
-                      type="button"
-                      onClick={() => addProfession(cat.id)}
-                      className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm text-[#374151] hover:bg-[#EBF5FB] hover:text-[#0089bb] transition-colors"
-                    >
-                      <Plus className="h-4 w-4 shrink-0 text-[#009FD9]" /> {getCategoryLabel(cat.id, locale)}
-                    </button>
-                  ))}
+                  {/* Image-based catalog browse (sprint 514): each category is a photo tile (real
+                      catalog image or branded fallback) — tap to add it as a servicio. */}
+                  <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
+                    {g.items.map((cat) => (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => addProfession(cat.id)}
+                        className="group flex flex-col overflow-hidden rounded-xl border border-[#e5e7eb] bg-white text-left transition-all hover:border-[#009FD9] hover:shadow-sm"
+                      >
+                        <ServiceImage categoryId={cat.id} className="aspect-[16/10]" badge={false} />
+                        <span className="flex items-center justify-between gap-1.5 px-2.5 py-2 text-[12.5px] font-semibold text-[#374151] group-hover:text-[#0089bb]">
+                          <span className="line-clamp-2 [overflow-wrap:anywhere]">{getCategoryLabel(cat.id, locale)}</span>
+                          <Plus className="h-4 w-4 shrink-0 text-[#009FD9]" />
+                        </span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               ))
             )}
