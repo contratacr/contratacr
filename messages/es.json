@@ -836,6 +836,7 @@
       "title": "¡Solicitud confirmada!",
       "desc": "Tu solicitud quedó confirmada. Coordina los detalles directamente por WhatsApp con el profesional.",
       "whatsapp": "Continuar por WhatsApp",
+      "viewRequest": "Ver mi solicitud",
       "close": "Listo"
     },
     "back": "Atrás",

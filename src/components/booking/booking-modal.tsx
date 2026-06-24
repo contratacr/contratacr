@@ -9,6 +9,7 @@ import {
 import { SuccessIcon } from "@/components/ui/success-icon";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { useTranslations, useLocale } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { PhoneInput, hasPhoneNumber } from "@/components/ui/phone-input";
@@ -108,6 +109,10 @@ function keepSelectMenuOpen(e: { detail?: { originalEvent?: Event }; target?: Ev
 export function BookingModal({ professional, categoryName, open, onClose, initialDate, initialTime, initialCategoryId, initialLocationId, initialLocationLabel }: BookingModalProps) {
   const t = useTranslations("booking");
   const locale = useLocale();
+  const router = useRouter();
+  // A solicitud was actually created in this session → on close we REFRESH so /buscar drops
+  // the now-occupied slot (the schedule strips re-read server availability).
+  const bookedRef = useRef(false);
 
   // DOB is only relevant for HEALTH/medical services (patient age). Driven by the
   // es_salud / DOB are derived from the EFFECTIVE profession being booked — NOT "any of
@@ -448,12 +453,24 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   const canGoNext = new Date(currentYear, currentMonth + 1, 1) < maxMonth;
 
   function resetAndClose() {
+    const didBook = bookedRef.current;
+    bookedRef.current = false;
     setStep("calendar");
     setSelectedDate("");
     setSelectedTime("");
     setDescription("");
     setWaLink("");
     onClose();
+    // Refresh server data so the slot we just booked stops showing as available on /buscar
+    // (and the profile schedule). Only when a booking was actually made this session.
+    if (didBook) router.refresh();
+  }
+
+  // "Ver mi solicitud" → the client's Mis solicitudes, where the just-created request sits
+  // at the top (newest first). Closes the modal (which also refreshes /buscar).
+  function goToMyRequest() {
+    resetAndClose();
+    router.push("/dashboard/profesional?tab=sent_bookings");
   }
 
   async function handleSubmit(overrideCedula?: string, overridePhone?: string, overrideName?: string) {
@@ -521,6 +538,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
         .join("\n");
 
       setWaLink(getWhatsAppLink(professional.whatsapp, message));
+      bookedRef.current = true;
       setStep("success");
     } finally {
       setSubmitting(false);
@@ -1495,7 +1513,12 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
             )}
 
             {step === "success" && (
-              <div className="px-6 py-4 border-t border-[#f3f4f6] shrink-0">
+              <div className="px-6 py-4 border-t border-[#f3f4f6] shrink-0 flex flex-col gap-2.5">
+                {/* Lead to the just-made request (it's at the top of Mis solicitudes), not a
+                    dead-end "Listo". Closing still refreshes /buscar so the slot disappears. */}
+                <Button size="md" className="w-full" onClick={goToMyRequest}>
+                  {t("success.viewRequest")}
+                </Button>
                 <Button variant="outline" size="md" className="w-full" onClick={resetAndClose}>
                   {t("success.close")}
                 </Button>

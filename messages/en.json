@@ -836,6 +836,7 @@
       "title": "Request confirmed!",
       "desc": "Your request is confirmed. Coordinate the details directly via WhatsApp with the professional.",
       "whatsapp": "Continue on WhatsApp",
+      "viewRequest": "View my request",
       "close": "Done"
     },
     "back": "Back",

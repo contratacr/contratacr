@@ -518,9 +518,12 @@ export function MobileFiltersButton() {
       type="button"
       aria-label={t("filters.title")}
       onClick={() => window.dispatchEvent(new CustomEvent("ccr:open-filters"))}
-      className="relative shrink-0 inline-flex h-10 w-10 items-center justify-center rounded-full border border-[#e5e7eb] bg-white text-[#162543] shadow-sm active:scale-95 transition-transform"
+      // Obvious filter affordance (sprint 524): a brand-tint pill with the sliders icon + the
+      // "Filtros" label (not a bare icon), so it clearly reads as a tappable filter control.
+      className="relative shrink-0 inline-flex h-10 items-center gap-1.5 rounded-full border border-[#bfdbfe] bg-[#EBF5FB] px-3.5 text-[13px] font-bold text-[#0089bb] shadow-sm active:scale-95 transition-transform"
     >
-      <SlidersHorizontal className="h-[18px] w-[18px]" />
+      <SlidersHorizontal className="h-[17px] w-[17px]" />
+      <span>{t("filters.title")}</span>
       {hasActive && <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#008ce0]" />}
     </button>
   );
