@@ -30,7 +30,7 @@ export function BasicProfileSection({
   // invitation at the END of this section — that's how they start offering.
   const userCanOffer = canOffer(user);
 
-  const [profileData, setProfileData] = useState<{ full_name: string; phone?: string; avatar_url?: string; cedula?: string | null } | null>(null);
+  const [profileData, setProfileData] = useState<{ full_name: string; phone?: string; avatar_url?: string; cedula?: string | null; client_identity_status?: "verified" | "pending" | "unverified" | null } | null>(null);
   const [profileForm, setProfileForm] = useState({ full_name: "", phone: "" });
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileSaved, setProfileSaved] = useState(false);
@@ -89,7 +89,7 @@ export function BasicProfileSection({
     setProfileSaving(true);
     const supabase = createClient();
     // Never overwrite a verified official name (locked; corrections go through admin).
-    const verified = !!profileData?.cedula && detectIdType(String(profileData.cedula)) === "cedula";
+    const verified = profileData?.client_identity_status === "verified";
     const update: Record<string, string | null> = { phone: hasPhoneNumber(profileForm.phone) ? profileForm.phone : null };
     if (!verified) update.full_name = profileForm.full_name;
     await supabase.from("profiles").update(update).eq("id", user.id);
@@ -154,7 +154,7 @@ export function BasicProfileSection({
     t("clientFallback");
 
   const savedCedula = profileData?.cedula ? String(profileData.cedula) : "";
-  const cedulaVerified = !!savedCedula && detectIdType(savedCedula) === "cedula";
+  const cedulaVerified = profileData?.client_identity_status === "verified" || (!!savedCedula && detectIdType(savedCedula) === "cedula" && !profileData?.client_identity_status);
 
   const inputClass =
     "w-full h-10 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";

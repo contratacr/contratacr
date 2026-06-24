@@ -3,6 +3,7 @@ export type UserRole = "client" | "professional";
 export type Profile = {
   id: string;
   cedula: string;
+  client_identity_status?: "verified" | "pending" | "unverified";
   full_name: string;
   email: string;
   phone?: string;
@@ -72,6 +73,7 @@ export type Project = {
   budget_min?: number;
   budget_max?: number;
   timeline?: string;
+  client_identity_status?: "verified" | "pending" | "unverified";
   photo_urls: string[];
   status: ProjectStatus;
   created_at: string;

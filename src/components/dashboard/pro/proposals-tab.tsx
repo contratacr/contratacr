@@ -42,6 +42,7 @@ type OpenProject = {
   categories?: { name: string };
   provincias?: { name: string };
   cantones?: { name: string };
+  client_identity_status?: "verified" | "pending" | "unverified" | null;
   profiles?: { full_name: string; avatar_url?: string };
   proposals?: { id: string }[];
 };
@@ -293,6 +294,11 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
     if (p.budget_max) return t("upTo", { amount: `₡${p.budget_max.toLocaleString("es-CR")}` });
     return t("budgetTBD");
   }
+  function clientIdentityText(status?: OpenProject["client_identity_status"]): string {
+    if (status === "verified") return t("clientIdentityVerified");
+    if (status === "pending") return t("clientIdentityPending");
+    return t("clientIdentityUnverified");
+  }
 
   // The opportunity DETAIL (Upwork/job-board) — rendered in the desktop right pane AND
   // inline on mobile (accordion). Header (badges + title + zona·publicada) → "el cliente
@@ -356,6 +362,9 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                 </Avatar>
                 <p className="min-w-0 truncate text-[13px] font-medium text-[#374151]">{project.profiles.full_name}</p>
               </div>
+              <p className="mt-1 text-[12px] font-medium text-[#6b7280]">
+                {clientIdentityText(project.client_identity_status)}
+              </p>
             </div>
           )}
         </div>

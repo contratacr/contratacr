@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { PriceInput } from "@/components/ui/price-input";
 import { PhoneInput, hasPhoneNumber } from "@/components/ui/phone-input";
+import { CedulaInput } from "@/components/ui/cedula-input";
 import { CategorySearch } from "@/components/ui/category-search";
 import { SelectMenu } from "@/components/ui/select-menu";
 import { X } from "lucide-react";
@@ -12,6 +13,7 @@ import { PROVINCES } from "@/lib/data/cr-geography";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { isValidId } from "@/lib/cedula";
 
 // "Publicar proyecto" as a MODAL (was a standalone page). Same fields, validation
 // and submit logic as the old publish-form — only the container changed to a modal:
@@ -38,8 +40,11 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
     budgetMin: "",
     budgetMax: "",
     timeline: "",
+    cedula: "",
   });
   const [error, setError] = useState<string | null>(null);
+  const [identityNotice, setIdentityNotice] = useState<string | null>(null);
+  const [published, setPublished] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const { user } = useAuth();
 
@@ -58,6 +63,8 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
       const { data } = await supabase.rpc("get_my_profile");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const raw = ((data as any)?.phone as string | undefined) ?? "";
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const cedula = ((data as any)?.cedula as string | undefined) ?? "";
       // A bare dial code / empty value is NOT a phone (legacy clears stored "506").
       let p = hasPhoneNumber(raw) ? raw : "";
       const onProfile = !!p;
@@ -72,6 +79,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
       }
       if (!active) return;
       setPhone(p);
+      setForm((f) => (f.cedula ? f : { ...f, cedula }));
       setPhoneOnProfile(onProfile);
       setNeedsPhone(!p);
     })();
@@ -96,20 +104,20 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (published) { onClose(); return; }
     setError(null);
+    setIdentityNotice(null);
 
-    // Category is REQUIRED — it's what routes the project to the right pros.
     if (!form.categoryId) { setError(t("errCategory")); return; }
     if (!form.title.trim()) { setError(t("errTitle")); return; }
     if (!form.description.trim()) { setError(t("errDescription")); return; }
+    if (!isValidId(form.cedula)) { setError(t("errCedula")); return; }
     if (needsPhone && phone.replace(/\D/g, "").length < 8) { setError(t("errPhone")); return; }
 
     setSubmitting(true);
     try {
-      // Persist the phone to profiles.phone when it isn't already there — either the
-      // client typed it (none on file) or we prefilled it from the pro's WhatsApp (a
-      // pro's number lives on professionals.whatsapp) — so the solicitud has a reachable
-      // contact and we never ask again.
+      // Persist the phone to profiles.phone when it isn't already there, so the
+      // solicitud has a reachable contact and we never ask again.
       if (user?.id && phone && !phoneOnProfile) {
         const supabase = createClient();
         await supabase.from("profiles").update({ phone }).eq("id", user.id);
@@ -126,6 +134,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
           budgetMin: form.budgetMin || null,
           budgetMax: form.budgetMax || null,
           timeline: form.timeline || null,
+          cedula: form.cedula,
         }),
       });
 
@@ -136,8 +145,18 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
         return;
       }
 
-      // Success: refresh the panel's project list and close. No navigation.
       onSuccess?.();
+      const identityStatus = data.clientIdentityStatus as "verified" | "pending" | "unverified" | undefined;
+      if (identityStatus === "pending") {
+        setPublished(true);
+        setIdentityNotice(t("identityPendingNotice"));
+        return;
+      }
+      if (identityStatus === "unverified") {
+        setPublished(true);
+        setIdentityNotice(t("identityUnverifiedNotice"));
+        return;
+      }
       onClose();
     } catch {
       setError(t("errUnexpected"));
@@ -145,6 +164,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
       setSubmitting(false);
     }
   }
+
 
   const inputClass =
     "w-full h-11 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
@@ -229,6 +249,13 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
               )}
             </div>
 
+            <CedulaInput
+              value={form.cedula}
+              onChange={(cedula) => update("cedula", cedula)}
+              required
+              hint={t("cedulaHelp")}
+            />
+
             {/* Location — the SAME polished SelectMenu popover used by the pro panel's
                 "¿En qué zonas ofreces tus servicios?" (and the Disponibilidad time picker),
                 NOT a native <select> (sprint 311), so every provincia/cantón dropdown in
@@ -311,6 +338,11 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
                 {error}
               </div>
             )}
+            {identityNotice && (
+              <p className="text-sm font-medium leading-relaxed text-[#374151] [overflow-wrap:anywhere]">
+                {identityNotice}
+              </p>
+            )}
           </div>
 
           {/* Footer (pinned) */}
@@ -318,8 +350,8 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
             <Button type="button" variant="outline" size="lg" onClick={onClose}>
               {t("cancel")}
             </Button>
-            <Button type="submit" size="lg" className="flex-1" loading={submitting} disabled={submitting}>
-              {submitting ? t("publishing") : t("publish")}
+            <Button type={published ? "button" : "submit"} size="lg" className="flex-1" loading={submitting} disabled={submitting} onClick={published ? onClose : undefined}>
+              {published ? t("close") : submitting ? t("publishing") : t("publish")}
             </Button>
           </div>
         </form>

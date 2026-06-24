@@ -3,6 +3,10 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getCategoryLabel, OTHER_CATEGORY } from "@/lib/data/categories";
 import { getProvinceById, getCantonById } from "@/lib/data/cr-geography";
+import { cleanId, detectIdType, isValidId } from "@/lib/cedula";
+import { getIdentityVerifier } from "@/lib/verification/identity-verifier";
+
+type ClientIdentityStatus = "verified" | "pending" | "unverified";
 
 /**
  * Resolve category / provincia / cantón display data WITHOUT relying on
@@ -40,13 +44,17 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { title, description, categoryId, provinciaId, cantonId, budgetMin, budgetMax, timeline } = body;
+    const cedula = cleanId(typeof body.cedula === "string" ? body.cedula : "");
 
     if (!title?.trim() || !description?.trim()) {
-      return NextResponse.json({ error: "Título y descripción son requeridos" }, { status: 400 });
+      return NextResponse.json({ error: "Titulo y descripcion son requeridos" }, { status: 400 });
     }
-    // Category is required — it routes the project to matching professionals.
+    // Category is required: it routes the project to matching professionals.
     if (!categoryId) {
-      return NextResponse.json({ error: "Elige una categoría para tu solicitud." }, { status: 400 });
+      return NextResponse.json({ error: "Elige una categoria para tu solicitud." }, { status: 400 });
+    }
+    if (!cedula || !isValidId(cedula)) {
+      return NextResponse.json({ error: "Ingresa un numero de identificacion valido." }, { status: 400 });
     }
 
     const supabase = await createClient();
@@ -56,16 +64,60 @@ export async function POST(req: NextRequest) {
     const uid = session.user.id;
     const admin = createAdminClient();
 
-    // Ensure the profiles row exists before inserting (client_id FK requires it)
+    const { data: dupe } = await admin
+      .from("profiles")
+      .select("id")
+      .eq("cedula", cedula)
+      .neq("id", uid)
+      .maybeSingle();
+    if (dupe) {
+      return NextResponse.json({ error: "Esta identificacion ya esta registrada en ContrataCR." }, { status: 409 });
+    }
+
+    let clientIdentityStatus: ClientIdentityStatus = "unverified";
+    let officialName: string | null = null;
+    let identityProvider: string | null = null;
+    const idType = detectIdType(cedula);
+    if (idType === "cedula") {
+      const result = await getIdentityVerifier().lookup(cedula);
+      identityProvider = result.provider;
+      if (result.found) {
+        clientIdentityStatus = "verified";
+        officialName = result.fullName ?? null;
+      } else {
+        clientIdentityStatus = "unverified";
+      }
+    } else {
+      clientIdentityStatus = "pending";
+    }
+
+    // Ensure the profiles row exists before inserting (client_id FK requires it).
+    // Client identity verification uses the same padron-backed verifier as the
+    // professional flow, but stores a client-specific status on profiles and a
+    // project snapshot so Oportunidades can show it without exposing the ID.
     await admin.from("profiles").upsert({
       id: uid,
       email: session.user.email ?? "",
-      full_name: (session.user.user_metadata?.full_name as string) ||
+      full_name: officialName ||
+                 (session.user.user_metadata?.full_name as string) ||
                  (session.user.user_metadata?.name as string) ||
                  session.user.email?.split("@")[0] || "",
       role: (session.user.user_metadata?.role as string) || "client",
       onboarding_completed: true,
+      cedula,
+      client_identity_status: clientIdentityStatus,
+      client_identity_verified_at: clientIdentityStatus === "verified" ? new Date().toISOString() : null,
+      client_identity_provider: identityProvider,
     }, { onConflict: "id", ignoreDuplicates: false });
+
+    if (officialName) {
+      try {
+        const { data: authUser } = await admin.auth.admin.getUserById(uid);
+        await admin.auth.admin.updateUserById(uid, {
+          user_metadata: { ...(authUser?.user?.user_metadata ?? {}), full_name: officialName },
+        });
+      } catch { /* profiles is the source of truth; auth metadata sync is best-effort */ }
+    }
 
     const { data, error } = await supabase.from("projects").insert({
       client_id: uid,
@@ -77,6 +129,7 @@ export async function POST(req: NextRequest) {
       budget_min: budgetMin ? parseInt(budgetMin, 10) : null,
       budget_max: budgetMax ? parseInt(budgetMax, 10) : null,
       timeline: timeline ?? null,
+      client_identity_status: clientIdentityStatus,
       status: "open",
     }).select("id").single();
 
@@ -86,15 +139,14 @@ export async function POST(req: NextRequest) {
     }
 
     // Notify every professional whose profession matches the project category.
-    // "Otro" is a FREEFORM catch-all — its custom text isn't reliably comparable, so it
-    // must NEVER drive matching: two different "Otro" entries (e.g. "yavines" vs
-    // "payasitos") are NOT the same category. An "Otro" project therefore notifies NO ONE.
+    // "Otro" is a FREEFORM catch-all: its custom text is not reliably comparable, so it
+    // must never drive matching. An "Otro" project therefore notifies no one.
     if (categoryId && categoryId !== OTHER_CATEGORY.id) {
       try {
         const { data: pros } = await admin
           .from("professionals")
           .select("profile_id")
-          .or(`category_id.eq.${categoryId},professions.cs.{${categoryId}}`);
+          .or("category_id.eq." + categoryId + ",professions.cs.{" + categoryId + "}");
 
         const recipients = [...new Set(
           (pros ?? []).map((p) => p.profile_id).filter((id): id is string => !!id && id !== uid)
@@ -105,8 +157,8 @@ export async function POST(req: NextRequest) {
           const rows = recipients.map((profileId) => ({
             user_id: profileId,
             type: "new_project",
-            title: "Nueva oportunidad en tu categoría",
-            message: `Un cliente publicó "${title.trim()}" en ${label}.`,
+            title: "Nueva oportunidad en tu categoria",
+            message: `Un cliente publico "${title.trim()}" en ${label}.`,
             data: { link: "/es/dashboard/profesional?tab=proposals", project_id: data.id },
           }));
           await admin.from("notifications").insert(rows);
@@ -116,7 +168,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({ id: data.id, success: true });
+    return NextResponse.json({ id: data.id, success: true, clientIdentityStatus });
   } catch (err) {
     console.error("[POST /api/projects] Unexpected error:", err);
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
