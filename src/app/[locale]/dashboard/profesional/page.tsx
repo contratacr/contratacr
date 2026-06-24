@@ -36,7 +36,6 @@ import { PAYMENTS_ENABLED } from "@/lib/payments/config";
 import { createClient } from "@/lib/supabase/client";
 import { getInitials, proDisplayName } from "@/lib/utils";
 import { canOffer } from "@/lib/auth/capabilities";
-import { ModeSwitcher } from "@/components/ui/mode-switcher";
 import { useMode, type Mode } from "@/hooks/use-mode";
 import { notificationContext } from "@/lib/notification-link";
 import { useRouter } from "@/i18n/navigation";
@@ -325,8 +324,26 @@ export default function DashboardPage() {
     );
   }
 
-  // No in-panel mode toggle anymore (Airbnb FULL switch): the switch lives in the navbar
-  // account menu and flips the whole experience. The panel just reflects the active mode.
+  function modePanelButton({ mobile = false }: { mobile?: boolean } = {}) {
+    const next: Mode = mode === "offer" ? "use" : "offer";
+    return (
+      <button
+        type="button"
+        onClick={() => { if (mobile) setMoreOpen(false); handleSwitchMode(next); }}
+        className={cn(
+          "w-full flex items-center gap-3 rounded-xl text-left text-sm font-medium transition-colors",
+          mobile ? "px-3 py-3" : "px-3 py-2.5",
+          "text-[#374151] hover:bg-[#f3f4f6]"
+        )}
+      >
+        <span className="shrink-0 text-[#9ca3af]">{next === "offer" ? <Wrench className="h-4 w-4" /> : <User className="h-4 w-4" />}</span>
+        <span className="flex-1">{next === "offer" ? t("panelProfessional") : t("panelClient")}</span>
+      </button>
+    );
+  }
+
+  // Mode switching is now a compact navigation action ("Panel cliente/profesional")
+  // instead of a large header control, so the identity header stays clean.
 
   return (
     <div className="min-h-screen flex flex-col bg-[#fafafa]">
@@ -381,22 +398,6 @@ export default function DashboardPage() {
                 )}
               </div>
             </div>
-            {/* Right header block — the MODE SWITCH (sprint 518: moved here from the navbar;
-                providers only, both worlds in one tap) over the "Ver perfil como cliente"
-                action. Logout lives ONLY in the navbar profile menu. */}
-            {isProvider && (
-              <div className="flex w-full shrink-0 items-center gap-2 sm:w-auto sm:flex-col sm:items-end">
-                <ModeSwitcher mode={mode} onSwitch={handleSwitchMode} className="min-w-0 flex-1 sm:w-[236px] sm:flex-none" block />
-                {mode === "offer" && pro?.slug && (
-                  <Button variant="outline" size="sm" asChild className="h-9 shrink-0 rounded-full px-3 text-xs sm:h-8" title={t("viewAsClient")}>
-                    <a href={`/es/profesionales/${pro.slug}?preview=1`} aria-label={t("viewAsClient")}>
-                      <ExternalLink className="h-4 w-4" />
-                      {t("publicPreview")}
-                    </a>
-                  </Button>
-                )}
-              </div>
-            )}
           </div>
 
           {/* Offer mode, provider row still loading → spinner (avoids gate flash). */}
@@ -434,6 +435,11 @@ export default function DashboardPage() {
                       <div>
                         {(mode === "offer" ? OFFER_TABS : USE_TABS).map(navButton)}
                       </div>
+                      {isProvider && (
+                        <div className="border-t border-[#f3f4f6] pt-2">
+                          {modePanelButton()}
+                        </div>
+                      )}
                       <div className="border-t border-[#f3f4f6] pt-2">
                         {SHARED_TABS.map(navButton)}
                       </div>
@@ -461,14 +467,26 @@ export default function DashboardPage() {
                       <CardContent className="px-6 pt-1 pb-6">
                         {/* MI PERFIL — pro editor in offer mode, basic identity in use mode. */}
                         {activeTab === "profile" && mode === "offer" && pro && (
-                          <ProfileEditor
-                            professionalId={pro.id}
-                            profileId={user.id}
-                            initial={pro}
-                            onSaved={handleSaved}
-                            focusField={profileFocus?.field ?? null}
-                            focusKey={profileFocus?.key}
-                          />
+                          <div className="space-y-4">
+                            {pro.slug && (
+                              <div className="flex justify-end">
+                                <Button variant="outline" size="sm" asChild className="rounded-lg">
+                                  <a href={`/es/profesionales/${pro.slug}?preview=1`}>
+                                    <ExternalLink className="h-4 w-4" />
+                                    {t("viewPublicProfile")}
+                                  </a>
+                                </Button>
+                              </div>
+                            )}
+                            <ProfileEditor
+                              professionalId={pro.id}
+                              profileId={user.id}
+                              initial={pro}
+                              onSaved={handleSaved}
+                              focusField={profileFocus?.field ?? null}
+                              focusKey={profileFocus?.key}
+                            />
+                          </div>
                         )}
                         {activeTab === "profile" && mode === "use" && (
                           <BasicProfileSection />
@@ -613,6 +631,11 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="p-2 pt-0">
+              {isProvider && (
+                <div className="border-b border-[#f3f4f6] pb-2 mb-2">
+                  {modePanelButton({ mobile: true })}
+                </div>
+              )}
               {moreTabs.map((tab) => {
                 const badge = tab === "notifications" ? unreadCount : tab === "soporte" ? supportUnread : 0;
                 const active = activeTab === tab;

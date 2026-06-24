@@ -1027,6 +1027,9 @@
   "proPanel": {
     "viewAsClient": "See how clients see me",
     "publicPreview": "Public view",
+    "viewPublicProfile": "View public profile",
+    "panelClient": "Client dashboard",
+    "panelProfessional": "Professional dashboard",
     "signOut": "Sign out",
     "identityVerified": "Verified",
     "notVerifiedBadge": "Not verified",
