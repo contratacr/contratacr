@@ -81,8 +81,8 @@ export function StatusFilterTabs({
             {label(tab.id)}
             {count > 0 && (
               <span className={cn(
-                "grid h-5 min-w-5 place-items-center rounded-full px-1.5 text-center text-[11px] font-bold leading-none tabular-nums ring-1",
-                active ? "bg-[#009FD9] text-white ring-[#009FD9]" : "bg-white text-[#6b7280] ring-[#e5e7eb]"
+                "text-[12px] font-bold leading-none tabular-nums",
+                active ? "text-[#009FD9]" : "text-[#9ca3af]"
               )}>
                 {count}
               </span>
