@@ -103,8 +103,9 @@ export function CaseShowcase({
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openCase(c); } }}
               className="group relative cursor-pointer overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm transition-shadow hover:shadow-md"
             >
-              <div className="grid gap-4 p-5 sm:grid-cols-[minmax(0,1fr)_190px] sm:items-stretch">
-                <div className="min-w-0">
+              <div className="p-5">
+                <div className="flex flex-col items-start justify-between gap-4 sm:flex-row">
+                <div className="min-w-0 flex-1">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-[#0089bb]">{profLabel(c.profession)}</p>
                 {c.title && <p className="mt-1 text-[18px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere]">{c.title}</p>}
                 {c.description && <p className="mt-1.5 line-clamp-4 text-[14px] leading-relaxed text-[#6b7280] [overflow-wrap:anywhere]">{c.description}</p>}
@@ -117,40 +118,40 @@ export function CaseShowcase({
                 )}
                 </div>
                 {c.photos.length > 0 && (
-                  <div className="grid h-[112px] grid-cols-3 grid-rows-2 gap-1.5 sm:h-full sm:min-h-[138px]">
+                  <div className="flex shrink-0 -space-x-3 pt-1 sm:self-auto">
                     {c.photos.slice(0, 3).map((url, idx) => (
                       <div
                         key={`${c.id}-${url}`}
-                        className={cn(
-                          "relative overflow-hidden rounded-xl bg-[#f3f4f6]",
-                          c.photos.length === 1 ? "col-span-3 row-span-2" : "",
-                          c.photos.length > 1 && idx === 0 ? "col-span-2 row-span-2" : "",
-                          c.photos.length === 2 && idx === 1 ? "row-span-2" : ""
-                        )}
+                        className="relative h-14 w-14 overflow-hidden rounded-xl border-2 border-white bg-[#f3f4f6] shadow-sm sm:h-16 sm:w-16"
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={cldThumb(url, idx === 0 ? 480 : 220)} alt={c.title ?? ""} loading="lazy" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" />
+                        <img src={cldThumb(url, 220)} alt={c.title ?? ""} loading="lazy" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" />
                         {idx === 2 && c.photos.length > 3 && (
                           <span className="absolute inset-0 grid place-items-center bg-black/45 text-xs font-bold text-white">+{c.photos.length - 3}</span>
-                        )}
-                        {idx === 0 && c.likeable && (
-                          <div onClick={(e) => e.stopPropagation()}>
-                            <CaseLikeButton
-                              professionalId={professionalId}
-                              caseId={c.id}
-                              label={t("likeLabel")}
-                              className="absolute right-1 top-1 z-10 grid h-7 w-7 place-items-center rounded-full bg-white/90 text-[#6b7280] shadow-sm backdrop-blur hover:bg-white hover:text-[#e11d48]"
-                            />
-                          </div>
                         )}
                       </div>
                     ))}
                   </div>
                 )}
-                {c.photos.length > 1 && (
-                  <span className="inline-flex w-fit items-center gap-1 rounded-full bg-[#f3f4f6] px-2 py-1 text-[11px] font-semibold text-[#6b7280] sm:col-span-2">
-                    <Images className="h-3 w-3" /> {t("casosPhotos", { count: c.photos.length })}
-                  </span>
+                </div>
+                {(c.photos.length > 1 || c.likeable) && (
+                  <div className="mt-4 flex items-center justify-between gap-3 border-t border-[#f3f4f6] pt-3">
+                    {c.photos.length > 1 ? (
+                      <span className="inline-flex w-fit items-center gap-1 rounded-full bg-[#f3f4f6] px-2 py-1 text-[11px] font-semibold text-[#6b7280]">
+                        <Images className="h-3 w-3" /> {t("casosPhotos", { count: c.photos.length })}
+                      </span>
+                    ) : <span />}
+                    {c.likeable && (
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <CaseLikeButton
+                          professionalId={professionalId}
+                          caseId={c.id}
+                          label={t("likeLabel")}
+                          className="grid h-8 w-8 place-items-center rounded-full bg-[#f9fafb] text-[#6b7280] transition-colors hover:bg-white hover:text-[#e11d48] hover:shadow-sm"
+                        />
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             </div>

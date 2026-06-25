@@ -175,41 +175,38 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
         />
       )}
 
-      {/* One-per-row case cards: editorial summary + compact proof collage. */}
+      {/* One-per-row case cards: outcome summary + small proof photo stack. */}
       {shownCases.length > 0 && (
         <div className="grid grid-cols-1 gap-4">
           {shownCases.map((c) => (
             <div key={c.id} className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
-              <div className="grid gap-4 p-4 sm:grid-cols-[minmax(0,1fr)_176px] sm:items-stretch">
-                <div className="flex min-w-0 flex-col">
+              <div className="p-4">
+                <div className="flex flex-col items-start justify-between gap-4 sm:flex-row">
+                  <div className="min-w-0 flex-1">
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-[#0089bb]">{label(c.profession)}</p>
                   {c.title && <p className="mt-1 text-[16px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere]">{c.title}</p>}
                   {c.description && <p className="mt-1.5 line-clamp-3 text-[13px] leading-relaxed text-[#6b7280] [overflow-wrap:anywhere]">{c.description}</p>}
                   {c.recipient && (
                     <p className="mt-2 text-xs font-medium text-[#374151] [overflow-wrap:anywhere]">{c.recipient}</p>
                   )}
-                </div>
+                  </div>
 
-                {c.photos.length > 0 && (
-                  <div className="grid h-[104px] grid-cols-3 grid-rows-2 gap-1.5 sm:h-full sm:min-h-[128px]">
-                    {c.photos.slice(0, MAX_PHOTOS_PER_CASE).map((url, idx) => (
+                  {c.photos.length > 0 && (
+                    <div className="flex shrink-0 -space-x-3 pt-1 sm:self-auto">
+                      {c.photos.slice(0, MAX_PHOTOS_PER_CASE).map((url) => (
                       <div
                         key={`${c.id}-${url}`}
-                        className={cn(
-                          "relative overflow-hidden rounded-xl bg-[#f3f4f6]",
-                          c.photos.length === 1 ? "col-span-3 row-span-2" : "",
-                          c.photos.length > 1 && idx === 0 ? "col-span-2 row-span-2" : "",
-                          c.photos.length === 2 && idx === 1 ? "row-span-2" : ""
-                        )}
+                        className="relative h-14 w-14 overflow-hidden rounded-xl border-2 border-white bg-[#f3f4f6] shadow-sm sm:h-16 sm:w-16"
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={cldThumb(url, idx === 0 ? 420 : 220)} alt={c.title ?? ""} className="h-full w-full object-cover" />
+                        <img src={cldThumb(url, 220)} alt={c.title ?? ""} className="h-full w-full object-cover" />
                       </div>
-                    ))}
-                  </div>
-                )}
+                      ))}
+                    </div>
+                  )}
+                </div>
 
-                <div className="flex items-center justify-between gap-2 border-t border-[#f3f4f6] pt-3 sm:col-span-2">
+                <div className="mt-3 flex items-center justify-between gap-2 border-t border-[#f3f4f6] pt-3">
                   <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-[#9ca3af]">
                     {c.photos.length > 0 && <span className="inline-flex items-center gap-1"><Images className="h-3 w-3 text-[#374151]" /> {t("photosCount", { count: c.photos.length })}</span>}
                     {c.date && <span className="inline-flex items-center gap-1"><CalendarDays className="h-3 w-3 text-[#374151]" /> {c.date}</span>}

@@ -1736,3 +1736,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Disponibilidad day actions vertical alignment.** In weekly availability rows, day-level actions (Agregar franja / Aplicar a otros dias) must align with the first visible time range and weekday row. Do not add top padding that makes the actions float above the 8:00AM - 5:00PM line; use a row-height action rail aligned to the TimeSelect height.
 
 > **Client profile phone autosave.** Profile phone autosave must read the latest field value at save time, not the value captured by the debounce callback's previous render. Persist only complete country-valid phone numbers; incomplete values should remain local/unsaved or clear the stored phone so booking/project flows can ask for a complete 8-digit CR number.
+
+> **Casos de exito proof stack.** Prefer success-case cards as outcome summaries with a small overlapping proof-photo stack. Avoid large covers, side collages, mosaic grids, or gallery-first layouts. Text is the main content; photos sit beside it on desktop and below it on mobile as supporting proof.
