@@ -1724,3 +1724,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Mis solicitudes description row.** Expanded client request descriptions should use the same flat icon-row pattern as service and beneficiary details: `FileText` icon, tiny uppercase `Descripción` / `Description` label, then the expandable text. Do not leave the request description as unlabeled loose text.
 
 > **Mis publicaciones description row.** Expanded publication descriptions should use the same `FileText` + `Descripción` / `Description` flat row pattern as Mis solicitudes. Avoid unlabeled left-rule text for primary user-entered descriptions.
+
+> **Notification source icons.** Notification rows should use the same icon as the dashboard section they open. Oportunidades notifications use `FolderOpen`, Solicitudes recibidas use `Inbox`, Mis solicitudes use `Send`, Mis publicaciones use `ClipboardList`, Soporte uses `Headset`, and only unknown/account-level notifications fall back to `Bell`.

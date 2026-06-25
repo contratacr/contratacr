@@ -10,6 +10,7 @@ import { cn, formatRelativeOrDate } from "@/lib/utils";
 import { notificationHref, notificationInMode } from "@/lib/notification-link";
 import { useMode } from "@/hooks/use-mode";
 import { canOffer } from "@/lib/auth/capabilities";
+import { NotificationSourceIcon } from "@/components/notifications/notification-source-icon";
 
 type Notification = {
   id: string;
@@ -153,7 +154,7 @@ export function NotificationsList() {
                   <div className="flex items-start gap-3">
                     <div className="relative shrink-0">
                       <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f3f4f6] text-[#374151]">
-                        <Bell className="h-4 w-4" />
+                        <NotificationSourceIcon type={n.type} className="h-4 w-4" />
                       </span>
                       {!n.read && <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#009FD9] ring-2 ring-white" />}
                     </div>

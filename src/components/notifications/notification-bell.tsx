@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Bell, CheckCheck, Trash2 } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { notificationHref, notificationInMode } from "@/lib/notification-link";
 import { useMode } from "@/hooks/use-mode";
 import { canOffer } from "@/lib/auth/capabilities";
+import { NotificationSourceIcon } from "@/components/notifications/notification-source-icon";
 
 type Notification = {
   id: string;
@@ -37,9 +38,7 @@ export function NotificationBell() {
   // it threw "cannot add postgres_changes callbacks after subscribe()" — crashing
   // the whole app via the error boundary. A unique topic gives each instance its
   // own channel, so handlers are always registered before subscribe().
-  const instanceIdRef = useRef<string>(
-    `nb-${Math.random().toString(36).slice(2)}-${Date.now().toString(36)}`
-  );
+  const instanceId = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
   // Only the active mode's notifications drive the bell (list + unread badge).
   const visible = notifications.filter((n) => notificationInMode(n.type, mode));
@@ -71,7 +70,7 @@ export function NotificationBell() {
     // INSERT (new notification) AND UPDATE (read flag flipped elsewhere) so the
     // unread badge stays correct without a manual refresh.
     const channel = supabase
-      .channel(`notifications-${user.id}-${instanceIdRef.current}`)
+      .channel(`notifications-${user.id}-${instanceId}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
@@ -92,7 +91,7 @@ export function NotificationBell() {
     // Clean up on unmount / user change so the channel is removed exactly once
     // and never re-subscribed with stale handlers.
     return () => { supabase.removeChannel(channel); };
-  }, [user, fetchNotifications]);
+  }, [user, fetchNotifications, instanceId]);
 
   // Same-tab sync: other notification surfaces (the in-panel list) broadcast this
   // event after marking read / deleting; re-pull so the bell badge matches.
@@ -208,11 +207,14 @@ export function NotificationBell() {
                       onClick={() => openNotification(n)}
                       className="w-full text-left px-4 py-3 pr-9 hover:bg-[#f3f4f6] transition-colors"
                     >
-                      <div className="flex items-start gap-2">
-                        {!n.read && (
-                          <span className="mt-1.5 h-2 w-2 rounded-full bg-[#319278] shrink-0" />
-                        )}
-                        <div className={cn("min-w-0 flex-1", !n.read ? "" : "ml-4")}>
+                      <div className="flex items-start gap-2.5">
+                        <div className="relative shrink-0">
+                          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#f3f4f6] text-[#374151]">
+                            <NotificationSourceIcon type={n.type} className="h-4 w-4" />
+                          </span>
+                          {!n.read && <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-[#319278] ring-2 ring-white" />}
+                        </div>
+                        <div className="min-w-0 flex-1">
                           {/* No role tag — the title/message already make the
                               context clear; clicking still routes correctly.
                               overflow-wrap:anywhere + line-clamp keep long/unbroken
