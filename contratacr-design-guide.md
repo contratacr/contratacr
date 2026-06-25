@@ -1704,3 +1704,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Dashboard action menus must not be clipped.** Cards or action rows that contain `CardActionsMenu` must keep overflow visible. Avoid `overflow-hidden` on the card wrapper and `overflow-x-auto` on the action row unless the menu is portaled/fixed; otherwise the dropdown can open but appear blank/clipped.
 
 > **Oportunidades description labels.** Inside an opportunity card, use the concise eyebrow `Descripción` / `Description` for the expanded body. Avoid `Descripción del proyecto` or `Descripción de la solicitud` unless the surrounding UI is ambiguous.
+
+> **Disponibilidad weekly actions placement.** In active weekly day rows, keep time ranges on the left and day-level actions (`Agregar franja` / `Aplicar a otros dias`) in a compact right-side column. Avoid putting those actions directly below the hour selects unless the row is redesigned, and preserve enough fixed action width so text wraps cleanly without overlapping time inputs.

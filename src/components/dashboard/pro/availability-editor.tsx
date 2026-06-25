@@ -715,8 +715,9 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                       {!on ? (
                         <p className="text-sm text-[#9ca3af] sm:pt-1.5">{t("closed")}</p>
                       ) : (
-                        <div className="flex flex-col gap-2.5">
-                          {blocks.map((b) => {
+                        <div className="flex items-start gap-3 sm:gap-4">
+                          <div className="flex min-w-0 flex-1 flex-col gap-2.5">
+                            {blocks.map((b) => {
                             const timeRow = (
                               <div className="flex items-center gap-1.5">
                                 <TimeSelect value={b.start} onChange={(v) => updateBlock(wd, b.id, { start: v, ...(b.end && toMins(b.end) <= toMins(v) ? { end: hhmm(Math.min(toMins(v) + 60, 23 * 60 + 30)) } : {}) })} className="min-w-0 flex-1 sm:flex-none sm:w-28" />
@@ -747,13 +748,14 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                                 {timeRow}
                               </div>
                             );
-                          })}
-                          <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-[#f3f4f6] pt-2">
-                            <button type="button" onClick={() => addBlock(wd)} className="inline-flex items-center gap-1 text-xs font-medium text-[#009FD9] hover:underline cursor-pointer">
-                              <Plus className="h-3.5 w-3.5" /> {t("addFranja")}
+                            })}
+                          </div>
+                          <div className="flex w-[116px] shrink-0 flex-col items-end gap-2 pt-1 sm:w-40">
+                            <button type="button" onClick={() => addBlock(wd)} className="inline-flex max-w-full items-center justify-end gap-1 text-right text-xs font-medium leading-tight text-[#009FD9] hover:underline cursor-pointer">
+                              <Plus className="h-3.5 w-3.5 shrink-0" /> <span>{t("addFranja")}</span>
                             </button>
                             {canApply && (
-                              <button type="button" onClick={() => setApplyModal({ weekday: wd })} className="text-xs font-medium text-[#6b7280] hover:text-[#009FD9] hover:underline cursor-pointer">
+                              <button type="button" onClick={() => setApplyModal({ weekday: wd })} className="max-w-full text-right text-xs font-medium leading-tight text-[#6b7280] hover:text-[#009FD9] hover:underline cursor-pointer">
                                 {t("applyToOtherDays")}
                               </button>
                             )}
