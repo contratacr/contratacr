@@ -39,7 +39,7 @@ export async function WhyContratacr() {
     };
   });
   // The phone mockup features a "Tecnología" professional (illustrative content only) with
-  // three example service categories and a "precio a consultar" price. Locale-aware so EN reads right.
+  // three example service categories and a "consultar precio" price. Locale-aware so EN reads right.
   const mockProfession = locale === "en" ? "Technology" : "Tecnología";
   const mockCategories = locale === "en"
     ? ["Computer repair", "Networks & internet", "Security cameras"]
@@ -54,7 +54,7 @@ export async function WhyContratacr() {
     viewSchedule: tSched("viewFullSchedule"),
     noScheduleNote: tSched("availabilityHiddenNote"),
     priceUnit: tCard("perHour"),
-    priceOnRequest: locale === "en" ? "Ask price" : "Consultar",
+    priceOnRequest: locale === "en" ? "Ask price" : "Consultar precio",
     reviews: (n: number) => tCard("reviewsCount", { count: n }),
     days,
   };

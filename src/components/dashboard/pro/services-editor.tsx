@@ -43,7 +43,7 @@ function genId() {
   return `svc_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 }
 
-// Price units offered in the service modal's <select> (the "Precio a consultar"
+// Price units offered in the service modal's <select> (the "Consultar precio"
 // checkbox covers a_convenir separately, so it's excluded here).
 const PRICE_UNITS = PRICING_TYPES.filter((p) => p.value !== "a_convenir");
 
@@ -51,7 +51,7 @@ interface ServiceFormState {
   description: string;
   priceUnit: PricingType;   // a non-a_convenir unit (por_hora, por_proyecto, …)
   priceAmount: string;
-  aConsultar: boolean;      // "Precio a consultar" → persists as priceType a_convenir
+  aConsultar: boolean;      // "Consultar precio" → persists as priceType a_convenir
   years: string;
 }
 
@@ -203,7 +203,7 @@ export function ServicesEditor({
   const formOpen = editCategory !== "";
 
   async function handleFormSave() {
-    // Require an explicit price OR the deliberate "Precio a consultar" choice.
+    // Require an explicit price OR the deliberate "Consultar precio" choice.
     if (!form.aConsultar && !form.priceAmount.trim()) {
       setFormError(t("priceRequired"));
       return;

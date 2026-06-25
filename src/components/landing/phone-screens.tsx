@@ -153,7 +153,7 @@ function ProCard({
                     {priceUnit ? <span className="text-[8px] font-medium text-[#9ca3af]"> {priceUnit}</span> : null}
                   </>
                 ) : (
-                  <span className="rounded-full bg-[#f3f4f6] px-1.5 py-0.5 text-[8px] font-semibold text-[#6b7280]">{price}</span>
+                  <span className="inline-flex max-w-[54px] items-center justify-center rounded-full bg-[#f3f4f6] px-1.5 py-0.5 text-center text-[7px] font-semibold leading-[0.95] text-[#6b7280] whitespace-normal">{price}</span>
                 )}
               </span>
             ) : null}
@@ -246,7 +246,7 @@ const DEFAULT_RESULTS_COPY: ResultsCopy = {
   viewSchedule: "Ver horario completo",
   noScheduleNote: "La disponibilidad de este perfil no es pública. Contáctanos y conoce sus horarios.",
   priceUnit: "/hora",
-  priceOnRequest: "Consultar",
+  priceOnRequest: "Consultar precio",
   reviews: (n) => `${n} reseñas`,
   days: [
     { label: "Hoy", times: ["9:00", "14:00"] },

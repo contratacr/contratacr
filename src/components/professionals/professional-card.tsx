@@ -134,7 +134,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
       : allProfessions.slice(0, 3);
   // Price split so the AMOUNT can be brand-blue and the /unit muted grey (matches the
   // target screenshots — e.g. "₡10 000" blue + " /hora" grey). A text price like
-  // "Precio a consultar" has no "/" and renders whole in grey.
+  // "Consultar precio" has no "/" and renders whole in grey.
   const priceLabel = primaryPricingLabel(professional.pricing, professional.hourlyRate);
   const priceSlash = priceLabel.indexOf("/");
   const priceAmount = priceSlash >= 0 ? priceLabel.slice(0, priceSlash).trim() : priceLabel;
