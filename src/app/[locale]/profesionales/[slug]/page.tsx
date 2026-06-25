@@ -754,30 +754,33 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                     });
 
                     return (
-                      <div className="flex flex-col gap-5">
+                      <div className="flex flex-col gap-6">
+                        <div>
+                          <h2 className="text-lg font-semibold text-[#111827]">{t("tabs.sobre")}</h2>
+                          <p className="mt-1 text-sm text-[#6b7280] [overflow-wrap:anywhere]">{professional.fullName}</p>
+                        </div>
                         {/* Bio — clean, well-spaced paragraph in a soft brand-tint card. NO quote
                             icon (owner: dropped it); the text is the person's intro, presented simply. */}
                         {professional.bio && (
-                          <div className="rounded-2xl bg-[#EBF5FB] p-5 sm:p-6">
-                            <p className="text-[15px] leading-relaxed text-[#374151] whitespace-pre-line [overflow-wrap:anywhere]">{professional.bio}</p>
+                          <div className="rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm sm:p-6">
+                            <p className="max-w-3xl whitespace-pre-line text-[15px] leading-7 text-[#374151] [overflow-wrap:anywhere]">{professional.bio}</p>
                           </div>
                         )}
                         {/* Facts: BORDERLESS soft-tint cards in a 2-col grid (no dividers/borders). */}
                         {facts.length > 0 && (
-                          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                            {facts.map((f, i) => {
-                              const spanFull = i === facts.length - 1 && facts.length % 2 === 1;
-                              return (
-                                <div key={f.key} className={cn("flex items-start gap-3.5 rounded-2xl bg-[#f9fafb] p-4 sm:p-5", spanFull && "sm:col-span-2")}>
-                                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#EBF5FB] text-[#009FD9]">{f.icon}</span>
+                          <div className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+                            <div className="grid grid-cols-1 divide-y divide-[#f3f4f6] sm:grid-cols-2 sm:divide-x sm:divide-y-0">
+                              {facts.map((f, i) => (
+                                <div key={f.key} className={cn("flex items-start gap-3.5 p-4 sm:p-5", i > 1 && "sm:border-t sm:border-[#f3f4f6]")}>
+                                  <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#EBF5FB] text-[#009FD9]">{f.icon}</span>
                                   <div className="min-w-0 flex-1">
                                     <p className="text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">{f.label}</p>
-                                    <div className="mt-1 text-[15px] font-bold text-[#162543] [overflow-wrap:anywhere]">{f.value}</div>
+                                    <div className="mt-1 text-[15px] font-semibold text-[#162543] [overflow-wrap:anywhere]">{f.value}</div>
                                     {f.caption && <div className="mt-1 text-xs leading-relaxed text-[#6b7280] [overflow-wrap:anywhere]">{f.caption}</div>}
                                   </div>
                                 </div>
-                              );
-                            })}
+                              ))}
+                            </div>
                           </div>
                         )}
                       </div>

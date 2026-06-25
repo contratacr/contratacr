@@ -1746,3 +1746,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Casos de exito modal ambient image treatment.** Avoid visible hard borders/letterbox frames in success-case modals. Prefer an ambient blurred background derived from the active photo, with the full image object-contain above it. Use soft thumbnail tiles with opacity/ring selection rather than dark bordered contain boxes.
 
 > **Casos de exito modal counter contrast.** Photo counters over success-case images must be readable on white/light photos. Use a solid-enough dark translucent pill with subtle border/shadow/blur and z-index above the image, not a low-opacity overlay that can disappear on light work photos.
+
+> **Public profile Sobre mi layout.** The professional About tab should read like an editorial profile section: heading + readable bio block + compact divided facts panel. Avoid many separate fact cards that make the section feel noisy; use icons and subtle dividers for scanability.
