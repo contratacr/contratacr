@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useSearchParams } from "next/navigation";
 import { SlidersHorizontal } from "lucide-react";
 import { GoogleMapPanel, type MapProfessional } from "@/components/maps/google-map-panel";
 
@@ -45,7 +46,12 @@ const MAX = 0.92;
  */
 export function SearchResultsLayout({ children, filters, drawerFilters, countLabel, mapData, apiKey, locale, numbering }: SearchResultsLayoutProps) {
   const t = useTranslations("search");
-  const [showFilters, setShowFilters] = useState(false); // full-filter drawer (mobile + lg–xl)
+  const params = useSearchParams();
+  const [showFilters, setShowFilters] = useState(false); // full-filter drawer (mobile + lg-xl)
+  const hasActiveFilters =
+    !!params.get("categoria") || !!params.get("provincia") || !!params.get("canton") ||
+    !!params.get("aseguradora") || params.get("verificados") === "1" || !!params.get("lat") ||
+    (!!params.get("sortBy") && params.get("sortBy") !== "rating");
 
   // The single-line mobile header (in the navbar) hosts the "Filtros" icon button, which
   // dispatches `ccr:open-filters`; the drawer's in-card X dispatches `ccr:close-filters`.
@@ -151,9 +157,7 @@ export function SearchResultsLayout({ children, filters, drawerFilters, countLab
         </div>
       )}
 
-      {/* The mobile search + "Filtros" now live in the navbar's single-line header (see
-          page.tsx `mobileInline`); "Filtros" opens this drawer via the `ccr:open-filters`
-          event above. So the layout goes straight to the map + sheet on mobile. */}
+      {/* Mobile search lives in the navbar; filters float over the map like modern map apps. */}
 
       {/* ONE flex container: mobile = the map fills the remaining height (the sheet floats
           over it); desktop = the 3-column shell (filters · cards · map) via `lg:order-*`. */}
@@ -168,6 +172,16 @@ export function SearchResultsLayout({ children, filters, drawerFilters, countLab
         <aside className="min-h-0 min-w-0 flex-1 lg:order-3">
           <div className="relative isolate h-full w-full overflow-hidden bg-[#eef2f6] lg:h-[calc(100vh-104px)] lg:rounded-2xl lg:border lg:border-[#e5e7eb] lg:bg-white lg:sticky lg:top-20">
             <GoogleMapPanel apiKey={apiKey} professionals={mapData} locale={locale} numbering={numbering} />
+            <button
+              type="button"
+              aria-label={t("filters.title")}
+              onClick={() => setShowFilters(true)}
+              className="absolute right-3 top-3 z-20 inline-flex h-10 items-center justify-center gap-1.5 rounded-full border border-[#e5e7eb] bg-white/95 px-3 text-[13px] font-bold text-[#162543] shadow-[0_8px_24px_rgba(15,23,42,0.16)] backdrop-blur transition-transform active:scale-95 sm:px-3.5 lg:hidden"
+            >
+              <SlidersHorizontal className="h-[17px] w-[17px] text-[#0089bb]" />
+              <span className="hidden min-[360px]:inline">{t("filters.title")}</span>
+              {hasActiveFilters && <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#008ce0]" />}
+            </button>
           </div>
         </aside>
 
@@ -176,7 +190,7 @@ export function SearchResultsLayout({ children, filters, drawerFilters, countLab
             (order-2) and the desktop map sit in the flex shell. */}
         <div
           className="fixed inset-x-0 bottom-0 z-30 flex flex-col rounded-t-[20px] border-x border-t border-[#e5e7eb] bg-white shadow-[0_-12px_36px_-14px_rgba(15,23,42,0.32)] lg:static lg:z-auto lg:rounded-none lg:border-0 lg:shadow-none lg:contents"
-          // maxHeight keeps the navbar (logo + search + filters + menu) visible even when fully
+          // maxHeight keeps the navbar (logo + search + menu) visible even when fully
           // expanded. On desktop the wrapper is `lg:contents`, so these inline styles have no effect.
           style={{ height: `${heightFr * 100}dvh`, maxHeight: "calc(100dvh - 72px)", transition: dragging ? "none" : "height .3s cubic-bezier(.32,.72,0,1)" }}
         >
