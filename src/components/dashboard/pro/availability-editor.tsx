@@ -474,10 +474,6 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
   function updateBlock(weekday: number, id: string, patch: Partial<Block>) {
     persistDay(weekday, blocksFor(weekday).map((b) => (b.id === id ? { ...b, ...patch } : b)));
   }
-  function removeBlock(weekday: number, id: string) {
-    persistDay(weekday, blocksFor(weekday).filter((b) => b.id !== id));
-  }
-
   // Copy one configured day's complete ranges to selected destination days.
   async function applyDayToTargets(sourceWeekday: number, targetWeekdays: number[]) {
     const targets = targetWeekdays.filter((wd) => wd !== sourceWeekday);
@@ -721,15 +717,11 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                       ) : (
                         <div className="flex flex-col gap-2.5">
                           {blocks.map((b) => {
-                            // time range + its remove "x" on ONE line — the x stays RIGHT
                             const timeRow = (
                               <div className="flex items-center gap-1.5">
                                 <TimeSelect value={b.start} onChange={(v) => updateBlock(wd, b.id, { start: v, ...(b.end && toMins(b.end) <= toMins(v) ? { end: hhmm(Math.min(toMins(v) + 60, 23 * 60 + 30)) } : {}) })} className="min-w-0 flex-1 sm:flex-none sm:w-28" />
                                 <span className="shrink-0 text-[#9ca3af]">–</span>
                                 <TimeSelect value={b.end} min={b.start ? hhmm(Math.min(toMins(b.start) + 30, 23 * 60 + 30)) : undefined} onChange={(v) => updateBlock(wd, b.id, { end: v })} className="min-w-0 flex-1 sm:flex-none sm:w-28" error={b.start && b.end && toMins(b.end) <= toMins(b.start) ? t("toAfterFrom") : undefined} />
-                                <button type="button" onClick={() => removeBlock(wd, b.id)} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-[#9ca3af] hover:bg-[#f3f4f6] hover:text-red-500 transition-colors" aria-label={t("remove")}>
-                                  <X className="h-4 w-4" />
-                                </button>
                               </div>
                             );
                             // Single-location pros: just the time row (clean, compact, no location UI).
@@ -756,22 +748,19 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                               </div>
                             );
                           })}
+                          <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-[#f3f4f6] pt-2">
+                            <button type="button" onClick={() => addBlock(wd)} className="inline-flex items-center gap-1 text-xs font-medium text-[#009FD9] hover:underline cursor-pointer">
+                              <Plus className="h-3.5 w-3.5" /> {t("addFranja")}
+                            </button>
+                            {canApply && (
+                              <button type="button" onClick={() => setApplyModal({ weekday: wd })} className="text-xs font-medium text-[#6b7280] hover:text-[#009FD9] hover:underline cursor-pointer">
+                                {t("applyToOtherDays")}
+                              </button>
+                            )}
+                          </div>
                         </div>
                       )}
                     </div>
-                    {/* Per-day actions: add another range or copy this day elsewhere. */}
-                    {on && (
-                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 sm:shrink-0 sm:justify-end sm:pt-1.5">
-                        <button type="button" onClick={() => addBlock(wd)} className="inline-flex items-center gap-1 text-xs font-medium text-[#009FD9] hover:underline cursor-pointer">
-                          <Plus className="h-3.5 w-3.5" /> {t("addFranja")}
-                        </button>
-                        {canApply && (
-                          <button type="button" onClick={() => setApplyModal({ weekday: wd })} className="text-xs font-medium text-[#6b7280] hover:text-[#009FD9] hover:underline cursor-pointer">
-                            {t("applyToOtherDays")}
-                          </button>
-                        )}
-                      </div>
-                    )}
                   </div>
                 );
               })}
