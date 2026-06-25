@@ -31,7 +31,7 @@ export type SuccessCase = {
 // Legacy item shape (photos-only) — read for back-compat so nothing is lost.
 type LegacyItem = { url?: string; serviceId?: string; profession?: string };
 
-export const MAX_CASES_PER_PROFESSION = 2;
+export const MAX_CASES_PER_PROFESSION = 3;
 export const MAX_PHOTOS_PER_CASE = 3;
 
 interface PhotoGalleryProps {
@@ -178,12 +178,12 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
         />
       )}
 
-      {/* Case grid (matches the panel mockup). */}
+      {/* Large one-per-row case cards: easier to inspect photos and text on every viewport. */}
       {shownCases.length > 0 && (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4">
           {shownCases.map((c) => (
-            <div key={c.id} className="flex flex-col overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
-              <div className="relative aspect-[4/3] bg-[#f3f4f6]">
+            <div key={c.id} className="flex flex-col overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm sm:flex-row">
+              <div className="relative aspect-[16/10] bg-[#f3f4f6] sm:w-64 sm:shrink-0">
                 {c.photos[0] && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={cldThumb(c.photos[0], 600)} alt={c.title ?? ""} className="h-full w-full object-cover" />
@@ -194,12 +194,12 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
                   </span>
                 )}
               </div>
-              <div className="flex flex-1 flex-col p-3.5">
+              <div className="flex flex-1 flex-col p-4">
                 <p className="text-[11px] font-semibold text-[#0089bb]">{label(c.profession)}</p>
-                {c.title && <p className="mt-0.5 line-clamp-1 text-[15px] font-bold text-[#162543] [overflow-wrap:anywhere]">{c.title}</p>}
-                {c.description && <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-[#6b7280] [overflow-wrap:anywhere]">{c.description}</p>}
+                {c.title && <p className="mt-0.5 text-[16px] font-bold text-[#162543] [overflow-wrap:anywhere]">{c.title}</p>}
+                {c.description && <p className="mt-1 line-clamp-3 text-[13px] leading-relaxed text-[#6b7280] [overflow-wrap:anywhere]">{c.description}</p>}
                 {c.recipient && (
-                  <p className="mt-0.5 line-clamp-1 text-xs text-[#6b7280] [overflow-wrap:anywhere]">{c.recipient}</p>
+                  <p className="mt-1 text-xs text-[#6b7280] [overflow-wrap:anywhere]">{c.recipient}</p>
                 )}
                 <div className="mt-3 flex items-center justify-between gap-2 border-t border-[#f3f4f6] pt-2.5">
                   <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-[#9ca3af]">

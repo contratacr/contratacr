@@ -22,7 +22,7 @@ export type ShowcaseCase = {
 };
 
 // Client-facing "Casos de éxito" showcase (the public profile). A profession filter
-// ("Todos" + per-profession counts) over a grid of case cards — cover photo + N-fotos
+// ("Todos" + per-profession counts) over large one-per-row case cards: cover photo + N-fotos
 // badge + profession tag + title + short description + recipient/date + "Me gusta".
 // Tapping a card opens a spacious CASE-DETAIL modal (sprint 527): the full info (service ·
 // recipient · date · description) beside a LARGER, browsable photo viewer — an overlay in
@@ -94,7 +94,7 @@ export function CaseShowcase({
         />
       )}
 
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-5">
         {shown.map((c) => {
           return (
             <div
@@ -103,10 +103,10 @@ export function CaseShowcase({
               role="button"
               tabIndex={0}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openCase(c); } }}
-              className="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm transition-shadow hover:shadow-md"
+              className="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm transition-shadow hover:shadow-md md:flex-row"
             >
               {c.photos[0] && (
-                <div className="relative block aspect-[16/9] overflow-hidden bg-[#f3f4f6]">
+                <div className="relative block aspect-[16/10] overflow-hidden bg-[#f3f4f6] md:w-[42%] md:shrink-0">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={cldThumb(c.photos[0], 600)} alt={c.title ?? ""} loading="lazy" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" />
                   {c.photos.length > 1 && (
@@ -128,10 +128,10 @@ export function CaseShowcase({
                   />
                 </div>
               )}
-              <div className="flex flex-1 flex-col p-4">
+              <div className="flex flex-1 flex-col p-5">
                 <p className="text-[11px] font-semibold text-[#0089bb]">{profLabel(c.profession)}</p>
-                {c.title && <p className="mt-0.5 line-clamp-1 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere]">{c.title}</p>}
-                {c.description && <p className="mt-1 line-clamp-2 text-[13px] leading-relaxed text-[#6b7280] [overflow-wrap:anywhere]">{c.description}</p>}
+                {c.title && <p className="mt-0.5 text-[17px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere]">{c.title}</p>}
+                {c.description && <p className="mt-1 line-clamp-4 text-[14px] leading-relaxed text-[#6b7280] [overflow-wrap:anywhere]">{c.description}</p>}
                 {(c.recipient || c.date) && (
                   <p className="mt-2.5 flex flex-wrap items-baseline gap-x-1.5 text-[12px] [overflow-wrap:anywhere]">
                     {c.recipient && <span className="font-medium text-[#374151]">{c.recipient}</span>}

@@ -437,31 +437,29 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
 
                         {expandedBooking === b.id && (
                           <div className="px-4 pb-5 pt-4 sm:px-5 border-t border-[#f3f4f6] flex flex-col gap-3.5">
-                            {/* The header already identifies the professional; details stay focused
-                                on the requested service and patient context. */}
-                            {bookingServiceLabel(b) && (
-                              <div className="overflow-hidden rounded-xl border border-[#eef0f2] bg-[#f9fafb] divide-y divide-[#eef0f2]">
-                                <div className="px-4 py-3">
-                                  <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("serviceField")}</p>
-                                  <p className="mt-0.5 text-[13px] font-medium text-[#374151] [overflow-wrap:anywhere]">{bookingServiceLabel(b)}</p>
-                                </div>
+                            {/* The header already identifies the professional; expanded details stay flat. */}
+                            {(bookingServiceLabel(b) || b.for_someone_else) && (
+                              <div className="flex flex-col gap-3 text-sm">
+                                {bookingServiceLabel(b) && (
+                                  <div>
+                                    <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("serviceField")}</p>
+                                    <p className="mt-0.5 font-medium text-[#374151] [overflow-wrap:anywhere]">{bookingServiceLabel(b)}</p>
+                                  </div>
+                                )}
+                                {b.for_someone_else && (() => {
+                                  const beneAge = ageLabel(b.beneficiary_dob);
+                                  return (
+                                    <div>
+                                      <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("apptForLabel")}</p>
+                                      <p className="mt-0.5 font-semibold text-[#111827] [overflow-wrap:anywhere]">{b.beneficiary_name || t("otherPerson")}</p>
+                                      {beneAge && (
+                                        <p className="mt-0.5 text-[12px] text-[#6b7280]"><span className="text-[#9ca3af]">{t("fieldAge")}</span> {beneAge}</p>
+                                      )}
+                                    </div>
+                                  );
+                                })()}
                               </div>
                             )}
-
-                            {/* "La cita es para" — client-side context only. Clinical age flags stay
-                                on the professional's received requests. */}
-                            {b.for_someone_else && (() => {
-                              const beneAge = ageLabel(b.beneficiary_dob);
-                              return (
-                                <div className="rounded-xl bg-[#EBF5FB] px-4 py-3">
-                                  <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#0089bb]">{t("apptForLabel")}</p>
-                                  <p className="mt-0.5 text-sm font-semibold text-[#111827] [overflow-wrap:anywhere]">{b.beneficiary_name || t("otherPerson")}</p>
-                                  {beneAge && (
-                                    <p className="mt-0.5 text-[12px] text-[#6b7280]"><span className="text-[#9ca3af]">{t("fieldAge")}</span> {beneAge}</p>
-                                  )}
-                                </div>
-                              );
-                            })()}
 
                             {b.service_description && (
                               <ExpandableText text={b.service_description} lines={5} />

@@ -556,7 +556,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                         {cats.length === 0 ? (
                           <p className="text-sm text-[#9ca3af] py-4 text-center">{t("noServices")}</p>
                         ) : (
-                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                          <div className="grid grid-cols-1 gap-4">
                             {cats.map((cat) => {
                               const items = byCat.get(cat) ?? [];
                               // ONE clean summary per service: its description + price (the model is
@@ -570,7 +570,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                                   <div className="flex flex-1 flex-col">
                                     <p className="text-[16px] font-bold text-[#162543] [overflow-wrap:anywhere]">{getCategoryLabel(cat, locale)}</p>
                                     {rep?.description ? (
-                                      <p className="mt-2 line-clamp-2 text-[13px] leading-relaxed text-[#6b7280] [overflow-wrap:anywhere]">{rep.description}</p>
+                                      <p className="mt-2 line-clamp-4 text-[14px] leading-relaxed text-[#6b7280] [overflow-wrap:anywhere]">{rep.description}</p>
                                     ) : (
                                       <p className="mt-2 text-[13px] text-[#9ca3af]">{t("askForDetails")}</p>
                                     )}
