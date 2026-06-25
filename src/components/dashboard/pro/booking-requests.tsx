@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarDays, ChevronDown, CalendarClock, Clock, Phone, IdCard, Wrench } from "lucide-react";
+import { CalendarDays, ChevronDown, CalendarClock, Clock, Phone, IdCard, Wrench, MapPin, UserRound } from "lucide-react";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { formatId } from "@/lib/cedula";
 import { ageCategoryFromDob, computeAge } from "@/lib/age";
@@ -235,7 +235,7 @@ export function BookingRequests() {
     const panelOpen = actionFor?.id === booking.id;
 
     return (
-      <Card className="rounded-2xl hover:shadow-md">
+      <Card className="overflow-hidden rounded-2xl hover:shadow-md">
         {/* EXPANDABLE LEAD CARD (sprint 430): COLLAPSED shows only essentials (who · when ·
             status + unverified). Tapping reveals the full identity, the "para otra persona"
             callout, servicio·zona, the note, and the management ACTIONS. Zero icons; text labels.
@@ -246,7 +246,7 @@ export function BookingRequests() {
           type="button"
           onClick={() => setExpandedId(expanded ? null : booking.id)}
           aria-expanded={expanded}
-          className={cn("w-full text-left px-4 py-4 sm:px-5 flex items-center gap-3.5 hover:bg-[#fafafa] transition-colors", expanded ? "rounded-t-2xl" : "rounded-2xl")}
+          className={cn("w-full text-left px-4 py-4 sm:px-5 flex items-start gap-3.5 hover:bg-[#fafafa] transition-colors", expanded ? "rounded-t-2xl" : "rounded-2xl")}
         >
           <Avatar className="h-11 w-11 shrink-0">
             <AvatarImage src={booking.profiles?.avatar_url} className="object-cover" />
@@ -257,81 +257,86 @@ export function BookingRequests() {
               itself), and a muted "servicio · nota" snippet on line 3 for instant context. */}
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
-              <span className="text-[15px] font-bold text-[#162543] min-w-0 flex items-center gap-2 flex-wrap [overflow-wrap:anywhere]">
+              <span className="text-[15px] font-bold text-[#162543] min-w-0 flex items-center gap-2 flex-wrap [overflow-wrap:anywhere] sm:text-base">
                 {booking.client_name || t("thePerson")}
-                {!booking.for_someone_else && ageBadge(booking.client_dob)}
-                {unverifiedPill}
-                {flaggedPill}
               </span>
               {!solicitudStatusRedundant(booking.status, booking.scheduled_date) && (
                 <Badge variant={STATUS_VARIANT[booking.status]} className="shrink-0 px-2.5 py-0.5 text-[11px] font-semibold">{t(`status.${booking.status}`)}</Badge>
               )}
             </div>
-            {/* Appointment date with a quiet grey calendar icon. */}
-            <p className="mt-1 flex items-center gap-1.5 text-[13px] min-w-0">
-              <CalendarClock className="h-3.5 w-3.5 shrink-0 text-[#374151]" />
-              <span className={cn("truncate", dateStr ? "font-medium text-[#374151]" : "text-[#6b7280]")}>{dateStr || t("noScheduledDate")}</span>
-            </p>
-            {/* The service requested (grey wrench) — mirrors the client's Mis solicitudes card. */}
-            {category && (
-              <p className="mt-1 flex items-center gap-1.5 text-[12px] text-[#6b7280] min-w-0">
-                <Wrench className="h-3.5 w-3.5 shrink-0 text-[#374151]" />
-                <span className="truncate">{category}</span>
-              </p>
-            )}
+            <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[12px] text-[#6b7280]">
+              <span className={cn("inline-flex max-w-full items-center gap-1.5 rounded-full px-2 py-1", dateStr ? "bg-[#f9fafb] font-medium text-[#374151]" : "bg-[#f3f4f6] text-[#6b7280]")}>
+                <CalendarClock className="h-3.5 w-3.5 shrink-0 text-[#374151]" />
+                <span className="truncate">{dateStr || t("noScheduledDate")}</span>
+              </span>
+              {category && (
+                <span className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-[#f9fafb] px-2 py-1">
+                  <Wrench className="h-3.5 w-3.5 shrink-0 text-[#374151]" />
+                  <span className="truncate">{category}</span>
+                </span>
+              )}
+              {location && (
+                <span className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-[#f9fafb] px-2 py-1">
+                  <MapPin className="h-3.5 w-3.5 shrink-0 text-[#374151]" />
+                  <span className="truncate">{location}</span>
+                </span>
+              )}
+              {!booking.for_someone_else && ageBadge(booking.client_dob)}
+              {unverifiedPill}
+              {flaggedPill}
+            </div>
           </div>
           <ChevronDown className={cn("h-5 w-5 text-[#9ca3af] shrink-0 transition-transform duration-200", expanded && "rotate-180")} />
         </button>
 
         {expanded && (
-          <div className="px-4 pb-5 pt-4 sm:px-5 border-t border-[#f3f4f6] flex flex-col gap-3.5">
-            {/* When the request came in — a quiet meta line at the TOP of the details (sprint 501;
-                was buried at the END of the contact card). Distinct from the appointment date
-                (shown collapsed) and from the contact/service info below. */}
+          <div className="px-4 pb-5 pt-4 sm:px-5 border-t border-[#f3f4f6] flex flex-col gap-4">
             {requestedDate && (
               <p className="flex items-center gap-1.5 text-[11px] text-[#9ca3af]">
                 <Clock className="h-3.5 w-3.5 shrink-0 text-[#374151]" /> {t("requestedOn", { date: requestedDate })}
               </p>
             )}
-            {/* REDESIGNED request info (sprint 443) — organised, not a flat "label: value" dump.
-                (1) the patient callout when the cita is for someone else; (2) a tidy DETAILS card
-                = the SERVICE (navy headline) + location, then the booker's CONTACT (phone · cédula)
-                with eyebrow labels; (3) a muted "Solicitada el …" meta; (4) the client's NOTE as a
-                quote. Zero icons; on-brand navy/blue/grey; scans cleanly on ~360px + desktop. */}
 
-            {/* 1 — "Para otra persona" callout (patient: name + age; clinical flag only here) */}
             {booking.for_someone_else && (() => {
               const beneAge = ageLabel(booking.beneficiary_dob);
               return (
-                <div className="rounded-xl bg-[#EBF5FB] px-4 py-3">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#0089bb]">{t("apptForLabel")}</p>
-                  <p className="mt-0.5 text-sm font-semibold text-[#111827] flex items-center gap-2 flex-wrap">
-                    {booking.beneficiary_name || t("otherPerson")}
-                    {ageBadge(booking.beneficiary_dob, !!booking.beneficiary_is_minor)}
-                  </p>
-                  {beneAge && (
-                    <p className="mt-0.5 text-[12px] text-[#6b7280]"><span className="text-[#9ca3af]">{t("fieldAge")}</span> {beneAge}</p>
-                  )}
+                <div className="flex items-start gap-2.5 rounded-xl bg-[#EBF5FB] px-3.5 py-3">
+                  <UserRound className="mt-0.5 h-4 w-4 shrink-0 text-[#0089bb]" />
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#0089bb]">{t("apptForLabel")}</p>
+                    <p className="mt-0.5 text-sm font-semibold text-[#111827] flex items-center gap-2 flex-wrap [overflow-wrap:anywhere]">
+                      {booking.beneficiary_name || t("otherPerson")}
+                      {ageBadge(booking.beneficiary_dob, !!booking.beneficiary_is_minor)}
+                    </p>
+                    {beneAge && (
+                      <p className="mt-0.5 text-[12px] text-[#6b7280]"><span className="text-[#9ca3af]">{t("fieldAge")}</span> {beneAge}</p>
+                    )}
+                  </div>
                 </div>
               );
             })()}
 
-            {/* 2 — DETAILS card (ONE organised block, hairline-divided): the SERVICE headline +
-                location and the booker's CONTACT (phone · cédula). The request date ("Solicitada el …")
-                moved to a quiet meta line at the TOP of the expanded panel (sprint 501), not buried here. */}
             {(category || location || phoneFmt || cedulaFmt || booking.service_description) && (
-              <div className="rounded-xl border border-[#eef0f2] bg-[#f9fafb] overflow-hidden divide-y divide-[#eef0f2]">
+              <div className="flex flex-col gap-3">
                 {(category || location) && (
-                  <div className="px-4 py-3.5">
-                    {category && <p className="text-[15px] font-semibold text-[#162543] leading-snug [overflow-wrap:anywhere]">{category}</p>}
-                    {location && <p className="mt-0.5 text-[12.5px] text-[#6b7280] [overflow-wrap:anywhere]">{location}</p>}
+                  <div className="flex items-start gap-2.5">
+                    <Wrench className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
+                    <div className="min-w-0">
+                      {category && <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("fieldService")}</p>}
+                      {category && <p className="mt-0.5 text-sm font-semibold text-[#162543] leading-snug [overflow-wrap:anywhere]">{category}</p>}
+                      {location && (
+                        <p className="mt-1 flex items-center gap-1.5 text-[12.5px] text-[#6b7280] [overflow-wrap:anywhere]">
+                          <MapPin className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" /> {location}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 )}
                 {(phoneFmt || cedulaFmt) && (
-                  <div className="grid grid-cols-2 gap-x-4 px-4 py-3.5">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     {phoneFmt && (
                       <div className="flex min-w-0 items-center gap-2">
-                        <Phone className="h-4 w-4 shrink-0 text-[#374151]" />
+                        <Phone className="h-4 w-4 shrink-0 text-[#9ca3af]" />
                         <div className="min-w-0">
                           <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("contactPhone")}</p>
                           <p className="mt-0.5 text-[13px] font-medium text-[#374151] truncate">{phoneFmt}</p>
@@ -340,7 +345,7 @@ export function BookingRequests() {
                     )}
                     {cedulaFmt && (
                       <div className="flex min-w-0 items-center gap-2">
-                        <IdCard className="h-4 w-4 shrink-0 text-[#374151]" />
+                        <IdCard className="h-4 w-4 shrink-0 text-[#9ca3af]" />
                         <div className="min-w-0">
                           <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("contactCedula")}</p>
                           <p className="mt-0.5 text-[13px] font-medium text-[#374151] truncate">{cedulaFmt}</p>
@@ -350,9 +355,9 @@ export function BookingRequests() {
                   </div>
                 )}
                 {booking.service_description && (
-                  <div className="px-4 py-3.5">
+                  <div className="border-l-2 border-[#e5e7eb] pl-3">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("noteEyebrow")}</p>
-                    <ExpandableText text={booking.service_description} lines={2} className="mt-1" />
+                    <ExpandableText text={booking.service_description} lines={3} className="mt-1 text-[13px] leading-relaxed text-[#4b5563]" />
                   </div>
                 )}
               </div>
@@ -376,9 +381,9 @@ export function BookingRequests() {
                 { label: t("reportClient"), onClick: () => setReportFor(booking), destructive: true },
               ];
               return (
-                <div className="flex items-center gap-2 pt-0.5">
+                <div className="flex flex-nowrap items-center gap-2 overflow-x-auto pt-0.5">
                   {waHref && (
-                    <Button variant="whatsapp" size="sm" asChild className="flex-1 sm:flex-none rounded-lg px-4">
+                    <Button variant="whatsapp" size="sm" asChild className="shrink-0 rounded-lg px-4">
                       <a href={waHref} target="_blank" rel="noopener noreferrer">
                         <WhatsAppIcon className="h-4 w-4" /> {t("whatsappTo", { name: cliFirst })}
                       </a>
