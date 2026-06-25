@@ -520,10 +520,10 @@ export function MobileFiltersButton() {
       onClick={() => window.dispatchEvent(new CustomEvent("ccr:open-filters"))}
       // Obvious filter affordance (sprint 524): a brand-tint pill with the sliders icon + the
       // "Filtros" label (not a bare icon), so it clearly reads as a tappable filter control.
-      className="relative shrink-0 inline-flex h-10 items-center gap-1.5 rounded-full border border-[#bfdbfe] bg-[#EBF5FB] px-3.5 text-[13px] font-bold text-[#0089bb] shadow-sm active:scale-95 transition-transform"
+      className="relative shrink-0 inline-flex h-10 items-center justify-center gap-1.5 rounded-full border border-[#bfdbfe] bg-[#EBF5FB] px-3.5 text-[13px] font-bold text-[#0089bb] shadow-sm active:scale-95 transition-transform max-[430px]:w-10 max-[430px]:px-0"
     >
       <SlidersHorizontal className="h-[17px] w-[17px]" />
-      <span>{t("filters.title")}</span>
+      <span className="max-[430px]:hidden">{t("filters.title")}</span>
       {hasActive && <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#008ce0]" />}
     </button>
   );
@@ -586,7 +586,7 @@ export function MobileServiceSearch() {
   useEffect(() => () => { if (debounceRef.current) clearTimeout(debounceRef.current); if (blurRef.current) clearTimeout(blurRef.current); }, []);
 
   return (
-    <div ref={fieldRef} className="relative flex items-center">
+    <div ref={fieldRef} className="relative flex min-w-0 w-full items-center">
       <Search className="absolute left-3 h-4 w-4 text-[#9ca3af] pointer-events-none" />
       <input
         type="text"
@@ -599,7 +599,7 @@ export function MobileServiceSearch() {
         role="combobox"
         aria-expanded={open}
         aria-autocomplete="list"
-        className="w-full rounded-full border border-[#e5e7eb] bg-white py-2.5 pl-9 pr-9 text-sm text-[#111827] placeholder-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition"
+        className="h-10 min-w-0 w-full rounded-full border border-[#e5e7eb] bg-white pl-9 pr-9 text-sm text-[#111827] placeholder-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition"
       />
       {q && (
         <button onClick={() => { setQ(""); setOpen(false); if (debounceRef.current) clearTimeout(debounceRef.current); pushQuery(""); }} className="absolute right-3 text-[#9ca3af] hover:text-[#374151] transition-colors" aria-label={t("filters.clearSearch")}>
