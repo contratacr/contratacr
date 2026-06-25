@@ -1772,3 +1772,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Oportunidades summary readability.** Match the Solicitudes recibidas readability pattern: keep only budget as the highlighted chip, then show category, location, timeline, and posted time as plain icon-led rows. The expanded body should not repeat summary fields; use ring/shadow for open focus and a circular chevron affordance.
 
 > **Mis propuestas summary readability.** Match the Oportunidades/Solicitudes pattern: keep only the proposed price highlighted, then show client and sent date as plain icon-led rows. Do not show the proposal message preview in the closed card; place it in the expanded sheet so the summary stays quick to scan.
+
+> **Mis solicitudes summary readability.** Match the Solicitudes recibidas pattern for client booking cards: keep only the appointment date highlighted, then show service and beneficiary hint as plain icon-led rows. The expanded body should not repeat the service already visible in the header.

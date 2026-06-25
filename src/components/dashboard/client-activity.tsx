@@ -175,7 +175,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
     setLoading(false);
   }, [user, section]);
 
-  useEffect(() => { fetchSection(); }, [fetchSection]);
+  useEffect(() => { queueMicrotask(() => fetchSection()); }, [fetchSection]);
 
   const loadMyReviews = useCallback(async () => {
     if (!user) return;
@@ -185,7 +185,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
       setMyReviews(reviews ?? []);
     } catch { /* ignore */ }
   }, [user]);
-  useEffect(() => { loadMyReviews(); }, [loadMyReviews]);
+  useEffect(() => { queueMicrotask(() => loadMyReviews()); }, [loadMyReviews]);
 
   function bookingReview(bookingId: string) {
     return myReviews.find((r) => r.booking_id === bookingId);
@@ -372,7 +372,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
               <p className="font-semibold text-[#374151]">{t("bEmpty")}</p>
               <p className="text-sm text-[#6b7280] mt-1">{t("bEmptySub")}</p>
               <Button className="mt-5" asChild>
-                <a href="/buscar">{t("searchPros")}</a>
+                <Link href="/buscar">{t("searchPros")}</Link>
               </Button>
             </div>
           ) : (
@@ -385,7 +385,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                   {filteredBookings.map((b) => {
                     const rev = b.status === "completed" ? bookingReview(b.id) : undefined;
                     return (
-                      <Card key={b.id} className="hover:shadow-md">
+                      <Card key={b.id} className={cn("rounded-2xl border-[#e5e7eb] bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md", expandedBooking === b.id && "shadow-md ring-1 ring-[#d8eef8]")}>
                         {/* COLLAPSED header — SAME card language as the other 3 sections: avatar +
                             pro name (primary, bold) + status chip on the right; "Fecha: {cita}"
                             key line. Tap to reveal the full description, cancel reason + actions. */}
@@ -393,7 +393,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                           type="button"
                           onClick={() => setExpandedBooking(expandedBooking === b.id ? null : b.id)}
                           aria-expanded={expandedBooking === b.id}
-                          className={cn("w-full text-left p-4 sm:p-5 flex items-start gap-3.5 hover:bg-[#fafafa] transition-colors", expandedBooking === b.id ? "rounded-t-2xl" : "rounded-2xl")}
+                          className={cn("group w-full text-left p-4 sm:p-5 flex items-start gap-3.5 hover:bg-[#f9fbfd] transition-colors", expandedBooking === b.id ? "rounded-t-2xl bg-[#fbfdff]" : "rounded-2xl")}
                         >
                           <Avatar className="h-11 w-11 shrink-0">
                             <AvatarImage src={b.professionals?.profiles?.avatar_url} />
@@ -412,44 +412,37 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                             </div>
                             {/* Appointment date with a grey calendar icon (no "Fecha:" label). */}
                             {formatBookingDate(b, dateLocale) && (
-                              <p className="mt-1 flex items-center gap-1.5 text-[13px] min-w-0">
-                                <CalendarClock className="h-3.5 w-3.5 shrink-0 text-[#374151]" />
-                                <span className="truncate font-medium text-[#374151]">{formatBookingDate(b, dateLocale)}</span>
-                              </p>
+                              <span className="mt-2 inline-flex w-full max-w-full items-center gap-2 rounded-xl border border-[#ccecf8] bg-[#EBF5FB] px-3 py-2.5 text-[13px] font-semibold text-[#162543] sm:w-auto">
+                                <CalendarClock className="h-4 w-4 shrink-0 text-[#009FD9]" />
+                                <span className="truncate">{formatBookingDate(b, dateLocale)}</span>
+                              </span>
                             )}
                             {/* The service the request was for (grey wrench). */}
                             {bookingServiceLabel(b) && (
-                              <p className="mt-1 flex items-center gap-1.5 text-[12px] text-[#6b7280] min-w-0">
-                                <Wrench className="h-3.5 w-3.5 shrink-0 text-[#374151]" />
-                                <span className="truncate">{bookingServiceLabel(b)}</span>
+                              <p className="mt-2 flex items-center gap-2 text-[13px] text-[#374151] min-w-0">
+                                <Wrench className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                                <span className="truncate font-medium">{bookingServiceLabel(b)}</span>
                               </p>
                             )}
                             {/* For someone else — a quiet at-a-glance hint. */}
                             {b.for_someone_else && (
-                              <p className="mt-1 flex items-center gap-1.5 text-[12px] text-[#6b7280] min-w-0">
-                                <Users className="h-3.5 w-3.5 shrink-0 text-[#374151]" />
+                              <p className="mt-1.5 flex items-center gap-2 text-[13px] text-[#6b7280] min-w-0">
+                                <Users className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
                                 <span className="truncate">{t("forOtherPerson")}</span>
                               </p>
                             )}
                           </div>
-                          <ChevronDown className={`h-5 w-5 text-[#9ca3af] shrink-0 mt-0.5 transition-transform duration-200 ${expandedBooking === b.id ? "rotate-180" : ""}`} />
+                          <span className={cn("mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition-colors duration-200", expandedBooking === b.id ? "border-[#ccecf8] bg-[#EBF5FB] text-[#009FD9]" : "border-[#eef2f6] bg-white text-[#9ca3af] group-hover:border-[#d8eef8] group-hover:text-[#009FD9]")}>
+                            <ChevronDown className={cn("h-[18px] w-[18px] transition-transform duration-200", expandedBooking === b.id && "rotate-180")} />
+                          </span>
                         </button>
 
                         {expandedBooking === b.id && (
-                          <div className="px-4 pb-5 pt-4 sm:px-5 border-t border-[#f3f4f6] flex flex-col gap-3.5">
+                          <div className="rounded-b-2xl border-t border-[#f3f4f6] bg-gradient-to-b from-[#fcfdff] to-white px-4 pb-5 pt-4 sm:px-5 flex flex-col gap-3.5">
                             {/* The header already identifies the professional; expanded details stay flat. */}
-                            {(bookingServiceLabel(b) || b.for_someone_else) && (
-                              <div className="flex flex-col gap-3 text-sm">
-                                {bookingServiceLabel(b) && (
-                                  <div className="flex items-start gap-2.5">
-                                    <Wrench className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
-                                    <div className="min-w-0">
-                                      <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("serviceField")}</p>
-                                      <p className="mt-0.5 font-medium text-[#374151] [overflow-wrap:anywhere]">{bookingServiceLabel(b)}</p>
-                                    </div>
-                                  </div>
-                                )}
-                                {b.for_someone_else && (() => {
+                            {b.for_someone_else && (
+                              <div className="rounded-2xl bg-white p-3.5 ring-1 ring-[#e8eef5]">
+                                {(() => {
                                   const beneAge = ageLabel(b.beneficiary_dob);
                                   return (
                                     <div className="flex items-start gap-2.5">
@@ -468,11 +461,13 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                             )}
 
                             {b.service_description && (
-                              <div className="flex items-start gap-2.5">
-                                <FileText className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
-                                <div className="min-w-0">
+                              <div className="rounded-2xl bg-white p-3.5 ring-1 ring-[#e8eef5]">
+                                <div className="flex items-start gap-2.5">
+                                  <FileText className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
+                                  <div className="min-w-0">
                                   <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("descriptionField")}</p>
                                   <ExpandableText text={b.service_description} lines={5} className="mt-0.5 text-sm leading-relaxed text-[#4b5563]" />
+                                  </div>
                                 </div>
                               </div>
                             )}
