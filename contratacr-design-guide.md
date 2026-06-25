@@ -1782,3 +1782,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Casos de exito modal arrows.** Multi-photo success-case modals must show prominent previous/next arrows above the large image. Use high-contrast circular controls with z-index, shadow, and enough touch target size so arrows remain visible over light or busy photos.
 
 > **Navbar categories dropdown.** On desktop, Categorias should behave like a marketplace browser: search at the top, persistent group rail on the left, selected group's services on the right. Avoid a two-step "open group then back" flow in the desktop navbar; reserve that compact flow for form pickers and mobile-sized contexts.
+
+> **Responsive navbar drawer.** Keep the mobile drawer as grouped app navigation, not a flat link list: search in its own top card, account/profile in a compact card, the primary panel action visually strongest, secondary account links divided below it, resources in a separate card, and language/sign-out quieter near the bottom.
