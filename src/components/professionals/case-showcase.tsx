@@ -106,7 +106,8 @@ export function CaseShowcase({
               className="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm transition-shadow hover:shadow-md"
             >
               {c.photos[0] && (
-                <div className="relative block h-[132px] overflow-hidden bg-[#f3f4f6] sm:h-[150px]">
+                <div className="px-5 pt-5">
+                  <div className="relative block h-[128px] w-full max-w-[240px] overflow-hidden rounded-xl bg-[#f3f4f6] sm:h-[140px] sm:max-w-[280px]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={cldThumb(c.photos[0], 600)} alt={c.title ?? ""} loading="lazy" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" />
                   {c.photos.length > 1 && (
@@ -114,17 +115,18 @@ export function CaseShowcase({
                       <Images className="h-3 w-3" /> {t("casosPhotos", { count: c.photos.length })}
                     </span>
                   )}
+                  </div>
                 </div>
               )}
               {/* Just a clickable heart, overlaid on the photo (top-right) — clean + minimal.
                   It stops propagation so liking never opens the detail modal. */}
-              {c.likeable && (
+              {c.likeable && c.photos[0] && (
                 <div onClick={(e) => e.stopPropagation()}>
                   <CaseLikeButton
                     professionalId={professionalId}
                     caseId={c.id}
                     label={t("likeLabel")}
-                    className="absolute right-2.5 top-2.5 z-10 grid h-9 w-9 place-items-center rounded-full bg-white/90 text-[#6b7280] shadow-sm backdrop-blur hover:bg-white hover:text-[#e11d48]"
+                    className="absolute left-[216px] top-7 z-10 grid h-9 w-9 place-items-center rounded-full bg-white/90 text-[#6b7280] shadow-sm backdrop-blur hover:bg-white hover:text-[#e11d48] sm:left-[256px]"
                   />
                 </div>
               )}
