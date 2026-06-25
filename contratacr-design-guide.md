@@ -1680,3 +1680,4 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
   Descriptions are full "Descripción/Description" fields, not "brief" fields, and should not be
   line-clamped in the editor. Adding a catalog service must be an explicit-save flow: selecting a
   service may open its details modal, but it must not persist until "Guardar cambios"/"Save changes".
+> **/buscar mobile bottom sheet snap.** The default mobile state must be map-first: the card sheet is a compact peek, not half the viewport. Keep `PEEK` around `0.32`, `MIN` around `0.18`, and pin focus around `0.58`; full expansion can still cover most of the map. Any card-height/design changes must re-check 390x844 and similar mobile viewports so the map remains visibly usable on first load.

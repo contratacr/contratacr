@@ -21,13 +21,13 @@ interface SearchResultsLayoutProps {
 }
 
 // Bottom-sheet snap points (fraction of the viewport height). PEEK = collapsed (map is the
-// dominant background, ~1 card + a peek of the next over the bottom); FULL = expanded
+// dominant background, a compact card-list peek over the bottom); FULL = expanded
 // (browse the whole list, header still visible on top). FOCUS = the rest height the sheet
 // springs to when a map pin is tapped, so the focused card is comfortably visible.
-const PEEK = 0.44;
+const PEEK = 0.32;
 const FULL = 0.9;
-const FOCUS = 0.64;
-const MIN = 0.2;
+const FOCUS = 0.58;
+const MIN = 0.18;
 const MAX = 0.92;
 
 /**
