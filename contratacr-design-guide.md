@@ -1776,3 +1776,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Mis solicitudes summary readability.** Match the Solicitudes recibidas pattern for client booking cards: keep only the appointment date highlighted, then show service and beneficiary hint as plain icon-led rows. The expanded body should not repeat the service already visible in the header.
 
 > **Mis publicaciones summary readability.** Match the dashboard card pattern: keep only the proposal count highlighted, then show category, zone, and published date as plain icon-led rows. Do not show the publication description in the closed card; place it in the expanded sheet.
+
+> **Professional profile Sobre mi readability.** Keep the About tab as two calm sheets: intro (name, professions, bio) and facts. Avoid separate nested header/bio cards, side rails, and mini fact cards; use one divided facts sheet with icon-led rows for faster scanning.
