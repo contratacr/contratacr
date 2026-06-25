@@ -580,7 +580,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                         : t("projOpen");
 
                 return (
-                  <Card key={project.id} className="hover:shadow-md">
+                  <Card key={project.id} className="overflow-hidden hover:shadow-md">
                     <button
                       type="button"
                       onClick={async () => {
@@ -590,26 +590,29 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                       aria-expanded={isExpanded}
                       className={cn("w-full text-left p-4 sm:p-5 hover:bg-[#fafafa] transition-colors", isExpanded ? "rounded-t-2xl" : "rounded-2xl")}
                     >
-                      <div className="flex items-start gap-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#EBF5FB] text-[#0089bb]">
-                          <FolderOpen className="h-5 w-5" />
+                      <div className="flex items-start gap-3.5">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EBF5FB] text-[#0089bb]">
+                          <FolderOpen className="h-[18px] w-[18px]" />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <div className="flex flex-wrap items-start gap-2">
-                            <h3 className="min-w-0 flex-1 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere]">{project.title}</h3>
+                          <div className="flex items-start justify-between gap-2">
+                            <h3 className="min-w-0 flex-1 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere] sm:text-base">{project.title}</h3>
                             {!proyectoStatusRedundant(project.status) ? (
                               <Badge className="shrink-0 text-[11px] font-semibold" variant={statusVariant}>{statusLabel}</Badge>
-                            ) : project.categories?.name ? (
-                              <Badge variant="muted" className="shrink-0 text-[11px] font-semibold">{project.categories.name}</Badge>
                             ) : null}
                           </div>
-                          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[#6b7280]">
-                            <span className="inline-flex items-center gap-1.5"><Users className="h-3.5 w-3.5 shrink-0 text-[#374151]" /> {t("proposalsCount", { count: proposalCount })}</span>
-                            <span className="inline-flex items-center gap-1.5"><CalendarDays className="h-3.5 w-3.5 shrink-0 text-[#374151]" /> {formatRelativeOrDate(project.created_at, locale)}</span>
-                            {zone && <span className="inline-flex min-w-0 items-center gap-1.5"><MapPin className="h-3.5 w-3.5 shrink-0 text-[#374151]" /> <span className="truncate">{zone}</span></span>}
+                          <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[12px] text-[#6b7280]">
+                            {project.categories?.name && (
+                              <span className="inline-flex max-w-full items-center rounded-full bg-[#f3f4f6] px-2 py-1 font-medium text-[#374151]">
+                                <span className="truncate">{project.categories.name}</span>
+                              </span>
+                            )}
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f9fafb] px-2 py-1"><Users className="h-3.5 w-3.5 shrink-0 text-[#374151]" /> {t("proposalsCount", { count: proposalCount })}</span>
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f9fafb] px-2 py-1"><CalendarDays className="h-3.5 w-3.5 shrink-0 text-[#374151]" /> {formatRelativeOrDate(project.created_at, locale)}</span>
+                            {zone && <span className="inline-flex min-w-0 max-w-full items-center gap-1.5 rounded-full bg-[#f9fafb] px-2 py-1"><MapPin className="h-3.5 w-3.5 shrink-0 text-[#374151]" /> <span className="truncate">{zone}</span></span>}
                           </div>
                           {!isExpanded && project.description && (
-                            <p className="mt-2 text-[13px] leading-relaxed text-[#6b7280] line-clamp-2 [overflow-wrap:anywhere]">{project.description}</p>
+                            <p className="mt-3 text-[13px] leading-relaxed text-[#6b7280] line-clamp-2 [overflow-wrap:anywhere]">{project.description}</p>
                           )}
                         </div>
                         <ChevronDown className={`mt-1 h-5 w-5 shrink-0 text-[#9ca3af] transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`} />
@@ -620,7 +623,9 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                       <div className="border-t border-[#f3f4f6] px-4 pb-5 pt-4 sm:px-5">
                         <div className="flex flex-col gap-4">
                           {project.description && (
-                            <ExpandableText text={project.description} lines={5} className="text-[13px] leading-relaxed text-[#6b7280]" />
+                            <div className="border-l-2 border-[#e5e7eb] pl-3">
+                              <ExpandableText text={project.description} lines={5} className="text-[13px] leading-relaxed text-[#4b5563]" />
+                            </div>
                           )}
 
                           {(() => {
@@ -672,20 +677,27 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                       </AvatarFallback>
                                     </Avatar>
                                     <div className="min-w-0 flex-1">
-                                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                                        {proposal.professionals?.slug ? (
-                                          <Link href={`/profesionales/${proposal.professionals.slug}`} className="text-sm font-semibold text-[#111827] hover:text-[#009FD9] hover:underline">
-                                            {proposal.professionals?.profiles?.full_name}
-                                          </Link>
-                                        ) : (
-                                          <p className="text-sm font-semibold text-[#111827]">{proposal.professionals?.profiles?.full_name}</p>
-                                        )}
-                                        {proposal.status === "accepted" && <Badge variant="success">{finalized ? t("finalized") : t("accepted")}</Badge>}
-                                        {proposal.status === "declined" && <Badge variant="error">{t("declined")}</Badge>}
+                                      <div className="flex items-start justify-between gap-2">
+                                        <div className="min-w-0">
+                                          {proposal.professionals?.slug ? (
+                                            <Link href={`/profesionales/${proposal.professionals.slug}`} className="text-sm font-semibold text-[#111827] hover:text-[#009FD9] hover:underline">
+                                              {proposal.professionals?.profiles?.full_name}
+                                            </Link>
+                                          ) : (
+                                            <p className="text-sm font-semibold text-[#111827]">{proposal.professionals?.profiles?.full_name}</p>
+                                          )}
+                                          {proposal.professionals?.categories?.name && (
+                                            <p className="mt-0.5 truncate text-[11px] text-[#6b7280]">{proposal.professionals.categories.name}</p>
+                                          )}
+                                        </div>
+                                        <div className="flex shrink-0 flex-col items-end gap-1">
+                                          <p className="text-xs font-bold text-[#009FD9]">
+                                            {proposal.price ? `\u20a1${proposal.price.toLocaleString("es-CR")}` : t("priceTBD")}
+                                          </p>
+                                          {proposal.status === "accepted" && <Badge variant="success">{finalized ? t("finalized") : t("accepted")}</Badge>}
+                                          {proposal.status === "declined" && <Badge variant="error">{t("declined")}</Badge>}
+                                        </div>
                                       </div>
-                                      <p className="mt-0.5 text-xs font-semibold text-[#009FD9]">
-                                        {proposal.price ? `\u20a1${proposal.price.toLocaleString("es-CR")}` : t("priceTBD")}
-                                      </p>
                                       <ExpandableText text={proposal.message} lines={3} className="mt-1 text-[13px] leading-relaxed" />
                                     </div>
                                   </div>
