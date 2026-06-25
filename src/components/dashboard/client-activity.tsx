@@ -629,8 +629,12 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                       <div className="border-t border-[#f3f4f6] px-4 pb-5 pt-4 sm:px-5">
                         <div className="flex flex-col gap-4">
                           {project.description && (
-                            <div className="border-l-2 border-[#e5e7eb] pl-3">
-                              <ExpandableText text={project.description} lines={5} className="text-[13px] leading-relaxed text-[#4b5563]" />
+                            <div className="flex items-start gap-2.5">
+                              <FileText className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
+                              <div className="min-w-0">
+                                <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("descriptionField")}</p>
+                                <ExpandableText text={project.description} lines={5} className="mt-0.5 text-[13px] leading-relaxed text-[#4b5563]" />
+                              </div>
                             </div>
                           )}
 

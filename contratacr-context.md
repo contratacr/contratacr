@@ -3279,3 +3279,5 @@ New i18n namespaces added this pass: `search.pagination`, extended `search.filte
 **Sprint 217 - Received request mobile summary rows separated.** `booking-requests.tsx`: on responsive/mobile Solicitudes recibidas cards, the appointment date/time, service, and location chips now stack as separate full-width rows. Desktop keeps the flexible chip row from `sm` upward. No i18n changes.
 
 **Sprint 218 - Mis solicitudes description row labelled.** `client-activity.tsx`: the expanded client Mis solicitudes description is no longer loose text; it now renders as a flat icon row with `FileText` and the label `Descripción` / `Description`, matching the service and appointment-for rows without adding a heavy nested card. Added `clientActivity.descriptionField` ES/EN.
+
+**Sprint 219 - Mis publicaciones description row labelled.** `client-activity.tsx`: the expanded client Mis publicaciones description now uses the same flat `FileText` + `Descripción` / `Description` row as Mis solicitudes, replacing the unlabeled left-rule text. No new i18n keys; reuses `clientActivity.descriptionField`.
