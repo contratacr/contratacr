@@ -236,7 +236,7 @@ export function BookingRequests() {
     const panelOpen = actionFor?.id === booking.id;
 
     return (
-      <Card className="overflow-hidden rounded-2xl hover:shadow-md">
+      <Card className="rounded-2xl hover:shadow-md">
         {/* EXPANDABLE LEAD CARD (sprint 430): COLLAPSED shows only essentials (who · when ·
             status + unverified). Tapping reveals the full identity, the "para otra persona"
             callout, servicio·zona, the note, and the management ACTIONS. Zero icons; text labels.
@@ -382,7 +382,7 @@ export function BookingRequests() {
                 { label: t("reportClient"), onClick: () => setReportFor(booking), destructive: true },
               ];
               return (
-                <div className="flex flex-nowrap items-center gap-2 overflow-x-auto pt-0.5">
+                <div className="flex flex-nowrap items-center gap-2 pt-0.5">
                   {waHref && (
                     <Button variant="whatsapp" size="sm" asChild className="shrink-0 rounded-lg px-4">
                       <a href={waHref} target="_blank" rel="noopener noreferrer">

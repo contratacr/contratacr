@@ -1700,3 +1700,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Mis publicaciones iconography.** Publication cards should use a request/brief icon such as `ClipboardList`. Avoid reusing opportunity-like folder/marketplace icons inside each card because they blur the difference between the client's posted requests and the professional's Oportunidades view.
 
 > **Solicitudes recibidas cancelled beneficiary context.** In cancelled/closed received requests, keep `La cita es para` only as historical context and render it neutrally; do not show active clinical badges such as `Menor de edad` or `Adulto mayor` because there is no pending care decision. Keep those badges for active/actionable bookings.
+
+> **Dashboard action menus must not be clipped.** Cards or action rows that contain `CardActionsMenu` must keep overflow visible. Avoid `overflow-hidden` on the card wrapper and `overflow-x-auto` on the action row unless the menu is portaled/fixed; otherwise the dropdown can open but appear blank/clipped.
