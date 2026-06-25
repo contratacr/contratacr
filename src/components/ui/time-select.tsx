@@ -87,7 +87,7 @@ export function TimeSelect({ value, onChange, min, step = 30, label, error, id, 
         aria-expanded={open}
         aria-invalid={!!error}
         className={cn(
-          "flex items-center h-10 rounded-xl border bg-white pl-3.5 pr-10 text-sm font-medium text-[#111827] relative text-left transition-all",
+          "flex items-center h-10 rounded-xl border bg-white pl-3.5 pr-9 text-sm font-medium text-[#111827] relative text-left transition-all",
           "focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent",
           open && "ring-2 ring-[#009FD9] border-transparent",
           error ? "border-red-400" : "border-[#e5e7eb]",
@@ -95,7 +95,7 @@ export function TimeSelect({ value, onChange, min, step = 30, label, error, id, 
         )}
       >
         {to12h(value) || <span className="text-[#9ca3af]">--:--</span>}
-        <ChevronDown className={cn("pointer-events-none absolute right-3 h-4 w-4 text-[#9ca3af] transition-transform", open && "rotate-180")} />
+        <ChevronDown className={cn("pointer-events-none absolute right-2.5 h-4 w-4 text-[#9ca3af] transition-transform", open && "rotate-180")} />
       </button>
 
       {open && (

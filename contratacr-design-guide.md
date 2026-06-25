@@ -1716,3 +1716,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Casos de exito photo strip.** Success-case cards should show up to 3 small thumbnails in a compact top strip, not one large full-width image or a single oversized thumbnail. Keep the card one-per-row with information below; the photos are supporting evidence, not the dominant surface.
 
 > **Casos de exito text-first card.** Success-case cards should lead with the case information (profession, title, description, recipient/date) and show up to 3 small thumbnails underneath as supporting proof. Avoid photo-first/banner-first layouts for this card family unless the entire section is redesigned.
+
+> **Time select spacing.** Time labels with attached AM/PM must not touch the chevron. Weekly availability `TimeSelect` controls should stay at least `sm:w-28`; if action columns need room, adjust surrounding layout rather than shrinking time selects until AM/PM crowds the icon.

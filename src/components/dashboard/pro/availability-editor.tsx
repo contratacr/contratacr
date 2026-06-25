@@ -720,9 +720,9 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                             {blocks.map((b) => {
                             const timeRow = (
                               <div className="flex items-center gap-1.5">
-                                <TimeSelect value={b.start} onChange={(v) => updateBlock(wd, b.id, { start: v, ...(b.end && toMins(b.end) <= toMins(v) ? { end: hhmm(Math.min(toMins(v) + 60, 23 * 60 + 30)) } : {}) })} className="min-w-0 flex-1 sm:flex-none sm:w-24" />
+                                <TimeSelect value={b.start} onChange={(v) => updateBlock(wd, b.id, { start: v, ...(b.end && toMins(b.end) <= toMins(v) ? { end: hhmm(Math.min(toMins(v) + 60, 23 * 60 + 30)) } : {}) })} className="min-w-0 flex-1 sm:flex-none sm:w-28" />
                                 <span className="shrink-0 text-[#9ca3af]">–</span>
-                                <TimeSelect value={b.end} min={b.start ? hhmm(Math.min(toMins(b.start) + 30, 23 * 60 + 30)) : undefined} onChange={(v) => updateBlock(wd, b.id, { end: v })} className="min-w-0 flex-1 sm:flex-none sm:w-24" error={b.start && b.end && toMins(b.end) <= toMins(b.start) ? t("toAfterFrom") : undefined} />
+                                <TimeSelect value={b.end} min={b.start ? hhmm(Math.min(toMins(b.start) + 30, 23 * 60 + 30)) : undefined} onChange={(v) => updateBlock(wd, b.id, { end: v })} className="min-w-0 flex-1 sm:flex-none sm:w-28" error={b.start && b.end && toMins(b.end) <= toMins(b.start) ? t("toAfterFrom") : undefined} />
                               </div>
                             );
                             // Single-location pros: just the time row (clean, compact, no location UI).
