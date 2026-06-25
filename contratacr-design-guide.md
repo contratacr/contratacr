@@ -1758,3 +1758,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Solicitudes recibidas appointment emphasis.** In received-request cards, the scheduled appointment date/time should be the primary collapsed-card anchor. Service/location are secondary metadata. Expanded info tiles should be light and low-shadow, with actions integrated as a simple separated row.
 
 > **Solicitudes recibidas expanded corner handling.** Any expanded panel with its own background inside a rounded received-request card must declare `rounded-b-2xl`; avoid parent overflow clipping because action menus need to remain visible. Use a subtle brand rail/ring for expanded focus.
+
+> **Solicitudes recibidas expanded sheet.** Prefer one calm white information sheet with internal dividers for service, contact, ID, and description. Avoid multiple separate mini cards inside an expanded request unless a section is truly exceptional, because the professional needs quick scanning more than decorative grouping.

@@ -236,7 +236,7 @@ export function BookingRequests() {
     const panelOpen = actionFor?.id === booking.id;
 
     return (
-      <Card className={cn("rounded-2xl border-[#e5e7eb] border-l-4 bg-white shadow-sm transition-shadow hover:shadow-md", expanded ? "border-l-[#009FD9] ring-1 ring-[#d8eef8]" : "border-l-transparent")}>
+      <Card className={cn("rounded-2xl border-[#e5e7eb] border-l-4 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md", expanded ? "border-l-[#009FD9] ring-1 ring-[#d8eef8] shadow-md" : "border-l-transparent")}>
         {/* EXPANDABLE LEAD CARD (sprint 430): COLLAPSED shows only essentials (who · when ·
             status + unverified). Tapping reveals the full identity, the "para otra persona"
             callout, servicio·zona, the note, and the management ACTIONS. Zero icons; text labels.
@@ -249,7 +249,7 @@ export function BookingRequests() {
           aria-expanded={expanded}
           className={cn("w-full text-left px-4 py-4 sm:px-5 flex items-start gap-3.5 transition-colors hover:bg-[#f9fbfd]", expanded ? "rounded-t-2xl bg-[#fbfdff]" : "rounded-2xl")}
         >
-          <Avatar className="h-12 w-12 shrink-0 ring-2 ring-[#EBF5FB]">
+          <Avatar className={cn("h-12 w-12 shrink-0 ring-2 transition-shadow", expanded ? "ring-[#ccecf8] shadow-sm" : "ring-[#EBF5FB]")}>
             <AvatarImage src={booking.profiles?.avatar_url} className="object-cover" />
             <AvatarFallback className="text-sm font-bold bg-[#EBF5FB] text-[#009FD9]">{getInitials(booking.client_name || "?")}</AvatarFallback>
           </Avatar>
@@ -265,8 +265,8 @@ export function BookingRequests() {
                 <Badge variant={STATUS_VARIANT[booking.status]} className="shrink-0 px-2.5 py-0.5 text-[11px] font-semibold">{t(`status.${booking.status}`)}</Badge>
               )}
             </div>
-            <div className="mt-2 flex flex-col items-start gap-2 text-[12px] text-[#6b7280]">
-              <span className={cn("inline-flex w-full max-w-full items-center gap-2 rounded-xl px-2.5 py-2 sm:w-auto", dateStr ? "bg-[#EBF5FB] font-semibold text-[#162543]" : "bg-[#f3f4f6] text-[#6b7280]")}>
+            <div className="mt-2 flex flex-col items-start gap-2.5 text-[12px] text-[#6b7280]">
+              <span className={cn("inline-flex w-full max-w-full items-center gap-2 rounded-xl border px-3 py-2.5 sm:w-auto", dateStr ? "border-[#ccecf8] bg-[#EBF5FB] font-semibold text-[#162543]" : "border-[#e5e7eb] bg-[#f3f4f6] text-[#6b7280]")}>
                 <CalendarClock className="h-4 w-4 shrink-0 text-[#009FD9]" />
                 <span className="truncate">{dateStr || t("noScheduledDate")}</span>
               </span>
@@ -293,9 +293,9 @@ export function BookingRequests() {
         </button>
 
         {expanded && (
-          <div className="rounded-b-2xl border-t border-[#f3f4f6] bg-[#fcfdff] px-4 pb-5 pt-4 sm:px-5 flex flex-col gap-4">
+          <div className="rounded-b-2xl border-t border-[#f3f4f6] bg-gradient-to-b from-[#fcfdff] to-white px-4 pb-5 pt-4 sm:px-5 flex flex-col gap-4">
             {requestedDate && (
-              <p className="flex items-center gap-1.5 border-b border-[#eef2f6] pb-3 text-[11px] text-[#9ca3af]">
+              <p className="flex items-center gap-1.5 text-[11px] text-[#9ca3af]">
                 <Clock className="h-3.5 w-3.5 shrink-0 text-[#374151]" /> {t("requestedOn", { date: requestedDate })}
               </p>
             )}
@@ -320,10 +320,10 @@ export function BookingRequests() {
             })()}
 
             {(category || location || phoneFmt || cedulaFmt || booking.service_description) && (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="overflow-hidden rounded-2xl bg-white ring-1 ring-[#e8eef5]">
                 {(category || location) && (
-                  <div className="flex items-start gap-2.5 rounded-xl bg-white p-3.5 ring-1 ring-[#e8eef5]">
-                    <Wrench className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
+                  <div className="flex items-start gap-3 px-3.5 py-3.5">
+                    <Wrench className="mt-0.5 h-4 w-4 shrink-0 text-[#009FD9]" />
                     <div className="min-w-0">
                       {category && <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("fieldService")}</p>}
                       {category && <p className="mt-0.5 text-sm font-semibold text-[#162543] leading-snug [overflow-wrap:anywhere]">{category}</p>}
@@ -335,8 +335,10 @@ export function BookingRequests() {
                     </div>
                   </div>
                 )}
-                {phoneFmt && (
-                      <div className="flex min-w-0 items-center gap-2 rounded-xl bg-white p-3.5 ring-1 ring-[#e8eef5]">
+                {(phoneFmt || cedulaFmt) && (
+                  <div className={cn("grid grid-cols-1 border-[#eef2f6] sm:grid-cols-2", (category || location) && "border-t")}>
+                    {phoneFmt && (
+                      <div className="flex min-w-0 items-center gap-2.5 px-3.5 py-3">
                         <Phone className="h-4 w-4 shrink-0 text-[#9ca3af]" />
                         <div className="min-w-0">
                           <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("contactPhone")}</p>
@@ -344,8 +346,8 @@ export function BookingRequests() {
                         </div>
                       </div>
                     )}
-                {cedulaFmt && (
-                      <div className="flex min-w-0 items-center gap-2 rounded-xl bg-white p-3.5 ring-1 ring-[#e8eef5]">
+                    {cedulaFmt && (
+                      <div className={cn("flex min-w-0 items-center gap-2.5 px-3.5 py-3", phoneFmt && "border-t border-[#eef2f6] sm:border-l sm:border-t-0")}>
                         <IdCard className="h-4 w-4 shrink-0 text-[#9ca3af]" />
                         <div className="min-w-0">
                           <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("contactCedula")}</p>
@@ -353,8 +355,10 @@ export function BookingRequests() {
                         </div>
                       </div>
                     )}
+                  </div>
+                )}
                 {booking.service_description && (
-                  <div className="rounded-xl bg-white p-3.5 ring-1 ring-[#e8eef5] sm:col-span-2">
+                  <div className="border-t border-[#eef2f6] px-3.5 py-3.5">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("noteEyebrow")}</p>
                     <ExpandableText text={booking.service_description} lines={3} className="mt-1 text-[13px] leading-relaxed text-[#4b5563]" />
                   </div>
