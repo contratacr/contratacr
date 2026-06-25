@@ -239,18 +239,16 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f4f7fa]">
-      {/* Same app-wide header as every page; it's fixed, so reserve its height. On MOBILE the
-          search + Filtros are injected INLINE so the logo + search + filters + menu share ONE
-          line (desktop header unchanged — `mobileInline` is `lg:hidden`). */}
-      <LandingNavbar
-        mobileInline={
-          <>
-            <div className="min-w-0 flex-1"><Suspense fallback={null}><MobileServiceSearch /></Suspense></div>
-            <Suspense fallback={null}><MobileFiltersButton /></Suspense>
-          </>
-        }
-      />
-      <div className="h-16" aria-hidden />
+      {/* Same app-wide header as every page. On mobile, search + Filtros get their own
+          fixed row below the navbar so the service field has enough horizontal room. */}
+      <LandingNavbar />
+      <div className="fixed left-0 right-0 top-16 z-40 border-b border-gray-100 bg-white/96 px-4 py-2 shadow-sm backdrop-blur-md lg:hidden">
+        <div className="flex min-w-0 items-center gap-2">
+          <div className="min-w-0 flex-1"><Suspense fallback={null}><MobileServiceSearch /></Suspense></div>
+          <Suspense fallback={null}><MobileFiltersButton /></Suspense>
+        </div>
+      </div>
+      <div className="h-[121px] lg:h-16" aria-hidden />
 
       {/* Top bar — title + subtitle. Background MATCHES the page/results area (#f4f7fa)
           and is FLUSH with it: no shadow, divider or raised band, so the title reads as

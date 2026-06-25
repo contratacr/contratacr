@@ -1667,3 +1667,8 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
   (preserving filters); the chips' `applyFilters` reads `q` from the URL (not the chip
   instance's stale local state). Keep this split. The mobile count is shown in the sheet, so the
   page-header subtitle is `hidden lg:block` (no duplication).
+- **Mobile /buscar header search row (Sprint 183):** do NOT squeeze logo + service search +
+  filters + menu into one line. `/buscar` should use the normal `LandingNavbar` and a separate
+  `lg:hidden fixed top-16` row for `MobileServiceSearch` + `MobileFiltersButton`. Keep the
+  filter button icon + "Filtros" label visible in that second row; the layout has enough room
+  and the label is clearer than an icon-only control.

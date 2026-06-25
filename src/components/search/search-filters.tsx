@@ -520,10 +520,10 @@ export function MobileFiltersButton() {
       onClick={() => window.dispatchEvent(new CustomEvent("ccr:open-filters"))}
       // Obvious filter affordance (sprint 524): a brand-tint pill with the sliders icon + the
       // "Filtros" label (not a bare icon), so it clearly reads as a tappable filter control.
-      className="relative shrink-0 inline-flex h-10 items-center justify-center gap-1.5 rounded-full border border-[#bfdbfe] bg-[#EBF5FB] px-3.5 text-[13px] font-bold text-[#0089bb] shadow-sm active:scale-95 transition-transform max-[430px]:w-10 max-[430px]:px-0"
+      className="relative shrink-0 inline-flex h-10 items-center justify-center gap-1.5 rounded-full border border-[#bfdbfe] bg-[#EBF5FB] px-3.5 text-[13px] font-bold text-[#0089bb] shadow-sm active:scale-95 transition-transform"
     >
       <SlidersHorizontal className="h-[17px] w-[17px]" />
-      <span className="max-[430px]:hidden">{t("filters.title")}</span>
+      <span>{t("filters.title")}</span>
       {hasActive && <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#008ce0]" />}
     </button>
   );
