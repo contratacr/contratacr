@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { ImageUp, X, Loader2, Plus, Pencil, Trash2, Images, CalendarDays, Heart } from "lucide-react";
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
@@ -96,12 +96,9 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
 
   // Keep the active filter valid if the pro's professions change (e.g. after editing
   // services) — fall back to the first so cases never silently disappear.
-  useEffect(() => {
-    if (professions.length > 0 && !professions.includes(activeProf)) setActiveProf(professions[0]);
-  }, [professions, activeProf]);
-
   const label = (id: string) => getCategoryLabel(id, locale);
   const countFor = (prof: string) => cases.filter((c) => c.profession === prof).length;
+  const selectedProf = professions.includes(activeProf) ? activeProf : professions[0] ?? "";
   const inputClass = "h-11 w-full rounded-xl border border-[#e5e7eb] bg-white px-3.5 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
 
   async function persist(next: SuccessCase[]) {
@@ -121,7 +118,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
   }
 
   function openAdd() {
-    const prof = professions.includes(activeProf) ? activeProf : primary ?? "";
+    const prof = selectedProf || primary || "";
     setDraft({ id: genId(), profession: prof, photos: [] });
   }
   function openEdit(c: SuccessCase) { setDraft({ ...c, photos: [...c.photos] }); }
@@ -153,8 +150,8 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
   }
   async function deleteCase(id: string) { await persist(cases.filter((c) => c.id !== id)); }
 
-  const shownCases = cases.filter((c) => c.profession === activeProf);
-  const addProf = professions.includes(activeProf) ? activeProf : primary ?? "";
+  const shownCases = cases.filter((c) => c.profession === selectedProf);
+  const addProf = selectedProf || primary || "";
   const addFull = !!addProf && countFor(addProf) >= MAX_CASES_PER_PROFESSION;
   const draftIsEdit = !!draft && cases.some((c) => c.id === draft.id);
 
@@ -171,43 +168,50 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
       {professions.length > 1 && (
         <StatusFilterTabs
           tabs={professions.map((p) => ({ id: p }))}
-          value={activeProf}
+          value={selectedProf}
           onChange={setActiveProf}
           labelFor={label}
           counts={Object.fromEntries(professions.map((p) => [p, countFor(p)]))}
         />
       )}
 
-      {/* One-per-row case cards: case details first, compact proof photos below. */}
+      {/* One-per-row case cards: editorial summary + compact proof collage. */}
       {shownCases.length > 0 && (
         <div className="grid grid-cols-1 gap-4">
           {shownCases.map((c) => (
-            <div key={c.id} className="flex flex-col overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
-              <div className="flex flex-1 flex-col p-4">
-                <p className="text-[11px] font-semibold text-[#0089bb]">{label(c.profession)}</p>
-                {c.title && <p className="mt-0.5 text-[16px] font-bold text-[#162543] [overflow-wrap:anywhere]">{c.title}</p>}
-                {c.description && <p className="mt-1 line-clamp-3 text-[13px] leading-relaxed text-[#6b7280] [overflow-wrap:anywhere]">{c.description}</p>}
-                {c.recipient && (
-                  <p className="mt-1 text-xs text-[#6b7280] [overflow-wrap:anywhere]">{c.recipient}</p>
-                )}
-                <div className="mt-3 flex items-end gap-2">
-                  {c.photos.slice(0, MAX_PHOTOS_PER_CASE).map((url, idx) => (
-                    <div key={`${c.id}-${url}`} className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-[#f3f4f6] sm:h-[72px] sm:w-[72px]">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={cldThumb(url, 220)} alt={c.title ?? ""} className="h-full w-full object-cover" />
-                      {idx === MAX_PHOTOS_PER_CASE - 1 && c.photos.length > MAX_PHOTOS_PER_CASE && (
-                        <span className="absolute inset-0 grid place-items-center bg-black/45 text-xs font-bold text-white">+{c.photos.length - MAX_PHOTOS_PER_CASE}</span>
-                      )}
-                    </div>
-                  ))}
-                  {c.photos.length > 0 && (
-                    <span className="mb-0.5 inline-flex items-center gap-1 rounded-full bg-[#f3f4f6] px-2 py-1 text-[11px] font-semibold text-[#6b7280]">
-                      <Images className="h-3 w-3" /> {t("photosCount", { count: c.photos.length })}
-                    </span>
+            <div key={c.id} className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+              <div className="grid gap-4 p-4 sm:grid-cols-[minmax(0,1fr)_176px] sm:items-stretch">
+                <div className="flex min-w-0 flex-col">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-[#0089bb]">{label(c.profession)}</p>
+                  {c.title && <p className="mt-1 text-[16px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere]">{c.title}</p>}
+                  {c.description && <p className="mt-1.5 line-clamp-3 text-[13px] leading-relaxed text-[#6b7280] [overflow-wrap:anywhere]">{c.description}</p>}
+                  {c.recipient && (
+                    <p className="mt-2 text-xs font-medium text-[#374151] [overflow-wrap:anywhere]">{c.recipient}</p>
                   )}
                 </div>
-                <div className="mt-3 flex items-center justify-between gap-2 border-t border-[#f3f4f6] pt-2.5">
+
+                {c.photos.length > 0 && (
+                  <div className="grid h-[104px] grid-cols-3 grid-rows-2 gap-1.5 sm:h-full sm:min-h-[128px]">
+                    {c.photos.slice(0, MAX_PHOTOS_PER_CASE).map((url, idx) => (
+                      <div
+                        key={`${c.id}-${url}`}
+                        className={cn(
+                          "relative overflow-hidden rounded-xl bg-[#f3f4f6]",
+                          c.photos.length === 1 ? "col-span-3 row-span-2" : "",
+                          c.photos.length > 1 && idx === 0 ? "col-span-2 row-span-2" : "",
+                          c.photos.length === 2 && idx === 1 ? "row-span-2" : ""
+                        )}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={cldThumb(url, idx === 0 ? 420 : 220)} alt={c.title ?? ""} className="h-full w-full object-cover" />
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between gap-2 border-t border-[#f3f4f6] pt-3 sm:col-span-2">
                   <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-[#9ca3af]">
+                    {c.photos.length > 0 && <span className="inline-flex items-center gap-1"><Images className="h-3 w-3 text-[#374151]" /> {t("photosCount", { count: c.photos.length })}</span>}
                     {c.date && <span className="inline-flex items-center gap-1"><CalendarDays className="h-3 w-3 text-[#374151]" /> {c.date}</span>}
                     {typeof c.likes === "number" && c.likes > 0 && <span className="inline-flex items-center gap-1"><Heart className="h-3 w-3 text-[#374151]" /> {c.likes}</span>}
                   </div>

@@ -1730,3 +1730,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Identity verification help placement.** The identity-verification education link (Que es la verificacion de identidad? / What is identity verification?) belongs directly under the verification intro copy and before the ID input. Do not place it as a loose global panel link or beside the field label; it should read as contextual help before the user types their ID.
 
 > **Profile completion meter color.** Keep the professional profile-completion progress bar in the ContrataCR blue gradient even when it reaches 100%. Avoid switching the meter to green for completed state; use copy/status text to communicate completion and keep progress UI on-brand.
+
+> **Casos de exito summary collage.** Success-case cards should read as a case summary supported by evidence photos. Use a text-first card with a compact fixed collage (1-3 photos in a two-row grid) rather than a large cover image, full-width banner, or loose thumbnail strip. On desktop the collage may sit to the right; on mobile it can sit below the text.

@@ -59,12 +59,10 @@ export function CaseShowcase({
     return [...inOrder, ...extras];
   }, [professions, cases]);
   // Keep the active filter valid (no "Todas") — fall back to the first profession with cases.
-  useEffect(() => {
-    if (distinctProfs.length > 0 && !distinctProfs.includes(active)) setActive(distinctProfs[0]);
-  }, [distinctProfs, active]);
   const showFilter = distinctProfs.length > 1;
   const countFor = (p: string) => cases.filter((c) => c.profession === p).length;
-  const shown = cases.filter((c) => c.profession === active);
+  const selectedActive = distinctProfs.includes(active) ? active : distinctProfs[0] ?? "";
+  const shown = cases.filter((c) => c.profession === selectedActive);
 
   // ── Detail modal nav (Esc / ← / →) ──
   function openCase(c: ShowcaseCase) { setDetail(c); setPi(0); }
@@ -87,7 +85,7 @@ export function CaseShowcase({
       {showFilter && (
         <StatusFilterTabs
           tabs={distinctProfs.map((p) => ({ id: p }))}
-          value={active}
+          value={selectedActive}
           onChange={setActive}
           labelFor={profLabel}
           counts={Object.fromEntries(distinctProfs.map((p) => [p, countFor(p)]))}
@@ -103,12 +101,13 @@ export function CaseShowcase({
               role="button"
               tabIndex={0}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openCase(c); } }}
-              className="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm transition-shadow hover:shadow-md"
+              className="group relative cursor-pointer overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm transition-shadow hover:shadow-md"
             >
-              <div className="flex flex-1 flex-col p-5">
-                <p className="text-[11px] font-semibold text-[#0089bb]">{profLabel(c.profession)}</p>
-                {c.title && <p className="mt-0.5 text-[17px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere]">{c.title}</p>}
-                {c.description && <p className="mt-1 line-clamp-4 text-[14px] leading-relaxed text-[#6b7280] [overflow-wrap:anywhere]">{c.description}</p>}
+              <div className="grid gap-4 p-5 sm:grid-cols-[minmax(0,1fr)_190px] sm:items-stretch">
+                <div className="min-w-0">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-[#0089bb]">{profLabel(c.profession)}</p>
+                {c.title && <p className="mt-1 text-[18px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere]">{c.title}</p>}
+                {c.description && <p className="mt-1.5 line-clamp-4 text-[14px] leading-relaxed text-[#6b7280] [overflow-wrap:anywhere]">{c.description}</p>}
                 {(c.recipient || c.date) && (
                   <p className="mt-2.5 flex flex-wrap items-baseline gap-x-1.5 text-[12px] [overflow-wrap:anywhere]">
                     {c.recipient && <span className="font-medium text-[#374151]">{c.recipient}</span>}
@@ -116,12 +115,21 @@ export function CaseShowcase({
                     {c.date && <span className="text-[#9ca3af]">{c.date}</span>}
                   </p>
                 )}
+                </div>
                 {c.photos.length > 0 && (
-                  <div className="mt-3 flex items-end gap-2">
+                  <div className="grid h-[112px] grid-cols-3 grid-rows-2 gap-1.5 sm:h-full sm:min-h-[138px]">
                     {c.photos.slice(0, 3).map((url, idx) => (
-                      <div key={`${c.id}-${url}`} className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-[#f3f4f6] sm:h-[72px] sm:w-[72px]">
+                      <div
+                        key={`${c.id}-${url}`}
+                        className={cn(
+                          "relative overflow-hidden rounded-xl bg-[#f3f4f6]",
+                          c.photos.length === 1 ? "col-span-3 row-span-2" : "",
+                          c.photos.length > 1 && idx === 0 ? "col-span-2 row-span-2" : "",
+                          c.photos.length === 2 && idx === 1 ? "row-span-2" : ""
+                        )}
+                      >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={cldThumb(url, 220)} alt={c.title ?? ""} loading="lazy" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" />
+                        <img src={cldThumb(url, idx === 0 ? 480 : 220)} alt={c.title ?? ""} loading="lazy" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" />
                         {idx === 2 && c.photos.length > 3 && (
                           <span className="absolute inset-0 grid place-items-center bg-black/45 text-xs font-bold text-white">+{c.photos.length - 3}</span>
                         )}
@@ -137,12 +145,12 @@ export function CaseShowcase({
                         )}
                       </div>
                     ))}
-                    {c.photos.length > 1 && (
-                      <span className="mb-0.5 inline-flex items-center gap-1 rounded-full bg-[#f3f4f6] px-2 py-1 text-[11px] font-semibold text-[#6b7280]">
-                        <Images className="h-3 w-3" /> {t("casosPhotos", { count: c.photos.length })}
-                      </span>
-                    )}
                   </div>
+                )}
+                {c.photos.length > 1 && (
+                  <span className="inline-flex w-fit items-center gap-1 rounded-full bg-[#f3f4f6] px-2 py-1 text-[11px] font-semibold text-[#6b7280] sm:col-span-2">
+                    <Images className="h-3 w-3" /> {t("casosPhotos", { count: c.photos.length })}
+                  </span>
                 )}
               </div>
             </div>
