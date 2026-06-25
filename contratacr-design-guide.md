@@ -1760,3 +1760,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Solicitudes recibidas expanded corner handling.** Any expanded panel with its own background inside a rounded received-request card must declare `rounded-b-2xl`; avoid parent overflow clipping because action menus need to remain visible. Use a subtle brand rail/ring for expanded focus.
 
 > **Solicitudes recibidas expanded sheet.** Prefer one calm white information sheet with internal dividers for service, contact, ID, and description. Avoid multiple separate mini cards inside an expanded request unless a section is truly exceptional, because the professional needs quick scanning more than decorative grouping.
+
+> **Solicitudes recibidas header affordance.** The collapsed card should clearly signal it opens. Use a small circular chevron affordance and quiet bordered metadata pills for service/location; avoid leaving the chevron as a loose icon when the card has several competing chips.

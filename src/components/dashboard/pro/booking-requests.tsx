@@ -247,7 +247,7 @@ export function BookingRequests() {
           type="button"
           onClick={() => setExpandedId(expanded ? null : booking.id)}
           aria-expanded={expanded}
-          className={cn("w-full text-left px-4 py-4 sm:px-5 flex items-start gap-3.5 transition-colors hover:bg-[#f9fbfd]", expanded ? "rounded-t-2xl bg-[#fbfdff]" : "rounded-2xl")}
+          className={cn("group w-full text-left px-4 py-4 sm:px-5 flex items-start gap-3.5 transition-colors hover:bg-[#f9fbfd]", expanded ? "rounded-t-2xl bg-[#fbfdff]" : "rounded-2xl")}
         >
           <Avatar className={cn("h-12 w-12 shrink-0 ring-2 transition-shadow", expanded ? "ring-[#ccecf8] shadow-sm" : "ring-[#EBF5FB]")}>
             <AvatarImage src={booking.profiles?.avatar_url} className="object-cover" />
@@ -272,14 +272,14 @@ export function BookingRequests() {
               </span>
               <span className="flex w-full max-w-full flex-col items-start gap-1.5 sm:flex-row sm:flex-wrap sm:items-center">
                 {category && (
-                  <span className="inline-flex w-full max-w-full items-center gap-1.5 rounded-full bg-[#f9fafb] px-2 py-1 sm:w-auto">
-                    <Wrench className="h-3.5 w-3.5 shrink-0 text-[#374151]" />
+                  <span className="inline-flex w-full max-w-full items-center gap-1.5 rounded-full border border-[#eef2f6] bg-white px-2.5 py-1 sm:w-auto">
+                    <Wrench className="h-3.5 w-3.5 shrink-0 text-[#6b7280]" />
                     <span className="truncate">{category}</span>
                   </span>
                 )}
                 {location && (
-                  <span className="inline-flex w-full max-w-full items-center gap-1.5 rounded-full bg-[#f9fafb] px-2 py-1 sm:w-auto">
-                    <MapPin className="h-3.5 w-3.5 shrink-0 text-[#374151]" />
+                  <span className="inline-flex w-full max-w-full items-center gap-1.5 rounded-full border border-[#eef2f6] bg-white px-2.5 py-1 sm:w-auto">
+                    <MapPin className="h-3.5 w-3.5 shrink-0 text-[#6b7280]" />
                     <span className="truncate">{location}</span>
                   </span>
                 )}
@@ -289,7 +289,9 @@ export function BookingRequests() {
               </span>
             </div>
           </div>
-          <ChevronDown className={cn("h-5 w-5 text-[#9ca3af] shrink-0 transition-transform duration-200", expanded && "rotate-180")} />
+          <span className={cn("mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition-colors duration-200", expanded ? "border-[#ccecf8] bg-[#EBF5FB] text-[#009FD9]" : "border-[#eef2f6] bg-white text-[#9ca3af] group-hover:border-[#d8eef8] group-hover:text-[#009FD9]")}>
+            <ChevronDown className={cn("h-[18px] w-[18px] transition-transform duration-200", expanded && "rotate-180")} />
+          </span>
         </button>
 
         {expanded && (
