@@ -96,6 +96,7 @@ export function ServicesEditor({
   const [formError, setFormError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [pendingNewCategory, setPendingNewCategory] = useState<string | null>(null);
 
   // App-wide autosave: report status to the section title row (inline, no layout shift).
   useReportSaveStatus(saving, saved);
@@ -138,10 +139,8 @@ export function ServicesEditor({
   // (price/description/años), so the pro is never left on an "what now?" state.
   function addService(id: string) {
     if (!id || professions.includes(id)) return;
-    const next = [...professions, id];
-    setProfessions(next);
     closePicker();
-    persist(next, services);
+    setPendingNewCategory(id);
     openEditInfo(id);
   }
 
@@ -190,6 +189,7 @@ export function ServicesEditor({
       years: rep?.years != null ? String(rep.years) : "",
     });
     setFormError(null);
+    if (professions.includes(prof)) setPendingNewCategory(null);
     setEditCategory(prof);
   }
 
@@ -197,6 +197,7 @@ export function ServicesEditor({
     setEditCategory("");
     setForm(EMPTY_FORM);
     setFormError(null);
+    setPendingNewCategory(null);
   }
 
   const formOpen = editCategory !== "";
@@ -230,10 +231,14 @@ export function ServicesEditor({
       category: editCategory,
       active: rep?.active ?? true,
     };
+    const nextProfessions = pendingNewCategory === editCategory && !professions.includes(editCategory)
+      ? [...professions, editCategory]
+      : professions;
     const next = [...services.filter((s) => effectiveCategory(s) !== editCategory), info];
+    setProfessions(nextProfessions);
     setServices(next);
     cancelForm();
-    await persist(professions, next);
+    await persist(nextProfessions, next);
   }
 
   // Services available to add (taxonomy minus the ones already added), filtered by the
@@ -292,7 +297,7 @@ export function ServicesEditor({
         <>
           {/* ONE service per card: name + price (focal), description, then clearly grouped
               actions. No catalog image in the panel (it's for the public profile only). */}
-          <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3.5">
             {professions.map((prof) => {
               const isPrincipal = professions.indexOf(prof) === 0;
               const info = serviceInfo(prof);
@@ -335,7 +340,7 @@ export function ServicesEditor({
 
                   {/* Description group — calm supporting text (or a gentle prompt). */}
                   {info?.description ? (
-                    <p className="mt-3 line-clamp-3 text-[13px] leading-relaxed text-[#6b7280] [overflow-wrap:anywhere]">{info.description}</p>
+                    <p className="mt-3 text-[13px] leading-relaxed text-[#6b7280] [overflow-wrap:anywhere]">{info.description}</p>
                   ) : (
                     <p className="mt-3 text-[13px] italic leading-relaxed text-[#9ca3af]">{t("noDescriptionYet")}</p>
                   )}
@@ -482,7 +487,7 @@ export function ServicesEditor({
                 {t("descBrief")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
               </label>
               <textarea
-                className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] min-h-[96px] resize-none focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+                className="min-h-[150px] w-full resize-y rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
                 placeholder={t("offerDescPlaceholder")}
                 value={form.description}
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}

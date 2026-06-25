@@ -1676,3 +1676,7 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
   not service-only. Keep the placeholder as service-or-location copy, and keep `q` matching
   province/cantón coverage (`search_provincias`, `search_cantones`, coverage fields) in addition
   to service/category/name/business/workplace text.
+- **Mis servicios cards (Sprint 185):** service cards in the pro panel are 1-per-row, not 2-up.
+  Descriptions are full "Descripción/Description" fields, not "brief" fields, and should not be
+  line-clamped in the editor. Adding a catalog service must be an explicit-save flow: selecting a
+  service may open its details modal, but it must not persist until "Guardar cambios"/"Save changes".
