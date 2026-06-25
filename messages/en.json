@@ -1276,7 +1276,7 @@
     "agoMonths": "{count, plural, one {# month} other {# months}} ago",
     "waitingTitle": "The client is waiting for proposals.",
     "waitingBody": "Be one of the first to send yours.",
-    "projectDescription": "Project description",
+    "projectDescription": "Description",
     "budgetLabel": "Estimated budget",
     "timelineLabel": "Desired date",
     "clientInfo": "Client information",

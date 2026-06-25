@@ -1275,7 +1275,7 @@
     "agoMonths": "hace {count, plural, one {# mes} other {# meses}}",
     "waitingTitle": "El cliente está esperando propuestas.",
     "waitingBody": "Sé uno de los primeros en enviar la tuya.",
-    "projectDescription": "Descripción del proyecto",
+    "projectDescription": "Descripción",
     "budgetLabel": "Presupuesto estimado",
     "timelineLabel": "Fecha deseada",
     "clientInfo": "Información del cliente",
