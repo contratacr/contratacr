@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import {
-  X, Menu, ChevronDown, Search, MapPin,
+  X, Menu, ChevronDown, ChevronRight, Search, MapPin,
   LayoutDashboard, LogOut, Bookmark, CalendarDays, FolderOpen, UserPlus, Briefcase, Compass, Settings, Bell, Globe, Inbox, Check,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
@@ -19,7 +19,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
 import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
-import { CategoryGroupPicker } from "@/components/ui/category-group-picker";
 import { SupportLink } from "@/components/support/support-link";
 import { ALL_CATEGORIES, CATEGORY_GROUPS, searchCategories, normalizeText, getCategoryLabel, getCategoryGroupLabel } from "@/lib/data/categories";
 import { searchLocations, resolveLocation, type LocationSuggestion } from "@/lib/data/location-search";
@@ -278,7 +277,7 @@ function CategoryAutocomplete({
       return () => cancelAnimationFrame(id);
     }
   }, [autoFocus]);
-  useEffect(() => setActive(0), [q]);
+  useEffect(() => { queueMicrotask(() => setActive(0)); }, [q]);
 
   function go(id?: string) {
     const params = new URLSearchParams();
@@ -386,8 +385,9 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const matches = useMemo(() => matchCategories(q, 18), [q]);
   const filtering = q.trim().length > 0;
+  const selectedGroup = CATEGORY_GROUPS.find((group) => group.id === (activeGroupId ?? CATEGORY_GROUPS[0]?.id)) ?? CATEGORY_GROUPS[0];
 
-  useEffect(() => setActive(0), [q]);
+  useEffect(() => { queueMicrotask(() => setActive(0)); }, [q]);
 
   function go(id?: string) {
     if (id) router.push(`/buscar?categoria=${id}`);
@@ -467,15 +467,59 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
           </div>
         )
       ) : (
-        <div className="max-h-[64vh] overflow-y-auto pr-1">
-          <CategoryGroupPicker
-            groups={CATEGORY_GROUPS}
-            activeGroupId={activeGroupId}
-            onActiveGroupChange={setActiveGroupId}
-            onSelect={go}
-            backLabel={ts("back")}
-            countLabel={(count) => ts("optionsCount", { count })}
-          />
+        <div className="grid max-h-[64vh] grid-cols-[240px_minmax(0,1fr)] overflow-hidden rounded-2xl border border-[#eef2f6] bg-white">
+          <div className="overflow-y-auto border-r border-[#eef2f6] bg-[#f8fafc] p-2">
+            {CATEGORY_GROUPS.map((group) => {
+              const selected = selectedGroup?.id === group.id;
+              return (
+                <button
+                  key={group.id}
+                  type="button"
+                  onMouseEnter={() => setActiveGroupId(group.id)}
+                  onFocus={() => setActiveGroupId(group.id)}
+                  onClick={() => setActiveGroupId(group.id)}
+                  className={cn(
+                    "flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left transition-colors",
+                    selected ? "bg-white text-[#162543] shadow-sm ring-1 ring-[#e8eef5]" : "text-[#6b7280] hover:bg-white hover:text-[#162543]"
+                  )}
+                >
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-semibold">{getCategoryGroupLabel(group.id, locale)}</span>
+                    <span className={cn("mt-0.5 block text-[11px]", selected ? "text-[#009FD9]" : "text-[#9ca3af]")}>
+                      {ts("optionsCount", { count: group.items.length })}
+                    </span>
+                  </span>
+                  <ChevronRight className={cn("h-4 w-4 shrink-0", selected ? "text-[#009FD9]" : "text-[#cbd5e1]")} />
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="min-w-0 overflow-y-auto p-4">
+            {selectedGroup && (
+              <>
+                <div className="mb-3 flex items-end justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-bold uppercase tracking-wide text-[#009FD9]">{t("categories")}</p>
+                    <h3 className="truncate text-base font-bold text-[#162543]">{getCategoryGroupLabel(selectedGroup.id, locale)}</h3>
+                  </div>
+                  <span className="shrink-0 text-xs font-medium text-[#9ca3af]">{ts("optionsCount", { count: selectedGroup.items.length })}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {selectedGroup.items.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => go(item.id)}
+                      className="rounded-xl px-3 py-2.5 text-left text-sm font-medium text-[#374151] transition-colors hover:bg-[#EBF5FB] hover:text-[#0089bb] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/20"
+                    >
+                      <span className="block [overflow-wrap:anywhere]">{getCategoryLabel(item.id, locale)}</span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
         </div>
       )}
 
@@ -757,7 +801,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
         setProUnread(pro); setClientUnread(cli); setNeutralUnread(neu);
       });
   }, [user]);
-  useEffect(() => { refreshNotifUnread(); }, [refreshNotifUnread, mobileOpen]);
+  useEffect(() => { queueMicrotask(() => refreshNotifUnread()); }, [refreshNotifUnread, mobileOpen]);
   // The active mode's unread (its own + account-level) → the bell + the menu's
   // Notificaciones badge. The mode switch itself stays clean (no badge).
   const activeUnread = (mode === "offer" ? proUnread : clientUnread) + neutralUnread;
