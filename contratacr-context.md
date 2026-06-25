@@ -3277,3 +3277,5 @@ New i18n namespaces added this pass: `search.pagination`, extended `search.filte
 **Sprint 216 - Time select chevron spacing fixed.** `time-select.tsx` / `availability-editor.tsx`: weekly availability time selectors are back to `sm:w-28` so labels like `8:00AM` / `5:00PM` do not crowd the chevron. The shared `TimeSelect` chevron moved slightly right and padding was tuned so AM/PM has breathing room while keeping the control compact. No i18n changes.
 
 **Sprint 217 - Received request mobile summary rows separated.** `booking-requests.tsx`: on responsive/mobile Solicitudes recibidas cards, the appointment date/time, service, and location chips now stack as separate full-width rows. Desktop keeps the flexible chip row from `sm` upward. No i18n changes.
+
+**Sprint 218 - Mis solicitudes description row labelled.** `client-activity.tsx`: the expanded client Mis solicitudes description is no longer loose text; it now renders as a flat icon row with `FileText` and the label `Descripción` / `Description`, matching the service and appointment-for rows without adding a heavy nested card. Added `clientActivity.descriptionField` ES/EN.

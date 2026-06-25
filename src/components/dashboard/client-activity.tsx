@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarDays, FolderOpen, ClipboardList, ChevronDown, Plus, CalendarClock, Wrench, Users, MapPin } from "lucide-react";
+import { CalendarDays, FolderOpen, ClipboardList, ChevronDown, Plus, CalendarClock, Wrench, Users, MapPin, FileText } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -468,7 +468,13 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                             )}
 
                             {b.service_description && (
-                              <ExpandableText text={b.service_description} lines={5} />
+                              <div className="flex items-start gap-2.5">
+                                <FileText className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
+                                <div className="min-w-0">
+                                  <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("descriptionField")}</p>
+                                  <ExpandableText text={b.service_description} lines={5} className="mt-0.5 text-sm leading-relaxed text-[#4b5563]" />
+                                </div>
+                              </div>
                             )}
                             {/* Pro cancelled → show why (so the client knows + can re-book). */}
                             {b.status === "cancelled" && b.cancelled_by === "professional" && (
