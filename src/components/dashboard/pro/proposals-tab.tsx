@@ -511,7 +511,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                     : null;
                   const sentDate = formatRelativeOrDate(p.created_at, locale);
                   return (
-                    <Card key={p.id} className="overflow-hidden hover:shadow-md">
+                    <Card key={p.id} className={cn("rounded-2xl border-[#e5e7eb] bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md", isOpen && "shadow-md ring-1 ring-[#d8eef8]")}>
                       {/* COLLAPSED header — client avatar + project title (primary) + a status chip
                           (a SENT proposal genuinely IS "Pendiente" until the client decides — unlike
                           auto-confirm bookings — so that badge is kept here); key fact = YOUR price; a
@@ -520,7 +520,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                         type="button"
                         onClick={() => setExpandedMine(isOpen ? null : p.id)}
                         aria-expanded={isOpen}
-                        className={cn("w-full text-left p-4 sm:p-5 flex items-start gap-3.5 hover:bg-[#fafafa] transition-colors", isOpen ? "rounded-t-2xl" : "rounded-2xl")}
+                        className={cn("group w-full text-left p-4 sm:p-5 flex items-start gap-3.5 hover:bg-[#f9fbfd] transition-colors", isOpen ? "rounded-t-2xl bg-[#fbfdff]" : "rounded-2xl")}
                       >
                         <Avatar className="h-11 w-11 shrink-0">
                           <AvatarImage src={p.projects?.profiles?.avatar_url} />
@@ -539,29 +539,41 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                               )
                             )}
                           </div>
-                          <p className="mt-1 text-[13px] min-w-0">
-                            <span className="min-w-0 truncate">
-                              <span className="text-[#6b7280]">{t("yourPriceLabel")}</span>{" "}
-                              {p.price
-                                ? <span className="font-semibold text-[#0089bb]">₡{p.price.toLocaleString("es-CR")}</span>
-                                : <span className="text-[#6b7280]">{t("priceTBD")}</span>}
+                          <div className="mt-2 flex flex-col items-start gap-1.5 text-[13px]">
+                            <span className="inline-flex max-w-full items-center rounded-xl border border-[#ccecf8] bg-[#EBF5FB] px-3 py-2 font-bold text-[#0089bb] [overflow-wrap:anywhere]">
+                              {p.price ? `₡${p.price.toLocaleString("es-CR")}` : t("priceTBD")}
                             </span>
-                          </p>
-                          {!isOpen && p.message && (
-                            <p className="mt-1 text-[13px] text-[#6b7280] leading-snug line-clamp-2 [overflow-wrap:anywhere]">{p.message}</p>
-                          )}
+                            {clientName && (
+                              <span className="inline-flex w-full max-w-full items-center gap-2 text-[#6b7280]">
+                                <Users className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                                <span className="truncate">{clientName}</span>
+                              </span>
+                            )}
+                            <span className="inline-flex w-full max-w-full items-center gap-2 text-[#9ca3af]">
+                              <CalendarDays className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                              <span className="truncate">{t("sentOn", { date: sentDate })}</span>
+                            </span>
+                          </div>
                         </div>
-                        <ChevronDown className={cn("h-5 w-5 text-[#9ca3af] shrink-0 mt-0.5 transition-transform duration-200", isOpen && "rotate-180")} />
+                        <span className={cn("mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition-colors duration-200", isOpen ? "border-[#ccecf8] bg-[#EBF5FB] text-[#009FD9]" : "border-[#eef2f6] bg-white text-[#9ca3af] group-hover:border-[#d8eef8] group-hover:text-[#009FD9]")}>
+                          <ChevronDown className={cn("h-[18px] w-[18px] transition-transform duration-200", isOpen && "rotate-180")} />
+                        </span>
                       </button>
 
                       {isOpen && (
-                        <div className="px-4 pb-5 pt-4 sm:px-5 border-t border-[#f3f4f6] flex flex-col gap-3.5">
-                          {clientName && <p className="text-[12.5px] text-[#6b7280] truncate">{clientName}</p>}
-                          {p.message && <ExpandableText text={p.message} lines={5} />}
-                          <p className="flex items-center gap-1.5 text-[11px] text-[#9ca3af]"><CalendarDays className="h-3.5 w-3.5 shrink-0 text-[#374151]" /> {t("sentOn", { date: sentDate })}</p>
+                        <div className="rounded-b-2xl border-t border-[#f3f4f6] bg-gradient-to-b from-[#fcfdff] to-white px-4 pb-5 pt-4 sm:px-5 flex flex-col gap-3.5">
+                          {p.message && (
+                            <div className="rounded-2xl bg-white p-3.5 ring-1 ring-[#e8eef5]">
+                              <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#9ca3af]">{t("yourMessage")}</p>
+                              <ExpandableText text={p.message} lines={5} className="mt-1 text-[13px] leading-relaxed text-[#4b5563]" />
+                            </div>
+                          )}
                           {/* Client contact — revealed once the proposal is accepted (still active). */}
                           {p.status === "accepted" && ps !== "cancelled" && phone && (
-                            <p className="text-xs text-[#374151]"><span className="text-[#6b7280]">{t("fieldPhone")}</span> {phone}</p>
+                            <div className="rounded-2xl bg-white p-3.5 ring-1 ring-[#e8eef5]">
+                              <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#9ca3af]">{t("fieldPhone")}</p>
+                              <p className="mt-0.5 text-[13px] font-medium text-[#374151] truncate">{phone}</p>
+                            </div>
                           )}
                           {/* Client cancelled the request after accepting → tell the pro (no actions). */}
                           {p.status === "accepted" && ps === "cancelled" && (
