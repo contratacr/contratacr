@@ -1766,3 +1766,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Solicitudes recibidas no duplicate location.** Because the collapsed header remains visible when a request is expanded, do not repeat the same location inside the expanded details sheet. Keep the location in the header summary and reserve the sheet for additional structured details.
 
 > **Solicitudes recibidas focus rail.** Do not use a physical left border on closed received-request cards; it can make the left rounded corners look clipped. If a brand rail is needed, render it only in the expanded state as a rounded pseudo-element inside the card.
+
+> **Solicitudes recibidas summary readability.** Keep only the appointment date as a highlighted chip. Service and location should be plain icon-led text rows below it, not pills, so the card reads as requester -> appointment -> service/location without making users interpret too many chips.

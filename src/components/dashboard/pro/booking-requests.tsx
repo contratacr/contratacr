@@ -270,22 +270,26 @@ export function BookingRequests() {
                 <CalendarClock className="h-4 w-4 shrink-0 text-[#009FD9]" />
                 <span className="truncate">{dateStr || t("noScheduledDate")}</span>
               </span>
-              <span className="flex w-full max-w-full flex-col items-start gap-1.5 sm:flex-row sm:flex-wrap sm:items-center">
+              <span className="flex w-full max-w-full flex-col items-start gap-1.5 text-[13px]">
                 {category && (
-                  <span className="inline-flex w-full max-w-full items-center gap-1.5 rounded-full border border-[#eef2f6] bg-white px-2.5 py-1 sm:w-auto">
-                    <Wrench className="h-3.5 w-3.5 shrink-0 text-[#6b7280]" />
-                    <span className="truncate">{category}</span>
+                  <span className="inline-flex w-full max-w-full items-center gap-2 text-[#374151]">
+                    <Wrench className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                    <span className="truncate font-medium">{category}</span>
                   </span>
                 )}
                 {location && (
-                  <span className="inline-flex w-full max-w-full items-center gap-1.5 rounded-full border border-[#eef2f6] bg-white px-2.5 py-1 sm:w-auto">
-                    <MapPin className="h-3.5 w-3.5 shrink-0 text-[#6b7280]" />
+                  <span className="inline-flex w-full max-w-full items-center gap-2 text-[#6b7280]">
+                    <MapPin className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
                     <span className="truncate">{location}</span>
                   </span>
                 )}
-                {!booking.for_someone_else && showClinicalFlags && ageBadge(booking.client_dob)}
-                {unverifiedPill}
-                {flaggedPill}
+                {(unverifiedPill || flaggedPill || (!booking.for_someone_else && showClinicalFlags && ageBadge(booking.client_dob))) && (
+                  <span className="mt-0.5 flex flex-wrap items-center gap-1.5">
+                    {!booking.for_someone_else && showClinicalFlags && ageBadge(booking.client_dob)}
+                    {unverifiedPill}
+                    {flaggedPill}
+                  </span>
+                )}
               </span>
             </div>
           </div>
