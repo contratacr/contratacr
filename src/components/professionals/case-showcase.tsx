@@ -191,11 +191,11 @@ export function CaseShowcase({
                   <img src={cldLarge(cur, 1280)} alt={tg("workAlt", { n: pi + 1 })} className="relative z-10 h-full w-full object-contain" />
                   {photos.length > 1 && (
                     <>
-                      <button onClick={prev} aria-label={tg("prev")} className="absolute left-2 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-black/45 text-white hover:bg-black/65">
-                        <ChevronLeft className="h-6 w-6" />
+                      <button onClick={prev} aria-label={tg("prev")} className="absolute left-3 top-1/2 z-20 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-[#111827]/85 text-white shadow-lg backdrop-blur transition-colors hover:bg-[#111827] sm:left-4">
+                        <ChevronLeft className="h-7 w-7" />
                       </button>
-                      <button onClick={next} aria-label={tg("next")} className="absolute right-2 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-black/45 text-white hover:bg-black/65">
-                        <ChevronRight className="h-6 w-6" />
+                      <button onClick={next} aria-label={tg("next")} className="absolute right-3 top-1/2 z-20 grid h-11 w-11 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-[#111827]/85 text-white shadow-lg backdrop-blur transition-colors hover:bg-[#111827] sm:right-4">
+                        <ChevronRight className="h-7 w-7" />
                       </button>
                       <span className="absolute bottom-3 left-1/2 z-20 -translate-x-1/2 rounded-full border border-white/25 bg-[#111827]/90 px-2.5 py-1 text-[11px] font-bold text-white shadow-lg backdrop-blur">
                         {pi + 1} / {photos.length}
