@@ -1,7 +1,7 @@
 import type { ProfessionalCardData, Certification } from "@/components/professionals/professional-card";
 import { deriveDisplayPricing } from "@/lib/pricing";
-import { getMatchingCategoryIds } from "@/lib/data/categories";
-import { getProvinceById, PROVINCE_CENTROIDS, haversineKm } from "@/lib/data/cr-geography";
+import { getMatchingCategoryIds, normalizeText } from "@/lib/data/categories";
+import { getProvinceById, PROVINCE_CENTROIDS, PROVINCES, haversineKm } from "@/lib/data/cr-geography";
 
 // Build the real travel-coverage summary for "me desplazo" pros (item 16):
 // whole country, specific provinces, and/or specific cantones (display names).
@@ -31,6 +31,40 @@ const PROVINCE_NAME_TO_ID: Record<string, string> = {
 };
 function getProvinceIdByName(name?: string): string {
   return (name && PROVINCE_NAME_TO_ID[name]) || "";
+}
+
+type LocationQueryMatch =
+  | { type: "province"; id: string }
+  | { type: "canton"; id: string; provinceId: string };
+
+function getMatchingLocationIds(raw: string): LocationQueryMatch[] {
+  const q = normalizeText(raw.trim());
+  if (q.length < 3) return [];
+
+  const matches: LocationQueryMatch[] = [];
+  const seen = new Set<string>();
+  const add = (match: LocationQueryMatch) => {
+    const key = `${match.type}:${match.id}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      matches.push(match);
+    }
+  };
+
+  for (const province of PROVINCES) {
+    const provinceName = normalizeText(province.name);
+    if (q === provinceName || q.includes(provinceName) || provinceName.includes(q)) {
+      add({ type: "province", id: province.id });
+    }
+    for (const canton of province.cantons) {
+      const cantonName = normalizeText(canton.name);
+      if (q === cantonName || q.includes(cantonName) || cantonName.includes(q)) {
+        add({ type: "canton", id: canton.id, provinceId: province.id });
+      }
+    }
+  }
+
+  return matches.slice(0, 8);
 }
 
 export type SearchFilters = {
@@ -159,19 +193,38 @@ export async function searchProfessionals(
           const q = filters.query.trim().slice(0, 80).replace(/[,()*%_:\\"']/g, " ").replace(/\s+/g, " ").trim();
           // Match text against bio/name AND expand keyword synonyms to category IDs
           const keywordCategoryIds = getMatchingCategoryIds(filters.query.trim());
+          const locationMatches = getMatchingLocationIds(filters.query.trim());
+          const locationFilterParts = locationMatches.flatMap((loc) => {
+            if (loc.type === "province") {
+              return modern
+                ? [`search_provincias.cs.{${loc.id}}`, `provincia_id.eq.${loc.id}`, "coverage_country.eq.true"]
+                : [`provincia_id.eq.${loc.id}`];
+            }
+            return modern
+              ? [
+                  `search_cantones.cs.{${loc.id}}`,
+                  `canton_id.eq.${loc.id}`,
+                  `coverage_provincias.cs.{${loc.provinceId}}`,
+                  "coverage_country.eq.true",
+                ]
+              : [`canton_id.eq.${loc.id}`];
+          });
           if (!q) {
+            const parts = [...locationFilterParts];
             if (keywordCategoryIds.length > 0 && !filters.categoryId) {
-              query = query.or(keywordCategoryIds.map((id) => `category_id.eq.${id}`).join(","));
+              parts.push(...keywordCategoryIds.map((id) => `category_id.eq.${id}`));
+            }
+            if (parts.length > 0) {
+              query = query.or(parts.join(","));
             }
             // No usable text after sanitizing → skip the text filter entirely.
           } else {
             const textFilter = `bio.ilike.%${q}%,profiles.full_name.ilike.%${q}%,services::text.ilike.%${q}%,business_name.ilike.%${q}%,workplaces::text.ilike.%${q}%`;
+            const parts = [textFilter, ...locationFilterParts];
             if (keywordCategoryIds.length > 0 && !filters.categoryId) {
-              const catFilter = keywordCategoryIds.map((id) => `category_id.eq.${id}`).join(",");
-              query = query.or(`${textFilter},${catFilter}`);
-            } else {
-              query = query.or(textFilter);
+              parts.push(...keywordCategoryIds.map((id) => `category_id.eq.${id}`));
             }
+            query = query.or(parts.join(","));
           }
         }
 

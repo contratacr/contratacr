@@ -1672,3 +1672,7 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
   `lg:hidden fixed top-16` row for `MobileServiceSearch` + `MobileFiltersButton`. Keep the
   filter button icon + "Filtros" label visible in that second row; the layout has enough room
   and the label is clearer than an icon-only control.
+- **Free-text search is service OR location-aware (Sprint 184):** the `/buscar` search field is
+  not service-only. Keep the placeholder as service-or-location copy, and keep `q` matching
+  province/cantón coverage (`search_provincias`, `search_cantones`, coverage fields) in addition
+  to service/category/name/business/workplace text.
