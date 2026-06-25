@@ -236,7 +236,7 @@ export function BookingRequests() {
     const panelOpen = actionFor?.id === booking.id;
 
     return (
-      <Card className="rounded-2xl hover:shadow-md">
+      <Card className="rounded-2xl border-[#e5e7eb] bg-white shadow-sm transition-shadow hover:shadow-md">
         {/* EXPANDABLE LEAD CARD (sprint 430): COLLAPSED shows only essentials (who · when ·
             status + unverified). Tapping reveals the full identity, the "para otra persona"
             callout, servicio·zona, the note, and the management ACTIONS. Zero icons; text labels.
@@ -247,9 +247,9 @@ export function BookingRequests() {
           type="button"
           onClick={() => setExpandedId(expanded ? null : booking.id)}
           aria-expanded={expanded}
-          className={cn("w-full text-left px-4 py-4 sm:px-5 flex items-start gap-3.5 hover:bg-[#fafafa] transition-colors", expanded ? "rounded-t-2xl" : "rounded-2xl")}
+          className={cn("w-full text-left px-4 py-4 sm:px-5 flex items-start gap-3.5 transition-colors hover:bg-[#f9fbfd]", expanded ? "rounded-t-2xl bg-[#fbfdff]" : "rounded-2xl")}
         >
-          <Avatar className="h-11 w-11 shrink-0">
+          <Avatar className="h-12 w-12 shrink-0 ring-2 ring-[#EBF5FB]">
             <AvatarImage src={booking.profiles?.avatar_url} className="object-cover" />
             <AvatarFallback className="text-sm font-bold bg-[#EBF5FB] text-[#009FD9]">{getInitials(booking.client_name || "?")}</AvatarFallback>
           </Avatar>
@@ -291,7 +291,7 @@ export function BookingRequests() {
         </button>
 
         {expanded && (
-          <div className="px-4 pb-5 pt-4 sm:px-5 border-t border-[#f3f4f6] flex flex-col gap-4">
+          <div className="border-t border-[#f3f4f6] bg-[#fcfdff] px-4 pb-5 pt-4 sm:px-5 flex flex-col gap-4">
             {requestedDate && (
               <p className="flex items-center gap-1.5 text-[11px] text-[#9ca3af]">
                 <Clock className="h-3.5 w-3.5 shrink-0 text-[#374151]" /> {t("requestedOn", { date: requestedDate })}
@@ -301,7 +301,7 @@ export function BookingRequests() {
             {booking.for_someone_else && (() => {
               const beneAge = ageLabel(booking.beneficiary_dob);
               return (
-                <div className={cn("flex items-start gap-2.5 rounded-xl px-3.5 py-3", showClinicalFlags ? "bg-[#EBF5FB]" : "bg-[#f9fafb]")}>
+                <div className={cn("flex items-start gap-2.5 rounded-xl border px-3.5 py-3", showClinicalFlags ? "border-[#ccecf8] bg-[#EBF5FB]" : "border-[#e5e7eb] bg-white")}>
                   <UserRound className={cn("mt-0.5 h-4 w-4 shrink-0", showClinicalFlags ? "text-[#0089bb]" : "text-[#9ca3af]")} />
                   <div className="min-w-0">
                     <p className={cn("text-[10px] font-bold uppercase tracking-[0.06em]", showClinicalFlags ? "text-[#0089bb]" : "text-[#9ca3af]")}>{t("apptForLabel")}</p>
@@ -318,7 +318,7 @@ export function BookingRequests() {
             })()}
 
             {(category || location || phoneFmt || cedulaFmt || booking.service_description) && (
-              <div className="flex flex-col gap-3">
+              <div className="rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm flex flex-col gap-3.5">
                 {(category || location) && (
                   <div className="flex items-start gap-2.5">
                     <Wrench className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
@@ -334,7 +334,7 @@ export function BookingRequests() {
                   </div>
                 )}
                 {(phoneFmt || cedulaFmt) && (
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-3 border-t border-[#f3f4f6] pt-3 sm:grid-cols-2">
                     {phoneFmt && (
                       <div className="flex min-w-0 items-center gap-2">
                         <Phone className="h-4 w-4 shrink-0 text-[#9ca3af]" />
@@ -356,7 +356,7 @@ export function BookingRequests() {
                   </div>
                 )}
                 {booking.service_description && (
-                  <div className="border-l-2 border-[#e5e7eb] pl-3">
+                  <div className="border-t border-[#f3f4f6] pt-3">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("noteEyebrow")}</p>
                     <ExpandableText text={booking.service_description} lines={3} className="mt-1 text-[13px] leading-relaxed text-[#4b5563]" />
                   </div>
@@ -382,7 +382,7 @@ export function BookingRequests() {
                 { label: t("reportClient"), onClick: () => setReportFor(booking), destructive: true },
               ];
               return (
-                <div className="flex flex-nowrap items-center gap-2 pt-0.5">
+                <div className="flex flex-nowrap items-center gap-2 rounded-xl border border-[#e5e7eb] bg-white p-2 shadow-sm">
                   {waHref && (
                     <Button variant="whatsapp" size="sm" asChild className="shrink-0 rounded-lg px-4">
                       <a href={waHref} target="_blank" rel="noopener noreferrer">

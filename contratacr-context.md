@@ -3307,3 +3307,5 @@ New i18n namespaces added this pass: `search.pagination`, extended `search.filte
 **Sprint 231 - Public profile About tab refined.** src/app/[locale]/profesionales/[slug]/page.tsx: redesigned Sobre mi on the professional public profile with a clear section heading, a cleaner white bio reading card, and a compact facts panel using divided rows instead of many separate gray cards. The section now feels more editorial and easier to scan. No i18n changes.
 
 **Sprint 232 - Public profile About tab made warmer.** src/app/[locale]/profesionales/[slug]/page.tsx: refined Sobre mi further with a soft header panel showing the professional name and specialties, a bio card with a brand accent rail, and a facts panel with soft hover rows instead of rigid table dividers. No i18n changes.
+
+**Sprint 233 - Received requests visual hierarchy refined.** booking-requests.tsx: improved Solicitudes recibidas cards with a cleaner card shell, clearer selected/expanded header state, stronger avatar treatment, soft expanded background, a grouped white detail panel, and a separated action row. Logic and i18n unchanged.
