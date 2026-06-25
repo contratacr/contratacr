@@ -411,7 +411,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                       const isExpanded = expandedProject === project.id;
                       const zona = [project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ");
                       return (
-                        <Card key={project.id} className="transition-shadow hover:shadow-md">
+                        <Card key={project.id} className="overflow-hidden transition-shadow hover:shadow-md">
                           <button
                             type="button"
                             onClick={() => setExpandedProject(isExpanded ? null : project.id)}
@@ -478,7 +478,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                     : null;
                   const sentDate = formatRelativeOrDate(p.created_at, locale);
                   return (
-                    <Card key={p.id} className="hover:shadow-md">
+                    <Card key={p.id} className="overflow-hidden hover:shadow-md">
                       {/* COLLAPSED header — client avatar + project title (primary) + a status chip
                           (a SENT proposal genuinely IS "Pendiente" until the client decides — unlike
                           auto-confirm bookings — so that badge is kept here); key fact = YOUR price; a
