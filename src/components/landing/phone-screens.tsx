@@ -145,7 +145,7 @@ function ProCard({
             <span className="min-w-0 flex-1 text-[13px] font-bold leading-tight text-[#111827] [overflow-wrap:anywhere]">{company}</span>
             {price ? (
               <span className="shrink-0 whitespace-nowrap pt-px leading-tight text-right">
-                {/* A colones amount renders blue + grey unit; a text price renders whole in grey,
+                {/* A colones amount renders blue + grey unit; a text price renders blue,
                     no unit, mirroring the real /buscar card in a compact phone mockup. */}
                 {price.charCodeAt(0) === 0x20a1 ? (
                   <>
@@ -153,7 +153,7 @@ function ProCard({
                     {priceUnit ? <span className="text-[8px] font-medium text-[#9ca3af]"> {priceUnit}</span> : null}
                   </>
                 ) : (
-                  <span className="inline-flex max-w-[54px] items-center justify-center rounded-full bg-[#f3f4f6] px-1.5 py-0.5 text-center text-[7px] font-semibold leading-[0.95] text-[#6b7280] whitespace-normal">{price}</span>
+                  <span className="inline-block max-w-[58px] whitespace-normal text-right text-[9px] font-bold leading-[1.05] text-[#009FD9]">{price}</span>
                 )}
               </span>
             ) : null}
