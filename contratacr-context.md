@@ -3305,3 +3305,5 @@ New i18n namespaces added this pass: `search.pagination`, extended `search.filte
 **Sprint 230 - Success case modal counter contrast fixed.** case-showcase.tsx: strengthened the photo counter pill (1 / 3) with a near-black translucent background, subtle white border, shadow, blur, and z-index so it remains readable over white or very light success-case photos. No i18n changes.
 
 **Sprint 231 - Public profile About tab refined.** src/app/[locale]/profesionales/[slug]/page.tsx: redesigned Sobre mi on the professional public profile with a clear section heading, a cleaner white bio reading card, and a compact facts panel using divided rows instead of many separate gray cards. The section now feels more editorial and easier to scan. No i18n changes.
+
+**Sprint 232 - Public profile About tab made warmer.** src/app/[locale]/profesionales/[slug]/page.tsx: refined Sobre mi further with a soft header panel showing the professional name and specialties, a bio card with a brand accent rail, and a facts panel with soft hover rows instead of rigid table dividers. No i18n changes.
