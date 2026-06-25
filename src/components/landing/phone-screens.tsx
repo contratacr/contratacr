@@ -139,21 +139,21 @@ function ProCard({
           <span className="absolute -left-1.5 -top-1.5 grid h-[18px] w-[18px] place-items-center rounded-full bg-[#162543] text-[9px] font-bold text-white ring-2 ring-white">{rank}</span>
         </div>
         <div className="min-w-0 flex-1">
-          {/* Keep the company name readable in the miniature: price sits below so
-              names like "SG Solutions" do not get cut by the compact phone width. */}
-          <div>
-            <span className="block text-[13px] font-bold leading-tight text-[#111827] [overflow-wrap:anywhere]">{company}</span>
+          {/* Company + price share the first row, like the real result card. The
+              price is compact so "SG Solutions" keeps room in the miniature. */}
+          <div className="flex min-w-0 items-start gap-1.5">
+            <span className="min-w-0 flex-1 text-[13px] font-bold leading-tight text-[#111827] [overflow-wrap:anywhere]">{company}</span>
             {price ? (
-              <span className="mt-0.5 block whitespace-nowrap leading-tight">
-                {/* A ₡ amount renders blue + grey unit; a TEXT price ("Precio a consultar")
-                    renders whole in grey, no unit — mirroring the real /buscar card. */}
-                {price.includes("₡") ? (
+              <span className="shrink-0 whitespace-nowrap pt-px leading-tight text-right">
+                {/* A colones amount renders blue + grey unit; a text price renders whole in grey,
+                    no unit, mirroring the real /buscar card in a compact phone mockup. */}
+                {price.charCodeAt(0) === 0x20a1 ? (
                   <>
                     <span className="text-[10px] font-bold text-[#009FD9]">{price}</span>
                     {priceUnit ? <span className="text-[8px] font-medium text-[#9ca3af]"> {priceUnit}</span> : null}
                   </>
                 ) : (
-                  <span className="text-[9px] font-semibold text-[#6b7280]">{price}</span>
+                  <span className="rounded-full bg-[#f3f4f6] px-1.5 py-0.5 text-[8px] font-semibold text-[#6b7280]">{price}</span>
                 )}
               </span>
             ) : null}
@@ -246,7 +246,7 @@ const DEFAULT_RESULTS_COPY: ResultsCopy = {
   viewSchedule: "Ver horario completo",
   noScheduleNote: "La disponibilidad de este perfil no es pública. Contáctanos y conoce sus horarios.",
   priceUnit: "/hora",
-  priceOnRequest: "Precio a consultar",
+  priceOnRequest: "Consultar",
   reviews: (n) => `${n} reseñas`,
   days: [
     { label: "Hoy", times: ["9:00", "14:00"] },

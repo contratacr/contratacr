@@ -54,7 +54,7 @@ export async function WhyContratacr() {
     viewSchedule: tSched("viewFullSchedule"),
     noScheduleNote: tSched("availabilityHiddenNote"),
     priceUnit: tCard("perHour"),
-    priceOnRequest: tCard("priceOnRequest"),
+    priceOnRequest: locale === "en" ? "Ask price" : "Consultar",
     reviews: (n: number) => tCard("reviewsCount", { count: n }),
     days,
   };
