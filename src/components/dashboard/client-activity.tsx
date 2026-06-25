@@ -581,7 +581,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                         : t("projOpen");
 
                 return (
-                  <Card key={project.id} className="overflow-hidden hover:shadow-md">
+                  <Card key={project.id} className={cn("rounded-2xl border-[#e5e7eb] bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md", isExpanded && "shadow-md ring-1 ring-[#d8eef8]")}>
                     <button
                       type="button"
                       onClick={async () => {
@@ -589,7 +589,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                         setExpandedProject(isExpanded ? null : project.id);
                       }}
                       aria-expanded={isExpanded}
-                      className={cn("w-full text-left p-4 sm:p-5 hover:bg-[#fafafa] transition-colors", isExpanded ? "rounded-t-2xl" : "rounded-2xl")}
+                      className={cn("group w-full text-left p-4 sm:p-5 hover:bg-[#f9fbfd] transition-colors", isExpanded ? "rounded-t-2xl bg-[#fbfdff]" : "rounded-2xl")}
                     >
                       <div className="flex items-start gap-3.5">
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EBF5FB] text-[#0089bb]">
@@ -602,33 +602,46 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                               <Badge className="shrink-0 text-[11px] font-semibold" variant={statusVariant}>{statusLabel}</Badge>
                             ) : null}
                           </div>
-                          <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[12px] text-[#6b7280]">
+                          <div className="mt-2 flex flex-col items-start gap-1.5 text-[13px]">
+                            <span className="inline-flex max-w-full items-center gap-2 rounded-xl border border-[#ccecf8] bg-[#EBF5FB] px-3 py-2 font-bold text-[#0089bb]">
+                              <Users className="h-3.5 w-3.5 shrink-0 text-[#009FD9]" />
+                              <span className="truncate">{t("proposalsCount", { count: proposalCount })}</span>
+                            </span>
                             {project.categories?.name && (
-                              <span className="inline-flex max-w-full items-center rounded-full bg-[#f3f4f6] px-2 py-1 font-medium text-[#374151]">
+                              <span className="inline-flex w-full max-w-full items-center gap-2 text-[#374151]">
+                                <ClipboardList className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
                                 <span className="truncate">{project.categories.name}</span>
                               </span>
                             )}
-                            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f9fafb] px-2 py-1"><Users className="h-3.5 w-3.5 shrink-0 text-[#374151]" /> {t("proposalsCount", { count: proposalCount })}</span>
-                            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f9fafb] px-2 py-1"><CalendarDays className="h-3.5 w-3.5 shrink-0 text-[#374151]" /> {formatRelativeOrDate(project.created_at, locale)}</span>
-                            {zone && <span className="inline-flex min-w-0 max-w-full items-center gap-1.5 rounded-full bg-[#f9fafb] px-2 py-1"><MapPin className="h-3.5 w-3.5 shrink-0 text-[#374151]" /> <span className="truncate">{zone}</span></span>}
+                            {zone && (
+                              <span className="inline-flex w-full max-w-full items-center gap-2 text-[#6b7280]">
+                                <MapPin className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                                <span className="truncate">{zone}</span>
+                              </span>
+                            )}
+                            <span className="inline-flex w-full max-w-full items-center gap-2 text-[#9ca3af]">
+                              <CalendarDays className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                              <span className="truncate">{t("publishedOn", { date: formatRelativeOrDate(project.created_at, locale) })}</span>
+                            </span>
                           </div>
-                          {!isExpanded && project.description && (
-                            <p className="mt-3 text-[13px] leading-relaxed text-[#6b7280] line-clamp-2 [overflow-wrap:anywhere]">{project.description}</p>
-                          )}
                         </div>
-                        <ChevronDown className={`mt-1 h-5 w-5 shrink-0 text-[#9ca3af] transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`} />
+                        <span className={cn("mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition-colors duration-200", isExpanded ? "border-[#ccecf8] bg-[#EBF5FB] text-[#009FD9]" : "border-[#eef2f6] bg-white text-[#9ca3af] group-hover:border-[#d8eef8] group-hover:text-[#009FD9]")}>
+                          <ChevronDown className={cn("h-[18px] w-[18px] transition-transform duration-200", isExpanded && "rotate-180")} />
+                        </span>
                       </div>
                     </button>
 
                     {isExpanded && (
-                      <div className="border-t border-[#f3f4f6] px-4 pb-5 pt-4 sm:px-5">
+                      <div className="rounded-b-2xl border-t border-[#f3f4f6] bg-gradient-to-b from-[#fcfdff] to-white px-4 pb-5 pt-4 sm:px-5">
                         <div className="flex flex-col gap-4">
                           {project.description && (
-                            <div className="flex items-start gap-2.5">
-                              <FileText className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
-                              <div className="min-w-0">
-                                <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("descriptionField")}</p>
-                                <ExpandableText text={project.description} lines={5} className="mt-0.5 text-[13px] leading-relaxed text-[#4b5563]" />
+                            <div className="rounded-2xl bg-white p-3.5 ring-1 ring-[#e8eef5]">
+                              <div className="flex items-start gap-2.5">
+                                <FileText className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
+                                <div className="min-w-0">
+                                  <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("descriptionField")}</p>
+                                  <ExpandableText text={project.description} lines={5} className="mt-0.5 text-[13px] leading-relaxed text-[#4b5563]" />
+                                </div>
                               </div>
                             </div>
                           )}
