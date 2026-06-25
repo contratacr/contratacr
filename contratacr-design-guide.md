@@ -1752,3 +1752,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Public profile Sobre mi refinement.** The About tab should feel personal and professional: use a soft header with name/specialties, a readable bio card with a subtle brand accent, and a compact facts panel with gentle row affordances rather than rigid table dividers.
 
 > **Solicitudes recibidas card hierarchy.** Received request cards should separate the scan header, expanded details, and actions visually. Use a soft expanded background, one grouped white detail panel, and a distinct action row rather than loose details floating directly on the card surface.
+
+> **Solicitudes recibidas expanded details.** Avoid a heavy nested card inside received-request cards. Expanded details should use a light responsive info-tile grid for service/location, contact, ID, and description, with the request-created date acting as a compact divider header.

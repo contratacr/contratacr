@@ -293,7 +293,7 @@ export function BookingRequests() {
         {expanded && (
           <div className="border-t border-[#f3f4f6] bg-[#fcfdff] px-4 pb-5 pt-4 sm:px-5 flex flex-col gap-4">
             {requestedDate && (
-              <p className="flex items-center gap-1.5 text-[11px] text-[#9ca3af]">
+              <p className="flex items-center gap-1.5 border-b border-[#eef2f6] pb-3 text-[11px] text-[#9ca3af]">
                 <Clock className="h-3.5 w-3.5 shrink-0 text-[#374151]" /> {t("requestedOn", { date: requestedDate })}
               </p>
             )}
@@ -318,9 +318,9 @@ export function BookingRequests() {
             })()}
 
             {(category || location || phoneFmt || cedulaFmt || booking.service_description) && (
-              <div className="rounded-2xl border border-[#e5e7eb] bg-white p-4 shadow-sm flex flex-col gap-3.5">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {(category || location) && (
-                  <div className="flex items-start gap-2.5">
+                  <div className="flex items-start gap-2.5 rounded-xl bg-white p-3.5 shadow-sm ring-1 ring-[#eef2f6]">
                     <Wrench className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
                     <div className="min-w-0">
                       {category && <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("fieldService")}</p>}
@@ -333,10 +333,8 @@ export function BookingRequests() {
                     </div>
                   </div>
                 )}
-                {(phoneFmt || cedulaFmt) && (
-                  <div className="grid grid-cols-1 gap-3 border-t border-[#f3f4f6] pt-3 sm:grid-cols-2">
-                    {phoneFmt && (
-                      <div className="flex min-w-0 items-center gap-2">
+                {phoneFmt && (
+                      <div className="flex min-w-0 items-center gap-2 rounded-xl bg-white p-3.5 shadow-sm ring-1 ring-[#eef2f6]">
                         <Phone className="h-4 w-4 shrink-0 text-[#9ca3af]" />
                         <div className="min-w-0">
                           <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("contactPhone")}</p>
@@ -344,8 +342,8 @@ export function BookingRequests() {
                         </div>
                       </div>
                     )}
-                    {cedulaFmt && (
-                      <div className="flex min-w-0 items-center gap-2">
+                {cedulaFmt && (
+                      <div className="flex min-w-0 items-center gap-2 rounded-xl bg-white p-3.5 shadow-sm ring-1 ring-[#eef2f6]">
                         <IdCard className="h-4 w-4 shrink-0 text-[#9ca3af]" />
                         <div className="min-w-0">
                           <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("contactCedula")}</p>
@@ -353,10 +351,8 @@ export function BookingRequests() {
                         </div>
                       </div>
                     )}
-                  </div>
-                )}
                 {booking.service_description && (
-                  <div className="border-t border-[#f3f4f6] pt-3">
+                  <div className="rounded-xl bg-white p-3.5 shadow-sm ring-1 ring-[#eef2f6] sm:col-span-2">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("noteEyebrow")}</p>
                     <ExpandableText text={booking.service_description} lines={3} className="mt-1 text-[13px] leading-relaxed text-[#4b5563]" />
                   </div>

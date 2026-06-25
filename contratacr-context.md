@@ -3309,3 +3309,5 @@ New i18n namespaces added this pass: `search.pagination`, extended `search.filte
 **Sprint 232 - Public profile About tab made warmer.** src/app/[locale]/profesionales/[slug]/page.tsx: refined Sobre mi further with a soft header panel showing the professional name and specialties, a bio card with a brand accent rail, and a facts panel with soft hover rows instead of rigid table dividers. No i18n changes.
 
 **Sprint 233 - Received requests visual hierarchy refined.** booking-requests.tsx: improved Solicitudes recibidas cards with a cleaner card shell, clearer selected/expanded header state, stronger avatar treatment, soft expanded background, a grouped white detail panel, and a separated action row. Logic and i18n unchanged.
+
+**Sprint 234 - Received requests details flattened.** booking-requests.tsx: flattened the expanded Solicitudes recibidas detail area by replacing the nested detail card with a responsive grid of light info tiles for service/location, phone, cedula, and description. The request date now acts as a compact divider header, reducing the card-within-card feel while keeping key details scannable. No i18n changes.
