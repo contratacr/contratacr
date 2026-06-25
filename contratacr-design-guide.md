@@ -1740,3 +1740,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Casos de exito proof stack.** Prefer success-case cards as outcome summaries with a small overlapping proof-photo stack. Avoid large covers, side collages, mosaic grids, or gallery-first layouts. Text is the main content; photos sit beside it on desktop and below it on mobile as supporting proof.
 
 > **Public profile services grid.** In the professional public profile, Servicios ofrecidos should render one service per row on mobile and two cards per row from sm upward. Avoid a single-column desktop list unless service cards become much more detailed.
+
+> **Casos de exito modal image viewing.** Use a fixed-size dark photo stage with object-contain for success-case modal images. Do not crop mixed-ratio work photos in the large viewer; add padding/letterboxing instead. Thumbnails should also be equal-size contain tiles so clients can compare images consistently and open each one large.

@@ -167,7 +167,7 @@ export function CaseShowcase({
         return (
           <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/70 p-4 sm:p-6" onClick={close}>
             <div
-              className="relative flex max-h-[90vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl sm:flex-row"
+              className="relative flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl sm:flex-row"
               onClick={(e) => e.stopPropagation()}
               role="dialog"
               aria-modal="true"
@@ -183,9 +183,9 @@ export function CaseShowcase({
 
               {/* PHOTO viewer — larger, browsable (arrows + thumbnails). */}
               {cur && (
-                <div className="relative flex shrink-0 items-center justify-center bg-[#0b0b0b] sm:w-3/5">
+                <div className="relative flex h-[46vh] shrink-0 items-center justify-center bg-[#0b0b0b] sm:h-auto sm:min-h-[620px] sm:w-[62%]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={cldLarge(cur, 1280)} alt={tg("workAlt", { n: pi + 1 })} className="max-h-[42vh] w-full object-contain sm:max-h-[90vh]" />
+                  <img src={cldLarge(cur, 1280)} alt={tg("workAlt", { n: pi + 1 })} className="h-full w-full object-contain p-3 sm:p-5" />
                   {photos.length > 1 && (
                     <>
                       <button onClick={prev} aria-label={tg("prev")} className="absolute left-2 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-black/45 text-white hover:bg-black/65">
@@ -213,16 +213,16 @@ export function CaseShowcase({
                 )}
                 {c.description && <p className="whitespace-pre-line text-[14px] leading-relaxed text-[#4b5563] [overflow-wrap:anywhere]">{c.description}</p>}
                 {photos.length > 1 && (
-                  <div className="mt-1 flex flex-wrap gap-2">
+                  <div className="mt-1 grid grid-cols-3 gap-2">
                     {photos.map((p, idx) => (
                       <button
                         key={idx}
                         onClick={() => setPi(idx)}
                         aria-label={tg("workAlt", { n: idx + 1 })}
-                        className={cn("h-14 w-14 overflow-hidden rounded-lg border-2 transition-all", idx === pi ? "border-[#009FD9]" : "border-transparent opacity-60 hover:opacity-100")}
+                        className={cn("h-16 overflow-hidden rounded-xl border-2 bg-[#111827] transition-all", idx === pi ? "border-[#009FD9]" : "border-transparent opacity-60 hover:opacity-100")}
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={cldThumb(p, 160)} alt="" className="h-full w-full object-cover" />
+                        <img src={cldThumb(p, 220)} alt="" className="h-full w-full object-contain p-1" />
                       </button>
                     ))}
                   </div>
