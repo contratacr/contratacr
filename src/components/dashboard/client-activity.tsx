@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarDays, FolderOpen, ChevronDown, Plus, CalendarClock, Wrench, Users, MapPin } from "lucide-react";
+import { CalendarDays, FolderOpen, ClipboardList, ChevronDown, Plus, CalendarClock, Wrench, Users, MapPin } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -592,7 +592,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                     >
                       <div className="flex items-start gap-3.5">
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EBF5FB] text-[#0089bb]">
-                          <FolderOpen className="h-[18px] w-[18px]" />
+                          <ClipboardList className="h-[18px] w-[18px]" />
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-start justify-between gap-2">
