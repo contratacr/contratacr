@@ -94,6 +94,13 @@ export function BookingRequests() {
     // Adulto mayor) matches every other status badge instead of a one-off smaller pill.
     return <Badge variant="warning" className="text-[11px] font-semibold">{t(cat)}</Badge>;
   }
+  function ageLabel(dob?: string | null) {
+    const age = dob ? computeAge(dob) : null;
+    if (!age) return null;
+    if (age.years > 0) return t("yearsOld", { count: age.years });
+    const months = Math.max(1, age.months);
+    return t("monthsOld", { count: months });
+  }
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("activas");
@@ -292,9 +299,9 @@ export function BookingRequests() {
                 with eyebrow labels; (3) a muted "Solicitada el …" meta; (4) the client's NOTE as a
                 quote. Zero icons; on-brand navy/blue/grey; scans cleanly on ~360px + desktop. */}
 
-            {/* 1 — "Para otra persona" callout (patient: name + AGE in years; "Menor de edad" only) */}
+            {/* 1 — "Para otra persona" callout (patient: name + age; clinical flag only here) */}
             {booking.for_someone_else && (() => {
-              const beneAge = booking.beneficiary_dob ? computeAge(booking.beneficiary_dob)?.years ?? null : null;
+              const beneAge = ageLabel(booking.beneficiary_dob);
               return (
                 <div className="rounded-xl bg-[#EBF5FB] px-4 py-3">
                   <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#0089bb]">{t("apptForLabel")}</p>
@@ -302,8 +309,8 @@ export function BookingRequests() {
                     {booking.beneficiary_name || t("otherPerson")}
                     {ageBadge(booking.beneficiary_dob, !!booking.beneficiary_is_minor)}
                   </p>
-                  {beneAge !== null && (
-                    <p className="mt-0.5 text-[12px] text-[#6b7280]"><span className="text-[#9ca3af]">{t("fieldAge")}</span> {t("yearsOld", { count: beneAge })}</p>
+                  {beneAge && (
+                    <p className="mt-0.5 text-[12px] text-[#6b7280]"><span className="text-[#9ca3af]">{t("fieldAge")}</span> {beneAge}</p>
                   )}
                 </div>
               );
