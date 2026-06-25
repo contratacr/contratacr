@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { FolderOpen, Send, ChevronDown, MapPin, CalendarClock, CalendarDays, Clock, EyeOff } from "lucide-react";
+import { FolderOpen, Send, ChevronDown, MapPin, CalendarClock, CalendarDays, Clock, EyeOff, Users } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -307,25 +307,28 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
     const form = proposalForms[project.id] ?? { price: "", message: "" };
     return (
       <div className="flex flex-col">
-        <div className="flex flex-col gap-4 p-5 sm:p-6">
+        <div className="flex flex-col gap-4 p-4 sm:p-5">
           {project.description && (
-            <div>
+            <div className="border-l-2 border-[#e5e7eb] pl-3">
               <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#9ca3af]">{t("projectDescription")}</p>
-              <ExpandableText text={project.description} lines={6} className="mt-1" />
+              <ExpandableText text={project.description} lines={6} className="mt-1 text-[13px] leading-relaxed text-[#4b5563]" />
             </div>
           )}
 
           {project.profiles?.full_name && (
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#9ca3af]">{t("clientInfo")}</p>
-              <p className="mt-1 text-[12px] font-medium text-[#6b7280]">
-                {clientIdentityText(project.client_identity_status)}
-              </p>
+            <div className="flex items-start gap-2.5">
+              <Users className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#9ca3af]">{t("clientInfo")}</p>
+                <p className="mt-1 text-[12px] font-medium text-[#6b7280]">
+                  {clientIdentityText(project.client_identity_status)}
+                </p>
+              </div>
             </div>
           )}
         </div>
 
-        <div className="border-t border-[#f3f4f6] bg-[#fafbfc] p-5 sm:p-6">
+        <div className="border-t border-[#f3f4f6] bg-[#fafbfc] p-4 sm:p-5">
           {alreadySubmitted ? (
             <p className="text-center text-[13px] text-[#6b7280]">{t("alreadyProposedNote")}</p>
           ) : (
@@ -339,7 +342,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                 <textarea value={form.message} onChange={(e) => updateForm(project.id, "message", e.target.value)} maxLength={500} className={`${inputClass} min-h-[100px] resize-none`} />
                 {form.message.length >= 500 && <p className="mt-1 text-xs text-[#b45309]">{t("charLimit", { max: 500 })}</p>}
               </div>
-              <Button onClick={() => submitProposal(project.id)} disabled={!form.message.trim() || submitting === project.id} loading={submitting === project.id} className="w-full">{t("sendProposal")}</Button>
+              <Button onClick={() => submitProposal(project.id)} disabled={!form.message.trim() || submitting === project.id} loading={submitting === project.id} className="w-full rounded-lg">{t("sendProposal")}</Button>
               <button type="button" onClick={() => dismissOpportunity(project.id)} className="mx-auto inline-flex items-center gap-1.5 text-[12px] font-medium text-[#9ca3af] transition-colors hover:text-[#6b7280]">
                 <EyeOff className="h-3.5 w-3.5" /> {t("dismiss")}
               </button>
@@ -416,30 +419,36 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                             type="button"
                             onClick={() => setExpandedProject(isExpanded ? null : project.id)}
                             aria-expanded={isExpanded}
-                            className={cn("flex w-full flex-col gap-2.5 p-4 text-left transition-colors hover:bg-[#fafafa] sm:p-5", isExpanded ? "rounded-t-2xl" : "rounded-2xl")}
+                            className={cn("flex w-full items-start gap-3.5 p-4 text-left transition-colors hover:bg-[#fafafa] sm:p-5", isExpanded ? "rounded-t-2xl" : "rounded-2xl")}
                           >
-                            <div className="flex items-start justify-between gap-2.5">
-                              <span className="min-w-0 flex-1 line-clamp-2 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere]">{project.title}</span>
-                              <span className="flex shrink-0 items-center gap-1.5">
-                                {isToday(project.created_at) && <Badge variant="success" className="text-[10px] font-semibold">{t("new")}</Badge>}
-                                <ChevronDown className={cn("h-4 w-4 text-[#9ca3af] transition-transform", isExpanded && "rotate-180")} />
-                              </span>
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EBF5FB] text-[#0089bb]">
+                              <FolderOpen className="h-[18px] w-[18px]" />
                             </div>
-                            <p className="text-[15px] font-bold text-[#0089bb] [overflow-wrap:anywhere]">{budgetTextFor(project)}</p>
-                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[#6b7280]">
-                              {zona && <span className="inline-flex items-center gap-1 [overflow-wrap:anywhere]"><MapPin className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />{zona}</span>}
-                              {project.timeline && <span className="inline-flex items-center gap-1 [overflow-wrap:anywhere]"><CalendarClock className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />{project.timeline}</span>}
-                              <span className="inline-flex items-center gap-1"><Clock className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />{relativeTime(project.created_at)}</span>
-                            </div>
-                            {project.profiles?.full_name && (
-                              <div className="flex items-center gap-2 border-t border-[#f3f4f6] pt-2.5">
-                                <Avatar className="h-6 w-6 shrink-0">
-                                  <AvatarImage src={project.profiles?.avatar_url} className="object-cover" />
-                                  <AvatarFallback className="bg-[#EBF5FB] text-[9px] font-bold text-[#009FD9]">{getInitials(project.profiles.full_name)}</AvatarFallback>
-                                </Avatar>
-                                <span className="min-w-0 truncate text-[12px] text-[#6b7280]">{project.profiles.full_name}</span>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-start justify-between gap-2.5">
+                                <span className="min-w-0 flex-1 line-clamp-2 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere] sm:text-base">{project.title}</span>
+                                <span className="flex shrink-0 items-center gap-1.5">
+                                  {isToday(project.created_at) && <Badge variant="success" className="text-[10px] font-semibold">{t("new")}</Badge>}
+                                  <ChevronDown className={cn("h-4 w-4 text-[#9ca3af] transition-transform", isExpanded && "rotate-180")} />
+                                </span>
                               </div>
-                            )}
+                              <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[12px] text-[#6b7280]">
+                                <span className="inline-flex max-w-full items-center rounded-full bg-[#EBF5FB] px-2 py-1 font-bold text-[#0089bb] [overflow-wrap:anywhere]">{budgetTextFor(project)}</span>
+                                {project.categories?.name && <span className="inline-flex max-w-full items-center rounded-full bg-[#f3f4f6] px-2 py-1 font-medium text-[#374151]"><span className="truncate">{project.categories.name}</span></span>}
+                                {zona && <span className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-[#f9fafb] px-2 py-1 [overflow-wrap:anywhere]"><MapPin className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" /><span className="truncate">{zona}</span></span>}
+                                {project.timeline && <span className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-[#f9fafb] px-2 py-1 [overflow-wrap:anywhere]"><CalendarClock className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" /><span className="truncate">{project.timeline}</span></span>}
+                                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#f9fafb] px-2 py-1"><Clock className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />{relativeTime(project.created_at)}</span>
+                              </div>
+                              {project.profiles?.full_name && (
+                                <div className="mt-3 flex items-center gap-2">
+                                  <Avatar className="h-6 w-6 shrink-0">
+                                    <AvatarImage src={project.profiles?.avatar_url} className="object-cover" />
+                                    <AvatarFallback className="bg-[#EBF5FB] text-[9px] font-bold text-[#009FD9]">{getInitials(project.profiles.full_name)}</AvatarFallback>
+                                  </Avatar>
+                                  <span className="min-w-0 truncate text-[12px] text-[#6b7280]">{project.profiles.full_name}</span>
+                                </div>
+                              )}
+                            </div>
                           </button>
                           {isExpanded && <div className="border-t border-[#f3f4f6]">{renderDetail(project)}</div>}
                         </Card>
