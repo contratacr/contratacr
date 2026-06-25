@@ -1710,3 +1710,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Casos de exito compact cover height.** Success-case cards stay one per row and vertical, but their cover image should use a controlled compact height (about 132px mobile / 150px desktop), not a width-derived aspect ratio, so the image never dominates the card or viewport.
 
 > **Casos de exito media should be a contained thumbnail.** Keep image above information, but do not use a full-width cover band. Use a padded rounded thumbnail with max width around 240px mobile / 280px desktop and compact height around 128px / 140px, so the card reads as a case summary rather than a photo banner.
+
+> **Disponibilidad inline day actions.** `Agregar franja` and `Aplicar a otros dias` should sit on the same right-side line, not stacked. Prefer compacting the weekday/time columns slightly before letting these actions wrap; keep the action rail wide enough for both links on one line.

@@ -695,9 +695,9 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                 const on = blocks.length > 0;
                 const canApply = blocks.some(isCompleteFranja);
                 return (
-                  <div key={wd} className="flex flex-col gap-2 py-3 sm:flex-row sm:gap-4">
+                  <div key={wd} className="flex flex-col gap-2 py-3 sm:flex-row sm:gap-3">
                     {/* toggle + weekday name */}
-                    <div className="flex items-center gap-2.5 sm:w-32 sm:shrink-0 sm:pt-1.5">
+                    <div className="flex items-center gap-2.5 sm:w-28 sm:shrink-0 sm:pt-1.5">
                       <button
                         type="button"
                         onClick={() => toggleDay(wd)}
@@ -720,9 +720,9 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                             {blocks.map((b) => {
                             const timeRow = (
                               <div className="flex items-center gap-1.5">
-                                <TimeSelect value={b.start} onChange={(v) => updateBlock(wd, b.id, { start: v, ...(b.end && toMins(b.end) <= toMins(v) ? { end: hhmm(Math.min(toMins(v) + 60, 23 * 60 + 30)) } : {}) })} className="min-w-0 flex-1 sm:flex-none sm:w-28" />
+                                <TimeSelect value={b.start} onChange={(v) => updateBlock(wd, b.id, { start: v, ...(b.end && toMins(b.end) <= toMins(v) ? { end: hhmm(Math.min(toMins(v) + 60, 23 * 60 + 30)) } : {}) })} className="min-w-0 flex-1 sm:flex-none sm:w-24" />
                                 <span className="shrink-0 text-[#9ca3af]">–</span>
-                                <TimeSelect value={b.end} min={b.start ? hhmm(Math.min(toMins(b.start) + 30, 23 * 60 + 30)) : undefined} onChange={(v) => updateBlock(wd, b.id, { end: v })} className="min-w-0 flex-1 sm:flex-none sm:w-28" error={b.start && b.end && toMins(b.end) <= toMins(b.start) ? t("toAfterFrom") : undefined} />
+                                <TimeSelect value={b.end} min={b.start ? hhmm(Math.min(toMins(b.start) + 30, 23 * 60 + 30)) : undefined} onChange={(v) => updateBlock(wd, b.id, { end: v })} className="min-w-0 flex-1 sm:flex-none sm:w-24" error={b.start && b.end && toMins(b.end) <= toMins(b.start) ? t("toAfterFrom") : undefined} />
                               </div>
                             );
                             // Single-location pros: just the time row (clean, compact, no location UI).
@@ -750,12 +750,12 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                             );
                             })}
                           </div>
-                          <div className="flex w-[116px] shrink-0 flex-col items-end gap-2 pt-1 sm:w-40">
-                            <button type="button" onClick={() => addBlock(wd)} className="inline-flex max-w-full items-center justify-end gap-1 text-right text-xs font-medium leading-tight text-[#009FD9] hover:underline cursor-pointer">
+                          <div className="flex w-[210px] shrink-0 flex-row items-center justify-end gap-3 pt-1 sm:w-[238px]">
+                            <button type="button" onClick={() => addBlock(wd)} className="inline-flex shrink-0 items-center justify-end gap-1 whitespace-nowrap text-right text-xs font-medium leading-tight text-[#009FD9] hover:underline cursor-pointer">
                               <Plus className="h-3.5 w-3.5 shrink-0" /> <span>{t("addFranja")}</span>
                             </button>
                             {canApply && (
-                              <button type="button" onClick={() => setApplyModal({ weekday: wd })} className="max-w-full text-right text-xs font-medium leading-tight text-[#6b7280] hover:text-[#009FD9] hover:underline cursor-pointer">
+                              <button type="button" onClick={() => setApplyModal({ weekday: wd })} className="shrink-0 whitespace-nowrap text-right text-xs font-medium leading-tight text-[#6b7280] hover:text-[#009FD9] hover:underline cursor-pointer">
                                 {t("applyToOtherDays")}
                               </button>
                             )}
