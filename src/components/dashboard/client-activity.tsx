@@ -683,18 +683,18 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                       <ExpandableText text={proposal.message} lines={3} className="mt-1 text-[13px] leading-relaxed" />
                                     </div>
                                   </div>
-                                  <div className="mt-3 flex flex-wrap justify-end gap-2 border-t border-[#eef0f2] pt-3">
+                                  <div className="mt-3 flex flex-nowrap justify-start gap-2 overflow-x-auto border-t border-[#eef0f2] pt-3 sm:justify-end">
                                     {proposal.status === "pending" && !locked && (
                                       <>
-                                        <Button size="sm" onClick={() => acceptProposal(proposal.id, project.id)}>{t("accept")}</Button>
-                                        <Button size="sm" variant="outline" onClick={() => declineProposal(proposal.id, project.id)}>{t("decline")}</Button>
+                                        <Button size="sm" className="shrink-0" onClick={() => acceptProposal(proposal.id, project.id)}>{t("accept")}</Button>
+                                        <Button size="sm" variant="outline" className="shrink-0" onClick={() => declineProposal(proposal.id, project.id)}>{t("decline")}</Button>
                                       </>
                                     )}
                                     {!locked && (proposal.status === "accepted" || proposal.status === "declined") && (
-                                      <Button size="sm" variant="outline" onClick={() => revertProposal(proposal.id, project.id)}>{t("changeDecision")}</Button>
+                                      <Button size="sm" variant="outline" className="shrink-0" onClick={() => revertProposal(proposal.id, project.id)}>{t("changeDecision")}</Button>
                                     )}
                                     {proposal.professionals?.whatsapp && (
-                                      <Button size="sm" variant="whatsapp" asChild>
+                                      <Button size="sm" variant="whatsapp" className="shrink-0" asChild>
                                         <a href={getWhatsAppLink(proposal.professionals.whatsapp, t("waProposal", { title: project.title }))} target="_blank" rel="noopener noreferrer">
                                           <WhatsAppIcon className="h-3.5 w-3.5" /> {t("whatsapp")}
                                         </a>
