@@ -183,7 +183,7 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
         <div className="grid grid-cols-1 gap-4">
           {shownCases.map((c) => (
             <div key={c.id} className="flex flex-col overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
-              <div className="relative aspect-[16/10] bg-[#f3f4f6]">
+              <div className="relative aspect-[16/7] bg-[#f3f4f6]">
                 {c.photos[0] && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={cldThumb(c.photos[0], 600)} alt={c.title ?? ""} className="h-full w-full object-cover" />

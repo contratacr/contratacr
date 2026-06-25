@@ -106,7 +106,7 @@ export function CaseShowcase({
               className="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm transition-shadow hover:shadow-md"
             >
               {c.photos[0] && (
-                <div className="relative block aspect-[16/10] overflow-hidden bg-[#f3f4f6]">
+                <div className="relative block aspect-[16/7] overflow-hidden bg-[#f3f4f6]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={cldThumb(c.photos[0], 600)} alt={c.title ?? ""} loading="lazy" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" />
                   {c.photos.length > 1 && (
