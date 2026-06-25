@@ -1714,3 +1714,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Disponibilidad inline day actions.** `Agregar franja` and `Aplicar a otros dias` should sit on the same right-side line, not stacked. Prefer compacting the weekday/time columns slightly before letting these actions wrap; keep the action rail wide enough for both links on one line.
 
 > **Casos de exito photo strip.** Success-case cards should show up to 3 small thumbnails in a compact top strip, not one large full-width image or a single oversized thumbnail. Keep the card one-per-row with information below; the photos are supporting evidence, not the dominant surface.
+
+> **Casos de exito text-first card.** Success-case cards should lead with the case information (profession, title, description, recipient/date) and show up to 3 small thumbnails underneath as supporting proof. Avoid photo-first/banner-first layouts for this card family unless the entire section is redesigned.

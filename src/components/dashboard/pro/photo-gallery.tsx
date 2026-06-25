@@ -178,27 +178,11 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
         />
       )}
 
-      {/* One-per-row case cards: image on top, case details below. */}
+      {/* One-per-row case cards: case details first, compact proof photos below. */}
       {shownCases.length > 0 && (
         <div className="grid grid-cols-1 gap-4">
           {shownCases.map((c) => (
             <div key={c.id} className="flex flex-col overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
-              <div className="flex gap-2 px-4 pt-4">
-                {c.photos.slice(0, MAX_PHOTOS_PER_CASE).map((url, idx) => (
-                  <div key={`${c.id}-${url}`} className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-[#f3f4f6] sm:h-24 sm:w-24">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={cldThumb(url, 260)} alt={c.title ?? ""} className="h-full w-full object-cover" />
-                    {idx === MAX_PHOTOS_PER_CASE - 1 && c.photos.length > MAX_PHOTOS_PER_CASE && (
-                      <span className="absolute inset-0 grid place-items-center bg-black/45 text-xs font-bold text-white">+{c.photos.length - MAX_PHOTOS_PER_CASE}</span>
-                    )}
-                  </div>
-                ))}
-                {c.photos.length > 0 && (
-                  <span className="self-end inline-flex items-center gap-1 rounded-full bg-[#f3f4f6] px-2 py-1 text-[11px] font-semibold text-[#6b7280]">
-                    <Images className="h-3 w-3" /> {t("photosCount", { count: c.photos.length })}
-                  </span>
-                )}
-              </div>
               <div className="flex flex-1 flex-col p-4">
                 <p className="text-[11px] font-semibold text-[#0089bb]">{label(c.profession)}</p>
                 {c.title && <p className="mt-0.5 text-[16px] font-bold text-[#162543] [overflow-wrap:anywhere]">{c.title}</p>}
@@ -206,6 +190,22 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
                 {c.recipient && (
                   <p className="mt-1 text-xs text-[#6b7280] [overflow-wrap:anywhere]">{c.recipient}</p>
                 )}
+                <div className="mt-3 flex items-end gap-2">
+                  {c.photos.slice(0, MAX_PHOTOS_PER_CASE).map((url, idx) => (
+                    <div key={`${c.id}-${url}`} className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-[#f3f4f6] sm:h-[72px] sm:w-[72px]">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={cldThumb(url, 220)} alt={c.title ?? ""} className="h-full w-full object-cover" />
+                      {idx === MAX_PHOTOS_PER_CASE - 1 && c.photos.length > MAX_PHOTOS_PER_CASE && (
+                        <span className="absolute inset-0 grid place-items-center bg-black/45 text-xs font-bold text-white">+{c.photos.length - MAX_PHOTOS_PER_CASE}</span>
+                      )}
+                    </div>
+                  ))}
+                  {c.photos.length > 0 && (
+                    <span className="mb-0.5 inline-flex items-center gap-1 rounded-full bg-[#f3f4f6] px-2 py-1 text-[11px] font-semibold text-[#6b7280]">
+                      <Images className="h-3 w-3" /> {t("photosCount", { count: c.photos.length })}
+                    </span>
+                  )}
+                </div>
                 <div className="mt-3 flex items-center justify-between gap-2 border-t border-[#f3f4f6] pt-2.5">
                   <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-[#9ca3af]">
                     {c.date && <span className="inline-flex items-center gap-1"><CalendarDays className="h-3 w-3 text-[#374151]" /> {c.date}</span>}
