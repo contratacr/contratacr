@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import { Plus, X, Lock, Loader2, MapPin, ChevronDown, ChevronLeft, ChevronRight, Calendar, CalendarClock, Pencil, Trash2 } from "lucide-react";
+import { Plus, X, Lock, Loader2, MapPin, ChevronDown, ChevronLeft, ChevronRight, Calendar, Pencil, Trash2 } from "lucide-react";
 import { type ContactPreference } from "@/lib/constants";
 import { crTodayISO, isTooSoonCR } from "@/lib/time-cr";
 import { TimeSelect, to12h } from "@/components/ui/time-select";
@@ -478,43 +478,46 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
     persistDay(weekday, blocksFor(weekday).filter((b) => b.id !== id));
   }
 
-  // ONE way to apply a schedule to the WHOLE week (replaces the per-day "Igual a todos los
-  // días" — sprint 488). Uses the FIRST configured day as the template; from scratch it
-  // falls back to the typical Mon–Fri 8AM–5PM. Blocked if it would put the pro in two
-  // places at once. (Each day's hours still expand into 1-hour bookable slots downstream.)
-  async function applySchedule() {
-    let template: { locationId: string; start: string; end: string }[] | null = null;
-    for (const wd of WEEKDAY_ORDER) {
-      const b = blocksFor(wd).filter(isCompleteFranja);
-      if (b.length > 0) { template = b.map((x) => ({ locationId: x.locationId, start: x.start, end: x.end })); break; }
-    }
-    if (!template) { await presetWeekdays8to5(); return; }
-    for (const wd of WEEKDAY_ORDER) {
+  // Copy one configured day's complete ranges to selected destination days.
+  async function applyDayToTargets(sourceWeekday: number, targetWeekdays: number[]) {
+    const targets = targetWeekdays.filter((wd) => wd !== sourceWeekday);
+    if (targets.length === 0) return;
+
+    const template = blocksFor(sourceWeekday)
+      .filter(isCompleteFranja)
+      .map((b) => ({ locationId: b.locationId, start: b.start, end: b.end }));
+    if (template.length === 0) return;
+
+    for (const wd of targets) {
       const c = validateDayBlocks(wd, template.map((s) => ({ id: genId(), ...s })));
       if (c) { setConflict(c); return; }
     }
-    const next: WeeklyRow[] = [];
-    for (const wd of WEEKDAY_ORDER) for (const s of template) next.push({ location_id: s.locationId, category_id: null, weekday: wd, start: s.start, end: s.end, slot_minutes: durationPref });
-    setWeekly(next);
-    const supabase = createClient();
-    await supabase.from("availability_weekly").delete().eq("professional_id", professionalId);
-    await supabase.from("availability_weekly").insert(next.map((r) => ({ professional_id: professionalId, location_id: r.location_id, category_id: null, weekday: r.weekday, start_time: r.start, end_time: r.end, slot_minutes: r.slot_minutes })));
-    await regenerate(next, exceptions);
-  }
 
-  // Quick win: one tap → Mon–Fri 8 AM–5 PM (weekend off) at the main location.
-  async function presetWeekdays8to5() {
-    const days = [1, 2, 3, 4, 5];
-    for (const wd of days) {
-      const c = validateDayBlocks(wd, [{ id: "_p", locationId: defaultLocationId, start: "08:00", end: "17:00" }]);
-      if (c) { setConflict(c); return; }
+    const next = weekly.filter((r) => !targets.includes(r.weekday));
+    for (const wd of targets) {
+      for (const s of template) {
+        next.push({ location_id: s.locationId, category_id: null, weekday: wd, start: s.start, end: s.end, slot_minutes: durationPref });
+      }
     }
-    const next: WeeklyRow[] = days.map((wd) => ({ location_id: defaultLocationId, category_id: null, weekday: wd, start: "08:00", end: "17:00", slot_minutes: durationPref }));
+
     setWeekly(next);
     const supabase = createClient();
-    await supabase.from("availability_weekly").delete().eq("professional_id", professionalId);
-    await supabase.from("availability_weekly").insert(next.map((r) => ({ professional_id: professionalId, location_id: r.location_id, category_id: null, weekday: r.weekday, start_time: r.start, end_time: r.end, slot_minutes: r.slot_minutes })));
+    await supabase.from("availability_weekly").delete().eq("professional_id", professionalId).in("weekday", targets);
+    await supabase.from("availability_weekly").insert(
+      targets.flatMap((wd) =>
+        template.map((s) => ({
+          professional_id: professionalId,
+          location_id: s.locationId,
+          category_id: null,
+          weekday: wd,
+          start_time: s.start,
+          end_time: s.end,
+          slot_minutes: durationPref,
+        }))
+      )
+    );
     await regenerate(next, exceptions);
+    setApplyModal(null);
   }
 
   async function setDuration(dur: number) {
@@ -612,6 +615,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
   }, [conflict]);
 
   // "Cambiar un día" modal
+  const [applyModal, setApplyModal] = useState<{ weekday: number } | null>(null);
   const [dayModal, setDayModal] = useState<{ date: string } | null>(null);
 
   const selectClass = "h-9 rounded-xl border border-[#e5e7eb] bg-white pl-3 pr-9 text-sm font-medium text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all appearance-none cursor-pointer";
@@ -684,17 +688,6 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                     </select>
                     <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9ca3af]" />
                   </div>
-                  {/* "Aplicar horario" — applies the first configured day (or Mon–Fri 8AM–5PM) to
-                      the whole week; blue icon + text. Hint in the tooltip to keep the row compact. */}
-                  <button
-                    type="button"
-                    onClick={applySchedule}
-                    title={t("applyScheduleHelp")}
-                    className="inline-flex items-center gap-2 rounded-lg border border-[#bfdbfe] bg-white px-3.5 py-2 text-sm font-semibold text-[#008ce0] transition-colors hover:border-[#008ce0] hover:bg-[#EBF5FB]"
-                  >
-                    <CalendarClock className="h-4 w-4" />
-                    {t("applySchedule")}
-                  </button>
                 </div>
               </div>
               <p className="mt-1.5 text-xs text-[#6b7280]">{t("alwaysSubAll")}</p>
@@ -704,6 +697,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
               {WEEKDAY_ORDER.map((wd) => {
                 const blocks = blocksFor(wd);
                 const on = blocks.length > 0;
+                const canApply = blocks.some(isCompleteFranja);
                 return (
                   <div key={wd} className="flex flex-col gap-2 py-3 sm:flex-row sm:gap-4">
                     {/* toggle + weekday name */}
@@ -765,13 +759,17 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                         </div>
                       )}
                     </div>
-                    {/* Per-day action — only "+ Agregar franja", to the RIGHT of the time row
-                        (stack below on mobile). The "apply to all days" lives ONCE above now. */}
+                    {/* Per-day actions: add another range or copy this day elsewhere. */}
                     {on && (
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 sm:shrink-0 sm:justify-end sm:pt-1.5">
                         <button type="button" onClick={() => addBlock(wd)} className="inline-flex items-center gap-1 text-xs font-medium text-[#009FD9] hover:underline cursor-pointer">
                           <Plus className="h-3.5 w-3.5" /> {t("addFranja")}
                         </button>
+                        {canApply && (
+                          <button type="button" onClick={() => setApplyModal({ weekday: wd })} className="text-xs font-medium text-[#6b7280] hover:text-[#009FD9] hover:underline cursor-pointer">
+                            {t("applyToOtherDays")}
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
@@ -840,7 +838,15 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
         </>
       )}
 
-      {/* ── "Cambiar un día" modal ──────────────────────────────────────── */}
+      {/* "Aplicar a otros días" modal */}
+      {applyModal && (
+        <ApplyScheduleModal
+          sourceWeekday={applyModal.weekday}
+          onClose={() => setApplyModal(null)}
+          onApply={(targets) => applyDayToTargets(applyModal.weekday, targets)}
+        />
+      )}
+
       {dayModal && (
         <DayModal
           initialDate={dayModal.date}
@@ -897,9 +903,74 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// "Cambiar un día" — pick a date on a month calendar, then choose: add extra hours,
-// replace that day's hours, or close the day. Edits ONE date without touching the
-// recurring template.
+function ApplyScheduleModal({ sourceWeekday, onClose, onApply }: {
+  sourceWeekday: number;
+  onClose: () => void;
+  onApply: (targets: number[]) => Promise<void> | void;
+}) {
+  const t = useTranslations("availabilityEditor");
+  const [selected, setSelected] = useState<number[]>([]);
+  const [saving, setSaving] = useState(false);
+  const targets = WEEKDAY_ORDER.filter((wd) => wd !== sourceWeekday);
+  const weekdays = [1, 2, 3, 4, 5].filter((wd) => wd !== sourceWeekday);
+
+  function toggle(wd: number) {
+    setSelected((prev) => prev.includes(wd) ? prev.filter((x) => x !== wd) : [...prev, wd]);
+  }
+
+  return (
+    <div className="fixed inset-0 z-[200] flex items-end justify-center p-0 sm:items-center sm:p-4">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative z-10 w-full rounded-t-2xl bg-white p-5 shadow-2xl sm:max-w-sm sm:rounded-2xl">
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h3 className="text-lg font-bold text-[#111827]">{t("applyToDaysTitle", { day: t(`weekday${sourceWeekday}` as `weekday${number}`) })}</h3>
+            <p className="mt-1 text-sm text-[#6b7280]">{t("applyToDaysBody")}</p>
+          </div>
+          <button type="button" onClick={onClose} className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[#9ca3af] hover:bg-[#f3f4f6] hover:text-[#111827]" aria-label={t("cancel")}>
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="mb-3 flex flex-wrap gap-2">
+          <button type="button" onClick={() => setSelected(weekdays)} className="rounded-full border border-[#dbeafe] px-3 py-1.5 text-xs font-semibold text-[#008ce0] hover:bg-[#EBF5FB]">
+            {t("mondayToFriday")}
+          </button>
+          <button type="button" onClick={() => setSelected(targets)} className="rounded-full border border-[#dbeafe] px-3 py-1.5 text-xs font-semibold text-[#008ce0] hover:bg-[#EBF5FB]">
+            {t("allDays")}
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          {targets.map((wd) => {
+            const active = selected.includes(wd);
+            return (
+              <button
+                key={wd}
+                type="button"
+                onClick={() => toggle(wd)}
+                className={cn(
+                  "rounded-xl border px-3 py-2 text-left text-sm font-semibold transition-colors",
+                  active ? "border-[#009FD9] bg-[#EBF5FB] text-[#0089bb]" : "border-[#e5e7eb] bg-white text-[#374151] hover:border-[#cbd5e1]"
+                )}
+              >
+                {t(`weekday${wd}` as `weekday${number}`)}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="mt-5 flex gap-3">
+          <Button type="button" variant="outline" size="md" className="flex-1" onClick={onClose} disabled={saving}>{t("cancel")}</Button>
+          <Button type="button" size="md" className="flex-1" disabled={selected.length === 0 || saving} loading={saving} onClick={async () => { setSaving(true); await onApply(selected); setSaving(false); }}>
+            {t("applyToSelected")}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function DayModal({ initialDate, existing, markedDates, defaultDuration, dateLocale, occupiedOnDate, fmtRanges, onClose, onSave }: {
   initialDate: string;
   existing: ExcRow[];
