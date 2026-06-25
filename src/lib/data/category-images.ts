@@ -19,7 +19,7 @@ export const CATEGORY_IMAGE: Record<string, string> = {
   electricidad: U("1621905251189-08b45d6a269e"),        // v
   construccion: U("1504307651254-35680f356dfd"),        // v
   pintura: U("1562259949-e8e7689d7828"),                // v
-  carpinteria: U("1588854337115-1c67d9247e4d"),         // v
+  carpinteria: U("1685022515782-534dfba3a2c4"),         // Unsplash: Jean-Baptiste D.
   pisos: U("1586023492125-27b2c045efd7"),               // v (explore-tabs)
   cerrajeria: U("1558002038-1055907df827"),
   techos: U("1632759145351-1d592919f522"),
@@ -85,7 +85,7 @@ export const CATEGORY_IMAGE: Record<string, string> = {
   // ── Eventos ──
   fotografia_eventos: U("1519741497674-611481863552"),
   videografia: U("1492684223066-81342ee5ff30"),
-  dj_sonido: U("1571266028243-eaa3f722e40d"),
+  dj_sonido: U("1547210841-2ceb0c5f0679"),              // Unsplash: Krys Amon
   chef: U("1577219491135-ce391730fb2c"),
   catering: U("1555244162-803834f70033"),
   decoracion: U("1478146896981-b80fe463b330"),
