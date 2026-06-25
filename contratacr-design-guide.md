@@ -1744,3 +1744,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Casos de exito modal image viewing.** Use a fixed-size dark photo stage with object-contain for success-case modal images. Do not crop mixed-ratio work photos in the large viewer; add padding/letterboxing instead. Thumbnails should also be equal-size contain tiles so clients can compare images consistently and open each one large.
 
 > **Casos de exito modal ambient image treatment.** Avoid visible hard borders/letterbox frames in success-case modals. Prefer an ambient blurred background derived from the active photo, with the full image object-contain above it. Use soft thumbnail tiles with opacity/ring selection rather than dark bordered contain boxes.
+
+> **Casos de exito modal counter contrast.** Photo counters over success-case images must be readable on white/light photos. Use a solid-enough dark translucent pill with subtle border/shadow/blur and z-index above the image, not a low-opacity overlay that can disappear on light work photos.

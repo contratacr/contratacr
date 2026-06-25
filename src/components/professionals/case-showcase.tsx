@@ -197,7 +197,9 @@ export function CaseShowcase({
                       <button onClick={next} aria-label={tg("next")} className="absolute right-2 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-black/45 text-white hover:bg-black/65">
                         <ChevronRight className="h-6 w-6" />
                       </button>
-                      <span className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-full bg-black/55 px-2 py-0.5 text-[11px] font-semibold text-white">{pi + 1} / {photos.length}</span>
+                      <span className="absolute bottom-3 left-1/2 z-20 -translate-x-1/2 rounded-full border border-white/25 bg-[#111827]/90 px-2.5 py-1 text-[11px] font-bold text-white shadow-lg backdrop-blur">
+                        {pi + 1} / {photos.length}
+                      </span>
                     </>
                   )}
                 </div>
