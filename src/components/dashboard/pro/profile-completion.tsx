@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { ChevronRight, X } from "lucide-react";
 
@@ -71,11 +71,10 @@ export function ProfileCompletion({ pro, onGo }: { pro: ProRecord; onGo: (tab: s
   // discoverable as their own sidebar tabs in Modo profesional). Dismissible, never nags
   // again, and NEVER counts toward the %.
   const proId = typeof pro.id === "string" ? pro.id : "";
-  const [dismissedVerify, setDismissedVerify] = useState(false);
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    try { setDismissedVerify(localStorage.getItem(`contratacr_verify_dismissed_${proId}`) === "1"); } catch { /* noop */ }
-  }, [proId]);
+  const [dismissedVerify, setDismissedVerify] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try { return localStorage.getItem(`contratacr_verify_dismissed_${proId}`) === "1"; } catch { return false; }
+  });
   function dismiss() {
     setDismissedVerify(true);
     try { localStorage.setItem(`contratacr_verify_dismissed_${proId}`, "1"); } catch { /* noop */ }
@@ -112,7 +111,7 @@ export function ProfileCompletion({ pro, onGo }: { pro: ProRecord; onGo: (tab: s
             className="h-full rounded-full transition-[width] duration-700 ease-out"
             style={{
               width: `${Math.max(percent, 4)}%`,
-              background: complete ? "#16a34a" : "linear-gradient(90deg,#009FD9,#33b4e0)",
+              background: "linear-gradient(90deg,#009FD9,#33b4e0)",
             }}
           />
         </div>

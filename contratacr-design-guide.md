@@ -1728,3 +1728,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Notification source icons.** Notification rows should use the same icon as the dashboard section they open. Oportunidades notifications use `FolderOpen`, Solicitudes recibidas use `Inbox`, Mis solicitudes use `Send`, Mis publicaciones use `ClipboardList`, Soporte uses `Headset`, and only unknown/account-level notifications fall back to `Bell`.
 
 > **Identity verification help placement.** The identity-verification education link (Que es la verificacion de identidad? / What is identity verification?) belongs directly under the verification intro copy and before the ID input. Do not place it as a loose global panel link or beside the field label; it should read as contextual help before the user types their ID.
+
+> **Profile completion meter color.** Keep the professional profile-completion progress bar in the ContrataCR blue gradient even when it reaches 100%. Avoid switching the meter to green for completed state; use copy/status text to communicate completion and keep progress UI on-brand.
