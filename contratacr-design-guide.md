@@ -1754,3 +1754,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Solicitudes recibidas card hierarchy.** Received request cards should separate the scan header, expanded details, and actions visually. Use a soft expanded background, one grouped white detail panel, and a distinct action row rather than loose details floating directly on the card surface.
 
 > **Solicitudes recibidas expanded details.** Avoid a heavy nested card inside received-request cards. Expanded details should use a light responsive info-tile grid for service/location, contact, ID, and description, with the request-created date acting as a compact divider header.
+
+> **Solicitudes recibidas appointment emphasis.** In received-request cards, the scheduled appointment date/time should be the primary collapsed-card anchor. Service/location are secondary metadata. Expanded info tiles should be light and low-shadow, with actions integrated as a simple separated row.

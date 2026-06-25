@@ -265,26 +265,28 @@ export function BookingRequests() {
                 <Badge variant={STATUS_VARIANT[booking.status]} className="shrink-0 px-2.5 py-0.5 text-[11px] font-semibold">{t(`status.${booking.status}`)}</Badge>
               )}
             </div>
-            <div className="mt-2 flex flex-col items-start gap-1.5 text-[12px] text-[#6b7280] sm:flex-row sm:flex-wrap sm:items-center">
-              <span className={cn("inline-flex w-full max-w-full items-center gap-1.5 rounded-full px-2 py-1 sm:w-auto", dateStr ? "bg-[#f9fafb] font-medium text-[#374151]" : "bg-[#f3f4f6] text-[#6b7280]")}>
-                <CalendarClock className="h-3.5 w-3.5 shrink-0 text-[#374151]" />
+            <div className="mt-2 flex flex-col items-start gap-2 text-[12px] text-[#6b7280]">
+              <span className={cn("inline-flex w-full max-w-full items-center gap-2 rounded-xl px-2.5 py-2 sm:w-auto", dateStr ? "bg-[#EBF5FB] font-semibold text-[#162543]" : "bg-[#f3f4f6] text-[#6b7280]")}>
+                <CalendarClock className="h-4 w-4 shrink-0 text-[#009FD9]" />
                 <span className="truncate">{dateStr || t("noScheduledDate")}</span>
               </span>
-              {category && (
-                <span className="inline-flex w-full max-w-full items-center gap-1.5 rounded-full bg-[#f9fafb] px-2 py-1 sm:w-auto">
-                  <Wrench className="h-3.5 w-3.5 shrink-0 text-[#374151]" />
-                  <span className="truncate">{category}</span>
-                </span>
-              )}
-              {location && (
-                <span className="inline-flex w-full max-w-full items-center gap-1.5 rounded-full bg-[#f9fafb] px-2 py-1 sm:w-auto">
-                  <MapPin className="h-3.5 w-3.5 shrink-0 text-[#374151]" />
-                  <span className="truncate">{location}</span>
-                </span>
-              )}
-              {!booking.for_someone_else && showClinicalFlags && ageBadge(booking.client_dob)}
-              {unverifiedPill}
-              {flaggedPill}
+              <span className="flex w-full max-w-full flex-col items-start gap-1.5 sm:flex-row sm:flex-wrap sm:items-center">
+                {category && (
+                  <span className="inline-flex w-full max-w-full items-center gap-1.5 rounded-full bg-[#f9fafb] px-2 py-1 sm:w-auto">
+                    <Wrench className="h-3.5 w-3.5 shrink-0 text-[#374151]" />
+                    <span className="truncate">{category}</span>
+                  </span>
+                )}
+                {location && (
+                  <span className="inline-flex w-full max-w-full items-center gap-1.5 rounded-full bg-[#f9fafb] px-2 py-1 sm:w-auto">
+                    <MapPin className="h-3.5 w-3.5 shrink-0 text-[#374151]" />
+                    <span className="truncate">{location}</span>
+                  </span>
+                )}
+                {!booking.for_someone_else && showClinicalFlags && ageBadge(booking.client_dob)}
+                {unverifiedPill}
+                {flaggedPill}
+              </span>
             </div>
           </div>
           <ChevronDown className={cn("h-5 w-5 text-[#9ca3af] shrink-0 transition-transform duration-200", expanded && "rotate-180")} />
@@ -320,7 +322,7 @@ export function BookingRequests() {
             {(category || location || phoneFmt || cedulaFmt || booking.service_description) && (
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 {(category || location) && (
-                  <div className="flex items-start gap-2.5 rounded-xl bg-white p-3.5 shadow-sm ring-1 ring-[#eef2f6]">
+                  <div className="flex items-start gap-2.5 rounded-xl bg-white p-3.5 ring-1 ring-[#e8eef5]">
                     <Wrench className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
                     <div className="min-w-0">
                       {category && <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("fieldService")}</p>}
@@ -334,7 +336,7 @@ export function BookingRequests() {
                   </div>
                 )}
                 {phoneFmt && (
-                      <div className="flex min-w-0 items-center gap-2 rounded-xl bg-white p-3.5 shadow-sm ring-1 ring-[#eef2f6]">
+                      <div className="flex min-w-0 items-center gap-2 rounded-xl bg-white p-3.5 ring-1 ring-[#e8eef5]">
                         <Phone className="h-4 w-4 shrink-0 text-[#9ca3af]" />
                         <div className="min-w-0">
                           <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("contactPhone")}</p>
@@ -343,7 +345,7 @@ export function BookingRequests() {
                       </div>
                     )}
                 {cedulaFmt && (
-                      <div className="flex min-w-0 items-center gap-2 rounded-xl bg-white p-3.5 shadow-sm ring-1 ring-[#eef2f6]">
+                      <div className="flex min-w-0 items-center gap-2 rounded-xl bg-white p-3.5 ring-1 ring-[#e8eef5]">
                         <IdCard className="h-4 w-4 shrink-0 text-[#9ca3af]" />
                         <div className="min-w-0">
                           <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("contactCedula")}</p>
@@ -352,7 +354,7 @@ export function BookingRequests() {
                       </div>
                     )}
                 {booking.service_description && (
-                  <div className="rounded-xl bg-white p-3.5 shadow-sm ring-1 ring-[#eef2f6] sm:col-span-2">
+                  <div className="rounded-xl bg-white p-3.5 ring-1 ring-[#e8eef5] sm:col-span-2">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("noteEyebrow")}</p>
                     <ExpandableText text={booking.service_description} lines={3} className="mt-1 text-[13px] leading-relaxed text-[#4b5563]" />
                   </div>
@@ -378,7 +380,7 @@ export function BookingRequests() {
                 { label: t("reportClient"), onClick: () => setReportFor(booking), destructive: true },
               ];
               return (
-                <div className="flex flex-nowrap items-center gap-2 rounded-xl border border-[#e5e7eb] bg-white p-2 shadow-sm">
+                <div className="flex flex-nowrap items-center gap-2 border-t border-[#eef2f6] pt-3">
                   {waHref && (
                     <Button variant="whatsapp" size="sm" asChild className="shrink-0 rounded-lg px-4">
                       <a href={waHref} target="_blank" rel="noopener noreferrer">
