@@ -265,19 +265,19 @@ export function BookingRequests() {
                 <Badge variant={STATUS_VARIANT[booking.status]} className="shrink-0 px-2.5 py-0.5 text-[11px] font-semibold">{t(`status.${booking.status}`)}</Badge>
               )}
             </div>
-            <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[12px] text-[#6b7280]">
-              <span className={cn("inline-flex max-w-full items-center gap-1.5 rounded-full px-2 py-1", dateStr ? "bg-[#f9fafb] font-medium text-[#374151]" : "bg-[#f3f4f6] text-[#6b7280]")}>
+            <div className="mt-2 flex flex-col items-start gap-1.5 text-[12px] text-[#6b7280] sm:flex-row sm:flex-wrap sm:items-center">
+              <span className={cn("inline-flex w-full max-w-full items-center gap-1.5 rounded-full px-2 py-1 sm:w-auto", dateStr ? "bg-[#f9fafb] font-medium text-[#374151]" : "bg-[#f3f4f6] text-[#6b7280]")}>
                 <CalendarClock className="h-3.5 w-3.5 shrink-0 text-[#374151]" />
                 <span className="truncate">{dateStr || t("noScheduledDate")}</span>
               </span>
               {category && (
-                <span className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-[#f9fafb] px-2 py-1">
+                <span className="inline-flex w-full max-w-full items-center gap-1.5 rounded-full bg-[#f9fafb] px-2 py-1 sm:w-auto">
                   <Wrench className="h-3.5 w-3.5 shrink-0 text-[#374151]" />
                   <span className="truncate">{category}</span>
                 </span>
               )}
               {location && (
-                <span className="inline-flex max-w-full items-center gap-1.5 rounded-full bg-[#f9fafb] px-2 py-1">
+                <span className="inline-flex w-full max-w-full items-center gap-1.5 rounded-full bg-[#f9fafb] px-2 py-1 sm:w-auto">
                   <MapPin className="h-3.5 w-3.5 shrink-0 text-[#374151]" />
                   <span className="truncate">{location}</span>
                 </span>

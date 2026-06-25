@@ -3275,3 +3275,5 @@ New i18n namespaces added this pass: `search.pagination`, extended `search.filte
 **Sprint 215 - Success case card redesigned as text-first summary.** `photo-gallery.tsx` and `case-showcase.tsx`: changed success-case cards from photo-first to text-first. Category/title/description/recipient now lead the card, with up to 3 smaller thumbnails underneath as supporting proof. This avoids banner/portfolio-card vibes and makes the case read like an outcome summary. No i18n changes.
 
 **Sprint 216 - Time select chevron spacing fixed.** `time-select.tsx` / `availability-editor.tsx`: weekly availability time selectors are back to `sm:w-28` so labels like `8:00AM` / `5:00PM` do not crowd the chevron. The shared `TimeSelect` chevron moved slightly right and padding was tuned so AM/PM has breathing room while keeping the control compact. No i18n changes.
+
+**Sprint 217 - Received request mobile summary rows separated.** `booking-requests.tsx`: on responsive/mobile Solicitudes recibidas cards, the appointment date/time, service, and location chips now stack as separate full-width rows. Desktop keeps the flexible chip row from `sm` upward. No i18n changes.

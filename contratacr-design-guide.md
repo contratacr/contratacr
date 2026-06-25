@@ -1718,3 +1718,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Casos de exito text-first card.** Success-case cards should lead with the case information (profession, title, description, recipient/date) and show up to 3 small thumbnails underneath as supporting proof. Avoid photo-first/banner-first layouts for this card family unless the entire section is redesigned.
 
 > **Time select spacing.** Time labels with attached AM/PM must not touch the chevron. Weekly availability `TimeSelect` controls should stay at least `sm:w-28`; if action columns need room, adjust surrounding layout rather than shrinking time selects until AM/PM crowds the icon.
+
+> **Solicitudes recibidas mobile summary rows.** In responsive received-request cards, the appointment date/time, service, and location must each sit on their own row. Do not let these three chips wrap together on mobile; desktop can return to compact wrapping from `sm` upward.
