@@ -441,20 +441,26 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                             {(bookingServiceLabel(b) || b.for_someone_else) && (
                               <div className="flex flex-col gap-3 text-sm">
                                 {bookingServiceLabel(b) && (
-                                  <div>
-                                    <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("serviceField")}</p>
-                                    <p className="mt-0.5 font-medium text-[#374151] [overflow-wrap:anywhere]">{bookingServiceLabel(b)}</p>
+                                  <div className="flex items-start gap-2.5">
+                                    <Wrench className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
+                                    <div className="min-w-0">
+                                      <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("serviceField")}</p>
+                                      <p className="mt-0.5 font-medium text-[#374151] [overflow-wrap:anywhere]">{bookingServiceLabel(b)}</p>
+                                    </div>
                                   </div>
                                 )}
                                 {b.for_someone_else && (() => {
                                   const beneAge = ageLabel(b.beneficiary_dob);
                                   return (
-                                    <div>
-                                      <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("apptForLabel")}</p>
-                                      <p className="mt-0.5 font-semibold text-[#111827] [overflow-wrap:anywhere]">{b.beneficiary_name || t("otherPerson")}</p>
-                                      {beneAge && (
-                                        <p className="mt-0.5 text-[12px] text-[#6b7280]"><span className="text-[#9ca3af]">{t("fieldAge")}</span> {beneAge}</p>
-                                      )}
+                                    <div className="flex items-start gap-2.5">
+                                      <Users className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
+                                      <div className="min-w-0">
+                                        <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("apptForLabel")}</p>
+                                        <p className="mt-0.5 font-semibold text-[#111827] [overflow-wrap:anywhere]">{b.beneficiary_name || t("otherPerson")}</p>
+                                        {beneAge && (
+                                          <p className="mt-0.5 text-[12px] text-[#6b7280]"><span className="text-[#9ca3af]">{t("fieldAge")}</span> {beneAge}</p>
+                                        )}
+                                      </div>
                                     </div>
                                   );
                                 })()}
