@@ -1762,3 +1762,7 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Solicitudes recibidas expanded sheet.** Prefer one calm white information sheet with internal dividers for service, contact, ID, and description. Avoid multiple separate mini cards inside an expanded request unless a section is truly exceptional, because the professional needs quick scanning more than decorative grouping.
 
 > **Solicitudes recibidas header affordance.** The collapsed card should clearly signal it opens. Use a small circular chevron affordance and quiet bordered metadata pills for service/location; avoid leaving the chevron as a loose icon when the card has several competing chips.
+
+> **Solicitudes recibidas no duplicate location.** Because the collapsed header remains visible when a request is expanded, do not repeat the same location inside the expanded details sheet. Keep the location in the header summary and reserve the sheet for additional structured details.
+
+> **Solicitudes recibidas focus rail.** Do not use a physical left border on closed received-request cards; it can make the left rounded corners look clipped. If a brand rail is needed, render it only in the expanded state as a rounded pseudo-element inside the card.

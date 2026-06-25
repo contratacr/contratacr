@@ -236,7 +236,7 @@ export function BookingRequests() {
     const panelOpen = actionFor?.id === booking.id;
 
     return (
-      <Card className={cn("rounded-2xl border-[#e5e7eb] border-l-4 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md", expanded ? "border-l-[#009FD9] ring-1 ring-[#d8eef8] shadow-md" : "border-l-transparent")}>
+      <Card className={cn("relative rounded-2xl border-[#e5e7eb] bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md", expanded && "shadow-md ring-1 ring-[#d8eef8] before:absolute before:inset-y-0 before:left-0 before:w-1 before:rounded-l-2xl before:bg-[#009FD9] before:content-['']")}>
         {/* EXPANDABLE LEAD CARD (sprint 430): COLLAPSED shows only essentials (who · when ·
             status + unverified). Tapping reveals the full identity, the "para otra persona"
             callout, servicio·zona, the note, and the management ACTIONS. Zero icons; text labels.
@@ -321,24 +321,19 @@ export function BookingRequests() {
               );
             })()}
 
-            {(category || location || phoneFmt || cedulaFmt || booking.service_description) && (
+            {(category || phoneFmt || cedulaFmt || booking.service_description) && (
               <div className="overflow-hidden rounded-2xl bg-white ring-1 ring-[#e8eef5]">
-                {(category || location) && (
+                {category && (
                   <div className="flex items-start gap-3 px-3.5 py-3.5">
                     <Wrench className="mt-0.5 h-4 w-4 shrink-0 text-[#009FD9]" />
                     <div className="min-w-0">
-                      {category && <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("fieldService")}</p>}
-                      {category && <p className="mt-0.5 text-sm font-semibold text-[#162543] leading-snug [overflow-wrap:anywhere]">{category}</p>}
-                      {location && (
-                        <p className="mt-1 flex items-center gap-1.5 text-[12.5px] text-[#6b7280] [overflow-wrap:anywhere]">
-                          <MapPin className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" /> {location}
-                        </p>
-                      )}
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("fieldService")}</p>
+                      <p className="mt-0.5 text-sm font-semibold text-[#162543] leading-snug [overflow-wrap:anywhere]">{category}</p>
                     </div>
                   </div>
                 )}
                 {(phoneFmt || cedulaFmt) && (
-                  <div className={cn("grid grid-cols-1 border-[#eef2f6] sm:grid-cols-2", (category || location) && "border-t")}>
+                  <div className={cn("grid grid-cols-1 border-[#eef2f6] sm:grid-cols-2", category && "border-t")}>
                     {phoneFmt && (
                       <div className="flex min-w-0 items-center gap-2.5 px-3.5 py-3">
                         <Phone className="h-4 w-4 shrink-0 text-[#9ca3af]" />
