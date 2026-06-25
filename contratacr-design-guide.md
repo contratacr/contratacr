@@ -1742,3 +1742,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Public profile services grid.** In the professional public profile, Servicios ofrecidos should render one service per row on mobile and two cards per row from sm upward. Avoid a single-column desktop list unless service cards become much more detailed.
 
 > **Casos de exito modal image viewing.** Use a fixed-size dark photo stage with object-contain for success-case modal images. Do not crop mixed-ratio work photos in the large viewer; add padding/letterboxing instead. Thumbnails should also be equal-size contain tiles so clients can compare images consistently and open each one large.
+
+> **Casos de exito modal ambient image treatment.** Avoid visible hard borders/letterbox frames in success-case modals. Prefer an ambient blurred background derived from the active photo, with the full image object-contain above it. Use soft thumbnail tiles with opacity/ring selection rather than dark bordered contain boxes.

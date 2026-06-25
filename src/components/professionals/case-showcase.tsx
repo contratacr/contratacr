@@ -183,9 +183,12 @@ export function CaseShowcase({
 
               {/* PHOTO viewer — larger, browsable (arrows + thumbnails). */}
               {cur && (
-                <div className="relative flex h-[46vh] shrink-0 items-center justify-center bg-[#0b0b0b] sm:h-auto sm:min-h-[620px] sm:w-[62%]">
+                <div className="relative flex h-[46vh] shrink-0 items-center justify-center overflow-hidden bg-[#111827] sm:h-auto sm:min-h-[620px] sm:w-[62%]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={cldLarge(cur, 1280)} alt={tg("workAlt", { n: pi + 1 })} className="h-full w-full object-contain p-3 sm:p-5" />
+                  <img src={cldLarge(cur, 900)} alt="" aria-hidden className="absolute inset-0 h-full w-full scale-110 object-cover opacity-35 blur-2xl" />
+                  <div className="absolute inset-0 bg-black/35" />
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={cldLarge(cur, 1280)} alt={tg("workAlt", { n: pi + 1 })} className="relative z-10 h-full w-full object-contain" />
                   {photos.length > 1 && (
                     <>
                       <button onClick={prev} aria-label={tg("prev")} className="absolute left-2 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-black/45 text-white hover:bg-black/65">
@@ -219,10 +222,10 @@ export function CaseShowcase({
                         key={idx}
                         onClick={() => setPi(idx)}
                         aria-label={tg("workAlt", { n: idx + 1 })}
-                        className={cn("h-16 overflow-hidden rounded-xl border-2 bg-[#111827] transition-all", idx === pi ? "border-[#009FD9]" : "border-transparent opacity-60 hover:opacity-100")}
+                        className={cn("h-16 overflow-hidden rounded-xl bg-[#f3f4f6] transition-all", idx === pi ? "opacity-100 ring-2 ring-[#009FD9] ring-offset-2" : "opacity-55 hover:opacity-100")}
                       >
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={cldThumb(p, 220)} alt="" className="h-full w-full object-contain p-1" />
+                        <img src={cldThumb(p, 220)} alt="" className="h-full w-full object-cover" />
                       </button>
                     ))}
                   </div>
