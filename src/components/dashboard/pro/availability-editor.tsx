@@ -750,7 +750,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                             );
                             })}
                           </div>
-                          <div className="flex w-[210px] shrink-0 flex-row items-center justify-end gap-3 pt-1 sm:w-[238px]">
+                          <div className="flex min-h-10 w-[210px] shrink-0 flex-row items-center justify-end gap-3 sm:w-[238px]">
                             <button type="button" onClick={() => addBlock(wd)} className="inline-flex shrink-0 items-center justify-end gap-1 whitespace-nowrap text-right text-xs font-medium leading-tight text-[#009FD9] hover:underline cursor-pointer">
                               <Plus className="h-3.5 w-3.5 shrink-0" /> <span>{t("addFranja")}</span>
                             </button>

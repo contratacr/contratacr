@@ -1732,3 +1732,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Profile completion meter color.** Keep the professional profile-completion progress bar in the ContrataCR blue gradient even when it reaches 100%. Avoid switching the meter to green for completed state; use copy/status text to communicate completion and keep progress UI on-brand.
 
 > **Casos de exito summary collage.** Success-case cards should read as a case summary supported by evidence photos. Use a text-first card with a compact fixed collage (1-3 photos in a two-row grid) rather than a large cover image, full-width banner, or loose thumbnail strip. On desktop the collage may sit to the right; on mobile it can sit below the text.
+
+> **Disponibilidad day actions vertical alignment.** In weekly availability rows, day-level actions (Agregar franja / Aplicar a otros dias) must align with the first visible time range and weekday row. Do not add top padding that makes the actions float above the 8:00AM - 5:00PM line; use a row-height action rail aligned to the TimeSelect height.
