@@ -231,6 +231,7 @@ export function BookingRequests() {
 
     // An ACTIVE booking (still upcoming/ongoing) gets the manage tools.
     const isActive = (["pending", "confirmed", "in_progress"] as string[]).includes(booking.status);
+    const showClinicalFlags = isActive;
     const expanded = expandedId === booking.id;
     const panelOpen = actionFor?.id === booking.id;
 
@@ -281,7 +282,7 @@ export function BookingRequests() {
                   <span className="truncate">{location}</span>
                 </span>
               )}
-              {!booking.for_someone_else && ageBadge(booking.client_dob)}
+              {!booking.for_someone_else && showClinicalFlags && ageBadge(booking.client_dob)}
               {unverifiedPill}
               {flaggedPill}
             </div>
@@ -300,13 +301,13 @@ export function BookingRequests() {
             {booking.for_someone_else && (() => {
               const beneAge = ageLabel(booking.beneficiary_dob);
               return (
-                <div className="flex items-start gap-2.5 rounded-xl bg-[#EBF5FB] px-3.5 py-3">
-                  <UserRound className="mt-0.5 h-4 w-4 shrink-0 text-[#0089bb]" />
+                <div className={cn("flex items-start gap-2.5 rounded-xl px-3.5 py-3", showClinicalFlags ? "bg-[#EBF5FB]" : "bg-[#f9fafb]")}>
+                  <UserRound className={cn("mt-0.5 h-4 w-4 shrink-0", showClinicalFlags ? "text-[#0089bb]" : "text-[#9ca3af]")} />
                   <div className="min-w-0">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#0089bb]">{t("apptForLabel")}</p>
+                    <p className={cn("text-[10px] font-bold uppercase tracking-[0.06em]", showClinicalFlags ? "text-[#0089bb]" : "text-[#9ca3af]")}>{t("apptForLabel")}</p>
                     <p className="mt-0.5 text-sm font-semibold text-[#111827] flex items-center gap-2 flex-wrap [overflow-wrap:anywhere]">
                       {booking.beneficiary_name || t("otherPerson")}
-                      {ageBadge(booking.beneficiary_dob, !!booking.beneficiary_is_minor)}
+                      {showClinicalFlags && ageBadge(booking.beneficiary_dob, !!booking.beneficiary_is_minor)}
                     </p>
                     {beneAge && (
                       <p className="mt-0.5 text-[12px] text-[#6b7280]"><span className="text-[#9ca3af]">{t("fieldAge")}</span> {beneAge}</p>
