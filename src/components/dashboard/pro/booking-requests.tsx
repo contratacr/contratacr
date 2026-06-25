@@ -236,7 +236,7 @@ export function BookingRequests() {
     const panelOpen = actionFor?.id === booking.id;
 
     return (
-      <Card className="rounded-2xl border-[#e5e7eb] bg-white shadow-sm transition-shadow hover:shadow-md">
+      <Card className={cn("rounded-2xl border-[#e5e7eb] border-l-4 bg-white shadow-sm transition-shadow hover:shadow-md", expanded ? "border-l-[#009FD9] ring-1 ring-[#d8eef8]" : "border-l-transparent")}>
         {/* EXPANDABLE LEAD CARD (sprint 430): COLLAPSED shows only essentials (who · when ·
             status + unverified). Tapping reveals the full identity, the "para otra persona"
             callout, servicio·zona, the note, and the management ACTIONS. Zero icons; text labels.
@@ -293,7 +293,7 @@ export function BookingRequests() {
         </button>
 
         {expanded && (
-          <div className="border-t border-[#f3f4f6] bg-[#fcfdff] px-4 pb-5 pt-4 sm:px-5 flex flex-col gap-4">
+          <div className="rounded-b-2xl border-t border-[#f3f4f6] bg-[#fcfdff] px-4 pb-5 pt-4 sm:px-5 flex flex-col gap-4">
             {requestedDate && (
               <p className="flex items-center gap-1.5 border-b border-[#eef2f6] pb-3 text-[11px] text-[#9ca3af]">
                 <Clock className="h-3.5 w-3.5 shrink-0 text-[#374151]" /> {t("requestedOn", { date: requestedDate })}
@@ -388,7 +388,7 @@ export function BookingRequests() {
                       </a>
                     </Button>
                   )}
-                  <div className={waHref ? "" : "ml-auto"}>
+                  <div className="ml-auto">
                     <CardActionsMenu actions={menuActions} label={t("actions")} />
                   </div>
                 </div>

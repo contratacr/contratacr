@@ -1703,7 +1703,7 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 
 > **Dashboard action menus must not be clipped.** Cards or action rows that contain `CardActionsMenu` must keep overflow visible. Avoid `overflow-hidden` on the card wrapper and `overflow-x-auto` on the action row unless the menu is portaled/fixed; otherwise the dropdown can open but appear blank/clipped.
 
-> **Oportunidades description labels.** Inside an opportunity card, use the concise eyebrow `Descripción` / `Description` for the expanded body. Avoid `Descripción del proyecto` or `Descripción de la solicitud` unless the surrounding UI is ambiguous.
+> **Oportunidades description labels.** Inside an opportunity card, use the concise eyebrow `Descripciï¿½n` / `Description` for the expanded body. Avoid `Descripciï¿½n del proyecto` or `Descripciï¿½n de la solicitud` unless the surrounding UI is ambiguous.
 
 > **Disponibilidad weekly actions placement.** In active weekly day rows, keep time ranges on the left and day-level actions (`Agregar franja` / `Aplicar a otros dias`) in a compact right-side column. Avoid putting those actions directly below the hour selects unless the row is redesigned, and preserve enough fixed action width so text wraps cleanly without overlapping time inputs.
 
@@ -1721,9 +1721,9 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 
 > **Solicitudes recibidas mobile summary rows.** In responsive received-request cards, the appointment date/time, service, and location must each sit on their own row. Do not let these three chips wrap together on mobile; desktop can return to compact wrapping from `sm` upward.
 
-> **Mis solicitudes description row.** Expanded client request descriptions should use the same flat icon-row pattern as service and beneficiary details: `FileText` icon, tiny uppercase `Descripción` / `Description` label, then the expandable text. Do not leave the request description as unlabeled loose text.
+> **Mis solicitudes description row.** Expanded client request descriptions should use the same flat icon-row pattern as service and beneficiary details: `FileText` icon, tiny uppercase `Descripciï¿½n` / `Description` label, then the expandable text. Do not leave the request description as unlabeled loose text.
 
-> **Mis publicaciones description row.** Expanded publication descriptions should use the same `FileText` + `Descripción` / `Description` flat row pattern as Mis solicitudes. Avoid unlabeled left-rule text for primary user-entered descriptions.
+> **Mis publicaciones description row.** Expanded publication descriptions should use the same `FileText` + `Descripciï¿½n` / `Description` flat row pattern as Mis solicitudes. Avoid unlabeled left-rule text for primary user-entered descriptions.
 
 > **Notification source icons.** Notification rows should use the same icon as the dashboard section they open. Oportunidades notifications use `FolderOpen`, Solicitudes recibidas use `Inbox`, Mis solicitudes use `Send`, Mis publicaciones use `ClipboardList`, Soporte uses `Headset`, and only unknown/account-level notifications fall back to `Bell`.
 
@@ -1756,3 +1756,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Solicitudes recibidas expanded details.** Avoid a heavy nested card inside received-request cards. Expanded details should use a light responsive info-tile grid for service/location, contact, ID, and description, with the request-created date acting as a compact divider header.
 
 > **Solicitudes recibidas appointment emphasis.** In received-request cards, the scheduled appointment date/time should be the primary collapsed-card anchor. Service/location are secondary metadata. Expanded info tiles should be light and low-shadow, with actions integrated as a simple separated row.
+
+> **Solicitudes recibidas expanded corner handling.** Any expanded panel with its own background inside a rounded received-request card must declare `rounded-b-2xl`; avoid parent overflow clipping because action menus need to remain visible. Use a subtle brand rail/ring for expanded focus.
