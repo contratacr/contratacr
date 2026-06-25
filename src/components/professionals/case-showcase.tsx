@@ -22,7 +22,7 @@ export type ShowcaseCase = {
 };
 
 // Client-facing "Casos de éxito" showcase (the public profile). A profession filter
-// ("Todos" + per-profession counts) over large one-per-row case cards: cover photo + N-fotos
+// ("Todos" + per-profession counts) over one-per-row vertical case cards: cover photo + N-fotos
 // badge + profession tag + title + short description + recipient/date + "Me gusta".
 // Tapping a card opens a spacious CASE-DETAIL modal (sprint 527): the full info (service ·
 // recipient · date · description) beside a LARGER, browsable photo viewer — an overlay in
@@ -103,10 +103,10 @@ export function CaseShowcase({
               role="button"
               tabIndex={0}
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openCase(c); } }}
-              className="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm transition-shadow hover:shadow-md md:flex-row"
+              className="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm transition-shadow hover:shadow-md"
             >
               {c.photos[0] && (
-                <div className="relative block aspect-[16/10] overflow-hidden bg-[#f3f4f6] md:w-[42%] md:shrink-0">
+                <div className="relative block aspect-[16/10] overflow-hidden bg-[#f3f4f6]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={cldThumb(c.photos[0], 600)} alt={c.title ?? ""} loading="lazy" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" />
                   {c.photos.length > 1 && (

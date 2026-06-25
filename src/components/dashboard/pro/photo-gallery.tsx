@@ -178,12 +178,12 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
         />
       )}
 
-      {/* Large one-per-row case cards: easier to inspect photos and text on every viewport. */}
+      {/* One-per-row case cards: image on top, case details below. */}
       {shownCases.length > 0 && (
         <div className="grid grid-cols-1 gap-4">
           {shownCases.map((c) => (
-            <div key={c.id} className="flex flex-col overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm sm:flex-row">
-              <div className="relative aspect-[16/10] bg-[#f3f4f6] sm:w-64 sm:shrink-0">
+            <div key={c.id} className="flex flex-col overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+              <div className="relative aspect-[16/10] bg-[#f3f4f6]">
                 {c.photos[0] && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={cldThumb(c.photos[0], 600)} alt={c.title ?? ""} className="h-full w-full object-cover" />
