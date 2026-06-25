@@ -1738,3 +1738,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Client profile phone autosave.** Profile phone autosave must read the latest field value at save time, not the value captured by the debounce callback's previous render. Persist only complete country-valid phone numbers; incomplete values should remain local/unsaved or clear the stored phone so booking/project flows can ask for a complete 8-digit CR number.
 
 > **Casos de exito proof stack.** Prefer success-case cards as outcome summaries with a small overlapping proof-photo stack. Avoid large covers, side collages, mosaic grids, or gallery-first layouts. Text is the main content; photos sit beside it on desktop and below it on mobile as supporting proof.
+
+> **Public profile services grid.** In the professional public profile, Servicios ofrecidos should render one service per row on mobile and two cards per row from sm upward. Avoid a single-column desktop list unless service cards become much more detailed.

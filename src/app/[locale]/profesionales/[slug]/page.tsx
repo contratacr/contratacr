@@ -57,6 +57,10 @@ function initialTabFromUrl(): Tab {
     ? (tab as Tab)
     : "servicios";
 }
+function searchParamFromUrl(key: string): string | null {
+  if (typeof window === "undefined") return null;
+  return new URLSearchParams(window.location.search).get(key);
+}
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function ProfilePage({ params }: ProfilePageProps) {
@@ -71,24 +75,15 @@ export default function ProfilePage({ params }: ProfilePageProps) {
   // button on the "Profesional no encontrado" screen so a signed-in visitor is never
   // stranded. `null` = logged out (that screen then shows only "Buscar profesionales").
   const [panelHref, setPanelHref] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<Tab>("servicios");
+  const [activeTab, setActiveTab] = useState<Tab>(() => initialTabFromUrl());
   // Deep-link support: /profesionales/[slug]?tab=casos opens that tab.
-  useEffect(() => { setActiveTab(initialTabFromUrl()); }, []);
   // Preview mode (?preview=1): a pro opened "Ver cómo me ven los clientes" from
   // their panel → show a clear "Volver a mi panel" bar so they never get stuck.
-  const [previewMode, setPreviewMode] = useState(false);
+  const [previewMode] = useState(() => searchParamFromUrl("preview") === "1");
   // The profession the client searched/filtered by (?categoria=) — passed to the
   // booking modal so, for a multi-specialty pro, that service is pre-selected and we
   // know up front whether it's a health service (DOB) without re-asking.
-  const [activeCategory, setActiveCategory] = useState<string | undefined>(undefined);
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const sp = new URLSearchParams(window.location.search);
-      setPreviewMode(sp.get("preview") === "1");
-      const cat = sp.get("categoria");
-      if (cat) setActiveCategory(cat);
-    }
-  }, []);
+  const [activeCategory, setActiveCategory] = useState<string | undefined>(() => searchParamFromUrl("categoria") ?? undefined);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [viewerId, setViewerId] = useState<string | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -556,7 +551,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                         {cats.length === 0 ? (
                           <p className="text-sm text-[#9ca3af] py-4 text-center">{t("noServices")}</p>
                         ) : (
-                          <div className="grid grid-cols-1 gap-4">
+                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             {cats.map((cat) => {
                               const items = byCat.get(cat) ?? [];
                               // ONE clean summary per service: its description + price (the model is
