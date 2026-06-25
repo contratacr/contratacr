@@ -562,12 +562,19 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                 const isExpanded = expandedProject === project.id;
                 const proposalList = projectProposals[project.id];
                 const proposalCount = project.proposals?.length ?? 0;
+                const zone = [project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ");
+                const statusVariant = project.status === "in_progress" || project.status === "awaiting_confirmation" ? "warning"
+                  : project.status === "completed" ? "success"
+                    : project.status === "cancelled" ? "error"
+                      : "default";
+                const statusLabel = project.status === "in_progress" ? t("projAssigned")
+                  : project.status === "awaiting_confirmation" ? t("projAwaiting")
+                    : project.status === "completed" ? t("projCompleted")
+                      : project.status === "cancelled" ? t("projCancelled")
+                        : t("projOpen");
 
                 return (
                   <Card key={project.id} className="hover:shadow-md">
-                    {/* EXPANDABLE PUBLICACIÓN (sprint 430): COLLAPSED shows title · estado ·
-                        nº de propuestas; tapping reveals the description, zona, fecha, the actions
-                        and the propuestas list (accept/decline). */}
                     <button
                       type="button"
                       onClick={async () => {
@@ -575,171 +582,148 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                         setExpandedProject(isExpanded ? null : project.id);
                       }}
                       aria-expanded={isExpanded}
-                      className={cn("w-full text-left p-4 sm:p-5 flex items-start gap-2.5 hover:bg-[#fafafa] transition-colors", isExpanded ? "rounded-t-2xl" : "rounded-2xl")}
+                      className={cn("w-full text-left p-4 sm:p-5 hover:bg-[#fafafa] transition-colors", isExpanded ? "rounded-t-2xl" : "rounded-2xl")}
                     >
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2">
-                          <span className="min-w-0 flex-1 text-[15px] font-bold text-[#162543] line-clamp-2 [overflow-wrap:anywhere]">{project.title}</span>
-                          {!proyectoStatusRedundant(project.status) ? (
-                            <Badge
-                              className="shrink-0 text-[11px] font-semibold"
-                              variant={
-                                project.status === "in_progress" ? "warning"
-                                  : project.status === "awaiting_confirmation" ? "warning"
-                                  : project.status === "completed" ? "success"
-                                  : project.status === "cancelled" ? "error"
-                                  : "default"
-                              }
-                            >
-                              {project.status === "in_progress" ? t("projAssigned")
-                                : project.status === "awaiting_confirmation" ? t("projAwaiting")
-                                : project.status === "completed" ? t("projCompleted")
-                                : project.status === "cancelled" ? t("projCancelled")
-                                : t("projOpen")}
-                            </Badge>
-                          ) : project.categories?.name ? (
-                            <Badge variant="muted" className="shrink-0 text-[11px] font-semibold">{project.categories.name}</Badge>
-                          ) : null}
+                      <div className="flex items-start gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#EBF5FB] text-[#0089bb]">
+                          <FolderOpen className="h-5 w-5" />
                         </div>
-                        {/* Propuestas count + publish date — each with a quiet grey icon, well-spaced. */}
-                        <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[#6b7280]">
-                          <span className="inline-flex items-center gap-1.5"><Users className="h-3.5 w-3.5 shrink-0 text-[#374151]" /> {t("proposalsCount", { count: proposalCount })}</span>
-                          <span className="inline-flex items-center gap-1.5"><CalendarDays className="h-3.5 w-3.5 shrink-0 text-[#374151]" /> {t("publishedOn", { date: formatRelativeOrDate(project.created_at, locale) })}</span>
-                        </p>
-                        {/* Description preview (collapsed only) — clamped to 2 lines so every
-                            list card stays a uniform, compact height; the full text shows when
-                            the card is expanded. overflow-wrap:anywhere breaks long unbroken
-                            strings so the card never grows wider than its column. */}
-                        {!isExpanded && project.description && (
-                          <p className="mt-1 text-[13px] text-[#6b7280] leading-snug line-clamp-2 [overflow-wrap:anywhere]">{project.description}</p>
-                        )}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-start gap-2">
+                            <h3 className="min-w-0 flex-1 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere]">{project.title}</h3>
+                            {!proyectoStatusRedundant(project.status) ? (
+                              <Badge className="shrink-0 text-[11px] font-semibold" variant={statusVariant}>{statusLabel}</Badge>
+                            ) : project.categories?.name ? (
+                              <Badge variant="muted" className="shrink-0 text-[11px] font-semibold">{project.categories.name}</Badge>
+                            ) : null}
+                          </div>
+                          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12px] text-[#6b7280]">
+                            <span className="inline-flex items-center gap-1.5"><Users className="h-3.5 w-3.5 shrink-0 text-[#374151]" /> {t("proposalsCount", { count: proposalCount })}</span>
+                            <span className="inline-flex items-center gap-1.5"><CalendarDays className="h-3.5 w-3.5 shrink-0 text-[#374151]" /> {formatRelativeOrDate(project.created_at, locale)}</span>
+                            {zone && <span className="inline-flex min-w-0 items-center gap-1.5"><MapPin className="h-3.5 w-3.5 shrink-0 text-[#374151]" /> <span className="truncate">{zone}</span></span>}
+                          </div>
+                          {!isExpanded && project.description && (
+                            <p className="mt-2 text-[13px] leading-relaxed text-[#6b7280] line-clamp-2 [overflow-wrap:anywhere]">{project.description}</p>
+                          )}
+                        </div>
+                        <ChevronDown className={`mt-1 h-5 w-5 shrink-0 text-[#9ca3af] transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`} />
                       </div>
-                      <ChevronDown className={`h-5 w-5 text-[#9ca3af] shrink-0 mt-0.5 transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`} />
                     </button>
 
                     {isExpanded && (
-                      <div className="px-4 pb-5 pt-4 sm:px-5 border-t border-[#f3f4f6] flex flex-col gap-3.5">
-                        {project.description && (
-                          <ExpandableText text={project.description} lines={5} className="text-[#6b7280]" />
-                        )}
-                        {(project.provincias?.name || project.cantones?.name) && (
-                          <p className="flex items-center gap-1.5 text-xs text-[#6b7280]"><MapPin className="h-3.5 w-3.5 shrink-0 text-[#374151]" /> {[project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ")}</p>
-                        )}
+                      <div className="border-t border-[#f3f4f6] px-4 pb-5 pt-4 sm:px-5">
+                        <div className="flex flex-col gap-4">
+                          {project.description && (
+                            <ExpandableText text={project.description} lines={5} className="text-[13px] leading-relaxed text-[#6b7280]" />
+                          )}
 
-                      {/* ACTIONS (sprint 441) — PRIMARY visible + "···" overflow menu. The propuestas
-                          list IS the content for an open publicación (no primary button); a status with
-                          a clear CTA (Confirmar finalización / Dejar reseña / Reabrir) shows it as the
-                          primary. Cancelar publicación + Eliminar (destructive) live in the menu. */}
-                      {(() => {
-                        const st = project.status;
-                        const menu: CardAction[] = [];
-                        if (st === "open" || st === "in_progress" || st === "awaiting_confirmation") {
-                          menu.push({ label: t("cancelProject"), onClick: () => updateProjectStatus(project.id, "cancelled"), destructive: true });
-                        }
-                        if (st !== "in_progress" && st !== "awaiting_confirmation") {
-                          menu.push({ label: t("delete"), onClick: () => setDeleteTarget(project.id), destructive: true });
-                        }
-                        let primary: ReactNode = null;
-                        if (st === "awaiting_confirmation") {
-                          primary = <Button size="sm" className="flex-1 sm:flex-none rounded-lg px-4" onClick={() => confirmProjectCompletion(project.id)}>{t("confirmCompletion")}</Button>;
-                        } else if (st === "completed") {
-                          const rev = projectReview(project.id);
-                          primary = <Button variant="outline" size="sm" className="flex-1 sm:flex-none rounded-lg px-4" onClick={() => reviewProjectPro(project.id)}>{rev ? t("editReview") : t("leaveReview")}</Button>;
-                        } else if (st === "cancelled") {
-                          primary = <Button variant="outline" size="sm" className="flex-1 sm:flex-none rounded-lg px-4" onClick={() => updateProjectStatus(project.id, "open")}>{t("reopenProject")}</Button>;
-                        }
-                        return (
-                          <div className="flex items-center gap-2">
-                            {primary}
-                            <div className="ml-auto">
-                              <CardActionsMenu actions={menu} label={t("actions")} />
-                            </div>
-                          </div>
-                        );
-                      })()}
-
-                      {isExpanded && proposalList && (() => {
-                        const finalized = project.status === "completed";
-                        const locked = finalized || project.status === "cancelled";
-                        const accepted = proposalList.filter((p) => p.status === "accepted");
-                        const others = proposalList.filter((p) => p.status !== "accepted");
-                        const primary = finalized && accepted.length > 0 ? accepted : proposalList;
-
-                        const renderProposal = (proposal: Proposal) => (
-                          <div key={proposal.id} className="flex items-start justify-between gap-3 p-3.5 rounded-xl bg-[#f9fafb] border border-[#e5e7eb]">
-                            <div className="flex items-start gap-2 flex-1 min-w-0">
-                              <Avatar className="h-8 w-8 shrink-0">
-                                <AvatarImage src={proposal.professionals?.profiles?.avatar_url} />
-                                <AvatarFallback className="bg-[#EBF5FB] text-[#009FD9] text-xs font-semibold">
-                                  {getInitials(proposal.professionals?.profiles?.full_name ?? "?")}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div className="flex-1 min-w-0">
-                                {proposal.professionals?.slug ? (
-                                  <Link href={`/profesionales/${proposal.professionals.slug}`} className="text-sm font-semibold text-[#111827] hover:text-[#009FD9] hover:underline">
-                                    {proposal.professionals?.profiles?.full_name}
-                                  </Link>
-                                ) : (
-                                  <p className="text-sm font-semibold text-[#111827]">
-                                    {proposal.professionals?.profiles?.full_name}
-                                  </p>
-                                )}
-                                {/* Price OR "a convenir" — informal pros often price after
-                                    seeing the job, so an empty price reads as "to be agreed",
-                                    never a blank. */}
-                                <p className="text-xs font-medium">
-                                  {proposal.price
-                                    ? <span className="text-[#009FD9]">₡{proposal.price.toLocaleString("es-CR")}</span>
-                                    : <span className="text-[#6b7280]">{t("priceTBD")}</span>}
-                                </p>
-                                <ExpandableText text={proposal.message} lines={3} className="mt-0.5" />
+                          {(() => {
+                            const st = project.status;
+                            const menu: CardAction[] = [];
+                            if (st === "open" || st === "in_progress" || st === "awaiting_confirmation") {
+                              menu.push({ label: t("cancelProject"), onClick: () => updateProjectStatus(project.id, "cancelled"), destructive: true });
+                            }
+                            if (st !== "in_progress" && st !== "awaiting_confirmation") {
+                              menu.push({ label: t("delete"), onClick: () => setDeleteTarget(project.id), destructive: true });
+                            }
+                            let primary: ReactNode = null;
+                            if (st === "awaiting_confirmation") {
+                              primary = <Button size="sm" className="flex-1 sm:flex-none rounded-lg px-4" onClick={() => confirmProjectCompletion(project.id)}>{t("confirmCompletion")}</Button>;
+                            } else if (st === "completed") {
+                              const rev = projectReview(project.id);
+                              primary = <Button variant="outline" size="sm" className="flex-1 sm:flex-none rounded-lg px-4" onClick={() => reviewProjectPro(project.id)}>{rev ? t("editReview") : t("leaveReview")}</Button>;
+                            } else if (st === "cancelled") {
+                              primary = <Button variant="outline" size="sm" className="flex-1 sm:flex-none rounded-lg px-4" onClick={() => updateProjectStatus(project.id, "open")}>{t("reopenProject")}</Button>;
+                            }
+                            return (
+                              <div className="flex items-center gap-2">
+                                {primary}
+                                <div className="ml-auto">
+                                  <CardActionsMenu actions={menu} label={t("actions")} />
+                                </div>
                               </div>
-                            </div>
-                            <div className="flex flex-col gap-1.5 shrink-0">
-                              {proposal.status === "pending" && !locked && (
-                                <>
-                                  <Button size="sm" onClick={() => acceptProposal(proposal.id, project.id)}>{t("accept")}</Button>
-                                  <Button size="sm" variant="outline" onClick={() => declineProposal(proposal.id, project.id)}>{t("decline")}</Button>
-                                </>
-                              )}
-                              {proposal.status === "accepted" && (
-                                <span className="inline-flex items-center justify-center rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold px-3 py-1 leading-none">
-                                  {finalized ? t("finalized") : t("accepted")}
-                                </span>
-                              )}
-                              {proposal.status === "declined" && <Badge variant="error">{t("declined")}</Badge>}
-                              {!locked && (proposal.status === "accepted" || proposal.status === "declined") && (
-                                <Button size="sm" variant="outline" onClick={() => revertProposal(proposal.id, project.id)}>{t("changeDecision")}</Button>
-                              )}
-                              {proposal.professionals?.whatsapp && (
-                                <Button size="sm" variant="whatsapp" asChild>
-                                  <a href={getWhatsAppLink(proposal.professionals.whatsapp, t("waProposal", { title: project.title }))} target="_blank" rel="noopener noreferrer">
-                                    <WhatsAppIcon className="h-3.5 w-3.5" /> {t("whatsapp")}
-                                  </a>
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                        );
+                            );
+                          })()}
 
-                        return (
-                          <div className="mt-4 pt-4 border-t border-[#f3f4f6] flex flex-col gap-3">
-                            {proposalList.length === 0 ? (
-                              <p className="text-sm text-[#6b7280] text-center py-2">{t("noProposalsYet")}</p>
-                            ) : (
-                              <>
-                                {primary.map(renderProposal)}
-                                {finalized && others.length > 0 && (
-                                  <details className="text-xs">
-                                    <summary className="cursor-pointer text-[#6b7280] hover:text-[#374151]">{t("seeUnchosen", { count: others.length })}</summary>
-                                    <div className="flex flex-col gap-3 mt-2 opacity-70">{others.map(renderProposal)}</div>
-                                  </details>
+                          {proposalList && (() => {
+                            const finalized = project.status === "completed";
+                            const locked = finalized || project.status === "cancelled";
+                            const accepted = proposalList.filter((p) => p.status === "accepted");
+                            const pending = proposalList.filter((p) => p.status === "pending");
+                            const declined = proposalList.filter((p) => p.status === "declined");
+                            const visible = finalized && accepted.length > 0 ? accepted : [...accepted, ...pending, ...declined];
+                            const hidden = finalized && accepted.length > 0 ? [...pending, ...declined] : [];
+
+                            const renderProposal = (proposal: Proposal) => {
+                              const isAccepted = proposal.status === "accepted";
+                              return (
+                                <div key={proposal.id} className={cn("rounded-xl border p-3.5", isAccepted ? "border-emerald-200 bg-emerald-50/40" : "border-[#e5e7eb] bg-white")}>
+                                  <div className="flex items-start gap-3">
+                                    <Avatar className="h-9 w-9 shrink-0">
+                                      <AvatarImage src={proposal.professionals?.profiles?.avatar_url} />
+                                      <AvatarFallback className="bg-[#EBF5FB] text-[#009FD9] text-xs font-semibold">
+                                        {getInitials(proposal.professionals?.profiles?.full_name ?? "?")}
+                                      </AvatarFallback>
+                                    </Avatar>
+                                    <div className="min-w-0 flex-1">
+                                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                                        {proposal.professionals?.slug ? (
+                                          <Link href={`/profesionales/${proposal.professionals.slug}`} className="text-sm font-semibold text-[#111827] hover:text-[#009FD9] hover:underline">
+                                            {proposal.professionals?.profiles?.full_name}
+                                          </Link>
+                                        ) : (
+                                          <p className="text-sm font-semibold text-[#111827]">{proposal.professionals?.profiles?.full_name}</p>
+                                        )}
+                                        {proposal.status === "accepted" && <Badge variant="success">{finalized ? t("finalized") : t("accepted")}</Badge>}
+                                        {proposal.status === "declined" && <Badge variant="error">{t("declined")}</Badge>}
+                                      </div>
+                                      <p className="mt-0.5 text-xs font-semibold text-[#009FD9]">
+                                        {proposal.price ? `\u20a1${proposal.price.toLocaleString("es-CR")}` : t("priceTBD")}
+                                      </p>
+                                      <ExpandableText text={proposal.message} lines={3} className="mt-1 text-[13px] leading-relaxed" />
+                                    </div>
+                                  </div>
+                                  <div className="mt-3 flex flex-wrap justify-end gap-2 border-t border-[#eef0f2] pt-3">
+                                    {proposal.status === "pending" && !locked && (
+                                      <>
+                                        <Button size="sm" onClick={() => acceptProposal(proposal.id, project.id)}>{t("accept")}</Button>
+                                        <Button size="sm" variant="outline" onClick={() => declineProposal(proposal.id, project.id)}>{t("decline")}</Button>
+                                      </>
+                                    )}
+                                    {!locked && (proposal.status === "accepted" || proposal.status === "declined") && (
+                                      <Button size="sm" variant="outline" onClick={() => revertProposal(proposal.id, project.id)}>{t("changeDecision")}</Button>
+                                    )}
+                                    {proposal.professionals?.whatsapp && (
+                                      <Button size="sm" variant="whatsapp" asChild>
+                                        <a href={getWhatsAppLink(proposal.professionals.whatsapp, t("waProposal", { title: project.title }))} target="_blank" rel="noopener noreferrer">
+                                          <WhatsAppIcon className="h-3.5 w-3.5" /> {t("whatsapp")}
+                                        </a>
+                                      </Button>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            };
+
+                            return (
+                              <div className="border-t border-[#f3f4f6] pt-4">
+                                {proposalList.length === 0 ? (
+                                  <p className="py-2 text-center text-sm text-[#6b7280]">{t("noProposalsYet")}</p>
+                                ) : (
+                                  <div className="flex flex-col gap-3">
+                                    {visible.map(renderProposal)}
+                                    {hidden.length > 0 && (
+                                      <details className="text-xs">
+                                        <summary className="cursor-pointer text-[#6b7280] hover:text-[#374151]">{t("seeUnchosen", { count: hidden.length })}</summary>
+                                        <div className="mt-2 flex flex-col gap-3 opacity-75">{hidden.map(renderProposal)}</div>
+                                      </details>
+                                    )}
+                                  </div>
                                 )}
-                              </>
-                            )}
-                          </div>
-                        );
-                      })()}
+                              </div>
+                            );
+                          })()}
+                        </div>
                       </div>
                     )}
                   </Card>
