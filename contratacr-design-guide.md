@@ -1726,3 +1726,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Mis publicaciones description row.** Expanded publication descriptions should use the same `FileText` + `Descripción` / `Description` flat row pattern as Mis solicitudes. Avoid unlabeled left-rule text for primary user-entered descriptions.
 
 > **Notification source icons.** Notification rows should use the same icon as the dashboard section they open. Oportunidades notifications use `FolderOpen`, Solicitudes recibidas use `Inbox`, Mis solicitudes use `Send`, Mis publicaciones use `ClipboardList`, Soporte uses `Headset`, and only unknown/account-level notifications fall back to `Bell`.
+
+> **Identity verification help placement.** The identity-verification education link (Que es la verificacion de identidad? / What is identity verification?) belongs directly under the verification intro copy and before the ID input. Do not place it as a loose global panel link or beside the field label; it should read as contextual help before the user types their ID.

@@ -178,13 +178,6 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
       {note && <StatusText title={t("resultTitle")}>{note}</StatusText>}
       {error && <p className="text-xs font-medium text-red-600 [overflow-wrap:anywhere]">{error}</p>}
 
-      <Link
-        href="/proveedores-autorizados"
-        className="inline-flex text-sm font-semibold text-[#009FD9] transition-colors hover:text-[#0089bb] hover:underline"
-      >
-        {t.rich("howItWorks", { link: (c) => <>{c}</> })}
-      </Link>
-
       {/* Pending no longer shows a separate "Verificar mi identidad ahora" (re-run the
           cédula on file) button — it was redundant with the "Verifica tu identidad con tu
           cédula" card below (sprint 332), which is the SINGLE coherent action: enter/confirm
@@ -246,7 +239,13 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
       {status !== "verified" && (
         <div className="bg-white rounded-2xl border border-[#e5e7eb] p-5 sm:p-6 shadow-sm">
           <h3 className="text-[15px] font-bold text-[#162543] mb-1.5">{t("enterCedulaTitle")}</h3>
-          <p className="text-[13px] leading-relaxed text-[#6b7280] mb-4">{t("enterCedulaBody")}</p>
+          <p className="text-[13px] leading-relaxed text-[#6b7280]">{t("enterCedulaBody")}</p>
+          <Link
+            href="/proveedores-autorizados"
+            className="mt-2 mb-4 inline-flex text-sm font-semibold text-[#009FD9] transition-colors hover:text-[#0089bb] hover:underline"
+          >
+            {t.rich("howItWorks", { link: (c) => <>{c}</> })}
+          </Link>
           <div className="flex flex-wrap items-center gap-2">
             <input
               value={newCedula}
