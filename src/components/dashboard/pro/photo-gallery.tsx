@@ -183,18 +183,21 @@ export function PhotoGallery({ professionalId, initialUrls = [], initialItems, p
         <div className="grid grid-cols-1 gap-4">
           {shownCases.map((c) => (
             <div key={c.id} className="flex flex-col overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
-              <div className="px-4 pt-4">
-                <div className="relative h-[128px] w-full max-w-[240px] overflow-hidden rounded-xl bg-[#f3f4f6] sm:h-[140px] sm:max-w-[280px]">
-                  {c.photos[0] && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={cldThumb(c.photos[0], 600)} alt={c.title ?? ""} className="h-full w-full object-cover" />
-                  )}
-                  {c.photos.length > 0 && (
-                    <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full bg-black/55 px-2 py-0.5 text-[11px] font-semibold text-white">
-                      <Images className="h-3 w-3" /> {t("photosCount", { count: c.photos.length })}
-                    </span>
-                  )}
-                </div>
+              <div className="flex gap-2 px-4 pt-4">
+                {c.photos.slice(0, MAX_PHOTOS_PER_CASE).map((url, idx) => (
+                  <div key={`${c.id}-${url}`} className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-[#f3f4f6] sm:h-24 sm:w-24">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={cldThumb(url, 260)} alt={c.title ?? ""} className="h-full w-full object-cover" />
+                    {idx === MAX_PHOTOS_PER_CASE - 1 && c.photos.length > MAX_PHOTOS_PER_CASE && (
+                      <span className="absolute inset-0 grid place-items-center bg-black/45 text-xs font-bold text-white">+{c.photos.length - MAX_PHOTOS_PER_CASE}</span>
+                    )}
+                  </div>
+                ))}
+                {c.photos.length > 0 && (
+                  <span className="self-end inline-flex items-center gap-1 rounded-full bg-[#f3f4f6] px-2 py-1 text-[11px] font-semibold text-[#6b7280]">
+                    <Images className="h-3 w-3" /> {t("photosCount", { count: c.photos.length })}
+                  </span>
+                )}
               </div>
               <div className="flex flex-1 flex-col p-4">
                 <p className="text-[11px] font-semibold text-[#0089bb]">{label(c.profession)}</p>

@@ -105,29 +105,32 @@ export function CaseShowcase({
               onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openCase(c); } }}
               className="group relative flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm transition-shadow hover:shadow-md"
             >
-              {c.photos[0] && (
-                <div className="px-5 pt-5">
-                  <div className="relative block h-[128px] w-full max-w-[240px] overflow-hidden rounded-xl bg-[#f3f4f6] sm:h-[140px] sm:max-w-[280px]">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={cldThumb(c.photos[0], 600)} alt={c.title ?? ""} loading="lazy" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" />
+              {c.photos.length > 0 && (
+                <div className="flex gap-2 px-5 pt-5">
+                  {c.photos.slice(0, 3).map((url, idx) => (
+                    <div key={`${c.id}-${url}`} className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-[#f3f4f6] sm:h-24 sm:w-24">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={cldThumb(url, 260)} alt={c.title ?? ""} loading="lazy" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" />
+                      {idx === 2 && c.photos.length > 3 && (
+                        <span className="absolute inset-0 grid place-items-center bg-black/45 text-xs font-bold text-white">+{c.photos.length - 3}</span>
+                      )}
+                      {idx === 0 && c.likeable && (
+                        <div onClick={(e) => e.stopPropagation()}>
+                          <CaseLikeButton
+                            professionalId={professionalId}
+                            caseId={c.id}
+                            label={t("likeLabel")}
+                            className="absolute right-1.5 top-1.5 z-10 grid h-8 w-8 place-items-center rounded-full bg-white/90 text-[#6b7280] shadow-sm backdrop-blur hover:bg-white hover:text-[#e11d48]"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  ))}
                   {c.photos.length > 1 && (
-                    <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full bg-black/55 px-2 py-0.5 text-[11px] font-semibold text-white">
+                    <span className="self-end inline-flex items-center gap-1 rounded-full bg-[#f3f4f6] px-2 py-1 text-[11px] font-semibold text-[#6b7280]">
                       <Images className="h-3 w-3" /> {t("casosPhotos", { count: c.photos.length })}
                     </span>
                   )}
-                  </div>
-                </div>
-              )}
-              {/* Just a clickable heart, overlaid on the photo (top-right) — clean + minimal.
-                  It stops propagation so liking never opens the detail modal. */}
-              {c.likeable && c.photos[0] && (
-                <div onClick={(e) => e.stopPropagation()}>
-                  <CaseLikeButton
-                    professionalId={professionalId}
-                    caseId={c.id}
-                    label={t("likeLabel")}
-                    className="absolute left-[216px] top-7 z-10 grid h-9 w-9 place-items-center rounded-full bg-white/90 text-[#6b7280] shadow-sm backdrop-blur hover:bg-white hover:text-[#e11d48] sm:left-[256px]"
-                  />
                 </div>
               )}
               <div className="flex flex-1 flex-col p-5">
