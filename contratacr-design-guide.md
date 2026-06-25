@@ -1734,3 +1734,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Casos de exito summary collage.** Success-case cards should read as a case summary supported by evidence photos. Use a text-first card with a compact fixed collage (1-3 photos in a two-row grid) rather than a large cover image, full-width banner, or loose thumbnail strip. On desktop the collage may sit to the right; on mobile it can sit below the text.
 
 > **Disponibilidad day actions vertical alignment.** In weekly availability rows, day-level actions (Agregar franja / Aplicar a otros dias) must align with the first visible time range and weekday row. Do not add top padding that makes the actions float above the 8:00AM - 5:00PM line; use a row-height action rail aligned to the TimeSelect height.
+
+> **Client profile phone autosave.** Profile phone autosave must read the latest field value at save time, not the value captured by the debounce callback's previous render. Persist only complete country-valid phone numbers; incomplete values should remain local/unsaved or clear the stored phone so booking/project flows can ask for a complete 8-digit CR number.

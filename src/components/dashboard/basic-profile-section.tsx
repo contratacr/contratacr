@@ -10,7 +10,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { canOffer } from "@/lib/auth/capabilities";
 import { cn, getInitials } from "@/lib/utils";
-import { PhoneInput, hasPhoneNumber } from "@/components/ui/phone-input";
+import { PhoneInput, hasPhoneNumber, isPhoneComplete } from "@/components/ui/phone-input";
 import { SaveStatus } from "@/components/dashboard/save-status";
 import { UnsavedChangesGuard } from "@/components/dashboard/unsaved-changes-guard";
 
@@ -37,6 +37,7 @@ export function BasicProfileSection({
   const [profileDirty, setProfileDirty] = useState(false);
   const profileTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const profileDirtyRef = useRef(false);
+  const profileFormRef = useRef(profileForm);
   const saveProfileRef = useRef<() => Promise<void>>(async () => {});
   const [photoUploading, setPhotoUploading] = useState(false);
   const [profileAvatar, setProfileAvatar] = useState<string | null>(null);
@@ -85,17 +86,18 @@ export function BasicProfileSection({
 
   async function saveProfile() {
     if (!user) return;
+    const currentForm = profileFormRef.current;
     setProfileDirty(false);
     setProfileSaving(true);
     const supabase = createClient();
     // Never overwrite a verified official name (locked; corrections go through admin).
     const verified = profileData?.client_identity_status === "verified";
-    const update: Record<string, string | null> = { phone: hasPhoneNumber(profileForm.phone) ? profileForm.phone : null };
-    if (!verified) update.full_name = profileForm.full_name;
+    const update: Record<string, string | null> = { phone: isPhoneComplete(currentForm.phone) ? currentForm.phone : null };
+    if (!verified) update.full_name = currentForm.full_name;
     await supabase.from("profiles").update(update).eq("id", user.id);
-    if (!verified && profileForm.full_name) {
-      await supabase.auth.updateUser({ data: { full_name: profileForm.full_name } });
-      setProfileData((prev) => (prev ? { ...prev, full_name: profileForm.full_name } : prev));
+    if (!verified && currentForm.full_name) {
+      await supabase.auth.updateUser({ data: { full_name: currentForm.full_name } });
+      setProfileData((prev) => (prev ? { ...prev, full_name: currentForm.full_name } : prev));
       window.dispatchEvent(new Event("ccr:profile-updated"));
     }
     setProfileSaving(false);
@@ -103,7 +105,10 @@ export function BasicProfileSection({
     profileDirtyRef.current = false;
     setTimeout(() => setProfileSaved(false), 3000);
   }
-  saveProfileRef.current = saveProfile;
+  useEffect(() => {
+    profileFormRef.current = profileForm;
+    saveProfileRef.current = saveProfile;
+  }, [profileForm, saveProfile]);
 
   // Flush a pending save on unmount (e.g. switching tabs) — the data-loss fix.
   useEffect(() => () => {
