@@ -563,7 +563,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                             <span className="inline-flex w-full max-w-full items-center gap-2 text-[#374151]">
                               <Banknote className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
                               <span className="truncate font-semibold">
-                                <span className="font-medium text-[#9ca3af]">{t("yourPriceLabel")}</span> <span className={p.price ? "text-[#0089bb]" : "text-[#374151]"}>{p.price ? `₡${p.price.toLocaleString("es-CR")}` : t("priceTBD")}</span>
+                                <span className="font-medium text-[#9ca3af]">{t("yourPriceLabel")}</span> <span className={p.price ? "text-[#111827]" : "text-[#374151]"}>{p.price ? `₡${p.price.toLocaleString("es-CR")}` : t("priceTBD")}</span>
                               </span>
                             </span>
                           </div>

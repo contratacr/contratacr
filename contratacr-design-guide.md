@@ -71,6 +71,8 @@ These are **enforceable acceptance criteria**, not suggestions. Every screen mus
 
 > **Cancel reason label (sprint 582).** Cancellation reason inputs remain optional in behavior, but the visible field label/placeholder should say only `Motivo` / `Reason`. Do not show `(opcional)` or helper copy like "Agrega un motivo si lo deseas"; the user can infer they may leave it blank because the confirm action remains available.
 
+> **Proposal price value color (sprint 583).** In Mis propuestas, `Tu precio` is factual content about the professional's own proposal, so the amount uses primary dark text (`#111827`), not brand blue. Keep the label muted grey and the shared money icon muted; reserve brand-blue emphasis for actionable states or opportunity budget availability.
+
 > **Navbar trigger active state (sprint 576).** Top-level navbar navigation should NOT stay visually marked just because the current URL matches it. Categorias, Recursos, Mi panel, Notificaciones, and responsive drawer rows use neutral text by default with hover/focus feedback only. Opening a dropdown may rotate the chevron and use a temporary hover-like background while the dropdown is open, but do not keep a blue underline, route-active tint, or left rail after navigation. Language is the exception because it is a selector and should show the active locale.
 
 > **Navbar category search localization (sprint 563).** In the desktop Categorias mega-menu, typing a service keeps results INSIDE the new category surface and shows each matched service with its parent category group. Do not return to a flat unlabeled grid or a separate floating autocomplete; the user must understand where the service lives in the taxonomy before clicking.
