@@ -841,14 +841,68 @@
     "contact": {
       "title": "Your contact information",
       "name": "Full name",
-      "namePlaceholder": "Your name"
+      "namePlaceholder": "Your full name",
+      "phone": "Contact phone",
+      "phoneHint": "We need your WhatsApp number to coordinate your appointment.",
+      "emailTaken": "This email already has an account. Sign in to continue."
     },
+    "completeProfileTitle": "Complete your profile",
+    "completeProfileBody": "We need this information to confirm your booking.",
+    "whatsappNumberTitle": "Your WhatsApp number",
+    "whatsappNumberBody": "We need your WhatsApp number to coordinate your appointment. We save it in your profile so we don't ask again.",
     "success": {
       "title": "Request confirmed!",
       "desc": "Your request is confirmed. Coordinate the details directly via WhatsApp with the professional.",
       "whatsapp": "Continue on WhatsApp",
       "viewRequest": "View my request",
       "close": "Done"
+    },
+    "verified": "Verified",
+    "verifiedTitle": "Verified identity",
+    "from": "From",
+    "youLower": "you",
+    "correct": "Correct",
+    "dobSaved": "Date of birth: {dob}",
+    "dobSavedWithAge": "Date of birth: {dob} · {age}",
+    "dobHealthHint": "We only ask for this for health services. We save it so we don't ask again.",
+    "servicePick": {
+      "title": "What service do you need?",
+      "body": "Choose the service you want to continue."
+    },
+    "next": {
+      "title": "What happens next",
+      "step1": "You choose a date and time and send your request.",
+      "step2": "WhatsApp opens with the professional to confirm.",
+      "step3": "You coordinate price and details directly, without intermediaries."
+    },
+    "calendar": {
+      "title": "Choose date and time",
+      "locationPrefix": "In <b>{location}</b>.",
+      "availabilityHint": "Days with a blue dot have appointments.",
+      "privateTitle": "Private availability",
+      "privateBody": "This professional coordinates schedules directly. Message them on WhatsApp to book.",
+      "whatsapp": "Coordinate on WhatsApp",
+      "whatsappOnlyTitle": "This professional coordinates on WhatsApp",
+      "whatsappOnlyBody": "They haven't published online times yet. Message them to coordinate your service.",
+      "today": "Today",
+      "selectDateTime": "Select date and time",
+      "pickDay": "Choose an available day to see times.",
+      "noSlots": "No times available for this day.",
+      "morning": "Morning",
+      "afternoon": "Afternoon",
+      "night": "Evening"
+    },
+    "describeGreeting": "Hi, <b>{name}</b>. Describe what you need.",
+    "bookingAs": "Booking as <b>{name}</b> · ID {cedula}",
+    "whatsapp": {
+      "at": "at",
+      "greeting": "Hi {firstName}, I'm {senderName}.",
+      "source": "I'm contacting you through ContrataCR.",
+      "service": "Service: {description}",
+      "dateTime": "Date and time: {dateTime}",
+      "place": "Place: {place}",
+      "confirmAvailability": "Can you confirm availability?",
+      "coordinate": "Hi {firstName}, I'd like to coordinate a service through ContrataCR."
     },
     "back": "Back",
     "continue": "Continue",

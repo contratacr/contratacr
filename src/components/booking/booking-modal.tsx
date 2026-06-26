@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useRef } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
@@ -32,11 +32,6 @@ type DaySchedule = { enabled: boolean; ranges: { start: string; end: string }[] 
 type WeeklyAvailability = Record<string, DaySchedule>;
 
 const DAY_KEYS = ["dom", "lun", "mar", "mie", "jue", "vie", "sab"];
-const DAY_NAMES_SHORT = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
-const MONTH_NAMES = [
-  "Enero","Febrero","Marzo","Abril","Mayo","Junio",
-  "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre",
-];
 
 function formatDateISO(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -50,13 +45,31 @@ function sameName(a: string, b: string): boolean {
   return norm(a) === norm(b) && norm(a).length > 0;
 }
 
-function formatDateDisplay(dateStr: string): string {
+function dateLocale(locale: string): string {
+  return locale === "en" ? "en-US" : "es-CR";
+}
+
+function formatDateDisplay(dateStr: string, locale: string): string {
   const [y, m, d] = dateStr.split("-").map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString("es-CR", {
+  return new Date(y, m - 1, d).toLocaleDateString(dateLocale(locale), {
     weekday: "long",
     day: "numeric",
     month: "long",
   });
+}
+
+function calendarDayNames(locale: string): string[] {
+  const base = new Date(2026, 5, 21);
+  return Array.from({ length: 7 }, (_, i) =>
+    new Date(base.getFullYear(), base.getMonth(), base.getDate() + i)
+      .toLocaleDateString(dateLocale(locale), { weekday: "short" })
+      .replace(".", "")
+  );
+}
+
+function calendarMonthLabel(year: number, month: number, locale: string): string {
+  const label = new Date(year, month, 1).toLocaleDateString(dateLocale(locale), { month: "long", year: "numeric" });
+  return label.charAt(0).toUpperCase() + label.slice(1);
 }
 
 function generateSlots(ranges: { start: string; end: string }[]): string[] {
@@ -232,32 +245,34 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
 
   useEffect(() => {
     if (!open) return;
-    setStep("calendar");
-    // Reset the picked service so a NEW booking re-asks which profession (for a
-    // multi-profession pro) instead of locking onto the previous booking's choice.
-    // The modal stays MOUNTED between bookings, so without this the 2nd booking skipped
-    // the service-selection step until a full page refresh (re-seeds the same way the
-    // initial state does: a category context wins, a single-profession pro auto-picks,
-    // a multi-profession pro with no context → null → re-prompt).
-    setPickedCategory(initialCategoryId ?? (proProfessions.length === 1 ? proProfessions[0] : null));
-    setSelectedDate(initialDate ?? "");
-    setSelectedTime(initialTime ?? "");
-    if (initialDate) {
-      const [iy, im] = initialDate.split("-").map(Number);
-      setCurrentYear(iy);
-      setCurrentMonth(im - 1);
-    }
-    setDescription("");
-    setWaLink("");
-    setNeedsProfile(false);
-    setProfileError(null);
-    setAvailabilityPrivate(false);
-    setForSomeoneElse(false);
-    setBenName(""); setBenDob("");
-    setSelfDobInput(""); setDobEditing(false); setSelfDob(null); setSubmitError(null); setNoCedula(false);
-    // Reset the on-file identity so the DB is the authoritative source each open —
-    // a social-login account with no cédula must always be (re)prompted.
-    setProfileCedula(""); setProfilePhone(""); setProfileLoaded(false); setHasStoredCedula(false);
+    queueMicrotask(() => {
+      setStep("calendar");
+      // Reset the picked service so a NEW booking re-asks which profession (for a
+      // multi-profession pro) instead of locking onto the previous booking's choice.
+      // The modal stays MOUNTED between bookings, so without this the 2nd booking skipped
+      // the service-selection step until a full page refresh (re-seeds the same way the
+      // initial state does: a category context wins, a single-profession pro auto-picks,
+      // a multi-profession pro with no context → null → re-prompt).
+      setPickedCategory(initialCategoryId ?? (proProfessions.length === 1 ? proProfessions[0] : null));
+      setSelectedDate(initialDate ?? "");
+      setSelectedTime(initialTime ?? "");
+      if (initialDate) {
+        const [iy, im] = initialDate.split("-").map(Number);
+        setCurrentYear(iy);
+        setCurrentMonth(im - 1);
+      }
+      setDescription("");
+      setWaLink("");
+      setNeedsProfile(false);
+      setProfileError(null);
+      setAvailabilityPrivate(false);
+      setForSomeoneElse(false);
+      setBenName(""); setBenDob("");
+      setSelfDobInput(""); setDobEditing(false); setSelfDob(null); setSubmitError(null); setNoCedula(false);
+      // Reset the on-file identity so the DB is the authoritative source each open —
+      // a social-login account with no cédula must always be (re)prompted.
+      setProfileCedula(""); setProfilePhone(""); setProfileLoaded(false); setHasStoredCedula(false);
+    });
 
     const supabase = createClient();
     Promise.all([
@@ -331,7 +346,9 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   // not health, force it back to "para mí" so a multi-profession pro who switches to a
   // non-health service never carries a stale beneficiary selection.
   useEffect(() => {
-    if (!proIsHealth) { setForSomeoneElse(false); setBenName(""); setBenDob(""); }
+    if (!proIsHealth) {
+      queueMicrotask(() => { setForSomeoneElse(false); setBenName(""); setBenDob(""); });
+    }
   }, [proIsHealth]);
 
   // Live checks for the client's own ID (guest/needs-cédula flows):
@@ -343,12 +360,12 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     // The cédula changed → drop the previously auto-filled official NAME so switching to
     // a different/longer ID never keeps a stale name. The saved DOB is account-bound (not
     // cédula-bound) and the padrón has no birth date, so we never touch `selfDob` here.
-    setSelfCedulaName(null);
-    if (!isValidId(clean)) { setSelfCedulaLoading(false); setCedulaTaken(false); return; }
+    queueMicrotask(() => setSelfCedulaName(null));
+    if (!isValidId(clean)) { queueMicrotask(() => { setSelfCedulaLoading(false); setCedulaTaken(false); }); return; }
     const isCedula = detectIdType(clean) === "cedula";
-    if (!isCedula) { setSelfCedulaName(null); setSelfCedulaLoading(false); }
+    if (!isCedula) { queueMicrotask(() => { setSelfCedulaName(null); setSelfCedulaLoading(false); }); }
     let active = true;
-    if (isCedula) setSelfCedulaLoading(true);
+    if (isCedula) queueMicrotask(() => setSelfCedulaLoading(true));
     const t = setTimeout(async () => {
       // Already-registered check first (the message that must show up front).
       let taken = false;
@@ -496,7 +513,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
           slotLocationId: initialLocationId ?? null,
           slotLocationLabel: initialLocationLabel ?? null,
           preferredDateText: selectedDate
-            ? `${formatDateDisplay(selectedDate)}${selectedTime ? ` a las ${selectedTime}` : ""}`
+            ? `${formatDateDisplay(selectedDate, locale)}${selectedTime ? ` ${t("whatsapp.at")} ${selectedTime}` : ""}`
             : null,
           // Booking for someone else (a health-only DEPENDENT). We collect ONLY the
           // beneficiary's name + DOB — no cédula, no phone (the requester is the contact
@@ -521,18 +538,18 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
       const firstName = professional.fullName.split(" ")[0];
       const senderName = submitName.trim() || "un cliente";
       const dateStr = selectedDate
-        ? `${formatDateDisplay(selectedDate)}${selectedTime ? ` a las ${selectedTime}` : ""}`
+        ? `${formatDateDisplay(selectedDate, locale)}${selectedTime ? ` ${t("whatsapp.at")} ${selectedTime}` : ""}`
         : null;
 
       const message = [
-        `Hola ${firstName}, soy ${senderName}.`,
-        `Te contacto por medio de ContrataCR.`,
+        t("whatsapp.greeting", { firstName, senderName }),
+        t("whatsapp.source"),
         ``,
-        description ? `Servicio: ${description}` : null,
-        dateStr ? `Fecha y hora: ${dateStr}` : null,
-        initialLocationLabel ? `Lugar: ${initialLocationLabel}` : null,
+        description ? t("whatsapp.service", { description }) : null,
+        dateStr ? t("whatsapp.dateTime", { dateTime: dateStr }) : null,
+        initialLocationLabel ? t("whatsapp.place", { place: initialLocationLabel }) : null,
         ``,
-        `¿Me puedes confirmar disponibilidad?`,
+        t("whatsapp.confirmAvailability"),
       ]
         .filter((l) => l !== null)
         .join("\n");
@@ -715,10 +732,12 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
       return (
         <div className="rounded-lg bg-[#f0fdf4] border border-[#bbf7d0] px-3 py-2 flex items-center justify-between gap-2">
           <p className="text-xs text-[#15803d] break-words">
-            Fecha de nacimiento: <strong>{formatDobDMY(selfDob)}</strong>{computeAge(selfDob) ? ` · ${formatAge(computeAge(selfDob))}` : ""}
+            {computeAge(selfDob)
+              ? t("dobSavedWithAge", { dob: formatDobDMY(selfDob), age: formatAge(computeAge(selfDob), locale) })
+              : t("dobSaved", { dob: formatDobDMY(selfDob) })}
           </p>
           <button type="button" onClick={() => { setSelfDobInput(selfDob); setDobEditing(true); }} className="shrink-0 text-[11px] font-semibold text-[#009FD9] hover:underline">
-            Corregir
+            {t("correct")}
           </button>
         </div>
       );
@@ -726,14 +745,14 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     return (
       <div>
         <label className="text-sm font-medium text-[#374151] block mb-1.5">
-          Fecha de nacimiento <span className="text-red-500">*</span>
+          {t("forWho.dobLabel")} <span className="text-red-500">*</span>
         </label>
         <DateOfBirthPicker
           value={selfDobInput}
           max={new Date().toISOString().slice(0, 10)}
           onChange={setSelfDobInput}
         />
-        <p className="text-[11px] text-[#9ca3af] mt-1.5">La pedimos solo para servicios de salud. La guardamos para no volver a pedirla.</p>
+        <p className="text-[11px] text-[#9ca3af] mt-1.5">{t("dobHealthHint")}</p>
       </div>
     );
   }
@@ -804,11 +823,11 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     }
     return (
       <div>
-        <label className="text-sm font-medium text-[#374151] block mb-1.5">Nombre completo <span className="text-red-500">*</span></label>
+        <label className="text-sm font-medium text-[#374151] block mb-1.5">{t("contact.name")} <span className="text-red-500">*</span></label>
         <input
           type="text"
           className="w-full h-10 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
-          placeholder="Tu nombre completo"
+          placeholder={t("contact.namePlaceholder")}
           value={clientName}
           onChange={(e) => setClientName(e.target.value)}
         />
@@ -865,8 +884,8 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     (the search query from `is_verified`, kept in sync on revoke/reject; the
                     public profile from `verificationStatus === "verified"`), so it's authoritative. */}
                 {professional.isVerified && (
-                  <span title="Identidad verificada" className="mt-1.5 inline-flex w-fit items-center rounded-full bg-[#009FD9] px-2 py-0.5 text-[10px] font-semibold text-white">
-                    Verificado
+                  <span title={t("verifiedTitle")} className="mt-1.5 inline-flex w-fit items-center rounded-full bg-[#009FD9] px-2 py-0.5 text-[10px] font-semibold text-white">
+                    {t("verified")}
                   </span>
                 )}
                 <p className="text-sm text-white/70 mt-1 md:text-center">{headerProfession}</p>
@@ -883,10 +902,10 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
               )}
               {professional.hourlyRate && (
                 <div className="text-center">
-                  <span className="text-xs text-white/60">Desde</span>
+                  <span className="text-xs text-white/60">{t("from")}</span>
                   <p className="font-bold text-white text-lg">
                     ₡{professional.hourlyRate.toLocaleString("es-CR")}
-                    <span className="text-xs font-normal text-white/60">/hora</span>
+                    <span className="text-xs font-normal text-white/60">{locale === "en" ? " /hour" : " /hora"}</span>
                   </p>
                 </div>
               )}
@@ -895,15 +914,11 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
             {/* What happens next — genuinely useful to the client at booking time
                 (replaces the generic "sin comisiones" trust chips). */}
             <div className="hidden md:flex flex-col gap-2.5 mt-auto pt-5">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-white/50">Qué sigue</p>
-              {[
-                "Eliges fecha y hora y envías tu solicitud.",
-                "Se abre WhatsApp con el profesional para confirmar.",
-                "Coordinan precio y detalles directamente, sin intermediarios.",
-              ].map((text, i) => (
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-white/50">{t("next.title")}</p>
+              {(["step1", "step2", "step3"] as const).map((key, i) => (
                 <div key={i} className="flex items-start gap-2 text-white/70 text-xs">
                   <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-white/15 text-[10px] font-semibold text-white">{i + 1}</span>
-                  <span className="leading-snug">{text}</span>
+                  <span className="leading-snug">{t(`next.${key}`)}</span>
                 </div>
               ))}
             </div>
@@ -932,7 +947,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                 )}
               </div>
               <Dialog.Close asChild>
-                <button className="p-2 rounded-xl text-[#9ca3af] hover:bg-[#f3f4f6] hover:text-[#374151] transition-colors" aria-label="Cerrar">
+                <button className="p-2 rounded-xl text-[#9ca3af] hover:bg-[#f3f4f6] hover:text-[#374151] transition-colors" aria-label={t("close")}>
                   <X className="h-5 w-5" />
                 </button>
               </Dialog.Close>
@@ -948,8 +963,8 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                       (so we know whether it's health → date of birth). */}
                   {needsProfessionPick && (
                     <div className="flex flex-col gap-2.5">
-                      <h3 className="text-lg font-semibold text-[#111827] mb-0.5">¿Qué servicio necesitas?</h3>
-                      <p className="text-sm text-[#6b7280] mb-1.5">Elige el servicio que buscas para continuar.</p>
+                      <h3 className="text-lg font-semibold text-[#111827] mb-0.5">{t("servicePick.title")}</h3>
+                      <p className="text-sm text-[#6b7280] mb-1.5">{t("servicePick.body")}</p>
                       {proProfessions.map((cat) => (
                         <button
                           key={cat}
@@ -964,10 +979,10 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     </div>
                   )}
                   {!needsProfessionPick && (<>
-                  <h3 className="text-lg font-semibold text-[#111827] mb-1">Elige fecha y hora</h3>
+                  <h3 className="text-lg font-semibold text-[#111827] mb-1">{t("calendar.title")}</h3>
                   <p className="text-sm text-[#6b7280] mb-4">
-                    {initialLocationLabel ? <>En <span className="font-semibold text-[#374151]">{initialLocationLabel}</span>. </> : null}
-                    Los días con punto azul tienen citas.
+                    {initialLocationLabel ? <>{t.rich("calendar.locationPrefix", { location: initialLocationLabel, b: (c) => <span className="font-semibold text-[#374151]">{c}</span> })} </> : null}
+                    {t("calendar.availabilityHint")}
                   </p>
 
                   {!availabilityLoaded ? (
@@ -980,19 +995,19 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                         <Lock className="h-5 w-5 text-[#009FD9]" />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-[#111827]">Disponibilidad privada</p>
+                        <p className="text-sm font-semibold text-[#111827]">{t("calendar.privateTitle")}</p>
                         <p className="text-xs text-[#9ca3af] mt-1 max-w-xs">
-                          Este profesional coordina sus horarios directamente. Escríbele por WhatsApp para agendar.
+                          {t("calendar.privateBody")}
                         </p>
                       </div>
                       <a
-                        href={getWhatsAppLink(professional.whatsapp, `Hola ${professional.fullName.split(" ")[0]}, me gustaría coordinar un servicio por ContrataCR.`)}
+                        href={getWhatsAppLink(professional.whatsapp, t("whatsapp.coordinate", { firstName: professional.fullName.split(" ")[0] }))}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#1ebe5d] text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
                       >
                         <WhatsAppIcon className="h-4 w-4" />
-                        Coordinar por WhatsApp
+                        {t("calendar.whatsapp")}
                       </a>
                     </div>
                   ) : !hasAnyAvailability ? (
@@ -1001,17 +1016,17 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                         <WhatsAppIcon className="h-5 w-5 text-[#25D366]" />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-[#111827]">Este profesional coordina por WhatsApp</p>
-                        <p className="text-xs text-[#9ca3af] mt-1 max-w-xs">Aún no publica horarios en línea. Escríbele para coordinar tu servicio.</p>
+                        <p className="text-sm font-semibold text-[#111827]">{t("calendar.whatsappOnlyTitle")}</p>
+                        <p className="text-xs text-[#9ca3af] mt-1 max-w-xs">{t("calendar.whatsappOnlyBody")}</p>
                       </div>
                       <a
-                        href={getWhatsAppLink(professional.whatsapp, `Hola ${professional.fullName.split(" ")[0]}, me gustaría coordinar un servicio por ContrataCR.`)}
+                        href={getWhatsAppLink(professional.whatsapp, t("whatsapp.coordinate", { firstName: professional.fullName.split(" ")[0] }))}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 bg-[#25D366] hover:bg-[#1ebe5d] text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
                       >
                         <WhatsAppIcon className="h-4 w-4" />
-                        Coordinar por WhatsApp
+                        {t("calendar.whatsapp")}
                       </a>
                     </div>
                   ) : (
@@ -1029,7 +1044,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                             <ChevronLeft className="h-4 w-4" />
                           </button>
                           <span className="text-sm font-semibold text-[#111827] capitalize">
-                            {MONTH_NAMES[currentMonth]} {currentYear}
+                            {calendarMonthLabel(currentYear, currentMonth, locale)}
                           </span>
                           <button
                             onClick={nextMonth}
@@ -1042,7 +1057,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
 
                         {/* Day headers */}
                         <div className="grid grid-cols-7 mb-1">
-                          {DAY_NAMES_SHORT.map((d) => (
+                          {calendarDayNames(locale).map((d) => (
                             <div key={d} className="text-center text-xs font-medium text-[#9ca3af] py-1">{d}</div>
                           ))}
                         </div>
@@ -1071,7 +1086,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                                 )}
                               >
                                 {isToday && !isSelected && (
-                                  <span className="absolute top-1 left-1/2 -translate-x-1/2 text-[8px] font-bold uppercase tracking-wide leading-none text-[#009FD9]">Hoy</span>
+                                  <span className="absolute top-1 left-1/2 -translate-x-1/2 text-[8px] font-bold uppercase tracking-wide leading-none text-[#009FD9]">{t("calendar.today")}</span>
                                 )}
                                 <span className={cn(isBlocked && "line-through opacity-50")}>{date.getDate()}</span>
                                 {available && !isSelected && (
@@ -1088,17 +1103,17 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                         {!selectedDate ? (
                           <div className="flex h-full min-h-[180px] flex-col items-center justify-center rounded-2xl border border-[#e5e7eb] bg-[#f9fafb] px-4 text-center">
                             <CalendarCheck className="h-7 w-7 text-[#cbd5e1]" />
-                            <p className="mt-2 text-sm text-[#9ca3af]">Elige un día disponible para ver las horas.</p>
+                            <p className="mt-2 text-sm text-[#9ca3af]">{t("calendar.pickDay")}</p>
                           </div>
                         ) : slots.length === 0 ? (
-                          <p className="text-sm text-[#9ca3af] text-center py-6">Sin horarios disponibles para este día.</p>
+                          <p className="text-sm text-[#9ca3af] text-center py-6">{t("calendar.noSlots")}</p>
                         ) : (
                           <>
-                            <p className="mb-3 text-sm font-semibold text-[#111827] capitalize">{formatDateDisplay(selectedDate)}</p>
+                            <p className="mb-3 text-sm font-semibold text-[#111827] capitalize">{formatDateDisplay(selectedDate, locale)}</p>
                             {[
-                              { key: "manana", label: "Mañana", Icon: Sun, items: slots.filter((s) => parseInt(s, 10) < 12) },
-                              { key: "tarde", label: "Tarde", Icon: Sunset, items: slots.filter((s) => { const h = parseInt(s, 10); return h >= 12 && h < 18; }) },
-                              { key: "noche", label: "Noche", Icon: Moon, items: slots.filter((s) => parseInt(s, 10) >= 18) },
+                              { key: "morning", label: t("calendar.morning"), Icon: Sun, items: slots.filter((s) => parseInt(s, 10) < 12) },
+                              { key: "afternoon", label: t("calendar.afternoon"), Icon: Sunset, items: slots.filter((s) => { const h = parseInt(s, 10); return h >= 12 && h < 18; }) },
+                              { key: "night", label: t("calendar.night"), Icon: Moon, items: slots.filter((s) => parseInt(s, 10) >= 18) },
                             ].filter((f) => f.items.length > 0).map((f) => (
                               <div key={f.key} className="mb-4 last:mb-0">
                                 <div className="mb-2 flex items-center gap-1.5 text-[13px] font-semibold text-[#374151]">
@@ -1138,12 +1153,12 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     <h3 className="text-lg font-semibold text-[#111827]">{t("step4.title")}</h3>
                     {selectedDate && (
                       <p className="text-sm text-[#009FD9] font-medium mt-1">
-                        📅 {formatDateDisplay(selectedDate)}{selectedTime ? ` · ${selectedTime}` : ""}
+                        📅 {formatDateDisplay(selectedDate, locale)}{selectedTime ? ` · ${selectedTime}` : ""}
                       </p>
                     )}
                     {isLoggedIn && clientName && (
                       <p className="text-sm text-[#6b7280] mt-1">
-                        Hola, <span className="font-medium text-[#374151]">{clientName.split(" ")[0]}</span>. Describe lo que necesitas.
+                        {t.rich("describeGreeting", { name: clientName.split(" ")[0], b: (c) => <span className="font-medium text-[#374151]">{c}</span> })}
                       </p>
                     )}
                     {/* Stored identity (logged-in + already has cédula) — shown, not re-asked.
@@ -1151,7 +1166,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                         below so it carries the auto-filled/locked + "Corregir" treatment. */}
                     {isLoggedIn && profileCedula && (
                       <div className="text-xs text-[#15803d] mt-1 leading-relaxed">
-                        <span>Reservas como <strong>{clientName || "tú"}</strong> · cédula {profileCedula}</span>
+                        <span>{t.rich("bookingAs", { name: clientName || t("youLower"), cedula: profileCedula, b: (c) => <strong>{c}</strong> })}</span>
                       </div>
                     )}
                   </div>
@@ -1246,7 +1261,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
               {/* STEP: contact (guests) */}
               {step === "contact" && (
                 <div className="flex flex-col gap-5">
-                  <h3 className="text-lg font-semibold text-[#111827]">Tu información de contacto</h3>
+                  <h3 className="text-lg font-semibold text-[#111827]">{t("contact.title")}</h3>
                   {/* IDENTIFICATION FIRST → the name auto-fills from it below. */}
                   {!noCedula && (
                     <CedulaInput
@@ -1278,17 +1293,17 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     />
                     {guestEmailCheck.taken && (
                       <p className="text-xs text-red-500 mt-1">
-                        Este correo ya tiene una cuenta. Inicia sesión para continuar.
+                        {t("contact.emailTaken")}
                       </p>
                     )}
                   </div>
                   <PhoneInput
-                    label="Teléfono de contacto"
+                    label={t("contact.phone")}
                     value={profilePhone}
                     onChange={setProfilePhone}
                   />
                   <p className="text-xs text-[#9ca3af] -mt-2">
-                    Para coordinar tu cita necesitamos tu número de WhatsApp.
+                    {t("contact.phoneHint")}
                   </p>
                   {/* HEALTH service for myself → DOB, auto-filled from the cédula above. */}
                   {proIsHealth && !forSomeoneElse && renderSelfDobField()}
@@ -1300,12 +1315,12 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                 <div className="flex flex-col gap-4">
                   <div>
                     <h3 className="text-lg font-semibold text-[#111827]">
-                      {needsProfile ? "Completa tu perfil" : "Tu número de WhatsApp"}
+                      {needsProfile ? t("completeProfileTitle") : t("whatsappNumberTitle")}
                     </h3>
                     <p className="text-sm text-[#6b7280] mt-1">
                       {needsProfile
-                        ? "Necesitamos estos datos para confirmar tu reserva."
-                        : "Para coordinar tu cita necesitamos tu número de WhatsApp. Lo guardamos en tu perfil para no volver a pedirlo."}
+                        ? t("completeProfileBody")
+                        : t("whatsappNumberBody")}
                     </p>
                   </div>
 
@@ -1353,18 +1368,18 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                       national cédula resolves, the green confirm above is the name. */}
                   {(needsProfile || needsCedula) && !selfHasAutoName && (
                     <div>
-                      <label className="text-sm font-medium text-[#374151] block mb-1.5">Nombre completo <span className="text-red-500">*</span></label>
+                      <label className="text-sm font-medium text-[#374151] block mb-1.5">{t("contact.name")} <span className="text-red-500">*</span></label>
                       <input
                         type="text"
                         className="w-full h-10 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
-                        placeholder="Tu nombre completo"
+                        placeholder={t("contact.namePlaceholder")}
                         value={clientName}
                         onChange={(e) => setClientName(e.target.value)}
                       />
                     </div>
                   )}
                   <PhoneInput
-                    label="Teléfono de contacto"
+                    label={t("contact.phone")}
                     required
                     value={profilePhone}
                     onChange={setProfilePhone}
@@ -1430,9 +1445,9 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                   <div className="flex flex-1 items-center justify-between gap-3">
                     <span className="min-w-0 truncate text-sm text-[#6b7280]">
                       {selectedDate && selectedTime ? (
-                        <span className="capitalize">{formatDateDisplay(selectedDate)} · <span className="font-semibold text-[#111827]">{selectedTime}</span></span>
+                        <span className="capitalize">{formatDateDisplay(selectedDate, locale)} · <span className="font-semibold text-[#111827]">{selectedTime}</span></span>
                       ) : (
-                        "Selecciona fecha y hora"
+                        t("calendar.selectDateTime")
                       )}
                     </span>
                     <Button

@@ -3568,3 +3568,6 @@ New i18n namespaces added this pass: `search.pagination`, extended `search.filte
 
 
 **Sprint 306 - Support ticket localization and refs.** Support tickets now store a stable topic key from the support form and render ticket subjects from locale messages when possible, with legacy Spanish/English subject fallback mapping. Support case references now use a stable SUP-XXXX-XXXX style derived from the ticket id instead of a 6-digit modulo number that could collide or look sequential. Admin/user support views no longer add an extra # before support refs.
+
+
+**Sprint 307 - English profile preview booking locale.** Fixed professional profile preview links to preserve the active locale instead of forcing /es. Booking and reschedule calendars now derive weekday/month labels and selected date text from the active locale. Booking modal sidebar/steps/contact copy and WhatsApp message pieces were moved to booking i18n keys. Pricing formatters now accept locale for /hour and Ask for price, and profile service prices prefer structured priceAmount/priceType over legacy text.

@@ -18,7 +18,7 @@ import { StarRating } from "@/components/ui/star-rating";
 import { getInitials, getWhatsAppLink, proDisplayName, cn } from "@/lib/utils";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { casoProfession, countCases } from "@/lib/services";
-import { formatPricingTier, primaryPricingLabel } from "@/lib/pricing";
+import { formatPricingTier, formatServicePrice, primaryPricingLabel } from "@/lib/pricing";
 import { languageLabel } from "@/lib/data/languages";
 import { insurerLabel } from "@/lib/data/insurers";
 import { getCantonById, getProvinceById } from "@/lib/data/cr-geography";
@@ -395,7 +395,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                 <div>
                   <span className="text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">{t("from")}</span>
                   {(() => {
-                    const label = primaryPricingLabel(professional.pricing, professional.hourlyRate);
+                    const label = primaryPricingLabel(professional.pricing, professional.hourlyRate, locale);
                     const slash = label.indexOf("/");
                     const amount = slash >= 0 ? label.slice(0, slash).trim() : label;
                     const unit = slash >= 0 ? label.slice(slash) : "";
@@ -758,10 +758,13 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                         value: (
                           <div className="space-y-3">
                             {professional.services.map((service) => (
-                              <div key={service.id}>
-                                <span className="block text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af] [overflow-wrap:anywhere]">{service.name}</span>
-                                <span className="mt-0.5 block text-[15px] font-semibold leading-snug text-[#374151] [overflow-wrap:anywhere]">{service.price || t("priceConsult")}</span>
-                              </div>
+                      <div key={service.id}>
+                        <span className="block text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af] [overflow-wrap:anywhere]">{service.name}</span>
+                        <span className="mt-0.5 block text-[15px] font-semibold leading-snug text-[#374151] [overflow-wrap:anywhere]">
+                          {formatServicePrice(service.priceAmount, service.priceType, locale)
+                            ?? (service.price ? service.price.replaceAll("/hora", locale === "en" ? " /hour" : " /hora").replaceAll("Precio a consultar", t("priceConsult")).replaceAll("Consultar precio", t("priceConsult")) : t("priceConsult"))}
+                        </span>
+                      </div>
                             ))}
                           </div>
                         ),
@@ -769,7 +772,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                     } else if (professional.pricing && professional.pricing.length > 0) {
                       facts.push({
                         key: "price", icon: <Banknote className="h-5 w-5" />, label: t("prices"),
-                        value: <div className="space-y-2">{professional.pricing.map((tier) => <div key={tier.id} className="font-semibold text-[#162543]">{formatPricingTier(tier)}</div>)}</div>,
+                        value: <div className="space-y-2">{professional.pricing.map((tier) => <div key={tier.id} className="font-semibold text-[#162543]">{formatPricingTier(tier, locale)}</div>)}</div>,
                       });
                     } else if (rate) {
                       facts.push({ key: "rate", icon: <Banknote className="h-5 w-5" />, label: t("baseRate"), value: rate, caption: t("baseRateCaption") });

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -23,11 +23,6 @@ type DaySchedule = { enabled: boolean; ranges: { start: string; end: string }[] 
 type WeeklyAvailability = Record<string, DaySchedule>;
 
 const DAY_KEYS = ["dom", "lun", "mar", "mie", "jue", "vie", "sab"];
-const DAY_NAMES_SHORT = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
-const MONTH_NAMES = [
-  "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-  "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
-];
 
 function formatDateISO(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -60,6 +55,21 @@ function to12h(time: string): string {
   const h12 = h % 12 === 0 ? 12 : h % 12;
   return `${h12}:${String(m).padStart(2, "0")} ${ap}`;
 }
+function dateLocale(locale: string): string {
+  return locale === "en" ? "en-US" : "es-CR";
+}
+function calendarDayNames(locale: string): string[] {
+  const base = new Date(2026, 5, 21);
+  return Array.from({ length: 7 }, (_, i) =>
+    new Date(base.getFullYear(), base.getMonth(), base.getDate() + i)
+      .toLocaleDateString(dateLocale(locale), { weekday: "short" })
+      .replace(".", "")
+  );
+}
+function calendarMonthLabel(year: number, month: number, locale: string): string {
+  const label = new Date(year, month, 1).toLocaleDateString(dateLocale(locale), { month: "long", year: "numeric" });
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
 
 interface RescheduleModalProps {
   professionalId: string;
@@ -71,6 +81,7 @@ interface RescheduleModalProps {
 
 export function RescheduleModal({ professionalId, bookingId, currentWhen, onClose, onDone }: RescheduleModalProps) {
   const t = useTranslations("reschedule");
+  const locale = useLocale();
   const today = useMemo(() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; }, []);
 
   const [availability, setAvailability] = useState<WeeklyAvailability>({});
@@ -210,7 +221,7 @@ export function RescheduleModal({ professionalId, bookingId, currentWhen, onClos
                 <button onClick={prevMonth} disabled={!canGoPrev} className="p-1.5 rounded-lg text-[#6b7280] hover:bg-[#f3f4f6] disabled:opacity-30 disabled:hover:bg-transparent transition-colors">
                   <ChevronLeft className="h-5 w-5" />
                 </button>
-                <span className="text-sm font-semibold text-[#111827]">{MONTH_NAMES[currentMonth]} {currentYear}</span>
+                <span className="text-sm font-semibold text-[#111827]">{calendarMonthLabel(currentYear, currentMonth, locale)}</span>
                 <button onClick={nextMonth} disabled={!canGoNext} className="p-1.5 rounded-lg text-[#6b7280] hover:bg-[#f3f4f6] disabled:opacity-30 disabled:hover:bg-transparent transition-colors">
                   <ChevronRight className="h-5 w-5" />
                 </button>
@@ -218,7 +229,7 @@ export function RescheduleModal({ professionalId, bookingId, currentWhen, onClos
 
               {/* Day grid */}
               <div className="grid grid-cols-7 gap-1 mb-1">
-                {DAY_NAMES_SHORT.map((d) => (
+                {calendarDayNames(locale).map((d) => (
                   <div key={d} className="text-center text-[10px] font-semibold text-[#9ca3af] py-1">{d}</div>
                 ))}
               </div>

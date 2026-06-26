@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { isSigningOut } from "@/lib/auth/sign-out";
 import { useSearchParams } from "next/navigation";
 import {
@@ -102,6 +102,7 @@ export default function DashboardPage() {
   const searchParams = useSearchParams();
   const t = useTranslations("proPanel");
   const tc = useTranslations("clientActivity");
+  const locale = useLocale();
   const activeTab = (searchParams.get("tab") as Tab) ?? "profile";
 
   const [pro, setPro] = useState<ProData | null>(null);
@@ -465,7 +466,7 @@ export default function DashboardPage() {
                             <h2 className="min-w-0 truncate text-lg font-semibold text-[#111827]">{activeTab === "services" ? t("servicesHeading") : t(`tabs.${activeTab}`)}</h2>
                             {activeTab === "profile" && mode === "offer" && pro?.slug && (
                               <a
-                                href={`/es/profesionales/${pro.slug}?preview=1`}
+                                href={`/${locale}/profesionales/${pro.slug}?preview=1`}
                                 aria-label={t("viewPublicProfile")}
                                 title={t("viewPublicProfile")}
                                 className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[#6b7280] transition-colors hover:bg-[#f3f4f6] hover:text-[#009FD9]"

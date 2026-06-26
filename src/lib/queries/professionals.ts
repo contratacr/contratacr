@@ -90,6 +90,8 @@ export type ProService = {
   name: string;
   description?: string;
   price?: string;
+  priceAmount?: number | null;
+  priceType?: import("@/lib/pricing").PricingType | null;
   category?: string;
 };
 
@@ -523,7 +525,7 @@ export async function getProfessionalBySlug(
         for (const r of (rj ?? []) as { id: string; job_title?: string | null }[]) titleMap[r.id] = r.job_title ?? null;
       } catch { /* column not migrated yet */ }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      /* eslint-disable @typescript-eslint/no-explicit-any */
       const reviews: Review[] = ((pro.reviews as any[]) ?? []).map((r: any) => ({
         id: r.id,
         jobTitle: titleMap[r.id] ?? null,
@@ -587,6 +589,7 @@ export async function getProfessionalBySlug(
         contactEmail,
         socialLinks,
       };
+      /* eslint-enable @typescript-eslint/no-explicit-any */
     } catch (err) {
       console.error("[getProfessionalBySlug] Supabase error:", err);
     }

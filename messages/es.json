@@ -840,14 +840,68 @@
     "contact": {
       "title": "Tu información de contacto",
       "name": "Nombre completo",
-      "namePlaceholder": "Tu nombre"
+      "namePlaceholder": "Tu nombre completo",
+      "phone": "Teléfono de contacto",
+      "phoneHint": "Para coordinar tu cita necesitamos tu número de WhatsApp.",
+      "emailTaken": "Este correo ya tiene una cuenta. Inicia sesión para continuar."
     },
+    "completeProfileTitle": "Completa tu perfil",
+    "completeProfileBody": "Necesitamos estos datos para confirmar tu reserva.",
+    "whatsappNumberTitle": "Tu número de WhatsApp",
+    "whatsappNumberBody": "Para coordinar tu cita necesitamos tu número de WhatsApp. Lo guardamos en tu perfil para no volver a pedirlo.",
     "success": {
       "title": "¡Solicitud confirmada!",
       "desc": "Tu solicitud quedó confirmada. Coordina los detalles directamente por WhatsApp con el profesional.",
       "whatsapp": "Continuar por WhatsApp",
       "viewRequest": "Ver mi solicitud",
       "close": "Listo"
+    },
+    "verified": "Verificado",
+    "verifiedTitle": "Identidad verificada",
+    "from": "Desde",
+    "youLower": "tú",
+    "correct": "Corregir",
+    "dobSaved": "Fecha de nacimiento: {dob}",
+    "dobSavedWithAge": "Fecha de nacimiento: {dob} · {age}",
+    "dobHealthHint": "La pedimos solo para servicios de salud. La guardamos para no volver a pedirla.",
+    "servicePick": {
+      "title": "¿Qué servicio necesitas?",
+      "body": "Elige el servicio que buscas para continuar."
+    },
+    "next": {
+      "title": "Qué sigue",
+      "step1": "Eliges fecha y hora y envías tu solicitud.",
+      "step2": "Se abre WhatsApp con el profesional para confirmar.",
+      "step3": "Coordinan precio y detalles directamente, sin intermediarios."
+    },
+    "calendar": {
+      "title": "Elige fecha y hora",
+      "locationPrefix": "En <b>{location}</b>.",
+      "availabilityHint": "Los días con punto azul tienen citas.",
+      "privateTitle": "Disponibilidad privada",
+      "privateBody": "Este profesional coordina sus horarios directamente. Escríbele por WhatsApp para agendar.",
+      "whatsapp": "Coordinar por WhatsApp",
+      "whatsappOnlyTitle": "Este profesional coordina por WhatsApp",
+      "whatsappOnlyBody": "Aún no publica horarios en línea. Escríbele para coordinar tu servicio.",
+      "today": "Hoy",
+      "selectDateTime": "Selecciona fecha y hora",
+      "pickDay": "Elige un día disponible para ver las horas.",
+      "noSlots": "Sin horarios disponibles para este día.",
+      "morning": "Mañana",
+      "afternoon": "Tarde",
+      "night": "Noche"
+    },
+    "describeGreeting": "Hola, <b>{name}</b>. Describe lo que necesitas.",
+    "bookingAs": "Reservas como <b>{name}</b> · cédula {cedula}",
+    "whatsapp": {
+      "at": "a las",
+      "greeting": "Hola {firstName}, soy {senderName}.",
+      "source": "Te contacto por medio de ContrataCR.",
+      "service": "Servicio: {description}",
+      "dateTime": "Fecha y hora: {dateTime}",
+      "place": "Lugar: {place}",
+      "confirmAvailability": "¿Me puedes confirmar disponibilidad?",
+      "coordinate": "Hola {firstName}, me gustaría coordinar un servicio por ContrataCR."
     },
     "back": "Atrás",
     "continue": "Continuar",

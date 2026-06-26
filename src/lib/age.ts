@@ -28,12 +28,13 @@ export function computeAge(dobISO: string, ref: Date = new Date()): AgeParts | n
   return { years, months, days };
 }
 
-export function formatAge(parts: AgeParts | null): string {
+export function formatAge(parts: AgeParts | null, locale: string = "es"): string {
   if (!parts) return "";
   const bits: string[] = [];
-  if (parts.years) bits.push(`${parts.years} ${parts.years === 1 ? "año" : "años"}`);
-  if (parts.months) bits.push(`${parts.months} ${parts.months === 1 ? "mes" : "meses"}`);
-  if (parts.days && !parts.years) bits.push(`${parts.days} ${parts.days === 1 ? "día" : "días"}`);
+  const en = locale.startsWith("en");
+  if (parts.years) bits.push(`${parts.years} ${parts.years === 1 ? (en ? "year" : "año") : (en ? "years" : "años")}`);
+  if (parts.months) bits.push(`${parts.months} ${parts.months === 1 ? (en ? "month" : "mes") : (en ? "months" : "meses")}`);
+  if (parts.days && !parts.years) bits.push(`${parts.days} ${parts.days === 1 ? (en ? "day" : "día") : (en ? "days" : "días")}`);
   return bits.join(", ");
 }
 

@@ -176,7 +176,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         .map((id) => tCat(id as Parameters<typeof tCat>[0])),
       verified: pro.verificationStatus === "verified",
       hourlyRate: pro.hourlyRate ?? null,
-      priceLabel: primaryPricingLabel(pro.pricing, pro.hourlyRate),
+      priceLabel: primaryPricingLabel(pro.pricing, pro.hourlyRate, locale),
       provinceName: pro.provinceName,
     };
     const places = (pro.workplaces ?? []).filter((w) => typeof w.lat === "number" && typeof w.lng === "number");
