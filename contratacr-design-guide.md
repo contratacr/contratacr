@@ -1794,3 +1794,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Responsive navbar resources.** Resource links in the phone navbar drawer should use subtle row icons plus labels and chevrons, matching the Categorias row. Keep icons muted gray except the main category entry, which can use the app blue.
 
 > **Single secondary card actions.** Do not show an Acciones overflow menu when a dashboard card has only one secondary action. Render the action directly. For Mis publicaciones, active publications should offer Cancelar solicitud, while Eliminar is reserved for non-active publications.
+
+> **Oportunidades compact metadata.** In collapsed Oportunidades cards, keep the core metadata trio (service/category, location, timeline) in a single 3-column row even on phone. Keep budget and created-at separate so the row remains scannable.

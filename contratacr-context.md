@@ -3351,3 +3351,5 @@ New i18n namespaces added this pass: `search.pagination`, extended `search.filte
 **Sprint 253 - Responsive navbar resources now use icons.** landing-navbar.tsx: added lightweight lucide icons to each Resources row in the phone drawer (Como funciona, Centro de ayuda, Consejos para profesionales, Soporte) and aligned them with the existing Categorias row using icon + label + chevron. No route, label, desktop, or i18n changes.
 
 **Sprint 254 - Mis publicaciones single action shown directly.** client-activity.tsx: removed the redundant Cancelar solicitud + Eliminar pairing for active publications by reserving Eliminar for non-active states. When a publication has only one secondary action, it now renders as a direct button instead of hiding inside the Acciones menu. No i18n changes.
+
+**Sprint 255 - Oportunidades mobile metadata stays in one row.** proposals-tab.tsx: changed the collapsed Oportunidades card metadata so service/category, location, and timeline render in a 3-column row on phone instead of each taking a full line. Budget remains separate and created-at stays below to avoid a fourth cramped column. No i18n changes.

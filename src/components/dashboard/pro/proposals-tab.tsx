@@ -440,24 +440,26 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                               </div>
                               <div className="mt-2 flex flex-col items-start gap-1.5 text-[13px]">
                                 <span className="inline-flex max-w-full items-center rounded-xl border border-[#ccecf8] bg-[#EBF5FB] px-3 py-2 font-bold text-[#0089bb] [overflow-wrap:anywhere]">{budgetTextFor(project)}</span>
-                                {project.categories?.name && (
-                                  <span className="inline-flex w-full max-w-full items-center gap-2 text-[#374151]">
-                                    <FolderOpen className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                                    <span className="truncate font-medium">{project.categories.name}</span>
-                                  </span>
-                                )}
-                                {zona && (
-                                  <span className="inline-flex w-full max-w-full items-center gap-2 text-[#6b7280]">
-                                    <MapPin className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                                    <span className="truncate">{zona}</span>
-                                  </span>
-                                )}
-                                {project.timeline && (
-                                  <span className="inline-flex w-full max-w-full items-center gap-2 text-[#6b7280]">
-                                    <CalendarClock className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                                    <span className="truncate">{project.timeline}</span>
-                                  </span>
-                                )}
+                                <div className="grid w-full min-w-0 grid-cols-3 gap-2">
+                                  {project.categories?.name && (
+                                    <span className="inline-flex min-w-0 items-center gap-1.5 text-[#374151]">
+                                      <FolderOpen className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                                      <span className="truncate font-medium">{project.categories.name}</span>
+                                    </span>
+                                  )}
+                                  {zona && (
+                                    <span className="inline-flex min-w-0 items-center gap-1.5 text-[#6b7280]">
+                                      <MapPin className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                                      <span className="truncate">{zona}</span>
+                                    </span>
+                                  )}
+                                  {project.timeline && (
+                                    <span className="inline-flex min-w-0 items-center gap-1.5 text-[#6b7280]">
+                                      <CalendarClock className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                                      <span className="truncate">{project.timeline}</span>
+                                    </span>
+                                  )}
+                                </div>
                                 <span className="inline-flex w-full max-w-full items-center gap-2 text-[#9ca3af]">
                                   <Clock className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
                                   <span className="truncate">{relativeTime(project.created_at)}</span>
