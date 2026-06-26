@@ -226,16 +226,24 @@ function editDistance(a: string, b: string): number {
 }
 
 type CatMatch = (typeof ALL_CATEGORIES)[number];
-function matchCategories(query: string, limit = 8): CatMatch[] {
+function matchCategories(query: string, limit = 8, locale?: string): CatMatch[] {
   if (!query.trim()) return [];
+  const needle = normalizeText(query.trim());
+  const localized = ALL_CATEGORIES
+    .filter((item) => {
+      const label = normalizeText(getCategoryLabel(item.id, locale));
+      const group = normalizeText(getCategoryGroupLabel(item.groupId, locale));
+      return label.includes(needle) || group.includes(needle);
+    })
+    .slice(0, limit);
+  if (localized.length) return localized;
   const direct = searchCategories(query);
   if (direct.length) return direct.slice(0, limit);
-  const q = normalizeText(query.trim());
-  const tol = q.length > 6 ? 2 : 1;
+  const tol = needle.length > 6 ? 2 : 1;
   return ALL_CATEGORIES
     .map((item) => {
-      const words = normalizeText(item.label).split(/\s+/);
-      const best = Math.min(...words.map((w) => editDistance(w, q)));
+      const words = normalizeText(`${getCategoryLabel(item.id, locale)} ${item.label}`).split(/\s+/);
+      const best = Math.min(...words.map((w) => editDistance(w, needle)));
       return { item, best };
     })
     .filter((x) => x.best <= tol)
@@ -276,7 +284,7 @@ function CategoryAutocomplete({
   const inputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const blurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const suggestions = useMemo(() => matchCategories(q), [q]);
+  const suggestions = useMemo(() => matchCategories(q, 8, locale), [q, locale]);
 
   useEffect(() => {
     if (autoFocus) {
@@ -390,7 +398,7 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
   const [active, setActive] = useState(0);
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const matches = useMemo(() => matchCategories(q, 18), [q]);
+  const matches = useMemo(() => matchCategories(q, 18, locale), [q, locale]);
   const filtering = q.trim().length > 0;
   const selectedGroup = CATEGORY_GROUPS.find((group) => group.id === (activeGroupId ?? CATEGORY_GROUPS[0]?.id)) ?? CATEGORY_GROUPS[0];
 
@@ -439,7 +447,7 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
 
       {filtering ? (
         matches.length > 0 ? (
-          <div className="grid max-h-[320px] grid-cols-3 gap-x-6 gap-y-1 overflow-y-auto">
+          <div className="max-h-[360px] overflow-y-auto rounded-2xl border border-[#eef2f6] bg-white p-2">
             {matches.map((m, i) => (
               <button
                 key={m.id}
@@ -447,11 +455,19 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
                 onClick={() => go(m.id)}
                 onMouseEnter={() => setActive(i)}
                 className={cn(
-                  "rounded-lg px-2 py-1.5 text-left text-sm leading-tight transition-colors",
-                  i === active ? "bg-[#EBF5FB] text-[#009FD9]" : "text-gray-600 hover:text-[#009FD9]"
+                  "group flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/20",
+                  i === active ? "bg-[#EBF5FB]" : "hover:bg-[#f8fafc]"
                 )}
               >
-                {getCategoryLabel(m.id, locale)}
+                <span className="min-w-0">
+                  <span className={cn("block text-sm font-semibold [overflow-wrap:anywhere]", i === active ? "text-[#0089bb]" : "text-[#162543] group-hover:text-[#0089bb]")}>
+                    {getCategoryLabel(m.id, locale)}
+                  </span>
+                  <span className="mt-0.5 block text-[11px] font-medium text-[#9ca3af]">
+                    {getCategoryGroupLabel(m.groupId, locale)}
+                  </span>
+                </span>
+                <ChevronRight className={cn("h-4 w-4 shrink-0", i === active ? "text-[#009FD9]" : "text-[#cbd5e1] group-hover:text-[#009FD9]")} />
               </button>
             ))}
           </div>
@@ -821,7 +837,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
   const mobileIconClass = (active: boolean) => cn("h-4 w-4 shrink-0", active ? "text-[#0089bb]" : "text-[#9ca3af]");
   const mobileChevronClass = (active: boolean) => cn("h-4 w-4 shrink-0", active ? "text-[#0089bb]" : "text-gray-300");
 
-  const compactSuggestions = useMemo(() => matchCategories(searchQuery), [searchQuery]);
+  const compactSuggestions = useMemo(() => matchCategories(searchQuery, 8, locale), [searchQuery, locale]);
   const navLocSug = useMemo(() => searchLocations(navLocation), [navLocation]);
 
   // Track small screens so the compact search placeholder can shorten to fit.
