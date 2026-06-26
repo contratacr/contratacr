@@ -652,7 +652,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                             if (st === "open" || st === "in_progress" || st === "awaiting_confirmation") {
                               menu.push({ label: t("cancelProject"), onClick: () => updateProjectStatus(project.id, "cancelled"), destructive: true });
                             }
-                            if (st !== "in_progress" && st !== "awaiting_confirmation") {
+                            if (st !== "open" && st !== "in_progress" && st !== "awaiting_confirmation") {
                               menu.push({ label: t("delete"), onClick: () => setDeleteTarget(project.id), destructive: true });
                             }
                             let primary: ReactNode = null;
@@ -665,11 +665,23 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                               primary = <Button variant="outline" size="sm" className="flex-1 sm:flex-none rounded-lg px-4" onClick={() => updateProjectStatus(project.id, "open")}>{t("reopenProject")}</Button>;
                             }
                             return (
-                              <div className="flex items-center gap-2">
+                              <div className="flex flex-wrap items-center gap-2">
                                 {primary}
-                                <div className="ml-auto">
-                                  <CardActionsMenu actions={menu} label={t("actions")} />
-                                </div>
+                                {menu.length === 1 ? (
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className="ml-auto flex-1 rounded-lg border-red-100 px-4 text-red-600 hover:bg-red-50 sm:flex-none"
+                                    onClick={menu[0].onClick}
+                                  >
+                                    {menu[0].label}
+                                  </Button>
+                                ) : (
+                                  <div className="ml-auto">
+                                    <CardActionsMenu actions={menu} label={t("actions")} />
+                                  </div>
+                                )}
                               </div>
                             );
                           })()}

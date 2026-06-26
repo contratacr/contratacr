@@ -1792,3 +1792,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Mobile card action rows.** Important actions in dashboard cards, especially WhatsApp/accept/decline rows, should wrap on phone instead of relying on horizontal scrolling. Use responsive min widths with `flex-1` on mobile and compact `sm:flex-none` sizing on desktop so labels never clip.
 
 > **Responsive navbar resources.** Resource links in the phone navbar drawer should use subtle row icons plus labels and chevrons, matching the Categorias row. Keep icons muted gray except the main category entry, which can use the app blue.
+
+> **Single secondary card actions.** Do not show an Acciones overflow menu when a dashboard card has only one secondary action. Render the action directly. For Mis publicaciones, active publications should offer Cancelar solicitud, while Eliminar is reserved for non-active publications.
