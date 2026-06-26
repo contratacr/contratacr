@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Headset, ArrowLeft, Send, User, Shield, Plus, MessageCircle, Clock3, CheckCircle2 } from "lucide-react";
+import { Headset, ArrowLeft, Send, User, Shield, Plus, Clock3 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
 import { SupportModal } from "@/components/support/support-modal";
@@ -33,11 +33,6 @@ const STATUS_COLOR: Record<string, string> = {
   in_progress: "bg-blue-100 text-blue-700",
   resolved: "bg-emerald-100 text-emerald-700",
 };
-const STATUS_ICON = {
-  open: Clock3,
-  in_progress: MessageCircle,
-  resolved: CheckCircle2,
-} as const;
 // Status tabs only — no "Todas"; the three statuses cover every ticket and read
 // cleaner. Defaults to "open" (Pendiente).
 const FILTER_IDS = ["open", "in_progress", "resolved"] as const;
@@ -270,17 +265,11 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
   // ── List view ──
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl border border-[#dbe4ee] bg-white p-4 shadow-sm sm:p-5">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex items-start gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#ccecf8] bg-[#EAF7FD] text-[#0089bb] shadow-[0_8px_20px_-18px_rgba(0,159,217,0.9)]">
-              <Headset className="h-[18px] w-[18px]" />
-            </span>
-            <div className="min-w-0">
-              <h3 className="text-[15px] font-bold text-[#162543] sm:text-base">{t("inboxTitle")}</h3>
-              <p className="mt-1 text-sm leading-relaxed text-[#6b7280]">{t("inboxBody")}</p>
-            </div>
-          </div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <h3 className="text-[15px] font-bold text-[#162543] sm:text-base">{t("inboxTitle")}</h3>
+          <p className="mt-1 max-w-2xl text-sm leading-relaxed text-[#6b7280]">{t("inboxBody")}</p>
+        </div>
         {/* Header action shows ONLY once tickets have loaded AND there's at least one
             (the persistent action above the list). It must NOT render while loading
             (that flashed the "has tickets" treatment before data arrived) nor in the
@@ -291,7 +280,6 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
             <Plus className="h-4 w-4" /> {t("newTicket")}
           </button>
         )}
-        </div>
       </div>
 
       {/* Status filter — the SHARED tab style (consistent with solicitudes/proyectos):
@@ -326,12 +314,11 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
         <div className="flex flex-col gap-3">
           {filtered.map((tk) => {
             const hasNew = unread.has(tk.id);
-            const StatusIcon = STATUS_ICON[tk.status as keyof typeof STATUS_ICON] ?? MessageCircle;
             return (
               <button key={tk.id} onClick={() => openTicket(tk.id)} className={`group text-left bg-white rounded-2xl border p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md sm:p-5 ${hasNew ? "border-[#bfe3f5] ring-1 ring-[#EBF5FB]" : "border-[#e5e7eb] hover:border-[#bfe3f5]"}`}>
                 <div className="flex items-start gap-3">
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#ccecf8] bg-[#EAF7FD] text-[#0089bb] shadow-[0_8px_20px_-18px_rgba(0,159,217,0.9)]">
-                    <StatusIcon className="h-[18px] w-[18px]" />
+                    <Headset className="h-[18px] w-[18px]" />
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
