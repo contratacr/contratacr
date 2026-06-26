@@ -845,22 +845,28 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
             <h2 className="text-base font-bold text-[#111827]">{t("cancelTitle")}</h2>
             <p className="mt-1 text-sm text-[#6b7280]">{t("cancelBody")}</p>
             {cancelBooking && ["pending", "confirmed", "in_progress"].includes(cancelBooking.status) && (
-              <div className="mt-4 rounded-2xl border border-[#ccecf8] bg-[#EBF5FB] p-3">
-                <p className="text-sm font-semibold text-[#162543]">{t("cancelReschedulePrompt")}</p>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="mt-2 w-full rounded-full border-[#bfdbfe] bg-white text-[#0089bb] hover:bg-white"
-                  onClick={() => {
-                    setReschedule({ id: cancelBooking.id, professionalId: cancelBooking.professional_id, when: formatBookingDate(cancelBooking, dateLocale) });
-                    setCancelTarget(null);
-                    setCancelNote("");
-                  }}
-                  disabled={cancelling}
-                >
-                  {t("cancelRescheduleAction")}
-                </Button>
+              <div className="mt-4 flex gap-3 rounded-2xl bg-[#f8fafc] p-3">
+                <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#EBF5FB] text-[#0089bb]">
+                  <CalendarClock className="h-4 w-4" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-[#162543]">{t("cancelReschedulePrompt")}</p>
+                  <p className="mt-0.5 text-xs leading-relaxed text-[#6b7280]">{t("cancelRescheduleBody")}</p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-3 w-full rounded-full border-[#bfdbfe] bg-white text-[#0089bb] hover:bg-white sm:w-auto"
+                    onClick={() => {
+                      setReschedule({ id: cancelBooking.id, professionalId: cancelBooking.professional_id, when: formatBookingDate(cancelBooking, dateLocale) });
+                      setCancelTarget(null);
+                      setCancelNote("");
+                    }}
+                    disabled={cancelling}
+                  >
+                    {t("cancelRescheduleAction")}
+                  </Button>
+                </div>
               </div>
             )}
             <label className="mt-4 block text-xs font-medium text-[#374151]">{t("cancelNoteLabel")}</label>

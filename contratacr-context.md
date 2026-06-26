@@ -1,5 +1,7 @@
 # ContrataCR.com — Project Context
 
+_Last updated: 2026-06-26 (sprint 573 - **Client cancel request reschedule option refined** (`client-activity.tsx`, messages es+en, design guide). The Mis solicitudes cancel modal now presents rescheduling as a compact helpful option with a calendar icon, short explanatory body, and direct `Reprogramar solicitud` / `Reschedule request` CTA. The destructive cancel action remains separated at the bottom. No booking cancel/reschedule API logic, status handling, routing, or validation changed.)_
+
 _Last updated: 2026-06-26 (sprint 572 - **Oportunidades budget icon refined** (`proposals-tab.tsx`, design guide). The Oportunidades closed-card budget row now uses `Banknote` instead of `Coins`, with the icon brand-blue when an actual budget/range exists and muted grey for `A convenir` / `To be agreed`. `Coins` remains reserved for pro-owned price rows such as `Tu precio` in Mis propuestas. No budget text, filters, proposals, routing, data loading, or i18n changed.)_
 
 _Last updated: 2026-06-26 (sprint 571 - **Public profile Sobre m? prices and workplaces refined** (`profesionales/[slug]/page.tsx`, design guide). In About, prices now render as cleaner service-to-price rows with subtle internal dividers and no ?Precios de referencia? caption. Lugares de trabajo now displays only deduplicated administrative areas (`Cant?n, Provincia`) from `provinciaId/cantonId`, not map pin names or exact addresses. No profile data fetching, booking/contact logic, routing, or i18n messages changed.)_

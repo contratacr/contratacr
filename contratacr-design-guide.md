@@ -1853,6 +1853,8 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 
 > **Mis solicitudes actions.** The professional name in a client request card should be the profile link; do not hide "Ver perfil" inside an actions menu. Avoid an overflow menu when the remaining actions are simple: show the primary state action, a direct **Cancelar** button for active bookings, and a compact flag icon for **Reportar**. Reprogramar belongs inside the cancel confirmation as the safer alternative ("reprogramar en lugar de cancelar"), not as a separate competing action.
 
+> **Client cancel modal reschedule option.** When cancelling an active booking from Mis solicitudes, show rescheduling as a compact helper option inside the modal, not as another destructive-level action: soft grey surface, small brand-tint `CalendarClock` icon, title "¿Solo necesitas otra fecha u hora?", one short explanatory sentence, and a direct outline CTA "Reprogramar solicitud". Keep the red cancel confirmation visually separated below the optional note.
+
 > **Mis publicaciones summary readability.** Match the dashboard card pattern: keep only the proposal count highlighted, then show category, zone, and published date as plain icon-led rows. Do not show the publication description in the closed card; place it in the expanded sheet.
 
 > **Professional profile Sobre mi readability.** Keep the About tab as two calm sheets: intro (name, professions, bio) and facts. Avoid separate nested header/bio cards, side rails, and mini fact cards; use one divided facts sheet with icon-led rows for faster scanning.
