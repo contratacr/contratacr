@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, type ReactNode } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import {
-  MapPin, Shield, ArrowLeft, Star, Briefcase, Camera, Coins, Languages,
+  MapPin, Shield, ArrowLeft, Star, Briefcase, Camera, ReceiptText, Languages,
   Share2, Flag, ChevronDown, Lock, Building2, Award, Mail, SearchX, FileText,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -754,13 +754,13 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                     });
                     if (professional.services && professional.services.length > 0) {
                       facts.push({
-                        key: "price", icon: <Coins className="h-5 w-5" />, label: t("prices"),
+                        key: "price", icon: <ReceiptText className="h-5 w-5" />, label: t("prices"),
                         value: (
                           <div className="divide-y divide-[#eef2f6]">
                             {professional.services.map((service) => (
-                              <div key={service.id} className="grid gap-1 py-2 first:pt-0 last:pb-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-baseline sm:gap-4">
-                                <span className="min-w-0 text-[#374151] [overflow-wrap:anywhere]">{service.name}</span>
-                                <span className="font-semibold text-[#162543] sm:text-right">{service.price || t("priceConsult")}</span>
+                              <div key={service.id} className="py-2 first:pt-0 last:pb-0">
+                                <span className="block text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af] [overflow-wrap:anywhere]">{service.name}</span>
+                                <span className="mt-0.5 block text-[15px] font-semibold leading-snug text-[#374151] [overflow-wrap:anywhere]">{service.price || t("priceConsult")}</span>
                               </div>
                             ))}
                           </div>
@@ -768,11 +768,11 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                       });
                     } else if (professional.pricing && professional.pricing.length > 0) {
                       facts.push({
-                        key: "price", icon: <Coins className="h-5 w-5" />, label: t("prices"),
+                        key: "price", icon: <ReceiptText className="h-5 w-5" />, label: t("prices"),
                         value: <div className="divide-y divide-[#eef2f6]">{professional.pricing.map((tier) => <div key={tier.id} className="py-2 first:pt-0 last:pb-0 font-semibold text-[#162543]">{formatPricingTier(tier)}</div>)}</div>,
                       });
                     } else if (rate) {
-                      facts.push({ key: "rate", icon: <Coins className="h-5 w-5" />, label: t("baseRate"), value: rate, caption: t("baseRateCaption") });
+                      facts.push({ key: "rate", icon: <ReceiptText className="h-5 w-5" />, label: t("baseRate"), value: rate, caption: t("baseRateCaption") });
                     }
                     if (workplaceAreaLines.length > 0) facts.push({
                       key: "loc", icon: <MapPin className="h-5 w-5" />,
