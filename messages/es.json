@@ -1344,6 +1344,7 @@
     "fieldDeadline": "Plazo:",
     "fieldBudget": "Presupuesto:",
     "fieldPublished": "Publicado:",
+    "fieldSent": "Enviada:",
     "fieldPhone": "Tel:",
     "budgetTBD": "A convenir",
     "charLimit": "Has alcanzado el límite de {max} caracteres."

@@ -315,15 +315,38 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
   }
 
   // Expanded opportunity content: only what is NOT already present in the
-  // closed summary card. Summary owns title, budget, zone, timeline, posted time
-  // and client name. Expanded owns description, client identity status and the
-  // proposal form/actions.
+  // closed summary card. Summary owns title, budget, and service. Expanded owns
+  // zone/timeline/published context, description, client identity status and actions.
   function renderDetail(project: OpenProject) {
     const alreadySubmitted = submitted.has(project.id);
     const form = proposalForms[project.id] ?? { price: "", message: "" };
+    const zona = [project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ");
     return (
       <div className="flex flex-col">
         <div className="flex flex-col gap-4 p-4 sm:p-5">
+          {(zona || project.timeline) && (
+            <div className="flex flex-col gap-2">
+              {zona && (
+                <div className="flex items-start gap-2.5">
+                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("fieldZone")}</p>
+                    <p className="mt-0.5 text-[13px] font-medium text-[#374151] [overflow-wrap:anywhere]">{zona}</p>
+                  </div>
+                </div>
+              )}
+              {project.timeline && (
+                <div className="flex items-start gap-2.5">
+                  <CalendarClock className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("fieldDeadline")}</p>
+                    <p className="mt-0.5 text-[13px] font-medium text-[#374151] [overflow-wrap:anywhere]">{project.timeline}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {project.description && (
             <div className="flex items-start gap-2.5">
               <FileText className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
@@ -345,6 +368,14 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
               </div>
             </div>
           )}
+
+          <div className="flex items-start gap-2.5">
+            <Clock className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
+            <div className="min-w-0">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("fieldPublished")}</p>
+              <p className="mt-0.5 text-[13px] font-medium text-[#374151]">{relativeTime(project.created_at)}</p>
+            </div>
+          </div>
         </div>
 
         <div className="border-t border-[#eef2f6] p-4 sm:p-5">
@@ -431,7 +462,6 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                     </div>
                     {list.map((project) => {
                       const isExpanded = expandedProject === project.id;
-                      const zona = [project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ");
                       return (
                         <Card key={project.id} className={cn("rounded-2xl border-[#e5e7eb] bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md", isExpanded && "shadow-md ring-1 ring-[#d8eef8]")}>
                           <button
@@ -462,22 +492,6 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                                     <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldService")}</span> <span className="text-[#374151]">{project.categories.name}</span></span>
                                   </span>
                                 )}
-                                {zona && (
-                                  <span className="inline-flex w-full max-w-full items-center gap-2 text-[#6b7280]">
-                                    <MapPin className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                                    <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldZone")}</span> <span className="text-[#374151]">{zona}</span></span>
-                                  </span>
-                                )}
-                                {project.timeline && (
-                                  <span className="inline-flex w-full max-w-full items-center gap-2 text-[#6b7280]">
-                                    <CalendarClock className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                                    <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldDeadline")}</span> <span className="text-[#374151]">{project.timeline}</span></span>
-                                  </span>
-                                )}
-                                <span className="inline-flex w-full max-w-full items-center gap-2 text-[#9ca3af]">
-                                  <Clock className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                                  <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldPublished")}</span> <span className="text-[#374151]">{relativeTime(project.created_at)}</span></span>
-                                </span>
                               </div>
                             </div>
                           </button>
@@ -552,16 +566,6 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                                 <span className="font-medium text-[#9ca3af]">{t("yourPriceLabel")}</span> <span className={p.price ? "text-[#0089bb]" : "text-[#374151]"}>{p.price ? `₡${p.price.toLocaleString("es-CR")}` : t("priceTBD")}</span>
                               </span>
                             </span>
-                            {clientName && (
-                              <span className="inline-flex w-full max-w-full items-center gap-2">
-                                <Users className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                                <span className="truncate text-[#374151]">{clientName}</span>
-                              </span>
-                            )}
-                            <span className="inline-flex w-full max-w-full items-center gap-2">
-                              <CalendarDays className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                              <span className="truncate text-[#374151]">{t("sentOn", { date: sentDate })}</span>
-                            </span>
                           </div>
                         </div>
                         <ExpandToggle open={isOpen} />
@@ -569,6 +573,27 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
 
                       {isOpen && (
                         <div className="rounded-b-2xl border-t border-[#f3f4f6] bg-gradient-to-b from-[#fcfdff] to-white px-4 pb-5 pt-4 sm:px-5 flex flex-col gap-3.5">
+                          {(clientName || sentDate) && (
+                            <div className="flex flex-col gap-2">
+                              {clientName && (
+                                <div className="flex items-start gap-2.5">
+                                  <Users className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
+                                  <div className="min-w-0">
+                                    <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("clientInfo")}</p>
+                                    <p className="mt-0.5 text-[13px] font-medium text-[#374151] [overflow-wrap:anywhere]">{clientName}</p>
+                                  </div>
+                                </div>
+                              )}
+                              <div className="flex items-start gap-2.5">
+                                <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
+                                <div className="min-w-0">
+                                  <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("fieldSent")}</p>
+                                  <p className="mt-0.5 text-[13px] font-medium text-[#374151]">{sentDate}</p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
                           {p.message && (
                             <div className="flex flex-col gap-2.5">
                               <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#9ca3af]">{t("myProposal")}</p>

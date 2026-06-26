@@ -275,12 +275,6 @@ export function BookingRequests() {
                     <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldService")}</span> <span className="text-[#374151]">{category}</span></span>
                   </span>
                 )}
-                {location && (
-                  <span className="inline-flex w-full max-w-full items-center gap-2 text-[#6b7280]">
-                    <MapPin className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                    <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldZone")}</span> <span className="text-[#374151]">{location}</span></span>
-                  </span>
-                )}
                 {(unverifiedPill || flaggedPill || (!booking.for_someone_else && showClinicalFlags && ageBadge(booking.client_dob))) && (
                   <span className="mt-0.5 flex flex-wrap items-center gap-1.5">
                     {!booking.for_someone_else && showClinicalFlags && ageBadge(booking.client_dob)}
@@ -300,6 +294,16 @@ export function BookingRequests() {
               <p className="flex items-center gap-1.5 text-[11px] text-[#9ca3af]">
                 <Clock className="h-3.5 w-3.5 shrink-0 text-[#374151]" /> {t("requestedOn", { date: requestedDate })}
               </p>
+            )}
+
+            {location && (
+              <div className="flex items-start gap-2.5">
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
+                <div className="min-w-0">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("fieldZone")}</p>
+                  <p className="mt-0.5 text-[13px] font-medium text-[#374151] [overflow-wrap:anywhere]">{location}</p>
+                </div>
+              </div>
             )}
 
             {booking.for_someone_else && (() => {

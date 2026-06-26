@@ -445,12 +445,6 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                               </p>
                             )}
                             {/* For someone else — a quiet at-a-glance hint. */}
-                            {b.for_someone_else && (
-                              <p className="mt-1.5 flex items-center gap-2 text-[13px] text-[#6b7280] min-w-0">
-                                <Users className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                                <span className="truncate">{t("bookingFor", { name: b.beneficiary_name || t("otherPerson") })}</span>
-                              </p>
-                            )}
                           </div>
                           <ExpandToggle open={expandedBooking === b.id} />
                         </div>
@@ -612,25 +606,9 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                             ) : null}
                           </div>
                           <div className="mt-2 flex flex-col items-start gap-1.5 text-[13px]">
-                            {project.categories?.name && (
-                              <span className="inline-flex w-full max-w-full items-center gap-2 text-[#374151]">
-                                <Wrench className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                                <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldService")}</span> <span className="text-[#374151]">{project.categories.name}</span></span>
-                              </span>
-                            )}
-                            {zone && (
-                              <span className="inline-flex w-full max-w-full items-center gap-2 text-[#6b7280]">
-                                <MapPin className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                                <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldZone")}</span> <span className="text-[#374151]">{zone}</span></span>
-                              </span>
-                            )}
                             <span className="inline-flex w-full max-w-full items-center gap-2 text-[#6b7280]">
                               <Users className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
                               <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldProposals")}</span> <span className="text-[#374151]">{t("proposalsCount", { count: proposalCount })}</span></span>
-                            </span>
-                            <span className="inline-flex w-full max-w-full items-center gap-2 text-[#9ca3af]">
-                              <CalendarDays className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                              <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldPublished")}</span> <span className="text-[#374151]">{formatRelativeOrDate(project.created_at, locale)}</span></span>
                             </span>
                           </div>
                         </div>
@@ -641,6 +619,37 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                     {isExpanded && (
                       <div className="rounded-b-2xl border-t border-[#f3f4f6] bg-gradient-to-b from-[#fcfdff] to-white px-4 pb-5 pt-4 sm:px-5">
                         <div className="flex flex-col gap-4">
+                          {(project.categories?.name || zone) && (
+                            <div className="flex flex-col gap-2">
+                              {project.categories?.name && (
+                                <div className="flex items-start gap-2.5">
+                                  <Wrench className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
+                                  <div className="min-w-0">
+                                    <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("fieldService")}</p>
+                                    <p className="mt-0.5 text-[13px] font-medium text-[#374151] [overflow-wrap:anywhere]">{project.categories.name}</p>
+                                  </div>
+                                </div>
+                              )}
+                              {zone && (
+                                <div className="flex items-start gap-2.5">
+                                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
+                                  <div className="min-w-0">
+                                    <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("fieldZone")}</p>
+                                    <p className="mt-0.5 text-[13px] font-medium text-[#374151] [overflow-wrap:anywhere]">{zone}</p>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          <div className="flex items-start gap-2.5">
+                            <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
+                            <div className="min-w-0">
+                              <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("fieldPublished")}</p>
+                              <p className="mt-0.5 text-[13px] font-medium text-[#374151]">{formatRelativeOrDate(project.created_at, locale)}</p>
+                            </div>
+                          </div>
+
                           {project.description && (
                             <div className="flex items-start gap-2.5">
                               <FileText className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
