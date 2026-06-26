@@ -51,8 +51,8 @@ export async function GET() {
   });
 }
 
-// POST → start a recurring CARD checkout (gateway-hosted). Inert until the flag is
-// on AND a real gateway is integrated; SINPE is handled manually by an admin.
+// POST -> start a recurring CARD checkout (gateway-hosted). Inert until the flag
+// is on AND a real gateway is integrated. Public launch is card-only.
 export async function POST() {
   if (!PAYMENTS_ENABLED) return NextResponse.json({ error: "Pagos no disponibles" }, { status: 404 });
 
@@ -60,8 +60,7 @@ export async function POST() {
   if (!me) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
 
   if (!isGatewayIntegrated()) {
-    // Card path not wired yet — the UI should fall back to the SINPE instructions.
-    return NextResponse.json({ error: "Pago con tarjeta no disponible todavía" }, { status: 501 });
+    return NextResponse.json({ error: "Pago con tarjeta no disponible todavia" }, { status: 501 });
   }
 
   // Integration point: create the customer + hosted checkout, return its URL.

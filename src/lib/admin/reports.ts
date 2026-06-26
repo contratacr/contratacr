@@ -14,7 +14,7 @@ export type AdminReports = {
   users: { total: number; clients: number; pros: number; verifiedPros: number; activeClients: number; reg30: RegPoint[] };
   pros: { total: number; verified: number; pending: number; unverified: number; rejected: number; byCategory: Count[]; byProvince: Count[]; traveling: number; fixed: number; withSchedule: number; withoutSchedule: number; withServices: number; withoutServices: number };
   activity: { solicitudesTotal: number; solicitudesByStatus: Count[]; solicitudesResponded: number; proyectosTotal: number; proyectosByStatus: Count[]; topCategories: Count[]; series30: ActPoint[] };
-  subs: { total: number; active: number; expired: number; byPlan: Count[]; byStatus: Count[]; byCycle: Count[]; byMethod: Count[]; revenueTotal: number; revenueByMethod: Count[]; pendingSinpe: number; hasData: boolean };
+  subs: { total: number; active: number; expired: number; byPlan: Count[]; byStatus: Count[]; byCycle: Count[]; byMethod: Count[]; revenueTotal: number; revenueByMethod: Count[]; pendingPayments: number; hasData: boolean };
   support: { total: number; byStatus: Count[]; series30: { date: string; tickets: number }[] };
 };
 
@@ -47,7 +47,7 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
     users: { total: 0, clients: 0, pros: 0, verifiedPros: 0, activeClients: 0, reg30: days30.map((d) => ({ date: d, pros: 0, clients: 0 })) },
     pros: { total: 0, verified: 0, pending: 0, unverified: 0, rejected: 0, byCategory: [], byProvince: [], traveling: 0, fixed: 0, withSchedule: 0, withoutSchedule: 0, withServices: 0, withoutServices: 0 },
     activity: { solicitudesTotal: 0, solicitudesByStatus: [], solicitudesResponded: 0, proyectosTotal: 0, proyectosByStatus: [], topCategories: [], series30: days30.map((d) => ({ date: d, solicitudes: 0, proyectos: 0 })) },
-    subs: { total: 0, active: 0, expired: 0, byPlan: [], byStatus: [], byCycle: [], byMethod: [], revenueTotal: 0, revenueByMethod: [], pendingSinpe: 0, hasData: false },
+    subs: { total: 0, active: 0, expired: 0, byPlan: [], byStatus: [], byCycle: [], byMethod: [], revenueTotal: 0, revenueByMethod: [], pendingPayments: 0, hasData: false },
     support: { total: 0, byStatus: [], series30: days30.map((d) => ({ date: d, tickets: 0 })) },
   };
 
@@ -153,7 +153,7 @@ export async function getAdminReports(locale = "es"): Promise<AdminReports> {
     for (const p of paid) revByMethod.set(p.method as string, (revByMethod.get(p.method as string) ?? 0) + (Number(p.amount) || 0));
     const methodLabels: Record<string, string> = { card: "Tarjeta", sinpe: "SINPE", manual: "Manual" };
     empty.subs.revenueByMethod = [...revByMethod.entries()].sort((a, b) => b[1] - a[1]).map(([k, value]) => ({ label: methodLabels[k] ?? k, value }));
-    empty.subs.pendingSinpe = payRows.filter((p) => p.method === "sinpe" && p.status === "pending").length;
+    empty.subs.pendingPayments = payRows.filter((p) => p.status === "pending").length;
     empty.subs.hasData = sRows.length > 0 || payRows.length > 0;
   } catch (e) { console.error("[reports] subs", e); }
 

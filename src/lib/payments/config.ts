@@ -21,9 +21,18 @@ export type PlanId = "free" | "premium";
 export type BillingCycle = "monthly" | "annual";
 
 export const PRICES: Record<BillingCycle, number> = {
-  monthly: 3000,   // ₡3.000 / mes
-  annual: 30000,   // ₡30.000 / año (≈ 2 meses gratis vs mensual)
+  monthly: 3000,
+  annual: 30000,
 };
+
+// Launch policy for when payments are eventually enabled:
+// - Existing professionals get 2 free months before being charged.
+// - Early collaborators who help build the initial client base get 1 free year.
+// These are admin-granted promotional periods, not public coupons.
+export const LAUNCH_BENEFITS = {
+  existingUsersFreeMonths: 2,
+  earlyCollaboratorsFreeMonths: 12,
+} as const;
 
 /** Whole months a cycle covers — used to compute renewal/expiry dates. */
 export const CYCLE_MONTHS: Record<BillingCycle, number> = {
@@ -33,12 +42,6 @@ export const CYCLE_MONTHS: Record<BillingCycle, number> = {
 
 export const CURRENCY = "CRC";
 
-// Manual SINPE Móvil / transfer destination shown to pros for the manual flow.
-// PLACEHOLDER — set the real SINPE number + holder name before activating.
-export const SINPE_PAYMENT = {
-  number: "0000-0000",
-  holder: "ContrataCR",
-};
 
 /** Display helper (₡3.000). Kept here so UI + admin format prices identically. */
 export function formatColones(amount: number): string {
@@ -47,6 +50,8 @@ export function formatColones(amount: number): string {
 
 // ─── Subscription status / payment vocab (mirrors the DB CHECK constraints) ────
 export type SubscriptionStatus = "active" | "inactive" | "expired" | "pending" | "cancelled";
+// `sinpe` remains for legacy DB compatibility, but the planned public launch is
+// card-only automatic billing.
 export type PaymentMethod = "card" | "sinpe" | "manual";
 export type PaymentStatus = "paid" | "pending" | "failed" | "refunded";
 

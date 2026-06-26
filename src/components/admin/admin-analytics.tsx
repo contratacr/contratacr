@@ -194,7 +194,7 @@ export function AdminAnalytics({ data }: { data: AdminReports }) {
               <Tile label="Suscriptores" value={subs.total} accent="#008ce0" />
               <Tile label="Activas" value={subs.active} accent="#16a34a" />
               <Tile label="Expiradas" value={subs.expired} accent="#94a3b8" />
-              <Tile label="SINPE pendientes" value={subs.pendingSinpe} accent="#f59e0b" />
+                <Tile label="Pagos pendientes" value={subs.pendingPayments} accent="#f59e0b" />
             </div>
             <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
               <div className="rounded-xl bg-[#f8fafc] p-4">

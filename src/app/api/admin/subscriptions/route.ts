@@ -2,13 +2,11 @@ import { NextResponse } from "next/server";
 import { getApiAdmin } from "@/lib/auth/admin";
 import {
   getSubscription, getPayments, activatePaidPeriod, setSubscriptionStatus, deleteSubscription,
-  listPendingPayments, approveManualPayment, rejectManualPayment,
+  listPendingPayments, approveManualPayment, rejectManualPayment, grantPromotionalPeriod,
 } from "@/lib/payments/subscriptions";
 import type { BillingCycle } from "@/lib/payments/config";
 
-// Admin subscription management (admin-only; visible NOW for testing the manual
-// SINPE/transfer flow). Independent of PAYMENTS_ENABLED so admin can prepare even
-// while the public feature is off. Never exposes anything to regular users.
+// Admin subscription management (admin-only). Independent of PAYMENTS_ENABLED so admin can prepare while the public feature is off. Planned public launch is card-only; manual admin actions are for founder/promotional grants.
 
 // GET /api/admin/subscriptions?professionalId=…  → subscription + payment history
 // GET /api/admin/subscriptions?pending=1          → manual payments awaiting review
@@ -50,12 +48,23 @@ export async function POST(req: Request) {
     const sub = await activatePaidPeriod({
       professionalId,
       cycle,
-      method: body.method === "card" ? "card" : "sinpe", // manual flow = SINPE/transfer
+      method: body.method === "card" ? "card" : "manual",
       amount: typeof body.amount === "number" ? body.amount : undefined,
       reference: body.reference ?? null,
       note: body.note ?? null,
       recordedBy: admin.id,
       extend: !!body.extend,
+    });
+    return NextResponse.json({ ok: true, subscription: sub });
+  }
+
+  if (action === "grant") {
+    const sub = await grantPromotionalPeriod({
+      professionalId,
+      months: typeof body.months === "number" ? body.months : 1,
+      note: body.note ?? null,
+      recordedBy: admin.id,
+      extend: body.extend !== false,
     });
     return NextResponse.json({ ok: true, subscription: sub });
   }

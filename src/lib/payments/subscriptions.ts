@@ -120,6 +120,14 @@ type ActivateInput = {
   extend?: boolean;
 };
 
+type GrantPromotionalInput = {
+  professionalId: string;
+  months: number;
+  recordedBy?: string | null;
+  note?: string | null;
+  extend?: boolean;
+};
+
 /**
  * Activate (or extend) premium and record the payment in ONE place — used by the
  * manual SINPE/transfer admin flow today and by the gateway webhook later. Always
@@ -166,6 +174,55 @@ export async function activatePaidPeriod(input: ActivateInput): Promise<Subscrip
       current_period_end: periodEnd.toISOString(),
       cancel_at: null,
       gateway: input.gateway ?? sub.gateway ?? null,
+      updated_at: now.toISOString(),
+    })
+    .eq("id", sub.id)
+    .select("*")
+    .single();
+
+  return data as SubscriptionRow;
+}
+
+/** Grant a free promotional premium period (founder/early-collaborator benefit). */
+export async function grantPromotionalPeriod(input: GrantPromotionalInput): Promise<SubscriptionRow> {
+  const db = createAdminClient();
+  const sub = await ensureSubscription(input.professionalId);
+  const months = Math.max(1, Math.min(24, Math.floor(input.months)));
+
+  const now = new Date();
+  const base = input.extend && isSubscriptionActive(sub) && sub.current_period_end
+    ? new Date(sub.current_period_end)
+    : now;
+  const periodEnd = new Date(base);
+  periodEnd.setMonth(periodEnd.getMonth() + months);
+
+  await db.from("subscription_payments").insert({
+    subscription_id: sub.id,
+    professional_id: input.professionalId,
+    amount: 0,
+    currency: "CRC",
+    method: "manual",
+    status: "paid",
+    billing_cycle: null,
+    period_start: base.toISOString(),
+    period_end: periodEnd.toISOString(),
+    paid_at: now.toISOString(),
+    reference: `promo-${months}m`,
+    recorded_by: input.recordedBy ?? null,
+    note: input.note ?? null,
+  });
+
+  const { data } = await db
+    .from("subscriptions")
+    .update({
+      plan: "premium",
+      status: "active",
+      billing_cycle: null,
+      price_paid: 0,
+      payment_method: "manual",
+      started_at: sub.started_at ?? now.toISOString(),
+      current_period_end: periodEnd.toISOString(),
+      cancel_at: null,
       updated_at: now.toISOString(),
     })
     .eq("id", sub.id)

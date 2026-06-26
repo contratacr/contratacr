@@ -22,10 +22,9 @@ export async function GET() {
 
   const db = createAdminClient();
 
-  const [verificacion, reportes, suscripciones, categorias, supportOpen, supportAwaiting] = await Promise.all([
+  const [verificacion, reportes, categorias, supportOpen, supportAwaiting] = await Promise.all([
     db.from("professionals").select("id", { count: "exact", head: true }).in("verification_status", ["pending", "under_appeal"]),
     db.from("reports").select("id", { count: "exact", head: true }).eq("status", "open"),
-    db.from("subscription_payments").select("id", { count: "exact", head: true }).eq("status", "pending"),
     db.from("category_suggestions").select("id", { count: "exact", head: true }).eq("status", "pending"),
     db.from("support_tickets").select("id", { count: "exact", head: true }).eq("status", "open"),
     db.from("support_tickets").select("id", { count: "exact", head: true }).eq("status", "in_progress").eq("last_reply_role", "user"),
@@ -34,7 +33,7 @@ export async function GET() {
   return NextResponse.json({
     verificacion: verificacion.count ?? 0,
     reportes: reportes.count ?? 0,
-    suscripciones: suscripciones.count ?? 0,
+    suscripciones: 0,
     categorias: categorias.count ?? 0,
     soporte: (supportOpen.count ?? 0) + (supportAwaiting.count ?? 0),
   });
