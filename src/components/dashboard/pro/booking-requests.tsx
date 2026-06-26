@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarDays, ChevronDown, CalendarClock, Clock, Phone, IdCard, Wrench, MapPin, UserRound } from "lucide-react";
+import { CalendarDays, ChevronDown, CalendarClock, Clock, Phone, IdCard, Wrench, MapPin, UserRound, Flag } from "lucide-react";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { formatId } from "@/lib/cedula";
 import { ageCategoryFromDob, computeAge } from "@/lib/age";
@@ -13,7 +13,6 @@ import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getWhatsAppLink, getInitials, cn, formatRelativeOrDate } from "@/lib/utils";
 import { StatusFilterTabs, SOLICITUD_TABS, solicitudBucket, solicitudStatusRedundant, bucketCounts } from "@/components/dashboard/status-filter-tabs";
-import { CardActionsMenu, type CardAction } from "@/components/dashboard/card-actions-menu";
 import { ExpandableText } from "@/components/ui/expandable-text";
 import { ReportModal } from "@/components/dashboard/report-modal";
 import type { BookingStatus } from "@/types";
@@ -364,17 +363,9 @@ export function BookingRequests() {
               </p>
             )}
 
-            {/* ACTIONS (sprint 441) — clean PRIMARY-visible + overflow MENU pattern. The most-used
-                action (WhatsApp, contacting the client) stays a 1-tap visible button; the secondary
-                management actions (Marcar completado · Cancelar · Reportar) live in the "···" menu. */}
+            {/* Actions: keep the pro's common workflow visible (WhatsApp, mark completed,
+                cancel) and leave Reportar as the quiet flag action. */}
             {!panelOpen && (() => {
-              const menuActions: CardAction[] = [
-                ...(isActive ? [
-                  { label: t("markCompleted"), onClick: () => updateStatus(booking.id, "awaiting_confirmation") },
-                  { label: t("cancel"), onClick: () => openAction(booking.id, "cancel"), destructive: true },
-                ] : []),
-                { label: t("reportClient"), onClick: () => setReportFor(booking), destructive: true },
-              ];
               return (
                 <div className="flex flex-wrap items-center gap-2 border-t border-[#eef2f6] pt-3">
                   {waHref && (
@@ -384,9 +375,37 @@ export function BookingRequests() {
                       </a>
                     </Button>
                   )}
-                  <div className="ml-auto shrink-0">
-                    <CardActionsMenu actions={menuActions} label={t("actions")} />
-                  </div>
+                  {isActive && (
+                    <>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 rounded-lg px-4 text-[#374151] sm:flex-none"
+                        onClick={() => updateStatus(booking.id, "awaiting_confirmation")}
+                      >
+                        {t("markCompleted")}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 rounded-lg border-[#fecaca] px-4 text-[#dc2626] hover:border-[#fca5a5] hover:bg-[#fef2f2] hover:text-[#b91c1c] sm:flex-none"
+                        onClick={() => openAction(booking.id, "cancel")}
+                      >
+                        {t("cancel")}
+                      </Button>
+                    </>
+                  )}
+                  <button
+                    type="button"
+                    aria-label={t("reportClient")}
+                    title={t("reportClient")}
+                    onClick={() => setReportFor(booking)}
+                    className="ml-auto inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#e5e7eb] text-[#9ca3af] transition-colors hover:border-[#fecaca] hover:bg-[#fef2f2] hover:text-[#dc2626]"
+                  >
+                    <Flag className="h-4 w-4" />
+                  </button>
                 </div>
               );
             })()}
