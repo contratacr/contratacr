@@ -1411,7 +1411,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
               </div>
             ) : (
               <div className="mb-5">
-                <p className="pb-2 text-[10px] font-bold uppercase tracking-widest text-gray-400">{t("myAccount")}</p>
+                <p className="pb-2 text-[10px] font-bold uppercase tracking-widest text-gray-400">{t("access")}</p>
                 <div className="divide-y divide-gray-100 border-b border-t border-gray-100">
                 <Link
                   href="/registro/profesional"
