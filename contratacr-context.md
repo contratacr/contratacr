@@ -3571,3 +3571,6 @@ New i18n namespaces added this pass: `search.pagination`, extended `search.filte
 
 
 **Sprint 307 - English profile preview booking locale.** Fixed professional profile preview links to preserve the active locale instead of forcing /es. Booking and reschedule calendars now derive weekday/month labels and selected date text from the active locale. Booking modal sidebar/steps/contact copy and WhatsApp message pieces were moved to booking i18n keys. Pricing formatters now accept locale for /hour and Ask for price, and profile service prices prefer structured priceAmount/priceType over legacy text.
+
+
+**Sprint 308 - Simpler category navbar dropdown.** landing-navbar category dropdown no longer uses the two-pane hover mega-menu. It now keeps one search field and shows compact group cards with the first few direct category links per group, plus the existing filtered search and view-all link. Goal: calmer, easier scanning with less hover-dependent behavior.

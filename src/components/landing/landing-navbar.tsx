@@ -403,11 +403,9 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
   const router = useRouter();
   const [q, setQ] = useState("");
   const [active, setActive] = useState(0);
-  const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const matches = useMemo(() => matchCategories(q, 18, locale), [q, locale]);
   const filtering = q.trim().length > 0;
-  const selectedGroup = CATEGORY_GROUPS.find((group) => group.id === (activeGroupId ?? CATEGORY_GROUPS[0]?.id)) ?? CATEGORY_GROUPS[0];
 
   useEffect(() => { queueMicrotask(() => setActive(0)); }, [q]);
 
@@ -416,7 +414,6 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
     else if (q.trim()) router.push(`/buscar?q=${encodeURIComponent(q.trim())}`);
     else router.push("/buscar");
     setQ("");
-    setActiveGroupId(null);
     onNavigate();
   }
   function onKeyDown(e: React.KeyboardEvent) {
@@ -439,14 +436,14 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
           ref={inputRef}
           type="text"
           value={q}
-          onChange={(e) => { setQ(e.target.value); setActiveGroupId(null); }}
+          onChange={(e) => setQ(e.target.value)}
           onKeyDown={onKeyDown}
           placeholder={t("searchServicePlaceholder")}
           aria-label={t("searchServiceAria")}
           className="ml-2 min-w-0 flex-1 bg-transparent text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none"
         />
         {q && (
-          <button type="button" onClick={() => { setQ(""); setActiveGroupId(null); inputRef.current?.focus(); }} className="ml-2 text-gray-400 hover:text-gray-600" aria-label={ts("cancel")}>
+          <button type="button" onClick={() => { setQ(""); inputRef.current?.focus(); }} className="ml-2 text-gray-400 hover:text-gray-600" aria-label={ts("cancel")}>
             <X className="h-4 w-4" />
           </button>
         )}
@@ -497,58 +494,31 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
           </div>
         )
       ) : (
-        <div className="grid max-h-[64vh] grid-cols-[240px_minmax(0,1fr)] overflow-hidden rounded-2xl border border-[#eef2f6] bg-white">
-          <div className="overflow-y-auto border-r border-[#eef2f6] bg-[#f8fafc] p-2">
-            {CATEGORY_GROUPS.map((group) => {
-              const selected = selectedGroup?.id === group.id;
-              return (
-                <button
-                  key={group.id}
-                  type="button"
-                  onMouseEnter={() => setActiveGroupId(group.id)}
-                  onFocus={() => setActiveGroupId(group.id)}
-                  onClick={() => setActiveGroupId(group.id)}
-                  className={cn(
-                    "flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left transition-colors",
-                    selected ? "bg-white text-[#162543] shadow-sm ring-1 ring-[#e8eef5]" : "text-[#6b7280] hover:bg-white hover:text-[#162543]"
-                  )}
-                >
-                  <span className="min-w-0">
-                    <span className="block truncate text-sm font-semibold">{getCategoryGroupLabel(group.id, locale)}</span>
-                    <span className={cn("mt-0.5 block text-[11px]", selected ? "text-[#009FD9]" : "text-[#9ca3af]")}>
-                      {ts("optionsCount", { count: group.items.length })}
-                    </span>
-                  </span>
-                  <ChevronRight className={cn("h-4 w-4 shrink-0", selected ? "text-[#009FD9]" : "text-[#cbd5e1]")} />
-                </button>
-              );
-            })}
-          </div>
-
-          <div className="min-w-0 overflow-y-auto p-4">
-            {selectedGroup && (
-              <>
-                <div className="mb-3 flex items-end justify-between gap-3">
+        <div className="max-h-[64vh] overflow-y-auto rounded-2xl border border-[#eef2f6] bg-white p-3">
+          <div className="grid grid-cols-3 gap-3">
+            {CATEGORY_GROUPS.map((group) => (
+              <section key={group.id} className="rounded-xl border border-transparent bg-[#f8fafc] p-3 transition-colors hover:border-[#dbeafe] hover:bg-white">
+                <div className="mb-2 flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="text-[11px] font-bold uppercase tracking-wide text-[#009FD9]">{t("categories")}</p>
-                    <h3 className="truncate text-base font-bold text-[#162543]">{getCategoryGroupLabel(selectedGroup.id, locale)}</h3>
+                    <h3 className="truncate text-sm font-bold text-[#162543]">{getCategoryGroupLabel(group.id, locale)}</h3>
+                    <p className="mt-0.5 text-[11px] font-medium text-[#9ca3af]">{ts("optionsCount", { count: group.items.length })}</p>
                   </div>
-                  <span className="shrink-0 text-xs font-medium text-[#9ca3af]">{ts("optionsCount", { count: selectedGroup.items.length })}</span>
+                  <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-[#cbd5e1]" />
                 </div>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {selectedGroup.items.map((item) => (
+                <div className="space-y-0.5">
+                  {group.items.slice(0, 4).map((item) => (
                     <button
                       key={item.id}
                       type="button"
                       onClick={() => go(item.id)}
-                      className="rounded-xl px-3 py-2.5 text-left text-sm font-medium text-[#374151] transition-colors hover:bg-[#EBF5FB] hover:text-[#0089bb] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/20"
+                      className="block w-full rounded-lg px-2 py-1.5 text-left text-[13px] font-medium leading-snug text-[#4b5563] transition-colors hover:bg-[#EBF5FB] hover:text-[#0089bb] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/20"
                     >
                       <span className="block [overflow-wrap:anywhere]">{getCategoryLabel(item.id, locale)}</span>
                     </button>
                   ))}
                 </div>
-              </>
-            )}
+              </section>
+            ))}
           </div>
         </div>
       )}
