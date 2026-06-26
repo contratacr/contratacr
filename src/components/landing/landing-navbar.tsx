@@ -637,8 +637,6 @@ function AccountMenu({
             {t("myPanel")}
           </a>
 
-          {/* Desktop-only quick links; phone keeps the avatar menu short and account-focused. */}
-          <div className="hidden lg:block">
           {mode === "offer" ? (
             <>
               <a href={bookingsHref} onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors">
@@ -666,7 +664,6 @@ function AccountMenu({
               </a>
             </>
           )}
-          </div>
 
           <a
             href={notificationsHref}
@@ -698,14 +695,6 @@ function AccountMenu({
               {t("offerServices")}
             </Link>
           )}
-
-          {/* Language — MOBILE only here (desktop has the discreet globe in the navbar bar).
-              Quiet inline pair so the rarely-used control stays in the profile menu. */}
-          <div className="lg:hidden flex items-center gap-2.5 px-3 py-2 mt-1 border-t border-gray-50">
-            <Globe className="h-4 w-4 text-gray-400 shrink-0" />
-            <span className="flex-1 text-sm text-[#374151]">{t("language")}</span>
-            <LanguageInline />
-          </div>
 
           <button
             onClick={onSignOut}
@@ -1340,7 +1329,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
             </button>
           </div>
 
-          {/* Scrollable content — clearly grouped sections; account surfaced first */}
+          {/* Scrollable content — mirrors the desktop navbar with mobile icon rows. */}
           <div className="flex-1 overflow-y-auto px-4 py-4">
             {/* Smart search on mobile */}
             <div className="mb-5">
@@ -1351,173 +1340,100 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
               />
             </div>
 
-            {/* MI CUENTA — surfaced right after the search so a logged-in user reaches
-                their panel fast. Role-aware (pro keeps the unified panel). */}
-            {user && (
-              <div className="mb-5">
-                <div className="mb-4 flex items-center gap-3">
-                  {!avatarReady ? (
-                    <span className="block h-10 w-10 animate-pulse rounded-full bg-gray-200" />
-                  ) : (
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src={avatarUrl ?? undefined} />
-                      <AvatarFallback delayMs={avatarUrl ? 600 : 0} className="text-[12px] bg-[#009FD9] text-white font-bold">{initials}</AvatarFallback>
-                    </Avatar>
-                  )}
-                  <div className="min-w-0 flex-1">
-                    {displayName && <p className="truncate text-sm font-bold text-[#162543]">{displayName}</p>}
-                    <p className="truncate text-xs text-gray-500">{user.email}</p>
-                  </div>
-                </div>
-                {/* Mode switch removed from the responsive menu (sprint 518) — it lives inside
-                    "Mi panel". The drawer just shows the "Mi cuenta" heading; its links reflect
-                    the active mode. */}
-                <a href={primaryPanelHref} onClick={() => setMobileOpen(false)} className="mb-3 flex items-center gap-3 rounded-xl bg-[#009FD9] px-3 py-3 text-sm font-bold text-white transition-colors hover:bg-[#0089bb]">
-                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white/15 text-white">
-                    <LayoutDashboard className="h-4 w-4" />
-                  </span>
-                  <span className="flex-1">{t("myPanel")}</span>
-                  <ChevronRight className="h-4 w-4 text-white/80" />
-                </a>
-                <div className="divide-y divide-gray-100 border-b border-t border-gray-100">
-                {mode === "offer" ? (
-                  <>
-                    <a href={bookingsHref} onClick={() => setMobileOpen(false)} className="flex min-h-11 items-center gap-3 py-2.5 text-sm font-medium text-[#374151] transition-colors hover:text-[#009FD9]">
-                      <Inbox className="h-4 w-4 shrink-0 text-gray-400" />
-                      <span className="flex-1">{t("receivedRequests")}</span>
-                    </a>
-                    <a href={proposalsHref} onClick={() => setMobileOpen(false)} className="flex min-h-11 items-center gap-3 py-2.5 text-sm font-medium text-[#374151] transition-colors hover:text-[#009FD9]">
-                      <FolderOpen className="h-4 w-4 shrink-0 text-gray-400" />
-                      <span className="flex-1">{t("myProposals")}</span>
-                    </a>
-                  </>
-                ) : (
-                  <>
-                    <a href={sentBookingsHref} onClick={() => setMobileOpen(false)} className="flex min-h-11 items-center gap-3 py-2.5 text-sm font-medium text-[#374151] transition-colors hover:text-[#009FD9]">
-                      <CalendarDays className="h-4 w-4 shrink-0 text-gray-400" />
-                      <span className="flex-1">{t("myRequests")}</span>
-                    </a>
-                    <a href={sentProjectsHref} onClick={() => setMobileOpen(false)} className="flex min-h-11 items-center gap-3 py-2.5 text-sm font-medium text-[#374151] transition-colors hover:text-[#009FD9]">
-                      <FolderOpen className="h-4 w-4 shrink-0 text-gray-400" />
-                      <span className="flex-1">{t("myProjects")}</span>
-                    </a>
-                    <a href={savedHref} onClick={() => setMobileOpen(false)} className="flex min-h-11 items-center gap-3 py-2.5 text-sm font-medium text-[#374151] transition-colors hover:text-[#009FD9]">
-                      <Bookmark className="h-4 w-4 shrink-0 text-gray-400" />
-                      <span className="flex-1">{t("favorites")}</span>
-                    </a>
-                  </>
-                )}
-                {!isPro && (
-                  <Link href="/registro/profesional" onClick={() => setMobileOpen(false)} className="flex min-h-11 items-center gap-3 py-2.5 text-sm font-semibold text-[#009FD9] transition-colors hover:text-[#0089bb]">
-                    <Briefcase className="h-4 w-4 shrink-0" />
-                    <span className="flex-1">{t("offerServices")}</span>
-                  </Link>
-                )}
-                <a href={accountHref} onClick={() => setMobileOpen(false)} className="flex min-h-11 items-center gap-3 py-2.5 text-sm font-medium text-[#374151] transition-colors hover:text-[#009FD9]">
-                  <Settings className="h-4 w-4 shrink-0 text-gray-400" />
-                  <span className="flex-1">{t("accountSecurity")}</span>
-                </a>
-                </div>
-              </div>
-            )}
-
-            {/* VISITOR ACTIONS — logged-out visitors get an Airbnb-style list:
-                primary marketplace paths first, account actions second. */}
-            {!user && (
-              <div className="mb-4 border-b border-gray-100 pb-3">
-                <Link
-                  href="/buscar"
-                  onClick={() => setMobileOpen(false)}
-                  className="flex min-h-12 items-center gap-3 rounded-xl px-2.5 py-2.5 text-sm font-bold text-[#162543] transition-colors hover:bg-[#f8fafc]"
-                >
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#EBF5FB] text-[#0089bb]">
-                    <Search className="h-4 w-4" />
-                  </span>
-                  <span className="min-w-0 flex-1">{t("searchProfessionals")}</span>
-                  <ChevronRight className="h-4 w-4 shrink-0 text-gray-300" />
-                </Link>
-                <Link
-                  href="/categorias"
-                  onClick={() => setMobileOpen(false)}
-                  className="flex min-h-12 items-center gap-3 rounded-xl px-2.5 py-2.5 text-sm font-semibold text-[#162543] transition-colors hover:bg-[#f8fafc]"
-                >
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#EBF5FB] text-[#0089bb]">
-                    <Compass className="h-4 w-4" />
-                  </span>
-                  <span className="min-w-0 flex-1">{t("categories")}</span>
-                  <ChevronRight className="h-4 w-4 shrink-0 text-gray-300" />
-                </Link>
-                <div className="my-2 h-px bg-gray-100" />
-                <Link
-                  href="/registro/profesional"
-                  onClick={() => setMobileOpen(false)}
-                  className="flex min-h-12 items-center gap-3 rounded-xl px-2.5 py-2.5 text-sm font-semibold text-[#374151] transition-colors hover:bg-[#f8fafc] hover:text-[#009FD9]"
-                >
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gray-100 text-gray-500">
-                    <Briefcase className="h-4 w-4" />
-                  </span>
-                  <span className="min-w-0 flex-1">{t("registerPro")}</span>
-                  <ChevronRight className="h-4 w-4 shrink-0 text-gray-300" />
-                </Link>
-                <Link
-                  href={loginHref}
-                  onClick={() => setMobileOpen(false)}
-                  className="flex min-h-12 items-center gap-3 rounded-xl px-2.5 py-2.5 text-sm font-semibold text-[#374151] transition-colors hover:bg-[#f8fafc] hover:text-[#009FD9]"
-                >
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gray-100 text-gray-500">
-                    <LogIn className="h-4 w-4" />
-                  </span>
-                  <span className="min-w-0 flex-1">{t("login")}</span>
-                  <ChevronRight className="h-4 w-4 shrink-0 text-gray-300" />
-                </Link>
-              </div>
-            )}
-
-            {/* RECURSOS — logged-in users still get Categorias here; visitors already saw it above. */}
             <div className="mb-5">
-              <p className="pb-2 text-[10px] font-bold uppercase tracking-widest text-gray-400">{t("resources")}</p>
+              <p className="pb-2 text-[10px] font-bold uppercase tracking-widest text-gray-400">{t("menu")}</p>
               <div className="divide-y divide-gray-100 border-b border-t border-gray-100">
-              {user && (
                 <Link
                   href="/categorias"
                   onClick={() => setMobileOpen(false)}
                   className="flex min-h-11 items-center gap-3 py-2.5 text-sm font-semibold text-[#162543] transition-colors hover:text-[#009FD9]"
                 >
                   <Compass className="h-4 w-4 shrink-0 text-[#009FD9]" />
-                  <span className="flex-1">{t("categories")}</span>
-                  <ChevronRight className="h-4 w-4 text-gray-300" />
+                  <span className="min-w-0 flex-1">{t("categories")}</span>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-gray-300" />
                 </Link>
-              )}
-              {RESOURCES_LINKS.map((link) => {
-                const ResourceIcon = RESOURCE_ICONS[link.key as keyof typeof RESOURCE_ICONS];
-                const content = (
-                  <>
-                    <ResourceIcon className="h-4 w-4 shrink-0 text-gray-400" />
-                    <span className="min-w-0 flex-1">{t(`resourceLinks.${link.key}`)}</span>
-                    <ChevronRight className="h-4 w-4 shrink-0 text-gray-300" />
-                  </>
-                );
-                return link.key === "support" ? (
-                  <SupportLink
-                    key={link.href}
-                    onNavigate={() => setMobileOpen(false)}
-                    className="flex min-h-11 w-full items-center gap-3 py-2.5 text-left text-sm font-medium leading-tight text-gray-600 transition-colors hover:text-[#009FD9]"
-                  >
-                    {content}
-                  </SupportLink>
-                ) : (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setMobileOpen(false)}
-                    className="flex min-h-11 items-center gap-3 py-2.5 text-sm font-medium leading-tight text-gray-600 transition-colors hover:text-[#009FD9]"
-                  >
-                    {content}
-                  </Link>
-                );
-              })}
+                {RESOURCES_LINKS.map((link) => {
+                  const ResourceIcon = RESOURCE_ICONS[link.key as keyof typeof RESOURCE_ICONS];
+                  const content = (
+                    <>
+                      <ResourceIcon className="h-4 w-4 shrink-0 text-gray-400" />
+                      <span className="min-w-0 flex-1">{t(`resourceLinks.${link.key}`)}</span>
+                      <ChevronRight className="h-4 w-4 shrink-0 text-gray-300" />
+                    </>
+                  );
+                  return link.key === "support" ? (
+                    <SupportLink
+                      key={link.href}
+                      onNavigate={() => setMobileOpen(false)}
+                      className="flex min-h-11 w-full items-center gap-3 py-2.5 text-left text-sm font-medium leading-tight text-gray-600 transition-colors hover:text-[#009FD9]"
+                    >
+                      {content}
+                    </SupportLink>
+                  ) : (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      onClick={() => setMobileOpen(false)}
+                      className="flex min-h-11 items-center gap-3 py-2.5 text-sm font-medium leading-tight text-gray-600 transition-colors hover:text-[#009FD9]"
+                    >
+                      {content}
+                    </Link>
+                  );
+                })}
               </div>
             </div>
+
+            {user ? (
+              <div className="mb-5">
+                <p className="pb-2 text-[10px] font-bold uppercase tracking-widest text-gray-400">{t("myAccount")}</p>
+                <div className="divide-y divide-gray-100 border-b border-t border-gray-100">
+                  {!isPro && (
+                    <Link href="/registro/profesional" onClick={() => setMobileOpen(false)} className="flex min-h-11 items-center gap-3 py-2.5 text-sm font-semibold text-[#009FD9] transition-colors hover:text-[#0089bb]">
+                      <Briefcase className="h-4 w-4 shrink-0" />
+                      <span className="min-w-0 flex-1">{t("offerServices")}</span>
+                      <ChevronRight className="h-4 w-4 shrink-0 text-gray-300" />
+                    </Link>
+                  )}
+                  <a href={primaryPanelHref} onClick={() => setMobileOpen(false)} className="flex min-h-11 items-center gap-3 py-2.5 text-sm font-semibold text-[#162543] transition-colors hover:text-[#009FD9]">
+                    <LayoutDashboard className="h-4 w-4 shrink-0 text-[#009FD9]" />
+                    <span className="min-w-0 flex-1">{t("myPanel")}</span>
+                    <ChevronRight className="h-4 w-4 shrink-0 text-gray-300" />
+                  </a>
+                  <a href={notificationsHref} onClick={() => setMobileOpen(false)} className="flex min-h-11 items-center gap-3 py-2.5 text-sm font-medium text-[#374151] transition-colors hover:text-[#009FD9]">
+                    <Bell className="h-4 w-4 shrink-0 text-gray-400" />
+                    <span className="min-w-0 flex-1">{t("notifications")}</span>
+                    {activeUnread > 0 && (
+                      <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold text-white">{activeUnread > 9 ? "9+" : activeUnread}</span>
+                    )}
+                    <ChevronRight className="h-4 w-4 shrink-0 text-gray-300" />
+                  </a>
+                </div>
+              </div>
+            ) : (
+              <div className="mb-5">
+                <p className="pb-2 text-[10px] font-bold uppercase tracking-widest text-gray-400">{t("myAccount")}</p>
+                <div className="divide-y divide-gray-100 border-b border-t border-gray-100">
+                <Link
+                  href="/registro/profesional"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex min-h-11 items-center gap-3 py-2.5 text-sm font-semibold text-[#009FD9] transition-colors hover:text-[#0089bb]"
+                >
+                  <Briefcase className="h-4 w-4 shrink-0" />
+                  <span className="min-w-0 flex-1">{t("registerPro")}</span>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-gray-300" />
+                </Link>
+                <Link
+                  href={loginHref}
+                  onClick={() => setMobileOpen(false)}
+                  className="flex min-h-11 items-center gap-3 py-2.5 text-sm font-medium text-[#374151] transition-colors hover:text-[#009FD9]"
+                >
+                  <LogIn className="h-4 w-4 shrink-0 text-gray-400" />
+                  <span className="min-w-0 flex-1">{t("login")}</span>
+                  <ChevronRight className="h-4 w-4 shrink-0 text-gray-300" />
+                </Link>
+              </div>
+              </div>
+            )}
 
             {/* Idioma — discreet inline text pair (not a segmented toggle). */}
             <div className="border-b border-t border-gray-100 py-3">
