@@ -1207,7 +1207,7 @@
     "reportR2": "False information",
     "reportR3": "Disrespectful",
     "reportR4": "Other",
-    "reportDetails": "Details (optional)",
+    "reportDetails": "Describe what happened",
     "reportSubmit": "Report"
   },
   "photoGallery": {
@@ -1769,7 +1769,7 @@
     "reportR2": "Poor work",
     "reportR3": "Disrespectful",
     "reportR4": "Other",
-    "reportDetails": "Details (optional)",
+    "reportDetails": "Describe what happened",
     "reportSubmit": "Report"
   },
   "clientPage": {

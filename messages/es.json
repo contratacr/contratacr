@@ -1206,7 +1206,7 @@
     "reportR2": "Datos falsos",
     "reportR3": "Trato irrespetuoso",
     "reportR4": "Otro",
-    "reportDetails": "Detalles (opcional)",
+    "reportDetails": "Describe qué pasó",
     "reportSubmit": "Reportar"
   },
   "photoGallery": {
@@ -1768,7 +1768,7 @@
     "reportR2": "Trabajo deficiente",
     "reportR3": "Trato irrespetuoso",
     "reportR4": "Otro",
-    "reportDetails": "Detalles (opcional)",
+    "reportDetails": "Describe qué pasó",
     "reportSubmit": "Reportar"
   },
   "clientPage": {

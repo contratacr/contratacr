@@ -901,7 +901,6 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
         <ReportModal
           title={t("reportTitle")}
           body={t("reportBody")}
-          reasons={[t("reportR1"), t("reportR2"), t("reportR3"), t("reportR4")]}
           detailsPlaceholder={t("reportDetails")}
           backLabel={t("cancelBack")}
           submitLabel={t("reportSubmit")}
