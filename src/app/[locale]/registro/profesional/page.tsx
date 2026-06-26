@@ -545,7 +545,7 @@ export default function RegisterProfessionalPage() {
           email: userEmail,
           fullName,
           businessName: businessName.trim() || null,
-          cedula: (noCrId || identityMismatch) ? null : (step1Data?.cedula?.replace(/\D/g, "") ?? (oauthCedula ? oauthCedula.replace(/\D/g, "") : null)),
+          cedula: (noCrId || identityMismatch) ? null : (step1Data?.cedula?.replace(/\D/g, "") ?? (accountCedula || oauthCedula ? (accountCedula || oauthCedula).replace(/\D/g, "") : null)),
           // Skipping the cédula (noCrId) is a normal unverified registration — NOT a
           // review case. Only "¿No es tu información?" (identityMismatch) routes to
           // manual review; both simply mean no cédula is stored (so no auto-verify).

@@ -114,7 +114,14 @@ export async function POST(req: Request) {
       fullName = bodyFullName ?? (adminLookup.user.user_metadata?.full_name as string) ?? "";
     }
 
-    const cedula = bodyCedula ?? null;
+    const rawBodyCedula = typeof bodyCedula === "string" ? bodyCedula.replace(/\D/g, "") : null;
+    const { data: existingProfile } = await supabase
+      .from("profiles")
+      .select("cedula, client_identity_status")
+      .eq("id", userId)
+      .maybeSingle();
+    const existingCedula = typeof existingProfile?.cedula === "string" ? existingProfile.cedula : null;
+    const cedula = rawBodyCedula || existingCedula || null;
 
     // ── 2. Check cedula duplicate ─────────────────────────────────────────────
     if (cedula) {
@@ -140,10 +147,10 @@ export async function POST(req: Request) {
       id: userId,
       email,
       full_name: fullName,
-      cedula: cedula || null,
       role: "professional",
       onboarding_completed: true,
       ...(photoUrl ? { avatar_url: photoUrl } : {}),
+      ...(cedula ? { cedula } : {}),
     };
 
     let { error: profileError } = await supabase.from("profiles").upsert(profileRow, { onConflict: "id" });

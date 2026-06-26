@@ -31,7 +31,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
   const { data: pro } = await db
     .from("professionals")
-    .select("id, verification_status")
+    .select("id, profile_id, verification_status")
     .eq("id", id)
     .maybeSingle();
   if (!pro) return NextResponse.json({ error: "Proveedor no encontrado." }, { status: 404 });
@@ -60,6 +60,20 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     console.error("[admin/decision] update error:", updErr);
     return NextResponse.json({ error: "No se pudo guardar la decisión." }, { status: 500 });
   }
+
+  await db
+    .from("profiles")
+    .update({
+      client_identity_status: toStatus === "verified" ? "verified" : action === "reject" ? "unverified" : "pending",
+      client_identity_verified_at: toStatus === "verified" ? new Date().toISOString() : null,
+      client_identity_provider: "manual",
+    })
+    .eq("id", pro.profile_id);
+  await db
+    .from("projects")
+    .update({ client_identity_status: toStatus === "verified" ? "verified" : action === "reject" ? "unverified" : "pending" })
+    .eq("client_id", pro.profile_id)
+    .eq("status", "open");
 
   // Audit trail — permanent record of who/when/what/why (manual decision).
   await db.from("provider_verification_log").insert({

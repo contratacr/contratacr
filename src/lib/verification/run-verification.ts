@@ -93,6 +93,20 @@ export async function runIdentityVerification(
       })
       .eq("id", professionalId);
 
+    await admin
+      .from("profiles")
+      .update({
+        client_identity_status: "verified",
+        client_identity_verified_at: now,
+        client_identity_provider: result.provider,
+      })
+      .eq("id", pro.profile_id);
+    await admin
+      .from("projects")
+      .update({ client_identity_status: "verified" })
+      .eq("client_id", pro.profile_id)
+      .eq("status", "open");
+
     await admin.from("provider_verification_log").insert({
       professional_id: professionalId,
       admin_id: null,
@@ -120,6 +134,19 @@ export async function runIdentityVerification(
       .from("professionals")
       .update({ verification_status: "under_appeal", verification_method: "automatic", verification_provider: result.provider, verification_updated_at: now })
       .eq("id", professionalId);
+    await admin
+      .from("profiles")
+      .update({
+        client_identity_status: "pending",
+        client_identity_verified_at: null,
+        client_identity_provider: result.provider,
+      })
+      .eq("id", pro.profile_id);
+    await admin
+      .from("projects")
+      .update({ client_identity_status: "pending" })
+      .eq("client_id", pro.profile_id)
+      .eq("status", "open");
 
     await admin.from("provider_verification_log").insert({
       professional_id: professionalId, admin_id: null, admin_name: "Apelación (re-ejecución automática)",
@@ -148,6 +175,20 @@ export async function runIdentityVerification(
       verification_updated_at: now,
     })
     .eq("id", professionalId);
+
+  await admin
+    .from("profiles")
+    .update({
+      client_identity_status: "pending",
+      client_identity_verified_at: null,
+      client_identity_provider: result.provider,
+    })
+    .eq("id", pro.profile_id);
+  await admin
+    .from("projects")
+    .update({ client_identity_status: "pending" })
+    .eq("client_id", pro.profile_id)
+    .eq("status", "open");
 
   await admin.from("provider_verification_log").insert({
     professional_id: professionalId,
