@@ -515,7 +515,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                     : null;
                   const sentDate = formatRelativeOrDate(p.created_at, locale);
                   return (
-                    <Card key={p.id} className={cn("rounded-2xl border-[#e5e7eb] bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md", isOpen && "shadow-md ring-1 ring-[#d8eef8]")}>
+                    <Card key={p.id} className={cn("rounded-2xl border-[#e5e7eb] bg-white shadow-sm transition-all hover:shadow-md", isOpen && "shadow-md ring-1 ring-[#d8eef8]")}>
                       {/* COLLAPSED header — client avatar + project title (primary) + a status chip
                           (a SENT proposal genuinely IS "Pendiente" until the client decides — unlike
                           auto-confirm bookings — so that badge is kept here); key fact = YOUR price; a
@@ -524,9 +524,9 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                         type="button"
                         onClick={() => setExpandedMine(isOpen ? null : p.id)}
                         aria-expanded={isOpen}
-                        className={cn("group w-full text-left p-4 sm:p-5 flex items-start gap-3.5 hover:bg-[#f9fbfd] transition-colors", isOpen ? "rounded-t-2xl bg-[#fbfdff]" : "rounded-2xl")}
+                        className={cn("group w-full text-left p-4 sm:p-5 flex items-start gap-3 hover:bg-[#f9fbfd] transition-colors sm:gap-3.5", isOpen ? "rounded-t-2xl bg-[#fbfdff]" : "rounded-2xl")}
                       >
-                        <Avatar className="h-11 w-11 shrink-0">
+                        <Avatar className="h-10 w-10 shrink-0 ring-2 ring-[#EBF5FB] sm:h-11 sm:w-11">
                           <AvatarImage src={p.projects?.profiles?.avatar_url} />
                           <AvatarFallback className="text-sm bg-[#EBF5FB] text-[#009FD9] font-bold">
                             {getInitials(clientName ?? "?")}
@@ -534,7 +534,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                         </Avatar>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2.5">
-                            <span className="min-w-0 flex-1 text-[15px] font-bold text-[#162543] line-clamp-2 [overflow-wrap:anywhere]">{p.projects?.title ?? t("projectFallback")}</span>
+                            <span className="min-w-0 flex-1 text-[15px] font-semibold leading-snug text-[#111827] line-clamp-2 [overflow-wrap:anywhere]">{p.projects?.title ?? t("projectFallback")}</span>
                             {!proposalStatusRedundant(p.status, ps) && (
                               p.status === "accepted" ? (
                                 <Badge variant={projStatusVariant(ps)} className="shrink-0 text-[11px] font-semibold">{projStatusLabel(ps)}</Badge>
@@ -543,19 +543,19 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                               )
                             )}
                           </div>
-                          <div className="mt-2 flex flex-col items-start gap-1.5 text-[13px]">
-                            <span className="inline-flex max-w-full items-center rounded-xl border border-[#ccecf8] bg-[#EBF5FB] px-3 py-2 font-bold text-[#0089bb] [overflow-wrap:anywhere]">
-                              {p.price ? `₡${p.price.toLocaleString("es-CR")}` : t("priceTBD")}
+                          <div className="mt-2.5 flex flex-col items-start gap-2 text-[13px]">
+                            <span className="inline-flex w-full max-w-full items-start rounded-xl border border-[#ccecf8] bg-[#EBF5FB] px-3 py-2.5 font-semibold text-[#162543]">
+                              <span className="min-w-0 [overflow-wrap:anywhere]">{p.price ? `₡${p.price.toLocaleString("es-CR")}` : t("priceTBD")}</span>
                             </span>
                             {clientName && (
-                              <span className="inline-flex w-full max-w-full items-center gap-2 text-[#6b7280]">
-                                <Users className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                                <span className="truncate">{clientName}</span>
+                              <span className="inline-flex w-full max-w-full items-start gap-2 text-[#6b7280]">
+                                <Users className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                                <span className="min-w-0 [overflow-wrap:anywhere]">{clientName}</span>
                               </span>
                             )}
-                            <span className="inline-flex w-full max-w-full items-center gap-2 text-[#9ca3af]">
-                              <CalendarDays className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                              <span className="truncate">{t("sentOn", { date: sentDate })}</span>
+                            <span className="inline-flex w-full max-w-full items-start gap-2 text-[#9ca3af]">
+                              <CalendarDays className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                              <span className="min-w-0 [overflow-wrap:anywhere]">{t("sentOn", { date: sentDate })}</span>
                             </span>
                           </div>
                         </div>
@@ -565,18 +565,18 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                       </button>
 
                       {isOpen && (
-                        <div className="rounded-b-2xl border-t border-[#f3f4f6] bg-gradient-to-b from-[#fcfdff] to-white px-4 pb-5 pt-4 sm:px-5 flex flex-col gap-3.5">
+                        <div className="rounded-b-2xl border-t border-[#f3f4f6] bg-[#f8fbfd] px-4 pb-5 pt-4 sm:px-5 flex flex-col gap-3.5">
                           {p.message && (
-                            <div className="rounded-2xl bg-white p-3.5 ring-1 ring-[#e8eef5]">
+                            <div className="rounded-2xl bg-white p-3.5 shadow-sm ring-1 ring-[#e8eef5]">
                               <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#9ca3af]">{t("yourMessage")}</p>
                               <ExpandableText text={p.message} lines={5} className="mt-1 text-[13px] leading-relaxed text-[#4b5563]" />
                             </div>
                           )}
                           {/* Client contact — revealed once the proposal is accepted (still active). */}
                           {p.status === "accepted" && ps !== "cancelled" && phone && (
-                            <div className="rounded-2xl bg-white p-3.5 ring-1 ring-[#e8eef5]">
+                            <div className="rounded-2xl bg-white p-3.5 shadow-sm ring-1 ring-[#e8eef5]">
                               <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#9ca3af]">{t("fieldPhone")}</p>
-                              <p className="mt-0.5 text-[13px] font-medium text-[#374151] truncate">{phone}</p>
+                              <p className="mt-0.5 text-[13px] font-medium text-[#374151] [overflow-wrap:anywhere]">{phone}</p>
                             </div>
                           )}
                           {/* Client cancelled the request after accepting → tell the pro (no actions). */}
@@ -607,7 +607,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                               if (ps === "in_progress") actions.push(<Button key="done" size="sm" variant="outline" className="flex-1 sm:flex-none rounded-lg px-4" onClick={() => markWorkDone(p.project_id)}>{t("markCompleted")}</Button>);
                             }
                             if (actions.length === 0) return null;
-                            return <div className="flex flex-wrap items-center gap-2">{actions}</div>;
+                            return <div className="flex flex-wrap items-center gap-2 border-t border-[#eef2f6] pt-3">{actions}</div>;
                           })()}
 
                           {/* Inline edit form (pending only) */}
