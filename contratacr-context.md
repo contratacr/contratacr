@@ -3562,3 +3562,6 @@ New i18n namespaces added this pass: `search.pagination`, extended `search.filte
 
 
 **Sprint 304 - Availability English spacing.** availability-editor.tsx: adjusted the weekly availability row so English weekday and action labels fit without colliding with time fields. The day label has more reserved width, actions can wrap before overlap, and the Spanish layout keeps the same visual rhythm.
+
+
+**Sprint 305 - Localized notification titles.** Notification surfaces now render known notification titles from messages.*.notifications.types instead of trusting the stored database title. This keeps legacy Spanish notifications readable in English without a data migration. Add new notification types to localized-notification.ts and both message files.

@@ -2182,7 +2182,15 @@
       "review_request": "Leave your review",
       "proposal_received": "New proposal",
       "proposal_accepted": "Proposal accepted!",
-      "booking_rescheduled": "New time proposed"
+      "booking_rescheduled": "New time proposed",
+      "booking_update": "Request update",
+      "project_proposal_accepted": "Proposal accepted!",
+      "new_project": "New opportunity",
+      "project_work_done": "Confirm job completion",
+      "project_completed": "Request completed",
+      "support_reply": "Support reply",
+      "verification": "Verification update",
+      "verification_appeal_received": "Verification appeal received"
     },
     "viewAll": "View all"
   },

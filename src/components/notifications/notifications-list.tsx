@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { cn, formatRelativeOrDate } from "@/lib/utils";
 import { notificationHref, notificationInMode } from "@/lib/notification-link";
+import { TRANSLATED_NOTIFICATION_TYPES } from "@/lib/localized-notification";
 import { useMode } from "@/hooks/use-mode";
 import { canOffer } from "@/lib/auth/capabilities";
 import { NotificationSourceIcon } from "@/components/notifications/notification-source-icon";
@@ -55,6 +56,8 @@ export function NotificationsList() {
   // Only the active mode's notifications are shown / acted on here.
   const visible = items.filter((n) => notificationInMode(n.type, mode));
   const unread = visible.filter((n) => !n.read).length;
+  const notificationTitle = (n: Notification) =>
+    TRANSLATED_NOTIFICATION_TYPES.has(n.type) ? t(`types.${n.type}`) : n.title;
   // NO "todas / no leídas" filter (sprint 516): it added a tab row of clutter without
   // real value — unread is already conveyed by the row highlight + dot + "Marcar todas
   // como leídas", the list is mode-scoped + short, and each title makes its type obvious.
@@ -161,7 +164,7 @@ export function NotificationsList() {
                     <div className="min-w-0 flex-1">
                       {/* overflow-wrap:anywhere breaks long unbroken strings; line-clamp keeps
                           every row a uniform, compact height (full text on open). */}
-                      <p className={cn("text-sm [overflow-wrap:anywhere] line-clamp-2", n.read ? "font-medium text-[#374151]" : "font-semibold text-[#162543]")}>{n.title}</p>
+                      <p className={cn("text-sm [overflow-wrap:anywhere] line-clamp-2", n.read ? "font-medium text-[#374151]" : "font-semibold text-[#162543]")}>{notificationTitle(n)}</p>
                       <p className="text-xs text-[#6b7280] mt-0.5 [overflow-wrap:anywhere] line-clamp-2">{n.message}</p>
                       <p className="text-xs text-[#9ca3af] mt-1">{formatRelativeOrDate(n.created_at, locale)}</p>
                     </div>

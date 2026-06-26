@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useRouter } from "@/i18n/navigation";
 import { cn, formatRelativeTime } from "@/lib/utils";
 import { notificationHref } from "@/lib/notification-link";
+import { TRANSLATED_NOTIFICATION_TYPES } from "@/lib/localized-notification";
 
 type Notification = {
   id: string;
@@ -49,6 +50,8 @@ export default function NotificationsPage() {
   }, [user]);
 
   const unread = items.filter((n) => !n.read).length;
+  const notificationTitle = (n: Notification) =>
+    TRANSLATED_NOTIFICATION_TYPES.has(n.type) ? t(`types.${n.type}`) : n.title;
 
   async function markAllRead() {
     if (!user) return;
@@ -102,7 +105,7 @@ export default function NotificationsPage() {
                       <div className="flex items-start gap-2">
                         {!n.read && <span className="mt-1.5 h-2 w-2 rounded-full bg-[#319278] shrink-0" />}
                         <div className={cn(!n.read ? "" : "ml-4")}>
-                          <p className="text-sm font-medium text-[#111827]">{n.title}</p>
+                          <p className="text-sm font-medium text-[#111827]">{notificationTitle(n)}</p>
                           <p className="text-xs text-[#6b7280] mt-0.5">{n.message}</p>
                           <p className="text-xs text-[#9ca3af] mt-1">{formatRelativeTime(n.created_at)}</p>
                         </div>

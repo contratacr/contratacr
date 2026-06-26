@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { cn, formatRelativeTime } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { notificationHref } from "@/lib/notification-link";
+import { TRANSLATED_NOTIFICATION_TYPES } from "@/lib/localized-notification";
 import { NotificationSourceIcon } from "@/components/notifications/notification-source-icon";
 
 type Notification = {
@@ -39,6 +40,8 @@ export function NotificationBell() {
   // professional, support, and account notifications together.
   const visible = notifications;
   const unreadCount = visible.filter((n) => !n.read).length;
+  const notificationTitle = (n: Notification) =>
+    TRANSLATED_NOTIFICATION_TYPES.has(n.type) ? t(`types.${n.type}`) : n.title;
 
   // Re-pullable so the badge can refresh whenever notifications change anywhere
   // (the in-panel list marks read / deletes, another tab, etc.).
@@ -214,7 +217,7 @@ export function NotificationBell() {
                               context clear; clicking still routes correctly.
                               overflow-wrap:anywhere + line-clamp keep long/unbroken
                               text inside the row (full text on open). */}
-                          <p className="text-sm font-medium text-[#111827] [overflow-wrap:anywhere] line-clamp-2">{n.title}</p>
+                          <p className="text-sm font-medium text-[#111827] [overflow-wrap:anywhere] line-clamp-2">{notificationTitle(n)}</p>
                           <p className="text-xs text-[#6b7280] mt-0.5 [overflow-wrap:anywhere] line-clamp-2">{n.message}</p>
                           <p className="text-xs text-[#9ca3af] mt-1">
                             {formatRelativeTime(n.created_at, locale)}
