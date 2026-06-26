@@ -615,7 +615,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                           <div className="mt-2 flex flex-col items-start gap-1.5 text-[13px]">
                             {project.categories?.name && (
                               <span className="inline-flex w-full max-w-full items-center gap-2 text-[#374151]">
-                                <ClipboardList className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                                <Wrench className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
                                 <span className="truncate">{project.categories.name}</span>
                               </span>
                             )}
