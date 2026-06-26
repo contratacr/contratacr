@@ -83,11 +83,7 @@ function useSwitchLang() {
   };
 }
 
-/* ─── Language menu (DESKTOP navbar) ───
-   Deliberately NOT a segmented control (so it never competes with the prominent
-   MODE segmented control). A discreet, quiet **globe + current code** trigger
-   that opens a tiny dropdown to pick the language — language is set rarely, so
-   it stays subordinate and out of the way. */
+/* ─── Language menu (DESKTOP navbar) ─── */
 function LanguageMenu() {
   const locale = useLocale();
   const switchLang = useSwitchLang();
@@ -111,14 +107,19 @@ function LanguageMenu() {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Cambiar idioma / Change language"
-        className="inline-flex items-center gap-1 rounded-full px-2 py-1.5 text-[12px] font-semibold text-gray-500 hover:text-[#1a2744] hover:bg-gray-50 transition-colors"
+        className={cn(
+          "inline-flex h-10 items-center gap-2 rounded-full border px-3 text-[12px] font-bold transition-all",
+          open
+            ? "border-[#bfe3f5] bg-[#EBF5FB] text-[#0089bb] shadow-[0_10px_26px_-20px_rgba(0,159,217,0.85)]"
+            : "border-[#e8eef5] bg-white text-[#374151] shadow-[0_8px_24px_-22px_rgba(15,23,42,0.6)] hover:border-[#ccecf8] hover:bg-[#f8fbfd] hover:text-[#162543]"
+        )}
       >
-        <Globe className="h-4 w-4 text-gray-400" aria-hidden />
-        {locale.toUpperCase()}
-        <ChevronDown className={cn("h-3 w-3 text-gray-400 transition-transform duration-200", open && "rotate-180")} />
+        <Globe className={cn("h-4 w-4", open ? "text-[#0089bb]" : "text-[#9ca3af]")} aria-hidden />
+        <span>{locale.toUpperCase()}</span>
+        <ChevronDown className={cn("h-3.5 w-3.5 text-[#9ca3af] transition-transform duration-200", open && "rotate-180 text-[#0089bb]")} />
       </button>
       {open && (
-        <div role="menu" className="absolute right-0 top-full mt-1.5 w-36 rounded-xl border border-gray-100 bg-white py-1 shadow-[0_18px_45px_-18px_rgba(15,23,42,0.42)] z-50">
+        <div role="menu" className="absolute right-0 top-full z-50 mt-2 w-44 overflow-hidden rounded-2xl border border-[#e8eef5] bg-white p-1.5 shadow-[0_24px_70px_-24px_rgba(15,23,42,0.5)]">
           {LANGS.map((l) => {
             const active = locale === l.code;
             return (
@@ -128,12 +129,17 @@ function LanguageMenu() {
                 aria-checked={active}
                 onClick={() => { setOpen(false); switchLang(l.code); }}
                 className={cn(
-                  "flex w-full items-center justify-between gap-2 px-3 py-2 text-sm transition-colors",
-                  active ? "bg-[#EBF5FB] font-semibold text-[#009FD9]" : "text-[#374151] hover:bg-gray-50",
+                  "flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left transition-colors",
+                  active ? "bg-[#EBF5FB] font-semibold text-[#0089bb]" : "text-[#374151] hover:bg-[#f8fafc] hover:text-[#162543]",
                 )}
               >
-                {l.label}
-                {active && <Check className="h-4 w-4" />}
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold">{l.label}</span>
+                  <span className="block text-[11px] font-medium uppercase tracking-wide text-[#9ca3af]">{l.code}</span>
+                </span>
+                <span className={cn("grid h-5 w-5 shrink-0 place-items-center rounded-full", active ? "bg-[#009FD9] text-white" : "bg-[#f3f4f6] text-transparent")}>
+                  <Check className="h-3.5 w-3.5" />
+                </span>
               </button>
             );
           })}
@@ -143,14 +149,12 @@ function LanguageMenu() {
   );
 }
 
-/* ─── Language inline (mobile profile menu + hamburger drawer) ───
-   Discreet plain-text pair (current = brand-blue, other = grey) — distinct from
-   the mode segmented control's pill track; fits a vertical menu row cleanly. */
+/* ─── Language inline (mobile hamburger drawer) ─── */
 function LanguageInline({ className }: { className?: string }) {
   const locale = useLocale();
   const switchLang = useSwitchLang();
   return (
-    <div className={cn("flex items-center gap-3", className)} role="group" aria-label="Cambiar idioma / Change language">
+    <div className={cn("grid grid-cols-2 gap-2", className)} role="group" aria-label="Cambiar idioma / Change language">
       {LANGS.map((l) => {
         const active = locale === l.code;
         return (
@@ -159,11 +163,15 @@ function LanguageInline({ className }: { className?: string }) {
             onClick={() => switchLang(l.code)}
             aria-pressed={active}
             className={cn(
-              "text-sm transition-colors",
-              active ? "font-semibold text-[#009FD9]" : "text-gray-500 hover:text-[#1a2744]",
+              "inline-flex h-10 items-center justify-center gap-2 rounded-xl border px-3 text-sm font-semibold transition-colors",
+              active
+                ? "border-[#ccecf8] bg-[#EBF5FB] text-[#0089bb]"
+                : "border-[#e5e7eb] bg-white text-[#6b7280] hover:border-[#cbd5e1] hover:text-[#162543]",
             )}
           >
-            {l.label}
+            <span>{l.code.toUpperCase()}</span>
+            <span className="hidden min-[360px]:inline">{l.label}</span>
+            {active && <Check className="h-4 w-4 shrink-0" />}
           </button>
         );
       })}
@@ -1481,12 +1489,13 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                 </div>
               </div>
 
-              {/* Idioma - discreet inline text pair (not a segmented toggle). */}
-              <div className="px-4 py-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-gray-400">{t("language")}</span>
-                  <LanguageInline />
+              {/* Idioma */}
+              <div className="border-t border-[#edf2f7] px-3 py-3">
+                <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-[#9ca3af]">
+                  <Globe className="h-3.5 w-3.5" />
+                  <span>{t("language")}</span>
                 </div>
+                <LanguageInline />
               </div>
             </div>
 
