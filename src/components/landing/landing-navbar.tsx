@@ -1349,126 +1349,128 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
             </button>
           </div>
 
-          {/* Scrollable content — mirrors the desktop navbar with mobile icon rows. */}
+          {/* Scrollable content - mirrors the desktop navbar with mobile icon rows. */}
           <div className="flex-1 overflow-y-auto px-4 py-4">
-            {/* Smart search on mobile */}
-            <div className="mb-4 rounded-2xl border border-[#e8eef5] bg-white p-2 shadow-[0_12px_35px_-24px_rgba(15,23,42,0.55)]">
-              <CategoryAutocomplete
-                placeholder={t("searchServicePlaceholderShort")}
-                size="lg"
-                onNavigate={() => setMobileOpen(false)}
-              />
-            </div>
-
-            <div className="mb-4 rounded-2xl border border-[#e8eef5] bg-white p-1.5 shadow-[0_12px_35px_-24px_rgba(15,23,42,0.55)]">
-              <div className="flex flex-col gap-0.5">
-                <Link
-                  href="/categorias"
-                  onClick={() => setMobileOpen(false)}
-                  className={mobileRowClass(categoriesActive, true)}
-                >
-                  <Compass className={mobileIconClass(categoriesActive)} />
-                  <span className="min-w-0 flex-1">{t("categories")}</span>
-                  <ChevronRight className={mobileChevronClass(categoriesActive)} />
-                </Link>
-                {RESOURCES_LINKS.map((link) => {
-                  const ResourceIcon = RESOURCE_ICONS[link.key as keyof typeof RESOURCE_ICONS];
-                  const active = navPath === link.href || navPath.startsWith(`${link.href}/`);
-                  const content = (
-                    <>
-                      <ResourceIcon className={mobileIconClass(active)} />
-                      <span className="min-w-0 flex-1">{t(`resourceLinks.${link.key}`)}</span>
-                      <ChevronRight className={mobileChevronClass(active)} />
-                    </>
-                  );
-                  return link.key === "support" ? (
-                    <SupportLink
-                      key={link.href}
-                      onNavigate={() => setMobileOpen(false)}
-                      className={mobileRowClass(active)}
-                    >
-                      {content}
-                    </SupportLink>
-                  ) : (
-                    <Link
-                      key={link.href}
-                      href={link.href}
-                      onClick={() => setMobileOpen(false)}
-                      className={mobileRowClass(active)}
-                    >
-                      {content}
-                    </Link>
-                  );
-                })}
-                {!user && (
-                  <>
-                    <Link
-                      href="/registro/profesional"
-                      onClick={() => setMobileOpen(false)}
-                      className="relative flex min-h-[48px] items-center gap-3 rounded-xl bg-[#009FD9] px-3 py-2.5 text-sm font-semibold text-white shadow-[0_10px_25px_-18px_rgba(0,159,217,0.9)] transition-colors hover:bg-[#0089bb]"
-                    >
-                      <Briefcase className="h-4 w-4 shrink-0" />
-                      <span className="min-w-0 flex-1">{t("registerPro")}</span>
-                      <ChevronRight className="h-4 w-4 shrink-0 text-white/70" />
-                    </Link>
-                    <Link
-                      href={loginHref}
-                      onClick={() => setMobileOpen(false)}
-                      className={mobileRowClass(false)}
-                    >
-                      <LogIn className={mobileIconClass(false)} />
-                      <span className="min-w-0 flex-1">{t("login")}</span>
-                      <ChevronRight className={mobileChevronClass(false)} />
-                    </Link>
-                  </>
-                )}
-              </div>
-            </div>
-
-            {user ? (
-              <div className="mb-4 rounded-2xl border border-[#e8eef5] bg-white p-1.5 shadow-[0_12px_35px_-24px_rgba(15,23,42,0.55)]">
-                <div className="mb-1 flex items-center gap-3 rounded-xl bg-[#f8fafc] px-3 py-3">
-                  <Avatar className="h-9 w-9">
-                    <AvatarImage src={avatarUrl ?? undefined} />
-                    <AvatarFallback delayMs={avatarUrl ? 600 : 0} className="bg-[#009FD9] text-xs font-bold text-white">
-                      {initials}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-bold text-[#162543]">{displayName || t("myAccount")}</p>
-                    <p className="truncate text-xs text-[#9ca3af]">{user.email}</p>
+            <div className="overflow-hidden rounded-2xl border border-[#e8eef5] bg-white shadow-[0_18px_45px_-26px_rgba(15,23,42,0.65)]">
+              {user ? (
+                <div className="border-b border-[#edf2f7] p-1.5">
+                  <div className="mb-1 flex items-center gap-3 rounded-xl bg-[#f8fafc] px-3 py-3">
+                    <Avatar className="h-9 w-9">
+                      <AvatarImage src={avatarUrl ?? undefined} />
+                      <AvatarFallback delayMs={avatarUrl ? 600 : 0} className="bg-[#009FD9] text-xs font-bold text-white">
+                        {initials}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-bold text-[#162543]">{displayName || t("myAccount")}</p>
+                      <p className="truncate text-xs text-[#9ca3af]">{user.email}</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    <a href={primaryPanelHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(panelActive, true)}>
+                      <LayoutDashboard className={mobileIconClass(panelActive)} />
+                      <span className="min-w-0 flex-1">{t("myPanel")}</span>
+                      <ChevronRight className={mobileChevronClass(panelActive)} />
+                    </a>
+                    <a href={notificationsHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(notificationsActive)}>
+                      <Bell className={mobileIconClass(notificationsActive)} />
+                      <span className="min-w-0 flex-1">{t("notifications")}</span>
+                      {activeUnread > 0 && (
+                        <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold text-white">{activeUnread > 9 ? "9+" : activeUnread}</span>
+                      )}
+                      <ChevronRight className={mobileChevronClass(notificationsActive)} />
+                    </a>
+                    {!isPro && (
+                      <Link href="/registro/profesional" onClick={() => setMobileOpen(false)} className={mobileRowClass(false, true)}>
+                        <Briefcase className={mobileIconClass(false)} />
+                        <span className="min-w-0 flex-1">{t("offerServices")}</span>
+                        <ChevronRight className={mobileChevronClass(false)} />
+                      </Link>
+                    )}
                   </div>
                 </div>
+              ) : null}
+
+              {/* Smart search on mobile */}
+              <div className="border-b border-[#edf2f7] p-2">
+                <CategoryAutocomplete
+                  placeholder={t("searchServicePlaceholderShort")}
+                  size="lg"
+                  onNavigate={() => setMobileOpen(false)}
+                />
+              </div>
+
+              <div className="border-b border-[#edf2f7] p-1.5">
                 <div className="flex flex-col gap-0.5">
-                  {!isPro && (
-                    <Link href="/registro/profesional" onClick={() => setMobileOpen(false)} className={mobileRowClass(false, true)}>
-                      <Briefcase className={mobileIconClass(false)} />
-                      <span className="min-w-0 flex-1">{t("offerServices")}</span>
-                      <ChevronRight className={mobileChevronClass(false)} />
-                    </Link>
+                  <Link
+                    href="/categorias"
+                    onClick={() => setMobileOpen(false)}
+                    className={mobileRowClass(categoriesActive, true)}
+                  >
+                    <Compass className={mobileIconClass(categoriesActive)} />
+                    <span className="min-w-0 flex-1">{t("categories")}</span>
+                    <ChevronRight className={mobileChevronClass(categoriesActive)} />
+                  </Link>
+                  {RESOURCES_LINKS.map((link) => {
+                    const ResourceIcon = RESOURCE_ICONS[link.key as keyof typeof RESOURCE_ICONS];
+                    const active = navPath === link.href || navPath.startsWith(`${link.href}/`);
+                    const content = (
+                      <>
+                        <ResourceIcon className={mobileIconClass(active)} />
+                        <span className="min-w-0 flex-1">{t(`resourceLinks.${link.key}`)}</span>
+                        <ChevronRight className={mobileChevronClass(active)} />
+                      </>
+                    );
+                    return link.key === "support" ? (
+                      <SupportLink
+                        key={link.href}
+                        onNavigate={() => setMobileOpen(false)}
+                        className={mobileRowClass(active)}
+                      >
+                        {content}
+                      </SupportLink>
+                    ) : (
+                      <Link
+                        key={link.href}
+                        href={link.href}
+                        onClick={() => setMobileOpen(false)}
+                        className={mobileRowClass(active)}
+                      >
+                        {content}
+                      </Link>
+                    );
+                  })}
+                  {!user && (
+                    <>
+                      <Link
+                        href="/registro/profesional"
+                        onClick={() => setMobileOpen(false)}
+                        className="relative flex min-h-[48px] items-center gap-3 rounded-xl bg-[#009FD9] px-3 py-2.5 text-sm font-semibold text-white shadow-[0_10px_25px_-18px_rgba(0,159,217,0.9)] transition-colors hover:bg-[#0089bb]"
+                      >
+                        <Briefcase className="h-4 w-4 shrink-0" />
+                        <span className="min-w-0 flex-1">{t("registerPro")}</span>
+                        <ChevronRight className="h-4 w-4 shrink-0 text-white/70" />
+                      </Link>
+                      <Link
+                        href={loginHref}
+                        onClick={() => setMobileOpen(false)}
+                        className={mobileRowClass(false)}
+                      >
+                        <LogIn className={mobileIconClass(false)} />
+                        <span className="min-w-0 flex-1">{t("login")}</span>
+                        <ChevronRight className={mobileChevronClass(false)} />
+                      </Link>
+                    </>
                   )}
-                  <a href={primaryPanelHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(panelActive, true)}>
-                    <LayoutDashboard className={mobileIconClass(panelActive)} />
-                    <span className="min-w-0 flex-1">{t("myPanel")}</span>
-                    <ChevronRight className={mobileChevronClass(panelActive)} />
-                  </a>
-                  <a href={notificationsHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(notificationsActive)}>
-                    <Bell className={mobileIconClass(notificationsActive)} />
-                    <span className="min-w-0 flex-1">{t("notifications")}</span>
-                    {activeUnread > 0 && (
-                      <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold text-white">{activeUnread > 9 ? "9+" : activeUnread}</span>
-                    )}
-                    <ChevronRight className={mobileChevronClass(notificationsActive)} />
-                  </a>
                 </div>
               </div>
-            ) : null}
 
-            {/* Idioma — discreet inline text pair (not a segmented toggle). */}
-            <div className="rounded-2xl border border-[#e8eef5] bg-white px-4 py-3 shadow-[0_12px_35px_-24px_rgba(15,23,42,0.55)]">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-400 font-medium">{t("language")}</span>
-                <LanguageInline />
+              {/* Idioma - discreet inline text pair (not a segmented toggle). */}
+              <div className="px-4 py-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-gray-400">{t("language")}</span>
+                  <LanguageInline />
+                </div>
               </div>
             </div>
 
