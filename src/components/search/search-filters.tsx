@@ -113,7 +113,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
 
   // Request geolocation on demand (item 11). Granted → proximity sort + autofill
   // the nearest provincia. Denied/unavailable → keep the text-based search.
-  function useMyLocation() {
+  function requestMyLocation() {
     if (geoActive) {
       // Toggle OFF — drop the proximity sort + coords, keep other filters.
       setGeoError(null);
@@ -235,7 +235,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
         <div className="shrink-0 w-[150px]">
           <Select value={sortBy} onValueChange={(v) => {
             setSortBy(v);
-            if (v === "cercania" && !geoActive) { useMyLocation(); return; }
+            if (v === "cercania" && !geoActive) { requestMyLocation(); return; }
             applyFilters({ sortBy: v });
           }}>
             <SelectTrigger className={pill}><SelectValue /></SelectTrigger>
@@ -260,7 +260,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
             </SelectContent>
           </Select>
         </div>
-        <button type="button" onClick={useMyLocation} disabled={geoLoading} className={toggleChip(geoActive)}>
+        <button type="button" onClick={requestMyLocation} disabled={geoLoading} className={toggleChip(geoActive)}>
           {geoLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MapPin className="h-3.5 w-3.5" />}
           {geoActive ? t("filters.nearMeActive") : t("filters.nearMe")}
         </button>
@@ -304,7 +304,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
                 type="button"
                 onClick={() => window.dispatchEvent(new CustomEvent("ccr:close-filters"))}
                 aria-label={t("close")}
-                className="-mr-1 inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#f3f4f6] text-[#374151] hover:bg-[#e5e7eb] active:scale-95 transition-all"
+                className="-mr-1 inline-flex h-8 w-8 items-center justify-center rounded-lg text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#111827] active:scale-95 transition-all"
               >
                 <X className="h-[18px] w-[18px]" />
               </button>
@@ -427,7 +427,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
             setSortBy(v);
             // "Cercanía" needs the user's coordinates — request geolocation if we
             // don't have them yet; otherwise apply directly.
-            if (v === "cercania" && !geoActive) { useMyLocation(); return; }
+            if (v === "cercania" && !geoActive) { requestMyLocation(); return; }
             applyFilters({ sortBy: v });
           }}>
             <SelectTrigger className={FILTER_TRIGGER}><SelectValue /></SelectTrigger>
@@ -472,7 +472,7 @@ export function SearchFilters({ variant = "sidebar", hideSearch = false, hideHea
       <div className="mt-3 flex flex-col gap-0.5 border-t border-[#f3f4f6] pt-2">
         <button
           type="button"
-          onClick={useMyLocation}
+          onClick={requestMyLocation}
           disabled={geoLoading}
           className="inline-flex w-full items-center justify-between gap-2 rounded-lg px-1.5 py-2 text-[13px] font-medium text-[#374151] transition-colors hover:bg-[#f9fafb] focus:outline-none focus-visible:bg-[#f9fafb]"
         >
