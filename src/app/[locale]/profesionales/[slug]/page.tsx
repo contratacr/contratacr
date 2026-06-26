@@ -21,6 +21,7 @@ import { casoProfession, countCases } from "@/lib/services";
 import { formatPricingTier, primaryPricingLabel } from "@/lib/pricing";
 import { languageLabel } from "@/lib/data/languages";
 import { insurerLabel } from "@/lib/data/insurers";
+import { getCantonById, getProvinceById } from "@/lib/data/cr-geography";
 import { ReviewSection } from "@/components/professionals/review-section";
 import { CaseShowcase } from "@/components/professionals/case-showcase";
 import { BrandIconBadge } from "@/components/ui/brand-icon-badge";
@@ -723,9 +724,17 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                           .filter(([, w]) => w.name || w.address)
                       ).values()
                     );
-                    const sameText = (a?: string | null, b?: string | null) =>
-                      String(a ?? "").trim().toLocaleLowerCase("es-CR") === String(b ?? "").trim().toLocaleLowerCase("es-CR");
-                    const workplaceLines = uniqueWorkplaces.filter((w) => !(sameText(w.name, locationText) || sameText(w.address, locationText)));
+                    const workplaceAreaLines = Array.from(new Set([
+                      ...uniqueWorkplaces
+                        .map((w) => {
+                          const area = w as typeof w & { provinciaId?: string; cantonId?: string };
+                          const cantonName = area.cantonId ? getCantonById(area.cantonId)?.name : "";
+                          const provinceName = area.provinciaId ? getProvinceById(area.provinciaId)?.name : "";
+                          return [cantonName, provinceName].filter(Boolean).join(", ");
+                        })
+                        .filter(Boolean),
+                      locationText,
+                    ].filter(Boolean)));
                     if (professional.bio) facts.push({
                       key: "bio",
                       icon: <FileText className="h-5 w-5" />,
@@ -747,40 +756,34 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                       facts.push({
                         key: "price", icon: <Coins className="h-5 w-5" />, label: t("prices"),
                         value: (
-                          <span className="flex flex-col gap-1.5">
+                          <div className="divide-y divide-[#eef2f6]">
                             {professional.services.map((service) => (
-                              <span key={service.id} className="grid gap-0.5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-baseline sm:gap-4">
-                                <span className="min-w-0 font-medium text-[#374151] [overflow-wrap:anywhere]">{service.name}</span>
-                                <span className="text-[#162543]">{service.price || t("priceConsult")}</span>
-                              </span>
+                              <div key={service.id} className="grid gap-1 py-2 first:pt-0 last:pb-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-baseline sm:gap-4">
+                                <span className="min-w-0 text-[#374151] [overflow-wrap:anywhere]">{service.name}</span>
+                                <span className="font-semibold text-[#162543] sm:text-right">{service.price || t("priceConsult")}</span>
+                              </div>
                             ))}
-                          </span>
+                          </div>
                         ),
-                        caption: t("pricesRefCaption"),
                       });
                     } else if (professional.pricing && professional.pricing.length > 0) {
                       facts.push({
                         key: "price", icon: <Coins className="h-5 w-5" />, label: t("prices"),
-                        value: <span className="flex flex-col gap-0.5">{professional.pricing.map((tier) => <span key={tier.id}>{formatPricingTier(tier)}</span>)}</span>,
-                        caption: t("pricesRefCaption"),
+                        value: <div className="divide-y divide-[#eef2f6]">{professional.pricing.map((tier) => <div key={tier.id} className="py-2 first:pt-0 last:pb-0 font-semibold text-[#162543]">{formatPricingTier(tier)}</div>)}</div>,
                       });
                     } else if (rate) {
                       facts.push({ key: "rate", icon: <Coins className="h-5 w-5" />, label: t("baseRate"), value: rate, caption: t("baseRateCaption") });
                     }
-                    if (locationText || uniqueWorkplaces.length > 0) facts.push({
+                    if (workplaceAreaLines.length > 0) facts.push({
                       key: "loc", icon: <MapPin className="h-5 w-5" />,
-                      label: uniqueWorkplaces.length > 0 ? t("workplaces") : t("location"),
-                      value: locationText || uniqueWorkplaces[0]?.name || uniqueWorkplaces[0]?.address || "",
-                      caption: workplaceLines.length > 0 ? (
-                        <span className="flex flex-col gap-1.5">
-                          {workplaceLines.map((w, i) => (
-                            <span key={w.id ?? i} className="[overflow-wrap:anywhere]">
-                              <span className="font-medium text-[#374151]">{w.name}</span>
-                              {w.address && w.address !== w.name && <span className="mt-0.5 block text-[#9ca3af]">{w.address}</span>}
-                            </span>
+                      label: workplaceAreaLines.length > 1 ? t("workplaces") : t("location"),
+                      value: (
+                        <span className="flex flex-col gap-1">
+                          {workplaceAreaLines.map((line) => (
+                            <span key={line} className="[overflow-wrap:anywhere]">{line}</span>
                           ))}
                         </span>
-                      ) : undefined,
+                      ),
                     });
                     return (
                       <div className="flex flex-col gap-5">

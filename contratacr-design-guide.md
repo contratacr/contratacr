@@ -249,6 +249,8 @@ Use the standard 4px Tailwind steps. Defaults for this app:
 
 **Professional profile description is required:** the main profile `Descripción` / `Description` field (`bio`) is part of the "Completa tu perfil" required checklist. Do not label it optional in the profile editor; show it with the required `*`. Optional copy is only valid for the separate identity verification suggestion, business name, social links, extra languages, insurers, and other non-completion extras.
 
+> **Public profile About prices/workplaces (sprint 571).** In Sobre m? / About, Precios/Prices render as clean service-to-price rows with subtle internal dividers and no caption such as ?Precios de referencia.? Lugares de trabajo / Workplaces must show only the administrative area (`Cant?n, Provincia`) chosen by the pro, deduplicated; do not show map pin names, exact addresses, or place labels from the map in this fact row.
+
 > **Public profile About label/value hierarchy (sprint 570).** In Sobre m? / About facts, the small field title/label is muted grey and uppercase; the content/value is darker readable text (`#374151`, medium weight), not another navy/bold title. Reserve stronger navy/brand emphasis only for true anchors such as prices inside the value. This mirrors the dashboard field rule: label grey, user-facing value dark.
 
 > **Public profile About verification row removed (sprint 569).** Sobre m? / About must not show a standalone Confianza/Trust row with Verificado/Verified. The verification state belongs in the profile header badge only; repeating it inside About adds clutter. Keep About focused on useful profile details: description, experience, languages, insurers, prices, and workplaces.
