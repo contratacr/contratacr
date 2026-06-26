@@ -1795,7 +1795,7 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 
 > **Single secondary card actions.** Do not show an Acciones overflow menu when a dashboard card has only one secondary action. Render the action directly. For Mis publicaciones, active publications should offer Cancelar solicitud, while Eliminar is reserved for non-active publications.
 
-> **Oportunidades compact metadata.** In collapsed Oportunidades cards, keep the core metadata trio (service/category, location, timeline) in a single 3-column row even on phone. Keep budget and created-at separate so the row remains scannable.
+> **Oportunidades compact metadata.** In collapsed Oportunidades cards, keep the core metadata trio (service/category, location, timeline) grouped together, but never force it into fixed 3-column phone widths. Use flexible wrapping metadata rows: one row when it naturally fits, two rows when needed. Keep budget and created-at separate so the row remains scannable, and prioritize full readable labels over a forced one-line layout.
 
 > **Support icon consistency.** Use the Headset icon for Soporte across the dashboard panel and responsive navbar resources. Avoid MessageCircle for Soporte because it reads like chat/WhatsApp instead of support center.
 

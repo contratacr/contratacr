@@ -423,9 +423,9 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                             type="button"
                             onClick={() => setExpandedProject(isExpanded ? null : project.id)}
                             aria-expanded={isExpanded}
-                            className={cn("group flex w-full items-start gap-3.5 p-4 text-left transition-colors hover:bg-[#f9fbfd] sm:p-5", isExpanded ? "rounded-t-2xl bg-[#fbfdff]" : "rounded-2xl")}
+                            className={cn("group flex w-full items-start gap-3 p-4 text-left transition-colors hover:bg-[#f9fbfd] sm:gap-3.5 sm:p-5", isExpanded ? "rounded-t-2xl bg-[#fbfdff]" : "rounded-2xl")}
                           >
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EBF5FB] text-[#0089bb]">
+                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#EBF5FB] text-[#0089bb] sm:h-10 sm:w-10 sm:rounded-xl">
                               <FolderOpen className="h-[18px] w-[18px]" />
                             </div>
                             <div className="min-w-0 flex-1">
@@ -440,23 +440,23 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                               </div>
                               <div className="mt-2 flex flex-col items-start gap-1.5 text-[13px]">
                                 <span className="inline-flex max-w-full items-center rounded-xl border border-[#ccecf8] bg-[#EBF5FB] px-3 py-2 font-bold text-[#0089bb] [overflow-wrap:anywhere]">{budgetTextFor(project)}</span>
-                                <div className="grid w-full min-w-0 grid-cols-3 gap-2">
+                                <div className="flex w-full min-w-0 flex-wrap items-start gap-x-3 gap-y-1.5">
                                   {project.categories?.name && (
-                                    <span className="inline-flex min-w-0 items-center gap-1.5 text-[#374151]">
-                                      <FolderOpen className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                                      <span className="truncate font-medium">{project.categories.name}</span>
+                                    <span className="inline-flex min-w-0 max-w-full flex-1 basis-28 items-start gap-1.5 leading-snug text-[#374151] sm:flex-none sm:basis-auto">
+                                      <FolderOpen className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                                      <span className="min-w-0 font-medium [overflow-wrap:anywhere]">{project.categories.name}</span>
                                     </span>
                                   )}
                                   {zona && (
-                                    <span className="inline-flex min-w-0 items-center gap-1.5 text-[#6b7280]">
-                                      <MapPin className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                                      <span className="truncate">{zona}</span>
+                                    <span className="inline-flex min-w-0 max-w-full flex-1 basis-28 items-start gap-1.5 leading-snug text-[#6b7280] sm:flex-none sm:basis-auto">
+                                      <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                                      <span className="min-w-0 [overflow-wrap:anywhere]">{zona}</span>
                                     </span>
                                   )}
                                   {project.timeline && (
-                                    <span className="inline-flex min-w-0 items-center gap-1.5 text-[#6b7280]">
-                                      <CalendarClock className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                                      <span className="truncate">{project.timeline}</span>
+                                    <span className="inline-flex min-w-0 max-w-full flex-1 basis-28 items-start gap-1.5 leading-snug text-[#6b7280] sm:flex-none sm:basis-auto">
+                                      <CalendarClock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                                      <span className="min-w-0 [overflow-wrap:anywhere]">{project.timeline}</span>
                                     </span>
                                   )}
                                 </div>
