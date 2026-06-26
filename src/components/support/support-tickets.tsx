@@ -271,8 +271,7 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <h3 className="text-[15px] font-bold text-[#162543] sm:text-base">{t("inboxTitle")}</h3>
-          <p className="mt-1 max-w-2xl text-sm leading-relaxed text-[#6b7280]">{t("inboxBody")}</p>
+          <p className="max-w-2xl text-sm leading-relaxed text-[#6b7280]">{t("inboxBody")}</p>
         </div>
         {/* Header action shows ONLY once tickets have loaded AND there's at least one
             (the persistent action above the list). It must NOT render while loading
