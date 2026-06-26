@@ -483,13 +483,11 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                             )}
 
                             {b.service_description && (
-                              <div className="rounded-2xl bg-white p-3.5 ring-1 ring-[#e8eef5]">
-                                <div className="flex items-start gap-2.5">
-                                  <FileText className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
-                                  <div className="min-w-0">
+                              <div className="flex items-start gap-2.5">
+                                <FileText className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
+                                <div className="min-w-0">
                                   <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("descriptionField")}</p>
                                   <ExpandableText text={b.service_description} lines={5} className="mt-0.5 text-sm leading-relaxed text-[#4b5563]" />
-                                  </div>
                                 </div>
                               </div>
                             )}
