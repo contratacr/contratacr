@@ -1380,6 +1380,28 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     </Link>
                   );
                 })}
+                {!user && (
+                  <>
+                    <Link
+                      href="/registro/profesional"
+                      onClick={() => setMobileOpen(false)}
+                      className="flex min-h-11 items-center gap-3 py-2.5 text-sm font-semibold text-[#009FD9] transition-colors hover:text-[#0089bb]"
+                    >
+                      <Briefcase className="h-4 w-4 shrink-0" />
+                      <span className="min-w-0 flex-1">{t("registerPro")}</span>
+                      <ChevronRight className="h-4 w-4 shrink-0 text-gray-300" />
+                    </Link>
+                    <Link
+                      href={loginHref}
+                      onClick={() => setMobileOpen(false)}
+                      className="flex min-h-11 items-center gap-3 py-2.5 text-sm font-medium text-[#374151] transition-colors hover:text-[#009FD9]"
+                    >
+                      <LogIn className="h-4 w-4 shrink-0 text-gray-400" />
+                      <span className="min-w-0 flex-1">{t("login")}</span>
+                      <ChevronRight className="h-4 w-4 shrink-0 text-gray-300" />
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
 
@@ -1409,30 +1431,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                   </a>
                 </div>
               </div>
-            ) : (
-              <div className="mb-5">
-                <div className="divide-y divide-gray-100 border-b border-t border-gray-100">
-                <Link
-                  href="/registro/profesional"
-                  onClick={() => setMobileOpen(false)}
-                  className="flex min-h-11 items-center gap-3 py-2.5 text-sm font-semibold text-[#009FD9] transition-colors hover:text-[#0089bb]"
-                >
-                  <Briefcase className="h-4 w-4 shrink-0" />
-                  <span className="min-w-0 flex-1">{t("registerPro")}</span>
-                  <ChevronRight className="h-4 w-4 shrink-0 text-gray-300" />
-                </Link>
-                <Link
-                  href={loginHref}
-                  onClick={() => setMobileOpen(false)}
-                  className="flex min-h-11 items-center gap-3 py-2.5 text-sm font-medium text-[#374151] transition-colors hover:text-[#009FD9]"
-                >
-                  <LogIn className="h-4 w-4 shrink-0 text-gray-400" />
-                  <span className="min-w-0 flex-1">{t("login")}</span>
-                  <ChevronRight className="h-4 w-4 shrink-0 text-gray-300" />
-                </Link>
-              </div>
-              </div>
-            )}
+            ) : null}
 
             {/* Idioma — discreet inline text pair (not a segmented toggle). */}
             <div className="border-b border-t border-gray-100 py-3">
