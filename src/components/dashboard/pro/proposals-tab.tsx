@@ -446,29 +446,29 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                               <div className="mt-2 flex flex-col items-start gap-1.5 text-[13px]">
                                 <span className={cn("inline-flex w-full max-w-full items-center gap-2", hasBudget(project) ? "font-semibold text-[#0089bb]" : "text-[#6b7280]")}>
                                   <Coins className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                                  <span className="truncate">{budgetTextFor(project)}</span>
+                                  <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldBudget")}</span> {budgetTextFor(project)}</span>
                                 </span>
                                 {project.categories?.name && (
                                   <span className="inline-flex w-full max-w-full items-center gap-2 text-[#374151]">
                                     <Wrench className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                                    <span className="truncate">{project.categories.name}</span>
+                                    <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldService")}</span> {project.categories.name}</span>
                                   </span>
                                 )}
                                 {zona && (
                                   <span className="inline-flex w-full max-w-full items-center gap-2 text-[#6b7280]">
                                     <MapPin className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                                    <span className="truncate">{zona}</span>
+                                    <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldZone")}</span> {zona}</span>
                                   </span>
                                 )}
                                 {project.timeline && (
                                   <span className="inline-flex w-full max-w-full items-center gap-2 text-[#6b7280]">
                                     <CalendarClock className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                                    <span className="truncate">{project.timeline}</span>
+                                    <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldDeadline")}</span> {project.timeline}</span>
                                   </span>
                                 )}
                                 <span className="inline-flex w-full max-w-full items-center gap-2 text-[#9ca3af]">
                                   <Clock className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                                  <span className="truncate">{relativeTime(project.created_at)}</span>
+                                  <span className="min-w-0 truncate"><span className="font-medium">{t("fieldPublished")}</span> {relativeTime(project.created_at)}</span>
                                 </span>
                               </div>
                             </div>
@@ -539,7 +539,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                             <span className="inline-flex w-full max-w-full items-center gap-2 text-[#374151]">
                               <Coins className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
                               <span className={cn("truncate font-semibold", p.price ? "text-[#0089bb]" : "text-[#6b7280]")}>
-                                {p.price ? `₡${p.price.toLocaleString("es-CR")}` : t("priceTBD")}
+                                <span className="font-medium text-[#9ca3af]">{t("yourPriceLabel")}</span> {p.price ? `₡${p.price.toLocaleString("es-CR")}` : t("priceTBD")}
                               </span>
                             </span>
                             {clientName && (

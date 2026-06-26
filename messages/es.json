@@ -1334,9 +1334,11 @@
     "upTo": "Hasta {amount}",
     "range": "{min} – {max}",
     "matchesServices": "Coincide con tus servicios",
+    "fieldService": "Servicio:",
     "fieldZone": "Zona:",
     "fieldDeadline": "Plazo:",
     "fieldBudget": "Presupuesto:",
+    "fieldPublished": "Publicado:",
     "fieldPhone": "Tel:",
     "budgetTBD": "A convenir",
     "charLimit": "Has alcanzado el límite de {max} caracteres."
