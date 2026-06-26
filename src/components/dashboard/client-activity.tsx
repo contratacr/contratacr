@@ -447,7 +447,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                             {b.for_someone_else && (
                               <p className="mt-1.5 flex items-center gap-2 text-[13px] text-[#6b7280] min-w-0">
                                 <Users className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                                <span className="truncate">{t("forOtherPerson")}</span>
+                                <span className="truncate">{t("bookingFor", { name: b.beneficiary_name || t("otherPerson") })}</span>
                               </p>
                             )}
                           </div>

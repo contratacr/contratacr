@@ -1136,6 +1136,7 @@
     "appointmentDateLabel": "Fecha de la cita",
     "bookedByLabel": "Reservado por",
     "apptForLabel": "La cita es para",
+    "bookingFor": "Cita para: {name}",
     "forPerson": "Para: {name}",
     "otherPerson": "otra persona",
     "minor": "Menor de edad",

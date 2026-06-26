@@ -1698,6 +1698,7 @@
     "serviceField": "Service",
     "descriptionField": "Description",
     "apptForLabel": "The appointment is for",
+    "bookingFor": "For: {name}",
     "forOtherPerson": "For someone else",
     "otherPerson": "Another person",
     "fieldAge": "Age:",
