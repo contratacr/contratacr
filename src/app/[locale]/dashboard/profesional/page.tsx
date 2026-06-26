@@ -293,6 +293,7 @@ export default function DashboardPage() {
   // Mobile bottom-nav split: the mode's primary tabs in the bar (incl. the shared
   // "notifications" tab, which now has a dedicated slot), the rest under "Más".
   const modeTabs = mode === "offer" ? OFFER_TABS : USE_TABS;
+  const sidebarTabs = [...modeTabs, ...SHARED_TABS];
   const barTabs = [...modeTabs, ...SHARED_TABS];
   const primaryTabs = MOBILE_PRIMARY[mode].filter((tab) => barTabs.includes(tab));
   const moreTabs = barTabs.filter((tab) => !primaryTabs.includes(tab));
@@ -445,10 +446,7 @@ export default function DashboardPage() {
                           {modePanelButton()}
                         </div>
                       )}
-                      <div>
-                        {(mode === "offer" ? OFFER_TABS : USE_TABS).map(navButton)}
-                        {SHARED_TABS.map(navButton)}
-                      </div>
+                      <div>{sidebarTabs.map(navButton)}</div>
                     </CardContent>
                   </Card>
 
