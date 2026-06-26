@@ -620,10 +620,6 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                             ) : null}
                           </div>
                           <div className="mt-2 flex flex-col items-start gap-1.5 text-[13px]">
-                            <span className="inline-flex max-w-full items-center gap-2 rounded-xl border border-[#ccecf8] bg-[#EBF5FB] px-3 py-2 font-bold text-[#0089bb]">
-                              <Users className="h-3.5 w-3.5 shrink-0 text-[#009FD9]" />
-                              <span className="truncate">{t("proposalsCount", { count: proposalCount })}</span>
-                            </span>
                             {project.categories?.name && (
                               <span className="inline-flex w-full max-w-full items-center gap-2 text-[#374151]">
                                 <ClipboardList className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
@@ -636,6 +632,10 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                 <span className="truncate">{zone}</span>
                               </span>
                             )}
+                            <span className="inline-flex w-full max-w-full items-center gap-2 text-[#6b7280]">
+                              <Users className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                              <span className="truncate">{t("proposalsCount", { count: proposalCount })}</span>
+                            </span>
                             <span className="inline-flex w-full max-w-full items-center gap-2 text-[#9ca3af]">
                               <CalendarDays className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
                               <span className="truncate">{t("publishedOn", { date: formatRelativeOrDate(project.created_at, locale) })}</span>
