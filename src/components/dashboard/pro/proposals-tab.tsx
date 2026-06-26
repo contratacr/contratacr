@@ -296,6 +296,9 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
     if (p.budget_max) return t("upTo", { amount: `₡${p.budget_max.toLocaleString("es-CR")}` });
     return t("budgetTBD");
   }
+  function hasBudget(p: OpenProject): boolean {
+    return Boolean(p.budget_min || p.budget_max);
+  }
   function clientIdentityText(status?: OpenProject["client_identity_status"]): string {
     if (status === "verified") return t("clientIdentityVerified");
     if (status === "pending") return t("clientIdentityPending");
@@ -439,7 +442,12 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                                 </span>
                               </div>
                               <div className="mt-2.5 flex flex-col items-start gap-2 text-[13px]">
-                                <span className="inline-flex w-full max-w-full items-start gap-2 rounded-xl border border-[#ccecf8] bg-[#EBF5FB] px-3 py-2.5 font-semibold text-[#162543]">
+                                <span className={cn(
+                                  "inline-flex w-full max-w-full items-start gap-2 px-3 py-2.5 font-semibold",
+                                  hasBudget(project)
+                                    ? "rounded-xl border border-[#ccecf8] bg-[#EBF5FB] text-[#162543]"
+                                    : "text-[#6b7280]"
+                                )}>
                                   <span className="min-w-0 [overflow-wrap:anywhere]">{budgetTextFor(project)}</span>
                                 </span>
                                 <div className="flex w-full min-w-0 flex-col items-start gap-1.5 sm:flex-row sm:flex-wrap sm:gap-x-3">
