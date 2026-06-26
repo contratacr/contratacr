@@ -1,7 +1,7 @@
 import { requireAdmin } from "@/lib/auth/admin";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { SubscriptionPanel } from "@/components/dashboard/pro/subscription-panel";
-import { LAUNCH_BENEFITS, PAYMENTS_ENABLED, PRICES, formatColones } from "@/lib/payments/config";
+import { PAYMENTS_ENABLED, PRICES, formatColones } from "@/lib/payments/config";
 import { Info } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -30,8 +30,7 @@ export default async function AdminSuscripcionesPage() {
           </p>
           <p className="mt-1 text-[13px] text-[#374151]">
             Planes: <strong>{formatColones(PRICES.monthly)}/mes</strong> · <strong>{formatColones(PRICES.annual)}/año</strong> (pagas 10 meses y ahorras 2).
-            {" "}Lanzamiento: {LAUNCH_BENEFITS.existingUsersFreeMonths} meses gratis para usuarios existentes y {LAUNCH_BENEFITS.earlyCollaboratorsFreeMonths} meses gratis para colaboradores iniciales.
-            {" "}El cobro público será solo con tarjeta automática.
+            {" "}El cobro público será solo con tarjeta automática. Los beneficios especiales se aplican desde Usuarios, en la suscripción de cada profesional.
           </p>
         </div>
       </div>

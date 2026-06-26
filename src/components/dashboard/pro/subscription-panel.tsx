@@ -2,12 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Check, CreditCard, Loader2, ShieldCheck, Star } from "lucide-react";
-import {
-  LAUNCH_BENEFITS,
-  PRICES,
-  formatColones,
-  type BillingCycle,
-} from "@/lib/payments/config";
+import { PRICES, formatColones, type BillingCycle } from "@/lib/payments/config";
 
 // Professional-facing subscription plans page. Rendered ONLY when PAYMENTS_ENABLED
 // is on, or by an admin from /admin/suscripciones (preview). Planned launch:
@@ -151,13 +146,6 @@ export function SubscriptionPanel() {
           </li>
         ))}
       </ul>
-
-      <div className="rounded-xl border border-[#bfdbfe] bg-[#EBF5FB] px-4 py-3 text-sm text-[#0f172a]">
-        <p className="font-semibold">Beneficio de lanzamiento</p>
-        <p className="mt-0.5 text-[#374151]">
-          Los profesionales existentes reciben {LAUNCH_BENEFITS.existingUsersFreeMonths} meses gratis. Los colaboradores iniciales pueden recibir {LAUNCH_BENEFITS.earlyCollaboratorsFreeMonths} meses gratis cuando activemos pagos.
-        </p>
-      </div>
 
       <div className="flex flex-col gap-3">
         <p className="text-sm font-semibold text-[#111827]">Pago automático</p>
