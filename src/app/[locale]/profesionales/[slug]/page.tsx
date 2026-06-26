@@ -710,31 +710,63 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                     const rate = professional.hourlyRate
                       ? `₡${professional.hourlyRate.toLocaleString(locale === "en" ? "en-US" : "es-CR")}${t("perHour")}`
                       : null;
-                    const hasWork = !!(professional.workplaces && professional.workplaces.length > 0);
                     type Fact = { key: string; icon: ReactNode; label: string; value: ReactNode; caption?: ReactNode };
                     const facts: Fact[] = [];
+                    const uniqueWorkplaces = Array.from(
+                      new Map(
+                        (professional.workplaces ?? [])
+                          .map((w) => {
+                            const name = String(w.name ?? "").trim();
+                            const address = String(w.address ?? "").trim();
+                            return [`${name.toLowerCase()}|${address.toLowerCase()}`, { ...w, name, address }] as const;
+                          })
+                          .filter(([, w]) => w.name || w.address)
+                      ).values()
+                    );
+                    const sameText = (a?: string | null, b?: string | null) =>
+                      String(a ?? "").trim().toLocaleLowerCase("es-CR") === String(b ?? "").trim().toLocaleLowerCase("es-CR");
+                    const workplaceLines = uniqueWorkplaces.filter((w) => !(sameText(w.name, locationText) || sameText(w.address, locationText)));
+                    const contactLines: ReactNode[] = [];
+                    if (professional.whatsapp) contactLines.push(<span key="wa">{t("contactWhatsApp")}</span>);
+                    if (professional.allowPhoneCall && (professional.callPhone || professional.whatsapp)) contactLines.push(<span key="call">{t("contactCall")}</span>);
+                    if (professional.contactEmail) contactLines.push(<span key="email">{t("contactEmail")}</span>);
                     if (professional.bio) facts.push({
                       key: "bio",
                       icon: <FileText className="h-5 w-5" />,
-                      label: t("tabs.sobre"),
+                      label: t("description"),
                       value: <span className="block whitespace-pre-line text-[15px] font-normal leading-7 text-[#374151]">{professional.bio}</span>,
                     });
-                    if (professional.verificationStatus === "verified") facts.push({
-                      key: "verif", icon: <ShieldCheck className="h-5 w-5" />, label: t("verification"),
-                      value: <Badge variant="verified">{t("identityVerified")}</Badge>, caption: t("verificationCaption"),
+                    if (contactLines.length > 0) facts.push({
+                      key: "contact", icon: <Phone className="h-5 w-5" />, label: t("contactMethods"),
+                      value: <span className="flex flex-wrap gap-x-2 gap-y-1">{contactLines.map((line, i) => <span key={i} className="after:ml-2 after:text-[#d1d5db] after:content-['·'] last:after:content-none">{line}</span>)}</span>,
                     });
                     if (expYears > 0) facts.push({
                       key: "exp", icon: <Briefcase className="h-5 w-5" />, label: t("experienceLabel"), value: t("yearsValue", { years: expYears }),
                     });
                     if (professional.languages && professional.languages.length > 0) facts.push({
                       key: "lang", icon: <Languages className="h-5 w-5" />, label: t("languages"),
-                      value: professional.languages.map((l) => languageLabel(l, locale)).join(" · "), caption: t("languagesCaption"),
+                      value: professional.languages.map((l) => languageLabel(l, locale)).join(" · "),
                     });
                     if (professional.insuranceNetworks && professional.insuranceNetworks.length > 0) facts.push({
                       key: "ins", icon: <Shield className="h-5 w-5" />, label: t("insurers"),
                       value: professional.insuranceNetworks.map((id) => insurerLabel(id)).join(" · "),
                     });
-                    if (professional.pricing && professional.pricing.length > 0) {
+                    if (professional.services && professional.services.length > 0) {
+                      facts.push({
+                        key: "price", icon: <Coins className="h-5 w-5" />, label: t("prices"),
+                        value: (
+                          <span className="flex flex-col gap-1.5">
+                            {professional.services.map((service) => (
+                              <span key={service.id} className="grid gap-0.5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-baseline sm:gap-4">
+                                <span className="min-w-0 font-medium text-[#374151] [overflow-wrap:anywhere]">{service.name}</span>
+                                <span className="text-[#162543]">{service.price || t("priceConsult")}</span>
+                              </span>
+                            ))}
+                          </span>
+                        ),
+                        caption: t("pricesRefCaption"),
+                      });
+                    } else if (professional.pricing && professional.pricing.length > 0) {
                       facts.push({
                         key: "price", icon: <Coins className="h-5 w-5" />, label: t("prices"),
                         value: <span className="flex flex-col gap-0.5">{professional.pricing.map((tier) => <span key={tier.id}>{formatPricingTier(tier)}</span>)}</span>,
@@ -743,13 +775,13 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                     } else if (rate) {
                       facts.push({ key: "rate", icon: <Coins className="h-5 w-5" />, label: t("baseRate"), value: rate, caption: t("baseRateCaption") });
                     }
-                    if (locationText || hasWork) facts.push({
+                    if (locationText || uniqueWorkplaces.length > 0) facts.push({
                       key: "loc", icon: <MapPin className="h-5 w-5" />,
-                      label: hasWork ? t("workplaces") : t("location"),
-                      value: locationText || professional.workplaces?.[0]?.name || "",
-                      caption: hasWork ? (
+                      label: uniqueWorkplaces.length > 0 ? t("workplaces") : t("location"),
+                      value: locationText || uniqueWorkplaces[0]?.name || uniqueWorkplaces[0]?.address || "",
+                      caption: workplaceLines.length > 0 ? (
                         <span className="flex flex-col gap-1.5">
-                          {professional.workplaces!.map((w, i) => (
+                          {workplaceLines.map((w, i) => (
                             <span key={w.id ?? i} className="[overflow-wrap:anywhere]">
                               <span className="font-medium text-[#374151]">{w.name}</span>
                               {w.address && w.address !== w.name && <span className="mt-0.5 block text-[#9ca3af]">{w.address}</span>}
@@ -757,6 +789,10 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                           ))}
                         </span>
                       ) : undefined,
+                    });
+                    if (professional.verificationStatus === "verified") facts.push({
+                      key: "verif", icon: <ShieldCheck className="h-5 w-5" />, label: t("trust"),
+                      value: <span className="text-[#15803d]">{t("verified")}</span>,
                     });
                     return (
                       <div className="flex flex-col gap-5">
