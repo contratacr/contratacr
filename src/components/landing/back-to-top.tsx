@@ -2,15 +2,28 @@
 
 import { useState, useEffect } from "react";
 import { ChevronUp } from "lucide-react";
+import { usePathname } from "@/i18n/navigation";
+import { useSearchParams } from "next/navigation";
 
 export function BackToTop() {
   const [visible, setVisible] = useState(false);
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const redirect = searchParams.get("redirect") ?? "";
+  const isPanel = /(^|\/)(dashboard|admin)(\/|$)/.test(pathname) || /(^|\/)(dashboard|admin)(\/|$)/.test(redirect);
 
   useEffect(() => {
+    if (isPanel) {
+      queueMicrotask(() => setVisible(false));
+      return;
+    }
     const handler = () => setVisible(window.scrollY > 400);
+    handler();
     window.addEventListener("scroll", handler, { passive: true });
     return () => window.removeEventListener("scroll", handler);
-  }, []);
+  }, [isPanel]);
+
+  if (isPanel) return null;
 
   function scrollToTop() {
     window.scrollTo({ top: 0, behavior: "smooth" });

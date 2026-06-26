@@ -3355,3 +3355,5 @@ New i18n namespaces added this pass: `search.pagination`, extended `search.filte
 **Sprint 255 - Oportunidades mobile metadata stays in one row.** proposals-tab.tsx: changed the collapsed Oportunidades card metadata so service/category, location, and timeline render in a 3-column row on phone instead of each taking a full line. Budget remains separate and created-at stays below to avoid a fourth cramped column. No i18n changes.
 
 **Sprint 256 - Navbar support icon aligned with panel.** landing-navbar.tsx: changed the responsive navbar Resources > Soporte icon from MessageCircle to Headset so it matches the Soporte icon used in the dashboard panel. No route, label, desktop, or i18n changes.
+
+**Sprint 257 - Back-to-top hidden in panels.** back-to-top.tsx: made the global BackToTop button route-aware and disabled it for /dashboard and /admin paths so the floating scroll-up control no longer appears in responsive panel views. Public long-scroll pages keep the button. No i18n changes.

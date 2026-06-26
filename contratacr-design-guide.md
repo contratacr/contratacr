@@ -1798,3 +1798,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Oportunidades compact metadata.** In collapsed Oportunidades cards, keep the core metadata trio (service/category, location, timeline) in a single 3-column row even on phone. Keep budget and created-at separate so the row remains scannable.
 
 > **Support icon consistency.** Use the Headset icon for Soporte across the dashboard panel and responsive navbar resources. Avoid MessageCircle for Soporte because it reads like chat/WhatsApp instead of support center.
+
+> **Back-to-top scope.** The global back-to-top floating button is for public long-scroll pages only. Do not show it inside dashboard/admin panels, especially on responsive, because it competes with panel navigation and bottom controls.
