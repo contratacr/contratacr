@@ -87,7 +87,7 @@ export function TimeSelect({ value, onChange, min, step = 30, label, error, id, 
         aria-expanded={open}
         aria-invalid={!!error}
         className={cn(
-          "flex items-center h-10 rounded-xl border bg-white pl-3.5 pr-9 text-sm font-medium text-[#111827] relative text-left transition-all",
+          "flex h-10 w-full items-center rounded-xl border bg-white pl-3.5 pr-9 text-sm font-medium text-[#111827] relative text-left transition-all",
           "focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent",
           open && "ring-2 ring-[#009FD9] border-transparent",
           error ? "border-red-400" : "border-[#e5e7eb]",

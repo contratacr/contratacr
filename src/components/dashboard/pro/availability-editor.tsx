@@ -162,7 +162,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
   const [genLocation, setGenLocation] = useState("");
   useEffect(() => {
     if (locationOptions.length > 0 && !locationOptions.some((o) => o.id === genLocation)) {
-      setGenLocation(locationOptions[0].id);
+      queueMicrotask(() => setGenLocation(locationOptions[0].id));
     }
   }, [locationOptions, genLocation]);
 
@@ -715,14 +715,14 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                       {!on ? (
                         <p className="text-sm text-[#9ca3af] sm:pt-1.5">{t("closed")}</p>
                       ) : (
-                        <div className="flex items-start gap-3 sm:gap-4">
+                        <div className="flex min-w-0 flex-col gap-2.5 sm:flex-row sm:items-start sm:gap-4">
                           <div className="flex min-w-0 flex-1 flex-col gap-2.5">
                             {blocks.map((b) => {
                             const timeRow = (
-                              <div className="flex items-center gap-1.5">
-                                <TimeSelect value={b.start} onChange={(v) => updateBlock(wd, b.id, { start: v, ...(b.end && toMins(b.end) <= toMins(v) ? { end: hhmm(Math.min(toMins(v) + 60, 23 * 60 + 30)) } : {}) })} className="min-w-0 flex-1 sm:flex-none sm:w-28" />
+                              <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:flex sm:gap-1.5">
+                                <TimeSelect value={b.start} onChange={(v) => updateBlock(wd, b.id, { start: v, ...(b.end && toMins(b.end) <= toMins(v) ? { end: hhmm(Math.min(toMins(v) + 60, 23 * 60 + 30)) } : {}) })} className="min-w-0 w-full sm:w-28" />
                                 <span className="shrink-0 text-[#9ca3af]">–</span>
-                                <TimeSelect value={b.end} min={b.start ? hhmm(Math.min(toMins(b.start) + 30, 23 * 60 + 30)) : undefined} onChange={(v) => updateBlock(wd, b.id, { end: v })} className="min-w-0 flex-1 sm:flex-none sm:w-28" error={b.start && b.end && toMins(b.end) <= toMins(b.start) ? t("toAfterFrom") : undefined} />
+                                <TimeSelect value={b.end} min={b.start ? hhmm(Math.min(toMins(b.start) + 30, 23 * 60 + 30)) : undefined} onChange={(v) => updateBlock(wd, b.id, { end: v })} className="min-w-0 w-full sm:w-28" error={b.start && b.end && toMins(b.end) <= toMins(b.start) ? t("toAfterFrom") : undefined} />
                               </div>
                             );
                             // Single-location pros: just the time row (clean, compact, no location UI).
@@ -750,7 +750,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                             );
                             })}
                           </div>
-                          <div className="flex min-h-10 w-[210px] shrink-0 flex-row items-center justify-end gap-3 sm:w-[238px]">
+                          <div className="flex min-h-10 w-full flex-row flex-wrap items-center justify-start gap-x-4 gap-y-2 sm:w-[238px] sm:shrink-0 sm:justify-end">
                             <button type="button" onClick={() => addBlock(wd)} className="inline-flex shrink-0 items-center justify-end gap-1 whitespace-nowrap text-right text-xs font-medium leading-tight text-[#009FD9] hover:underline cursor-pointer">
                               <Plus className="h-3.5 w-3.5 shrink-0" /> <span>{t("addFranja")}</span>
                             </button>
@@ -983,11 +983,20 @@ function DayModal({ initialDate, existing, markedDates, defaultDuration, dateLoc
   // Prefill from any existing exception when the picked date changes.
   useEffect(() => {
     const rows = existing.filter((e) => e.date === date);
-    if (rows.length === 0) { setMode("extra"); setFranjas([{ id: genId(), start: "18:00", end: "20:00" }]); setDur(defaultDuration); return; }
+    if (rows.length === 0) {
+      queueMicrotask(() => {
+        setMode("extra");
+        setFranjas([{ id: genId(), start: "18:00", end: "20:00" }]);
+        setDur(defaultDuration);
+      });
+      return;
+    }
     const m = rows[0].mode;
-    setMode(m);
-    setDur(rows[0].slot_minutes ?? defaultDuration);
-    setFranjas(m === "closed" ? [] : rows.filter((r) => r.start && r.end).map((r) => ({ id: genId(), start: r.start!, end: r.end! })));
+    queueMicrotask(() => {
+      setMode(m);
+      setDur(rows[0].slot_minutes ?? defaultDuration);
+      setFranjas(m === "closed" ? [] : rows.filter((r) => r.start && r.end).map((r) => ({ id: genId(), start: r.start!, end: r.end! })));
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [date]);
 
