@@ -1744,6 +1744,8 @@
     "delete": "Delete",
     "accept": "Accept",
     "decline": "Decline",
+    "verified": "Verified",
+    "notVerifiedBadge": "Not verified",
     "finalized": "Finalized",
     "accepted": "Accepted",
     "declined": "Declined",

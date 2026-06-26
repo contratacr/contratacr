@@ -1743,6 +1743,8 @@
     "delete": "Eliminar",
     "accept": "Aceptar",
     "decline": "Rechazar",
+    "verified": "Verificado",
+    "notVerifiedBadge": "Sin verificar",
     "finalized": "Finalizada",
     "accepted": "Aceptada",
     "declined": "Rechazada",
