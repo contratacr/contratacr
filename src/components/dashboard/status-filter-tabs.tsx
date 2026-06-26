@@ -64,7 +64,7 @@ export function StatusFilterTabs({
   // active = brand-blue underline + blue text + a filled blue count pill; inactive = grey
   // text + a light-grey count pill. A wrapping row sharing one bottom hairline.
   return (
-    <div className="flex flex-wrap items-center gap-x-5 gap-y-1 border-b border-[#eef0f2]">
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-[#eef0f2]">
       {tabs.map((tab) => {
         const active = value === tab.id;
         const count = counts?.[tab.id] ?? 0;
@@ -74,14 +74,14 @@ export function StatusFilterTabs({
             type="button"
             onClick={() => onChange(tab.id)}
             className={cn(
-              "group -mb-px inline-flex items-center gap-2 whitespace-nowrap border-b-2 pb-2.5 pt-1 text-[14px] font-semibold transition-colors",
+              "group -mb-px inline-flex items-center gap-1.5 whitespace-nowrap border-b-2 pb-2.5 pt-1 text-[13px] font-semibold transition-colors sm:text-[14px]",
               active ? "border-[#009FD9] text-[#009FD9]" : "border-transparent text-[#6b7280] hover:text-[#162543]"
             )}
           >
             {label(tab.id)}
             {count > 0 && (
               <span className={cn(
-                "inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[11px] font-bold leading-none tabular-nums transition-colors",
+                "inline-flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full px-1 text-[10px] font-bold leading-none tabular-nums transition-colors sm:h-5 sm:min-w-5 sm:px-1.5 sm:text-[11px]",
                 active
                   ? "bg-[#EBF5FB] text-[#0089bb] ring-1 ring-[#ccecf8]"
                   : "bg-[#f3f4f6] text-[#6b7280] ring-1 ring-[#e5e7eb] group-hover:bg-[#eef2f6] group-hover:text-[#374151]"

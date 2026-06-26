@@ -1,5 +1,7 @@
 # ContrataCR.com — Project Context
 
+_Last updated: 2026-06-26 (sprint 588 - **Status filter counters compacted** (`status-filter-tabs.tsx`, design guide). Status filter count badges are now more compact on small screens: reduced horizontal gap between tabs, slightly smaller mobile tab text, and smaller mobile count pills (`h-4/min-w-4/text-[10px]`, scaling back up on `sm`). This helps three filters/services stay on one row more often without removing the count or changing filter behavior. No status bucket logic, counts, labels, i18n, routing, or panel data changed.)_
+
 _Last updated: 2026-06-26 (sprint 587 - **Opportunity budget neutralized** (`proposals-tab.tsx`, design guide). In Oportunidades, the presupuesto row now matches the other card metadata: the `Banknote` icon is muted grey and the budget amount renders as primary dark text (`#111827`) instead of brand blue. The no-budget fallback stays neutral. No budget calculation, filtering, proposal form, routing, i18n copy, or responsive structure changed.)_
 
 _Last updated: 2026-06-26 (sprint 586 - **Client proposal verification i18n fixed** (`messages/es.json`, `messages/en.json`). Added `clientActivity.verified` and `clientActivity.notVerifiedBadge` so the professional verification badge inside Mis publicaciones proposal cards renders localized labels instead of raw keys such as `clientActivity.verified`. No UI structure, API payload, verification logic, proposal actions, routing, or responsive behavior changed.)_
