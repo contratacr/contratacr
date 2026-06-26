@@ -3555,3 +3555,5 @@ New i18n namespaces added this pass: `search.pagination`, extended `search.filte
 **Sprint 296 - Internal public navbar chrome.** `LandingNavbar` now detects the locale-stripped pathname and applies a slightly stronger white navbar only on public internal pages: blue top rule, subtle blue border, and stronger shadow. Home keeps the softer landing chrome; `/buscar` stays unchanged for the map/search layout; dashboard/admin shells stay unchanged. No i18n or route behavior changed.
 
 **Sprint 297 - Home navbar goes dark.** Follow-up to Sprint 296: the home page now uses a dark navy navbar (`#111827`) with `ContrataCRLogo tone="dark"` / dark mark variants, white/soft-white nav actions, and a dark-compatible language selector. `/buscar` remains white, public internal pages keep the stronger white chrome, and dashboard/admin remain unchanged.
+
+**Sprint 298 - Availability break guidance.** `availability-editor.tsx` now shows a short helper under the regular-hours subtitle explaining that professionals with a lunch/rest break should create two separate time blocks (for example 8-12 and 1-5). ES/EN copy added; no scheduling logic changed.

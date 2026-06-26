@@ -1496,6 +1496,7 @@
     "alwaysTitle": "My usual hours",
     "alwaysSub": "At {place} · repeats automatically every week.",
     "alwaysSubAll": "Repeats automatically every week.",
+    "breakHint": "If you take a break, create two separate time blocks. Example: 8:00 AM - 12:00 PM and 1:00 PM - 5:00 PM.",
     "presetTypical": "Apply Monday to Friday, 8:00AM – 5:00PM",
     "applySchedule": "Apply schedule",
     "applyScheduleHelp": "Applies the same hours to the whole week (uses your first configured day, or 8 AM–5 PM if empty).",

@@ -1496,6 +1496,7 @@
     "alwaysTitle": "Mis horarios de siempre",
     "alwaysSub": "En {place} · se repite automáticamente cada semana.",
     "alwaysSubAll": "Se repite automáticamente cada semana.",
+    "breakHint": "Si tienes descanso, crea dos franjas separadas. Ejemplo: 8:00 a. m. - 12:00 p. m. y 1:00 p. m. - 5:00 p. m.",
     "presetTypical": "Aplicar Lunes a viernes, 8:00AM – 5:00PM",
     "applySchedule": "Aplicar horario",
     "applyScheduleHelp": "Aplica el mismo horario a toda la semana (toma el primer día configurado, o de 8 AM a 5 PM si está vacío).",

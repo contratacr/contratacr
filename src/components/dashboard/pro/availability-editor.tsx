@@ -687,6 +687,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                 </div>
               </div>
               <p className="mt-1.5 text-xs text-[#6b7280]">{t("alwaysSubAll")}</p>
+              <p className="mt-1 text-xs text-[#6b7280]">{t("breakHint")}</p>
             </div>
 
             <div className="flex flex-col divide-y divide-[#f3f4f6]">
