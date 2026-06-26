@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarDays, ChevronDown, CalendarClock, Clock, Phone, IdCard, Wrench, MapPin, UserRound, Flag } from "lucide-react";
+import { CalendarCheck, CalendarClock, CalendarDays, ChevronDown, Clock, Phone, IdCard, Wrench, MapPin, UserRound, Flag } from "lucide-react";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { formatId } from "@/lib/cedula";
 import { ageCategoryFromDob, computeAge } from "@/lib/age";
@@ -171,7 +171,7 @@ export function BookingRequests() {
   if (bookings.length === 0) {
     return (
       <div className="text-center py-16">
-        <CalendarDays className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
+        <CalendarCheck className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
         <h3 className="font-semibold text-[#374151] mb-1">{t("empty")}</h3>
         <p className="text-sm text-[#6b7280]">{t("emptySub")}</p>
       </div>
@@ -248,7 +248,7 @@ export function BookingRequests() {
           className={cn("group w-full text-left p-4 sm:p-5 flex items-start gap-3.5 transition-colors hover:bg-[#f9fbfd]", expanded ? "rounded-t-2xl bg-[#fbfdff]" : "rounded-2xl")}
         >
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EBF5FB] text-[#0089bb]">
-            <CalendarDays className="h-[18px] w-[18px]" />
+            <CalendarCheck className="h-[18px] w-[18px]" />
           </div>
           {/* INBOX ROW (Superhuman/Gmail hierarchy): bold name (+ pills) and the status on line 1,
               the APPOINTMENT date prominent on line 2 (no "Fecha:" label — the date speaks for

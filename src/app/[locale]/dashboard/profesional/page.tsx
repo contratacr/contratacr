@@ -5,8 +5,8 @@ import { useTranslations } from "next-intl";
 import { isSigningOut } from "@/lib/auth/sign-out";
 import { useSearchParams } from "next/navigation";
 import {
-  User, Image as ImageIcon, CalendarDays, Inbox, ExternalLink, Wrench,
-  FolderOpen, ShieldCheck, Bell, Send, ClipboardList, Bookmark, Settings, Headset, CreditCard,
+  User, Award, CalendarCheck, CalendarDays, ExternalLink, Wrench,
+  ShieldCheck, Bell, Send, ClipboardList, Bookmark, Settings, Headset, CreditCard,
   ArrowRight, Sparkles, Menu, X, Repeat2,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
@@ -58,10 +58,10 @@ type ProData = Record<string, any>;
 const TAB_ICONS: Record<Tab, React.ReactNode> = {
   profile: <User className="h-4 w-4" />,
   services: <Wrench className="h-4 w-4" />,
-  photos: <ImageIcon className="h-4 w-4" />,
+  photos: <Award className="h-4 w-4" />,
   availability: <CalendarDays className="h-4 w-4" />,
-  bookings: <Inbox className="h-4 w-4" />,
-  proposals: <FolderOpen className="h-4 w-4" />,
+  bookings: <CalendarCheck className="h-4 w-4" />,
+  proposals: <Send className="h-4 w-4" />,
   verificacion: <ShieldCheck className="h-4 w-4" />,
   suscripcion: <CreditCard className="h-4 w-4" />,
   sent_bookings: <Send className="h-4 w-4" />,

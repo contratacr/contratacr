@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import {
   X, Menu, ChevronDown, ChevronRight, Search, MapPin, LogIn,
-  LayoutDashboard, LogOut, Bookmark, CalendarDays, FolderOpen, UserPlus, Briefcase, Compass, Settings, Bell, Globe, Inbox, Check,
+  LayoutDashboard, LogOut, Bookmark, CalendarCheck, CalendarDays, ClipboardList, Send, UserPlus, Briefcase, Compass, Settings, Bell, Globe, Check,
   HelpCircle, Lightbulb, Headset, ListChecks,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
@@ -640,11 +640,11 @@ function AccountMenu({
           {mode === "offer" ? (
             <>
               <a href={bookingsHref} onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors">
-                <Inbox className="h-4 w-4 text-gray-400" />
+                <CalendarCheck className="h-4 w-4 text-gray-400" />
                 {t("receivedRequests")}
               </a>
               <a href={proposalsHref} onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors">
-                <FolderOpen className="h-4 w-4 text-gray-400" />
+                <Send className="h-4 w-4 text-gray-400" />
                 {t("myProposals")}
               </a>
             </>
@@ -655,7 +655,7 @@ function AccountMenu({
                 {t("myRequests")}
               </a>
               <a href={sentProjectsHref} onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors">
-                <FolderOpen className="h-4 w-4 text-gray-400" />
+                <ClipboardList className="h-4 w-4 text-gray-400" />
                 {t("myProjects")}
               </a>
               <a href={savedHref} onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors">

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { FolderOpen, Send, ChevronDown, MapPin, CalendarClock, CalendarDays, Clock, EyeOff, Users } from "lucide-react";
+import { Banknote, FileText, Send, ChevronDown, MapPin, CalendarClock, CalendarDays, Clock, EyeOff, Users } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -316,7 +316,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
         <div className="flex flex-col gap-4 p-4 sm:p-5">
           {project.description && (
             <div className="flex items-start gap-2.5">
-              <FolderOpen className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
+              <FileText className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
               <div className="min-w-0">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("projectDescription")}</p>
                 <ExpandableText text={project.description} lines={6} className="mt-0.5 text-[13px] leading-relaxed text-[#4b5563]" />
@@ -393,7 +393,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
         <div>
           {openProjects.length === 0 ? (
             <div className="text-center py-16">
-              <FolderOpen className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
+              <Send className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
               <p className="font-medium text-[#374151]">{t("emptyBrowse")}</p>
               <p className="text-sm text-[#6b7280] mt-1">{t("emptyBrowseSub")}</p>
             </div>
@@ -431,7 +431,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                             className={cn("group flex w-full items-start gap-3.5 p-4 text-left transition-colors hover:bg-[#f9fbfd] sm:p-5", isExpanded ? "rounded-t-2xl bg-[#fbfdff]" : "rounded-2xl")}
                           >
                             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EBF5FB] text-[#0089bb]">
-                              <FolderOpen className="h-[18px] w-[18px]" />
+                              <Send className="h-[18px] w-[18px]" />
                             </div>
                             <div className="min-w-0 flex-1">
                               <div className="flex items-start justify-between gap-2.5">
@@ -445,12 +445,12 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                               </div>
                               <div className="mt-2 flex flex-col items-start gap-1.5 text-[13px]">
                                 <span className={cn("inline-flex w-full max-w-full items-center gap-2", hasBudget(project) ? "font-semibold text-[#0089bb]" : "text-[#6b7280]")}>
-                                  <FolderOpen className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                                  <Banknote className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
                                   <span className="truncate">{budgetTextFor(project)}</span>
                                 </span>
                                 {project.categories?.name && (
                                   <span className="inline-flex w-full max-w-full items-center gap-2 text-[#374151]">
-                                    <FolderOpen className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                                    <Send className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
                                     <span className="truncate">{project.categories.name}</span>
                                   </span>
                                 )}
@@ -537,7 +537,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                           </div>
                           <div className="mt-2 flex flex-col items-start gap-1.5 text-[13px]">
                             <span className="inline-flex w-full max-w-full items-center gap-2 text-[#374151]">
-                              <FolderOpen className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                              <Banknote className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
                               <span className={cn("truncate font-semibold", p.price ? "text-[#0089bb]" : "text-[#6b7280]")}>
                                 {p.price ? `₡${p.price.toLocaleString("es-CR")}` : t("priceTBD")}
                               </span>

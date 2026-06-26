@@ -2,21 +2,20 @@
 
 import {
   Bell,
+  CalendarCheck,
   ClipboardList,
   Headset,
-  Inbox,
   Send,
-  FolderOpen,
 } from "lucide-react";
 
 export function NotificationSourceIcon({ type, className }: { type: string; className?: string }) {
   switch (type) {
     case "booking_received":
     case "booking_rescheduled":
-      return <Inbox className={className} />;
+      return <CalendarCheck className={className} />;
     case "new_project":
     case "proposal_accepted":
-      return <FolderOpen className={className} />;
+      return <Send className={className} />;
     case "booking_confirmed":
     case "booking_cancelled":
     case "booking_completed":
