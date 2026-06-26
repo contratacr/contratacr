@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Banknote, Coins, FileText, Handshake, Phone, MapPin, CalendarClock, CalendarDays, Clock, EyeOff, Users, Wrench } from "lucide-react";
+import { Banknote, FileText, Handshake, Phone, MapPin, CalendarClock, CalendarDays, Clock, EyeOff, Users, Wrench } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -561,7 +561,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                           </div>
                           <div className="mt-2 flex flex-col items-start gap-1.5 text-[13px]">
                             <span className="inline-flex w-full max-w-full items-center gap-2 text-[#374151]">
-                              <Coins className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                              <Banknote className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
                               <span className="truncate font-semibold">
                                 <span className="font-medium text-[#9ca3af]">{t("yourPriceLabel")}</span> <span className={p.price ? "text-[#0089bb]" : "text-[#374151]"}>{p.price ? `₡${p.price.toLocaleString("es-CR")}` : t("priceTBD")}</span>
                               </span>

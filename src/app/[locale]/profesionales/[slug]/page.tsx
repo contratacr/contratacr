@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, type ReactNode } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import {
-  MapPin, Shield, ArrowLeft, Star, Briefcase, Camera, Coins, Languages,
+  MapPin, Shield, ArrowLeft, Star, Briefcase, Camera, Banknote, Languages,
   Share2, Flag, ChevronDown, Lock, Building2, Award, Mail, SearchX, FileText,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -754,7 +754,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                     });
                     if (professional.services && professional.services.length > 0) {
                       facts.push({
-                        key: "price", icon: <Coins className="h-5 w-5" />, label: t("prices"),
+                        key: "price", icon: <Banknote className="h-5 w-5" />, label: t("prices"),
                         value: (
                           <div className="space-y-3">
                             {professional.services.map((service) => (
@@ -768,11 +768,11 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                       });
                     } else if (professional.pricing && professional.pricing.length > 0) {
                       facts.push({
-                        key: "price", icon: <Coins className="h-5 w-5" />, label: t("prices"),
+                        key: "price", icon: <Banknote className="h-5 w-5" />, label: t("prices"),
                         value: <div className="space-y-2">{professional.pricing.map((tier) => <div key={tier.id} className="font-semibold text-[#162543]">{formatPricingTier(tier)}</div>)}</div>,
                       });
                     } else if (rate) {
-                      facts.push({ key: "rate", icon: <Coins className="h-5 w-5" />, label: t("baseRate"), value: rate, caption: t("baseRateCaption") });
+                      facts.push({ key: "rate", icon: <Banknote className="h-5 w-5" />, label: t("baseRate"), value: rate, caption: t("baseRateCaption") });
                     }
                     if (workplaceAreaLines.length > 0) facts.push({
                       key: "loc", icon: <MapPin className="h-5 w-5" />,
