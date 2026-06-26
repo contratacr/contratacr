@@ -124,7 +124,7 @@ export async function GET(req: NextRequest) {
     .select(`
       *,
       professionals:professional_id(
-        id, slug, whatsapp,
+        id, slug, whatsapp, verification_status,
         profiles(full_name, avatar_url)
       )
     `)

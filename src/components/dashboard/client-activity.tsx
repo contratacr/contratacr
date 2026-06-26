@@ -84,6 +84,7 @@ type Proposal = {
     id: string;
     slug: string;
     whatsapp?: string;
+    verification_status?: string | null;
     profiles: { full_name: string; avatar_url?: string };
     categories: { name: string };
   };
@@ -763,6 +764,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
 
                             const renderProposal = (proposal: Proposal) => {
                               const isAccepted = proposal.status === "accepted";
+                              const proVerified = proposal.professionals?.verification_status === "verified";
                               return (
                                 <div key={proposal.id} className={cn("rounded-xl border p-3.5", isAccepted ? "border-emerald-200 bg-emerald-50/40" : "border-[#e5e7eb] bg-white")}>
                                   <div className="flex items-start gap-3">
@@ -775,13 +777,18 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                     <div className="min-w-0 flex-1">
                                       <div className="flex items-start justify-between gap-2">
                                         <div className="min-w-0">
-                                          {proposal.professionals?.slug ? (
-                                            <Link href={`/profesionales/${proposal.professionals.slug}`} className="text-sm font-semibold text-[#111827] hover:text-[#009FD9] hover:underline">
-                                              {proposal.professionals?.profiles?.full_name}
-                                            </Link>
-                                          ) : (
-                                            <p className="text-sm font-semibold text-[#111827]">{proposal.professionals?.profiles?.full_name}</p>
-                                          )}
+                                          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+                                            {proposal.professionals?.slug ? (
+                                              <Link href={`/profesionales/${proposal.professionals.slug}`} className="min-w-0 text-sm font-semibold text-[#111827] hover:text-[#009FD9] hover:underline">
+                                                {proposal.professionals?.profiles?.full_name}
+                                              </Link>
+                                            ) : (
+                                              <p className="min-w-0 text-sm font-semibold text-[#111827]">{proposal.professionals?.profiles?.full_name}</p>
+                                            )}
+                                            <Badge variant={proVerified ? "success" : "muted"} className="shrink-0 text-[10px] font-semibold">
+                                              {proVerified ? t("verified") : t("notVerifiedBadge")}
+                                            </Badge>
+                                          </div>
                                           {proposal.professionals?.categories?.name && (
                                             <p className="mt-0.5 truncate text-[11px] text-[#6b7280]">{proposal.professionals.categories.name}</p>
                                           )}
