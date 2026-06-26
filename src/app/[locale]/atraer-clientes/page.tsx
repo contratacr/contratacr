@@ -13,15 +13,17 @@ import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 
 // Icons in code; tip text (title/body/highlight) comes from the i18n namespace.
 const TIP_ICONS = [
-  <Camera key="0" className="h-6 w-6 text-[#009FD9]" />,
-  <UserCheck key="1" className="h-6 w-6 text-[#009FD9]" />,
-  <ImageIcon key="2" className="h-6 w-6 text-[#009FD9]" />,
-  <WhatsAppIcon key="3" className="h-6 w-6 text-[#009FD9]" />,
-  <Star key="4" className="h-6 w-6 text-[#009FD9]" />,
-  <MapPin key="5" className="h-6 w-6 text-[#009FD9]" />,
-  <CheckCircle2 key="6" className="h-6 w-6 text-[#009FD9]" />,
-  <Clock key="7" className="h-6 w-6 text-[#009FD9]" />,
+  <Camera key="0" className="h-6 w-6" />,
+  <UserCheck key="1" className="h-6 w-6" />,
+  <ImageIcon key="2" className="h-6 w-6" />,
+  <WhatsAppIcon key="3" className="h-6 w-6" />,
+  <Star key="4" className="h-6 w-6" />,
+  <MapPin key="5" className="h-6 w-6" />,
+  <CheckCircle2 key="6" className="h-6 w-6" />,
+  <Clock key="7" className="h-6 w-6" />,
 ];
+
+const leadIconClass = "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#ccecf8] bg-[#EAF7FD] text-[#0089bb] shadow-[0_8px_20px_-18px_rgba(0,159,217,0.9)]";
 
 export default function AtraerClientesPage() {
   const t = useTranslations("atraerClientes");
@@ -57,7 +59,7 @@ export default function AtraerClientesPage() {
                 <FadeInUp key={i} delay={i * 40}>
                   <div className="bg-white rounded-2xl border border-gray-100 p-6 hover:shadow-sm transition-shadow h-full">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="h-10 w-10 rounded-xl bg-[#EBF5FB] flex items-center justify-center shrink-0">
+                      <div className={leadIconClass}>
                         {icon}
                       </div>
                       <h3 className="text-sm font-bold text-[#1a2744] leading-snug">{t(`tip${i}Title`)}</h3>

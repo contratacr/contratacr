@@ -54,6 +54,8 @@ function MiniStep({ n, label, sub }: { n: number; label: string; sub: string }) 
   );
 }
 
+const leadIconClass = "flex h-12 w-12 items-center justify-center rounded-2xl border border-[#ccecf8] bg-[#EAF7FD] text-[#0089bb] shadow-[0_8px_20px_-18px_rgba(0,159,217,0.9)]";
+
 export default function ComoFuncionaPage() {
   const t = useTranslations("comoFunciona");
   return (
@@ -84,8 +86,8 @@ export default function ComoFuncionaPage() {
               {/* Path 1 — Search */}
               <div className="bg-white border-2 border-[#e5e7eb] rounded-3xl p-8 hover:border-[#009FD9]/40 hover:shadow-md transition-all">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="h-12 w-12 rounded-2xl bg-[#EBF5FB] flex items-center justify-center">
-                    <Search className="h-6 w-6 text-[#009FD9]" />
+                  <div className={leadIconClass}>
+                    <Search className="h-6 w-6" />
                   </div>
                   <div>
                     <p className="text-xs font-bold uppercase tracking-widest text-[#009FD9]">{t("opt1Badge")}</p>
@@ -111,8 +113,8 @@ export default function ComoFuncionaPage() {
               {/* Path 2 — Post project */}
               <div className="bg-white border-2 border-[#e5e7eb] rounded-3xl p-8 hover:border-[#009FD9]/40 hover:shadow-md transition-all">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="h-12 w-12 rounded-2xl bg-[#EBF5FB] flex items-center justify-center">
-                    <FileText className="h-6 w-6 text-[#009FD9]" />
+                  <div className={leadIconClass}>
+                    <FileText className="h-6 w-6" />
                   </div>
                   <div>
                     <p className="text-xs font-bold uppercase tracking-widest text-[#009FD9]">{t("opt2Badge")}</p>

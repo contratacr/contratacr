@@ -17,6 +17,8 @@ const POINTS = [
   { Icon: Headset, key: "point3" },
 ];
 
+const leadIconClass = "mt-0.5 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-[#ccecf8] bg-[#EAF7FD] text-[#0089bb] shadow-[0_8px_20px_-18px_rgba(0,159,217,0.9)]";
+
 export async function WhyContratacr() {
   const t = await getTranslations("landing.howItWorks");
   const tCard = await getTranslations("card");
@@ -78,7 +80,7 @@ export async function WhyContratacr() {
             <ul className="space-y-6">
               {POINTS.map(({ Icon, key }) => (
                 <li key={key} className="flex items-start gap-4">
-                  <span className="mt-0.5 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#EBF5FB] text-[#009FD9] ring-1 ring-[#dcebf6]">
+                  <span className={leadIconClass}>
                     <Icon className="h-5 w-5" />
                   </span>
                   <div className="min-w-0">

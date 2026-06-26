@@ -8,6 +8,8 @@ import { PROVINCES, getProvinceById } from "@/lib/data/cr-geography";
 import { CR_PROVINCE_PATHS, CR_MAP_VIEWBOX } from "@/lib/data/cr-map-paths";
 import type { ZoneCoverage } from "@/lib/queries/professionals";
 
+const leadIconClass = "grid shrink-0 place-items-center rounded-xl border border-[#ccecf8] bg-[#EAF7FD] text-[#0089bb] shadow-[0_8px_20px_-18px_rgba(0,159,217,0.9)]";
+
 // "Encuentra profesionales en tu zona" — an interactive map of Costa Rica.
 // Click a province on the map → it highlights and the panel shows its cantones
 // + REAL coverage (computed server-side; never a fabricated count).
@@ -126,7 +128,7 @@ export function FindByZone({ coverage }: { coverage: ZoneCoverage }) {
           <div className="rounded-3xl bg-white border border-[#eef1f5] p-7 sm:p-8 shadow-[0_18px_50px_rgba(16,39,68,0.10)]">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-5">
               <div className="flex items-center gap-2.5">
-                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#EBF5FB] text-[#009FD9]">
+                <span className={`${leadIconClass} h-11 w-11`}>
                   <MapPin className="h-5 w-5" />
                 </span>
                 <div>
@@ -184,7 +186,7 @@ export function FindByZone({ coverage }: { coverage: ZoneCoverage }) {
                 disabled={geoLoading}
                 className="inline-flex items-center gap-2.5 rounded-xl border border-[#e5e7eb] bg-white px-4 py-2.5 text-sm font-bold text-[#1a2744] hover:border-[#009FD9] hover:text-[#009FD9] transition-colors disabled:opacity-60"
               >
-                <span className="grid h-7 w-7 place-items-center rounded-lg bg-[#EBF5FB] text-[#009FD9]">
+                <span className={`${leadIconClass} h-7 w-7 rounded-lg`}>
                   {geoLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Navigation className="h-4 w-4" />}
                 </span>
                 {t("useLocation")}
