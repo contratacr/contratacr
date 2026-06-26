@@ -785,9 +785,15 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                             ) : (
                                               <p className="min-w-0 text-sm font-semibold text-[#111827]">{proposal.professionals?.profiles?.full_name}</p>
                                             )}
-                                            <Badge variant={proVerified ? "success" : "muted"} className="shrink-0 text-[10px] font-semibold">
-                                              {proVerified ? t("verified") : t("notVerifiedBadge")}
-                                            </Badge>
+                                            {proVerified ? (
+                                              <Badge variant="verified" className="shrink-0">
+                                                {t("verified")}
+                                              </Badge>
+                                            ) : (
+                                              <span className="inline-flex shrink-0 items-center rounded-full border border-[#e5e7eb] bg-[#f3f4f6] px-2.5 py-0.5 text-xs font-medium text-[#6b7280]">
+                                                {t("notVerifiedBadge")}
+                                              </span>
+                                            )}
                                           </div>
                                           {proposal.professionals?.categories?.name && (
                                             <p className="mt-0.5 truncate text-[11px] text-[#6b7280]">{proposal.professionals.categories.name}</p>
