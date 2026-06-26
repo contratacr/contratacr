@@ -1312,12 +1312,12 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
             drawerTouchX.current = null;
           }}
           className={cn(
-            "lg:hidden fixed top-0 left-0 bottom-0 z-[101] w-[88%] max-w-[380px] bg-[#f8fafc] shadow-[0_0_40px_rgba(0,0,0,0.25)] flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform",
+            "lg:hidden fixed top-0 left-0 bottom-0 z-[101] w-[86%] max-w-[360px] bg-white shadow-[0_0_40px_rgba(0,0,0,0.25)] flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform",
             mobileOpen ? "translate-x-0" : "-translate-x-full"
           )}
         >
           {/* Drawer header — logo (home link) + close */}
-          <div className="flex h-16 shrink-0 items-center justify-between border-b border-[#e8eef5] bg-white px-4">
+          <div className="flex h-16 shrink-0 items-center justify-between border-b border-gray-100 bg-white px-4">
             <Link href="/" aria-label="ContrataCR inicio" onClick={() => setMobileOpen(false)}>
               <ContrataCRLogo size="lg" />
             </Link>
@@ -1332,9 +1332,9 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
           </div>
 
           {/* Scrollable content — clearly grouped sections; account surfaced first */}
-          <div className="flex-1 overflow-y-auto px-3 py-3">
+          <div className="flex-1 overflow-y-auto px-4 py-4">
             {/* Smart search on mobile */}
-            <div className="mb-3 rounded-2xl border border-[#e8eef5] bg-white p-2 shadow-sm">
+            <div className="mb-5">
               <CategoryAutocomplete
                 placeholder={t("searchServicePlaceholderShort")}
                 size="lg"
@@ -1345,12 +1345,12 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
             {/* MI CUENTA — surfaced right after the search so a logged-in user reaches
                 their panel fast. Role-aware (pro keeps the unified panel). */}
             {user && (
-              <div className="mb-3 rounded-2xl border border-[#e8eef5] bg-white p-3 shadow-sm">
-                <div className="mb-3 flex items-center gap-3">
+              <div className="mb-5">
+                <div className="mb-4 flex items-center gap-3">
                   {!avatarReady ? (
-                    <span className="block h-11 w-11 animate-pulse rounded-full bg-gray-200" />
+                    <span className="block h-10 w-10 animate-pulse rounded-full bg-gray-200" />
                   ) : (
-                    <Avatar className="h-11 w-11 border border-white shadow-sm">
+                    <Avatar className="h-10 w-10">
                       <AvatarImage src={avatarUrl ?? undefined} />
                       <AvatarFallback delayMs={avatarUrl ? 600 : 0} className="text-[12px] bg-[#009FD9] text-white font-bold">{initials}</AvatarFallback>
                     </Avatar>
@@ -1363,50 +1363,57 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                 {/* Mode switch removed from the responsive menu (sprint 518) — it lives inside
                     "Mi panel". The drawer just shows the "Mi cuenta" heading; its links reflect
                     the active mode. */}
-                <a href={primaryPanelHref} onClick={() => setMobileOpen(false)} className="mb-2 flex items-center gap-3 rounded-xl bg-[#EBF5FB] px-3 py-3 text-sm font-bold text-[#162543] transition-colors hover:bg-[#dff1fb]">
-                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white text-[#009FD9] shadow-sm">
+                <a href={primaryPanelHref} onClick={() => setMobileOpen(false)} className="mb-3 flex items-center gap-3 rounded-xl bg-[#009FD9] px-3 py-3 text-sm font-bold text-white transition-colors hover:bg-[#0089bb]">
+                  <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white/15 text-white">
                     <LayoutDashboard className="h-4 w-4" />
                   </span>
                   <span className="flex-1">{t("myPanel")}</span>
-                  <ChevronRight className="h-4 w-4 text-[#009FD9]" />
+                  <ChevronRight className="h-4 w-4 text-white/80" />
                 </a>
-                <div className="overflow-hidden rounded-xl border border-[#eef2f6]">
+                <div className="divide-y divide-gray-100 border-b border-t border-gray-100">
                 {mode === "offer" ? (
                   <>
-                    <a href={bookingsHref} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 border-b border-[#eef2f6] px-3 py-2.5 text-sm text-[#374151] transition-colors hover:bg-[#f8fafc]">
-                      <Inbox className="h-4 w-4 text-gray-400 shrink-0" /> {t("receivedRequests")}
+                    <a href={bookingsHref} onClick={() => setMobileOpen(false)} className="flex min-h-11 items-center gap-3 py-2.5 text-sm font-medium text-[#374151] transition-colors hover:text-[#009FD9]">
+                      <Inbox className="h-4 w-4 shrink-0 text-gray-400" />
+                      <span className="flex-1">{t("receivedRequests")}</span>
                     </a>
-                    <a href={proposalsHref} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 border-b border-[#eef2f6] px-3 py-2.5 text-sm text-[#374151] transition-colors hover:bg-[#f8fafc]">
-                      <FolderOpen className="h-4 w-4 text-gray-400 shrink-0" /> {t("myProposals")}
+                    <a href={proposalsHref} onClick={() => setMobileOpen(false)} className="flex min-h-11 items-center gap-3 py-2.5 text-sm font-medium text-[#374151] transition-colors hover:text-[#009FD9]">
+                      <FolderOpen className="h-4 w-4 shrink-0 text-gray-400" />
+                      <span className="flex-1">{t("myProposals")}</span>
                     </a>
                   </>
                 ) : (
                   <>
-                    <a href={sentBookingsHref} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 border-b border-[#eef2f6] px-3 py-2.5 text-sm text-[#374151] transition-colors hover:bg-[#f8fafc]">
-                      <CalendarDays className="h-4 w-4 text-gray-400 shrink-0" /> {t("myRequests")}
+                    <a href={sentBookingsHref} onClick={() => setMobileOpen(false)} className="flex min-h-11 items-center gap-3 py-2.5 text-sm font-medium text-[#374151] transition-colors hover:text-[#009FD9]">
+                      <CalendarDays className="h-4 w-4 shrink-0 text-gray-400" />
+                      <span className="flex-1">{t("myRequests")}</span>
                     </a>
-                    <a href={sentProjectsHref} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 border-b border-[#eef2f6] px-3 py-2.5 text-sm text-[#374151] transition-colors hover:bg-[#f8fafc]">
-                      <FolderOpen className="h-4 w-4 text-gray-400 shrink-0" /> {t("myProjects")}
+                    <a href={sentProjectsHref} onClick={() => setMobileOpen(false)} className="flex min-h-11 items-center gap-3 py-2.5 text-sm font-medium text-[#374151] transition-colors hover:text-[#009FD9]">
+                      <FolderOpen className="h-4 w-4 shrink-0 text-gray-400" />
+                      <span className="flex-1">{t("myProjects")}</span>
                     </a>
-                    <a href={savedHref} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 border-b border-[#eef2f6] px-3 py-2.5 text-sm text-[#374151] transition-colors hover:bg-[#f8fafc]">
-                      <Bookmark className="h-4 w-4 text-gray-400 shrink-0" /> {t("favorites")}
+                    <a href={savedHref} onClick={() => setMobileOpen(false)} className="flex min-h-11 items-center gap-3 py-2.5 text-sm font-medium text-[#374151] transition-colors hover:text-[#009FD9]">
+                      <Bookmark className="h-4 w-4 shrink-0 text-gray-400" />
+                      <span className="flex-1">{t("favorites")}</span>
                     </a>
                   </>
                 )}
-                <a href={notificationsHref} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 border-b border-[#eef2f6] px-3 py-2.5 text-sm text-[#374151] transition-colors hover:bg-[#f8fafc]">
-                  <Bell className="h-4 w-4 text-gray-400 shrink-0" />
+                <a href={notificationsHref} onClick={() => setMobileOpen(false)} className="flex min-h-11 items-center gap-3 py-2.5 text-sm font-medium text-[#374151] transition-colors hover:text-[#009FD9]">
+                  <Bell className="h-4 w-4 shrink-0 text-gray-400" />
                   <span className="flex-1">{t("notifications")}</span>
                   {activeUnread > 0 && (
                     <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold text-white shrink-0">{activeUnread > 9 ? "9+" : activeUnread}</span>
                   )}
                 </a>
                 {!isPro && (
-                  <Link href="/registro/profesional" onClick={() => setMobileOpen(false)} className="flex items-center gap-3 border-b border-[#eef2f6] px-3 py-2.5 text-sm font-semibold text-[#009FD9] transition-colors hover:bg-[#EBF5FB]">
-                    <Briefcase className="h-4 w-4 shrink-0" /> {t("offerServices")}
+                  <Link href="/registro/profesional" onClick={() => setMobileOpen(false)} className="flex min-h-11 items-center gap-3 py-2.5 text-sm font-semibold text-[#009FD9] transition-colors hover:text-[#0089bb]">
+                    <Briefcase className="h-4 w-4 shrink-0" />
+                    <span className="flex-1">{t("offerServices")}</span>
                   </Link>
                 )}
-                <a href={accountHref} onClick={() => setMobileOpen(false)} className="flex items-center gap-3 px-3 py-2.5 text-sm text-[#374151] transition-colors hover:bg-[#f8fafc]">
-                  <Settings className="h-4 w-4 text-gray-400 shrink-0" /> {t("accountSecurity")}
+                <a href={accountHref} onClick={() => setMobileOpen(false)} className="flex min-h-11 items-center gap-3 py-2.5 text-sm font-medium text-[#374151] transition-colors hover:text-[#009FD9]">
+                  <Settings className="h-4 w-4 shrink-0 text-gray-400" />
+                  <span className="flex-1">{t("accountSecurity")}</span>
                 </a>
                 </div>
               </div>
@@ -1417,11 +1424,11 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                 service (no "register as client" here), so only Ingresar (returning)
                 + Registrarse como profesional (people who offer services). */}
             {!user && (
-              <div className="mb-3 rounded-2xl border border-[#e8eef5] bg-white p-3 shadow-sm">
-                <p className="px-1 pb-2 text-[10px] font-bold uppercase tracking-widest text-gray-400">{t("account")}</p>
+              <div className="mb-5">
+                <p className="pb-2 text-[10px] font-bold uppercase tracking-widest text-gray-400">{t("account")}</p>
                 <div className="flex flex-col gap-2">
                   <Link href={loginHref} onClick={() => setMobileOpen(false)}
-                    className="w-full rounded-xl border border-[#dbe4ee] px-4 py-3 text-center text-sm font-semibold text-[#374151] transition-colors hover:bg-[#f8fafc]">
+                    className="w-full rounded-xl border border-gray-200 px-4 py-3 text-center text-sm font-semibold text-[#374151] transition-colors hover:border-[#009FD9]/30 hover:text-[#009FD9]">
                     {t("login")}
                   </Link>
                   <Link href="/registro/profesional" onClick={() => setMobileOpen(false)}
@@ -1434,16 +1441,15 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
             )}
 
             {/* RECURSOS — includes Categorías so browse/help links read as one compact group. */}
-            <div className="mb-3 rounded-2xl border border-[#e8eef5] bg-white p-2 shadow-sm">
-              <p className="px-2 py-1.5 text-[10px] font-bold uppercase tracking-widest text-gray-400">{t("resources")}</p>
+            <div className="mb-5">
+              <p className="pb-2 text-[10px] font-bold uppercase tracking-widest text-gray-400">{t("resources")}</p>
+              <div className="divide-y divide-gray-100 border-b border-t border-gray-100">
               <Link
                 href="/categorias"
                 onClick={() => setMobileOpen(false)}
-                className="mb-1 flex items-center gap-3 rounded-xl px-2.5 py-2.5 text-sm font-semibold text-[#162543] transition-colors hover:bg-[#f8fafc]"
+                className="flex min-h-11 items-center gap-3 py-2.5 text-sm font-semibold text-[#162543] transition-colors hover:text-[#009FD9]"
               >
-                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[#EBF5FB] text-[#009FD9]">
-                  <Compass className="h-4 w-4" />
-                </span>
+                <Compass className="h-4 w-4 shrink-0 text-[#009FD9]" />
                 <span className="flex-1">{t("categories")}</span>
                 <ChevronRight className="h-4 w-4 text-gray-300" />
               </Link>
@@ -1452,7 +1458,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                   <SupportLink
                     key={link.href}
                     onNavigate={() => setMobileOpen(false)}
-                    className="block w-full rounded-lg px-2.5 py-2 text-left text-sm leading-tight text-gray-600 transition-colors hover:bg-[#f8fafc] hover:text-[#009FD9]"
+                    className="block w-full py-2.5 text-left text-sm font-medium leading-tight text-gray-600 transition-colors hover:text-[#009FD9]"
                   >
                     {t(`resourceLinks.${link.key}`)}
                   </SupportLink>
@@ -1461,16 +1467,17 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     key={link.href}
                     href={link.href}
                     onClick={() => setMobileOpen(false)}
-                    className="block rounded-lg px-2.5 py-2 text-sm leading-tight text-gray-600 transition-colors hover:bg-[#f8fafc] hover:text-[#009FD9]"
+                    className="block py-2.5 text-sm font-medium leading-tight text-gray-600 transition-colors hover:text-[#009FD9]"
                   >
                     {t(`resourceLinks.${link.key}`)}
                   </Link>
                 )
               )}
+              </div>
             </div>
 
             {/* Idioma — discreet inline text pair (not a segmented toggle). */}
-            <div className="rounded-2xl border border-[#e8eef5] bg-white p-3 shadow-sm">
+            <div className="border-b border-t border-gray-100 py-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs text-gray-400 font-medium">{t("language")}</span>
                 <LanguageInline />
@@ -1479,9 +1486,9 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
 
             {/* Cerrar sesión — logged-in only, at the very bottom */}
             {user && (
-              <div className="mt-3">
+              <div className="mt-4">
                 <button onClick={handleSignOut}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-red-100 bg-white px-4 py-3 text-sm font-medium text-red-600 transition-colors hover:bg-red-50">
+                  className="flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-medium text-red-600 transition-colors hover:bg-red-50">
                   <LogOut className="h-4 w-4" /> {t("signOut")}
                 </button>
               </div>
