@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     .neq("id", user.id)
     .maybeSingle();
   if (dupe) {
-    return NextResponse.json({ error: "Esta cédula ya está registrada en ContrataCR." }, { status: 409 });
+    return NextResponse.json({ error: "Esta identificación ya está registrada en ContrataCR." }, { status: 409 });
   }
 
   const { data: pro } = await db

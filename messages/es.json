@@ -669,7 +669,7 @@
       "idDocNotePlaceholder": "Ejemplo: Pasaporte de Nicaragua N° ..., o DIMEX en trámite N° ...",
       "errEmailTaken": "Este correo ya está registrado. Inicia sesión.",
       "errIdFormat": "Formato inválido. CR: 9 dígitos · DIMEX: 11-12 · NITE: 10.",
-      "errIdTaken": "Esta cédula ya está registrada en ContrataCR.",
+      "errIdTaken": "Esta identificación ya está registrada en ContrataCR.",
       "errIdentificationTaken": "Esta identificación ya está registrada en ContrataCR.",
       "errNameRequired": "Ingresa tu nombre completo.",
       "errPhoneIncomplete": "Ingresa un número de teléfono completo para el país seleccionado.",

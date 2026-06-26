@@ -28,6 +28,7 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
   // Add-cédula-later (no-ID pros who obtained a CR cédula).
   const [newCedula, setNewCedula] = useState("");
   const [cedulaBusy, setCedulaBusy] = useState(false);
+  const [cedulaError, setCedulaError] = useState<string | null>(null);
 
   const ref = caseRef(professionalId);
   const waMsg = encodeURIComponent(t("waHelp", { ref }));
@@ -63,6 +64,7 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
 
   async function addCedula() {
     setError(null);
+    setCedulaError(null);
     setNote(null);
     setCedulaBusy(true);
     try {
@@ -72,7 +74,10 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
         body: JSON.stringify({ cedula: newCedula }),
       });
       const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? "Error");
+      if (!res.ok) {
+        setCedulaError(json.error ?? t("processError"));
+        return;
+      }
       if (json.outcome === "verified") setNote(t("cedulaVerified"));
       else setNote(t("cedulaSaved"));
       setNewCedula("");
@@ -138,14 +143,16 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
           <div className="flex flex-wrap items-center gap-2">
             <input
               value={newCedula}
-              onChange={(e) => setNewCedula(e.target.value)}
+              onChange={(e) => { setNewCedula(e.target.value); setCedulaError(null); }}
               placeholder={t("cedulaPlaceholder")}
-              className="flex-1 min-w-[200px] h-11 px-4 rounded-xl border border-[#e5e7eb] text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+              aria-invalid={!!cedulaError}
+              className="flex-1 min-w-[200px] h-11 px-4 rounded-xl border border-[#e5e7eb] text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all aria-[invalid=true]:border-red-300 aria-[invalid=true]:focus:ring-red-200"
             />
             <button onClick={addCedula} disabled={cedulaBusy || newCedula.replace(/\D/g, "").length < 9} className="inline-flex items-center gap-2 rounded-full bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 disabled:opacity-50">
               <ShieldCheck className="h-4 w-4" /> {cedulaBusy ? t("verifying") : t("addAndVerify")}
             </button>
           </div>
+          {cedulaError && <p className="mt-2 text-xs font-medium text-red-600 [overflow-wrap:anywhere]">{cedulaError}</p>}
         </div>
       </div>
     );
@@ -249,10 +256,11 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
           <div className="flex flex-wrap items-center gap-2">
             <input
               value={newCedula}
-              onChange={(e) => setNewCedula(e.target.value)}
+              onChange={(e) => { setNewCedula(e.target.value); setCedulaError(null); }}
               inputMode="numeric"
               placeholder={t("cedulaPlaceholder")}
-              className="flex-1 min-w-[200px] h-11 px-4 rounded-xl border border-[#e5e7eb] text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
+              aria-invalid={!!cedulaError}
+              className="flex-1 min-w-[200px] h-11 px-4 rounded-xl border border-[#e5e7eb] text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all aria-[invalid=true]:border-red-300 aria-[invalid=true]:focus:ring-red-200"
             />
             <button
               onClick={addCedula}
@@ -262,6 +270,7 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
               <ShieldCheck className="h-4 w-4" /> {cedulaBusy ? t("verifying") : t("addAndVerify")}
             </button>
           </div>
+          {cedulaError && <p className="mt-2 text-xs font-medium text-red-600 [overflow-wrap:anywhere]">{cedulaError}</p>}
         </div>
       )}
     </div>

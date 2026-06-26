@@ -134,7 +134,7 @@ export async function POST(req: Request) {
 
       if (existingCedula) {
         return NextResponse.json(
-          { error: "Esta cédula ya está registrada. Inicia sesión o recupera tu cuenta.", code: "cedula_taken" },
+          { error: "Esta identificación ya está registrada. Inicia sesión o recupera tu cuenta.", code: "cedula_taken" },
           { status: 409 }
         );
       }
@@ -171,7 +171,7 @@ export async function POST(req: Request) {
       const friendly = dupEmail
         ? "Este correo ya está registrado. Inicia sesión."
         : /duplicate key|cedula/i.test(profileError.message)
-          ? "Esta cédula ya está registrada. Inicia sesión o recupera tu cuenta."
+          ? "Esta identificación ya está registrada. Inicia sesión o recupera tu cuenta."
           : "No pudimos crear tu cuenta. Intenta de nuevo en unos minutos.";
       return NextResponse.json({ error: friendly, ...(dupEmail ? { code: "email_taken" } : {}) }, { status: dupEmail ? 409 : 500 });
     }
