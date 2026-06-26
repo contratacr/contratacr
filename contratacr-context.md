@@ -3542,7 +3542,7 @@ New i18n namespaces added this pass: `search.pagination`, extended `search.filte
 
 **Sprint 290 - Sidebar tabs rendered as one list.** `dashboard/profesional/page.tsx`: the desktop sidebar now builds one `sidebarTabs` array (`modeTabs + sharedTabs`) and maps it once, instead of mapping the active-mode tabs and shared tabs separately. This guarantees pairs like `Mis favoritos` -> `Notificaciones` have identical spacing with no residual group gap. No tab order, routing, labels, badges, or mobile behavior changed.
 
-**Sprint 291 - Admin shell uses brand logo.** `admin-shell.tsx`: replaced the generic `ShieldCheck` mark in the admin sidebar/mobile header with the shared `ContrataCRLogo`, recolored for the dark admin chrome, plus a small separate `Admin` pill. This matches the public/admin login branding while keeping all admin navigation, badges, auth, and routes unchanged.
+**Sprint 291 - Admin shell uses brand logo.** `admin-shell.tsx`: replaced the generic `ShieldCheck` mark in the admin sidebar/mobile header with the shared `ContrataCRLogo`, recolored for the dark admin chrome. The separate `Admin` pill was later removed because the footer already identifies the role as "Administrador". This matches the public/admin login branding while keeping all admin navigation, badges, auth, and routes unchanged.
 
 **Sprint 292 - Admin sidebar footer simplified.** `admin-shell.tsx`: removed the admin initials/avatar circle from the desktop admin sidebar footer. The footer now keeps only the shortened admin name, role label, and logout button, reducing visual noise in the operational admin panel. No auth, routes, mobile header, or navigation behavior changed.
 
@@ -3554,3 +3554,5 @@ New i18n namespaces added this pass: `search.pagination`, extended `search.filte
 **Sprint 298 - Availability break guidance.** `availability-editor.tsx` briefly showed a helper under the regular-hours subtitle explaining that professionals with a lunch/rest break should create two separate time blocks (for example 8-12 and 1-5). Superseded by Sprint 299 because the explanation was too obvious for the UI.
 
 **Sprint 299 - Availability slot interval label.** `availability-editor.tsx`: removed the lunch/rest helper and changed the appointment duration label from "Cada cita dura" / "Each appointment lasts" to "Crear citas cada" / "Create slots every". This makes the actual behavior clearer: choosing 1 hour generates appointment slots every hour inside each franja. No scheduling logic changed.
+
+**Sprint 300 - Admin shell badge polish.** `admin-shell.tsx`: admin navigation counters now use the same compact icon-overlay badge pattern as the client/pro panels instead of a separate pill at the end of the row. The logo area also drops the redundant "Admin" chip; the role remains in the sidebar footer beside the admin name. No pending-count API, routes, auth, or admin section behavior changed.

@@ -83,13 +83,15 @@ export function AdminShell({
       )}
     >
       {active === it.id && variant === "side" && <span className="absolute left-0 h-5 w-1 rounded-r bg-[#38bdf8]" aria-hidden />}
-      <it.icon className={cn("h-4 w-4 shrink-0", active === it.id && "text-[#38bdf8]")} />
+      <span className="relative shrink-0">
+        <it.icon className={cn("h-4 w-4", active === it.id && "text-[#38bdf8]")} />
+        {it.badge > 0 && (
+          <span className="absolute -right-2.5 -top-2 grid h-[17px] min-w-[17px] place-items-center rounded-full bg-[#38bdf8] px-1 text-center text-[9px] font-bold leading-none text-[#0f172a] ring-2 ring-[#0f172a]">
+            {it.badge > 9 ? "9+" : it.badge}
+          </span>
+        )}
+      </span>
       <span className="truncate">{it.label}</span>
-      {it.badge > 0 && (
-        <span className="ml-auto inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#38bdf8] px-1 text-[10px] font-bold leading-none text-[#0f172a]">
-          {it.badge > 9 ? "9+" : it.badge}
-        </span>
-      )}
     </Link>
   );
 
@@ -99,7 +101,6 @@ export function AdminShell({
       <aside className="hidden lg:flex lg:w-60 lg:flex-col lg:fixed lg:inset-y-0 bg-[#0f172a] text-white">
         <Link href="/admin" className="flex h-16 shrink-0 items-center gap-2 px-5">
           <ContrataCRLogo tone="dark" />
-          <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] font-semibold text-white/60">Admin</span>
         </Link>
         <nav className="flex-1 overflow-y-auto px-3 py-2 space-y-0.5">
           {items.map((it) => (
@@ -122,7 +123,6 @@ export function AdminShell({
         <div className="px-4 py-3 flex items-center justify-between">
           <Link href="/admin" className="flex items-center gap-2">
             <ContrataCRLogo tone="dark" />
-            <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] font-semibold text-white/60">Admin</span>
           </Link>
           <button onClick={signOut} className="flex items-center gap-1.5 rounded-lg bg-white/10 hover:bg-white/20 px-3 py-1.5 text-sm transition-colors">
             <LogOut className="h-4 w-4" /> Salir
