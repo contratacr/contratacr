@@ -1918,3 +1918,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Responsive navbar account scope.** On phone, the avatar/profile-photo dropdown must match the desktop avatar dropdown option-for-option. The hamburger drawer is the responsive version of the desktop navbar, so it may include the same top-level session actions (Mi panel, Notificaciones, Ofrecer servicios, Ingresar) as icon-led rows, but it must not become a second detailed account menu.
 
 > **Admin filter counters (sprint 302).** Admin section filters with counts must use the same underline + inline-number treatment as client/pro panel StatusFilterTabs: active tab = brand-blue text/underline, inactive = grey text, count = small plain tabular number beside the label. Do not use filled red/blue count pills inside admin filter tabs. Sidebar nav badges are separate and may remain icon-overlay badges.
+
+> **Availability i18n spacing.** Weekly availability rows must be tested with English labels such as Wednesday, Add a time range, and Apply to other days. Reserve enough weekday width and allow action links to wrap or stack before they collide with time inputs.

@@ -3559,3 +3559,6 @@ New i18n namespaces added this pass: `search.pagination`, extended `search.filte
 
 
 **Sprint 302 - Admin filter counters match panels.** Added AdminFilterTabs, mirroring the client/pro StatusFilterTabs underline style: counts render as small inline numbers beside labels, not filled pills. Applied to admin Verificacion and Soporte filters; sidebar nav badges remain separate. No data/API behavior changed.
+
+
+**Sprint 304 - Availability English spacing.** availability-editor.tsx: adjusted the weekly availability row so English weekday and action labels fit without colliding with time fields. The day label has more reserved width, actions can wrap before overlap, and the Spanish layout keeps the same visual rhythm.
