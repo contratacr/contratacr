@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useTranslations } from "next-intl";
-import { ShieldCheck, Send } from "lucide-react";
+import { Clock3, Info, Send, ShieldCheck, XCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Link } from "@/i18n/navigation";
 import { SUPPORT_WHATSAPP_NUMBER } from "@/lib/constants";
@@ -17,7 +18,13 @@ interface Props {
   onSaved?: () => void;
 }
 
-export function VerificationPanel({ professionalId, status, reason, noCrId = false, onSaved }: Props) {
+export function VerificationPanel({
+  professionalId,
+  status,
+  reason,
+  noCrId = false,
+  onSaved,
+}: Props) {
   const t = useTranslations("verificationPanel");
   const rich = { strong: (c: React.ReactNode) => <strong>{c}</strong> };
   const [appeal, setAppeal] = useState("");
@@ -33,6 +40,14 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
   const ref = caseRef(professionalId);
   const waMsg = encodeURIComponent(t("waHelp", { ref }));
   const waUrl = `https://wa.me/${SUPPORT_WHATSAPP_NUMBER}?text=${waMsg}`;
+  const summaryTone =
+    status === "verified"
+      ? "verified"
+      : status === "under_appeal"
+        ? "review"
+        : status === "rejected"
+          ? "rejected"
+          : "pending";
 
   // Re-run automatic verification against the padrón (also used by the appeal).
   async function runCheck(appealMode: boolean) {
@@ -44,11 +59,16 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
     }
     setBusy(true);
     try {
-      const res = await fetch(appealMode ? "/api/appeals" : "/api/verify-identity", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: appealMode ? JSON.stringify({ message: appeal.trim() }) : undefined,
-      });
+      const res = await fetch(
+        appealMode ? "/api/appeals" : "/api/verify-identity",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: appealMode
+            ? JSON.stringify({ message: appeal.trim() })
+            : undefined,
+        },
+      );
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "Error");
       if (json.outcome === "verified") setNote(t("noteVerified"));
@@ -93,36 +113,56 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
   if (noCrId && status !== "verified") {
     return (
       <div className="space-y-5">
-        {status === "rejected" ? (
-          <StatusText title={t("rejectedTitle")}>
-            {reason ? <span className="block">{t("reason", { reason })}</span> : t("noReason")}
-            <span className="block mt-1">{t("rejectedNoCrBody")}</span>
-          </StatusText>
-        ) : status === "under_appeal" ? (
-          <StatusText title={t("underAppealTitle")}>
-            {t("underAppealNoCrBody")}
-          </StatusText>
-        ) : (
-          <StatusText title={t("unverifiedTitle")}>
-            {t.rich("noCrUnverifiedBody", rich)}
-          </StatusText>
-        )}
+        <VerificationSummary
+          title={
+            status === "rejected"
+              ? t("rejectedTitle")
+              : status === "under_appeal"
+                ? t("underAppealTitle")
+                : t("unverifiedTitle")
+          }
+          tone={summaryTone}
+        >
+          {status === "rejected" ? (
+            <>
+              {reason ? (
+                <span className="block">{t("reason", { reason })}</span>
+              ) : (
+                t("noReason")
+              )}
+              <span className="block mt-1">{t("rejectedNoCrBody")}</span>
+            </>
+          ) : status === "under_appeal" ? (
+            t("underAppealNoCrBody")
+          ) : (
+            t.rich("noCrUnverifiedBody", rich)
+          )}
+        </VerificationSummary>
 
-        {note && <StatusText title={t("resultTitle")}>{note}</StatusText>}
-        {error && (
-          <p className="text-xs font-medium text-red-600 [overflow-wrap:anywhere]">{error}</p>
+        {note && (
+          <Notice tone="info" title={t("resultTitle")}>
+            {note}
+          </Notice>
         )}
+        {error && <Notice tone="error">{error}</Notice>}
 
         {/* WhatsApp follow-up to track the case */}
-        <a href={waUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-full bg-[#25D366] hover:bg-[#1eb456] text-white text-sm font-bold px-5 py-2.5">
-          <WhatsAppIcon className="h-4 w-4 shrink-0" /> {t("waFollowUp", { ref })}
+        <a
+          href={waUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 rounded-full bg-[#25D366] hover:bg-[#1eb456] text-white text-sm font-bold px-5 py-2.5"
+        >
+          <WhatsAppIcon className="h-4 w-4 shrink-0" />{" "}
+          {t("waFollowUp", { ref })}
         </a>
 
         {/* Appeal → straight to support (no padrón re-run for no-ID cases) */}
         {status !== "under_appeal" && (
-          <div className="bg-white rounded-2xl border border-[#e5e7eb] p-5 sm:p-6 shadow-sm">
-            <h3 className="text-[15px] font-bold text-[#162543] mb-1.5">{t("manualReviewTitle")}</h3>
-            <p className="text-[13px] leading-relaxed text-[#6b7280] mb-4">{t("manualReviewBody")}</p>
+          <ActionPanel
+            title={t("manualReviewTitle")}
+            body={t("manualReviewBody")}
+          >
             <textarea
               value={appeal}
               onChange={(e) => setAppeal(e.target.value)}
@@ -130,60 +170,85 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
               placeholder={t("manualReviewPlaceholder")}
               className="w-full rounded-xl border border-[#e5e7eb] p-3 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
             />
-            <button onClick={() => runCheck(true)} disabled={busy} className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 disabled:opacity-60">
-              <Send className="h-4 w-4" /> {busy ? t("sending") : t("sendToReview")}
+            <button
+              onClick={() => runCheck(true)}
+              disabled={busy}
+              className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 disabled:opacity-60"
+            >
+              <Send className="h-4 w-4" />{" "}
+              {busy ? t("sending") : t("sendToReview")}
             </button>
-          </div>
+          </ActionPanel>
         )}
 
         {/* Add-cédula-later — runs the normal padrón verification automatically */}
-        <div className="bg-white rounded-2xl border border-[#e5e7eb] p-5 sm:p-6 shadow-sm">
-          <h3 className="text-[15px] font-bold text-[#162543] mb-1.5">{t("hasCedulaTitle")}</h3>
-          <p className="text-[13px] leading-relaxed text-[#6b7280] mb-4">{t("hasCedulaBody")}</p>
+        <ActionPanel title={t("hasCedulaTitle")} body={t("hasCedulaBody")}>
           <div className="flex flex-wrap items-center gap-2">
             <input
               value={newCedula}
-              onChange={(e) => { setNewCedula(e.target.value); setCedulaError(null); }}
+              onChange={(e) => {
+                setNewCedula(e.target.value);
+                setCedulaError(null);
+              }}
               placeholder={t("cedulaPlaceholder")}
               aria-invalid={!!cedulaError}
               className="flex-1 min-w-[200px] h-11 px-4 rounded-xl border border-[#e5e7eb] text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all aria-[invalid=true]:border-red-300 aria-[invalid=true]:focus:ring-red-200"
             />
-            <button onClick={addCedula} disabled={cedulaBusy || newCedula.replace(/\D/g, "").length < 9} className="inline-flex items-center gap-2 rounded-full bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 disabled:opacity-50">
-              <ShieldCheck className="h-4 w-4" /> {cedulaBusy ? t("verifying") : t("addAndVerify")}
+            <button
+              onClick={addCedula}
+              disabled={cedulaBusy || newCedula.replace(/\D/g, "").length < 9}
+              className="inline-flex items-center gap-2 rounded-full bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 disabled:opacity-50"
+            >
+              <ShieldCheck className="h-4 w-4" />{" "}
+              {cedulaBusy ? t("verifying") : t("addAndVerify")}
             </button>
           </div>
-          {cedulaError && <p className="mt-2 text-xs font-medium text-red-600 [overflow-wrap:anywhere]">{cedulaError}</p>}
-        </div>
+          {cedulaError && (
+            <Notice tone="error" className="mt-3">
+              {cedulaError}
+            </Notice>
+          )}
+        </ActionPanel>
       </div>
     );
   }
 
   return (
     <div className="space-y-5">
-      {status === "verified" && (
-        <StatusText title={t("verifiedTitle")}>
-          {t.rich("verifiedBody", rich)}
-        </StatusText>
-      )}
-      {status === "pending" && (
-        <StatusText title={t("unverifiedTitle")}>
-          {t.rich("pendingBody", rich)}
-        </StatusText>
-      )}
-      {status === "under_appeal" && (
-        <StatusText title={t("underAppealTitle")}>
-          {t("underAppealBody")}
-        </StatusText>
-      )}
-      {status === "rejected" && (
-        <StatusText title={t("rejectedTitle")}>
-          {reason ? <span className="block">{t("reason", { reason })}</span> : t("noReason")}
-          <span className="block mt-1">{t("rejectedBody")}</span>
-        </StatusText>
-      )}
+      <VerificationSummary
+        title={
+          status === "verified"
+            ? t("verifiedTitle")
+            : status === "under_appeal"
+              ? t("underAppealTitle")
+              : status === "rejected"
+                ? t("rejectedTitle")
+                : t("unverifiedTitle")
+        }
+        tone={summaryTone}
+        badge={status === "verified" ? t("verifiedChip") : undefined}
+      >
+        {status === "verified" && t.rich("verifiedBody", rich)}
+        {status === "pending" && t.rich("pendingBody", rich)}
+        {status === "under_appeal" && t("underAppealBody")}
+        {status === "rejected" && (
+          <>
+            {reason ? (
+              <span className="block">{t("reason", { reason })}</span>
+            ) : (
+              t("noReason")
+            )}
+            <span className="block mt-1">{t("rejectedBody")}</span>
+          </>
+        )}
+      </VerificationSummary>
 
-      {note && <StatusText title={t("resultTitle")}>{note}</StatusText>}
-      {error && <p className="text-xs font-medium text-red-600 [overflow-wrap:anywhere]">{error}</p>}
+      {note && (
+        <Notice tone="info" title={t("resultTitle")}>
+          {note}
+        </Notice>
+      )}
+      {error && <Notice tone="error">{error}</Notice>}
 
       {/* Pending no longer shows a separate "Verificar mi identidad ahora" (re-run the
           cédula on file) button — it was redundant with the "Verifica tu identidad con tu
@@ -194,11 +259,7 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
 
       {/* Rejected → appeal (re-runs automatically; if it still fails → support ticket) */}
       {status === "rejected" && (
-        <div className="bg-white rounded-2xl border border-[#e5e7eb] p-5 sm:p-6 shadow-sm">
-          <h3 className="text-[15px] font-bold text-[#162543] mb-1.5">{t("appealTitle")}</h3>
-          <p className="text-[13px] leading-relaxed text-[#6b7280] mb-4">
-            {t("appealBody")}
-          </p>
+        <ActionPanel title={t("appealTitle")} body={t("appealBody")}>
           <textarea
             value={appeal}
             onChange={(e) => setAppeal(e.target.value)}
@@ -212,7 +273,8 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
               disabled={busy}
               className="inline-flex items-center gap-2 rounded-full bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 disabled:opacity-60"
             >
-              <Send className="h-4 w-4" /> {busy ? t("sending") : t("appealReverify")}
+              <Send className="h-4 w-4" />{" "}
+              {busy ? t("sending") : t("appealReverify")}
             </button>
             <a
               href={waUrl}
@@ -220,10 +282,11 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-full bg-[#25D366] hover:bg-[#1eb456] text-white text-sm font-bold px-5 py-2.5"
             >
-              <WhatsAppIcon className="h-4 w-4 shrink-0" /> {t("supportWhatsapp")}
+              <WhatsAppIcon className="h-4 w-4 shrink-0" />{" "}
+              {t("supportWhatsapp")}
             </a>
           </div>
-        </div>
+        </ActionPanel>
       )}
 
       {status === "under_appeal" && (
@@ -233,7 +296,8 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 rounded-full bg-[#25D366] hover:bg-[#1eb456] text-white text-sm font-bold px-5 py-2.5"
         >
-          <WhatsAppIcon className="h-4 w-4 shrink-0" /> {t("supportWhatsappCase", { ref })}
+          <WhatsAppIcon className="h-4 w-4 shrink-0" />{" "}
+          {t("supportWhatsappCase", { ref })}
         </a>
       )}
 
@@ -244,9 +308,7 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
           from the padrón (profiles + Auth, in run-verification); DIMEX/NITE or not-found
           stays unverified; an invalid format errors out (no change). */}
       {status !== "verified" && (
-        <div className="bg-white rounded-2xl border border-[#e5e7eb] p-5 sm:p-6 shadow-sm">
-          <h3 className="text-[15px] font-bold text-[#162543] mb-1.5">{t("enterCedulaTitle")}</h3>
-          <p className="text-[13px] leading-relaxed text-[#6b7280]">{t("enterCedulaBody")}</p>
+        <ActionPanel title={t("enterCedulaTitle")} body={t("enterCedulaBody")}>
           <Link
             href="/proveedores-autorizados"
             className="mt-2 mb-4 inline-flex text-sm font-semibold text-[#009FD9] transition-colors hover:text-[#0089bb] hover:underline"
@@ -256,7 +318,10 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
           <div className="flex flex-wrap items-center gap-2">
             <input
               value={newCedula}
-              onChange={(e) => { setNewCedula(e.target.value); setCedulaError(null); }}
+              onChange={(e) => {
+                setNewCedula(e.target.value);
+                setCedulaError(null);
+              }}
               inputMode="numeric"
               placeholder={t("cedulaPlaceholder")}
               aria-invalid={!!cedulaError}
@@ -267,27 +332,113 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
               disabled={cedulaBusy || newCedula.replace(/\D/g, "").length < 9}
               className="inline-flex items-center gap-2 rounded-full bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 disabled:opacity-50"
             >
-              <ShieldCheck className="h-4 w-4" /> {cedulaBusy ? t("verifying") : t("addAndVerify")}
+              <ShieldCheck className="h-4 w-4" />{" "}
+              {cedulaBusy ? t("verifying") : t("addAndVerify")}
             </button>
           </div>
-          {cedulaError && <p className="mt-2 text-xs font-medium text-red-600 [overflow-wrap:anywhere]">{cedulaError}</p>}
-        </div>
+          {cedulaError && (
+            <Notice tone="error" className="mt-3">
+              {cedulaError}
+            </Notice>
+          )}
+        </ActionPanel>
       )}
     </div>
   );
 }
 
-function StatusText({
+function VerificationSummary({
   title,
+  tone,
+  badge,
   children,
 }: {
   title: string;
+  tone: "verified" | "pending" | "review" | "rejected";
+  badge?: string;
+  children: React.ReactNode;
+}) {
+  const Icon =
+    tone === "verified"
+      ? ShieldCheck
+      : tone === "review"
+        ? Clock3
+        : tone === "rejected"
+          ? XCircle
+          : Info;
+  const toneClass =
+    tone === "verified"
+      ? "border-[#bfe8f6] bg-[#f1fbfe] text-[#009FD9]"
+      : tone === "review"
+        ? "border-[#fde68a] bg-[#fffbeb] text-[#b45309]"
+        : tone === "rejected"
+          ? "border-[#fecaca] bg-[#fff1f2] text-[#dc2626]"
+          : "border-[#dbe4ee] bg-[#f8fafc] text-[#64748b]";
+  return (
+    <section className="rounded-2xl border border-[#dbe4ee] bg-white p-4 shadow-sm sm:p-5">
+      <div className="flex items-start gap-3">
+        <span
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border ${toneClass}`}
+        >
+          <Icon className="h-5 w-5" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-[15px] font-bold leading-snug text-[#162543] sm:text-base">
+              {title}
+            </h3>
+            {badge && (
+              <Badge variant="verified" className="shrink-0">
+                {badge}
+              </Badge>
+            )}
+          </div>
+          <div className="mt-1.5 text-sm leading-relaxed text-[#4b5563] [overflow-wrap:anywhere]">
+            {children}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ActionPanel({
+  title,
+  body,
+  children,
+}: {
+  title: string;
+  body: string;
   children: React.ReactNode;
 }) {
   return (
-    <div>
-      <p className="text-[15px] sm:text-base font-bold leading-snug text-[#162543]">{title}</p>
-      <div className="mt-1.5 text-sm leading-relaxed text-[#4b5563] [overflow-wrap:anywhere]">{children}</div>
+    <section className="rounded-2xl border border-[#dbe4ee] bg-white p-4 shadow-sm sm:p-5">
+      <h3 className="text-[15px] font-bold text-[#162543]">{title}</h3>
+      <p className="mt-1.5 text-[13px] leading-relaxed text-[#6b7280]">
+        {body}
+      </p>
+      <div className="mt-4">{children}</div>
+    </section>
+  );
+}
+
+function Notice({
+  tone,
+  title,
+  className = "",
+  children,
+}: {
+  tone: "info" | "error";
+  title?: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      className={`rounded-2xl border px-4 py-3 text-sm leading-relaxed [overflow-wrap:anywhere] ${tone === "error" ? "border-red-200 bg-red-50 text-red-700" : "border-[#bfe8f6] bg-[#f1fbfe] text-[#0f6380]"} ${className}`}
+    >
+      {title && <p className="mb-0.5 font-bold text-[#162543]">{title}</p>}
+      <div>{children}</div>
     </div>
   );
 }
