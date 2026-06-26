@@ -1803,7 +1803,7 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 
 > **Support icon consistency.** Use the Headset icon for Soporte across the dashboard panel and responsive navbar resources. Avoid MessageCircle for Soporte because it reads like chat/WhatsApp instead of support center.
 
-> **Back-to-top scope.** The global back-to-top floating button is for public long-scroll pages only. Do not show it inside dashboard/admin panels, especially on responsive, because it competes with panel navigation and bottom controls.
+> **Back-to-top scope.** The global back-to-top floating button is for public long-scroll pages only. Do not show it inside dashboard/admin panels, especially on responsive, because it competes with panel navigation and bottom controls. Pattern: compact circular FAB with a subtle scroll-progress ring, visible only after meaningful scroll, bottom-right with `env(safe-area-inset-bottom)` on phone, smooth-scroll unless `prefers-reduced-motion`, and bilingual accessible label.
 
 > **Back-to-top search exclusion.** Do not show the global back-to-top floating button on /buscar. Search is an app surface with map/results controls, so extra floating scroll controls create clutter on responsive.
 
