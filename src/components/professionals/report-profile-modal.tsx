@@ -81,9 +81,7 @@ export function ReportProfileModal({ professionalName, professionalSlug, onClose
       >
         <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-[#f3f4f6]">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-red-50">
-              <Flag className="h-4 w-4 text-red-500" />
-            </div>
+            <Flag className="h-5 w-5 shrink-0 text-red-500" />
             <div>
               <h2 className="text-base font-bold text-[#111827]">{t("title")}</h2>
               <p className="text-xs text-[#6b7280]">{professionalName}</p>

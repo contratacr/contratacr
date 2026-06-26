@@ -533,7 +533,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                     aria-label={t("report")}
                                     title={t("report")}
                                     onClick={() => setReportProFor(b.id)}
-                                    className="ml-auto inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#e5e7eb] text-[#9ca3af] transition-colors hover:border-[#fecaca] hover:bg-[#fef2f2] hover:text-[#dc2626]"
+                                    className="ml-auto inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[#dc2626] transition-colors hover:bg-[#fef2f2] hover:text-[#b91c1c]"
                                   >
                                     <Flag className="h-4 w-4" />
                                   </button>
