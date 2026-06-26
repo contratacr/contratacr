@@ -1,5 +1,7 @@
 # ContrataCR.com — Project Context
 
+_Last updated: 2026-06-26 (sprint 557 - **Dashboard card expand chevron standardized** (`expand-toggle.tsx` new, `client-activity.tsx`, `booking-requests.tsx`, `proposals-tab.tsx`, design guide). Created a shared `ExpandToggle` for collapsible dashboard cards: rounded-xl control, subtle closed border/shadow, brand-blue filled open state, and smoother chevron rotation. Applied to Mis solicitudes, Mis publicaciones, Solicitudes recibidas, Oportunidades, and Mis propuestas so the open/close “v” looks consistent. No card state, routing, data loading, actions, or i18n changed.)_
+
 _Last updated: 2026-06-26 (sprint 556 - **Mis propuestas pending badge softened** (`proposals-tab.tsx`, design guide). The `Pendiente / Pending` proposal state keeps the same wording but now renders as a calm amber waiting pill with a tiny amber dot, subtle border/background, and compact sizing, instead of the generic warning badge. Accepted/declined/status logic unchanged. No API, routing, lifecycle, or i18n keys changed.)_
 
 _Last updated: 2026-06-26 (sprint 555 - **Mis propuestas no longer repeats Tu precio** (`proposals-tab.tsx`, design guide). The pro proposal price now appears only in the collapsed Mis propuestas summary row. Opening the card no longer repeats `Tu precio`; the expanded Mi propuesta section shows only the proposal message when one exists. No proposal data, edit, withdraw, status, routing, API, or i18n keys changed.)_

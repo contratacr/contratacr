@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarDays, FolderOpen, ClipboardList, ChevronDown, Plus, CalendarClock, Wrench, Users, MapPin, FileText, Flag } from "lucide-react";
+import { CalendarDays, FolderOpen, ClipboardList, Plus, CalendarClock, Wrench, Users, MapPin, FileText, Flag } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -15,6 +15,7 @@ import { computeAge } from "@/lib/age";
 import { getInitials, getWhatsAppLink, cn, formatRelativeOrDate } from "@/lib/utils";
 import { StatusFilterTabs, SOLICITUD_TABS, PROYECTO_TABS, solicitudMatches, solicitudBucket, solicitudStatusRedundant, proyectoMatches, proyectoBucket, proyectoStatusRedundant, bucketCounts } from "@/components/dashboard/status-filter-tabs";
 import { CardActionsMenu, type CardAction } from "@/components/dashboard/card-actions-menu";
+import { ExpandToggle } from "@/components/dashboard/expand-toggle";
 import { ExpandableText } from "@/components/ui/expandable-text";
 import { ReportModal } from "@/components/dashboard/report-modal";
 import { LeaveReviewModal } from "@/components/professionals/leave-review-modal";
@@ -451,9 +452,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                               </p>
                             )}
                           </div>
-                          <span className={cn("mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition-colors duration-200", expandedBooking === b.id ? "border-[#ccecf8] bg-[#EBF5FB] text-[#009FD9]" : "border-[#eef2f6] bg-white text-[#9ca3af] group-hover:border-[#d8eef8] group-hover:text-[#009FD9]")}>
-                            <ChevronDown className={cn("h-[18px] w-[18px] transition-transform duration-200", expandedBooking === b.id && "rotate-180")} />
-                          </span>
+                          <ExpandToggle open={expandedBooking === b.id} />
                         </div>
 
                         {expandedBooking === b.id && (
@@ -635,9 +634,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                             </span>
                           </div>
                         </div>
-                        <span className={cn("mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition-colors duration-200", isExpanded ? "border-[#ccecf8] bg-[#EBF5FB] text-[#009FD9]" : "border-[#eef2f6] bg-white text-[#9ca3af] group-hover:border-[#d8eef8] group-hover:text-[#009FD9]")}>
-                          <ChevronDown className={cn("h-[18px] w-[18px] transition-transform duration-200", isExpanded && "rotate-180")} />
-                        </span>
+                        <ExpandToggle open={isExpanded} />
                       </div>
                     </button>
 

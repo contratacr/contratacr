@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Coins, FileText, Handshake, Phone, ChevronDown, MapPin, CalendarClock, CalendarDays, Clock, EyeOff, Users, Wrench } from "lucide-react";
+import { Coins, FileText, Handshake, Phone, MapPin, CalendarClock, CalendarDays, Clock, EyeOff, Users, Wrench } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +12,7 @@ import { cn, getWhatsAppLink, formatRelativeOrDate } from "@/lib/utils";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { StatusFilterTabs, PROYECTO_TABS, proposalMatches, proposalBucket, proposalStatusRedundant, bucketCounts } from "@/components/dashboard/status-filter-tabs";
 import { ExpandableText } from "@/components/ui/expandable-text";
+import { ExpandToggle } from "@/components/dashboard/expand-toggle";
 
 type ProposalStatus = "pending" | "accepted" | "declined";
 
@@ -447,9 +448,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                                 <span className="min-w-0 flex-1 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere] sm:text-base">{project.title}</span>
                                 <span className="flex shrink-0 items-center gap-1.5">
                                   {isToday(project.created_at) && <Badge variant="success" className="text-[10px] font-semibold">{t("new")}</Badge>}
-                                  <span className={cn("flex h-8 w-8 items-center justify-center rounded-full border transition-colors duration-200", isExpanded ? "border-[#ccecf8] bg-[#EBF5FB] text-[#009FD9]" : "border-[#eef2f6] bg-white text-[#9ca3af] group-hover:border-[#d8eef8] group-hover:text-[#009FD9]")}>
-                                    <ChevronDown className={cn("h-[18px] w-[18px] transition-transform", isExpanded && "rotate-180")} />
-                                  </span>
+                                  <ExpandToggle open={isExpanded} className="mt-0" />
                                 </span>
                               </div>
                               <div className="mt-2 flex flex-col items-start gap-1.5 text-[13px]">
@@ -565,9 +564,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                             </span>
                           </div>
                         </div>
-                        <span className={cn("mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition-colors duration-200", isOpen ? "border-[#ccecf8] bg-[#EBF5FB] text-[#009FD9]" : "border-[#eef2f6] bg-white text-[#9ca3af] group-hover:border-[#d8eef8] group-hover:text-[#009FD9]")}>
-                          <ChevronDown className={cn("h-[18px] w-[18px] transition-transform duration-200", isOpen && "rotate-180")} />
-                        </span>
+                        <ExpandToggle open={isOpen} />
                       </button>
 
                       {isOpen && (
