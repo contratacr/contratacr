@@ -25,12 +25,12 @@ import { ALL_CATEGORIES, CATEGORY_GROUPS, searchCategories, normalizeText, getCa
 import { searchLocations, resolveLocation, type LocationSuggestion } from "@/lib/data/location-search";
 
 /* ─── Brand mark (the square "CR" icon) ─── */
-export function ContrataCRMark({ className }: { className?: string }) {
+export function ContrataCRMark({ className, tone = "light" }: { className?: string; tone?: "light" | "dark" }) {
+  const src = tone === "dark" ? "/logo-mark-dark.png" : "/logo-mark-transparent.png";
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src="/logo-mark.png"
-      srcSet="/logo-mark.png 1x, /logo-mark@2x.png 2x"
+      src={src}
       alt="ContrataCR"
       width={28}
       height={28}
@@ -40,12 +40,13 @@ export function ContrataCRMark({ className }: { className?: string }) {
 }
 
 /* ─── Logo (mark + wordmark). `size="lg"` gives the header more brand presence. ─── */
-export function ContrataCRLogo({ className, chip = false, size = "md" }: { className?: string; chip?: boolean; size?: "md" | "lg" }) {
+export function ContrataCRLogo({ className, chip = false, size = "md", tone = "light" }: { className?: string; chip?: boolean; size?: "md" | "lg"; tone?: "light" | "dark" }) {
   const lg = size === "lg";
   const markCls = lg ? "h-8 w-8 sm:h-9 sm:w-9" : "h-7 w-7";
   const textCls = lg ? "text-[19px] sm:text-[22px]" : "text-[17px]";
   const chipCls = lg ? "h-9 w-9 sm:h-10 sm:w-10" : "h-8 w-8";
   const chipMarkCls = lg ? "h-6 w-6 sm:h-7 sm:w-7" : "h-[1.35rem] w-[1.35rem]";
+  const dark = tone === "dark";
   return (
     <div className={cn("flex items-center select-none", lg ? "gap-2.5" : "gap-2", className)}>
       {chip ? (
@@ -53,11 +54,11 @@ export function ContrataCRLogo({ className, chip = false, size = "md" }: { class
           <ContrataCRMark className={chipMarkCls} />
         </span>
       ) : (
-        <ContrataCRMark className={markCls} />
+        <ContrataCRMark className={markCls} tone={tone} />
       )}
       <span className={cn("font-extrabold tracking-tight leading-none", textCls)}>
-        <span className="text-[#1a2744]">Contrata</span>
-        <span className="text-[#009FD9]">CR</span>
+        <span className={dark ? "text-white" : "text-[#1a2744]"}>Contrata</span>
+        <span className={dark ? "text-[#38bdf8]" : "text-[#009FD9]"}>CR</span>
       </span>
     </div>
   );

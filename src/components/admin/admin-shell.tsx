@@ -98,7 +98,7 @@ export function AdminShell({
       {/* ── Desktop sidebar ── */}
       <aside className="hidden lg:flex lg:w-60 lg:flex-col lg:fixed lg:inset-y-0 bg-[#0f172a] text-white">
         <Link href="/admin" className="flex h-16 shrink-0 items-center gap-2 px-5">
-          <ContrataCRLogo className="[&_span:first-child]:text-white [&_span:last-child]:text-[#38bdf8]" />
+          <ContrataCRLogo tone="dark" />
           <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] font-semibold text-white/60">Admin</span>
         </Link>
         <nav className="flex-1 overflow-y-auto px-3 py-2 space-y-0.5">
@@ -121,7 +121,7 @@ export function AdminShell({
       <header className="lg:hidden bg-[#0f172a] text-white">
         <div className="px-4 py-3 flex items-center justify-between">
           <Link href="/admin" className="flex items-center gap-2">
-            <ContrataCRLogo className="[&_span:first-child]:text-white [&_span:last-child]:text-[#38bdf8]" />
+            <ContrataCRLogo tone="dark" />
             <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] font-semibold text-white/60">Admin</span>
           </Link>
           <button onClick={signOut} className="flex items-center gap-1.5 rounded-lg bg-white/10 hover:bg-white/20 px-3 py-1.5 text-sm transition-colors">
