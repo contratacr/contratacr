@@ -6,9 +6,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { cn, formatRelativeTime } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
-import { notificationHref, notificationInMode } from "@/lib/notification-link";
-import { useMode } from "@/hooks/use-mode";
-import { canOffer } from "@/lib/auth/capabilities";
+import { notificationHref } from "@/lib/notification-link";
 import { NotificationSourceIcon } from "@/components/notifications/notification-source-icon";
 
 type Notification = {
@@ -25,9 +23,6 @@ export function NotificationBell() {
   const { user } = useAuth();
   const t = useTranslations("notifications");
   const locale = useLocale();
-  // Per-mode bell (Airbnb full switch): show ONLY the active mode's notifications
-  // (professional ones in "offer", client ones in "use"; support/account ones in both).
-  const { mode } = useMode(canOffer(user));
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -40,8 +35,9 @@ export function NotificationBell() {
   // own channel, so handlers are always registered before subscribe().
   const instanceId = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
-  // Only the active mode's notifications drive the bell (list + unread badge).
-  const visible = notifications.filter((n) => notificationInMode(n.type, mode));
+  // Navbar bell = account inbox, before the user chooses a panel mode. Show client,
+  // professional, support, and account notifications together.
+  const visible = notifications;
   const unreadCount = visible.filter((n) => !n.read).length;
 
   // Re-pullable so the badge can refresh whenever notifications change anywhere
@@ -122,7 +118,6 @@ export function NotificationBell() {
 
   async function markAllRead() {
     if (!user) return;
-    // Mark only the CURRENT mode's unread (the bell is per-mode now).
     const ids = visible.filter((n) => !n.read).map((n) => n.id);
     if (ids.length === 0) return;
     const supabase = createClient();

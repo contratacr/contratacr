@@ -803,7 +803,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
   useEffect(() => { queueMicrotask(() => refreshNotifUnread()); }, [refreshNotifUnread, mobileOpen]);
   // The active mode's unread (its own + account-level) → the bell + the menu's
   // Notificaciones badge. The mode switch itself stays clean (no badge).
-  const activeUnread = (mode === "offer" ? proUnread : clientUnread) + neutralUnread;
+  const activeUnread = proUnread + clientUnread + neutralUnread;
   const navPath = pathname.replace(/^\/(es|en)(?=\/|$)/, "") || "/";
   const categoriesActive = navPath === "/categorias" || navPath.startsWith("/buscar");
   const resourcesActive = RESOURCES_LINKS.some((link) => navPath === link.href || navPath.startsWith(`${link.href}/`));
