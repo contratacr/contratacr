@@ -213,6 +213,8 @@ Use the standard 4px Tailwind steps. Defaults for this app:
 
 **Oportunidades / Mis propuestas field icons:** the section icon (`Send`) is only for the card lead / section identity. Inside opportunity/proposal metadata, use distinct field icons: budget/price = a compact `₡` glyph icon, service/category = `Wrench`, description/message = `FileText`, phone = `Phone`, location = `MapPin`, date/time = calendar/clock. Do not reuse the opportunity icon for description or service rows. In expanded `Mis propuestas`, the price label must be `Tu precio:` / `Your price:` while the value carries the `₡` amount, so the colón symbol is not repeated.
 
+**Sprint 279 override for Oportunidades / Mis propuestas icons:** supersedes the two icon bullets above where they mention `Send` or a compact currency glyph. `Oportunidades` / `Mis propuestas` use `Handshake` everywhere for section identity (panel nav, card lead, navbar account menu, notifications). Budget/price rows use `Coins`; the value itself is the only place the currency symbol appears.
+
 **Mis publicaciones field icons:** the card lead icon remains `ClipboardList` because the object is a publication/request brief. Inside the card metadata, the service/category row must use `Wrench`, not `ClipboardList`; proposal count uses `Users`, location uses `MapPin`, description uses `FileText`, and publish date uses `CalendarDays`.
 
 **Solicitudes recibidas field icons:** in received request cards, service/category uses `Wrench`; the client's note/description uses `FileText`; phone uses `Phone`; ID uses `IdCard`; appointment date uses `CalendarClock`; location uses `MapPin`. Do not reuse `Wrench` for the client note.

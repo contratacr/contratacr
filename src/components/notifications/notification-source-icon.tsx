@@ -4,6 +4,7 @@ import {
   Bell,
   CalendarCheck,
   ClipboardList,
+  Handshake,
   Headset,
   Send,
 } from "lucide-react";
@@ -15,7 +16,7 @@ export function NotificationSourceIcon({ type, className }: { type: string; clas
       return <CalendarCheck className={className} />;
     case "new_project":
     case "proposal_accepted":
-      return <Send className={className} />;
+      return <Handshake className={className} />;
     case "booking_confirmed":
     case "booking_cancelled":
     case "booking_completed":

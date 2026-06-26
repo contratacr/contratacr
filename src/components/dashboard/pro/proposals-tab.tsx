@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { FileText, Phone, Send, ChevronDown, MapPin, CalendarClock, CalendarDays, Clock, EyeOff, Users, Wrench } from "lucide-react";
+import { Coins, FileText, Handshake, Phone, ChevronDown, MapPin, CalendarClock, CalendarDays, Clock, EyeOff, Users, Wrench } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -45,14 +45,6 @@ type OpenProject = {
   profiles?: { full_name: string; avatar_url?: string };
   proposals?: { id: string }[];
 };
-
-function ColonIcon({ className }: { className?: string }) {
-  return (
-    <span className={cn("inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center text-[13px] font-bold leading-none", className)}>
-      ₡
-    </span>
-  );
-}
 
 const STATUS_VARIANT: Record<ProposalStatus, "warning" | "success" | "error"> = {
   pending: "warning",
@@ -345,7 +337,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
           )}
         </div>
 
-        <div className="border-t border-[#eef2f6] bg-white p-4 sm:p-5">
+        <div className="border-t border-[#eef2f6] p-4 sm:p-5">
           {alreadySubmitted ? (
             <p className="text-center text-[13px] text-[#6b7280]">{t("alreadyProposedNote")}</p>
           ) : (
@@ -401,7 +393,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
         <div>
           {openProjects.length === 0 ? (
             <div className="text-center py-16">
-              <Send className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
+              <Handshake className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
               <p className="font-medium text-[#374151]">{t("emptyBrowse")}</p>
               <p className="text-sm text-[#6b7280] mt-1">{t("emptyBrowseSub")}</p>
             </div>
@@ -439,7 +431,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                             className={cn("group flex w-full items-start gap-3.5 p-4 text-left transition-colors hover:bg-[#f9fbfd] sm:p-5", isExpanded ? "rounded-t-2xl bg-[#fbfdff]" : "rounded-2xl")}
                           >
                             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EBF5FB] text-[#0089bb]">
-                              <Send className="h-[18px] w-[18px]" />
+                              <Handshake className="h-[18px] w-[18px]" />
                             </div>
                             <div className="min-w-0 flex-1">
                               <div className="flex items-start justify-between gap-2.5">
@@ -453,7 +445,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                               </div>
                               <div className="mt-2 flex flex-col items-start gap-1.5 text-[13px]">
                                 <span className={cn("inline-flex w-full max-w-full items-center gap-2", hasBudget(project) ? "font-semibold text-[#0089bb]" : "text-[#6b7280]")}>
-                                  <ColonIcon className="text-[#9ca3af]" />
+                                  <Coins className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
                                   <span className="truncate">{budgetTextFor(project)}</span>
                                 </span>
                                 {project.categories?.name && (
@@ -498,7 +490,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
         <div>
           {myProposals.length === 0 ? (
             <div className="text-center py-16">
-              <Send className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
+              <Handshake className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
               <p className="font-medium text-[#374151]">{t("emptyMine")}</p>
               <p className="text-sm text-[#6b7280] mt-1">{t("emptyMineSub")}</p>
             </div>
@@ -530,7 +522,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                         className={cn("group w-full text-left p-4 sm:p-5 flex items-start gap-3.5 hover:bg-[#f9fbfd] transition-colors", isOpen ? "rounded-t-2xl bg-[#fbfdff]" : "rounded-2xl")}
                       >
                         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EBF5FB] text-[#0089bb]">
-                          <Send className="h-[18px] w-[18px]" />
+                          <Handshake className="h-[18px] w-[18px]" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2.5">
@@ -545,7 +537,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                           </div>
                           <div className="mt-2 flex flex-col items-start gap-1.5 text-[13px]">
                             <span className="inline-flex w-full max-w-full items-center gap-2 text-[#374151]">
-                              <ColonIcon className="text-[#9ca3af]" />
+                              <Coins className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
                               <span className={cn("truncate font-semibold", p.price ? "text-[#0089bb]" : "text-[#6b7280]")}>
                                 {p.price ? `₡${p.price.toLocaleString("es-CR")}` : t("priceTBD")}
                               </span>
@@ -574,7 +566,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                               <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#9ca3af]">{t("myProposal")}</p>
                               <div className="flex flex-col gap-2.5">
                                 <div className="flex items-start gap-2.5">
-                                  <ColonIcon className="mt-0.5 text-[#9ca3af]" />
+                                  <Coins className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
                                   <div className="min-w-0">
                                     <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("yourPriceLabel")}</p>
                                     <p className={cn("mt-0.5 min-w-0 text-[13px] font-semibold [overflow-wrap:anywhere]", p.price ? "text-[#0089bb]" : "text-[#6b7280]")}>

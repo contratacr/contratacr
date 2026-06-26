@@ -6,7 +6,7 @@ import { isSigningOut } from "@/lib/auth/sign-out";
 import { useSearchParams } from "next/navigation";
 import {
   User, Award, CalendarCheck, CalendarDays, ExternalLink, Wrench,
-  ShieldCheck, Bell, Send, ClipboardList, Bookmark, Settings, Headset, CreditCard,
+  ShieldCheck, Bell, Send, Handshake, ClipboardList, Bookmark, Settings, Headset, CreditCard,
   ArrowRight, Sparkles, Menu, X, Repeat2,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
@@ -61,7 +61,7 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
   photos: <Award className="h-4 w-4" />,
   availability: <CalendarDays className="h-4 w-4" />,
   bookings: <CalendarCheck className="h-4 w-4" />,
-  proposals: <Send className="h-4 w-4" />,
+  proposals: <Handshake className="h-4 w-4" />,
   verificacion: <ShieldCheck className="h-4 w-4" />,
   suscripcion: <CreditCard className="h-4 w-4" />,
   sent_bookings: <Send className="h-4 w-4" />,
