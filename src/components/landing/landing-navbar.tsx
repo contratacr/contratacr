@@ -765,6 +765,11 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
   const locale = useLocale();
   const pathname = usePathname();
   const { user, avatarUrl, avatarReady } = useAuth();
+  const publicPath = pathname.replace(/^\/(es|en)(?=\/|$)/, "") || "/";
+  const isMainPage = publicPath === "/";
+  const isSearchPage = publicPath.startsWith("/buscar");
+  const isPanelPage = publicPath.startsWith("/dashboard") || publicPath.startsWith("/admin");
+  const useInternalNavChrome = !isMainPage && !isSearchPage && !isPanelPage;
 
   // "Ingresar" routes to the robust /login PAGE (forgot-password, role-aware
   // post-login redirect to the correct panel, waitForAuthCookie, OAuth `next`,
@@ -984,7 +989,12 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
   return (
     <>
       <header
-        className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-white/96 backdrop-blur-md shadow-[0_10px_34px_-24px_rgba(15,23,42,0.55)] border-b border-gray-100/80"
+        className={cn(
+          "fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-white/96 backdrop-blur-md",
+          useInternalNavChrome
+            ? "border-b border-[#dbeafe] shadow-[0_16px_44px_-26px_rgba(15,23,42,0.72)] before:absolute before:inset-x-0 before:top-0 before:h-0.5 before:bg-[#009FD9]"
+            : "border-b border-gray-100/80 shadow-[0_10px_34px_-24px_rgba(15,23,42,0.55)]"
+        )}
       >
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="relative h-16">
