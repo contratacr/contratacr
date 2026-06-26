@@ -551,9 +551,12 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                               )
                             )}
                           </div>
-                          <div className="mt-2.5 flex flex-col items-start gap-2 text-[13px]">
-                            <span className="inline-flex w-full max-w-full items-start rounded-xl border border-[#ccecf8] bg-[#EBF5FB] px-3 py-2.5 font-semibold text-[#162543]">
-                              <span className="min-w-0 [overflow-wrap:anywhere]">{p.price ? `₡${p.price.toLocaleString("es-CR")}` : t("priceTBD")}</span>
+                          <div className="mt-2.5 flex flex-col items-start gap-1.5 text-[13px]">
+                            <span className="inline-flex w-full max-w-full items-start gap-2 text-[#374151]">
+                              <span className="shrink-0 text-[#9ca3af]">{t("yourPriceLabel")}</span>
+                              <span className={cn("min-w-0 font-semibold [overflow-wrap:anywhere]", p.price ? "text-[#0089bb]" : "text-[#6b7280]")}>
+                                {p.price ? `₡${p.price.toLocaleString("es-CR")}` : t("priceTBD")}
+                              </span>
                             </span>
                             {clientName && (
                               <span className="inline-flex w-full max-w-full items-start gap-2 text-[#6b7280]">
@@ -574,15 +577,28 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
 
                       {isOpen && (
                         <div className="rounded-b-2xl border-t border-[#f3f4f6] bg-[#f8fbfd] px-4 pb-5 pt-4 sm:px-5 flex flex-col gap-3.5">
-                          {p.message && (
-                            <div className="rounded-2xl bg-white p-3.5 shadow-sm ring-1 ring-[#e8eef5]">
-                              <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#9ca3af]">{t("yourMessage")}</p>
-                              <ExpandableText text={p.message} lines={5} className="mt-1 text-[13px] leading-relaxed text-[#4b5563]" />
+                          {(p.price || p.message) && (
+                            <div className="flex flex-col gap-2.5">
+                              <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#9ca3af]">{t("myProposal")}</p>
+                              <div className="flex flex-col gap-2.5">
+                                <div className="flex items-start gap-2.5">
+                                  <span className="min-w-[72px] shrink-0 text-[12px] font-medium text-[#9ca3af]">{t("yourPrice")}</span>
+                                  <p className={cn("min-w-0 text-[13px] font-semibold [overflow-wrap:anywhere]", p.price ? "text-[#0089bb]" : "text-[#6b7280]")}>
+                                    {p.price ? `₡${p.price.toLocaleString("es-CR")}` : t("priceTBD")}
+                                  </p>
+                                </div>
+                                {p.message && (
+                                  <div className="flex items-start gap-2.5">
+                                    <span className="min-w-[72px] shrink-0 text-[12px] font-medium text-[#9ca3af]">{t("yourMessage")}</span>
+                                    <ExpandableText text={p.message} lines={5} className="min-w-0 text-[13px] leading-relaxed text-[#4b5563]" />
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           )}
                           {/* Client contact — revealed once the proposal is accepted (still active). */}
                           {p.status === "accepted" && ps !== "cancelled" && phone && (
-                            <div className="rounded-2xl bg-white p-3.5 shadow-sm ring-1 ring-[#e8eef5]">
+                            <div className="border-t border-[#eef2f6] pt-3">
                               <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#9ca3af]">{t("fieldPhone")}</p>
                               <p className="mt-0.5 text-[13px] font-medium text-[#374151] [overflow-wrap:anywhere]">{phone}</p>
                             </div>

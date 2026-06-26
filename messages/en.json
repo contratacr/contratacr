@@ -1294,6 +1294,7 @@
     "sendProposal": "Send proposal",
     "emptyMine": "You haven't sent any proposals yet",
     "emptyMineSub": "Browse available opportunities and send your first proposal.",
+    "myProposal": "My proposal",
     "noneInView": "No opportunities in this view.",
     "status": {
       "pending": "Pending",

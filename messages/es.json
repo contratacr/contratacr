@@ -1293,6 +1293,7 @@
     "sendProposal": "Enviar propuesta",
     "emptyMine": "No enviaste propuestas todavía",
     "emptyMineSub": "Explora las oportunidades disponibles y envía tu primera propuesta.",
+    "myProposal": "Mi propuesta",
     "noneInView": "No hay oportunidades en esta vista.",
     "status": {
       "pending": "Pendiente",
