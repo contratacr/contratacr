@@ -3557,5 +3557,3 @@ New i18n namespaces added this pass: `search.pagination`, extended `search.filte
 **Sprint 297 - Home navbar goes dark.** Follow-up to Sprint 296: the home page now uses a dark navy navbar (`#111827`) with `ContrataCRLogo tone="dark"` / dark mark variants, white/soft-white nav actions, and a dark-compatible language selector. `/buscar` remains white, public internal pages keep the stronger white chrome, and dashboard/admin remain unchanged.
 
 **Sprint 298 - Availability break guidance.** `availability-editor.tsx` now shows a short helper under the regular-hours subtitle explaining that professionals with a lunch/rest break should create two separate time blocks (for example 8-12 and 1-5). ES/EN copy added; no scheduling logic changed.
-
-**Sprint 299 - Dark home navbar contrast polish.** `NotificationBell` now accepts `tone="dark"` so the home navbar bell and unread badge use the light brand blue on the dark navbar. `LandingNavbar` passes that tone on the home default and compact rows; home nav labels (Categorías, Recursos, Mi panel, Ingresar, language icon/chevron) are full white instead of muted white. Non-home navbars remain unchanged.

@@ -118,9 +118,9 @@ function LanguageMenu({ tone = "light" }: { tone?: "light" | "dark" } = {}) {
             : "border-[#e8eef5] bg-white text-[#374151] shadow-[0_8px_24px_-22px_rgba(15,23,42,0.6)] hover:border-[#ccecf8] hover:bg-[#f8fbfd] hover:text-[#162543]"
         )}
       >
-        <Globe className={cn("h-4 w-4", open ? "text-[#0089bb]" : dark ? "text-white" : "text-[#9ca3af]")} aria-hidden />
+        <Globe className={cn("h-4 w-4", open ? "text-[#0089bb]" : dark ? "text-white/65" : "text-[#9ca3af]")} aria-hidden />
         <span>{locale.toUpperCase()}</span>
-        <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", dark ? "text-white" : "text-[#9ca3af]", open && "rotate-180 text-[#0089bb]")} />
+        <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", dark ? "text-white/65" : "text-[#9ca3af]", open && "rotate-180 text-[#0089bb]")} />
       </button>
       {open && (
         <div role="menu" className="absolute right-0 top-full z-50 mt-2 w-44 overflow-hidden rounded-2xl border border-[#e8eef5] bg-white p-1.5 shadow-[0_24px_70px_-24px_rgba(15,23,42,0.5)]">
@@ -1042,7 +1042,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                       "relative flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-medium transition-colors after:absolute after:left-4 after:right-4 after:-bottom-1 after:h-0.5 after:rounded-full after:bg-[#009FD9] after:transition-opacity",
                       openMenu === "categorias"
                         ? useDarkHomeNav ? "bg-white/10 text-white after:opacity-0" : "text-[#1a2744] bg-gray-50 after:opacity-0"
-                        : useDarkHomeNav ? "text-white after:opacity-0 hover:bg-white/10" : "text-[#374151] after:opacity-0 hover:text-[#1a2744] hover:bg-gray-50"
+                        : useDarkHomeNav ? "text-white/75 after:opacity-0 hover:bg-white/10 hover:text-white" : "text-[#374151] after:opacity-0 hover:text-[#1a2744] hover:bg-gray-50"
                     )}
                   >
                     {t("categories")}
@@ -1075,7 +1075,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                       "relative flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-medium transition-colors after:absolute after:left-4 after:right-4 after:-bottom-1 after:h-0.5 after:rounded-full after:bg-[#009FD9] after:transition-opacity",
                       openMenu === "recursos"
                         ? useDarkHomeNav ? "bg-white/10 text-white after:opacity-0" : "text-[#1a2744] bg-gray-50 after:opacity-0"
-                        : useDarkHomeNav ? "text-white after:opacity-0 hover:bg-white/10" : "text-[#374151] after:opacity-0 hover:text-[#1a2744] hover:bg-gray-50"
+                        : useDarkHomeNav ? "text-white/75 after:opacity-0 hover:bg-white/10 hover:text-white" : "text-[#374151] after:opacity-0 hover:text-[#1a2744] hover:bg-gray-50"
                     )}
                   >
                     {t("resources")}
@@ -1138,12 +1138,12 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                       href={primaryPanelHref}
                       className={cn(
                         "relative text-sm font-medium px-3 py-2 transition-colors whitespace-nowrap after:absolute after:left-3 after:right-3 after:-bottom-1 after:h-0.5 after:rounded-full after:bg-[#009FD9] after:opacity-0",
-                        useDarkHomeNav ? "text-white hover:text-white" : "text-[#374151] hover:text-[#1a2744]"
+                        useDarkHomeNav ? "text-white/75 hover:text-white" : "text-[#374151] hover:text-[#1a2744]"
                       )}
                     >
                       {t("myPanel")}
                     </a>
-                    <NotificationBell tone={useDarkHomeNav ? "dark" : "light"} />
+                    <NotificationBell />
                     <AccountMenu
                       user={user}
                       isPro={isPro}
@@ -1177,7 +1177,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                       href={loginHref}
                       className={cn(
                         "text-sm font-medium px-3 py-2 rounded-xl transition-colors",
-                        useDarkHomeNav ? "text-white hover:bg-white/10" : "text-[#374151] hover:bg-gray-50"
+                        useDarkHomeNav ? "text-white/75 hover:bg-white/10 hover:text-white" : "text-[#374151] hover:bg-gray-50"
                       )}
                     >
                       {t("login")}
@@ -1323,7 +1323,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                   header for both roles; logged-out users see only the search. */}
               {user && (
                 <div className="flex items-center gap-0.5 sm:gap-1.5 shrink-0">
-                  <NotificationBell tone={useDarkHomeNav ? "dark" : "light"} />
+                  <NotificationBell />
                   <AccountMenu
                     user={user}
                     isPro={isPro}

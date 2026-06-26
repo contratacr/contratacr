@@ -19,7 +19,7 @@ type Notification = {
   data?: { link?: string } | null;
 };
 
-export function NotificationBell({ tone = "light" }: { tone?: "light" | "dark" } = {}) {
+export function NotificationBell() {
   const { user } = useAuth();
   const t = useTranslations("notifications");
   const locale = useLocale();
@@ -39,7 +39,6 @@ export function NotificationBell({ tone = "light" }: { tone?: "light" | "dark" }
   // professional, support, and account notifications together.
   const visible = notifications;
   const unreadCount = visible.filter((n) => !n.read).length;
-  const dark = tone === "dark";
 
   // Re-pullable so the badge can refresh whenever notifications change anywhere
   // (the in-panel list marks read / deletes, another tab, etc.).
@@ -157,18 +156,12 @@ export function NotificationBell({ tone = "light" }: { tone?: "light" | "dark" }
     <div className="relative" ref={panelRef}>
       <button
         onClick={() => setOpen(!open)}
-        className={cn(
-          "relative p-2 rounded-xl transition-colors",
-          dark ? "text-[#38bdf8] hover:bg-white/10" : "text-[#6b7280] hover:bg-[#f3f4f6]"
-        )}
+        className="relative p-2 rounded-xl text-[#6b7280] hover:bg-[#f3f4f6] transition-colors"
         aria-label={t("title")}
       >
         <Bell className="h-5 w-5" />
         {unreadCount > 0 && (
-          <span className={cn(
-            "absolute -top-0.5 -right-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-bold leading-none ring-2",
-            dark ? "bg-[#38bdf8] text-[#111827] ring-[#111827]" : "bg-[#009FD9] text-white ring-white"
-          )}>
+          <span className="absolute -top-0.5 -right-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold leading-none text-white ring-2 ring-white">
             {unreadCount > 9 ? "9+" : unreadCount}
           </span>
         )}
