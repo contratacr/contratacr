@@ -118,7 +118,7 @@ function LanguageMenu() {
         <ChevronDown className={cn("h-3 w-3 text-gray-400 transition-transform duration-200", open && "rotate-180")} />
       </button>
       {open && (
-        <div role="menu" className="absolute right-0 top-full mt-1.5 w-36 rounded-xl border border-gray-100 bg-white py-1 shadow-xl z-50">
+        <div role="menu" className="absolute right-0 top-full mt-1.5 w-36 rounded-xl border border-gray-100 bg-white py-1 shadow-[0_18px_45px_-18px_rgba(15,23,42,0.42)] z-50">
           {LANGS.map((l) => {
             const active = locale === l.code;
             return (
@@ -619,7 +619,7 @@ function AccountMenu({
         )}
       </button>
       {open && (
-        <div className="absolute right-0 top-full mt-2 w-60 bg-white border border-gray-100 rounded-2xl shadow-xl z-50 py-1.5 overflow-hidden">
+        <div className="absolute right-0 top-full mt-2 w-60 bg-white border border-gray-100 rounded-2xl shadow-[0_22px_55px_-18px_rgba(15,23,42,0.45)] z-50 py-1.5 overflow-hidden">
           <div className="px-3 py-2 border-b border-gray-50 mb-1">
             {displayName && <p className="text-sm font-semibold text-[#111827] truncate">{displayName}</p>}
             <p className="text-xs text-[#9ca3af] truncate">{user.email}</p>
@@ -740,6 +740,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
   const router = useRouter();
   const t = useTranslations("header");
   const locale = useLocale();
+  const pathname = usePathname();
   const { user, avatarUrl, avatarReady } = useAuth();
 
   // "Ingresar" routes to the robust /login PAGE (forgot-password, role-aware
@@ -803,6 +804,11 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
   // The active mode's unread (its own + account-level) → the bell + the menu's
   // Notificaciones badge. The mode switch itself stays clean (no badge).
   const activeUnread = (mode === "offer" ? proUnread : clientUnread) + neutralUnread;
+  const navPath = pathname.replace(/^\/(es|en)(?=\/|$)/, "") || "/";
+  const categoriesActive = navPath === "/categorias" || navPath.startsWith("/buscar");
+  const resourcesActive = RESOURCES_LINKS.some((link) => navPath === link.href || navPath.startsWith(`${link.href}/`));
+  const panelActive = navPath.startsWith("/dashboard/profesional");
+  const notificationsActive = navPath.startsWith("/notificaciones");
 
   const compactSuggestions = useMemo(() => matchCategories(searchQuery), [searchQuery]);
   const navLocSug = useMemo(() => searchLocations(navLocation), [navLocation]);
@@ -951,7 +957,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
   return (
     <>
       <header
-        className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-white/96 backdrop-blur-md shadow-sm border-b border-gray-100/80"
+        className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-white/96 backdrop-blur-md shadow-[0_10px_34px_-24px_rgba(15,23,42,0.55)] border-b border-gray-100/80"
       >
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="relative h-16">
@@ -990,8 +996,8 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                 >
                   <button
                     className={cn(
-                      "flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-medium transition-colors",
-                      openMenu === "categorias" ? "text-[#1a2744] bg-gray-50" : "text-[#374151] hover:text-[#1a2744] hover:bg-gray-50"
+                      "relative flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-medium transition-colors after:absolute after:left-4 after:right-4 after:-bottom-1 after:h-0.5 after:rounded-full after:bg-[#009FD9] after:transition-opacity",
+                      openMenu === "categorias" || categoriesActive ? "text-[#1a2744] bg-gray-50 after:opacity-100" : "text-[#374151] after:opacity-0 hover:text-[#1a2744] hover:bg-gray-50"
                     )}
                   >
                     {t("categories")}
@@ -1000,7 +1006,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
 
                   {openMenu === "categorias" && (
                     <div
-                      className="absolute top-full left-0 mt-1.5 bg-white rounded-2xl shadow-2xl border border-gray-100 p-5 z-50 w-[720px]"
+                      className="absolute top-full left-0 mt-1.5 bg-white rounded-2xl shadow-[0_24px_70px_-22px_rgba(15,23,42,0.45)] border border-gray-100 p-5 z-50 w-[720px]"
                       style={{ animation: "tab-cards-in 0.15s ease both" }}
                     >
                       {/* ONE container: typing in the search FILTERS the categories in place. */}
@@ -1021,8 +1027,8 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                 >
                   <button
                     className={cn(
-                      "flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-medium transition-colors",
-                      openMenu === "recursos" ? "text-[#1a2744] bg-gray-50" : "text-[#374151] hover:text-[#1a2744] hover:bg-gray-50"
+                      "relative flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-medium transition-colors after:absolute after:left-4 after:right-4 after:-bottom-1 after:h-0.5 after:rounded-full after:bg-[#009FD9] after:transition-opacity",
+                      openMenu === "recursos" || resourcesActive ? "text-[#1a2744] bg-gray-50 after:opacity-100" : "text-[#374151] after:opacity-0 hover:text-[#1a2744] hover:bg-gray-50"
                     )}
                   >
                     {t("resources")}
@@ -1030,7 +1036,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                   </button>
                   {openMenu === "recursos" && (
                     <div
-                      className="absolute top-full left-0 mt-1.5 bg-white rounded-2xl shadow-2xl border border-gray-100 p-4 z-50 min-w-[220px]"
+                      className="absolute top-full left-0 mt-1.5 bg-white rounded-2xl shadow-[0_24px_70px_-22px_rgba(15,23,42,0.45)] border border-gray-100 p-4 z-50 min-w-[220px]"
                       style={{ animation: "tab-cards-in 0.15s ease both" }}
                     >
                       <ul className="space-y-1">
@@ -1080,7 +1086,10 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     {/* Mode switch removed from the navbar (sprint 518) — it lives inside "Mi panel". */}
                     <a
                       href={primaryPanelHref}
-                      className="text-sm font-medium px-3 py-2 text-[#374151] hover:text-[#1a2744] transition-colors whitespace-nowrap"
+                      className={cn(
+                        "relative text-sm font-medium px-3 py-2 transition-colors whitespace-nowrap after:absolute after:left-3 after:right-3 after:-bottom-1 after:h-0.5 after:rounded-full after:bg-[#009FD9] after:transition-opacity",
+                        panelActive ? "text-[#1a2744] after:opacity-100" : "text-[#374151] after:opacity-0 hover:text-[#1a2744]"
+                      )}
                     >
                       {t("myPanel")}
                     </a>
@@ -1310,7 +1319,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
             drawerTouchX.current = null;
           }}
           className={cn(
-            "lg:hidden fixed top-0 left-0 bottom-0 z-[101] w-[86%] max-w-[360px] bg-white shadow-[0_0_40px_rgba(0,0,0,0.25)] flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform",
+            "lg:hidden fixed top-0 left-0 bottom-0 z-[101] w-[86%] max-w-[360px] bg-white shadow-[18px_0_60px_-18px_rgba(15,23,42,0.5)] flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform",
             mobileOpen ? "translate-x-0" : "-translate-x-full"
           )}
         >
@@ -1346,7 +1355,10 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                 <Link
                   href="/categorias"
                   onClick={() => setMobileOpen(false)}
-                  className="flex min-h-11 items-center gap-3 py-2.5 text-sm font-semibold text-[#162543] transition-colors hover:text-[#009FD9]"
+                  className={cn(
+                    "relative flex min-h-11 items-center gap-3 py-2.5 pl-3 pr-0 text-sm font-semibold transition-colors before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-0.5 before:rounded-r-full before:bg-[#009FD9] before:transition-opacity",
+                    categoriesActive ? "text-[#009FD9] before:opacity-100" : "text-[#162543] before:opacity-0 hover:text-[#009FD9]"
+                  )}
                 >
                   <Compass className="h-4 w-4 shrink-0 text-[#009FD9]" />
                   <span className="min-w-0 flex-1">{t("categories")}</span>
@@ -1365,7 +1377,10 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     <SupportLink
                       key={link.href}
                       onNavigate={() => setMobileOpen(false)}
-                      className="flex min-h-11 w-full items-center gap-3 py-2.5 text-left text-sm font-medium leading-tight text-gray-600 transition-colors hover:text-[#009FD9]"
+                      className={cn(
+                        "relative flex min-h-11 w-full items-center gap-3 py-2.5 pl-3 pr-0 text-left text-sm font-medium leading-tight transition-colors before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-0.5 before:rounded-r-full before:bg-[#009FD9] before:transition-opacity",
+                        (navPath === link.href || navPath.startsWith(`${link.href}/`)) ? "text-[#009FD9] before:opacity-100" : "text-gray-600 before:opacity-0 hover:text-[#009FD9]"
+                      )}
                     >
                       {content}
                     </SupportLink>
@@ -1374,7 +1389,10 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                       key={link.href}
                       href={link.href}
                       onClick={() => setMobileOpen(false)}
-                      className="flex min-h-11 items-center gap-3 py-2.5 text-sm font-medium leading-tight text-gray-600 transition-colors hover:text-[#009FD9]"
+                      className={cn(
+                        "relative flex min-h-11 items-center gap-3 py-2.5 pl-3 pr-0 text-sm font-medium leading-tight transition-colors before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-0.5 before:rounded-r-full before:bg-[#009FD9] before:transition-opacity",
+                        (navPath === link.href || navPath.startsWith(`${link.href}/`)) ? "text-[#009FD9] before:opacity-100" : "text-gray-600 before:opacity-0 hover:text-[#009FD9]"
+                      )}
                     >
                       {content}
                     </Link>
@@ -1385,7 +1403,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     <Link
                       href="/registro/profesional"
                       onClick={() => setMobileOpen(false)}
-                      className="flex min-h-11 items-center gap-3 py-2.5 text-sm font-semibold text-[#009FD9] transition-colors hover:text-[#0089bb]"
+                      className="relative flex min-h-11 items-center gap-3 py-2.5 pl-3 pr-0 text-sm font-semibold text-[#009FD9] transition-colors hover:text-[#0089bb]"
                     >
                       <Briefcase className="h-4 w-4 shrink-0" />
                       <span className="min-w-0 flex-1">{t("registerPro")}</span>
@@ -1394,7 +1412,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     <Link
                       href={loginHref}
                       onClick={() => setMobileOpen(false)}
-                      className="flex min-h-11 items-center gap-3 py-2.5 text-sm font-medium text-[#374151] transition-colors hover:text-[#009FD9]"
+                      className="relative flex min-h-11 items-center gap-3 py-2.5 pl-3 pr-0 text-sm font-medium text-[#374151] transition-colors hover:text-[#009FD9]"
                     >
                       <LogIn className="h-4 w-4 shrink-0 text-gray-400" />
                       <span className="min-w-0 flex-1">{t("login")}</span>
@@ -1416,12 +1434,18 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                       <ChevronRight className="h-4 w-4 shrink-0 text-gray-300" />
                     </Link>
                   )}
-                  <a href={primaryPanelHref} onClick={() => setMobileOpen(false)} className="flex min-h-11 items-center gap-3 py-2.5 text-sm font-semibold text-[#162543] transition-colors hover:text-[#009FD9]">
+                  <a href={primaryPanelHref} onClick={() => setMobileOpen(false)} className={cn(
+                    "relative flex min-h-11 items-center gap-3 py-2.5 pl-3 pr-0 text-sm font-semibold transition-colors before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-0.5 before:rounded-r-full before:bg-[#009FD9] before:transition-opacity",
+                    panelActive ? "text-[#009FD9] before:opacity-100" : "text-[#162543] before:opacity-0 hover:text-[#009FD9]"
+                  )}>
                     <LayoutDashboard className="h-4 w-4 shrink-0 text-[#009FD9]" />
                     <span className="min-w-0 flex-1">{t("myPanel")}</span>
                     <ChevronRight className="h-4 w-4 shrink-0 text-gray-300" />
                   </a>
-                  <a href={notificationsHref} onClick={() => setMobileOpen(false)} className="flex min-h-11 items-center gap-3 py-2.5 text-sm font-medium text-[#374151] transition-colors hover:text-[#009FD9]">
+                  <a href={notificationsHref} onClick={() => setMobileOpen(false)} className={cn(
+                    "relative flex min-h-11 items-center gap-3 py-2.5 pl-3 pr-0 text-sm font-medium transition-colors before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-0.5 before:rounded-r-full before:bg-[#009FD9] before:transition-opacity",
+                    notificationsActive ? "text-[#009FD9] before:opacity-100" : "text-[#374151] before:opacity-0 hover:text-[#009FD9]"
+                  )}>
                     <Bell className="h-4 w-4 shrink-0 text-gray-400" />
                     <span className="min-w-0 flex-1">{t("notifications")}</span>
                     {activeUnread > 0 && (

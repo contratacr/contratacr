@@ -7,7 +7,7 @@ import { useSearchParams } from "next/navigation";
 import {
   User, Image as ImageIcon, CalendarDays, Inbox, ExternalLink, Wrench,
   FolderOpen, ShieldCheck, Bell, Send, ClipboardList, Bookmark, Settings, Headset, CreditCard,
-  ArrowRight, Sparkles, MoreHorizontal, X, Repeat2,
+  ArrowRight, Sparkles, Menu, X, Repeat2,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -343,7 +343,7 @@ export default function DashboardPage() {
       <button
         type="button"
         onClick={() => { setMoreOpen(false); handleSwitchMode(next); }}
-        className="flex flex-1 flex-col items-center justify-center gap-1 px-0.5 pt-2 pb-1.5 text-[#374151] transition-colors hover:text-[#111827]"
+        className="relative flex flex-1 flex-col items-center justify-center gap-1 px-0.5 pt-2 pb-1.5 text-[#374151] transition-colors hover:text-[#111827]"
       >
         <Repeat2 className="h-[22px] w-[22px]" />
         <span className="max-w-full truncate text-[10px] font-semibold leading-none">
@@ -575,7 +575,7 @@ export default function DashboardPage() {
           thumb-reachable, always visible while in the panel; replaces the sidebar on phones.
           A capped item set per mode (+ "Más") means it ALWAYS fits — never a horizontal scroll. */}
       <nav
-        className="lg:hidden fixed bottom-0 inset-x-0 z-40 flex items-stretch border-t border-[#e5e7eb] bg-white shadow-[0_-2px_10px_rgba(15,23,42,0.05)] pb-[env(safe-area-inset-bottom)]"
+        className="lg:hidden fixed bottom-0 inset-x-0 z-40 flex items-stretch border-t border-[#e5e7eb] bg-white shadow-[0_-14px_34px_-18px_rgba(15,23,42,0.45)] pb-[env(safe-area-inset-bottom)]"
         aria-label={t("title")}
       >
         {isProvider && modeBottomNavButton()}
@@ -587,8 +587,8 @@ export default function DashboardPage() {
               onClick={() => { setMoreOpen(false); setTab(tab); }}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "flex-1 flex flex-col items-center justify-center gap-1 px-0.5 pt-2 pb-1.5 transition-colors",
-                active ? "text-[#009FD9]" : "text-[#6b7280] hover:text-[#374151]"
+                "relative flex-1 flex flex-col items-center justify-center gap-1 px-0.5 pt-2 pb-1.5 transition-colors before:absolute before:left-1/2 before:top-0 before:h-0.5 before:w-8 before:-translate-x-1/2 before:rounded-b-full before:bg-[#009FD9] before:transition-opacity",
+                active ? "text-[#009FD9] before:opacity-100" : "text-[#6b7280] before:opacity-0 hover:text-[#374151]"
               )}
             >
               <span className="relative [&>svg]:!h-[22px] [&>svg]:!w-[22px]">
@@ -606,13 +606,13 @@ export default function DashboardPage() {
           onClick={() => setMoreOpen(true)}
           aria-current={activeInMore ? "page" : undefined}
           className={cn(
-            "flex-1 flex flex-col items-center justify-center gap-1 px-0.5 pt-2 pb-1.5 transition-colors",
-            (moreOpen || activeInMore) ? "text-[#009FD9]" : "text-[#6b7280] hover:text-[#374151]"
+            "relative flex-1 flex flex-col items-center justify-center gap-1 px-0.5 pt-2 pb-1.5 transition-colors before:absolute before:left-1/2 before:top-0 before:h-0.5 before:w-8 before:-translate-x-1/2 before:rounded-b-full before:bg-[#009FD9] before:transition-opacity",
+            (moreOpen || activeInMore) ? "text-[#009FD9] before:opacity-100" : "text-[#6b7280] before:opacity-0 hover:text-[#374151]"
           )}
         >
           {/* "Más" no longer carries a notification dot — notifications now have their own
               dedicated bottom-bar slot (sprint 432). */}
-          <MoreHorizontal className="h-[22px] w-[22px]" />
+          <Menu className="h-[22px] w-[22px]" />
           <span className="text-[10px] font-semibold leading-none">{t("bottomNav.more")}</span>
         </button>
       </nav>
@@ -621,7 +621,7 @@ export default function DashboardPage() {
       {moreOpen && (
         <div className="lg:hidden fixed inset-0 z-50">
           <div className="absolute inset-0 bg-black/40 animate-in fade-in-0" onClick={() => setMoreOpen(false)} aria-hidden />
-          <div className="absolute inset-x-0 bottom-0 max-h-[78vh] overflow-y-auto rounded-t-2xl bg-white shadow-2xl pb-[env(safe-area-inset-bottom)] animate-in slide-in-from-bottom duration-200">
+          <div className="absolute inset-x-0 bottom-0 max-h-[78vh] overflow-y-auto rounded-t-2xl bg-white shadow-[0_-24px_60px_-18px_rgba(15,23,42,0.45)] pb-[env(safe-area-inset-bottom)] animate-in slide-in-from-bottom duration-200">
             <div className="sticky top-0 bg-white pt-2">
               {/* Drag handle (tap to close too) + a clear X — standard bottom-sheet dismissal. */}
               <button onClick={() => setMoreOpen(false)} aria-label={t("bottomNav.close")} className="mx-auto block h-1 w-10 rounded-full bg-[#d1d5db]" />
@@ -642,8 +642,8 @@ export default function DashboardPage() {
                     key={tab}
                     onClick={() => { setMoreOpen(false); setTab(tab); }}
                     className={cn(
-                      "w-full flex items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium transition-colors",
-                      active ? "bg-[#EBF5FB] text-[#009FD9]" : "text-[#374151] hover:bg-[#f3f4f6]"
+                      "relative w-full flex items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-medium transition-colors before:absolute before:left-0 before:top-2 before:bottom-2 before:w-0.5 before:rounded-r-full before:bg-[#009FD9] before:transition-opacity",
+                      active ? "bg-[#EBF5FB] text-[#009FD9] before:opacity-100" : "text-[#374151] before:opacity-0 hover:bg-[#f3f4f6]"
                     )}
                   >
                     <span className={cn("shrink-0", active ? "text-[#009FD9]" : "text-[#9ca3af]")}>{TAB_ICONS[tab]}</span>
