@@ -446,29 +446,29 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                               <div className="mt-2 flex flex-col items-start gap-1.5 text-[13px]">
                                 <span className={cn("inline-flex w-full max-w-full items-center gap-2", hasBudget(project) ? "font-semibold text-[#0089bb]" : "text-[#6b7280]")}>
                                   <Coins className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                                  <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldBudget")}</span> {budgetTextFor(project)}</span>
+                                  <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldBudget")}</span> <span className={hasBudget(project) ? "text-[#0089bb]" : "text-[#374151]"}>{budgetTextFor(project)}</span></span>
                                 </span>
                                 {project.categories?.name && (
                                   <span className="inline-flex w-full max-w-full items-center gap-2 text-[#374151]">
                                     <Wrench className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                                    <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldService")}</span> {project.categories.name}</span>
+                                    <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldService")}</span> <span className="text-[#374151]">{project.categories.name}</span></span>
                                   </span>
                                 )}
                                 {zona && (
                                   <span className="inline-flex w-full max-w-full items-center gap-2 text-[#6b7280]">
                                     <MapPin className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                                    <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldZone")}</span> {zona}</span>
+                                    <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldZone")}</span> <span className="text-[#374151]">{zona}</span></span>
                                   </span>
                                 )}
                                 {project.timeline && (
                                   <span className="inline-flex w-full max-w-full items-center gap-2 text-[#6b7280]">
                                     <CalendarClock className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                                    <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldDeadline")}</span> {project.timeline}</span>
+                                    <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldDeadline")}</span> <span className="text-[#374151]">{project.timeline}</span></span>
                                   </span>
                                 )}
                                 <span className="inline-flex w-full max-w-full items-center gap-2 text-[#9ca3af]">
                                   <Clock className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                                  <span className="min-w-0 truncate"><span className="font-medium">{t("fieldPublished")}</span> {relativeTime(project.created_at)}</span>
+                                  <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldPublished")}</span> <span className="text-[#374151]">{relativeTime(project.created_at)}</span></span>
                                 </span>
                               </div>
                             </div>
@@ -538,19 +538,19 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                           <div className="mt-2 flex flex-col items-start gap-1.5 text-[13px]">
                             <span className="inline-flex w-full max-w-full items-center gap-2 text-[#374151]">
                               <Coins className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                              <span className={cn("truncate font-semibold", p.price ? "text-[#0089bb]" : "text-[#6b7280]")}>
-                                <span className="font-medium text-[#9ca3af]">{t("yourPriceLabel")}</span> {p.price ? `₡${p.price.toLocaleString("es-CR")}` : t("priceTBD")}
+                              <span className="truncate font-semibold">
+                                <span className="font-medium text-[#9ca3af]">{t("yourPriceLabel")}</span> <span className={p.price ? "text-[#0089bb]" : "text-[#374151]"}>{p.price ? `₡${p.price.toLocaleString("es-CR")}` : t("priceTBD")}</span>
                               </span>
                             </span>
                             {clientName && (
-                              <span className="inline-flex w-full max-w-full items-center gap-2 text-[#6b7280]">
+                              <span className="inline-flex w-full max-w-full items-center gap-2">
                                 <Users className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                                <span className="truncate">{clientName}</span>
+                                <span className="truncate text-[#374151]">{clientName}</span>
                               </span>
                             )}
-                            <span className="inline-flex w-full max-w-full items-center gap-2 text-[#9ca3af]">
+                            <span className="inline-flex w-full max-w-full items-center gap-2">
                               <CalendarDays className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                              <span className="truncate">{t("sentOn", { date: sentDate })}</span>
+                              <span className="truncate text-[#374151]">{t("sentOn", { date: sentDate })}</span>
                             </span>
                           </div>
                         </div>

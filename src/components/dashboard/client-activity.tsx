@@ -433,14 +433,14 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                             {formatBookingDate(b, dateLocale) && (
                               <span className="mt-2 inline-flex w-full max-w-full items-center gap-2 text-[13px] text-[#374151] sm:w-auto">
                                 <CalendarClock className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                                <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldDate")}</span> {formatBookingDate(b, dateLocale)}</span>
+                                <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldDate")}</span> <span className="text-[#374151]">{formatBookingDate(b, dateLocale)}</span></span>
                               </span>
                             )}
                             {/* The service the request was for (grey wrench). */}
                             {bookingServiceLabel(b) && (
                               <p className="mt-2 flex items-center gap-2 text-[13px] text-[#374151] min-w-0">
                                 <Wrench className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                                <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldService")}</span> {bookingServiceLabel(b)}</span>
+                                <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldService")}</span> <span className="text-[#374151]">{bookingServiceLabel(b)}</span></span>
                               </p>
                             )}
                             {/* For someone else — a quiet at-a-glance hint. */}
@@ -468,7 +468,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                     <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("apptForLabel")}</p>
                                     <p className="mt-0.5 text-[13px] font-semibold text-[#111827] [overflow-wrap:anywhere]">{b.beneficiary_name || t("otherPerson")}</p>
                                     {beneAge && (
-                                      <p className="mt-0.5 text-[12px] text-[#6b7280]"><span className="text-[#9ca3af]">{t("fieldAge")}</span> {beneAge}</p>
+                                      <p className="mt-0.5 text-[12px]"><span className="text-[#9ca3af]">{t("fieldAge")}</span> <span className="text-[#374151]">{beneAge}</span></p>
                                     )}
                                   </div>
                                 </div>
@@ -489,7 +489,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                               <div className="rounded-lg bg-[#fef2f2] border border-[#fee2e2] px-2.5 py-1.5">
                                 <p className="text-[11px] font-semibold text-[#b91c1c]">{t("proCancelled")}</p>
                                 {b.cancel_reason && (
-                                  <p className="mt-0.5 text-xs text-[#374151]"><span className="text-[#6b7280]">{t("fieldReason")}</span> {b.cancel_reason}</p>
+                                  <p className="mt-0.5 text-xs"><span className="text-[#9ca3af]">{t("fieldReason")}</span> <span className="text-[#374151]">{b.cancel_reason}</span></p>
                                 )}
                               </div>
                             )}
@@ -616,22 +616,22 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                             {project.categories?.name && (
                               <span className="inline-flex w-full max-w-full items-center gap-2 text-[#374151]">
                                 <Wrench className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                                <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldService")}</span> {project.categories.name}</span>
+                                <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldService")}</span> <span className="text-[#374151]">{project.categories.name}</span></span>
                               </span>
                             )}
                             {zone && (
                               <span className="inline-flex w-full max-w-full items-center gap-2 text-[#6b7280]">
                                 <MapPin className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                                <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldZone")}</span> {zone}</span>
+                                <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldZone")}</span> <span className="text-[#374151]">{zone}</span></span>
                               </span>
                             )}
                             <span className="inline-flex w-full max-w-full items-center gap-2 text-[#6b7280]">
                               <Users className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                              <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldProposals")}</span> {t("proposalsCount", { count: proposalCount })}</span>
+                              <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldProposals")}</span> <span className="text-[#374151]">{t("proposalsCount", { count: proposalCount })}</span></span>
                             </span>
                             <span className="inline-flex w-full max-w-full items-center gap-2 text-[#9ca3af]">
                               <CalendarDays className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                              <span className="min-w-0 truncate"><span className="font-medium">{t("fieldPublished")}</span> {formatRelativeOrDate(project.created_at, locale)}</span>
+                              <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldPublished")}</span> <span className="text-[#374151]">{formatRelativeOrDate(project.created_at, locale)}</span></span>
                             </span>
                           </div>
                         </div>

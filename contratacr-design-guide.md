@@ -107,6 +107,8 @@ These are **enforceable acceptance criteria**, not suggestions. Every screen mus
 
 > **Zero-icon request sections (sprint 413).** The 4 request sections use **TEXT LABELS, not icons**, for every info field — the canonical label scheme: **Fecha: · Servicio: · Zona: · Nota: · Tel: · Cédula: · Nacimiento: · Presupuesto: · Plazo: · Publicado:** (muted `#9ca3af` label + value). NO calendar/location/money/phone/id/file/status icons; NO decorative leading icons on buttons. The ONLY icons that remain in these sections: the **WhatsApp brand mark** on WhatsApp buttons, the **expand/collapse chevrons** (functional), and the **large empty-state illustrations**. Apply this minimal label-not-icon treatment to any similar list/card section.
 
+> **Field label/value contrast (sprint 554).** Any compact metadata row that uses an icon + field label + value must split contrast clearly: icon and label in muted grey (`#9ca3af`), actual value in readable dark text (`#374151`/`#111827`). Example: `Zona:` stays grey, `San José, San José` is dark. Do this consistently for Fecha, Servicio, Zona, Propuestas, Publicado, Edad, and similar fields. Real money/budget values may stay brand-blue (`#0089bb`) because they are decision anchors, but the label still stays grey. This matches the Cédula/Teléfono expanded-row pattern.
+
 ---
 
 ## 2. Design tokens

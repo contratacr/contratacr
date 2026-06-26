@@ -265,19 +265,19 @@ export function BookingRequests() {
             <div className="mt-2 flex flex-col items-start gap-1.5 text-[13px]">
               <span className={cn("inline-flex w-full max-w-full items-center gap-2", dateStr ? "text-[#374151]" : "text-[#9ca3af]")}>
                 <CalendarClock className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldDate")}</span> {dateStr || t("noScheduledDate")}</span>
+                <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldDate")}</span> <span className={dateStr ? "text-[#374151]" : "text-[#9ca3af]"}>{dateStr || t("noScheduledDate")}</span></span>
               </span>
               <span className="flex w-full max-w-full flex-col items-start gap-1.5">
                 {category && (
                   <span className="inline-flex w-full max-w-full items-center gap-2 text-[#374151]">
                     <Wrench className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                    <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldService")}</span> {category}</span>
+                    <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldService")}</span> <span className="text-[#374151]">{category}</span></span>
                   </span>
                 )}
                 {location && (
                   <span className="inline-flex w-full max-w-full items-center gap-2 text-[#6b7280]">
                     <MapPin className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                    <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldZone")}</span> {location}</span>
+                    <span className="min-w-0 truncate"><span className="font-medium text-[#9ca3af]">{t("fieldZone")}</span> <span className="text-[#374151]">{location}</span></span>
                   </span>
                 )}
                 {(unverifiedPill || flaggedPill || (!booking.for_someone_else && showClinicalFlags && ageBadge(booking.client_dob))) && (
@@ -317,7 +317,7 @@ export function BookingRequests() {
                       {showClinicalFlags && ageBadge(booking.beneficiary_dob, !!booking.beneficiary_is_minor)}
                     </div>
                     {beneAge && (
-                      <p className="mt-0.5 text-[12px] text-[#6b7280]"><span className="text-[#9ca3af]">{t("fieldAge")}</span> {beneAge}</p>
+                      <p className="mt-0.5 text-[12px]"><span className="text-[#9ca3af]">{t("fieldAge")}</span> <span className="text-[#374151]">{beneAge}</span></p>
                     )}
                   </div>
                 </div>
