@@ -313,14 +313,14 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
       <div className="flex flex-col">
         <div className="flex flex-col gap-4 p-4 sm:p-5">
           {project.description && (
-            <div className="rounded-2xl bg-white p-3.5 ring-1 ring-[#e8eef5]">
+            <div className="rounded-2xl bg-white p-3.5 shadow-sm ring-1 ring-[#e8eef5]">
               <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#9ca3af]">{t("projectDescription")}</p>
               <ExpandableText text={project.description} lines={6} className="mt-1 text-[13px] leading-relaxed text-[#4b5563]" />
             </div>
           )}
 
           {project.profiles?.full_name && (
-            <div className="flex items-start gap-2.5 rounded-2xl bg-white p-3.5 ring-1 ring-[#e8eef5]">
+            <div className="flex items-start gap-2.5 rounded-2xl bg-white p-3.5 shadow-sm ring-1 ring-[#e8eef5]">
               <Users className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
               <div className="min-w-0">
                 <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#9ca3af]">{t("clientInfo")}</p>
@@ -332,7 +332,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
           )}
         </div>
 
-        <div className="border-t border-[#f3f4f6] bg-[#fafbfc] p-4 sm:p-5">
+        <div className="border-t border-[#eef2f6] bg-white p-4 sm:p-5">
           {alreadySubmitted ? (
             <p className="text-center text-[13px] text-[#6b7280]">{t("alreadyProposedNote")}</p>
           ) : (
@@ -418,19 +418,19 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                       const isExpanded = expandedProject === project.id;
                       const zona = [project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ");
                       return (
-                        <Card key={project.id} className={cn("rounded-2xl border-[#e5e7eb] bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md", isExpanded && "shadow-md ring-1 ring-[#d8eef8]")}>
+                        <Card key={project.id} className={cn("rounded-2xl border-[#e5e7eb] bg-white shadow-sm transition-all hover:shadow-md", isExpanded && "shadow-md ring-1 ring-[#d8eef8]")}>
                           <button
                             type="button"
                             onClick={() => setExpandedProject(isExpanded ? null : project.id)}
                             aria-expanded={isExpanded}
                             className={cn("group flex w-full items-start gap-3 p-4 text-left transition-colors hover:bg-[#f9fbfd] sm:gap-3.5 sm:p-5", isExpanded ? "rounded-t-2xl bg-[#fbfdff]" : "rounded-2xl")}
                           >
-                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#EBF5FB] text-[#0089bb] sm:h-10 sm:w-10 sm:rounded-xl">
-                              <FolderOpen className="h-[18px] w-[18px]" />
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EBF5FB] text-[#0089bb] ring-1 ring-[#d8eef8]">
+                              <FolderOpen className="h-4 w-4" />
                             </div>
                             <div className="min-w-0 flex-1">
                               <div className="flex items-start justify-between gap-2.5">
-                                <span className="min-w-0 flex-1 line-clamp-2 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere] sm:text-base">{project.title}</span>
+                                <span className="min-w-0 flex-1 line-clamp-2 text-[15px] font-semibold leading-snug text-[#111827] [overflow-wrap:anywhere] sm:text-base">{project.title}</span>
                                 <span className="flex shrink-0 items-center gap-1.5">
                                   {isToday(project.created_at) && <Badge variant="success" className="text-[10px] font-semibold">{t("new")}</Badge>}
                                   <span className={cn("flex h-8 w-8 items-center justify-center rounded-full border transition-colors duration-200", isExpanded ? "border-[#ccecf8] bg-[#EBF5FB] text-[#009FD9]" : "border-[#eef2f6] bg-white text-[#9ca3af] group-hover:border-[#d8eef8] group-hover:text-[#009FD9]")}>
@@ -438,23 +438,25 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                                   </span>
                                 </span>
                               </div>
-                              <div className="mt-2 flex flex-col items-start gap-1.5 text-[13px]">
-                                <span className="inline-flex max-w-full items-center rounded-xl border border-[#ccecf8] bg-[#EBF5FB] px-3 py-2 font-bold text-[#0089bb] [overflow-wrap:anywhere]">{budgetTextFor(project)}</span>
-                                <div className="flex w-full min-w-0 flex-wrap items-start gap-x-3 gap-y-1.5">
+                              <div className="mt-2.5 flex flex-col items-start gap-2 text-[13px]">
+                                <span className="inline-flex w-full max-w-full items-start gap-2 rounded-xl border border-[#ccecf8] bg-[#EBF5FB] px-3 py-2.5 font-semibold text-[#162543]">
+                                  <span className="min-w-0 [overflow-wrap:anywhere]">{budgetTextFor(project)}</span>
+                                </span>
+                                <div className="flex w-full min-w-0 flex-col items-start gap-1.5 sm:flex-row sm:flex-wrap sm:gap-x-3">
                                   {project.categories?.name && (
-                                    <span className="inline-flex min-w-0 max-w-full flex-1 basis-28 items-start gap-1.5 leading-snug text-[#374151] sm:flex-none sm:basis-auto">
+                                    <span className="inline-flex w-full min-w-0 max-w-full items-start gap-1.5 leading-snug text-[#374151] sm:w-auto">
                                       <FolderOpen className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
                                       <span className="min-w-0 font-medium [overflow-wrap:anywhere]">{project.categories.name}</span>
                                     </span>
                                   )}
                                   {zona && (
-                                    <span className="inline-flex min-w-0 max-w-full flex-1 basis-28 items-start gap-1.5 leading-snug text-[#6b7280] sm:flex-none sm:basis-auto">
+                                    <span className="inline-flex w-full min-w-0 max-w-full items-start gap-1.5 leading-snug text-[#6b7280] sm:w-auto">
                                       <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
                                       <span className="min-w-0 [overflow-wrap:anywhere]">{zona}</span>
                                     </span>
                                   )}
                                   {project.timeline && (
-                                    <span className="inline-flex min-w-0 max-w-full flex-1 basis-28 items-start gap-1.5 leading-snug text-[#6b7280] sm:flex-none sm:basis-auto">
+                                    <span className="inline-flex w-full min-w-0 max-w-full items-start gap-1.5 leading-snug text-[#6b7280] sm:w-auto">
                                       <CalendarClock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
                                       <span className="min-w-0 [overflow-wrap:anywhere]">{project.timeline}</span>
                                     </span>
@@ -462,7 +464,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                                 </div>
                                 <span className="inline-flex w-full max-w-full items-center gap-2 text-[#9ca3af]">
                                   <Clock className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                                  <span className="truncate">{relativeTime(project.created_at)}</span>
+                                  <span className="min-w-0 [overflow-wrap:anywhere]">{relativeTime(project.created_at)}</span>
                                 </span>
                               </div>
                               {project.profiles?.full_name && (
@@ -476,7 +478,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                               )}
                             </div>
                           </button>
-                          {isExpanded && <div className="rounded-b-2xl border-t border-[#f3f4f6] bg-gradient-to-b from-[#fcfdff] to-white">{renderDetail(project)}</div>}
+                          {isExpanded && <div className="rounded-b-2xl border-t border-[#f3f4f6] bg-[#f8fbfd]">{renderDetail(project)}</div>}
                         </Card>
                       );
                     })}
