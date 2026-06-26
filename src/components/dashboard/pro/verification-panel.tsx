@@ -366,21 +366,11 @@ function VerificationSummary({
         : tone === "rejected"
           ? XCircle
           : Info;
-  const toneClass =
-    tone === "verified"
-      ? "border-[#bfe8f6] bg-[#f1fbfe] text-[#009FD9]"
-      : tone === "review"
-        ? "border-[#fde68a] bg-[#fffbeb] text-[#b45309]"
-        : tone === "rejected"
-          ? "border-[#fecaca] bg-[#fff1f2] text-[#dc2626]"
-          : "border-[#dbe4ee] bg-[#f8fafc] text-[#64748b]";
   return (
     <section className="rounded-2xl border border-[#dbe4ee] bg-white p-4 shadow-sm sm:p-5">
       <div className="flex items-start gap-3">
-        <span
-          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border ${toneClass}`}
-        >
-          <Icon className="h-5 w-5" />
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#ccecf8] bg-[#EAF7FD] text-[#0089bb] shadow-[0_8px_20px_-18px_rgba(0,159,217,0.9)]">
+          <Icon className="h-[18px] w-[18px]" />
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
