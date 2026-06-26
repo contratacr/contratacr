@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import {
   X, Menu, ChevronDown, ChevronRight, Search, MapPin,
   LayoutDashboard, LogOut, Bookmark, CalendarDays, FolderOpen, UserPlus, Briefcase, Compass, Settings, Bell, Globe, Inbox, Check,
-  HelpCircle, Lightbulb, MessageCircle, ListChecks,
+  HelpCircle, Lightbulb, Headset, ListChecks,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -202,7 +202,7 @@ const RESOURCE_ICONS = {
   howItWorks: ListChecks,
   helpCenter: HelpCircle,
   proTips: Lightbulb,
-  support: MessageCircle,
+  support: Headset,
 } as const;
 
 /* ─── Accent- and typo-tolerant category matcher ───
