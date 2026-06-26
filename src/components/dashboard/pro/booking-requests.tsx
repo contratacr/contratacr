@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarCheck, CalendarClock, CalendarDays, ChevronDown, Clock, Phone, IdCard, Wrench, MapPin, UserRound, Flag } from "lucide-react";
+import { CalendarCheck, CalendarClock, CalendarDays, ChevronDown, Clock, FileText, Phone, IdCard, Wrench, MapPin, UserRound, Flag } from "lucide-react";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { formatId } from "@/lib/cedula";
 import { ageCategoryFromDob, computeAge } from "@/lib/age";
@@ -343,7 +343,7 @@ export function BookingRequests() {
             )}
             {booking.service_description && (
               <div className="flex items-start gap-2.5">
-                <Wrench className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
+                <FileText className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
                 <div className="min-w-0">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("noteEyebrow")}</p>
                   <ExpandableText text={booking.service_description} lines={3} className="mt-0.5 text-[13px] leading-relaxed text-[#4b5563]" />

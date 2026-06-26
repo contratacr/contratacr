@@ -1,5 +1,7 @@
 # ContrataCR.com — Project Context
 
+_Last updated: 2026-06-26 (sprint 548 - **Solicitudes recibidas note icon fixed** (`booking-requests.tsx`, design guide). In professional Solicitudes recibidas expanded details, the client note now uses `FileText` instead of the service icon `Wrench`. `Wrench` remains only for the service/category row. No copy, route, API, or layout changes.)_
+
 _Last updated: 2026-06-26 (sprint 547 - **Mis publicaciones service icon fixed** (`client-activity.tsx`, design guide). In client Mis publicaciones cards, the publication/card lead still uses `ClipboardList`, but the service/category metadata row now uses the service icon `Wrench` instead of repeating `ClipboardList`. No route, copy, API, or layout changes.)_
 
 _Last updated: 2026-06-26 (sprint 546 - **Public professional About tab removes repeated identity** (`profesionales/[slug]/page.tsx`, design guide). The public profile `Sobre mí` / `About` tab no longer repeats the professional name and profession list because those already live in the profile header. The bio now renders as the first flat fact row with a `FileText` icon and `Sobre mí` label, followed by verification, experience, languages, prices, and workplaces in the same row system. No API, route, or i18n changes.)_

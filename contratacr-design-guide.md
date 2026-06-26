@@ -215,6 +215,8 @@ Use the standard 4px Tailwind steps. Defaults for this app:
 
 **Mis publicaciones field icons:** the card lead icon remains `ClipboardList` because the object is a publication/request brief. Inside the card metadata, the service/category row must use `Wrench`, not `ClipboardList`; proposal count uses `Users`, location uses `MapPin`, description uses `FileText`, and publish date uses `CalendarDays`.
 
+**Solicitudes recibidas field icons:** in received request cards, service/category uses `Wrench`; the client's note/description uses `FileText`; phone uses `Phone`; ID uses `IdCard`; appointment date uses `CalendarClock`; location uses `MapPin`. Do not reuse `Wrench` for the client note.
+
 **Professional profile description is required:** the main profile `Descripción` / `Description` field (`bio`) is part of the "Completa tu perfil" required checklist. Do not label it optional in the profile editor; show it with the required `*`. Optional copy is only valid for the separate identity verification suggestion, business name, social links, extra languages, insurers, and other non-completion extras.
 
 **Public professional About tab:** do not repeat the professional name or professions inside `Sobre mí` / `About`; those already belong to the profile header. The About tab should read as one unified fact list. If `bio` exists, render it as the first flat row with a `FileText` icon, `Sobre mí` / `About` label, and the description text, followed by verification, experience, languages, prices, and workplaces.
