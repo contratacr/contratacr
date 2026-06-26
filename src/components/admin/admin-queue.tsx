@@ -12,6 +12,7 @@ import {
 } from "@/lib/verification";
 import { formatId } from "@/lib/cedula";
 import { getInitials } from "@/lib/utils";
+import { AdminFilterTabs } from "@/components/admin/admin-filter-tabs";
 
 type Row = {
   id: string;
@@ -55,7 +56,7 @@ export function AdminQueue() {
   }, []);
 
   useEffect(() => {
-    load(status);
+    queueMicrotask(() => load(status));
   }, [status, load]);
 
   const filtered = rows.filter((r) => {
@@ -63,6 +64,16 @@ export function AdminQueue() {
     const hay = `${r.profiles?.full_name ?? ""} ${r.profiles?.email ?? ""} ${r.profiles?.cedula ?? ""}`.toLowerCase();
     return hay.includes(q.trim().toLowerCase());
   });
+  const filterCounts = Object.fromEntries(
+    FILTERS.map((f) => [
+      f.value,
+      f.value === "all"
+        ? VERIFICATION_STATUSES.reduce((sum, s) => sum + (counts[s] ?? 0), 0)
+        : f.value === "pending"
+          ? (counts.pending ?? 0) + (counts.under_appeal ?? 0)
+          : counts[f.value] ?? 0,
+    ]),
+  );
 
   return (
     <div>
@@ -79,33 +90,7 @@ export function AdminQueue() {
         </div>
       </div>
 
-      {/* Status filter tabs */}
-      <div className="flex flex-wrap gap-2 mb-4">
-        {FILTERS.map((f) => {
-          const count =
-            f.value === "all"
-              ? VERIFICATION_STATUSES.reduce((sum, s) => sum + (counts[s] ?? 0), 0)
-              : f.value === "pending"
-              ? // Pending view also surfaces appeals (item 7) — count both.
-                (counts.pending ?? 0) + (counts.under_appeal ?? 0)
-              : counts[f.value] ?? 0;
-          const active = status === f.value;
-          return (
-            <button
-              key={f.value}
-              onClick={() => setStatus(f.value)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
-                active
-                  ? "bg-[#009FD9] text-white border-[#009FD9]"
-                  : "bg-white text-[#374151] border-[#e5e7eb] hover:border-[#009FD9]"
-              }`}
-            >
-              {f.label}
-              <span className={`ml-1.5 text-xs ${active ? "text-white/80" : "text-[#9ca3af]"}`}>{count}</span>
-            </button>
-          );
-        })}
-      </div>
+      <AdminFilterTabs tabs={FILTERS.map((f) => ({ id: f.value, label: f.label }))} value={status} onChange={setStatus} counts={filterCounts} />
 
       <div className="bg-white rounded-xl border border-[#e5e7eb] overflow-hidden">
         {loading ? (

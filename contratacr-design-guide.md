@@ -1916,3 +1916,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Back-to-top search exclusion.** Do not show the global back-to-top floating button on /buscar. Search is an app surface with map/results controls, so extra floating scroll controls create clutter on responsive.
 
 > **Responsive navbar account scope.** On phone, the avatar/profile-photo dropdown must match the desktop avatar dropdown option-for-option. The hamburger drawer is the responsive version of the desktop navbar, so it may include the same top-level session actions (Mi panel, Notificaciones, Ofrecer servicios, Ingresar) as icon-led rows, but it must not become a second detailed account menu.
+
+> **Admin filter counters (sprint 302).** Admin section filters with counts must use the same underline + inline-number treatment as client/pro panel StatusFilterTabs: active tab = brand-blue text/underline, inactive = grey text, count = small plain tabular number beside the label. Do not use filled red/blue count pills inside admin filter tabs. Sidebar nav badges are separate and may remain icon-overlay badges.
