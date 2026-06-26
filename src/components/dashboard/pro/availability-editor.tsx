@@ -670,7 +670,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
               are visible at a glance. */}
           <div className="rounded-2xl border border-[#e5e7eb] p-4 sm:p-5">
             {/* Title row: the heading "Mis horarios de siempre" shares ONE line with the
-                "Cada cita dura" select + the "Aplicar horario" button. The "se repite cada
+                "Crear citas cada" select + the "Aplicar horario" button. The "se repite cada
                 semana" subtitle drops BELOW the row. Wraps gracefully on small screens; the
                 button's behavior hint lives in its tooltip. */}
             <div className="mb-4">
@@ -687,7 +687,6 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                 </div>
               </div>
               <p className="mt-1.5 text-xs text-[#6b7280]">{t("alwaysSubAll")}</p>
-              <p className="mt-1 text-xs text-[#6b7280]">{t("breakHint")}</p>
             </div>
 
             <div className="flex flex-col divide-y divide-[#f3f4f6]">
