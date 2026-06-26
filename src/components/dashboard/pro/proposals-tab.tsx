@@ -52,6 +52,15 @@ const STATUS_VARIANT: Record<ProposalStatus, "warning" | "success" | "error"> = 
   declined: "error",
 };
 
+function PendingProposalBadge({ label }: { label: string }) {
+  return (
+    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50/80 px-2.5 py-1 text-[11px] font-semibold text-amber-700 shadow-[0_1px_0_rgba(245,158,11,0.12)]">
+      <span className="h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden="true" />
+      {label}
+    </span>
+  );
+}
+
 function projStatusVariant(status?: string): "warning" | "success" | "error" | "default" {
   switch (status) {
     case "completed": return "success";
@@ -530,6 +539,8 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                             {!proposalStatusRedundant(p.status, ps) && (
                               p.status === "accepted" ? (
                                 <Badge variant={projStatusVariant(ps)} className="shrink-0 text-[11px] font-semibold">{projStatusLabel(ps)}</Badge>
+                              ) : p.status === "pending" ? (
+                                <PendingProposalBadge label={t("status.pending")} />
                               ) : (
                                 <Badge variant={STATUS_VARIANT[p.status]} className="shrink-0 text-[11px] font-semibold">{t(`status.${p.status}`)}</Badge>
                               )

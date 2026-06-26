@@ -1,5 +1,7 @@
 # ContrataCR.com — Project Context
 
+_Last updated: 2026-06-26 (sprint 556 - **Mis propuestas pending badge softened** (`proposals-tab.tsx`, design guide). The `Pendiente / Pending` proposal state keeps the same wording but now renders as a calm amber waiting pill with a tiny amber dot, subtle border/background, and compact sizing, instead of the generic warning badge. Accepted/declined/status logic unchanged. No API, routing, lifecycle, or i18n keys changed.)_
+
 _Last updated: 2026-06-26 (sprint 555 - **Mis propuestas no longer repeats Tu precio** (`proposals-tab.tsx`, design guide). The pro proposal price now appears only in the collapsed Mis propuestas summary row. Opening the card no longer repeats `Tu precio`; the expanded Mi propuesta section shows only the proposal message when one exists. No proposal data, edit, withdraw, status, routing, API, or i18n keys changed.)_
 
 _Last updated: 2026-06-26 (sprint 554 - **Dashboard metadata values darkened** (`client-activity.tsx`, `booking-requests.tsx`, `proposals-tab.tsx`, design guide). Compact card metadata rows now consistently render icon + label in muted grey and the actual value in readable dark text, matching the existing Cedula/Telefono expanded-row treatment. Applied to Fecha, Servicio, Zona, Propuestas, Publicado, Edad, budget/deadline rows, and Mis propuestas price/client/date rows; real money values still use brand blue as decision anchors. No copy, API, routing, or lifecycle logic changed.)_
