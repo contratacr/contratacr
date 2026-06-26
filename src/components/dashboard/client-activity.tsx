@@ -2,13 +2,13 @@
 
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarDays, FolderOpen, ClipboardList, ChevronDown, Plus, CalendarClock, Wrench, Users, MapPin, FileText } from "lucide-react";
+import { CalendarDays, FolderOpen, ClipboardList, ChevronDown, Plus, CalendarClock, Wrench, Users, MapPin, FileText, Flag } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Link, useRouter } from "@/i18n/navigation";
+import { Link } from "@/i18n/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { computeAge } from "@/lib/age";
@@ -116,7 +116,6 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   const { user } = useAuth();
   const t = useTranslations("clientActivity");
   const locale = useLocale();
-  const router = useRouter();
   const dateLocale = locale === "en" ? "en-US" : "es-CR";
 
   // The service a booking is for (the specific category requested, else the pro's primary).
@@ -208,6 +207,11 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
     setBookings((prev) => prev.map((b) => (b.id === cancelTarget ? { ...b, status: "cancelled" } : b)));
     setCancelling(false);
     setCancelTarget(null);
+    setCancelNote("");
+  }
+
+  function openCancelBooking(id: string) {
+    setCancelTarget(id);
     setCancelNote("");
   }
 
@@ -360,6 +364,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   const filteredProjects = projects.filter((p) => proyectoMatches(projectFilter, p.status));
   const bookingCounts = bucketCounts(bookings.map((b) => solicitudBucket(b.status, b.scheduled_date)));
   const projectCounts = bucketCounts(projects.map((p) => proyectoBucket(p.status)));
+  const cancelBooking = cancelTarget ? bookings.find((b) => b.id === cancelTarget) : null;
 
   return (
     <>
@@ -389,11 +394,18 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                         {/* COLLAPSED header — SAME card language as the other 3 sections: avatar +
                             pro name (primary, bold) + status chip on the right; "Fecha: {cita}"
                             key line. Tap to reveal the full description, cancel reason + actions. */}
-                        <button
-                          type="button"
+                        <div
+                          role="button"
+                          tabIndex={0}
                           onClick={() => setExpandedBooking(expandedBooking === b.id ? null : b.id)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              setExpandedBooking(expandedBooking === b.id ? null : b.id);
+                            }
+                          }}
                           aria-expanded={expandedBooking === b.id}
-                          className={cn("group w-full text-left p-4 sm:p-5 flex items-start gap-3.5 hover:bg-[#f9fbfd] transition-colors", expandedBooking === b.id ? "rounded-t-2xl bg-[#fbfdff]" : "rounded-2xl")}
+                          className={cn("group w-full cursor-pointer text-left p-4 sm:p-5 flex items-start gap-3.5 hover:bg-[#f9fbfd] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]", expandedBooking === b.id ? "rounded-t-2xl bg-[#fbfdff]" : "rounded-2xl")}
                         >
                           <Avatar className="h-11 w-11 shrink-0">
                             <AvatarImage src={b.professionals?.profiles?.avatar_url} />
@@ -403,9 +415,19 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                           </Avatar>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between gap-2">
-                              <span className="min-w-0 flex-1 text-[15px] font-bold text-[#162543] line-clamp-2 [overflow-wrap:anywhere]">
-                                {b.professionals?.profiles?.full_name ?? t("professional")}
-                              </span>
+                              {b.professionals?.slug ? (
+                                <Link
+                                  href={`/profesionales/${b.professionals.slug}`}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="min-w-0 flex-1 text-[15px] font-bold text-[#162543] line-clamp-2 [overflow-wrap:anywhere] hover:text-[#009FD9] hover:underline"
+                                >
+                                  {b.professionals?.profiles?.full_name ?? t("professional")}
+                                </Link>
+                              ) : (
+                                <span className="min-w-0 flex-1 text-[15px] font-bold text-[#162543] line-clamp-2 [overflow-wrap:anywhere]">
+                                  {b.professionals?.profiles?.full_name ?? t("professional")}
+                                </span>
+                              )}
                               {!solicitudStatusRedundant(b.status, b.scheduled_date) && (
                                 <Badge variant={STATUS_VARIANT[b.status]} className="shrink-0 text-[11px] font-semibold">{t(`bStatus.${b.status}`)}</Badge>
                               )}
@@ -435,7 +457,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                           <span className={cn("mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition-colors duration-200", expandedBooking === b.id ? "border-[#ccecf8] bg-[#EBF5FB] text-[#009FD9]" : "border-[#eef2f6] bg-white text-[#9ca3af] group-hover:border-[#d8eef8] group-hover:text-[#009FD9]")}>
                             <ChevronDown className={cn("h-[18px] w-[18px] transition-transform duration-200", expandedBooking === b.id && "rotate-180")} />
                           </span>
-                        </button>
+                        </div>
 
                         {expandedBooking === b.id && (
                           <div className="rounded-b-2xl border-t border-[#f3f4f6] bg-gradient-to-b from-[#fcfdff] to-white px-4 pb-5 pt-4 sm:px-5 flex flex-col gap-3.5">
@@ -481,27 +503,13 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                               </div>
                             )}
 
-                            {/* Actions (sprint 441) — PRIMARY visible + "···" overflow menu. The
-                                primary is the most-useful action for the state (Contactar by WhatsApp
-                                while active; Confirmar finalización while awaiting; Dejar reseña once
-                                done). Reprogramar / Cancelar / Reportar live in the menu. */}
+                            {/* Actions: keep the state primary visible, Cancelar direct for active
+                                bookings, Reportar as the quiet flag, and offer Reprogramar inside the
+                                cancel confirmation so the choice is clear. */}
                             {(() => {
                               const isActiveB = ["pending", "confirmed", "in_progress"].includes(b.status);
                               const wa = b.professionals?.whatsapp && b.status !== "cancelled" && b.status !== "completed"
                                 ? getWhatsAppLink(b.professionals.whatsapp, t("waBooking")) : null;
-                              const slug = b.professionals?.slug;
-                              const menu: CardAction[] = [];
-                              // "Ver perfil" lives in the menu (sprint 442): the name itself can't be a
-                              // link — the whole collapsed header is the expand toggle (consistent with
-                              // the other 3 sections) — so the profile is reached from here, cleanly.
-                              if (slug) menu.push({ label: t("viewProfile"), onClick: () => router.push(`/profesionales/${slug}`) });
-                              if (b.status === "awaiting_confirmation" && wa) menu.push({ label: t("contact"), onClick: () => window.open(wa, "_blank", "noopener,noreferrer") });
-                              if (isActiveB) {
-                                menu.push({ label: t("reschedule"), onClick: () => setReschedule({ id: b.id, professionalId: b.professional_id, when: formatBookingDate(b, dateLocale) }) });
-                                menu.push({ label: t("cancel"), onClick: () => { setCancelTarget(b.id); setCancelNote(""); }, destructive: true });
-                              }
-                              menu.push({ label: t("report"), onClick: () => setReportProFor(b.id), destructive: true });
-
                               let primary: ReactNode = null;
                               if (b.status === "awaiting_confirmation") {
                                 primary = <Button size="sm" className="flex-1 sm:flex-none rounded-lg px-4" onClick={() => confirmBookingDone(b.id)}>{t("confirmCompletion")}</Button>;
@@ -515,11 +523,22 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                 );
                               }
                               return (
-                                <div className="flex items-center gap-2">
+                                <div className="flex flex-wrap items-center gap-2 border-t border-[#eef2f6] pt-3">
                                   {primary}
-                                  <div className="ml-auto">
-                                    <CardActionsMenu actions={menu} label={t("actions")} />
-                                  </div>
+                                  {isActiveB && (
+                                    <Button variant="outline" size="sm" className="flex-1 rounded-lg border-[#fecaca] px-4 text-[#dc2626] hover:border-[#fca5a5] hover:bg-[#fef2f2] hover:text-[#b91c1c] sm:flex-none" onClick={() => openCancelBooking(b.id)}>
+                                      {t("cancel")}
+                                    </Button>
+                                  )}
+                                  <button
+                                    type="button"
+                                    aria-label={t("report")}
+                                    title={t("report")}
+                                    onClick={() => setReportProFor(b.id)}
+                                    className="ml-auto inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#e5e7eb] text-[#9ca3af] transition-colors hover:border-[#fecaca] hover:bg-[#fef2f2] hover:text-[#dc2626]"
+                                  >
+                                    <Flag className="h-4 w-4" />
+                                  </button>
                                 </div>
                               );
                             })()}
@@ -830,6 +849,25 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
           <div role="dialog" aria-modal="true" aria-label={t("cancelTitle")} className="relative w-full sm:max-w-sm bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl p-5 pb-[max(env(safe-area-inset-bottom),1.25rem)]">
             <h2 className="text-base font-bold text-[#111827]">{t("cancelTitle")}</h2>
             <p className="mt-1 text-sm text-[#6b7280]">{t("cancelBody")}</p>
+            {cancelBooking && ["pending", "confirmed", "in_progress"].includes(cancelBooking.status) && (
+              <div className="mt-4 rounded-2xl border border-[#ccecf8] bg-[#EBF5FB] p-3">
+                <p className="text-sm font-semibold text-[#162543]">{t("cancelReschedulePrompt")}</p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="mt-2 w-full rounded-full border-[#bfdbfe] bg-white text-[#0089bb] hover:bg-white"
+                  onClick={() => {
+                    setReschedule({ id: cancelBooking.id, professionalId: cancelBooking.professional_id, when: formatBookingDate(cancelBooking, dateLocale) });
+                    setCancelTarget(null);
+                    setCancelNote("");
+                  }}
+                  disabled={cancelling}
+                >
+                  {t("cancelRescheduleAction")}
+                </Button>
+              </div>
+            )}
             <label className="mt-4 block text-xs font-medium text-[#374151]">{t("cancelNoteLabel")}</label>
             <textarea
               value={cancelNote}

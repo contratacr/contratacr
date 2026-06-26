@@ -1749,6 +1749,8 @@
     "reschedule": "Reschedule",
     "cancelTitle": "Cancel this request?",
     "cancelBody": "The time slot will be freed and the professional will be notified.",
+    "cancelReschedulePrompt": "Do you only want to change the date or time?",
+    "cancelRescheduleAction": "Reschedule instead of canceling",
     "cancelNoteLabel": "Reason (optional)",
     "cancelNotePlaceholder": "Add a reason if you want.",
     "cancelBack": "Back",
