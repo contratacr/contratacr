@@ -150,7 +150,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   // slot for the same pro → old slot freed, new slot taken (atomic). The pro does NOT
   // reschedule (they cancel + coordinate via WhatsApp) — see sprint 433.
   const [reschedule, setReschedule] = useState<{ id: string; professionalId: string; when: string | null } | null>(null);
-  // CLIENT cancel confirm dialog (optional note).
+  // CLIENT cancel inline panel (optional note).
   const [cancelTarget, setCancelTarget] = useState<string | null>(null);
   const [cancelNote, setCancelNote] = useState("");
   const [cancelling, setCancelling] = useState(false);
@@ -214,6 +214,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   function openCancelBooking(id: string) {
     setCancelTarget(id);
     setCancelNote("");
+    setExpandedBooking(id);
   }
 
   async function confirmBookingDone(id: string) {
@@ -365,8 +366,6 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   const filteredProjects = projects.filter((p) => proyectoMatches(projectFilter, p.status));
   const bookingCounts = bucketCounts(bookings.map((b) => solicitudBucket(b.status, b.scheduled_date)));
   const projectCounts = bucketCounts(projects.map((p) => proyectoBucket(p.status)));
-  const cancelBooking = cancelTarget ? bookings.find((b) => b.id === cancelTarget) : null;
-
   return (
     <>
       {/* SENT SOLICITUDES */}
@@ -398,11 +397,23 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                         <div
                           role="button"
                           tabIndex={0}
-                          onClick={() => setExpandedBooking(expandedBooking === b.id ? null : b.id)}
+                          onClick={() => {
+                            const closing = expandedBooking === b.id;
+                            setExpandedBooking(closing ? null : b.id);
+                            if (closing) {
+                              setCancelTarget(null);
+                              setCancelNote("");
+                            }
+                          }}
                           onKeyDown={(e) => {
                             if (e.key === "Enter" || e.key === " ") {
                               e.preventDefault();
-                              setExpandedBooking(expandedBooking === b.id ? null : b.id);
+                              const closing = expandedBooking === b.id;
+                              setExpandedBooking(closing ? null : b.id);
+                              if (closing) {
+                                setCancelTarget(null);
+                                setCancelNote("");
+                              }
                             }
                           }}
                           aria-expanded={expandedBooking === b.id}
@@ -526,6 +537,48 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                 </div>
                               );
                             })()}
+                            {cancelTarget === b.id && (
+                              <div className="rounded-xl border border-[#e5e7eb] bg-[#fafafa] p-3">
+                                <p className="text-sm font-semibold text-[#111827]">{t("cancelTitle")}</p>
+                                <p className="mt-0.5 text-xs leading-relaxed text-[#6b7280]">{t("cancelBody")}</p>
+                                <div className="mt-3 flex gap-3 rounded-xl bg-white p-3">
+                                  <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#EBF5FB] text-[#0089bb]">
+                                    <CalendarClock className="h-4 w-4" />
+                                  </span>
+                                  <div className="min-w-0 flex-1">
+                                    <p className="text-sm font-semibold text-[#162543]">{t("cancelReschedulePrompt")}</p>
+                                    <p className="mt-0.5 text-xs leading-relaxed text-[#6b7280]">{t("cancelRescheduleBody")}</p>
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="sm"
+                                      className="mt-3 w-full rounded-lg border-[#bfdbfe] bg-white text-[#0089bb] hover:bg-[#f8fcff] sm:w-auto"
+                                      onClick={() => {
+                                        setReschedule({ id: b.id, professionalId: b.professional_id, when: formatBookingDate(b, dateLocale) });
+                                        setCancelTarget(null);
+                                        setCancelNote("");
+                                      }}
+                                      disabled={cancelling}
+                                    >
+                                      {t("cancelRescheduleAction")}
+                                    </Button>
+                                  </div>
+                                </div>
+                                <label className="mt-3 block text-xs font-medium text-[#374151]">{t("cancelNoteLabel")}</label>
+                                <textarea
+                                  value={cancelNote}
+                                  onChange={(e) => setCancelNote(e.target.value)}
+                                  rows={2}
+                                  maxLength={300}
+                                  placeholder={t("cancelNotePlaceholder")}
+                                  className="mt-1 w-full resize-none rounded-xl border border-[#e5e7eb] bg-white px-3 py-2 text-sm text-[#111827] placeholder:text-[#9ca3af] [overflow-wrap:anywhere] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
+                                />
+                                <div className="mt-3 flex gap-2">
+                                  <Button variant="outline" size="sm" className="rounded-lg" onClick={() => setCancelTarget(null)} disabled={cancelling}>{t("cancelBack")}</Button>
+                                  <Button size="sm" className="rounded-lg bg-red-600 hover:bg-red-700" onClick={confirmCancelBooking} disabled={cancelling} loading={cancelling}>{t("cancelConfirm")}</Button>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         )}
                       </Card>
@@ -835,55 +888,6 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
           onClose={() => setReschedule(null)}
           onDone={fetchSection}
         />
-      )}
-
-      {/* CLIENT cancel — clean confirm dialog; the note is OPTIONAL (low-friction). */}
-      {cancelTarget && (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center">
-          <div className="absolute inset-0 bg-black/50" onClick={() => !cancelling && setCancelTarget(null)} aria-hidden />
-          <div role="dialog" aria-modal="true" aria-label={t("cancelTitle")} className="relative w-full sm:max-w-sm bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl p-5 pb-[max(env(safe-area-inset-bottom),1.25rem)]">
-            <h2 className="text-base font-bold text-[#111827]">{t("cancelTitle")}</h2>
-            <p className="mt-1 text-sm text-[#6b7280]">{t("cancelBody")}</p>
-            {cancelBooking && ["pending", "confirmed", "in_progress"].includes(cancelBooking.status) && (
-              <div className="mt-4 flex gap-3 rounded-2xl bg-[#f8fafc] p-3">
-                <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#EBF5FB] text-[#0089bb]">
-                  <CalendarClock className="h-4 w-4" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-[#162543]">{t("cancelReschedulePrompt")}</p>
-                  <p className="mt-0.5 text-xs leading-relaxed text-[#6b7280]">{t("cancelRescheduleBody")}</p>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="mt-3 w-full rounded-full border-[#bfdbfe] bg-white text-[#0089bb] hover:bg-white sm:w-auto"
-                    onClick={() => {
-                      setReschedule({ id: cancelBooking.id, professionalId: cancelBooking.professional_id, when: formatBookingDate(cancelBooking, dateLocale) });
-                      setCancelTarget(null);
-                      setCancelNote("");
-                    }}
-                    disabled={cancelling}
-                  >
-                    {t("cancelRescheduleAction")}
-                  </Button>
-                </div>
-              </div>
-            )}
-            <label className="mt-4 block text-xs font-medium text-[#374151]">{t("cancelNoteLabel")}</label>
-            <textarea
-              value={cancelNote}
-              onChange={(e) => setCancelNote(e.target.value)}
-              rows={2}
-              maxLength={300}
-              placeholder={t("cancelNotePlaceholder")}
-              className="mt-1 w-full rounded-xl border border-[#e5e7eb] bg-white px-3 py-2 text-sm text-[#111827] placeholder:text-[#9ca3af] break-words focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent resize-none"
-            />
-            <div className="mt-4 flex gap-2">
-              <Button variant="outline" size="sm" className="flex-1 rounded-full" onClick={() => setCancelTarget(null)} disabled={cancelling}>{t("cancelBack")}</Button>
-              <Button size="sm" className="flex-1 rounded-full bg-red-600 hover:bg-red-700" onClick={confirmCancelBooking} disabled={cancelling} loading={cancelling}>{t("cancelConfirm")}</Button>
-            </div>
-          </div>
-        </div>
       )}
 
       {/* DELETE publicación — clean on-brand confirm modal (replaces window.confirm). */}
