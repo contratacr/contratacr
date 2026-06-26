@@ -81,10 +81,8 @@ export function StatusFilterTabs({
             {label(tab.id)}
             {count > 0 && (
               <span className={cn(
-                "inline-flex h-4 min-w-4 shrink-0 items-center justify-center rounded-full px-1 text-[10px] font-bold leading-none tabular-nums transition-colors sm:h-5 sm:min-w-5 sm:px-1.5 sm:text-[11px]",
-                active
-                  ? "bg-[#EBF5FB] text-[#0089bb] ring-1 ring-[#ccecf8]"
-                  : "bg-[#f3f4f6] text-[#6b7280] ring-1 ring-[#e5e7eb] group-hover:bg-[#eef2f6] group-hover:text-[#374151]"
+                "shrink-0 text-[11px] font-semibold leading-none tabular-nums transition-colors",
+                active ? "text-[#0089bb]" : "text-[#9ca3af] group-hover:text-[#6b7280]"
               )}>
                 {count > 99 ? "99+" : count}
               </span>
