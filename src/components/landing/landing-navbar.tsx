@@ -1413,7 +1413,30 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     )}
                   </div>
                 </div>
-              ) : null}
+              ) : (
+                <div className="border-b border-[#edf2f7] p-1.5">
+                  <div className="flex flex-col gap-0.5">
+                    <Link
+                      href="/registro/profesional"
+                      onClick={() => setMobileOpen(false)}
+                      className="relative flex min-h-[48px] items-center gap-3 rounded-xl bg-[#009FD9] px-3 py-2.5 text-sm font-semibold text-white shadow-[0_10px_25px_-18px_rgba(0,159,217,0.9)] transition-colors hover:bg-[#0089bb]"
+                    >
+                      <Briefcase className="h-4 w-4 shrink-0" />
+                      <span className="min-w-0 flex-1">{t("registerPro")}</span>
+                      <ChevronRight className="h-4 w-4 shrink-0 text-white/70" />
+                    </Link>
+                    <Link
+                      href={loginHref}
+                      onClick={() => setMobileOpen(false)}
+                      className={mobileRowClass(false)}
+                    >
+                      <LogIn className={mobileIconClass(false)} />
+                      <span className="min-w-0 flex-1">{t("login")}</span>
+                      <ChevronRight className={mobileChevronClass(false)} />
+                    </Link>
+                  </div>
+                </div>
+              )}
 
               {/* Smart search on mobile */}
               <div className="border-b border-[#edf2f7] p-2">
@@ -1464,28 +1487,6 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                       </Link>
                     );
                   })}
-                  {!user && (
-                    <>
-                      <Link
-                        href="/registro/profesional"
-                        onClick={() => setMobileOpen(false)}
-                        className="relative flex min-h-[48px] items-center gap-3 rounded-xl bg-[#009FD9] px-3 py-2.5 text-sm font-semibold text-white shadow-[0_10px_25px_-18px_rgba(0,159,217,0.9)] transition-colors hover:bg-[#0089bb]"
-                      >
-                        <Briefcase className="h-4 w-4 shrink-0" />
-                        <span className="min-w-0 flex-1">{t("registerPro")}</span>
-                        <ChevronRight className="h-4 w-4 shrink-0 text-white/70" />
-                      </Link>
-                      <Link
-                        href={loginHref}
-                        onClick={() => setMobileOpen(false)}
-                        className={mobileRowClass(false)}
-                      >
-                        <LogIn className={mobileIconClass(false)} />
-                        <span className="min-w-0 flex-1">{t("login")}</span>
-                        <ChevronRight className={mobileChevronClass(false)} />
-                      </Link>
-                    </>
-                  )}
                 </div>
               </div>
 

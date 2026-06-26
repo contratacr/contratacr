@@ -1,5 +1,7 @@
 # ContrataCR.com — Project Context
 
+_Last updated: 2026-06-26 (sprint 565 - **Logged-out responsive navbar drawer aligned** (`landing-navbar.tsx`, design guide). The mobile drawer with no active session now uses the same modern grouped structure as the logged-in drawer: Ofrecer mis servicios and Ingresar live in their own top session block, public navigation/search stays separate, and the existing language chip selector remains below. No auth, routes, desktop nav, or locale-switch behavior changed.)_
+
 _Last updated: 2026-06-26 (sprint 564 - **Navbar language selector redesigned** (`landing-navbar.tsx`, design guide). Desktop language now uses a polished compact globe/current-code trigger with a rounded dropdown showing label, code, and active check. The responsive drawer language area now has a proper globe label and two equal language chips instead of a loose text pair. Locale persistence and routing behavior are unchanged.)_
 
 _Last updated: 2026-06-26 (sprint 563 - **Navbar category search results localized in the new design** (`landing-navbar.tsx`, design guide). Typing a service in the desktop Categorias dropdown now keeps matches inside the redesigned category surface and shows each matched service with its parent group plus a chevron, so users can see where the service is located before navigating. The matcher also uses locale-aware labels, so English searches like “plumbing” resolve to Plumbing instead of falling back to no-results. No routing, category data, mobile drawer, search params, or i18n copy changed.)_
