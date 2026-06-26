@@ -2,18 +2,18 @@
 
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { CalendarDays, CalendarClock, Clock, Phone, IdCard, Wrench, MapPin, UserRound } from "lucide-react";
+import { CalendarDays, ChevronDown, CalendarClock, Clock, Phone, IdCard, Wrench, MapPin, UserRound } from "lucide-react";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { formatId } from "@/lib/cedula";
 import { ageCategoryFromDob, computeAge } from "@/lib/age";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getWhatsAppLink, getInitials, cn, formatRelativeOrDate } from "@/lib/utils";
 import { StatusFilterTabs, SOLICITUD_TABS, solicitudBucket, solicitudStatusRedundant, bucketCounts } from "@/components/dashboard/status-filter-tabs";
 import { CardActionsMenu, type CardAction } from "@/components/dashboard/card-actions-menu";
-import { ActivityCard, ActivityCardButton, ActivityChevron, ActivityKeyFact } from "@/components/dashboard/activity-card";
 import { ExpandableText } from "@/components/ui/expandable-text";
 import { ReportModal } from "@/components/dashboard/report-modal";
 import type { BookingStatus } from "@/types";
@@ -236,18 +236,20 @@ export function BookingRequests() {
     const panelOpen = actionFor?.id === booking.id;
 
     return (
-      <ActivityCard expanded={expanded}>
+      <Card className={cn("rounded-2xl border-[#e5e7eb] bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md", expanded && "shadow-md ring-1 ring-[#d8eef8]")}>
         {/* EXPANDABLE LEAD CARD (sprint 430): COLLAPSED shows only essentials (who · when ·
             status + unverified). Tapping reveals the full identity, the "para otra persona"
             callout, servicio·zona, the note, and the management ACTIONS. Zero icons; text labels.
             The button gets the card's rounded corners (rounded-2xl collapsed / rounded-t when
             expanded) so its hover bg never squares off the corners — sprint 441 (no overflow-hidden,
             which would clip the actions menu). */}
-        <ActivityCardButton
+        <button
+          type="button"
           onClick={() => setExpandedId(expanded ? null : booking.id)}
-          expanded={expanded}
+          aria-expanded={expanded}
+          className={cn("group w-full text-left px-4 py-4 sm:px-5 flex items-start gap-3.5 transition-colors hover:bg-[#f9fbfd]", expanded ? "rounded-t-2xl bg-[#fbfdff]" : "rounded-2xl")}
         >
-          <Avatar className={cn("h-10 w-10 shrink-0 ring-2 transition-shadow", expanded ? "ring-[#ccecf8] shadow-sm" : "ring-[#EBF5FB]")}>
+          <Avatar className={cn("h-12 w-12 shrink-0 ring-2 transition-shadow", expanded ? "ring-[#ccecf8] shadow-sm" : "ring-[#EBF5FB]")}>
             <AvatarImage src={booking.profiles?.avatar_url} className="object-cover" />
             <AvatarFallback className="text-sm font-bold bg-[#EBF5FB] text-[#009FD9]">{getInitials(booking.client_name || "?")}</AvatarFallback>
           </Avatar>
@@ -256,7 +258,7 @@ export function BookingRequests() {
               itself), and a muted "servicio · nota" snippet on line 3 for instant context. */}
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
-              <span className="text-[15px] font-semibold text-[#111827] min-w-0 flex items-center gap-2 flex-wrap [overflow-wrap:anywhere] sm:text-base">
+              <span className="text-[15px] font-bold text-[#162543] min-w-0 flex items-center gap-2 flex-wrap [overflow-wrap:anywhere] sm:text-base">
                 {booking.client_name || t("thePerson")}
               </span>
               {!solicitudStatusRedundant(booking.status, booking.scheduled_date) && (
@@ -264,9 +266,10 @@ export function BookingRequests() {
               )}
             </div>
             <div className="mt-2 flex flex-col items-start gap-2.5 text-[12px] text-[#6b7280]">
-              <ActivityKeyFact icon={CalendarClock} className={cn(!dateStr && "border-[#e5e7eb] bg-[#f3f4f6] text-[#6b7280]")}>
-                {dateStr || t("noScheduledDate")}
-              </ActivityKeyFact>
+              <span className={cn("inline-flex w-full max-w-full items-center gap-2 rounded-xl border px-3 py-2.5 sm:w-auto", dateStr ? "border-[#ccecf8] bg-[#EBF5FB] font-semibold text-[#162543]" : "border-[#e5e7eb] bg-[#f3f4f6] text-[#6b7280]")}>
+                <CalendarClock className="h-4 w-4 shrink-0 text-[#009FD9]" />
+                <span className="truncate">{dateStr || t("noScheduledDate")}</span>
+              </span>
               <span className="flex w-full max-w-full flex-col items-start gap-1.5 text-[13px]">
                 {category && (
                   <span className="inline-flex w-full max-w-full items-center gap-2 text-[#374151]">
@@ -290,8 +293,10 @@ export function BookingRequests() {
               </span>
             </div>
           </div>
-          <ActivityChevron expanded={expanded} />
-        </ActivityCardButton>
+          <span className={cn("mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border transition-colors duration-200", expanded ? "border-[#ccecf8] bg-[#EBF5FB] text-[#009FD9]" : "border-[#eef2f6] bg-white text-[#9ca3af] group-hover:border-[#d8eef8] group-hover:text-[#009FD9]")}>
+            <ChevronDown className={cn("h-[18px] w-[18px] transition-transform duration-200", expanded && "rotate-180")} />
+          </span>
+        </button>
 
         {expanded && (
           <div className="rounded-b-2xl border-t border-[#f3f4f6] bg-gradient-to-b from-[#fcfdff] to-white px-4 pb-5 pt-4 sm:px-5 flex flex-col gap-4">
@@ -409,7 +414,7 @@ export function BookingRequests() {
           )}
           </div>
         )}
-      </ActivityCard>
+      </Card>
     );
   }
 
