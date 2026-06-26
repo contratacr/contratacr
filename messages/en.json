@@ -1753,6 +1753,7 @@
     "priceTBD": "Price to be agreed",
     "seeUnchosen": "See proposals not chosen ({count})",
     "fieldDate": "Date:",
+    "fieldService": "Service:",
     "fieldZone": "Area:",
     "fieldPublished": "Published:",
     "fieldProposals": "Proposals:",

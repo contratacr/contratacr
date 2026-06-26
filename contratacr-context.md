@@ -1,5 +1,7 @@
 # ContrataCR.com — Project Context
 
+_Last updated: 2026-06-26 (sprint 559 - **ClientActivity missing fieldService translation fixed** (`messages/es.json`, `messages/en.json`). Added `clientActivity.fieldService` in ES/EN so Mis publicaciones/Mis solicitudes metadata renders `Servicio:` / `Service:` instead of the literal missing key path. No component logic, routing, layout, API, or data changes.)_
+
 _Last updated: 2026-06-26 (sprint 558 - **Status filter counters redesigned** (`status-filter-tabs.tsx`, design guide). Counts in shared StatusFilterTabs now render as compact rounded chips instead of loose grey numbers: active tabs use a soft brand-blue chip with light ring, inactive tabs use a neutral grey chip with hover refinement, and long counts cap at `99+` so filters stay tidy on mobile. Applies everywhere using the shared filters: Activas/Finalizadas/Canceladas, profession filters, support/case filters. No filtering logic, labels, counts, routing, or i18n changed.)_
 
 _Last updated: 2026-06-26 (sprint 557 - **Dashboard card expand chevron standardized** (`expand-toggle.tsx` new, `client-activity.tsx`, `booking-requests.tsx`, `proposals-tab.tsx`, design guide). Created a shared `ExpandToggle` for collapsible dashboard cards: rounded-xl control, subtle closed border/shadow, brand-blue filled open state, and smoother chevron rotation. Applied to Mis solicitudes, Mis publicaciones, Solicitudes recibidas, Oportunidades, and Mis propuestas so the open/close “v” looks consistent. No card state, routing, data loading, actions, or i18n changed.)_
