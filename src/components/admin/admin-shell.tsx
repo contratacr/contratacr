@@ -62,7 +62,6 @@ export function AdminShell({
     { id: "actividad", label: "Actividad", icon: Activity, href: "/admin/actividad", badge: 0 },
   ];
 
-  const initials = adminName.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase() || "AD";
   // The sidebar footer is narrow — show ONLY first name + first surname so the name
   // never truncates with "…". (First surname = the second-to-last word in a CR name.)
   const shortAdminName = (() => {
@@ -108,7 +107,6 @@ export function AdminShell({
           ))}
         </nav>
         <div className="border-t border-white/10 p-3 flex items-center gap-2.5">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-bold text-[#38bdf8]">{initials}</span>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold leading-tight">{shortAdminName}</p>
             <p className="text-[11px] text-white/50">Administrador</p>
