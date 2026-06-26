@@ -7,7 +7,7 @@ import { useSearchParams } from "next/navigation";
 import {
   User, Award, CalendarCheck, CalendarClock, CalendarDays, ExternalLink, Wrench,
   ShieldCheck, Bell, Handshake, ClipboardList, Bookmark, Settings, Headset, CreditCard,
-  ArrowRight, Sparkles, Menu, X, Repeat2,
+  ArrowRight, Sparkles, Menu, X, Repeat2, Plus,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
@@ -101,6 +101,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const t = useTranslations("proPanel");
+  const tc = useTranslations("clientActivity");
   const activeTab = (searchParams.get("tab") as Tab) ?? "profile";
 
   const [pro, setPro] = useState<ProData | null>(null);
@@ -143,11 +144,13 @@ export default function DashboardPage() {
   useEffect(() => {
     const focus = searchParams.get("focus");
     if (!focus) return;
-    setProfileFocus({ field: focus, key: Date.now() });
-    const params = new URLSearchParams(searchParams.toString());
-    params.delete("focus");
-    const qs = params.toString();
-    router.replace(`/dashboard/profesional${qs ? `?${qs}` : ""}`, { scroll: false });
+    queueMicrotask(() => {
+      setProfileFocus({ field: focus, key: Date.now() });
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("focus");
+      const qs = params.toString();
+      router.replace(`/dashboard/profesional${qs ? `?${qs}` : ""}`, { scroll: false });
+    });
   }, [searchParams, router]);
 
   const fetchPro = useCallback(async () => {
@@ -165,7 +168,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!user) return;
-    fetchPro();
+    queueMicrotask(() => fetchPro());
   }, [user, activeTab, refreshKey, fetchPro]);
 
   // Base profile (name/avatar) for the header — works for seekers with no pro row.
@@ -475,7 +478,19 @@ export default function DashboardPage() {
                           <HeaderSaveStatus />
                         </div>
                         {TABS_WITH_SUBTITLE.has(activeTab) && (
-                          <p className="mt-0.5 text-sm text-[#6b7280]">{t(`subtitles.${activeTab}`)}</p>
+                          <div className="mt-0.5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                            <p className="text-sm text-[#6b7280]">{t(`subtitles.${activeTab}`)}</p>
+                            {activeTab === "sent_projects" && (
+                              <Button
+                                size="sm"
+                                className="hidden rounded-full px-4 lg:inline-flex"
+                                onClick={() => window.dispatchEvent(new Event("contratacr:open-publish-project"))}
+                              >
+                                <Plus className="h-4 w-4" />
+                                {tc("publishProject")}
+                              </Button>
+                            )}
+                          </div>
                         )}
                       </CardHeader>
                       <CardContent className="px-4 pt-0 pb-4 sm:px-6 sm:pt-1 sm:pb-6">

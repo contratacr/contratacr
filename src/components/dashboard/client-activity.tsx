@@ -34,6 +34,8 @@ import type { BookingStatus } from "@/types";
 
 export type ClientActivitySection = "bookings" | "projects" | "saved";
 
+const OPEN_PUBLISH_PROJECT_EVENT = "contratacr:open-publish-project";
+
 type Booking = {
   id: string;
   professional_id: string;
@@ -176,6 +178,13 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   }, [user, section]);
 
   useEffect(() => { queueMicrotask(() => fetchSection()); }, [fetchSection]);
+
+  useEffect(() => {
+    if (section !== "projects") return;
+    const openPublish = () => setShowPublish(true);
+    window.addEventListener(OPEN_PUBLISH_PROJECT_EVENT, openPublish);
+    return () => window.removeEventListener(OPEN_PUBLISH_PROJECT_EVENT, openPublish);
+  }, [section]);
 
   const loadMyReviews = useCallback(async () => {
     if (!user) return;
@@ -601,22 +610,12 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
               <p className="text-sm text-[#6b7280] mt-1">
                 {t("pEmptySub")}
               </p>
-              <Button className="mt-5" onClick={() => setShowPublish(true)}>
+              <Button className="mt-5 lg:hidden" onClick={() => setShowPublish(true)}>
                 {t("publishProject")}
               </Button>
             </div>
           ) : (
             <div className="flex flex-col gap-3.5">
-              {/* PRIMARY action — DESKTOP: a prominent right-aligned button above the filters
-                  (no bottom nav bar there, so a top button is the cleanest, most visible spot).
-                  MOBILE uses the floating action button below instead (thumb-reachable while
-                  scrolling, clear of the fixed bottom nav bar) — so this row is hidden on phones
-                  to avoid a redundant second publish button. */}
-              <div className="hidden lg:flex justify-end">
-                <Button className="rounded-full px-5" onClick={() => setShowPublish(true)}>
-                  {t("publishProject")}
-                </Button>
-              </div>
               <StatusFilterTabs tabs={PROYECTO_TABS} value={projectFilter} onChange={setProjectFilter} counts={projectCounts} />
               {filteredProjects.length === 0 && (
                 <p className="text-sm text-[#6b7280] text-center py-8">{t("noProjectsView")}</p>
