@@ -264,12 +264,12 @@ export function BookingRequests() {
                 <Badge variant={STATUS_VARIANT[booking.status]} className="shrink-0 px-2.5 py-0.5 text-[11px] font-semibold">{t(`status.${booking.status}`)}</Badge>
               )}
             </div>
-            <div className="mt-2.5 flex flex-col items-start gap-2 text-[12px] text-[#6b7280]">
-              <span className={cn("inline-flex w-full max-w-full items-start gap-2 rounded-xl border px-3 py-2.5", dateStr ? "border-[#ccecf8] bg-[#EBF5FB] font-semibold text-[#162543]" : "border-[#e5e7eb] bg-[#f3f4f6] text-[#6b7280]")}>
-                <CalendarClock className="h-4 w-4 shrink-0 text-[#009FD9]" />
+            <div className="mt-2.5 flex flex-col items-start gap-1.5 text-[13px] text-[#6b7280]">
+              <span className={cn("inline-flex w-full max-w-full items-start gap-2", dateStr ? "font-medium text-[#374151]" : "text-[#9ca3af]")}>
+                <CalendarClock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
                 <span className="min-w-0 [overflow-wrap:anywhere]">{dateStr || t("noScheduledDate")}</span>
               </span>
-              <span className="flex w-full max-w-full flex-col items-start gap-1.5 text-[13px]">
+              <span className="flex w-full max-w-full flex-col items-start gap-1.5">
                 {category && (
                   <span className="inline-flex w-full max-w-full items-start gap-2 text-[#374151]">
                     <Wrench className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
