@@ -407,12 +407,9 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                           aria-expanded={expandedBooking === b.id}
                           className={cn("group w-full cursor-pointer text-left p-4 sm:p-5 flex items-start gap-3.5 hover:bg-[#f9fbfd] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]", expandedBooking === b.id ? "rounded-t-2xl bg-[#fbfdff]" : "rounded-2xl")}
                         >
-                          <Avatar className="h-11 w-11 shrink-0">
-                            <AvatarImage src={b.professionals?.profiles?.avatar_url} />
-                            <AvatarFallback className="bg-[#EBF5FB] text-[#009FD9] text-xs font-semibold">
-                              {getInitials(b.professionals?.profiles?.full_name ?? "?")}
-                            </AvatarFallback>
-                          </Avatar>
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EBF5FB] text-[#0089bb]">
+                            <CalendarDays className="h-[18px] w-[18px]" />
+                          </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-start justify-between gap-2">
                               {b.professionals?.slug ? (
@@ -434,8 +431,8 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                             </div>
                             {/* Appointment date with a grey calendar icon (no "Fecha:" label). */}
                             {formatBookingDate(b, dateLocale) && (
-                              <span className="mt-2 inline-flex w-full max-w-full items-center gap-2 rounded-xl border border-[#ccecf8] bg-[#EBF5FB] px-3 py-2.5 text-[13px] font-semibold text-[#162543] sm:w-auto">
-                                <CalendarClock className="h-4 w-4 shrink-0 text-[#009FD9]" />
+                              <span className="mt-2 inline-flex w-full max-w-full items-center gap-2 text-[13px] text-[#374151] sm:w-auto">
+                                <CalendarClock className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
                                 <span className="truncate">{formatBookingDate(b, dateLocale)}</span>
                               </span>
                             )}

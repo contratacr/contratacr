@@ -205,6 +205,8 @@ Use the standard 4px Tailwind steps. Defaults for this app:
 
 **Cards** (`Card`): white surface, `border border-[#e5e7eb]`, **`rounded-2xl`**, `shadow-sm`, `p-4` — this is the **item-card** treatment (see the elevation convention in §2: only floating list items are shadowed; sections/row-lists/forms are FLAT). In a list, cards must be **uniform height** — bound variable content (cap lists, consolidate optional rows, use `min-h-[…]`) so a sparse card matches a rich one. See §3/§4.
 
+**Panel list cards:** `Mis publicaciones` is the canonical activity-card pattern. `Mis solicitudes`, `Solicitudes recibidas`, `Oportunidades`, and `Mis propuestas` must use the same closed-card anatomy: white `rounded-2xl border-[#e5e7eb] shadow-sm`, `hover:-translate-y-0.5 hover:shadow-md`, `p-4 sm:p-5`, a `h-10 w-10 rounded-xl bg-[#EBF5FB] text-[#0089bb]` leading icon, navy bold title, stacked 13px metadata rows with grey icons, and the same circular chevron. Expanded panels use `border-t border-[#f3f4f6] bg-gradient-to-b from-[#fcfdff] to-white`. Keep section-specific actions/data, but do not invent alternate closed-card layouts for these four sections.
+
 **Badges** (`Badge`): status/labels. `default` brand-tint, `success`, `warning`, `error`, `muted`, `verified` (solid brand), `featured` (solid accent). Use `verified` for "Identidad verificada".
 
 **Verification status — always show one of two unmistakable states (legal/veracity rule).** A professional is **never** shown without a verification indicator (ambiguity is the risk). Two states, visually distinct, on the /buscar card, the public profile, and the booking modal:

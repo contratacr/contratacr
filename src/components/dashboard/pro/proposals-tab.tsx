@@ -421,19 +421,19 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                       const isExpanded = expandedProject === project.id;
                       const zona = [project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ");
                       return (
-                        <Card key={project.id} className={cn("rounded-2xl border-[#e5e7eb] bg-white shadow-sm transition-all hover:shadow-md", isExpanded && "shadow-md ring-1 ring-[#d8eef8]")}>
+                        <Card key={project.id} className={cn("rounded-2xl border-[#e5e7eb] bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md", isExpanded && "shadow-md ring-1 ring-[#d8eef8]")}>
                           <button
                             type="button"
                             onClick={() => setExpandedProject(isExpanded ? null : project.id)}
                             aria-expanded={isExpanded}
-                            className={cn("group flex w-full items-start gap-3 p-4 text-left transition-colors hover:bg-[#f9fbfd] sm:gap-3.5 sm:p-5", isExpanded ? "rounded-t-2xl bg-[#fbfdff]" : "rounded-2xl")}
+                            className={cn("group flex w-full items-start gap-3.5 p-4 text-left transition-colors hover:bg-[#f9fbfd] sm:p-5", isExpanded ? "rounded-t-2xl bg-[#fbfdff]" : "rounded-2xl")}
                           >
-                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EBF5FB] text-[#0089bb] ring-1 ring-[#d8eef8]">
-                              <FolderOpen className="h-4 w-4" />
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EBF5FB] text-[#0089bb]">
+                              <FolderOpen className="h-[18px] w-[18px]" />
                             </div>
                             <div className="min-w-0 flex-1">
                               <div className="flex items-start justify-between gap-2.5">
-                                <span className="min-w-0 flex-1 line-clamp-2 text-[15px] font-semibold leading-snug text-[#111827] [overflow-wrap:anywhere] sm:text-base">{project.title}</span>
+                                <span className="min-w-0 flex-1 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere] sm:text-base">{project.title}</span>
                                 <span className="flex shrink-0 items-center gap-1.5">
                                   {isToday(project.created_at) && <Badge variant="success" className="text-[10px] font-semibold">{t("new")}</Badge>}
                                   <span className={cn("flex h-8 w-8 items-center justify-center rounded-full border transition-colors duration-200", isExpanded ? "border-[#ccecf8] bg-[#EBF5FB] text-[#009FD9]" : "border-[#eef2f6] bg-white text-[#9ca3af] group-hover:border-[#d8eef8] group-hover:text-[#009FD9]")}>
@@ -441,7 +441,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                                   </span>
                                 </span>
                               </div>
-                              <div className="mt-2.5 flex flex-col items-start gap-2 text-[13px]">
+                              <div className="mt-2 flex flex-col items-start gap-1.5 text-[13px]">
                                 <span className={cn(
                                   "inline-flex w-full max-w-full items-start gap-2 px-3 py-2.5 font-semibold",
                                   hasBudget(project)
@@ -486,7 +486,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                               )}
                             </div>
                           </button>
-                          {isExpanded && <div className="rounded-b-2xl border-t border-[#f3f4f6] bg-[#f8fbfd]">{renderDetail(project)}</div>}
+                          {isExpanded && <div className="rounded-b-2xl border-t border-[#f3f4f6] bg-gradient-to-b from-[#fcfdff] to-white">{renderDetail(project)}</div>}
                         </Card>
                       );
                     })}
@@ -523,7 +523,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                     : null;
                   const sentDate = formatRelativeOrDate(p.created_at, locale);
                   return (
-                    <Card key={p.id} className={cn("rounded-2xl border-[#e5e7eb] bg-white shadow-sm transition-all hover:shadow-md", isOpen && "shadow-md ring-1 ring-[#d8eef8]")}>
+                    <Card key={p.id} className={cn("rounded-2xl border-[#e5e7eb] bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md", isOpen && "shadow-md ring-1 ring-[#d8eef8]")}>
                       {/* COLLAPSED header — client avatar + project title (primary) + a status chip
                           (a SENT proposal genuinely IS "Pendiente" until the client decides — unlike
                           auto-confirm bookings — so that badge is kept here); key fact = YOUR price; a
@@ -532,17 +532,14 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                         type="button"
                         onClick={() => setExpandedMine(isOpen ? null : p.id)}
                         aria-expanded={isOpen}
-                        className={cn("group w-full text-left p-4 sm:p-5 flex items-start gap-3 hover:bg-[#f9fbfd] transition-colors sm:gap-3.5", isOpen ? "rounded-t-2xl bg-[#fbfdff]" : "rounded-2xl")}
+                        className={cn("group w-full text-left p-4 sm:p-5 flex items-start gap-3.5 hover:bg-[#f9fbfd] transition-colors", isOpen ? "rounded-t-2xl bg-[#fbfdff]" : "rounded-2xl")}
                       >
-                        <Avatar className="h-10 w-10 shrink-0 ring-2 ring-[#EBF5FB] sm:h-11 sm:w-11">
-                          <AvatarImage src={p.projects?.profiles?.avatar_url} />
-                          <AvatarFallback className="text-sm bg-[#EBF5FB] text-[#009FD9] font-bold">
-                            {getInitials(clientName ?? "?")}
-                          </AvatarFallback>
-                        </Avatar>
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EBF5FB] text-[#0089bb]">
+                          <Send className="h-[18px] w-[18px]" />
+                        </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-2.5">
-                            <span className="min-w-0 flex-1 text-[15px] font-semibold leading-snug text-[#111827] line-clamp-2 [overflow-wrap:anywhere]">{p.projects?.title ?? t("projectFallback")}</span>
+                            <span className="min-w-0 flex-1 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere] sm:text-base">{p.projects?.title ?? t("projectFallback")}</span>
                             {!proposalStatusRedundant(p.status, ps) && (
                               p.status === "accepted" ? (
                                 <Badge variant={projStatusVariant(ps)} className="shrink-0 text-[11px] font-semibold">{projStatusLabel(ps)}</Badge>
@@ -551,7 +548,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                               )
                             )}
                           </div>
-                          <div className="mt-2.5 flex flex-col items-start gap-1.5 text-[13px]">
+                          <div className="mt-2 flex flex-col items-start gap-1.5 text-[13px]">
                             <span className="inline-flex w-full max-w-full items-start gap-2 text-[#374151]">
                               <span className="shrink-0 text-[#9ca3af]">{t("yourPriceLabel")}</span>
                               <span className={cn("min-w-0 font-semibold [overflow-wrap:anywhere]", p.price ? "text-[#0089bb]" : "text-[#6b7280]")}>
@@ -576,7 +573,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                       </button>
 
                       {isOpen && (
-                        <div className="rounded-b-2xl border-t border-[#f3f4f6] bg-[#f8fbfd] px-4 pb-5 pt-4 sm:px-5 flex flex-col gap-3.5">
+                        <div className="rounded-b-2xl border-t border-[#f3f4f6] bg-gradient-to-b from-[#fcfdff] to-white px-4 pb-5 pt-4 sm:px-5 flex flex-col gap-3.5">
                           {(p.price || p.message) && (
                             <div className="flex flex-col gap-2.5">
                               <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#9ca3af]">{t("myProposal")}</p>
