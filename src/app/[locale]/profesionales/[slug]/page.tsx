@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, type ReactNode } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import {
   MapPin, Shield, ShieldCheck, ArrowLeft, Star, Briefcase, Camera, Coins, Languages,
-  Share2, Flag, ChevronDown, Lock, Phone, Building2, Award, Mail, SearchX,
+  Share2, Flag, ChevronDown, Lock, Phone, Building2, Award, Mail, SearchX, FileText,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { InstagramIcon, FacebookIcon, TikTokIcon } from "@/components/icons/social-icons";
@@ -713,6 +713,12 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                     const hasWork = !!(professional.workplaces && professional.workplaces.length > 0);
                     type Fact = { key: string; icon: ReactNode; label: string; value: ReactNode; caption?: ReactNode };
                     const facts: Fact[] = [];
+                    if (professional.bio) facts.push({
+                      key: "bio",
+                      icon: <FileText className="h-5 w-5" />,
+                      label: t("tabs.sobre"),
+                      value: <span className="block whitespace-pre-line text-[15px] font-normal leading-7 text-[#374151]">{professional.bio}</span>,
+                    });
                     if (professional.verificationStatus === "verified") facts.push({
                       key: "verif", icon: <ShieldCheck className="h-5 w-5" />, label: t("verification"),
                       value: <Badge variant="verified">{t("identityVerified")}</Badge>, caption: t("verificationCaption"),
@@ -752,26 +758,8 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                         </span>
                       ) : undefined,
                     });
-                    const aboutProfessions = ((professional.professions && professional.professions.length > 0)
-                      ? professional.professions
-                      : (professional.categoryId ? [professional.categoryId] : []))
-                      .map((id) => getCategoryLabel(id, locale))
-                      .filter(Boolean)
-                      .join(" · ");
-
                     return (
                       <div className="flex flex-col gap-5">
-                        <section className="rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm sm:p-6">
-                          <p className="text-[11px] font-semibold uppercase tracking-wide text-[#009FD9]">{t("tabs.sobre")}</p>
-                          <h2 className="mt-1 text-xl font-bold leading-snug text-[#162543] [overflow-wrap:anywhere]">{professional.fullName}</h2>
-                          {aboutProfessions && (
-                            <p className="mt-1 text-sm font-medium text-[#6b7280] [overflow-wrap:anywhere]">{aboutProfessions}</p>
-                          )}
-                          {professional.bio && (
-                            <p className="mt-4 max-w-3xl border-t border-[#eef2f6] pt-4 whitespace-pre-line text-[15px] leading-7 text-[#374151] [overflow-wrap:anywhere]">{professional.bio}</p>
-                          )}
-                        </section>
-
                         {facts.length > 0 && (
                           <section className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
                             <div className="divide-y divide-[#eef2f6]">

@@ -215,6 +215,8 @@ Use the standard 4px Tailwind steps. Defaults for this app:
 
 **Professional profile description is required:** the main profile `Descripción` / `Description` field (`bio`) is part of the "Completa tu perfil" required checklist. Do not label it optional in the profile editor; show it with the required `*`. Optional copy is only valid for the separate identity verification suggestion, business name, social links, extra languages, insurers, and other non-completion extras.
 
+**Public professional About tab:** do not repeat the professional name or professions inside `Sobre mí` / `About`; those already belong to the profile header. The About tab should read as one unified fact list. If `bio` exists, render it as the first flat row with a `FileText` icon, `Sobre mí` / `About` label, and the description text, followed by verification, experience, languages, prices, and workplaces.
+
 **Mis solicitudes closed-card beneficiary hint:** when a booking is for someone else, do not show the generic "Para otra persona" line in the closed card. Show the useful compact form `Cita para: {name}` (fallback to "Otra persona") so the user understands the context without opening the card. The expanded detail keeps the fuller "La cita es para" label.
 
 **Navigation chrome:** desktop navbar dropdowns, responsive drawer, and the panel mobile bottom nav need enough shadow to read as foreground containers. Active navigation is shown with a brand-blue rule: bottom rule on desktop navbar items, left rule inside mobile drawers/sheets, and top rule on the panel bottom nav. Use a three-line `Menu` icon for navigation overflow ("Mas"); reserve three-dot icons for contextual item actions.
