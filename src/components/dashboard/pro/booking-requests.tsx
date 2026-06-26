@@ -236,7 +236,7 @@ export function BookingRequests() {
     const panelOpen = actionFor?.id === booking.id;
 
     return (
-      <Card className={cn("rounded-2xl border-[#e5e7eb] bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md", expanded && "shadow-md ring-1 ring-[#d8eef8]")}>
+      <Card className={cn("rounded-2xl border-[#e5e7eb] bg-white shadow-sm transition-all hover:shadow-md", expanded && "shadow-md ring-1 ring-[#d8eef8]")}>
         {/* EXPANDABLE LEAD CARD (sprint 430): COLLAPSED shows only essentials (who · when ·
             status + unverified). Tapping reveals the full identity, the "para otra persona"
             callout, servicio·zona, the note, and the management ACTIONS. Zero icons; text labels.
@@ -247,9 +247,9 @@ export function BookingRequests() {
           type="button"
           onClick={() => setExpandedId(expanded ? null : booking.id)}
           aria-expanded={expanded}
-          className={cn("group w-full text-left px-4 py-4 sm:px-5 flex items-start gap-3.5 transition-colors hover:bg-[#f9fbfd]", expanded ? "rounded-t-2xl bg-[#fbfdff]" : "rounded-2xl")}
+          className={cn("group w-full text-left px-4 py-3.5 sm:px-5 flex items-start gap-3 transition-colors hover:bg-[#f9fbfd]", expanded ? "rounded-t-2xl bg-[#fbfdff]" : "rounded-2xl")}
         >
-          <Avatar className={cn("h-12 w-12 shrink-0 ring-2 transition-shadow", expanded ? "ring-[#ccecf8] shadow-sm" : "ring-[#EBF5FB]")}>
+          <Avatar className={cn("h-10 w-10 shrink-0 ring-2 transition-shadow sm:h-11 sm:w-11", expanded ? "ring-[#ccecf8] shadow-sm" : "ring-[#EBF5FB]")}>
             <AvatarImage src={booking.profiles?.avatar_url} className="object-cover" />
             <AvatarFallback className="text-sm font-bold bg-[#EBF5FB] text-[#009FD9]">{getInitials(booking.client_name || "?")}</AvatarFallback>
           </Avatar>
@@ -258,29 +258,29 @@ export function BookingRequests() {
               itself), and a muted "servicio · nota" snippet on line 3 for instant context. */}
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
-              <span className="text-[15px] font-bold text-[#162543] min-w-0 flex items-center gap-2 flex-wrap [overflow-wrap:anywhere] sm:text-base">
+              <span className="text-[15px] font-semibold text-[#111827] min-w-0 flex items-center gap-2 flex-wrap [overflow-wrap:anywhere] sm:text-base">
                 {booking.client_name || t("thePerson")}
               </span>
               {!solicitudStatusRedundant(booking.status, booking.scheduled_date) && (
                 <Badge variant={STATUS_VARIANT[booking.status]} className="shrink-0 px-2.5 py-0.5 text-[11px] font-semibold">{t(`status.${booking.status}`)}</Badge>
               )}
             </div>
-            <div className="mt-2 flex flex-col items-start gap-2.5 text-[12px] text-[#6b7280]">
-              <span className={cn("inline-flex w-full max-w-full items-center gap-2 rounded-xl border px-3 py-2.5 sm:w-auto", dateStr ? "border-[#ccecf8] bg-[#EBF5FB] font-semibold text-[#162543]" : "border-[#e5e7eb] bg-[#f3f4f6] text-[#6b7280]")}>
+            <div className="mt-2.5 flex flex-col items-start gap-2 text-[12px] text-[#6b7280]">
+              <span className={cn("inline-flex w-full max-w-full items-start gap-2 rounded-xl border px-3 py-2.5", dateStr ? "border-[#ccecf8] bg-[#EBF5FB] font-semibold text-[#162543]" : "border-[#e5e7eb] bg-[#f3f4f6] text-[#6b7280]")}>
                 <CalendarClock className="h-4 w-4 shrink-0 text-[#009FD9]" />
-                <span className="truncate">{dateStr || t("noScheduledDate")}</span>
+                <span className="min-w-0 [overflow-wrap:anywhere]">{dateStr || t("noScheduledDate")}</span>
               </span>
               <span className="flex w-full max-w-full flex-col items-start gap-1.5 text-[13px]">
                 {category && (
-                  <span className="inline-flex w-full max-w-full items-center gap-2 text-[#374151]">
-                    <Wrench className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                    <span className="truncate font-medium">{category}</span>
+                  <span className="inline-flex w-full max-w-full items-start gap-2 text-[#374151]">
+                    <Wrench className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                    <span className="min-w-0 font-medium [overflow-wrap:anywhere]">{category}</span>
                   </span>
                 )}
                 {location && (
-                  <span className="inline-flex w-full max-w-full items-center gap-2 text-[#6b7280]">
-                    <MapPin className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                    <span className="truncate">{location}</span>
+                  <span className="inline-flex w-full max-w-full items-start gap-2 text-[#6b7280]">
+                    <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                    <span className="min-w-0 [overflow-wrap:anywhere]">{location}</span>
                   </span>
                 )}
                 {(unverifiedPill || flaggedPill || (!booking.for_someone_else && showClinicalFlags && ageBadge(booking.client_dob))) && (
@@ -299,7 +299,7 @@ export function BookingRequests() {
         </button>
 
         {expanded && (
-          <div className="rounded-b-2xl border-t border-[#f3f4f6] bg-gradient-to-b from-[#fcfdff] to-white px-4 pb-5 pt-4 sm:px-5 flex flex-col gap-4">
+          <div className="rounded-b-2xl border-t border-[#f3f4f6] bg-[#f8fbfd] px-4 pb-5 pt-4 sm:px-5 flex flex-col gap-4">
             {requestedDate && (
               <p className="flex items-center gap-1.5 text-[11px] text-[#9ca3af]">
                 <Clock className="h-3.5 w-3.5 shrink-0 text-[#374151]" /> {t("requestedOn", { date: requestedDate })}
@@ -326,7 +326,7 @@ export function BookingRequests() {
             })()}
 
             {(phoneFmt || cedulaFmt || booking.service_description) && (
-              <div className="overflow-hidden rounded-2xl bg-white ring-1 ring-[#e8eef5]">
+              <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-[#e8eef5]">
                 {(phoneFmt || cedulaFmt) && (
                   <div className="grid grid-cols-1 border-[#eef2f6] sm:grid-cols-2">
                     {phoneFmt && (
@@ -376,15 +376,15 @@ export function BookingRequests() {
                 { label: t("reportClient"), onClick: () => setReportFor(booking), destructive: true },
               ];
               return (
-                <div className="flex flex-nowrap items-center gap-2 border-t border-[#eef2f6] pt-3">
+                <div className="flex flex-wrap items-center gap-2 border-t border-[#eef2f6] pt-3">
                   {waHref && (
-                    <Button variant="whatsapp" size="sm" asChild className="shrink-0 rounded-lg px-4">
+                    <Button variant="whatsapp" size="sm" asChild className="min-w-[9.5rem] flex-1 rounded-lg px-4 sm:flex-none">
                       <a href={waHref} target="_blank" rel="noopener noreferrer">
                         <WhatsAppIcon className="h-4 w-4" /> {t("whatsappTo", { name: cliFirst })}
                       </a>
                     </Button>
                   )}
-                  <div className="ml-auto">
+                  <div className="ml-auto shrink-0">
                     <CardActionsMenu actions={menuActions} label={t("actions")} />
                   </div>
                 </div>
