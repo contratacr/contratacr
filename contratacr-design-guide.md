@@ -1928,3 +1928,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Booking/profile locale discipline.** Public profile preview links from dashboards must preserve the current locale. Booking/reschedule calendars must use Intl from the active locale for weekday/month/date labels, never hardcoded Spanish arrays. Pricing UI should use structured priceAmount/priceType with locale-aware formatters; legacy price text is fallback only.
 
 > **Navbar category dropdown.** Prefer the simple search-first category dropdown: one search input, compact group cards with a few direct links, and a clear view-all link. Avoid two-pane hover-dependent category navigation unless there is a strong reason; it is heavier and harder to scan.
+
+> **Smart search examples.** The scrolled compact navbar search may use a typewriter placeholder with short natural-language service examples. Keep examples practical and localized, and make sure the same text pattern resolves through `resolveCategoryIntent()` so phrases like "Necesito limpiar mi casa" search by category instead of only as raw keywords.

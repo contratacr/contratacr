@@ -4,6 +4,7 @@ import {
   getMatchingCategoryIds,
   getCategoryLabel,
   normalizeText,
+  resolveCategoryIntent,
 } from "@/lib/data/categories";
 
 const SUPABASE_CONFIGURED =
@@ -44,7 +45,11 @@ export async function GET(req: NextRequest) {
   }
 
   // 1. Matching service categories from the fixed taxonomy (keyword synonyms), localized.
-  const staticCats: SearchSuggestion[] = searchCategories(q)
+  const inferredCat = resolveCategoryIntent(q, locale);
+  const staticCats: SearchSuggestion[] = [
+    ...(inferredCat ? [inferredCat] : []),
+    ...searchCategories(q).filter((c) => c.id !== inferredCat?.id),
+  ]
     .slice(0, 6)
     .map((c) => ({ type: "category", id: c.id, label: getCategoryLabel(c.id, locale) }));
 

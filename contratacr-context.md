@@ -3574,3 +3574,5 @@ New i18n namespaces added this pass: `search.pagination`, extended `search.filte
 
 
 **Sprint 308 - Simpler category navbar dropdown.** landing-navbar category dropdown no longer uses the two-pane hover mega-menu. It now keeps one search field and shows compact group cards with the first few direct category links per group, plus the existing filtered search and view-all link. Goal: calmer, easier scanning with less hover-dependent behavior.
+
+**Sprint 309 - Smart natural-language navbar search.** Added `resolveCategoryIntent()` to the category taxonomy so search text like "Necesito limpiar mi casa" resolves to the `limpieza` category instead of staying as free `q` text. The landing hero, scrolled compact navbar, `/api/search/suggestions`, and `/buscar` keyword expansion now share the intent resolver. The compact navbar placeholder rotates with typewriter-style service examples in ES/EN only while the field is empty and the scrolled search is visible.

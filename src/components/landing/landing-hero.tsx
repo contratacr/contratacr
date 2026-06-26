@@ -11,6 +11,7 @@ import type { SearchSuggestion } from "@/app/api/search/suggestions/route";
 import { searchLocations, resolveLocation, type LocationSuggestion } from "@/lib/data/location-search";
 import { loadGoogleMaps } from "@/lib/maps/loader";
 import { matchProvinceCanton } from "@/lib/data/cr-geography";
+import { resolveCategoryIntent } from "@/lib/data/categories";
 
 // A Google Places ADDRESS prediction shown alongside our province/cantón suggestions, so the
 // location field autocompletes real addresses (not just province/cantón names).
@@ -441,7 +442,11 @@ export function LandingHero() {
       params.set("categoria", chosen.id);
     } else {
       const svc = (chosen?.type === "professional" ? chosen.label : service).trim();
-      if (svc) params.set("q", svc);
+      if (svc) {
+        const inferred = chosen?.type === "professional" ? null : resolveCategoryIntent(svc, locale);
+        if (inferred) params.set("categoria", inferred.id);
+        else params.set("q", svc);
+      }
     }
     // Location resolution order: explicit Enter override → a picked Google ADDRESS
     // (province/cantón + proximity) → a picked/typed province/cantón from our taxonomy.

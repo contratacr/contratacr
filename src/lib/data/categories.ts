@@ -298,6 +298,99 @@ export function searchCategories(query: string): (CategoryItem & { groupId: stri
   });
 }
 
+const NATURAL_QUERY_ALIASES: Record<string, string[]> = {
+  limpieza: ["limpiar mi casa", "limpiar casa", "limpiar el hogar", "limpieza de mi casa", "asear mi casa", "servicio domestico", "clean my house", "clean my home", "house cleaned", "home cleaned"],
+  limpieza_oficinas: ["limpiar oficina", "limpieza de oficina", "aseo de oficina", "limpiar local"],
+  plomeria: ["arreglar fuga", "tengo una fuga", "arreglar tubo", "destapar inodoro", "destapar caneria", "arreglar lavamanos", "fix a water leak", "fix leak", "water leak", "clogged toilet"],
+  electricidad: ["arreglar luz", "poner enchufe", "instalar toma", "problema electrico", "se fue la luz", "cambiar breaker"],
+  pintura: ["pintar mi casa", "pintar cuarto", "pintar pared", "pintar sala", "paint my house", "paint my living room", "paint a room"],
+  jardineria: ["cortar zacate", "cortar el zacate", "arreglar jardin", "limpiar jardin", "mantenimiento jardin"],
+  mudanzas: ["mudarme", "hacer mudanza", "mover muebles", "necesito mudanza"],
+  reparacion_computadoras: ["arreglar computadora", "arreglar laptop", "mi computadora no enciende", "reparar pc", "reparar laptop", "repair my laptop", "fix my laptop", "repair computer", "fix computer"],
+  redes_internet: ["arreglar wifi", "mejorar internet", "instalar router", "poner internet", "problemas de wifi"],
+  cuidado_infantil: ["cuidar ninos", "cuidar mi hijo", "necesito ninera", "buscar ninera"],
+  cuidado_adultos: ["cuidar adulto mayor", "cuidado para adulto mayor", "acompanar adulto mayor", "care for an older adult", "elderly care", "senior care"],
+  veterinaria: ["llevar mascota al doctor", "doctor para perro", "doctor para gato", "veterinario para mascota"],
+  peluqueria_canina: ["banar perro", "cortar pelo perro", "grooming perro"],
+  medicina_domicilio: ["doctor a domicilio", "medico a domicilio", "consulta medica"],
+  fisioterapia: ["terapia fisica", "dolor de espalda", "fisioterapeuta"],
+  psicologia: ["necesito psicologo", "terapia psicologica", "hablar con psicologo"],
+  clases_manejo: ["aprender a manejar", "clases de conducir", "clases de manejo"],
+  tutorias: ["clases particulares", "ayuda con tareas", "tutor para mi hijo"],
+  fotografia: ["tomar fotos profesionales", "sesion de fotos", "fotografo profesional"],
+  fotografia_eventos: ["fotografo para boda", "fotografo para evento", "fotos de quinceanos"],
+  dj_sonido: ["musica para fiesta", "dj para fiesta", "sonido para evento", "dj for a party", "sound for event"],
+  catering: ["comida para evento", "comida para fiesta", "banquete para evento"],
+  mecanica: ["arreglar carro", "mecanico para carro", "revisar motor", "cambio de aceite"],
+  aire_acondicionado: ["arreglar aire acondicionado", "instalar aire acondicionado", "mantenimiento de aire"],
+};
+
+const NATURAL_STOPWORDS = new Set([
+  "necesito", "ocupo", "quiero", "busco", "buscar", "alguien", "persona", "servicio", "servicios",
+  "para", "por", "favor", "que", "me", "mi", "mis", "un", "una", "uno", "el", "la", "los", "las",
+  "de", "del", "en", "con", "a", "al", "hacer", "tengo", "need", "looking", "look", "for", "someone",
+  "service", "services", "to", "my", "the", "a", "an", "and", "please", "want", "house", "home",
+]);
+
+const TOKEN_ROOTS: Record<string, string> = {
+  limpiar: "limpiez", limpio: "limpiez", limpia: "limpiez", limpieza: "limpiez",
+  pintar: "pint", pintura: "pint", pintor: "pint", paint: "pint", painting: "pint",
+  arreglar: "repar", reparar: "repar", reparacion: "repar", repair: "repar", repairing: "repar", fix: "repar", fixing: "repar",
+  cuidar: "cuid", cuido: "cuid", cuidado: "cuid", care: "cuid", caregiving: "cuid",
+  construir: "constru", construccion: "constru",
+  moving: "mov", move: "mov", mover: "mud", mudanza: "mud",
+  cleaning: "clean", clean: "clean", cleaned: "clean", plumbing: "plumb", plumber: "plumb",
+};
+
+function queryTokens(text: string): string[] {
+  return normalizeText(text)
+    .replace(/[^a-z0-9ñ\s]/g, " ")
+    .split(/\s+/)
+    .map((token) => TOKEN_ROOTS[token] ?? token)
+    .filter((token) => token.length > 2 && !NATURAL_STOPWORDS.has(token));
+}
+
+function termsForCategory(item: CategoryItem & { groupId: string; groupLabel: string }, locale?: string): string[] {
+  return [
+    item.label,
+    getCategoryLabel(item.id, locale),
+    item.groupLabel,
+    getCategoryGroupLabel(item.groupId, locale),
+    ...item.keywords,
+    ...(NATURAL_QUERY_ALIASES[item.id] ?? []),
+  ];
+}
+
+export function resolveCategoryIntent(query: string, locale?: string): (CategoryItem & { groupId: string; groupLabel: string }) | null {
+  const raw = query.trim();
+  if (raw.length < 2) return null;
+  const pool = getAllCategories();
+  const q = normalizeText(raw);
+
+  for (const item of pool) {
+    if (termsForCategory(item, locale).some((term) => normalizeText(term) === q)) return item;
+  }
+
+  let best: { item: (CategoryItem & { groupId: string; groupLabel: string }); score: number } | null = null;
+  const tokens = queryTokens(raw);
+  for (const item of pool) {
+    const terms = termsForCategory(item, locale);
+    let score = 0;
+    for (const term of terms) {
+      const normalizedTerm = normalizeText(term);
+      if (q.includes(normalizedTerm) || normalizedTerm.includes(q)) score += normalizedTerm === q ? 80 : 30;
+      const termTokens = queryTokens(term);
+      for (const token of tokens) {
+        if (termTokens.includes(token)) score += 12;
+        else if (termTokens.some((t) => t.includes(token) || token.includes(t))) score += 7;
+      }
+    }
+    if (score > (best?.score ?? 0)) best = { item, score };
+  }
+
+  return best && best.score >= 14 ? best.item : null;
+}
+
 /* ─── English labels for the fixed taxonomy ───
    Spanish (in CATEGORY_GROUPS above) stays the source of truth; these are the
    per-language English labels so categories/services also render in English.
@@ -447,7 +540,11 @@ export function anyHealthCategory(ids?: (string | null | undefined)[]): boolean 
 /* ─── Get category IDs that match a text query (for search page) ─── */
 export function getMatchingCategoryIds(query: string): string[] {
   if (!query.trim()) return [];
-  return searchCategories(query).map((c) => c.id);
+  const inferred = resolveCategoryIntent(query);
+  return [...new Set([
+    ...(inferred ? [inferred.id] : []),
+    ...searchCategories(query).map((c) => c.id),
+  ])];
 }
 
 /* ─── Legacy flat CATEGORIES array (kept for backwards compat) ─── */

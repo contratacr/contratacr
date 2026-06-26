@@ -21,7 +21,7 @@ import { NotificationBell } from "@/components/notifications/notification-bell";
 import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
 import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { SupportLink } from "@/components/support/support-link";
-import { ALL_CATEGORIES, CATEGORY_GROUPS, searchCategories, normalizeText, getCategoryLabel, getCategoryGroupLabel } from "@/lib/data/categories";
+import { ALL_CATEGORIES, CATEGORY_GROUPS, searchCategories, normalizeText, getCategoryLabel, getCategoryGroupLabel, resolveCategoryIntent } from "@/lib/data/categories";
 import { searchLocations, resolveLocation, type LocationSuggestion } from "@/lib/data/location-search";
 
 /* ─── Brand mark (the square "CR" icon) ─── */
@@ -69,6 +69,48 @@ const LANGS = [
   { code: "es", label: "Español" },
   { code: "en", label: "English" },
 ] as const;
+
+function useTypedPlaceholder(examples: string[], active: boolean) {
+  const [text, setText] = useState(examples[0] ?? "");
+
+  useEffect(() => {
+    if (!active || examples.length === 0) return;
+
+    let exampleIndex = 0;
+    let charIndex = 0;
+    let deleting = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    const tick = () => {
+      const phrase = examples[exampleIndex] ?? "";
+      setText(phrase.slice(0, charIndex));
+
+      if (!deleting && charIndex < phrase.length) {
+        charIndex += 1;
+        timer = setTimeout(tick, 48);
+        return;
+      }
+      if (!deleting) {
+        deleting = true;
+        timer = setTimeout(tick, 1350);
+        return;
+      }
+      if (charIndex > 0) {
+        charIndex -= 1;
+        timer = setTimeout(tick, 24);
+        return;
+      }
+      deleting = false;
+      exampleIndex = (exampleIndex + 1) % examples.length;
+      timer = setTimeout(tick, 260);
+    };
+
+    timer = setTimeout(tick, 250);
+    return () => { if (timer) clearTimeout(timer); };
+  }, [active, examples]);
+
+  return text;
+}
 
 function useSwitchLang() {
   const router = useRouter();
@@ -735,6 +777,11 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
   const locale = useLocale();
   const pathname = usePathname();
   const { user, avatarUrl, avatarReady } = useAuth();
+  const compactSearchExamples = useMemo(() => {
+    const raw = t.raw("searchExamples");
+    return Array.isArray(raw) ? raw.filter((item): item is string => typeof item === "string" && item.trim().length > 0) : [];
+  }, [t]);
+  const compactPlaceholder = useTypedPlaceholder(compactSearchExamples, compact && !searchFocused && !searchQuery.trim());
 
   // "Ingresar" routes to the robust /login PAGE (forgot-password, role-aware
   // post-login redirect to the correct panel, waitForAuthCookie, OAuth `next`,
@@ -866,7 +913,9 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
     if (searchCategoryId && picked && picked.label === searchQuery) {
       params.set("categoria", searchCategoryId);
     } else if (svc) {
-      params.set("q", svc);
+      const inferred = resolveCategoryIntent(svc, locale);
+      if (inferred) params.set("categoria", inferred.id);
+      else params.set("q", svc);
     }
     const loc = navLocationSel && navLocationSel.label === navLocation ? navLocationSel : resolveLocation(navLocation);
     if (loc) {
@@ -1167,7 +1216,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                         onKeyDown={handleCompactSearchKeyDown}
                         onFocus={() => { if (searchBlurTimer.current) clearTimeout(searchBlurTimer.current); setSearchFocused(true); }}
                         onBlur={() => { searchBlurTimer.current = setTimeout(() => setSearchFocused(false), 150); }}
-                        placeholder={isSmallScreen ? t("servicePlaceholderShort") : t("servicePlaceholder")}
+                        placeholder={compactPlaceholder || (isSmallScreen ? t("servicePlaceholderShort") : t("servicePlaceholder"))}
                         className="flex-1 text-sm sm:text-base text-gray-700 placeholder:text-gray-400 bg-transparent focus:outline-none min-w-0"
                         role="combobox"
                         aria-expanded={searchFocused && searchQuery.trim().length > 0}
