@@ -1032,7 +1032,11 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                   <button
                     className={cn(
                       "relative flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-medium transition-colors after:absolute after:left-4 after:right-4 after:-bottom-1 after:h-0.5 after:rounded-full after:bg-[#009FD9] after:transition-opacity",
-                      openMenu === "categorias" || categoriesActive ? "text-[#1a2744] bg-gray-50 after:opacity-100" : "text-[#374151] after:opacity-0 hover:text-[#1a2744] hover:bg-gray-50"
+                      categoriesActive
+                        ? "text-[#1a2744] bg-gray-50 after:opacity-100"
+                        : openMenu === "categorias"
+                          ? "text-[#1a2744] after:opacity-0"
+                          : "text-[#374151] after:opacity-0 hover:text-[#1a2744] hover:bg-gray-50"
                     )}
                   >
                     {t("categories")}
