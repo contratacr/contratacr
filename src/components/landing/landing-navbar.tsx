@@ -809,6 +809,17 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
   const resourcesActive = RESOURCES_LINKS.some((link) => navPath === link.href || navPath.startsWith(`${link.href}/`));
   const panelActive = navPath.startsWith("/dashboard/profesional");
   const notificationsActive = navPath.startsWith("/notificaciones");
+  const mobileRowBase = "relative flex min-h-[48px] w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors before:absolute before:left-0 before:top-3 before:bottom-3 before:w-0.5 before:rounded-r-full before:bg-[#009FD9] before:transition-opacity";
+  const mobileRowClass = (active: boolean, strong = false) => cn(
+    mobileRowBase,
+    active
+      ? "bg-[#EBF5FB] text-[#0089bb] before:opacity-100"
+      : strong
+        ? "text-[#162543] before:opacity-0 hover:bg-[#f8fafc] hover:text-[#0089bb]"
+        : "text-[#4b5563] before:opacity-0 hover:bg-[#f8fafc] hover:text-[#0089bb]"
+  );
+  const mobileIconClass = (active: boolean) => cn("h-4 w-4 shrink-0", active ? "text-[#0089bb]" : "text-[#9ca3af]");
+  const mobileChevronClass = (active: boolean) => cn("h-4 w-4 shrink-0", active ? "text-[#0089bb]" : "text-gray-300");
 
   const compactSuggestions = useMemo(() => matchCategories(searchQuery), [searchQuery]);
   const navLocSug = useMemo(() => searchLocations(navLocation), [navLocation]);
@@ -1319,12 +1330,12 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
             drawerTouchX.current = null;
           }}
           className={cn(
-            "lg:hidden fixed top-0 left-0 bottom-0 z-[101] w-[86%] max-w-[360px] bg-white shadow-[18px_0_60px_-18px_rgba(15,23,42,0.5)] flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform",
+            "lg:hidden fixed top-0 left-0 bottom-0 z-[101] w-[88%] max-w-[380px] bg-[#f8fafc] shadow-[18px_0_60px_-18px_rgba(15,23,42,0.5)] flex flex-col transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] will-change-transform",
             mobileOpen ? "translate-x-0" : "-translate-x-full"
           )}
         >
           {/* Drawer header — logo (home link) + close */}
-          <div className="flex h-16 shrink-0 items-center justify-between border-b border-gray-100 bg-white px-4">
+          <div className="flex h-16 shrink-0 items-center justify-between border-b border-[#e8eef5] bg-white px-4 shadow-sm">
             <Link href="/" aria-label="ContrataCR inicio" onClick={() => setMobileOpen(false)}>
               <ContrataCRLogo size="lg" />
             </Link>
@@ -1341,7 +1352,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
           {/* Scrollable content — mirrors the desktop navbar with mobile icon rows. */}
           <div className="flex-1 overflow-y-auto px-4 py-4">
             {/* Smart search on mobile */}
-            <div className="mb-5">
+            <div className="mb-4 rounded-2xl border border-[#e8eef5] bg-white p-2 shadow-[0_12px_35px_-24px_rgba(15,23,42,0.55)]">
               <CategoryAutocomplete
                 placeholder={t("searchServicePlaceholderShort")}
                 size="lg"
@@ -1349,38 +1360,32 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
               />
             </div>
 
-            <div className="mb-5">
-              <p className="pb-2 text-[10px] font-bold uppercase tracking-widest text-gray-400">{t("menu")}</p>
-              <div className="divide-y divide-gray-100 border-b border-t border-gray-100">
+            <div className="mb-4 rounded-2xl border border-[#e8eef5] bg-white p-1.5 shadow-[0_12px_35px_-24px_rgba(15,23,42,0.55)]">
+              <div className="flex flex-col gap-0.5">
                 <Link
                   href="/categorias"
                   onClick={() => setMobileOpen(false)}
-                  className={cn(
-                    "relative flex min-h-11 items-center gap-3 py-2.5 pl-3 pr-0 text-sm font-semibold transition-colors before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-0.5 before:rounded-r-full before:bg-[#009FD9] before:transition-opacity",
-                    categoriesActive ? "text-[#009FD9] before:opacity-100" : "text-[#162543] before:opacity-0 hover:text-[#009FD9]"
-                  )}
+                  className={mobileRowClass(categoriesActive, true)}
                 >
-                  <Compass className="h-4 w-4 shrink-0 text-[#009FD9]" />
+                  <Compass className={mobileIconClass(categoriesActive)} />
                   <span className="min-w-0 flex-1">{t("categories")}</span>
-                  <ChevronRight className="h-4 w-4 shrink-0 text-gray-300" />
+                  <ChevronRight className={mobileChevronClass(categoriesActive)} />
                 </Link>
                 {RESOURCES_LINKS.map((link) => {
                   const ResourceIcon = RESOURCE_ICONS[link.key as keyof typeof RESOURCE_ICONS];
+                  const active = navPath === link.href || navPath.startsWith(`${link.href}/`);
                   const content = (
                     <>
-                      <ResourceIcon className="h-4 w-4 shrink-0 text-gray-400" />
+                      <ResourceIcon className={mobileIconClass(active)} />
                       <span className="min-w-0 flex-1">{t(`resourceLinks.${link.key}`)}</span>
-                      <ChevronRight className="h-4 w-4 shrink-0 text-gray-300" />
+                      <ChevronRight className={mobileChevronClass(active)} />
                     </>
                   );
                   return link.key === "support" ? (
                     <SupportLink
                       key={link.href}
                       onNavigate={() => setMobileOpen(false)}
-                      className={cn(
-                        "relative flex min-h-11 w-full items-center gap-3 py-2.5 pl-3 pr-0 text-left text-sm font-medium leading-tight transition-colors before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-0.5 before:rounded-r-full before:bg-[#009FD9] before:transition-opacity",
-                        (navPath === link.href || navPath.startsWith(`${link.href}/`)) ? "text-[#009FD9] before:opacity-100" : "text-gray-600 before:opacity-0 hover:text-[#009FD9]"
-                      )}
+                      className={mobileRowClass(active)}
                     >
                       {content}
                     </SupportLink>
@@ -1389,10 +1394,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                       key={link.href}
                       href={link.href}
                       onClick={() => setMobileOpen(false)}
-                      className={cn(
-                        "relative flex min-h-11 items-center gap-3 py-2.5 pl-3 pr-0 text-sm font-medium leading-tight transition-colors before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-0.5 before:rounded-r-full before:bg-[#009FD9] before:transition-opacity",
-                        (navPath === link.href || navPath.startsWith(`${link.href}/`)) ? "text-[#009FD9] before:opacity-100" : "text-gray-600 before:opacity-0 hover:text-[#009FD9]"
-                      )}
+                      className={mobileRowClass(active)}
                     >
                       {content}
                     </Link>
@@ -1403,20 +1405,20 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     <Link
                       href="/registro/profesional"
                       onClick={() => setMobileOpen(false)}
-                      className="relative flex min-h-11 items-center gap-3 py-2.5 pl-3 pr-0 text-sm font-semibold text-[#009FD9] transition-colors hover:text-[#0089bb]"
+                      className="relative flex min-h-[48px] items-center gap-3 rounded-xl bg-[#009FD9] px-3 py-2.5 text-sm font-semibold text-white shadow-[0_10px_25px_-18px_rgba(0,159,217,0.9)] transition-colors hover:bg-[#0089bb]"
                     >
                       <Briefcase className="h-4 w-4 shrink-0" />
                       <span className="min-w-0 flex-1">{t("registerPro")}</span>
-                      <ChevronRight className="h-4 w-4 shrink-0 text-gray-300" />
+                      <ChevronRight className="h-4 w-4 shrink-0 text-white/70" />
                     </Link>
                     <Link
                       href={loginHref}
                       onClick={() => setMobileOpen(false)}
-                      className="relative flex min-h-11 items-center gap-3 py-2.5 pl-3 pr-0 text-sm font-medium text-[#374151] transition-colors hover:text-[#009FD9]"
+                      className={mobileRowClass(false)}
                     >
-                      <LogIn className="h-4 w-4 shrink-0 text-gray-400" />
+                      <LogIn className={mobileIconClass(false)} />
                       <span className="min-w-0 flex-1">{t("login")}</span>
-                      <ChevronRight className="h-4 w-4 shrink-0 text-gray-300" />
+                      <ChevronRight className={mobileChevronClass(false)} />
                     </Link>
                   </>
                 )}
@@ -1424,41 +1426,46 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
             </div>
 
             {user ? (
-              <div className="mb-5">
-                <p className="pb-2 text-[10px] font-bold uppercase tracking-widest text-gray-400">{t("myAccount")}</p>
-                <div className="divide-y divide-gray-100 border-b border-t border-gray-100">
+              <div className="mb-4 rounded-2xl border border-[#e8eef5] bg-white p-1.5 shadow-[0_12px_35px_-24px_rgba(15,23,42,0.55)]">
+                <div className="mb-1 flex items-center gap-3 rounded-xl bg-[#f8fafc] px-3 py-3">
+                  <Avatar className="h-9 w-9">
+                    <AvatarImage src={avatarUrl ?? undefined} />
+                    <AvatarFallback delayMs={avatarUrl ? 600 : 0} className="bg-[#009FD9] text-xs font-bold text-white">
+                      {initials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-bold text-[#162543]">{displayName || t("myAccount")}</p>
+                    <p className="truncate text-xs text-[#9ca3af]">{user.email}</p>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-0.5">
                   {!isPro && (
-                    <Link href="/registro/profesional" onClick={() => setMobileOpen(false)} className="flex min-h-11 items-center gap-3 py-2.5 text-sm font-semibold text-[#009FD9] transition-colors hover:text-[#0089bb]">
-                      <Briefcase className="h-4 w-4 shrink-0" />
+                    <Link href="/registro/profesional" onClick={() => setMobileOpen(false)} className={mobileRowClass(false, true)}>
+                      <Briefcase className={mobileIconClass(false)} />
                       <span className="min-w-0 flex-1">{t("offerServices")}</span>
-                      <ChevronRight className="h-4 w-4 shrink-0 text-gray-300" />
+                      <ChevronRight className={mobileChevronClass(false)} />
                     </Link>
                   )}
-                  <a href={primaryPanelHref} onClick={() => setMobileOpen(false)} className={cn(
-                    "relative flex min-h-11 items-center gap-3 py-2.5 pl-3 pr-0 text-sm font-semibold transition-colors before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-0.5 before:rounded-r-full before:bg-[#009FD9] before:transition-opacity",
-                    panelActive ? "text-[#009FD9] before:opacity-100" : "text-[#162543] before:opacity-0 hover:text-[#009FD9]"
-                  )}>
-                    <LayoutDashboard className="h-4 w-4 shrink-0 text-[#009FD9]" />
+                  <a href={primaryPanelHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(panelActive, true)}>
+                    <LayoutDashboard className={mobileIconClass(panelActive)} />
                     <span className="min-w-0 flex-1">{t("myPanel")}</span>
-                    <ChevronRight className="h-4 w-4 shrink-0 text-gray-300" />
+                    <ChevronRight className={mobileChevronClass(panelActive)} />
                   </a>
-                  <a href={notificationsHref} onClick={() => setMobileOpen(false)} className={cn(
-                    "relative flex min-h-11 items-center gap-3 py-2.5 pl-3 pr-0 text-sm font-medium transition-colors before:absolute before:left-0 before:top-2.5 before:bottom-2.5 before:w-0.5 before:rounded-r-full before:bg-[#009FD9] before:transition-opacity",
-                    notificationsActive ? "text-[#009FD9] before:opacity-100" : "text-[#374151] before:opacity-0 hover:text-[#009FD9]"
-                  )}>
-                    <Bell className="h-4 w-4 shrink-0 text-gray-400" />
+                  <a href={notificationsHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(notificationsActive)}>
+                    <Bell className={mobileIconClass(notificationsActive)} />
                     <span className="min-w-0 flex-1">{t("notifications")}</span>
                     {activeUnread > 0 && (
                       <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold text-white">{activeUnread > 9 ? "9+" : activeUnread}</span>
                     )}
-                    <ChevronRight className="h-4 w-4 shrink-0 text-gray-300" />
+                    <ChevronRight className={mobileChevronClass(notificationsActive)} />
                   </a>
                 </div>
               </div>
             ) : null}
 
             {/* Idioma — discreet inline text pair (not a segmented toggle). */}
-            <div className="border-b border-t border-gray-100 py-3">
+            <div className="rounded-2xl border border-[#e8eef5] bg-white px-4 py-3 shadow-[0_12px_35px_-24px_rgba(15,23,42,0.55)]">
               <div className="flex items-center justify-between">
                 <span className="text-xs text-gray-400 font-medium">{t("language")}</span>
                 <LanguageInline />
