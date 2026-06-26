@@ -1,5 +1,7 @@
 # ContrataCR.com — Project Context
 
+_Last updated: 2026-06-26 (sprint 570 - **Public profile Sobre m? label/value hierarchy refined** (`profesionales/[slug]/page.tsx`, design guide). The About facts now keep labels/titles muted grey and render values as darker readable text (`#374151`, medium weight) instead of navy semibold everywhere. This keeps the liked design but makes the content hierarchy match the rest of the app: grey label, darker value. No data, copy, routing, or contact/verification logic changed.)_
+
 _Last updated: 2026-06-26 (sprint 569 - **Public profile Sobre m? trust row removed** (`profesionales/[slug]/page.tsx`, design guide). Removed the redundant Confianza/Trust: Verificado/Verified fact row from the public professional Sobre m?/About section. Verification remains visible in the profile header badge, so About now stays focused on description, experience, languages, insurers, prices, and workplaces. No verification logic, contact actions, routing, data fetching, or i18n messages changed.)_
 
 _Last updated: 2026-06-26 (sprint 568 - **Public profile Sobre m? contact row removed** (`profesionales/[slug]/page.tsx`, design guide). Removed the redundant Contacto row from the public professional Sobre m?/About facts, so WhatsApp, Llamada/Call, and Correo/Email no longer repeat there. Contact actions remain available in the profile contact card/schedule area. No contact routing, booking flow, data fetching, copy, or ES/EN messages changed.)_

@@ -792,7 +792,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                                   <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#EBF5FB] text-[#009FD9]">{f.icon}</span>
                                   <div className="min-w-0 flex-1">
                                     <p className="text-[11px] font-semibold uppercase tracking-wide text-[#9ca3af]">{f.label}</p>
-                                    <div className="mt-1 text-[15px] font-semibold text-[#162543] [overflow-wrap:anywhere]">{f.value}</div>
+                                    <div className="mt-1 text-[15px] font-medium text-[#374151] [overflow-wrap:anywhere]">{f.value}</div>
                                     {f.caption && <div className="mt-1 text-xs leading-relaxed text-[#6b7280] [overflow-wrap:anywhere]">{f.caption}</div>}
                                   </div>
                                 </div>
