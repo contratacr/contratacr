@@ -508,9 +508,8 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                               </div>
                             )}
 
-                            {/* Actions: keep the state primary visible, Cancelar direct for active
-                                bookings, Reportar as the quiet flag, and offer Reprogramar inside the
-                                cancel confirmation so the choice is clear. */}
+                            {/* Actions: Reprogramar is a direct positive action; Cancelar stays focused
+                                on cancellation only. */}
                             {(() => {
                               const isActiveB = ["pending", "confirmed", "in_progress"].includes(b.status);
                               const wa = b.professionals?.whatsapp && b.status !== "cancelled" && b.status !== "completed"
@@ -531,9 +530,24 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                 <div className="flex flex-wrap items-center gap-2 border-t border-[#eef2f6] pt-3">
                                   {primary}
                                   {isActiveB && (
-                                    <Button variant="outline" size="sm" className="flex-1 rounded-lg border-[#fecaca] px-4 text-[#dc2626] hover:border-[#fca5a5] hover:bg-[#fef2f2] hover:text-[#b91c1c] sm:flex-none" onClick={() => openCancelBooking(b.id)}>
-                                      {t("cancel")}
-                                    </Button>
+                                    <>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="flex-1 rounded-lg border-[#bfdbfe] px-4 text-[#0089bb] hover:bg-[#f8fcff] sm:flex-none"
+                                        onClick={() => {
+                                          setReschedule({ id: b.id, professionalId: b.professional_id, when: formatBookingDate(b, dateLocale) });
+                                          setCancelTarget(null);
+                                          setCancelNote("");
+                                        }}
+                                      >
+                                        <CalendarClock className="h-4 w-4" />
+                                        {t("reschedule")}
+                                      </Button>
+                                      <Button variant="outline" size="sm" className="flex-1 rounded-lg border-[#fecaca] px-4 text-[#dc2626] hover:border-[#fca5a5] hover:bg-[#fef2f2] hover:text-[#b91c1c] sm:flex-none" onClick={() => openCancelBooking(b.id)}>
+                                        {t("cancel")}
+                                      </Button>
+                                    </>
                                   )}
                                   <button
                                     type="button"
@@ -551,29 +565,6 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                               <div className="rounded-xl border border-[#e5e7eb] bg-[#fafafa] p-3">
                                 <p className="text-sm font-semibold text-[#111827]">{t("cancelTitle")}</p>
                                 <p className="mt-0.5 text-xs leading-relaxed text-[#6b7280]">{t("cancelBody")}</p>
-                                <div className="mt-3 flex gap-3 rounded-xl bg-white p-3">
-                                  <span className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#EBF5FB] text-[#0089bb]">
-                                    <CalendarClock className="h-4 w-4" />
-                                  </span>
-                                  <div className="min-w-0 flex-1">
-                                    <p className="text-sm font-semibold text-[#162543]">{t("cancelReschedulePrompt")}</p>
-                                    <p className="mt-0.5 text-xs leading-relaxed text-[#6b7280]">{t("cancelRescheduleBody")}</p>
-                                    <Button
-                                      type="button"
-                                      variant="outline"
-                                      size="sm"
-                                      className="mt-3 w-full rounded-lg border-[#bfdbfe] bg-white text-[#0089bb] hover:bg-[#f8fcff] sm:w-auto"
-                                      onClick={() => {
-                                        setReschedule({ id: b.id, professionalId: b.professional_id, when: formatBookingDate(b, dateLocale) });
-                                        setCancelTarget(null);
-                                        setCancelNote("");
-                                      }}
-                                      disabled={cancelling}
-                                    >
-                                      {t("cancelRescheduleAction")}
-                                    </Button>
-                                  </div>
-                                </div>
                                 <label className="mt-3 block text-xs font-medium text-[#374151]">{t("cancelNoteLabel")}</label>
                                 <textarea
                                   value={cancelNote}
