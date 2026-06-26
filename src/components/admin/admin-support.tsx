@@ -142,7 +142,7 @@ export function AdminSupport() {
               <div className="min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-semibold text-[#6b7280]">
-                    Caso #{supportTicketRef(ticket.id)}
+                    Caso {supportTicketRef(ticket.id)}
                   </span>
                   <p className="font-semibold text-[#111827]">{ticket.subject}</p>
                 </div>
@@ -249,7 +249,7 @@ export function AdminSupport() {
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-semibold text-[#6b7280]">
-                      Caso #{supportTicketRef(t.id)}
+                      Caso {supportTicketRef(t.id)}
                     </span>
                     <p className="text-sm font-semibold text-[#111827]">{t.subject}</p>
                     <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${STATUS_COLOR[t.status] ?? "bg-gray-100 text-gray-600"}`}>{STATUS_LABEL[t.status] ?? t.status}</span>

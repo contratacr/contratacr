@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/use-auth";
 
 const MAX_FILES = 3;
 const MAX_FILE_MB = 4;
+const SUBJECT_IDS = [0, 1, 2, 3, 4, 5] as const;
 
 type AttachedFile = { file: File; preview?: string };
 
@@ -21,18 +22,20 @@ export function SupportForm({ onSuccess }: { onSuccess?: (email: string) => void
   const { user, loading: authLoading } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
+  const [form, setForm] = useState({ name: "", email: "", topic: "", subject: "", message: "" });
   const [attachments, setAttachments] = useState<AttachedFile[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (user && !authLoading) {
-      setForm((f) => ({
-        ...f,
-        name: (user.user_metadata?.full_name as string) || (user.user_metadata?.name as string) || f.name,
-        email: user.email ?? f.email,
-      }));
+      queueMicrotask(() => {
+        setForm((f) => ({
+          ...f,
+          name: (user.user_metadata?.full_name as string) || (user.user_metadata?.name as string) || f.name,
+          email: user.email ?? f.email,
+        }));
+      });
     }
   }, [user, authLoading]);
 
@@ -92,6 +95,7 @@ export function SupportForm({ onSuccess }: { onSuccess?: (email: string) => void
       fd.append("name", form.name);
       fd.append("email", form.email);
       fd.append("subject", form.subject);
+      fd.append("topic", form.topic);
       fd.append("message", form.message);
       for (const { file } of attachments) {
         fd.append("attachments", file);
@@ -138,12 +142,16 @@ export function SupportForm({ onSuccess }: { onSuccess?: (email: string) => void
         <label className="text-sm font-medium text-[#374151] block mb-1.5">
           {t("subjectLabel")} <span className="text-red-500">*</span>
         </label>
-        <select className={inputClass + " cursor-pointer"} value={form.subject}
-          onChange={(e) => update("subject", e.target.value)} required>
+        <select className={inputClass + " cursor-pointer"} value={form.topic}
+          onChange={(e) => {
+            const topic = e.target.value;
+            update("topic", topic);
+            update("subject", topic ? t(topic) : "");
+          }} required>
           <option value="">{t("subjectPlaceholder")}</option>
-          {[0, 1, 2, 3, 4, 5].map((i) => {
-            const label = t(`subject${i}`);
-            return <option key={i} value={label}>{label}</option>;
+          {SUBJECT_IDS.map((i) => {
+            const key = `subject${i}`;
+            return <option key={i} value={key}>{t(key)}</option>;
           })}
         </select>
       </div>

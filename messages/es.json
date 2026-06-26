@@ -1915,7 +1915,7 @@
     "actionError": "No se pudo procesar. Intenta de nuevo.",
     "yourConversations": "Tus tiquetes de soporte.",
     "inboxTitle": "Casos de soporte",
-    "caseRef": "Caso #{ref}",
+    "caseRef": "Caso {ref}",
     "inboxBody": "Abre un caso nuevo o continúa una conversación existente. Te respondemos aquí y por correo.",
     "newTicket": "Contactar soporte",
     "empty": "Todavía no tienes tiquetes",
@@ -1929,6 +1929,14 @@
       "open": "Recibimos tu caso y soporte lo revisará.",
       "in_progress": "Hay una conversación activa con soporte.",
       "resolved": "Este caso está marcado como resuelto."
+    },
+    "subjects": {
+      "subject0": "Problema técnico en la plataforma",
+      "subject1": "Tengo una pregunta sobre mi cuenta",
+      "subject2": "Quiero reportar a un usuario",
+      "subject3": "Problemas con el registro para ofrecer servicios",
+      "subject4": "Problemas con una reservación o solicitud",
+      "subject5": "Otro"
     },
     "updated": "Actualizado {date}"
   },

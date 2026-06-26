@@ -38,6 +38,21 @@ const STATUS_COLOR: Record<string, string> = {
 // cleaner. Defaults to "open" (Pendiente).
 const FILTER_IDS = ["open", "in_progress", "resolved"] as const;
 const SUPPORT_TABS = FILTER_IDS.map((id) => ({ id }));
+const SUPPORT_SUBJECT_KEYS = ["subject0", "subject1", "subject2", "subject3", "subject4", "subject5"] as const;
+const LEGACY_SUBJECT_TO_KEY: Record<string, (typeof SUPPORT_SUBJECT_KEYS)[number]> = {
+  "Problema técnico en la plataforma": "subject0",
+  "Technical problem on the platform": "subject0",
+  "Tengo una pregunta sobre mi cuenta": "subject1",
+  "I have a question about my account": "subject1",
+  "Quiero reportar a un usuario": "subject2",
+  "I want to report a user": "subject2",
+  "Problemas con el registro para ofrecer servicios": "subject3",
+  "Problems registering to offer services": "subject3",
+  "Problemas con una reservación o solicitud": "subject4",
+  "Problems with a booking or request": "subject4",
+  "Otro": "subject5",
+  "Other": "subject5",
+};
 
 export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadChange?: (n: number) => void; initialTicketId?: string | null }) {
   const { user } = useAuth();
@@ -51,6 +66,12 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
   const statusHelp = (s: string) => {
     const keys = ["open", "in_progress", "resolved"];
     return keys.includes(s) ? t(`statusHelp.${s}` as "statusHelp.open" | "statusHelp.in_progress" | "statusHelp.resolved") : "";
+  };
+  const ticketSubject = (tk: Ticket) => {
+    const topicKey = SUPPORT_SUBJECT_KEYS.includes(tk.topic as (typeof SUPPORT_SUBJECT_KEYS)[number])
+      ? tk.topic as (typeof SUPPORT_SUBJECT_KEYS)[number]
+      : LEGACY_SUBJECT_TO_KEY[tk.subject];
+    return topicKey ? t(`subjects.${topicKey}`) : tk.subject;
   };
   const filterLabel = (id: string) => statusLabel(id);
   const fmt = (d: string) => new Date(d).toLocaleString(dateLocale, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
@@ -204,7 +225,7 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
                     <span className="rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-semibold text-[#6b7280]">
                       {t("caseRef", { ref: supportTicketRef(ticket.id) })}
                     </span>
-                    <h3 className="text-[15px] font-bold leading-snug text-[#162543] sm:text-base">{ticket.subject}</h3>
+                    <h3 className="text-[15px] font-bold leading-snug text-[#162543] sm:text-base">{ticketSubject(ticket)}</h3>
                     <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${STATUS_COLOR[ticket.status] ?? ""}`}>{statusLabel(ticket.status)}</span>
                   </div>
                   <p className="mt-1 text-xs leading-relaxed text-[#6b7280]">{statusHelp(ticket.status)}</p>
@@ -328,7 +349,7 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
                       <span className="rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-semibold text-[#6b7280]">
                         {t("caseRef", { ref: supportTicketRef(tk.id) })}
                       </span>
-                      <p className="min-w-0 flex-1 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere]">{tk.subject}</p>
+                      <p className="min-w-0 flex-1 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere]">{ticketSubject(tk)}</p>
                       <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${STATUS_COLOR[tk.status] ?? ""}`}>{statusLabel(tk.status)}</span>
                       {hasNew && (
                         <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#EBF5FB] text-[#0077a8]">{t("newReply")}</span>

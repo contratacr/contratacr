@@ -1922,3 +1922,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Availability i18n spacing.** Weekly availability rows must be tested with English labels such as Wednesday, Add a time range, and Apply to other days. Reserve enough weekday width and allow action links to wrap or stack before they collide with time inputs.
 
 > **Notification i18n.** Notification UI must render known notification titles through messages.*.notifications.types, because database rows may contain legacy Spanish title text. Whenever a new notification type is inserted, add it to src/lib/localized-notification.ts and both locale files.
+
+> **Support ticket i18n and refs.** Support ticket subjects must be stored with a stable topic key and rendered from locale messages. Legacy free-text subjects may be mapped at display time. Case references should use the stable SUP-XXXX-XXXX format from supportTicketRef; do not render an extra # before support refs and do not use list indexes as case numbers.

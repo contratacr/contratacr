@@ -192,7 +192,7 @@ export function AdminUserProfile({ userId }: { userId: string }) {
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="shrink-0 rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-semibold text-[#6b7280]">
-                      Caso #{supportTicketRef(t.id)}
+                      Caso {supportTicketRef(t.id)}
                     </span>
                     <p className="min-w-0 truncate text-sm font-medium text-[#111827]">{t.subject}</p>
                   </div>

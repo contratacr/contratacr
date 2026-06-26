@@ -3565,3 +3565,6 @@ New i18n namespaces added this pass: `search.pagination`, extended `search.filte
 
 
 **Sprint 305 - Localized notification titles.** Notification surfaces now render known notification titles from messages.*.notifications.types instead of trusting the stored database title. This keeps legacy Spanish notifications readable in English without a data migration. Add new notification types to localized-notification.ts and both message files.
+
+
+**Sprint 306 - Support ticket localization and refs.** Support tickets now store a stable topic key from the support form and render ticket subjects from locale messages when possible, with legacy Spanish/English subject fallback mapping. Support case references now use a stable SUP-XXXX-XXXX style derived from the ticket id instead of a 6-digit modulo number that could collide or look sequential. Admin/user support views no longer add an extra # before support refs.

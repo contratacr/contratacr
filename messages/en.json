@@ -1916,7 +1916,7 @@
     "actionError": "Couldn't process it. Try again.",
     "yourConversations": "Your support tickets.",
     "inboxTitle": "Support cases",
-    "caseRef": "Case #{ref}",
+    "caseRef": "Case {ref}",
     "inboxBody": "Open a new case or continue an existing conversation. We reply here and by email.",
     "newTicket": "Contact support",
     "empty": "You don't have any tickets yet",
@@ -1930,6 +1930,14 @@
       "open": "We received your case and support will review it.",
       "in_progress": "There is an active conversation with support.",
       "resolved": "This case is marked as resolved."
+    },
+    "subjects": {
+      "subject0": "Technical problem on the platform",
+      "subject1": "I have a question about my account",
+      "subject2": "I want to report a user",
+      "subject3": "Problems registering to offer services",
+      "subject4": "Problems with a booking or request",
+      "subject5": "Other"
     },
     "updated": "Updated {date}"
   },

@@ -1,5 +1,5 @@
 export function supportTicketRef(ticketId: string): string {
-  const hex = ticketId.replace(/[^a-fA-F0-9]/g, "").slice(0, 12);
-  if (!hex) return ticketId.slice(0, 6).toUpperCase();
-  return String((Number.parseInt(hex, 16) % 900000) + 100000);
+  const compact = ticketId.replace(/[^a-zA-Z0-9]/g, "").toUpperCase();
+  if (!compact) return ticketId.slice(0, 10).toUpperCase();
+  return `SUP-${compact.slice(0, 4)}-${compact.slice(-4)}`;
 }
