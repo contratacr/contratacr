@@ -73,6 +73,8 @@ These are **enforceable acceptance criteria**, not suggestions. Every screen mus
 
 > **Proposal price value color (sprint 583).** In Mis propuestas, `Tu precio` is factual content about the professional's own proposal, so the amount uses primary dark text (`#111827`), not brand blue. Keep the label muted grey and the shared money icon muted; reserve brand-blue emphasis for actionable states or opportunity budget availability.
 
+> **Opportunity budget value color (sprint 587).** In Oportunidades, `Presupuesto` is card metadata, not an action. The `Banknote` icon stays muted grey like the other metadata icons, and a present budget uses primary dark text (`#111827`) instead of brand blue. The empty/consult fallback remains neutral.
+
 > **Mis publicaciones publish CTA placement (sprint 584).** On desktop, `Publicar una solicitud` belongs in the section header row, inline with the `Mis publicaciones` subtitle (`Solicitudes que publicaste para recibir propuestas.`), aligned to the right. Do not place a second desktop CTA above the filters. On mobile, keep publish actions thumb-reachable (FAB/empty-state CTA) rather than forcing the full button into the header.
 
 > **Mis publicaciones proposal verification badge (sprint 585).** In each proposal card shown to the client, display the proposing professional's verification status next to their name as a small `Verificado` / `Sin verificar` badge. This is the right trust signal for choosing a proposal. Never expose the professional's or client's cédula/ID number in this proposal list.
