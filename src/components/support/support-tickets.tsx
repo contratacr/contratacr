@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Headset, ArrowLeft, Send, User, Shield, Plus } from "lucide-react";
+import { Headset, ArrowLeft, Send, User, Shield, Plus, MessageCircle, Clock3, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
 import { SupportModal } from "@/components/support/support-modal";
@@ -33,6 +33,11 @@ const STATUS_COLOR: Record<string, string> = {
   in_progress: "bg-blue-100 text-blue-700",
   resolved: "bg-emerald-100 text-emerald-700",
 };
+const STATUS_ICON = {
+  open: Clock3,
+  in_progress: MessageCircle,
+  resolved: CheckCircle2,
+} as const;
 // Status tabs only — no "Todas"; the three statuses cover every ticket and read
 // cleaner. Defaults to "open" (Pendiente).
 const FILTER_IDS = ["open", "in_progress", "resolved"] as const;
@@ -46,6 +51,10 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
   const statusLabel = (s: string) => {
     const keys = ["open", "in_progress", "resolved"];
     return keys.includes(s) ? t(`status.${s}` as "status.open" | "status.in_progress" | "status.resolved") : s;
+  };
+  const statusHelp = (s: string) => {
+    const keys = ["open", "in_progress", "resolved"];
+    return keys.includes(s) ? t(`statusHelp.${s}` as "statusHelp.open" | "statusHelp.in_progress" | "statusHelp.resolved") : "";
   };
   const filterLabel = (id: string) => statusLabel(id);
   const fmt = (d: string) => new Date(d).toLocaleString(dateLocale, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
@@ -99,7 +108,9 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
       .finally(() => setLoading(false));
   }, []);
 
-  useEffect(() => { if (!openId) { load(); loadUnread(); } }, [openId, load, loadUnread]);
+  useEffect(() => {
+    if (!openId) queueMicrotask(() => { load(); loadUnread(); });
+  }, [openId, load, loadUnread]);
 
   const openTicket = useCallback(async (id: string) => {
     setOpenId(id);
@@ -179,20 +190,30 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
   if (openId) {
     return (
       <div>
-        <button onClick={() => { setOpenId(null); setTicket(null); setMessages([]); }} className="inline-flex items-center gap-1.5 text-sm text-[#374151] hover:text-[#009FD9] mb-4">
+        <button onClick={() => { setOpenId(null); setTicket(null); setMessages([]); }} className="inline-flex items-center gap-1.5 text-sm font-medium text-[#374151] hover:text-[#009FD9] mb-4">
           <ArrowLeft className="h-4 w-4" /> {t("backToTickets")}
         </button>
 
         {threadLoading || !ticket ? (
           <div className="flex justify-center py-12"><div className="h-7 w-7 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" /></div>
         ) : (
-          <div className="bg-white rounded-2xl border border-[#e5e7eb] overflow-hidden">
-            <div className="px-5 py-4 border-b border-[#e5e7eb] flex items-center justify-between gap-3">
-              <p className="font-semibold text-[#111827] min-w-0 truncate">{ticket.subject}</p>
-              <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${STATUS_COLOR[ticket.status] ?? ""}`}>{statusLabel(ticket.status)}</span>
+          <div className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+            <div className="px-4 py-4 border-b border-[#e5e7eb] sm:px-5">
+              <div className="flex items-start gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#ccecf8] bg-[#EAF7FD] text-[#0089bb] shadow-[0_8px_20px_-18px_rgba(0,159,217,0.9)]">
+                  <Headset className="h-[18px] w-[18px]" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="text-[15px] font-bold leading-snug text-[#162543] sm:text-base">{ticket.subject}</h3>
+                    <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${STATUS_COLOR[ticket.status] ?? ""}`}>{statusLabel(ticket.status)}</span>
+                  </div>
+                  <p className="mt-1 text-xs leading-relaxed text-[#6b7280]">{statusHelp(ticket.status)}</p>
+                </div>
+              </div>
             </div>
 
-            <div className="p-5 flex flex-col gap-3 max-h-[460px] overflow-y-auto bg-[#f9fafb]">
+            <div className="p-4 sm:p-5 flex flex-col gap-3 max-h-[460px] overflow-y-auto bg-[#f9fafb]">
               {messages.map((m) => (
                 <div key={m.id} className={`flex ${m.sender_role === "user" ? "justify-end" : "justify-start"}`}>
                   <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 ${m.sender_role === "user" ? "bg-[#009FD9] text-white" : "bg-white border border-[#e5e7eb] text-[#374151]"}`}>
@@ -248,9 +269,18 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
 
   // ── List view ──
   return (
-    <div>
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-        <p className="text-sm text-[#6b7280]">{t("yourConversations")}</p>
+    <div className="space-y-4">
+      <div className="rounded-2xl border border-[#dbe4ee] bg-white p-4 shadow-sm sm:p-5">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex items-start gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#ccecf8] bg-[#EAF7FD] text-[#0089bb] shadow-[0_8px_20px_-18px_rgba(0,159,217,0.9)]">
+              <Headset className="h-[18px] w-[18px]" />
+            </span>
+            <div className="min-w-0">
+              <h3 className="text-[15px] font-bold text-[#162543] sm:text-base">{t("inboxTitle")}</h3>
+              <p className="mt-1 text-sm leading-relaxed text-[#6b7280]">{t("inboxBody")}</p>
+            </div>
+          </div>
         {/* Header action shows ONLY once tickets have loaded AND there's at least one
             (the persistent action above the list). It must NOT render while loading
             (that flashed the "has tickets" treatment before data arrived) nor in the
@@ -261,6 +291,7 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
             <Plus className="h-4 w-4" /> {t("newTicket")}
           </button>
         )}
+        </div>
       </div>
 
       {/* Status filter — the SHARED tab style (consistent with solicitudes/proyectos):
@@ -292,22 +323,33 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
       ) : filtered.length === 0 ? (
         <p className="text-sm text-[#9ca3af] text-center py-8">{t("noneInView")}</p>
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-3">
           {filtered.map((tk) => {
             const hasNew = unread.has(tk.id);
+            const StatusIcon = STATUS_ICON[tk.status as keyof typeof STATUS_ICON] ?? MessageCircle;
             return (
-              <button key={tk.id} onClick={() => openTicket(tk.id)} className={`text-left bg-white rounded-2xl border p-4 shadow-sm transition-all ${hasNew ? "border-[#bfe3f5] ring-1 ring-[#EBF5FB]" : "border-[#e5e7eb] hover:border-[#bfe3f5]"}`}>
-                <div className="flex items-center gap-2 flex-wrap">
-                  {hasNew && <span className="h-2 w-2 rounded-full bg-[#009FD9] shrink-0" />}
-                  <p className="text-sm font-semibold text-[#111827]">{tk.subject}</p>
-                  {/* No per-card status pill: the active status tab already says it (the
-                      list is always within ONE status filter, so it would be redundant). */}
-                  {hasNew && (
-                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#EBF5FB] text-[#0077a8]">{t("newReply")}</span>
-                  )}
+              <button key={tk.id} onClick={() => openTicket(tk.id)} className={`group text-left bg-white rounded-2xl border p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md sm:p-5 ${hasNew ? "border-[#bfe3f5] ring-1 ring-[#EBF5FB]" : "border-[#e5e7eb] hover:border-[#bfe3f5]"}`}>
+                <div className="flex items-start gap-3">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#ccecf8] bg-[#EAF7FD] text-[#0089bb] shadow-[0_8px_20px_-18px_rgba(0,159,217,0.9)]">
+                    <StatusIcon className="h-[18px] w-[18px]" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="min-w-0 flex-1 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere]">{tk.subject}</p>
+                      <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${STATUS_COLOR[tk.status] ?? ""}`}>{statusLabel(tk.status)}</span>
+                      {hasNew && (
+                        <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#EBF5FB] text-[#0077a8]">{t("newReply")}</span>
+                      )}
+                    </div>
+                    <p className="mt-1 text-xs leading-relaxed text-[#6b7280]">{statusHelp(tk.status)}</p>
+                    <p className="mt-2 flex items-center gap-1.5 text-xs text-[#9ca3af]">
+                      <Clock3 className="h-3.5 w-3.5" />
+                      {t("updated", { date: fmt(tk.last_reply_at || tk.created_at) })}
+                    </p>
+                    <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-[#4b5563]">{tk.message}</p>
+                    <span className="mt-3 inline-flex text-sm font-semibold text-[#009FD9] group-hover:underline">{hasNew ? t("viewReply") : t("openConversation")}</span>
+                  </div>
                 </div>
-                <p className="text-xs text-[#9ca3af] mt-0.5">{t("updated", { date: fmt(tk.last_reply_at || tk.created_at) })}</p>
-                <p className="text-sm text-[#6b7280] line-clamp-1 mt-1">{tk.message}</p>
               </button>
             );
           })}

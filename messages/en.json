@@ -1915,12 +1915,21 @@
     "sendError": "Couldn't send the message.",
     "actionError": "Couldn't process it. Try again.",
     "yourConversations": "Your support tickets.",
+    "inboxTitle": "Support cases",
+    "inboxBody": "Open a new case or continue an existing conversation. We reply here and by email.",
     "newTicket": "Contact support",
     "empty": "You don't have any tickets yet",
     "emptySub": "If you need help, contact us and we'll reply here and by email.",
     "openTicket": "Contact support",
     "noneInView": "No tickets in this view.",
     "newReply": "New reply",
+    "viewReply": "View reply",
+    "openConversation": "Open conversation",
+    "statusHelp": {
+      "open": "We received your case and support will review it.",
+      "in_progress": "There is an active conversation with support.",
+      "resolved": "This case is marked as resolved."
+    },
     "updated": "Updated {date}"
   },
   "savedPros": {

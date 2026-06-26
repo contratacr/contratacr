@@ -1914,12 +1914,21 @@
     "sendError": "No se pudo enviar el mensaje.",
     "actionError": "No se pudo procesar. Intenta de nuevo.",
     "yourConversations": "Tus tiquetes de soporte.",
+    "inboxTitle": "Casos de soporte",
+    "inboxBody": "Abre un caso nuevo o continúa una conversación existente. Te respondemos aquí y por correo.",
     "newTicket": "Contactar soporte",
     "empty": "Todavía no tienes tiquetes",
     "emptySub": "Si necesitas ayuda, contáctanos y te respondemos por aquí y por correo.",
     "openTicket": "Contactar soporte",
     "noneInView": "No hay tiquetes en esta vista.",
     "newReply": "Nueva respuesta",
+    "viewReply": "Ver respuesta",
+    "openConversation": "Abrir conversación",
+    "statusHelp": {
+      "open": "Recibimos tu caso y soporte lo revisará.",
+      "in_progress": "Hay una conversación activa con soporte.",
+      "resolved": "Este caso está marcado como resuelto."
+    },
     "updated": "Actualizado {date}"
   },
   "savedPros": {
