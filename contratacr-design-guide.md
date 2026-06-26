@@ -1799,6 +1799,8 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 
 > **Oportunidades compact metadata.** In collapsed Oportunidades cards, keep the core metadata trio (service/category, location, timeline) grouped together, but never force it into fixed 3-column phone widths. Use flexible wrapping metadata rows: one row when it naturally fits, two rows when needed. Keep budget and created-at separate so the row remains scannable, and prioritize full readable labels over a forced one-line layout.
 
+> **Success-case detail modal responsive height.** The public profile Casos de éxito detail modal is full-height on phones (`100dvh`) with the photo stage fixed to a controlled top area and the info column scrolling independently with safe-area bottom padding. Do not use a centered `max-h: vh` modal plus overlay padding on mobile, because browser chrome/safe-area can cut off the bottom. Desktop/tablet can stay centered with `sm:max-h-[92vh]`.
+
 > **Support icon consistency.** Use the Headset icon for Soporte across the dashboard panel and responsive navbar resources. Avoid MessageCircle for Soporte because it reads like chat/WhatsApp instead of support center.
 
 > **Back-to-top scope.** The global back-to-top floating button is for public long-scroll pages only. Do not show it inside dashboard/admin panels, especially on responsive, because it competes with panel navigation and bottom controls.

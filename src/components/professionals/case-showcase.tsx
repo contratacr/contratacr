@@ -165,9 +165,9 @@ export function CaseShowcase({
         const photos = c.photos;
         const cur = photos[pi] ?? photos[0];
         return (
-          <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/70 p-4 sm:p-6" onClick={close}>
+          <div className="fixed inset-0 z-[300] flex items-stretch justify-stretch bg-black/70 p-0 sm:items-center sm:justify-center sm:p-6" onClick={close}>
             <div
-              className="relative flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl sm:flex-row"
+              className="relative flex h-[100dvh] max-h-[100dvh] w-full flex-col overflow-hidden bg-white shadow-2xl sm:h-auto sm:max-h-[92vh] sm:max-w-5xl sm:rounded-2xl sm:flex-row"
               onClick={(e) => e.stopPropagation()}
               role="dialog"
               aria-modal="true"
@@ -183,7 +183,7 @@ export function CaseShowcase({
 
               {/* PHOTO viewer — larger, browsable (arrows + thumbnails). */}
               {cur && (
-                <div className="relative flex h-[46vh] shrink-0 items-center justify-center overflow-hidden bg-[#111827] sm:h-auto sm:min-h-[620px] sm:w-[62%]">
+                <div className="relative flex h-[42dvh] min-h-[220px] shrink-0 items-center justify-center overflow-hidden bg-[#111827] sm:h-auto sm:min-h-[620px] sm:w-[62%]">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={cldLarge(cur, 900)} alt="" aria-hidden className="absolute inset-0 h-full w-full scale-110 object-cover opacity-35 blur-2xl" />
                   <div className="absolute inset-0 bg-black/35" />
@@ -206,7 +206,7 @@ export function CaseShowcase({
               )}
 
               {/* INFO — the service, recipient, date + full description, with room to breathe. */}
-              <div className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto p-5 sm:p-6">
+              <div className="flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto p-5 pb-[max(env(safe-area-inset-bottom),1.25rem)] sm:p-6">
                 <span className="inline-flex w-fit rounded-full bg-[#EBF5FB] px-2.5 py-1 text-[11px] font-bold text-[#0089bb]">{profLabel(c.profession)}</span>
                 {c.title && <h3 className="text-xl font-bold leading-snug text-[#162543] [overflow-wrap:anywhere]">{c.title}</h3>}
                 {(c.recipient || c.date) && (
