@@ -756,9 +756,9 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                       facts.push({
                         key: "price", icon: <ReceiptText className="h-5 w-5" />, label: t("prices"),
                         value: (
-                          <div className="divide-y divide-[#eef2f6]">
+                          <div className="space-y-3">
                             {professional.services.map((service) => (
-                              <div key={service.id} className="py-2 first:pt-0 last:pb-0">
+                              <div key={service.id}>
                                 <span className="block text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af] [overflow-wrap:anywhere]">{service.name}</span>
                                 <span className="mt-0.5 block text-[15px] font-semibold leading-snug text-[#374151] [overflow-wrap:anywhere]">{service.price || t("priceConsult")}</span>
                               </div>
@@ -769,7 +769,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                     } else if (professional.pricing && professional.pricing.length > 0) {
                       facts.push({
                         key: "price", icon: <ReceiptText className="h-5 w-5" />, label: t("prices"),
-                        value: <div className="divide-y divide-[#eef2f6]">{professional.pricing.map((tier) => <div key={tier.id} className="py-2 first:pt-0 last:pb-0 font-semibold text-[#162543]">{formatPricingTier(tier)}</div>)}</div>,
+                        value: <div className="space-y-2">{professional.pricing.map((tier) => <div key={tier.id} className="font-semibold text-[#162543]">{formatPricingTier(tier)}</div>)}</div>,
                       });
                     } else if (rate) {
                       facts.push({ key: "rate", icon: <ReceiptText className="h-5 w-5" />, label: t("baseRate"), value: rate, caption: t("baseRateCaption") });
