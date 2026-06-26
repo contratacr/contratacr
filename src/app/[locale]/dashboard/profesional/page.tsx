@@ -469,7 +469,7 @@ export default function DashboardPage() {
                         <div className="relative">
                           <div className="flex min-w-0 items-center gap-2 pr-28">
                             <h2 className="min-w-0 truncate text-lg font-semibold text-[#111827]">{activeTab === "services" ? t("servicesHeading") : t(`tabs.${activeTab}`)}</h2>
-                            <span className="inline-flex shrink-0 items-center rounded-full border border-[#d8eef8] bg-[#EBF5FB] px-2.5 py-0.5 text-[11px] font-semibold text-[#0089bb] lg:hidden">
+                            <span className="inline-flex shrink-0 items-center rounded-full border border-[#d8eef8] bg-[#EBF5FB] px-2.5 py-0.5 text-[11px] font-semibold text-[#0089bb]">
                               {panelLabelFor(activeTab)}
                             </span>
                             {activeTab === "profile" && mode === "offer" && pro?.slug && (
