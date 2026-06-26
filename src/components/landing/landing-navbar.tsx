@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import {
   X, Menu, ChevronDown, ChevronRight, Search, MapPin, LogIn,
-  LayoutDashboard, LogOut, Bookmark, CalendarCheck, CalendarDays, ClipboardList, Send, Handshake, UserPlus, Briefcase, Compass, Settings, Bell, Globe, Check,
+  LayoutDashboard, LogOut, Bookmark, CalendarCheck, CalendarClock, CalendarDays, ClipboardList, Send, Handshake, UserPlus, Briefcase, Compass, Settings, Bell, Globe, Check,
   HelpCircle, Lightbulb, Headset, ListChecks,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
@@ -675,7 +675,7 @@ function AccountMenu({
           ) : (
             <>
               <a href={sentBookingsHref} onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors">
-                <CalendarDays className="h-4 w-4 text-gray-400" />
+                <CalendarClock className="h-4 w-4 text-gray-400" />
                 {t("myRequests")}
               </a>
               <a href={sentProjectsHref} onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors">

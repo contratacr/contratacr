@@ -5,8 +5,8 @@ import { useTranslations } from "next-intl";
 import { isSigningOut } from "@/lib/auth/sign-out";
 import { useSearchParams } from "next/navigation";
 import {
-  User, Award, CalendarCheck, CalendarDays, ExternalLink, Wrench,
-  ShieldCheck, Bell, Send, Handshake, ClipboardList, Bookmark, Settings, Headset, CreditCard,
+  User, Award, CalendarCheck, CalendarClock, CalendarDays, ExternalLink, Wrench,
+  ShieldCheck, Bell, Handshake, ClipboardList, Bookmark, Settings, Headset, CreditCard,
   ArrowRight, Sparkles, Menu, X, Repeat2,
 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
@@ -64,7 +64,7 @@ const TAB_ICONS: Record<Tab, React.ReactNode> = {
   proposals: <Handshake className="h-4 w-4" />,
   verificacion: <ShieldCheck className="h-4 w-4" />,
   suscripcion: <CreditCard className="h-4 w-4" />,
-  sent_bookings: <Send className="h-4 w-4" />,
+  sent_bookings: <CalendarClock className="h-4 w-4" />,
   sent_projects: <ClipboardList className="h-4 w-4" />,
   saved: <Bookmark className="h-4 w-4" />,
   notifications: <Bell className="h-4 w-4" />,
