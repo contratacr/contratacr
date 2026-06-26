@@ -3359,3 +3359,5 @@ New i18n namespaces added this pass: `search.pagination`, extended `search.filte
 **Sprint 257 - Back-to-top hidden in panels.** back-to-top.tsx: made the global BackToTop button route-aware and disabled it for /dashboard and /admin paths so the floating scroll-up control no longer appears in responsive panel views. Public long-scroll pages keep the button. No i18n changes.
 
 **Sprint 258 - Back-to-top hidden on search app surface.** back-to-top.tsx: extended the BackToTop exclusion to /buscar, treating search like dashboard/admin app surfaces because it already has map/results controls and a floating scroll-up button competes with responsive navigation. Public long-scroll content pages still keep the button. No i18n changes.
+
+**Sprint 259 - Responsive navbar account menus simplified.** landing-navbar.tsx: removed Notificaciones from the phone hamburger drawer and made the avatar dropdown's mode-specific quick links desktop-only. On phone, the avatar menu now stays account-focused (Mi panel, Notificaciones, Cuenta, idioma, salir), while the hamburger drawer remains general navigation. No i18n changes.

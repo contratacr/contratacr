@@ -1802,3 +1802,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Back-to-top scope.** The global back-to-top floating button is for public long-scroll pages only. Do not show it inside dashboard/admin panels, especially on responsive, because it competes with panel navigation and bottom controls.
 
 > **Back-to-top search exclusion.** Do not show the global back-to-top floating button on /buscar. Search is an app surface with map/results controls, so extra floating scroll controls create clutter on responsive.
+
+> **Responsive navbar account scope.** On phone, the hamburger drawer is for general navigation and should not include Notificaciones. The avatar dropdown should stay short and account-focused; hide mode-specific quick links there on mobile and send users to Mi panel for detailed sections.

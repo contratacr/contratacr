@@ -637,7 +637,8 @@ function AccountMenu({
             {t("myPanel")}
           </a>
 
-          {/* Mode-specific quick links — the menu is the active world, Airbnb-style. */}
+          {/* Desktop-only quick links; phone keeps the avatar menu short and account-focused. */}
+          <div className="hidden lg:block">
           {mode === "offer" ? (
             <>
               <a href={bookingsHref} onClick={() => setOpen(false)} className="flex items-center gap-2.5 px-3 py-2 text-sm text-[#374151] hover:bg-[#f9fafb] transition-colors">
@@ -665,6 +666,7 @@ function AccountMenu({
               </a>
             </>
           )}
+          </div>
 
           <a
             href={notificationsHref}
@@ -1405,13 +1407,6 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     </a>
                   </>
                 )}
-                <a href={notificationsHref} onClick={() => setMobileOpen(false)} className="flex min-h-11 items-center gap-3 py-2.5 text-sm font-medium text-[#374151] transition-colors hover:text-[#009FD9]">
-                  <Bell className="h-4 w-4 shrink-0 text-gray-400" />
-                  <span className="flex-1">{t("notifications")}</span>
-                  {activeUnread > 0 && (
-                    <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold text-white shrink-0">{activeUnread > 9 ? "9+" : activeUnread}</span>
-                  )}
-                </a>
                 {!isPro && (
                   <Link href="/registro/profesional" onClick={() => setMobileOpen(false)} className="flex min-h-11 items-center gap-3 py-2.5 text-sm font-semibold text-[#009FD9] transition-colors hover:text-[#0089bb]">
                     <Briefcase className="h-4 w-4 shrink-0" />
