@@ -408,7 +408,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                           aria-expanded={expandedBooking === b.id}
                           className={cn("group w-full cursor-pointer text-left p-4 sm:p-5 flex items-start gap-3.5 hover:bg-[#f9fbfd] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]", expandedBooking === b.id ? "rounded-t-2xl bg-[#fbfdff]" : "rounded-2xl")}
                         >
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EBF5FB] text-[#0089bb]">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#ccecf8] bg-[#EAF7FD] text-[#0089bb] shadow-[0_8px_20px_-18px_rgba(0,159,217,0.9)]">
                             <CalendarDays className="h-[18px] w-[18px]" />
                           </div>
                           <div className="flex-1 min-w-0">
@@ -595,7 +595,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                       className={cn("group w-full text-left p-4 sm:p-5 hover:bg-[#f9fbfd] transition-colors", isExpanded ? "rounded-t-2xl bg-[#fbfdff]" : "rounded-2xl")}
                     >
                       <div className="flex items-start gap-3.5">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EBF5FB] text-[#0089bb]">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#ccecf8] bg-[#EAF7FD] text-[#0089bb] shadow-[0_8px_20px_-18px_rgba(0,159,217,0.9)]">
                           <ClipboardList className="h-[18px] w-[18px]" />
                         </div>
                         <div className="min-w-0 flex-1">
