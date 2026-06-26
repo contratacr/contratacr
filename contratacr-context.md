@@ -1,5 +1,7 @@
 # ContrataCR.com — Project Context
 
+_Last updated: 2026-06-26 (sprint 591 - **Client profile phone notice simplified** (`messages/es.json`, `messages/en.json`). The client profile phone notice no longer says "crear solicitudes o solicitar servicios"; it now says the phone is optional here but needed to request services. English parity was updated to remove "post requests or". No form behavior, phone validation, profile save logic, routing, or responsive structure changed.)_
+
 _Last updated: 2026-06-26 (sprint 590 - **Status filter counters simplified** (`status-filter-tabs.tsx`, design guide). Status filter counts no longer render as rounded pills. They now appear as tiny inline tabular numbers next to the label, active in brand-blue and inactive in muted grey. This reduces horizontal footprint further so three filters/services fit on one row more often. No filter logic, bucket counts, labels, routing, or panel data changed.)_
 
 _Last updated: 2026-06-26 (sprint 589 - **Proposal verification badge matched panel style** (`client-activity.tsx`, design guide). The professional verification indicator shown inside Mis publicaciones proposal cards now uses the same visual treatment as the panel header under the name: verified = solid brand-blue `Badge variant="verified"`; not verified = grey rounded pill with border/background/text matching the panel's `Sin verificar` control. No proposal data, API payload, i18n keys, action behavior, routing, or responsive structure changed.)_
