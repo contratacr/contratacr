@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import {
-  X, Menu, ChevronDown, ChevronRight, Search, MapPin,
+  X, Menu, ChevronDown, ChevronRight, Search, MapPin, LogIn,
   LayoutDashboard, LogOut, Bookmark, CalendarDays, FolderOpen, UserPlus, Briefcase, Compass, Settings, Bell, Globe, Inbox, Check,
   HelpCircle, Lightbulb, Headset, ListChecks,
 } from "lucide-react";
@@ -1421,23 +1421,41 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
               </div>
             )}
 
-            {/* CUENTA (logged-OUT) — account actions sit right after browse, clearly
-                visible but not first: new clients register when they REQUEST a
-                service (no "register as client" here), so only Ingresar (returning)
-                + Registrarse como profesional (people who offer services). */}
+            {/* VISITOR ACTIONS — logged-out visitors think "find a service" first,
+                then "offer services" or "log in". Keep this as one compact marketplace
+                action block instead of separate account cards. */}
             {!user && (
               <div className="mb-5">
-                <p className="pb-2 text-[10px] font-bold uppercase tracking-widest text-gray-400">{t("account")}</p>
-                <div className="flex flex-col gap-2">
-                  <Link href={loginHref} onClick={() => setMobileOpen(false)}
-                    className="w-full rounded-xl border border-gray-200 px-4 py-3 text-center text-sm font-semibold text-[#374151] transition-colors hover:border-[#009FD9]/30 hover:text-[#009FD9]">
-                    {t("login")}
+                <div className="rounded-2xl border border-[#e8eef5] bg-[#f8fbfd] p-3">
+                  <Link
+                    href="/buscar"
+                    onClick={() => setMobileOpen(false)}
+                    className="flex min-h-12 w-full items-center gap-3 rounded-xl bg-[#009FD9] px-3.5 py-3 text-sm font-bold text-white shadow-sm shadow-[#009FD9]/20 transition-colors hover:bg-[#0089bb]"
+                  >
+                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-white/15 text-white">
+                      <Search className="h-4 w-4" />
+                    </span>
+                    <span className="min-w-0 flex-1">{t("searchProfessionals")}</span>
+                    <ChevronRight className="h-4 w-4 shrink-0 text-white/80" />
                   </Link>
-                  <Link href="/registro/profesional" onClick={() => setMobileOpen(false)}
-                    className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#009FD9] px-4 py-3 text-center text-sm font-bold text-white transition-colors hover:bg-[#0089bb]">
-                    <UserPlus className="h-4 w-4" />
-                    {t("registerPro")}
-                  </Link>
+                  <div className="mt-2 flex flex-col gap-2">
+                    <Link
+                      href="/registro/profesional"
+                      onClick={() => setMobileOpen(false)}
+                      className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#d8eef8] bg-white px-3 py-2.5 text-center text-[13px] font-semibold leading-tight text-[#0089bb] transition-colors hover:border-[#009FD9]/50 hover:bg-[#f0f9fd]"
+                    >
+                      <Briefcase className="h-4 w-4 shrink-0" />
+                      <span className="min-w-0">{t("registerPro")}</span>
+                    </Link>
+                    <Link
+                      href={loginHref}
+                      onClick={() => setMobileOpen(false)}
+                      className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-center text-[13px] font-semibold leading-tight text-[#374151] transition-colors hover:border-[#009FD9]/30 hover:text-[#009FD9]"
+                    >
+                      <LogIn className="h-4 w-4 shrink-0 text-gray-400" />
+                      <span className="min-w-0">{t("login")}</span>
+                    </Link>
+                  </div>
                 </div>
               </div>
             )}
