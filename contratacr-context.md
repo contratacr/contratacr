@@ -3357,3 +3357,5 @@ New i18n namespaces added this pass: `search.pagination`, extended `search.filte
 **Sprint 256 - Navbar support icon aligned with panel.** landing-navbar.tsx: changed the responsive navbar Resources > Soporte icon from MessageCircle to Headset so it matches the Soporte icon used in the dashboard panel. No route, label, desktop, or i18n changes.
 
 **Sprint 257 - Back-to-top hidden in panels.** back-to-top.tsx: made the global BackToTop button route-aware and disabled it for /dashboard and /admin paths so the floating scroll-up control no longer appears in responsive panel views. Public long-scroll pages keep the button. No i18n changes.
+
+**Sprint 258 - Back-to-top hidden on search app surface.** back-to-top.tsx: extended the BackToTop exclusion to /buscar, treating search like dashboard/admin app surfaces because it already has map/results controls and a floating scroll-up button competes with responsive navigation. Public long-scroll content pages still keep the button. No i18n changes.

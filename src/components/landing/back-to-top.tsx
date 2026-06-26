@@ -10,10 +10,11 @@ export function BackToTop() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") ?? "";
-  const isPanel = /(^|\/)(dashboard|admin)(\/|$)/.test(pathname) || /(^|\/)(dashboard|admin)(\/|$)/.test(redirect);
+  const hasAppSurfacePath = (value: string) => /(^|\/)(dashboard|admin|buscar)(\/|$)/.test(value);
+  const isAppSurface = hasAppSurfacePath(pathname) || hasAppSurfacePath(redirect);
 
   useEffect(() => {
-    if (isPanel) {
+    if (isAppSurface) {
       queueMicrotask(() => setVisible(false));
       return;
     }
@@ -21,9 +22,9 @@ export function BackToTop() {
     handler();
     window.addEventListener("scroll", handler, { passive: true });
     return () => window.removeEventListener("scroll", handler);
-  }, [isPanel]);
+  }, [isAppSurface]);
 
-  if (isPanel) return null;
+  if (isAppSurface) return null;
 
   function scrollToTop() {
     window.scrollTo({ top: 0, behavior: "smooth" });
