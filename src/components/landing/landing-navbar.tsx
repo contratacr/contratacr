@@ -163,15 +163,13 @@ function LanguageInline({ className }: { className?: string }) {
             onClick={() => switchLang(l.code)}
             aria-pressed={active}
             className={cn(
-              "inline-flex h-10 items-center justify-center gap-2 rounded-xl border px-3 text-sm font-semibold transition-colors",
+              "inline-flex h-10 items-center justify-center rounded-xl border px-3 text-sm font-semibold transition-colors",
               active
-                ? "border-[#ccecf8] bg-[#EBF5FB] text-[#0089bb]"
+                ? "border-[#009FD9] bg-[#EBF5FB] text-[#0089bb] shadow-[0_8px_18px_-16px_rgba(0,159,217,0.9)]"
                 : "border-[#e5e7eb] bg-white text-[#6b7280] hover:border-[#cbd5e1] hover:text-[#162543]",
             )}
           >
-            <span>{l.code.toUpperCase()}</span>
-            <span className="hidden min-[360px]:inline">{l.label}</span>
-            {active && <Check className="h-4 w-4 shrink-0" />}
+            <span>{l.label}</span>
           </button>
         );
       })}
@@ -1368,6 +1366,15 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
           {/* Scrollable content - mirrors the desktop navbar with mobile icon rows. */}
           <div className="flex-1 overflow-y-auto px-4 py-4">
             <div className="overflow-hidden rounded-2xl border border-[#e8eef5] bg-white shadow-[0_18px_45px_-26px_rgba(15,23,42,0.65)]">
+              {/* Smart search on mobile */}
+              <div className="border-b border-[#edf2f7] p-2">
+                <CategoryAutocomplete
+                  placeholder={t("searchServicePlaceholderShort")}
+                  size="lg"
+                  onNavigate={() => setMobileOpen(false)}
+                />
+              </div>
+
               {user ? (
                 <div className="border-b border-[#edf2f7] p-1.5">
                   <div className="mb-1 flex items-center gap-3 rounded-xl bg-[#f8fafc] px-3 py-3">
@@ -1429,15 +1436,6 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                   </div>
                 </div>
               )}
-
-              {/* Smart search on mobile */}
-              <div className="border-b border-[#edf2f7] p-2">
-                <CategoryAutocomplete
-                  placeholder={t("searchServicePlaceholderShort")}
-                  size="lg"
-                  onNavigate={() => setMobileOpen(false)}
-                />
-              </div>
 
               <div className="border-b border-[#edf2f7] p-1.5">
                 <div className="flex flex-col gap-0.5">
