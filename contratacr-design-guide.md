@@ -249,6 +249,8 @@ Use the standard 4px Tailwind steps. Defaults for this app:
 
 **Professional profile description is required:** the main profile `Descripción` / `Description` field (`bio`) is part of the "Completa tu perfil" required checklist. Do not label it optional in the profile editor; show it with the required `*`. Optional copy is only valid for the separate identity verification suggestion, business name, social links, extra languages, insurers, and other non-completion extras.
 
+> **Public profile About verification row removed (sprint 569).** Sobre m? / About must not show a standalone Confianza/Trust row with Verificado/Verified. The verification state belongs in the profile header badge only; repeating it inside About adds clutter. Keep About focused on useful profile details: description, experience, languages, insurers, prices, and workplaces.
+
 > **Public profile About contact row removed (sprint 568).** Sobre m? / About must not show a standalone Contacto row listing WhatsApp, Llamada, or Correo. Those options belong to the profile contact card/action area, not the About facts. Keep About focused on description, trust/experience, languages, insurers, prices, and workplaces.
 
 **Public professional About tab:** do not repeat the professional name or professions inside `Sobre mí` / `About`; those already belong to the profile header. The About tab should read as one unified fact list. If `bio` exists, render it as the first flat row with a `FileText` icon, `Sobre mí` / `About` label, and the description text, followed by verification, experience, languages, prices, and workplaces.

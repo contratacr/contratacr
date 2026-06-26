@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, type ReactNode } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import {
-  MapPin, Shield, ShieldCheck, ArrowLeft, Star, Briefcase, Camera, Coins, Languages,
+  MapPin, Shield, ArrowLeft, Star, Briefcase, Camera, Coins, Languages,
   Share2, Flag, ChevronDown, Lock, Building2, Award, Mail, SearchX, FileText,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -781,10 +781,6 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                           ))}
                         </span>
                       ) : undefined,
-                    });
-                    if (professional.verificationStatus === "verified") facts.push({
-                      key: "verif", icon: <ShieldCheck className="h-5 w-5" />, label: t("trust"),
-                      value: <span className="text-[#15803d]">{t("verified")}</span>,
                     });
                     return (
                       <div className="flex flex-col gap-5">
