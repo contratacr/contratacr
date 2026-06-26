@@ -828,22 +828,15 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
   // The active mode's unread (its own + account-level) → the bell + the menu's
   // Notificaciones badge. The mode switch itself stays clean (no badge).
   const activeUnread = proUnread + clientUnread + neutralUnread;
-  const navPath = pathname.replace(/^\/(es|en)(?=\/|$)/, "") || "/";
-  const categoriesActive = navPath === "/categorias" || navPath.startsWith("/buscar");
-  const resourcesActive = RESOURCES_LINKS.some((link) => navPath === link.href || navPath.startsWith(`${link.href}/`));
-  const panelActive = navPath.startsWith("/dashboard/profesional");
-  const notificationsActive = navPath.startsWith("/notificaciones");
   const mobileRowBase = "relative flex min-h-[48px] w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors before:absolute before:left-0 before:top-3 before:bottom-3 before:w-0.5 before:rounded-r-full before:bg-[#009FD9] before:transition-opacity";
-  const mobileRowClass = (active: boolean, strong = false) => cn(
+  const mobileRowClass = (_active: boolean, strong = false) => cn(
     mobileRowBase,
-    active
-      ? "bg-[#EBF5FB] text-[#0089bb] before:opacity-100"
-      : strong
-        ? "text-[#162543] before:opacity-0 hover:bg-[#f8fafc] hover:text-[#0089bb]"
-        : "text-[#4b5563] before:opacity-0 hover:bg-[#f8fafc] hover:text-[#0089bb]"
+    strong
+      ? "text-[#162543] before:opacity-0 hover:bg-[#f8fafc] hover:text-[#0089bb]"
+      : "text-[#4b5563] before:opacity-0 hover:bg-[#f8fafc] hover:text-[#0089bb]"
   );
-  const mobileIconClass = (active: boolean) => cn("h-4 w-4 shrink-0", active ? "text-[#0089bb]" : "text-[#9ca3af]");
-  const mobileChevronClass = (active: boolean) => cn("h-4 w-4 shrink-0", active ? "text-[#0089bb]" : "text-gray-300");
+  const mobileIconClass = (_active: boolean) => "h-4 w-4 shrink-0 text-[#9ca3af]";
+  const mobileChevronClass = (_active: boolean) => "h-4 w-4 shrink-0 text-gray-300";
 
   const compactSuggestions = useMemo(() => matchCategories(searchQuery, 8, locale), [searchQuery, locale]);
   const navLocSug = useMemo(() => searchLocations(navLocation), [navLocation]);
@@ -1032,11 +1025,9 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                   <button
                     className={cn(
                       "relative flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-medium transition-colors after:absolute after:left-4 after:right-4 after:-bottom-1 after:h-0.5 after:rounded-full after:bg-[#009FD9] after:transition-opacity",
-                      categoriesActive
-                        ? "text-[#1a2744] bg-gray-50 after:opacity-100"
-                        : openMenu === "categorias"
-                          ? "text-[#1a2744] after:opacity-0"
-                          : "text-[#374151] after:opacity-0 hover:text-[#1a2744] hover:bg-gray-50"
+                      openMenu === "categorias"
+                        ? "text-[#1a2744] bg-gray-50 after:opacity-0"
+                        : "text-[#374151] after:opacity-0 hover:text-[#1a2744] hover:bg-gray-50"
                     )}
                   >
                     {t("categories")}
@@ -1067,7 +1058,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                   <button
                     className={cn(
                       "relative flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-medium transition-colors after:absolute after:left-4 after:right-4 after:-bottom-1 after:h-0.5 after:rounded-full after:bg-[#009FD9] after:transition-opacity",
-                      openMenu === "recursos" || resourcesActive ? "text-[#1a2744] bg-gray-50 after:opacity-100" : "text-[#374151] after:opacity-0 hover:text-[#1a2744] hover:bg-gray-50"
+                      openMenu === "recursos" ? "text-[#1a2744] bg-gray-50 after:opacity-0" : "text-[#374151] after:opacity-0 hover:text-[#1a2744] hover:bg-gray-50"
                     )}
                   >
                     {t("resources")}
@@ -1125,10 +1116,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     {/* Mode switch removed from the navbar (sprint 518) — it lives inside "Mi panel". */}
                     <a
                       href={primaryPanelHref}
-                      className={cn(
-                        "relative text-sm font-medium px-3 py-2 transition-colors whitespace-nowrap after:absolute after:left-3 after:right-3 after:-bottom-1 after:h-0.5 after:rounded-full after:bg-[#009FD9] after:transition-opacity",
-                        panelActive ? "text-[#1a2744] after:opacity-100" : "text-[#374151] after:opacity-0 hover:text-[#1a2744]"
-                      )}
+                      className="relative text-sm font-medium px-3 py-2 text-[#374151] transition-colors whitespace-nowrap after:absolute after:left-3 after:right-3 after:-bottom-1 after:h-0.5 after:rounded-full after:bg-[#009FD9] after:opacity-0 hover:text-[#1a2744]"
                     >
                       {t("myPanel")}
                     </a>
@@ -1395,18 +1383,18 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     </div>
                   </div>
                   <div className="flex flex-col gap-0.5">
-                    <a href={primaryPanelHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(panelActive, true)}>
-                      <LayoutDashboard className={mobileIconClass(panelActive)} />
+                    <a href={primaryPanelHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false, true)}>
+                      <LayoutDashboard className={mobileIconClass(false)} />
                       <span className="min-w-0 flex-1">{t("myPanel")}</span>
-                      <ChevronRight className={mobileChevronClass(panelActive)} />
+                      <ChevronRight className={mobileChevronClass(false)} />
                     </a>
-                    <a href={notificationsHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(notificationsActive)}>
-                      <Bell className={mobileIconClass(notificationsActive)} />
+                    <a href={notificationsHref} onClick={() => setMobileOpen(false)} className={mobileRowClass(false)}>
+                      <Bell className={mobileIconClass(false)} />
                       <span className="min-w-0 flex-1">{t("notifications")}</span>
                       {activeUnread > 0 && (
                         <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#009FD9] px-1 text-[10px] font-bold text-white">{activeUnread > 9 ? "9+" : activeUnread}</span>
                       )}
-                      <ChevronRight className={mobileChevronClass(notificationsActive)} />
+                      <ChevronRight className={mobileChevronClass(false)} />
                     </a>
                     {!isPro && (
                       <Link href="/registro/profesional" onClick={() => setMobileOpen(false)} className={mobileRowClass(false, true)}>
@@ -1456,27 +1444,26 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                   <Link
                     href="/categorias"
                     onClick={() => setMobileOpen(false)}
-                    className={mobileRowClass(categoriesActive, true)}
+                    className={mobileRowClass(false, true)}
                   >
-                    <Compass className={mobileIconClass(categoriesActive)} />
+                    <Compass className={mobileIconClass(false)} />
                     <span className="min-w-0 flex-1">{t("categories")}</span>
-                    <ChevronRight className={mobileChevronClass(categoriesActive)} />
+                    <ChevronRight className={mobileChevronClass(false)} />
                   </Link>
                   {RESOURCES_LINKS.map((link) => {
                     const ResourceIcon = RESOURCE_ICONS[link.key as keyof typeof RESOURCE_ICONS];
-                    const active = navPath === link.href || navPath.startsWith(`${link.href}/`);
                     const content = (
                       <>
-                        <ResourceIcon className={mobileIconClass(active)} />
+                        <ResourceIcon className={mobileIconClass(false)} />
                         <span className="min-w-0 flex-1">{t(`resourceLinks.${link.key}`)}</span>
-                        <ChevronRight className={mobileChevronClass(active)} />
+                        <ChevronRight className={mobileChevronClass(false)} />
                       </>
                     );
                     return link.key === "support" ? (
                       <SupportLink
                         key={link.href}
                         onNavigate={() => setMobileOpen(false)}
-                        className={mobileRowClass(active)}
+                        className={mobileRowClass(false)}
                       >
                         {content}
                       </SupportLink>
@@ -1485,7 +1472,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                         key={link.href}
                         href={link.href}
                         onClick={() => setMobileOpen(false)}
-                        className={mobileRowClass(active)}
+                        className={mobileRowClass(false)}
                       >
                         {content}
                       </Link>
