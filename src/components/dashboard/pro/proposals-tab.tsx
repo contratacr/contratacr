@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Banknote, FileText, Send, ChevronDown, MapPin, CalendarClock, CalendarDays, Clock, EyeOff, Users } from "lucide-react";
+import { FileText, Phone, Send, ChevronDown, MapPin, CalendarClock, CalendarDays, Clock, EyeOff, Users, Wrench } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -45,6 +45,14 @@ type OpenProject = {
   profiles?: { full_name: string; avatar_url?: string };
   proposals?: { id: string }[];
 };
+
+function ColonIcon({ className }: { className?: string }) {
+  return (
+    <span className={cn("inline-flex h-3.5 w-3.5 shrink-0 items-center justify-center text-[13px] font-bold leading-none", className)}>
+      ₡
+    </span>
+  );
+}
 
 const STATUS_VARIANT: Record<ProposalStatus, "warning" | "success" | "error"> = {
   pending: "warning",
@@ -445,12 +453,12 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                               </div>
                               <div className="mt-2 flex flex-col items-start gap-1.5 text-[13px]">
                                 <span className={cn("inline-flex w-full max-w-full items-center gap-2", hasBudget(project) ? "font-semibold text-[#0089bb]" : "text-[#6b7280]")}>
-                                  <Banknote className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                                  <ColonIcon className="text-[#9ca3af]" />
                                   <span className="truncate">{budgetTextFor(project)}</span>
                                 </span>
                                 {project.categories?.name && (
                                   <span className="inline-flex w-full max-w-full items-center gap-2 text-[#374151]">
-                                    <Send className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                                    <Wrench className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
                                     <span className="truncate">{project.categories.name}</span>
                                   </span>
                                 )}
@@ -537,7 +545,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                           </div>
                           <div className="mt-2 flex flex-col items-start gap-1.5 text-[13px]">
                             <span className="inline-flex w-full max-w-full items-center gap-2 text-[#374151]">
-                              <Banknote className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                              <ColonIcon className="text-[#9ca3af]" />
                               <span className={cn("truncate font-semibold", p.price ? "text-[#0089bb]" : "text-[#6b7280]")}>
                                 {p.price ? `₡${p.price.toLocaleString("es-CR")}` : t("priceTBD")}
                               </span>
@@ -566,15 +574,21 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                               <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#9ca3af]">{t("myProposal")}</p>
                               <div className="flex flex-col gap-2.5">
                                 <div className="flex items-start gap-2.5">
-                                  <span className="min-w-[72px] shrink-0 text-[12px] font-medium text-[#9ca3af]">{t("yourPrice")}</span>
-                                  <p className={cn("min-w-0 text-[13px] font-semibold [overflow-wrap:anywhere]", p.price ? "text-[#0089bb]" : "text-[#6b7280]")}>
-                                    {p.price ? `₡${p.price.toLocaleString("es-CR")}` : t("priceTBD")}
-                                  </p>
+                                  <ColonIcon className="mt-0.5 text-[#9ca3af]" />
+                                  <div className="min-w-0">
+                                    <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("yourPriceLabel")}</p>
+                                    <p className={cn("mt-0.5 min-w-0 text-[13px] font-semibold [overflow-wrap:anywhere]", p.price ? "text-[#0089bb]" : "text-[#6b7280]")}>
+                                      {p.price ? `₡${p.price.toLocaleString("es-CR")}` : t("priceTBD")}
+                                    </p>
+                                  </div>
                                 </div>
                                 {p.message && (
                                   <div className="flex items-start gap-2.5">
-                                    <span className="min-w-[72px] shrink-0 text-[12px] font-medium text-[#9ca3af]">{t("yourMessage")}</span>
-                                    <ExpandableText text={p.message} lines={5} className="min-w-0 text-[13px] leading-relaxed text-[#4b5563]" />
+                                    <FileText className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
+                                    <div className="min-w-0">
+                                      <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("yourMessage")}</p>
+                                      <ExpandableText text={p.message} lines={5} className="mt-0.5 min-w-0 text-[13px] leading-relaxed text-[#4b5563]" />
+                                    </div>
                                   </div>
                                 )}
                               </div>
@@ -583,8 +597,13 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                           {/* Client contact — revealed once the proposal is accepted (still active). */}
                           {p.status === "accepted" && ps !== "cancelled" && phone && (
                             <div className="border-t border-[#eef2f6] pt-3">
-                              <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#9ca3af]">{t("fieldPhone")}</p>
-                              <p className="mt-0.5 text-[13px] font-medium text-[#374151] [overflow-wrap:anywhere]">{phone}</p>
+                              <div className="flex items-start gap-2.5">
+                                <Phone className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
+                                <div className="min-w-0">
+                                  <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#9ca3af]">{t("fieldPhone")}</p>
+                                  <p className="mt-0.5 text-[13px] font-medium text-[#374151] [overflow-wrap:anywhere]">{phone}</p>
+                                </div>
+                              </div>
                             </div>
                           )}
                           {/* Client cancelled the request after accepting → tell the pro (no actions). */}
