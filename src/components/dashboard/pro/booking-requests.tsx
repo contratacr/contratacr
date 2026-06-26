@@ -303,56 +303,51 @@ export function BookingRequests() {
               </p>
             )}
 
-            {(booking.for_someone_else || phoneFmt || cedulaFmt || booking.service_description) && (
-              <div className="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-[#e8eef5]">
-                {booking.for_someone_else && (() => {
-                  const beneAge = ageLabel(booking.beneficiary_dob);
-                  return (
-                    <div className="flex items-start gap-2.5 px-3.5 py-3.5">
-                      <UserRound className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("apptForLabel")}</p>
-                        <div className="mt-0.5 flex flex-wrap items-center gap-2">
-                          <p className="min-w-0 text-sm font-semibold text-[#111827] [overflow-wrap:anywhere]">
-                            {booking.beneficiary_name || t("otherPerson")}
-                          </p>
-                          {showClinicalFlags && ageBadge(booking.beneficiary_dob, !!booking.beneficiary_is_minor)}
-                        </div>
-                        {beneAge && (
-                          <p className="mt-0.5 text-[12px] text-[#6b7280]"><span className="text-[#9ca3af]">{t("fieldAge")}</span> {beneAge}</p>
-                        )}
-                      </div>
+            {booking.for_someone_else && (() => {
+              const beneAge = ageLabel(booking.beneficiary_dob);
+              return (
+                <div className="flex items-start gap-2.5">
+                  <UserRound className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("apptForLabel")}</p>
+                    <div className="mt-0.5 flex flex-wrap items-center gap-2">
+                      <p className="min-w-0 text-[13px] font-semibold text-[#111827] [overflow-wrap:anywhere]">
+                        {booking.beneficiary_name || t("otherPerson")}
+                      </p>
+                      {showClinicalFlags && ageBadge(booking.beneficiary_dob, !!booking.beneficiary_is_minor)}
                     </div>
-                  );
-                })()}
-                {(phoneFmt || cedulaFmt) && (
-                  <div className={cn("grid grid-cols-1 sm:grid-cols-2", booking.for_someone_else && "border-t border-[#eef2f6]")}>
-                    {phoneFmt && (
-                      <div className="flex min-w-0 items-center gap-2.5 px-3.5 py-3">
-                        <Phone className="h-4 w-4 shrink-0 text-[#9ca3af]" />
-                        <div className="min-w-0">
-                          <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("contactPhone")}</p>
-                          <p className="mt-0.5 text-[13px] font-medium text-[#374151] truncate">{phoneFmt}</p>
-                        </div>
-                      </div>
-                    )}
-                    {cedulaFmt && (
-                      <div className={cn("flex min-w-0 items-center gap-2.5 px-3.5 py-3", phoneFmt && "border-t border-[#eef2f6] sm:border-l sm:border-t-0")}>
-                        <IdCard className="h-4 w-4 shrink-0 text-[#9ca3af]" />
-                        <div className="min-w-0">
-                          <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("contactCedula")}</p>
-                          <p className="mt-0.5 text-[13px] font-medium text-[#374151] truncate">{cedulaFmt}</p>
-                        </div>
-                      </div>
+                    {beneAge && (
+                      <p className="mt-0.5 text-[12px] text-[#6b7280]"><span className="text-[#9ca3af]">{t("fieldAge")}</span> {beneAge}</p>
                     )}
                   </div>
-                )}
-                {booking.service_description && (
-                  <div className="border-t border-[#eef2f6] px-3.5 py-3.5">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("noteEyebrow")}</p>
-                    <ExpandableText text={booking.service_description} lines={3} className="mt-1 text-[13px] leading-relaxed text-[#4b5563]" />
-                  </div>
-                )}
+                </div>
+              );
+            })()}
+            {phoneFmt && (
+              <div className="flex items-start gap-2.5">
+                <Phone className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
+                <div className="min-w-0">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("contactPhone")}</p>
+                  <p className="mt-0.5 text-[13px] font-medium text-[#374151] truncate">{phoneFmt}</p>
+                </div>
+              </div>
+            )}
+            {cedulaFmt && (
+              <div className="flex items-start gap-2.5">
+                <IdCard className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
+                <div className="min-w-0">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("contactCedula")}</p>
+                  <p className="mt-0.5 text-[13px] font-medium text-[#374151] truncate">{cedulaFmt}</p>
+                </div>
+              </div>
+            )}
+            {booking.service_description && (
+              <div className="flex items-start gap-2.5">
+                <Wrench className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
+                <div className="min-w-0">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("noteEyebrow")}</p>
+                  <ExpandableText text={booking.service_description} lines={3} className="mt-0.5 text-[13px] leading-relaxed text-[#4b5563]" />
+                </div>
               </div>
             )}
 

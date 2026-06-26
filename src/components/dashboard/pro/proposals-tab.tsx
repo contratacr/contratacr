@@ -7,9 +7,8 @@ import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PriceInput } from "@/components/ui/price-input";
-import { cn, getWhatsAppLink, getInitials, formatRelativeOrDate } from "@/lib/utils";
+import { cn, getWhatsAppLink, formatRelativeOrDate } from "@/lib/utils";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { StatusFilterTabs, PROYECTO_TABS, proposalMatches, proposalBucket, proposalStatusRedundant, bucketCounts } from "@/components/dashboard/status-filter-tabs";
 import { ExpandableText } from "@/components/ui/expandable-text";
@@ -316,18 +315,21 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
       <div className="flex flex-col">
         <div className="flex flex-col gap-4 p-4 sm:p-5">
           {project.description && (
-            <div className="rounded-2xl bg-white p-3.5 shadow-sm ring-1 ring-[#e8eef5]">
-              <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#9ca3af]">{t("projectDescription")}</p>
-              <ExpandableText text={project.description} lines={6} className="mt-1 text-[13px] leading-relaxed text-[#4b5563]" />
+            <div className="flex items-start gap-2.5">
+              <FolderOpen className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("projectDescription")}</p>
+                <ExpandableText text={project.description} lines={6} className="mt-0.5 text-[13px] leading-relaxed text-[#4b5563]" />
+              </div>
             </div>
           )}
 
           {project.profiles?.full_name && (
-            <div className="flex items-start gap-2.5 rounded-2xl bg-white p-3.5 shadow-sm ring-1 ring-[#e8eef5]">
+            <div className="flex items-start gap-2.5">
               <Users className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
               <div className="min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-[0.06em] text-[#9ca3af]">{t("clientInfo")}</p>
-                <p className="mt-1 text-[12px] font-medium text-[#6b7280]">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("clientInfo")}</p>
+                <p className="mt-0.5 text-[13px] leading-relaxed text-[#4b5563]">
                   {clientIdentityText(project.client_identity_status)}
                 </p>
               </div>
@@ -442,48 +444,33 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                                 </span>
                               </div>
                               <div className="mt-2 flex flex-col items-start gap-1.5 text-[13px]">
-                                <span className={cn(
-                                  "inline-flex w-full max-w-full items-start gap-2 px-3 py-2.5 font-semibold",
-                                  hasBudget(project)
-                                    ? "rounded-xl border border-[#ccecf8] bg-[#EBF5FB] text-[#162543]"
-                                    : "text-[#6b7280]"
-                                )}>
-                                  <span className="min-w-0 [overflow-wrap:anywhere]">{budgetTextFor(project)}</span>
+                                <span className={cn("inline-flex w-full max-w-full items-center gap-2", hasBudget(project) ? "font-semibold text-[#0089bb]" : "text-[#6b7280]")}>
+                                  <FolderOpen className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                                  <span className="truncate">{budgetTextFor(project)}</span>
                                 </span>
-                                <div className="flex w-full min-w-0 flex-col items-start gap-1.5 sm:flex-row sm:flex-wrap sm:gap-x-3">
-                                  {project.categories?.name && (
-                                    <span className="inline-flex w-full min-w-0 max-w-full items-start gap-1.5 leading-snug text-[#374151] sm:w-auto">
-                                      <FolderOpen className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                                      <span className="min-w-0 font-medium [overflow-wrap:anywhere]">{project.categories.name}</span>
-                                    </span>
-                                  )}
-                                  {zona && (
-                                    <span className="inline-flex w-full min-w-0 max-w-full items-start gap-1.5 leading-snug text-[#6b7280] sm:w-auto">
-                                      <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                                      <span className="min-w-0 [overflow-wrap:anywhere]">{zona}</span>
-                                    </span>
-                                  )}
-                                  {project.timeline && (
-                                    <span className="inline-flex w-full min-w-0 max-w-full items-start gap-1.5 leading-snug text-[#6b7280] sm:w-auto">
-                                      <CalendarClock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                                      <span className="min-w-0 [overflow-wrap:anywhere]">{project.timeline}</span>
-                                    </span>
-                                  )}
-                                </div>
+                                {project.categories?.name && (
+                                  <span className="inline-flex w-full max-w-full items-center gap-2 text-[#374151]">
+                                    <FolderOpen className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                                    <span className="truncate">{project.categories.name}</span>
+                                  </span>
+                                )}
+                                {zona && (
+                                  <span className="inline-flex w-full max-w-full items-center gap-2 text-[#6b7280]">
+                                    <MapPin className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                                    <span className="truncate">{zona}</span>
+                                  </span>
+                                )}
+                                {project.timeline && (
+                                  <span className="inline-flex w-full max-w-full items-center gap-2 text-[#6b7280]">
+                                    <CalendarClock className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                                    <span className="truncate">{project.timeline}</span>
+                                  </span>
+                                )}
                                 <span className="inline-flex w-full max-w-full items-center gap-2 text-[#9ca3af]">
                                   <Clock className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                                  <span className="min-w-0 [overflow-wrap:anywhere]">{relativeTime(project.created_at)}</span>
+                                  <span className="truncate">{relativeTime(project.created_at)}</span>
                                 </span>
                               </div>
-                              {project.profiles?.full_name && (
-                                <div className="mt-3 flex items-center gap-2">
-                                  <Avatar className="h-6 w-6 shrink-0">
-                                    <AvatarImage src={project.profiles?.avatar_url} className="object-cover" />
-                                    <AvatarFallback className="bg-[#EBF5FB] text-[9px] font-bold text-[#009FD9]">{getInitials(project.profiles.full_name)}</AvatarFallback>
-                                  </Avatar>
-                                  <span className="min-w-0 truncate text-[12px] text-[#6b7280]">{project.profiles.full_name}</span>
-                                </div>
-                              )}
                             </div>
                           </button>
                           {isExpanded && <div className="rounded-b-2xl border-t border-[#f3f4f6] bg-gradient-to-b from-[#fcfdff] to-white">{renderDetail(project)}</div>}
@@ -549,21 +536,21 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                             )}
                           </div>
                           <div className="mt-2 flex flex-col items-start gap-1.5 text-[13px]">
-                            <span className="inline-flex w-full max-w-full items-start gap-2 text-[#374151]">
-                              <span className="shrink-0 text-[#9ca3af]">{t("yourPriceLabel")}</span>
-                              <span className={cn("min-w-0 font-semibold [overflow-wrap:anywhere]", p.price ? "text-[#0089bb]" : "text-[#6b7280]")}>
+                            <span className="inline-flex w-full max-w-full items-center gap-2 text-[#374151]">
+                              <FolderOpen className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                              <span className={cn("truncate font-semibold", p.price ? "text-[#0089bb]" : "text-[#6b7280]")}>
                                 {p.price ? `₡${p.price.toLocaleString("es-CR")}` : t("priceTBD")}
                               </span>
                             </span>
                             {clientName && (
-                              <span className="inline-flex w-full max-w-full items-start gap-2 text-[#6b7280]">
-                                <Users className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                                <span className="min-w-0 [overflow-wrap:anywhere]">{clientName}</span>
+                              <span className="inline-flex w-full max-w-full items-center gap-2 text-[#6b7280]">
+                                <Users className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                                <span className="truncate">{clientName}</span>
                               </span>
                             )}
-                            <span className="inline-flex w-full max-w-full items-start gap-2 text-[#9ca3af]">
-                              <CalendarDays className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
-                              <span className="min-w-0 [overflow-wrap:anywhere]">{t("sentOn", { date: sentDate })}</span>
+                            <span className="inline-flex w-full max-w-full items-center gap-2 text-[#9ca3af]">
+                              <CalendarDays className="h-3.5 w-3.5 shrink-0 text-[#9ca3af]" />
+                              <span className="truncate">{t("sentOn", { date: sentDate })}</span>
                             </span>
                           </div>
                         </div>

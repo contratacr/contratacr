@@ -416,12 +416,12 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                 <Link
                                   href={`/profesionales/${b.professionals.slug}`}
                                   onClick={(e) => e.stopPropagation()}
-                                  className="min-w-0 flex-1 text-[15px] font-bold text-[#162543] line-clamp-2 [overflow-wrap:anywhere] hover:text-[#009FD9] hover:underline"
+                                  className="min-w-0 flex-1 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere] hover:text-[#009FD9] hover:underline sm:text-base"
                                 >
                                   {b.professionals?.profiles?.full_name ?? t("professional")}
                                 </Link>
                               ) : (
-                                <span className="min-w-0 flex-1 text-[15px] font-bold text-[#162543] line-clamp-2 [overflow-wrap:anywhere]">
+                                <span className="min-w-0 flex-1 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere] sm:text-base">
                                   {b.professionals?.profiles?.full_name ?? t("professional")}
                                 </span>
                               )}
@@ -459,25 +459,21 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                         {expandedBooking === b.id && (
                           <div className="rounded-b-2xl border-t border-[#f3f4f6] bg-gradient-to-b from-[#fcfdff] to-white px-4 pb-5 pt-4 sm:px-5 flex flex-col gap-3.5">
                             {/* The header already identifies the professional; expanded details stay flat. */}
-                            {b.for_someone_else && (
-                              <div className="rounded-2xl bg-white p-3.5 ring-1 ring-[#e8eef5]">
-                                {(() => {
-                                  const beneAge = ageLabel(b.beneficiary_dob);
-                                  return (
-                                    <div className="flex items-start gap-2.5">
-                                      <Users className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
-                                      <div className="min-w-0">
-                                        <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("apptForLabel")}</p>
-                                        <p className="mt-0.5 font-semibold text-[#111827] [overflow-wrap:anywhere]">{b.beneficiary_name || t("otherPerson")}</p>
-                                        {beneAge && (
-                                          <p className="mt-0.5 text-[12px] text-[#6b7280]"><span className="text-[#9ca3af]">{t("fieldAge")}</span> {beneAge}</p>
-                                        )}
-                                      </div>
-                                    </div>
-                                  );
-                                })()}
-                              </div>
-                            )}
+                            {b.for_someone_else && (() => {
+                              const beneAge = ageLabel(b.beneficiary_dob);
+                              return (
+                                <div className="flex items-start gap-2.5">
+                                  <Users className="mt-0.5 h-4 w-4 shrink-0 text-[#9ca3af]" />
+                                  <div className="min-w-0">
+                                    <p className="text-[10px] font-semibold uppercase tracking-[0.06em] text-[#9ca3af]">{t("apptForLabel")}</p>
+                                    <p className="mt-0.5 text-[13px] font-semibold text-[#111827] [overflow-wrap:anywhere]">{b.beneficiary_name || t("otherPerson")}</p>
+                                    {beneAge && (
+                                      <p className="mt-0.5 text-[12px] text-[#6b7280]"><span className="text-[#9ca3af]">{t("fieldAge")}</span> {beneAge}</p>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })()}
 
                             {b.service_description && (
                               <div className="flex items-start gap-2.5">
