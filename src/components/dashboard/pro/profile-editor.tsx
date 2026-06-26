@@ -571,7 +571,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
 
         {/* Description */}
         <div data-field="bio">
-          <label className="text-sm font-medium text-[#374151] block mb-1.5">{t("description")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span></label>
+          <label className="text-sm font-medium text-[#374151] block mb-1.5">{t("description")} <span className="text-red-500">*</span></label>
           <textarea
             className="w-full rounded-xl border border-[#e5e7eb] bg-white px-4 py-3 text-sm text-[#111827] placeholder:text-[#9ca3af] min-h-[110px] resize-none focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all"
             placeholder={t("descPlaceholder")}
