@@ -74,17 +74,19 @@ export function StatusFilterTabs({
             type="button"
             onClick={() => onChange(tab.id)}
             className={cn(
-              "-mb-px inline-flex items-center gap-2 whitespace-nowrap border-b-2 pb-2.5 pt-1 text-[14px] font-semibold transition-colors",
+              "group -mb-px inline-flex items-center gap-2 whitespace-nowrap border-b-2 pb-2.5 pt-1 text-[14px] font-semibold transition-colors",
               active ? "border-[#009FD9] text-[#009FD9]" : "border-transparent text-[#6b7280] hover:text-[#162543]"
             )}
           >
             {label(tab.id)}
             {count > 0 && (
               <span className={cn(
-                "text-[12px] font-bold leading-none tabular-nums",
-                active ? "text-[#009FD9]" : "text-[#9ca3af]"
+                "inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[11px] font-bold leading-none tabular-nums transition-colors",
+                active
+                  ? "bg-[#EBF5FB] text-[#0089bb] ring-1 ring-[#ccecf8]"
+                  : "bg-[#f3f4f6] text-[#6b7280] ring-1 ring-[#e5e7eb] group-hover:bg-[#eef2f6] group-hover:text-[#374151]"
               )}>
-                {count}
+                {count > 99 ? "99+" : count}
               </span>
             )}
             {dotFor?.(tab.id) && <span className="h-1.5 w-1.5 rounded-full bg-[#009FD9] shrink-0" aria-hidden />}
