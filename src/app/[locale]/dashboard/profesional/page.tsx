@@ -252,6 +252,11 @@ export default function DashboardPage() {
     setTab(next === "offer" ? "bookings" : "sent_bookings");
   }
 
+  function panelLabelFor(tab: Tab): string {
+    const panelMode: Mode = OFFER_ONLY.has(tab) ? "offer" : USE_ONLY.has(tab) ? "use" : mode;
+    return panelMode === "offer" ? t("panelProfessional") : t("panelClient");
+  }
+
   function handleSaved() {
     setRefreshKey((k) => k + 1);
   }
@@ -464,6 +469,9 @@ export default function DashboardPage() {
                         <div className="relative">
                           <div className="flex min-w-0 items-center gap-2 pr-28">
                             <h2 className="min-w-0 truncate text-lg font-semibold text-[#111827]">{activeTab === "services" ? t("servicesHeading") : t(`tabs.${activeTab}`)}</h2>
+                            <span className="inline-flex shrink-0 items-center rounded-full border border-[#d8eef8] bg-[#EBF5FB] px-2.5 py-0.5 text-[11px] font-semibold text-[#0089bb] lg:hidden">
+                              {panelLabelFor(activeTab)}
+                            </span>
                             {activeTab === "profile" && mode === "offer" && pro?.slug && (
                               <a
                                 href={`/es/profesionales/${pro.slug}?preview=1`}
