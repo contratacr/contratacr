@@ -85,11 +85,12 @@ function useSwitchLang() {
 }
 
 /* ─── Language menu (DESKTOP navbar) ─── */
-function LanguageMenu() {
+function LanguageMenu({ tone = "light" }: { tone?: "light" | "dark" } = {}) {
   const locale = useLocale();
   const switchLang = useSwitchLang();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const dark = tone === "dark";
   useEffect(() => {
     function onOutside(e: Event) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
@@ -112,12 +113,14 @@ function LanguageMenu() {
           "inline-flex h-10 items-center gap-2 rounded-full border px-3 text-[12px] font-bold transition-all",
           open
             ? "border-[#bfe3f5] bg-[#EBF5FB] text-[#0089bb] shadow-[0_10px_26px_-20px_rgba(0,159,217,0.85)]"
+            : dark
+            ? "border-white/15 bg-white/8 text-white shadow-[0_8px_24px_-22px_rgba(0,0,0,0.8)] hover:border-white/25 hover:bg-white/12"
             : "border-[#e8eef5] bg-white text-[#374151] shadow-[0_8px_24px_-22px_rgba(15,23,42,0.6)] hover:border-[#ccecf8] hover:bg-[#f8fbfd] hover:text-[#162543]"
         )}
       >
-        <Globe className={cn("h-4 w-4", open ? "text-[#0089bb]" : "text-[#9ca3af]")} aria-hidden />
+        <Globe className={cn("h-4 w-4", open ? "text-[#0089bb]" : dark ? "text-white/65" : "text-[#9ca3af]")} aria-hidden />
         <span>{locale.toUpperCase()}</span>
-        <ChevronDown className={cn("h-3.5 w-3.5 text-[#9ca3af] transition-transform duration-200", open && "rotate-180 text-[#0089bb]")} />
+        <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", dark ? "text-white/65" : "text-[#9ca3af]", open && "rotate-180 text-[#0089bb]")} />
       </button>
       {open && (
         <div role="menu" className="absolute right-0 top-full z-50 mt-2 w-44 overflow-hidden rounded-2xl border border-[#e8eef5] bg-white p-1.5 shadow-[0_24px_70px_-24px_rgba(15,23,42,0.5)]">
@@ -770,6 +773,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
   const isSearchPage = publicPath.startsWith("/buscar");
   const isPanelPage = publicPath.startsWith("/dashboard") || publicPath.startsWith("/admin");
   const useInternalNavChrome = !isMainPage && !isSearchPage && !isPanelPage;
+  const useDarkHomeNav = isMainPage;
 
   // "Ingresar" routes to the robust /login PAGE (forgot-password, role-aware
   // post-login redirect to the correct panel, waitForAuthCookie, OAuth `next`,
@@ -990,8 +994,10 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
     <>
       <header
         className={cn(
-          "fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-white/96 backdrop-blur-md",
-          useInternalNavChrome
+          "fixed top-0 left-0 right-0 z-50 transition-all duration-300 backdrop-blur-md",
+          useDarkHomeNav
+            ? "border-b border-white/10 bg-[#111827]/96 shadow-[0_18px_48px_-24px_rgba(0,0,0,0.8)]"
+            : useInternalNavChrome
             ? "border-b border-[#dbeafe] shadow-[0_16px_44px_-26px_rgba(15,23,42,0.72)] before:absolute before:inset-x-0 before:top-0 before:h-0.5 before:bg-[#009FD9]"
             : "border-b border-gray-100/80 shadow-[0_10px_34px_-24px_rgba(15,23,42,0.55)]"
         )}
@@ -1009,13 +1015,13 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                   <>
                     {/* Compact mark on mobile ONLY when the inline search is present (it needs the
                         row); the full logo + wordmark on desktop. */}
-                    <ContrataCRMark className="h-8 w-8 lg:hidden" />
-                    <span className="hidden lg:inline-flex"><ContrataCRLogo size="lg" /></span>
+                    <ContrataCRMark className="h-8 w-8 lg:hidden" tone={useDarkHomeNav ? "dark" : "light"} />
+                    <span className="hidden lg:inline-flex"><ContrataCRLogo size="lg" tone={useDarkHomeNav ? "dark" : "light"} /></span>
                   </>
                 ) : (
                   /* Mode switch left the navbar (sprint 518) → there's room for the FULL logo +
                      "ContrataCR" wordmark on mobile again. */
-                  <ContrataCRLogo size="lg" />
+                  <ContrataCRLogo size="lg" tone={useDarkHomeNav ? "dark" : "light"} />
                 )}
               </Link>
 
@@ -1035,8 +1041,8 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     className={cn(
                       "relative flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-medium transition-colors after:absolute after:left-4 after:right-4 after:-bottom-1 after:h-0.5 after:rounded-full after:bg-[#009FD9] after:transition-opacity",
                       openMenu === "categorias"
-                        ? "text-[#1a2744] bg-gray-50 after:opacity-0"
-                        : "text-[#374151] after:opacity-0 hover:text-[#1a2744] hover:bg-gray-50"
+                        ? useDarkHomeNav ? "bg-white/10 text-white after:opacity-0" : "text-[#1a2744] bg-gray-50 after:opacity-0"
+                        : useDarkHomeNav ? "text-white/75 after:opacity-0 hover:bg-white/10 hover:text-white" : "text-[#374151] after:opacity-0 hover:text-[#1a2744] hover:bg-gray-50"
                     )}
                   >
                     {t("categories")}
@@ -1067,7 +1073,9 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                   <button
                     className={cn(
                       "relative flex items-center gap-1 px-4 py-2 rounded-xl text-sm font-medium transition-colors after:absolute after:left-4 after:right-4 after:-bottom-1 after:h-0.5 after:rounded-full after:bg-[#009FD9] after:transition-opacity",
-                      openMenu === "recursos" ? "text-[#1a2744] bg-gray-50 after:opacity-0" : "text-[#374151] after:opacity-0 hover:text-[#1a2744] hover:bg-gray-50"
+                      openMenu === "recursos"
+                        ? useDarkHomeNav ? "bg-white/10 text-white after:opacity-0" : "text-[#1a2744] bg-gray-50 after:opacity-0"
+                        : useDarkHomeNav ? "text-white/75 after:opacity-0 hover:bg-white/10 hover:text-white" : "text-[#374151] after:opacity-0 hover:text-[#1a2744] hover:bg-gray-50"
                     )}
                   >
                     {t("resources")}
@@ -1116,7 +1124,10 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     {!isPro && (
                       <Link
                         href="/registro/profesional"
-                        className="inline-flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-xl text-[#009FD9] hover:bg-[#EBF5FB] transition-colors whitespace-nowrap"
+                        className={cn(
+                          "inline-flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-xl transition-colors whitespace-nowrap",
+                          useDarkHomeNav ? "text-[#38bdf8] hover:bg-white/10" : "text-[#009FD9] hover:bg-[#EBF5FB]"
+                        )}
                       >
                         <Briefcase className="h-4 w-4" />
                         {t("offerServices")}
@@ -1125,7 +1136,10 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     {/* Mode switch removed from the navbar (sprint 518) — it lives inside "Mi panel". */}
                     <a
                       href={primaryPanelHref}
-                      className="relative text-sm font-medium px-3 py-2 text-[#374151] transition-colors whitespace-nowrap after:absolute after:left-3 after:right-3 after:-bottom-1 after:h-0.5 after:rounded-full after:bg-[#009FD9] after:opacity-0 hover:text-[#1a2744]"
+                      className={cn(
+                        "relative text-sm font-medium px-3 py-2 transition-colors whitespace-nowrap after:absolute after:left-3 after:right-3 after:-bottom-1 after:h-0.5 after:rounded-full after:bg-[#009FD9] after:opacity-0",
+                        useDarkHomeNav ? "text-white/75 hover:text-white" : "text-[#374151] hover:text-[#1a2744]"
+                      )}
                     >
                       {t("myPanel")}
                     </a>
@@ -1161,7 +1175,10 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     </Link>
                     <Link
                       href={loginHref}
-                      className="text-sm font-medium px-3 py-2 rounded-xl text-[#374151] hover:bg-gray-50 transition-colors"
+                      className={cn(
+                        "text-sm font-medium px-3 py-2 rounded-xl transition-colors",
+                        useDarkHomeNav ? "text-white/75 hover:bg-white/10 hover:text-white" : "text-[#374151] hover:bg-gray-50"
+                      )}
                     >
                       {t("login")}
                     </Link>
@@ -1169,14 +1186,17 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                 )}
                 {/* Discreet, quiet globe + code dropdown — visually subordinate to the
                     prominent MODE segmented control (never a competing toggle). */}
-                <LanguageMenu />
+                <LanguageMenu tone={useDarkHomeNav ? "dark" : "light"} />
               </div>
 
               {/* Mobile toggle — only OPENS the drawer; the drawer has the single X. */}
               <button
                 type="button"
                 onClick={() => setMobileOpen(true)}
-                className="lg:hidden ml-auto p-2 rounded-xl text-[#1a2744] hover:bg-gray-50 transition-colors"
+                className={cn(
+                  "lg:hidden ml-auto p-2 rounded-xl transition-colors",
+                  useDarkHomeNav ? "text-white hover:bg-white/10" : "text-[#1a2744] hover:bg-gray-50"
+                )}
                 aria-label={t("openMenu")}
               >
                 <Menu className="h-5 w-5" />
@@ -1193,7 +1213,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                 aria-label="ContrataCR inicio"
                 className="relative z-20 shrink-0 -ml-1 grid place-items-center p-1 rounded-lg active:bg-gray-100 touch-manipulation"
               >
-                <ContrataCRMark className="h-9 w-9" />
+                <ContrataCRMark className="h-9 w-9" tone={useDarkHomeNav ? "dark" : "light"} />
               </Link>
               <form onSubmit={handleCompactSearch} className="flex-1 min-w-0 flex justify-center">
                 <div className="relative w-full max-w-5xl">
