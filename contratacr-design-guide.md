@@ -1790,3 +1790,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Availability editor responsive rows.** In the phone availability editor, never force time selectors and row actions into one fixed-width horizontal line. Stack the time blocks above "Agregar franja / Aplicar a otros dias" on mobile, keep the desktop side-by-side row, and ensure time-select triggers are `w-full` inside responsive grid columns so AM/PM labels do not clip.
 
 > **Mobile card action rows.** Important actions in dashboard cards, especially WhatsApp/accept/decline rows, should wrap on phone instead of relying on horizontal scrolling. Use responsive min widths with `flex-1` on mobile and compact `sm:flex-none` sizing on desktop so labels never clip.
+
+> **Responsive navbar resources.** Resource links in the phone navbar drawer should use subtle row icons plus labels and chevrons, matching the Categorias row. Keep icons muted gray except the main category entry, which can use the app blue.

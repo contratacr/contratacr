@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import {
   X, Menu, ChevronDown, ChevronRight, Search, MapPin,
   LayoutDashboard, LogOut, Bookmark, CalendarDays, FolderOpen, UserPlus, Briefcase, Compass, Settings, Bell, Globe, Inbox, Check,
+  HelpCircle, Lightbulb, MessageCircle, ListChecks,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -197,6 +198,12 @@ const RESOURCES_LINKS: { key: string; href: string }[] = [
   { key: "proTips",    href: "/atraer-clientes" },
   { key: "support",    href: "/soporte" },
 ];
+const RESOURCE_ICONS = {
+  howItWorks: ListChecks,
+  helpCenter: HelpCircle,
+  proTips: Lightbulb,
+  support: MessageCircle,
+} as const;
 
 /* ─── Accent- and typo-tolerant category matcher ───
    `searchCategories` already does accent-insensitive substring matching over
@@ -1453,26 +1460,34 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                 <span className="flex-1">{t("categories")}</span>
                 <ChevronRight className="h-4 w-4 text-gray-300" />
               </Link>
-              {RESOURCES_LINKS.map((link) =>
-                link.key === "support" ? (
+              {RESOURCES_LINKS.map((link) => {
+                const ResourceIcon = RESOURCE_ICONS[link.key as keyof typeof RESOURCE_ICONS];
+                const content = (
+                  <>
+                    <ResourceIcon className="h-4 w-4 shrink-0 text-gray-400" />
+                    <span className="min-w-0 flex-1">{t(`resourceLinks.${link.key}`)}</span>
+                    <ChevronRight className="h-4 w-4 shrink-0 text-gray-300" />
+                  </>
+                );
+                return link.key === "support" ? (
                   <SupportLink
                     key={link.href}
                     onNavigate={() => setMobileOpen(false)}
-                    className="block w-full py-2.5 text-left text-sm font-medium leading-tight text-gray-600 transition-colors hover:text-[#009FD9]"
+                    className="flex min-h-11 w-full items-center gap-3 py-2.5 text-left text-sm font-medium leading-tight text-gray-600 transition-colors hover:text-[#009FD9]"
                   >
-                    {t(`resourceLinks.${link.key}`)}
+                    {content}
                   </SupportLink>
                 ) : (
                   <Link
                     key={link.href}
                     href={link.href}
                     onClick={() => setMobileOpen(false)}
-                    className="block py-2.5 text-sm font-medium leading-tight text-gray-600 transition-colors hover:text-[#009FD9]"
+                    className="flex min-h-11 items-center gap-3 py-2.5 text-sm font-medium leading-tight text-gray-600 transition-colors hover:text-[#009FD9]"
                   >
-                    {t(`resourceLinks.${link.key}`)}
+                    {content}
                   </Link>
-                )
-              )}
+                );
+              })}
               </div>
             </div>
 
