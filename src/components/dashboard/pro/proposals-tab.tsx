@@ -600,7 +600,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                               if (wa) {
                                 actions.push(
                                   <Button key="wa" variant="whatsapp" size="sm" asChild className="flex-1 sm:flex-none rounded-lg px-4">
-                                    <a href={wa} target="_blank" rel="noopener noreferrer"><WhatsAppIcon className="h-4 w-4" /> {t("contactClient")}</a>
+                                    <a href={wa} target="_blank" rel="noopener noreferrer"><WhatsAppIcon className="h-4 w-4 shrink-0" /> {t("contactClient")}</a>
                                   </Button>
                                 );
                               }

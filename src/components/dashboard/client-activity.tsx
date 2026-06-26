@@ -518,7 +518,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                               } else if (wa) {
                                 primary = (
                                   <Button variant="whatsapp" size="sm" asChild className="flex-1 sm:flex-none rounded-lg px-4">
-                                    <a href={wa} target="_blank" rel="noopener noreferrer"><WhatsAppIcon className="h-4 w-4" /> {t("contact")}</a>
+                                    <a href={wa} target="_blank" rel="noopener noreferrer"><WhatsAppIcon className="h-4 w-4 shrink-0" /> {t("contact")}</a>
                                   </Button>
                                 );
                               }
@@ -763,7 +763,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                     {proposal.professionals?.whatsapp && (
                                       <Button size="sm" variant="whatsapp" className="min-w-[104px] flex-1 px-3 sm:flex-none" asChild>
                                         <a href={getWhatsAppLink(proposal.professionals.whatsapp, t("waProposal", { title: project.title }))} target="_blank" rel="noopener noreferrer">
-                                          <WhatsAppIcon className="h-3.5 w-3.5" /> {t("whatsapp")}
+                                          <WhatsAppIcon className="h-3.5 w-3.5 shrink-0" /> {t("contact")}
                                         </a>
                                       </Button>
                                     )}

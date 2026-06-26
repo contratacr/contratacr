@@ -110,7 +110,7 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
 
         {/* WhatsApp follow-up to track the case */}
         <a href={waUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 rounded-full bg-[#25D366] hover:bg-[#1eb456] text-white text-sm font-bold px-5 py-2.5">
-          <WhatsAppIcon className="h-4 w-4" /> {t("waFollowUp", { ref })}
+          <WhatsAppIcon className="h-4 w-4 shrink-0" /> {t("waFollowUp", { ref })}
         </a>
 
         {/* Appeal → straight to support (no padrón re-run for no-ID cases) */}
@@ -213,7 +213,7 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-full bg-[#25D366] hover:bg-[#1eb456] text-white text-sm font-bold px-5 py-2.5"
             >
-              <WhatsAppIcon className="h-4 w-4" /> {t("supportWhatsapp")}
+              <WhatsAppIcon className="h-4 w-4 shrink-0" /> {t("supportWhatsapp")}
             </a>
           </div>
         </div>
@@ -226,7 +226,7 @@ export function VerificationPanel({ professionalId, status, reason, noCrId = fal
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 rounded-full bg-[#25D366] hover:bg-[#1eb456] text-white text-sm font-bold px-5 py-2.5"
         >
-          <WhatsAppIcon className="h-4 w-4" /> {t("supportWhatsappCase", { ref })}
+          <WhatsAppIcon className="h-4 w-4 shrink-0" /> {t("supportWhatsappCase", { ref })}
         </a>
       )}
 
