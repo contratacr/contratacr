@@ -439,16 +439,14 @@ export default function DashboardPage() {
                     On mobile this is replaced by the fixed bottom nav bar below. */}
                 <nav className="hidden lg:block lg:w-60 shrink-0 space-y-3">
                   <Card>
-                    <CardContent className="p-2 space-y-3">
+                    <CardContent className="p-2">
                       {isProvider && (
-                        <div className="border-b border-[#f3f4f6] pb-2">
+                        <div className="mb-2 border-b border-[#f3f4f6] pb-2">
                           {modePanelButton()}
                         </div>
                       )}
                       <div>
                         {(mode === "offer" ? OFFER_TABS : USE_TABS).map(navButton)}
-                      </div>
-                      <div>
                         {SHARED_TABS.map(navButton)}
                       </div>
                     </CardContent>
