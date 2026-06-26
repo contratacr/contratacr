@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { createClient } from "@/lib/supabase/client";
 import { SupportModal } from "@/components/support/support-modal";
 import { StatusFilterTabs } from "@/components/dashboard/status-filter-tabs";
+import { supportTicketRef } from "@/lib/support-ticket";
 
 type Ticket = {
   id: string;
@@ -200,6 +201,9 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-semibold text-[#6b7280]">
+                      {t("caseRef", { ref: supportTicketRef(ticket.id) })}
+                    </span>
                     <h3 className="text-[15px] font-bold leading-snug text-[#162543] sm:text-base">{ticket.subject}</h3>
                     <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${STATUS_COLOR[ticket.status] ?? ""}`}>{statusLabel(ticket.status)}</span>
                   </div>
@@ -322,6 +326,9 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
+                      <span className="rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-semibold text-[#6b7280]">
+                        {t("caseRef", { ref: supportTicketRef(tk.id) })}
+                      </span>
                       <p className="min-w-0 flex-1 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere]">{tk.subject}</p>
                       <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${STATUS_COLOR[tk.status] ?? ""}`}>{statusLabel(tk.status)}</span>
                       {hasNew && (

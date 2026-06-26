@@ -1916,6 +1916,7 @@
     "actionError": "Couldn't process it. Try again.",
     "yourConversations": "Your support tickets.",
     "inboxTitle": "Support cases",
+    "caseRef": "Case #{ref}",
     "inboxBody": "Open a new case or continue an existing conversation. We reply here and by email.",
     "newTicket": "Contact support",
     "empty": "You don't have any tickets yet",

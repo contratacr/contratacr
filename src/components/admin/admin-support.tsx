@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Headset, ArrowLeft, Send, User, Shield, UserSearch, Loader2 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { AdminUserSearch } from "@/components/admin/admin-user-search";
+import { supportTicketRef } from "@/lib/support-ticket";
 
 type Ticket = {
   id: string;
@@ -136,7 +137,12 @@ export function AdminSupport() {
             {/* Header */}
             <div className="px-5 py-4 border-b border-[#e5e7eb] flex items-start justify-between gap-3 flex-wrap">
               <div className="min-w-0">
-                <p className="font-semibold text-[#111827]">{ticket.subject}</p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-semibold text-[#6b7280]">
+                    Caso #{supportTicketRef(ticket.id)}
+                  </span>
+                  <p className="font-semibold text-[#111827]">{ticket.subject}</p>
+                </div>
                 <p className="text-xs text-[#9ca3af]">
                   {ticket.name || "Sin nombre"} · {ticket.email}{ticket.topic ? ` · ${ticket.topic}` : ""}
                   <span className={`ml-1.5 inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${ticket.user_id ? "bg-[#dbeafe] text-[#1d4ed8]" : "bg-gray-100 text-gray-500"}`}>
@@ -254,6 +260,9 @@ export function AdminSupport() {
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
+                    <span className="rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-semibold text-[#6b7280]">
+                      Caso #{supportTicketRef(t.id)}
+                    </span>
                     <p className="text-sm font-semibold text-[#111827]">{t.subject}</p>
                     <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${STATUS_COLOR[t.status] ?? "bg-gray-100 text-gray-600"}`}>{STATUS_LABEL[t.status] ?? t.status}</span>
                     <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${t.user_id ? "bg-[#dbeafe] text-[#1d4ed8]" : "bg-gray-100 text-gray-500"}`}>{t.user_id ? "Registrado" : "Invitado"}</span>

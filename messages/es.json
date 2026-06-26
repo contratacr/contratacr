@@ -1915,6 +1915,7 @@
     "actionError": "No se pudo procesar. Intenta de nuevo.",
     "yourConversations": "Tus tiquetes de soporte.",
     "inboxTitle": "Casos de soporte",
+    "caseRef": "Caso #{ref}",
     "inboxBody": "Abre un caso nuevo o continúa una conversación existente. Te respondemos aquí y por correo.",
     "newTicket": "Contactar soporte",
     "empty": "Todavía no tienes tiquetes",

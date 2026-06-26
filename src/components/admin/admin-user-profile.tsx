@@ -10,6 +10,7 @@ import { getInitials } from "@/lib/utils";
 import { getCategoryLabel } from "@/lib/data/categories";
 import { verificationLabel, verificationPillClasses, type VerificationStatus } from "@/lib/verification";
 import { AdminSubscription } from "@/components/admin/admin-subscription";
+import { supportTicketRef } from "@/lib/support-ticket";
 
 type Profile = {
   id: string; full_name: string | null; email: string | null; cedula: string | null;
@@ -189,7 +190,12 @@ export function AdminUserProfile({ userId }: { userId: string }) {
             {tickets.map((t) => (
               <li key={t.id} className="px-4 py-3 flex items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-[#111827] truncate">{t.subject}</p>
+                  <div className="flex items-center gap-2">
+                    <span className="shrink-0 rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-semibold text-[#6b7280]">
+                      Caso #{supportTicketRef(t.id)}
+                    </span>
+                    <p className="min-w-0 truncate text-sm font-medium text-[#111827]">{t.subject}</p>
+                  </div>
                   <p className="text-xs text-[#9ca3af]">{fmt(t.created_at)}{t.topic ? ` · ${t.topic}` : ""}</p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
