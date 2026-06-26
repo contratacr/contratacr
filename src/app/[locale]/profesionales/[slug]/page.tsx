@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, type ReactNode } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import {
   MapPin, Shield, ShieldCheck, ArrowLeft, Star, Briefcase, Camera, Coins, Languages,
-  Share2, Flag, ChevronDown, Lock, Phone, Building2, Award, Mail, SearchX, FileText,
+  Share2, Flag, ChevronDown, Lock, Building2, Award, Mail, SearchX, FileText,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { InstagramIcon, FacebookIcon, TikTokIcon } from "@/components/icons/social-icons";
@@ -726,19 +726,11 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                     const sameText = (a?: string | null, b?: string | null) =>
                       String(a ?? "").trim().toLocaleLowerCase("es-CR") === String(b ?? "").trim().toLocaleLowerCase("es-CR");
                     const workplaceLines = uniqueWorkplaces.filter((w) => !(sameText(w.name, locationText) || sameText(w.address, locationText)));
-                    const contactLines: ReactNode[] = [];
-                    if (professional.whatsapp) contactLines.push(<span key="wa">{t("contactWhatsApp")}</span>);
-                    if (professional.allowPhoneCall && (professional.callPhone || professional.whatsapp)) contactLines.push(<span key="call">{t("contactCall")}</span>);
-                    if (professional.contactEmail) contactLines.push(<span key="email">{t("contactEmail")}</span>);
                     if (professional.bio) facts.push({
                       key: "bio",
                       icon: <FileText className="h-5 w-5" />,
                       label: t("description"),
                       value: <span className="block whitespace-pre-line text-[15px] font-normal leading-7 text-[#374151]">{professional.bio}</span>,
-                    });
-                    if (contactLines.length > 0) facts.push({
-                      key: "contact", icon: <Phone className="h-5 w-5" />, label: t("contactMethods"),
-                      value: <span className="flex flex-wrap gap-x-2 gap-y-1">{contactLines.map((line, i) => <span key={i} className="after:ml-2 after:text-[#d1d5db] after:content-['·'] last:after:content-none">{line}</span>)}</span>,
                     });
                     if (expYears > 0) facts.push({
                       key: "exp", icon: <Briefcase className="h-5 w-5" />, label: t("experienceLabel"), value: t("yearsValue", { years: expYears }),
