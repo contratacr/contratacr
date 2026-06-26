@@ -157,6 +157,10 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   const [cancelTarget, setCancelTarget] = useState<string | null>(null);
   const [cancelNote, setCancelNote] = useState("");
   const [cancelling, setCancelling] = useState(false);
+  // Published request cancel confirm. Separate from appointment cancel because projects
+  // do not free a calendar slot, but professionals with proposals should still be warned.
+  const [cancelProjectTarget, setCancelProjectTarget] = useState<string | null>(null);
+  const [cancellingProject, setCancellingProject] = useState(false);
   // Delete-publicación confirm dialog (clean modal, not a browser confirm()).
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -267,6 +271,18 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
     if (!res.ok) { alert(t("projectUpdateError")); return; }
     setProjects((prev) => prev.map((p) => (p.id === projectId ? { ...p, status } : p)));
     refreshProjects();
+  }
+
+  function openCancelProject(projectId: string) {
+    setCancelProjectTarget(projectId);
+    setExpandedProject(projectId);
+  }
+
+  async function confirmCancelProject(projectId: string) {
+    setCancellingProject(true);
+    await updateProjectStatus(projectId, "cancelled");
+    setCancellingProject(false);
+    setCancelProjectTarget(null);
   }
 
   async function confirmProjectCompletion(projectId: string) {
@@ -708,7 +724,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                             const st = project.status;
                             const menu: CardAction[] = [];
                             if (st === "open" || st === "in_progress" || st === "awaiting_confirmation") {
-                              menu.push({ label: t("cancelProject"), onClick: () => updateProjectStatus(project.id, "cancelled"), destructive: true });
+                              menu.push({ label: t("cancelProject"), onClick: () => openCancelProject(project.id), destructive: true });
                             }
                             if (st !== "open" && st !== "in_progress" && st !== "awaiting_confirmation") {
                               menu.push({ label: t("delete"), onClick: () => setDeleteTarget(project.id), destructive: true });
@@ -743,6 +759,35 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                               </div>
                             );
                           })()}
+
+                          {cancelProjectTarget === project.id && (
+                            <div className="rounded-xl border border-red-100 bg-red-50/60 p-3.5">
+                              <p className="text-sm font-semibold text-[#111827]">{t("cancelProjectTitle")}</p>
+                              <p className="mt-0.5 text-xs leading-relaxed text-[#6b7280]">
+                                {t("cancelProjectBody")}
+                              </p>
+                              <div className="mt-3 flex flex-wrap justify-end gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="rounded-lg"
+                                  onClick={() => setCancelProjectTarget(null)}
+                                  disabled={cancellingProject}
+                                >
+                                  {t("cancelBack")}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  className="rounded-lg bg-red-600 hover:bg-red-700"
+                                  onClick={() => confirmCancelProject(project.id)}
+                                  disabled={cancellingProject}
+                                  loading={cancellingProject}
+                                >
+                                  {t("cancelProjectConfirm")}
+                                </Button>
+                              </div>
+                            </div>
+                          )}
 
                           {proposalList && (() => {
                             const finalized = project.status === "completed";

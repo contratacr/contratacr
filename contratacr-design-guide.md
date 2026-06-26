@@ -1930,3 +1930,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Navbar category dropdown.** Prefer the simple search-first category dropdown: one search input, compact group cards with a few direct links, and a clear view-all link. Avoid two-pane hover-dependent category navigation unless there is a strong reason; it is heavier and harder to scan.
 
 > **Smart search examples.** The scrolled compact navbar search may use a typewriter placeholder with short natural-language service examples. Keep examples practical and localized, and make sure the same text pattern resolves through `resolveCategoryIntent()` so phrases like "Necesito limpiar mi casa" search by category instead of only as raw keywords.
+
+> **Published request cancellation.** Cancelling an active Mis publicaciones request is destructive because it closes the request to proposals. Use an inline confirmation block inside the expanded card before applying `status=cancelled`; do not cancel immediately from the action button.
