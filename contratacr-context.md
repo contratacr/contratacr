@@ -3654,3 +3654,5 @@ New i18n namespaces added this pass: `search.pagination`, extended `search.filte
 - Sprint 347: /categorias redesigned from accordion-only to scan-first: search hero, horizontal group shortcut rail, all groups expanded as visible section cards, and the suggestion card after the groups. Category links still route to /buscar?categoria=... .
 
 - Sprint 361: /categorias now uses full-width uniform category sections instead of uneven two-column group cards. Category groups can have very different service counts, so equal-width cards created mismatched container heights; the page now keeps every group visible for scan-first browsing while rendering services as compact links/chips.
+
+- Sprint 362: Service modalities remain per-service fields in Servicios, not Disponibilidad. /buscar no shows A domicilio/Videoconsulta chips anymore so cards stay focused; modalities continue to surface in the professional profile/service request context, where clients have more room and intent.

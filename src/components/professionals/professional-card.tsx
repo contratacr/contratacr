@@ -158,18 +158,11 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
   // column under the rating — see ProfessionalSchedule). The per-place TABS +
   // street addresses come from the pro's workplaces; here we only supply the
   // FALLBACK tab (province/cantón, shown when there are no named workplaces) and
-  // the general province/cantón address. Home service is shown as a separate chip,
-  // never as the address line.
+  // the general province/cantón address. Service modalities such as home service
+  // and video consultation stay off the search card to keep results easy to scan;
+  // the profile/service request flow carries that detail.
   const placeFallback = professional.cantonName || professional.provinceName || "";
   const placeAddress = [professional.cantonName, professional.provinceName].filter(Boolean).join(", ");
-  const visibleServices = (professional.services ?? []).filter((s) => s.active !== false);
-  const modalityServices = activeCategory
-    ? visibleServices.filter((s) => (s.category ?? professional.categoryId) === activeCategory)
-    : visibleServices;
-  const offersHomeService = professional.serviceType?.includes("mobile") || modalityServices.some((s) => s.modalities?.includes("at_home"));
-  const hasFixedPlace = (professional.workplaces?.length ?? 0) > 0 || !!placeAddress;
-  const homeServiceLabel = offersHomeService ? tCard(hasFixedPlace ? "alsoAtHome" : "atHome") : "";
-  const offersVideoConsult = modalityServices.some((s) => s.modalities?.includes("video"));
 
   // ── LEFT-column professional info (slotted into ProfessionalSchedule, which owns the
   // desktop two-column layout). Each block is a direct child of the schedule's left
@@ -268,16 +261,6 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
               </span>
             )}
           </div>
-          {homeServiceLabel && (
-            <span className="inline-flex w-fit items-center rounded-full bg-[#EBF5FB] px-2 py-0.5 text-[11px] font-semibold text-[#0089bb]">
-              {homeServiceLabel}
-            </span>
-          )}
-          {offersVideoConsult && (
-            <span className="inline-flex w-fit items-center rounded-full bg-[#f0fdf4] px-2 py-0.5 text-[11px] font-semibold text-[#15803d]">
-              {tCard("videoConsult")}
-            </span>
-          )}
         </div>
       </div>
     </>
