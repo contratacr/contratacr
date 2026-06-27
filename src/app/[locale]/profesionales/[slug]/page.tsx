@@ -791,14 +791,10 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                             <span key={line} className="[overflow-wrap:anywhere]">{line}</span>
                           ))}
                           {offersHomeService && (
-                            <span className="w-fit rounded-full bg-[#EBF5FB] px-2 py-0.5 text-[11px] font-semibold text-[#0089bb]">
-                              {t(hasFixedPlace ? "alsoAtHome" : "atHome")}
-                            </span>
+                            <span className="[overflow-wrap:anywhere]">{t("atHome")}</span>
                           )}
                           {offersVideoConsult && (
-                            <span className="w-fit rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-semibold text-[#6b7280]">
-                              {t("videoConsult")}
-                            </span>
+                            <span className="[overflow-wrap:anywhere]">{t("videoConsult")}</span>
                           )}
                         </span>
                       ),

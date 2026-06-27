@@ -3670,3 +3670,5 @@ New i18n namespaces added this pass: `search.pagination`, extended `search.filte
 - Sprint 368: Simplified attention modalities back to profile-level. Services no longer ask or show per-service modalities; Mi perfil location section now includes the general Videoconsulta toggle alongside fixed workplaces and travel-to-client. Public profile Sobre mi and booking modal show general attention modes as info only; clients/pros coordinate the exact modality on WhatsApp. Legacy services[].modalities may remain in old records but the UI ignores it.
 
 - Sprint 369: Attention-mode labels are now neutral modern-app labels instead of conversational 'tambien' phrasing. Mi perfil uses 'A domicilio' and 'Videoconsulta'; booking info says 'Formas de atención disponibles...' / 'Available service modes...' so it reads as available options, not exclusive service promises.
+
+- Sprint 370: Public profile Sobre mi -> Lugares de trabajo now renders A domicilio and Videoconsulta as normal list lines, matching physical workplace text, instead of colored chips. Uses neutral 'A domicilio' label in this context.
