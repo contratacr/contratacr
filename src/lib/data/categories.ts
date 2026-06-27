@@ -230,9 +230,23 @@ export const OTHER_CATEGORY: CategoryItem = {
    server (no fetch) — there `getCategoryLabel` falls back to a clean slug label. */
 export const CUSTOM_GROUP_ID = "otras";
 let CUSTOM_CATEGORIES: (CategoryItem & { groupId: string; groupLabel: string })[] = [];
+let CATEGORY_FEATURE_OVERRIDES = new Map<string, { esSalud?: boolean; supportsVideoconsulta?: boolean }>();
 const customListeners = new Set<() => void>();
 
-export function setCustomCategories(list: { id: string; label: string; keywords?: string[] }[]): void {
+export function setCategoryFeatureOverrides(
+  list: { id: string; esSalud?: boolean; supportsVideoconsulta?: boolean }[]
+): void {
+  CATEGORY_FEATURE_OVERRIDES = new Map(
+    list
+      .filter((c) => c && c.id)
+      .map((c) => [c.id, { esSalud: c.esSalud, supportsVideoconsulta: c.supportsVideoconsulta }])
+  );
+  customListeners.forEach((fn) => { try { fn(); } catch { /* ignore */ } });
+}
+
+export function setCustomCategories(
+  list: { id: string; label: string; keywords?: string[]; esSalud?: boolean; supportsVideoconsulta?: boolean }[]
+): void {
   CUSTOM_CATEGORIES = list
     .filter((c) => c && c.id && c.label)
     .map((c) => ({
@@ -242,7 +256,7 @@ export function setCustomCategories(list: { id: string; label: string; keywords?
       groupId: CUSTOM_GROUP_ID,
       groupLabel: "Otras categorías",
     }));
-  customListeners.forEach((fn) => { try { fn(); } catch { /* ignore */ } });
+  setCategoryFeatureOverrides(list);
 }
 
 export function getCustomCategories(): (CategoryItem & { groupId: string; groupLabel: string })[] {
@@ -516,7 +530,9 @@ export const HEALTH_CATEGORY_IDS = new Set<string>([
 
 /** True if the category is a health/medical category (DOB relevant). */
 export function isHealthCategory(id?: string | null): boolean {
-  return !!id && HEALTH_CATEGORY_IDS.has(id);
+  if (!id) return false;
+  const override = CATEGORY_FEATURE_OVERRIDES.get(id)?.esSalud;
+  return typeof override === "boolean" ? override : HEALTH_CATEGORY_IDS.has(id);
 }
 
 /* ─── CARE categories — a SUBSET of health that is CARE of a person (not a clinical
@@ -554,7 +570,9 @@ export const VIDEO_CONSULT_CATEGORY_IDS = new Set<string>([
 ]);
 
 export function supportsVideoConsultCategory(id?: string | null): boolean {
-  return !!id && VIDEO_CONSULT_CATEGORY_IDS.has(id);
+  if (!id) return false;
+  const override = CATEGORY_FEATURE_OVERRIDES.get(id)?.supportsVideoconsulta;
+  return typeof override === "boolean" ? override : VIDEO_CONSULT_CATEGORY_IDS.has(id);
 }
 
 export function anyVideoConsultCategory(ids?: (string | null | undefined)[]): boolean {

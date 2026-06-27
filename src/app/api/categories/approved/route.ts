@@ -12,14 +12,25 @@ export async function GET() {
     .select("id, label, suggested_name")
     .eq("status", "approved")
     .order("label", { ascending: true });
+  const { data: flags } = await db
+    .from("categories")
+    .select("id, es_salud, supports_videoconsulta");
+  const flagMap = new Map((flags ?? []).map((c) => [c.id, c]));
 
   const categories = (data ?? []).map((c) => ({
     id: c.id,
     label: (c.label || c.suggested_name || "").trim(),
+    esSalud: !!flagMap.get(c.id)?.es_salud,
+    supportsVideoconsulta: !!flagMap.get(c.id)?.supports_videoconsulta,
+  }));
+  const categoryFlags = (flags ?? []).map((c) => ({
+    id: c.id,
+    esSalud: !!c.es_salud,
+    supportsVideoconsulta: !!c.supports_videoconsulta,
   }));
 
   return NextResponse.json(
-    { categories },
+    { categories, categoryFlags },
     // Cache briefly at the edge — approvals are rare; pickers can be a touch stale.
     { headers: { "Cache-Control": "public, max-age=60, s-maxage=300" } }
   );

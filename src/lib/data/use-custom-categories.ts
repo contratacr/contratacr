@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   getCustomCategories,
+  setCategoryFeatureOverrides,
   setCustomCategories,
   subscribeCustomCategories,
 } from "./categories";
@@ -19,6 +20,7 @@ function ensureLoaded() {
   fetch("/api/categories/approved")
     .then((r) => (r.ok ? r.json() : null))
     .then((d) => {
+      if (d && Array.isArray(d.categoryFlags)) setCategoryFeatureOverrides(d.categoryFlags);
       if (d && Array.isArray(d.categories)) setCustomCategories(d.categories);
     })
     .catch(() => {
