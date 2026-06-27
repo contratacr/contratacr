@@ -15,6 +15,8 @@ import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import { PRICING_TYPES, formatServicePrice, type PricingType } from "@/lib/pricing";
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
 
+export type ServiceModality = "in_person" | "at_home" | "video";
+
 export type ProService = {
   id: string;
   name: string;
@@ -29,6 +31,9 @@ export type ProService = {
   // Active/inactive toggle (sprint 486). An INACTIVE service is "paused" — kept in the
   // editor but HIDDEN from clients (public profile). Undefined/true = active (back-compat).
   active?: boolean;
+  // How this specific service can be delivered. Availability stays shared; these are
+  // client-facing modalities, not separate schedule locations.
+  modalities?: ServiceModality[];
 };
 
 interface ServicesEditorProps {
@@ -53,9 +58,11 @@ interface ServiceFormState {
   priceAmount: string;
   aConsultar: boolean;      // "Consultar precio" → persists as priceType a_convenir
   years: string;
+  modalities: ServiceModality[];
 }
 
-const EMPTY_FORM: ServiceFormState = { description: "", priceUnit: "por_hora", priceAmount: "", aConsultar: false, years: "" };
+const EMPTY_FORM: ServiceFormState = { description: "", priceUnit: "por_hora", priceAmount: "", aConsultar: false, years: "", modalities: ["in_person"] };
+const MODALITY_OPTIONS: ServiceModality[] = ["in_person", "at_home", "video"];
 
 export function ServicesEditor({
   professionalId,
@@ -187,6 +194,7 @@ export function ServicesEditor({
       priceAmount: rep?.priceAmount != null ? String(rep.priceAmount) : "",
       aConsultar: isAsk,
       years: rep?.years != null ? String(rep.years) : "",
+      modalities: rep?.modalities?.length ? rep.modalities : ["in_person"],
     });
     setFormError(null);
     if (professions.includes(prof)) setPendingNewCategory(null);
@@ -230,6 +238,7 @@ export function ServicesEditor({
       years,
       category: editCategory,
       active: rep?.active ?? true,
+      modalities: form.modalities.length > 0 ? form.modalities : ["in_person"],
     };
     const nextProfessions = pendingNewCategory === editCategory && !professions.includes(editCategory)
       ? [...professions, editCategory]
@@ -303,6 +312,7 @@ export function ServicesEditor({
               const info = serviceInfo(prof);
               const isActive = serviceActive(prof);
               const priceLabel = info?.price && info.priceType !== "a_convenir" ? info.price : t("priceConsult");
+              const modalities = info?.modalities?.length ? info.modalities : ["in_person"];
               return (
                 <section
                   key={prof}
@@ -344,6 +354,13 @@ export function ServicesEditor({
                   ) : (
                     <p className="mt-3 text-[13px] italic leading-relaxed text-[#9ca3af]">{t("noDescriptionYet")}</p>
                   )}
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    {modalities.map((modality) => (
+                      <span key={modality} className="inline-flex rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-semibold text-[#6b7280]">
+                        {t(`modality.${modality}`)}
+                      </span>
+                    ))}
+                  </div>
 
                   <div className="mt-3 min-h-[18px]">
                     {isPrincipal ? (
@@ -493,6 +510,36 @@ export function ServicesEditor({
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                 autoFocus
               />
+            </div>
+
+            <div>
+              <p className="mb-2 block text-sm font-medium text-[#374151]">{t("modalitiesLabel")}</p>
+              <div className="flex flex-wrap gap-2">
+                {MODALITY_OPTIONS.map((modality) => {
+                  const checked = form.modalities.includes(modality);
+                  return (
+                    <button
+                      key={modality}
+                      type="button"
+                      aria-pressed={checked}
+                      onClick={() => setForm((f) => {
+                        const next = checked
+                          ? f.modalities.filter((m) => m !== modality)
+                          : [...f.modalities, modality];
+                        return { ...f, modalities: next.length > 0 ? next : ["in_person"] };
+                      })}
+                      className={cn(
+                        "rounded-lg border px-3 py-2 text-xs font-semibold transition-colors",
+                        checked
+                          ? "border-[#009FD9] bg-[#EBF5FB] text-[#0089bb]"
+                          : "border-[#e5e7eb] bg-white text-[#6b7280] hover:border-[#cbd5e1] hover:bg-[#f8fafc]"
+                      )}
+                    >
+                      {t(`modality.${modality}`)}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             <div>

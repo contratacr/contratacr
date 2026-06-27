@@ -561,6 +561,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                               const rep = items.find((s) => s.description) ?? items.find((s) => s.price) ?? items[0];
                               const priced = items.find((s) => s.price && (s as { priceType?: string }).priceType !== "a_convenir");
                               const priceLabel = priced?.price ?? t("priceConsult");
+                              const modalities = rep?.modalities?.length ? rep.modalities : ["in_person"];
                               return (
                                 <div key={cat} className="flex flex-col rounded-2xl border border-[#e5e7eb] bg-white p-5 shadow-sm transition-shadow hover:shadow-md">
                                   <div className="flex flex-1 flex-col">
@@ -570,6 +571,13 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                                     ) : (
                                       <p className="mt-2 text-[13px] text-[#9ca3af]">{t("askForDetails")}</p>
                                     )}
+                                    <div className="mt-3 flex flex-wrap gap-1.5">
+                                      {modalities.map((modality) => (
+                                        <span key={modality} className="inline-flex rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-semibold text-[#6b7280]">
+                                          {t(`modality.${modality}`)}
+                                        </span>
+                                      ))}
+                                    </div>
                                     <p className="mt-3 text-[15px] font-bold text-[#0089bb] [overflow-wrap:anywhere]">{priceLabel}</p>
                                     <button type="button" onClick={() => requestService(cat)} className="mt-auto pt-4">
                                       <span className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#009FD9] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[#0089bb]">
@@ -741,13 +749,14 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                       label: t("description"),
                       value: <span className="block whitespace-pre-line text-[15px] font-normal leading-7 text-[#374151]">{professional.bio}</span>,
                     });
-                    const offersHomeService = String(professional.serviceType ?? "").includes("mobile");
+                    const offersHomeService = String(professional.serviceType ?? "").includes("mobile") || services.some((service) => service.modalities?.includes("at_home"));
+                    const offersVideoConsult = services.some((service) => service.modalities?.includes("video"));
                     const hasFixedPlace = workplaceAreaLines.length > 0 || uniqueWorkplaces.length > 0;
-                    if (offersHomeService) facts.push({
+                    if (offersHomeService || offersVideoConsult) facts.push({
                       key: "attention",
                       icon: <Building2 className="h-5 w-5" />,
                       label: t("attention"),
-                      value: t(hasFixedPlace ? "alsoAtHome" : "atHome"),
+                      value: [offersHomeService ? t(hasFixedPlace ? "alsoAtHome" : "atHome") : "", offersVideoConsult ? t("videoConsult") : ""].filter(Boolean).join(" · "),
                     });
                     if (expYears > 0) facts.push({
                       key: "exp", icon: <Briefcase className="h-5 w-5" />, label: t("experienceLabel"), value: t("yearsValue", { years: expYears }),

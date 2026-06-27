@@ -248,6 +248,7 @@
     "coverageAreas": "Se desplaza en {areas}",
     "atHome": "A domicilio",
     "alsoAtHome": "También a domicilio",
+    "videoConsult": "Videoconsulta",
     "save": "Guardar profesional",
     "unsave": "Quitar de guardados",
     "saveLabel": "Guardar",
@@ -566,6 +567,12 @@
     "attention": "Atención",
     "atHome": "A domicilio",
     "alsoAtHome": "También a domicilio",
+    "videoConsult": "Videoconsulta",
+    "modality": {
+      "in_person": "Presencial",
+      "at_home": "A domicilio",
+      "video": "Videoconsulta"
+    },
     "prices": "Precios",
     "baseRate": "Tarifa base",
     "workplaces": "Lugares de trabajo",
@@ -1479,6 +1486,12 @@
     "nameField": "Nombre",
     "namePlaceholderShort": "Ej. Reparación de fugas",
     "descBrief": "Descripción",
+    "modalitiesLabel": "Modalidades de atención",
+    "modality": {
+      "in_person": "Presencial",
+      "at_home": "A domicilio",
+      "video": "Videoconsulta"
+    },
     "descPlaceholderShort": "¿Qué incluye este servicio?",
     "priceRef": "Precio de referencia",
     "aConsultarLabel": "Consultar precio (no mostrar monto)",

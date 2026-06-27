@@ -248,6 +248,7 @@
     "coverageAreas": "Travels in {areas}",
     "atHome": "At home",
     "alsoAtHome": "Also at home",
+    "videoConsult": "Video consultation",
     "save": "Save professional",
     "unsave": "Remove from saved",
     "saveLabel": "Save",
@@ -567,6 +568,12 @@
     "attention": "Service mode",
     "atHome": "At home",
     "alsoAtHome": "Also at home",
+    "videoConsult": "Video consultation",
+    "modality": {
+      "in_person": "In person",
+      "at_home": "At home",
+      "video": "Video consultation"
+    },
     "prices": "Prices",
     "baseRate": "Base rate",
     "workplaces": "Workplaces",
@@ -1479,6 +1486,12 @@
     "nameField": "Name",
     "namePlaceholderShort": "e.g. Leak repair",
     "descBrief": "Description",
+    "modalitiesLabel": "Service modalities",
+    "modality": {
+      "in_person": "In person",
+      "at_home": "At home",
+      "video": "Video consultation"
+    },
     "descPlaceholderShort": "What does this service include?",
     "priceRef": "Reference price",
     "aConsultarLabel": "Ask price (do not show amount)",

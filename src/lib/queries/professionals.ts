@@ -93,6 +93,8 @@ export type ProService = {
   priceAmount?: number | null;
   priceType?: import("@/lib/pricing").PricingType | null;
   category?: string;
+  active?: boolean;
+  modalities?: Array<"in_person" | "at_home" | "video">;
 };
 
 // Photos attach to a SERVICE INSTANCE (serviceId); `profession` kept for legacy.
