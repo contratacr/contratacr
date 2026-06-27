@@ -728,27 +728,30 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                           <div className="flex min-w-0 flex-1 flex-col gap-2.5">
                             {blocks.map((b) => {
                             const timeRow = (
-                              <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:w-fit sm:grid-cols-[6.75rem_auto_6.75rem] sm:gap-1.5">
-                                <TimeSelect value={b.start} onChange={(v) => updateBlock(wd, b.id, { start: v, ...(b.end && toMins(b.end) <= toMins(v) ? { end: hhmm(Math.min(toMins(v) + 60, 23 * 60 + 30)) } : {}) })} className="min-w-0 w-full sm:w-[6.75rem]" />
+                              <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:w-fit sm:grid-cols-[6.5rem_auto_6.5rem] sm:gap-1.5">
+                                <TimeSelect value={b.start} onChange={(v) => updateBlock(wd, b.id, { start: v, ...(b.end && toMins(b.end) <= toMins(v) ? { end: hhmm(Math.min(toMins(v) + 60, 23 * 60 + 30)) } : {}) })} className="min-w-0 w-full sm:w-[6.5rem]" />
                                 <span className="shrink-0 text-[#9ca3af]">–</span>
-                                <TimeSelect value={b.end} min={b.start ? hhmm(Math.min(toMins(b.start) + 30, 23 * 60 + 30)) : undefined} onChange={(v) => updateBlock(wd, b.id, { end: v })} className="min-w-0 w-full sm:w-[6.75rem]" error={b.start && b.end && toMins(b.end) <= toMins(b.start) ? t("toAfterFrom") : undefined} />
+                                <TimeSelect value={b.end} min={b.start ? hhmm(Math.min(toMins(b.start) + 30, 23 * 60 + 30)) : undefined} onChange={(v) => updateBlock(wd, b.id, { end: v })} className="min-w-0 w-full sm:w-[6.5rem]" error={b.start && b.end && toMins(b.end) <= toMins(b.start) ? t("toAfterFrom") : undefined} />
                               </div>
                             );
                             // Single-location pros: just the time row (clean, compact, no location UI).
                             if (!isMultiLocation) return <div key={b.id}>{timeRow}</div>;
+                            const currentLocationLabel = locationOptions.find((o) => o.id === b.locationId)?.label ?? "";
                             // 2+ locations: location first, hours below, with no extra card chrome.
-                            // The fixed width keeps the day actions aligned on the same row.
+                            // Keep this compact so the day actions stay on the same row; long
+                            // addresses truncate in the control but remain available in the option/title.
                             return (
-                              <div key={b.id} className="flex w-full flex-col gap-2 sm:w-[15.75rem]">
+                              <div key={b.id} className="flex w-full flex-col gap-2 sm:w-[14.25rem]">
                                 <div className="relative min-w-0">
                                   <MapPin className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#009FD9]" />
                                   <select
                                     value={b.locationId}
                                     onChange={(e) => updateBlock(wd, b.id, { locationId: e.target.value })}
                                     aria-label={t("blockLocationAria")}
-                                    className="h-10 w-full appearance-none truncate rounded-xl border border-[#e5e7eb] bg-[#f9fafb] pl-9 pr-9 text-xs font-semibold text-[#374151] hover:border-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent cursor-pointer transition-colors"
+                                    title={currentLocationLabel}
+                                    className="h-10 w-full appearance-none truncate rounded-xl border border-[#e5e7eb] bg-[#f9fafb] pl-9 pr-8 text-xs font-semibold text-[#374151] hover:border-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent cursor-pointer transition-colors"
                                   >
-                                    {locationOptions.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+                                    {locationOptions.map((o) => <option key={o.id} value={o.id} title={o.label}>{o.label}</option>)}
                                   </select>
                                   <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9ca3af]" />
                                 </div>

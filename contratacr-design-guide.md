@@ -1949,4 +1949,6 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 
 > **Availability multi-location inputs.** Weekly availability rows with multiple work locations should stay visually simple: location select above the time range, no extra per-slot card chrome. Keep the select/time group narrow enough that `Agregar franja` and `Aplicar a otros días` can align to the right on larger screens, while stacking cleanly on mobile.
 
+> **Availability location select sizing.** Work-location selects in availability must not grow with long exact addresses. Keep the visible control compact, truncate long labels inside the select, and expose the full address through native option/title text so actions beside the schedule never get covered.
+
 > **Navbar category dropdown.** The desktop category menu should be section-led, not a flat wall of cards. Use a compact search at the top, a left rail of category groups with icons, and a right pane for the selected group's services. Search results should remain grouped by section so users understand where each service belongs.
