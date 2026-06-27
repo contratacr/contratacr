@@ -816,7 +816,10 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                 return (
                   <div key={wd} className="grid min-w-0 gap-2 py-3 lg:grid-cols-[7.5rem_minmax(0,1fr)] lg:gap-3">
                     {/* toggle + weekday name */}
-                    <div className="flex min-w-0 items-center gap-2.5 lg:pt-2">
+                    <div className={cn(
+                      "flex min-w-0 items-center gap-2.5 lg:pt-2",
+                      on && isMultiLocation && "lg:pt-11"
+                    )}>
                       <button
                         type="button"
                         onClick={() => toggleDay(wd)}

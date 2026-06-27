@@ -3626,3 +3626,5 @@ New i18n namespaces added this pass: `search.pagination`, extended `search.filte
 **Sprint 333 - Select-like availability place menu.** Simplified the availability location dropdown so it feels like a normal opened select: compact trigger, attached list, readable wrapped options, and a discreet active check. Weekly rows now place the first time range and Agregar franja / Aplicar a otros dias in the same flex line from medium widths, only wrapping when the available width truly requires it.
 
 **Sprint 334 - Availability location separated from time row.** Multi-location weekly availability now keeps the location dropdown on its own line above the schedule controls. The time range and Agregar franja / Aplicar a otros dias share a flexible row that wraps inside the card instead of overflowing or covering nearby controls.
+
+**Sprint 335 - Availability weekday aligns with time row.** When a weekly availability block has a location selector, the selector stays above while the weekday aligns vertically with the start/end time row and Agregar franja / Aplicar a otros dias. This preserves the intended five-item line without putting location into that line.
