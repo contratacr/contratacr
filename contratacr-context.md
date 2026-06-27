@@ -3644,3 +3644,5 @@ New i18n namespaces added this pass: `search.pagination`, extended `search.filte
 - Sprint 342: Availability no longer treats 'A domicilio' or coverage zones as schedulable locations. The 'Horario para' selector shows only fixed/base workplaces; home service remains a profile/search capability that clients can request inside the pro's normal workplace hours for covered zones.
 
 - Sprint 343: Search cards now show home-service as a chip under rating/reviews ('A domicilio' or 'Tambien a domicilio'), never in the address/location line. The address line is reserved for real fixed locations such as canton/province or workplace address; legacy cov_* slot ids are ignored for the location tab row.
+
+- Sprint 344: Public professional profiles show home-service inside Sobre mi as a fact row labeled Atencion ('A domicilio' / 'Tambien a domicilio'), matching the /buscar card chip. It is not shown as an address or workplace.

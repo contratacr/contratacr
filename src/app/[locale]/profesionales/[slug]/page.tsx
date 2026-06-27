@@ -741,6 +741,14 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                       label: t("description"),
                       value: <span className="block whitespace-pre-line text-[15px] font-normal leading-7 text-[#374151]">{professional.bio}</span>,
                     });
+                    const offersHomeService = String(professional.serviceType ?? "").includes("mobile");
+                    const hasFixedPlace = workplaceAreaLines.length > 0 || uniqueWorkplaces.length > 0;
+                    if (offersHomeService) facts.push({
+                      key: "attention",
+                      icon: <Building2 className="h-5 w-5" />,
+                      label: t("attention"),
+                      value: t(hasFixedPlace ? "alsoAtHome" : "atHome"),
+                    });
                     if (expYears > 0) facts.push({
                       key: "exp", icon: <Briefcase className="h-5 w-5" />, label: t("experienceLabel"), value: t("yearsValue", { years: expYears }),
                     });
