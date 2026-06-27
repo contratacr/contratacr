@@ -1492,6 +1492,11 @@
       "at_home": "At home",
       "video": "Video consultation"
     },
+    "modalityDesc": {
+      "in_person": "You serve clients at your office, shop or clinic.",
+      "at_home": "You can travel to the client's location.",
+      "video": "You can serve clients by video call."
+    },
     "descPlaceholderShort": "What does this service include?",
     "priceRef": "Reference price",
     "aConsultarLabel": "Ask price (do not show amount)",

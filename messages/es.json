@@ -1492,6 +1492,11 @@
       "at_home": "A domicilio",
       "video": "Videoconsulta"
     },
+    "modalityDesc": {
+      "in_person": "Atiendes en tu local, oficina o consultorio.",
+      "at_home": "Puedes desplazarte donde el cliente.",
+      "video": "Puedes atender por videollamada."
+    },
     "descPlaceholderShort": "¿Qué incluye este servicio?",
     "priceRef": "Precio de referencia",
     "aConsultarLabel": "Consultar precio (no mostrar monto)",

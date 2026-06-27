@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Plus, Trash2, Pencil, Search } from "lucide-react";
+import { Plus, Trash2, Pencil, Search, MapPin, Home, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PriceInput } from "@/components/ui/price-input";
 import { Modal } from "@/components/ui/modal";
@@ -63,6 +63,11 @@ interface ServiceFormState {
 
 const EMPTY_FORM: ServiceFormState = { description: "", priceUnit: "por_hora", priceAmount: "", aConsultar: false, years: "", modalities: ["in_person"] };
 const MODALITY_OPTIONS: ServiceModality[] = ["in_person", "at_home", "video"];
+const MODALITY_ICON = {
+  in_person: MapPin,
+  at_home: Home,
+  video: Video,
+} satisfies Record<ServiceModality, typeof MapPin>;
 
 export function ServicesEditor({
   professionalId,
@@ -514,9 +519,10 @@ export function ServicesEditor({
 
             <div>
               <p className="mb-2 block text-sm font-medium text-[#374151]">{t("modalitiesLabel")}</p>
-              <div className="flex flex-wrap gap-2">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
                 {MODALITY_OPTIONS.map((modality) => {
                   const checked = form.modalities.includes(modality);
+                  const Icon = MODALITY_ICON[modality];
                   return (
                     <button
                       key={modality}
@@ -529,13 +535,28 @@ export function ServicesEditor({
                         return { ...f, modalities: next.length > 0 ? next : ["in_person"] };
                       })}
                       className={cn(
-                        "rounded-lg border px-3 py-2 text-xs font-semibold transition-colors",
+                        "group flex min-h-[86px] items-start gap-3 rounded-xl border p-3 text-left transition-all",
                         checked
-                          ? "border-[#009FD9] bg-[#EBF5FB] text-[#0089bb]"
-                          : "border-[#e5e7eb] bg-white text-[#6b7280] hover:border-[#cbd5e1] hover:bg-[#f8fafc]"
+                          ? "border-[#009FD9] bg-[#f4fbff] shadow-sm ring-1 ring-[#bfe8f7]"
+                          : "border-[#e5e7eb] bg-white hover:border-[#bfdbfe] hover:bg-[#f8fbfe]"
                       )}
                     >
-                      {t(`modality.${modality}`)}
+                      <span
+                        className={cn(
+                          "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors",
+                          checked ? "bg-[#009FD9] text-white" : "bg-[#f3f4f6] text-[#9ca3af] group-hover:bg-[#EBF5FB] group-hover:text-[#009FD9]"
+                        )}
+                      >
+                        <Icon className="h-4 w-4" />
+                      </span>
+                      <span className="min-w-0">
+                        <span className={cn("block text-sm font-bold leading-tight", checked ? "text-[#162543]" : "text-[#374151]")}>
+                          {t(`modality.${modality}`)}
+                        </span>
+                        <span className="mt-1 block text-xs leading-snug text-[#6b7280]">
+                          {t(`modalityDesc.${modality}`)}
+                        </span>
+                      </span>
                     </button>
                   );
                 })}
