@@ -56,6 +56,15 @@ const STATUS_VARIANT: Record<BookingStatus, "warning" | "success" | "error" | "d
   rescheduled: "muted",
 };
 
+function PendingStatusText({ label }: { label: string }) {
+  return (
+    <span className="inline-flex shrink-0 items-center gap-1.5 text-[11px] font-semibold text-[#b45309]">
+      <span className="h-1.5 w-1.5 rounded-full bg-[#f59e0b]" aria-hidden="true" />
+      {label}
+    </span>
+  );
+}
+
 // "50688888888" / "88888888" → "+506 8888 8888" (readable). Non-standard → as-is.
 function formatPhoneCR(raw?: string | null): string | null {
   if (!raw) return null;
@@ -260,7 +269,11 @@ export function BookingRequests() {
                 {booking.client_name || t("thePerson")}
               </span>
               {!solicitudStatusRedundant(booking.status, booking.scheduled_date) && (
-                <Badge variant={STATUS_VARIANT[booking.status]} className="shrink-0 text-[11px] font-semibold">{t(`status.${booking.status}`)}</Badge>
+                booking.status === "pending" ? (
+                  <PendingStatusText label={t(`status.${booking.status}`)} />
+                ) : (
+                  <Badge variant={STATUS_VARIANT[booking.status]} className="shrink-0 text-[11px] font-semibold">{t(`status.${booking.status}`)}</Badge>
+                )
               )}
             </div>
             <div className="mt-2 flex flex-col items-start gap-1.5 text-[13px]">

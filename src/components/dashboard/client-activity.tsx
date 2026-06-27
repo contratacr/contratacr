@@ -105,6 +105,15 @@ const STATUS_VARIANT: Record<BookingStatus, "warning" | "success" | "error" | "d
   rescheduled: "muted",
 };
 
+function PendingStatusText({ label }: { label: string }) {
+  return (
+    <span className="inline-flex shrink-0 items-center gap-1.5 text-[11px] font-semibold text-[#b45309]">
+      <span className="h-1.5 w-1.5 rounded-full bg-[#f59e0b]" aria-hidden="true" />
+      {label}
+    </span>
+  );
+}
+
 function formatBookingDate(b: Booking, dateLocale: string) {
   if (b.scheduled_date) {
     const [y, m, d] = b.scheduled_date.split("-").map(Number);
@@ -464,7 +473,11 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                                 </span>
                               )}
                               {!solicitudStatusRedundant(b.status, b.scheduled_date) && (
-                                <Badge variant={STATUS_VARIANT[b.status]} className="shrink-0 text-[11px] font-semibold">{t(`bStatus.${b.status}`)}</Badge>
+                                b.status === "pending" ? (
+                                  <PendingStatusText label={t(`bStatus.${b.status}`)} />
+                                ) : (
+                                  <Badge variant={STATUS_VARIANT[b.status]} className="shrink-0 text-[11px] font-semibold">{t(`bStatus.${b.status}`)}</Badge>
+                                )
                               )}
                             </div>
                             {/* Appointment date with a grey calendar icon (no "Fecha:" label). */}

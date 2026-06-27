@@ -1944,3 +1944,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Availability multi-location rows.** When a professional has multiple work locations, each weekly time block should show location and time as one compact unit. Use a soft bordered row/card that lays out `location → time range` on desktop and stacks inside the same unit on phone; avoid tall disconnected location-over-time controls.
 
 > **Report actions in dashboard cards.** Do not use a standalone red square flag or an empty three-dot menu for the only report action. In opened cards, show report as a quiet secondary text link with a small flag icon, muted grey by default and red on hover/tap. Keep primary workflow buttons separate.
+
+> **Pending status treatment.** In dashboard cards, `Pendiente` / `Pending` should not use a filled or bordered badge container unless it represents a warning requiring attention. Prefer quiet amber text with a small dot so it reads as status, not a CTA or alert.

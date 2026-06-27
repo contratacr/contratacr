@@ -55,8 +55,8 @@ const STATUS_VARIANT: Record<ProposalStatus, "warning" | "success" | "error"> = 
 
 function PendingProposalBadge({ label }: { label: string }) {
   return (
-    <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50/80 px-2.5 py-1 text-[11px] font-semibold text-amber-700 shadow-[0_1px_0_rgba(245,158,11,0.12)]">
-      <span className="h-1.5 w-1.5 rounded-full bg-amber-500" aria-hidden="true" />
+    <span className="inline-flex shrink-0 items-center gap-1.5 text-[11px] font-semibold text-[#b45309]">
+      <span className="h-1.5 w-1.5 rounded-full bg-[#f59e0b]" aria-hidden="true" />
       {label}
     </span>
   );
