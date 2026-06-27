@@ -704,9 +704,9 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                 const on = blocks.length > 0;
                 const canApply = blocks.some(isCompleteFranja);
                 return (
-                  <div key={wd} className="grid gap-2 py-3 sm:grid-cols-[9rem_minmax(0,1fr)] sm:gap-4">
+                  <div key={wd} className="grid min-w-0 gap-2 py-3 lg:grid-cols-[9rem_minmax(0,1fr)] lg:gap-4">
                     {/* toggle + weekday name */}
-                    <div className="flex min-w-0 items-center gap-2.5 sm:pt-2">
+                    <div className="flex min-w-0 items-center gap-2.5 lg:pt-2">
                       <button
                         type="button"
                         onClick={() => toggleDay(wd)}
@@ -728,10 +728,10 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                           <div className="flex min-w-0 flex-1 flex-col gap-2.5">
                             {blocks.map((b) => {
                             const timeRow = (
-                              <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:w-fit sm:grid-cols-[7rem_auto_7rem] sm:gap-2">
-                                <TimeSelect value={b.start} onChange={(v) => updateBlock(wd, b.id, { start: v, ...(b.end && toMins(b.end) <= toMins(v) ? { end: hhmm(Math.min(toMins(v) + 60, 23 * 60 + 30)) } : {}) })} className="min-w-0 w-full sm:w-28" />
+                              <div className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 md:max-w-[19rem] md:grid-cols-[minmax(8.5rem,1fr)_auto_minmax(8.5rem,1fr)]">
+                                <TimeSelect value={b.start} onChange={(v) => updateBlock(wd, b.id, { start: v, ...(b.end && toMins(b.end) <= toMins(v) ? { end: hhmm(Math.min(toMins(v) + 60, 23 * 60 + 30)) } : {}) })} className="min-w-0 w-full" />
                                 <span className="shrink-0 text-[#9ca3af]">–</span>
-                                <TimeSelect value={b.end} min={b.start ? hhmm(Math.min(toMins(b.start) + 30, 23 * 60 + 30)) : undefined} onChange={(v) => updateBlock(wd, b.id, { end: v })} className="min-w-0 w-full sm:w-28" error={b.start && b.end && toMins(b.end) <= toMins(b.start) ? t("toAfterFrom") : undefined} />
+                                <TimeSelect value={b.end} min={b.start ? hhmm(Math.min(toMins(b.start) + 30, 23 * 60 + 30)) : undefined} onChange={(v) => updateBlock(wd, b.id, { end: v })} className="min-w-0 w-full" error={b.start && b.end && toMins(b.end) <= toMins(b.start) ? t("toAfterFrom") : undefined} />
                               </div>
                             );
                             // Single-location pros: just the time row (clean, compact, no location UI).
@@ -740,7 +740,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                             // 2+ locations: give the long address its own column/line so it
                             // never competes with day actions or overlaps the time controls.
                             return (
-                              <div key={b.id} className="grid w-full min-w-0 gap-2 lg:grid-cols-[minmax(13rem,18rem)_auto] lg:items-center">
+                              <div key={b.id} className="grid w-full max-w-full min-w-0 gap-2">
                                 <div className="relative min-w-0">
                                   <MapPin className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#009FD9]" />
                                   <select
