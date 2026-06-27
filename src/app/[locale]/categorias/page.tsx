@@ -122,7 +122,6 @@ export default function CategoriasPage() {
   const t = useTranslations("categories");
   const tg = useTranslations("categoryGroups");
   const tp = useTranslations("categoriesPage");
-  const totalServices = GROUPS.reduce((sum, group) => sum + group.ids.length, 0);
 
   return (
     <div className="flex min-h-screen flex-col bg-[#f7f9fb]">
@@ -130,28 +129,20 @@ export default function CategoriasPage() {
 
       <section className="relative z-30 border-b border-[#e5e7eb] bg-white px-4 pb-8 pt-28 sm:pt-32">
         <FadeInUp>
-          <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-end">
+          <div className="mx-auto flex max-w-4xl flex-col items-center text-center">
             <div className="min-w-0">
               <span className="mb-3 inline-flex rounded-full bg-[#EBF5FB] px-3 py-1 text-xs font-bold uppercase text-[#0089bb]">
                 {tp("eyebrow")}
               </span>
-              <h1 className="max-w-2xl text-3xl font-extrabold leading-tight text-[#1a2744] sm:text-4xl">
+              <h1 className="mx-auto max-w-2xl text-3xl font-extrabold leading-tight text-[#1a2744] sm:text-4xl">
                 {tp("title")}
               </h1>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-[#5f6b7a] sm:text-base">
+              <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-[#5f6b7a] sm:text-base">
                 {tp("subtitle")}
               </p>
-              <div className="mt-5 flex flex-wrap gap-2 text-xs font-semibold text-[#6b7280]">
-                <span className="rounded-full border border-[#e5e7eb] bg-white px-3 py-1.5">
-                  {tp("groupCount", { count: GROUPS.length })}
-                </span>
-                <span className="rounded-full border border-[#e5e7eb] bg-white px-3 py-1.5">
-                  {tp("serviceCount", { count: totalServices })}
-                </span>
-              </div>
             </div>
-            <div className="w-full">
-              <CategorySearchBox />
+            <div className="mt-6 w-full max-w-xl">
+              <CategorySearchBox embeddedResults />
             </div>
           </div>
         </FadeInUp>
