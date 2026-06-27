@@ -1487,6 +1487,7 @@
     "namePlaceholderShort": "e.g. Leak repair",
     "descBrief": "Description",
     "modalitiesLabel": "Service modalities",
+    "modalitiesHelp": "You can select one or more options for this service.",
     "modality": {
       "in_person": "In person",
       "at_home": "At home",

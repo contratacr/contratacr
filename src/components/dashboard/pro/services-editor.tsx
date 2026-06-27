@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Plus, Trash2, Pencil, Search, MapPin, Home, Video } from "lucide-react";
+import { Plus, Trash2, Pencil, Search, MapPin, Home, Video, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PriceInput } from "@/components/ui/price-input";
 import { Modal } from "@/components/ui/modal";
@@ -518,8 +518,11 @@ export function ServicesEditor({
             </div>
 
             <div>
-              <p className="mb-2 block text-sm font-medium text-[#374151]">{t("modalitiesLabel")}</p>
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <div className="mb-2">
+                <p className="text-sm font-medium text-[#374151]">{t("modalitiesLabel")}</p>
+                <p className="mt-0.5 text-xs leading-snug text-[#6b7280]">{t("modalitiesHelp")}</p>
+              </div>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 {MODALITY_OPTIONS.map((modality) => {
                   const checked = form.modalities.includes(modality);
                   const Icon = MODALITY_ICON[modality];
@@ -535,7 +538,7 @@ export function ServicesEditor({
                         return { ...f, modalities: next.length > 0 ? next : ["in_person"] };
                       })}
                       className={cn(
-                        "group flex min-h-[86px] items-start gap-3 rounded-xl border p-3 text-left transition-all",
+                        "group relative flex min-h-[92px] w-full min-w-0 items-start gap-3 rounded-xl border p-3 pr-9 text-left transition-all",
                         checked
                           ? "border-[#009FD9] bg-[#f4fbff] shadow-sm ring-1 ring-[#bfe8f7]"
                           : "border-[#e5e7eb] bg-white hover:border-[#bfdbfe] hover:bg-[#f8fbfe]"
@@ -550,12 +553,21 @@ export function ServicesEditor({
                         <Icon className="h-4 w-4" />
                       </span>
                       <span className="min-w-0">
-                        <span className={cn("block text-sm font-bold leading-tight", checked ? "text-[#162543]" : "text-[#374151]")}>
+                        <span className={cn("block text-sm font-bold leading-tight [overflow-wrap:anywhere]", checked ? "text-[#162543]" : "text-[#374151]")}>
                           {t(`modality.${modality}`)}
                         </span>
                         <span className="mt-1 block text-xs leading-snug text-[#6b7280]">
                           {t(`modalityDesc.${modality}`)}
                         </span>
+                      </span>
+                      <span
+                        className={cn(
+                          "absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full border transition-colors",
+                          checked ? "border-[#009FD9] bg-[#009FD9] text-white" : "border-[#d1d5db] bg-white text-transparent"
+                        )}
+                        aria-hidden
+                      >
+                        <Check className="h-3.5 w-3.5" strokeWidth={3} />
                       </span>
                     </button>
                   );

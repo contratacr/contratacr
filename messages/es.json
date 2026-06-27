@@ -1487,6 +1487,7 @@
     "namePlaceholderShort": "Ej. Reparación de fugas",
     "descBrief": "Descripción",
     "modalitiesLabel": "Modalidades de atención",
+    "modalitiesHelp": "Puedes seleccionar una o varias opciones para este servicio.",
     "modality": {
       "in_person": "Presencial",
       "at_home": "A domicilio",

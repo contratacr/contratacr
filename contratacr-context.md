@@ -3662,3 +3662,5 @@ New i18n namespaces added this pass: `search.pagination`, extended `search.filte
 - Sprint 364: Mobile /buscar bottom sheet can no longer expand high enough to cover the map controls/filter trigger. FULL/MAX snap points are lower and the sheet max-height leaves a permanent map-control band below the navbar; cards still scroll inside the sheet.
 
 - Sprint 365: Servicios -> Modalidades de atención changed from loose tag buttons to compact selectable modality cards with icon, title and one-line explanation (Presencial/A domicilio/Videoconsulta). The selection remains multi-select and per-service; EN copy added in parallel.
+
+- Sprint 366: Servicios -> Modalidades de atención now explicitly says the pro can select one or more options, selected modality cards show a check indicator, and the modal layout uses 1 column on phone / 2 columns on wider modal widths so Videoconsulta no longer overflows.
