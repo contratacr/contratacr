@@ -703,6 +703,18 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                 const blocks = blocksFor(wd);
                 const on = blocks.length > 0;
                 const canApply = blocks.some(isCompleteFranja);
+                const dayActions = (
+                  <div className="flex min-w-0 flex-row flex-wrap items-center justify-start gap-x-4 gap-y-2 xl:justify-end xl:pb-1">
+                    <button type="button" onClick={() => addBlock(wd)} className="inline-flex min-w-0 items-center gap-1 text-left text-xs font-medium leading-tight text-[#009FD9] hover:underline cursor-pointer">
+                      <Plus className="h-3.5 w-3.5 shrink-0" /> <span>{t("addFranja")}</span>
+                    </button>
+                    {canApply && (
+                      <button type="button" onClick={() => setApplyModal({ weekday: wd })} className="min-w-0 text-left text-xs font-medium leading-tight text-[#6b7280] hover:text-[#009FD9] hover:underline cursor-pointer">
+                        {t("applyToOtherDays")}
+                      </button>
+                    )}
+                  </div>
+                );
                 return (
                   <div key={wd} className="grid min-w-0 gap-2 py-3 lg:grid-cols-[9rem_minmax(0,1fr)] lg:gap-4">
                     {/* toggle + weekday name */}
@@ -724,7 +736,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                       {!on ? (
                         <p className="text-sm text-[#9ca3af] sm:pt-1.5">{t("closed")}</p>
                       ) : (
-                        <div className="flex min-w-0 flex-col gap-3">
+                        <div className="grid min-w-0 gap-2.5 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end xl:gap-4">
                           <div className="flex min-w-0 flex-1 flex-col gap-2.5">
                             {blocks.map((b) => {
                             const timeRow = (
@@ -741,7 +753,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                             // never competes with day actions or overlaps the time controls.
                             return (
                               <div key={b.id} className="grid w-full max-w-full min-w-0 gap-2">
-                                <div className="relative min-w-0">
+                                <div className="relative min-w-0 max-w-[16rem]">
                                   <MapPin className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#009FD9]" />
                                   <select
                                     value={b.locationId}
@@ -759,16 +771,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                             );
                             })}
                           </div>
-                          <div className="flex min-w-0 flex-row flex-wrap items-center justify-start gap-x-4 gap-y-2 border-t border-[#f3f4f6] pt-2 sm:border-t-0 sm:pt-0">
-                            <button type="button" onClick={() => addBlock(wd)} className="inline-flex min-w-0 items-center gap-1 text-left text-xs font-medium leading-tight text-[#009FD9] hover:underline cursor-pointer">
-                              <Plus className="h-3.5 w-3.5 shrink-0" /> <span>{t("addFranja")}</span>
-                            </button>
-                            {canApply && (
-                              <button type="button" onClick={() => setApplyModal({ weekday: wd })} className="min-w-0 text-left text-xs font-medium leading-tight text-[#6b7280] hover:text-[#009FD9] hover:underline cursor-pointer">
-                                {t("applyToOtherDays")}
-                              </button>
-                            )}
-                          </div>
+                          {dayActions}
                         </div>
                       )}
                     </div>

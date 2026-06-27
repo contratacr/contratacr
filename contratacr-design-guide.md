@@ -1955,6 +1955,8 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 
 > **Availability overflow guard.** Never combine a fixed-width workplace select with fixed-width time columns inside the weekly availability card. Use `min-w-0`, `max-w-full`, and stacked location/time rows; only introduce a day/content split on large screens where the card has enough horizontal room.
 
+> **Availability actions alignment.** `Agregar franja` and `Aplicar a otros días` may align beside the time range only at wide breakpoints. On narrower cards they must wrap below the time range. Workplace selects should have a compact max width and truncate long addresses instead of expanding the schedule row.
+
 > **Navbar category dropdown.** The desktop category menu should be section-led, not a flat wall of cards. Use a compact search at the top, a left rail of category groups with icons, and a right pane for the selected group's services. Search results should remain grouped by section so users understand where each service belongs.
 
 > **Category group icons.** The navbar category dropdown must use the same category-group icon mapping as `/categorias` so both entry points feel like the same catalog system.
