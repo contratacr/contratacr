@@ -837,7 +837,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                         <div className="flex min-w-0 flex-col gap-2.5">
                           {blocks.map((b, index) => {
                             const timeRow = (
-                              <div className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 md:w-[16rem] md:shrink-0 md:grid-cols-[minmax(7rem,1fr)_auto_minmax(7rem,1fr)]">
+                              <div className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 md:w-[15.5rem] md:shrink-0 md:grid-cols-[minmax(6.75rem,1fr)_auto_minmax(6.75rem,1fr)]">
                                 <TimeSelect value={b.start} onChange={(v) => updateBlock(wd, b.id, { start: v, ...(b.end && toMins(b.end) <= toMins(v) ? { end: hhmm(Math.min(toMins(v) + 60, 23 * 60 + 30)) } : {}) })} className="min-w-0 w-full" />
                                 <span className="shrink-0 text-[#9ca3af]">–</span>
                                 <TimeSelect value={b.end} min={b.start ? hhmm(Math.min(toMins(b.start) + 30, 23 * 60 + 30)) : undefined} onChange={(v) => updateBlock(wd, b.id, { end: v })} className="min-w-0 w-full" error={b.start && b.end && toMins(b.end) <= toMins(b.start) ? t("toAfterFrom") : undefined} />
@@ -846,7 +846,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                             // Single-location pros: just the time row (clean, compact, no location UI).
                             if (!isMultiLocation) {
                               return (
-                                <div key={b.id} className="flex min-w-0 flex-col gap-2 md:flex-row md:items-center md:gap-4">
+                                <div key={b.id} className="flex min-w-0 flex-col gap-2 md:flex-row md:flex-wrap md:items-center md:gap-x-4 md:gap-y-2">
                                   {timeRow}
                                   {index === 0 && dayActions}
                                 </div>
@@ -855,16 +855,18 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                             // 2+ locations: give the long address its own column/line so it
                             // never competes with day actions or overlaps the time controls.
                             return (
-                              <div key={b.id} className="flex min-w-0 flex-col gap-2 xl:flex-row xl:items-center xl:gap-3">
+                              <div key={b.id} className="flex min-w-0 flex-col gap-2">
                                 <LocationDropdown
                                   value={b.locationId}
                                   options={locationOptions}
                                   onChange={(locationId) => updateBlock(wd, b.id, { locationId })}
                                   ariaLabel={t("blockLocationAria")}
-                                  className="max-w-[14rem] xl:w-[12.5rem] xl:shrink-0"
+                                  className="w-full max-w-[16rem]"
                                 />
-                                {timeRow}
-                                {index === 0 && dayActions}
+                                <div className="flex min-w-0 flex-col gap-2 md:flex-row md:flex-wrap md:items-center md:gap-x-4 md:gap-y-2">
+                                  {timeRow}
+                                  {index === 0 && dayActions}
+                                </div>
                               </div>
                             );
                           })}
