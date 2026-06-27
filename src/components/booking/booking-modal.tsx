@@ -30,6 +30,7 @@ type BookingStep = "calendar" | "details" | "contact" | "complete" | "success";
 type BookingProfessional = ProfessionalCardData & {
   serviceType?: string | null;
   videoconsulta?: boolean;
+  services?: Array<{ modalities?: Array<"in_person" | "at_home" | "video"> }>;
 };
 
 type DaySchedule = { enabled: boolean; ranges: { start: string; end: string }[] };
@@ -145,7 +146,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   );
   const effectiveCategory = initialCategoryId ?? pickedCategory ?? null;
   const needsProfessionPick = !effectiveCategory && proProfessions.length > 1;
-  const offersVideoConsult = !!professional.videoconsulta;
+  const offersVideoConsult = !!professional.videoconsulta || professional.services?.some((service) => service.modalities?.includes("video"));
 
   // Profession shown UNDER the name: the RELEVANT one for the current context —
   //  • filtered (initialCategoryId) or selected (pickedCategory) → that profession;

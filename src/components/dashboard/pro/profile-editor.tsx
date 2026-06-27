@@ -367,7 +367,6 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
         call_phone: callPhone.trim() || null,
         allow_phone_call: allowPhoneCall,
         contact_email: contactEmail.trim() || null,
-        videoconsulta: videoConsult,
       };
 
       // 1) Core fields — guaranteed columns; a failure here is a real error.
@@ -403,6 +402,14 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
         .update(identityFields)
         .eq("id", professionalId);
       if (idError) console.warn("[profile-editor] optional identity columns not saved:", idError.message);
+
+      // Videoconsulta is a visible client-facing capability, so save it independently
+      // from the best-effort optional identity bundle above.
+      const { error: videoError } = await supabase
+        .from("professionals")
+        .update({ videoconsulta: videoConsult })
+        .eq("id", professionalId);
+      if (videoError) throw videoError;
 
       // Persist certifications in their OWN update so an unrelated optional column
       // can never drop them (that was the "not saving" bug). Each keeps its
