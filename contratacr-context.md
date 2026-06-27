@@ -3618,3 +3618,5 @@ New i18n namespaces added this pass: `search.pagination`, extended `search.filte
 **Sprint 329 - Compact availability time controls.** Tightened weekly availability row geometry: the day column is narrower, time selects are capped around 16.5rem total, workplace selects are capped around 14rem with truncation/title support, and the action links have a reserved wide-screen column so 5:00PM no longer competes with Agregar franja.
 
 **Sprint 330 - Locale switch preserves dashboard tabs.** Language switching now keeps the current pathname plus query/hash so dashboard tabs like ?tab=availability, ?tab=bookings, or client panel sections do not reset to profile when switching between Spanish and English.
+
+**Sprint 331 - Availability location dropdown polish.** Replaced the native workplace select in Disponibilidad with an app-styled location dropdown. The closed control remains compact, while the opened menu is wider, scrollable, shows the active location clearly, and wraps long address labels for better responsive readability.

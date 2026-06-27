@@ -1972,3 +1972,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Published request reopening.** In client publications, prefer `Volver a publicar` / `Publish again` over `Reabrir solicitud`; it sounds clearer as marketplace language. Reopening a cancelled publication should not delete existing proposals. Accepting one proposal should mark the other pending proposals as not selected so professionals do not keep seeing them as live opportunities.
 
 > **Locale switch state preservation.** Language switches must preserve the current pathname, query string, and hash. This is especially important in dashboard panels where the active section lives in `?tab=...`; switching ES/EN must not reset the user to Mi perfil / My profile.
+
+> **Availability location dropdown.** Availability workplace/location controls should stay compact when closed, but the opened menu must be wide and readable enough for long exact addresses. Use an app-styled dropdown with wrapped option labels and a clear active state instead of relying on native select menus when location names need real design control.

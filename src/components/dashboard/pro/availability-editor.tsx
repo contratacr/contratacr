@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -95,6 +95,104 @@ function nextFranja(existing: Franja[]): Franja {
 
 type Place = { id?: string; name: string };
 type Coverage = { level?: "canton" | "provincia" | "country"; provinciaId?: string; cantonId?: string; cantonName?: string; provinceName?: string };
+
+function LocationDropdown({
+  value,
+  options,
+  onChange,
+  ariaLabel,
+  className,
+  menuAlign = "left",
+}: {
+  value: string;
+  options: { id: string; label: string }[];
+  onChange: (value: string) => void;
+  ariaLabel: string;
+  className?: string;
+  menuAlign?: "left" | "right";
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const selected = options.find((o) => o.id === value) ?? options[0];
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (event: MouseEvent | TouchEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("touchstart", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("touchstart", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
+
+  return (
+    <div ref={ref} className={cn("relative min-w-0", className)}>
+      <button
+        type="button"
+        aria-label={ariaLabel}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        title={selected?.label}
+        onClick={() => setOpen((v) => !v)}
+        className={cn(
+          "flex h-10 w-full min-w-0 items-center gap-2 rounded-xl border bg-[#f9fafb] pl-3 pr-2.5 text-left text-xs font-semibold transition-colors",
+          open
+            ? "border-[#bfe3f5] bg-white shadow-[0_10px_28px_-22px_rgba(0,159,217,0.75)] ring-2 ring-[#e4f4fb]"
+            : "border-[#e5e7eb] text-[#374151] hover:border-[#cbd5e1]"
+        )}
+      >
+        <MapPin className="h-4 w-4 shrink-0 text-[#009FD9]" />
+        <span className="min-w-0 flex-1 truncate text-[#374151]">{selected?.label}</span>
+        <ChevronDown className={cn("h-4 w-4 shrink-0 text-[#9ca3af] transition-transform", open && "rotate-180 text-[#009FD9]")} />
+      </button>
+
+      {open && (
+        <div
+          role="listbox"
+          aria-label={ariaLabel}
+          className={cn(
+            "absolute top-full z-50 mt-2 max-h-72 w-[min(23rem,calc(100vw-2rem))] overflow-y-auto rounded-2xl border border-[#e5e7eb] bg-white p-1.5 shadow-[0_24px_70px_-24px_rgba(15,23,42,0.45)]",
+            menuAlign === "right" ? "right-0" : "left-0"
+          )}
+        >
+          {options.map((option) => {
+            const active = option.id === value;
+            return (
+              <button
+                key={option.id}
+                type="button"
+                role="option"
+                aria-selected={active}
+                title={option.label}
+                onClick={() => {
+                  onChange(option.id);
+                  setOpen(false);
+                }}
+                className={cn(
+                  "flex w-full items-start gap-2.5 rounded-xl px-3 py-2.5 text-left transition-colors",
+                  active ? "bg-[#EBF5FB]" : "hover:bg-[#f8fafc]"
+                )}
+              >
+                <span className={cn("mt-0.5 h-2 w-2 shrink-0 rounded-full", active ? "bg-[#009FD9]" : "bg-[#d1d5db]")} />
+                <span className="min-w-0 flex-1 text-sm font-semibold leading-snug text-[#162543] [overflow-wrap:anywhere]">
+                  {option.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 interface AvailabilityEditorProps {
   professionalId: string;
@@ -748,24 +846,17 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                             );
                             // Single-location pros: just the time row (clean, compact, no location UI).
                             if (!isMultiLocation) return <div key={b.id}>{timeRow}</div>;
-                            const currentLocationLabel = locationOptions.find((o) => o.id === b.locationId)?.label ?? "";
                             // 2+ locations: give the long address its own column/line so it
                             // never competes with day actions or overlaps the time controls.
                             return (
                               <div key={b.id} className="grid w-full max-w-full min-w-0 gap-2">
-                                <div className="relative min-w-0 max-w-[14rem]">
-                                  <MapPin className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#009FD9]" />
-                                  <select
-                                    value={b.locationId}
-                                    onChange={(e) => updateBlock(wd, b.id, { locationId: e.target.value })}
-                                    aria-label={t("blockLocationAria")}
-                                    title={currentLocationLabel}
-                                    className="h-10 w-full appearance-none truncate rounded-xl border border-[#e5e7eb] bg-[#f9fafb] pl-9 pr-8 text-xs font-semibold text-[#374151] hover:border-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent cursor-pointer transition-colors"
-                                  >
-                                    {locationOptions.map((o) => <option key={o.id} value={o.id} title={o.label}>{o.label}</option>)}
-                                  </select>
-                                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9ca3af]" />
-                                </div>
+                                <LocationDropdown
+                                  value={b.locationId}
+                                  options={locationOptions}
+                                  onChange={(locationId) => updateBlock(wd, b.id, { locationId })}
+                                  ariaLabel={t("blockLocationAria")}
+                                  className="max-w-[14rem]"
+                                />
                                 {timeRow}
                               </div>
                             );
@@ -791,12 +882,14 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
               <div className="flex flex-wrap items-center gap-2">
                 {/* Exceptions are per-location — pick which location they apply to. */}
                 {isMultiLocation && (
-                  <div className="relative">
-                    <select value={genLocation} onChange={(e) => setGenLocation(e.target.value)} aria-label={t("excLocationAria")} className={selectClass}>
-                      {locationOptions.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
-                    </select>
-                    <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9ca3af]" />
-                  </div>
+                  <LocationDropdown
+                    value={genLocation}
+                    options={locationOptions}
+                    onChange={setGenLocation}
+                    ariaLabel={t("excLocationAria")}
+                    className="w-full max-w-[16rem] sm:w-64"
+                    menuAlign="right"
+                  />
                 )}
                 <Button type="button" variant="secondary" size="sm" onClick={() => setDayModal({ date: todayISO() })}>
                   <Calendar className="h-4 w-4" /> {t("changeDay")}
