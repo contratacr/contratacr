@@ -647,7 +647,6 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
           <label className="text-sm font-medium text-[#374151] block mb-2">
             {t("workplaces")} <span className="text-red-500">*</span>
           </label>
-          <p className="mb-2 text-xs leading-relaxed text-[#6b7280]">{t("workplacesHelp")}</p>
           <WorkplacesPicker value={workplaces} onChange={(next) => { setWorkplaces(next); touch(); }} mapHeight={168} />
         </div>
 
@@ -656,7 +655,6 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
         <div className="flex items-start justify-between gap-4 rounded-xl bg-[#f9fafb] p-3.5">
           <div>
             <p className="text-sm font-medium text-[#111827]">{t("travelsLabel")}</p>
-            <p className="text-xs text-[#6b7280] mt-0.5 max-w-md">{t("travelsDesc")}</p>
           </div>
           <button
             type="button"
