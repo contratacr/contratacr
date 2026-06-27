@@ -1946,3 +1946,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Report actions in dashboard cards.** Do not use a standalone red square flag or an empty three-dot menu for the only report action. In opened cards, show report as a quiet secondary text link with a small flag icon, muted grey by default and red on hover/tap. Keep primary workflow buttons separate.
 
 > **Pending status treatment.** In dashboard cards, `Pendiente` / `Pending` should not use a filled or bordered badge container unless it represents a warning requiring attention. Prefer quiet amber text with a small dot so it reads as status, not a CTA or alert.
+
+> **Availability multi-location inputs.** Weekly availability rows with multiple work locations should stay visually simple: location select above the time range, no extra per-slot card chrome. Keep the select/time group narrow enough that `Agregar franja` and `Aplicar a otros días` can align to the right on larger screens, while stacking cleanly on mobile.

@@ -3592,3 +3592,5 @@ New i18n namespaces added this pass: `search.pagination`, extended `search.filte
 **Sprint 316 - Discreet report action links.** Dashboard cards no longer show report as a standalone red square flag. In opened Mis solicitudes and Solicitudes recibidas cards, report is now a quiet grey text link with a small flag icon (`Reportar profesional` / `Reportar cliente`), turning red only on hover. This keeps safety visible without competing with primary actions.
 
 **Sprint 317 - Pending status without badge container.** Pending statuses in dashboard cards now render as quiet amber text with a small dot instead of a bordered/fill pill. Applied to Mis solicitudes, Solicitudes recibidas, and Mis propuestas; other warning badges stay unchanged for important risk or profile states.
+
+**Sprint 318 - Availability multi-location layout revert.** Reverted the multi-location weekly availability slot from the bordered mini-card treatment back to the simpler location-above-time layout. The location select and time controls are now width-constrained so Agregar franja and Aplicar a otros días stay aligned on the same row on wider screens while mobile remains stacked.
