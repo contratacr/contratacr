@@ -2467,6 +2467,8 @@
     "noResults": "No encontramos esa categoría.",
     "noResultsHint": "Sugiérela abajo y nuestro equipo la revisa.",
     "viewAll": "Ver todos los servicios",
+    "groupCount": "{count, plural, one {# grupo} other {# grupos}}",
+    "serviceCount": "{count, plural, one {# servicio} other {# servicios}}",
     "ctaTitle": "¿No encuentras tu categoría?",
     "ctaDesc": "Tenemos más de 90 especialidades disponibles. Escríbenos y te ayudamos a encontrar el servicio que necesitas.",
     "ctaSearch": "Buscar servicios",

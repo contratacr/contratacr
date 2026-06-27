@@ -3650,3 +3650,5 @@ New i18n namespaces added this pass: `search.pagination`, extended `search.filte
 - Sprint 345: Services support per-service modalities via services[].modalities: in_person, at_home, video. Existing services default to in_person. Videoconsulta is shown as a capability on /buscar and profile/service cards, but it does not create a separate availability schedule; the call link is coordinated by WhatsApp for now.
 
 - Sprint 346: On the public professional profile, home-service moved from the Atencion fact row into Sobre mi -> Lugares de trabajo as a compact line/chip after real places. Atencion is now reserved for Videoconsulta or similar non-location modalities.
+
+- Sprint 347: /categorias redesigned from accordion-only to scan-first: search hero, horizontal group shortcut rail, all groups expanded as visible section cards, and the suggestion card after the groups. Category links still route to /buscar?categoria=... .
