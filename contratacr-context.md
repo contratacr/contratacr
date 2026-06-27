@@ -3652,3 +3652,5 @@ New i18n namespaces added this pass: `search.pagination`, extended `search.filte
 - Sprint 346: On the public professional profile, home-service moved from the Atencion fact row into Sobre mi -> Lugares de trabajo as a compact line/chip after real places. Atencion is now reserved for Videoconsulta or similar non-location modalities.
 
 - Sprint 347: /categorias redesigned from accordion-only to scan-first: search hero, horizontal group shortcut rail, all groups expanded as visible section cards, and the suggestion card after the groups. Category links still route to /buscar?categoria=... .
+
+- Sprint 361: /categorias now uses full-width uniform category sections instead of uneven two-column group cards. Category groups can have very different service counts, so equal-width cards created mismatched container heights; the page now keeps every group visible for scan-first browsing while rendering services as compact links/chips.
