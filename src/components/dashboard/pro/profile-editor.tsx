@@ -642,11 +642,6 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
 
       {/* ── Ubicación y cobertura ─────────────────────────────────────── */}
       <Section id="location" title={t("secLocation")} desc={t("secLocationDesc")} open={openSections.has("location")} onToggle={toggleSection}>
-        <div className="rounded-xl bg-[#f5fbfe] p-3.5">
-          <p className="text-sm font-semibold text-[#162543]">{t("locationLogicTitle")}</p>
-          <p className="mt-1 text-xs leading-relaxed text-[#4b5563]">{t("locationLogicBody")}</p>
-        </div>
-
         {/* Work zones — provincia/cantón first (drives /buscar), optional exact pin. */}
         <div data-field="location">
           <label className="text-sm font-medium text-[#374151] block mb-2">

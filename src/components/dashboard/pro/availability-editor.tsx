@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import { Plus, X, Lock, Loader2, MapPin, ChevronDown, ChevronLeft, ChevronRight, Calendar, Pencil, Trash2, Check } from "lucide-react";
+import { Plus, X, Lock, Loader2, MapPin, ChevronDown, ChevronLeft, ChevronRight, Calendar, Pencil, Trash2 } from "lucide-react";
 import { type ContactPreference } from "@/lib/constants";
 import { crTodayISO, isTooSoonCR } from "@/lib/time-cr";
 import { TimeSelect, to12h } from "@/components/ui/time-select";
@@ -96,104 +96,6 @@ function nextFranja(existing: Franja[]): Franja {
 type Place = { id?: string; name: string };
 type Coverage = { level?: "canton" | "provincia" | "country"; provinciaId?: string; cantonId?: string; cantonName?: string; provinceName?: string };
 
-function LocationDropdown({
-  value,
-  options,
-  onChange,
-  ariaLabel,
-  className,
-  menuAlign = "left",
-}: {
-  value: string;
-  options: { id: string; label: string }[];
-  onChange: (value: string) => void;
-  ariaLabel: string;
-  className?: string;
-  menuAlign?: "left" | "right";
-}) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-  const selected = options.find((o) => o.id === value) ?? options[0];
-
-  useEffect(() => {
-    if (!open) return;
-    const onPointerDown = (event: MouseEvent | TouchEvent) => {
-      if (ref.current && !ref.current.contains(event.target as Node)) setOpen(false);
-    };
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
-    };
-    document.addEventListener("mousedown", onPointerDown);
-    document.addEventListener("touchstart", onPointerDown);
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.removeEventListener("mousedown", onPointerDown);
-      document.removeEventListener("touchstart", onPointerDown);
-      document.removeEventListener("keydown", onKeyDown);
-    };
-  }, [open]);
-
-  return (
-    <div ref={ref} className={cn("relative min-w-0", className)}>
-      <button
-        type="button"
-        aria-label={ariaLabel}
-        aria-haspopup="listbox"
-        aria-expanded={open}
-        title={selected?.label}
-        onClick={() => setOpen((v) => !v)}
-        className={cn(
-          "flex h-9 w-full min-w-0 items-center gap-2 rounded-lg border bg-white pl-2.5 pr-2 text-left text-[13px] font-medium shadow-[0_1px_0_rgba(15,23,42,0.02)] transition-colors",
-          open
-            ? "border-[#009FD9] ring-2 ring-[#EBF5FB]"
-            : "border-[#dfe7f0] text-[#374151] hover:border-[#cbd5e1]"
-        )}
-      >
-        <MapPin className="h-4 w-4 shrink-0 text-[#6b7280]" />
-        <span className="min-w-0 flex-1 truncate text-[#111827]">{selected?.label}</span>
-        <ChevronDown className={cn("h-4 w-4 shrink-0 text-[#9ca3af] transition-transform", open && "rotate-180 text-[#009FD9]")} />
-      </button>
-
-      {open && (
-        <div
-          role="listbox"
-          aria-label={ariaLabel}
-          className={cn(
-            "absolute top-full z-50 mt-1 max-h-64 w-[min(24rem,calc(100vw-2rem))] overflow-y-auto rounded-lg border border-[#dfe7f0] bg-white p-1 shadow-[0_18px_44px_-24px_rgba(15,23,42,0.55)]",
-            menuAlign === "right" ? "right-0" : "left-0"
-          )}
-        >
-          {options.map((option) => {
-            const active = option.id === value;
-            return (
-              <button
-                key={option.id}
-                type="button"
-                role="option"
-                aria-selected={active}
-                title={option.label}
-                onClick={() => {
-                  onChange(option.id);
-                  setOpen(false);
-                }}
-                className={cn(
-                  "flex w-full items-start gap-2 rounded-md px-2.5 py-2 text-left text-[13px] leading-snug transition-colors",
-                  active ? "bg-[#EBF5FB] text-[#162543]" : "text-[#374151] hover:bg-[#f8fafc]"
-                )}
-              >
-                <span className="min-w-0 flex-1 font-medium [overflow-wrap:anywhere]">
-                  {option.label}
-                </span>
-                {active && <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#009FD9]" />}
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
-
 interface AvailabilityEditorProps {
   professionalId: string;
   initialPublic?: boolean;
@@ -248,9 +150,8 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
     return opts;
   }, [workplaces, coverageAreas, travels, t]);
 
-  // Unified per-day weekly view (sprint 238): blocks carry their own location, so
-  // there are NO "HORARIO PARA" tabs. The per-block location dropdown only appears
-  // when the pro has 2+ locations; otherwise it's just a simple weekly schedule.
+  // Weekly schedules are edited one location at a time. This keeps the form simple:
+  // pick "Atenas", "Grecia" or "A domicilio" once, then edit that location's week.
   const isMultiLocation = locationOptions.length > 1;
   const defaultLocationId = locationOptions[0]?.id ?? "";
 
@@ -263,12 +164,13 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
       queueMicrotask(() => setGenLocation(locationOptions[0].id));
     }
   }, [locationOptions, genLocation]);
+  const activeLocationId = locationOptions.some((o) => o.id === genLocation) ? genLocation : defaultLocationId;
 
   // Schedules are keyed by LOCATION ONLY. Professions ("what I do") are profile info,
   // never tied to when/where — the specific service is coordinated at contact/booking.
   // New weekly/exception rows write category_id = null; legacy profession-tagged rows
   // are matched by location (any category) and migrate to null as the pro edits.
-  const sameLoc = useCallback((loc: string) => loc === genLocation, [genLocation]);
+  const sameLoc = useCallback((loc: string) => loc === activeLocationId, [activeLocationId]);
 
   function locationLabel(id: string): string {
     return locationOptions.find((o) => o.id === id)?.label ?? t("locationFallback");
@@ -357,7 +259,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
   // closed/custom/extra precedence via rangesForLocOnDate. (The weekly view no longer
   // needs a per-weekday hint — every location's blocks are shown together.)
   function otherOccupiedForDate(date: string): { label: string; ranges: [number, number][] }[] {
-    const otherLocs = [...new Set([...weekly, ...exceptions].map((r) => r.location_id))].filter((l) => l && l !== genLocation);
+    const otherLocs = [...new Set([...weekly, ...exceptions].map((r) => r.location_id))].filter((l) => l && l !== activeLocationId);
     return otherLocs
       .map((loc) => ({ label: locationLabel(loc), ranges: mergeRanges(rangesForLocOnDate(loc, date, weekly, exceptions)) }))
       .filter((o) => o.ranges.length > 0);
@@ -481,6 +383,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
   const dayBlocks = useMemo(() => {
     const map = new Map<number, Block[]>();
     for (const r of weekly) {
+      if (r.location_id !== activeLocationId) continue;
       const arr = map.get(r.weekday) ?? [];
       arr.push({ id: r.id ?? genId(), locationId: r.location_id, start: r.start, end: r.end });
       map.set(r.weekday, arr);
@@ -488,7 +391,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
     // Sort by start, then location; empty drafts (just-added, no time) go LAST.
     for (const arr of map.values()) arr.sort((a, b) => (!a.start ? 1 : !b.start ? -1 : a.start.localeCompare(b.start) || a.locationId.localeCompare(b.locationId)));
     return map;
-  }, [weekly]);
+  }, [weekly, activeLocationId]);
   const blocksFor = (weekday: number): Block[] => dayBlocks.get(weekday) ?? [];
 
   const activeExceptions = useMemo(() => {
@@ -509,9 +412,9 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
   // every block of the weekday: on each future date of that weekday, NO two effective
   // open ranges (any location, exception-aware via `rangesForLocOnDate`) may overlap.
   // Touching/consecutive ranges are allowed (half-open `rangesOverlap`).
-  function validateDayBlocks(weekday: number, complete: Block[]): { title: string; body: string } | null {
+  function validateDayBlocks(weekday: number, complete: Block[], loc: string = activeLocationId): { title: string; body: string } | null {
     const hypo: WeeklyRow[] = [
-      ...weekly.filter((r) => r.weekday !== weekday),
+      ...weekly.filter((r) => !(r.weekday === weekday && r.location_id === loc)),
       ...complete.map((b) => ({ location_id: b.locationId, category_id: null, weekday, start: b.start, end: b.end, slot_minutes: durationPref })),
     ];
     const start = todayISO();
@@ -543,17 +446,17 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
   // Backend model unchanged: each COMPLETE block writes its own `availability_weekly`
   // row (category_id null → absorbs legacy). INCOMPLETE drafts stay in LOCAL state so
   // the row shows, but are NOT validated/written/materialized.
-  async function persistDay(weekday: number, blocks: Block[]) {
+  async function persistDay(weekday: number, blocks: Block[], loc: string = activeLocationId) {
     const complete = blocks.filter(isCompleteFranja);
-    const c = validateDayBlocks(weekday, complete);
+    const c = validateDayBlocks(weekday, complete, loc);
     if (c) { setConflict(c); return; }
 
-    const next = weekly.filter((r) => r.weekday !== weekday);
+    const next = weekly.filter((r) => !(r.weekday === weekday && r.location_id === loc));
     for (const b of blocks) next.push({ location_id: b.locationId, category_id: null, weekday, start: b.start, end: b.end, slot_minutes: durationPref });
     setWeekly(next);
 
     const supabase = createClient();
-    await supabase.from("availability_weekly").delete().eq("professional_id", professionalId).eq("weekday", weekday);
+    await supabase.from("availability_weekly").delete().eq("professional_id", professionalId).eq("weekday", weekday).eq("location_id", loc);
     if (complete.length > 0) {
       await supabase.from("availability_weekly").insert(complete.map((b) => ({ professional_id: professionalId, location_id: b.locationId, category_id: null, weekday, start_time: b.start, end_time: b.end, slot_minutes: durationPref })));
     }
@@ -562,15 +465,15 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
 
   function toggleDay(weekday: number) {
     const cur = blocksFor(weekday);
-    if (cur.length > 0) { persistDay(weekday, []); return; } // OFF → clear the whole day (all locations)
-    persistDay(weekday, [smartDefaultBlock(weekday, [], defaultLocationId)]);
+    if (cur.length > 0) { persistDay(weekday, [], activeLocationId); return; }
+    persistDay(weekday, [smartDefaultBlock(weekday, [], activeLocationId)], activeLocationId);
   }
   function addBlock(weekday: number) {
     const cur = blocksFor(weekday);
-    persistDay(weekday, [...cur, smartDefaultBlock(weekday, cur, defaultLocationId)]);
+    persistDay(weekday, [...cur, smartDefaultBlock(weekday, cur, activeLocationId)], activeLocationId);
   }
   function updateBlock(weekday: number, id: string, patch: Partial<Block>) {
-    persistDay(weekday, blocksFor(weekday).map((b) => (b.id === id ? { ...b, ...patch } : b)));
+    persistDay(weekday, blocksFor(weekday).map((b) => (b.id === id ? { ...b, ...patch, locationId: activeLocationId } : b)), activeLocationId);
   }
   // Copy one configured day's complete ranges to selected destination days.
   async function applyDayToTargets(sourceWeekday: number, targetWeekdays: number[]) {
@@ -579,15 +482,15 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
 
     const template = blocksFor(sourceWeekday)
       .filter(isCompleteFranja)
-      .map((b) => ({ locationId: b.locationId, start: b.start, end: b.end }));
+      .map((b) => ({ locationId: activeLocationId, start: b.start, end: b.end }));
     if (template.length === 0) return;
 
     for (const wd of targets) {
-      const c = validateDayBlocks(wd, template.map((s) => ({ id: genId(), ...s })));
+      const c = validateDayBlocks(wd, template.map((s) => ({ id: genId(), ...s })), activeLocationId);
       if (c) { setConflict(c); return; }
     }
 
-    const next = weekly.filter((r) => !targets.includes(r.weekday));
+    const next = weekly.filter((r) => !(targets.includes(r.weekday) && r.location_id === activeLocationId));
     for (const wd of targets) {
       for (const s of template) {
         next.push({ location_id: s.locationId, category_id: null, weekday: wd, start: s.start, end: s.end, slot_minutes: durationPref });
@@ -596,7 +499,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
 
     setWeekly(next);
     const supabase = createClient();
-    await supabase.from("availability_weekly").delete().eq("professional_id", professionalId).in("weekday", targets);
+    await supabase.from("availability_weekly").delete().eq("professional_id", professionalId).in("weekday", targets).eq("location_id", activeLocationId);
     await supabase.from("availability_weekly").insert(
       targets.flatMap((wd) =>
         template.map((s) => ({
@@ -635,26 +538,26 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
       // REPLACE the weekly hours, so they get no weekly base to clear (only the
       // cross-location check below applies).
       const ownBase: [number, number][] = mode === "extra"
-        ? weekly.filter((r) => r.location_id === genLocation && r.weekday === weekdayOf(date) && isCompleteFranja(r)).map((r) => [toMins(r.start), toMins(r.end)])
+        ? weekly.filter((r) => r.location_id === activeLocationId && r.weekday === weekdayOf(date) && isCompleteFranja(r)).map((r) => [toMins(r.start), toMins(r.end)])
         : [];
-      const c = findOverlapConflict(genLocation, proposed, { date }, ownBase, t("conflictExtraWeekly"));
+      const c = findOverlapConflict(activeLocationId, proposed, { date }, ownBase, t("conflictExtraWeekly"));
       if (c) { setConflict(c); return false; }
     }
 
     const next = exceptions.filter((e) => !(sameLoc(e.location_id) && e.date === date));
     if (mode === "closed") {
-      next.push({ location_id: genLocation, category_id: null, date, mode: "closed", start: null, end: null, slot_minutes: dur });
+      next.push({ location_id: activeLocationId, category_id: null, date, mode: "closed", start: null, end: null, slot_minutes: dur });
     } else {
-      for (const f of franjas) next.push({ location_id: genLocation, category_id: null, date, mode, start: f.start, end: f.end, slot_minutes: dur });
+      for (const f of franjas) next.push({ location_id: activeLocationId, category_id: null, date, mode, start: f.start, end: f.end, slot_minutes: dur });
     }
     setExceptions(next);
 
     const supabase = createClient();
-    await supabase.from("availability_exceptions").delete().eq("professional_id", professionalId).eq("location_id", genLocation).eq("exception_date", date);
+    await supabase.from("availability_exceptions").delete().eq("professional_id", professionalId).eq("location_id", activeLocationId).eq("exception_date", date);
     const rows: { professional_id: string; location_id: string; category_id: string | null; exception_date: string; mode: ExcMode; start_time: string | null; end_time: string | null; slot_minutes: number }[] =
       mode === "closed"
-        ? [{ professional_id: professionalId, location_id: genLocation, category_id: null, exception_date: date, mode, start_time: null, end_time: null, slot_minutes: dur }]
-        : franjas.map((f) => ({ professional_id: professionalId, location_id: genLocation, category_id: null, exception_date: date, mode, start_time: f.start, end_time: f.end, slot_minutes: dur }));
+        ? [{ professional_id: professionalId, location_id: activeLocationId, category_id: null, exception_date: date, mode, start_time: null, end_time: null, slot_minutes: dur }]
+        : franjas.map((f) => ({ professional_id: professionalId, location_id: activeLocationId, category_id: null, exception_date: date, mode, start_time: f.start, end_time: f.end, slot_minutes: dur }));
     if (rows.length > 0) await supabase.from("availability_exceptions").insert(rows);
     await regenerate(weekly, next);
     return true;
@@ -664,7 +567,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
     const next = exceptions.filter((e) => !(sameLoc(e.location_id) && e.date === date));
     setExceptions(next);
     const supabase = createClient();
-    await supabase.from("availability_exceptions").delete().eq("professional_id", professionalId).eq("location_id", genLocation).eq("exception_date", date);
+    await supabase.from("availability_exceptions").delete().eq("professional_id", professionalId).eq("location_id", activeLocationId).eq("exception_date", date);
     await regenerate(weekly, next);
   }
 
@@ -795,25 +698,30 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
               </div>
               <p className="mt-1.5 text-xs text-[#6b7280]">{t("alwaysSubAll")}</p>
               {isMultiLocation && (
-                <div className="mt-3 rounded-xl bg-[#f9fafb] p-3">
-                  <div className="flex items-start gap-2.5">
-                    <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#009FD9]" />
-                    <div className="min-w-0">
-                      <p className="text-xs font-semibold text-[#162543]">{t("schedulePlacesTitle")}</p>
-                      <p className="mt-0.5 text-xs leading-relaxed text-[#6b7280]">{t("schedulePlacesHelp")}</p>
-                    </div>
+                <div className="mt-3">
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 shrink-0 text-[#009FD9]" />
+                    <p className="text-xs font-semibold text-[#162543]">{t("schedulePlacesTitle")}</p>
                   </div>
-                  <div className="mt-2 flex flex-wrap gap-1.5">
+                  <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
                     {locationOptions.map((option) => (
-                      <span
+                      <button
                         key={option.id}
+                        type="button"
                         title={option.label}
-                        className="max-w-full truncate rounded-md bg-white px-2 py-1 text-xs font-medium text-[#374151] shadow-sm ring-1 ring-[#e5e7eb] sm:max-w-[14rem]"
+                        onClick={() => setGenLocation(option.id)}
+                        className={cn(
+                          "h-9 max-w-[13rem] shrink-0 truncate rounded-lg px-3 text-xs font-semibold transition-colors",
+                          option.id === activeLocationId
+                            ? "bg-[#009FD9] text-white shadow-sm"
+                            : "bg-[#f3f4f6] text-[#374151] hover:bg-[#EBF5FB] hover:text-[#0089bb]"
+                        )}
                       >
                         {option.label}
-                      </span>
+                      </button>
                     ))}
                   </div>
+                  <p className="mt-1.5 text-xs leading-relaxed text-[#6b7280]">{t("schedulePlacesHelp")}</p>
                 </div>
               )}
             </div>
@@ -839,8 +747,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                   <div key={wd} className="grid min-w-0 gap-2 py-3 lg:grid-cols-[6.75rem_minmax(0,1fr)] lg:gap-2.5">
                     {/* toggle + weekday name */}
                     <div className={cn(
-                      "flex min-w-0 items-center gap-2.5 lg:pt-1.5",
-                      on && isMultiLocation && "lg:pt-11"
+                      "flex min-w-0 items-center gap-2.5 lg:pt-1.5"
                     )}>
                       <button
                         type="button"
@@ -868,30 +775,10 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                                 <TimeSelect value={b.end} min={b.start ? hhmm(Math.min(toMins(b.start) + 30, 23 * 60 + 30)) : undefined} onChange={(v) => updateBlock(wd, b.id, { end: v })} className="min-w-0 w-full" error={b.start && b.end && toMins(b.end) <= toMins(b.start) ? t("toAfterFrom") : undefined} />
                               </div>
                             );
-                            // Single-location pros: just the time row (clean, compact, no location UI).
-                            if (!isMultiLocation) {
-                              return (
-                                <div key={b.id} className="flex min-w-0 flex-col gap-2 lg:flex-row lg:flex-nowrap lg:items-center lg:gap-x-3">
-                                  {timeRow}
-                                  {index === 0 && dayActions}
-                                </div>
-                              );
-                            }
-                            // 2+ locations: give the long address its own column/line so it
-                            // never competes with day actions or overlaps the time controls.
                             return (
-                              <div key={b.id} className="flex min-w-0 flex-col gap-2">
-                                <LocationDropdown
-                                  value={b.locationId}
-                                  options={locationOptions}
-                                  onChange={(locationId) => updateBlock(wd, b.id, { locationId })}
-                                  ariaLabel={t("blockLocationAria")}
-                                  className="w-full max-w-[15.5rem] sm:max-w-[17rem]"
-                                />
-                                <div className="flex min-w-0 flex-col gap-2 lg:flex-row lg:flex-nowrap lg:items-center lg:gap-x-3">
-                                  {timeRow}
-                                  {index === 0 && dayActions}
-                                </div>
+                              <div key={b.id} className="flex min-w-0 flex-col gap-2 lg:flex-row lg:flex-nowrap lg:items-center lg:gap-x-3">
+                                {timeRow}
+                                {index === 0 && dayActions}
                               </div>
                             );
                           })}
@@ -912,17 +799,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                 <p className="mt-0.5 text-xs text-[#6b7280]">{t("diffDaySub")}</p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                {/* Exceptions are per-location — pick which location they apply to. */}
-                {isMultiLocation && (
-                  <LocationDropdown
-                    value={genLocation}
-                    options={locationOptions}
-                    onChange={setGenLocation}
-                    ariaLabel={t("excLocationAria")}
-                    className="w-full max-w-[16rem] sm:w-64"
-                    menuAlign="right"
-                  />
-                )}
+                {isMultiLocation && <span className="text-xs font-medium text-[#6b7280]">{locationLabel(activeLocationId)}</span>}
                 <Button type="button" variant="secondary" size="sm" onClick={() => setDayModal({ date: todayISO() })}>
                   <Calendar className="h-4 w-4" /> {t("changeDay")}
                 </Button>
