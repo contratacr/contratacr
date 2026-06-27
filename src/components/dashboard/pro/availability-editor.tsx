@@ -11,11 +11,6 @@ import { crTodayISO, isTooSoonCR } from "@/lib/time-cr";
 import { TimeSelect, to12h } from "@/components/ui/time-select";
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
 
-// Stable id for the optional "A domicilio" (traveling) schedule. Starts with `cov_`
-// so /buscar treats it exactly like any coverage zone (an "A domicilio" tab with its
-// own slots and no street address).
-const A_DOMICILIO_LOC = "cov_domicilio";
-
 // How far ahead the weekly template + exceptions are MATERIALIZED into concrete
 // `availability_slots` (the booking-critical table everything downstream reads). The
 // window is regenerated on every edit AND when the editor mounts, so it stays fresh.
@@ -103,12 +98,12 @@ interface AvailabilityEditorProps {
   workplaces?: Place[];
   coverageAreas?: Coverage[];
   /** True when the pro selected "Me desplazo donde el cliente" (service_type includes
-   *  "mobile"). Adds an OPTIONAL "A domicilio" schedulable location. */
+   *  "mobile"). This affects search/profile coverage, not separate availability rows. */
   travels?: boolean;
   onSaved?: () => void;
 }
 
-export function AvailabilityEditor({ professionalId, initialPublic = true, workplaces = [], coverageAreas = [], travels = false, onSaved }: AvailabilityEditorProps) {
+export function AvailabilityEditor({ professionalId, initialPublic = true, workplaces = [], onSaved }: AvailabilityEditorProps) {
   const locale = useLocale();
   const t = useTranslations("availabilityEditor");
   const dateLocale = locale === "en" ? "en-US" : "es-CR";
@@ -132,27 +127,16 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
   // Appointment length is ONE global value (applies to every block/location).
   const [durationPref, setDurationPref] = useState(60);
 
-  // ── Location tabs ("HORARIO PARA") — workplaces + coverage + A domicilio ──
+  // ── Location tabs ("HORARIO PARA") — fixed/base workplaces only ──
   const locationOptions = useMemo(() => {
     const opts: { id: string; label: string }[] = [];
     for (const w of workplaces) if (w.id) opts.push({ id: w.id, label: w.name });
-    coverageAreas.forEach((c, i) => {
-      const level = c.level ?? (c.cantonId ? "canton" : c.provinciaId ? "provincia" : "country");
-      const key = c.cantonId ?? c.provinciaId ?? `pais${i}`;
-      const label =
-        level === "country" ? t("covCountry")
-        : level === "provincia" ? t("covProvincia", { province: c.provinceName ?? "Provincia" })
-        : t("covCanton", { canton: `${c.cantonName ?? "Zona"}${c.provinceName ? `, ${c.provinceName}` : ""}` });
-      opts.push({ id: `cov_${key}`, label });
-    });
-    if (travels && !opts.some((o) => o.id === A_DOMICILIO_LOC)) {
-      opts.push({ id: A_DOMICILIO_LOC, label: t("aDomicilio") });
-    }
     return opts;
-  }, [workplaces, coverageAreas, travels, t]);
+  }, [workplaces]);
+  const schedulableLocationIds = useMemo(() => new Set(locationOptions.map((o) => o.id)), [locationOptions]);
 
-  // Weekly schedules are edited one location at a time. This keeps the form simple:
-  // pick "Atenas", "Grecia" or "A domicilio" once, then edit that location's week.
+  // Weekly schedules are edited one fixed/base workplace at a time. "A domicilio" is
+  // profile coverage, not a separate schedule; clients request it within normal hours.
   const isMultiLocation = locationOptions.length > 1;
   const defaultLocationId = locationOptions[0]?.id ?? "";
 
@@ -281,6 +265,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
     // weekly franjas keyed by `${loc}|${weekday}`
     const weeklyByKey = new Map<string, { start: string; end: string; dur: number }[]>();
     for (const r of wk) {
+      if (!schedulableLocationIds.has(r.location_id)) continue;
       if (!isCompleteFranja(r)) continue; // skip INCOMPLETE drafts (just-enabled, empty fields)
       locs.add(r.location_id);
       const k = `${r.location_id}|${r.weekday}`;
@@ -291,6 +276,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
     // exceptions keyed by `${loc}|${date}`
     const excByKey = new Map<string, { closed: boolean; custom: { start: string; end: string; dur: number }[]; extra: { start: string; end: string; dur: number }[] }>();
     for (const e of exc) {
+      if (!schedulableLocationIds.has(e.location_id)) continue;
       locs.add(e.location_id);
       const k = `${e.location_id}|${e.date}`;
       const cur = excByKey.get(k) ?? { closed: false, custom: [], extra: [] };
@@ -327,7 +313,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
       }
     }
     return out;
-  }, []);
+  }, [schedulableLocationIds]);
 
   const regenerate = useCallback(async (wk: WeeklyRow[], exc: ExcRow[]) => {
     setBusy(true);
@@ -361,8 +347,12 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
         supabase.from("availability_exceptions").select("id, location_id, category_id, exception_date, mode, start_time, end_time, slot_minutes").eq("professional_id", professionalId),
       ]);
       if (cancelled) return;
-      const wkRows: WeeklyRow[] = (wk ?? []).map((r) => ({ id: r.id, location_id: r.location_id ?? "", category_id: r.category_id ?? null, weekday: r.weekday, start: String(r.start_time).slice(0, 5), end: String(r.end_time).slice(0, 5), slot_minutes: r.slot_minutes ?? 60 }));
-      const excRows: ExcRow[] = (exc ?? []).map((r) => ({ id: r.id, location_id: r.location_id ?? "", category_id: r.category_id ?? null, date: r.exception_date, mode: r.mode as ExcMode, start: r.start_time ? String(r.start_time).slice(0, 5) : null, end: r.end_time ? String(r.end_time).slice(0, 5) : null, slot_minutes: r.slot_minutes ?? 60 }));
+      const wkRows: WeeklyRow[] = (wk ?? [])
+        .map((r) => ({ id: r.id, location_id: r.location_id ?? "", category_id: r.category_id ?? null, weekday: r.weekday, start: String(r.start_time).slice(0, 5), end: String(r.end_time).slice(0, 5), slot_minutes: r.slot_minutes ?? 60 }))
+        .filter((r) => schedulableLocationIds.has(r.location_id));
+      const excRows: ExcRow[] = (exc ?? [])
+        .map((r) => ({ id: r.id, location_id: r.location_id ?? "", category_id: r.category_id ?? null, date: r.exception_date, mode: r.mode as ExcMode, start: r.start_time ? String(r.start_time).slice(0, 5) : null, end: r.end_time ? String(r.end_time).slice(0, 5) : null, slot_minutes: r.slot_minutes ?? 60 }))
+        .filter((r) => schedulableLocationIds.has(r.location_id));
       setWeekly(wkRows);
       setExceptions(excRows);
       setDurationPref(wkRows[0]?.slot_minutes ?? excRows[0]?.slot_minutes ?? 60);
