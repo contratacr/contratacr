@@ -5,6 +5,7 @@ import {
   ALL_CATEGORIES,
   classifySuggestedCategory,
   isHealthCategory,
+  slugifyCategory,
   supportsVideoConsultCategory,
 } from "@/lib/data/categories";
 
@@ -76,10 +77,11 @@ export async function PATCH(req: Request) {
   const db = createAdminClient();
 
   if (!status) {
+    const cleanLabel = typeof label === "string" && label.trim() ? label.trim() : labelFromId(id);
     const { error } = await db.from("categories").upsert(
       {
         id,
-        name: labelFromId(id),
+        name: cleanLabel,
         es_salud: !!esSalud,
         supports_videoconsulta: !!supportsVideoconsulta,
       },
@@ -119,6 +121,62 @@ export async function PATCH(req: Request) {
     }, { onConflict: "id", ignoreDuplicates: false });
   }
 
+  return NextResponse.json({ ok: true });
+}
+
+export async function POST(req: Request) {
+  const admin = await getApiAdmin();
+  if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+
+  const { label, esSalud, supportsVideoconsulta } = await req.json();
+  const cleanLabel = typeof label === "string" ? label.trim() : "";
+  if (!cleanLabel) return NextResponse.json({ error: "Nombre requerido" }, { status: 400 });
+
+  const id = slugifyCategory(cleanLabel);
+  const fixedExists = ALL_CATEGORIES.some((category) => category.id === id);
+  if (fixedExists) return NextResponse.json({ error: "Ese servicio ya existe en el catalogo base" }, { status: 409 });
+
+  const db = createAdminClient();
+  const review = classifySuggestedCategory(cleanLabel);
+  const flags = {
+    es_salud: typeof esSalud === "boolean" ? esSalud : review.healthLikely,
+    supports_videoconsulta: typeof supportsVideoconsulta === "boolean" ? supportsVideoconsulta : review.videoConsultLikely,
+  };
+
+  const { error: categoryError } = await db.from("categories").upsert({
+    id,
+    name: cleanLabel,
+    ...flags,
+  }, { onConflict: "id", ignoreDuplicates: false });
+  if (categoryError) return NextResponse.json({ error: categoryError.message }, { status: 500 });
+
+  const { error: suggestionError } = await db.from("category_suggestions").upsert({
+    id,
+    label: cleanLabel,
+    suggested_name: cleanLabel,
+    approved: true,
+    status: "approved",
+    reviewed_at: new Date().toISOString(),
+  }, { onConflict: "id", ignoreDuplicates: false });
+  if (suggestionError) return NextResponse.json({ error: suggestionError.message }, { status: 500 });
+
+  return NextResponse.json({ ok: true, category: { id, label: cleanLabel } });
+}
+
+export async function DELETE(req: Request) {
+  const admin = await getApiAdmin();
+  if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+
+  const id = new URL(req.url).searchParams.get("id");
+  if (!id) return NextResponse.json({ error: "ID requerido" }, { status: 400 });
+  if (ALL_CATEGORIES.some((category) => category.id === id)) {
+    return NextResponse.json({ error: "Los servicios base no se eliminan; solo se editan sus flags." }, { status: 400 });
+  }
+
+  const db = createAdminClient();
+  await db.from("category_suggestions").delete().eq("id", id);
+  const { error } = await db.from("categories").delete().eq("id", id);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }
 

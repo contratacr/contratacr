@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Check, X, Tag, Loader2, HeartPulse, Video, Search } from "lucide-react";
+import { Check, X, Tag, Loader2, HeartPulse, Video, Search, Plus, Trash2 } from "lucide-react";
 import { ALL_CATEGORIES, classifySuggestedCategory, normalizeText } from "@/lib/data/categories";
 
 type Suggestion = {
@@ -71,6 +71,8 @@ export function AdminCategories() {
   const [catalogFilter, setCatalogFilter] = useState<"all" | "health" | "video">("all");
   const [edits, setEdits] = useState<Record<string, string>>({});
   const [flagEdits, setFlagEdits] = useState<Record<string, { esSalud: boolean; supportsVideoconsulta: boolean }>>({});
+  const [newServiceName, setNewServiceName] = useState("");
+  const [newServiceFlags, setNewServiceFlags] = useState({ esSalud: false, supportsVideoconsulta: false });
   const [busy, setBusy] = useState<string | null>(null);
 
   useEffect(() => {
@@ -133,10 +135,55 @@ export function AdminCategories() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id: item.id,
+          label: item.label,
           esSalud: updated.esSalud,
           supportsVideoconsulta: updated.supportsVideoconsulta,
         }),
       });
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function addService(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const label = newServiceName.trim();
+    if (!label) return;
+    setBusy("new-service");
+    try {
+      const res = await fetch("/api/admin/categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ label, ...newServiceFlags }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        window.alert(data.error || "No se pudo agregar el servicio.");
+        return;
+      }
+      setNewServiceName("");
+      setNewServiceFlags({ esSalud: false, supportsVideoconsulta: false });
+      setLoading(true);
+      const data = await fetch("/api/admin/categories?status=catalog").then((r) => r.json());
+      setCatalog(data.catalog ?? []);
+    } finally {
+      setBusy(null);
+      setLoading(false);
+    }
+  }
+
+  async function deleteService(item: CatalogCategory) {
+    if (item.source !== "custom") return;
+    if (!window.confirm(`Eliminar "${item.label}" del catalogo?`)) return;
+    setBusy(item.id);
+    try {
+      const res = await fetch(`/api/admin/categories?id=${encodeURIComponent(item.id)}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        window.alert(data.error || "No se pudo eliminar el servicio.");
+        return;
+      }
+      setCatalog((prev) => prev.filter((row) => row.id !== item.id));
     } finally {
       setBusy(null);
     }
@@ -148,16 +195,16 @@ export function AdminCategories() {
         <div>
           <div className="mb-2 flex items-center gap-2">
             <Tag className="h-5 w-5 text-[#009FD9]" />
-            <h1 className="text-xl font-bold text-[#111827]">Categorias</h1>
+            <h1 className="text-xl font-bold text-[#111827]">Servicios</h1>
           </div>
           <p className="max-w-2xl text-sm text-[#6b7280]">
-            Revisa sugerencias y administra cuales categorias activan datos de salud o videoconsulta.
+            Revisa sugerencias y administra que servicios activan datos de salud o videoconsulta.
           </p>
         </div>
         <div className="inline-flex rounded-xl border border-[#e5e7eb] bg-white p-1 shadow-sm">
           {[
             { id: "suggestions", label: "Sugerencias" },
-            { id: "catalog", label: "Catalogo" },
+            { id: "catalog", label: "Catalogo de servicios" },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -243,6 +290,32 @@ export function AdminCategories() {
         </>
       ) : (
         <>
+          <form onSubmit={addService} className="mb-4 rounded-xl border border-[#e5e7eb] bg-white p-3 shadow-sm">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+              <div className="min-w-0 flex-1">
+                <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-[#8a94a6]">Agregar servicio</label>
+                <input
+                  value={newServiceName}
+                  onChange={(e) => setNewServiceName(e.target.value)}
+                  placeholder="Ejemplo: Cardiologia"
+                  className="h-10 w-full rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
+                />
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <Toggle checked={newServiceFlags.esSalud} label="Salud" onChange={(v) => setNewServiceFlags((p) => ({ ...p, esSalud: v }))} />
+                <Toggle checked={newServiceFlags.supportsVideoconsulta} label="Videoconsulta" onChange={(v) => setNewServiceFlags((p) => ({ ...p, supportsVideoconsulta: v }))} />
+                <button
+                  type="submit"
+                  disabled={!newServiceName.trim() || busy === "new-service"}
+                  className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#009FD9] px-4 text-sm font-semibold text-white hover:bg-[#0089bb] disabled:opacity-50"
+                >
+                  {busy === "new-service" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                  Agregar
+                </button>
+              </div>
+            </div>
+          </form>
+
           <div className="mb-4 flex flex-col gap-3 rounded-xl border border-[#e5e7eb] bg-white p-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="relative min-w-0 flex-1">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9ca3af]" />
@@ -279,11 +352,20 @@ export function AdminCategories() {
                 <div key={item.id} className="flex flex-col gap-3 border-b border-[#f1f5f9] px-4 py-3 last:border-b-0 sm:flex-row sm:items-center">
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-[#111827]">{item.label}</p>
-                    <p className="text-xs text-[#9ca3af]">{item.groupLabel} · {item.source === "base" ? "Base" : "Agregada"}</p>
+                    <p className="text-xs text-[#9ca3af]">{item.groupLabel} · {item.source === "base" ? "Base" : "Agregado"}</p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <Toggle checked={item.esSalud} label="Salud" onChange={(v) => updateCatalogFlag(item, { esSalud: v })} />
                     <Toggle checked={item.supportsVideoconsulta} label="Videoconsulta" onChange={(v) => updateCatalogFlag(item, { supportsVideoconsulta: v })} />
+                    {item.source === "custom" && (
+                      <button
+                        type="button"
+                        onClick={() => deleteService(item)}
+                        className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-[#b91c1c] hover:bg-[#fef2f2]"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" /> Eliminar
+                      </button>
+                    )}
                     {busy === item.id && <Loader2 className="h-4 w-4 animate-spin text-[#009FD9]" />}
                   </div>
                 </div>
