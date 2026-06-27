@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Plus, Trash2, Pencil, Search, MapPin, Home, Video, Check } from "lucide-react";
+import { Plus, Trash2, Pencil, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PriceInput } from "@/components/ui/price-input";
 import { Modal } from "@/components/ui/modal";
@@ -14,8 +14,6 @@ import { getCategoryLabel, getAllCategories, normalizeText } from "@/lib/data/ca
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import { PRICING_TYPES, formatServicePrice, type PricingType } from "@/lib/pricing";
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
-
-export type ServiceModality = "in_person" | "at_home" | "video";
 
 export type ProService = {
   id: string;
@@ -31,9 +29,6 @@ export type ProService = {
   // Active/inactive toggle (sprint 486). An INACTIVE service is "paused" — kept in the
   // editor but HIDDEN from clients (public profile). Undefined/true = active (back-compat).
   active?: boolean;
-  // How this specific service can be delivered. Availability stays shared; these are
-  // client-facing modalities, not separate schedule locations.
-  modalities?: ServiceModality[];
 };
 
 interface ServicesEditorProps {
@@ -58,16 +53,9 @@ interface ServiceFormState {
   priceAmount: string;
   aConsultar: boolean;      // "Consultar precio" → persists as priceType a_convenir
   years: string;
-  modalities: ServiceModality[];
 }
 
-const EMPTY_FORM: ServiceFormState = { description: "", priceUnit: "por_hora", priceAmount: "", aConsultar: false, years: "", modalities: ["in_person"] };
-const MODALITY_OPTIONS: ServiceModality[] = ["in_person", "at_home", "video"];
-const MODALITY_ICON = {
-  in_person: MapPin,
-  at_home: Home,
-  video: Video,
-} satisfies Record<ServiceModality, typeof MapPin>;
+const EMPTY_FORM: ServiceFormState = { description: "", priceUnit: "por_hora", priceAmount: "", aConsultar: false, years: "" };
 
 export function ServicesEditor({
   professionalId,
@@ -199,7 +187,6 @@ export function ServicesEditor({
       priceAmount: rep?.priceAmount != null ? String(rep.priceAmount) : "",
       aConsultar: isAsk,
       years: rep?.years != null ? String(rep.years) : "",
-      modalities: rep?.modalities?.length ? rep.modalities : ["in_person"],
     });
     setFormError(null);
     if (professions.includes(prof)) setPendingNewCategory(null);
@@ -243,7 +230,6 @@ export function ServicesEditor({
       years,
       category: editCategory,
       active: rep?.active ?? true,
-      modalities: form.modalities.length > 0 ? form.modalities : ["in_person"],
     };
     const nextProfessions = pendingNewCategory === editCategory && !professions.includes(editCategory)
       ? [...professions, editCategory]
@@ -317,7 +303,6 @@ export function ServicesEditor({
               const info = serviceInfo(prof);
               const isActive = serviceActive(prof);
               const priceLabel = info?.price && info.priceType !== "a_convenir" ? info.price : t("priceConsult");
-              const modalities = info?.modalities?.length ? info.modalities : ["in_person"];
               return (
                 <section
                   key={prof}
@@ -359,14 +344,6 @@ export function ServicesEditor({
                   ) : (
                     <p className="mt-3 text-[13px] italic leading-relaxed text-[#9ca3af]">{t("noDescriptionYet")}</p>
                   )}
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    {modalities.map((modality) => (
-                      <span key={modality} className="inline-flex rounded-full bg-[#f3f4f6] px-2 py-0.5 text-[11px] font-semibold text-[#6b7280]">
-                        {t(`modality.${modality}`)}
-                      </span>
-                    ))}
-                  </div>
-
                   <div className="mt-3 min-h-[18px]">
                     {isPrincipal ? (
                       <span className="text-xs font-bold text-[#0089bb]">{t("principal")}</span>
@@ -515,64 +492,6 @@ export function ServicesEditor({
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                 autoFocus
               />
-            </div>
-
-            <div>
-              <div className="mb-2">
-                <p className="text-sm font-medium text-[#374151]">{t("modalitiesLabel")}</p>
-                <p className="mt-0.5 text-xs leading-snug text-[#6b7280]">{t("modalitiesHelp")}</p>
-              </div>
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                {MODALITY_OPTIONS.map((modality) => {
-                  const checked = form.modalities.includes(modality);
-                  const Icon = MODALITY_ICON[modality];
-                  return (
-                    <button
-                      key={modality}
-                      type="button"
-                      aria-pressed={checked}
-                      onClick={() => setForm((f) => {
-                        const next = checked
-                          ? f.modalities.filter((m) => m !== modality)
-                          : [...f.modalities, modality];
-                        return { ...f, modalities: next.length > 0 ? next : ["in_person"] };
-                      })}
-                      className={cn(
-                        "group relative flex min-h-[92px] w-full min-w-0 items-start gap-3 rounded-xl border p-3 pr-9 text-left transition-all",
-                        checked
-                          ? "border-[#009FD9] bg-[#f4fbff] shadow-sm ring-1 ring-[#bfe8f7]"
-                          : "border-[#e5e7eb] bg-white hover:border-[#bfdbfe] hover:bg-[#f8fbfe]"
-                      )}
-                    >
-                      <span
-                        className={cn(
-                          "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors",
-                          checked ? "bg-[#009FD9] text-white" : "bg-[#f3f4f6] text-[#9ca3af] group-hover:bg-[#EBF5FB] group-hover:text-[#009FD9]"
-                        )}
-                      >
-                        <Icon className="h-4 w-4" />
-                      </span>
-                      <span className="min-w-0">
-                        <span className={cn("block text-sm font-bold leading-tight [overflow-wrap:anywhere]", checked ? "text-[#162543]" : "text-[#374151]")}>
-                          {t(`modality.${modality}`)}
-                        </span>
-                        <span className="mt-1 block text-xs leading-snug text-[#6b7280]">
-                          {t(`modalityDesc.${modality}`)}
-                        </span>
-                      </span>
-                      <span
-                        className={cn(
-                          "absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full border transition-colors",
-                          checked ? "border-[#009FD9] bg-[#009FD9] text-white" : "border-[#d1d5db] bg-white text-transparent"
-                        )}
-                        aria-hidden
-                      >
-                        <Check className="h-3.5 w-3.5" strokeWidth={3} />
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
             </div>
 
             <div>

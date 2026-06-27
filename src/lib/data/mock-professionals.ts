@@ -23,6 +23,7 @@ export type ProfessionalCardData = {
   isFeatured: boolean;
   isAvailable: boolean;
   workplaces?: { id?: string; name: string; address?: string; lat?: number; lng?: number }[];
+  videoconsulta?: boolean;
   /** Opt-in: the pro exposes phone-call contact (Disponibilidad). */
   allowPhoneCall?: boolean;
   /** Optional separate call number (else the WhatsApp number is used for calls). */

@@ -206,6 +206,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
   // "Me desplazo a donde está el cliente" — a simple yes/no. Their coverage is the
   // zone(s) above; exact travel is coordinated with the client directly.
   const [travels, setTravels] = useState(String(initial.service_type ?? "").includes("mobile"));
+  const [videoConsult, setVideoConsult] = useState(!!initial.videoconsulta);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(
     initial.profiles?.avatar_url ?? null
   );
@@ -367,6 +368,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
         call_phone: callPhone.trim() || null,
         allow_phone_call: allowPhoneCall,
         contact_email: contactEmail.trim() || null,
+        videoconsulta: videoConsult,
       };
 
       // 1) Core fields — guaranteed columns; a failure here is a real error.
@@ -663,6 +665,20 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
             aria-label={t("travelsLabel")}
           >
             <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", travels ? "left-5" : "left-0.5")} />
+          </button>
+        </div>
+
+        <div className="flex items-start justify-between gap-4 rounded-xl bg-[#f9fafb] p-3.5">
+          <div>
+            <p className="text-sm font-medium text-[#111827]">{t("videoConsultLabel")}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => { setVideoConsult((v) => !v); touch(); }}
+            className={cn("relative h-6 w-11 rounded-full transition-all shrink-0 mt-0.5", videoConsult ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
+            aria-label={t("videoConsultLabel")}
+          >
+            <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", videoConsult ? "left-5" : "left-0.5")} />
           </button>
         </div>
       </Section>

@@ -454,7 +454,7 @@ export async function getProfessionalBySlug(
         .select(
           `id, profile_id, slug, hourly_rate, is_verified, is_featured, is_available,
            rating_avg, review_count, bio, whatsapp, years_experience, portfolio_urls,
-           category_id, professions, pricing, services, availability_public, contact_preference, languages, business_name, workplaces, verification_status, insurance_networks, lat, lng, service_type,
+           category_id, professions, pricing, services, availability_public, contact_preference, languages, business_name, workplaces, verification_status, insurance_networks, lat, lng, service_type, videoconsulta,
            profiles(full_name, avatar_url),
            provincias(id, name),
            cantones(id, name),
@@ -565,6 +565,7 @@ export async function getProfessionalBySlug(
         lat: (pro as any).lat ?? null,
         lng: (pro as any).lng ?? null,
         serviceType: (pro as any).service_type ?? null,
+        videoconsulta: !!(pro as any).videoconsulta,
         portfolioUrls: pro.portfolio_urls ?? [],
         portfolioItems,
         allowPhoneCall,

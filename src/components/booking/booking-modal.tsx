@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
   X, MapPin, Shield, ShieldAlert, ArrowLeft, ChevronLeft, ChevronRight, Lock, CalendarPlus,
-  Check, Sun, Sunset, Moon, CalendarCheck, Home, Video,
+  Check, Sun, Sunset, Moon, CalendarCheck,
 } from "lucide-react";
 import { SuccessIcon } from "@/components/ui/success-icon";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
@@ -29,23 +29,14 @@ import type { ProfessionalCardData } from "@/lib/data/mock-professionals";
 type BookingStep = "calendar" | "details" | "contact" | "complete" | "success";
 type ServiceModality = "in_person" | "at_home" | "video";
 type BookingProfessional = ProfessionalCardData & {
-  services?: Array<{
-    id?: string;
-    category?: string;
-    active?: boolean;
-    modalities?: ServiceModality[];
-  }>;
+  serviceType?: string | null;
+  videoconsulta?: boolean;
 };
 
 type DaySchedule = { enabled: boolean; ranges: { start: string; end: string }[] };
 type WeeklyAvailability = Record<string, DaySchedule>;
 
 const DAY_KEYS = ["dom", "lun", "mar", "mie", "jue", "vie", "sab"];
-const MODALITY_ICON = {
-  in_person: MapPin,
-  at_home: Home,
-  video: Video,
-} satisfies Record<ServiceModality, typeof MapPin>;
 
 function formatDateISO(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
@@ -153,20 +144,13 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   const [pickedCategory, setPickedCategory] = useState<string | null>(
     initialCategoryId ?? (proProfessions.length === 1 ? proProfessions[0] : null)
   );
-  const activeServices = (professional.services ?? []).filter((s) => s.active !== false);
-  const modalitiesForCategory = (cat: string | null): ServiceModality[] => {
-    if (!cat) return ["in_person"];
-    const service = activeServices.find((s) => (s.category ?? professional.categoryId) === cat);
-    return service?.modalities?.length ? service.modalities : ["in_person"];
-  };
   const effectiveCategory = initialCategoryId ?? pickedCategory ?? null;
   const needsProfessionPick = !effectiveCategory && proProfessions.length > 1;
-  const currentServiceModalities = modalitiesForCategory(effectiveCategory);
-  const [selectedModality, setSelectedModality] = useState<ServiceModality | null>(
-    currentServiceModalities.length === 1 ? currentServiceModalities[0] : null
-  );
-  const effectiveModality = selectedModality ?? (currentServiceModalities.length === 1 ? currentServiceModalities[0] : null);
-  const needsModalityPick = currentServiceModalities.length > 1 && !effectiveModality;
+  const professionalModalities: ServiceModality[] = [
+    (professional.workplaces?.length ?? 0) > 0 ? "in_person" : null,
+    professional.serviceType?.includes("mobile") ? "at_home" : null,
+    professional.videoconsulta ? "video" : null,
+  ].filter((m): m is ServiceModality => !!m);
 
   // Profession shown UNDER the name: the RELEVANT one for the current context —
   //  • filtered (initialCategoryId) or selected (pickedCategory) → that profession;
@@ -279,10 +263,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
       // the service-selection step until a full page refresh (re-seeds the same way the
       // initial state does: a category context wins, a single-profession pro auto-picks,
       // a multi-profession pro with no context → null → re-prompt).
-      const nextCategory = initialCategoryId ?? (proProfessions.length === 1 ? proProfessions[0] : null);
-      const nextModalities = modalitiesForCategory(nextCategory);
-      setPickedCategory(nextCategory);
-      setSelectedModality(nextModalities.length === 1 ? nextModalities[0] : null);
+      setPickedCategory(initialCategoryId ?? (proProfessions.length === 1 ? proProfessions[0] : null));
       setSelectedDate(initialDate ?? "");
       setSelectedTime(initialTime ?? "");
       if (initialDate) {
@@ -524,10 +505,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     setSubmitError(null);
     // The official padrón name (for "myself") prevails as the booking name.
     const submitName = (overrideName ?? (selfOfficialName || clientName)) || "Cliente";
-    const modalityLabel = effectiveModality ? t(`modality.${effectiveModality}`) : "";
-    const serviceDescription = [modalityLabel ? t("modality.requestLine", { modality: modalityLabel }) : null, description]
-      .filter(Boolean)
-      .join("\n");
+    const serviceDescription = description;
     try {
       const res = await fetch("/api/bookings", {
         method: "POST",
@@ -653,10 +631,9 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   // Universal calendar export (.ics) — works with Google/Apple/Outlook.
   function downloadCalendar() {
     if (!selectedDate || !selectedTime) return;
-    const modalityLabel = effectiveModality ? t(`modality.${effectiveModality}`) : "";
     const ics = buildBookingIcs({
       proName: professional.fullName,
-      service: [modalityLabel ? t("modality.requestLine", { modality: modalityLabel }) : null, description].filter(Boolean).join("\n"),
+      service: description,
       date: selectedDate,
       time: selectedTime,
       whatsappLink: getWhatsAppLink(professional.whatsapp),
@@ -1003,11 +980,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                         <button
                           key={cat}
                           type="button"
-                          onClick={() => {
-                            const nextModalities = modalitiesForCategory(cat);
-                            setPickedCategory(cat);
-                            setSelectedModality(nextModalities.length === 1 ? nextModalities[0] : null);
-                          }}
+                          onClick={() => setPickedCategory(cat)}
                           className="flex items-center justify-between gap-2 rounded-xl border border-[#e5e7eb] px-4 py-3 text-left text-sm font-medium text-[#374151] hover:border-[#009FD9] hover:bg-[#EBF5FB] transition-colors"
                         >
                           <span className="min-w-0 break-words">{getCategoryLabel(cat, locale)}</span>
@@ -1248,47 +1221,11 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                       next step (so typing it auto-fills name + DOB together). */}
                   {proIsHealth && !forSomeoneElse && hasStoredCedula && renderSelfDobField()}
 
-                  {currentServiceModalities.length > 0 && (
-                    <div>
-                      <div className="mb-2">
-                        <p className="text-sm font-medium text-[#374151]">
-                          {t("modality.title")}{currentServiceModalities.length > 1 && <span className="text-red-500"> *</span>}
-                        </p>
-                        <p className="mt-0.5 text-xs leading-snug text-[#9ca3af]">
-                          {currentServiceModalities.length > 1 ? t("modality.pickOne") : t("modality.onlyOne")}
-                        </p>
-                      </div>
-                      <div className={cn("grid gap-2", currentServiceModalities.length > 1 ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1")}>
-                        {currentServiceModalities.map((modality) => {
-                          const Icon = MODALITY_ICON[modality];
-                          const checked = effectiveModality === modality;
-                          return (
-                            <button
-                              key={modality}
-                              type="button"
-                              disabled={currentServiceModalities.length === 1}
-                              aria-pressed={checked}
-                              onClick={() => setSelectedModality(modality)}
-                              className={cn(
-                                "relative flex min-w-0 items-start gap-3 rounded-xl border p-3 pr-9 text-left transition-all",
-                                checked ? "border-[#009FD9] bg-[#f4fbff] ring-1 ring-[#bfe8f7]" : "border-[#e5e7eb] bg-white hover:border-[#bfdbfe] hover:bg-[#f8fbfe]",
-                                currentServiceModalities.length === 1 && "cursor-default"
-                              )}
-                            >
-                              <span className={cn("mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg", checked ? "bg-[#009FD9] text-white" : "bg-[#f3f4f6] text-[#9ca3af]")}>
-                                <Icon className="h-4 w-4" />
-                              </span>
-                              <span className="min-w-0">
-                                <span className="block text-sm font-bold leading-tight text-[#162543] [overflow-wrap:anywhere]">{t(`modality.${modality}`)}</span>
-                                <span className="mt-1 block text-xs leading-snug text-[#6b7280]">{t(`modalityDesc.${modality}`)}</span>
-                              </span>
-                              <span className={cn("absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full border", checked ? "border-[#009FD9] bg-[#009FD9] text-white" : "border-[#d1d5db] bg-white text-transparent")} aria-hidden>
-                                <Check className="h-3.5 w-3.5" strokeWidth={3} />
-                              </span>
-                            </button>
-                          );
-                        })}
-                      </div>
+                  {professionalModalities.length > 0 && (
+                    <div className="rounded-xl border border-[#e5e7eb] bg-[#f9fafb] px-3 py-2.5">
+                      <p className="text-xs font-medium leading-relaxed text-[#6b7280]">
+                        {t("modality.available", { modalities: professionalModalities.map((m) => t(`modality.${m}`)).join(" · ") })}
+                      </p>
                     </div>
                   )}
 
@@ -1549,14 +1486,12 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                     className="flex-1"
                     disabled={
                       !description.trim()
-                      || needsModalityPick
                       || (forSomeoneElse && (!benName.trim() || !benDob))
                       || (proIsHealth && !forSomeoneElse && hasStoredCedula && !effectiveSelfDob)
                     }
                     loading={submitting}
                     onClick={async () => {
                       if (!description.trim()) return;
-                      if (needsModalityPick) return;
                       // Booking for a dependent needs the beneficiary's name + DOB (age).
                       if (forSomeoneElse && (!benName.trim() || !benDob)) return;
                       // Health services require the patient's DOB. For "para mí" we only

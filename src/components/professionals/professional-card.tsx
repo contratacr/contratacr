@@ -57,6 +57,8 @@ export type ProfessionalCardData = {
   lat?: number | null;
   lng?: number | null;
   serviceType?: string | null;
+  /** General profile-level capability: the pro can attend online when appropriate. */
+  videoconsulta?: boolean;
   /** Count of "casos de éxito" (portfolio photos) — drives the preview link. */
   portfolioCount?: number;
   /** Count of certifications — drives the compact "Ver certificaciones (N)" link. */
