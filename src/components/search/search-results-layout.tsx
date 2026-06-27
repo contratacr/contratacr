@@ -26,10 +26,10 @@ interface SearchResultsLayoutProps {
 // (browse the whole list, header still visible on top). FOCUS = the rest height the sheet
 // springs to when a map pin is tapped, so the focused card is comfortably visible.
 const PEEK = 0.32;
-const FULL = 0.9;
+const FULL = 0.72;
 const FOCUS = 0.58;
 const MIN = 0.18;
-const MAX = 0.92;
+const MAX = 0.74;
 
 /**
  * Responsive search shell — ONE map instance + ONE card list, repositioned via classes.
@@ -190,9 +190,10 @@ export function SearchResultsLayout({ children, filters, drawerFilters, countLab
             (order-2) and the desktop map sit in the flex shell. */}
         <div
           className="fixed inset-x-0 bottom-0 z-30 flex flex-col rounded-t-[20px] border-x border-t border-[#e5e7eb] bg-white shadow-[0_-12px_36px_-14px_rgba(15,23,42,0.32)] lg:static lg:z-auto lg:rounded-none lg:border-0 lg:shadow-none lg:contents"
-          // maxHeight keeps the navbar (logo + search + menu) visible even when fully
-          // expanded. On desktop the wrapper is `lg:contents`, so these inline styles have no effect.
-          style={{ height: `${heightFr * 100}dvh`, maxHeight: "calc(100dvh - 72px)", transition: dragging ? "none" : "height .3s cubic-bezier(.32,.72,0,1)" }}
+          // maxHeight keeps the navbar AND the map controls visible even when the sheet is
+          // expanded. The list scrolls inside the sheet; the sheet itself should never cover
+          // the filter/map affordances at the top of the mobile map.
+          style={{ height: `${heightFr * 100}dvh`, maxHeight: "calc(100dvh - 164px)", transition: dragging ? "none" : "height .3s cubic-bezier(.32,.72,0,1)" }}
         >
           {/* Sheet header (handle + count) — the whole strip is the drag target; drag to
               resize, tap to toggle peek/full. `touch-none` keeps the gesture from scrolling

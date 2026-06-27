@@ -3658,3 +3658,5 @@ New i18n namespaces added this pass: `search.pagination`, extended `search.filte
 - Sprint 362: Service modalities remain per-service fields in Servicios, not Disponibilidad. /buscar no shows A domicilio/Videoconsulta chips anymore so cards stay focused; modalities continue to surface in the professional profile/service request context, where clients have more room and intent.
 
 - Sprint 363: Mobile /buscar professional cards no longer truncate the primary/secondary name lines. The favorite bookmark sits higher and the price column is narrower/right-aligned so long names get priority on phone while desktop keeps tighter one-line headers.
+
+- Sprint 364: Mobile /buscar bottom sheet can no longer expand high enough to cover the map controls/filter trigger. FULL/MAX snap points are lower and the sheet max-height leaves a permanent map-control band below the navbar; cards still scroll inside the sheet.
