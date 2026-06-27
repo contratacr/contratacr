@@ -541,7 +541,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
         {nameLocked ? (
           <div>
             <Input
-              label={t("fullName")}
+              label={<>{t("fullName")} <span className="text-red-500">*</span></>}
               value={fullName}
               disabled
               rightIcon={<Lock className="h-4 w-4" />}

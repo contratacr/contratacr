@@ -3600,3 +3600,5 @@ New i18n namespaces added this pass: `search.pagination`, extended `search.filte
 **Sprint 320 - Compact availability location select.** Multi-location availability rows now keep the work-location select compact so it does not cover or push Agregar franja / Aplicar a otros días. Long exact addresses truncate inside the select while the full label remains available through the native option/title text; time selects were slightly tightened while preserving AM/PM readability.
 
 **Sprint 321 - Shared category dropdown icons.** The navbar category dropdown now uses the same group icon mapping as /categorias (Home, Leaf, Sparkles, Laptop, Briefcase, Heart, Star, BookOpen, Truck, CalendarDays, Shield, Car) so category navigation is visually consistent across the app.
+
+**Sprint 322 - Required full-name labels.** Added the required-field asterisk to the remaining Nombre completo / Full name display states: booking modal while identity lookup is loading, booking modal when the official name is auto-confirmed, and the locked verified name in the professional profile editor. The booking modal now uses the translated contact-name label instead of hardcoded Spanish.

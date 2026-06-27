@@ -1954,3 +1954,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Navbar category dropdown.** The desktop category menu should be section-led, not a flat wall of cards. Use a compact search at the top, a left rail of category groups with icons, and a right pane for the selected group's services. Search results should remain grouped by section so users understand where each service belongs.
 
 > **Category group icons.** The navbar category dropdown must use the same category-group icon mapping as `/categorias` so both entry points feel like the same catalog system.
+
+> **Required field labels.** `Nombre completo` / `Full name` is a required identity/profile field and should show the red asterisk in every editable, loading, confirmed, or locked display state.

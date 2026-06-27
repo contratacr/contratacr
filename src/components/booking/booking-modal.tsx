@@ -805,7 +805,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     if (!noCedula && selfCedulaLoading) {
       return (
         <div>
-          <label className="text-sm font-medium text-[#374151] block mb-1.5">Nombre completo</label>
+          <label className="text-sm font-medium text-[#374151] block mb-1.5">{t("contact.name")} <span className="text-red-500">*</span></label>
           <div className="flex h-10 items-center rounded-xl border border-[#e5e7eb] bg-[#f9fafb] px-4 text-sm text-[#9ca3af]">Buscando…</div>
         </div>
       );
@@ -813,7 +813,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     if (selfHasAutoName) {
       return (
         <div>
-          <label className="text-sm font-medium text-[#374151] block mb-1.5">Nombre completo</label>
+          <label className="text-sm font-medium text-[#374151] block mb-1.5">{t("contact.name")} <span className="text-red-500">*</span></label>
           <div className="flex h-10 items-center justify-between rounded-xl border border-[#bbf7d0] bg-[#f0fdf4] px-4">
             <span className="truncate text-sm font-medium text-[#15803d]">{selfCedulaName}</span>
             <Check className="h-4 w-4 shrink-0 text-[#15803d]" />
