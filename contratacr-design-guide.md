@@ -1936,3 +1936,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Private availability notice.** The "Disponibilidad privada" explanatory state should read as informational, not warning/error. Use a soft brand-blue card (`#f5fbfe`, `#ccecf8`) with a white icon badge and dark readable text; reserve yellow/orange warning styles for real problems or risky actions.
 
 > **Support navigation from panels.** Links to support from inside dashboards should prefer the in-panel support tab. If a signed-in user lands on public `/soporte`, show a visible "Volver a mi panel" action above the form and route it to the user's correct client/professional support tab.
+
+> **Dashboard identity header.** On responsive dashboard headers, keep the user's display name on a single line with `truncate` rather than wrapping into two lines. Use a modest mobile font size and preserve the full value with `title` when practical.

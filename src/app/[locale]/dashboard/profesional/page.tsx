@@ -381,8 +381,9 @@ export default function DashboardPage() {
                 <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-[#9ca3af]">
                   {mode === "offer" ? t("panelProfessional") : t("panelClient")}
                 </p>
-                {/* Show the full account name; allow wrapping on mobile instead of truncating. */}
-                <h1 className="text-xl sm:text-2xl font-bold leading-tight text-[#162543] [overflow-wrap:anywhere]">
+                {/* Keep the account name on one line in responsive; very long names truncate
+                    instead of pushing the header into two lines. */}
+                <h1 className="truncate whitespace-nowrap text-lg font-bold leading-tight text-[#162543] sm:text-2xl" title={displayName}>
                   {displayName}
                 </h1>
                 <div className="mt-1.5 flex min-h-[22px] flex-wrap items-center gap-2">
