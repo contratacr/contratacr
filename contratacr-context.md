@@ -3642,3 +3642,5 @@ New i18n namespaces added this pass: `search.pagination`, extended `search.filte
 - Sprint 341: Availability now follows the table-style reference layout: private toggle first, weekly schedule card with 'Crear citas cada' + 'Horario para' top controls, Dia/Disponible/Horario/Acciones rows, collapsed closed-days summary, and a separate specific-day changes card. Location is selected once at the top, never inside each weekday row.
 
 - Sprint 342: Availability no longer treats 'A domicilio' or coverage zones as schedulable locations. The 'Horario para' selector shows only fixed/base workplaces; home service remains a profile/search capability that clients can request inside the pro's normal workplace hours for covered zones.
+
+- Sprint 343: Search cards now show home-service as a chip under rating/reviews ('A domicilio' or 'Tambien a domicilio'), never in the address/location line. The address line is reserved for real fixed locations such as canton/province or workplace address; legacy cov_* slot ids are ignored for the location tab row.

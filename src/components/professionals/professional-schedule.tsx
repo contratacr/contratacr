@@ -33,9 +33,6 @@ interface ProfessionalScheduleProps {
   placeFallback?: string;
   /** Fallback address line ("cantón, provincia") for the no-workplace case. */
   placeAddress?: string;
-  /** Travel coverage line ("se desplaza…") shown under the tabs when the selected
-   *  place has no street address (mobile pros / coverage zones). */
-  coverageText?: string;
   /** Business/brand name — bolded as the venue prefix on a real workplace address. */
   businessName?: string;
   /** STACKED single-column layout for the professional-profile contact card (no two-column
@@ -74,14 +71,14 @@ function dayColumnLabel(d: Date, i: number, locale: string): string {
  *    "Ver horario completo" link to the full profile.
  *  - Private: lock state with "Contáctanos por Whatsapp" + "por llamada".
  */
-export function ProfessionalSchedule({ professional, categoryName, availabilityPublic, contactPreference = "ambas", slots: allSlots, activeCategory, isOwn = false, info, placeFallback = "", placeAddress = "", coverageText = "", businessName = "", stacked = false }: ProfessionalScheduleProps) {
+export function ProfessionalSchedule({ professional, categoryName, availabilityPublic, contactPreference = "ambas", slots: allSlots, activeCategory, isOwn = false, info, placeFallback = "", placeAddress = "", businessName = "", stacked = false }: ProfessionalScheduleProps) {
   const t = useTranslations("schedule");
   const locale = useLocale();
   // Schedules are per-LOCATION, not per-profession: a pro at a location is reachable
   // at those hours regardless of which service was searched. So we show ALL of the
   // pro's slots (no profession filter). `activeCategory` is still used purely as the
   // booking context (which service the request is about), not to hide hours.
-  const slots = allSlots;
+  const slots = allSlots.filter((s) => !s.locationId?.startsWith("cov_"));
   const { user } = useAuth();
   const [showRegistration, setShowRegistration] = useState(false);
   const [showBooking, setShowBooking] = useState(false);
@@ -98,9 +95,8 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   // appointments-only.
   const canBook = availabilityPublic && contactPreference !== "solo_whatsapp";
 
-  // Distinct locations present in the published slots. Chips let the client choose
-  // WHICH place a slot is for before booking (item 3) — a traveling pro's coverage
-  // zones (cov_*) and videoconsulta are labeled too, never a bare "Ubicación".
+  // Distinct fixed/base locations present in the published slots. Chips let the
+  // client choose WHICH physical place a slot is for before booking.
   function locLabel(id: string | null): string {
     if (!id || id === "general") return "General";
     if (id === "videoconsulta") return t("videoconsulta");
@@ -114,8 +110,9 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     return professional.workplaces?.find((w) => w.id === id)?.address?.trim() ?? "";
   }
   // ── SERVICE LOCATIONS (the durable list the selector is built from) ──
-  // DURABLE source = the pro's named WORKPLACES, UNION any extra distinct locations
-  // their slots carry (a-domicilio `cov_*`, videoconsulta). Keyed by id.
+  // DURABLE source = the pro's named WORKPLACES, UNION any extra distinct fixed
+  // locations their slots carry. Keyed by id. `cov_*` is travel coverage, not a
+  // schedule place, so legacy slots with those ids are ignored for the tab row.
   //
   // WHY THIS (the recurring regression): the selector kept disappearing whenever it
   // was derived from the SLOTS alone — a multi-location pro who only published hours at
@@ -131,6 +128,7 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
     }
     for (const s of slots) {
       const id = s.locationId;
+      if (id?.startsWith("cov_")) continue;
       if (id && id !== "general" && !map.has(id)) map.set(id, locLabel(id));
     }
     return Array.from(map, ([id, label]) => ({ id, label }));
@@ -168,11 +166,11 @@ export function ProfessionalSchedule({ professional, categoryName, availabilityP
   const locTabs = hasRealLoc
     ? locationOptions
     : (placeFallback ? [{ id: "__fallback", label: placeFallback }] : []);
-  // Address under the tabs: the selected workplace's street address, else the pro's
-  // travel coverage ("se desplaza…"), else the province/cantón fallback. Only a real
-  // workplace gets its business name bolded as the venue prefix.
+  // Address under the tabs: the selected workplace's street address, else the
+  // province/cantón fallback. Home service is shown as a separate card chip, never
+  // as an address.
   const workplaceAddr = hasRealLoc && effectiveId ? locAddress(effectiveId) : "";
-  const addressLine = workplaceAddr || coverageText || placeAddress || "";
+  const addressLine = workplaceAddr || placeAddress || "";
   const venueName = workplaceAddr ? businessName.trim() : "";
   // Show the chevron nav whenever the tab row actually OVERFLOWS its container (FIT-based, not a
   // fixed count) — so on a NARROW card (e.g. the profile contact rail) where the 3rd location is

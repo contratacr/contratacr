@@ -246,6 +246,8 @@
     "coverageCountry": "Serves the whole country",
     "coverageYourLocation": "Travels to your location",
     "coverageAreas": "Travels in {areas}",
+    "atHome": "At home",
+    "alsoAtHome": "Also at home",
     "save": "Save professional",
     "unsave": "Remove from saved",
     "saveLabel": "Save",

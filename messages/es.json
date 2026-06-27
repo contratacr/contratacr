@@ -246,6 +246,8 @@
     "coverageCountry": "Atiende en todo el país",
     "coverageYourLocation": "Se desplaza a tu ubicación",
     "coverageAreas": "Se desplaza en {areas}",
+    "atHome": "A domicilio",
+    "alsoAtHome": "También a domicilio",
     "save": "Guardar profesional",
     "unsave": "Quitar de guardados",
     "saveLabel": "Guardar",

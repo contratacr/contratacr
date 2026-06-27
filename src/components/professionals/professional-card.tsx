@@ -74,21 +74,6 @@ export type ProfessionalCardData = {
   contactEmail?: string;
 };
 
-// Human label for the pro's actual travel coverage, e.g. "Atiende en todo el país",
-// "Se desplaza en Alajuela", "Se desplaza en Atenas, Escazú". Locale-aware via the
-// `card` translator passed from the (async) ProfessionalCard.
-function coverageLabel(
-  c: ProfessionalCardData["coverage"] | undefined,
-  tCard: (key: string, values?: Record<string, string>) => string
-): string {
-  if (c?.country) return tCard("coverageCountry");
-  const areas = [...(c?.provincias ?? []), ...(c?.cantones ?? [])];
-  if (areas.length === 0) return tCard("coverageYourLocation");
-  const shown = areas.slice(0, 3).join(", ");
-  const extra = areas.length > 3 ? ` +${areas.length - 3}` : "";
-  return tCard("coverageAreas", { areas: `${shown}${extra}` });
-}
-
 interface ProfessionalCardProps {
   professional: ProfessionalCardData;
   className?: string;
@@ -161,10 +146,13 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
   // column under the rating — see ProfessionalSchedule). The per-place TABS +
   // street addresses come from the pro's workplaces; here we only supply the
   // FALLBACK tab (province/cantón, shown when there are no named workplaces) and
-  // the travel COVERAGE line ("se desplaza…") used when a place has no address.
+  // the general province/cantón address. Home service is shown as a separate chip,
+  // never as the address line.
   const placeFallback = professional.cantonName || professional.provinceName || "";
   const placeAddress = [professional.cantonName, professional.provinceName].filter(Boolean).join(", ");
-  const coverageText = professional.serviceType?.includes("mobile") ? coverageLabel(professional.coverage, tCard) : "";
+  const offersHomeService = professional.serviceType?.includes("mobile");
+  const hasFixedPlace = (professional.workplaces?.length ?? 0) > 0 || !!placeAddress;
+  const homeServiceLabel = offersHomeService ? tCard(hasFixedPlace ? "alsoAtHome" : "atHome") : "";
 
   // ── LEFT-column professional info (slotted into ProfessionalSchedule, which owns the
   // desktop two-column layout). Each block is a direct child of the schedule's left
@@ -263,6 +251,11 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
               </span>
             )}
           </div>
+          {homeServiceLabel && (
+            <span className="inline-flex w-fit items-center rounded-full bg-[#EBF5FB] px-2 py-0.5 text-[11px] font-semibold text-[#0089bb]">
+              {homeServiceLabel}
+            </span>
+          )}
         </div>
       </div>
     </>
@@ -287,7 +280,6 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
         isOwn={isOwn}
         placeFallback={placeFallback}
         placeAddress={placeAddress}
-        coverageText={coverageText}
         businessName={businessName ?? ""}
       />
 
