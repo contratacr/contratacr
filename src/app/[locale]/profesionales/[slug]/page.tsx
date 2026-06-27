@@ -752,11 +752,11 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                     const offersHomeService = String(professional.serviceType ?? "").includes("mobile") || services.some((service) => service.modalities?.includes("at_home"));
                     const offersVideoConsult = services.some((service) => service.modalities?.includes("video"));
                     const hasFixedPlace = workplaceAreaLines.length > 0 || uniqueWorkplaces.length > 0;
-                    if (offersHomeService || offersVideoConsult) facts.push({
+                    if (offersVideoConsult) facts.push({
                       key: "attention",
                       icon: <Building2 className="h-5 w-5" />,
                       label: t("attention"),
-                      value: [offersHomeService ? t(hasFixedPlace ? "alsoAtHome" : "atHome") : "", offersVideoConsult ? t("videoConsult") : ""].filter(Boolean).join(" · "),
+                      value: t("videoConsult"),
                     });
                     if (expYears > 0) facts.push({
                       key: "exp", icon: <Briefcase className="h-5 w-5" />, label: t("experienceLabel"), value: t("yearsValue", { years: expYears }),
@@ -794,14 +794,19 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                     } else if (rate) {
                       facts.push({ key: "rate", icon: <Banknote className="h-5 w-5" />, label: t("baseRate"), value: rate, caption: t("baseRateCaption") });
                     }
-                    if (workplaceAreaLines.length > 0) facts.push({
+                    if (workplaceAreaLines.length > 0 || offersHomeService) facts.push({
                       key: "loc", icon: <MapPin className="h-5 w-5" />,
-                      label: workplaceAreaLines.length > 1 ? t("workplaces") : t("location"),
+                      label: workplaceAreaLines.length > 1 || offersHomeService ? t("workplaces") : t("location"),
                       value: (
                         <span className="flex flex-col gap-1">
                           {workplaceAreaLines.map((line) => (
                             <span key={line} className="[overflow-wrap:anywhere]">{line}</span>
                           ))}
+                          {offersHomeService && (
+                            <span className="w-fit rounded-full bg-[#EBF5FB] px-2 py-0.5 text-[11px] font-semibold text-[#0089bb]">
+                              {t(hasFixedPlace ? "alsoAtHome" : "atHome")}
+                            </span>
+                          )}
                         </span>
                       ),
                     });

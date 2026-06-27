@@ -3648,3 +3648,5 @@ New i18n namespaces added this pass: `search.pagination`, extended `search.filte
 - Sprint 344: Public professional profiles show home-service inside Sobre mi as a fact row labeled Atencion ('A domicilio' / 'Tambien a domicilio'), matching the /buscar card chip. It is not shown as an address or workplace.
 
 - Sprint 345: Services support per-service modalities via services[].modalities: in_person, at_home, video. Existing services default to in_person. Videoconsulta is shown as a capability on /buscar and profile/service cards, but it does not create a separate availability schedule; the call link is coordinated by WhatsApp for now.
+
+- Sprint 346: On the public professional profile, home-service moved from the Atencion fact row into Sobre mi -> Lugares de trabajo as a compact line/chip after real places. Atencion is now reserved for Videoconsulta or similar non-location modalities.
