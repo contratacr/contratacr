@@ -140,6 +140,9 @@ export default function CategoriasPage() {
       visibleIds: matchedIds ? group.ids.filter((id) => matchedIds.has(id)) : [...group.ids],
     }))
     .filter((group) => group.visibleIds.length > 0), [matchedIds]);
+  const searchResults = useMemo(() => visibleGroups.flatMap((group) =>
+    group.visibleIds.map((id) => ({ id, groupKey: group.key, Icon: group.Icon }))
+  ), [visibleGroups]);
   const resultCount = visibleGroups.reduce((sum, group) => sum + group.visibleIds.length, 0);
 
   function submitSearch(e: React.FormEvent<HTMLFormElement>) {
@@ -272,7 +275,51 @@ export default function CategoriasPage() {
           </aside>
 
           <div className="flex min-w-0 flex-col gap-8">
-            {visibleGroups.map((group, gi) => {
+            {query.trim() && resultCount > 0 ? (
+              <FadeInUp>
+                <section className="scroll-mt-32">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <div>
+                      <h2 className="text-lg font-extrabold leading-tight text-[#162543]">
+                        {tp("resultsTitle")}
+                      </h2>
+                      <p className="mt-0.5 text-xs font-medium text-[#8a94a6]">
+                        {tp("searchSummary", { count: resultCount, query: query.trim() })}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-2">
+                      {searchResults.map(({ id, groupKey, Icon }) => (
+                        <Link
+                          key={id}
+                          href={`/buscar?categoria=${id}`}
+                          className="group flex min-h-[64px] items-center justify-between gap-3 border-b border-[#eef2f6] px-4 py-3 text-left transition-colors hover:bg-[#f8fbfe] sm:odd:border-r"
+                        >
+                          <span className="flex min-w-0 items-center gap-3">
+                            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#EAF7FD] text-[#009FD9]">
+                              <Icon className="h-4 w-4" />
+                            </span>
+                            <span className="min-w-0">
+                              <span className="block text-sm font-semibold leading-snug text-[#374151] [overflow-wrap:anywhere] group-hover:text-[#0089bb]">
+                                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                                {getCategoryLabel(id, locale) || t(id as any)}
+                              </span>
+                              <span className="mt-0.5 block text-xs font-medium text-[#9ca3af]">
+                                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                                {tg(groupKey as any)}
+                              </span>
+                            </span>
+                          </span>
+                          <ChevronRight className="h-4 w-4 shrink-0 text-[#cbd5e1] transition-colors group-hover:text-[#009FD9]" />
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                </section>
+              </FadeInUp>
+            ) : visibleGroups.map((group, gi) => {
               const Icon = group.Icon;
               return (
                 <FadeInUp key={group.key} delay={gi * 20}>

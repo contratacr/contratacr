@@ -2447,6 +2447,7 @@
     "searchPlaceholder": "Search for a service…",
     "searchAria": "Search for a service",
     "clearSearch": "Clear search",
+    "resultsTitle": "Results",
     "searchSummary": "{count, plural, one {# service found for \"{query}\"} other {# services found for \"{query}\"}}",
     "noResults": "We couldn't find that category.",
     "noResultsHint": "Suggest it below and our team will review it.",

@@ -362,7 +362,7 @@
     "cancel": "Cancelar",
     "notListed": "Sugerir categoría",
     "back": "Volver a categorias",
-    "optionsCount": "{count, plural, one {# opci?n} other {# opciones}}"
+    "optionsCount": "{count, plural, one {# opción} other {# opciones}}"
   },
   "gallery": {
     "workAlt": "Trabajo {n}",
@@ -1493,7 +1493,7 @@
     "emptyTitle": "Aún no ofreces servicios",
     "emptyHelp": "Agrega los servicios que ofreces desde nuestro catálogo.",
     "pickerBack": "Volver a categorias",
-    "pickerOptionsCount": "{count, plural, one {# opci?n} other {# opciones}}"
+    "pickerOptionsCount": "{count, plural, one {# opción} other {# opciones}}"
   },
   "availabilityEditor": {
     "interval30": "Cada 30 min",
@@ -2445,7 +2445,8 @@
     "subtitle": "Encuentra lo que necesitas, organizado por categoría.",
     "searchPlaceholder": "Busca un servicio…",
     "searchAria": "Buscar un servicio",
-    "clearSearch": "Limpiar busqueda",
+    "clearSearch": "Limpiar búsqueda",
+    "resultsTitle": "Resultados",
     "searchSummary": "{count, plural, one {# servicio encontrado para \"{query}\"} other {# servicios encontrados para \"{query}\"}}",
     "noResults": "No encontramos esa categoría.",
     "noResultsHint": "Sugiérela abajo y nuestro equipo la revisa.",
@@ -2464,7 +2465,7 @@
     "suggestSending": "Enviando…",
     "cancel": "Cancelar",
     "suggestThanks": "Gracias. Enviamos tu sugerencia al equipo para revisión.",
-    "optionsCount": "{count, plural, one {# opci?n} other {# opciones}}"
+    "optionsCount": "{count, plural, one {# opción} other {# opciones}}"
   },
   "comoFunciona": {
     "eyebrow": "Cómo funciona",
