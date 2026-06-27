@@ -1934,3 +1934,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Published request cancellation.** Cancelling an active Mis publicaciones request is destructive because it closes the request to proposals. Use an inline confirmation block inside the expanded card before applying `status=cancelled`; do not cancel immediately from the action button.
 
 > **Private availability notice.** The "Disponibilidad privada" explanatory state should read as informational, not warning/error. Use a soft brand-blue card (`#f5fbfe`, `#ccecf8`) with a white icon badge and dark readable text; reserve yellow/orange warning styles for real problems or risky actions.
+
+> **Support navigation from panels.** Links to support from inside dashboards should prefer the in-panel support tab. If a signed-in user lands on public `/soporte`, show a visible "Volver a mi panel" action above the form and route it to the user's correct client/professional support tab.

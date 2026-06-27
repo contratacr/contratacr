@@ -2638,6 +2638,7 @@
     "successGuestDesc": "We'll reply by email to <b>{email}</b>.",
     "guestFollow": "Sign in or create an account with this email to follow your tickets.",
     "backHome": "Back to home",
+    "backToPanel": "Back to my dashboard",
     "guestSignInOrRegister": "Sign in or create account",
     "nameLabel": "Name",
     "optional": "(optional)",

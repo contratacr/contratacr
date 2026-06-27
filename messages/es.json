@@ -2637,6 +2637,7 @@
     "successGuestDesc": "Te responderemos por correo a <b>{email}</b>.",
     "guestFollow": "Inicia sesión o crea una cuenta con este correo para seguir tus tiquetes.",
     "backHome": "Volver al inicio",
+    "backToPanel": "Volver a mi panel",
     "guestSignInOrRegister": "Iniciar sesión o crear cuenta",
     "nameLabel": "Nombre",
     "optional": "(opcional)",

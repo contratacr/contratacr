@@ -5,17 +5,20 @@ import { useTranslations } from "next-intl";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { useAuth } from "@/hooks/use-auth";
-import { Headset, Home } from "lucide-react";
+import { ArrowLeft, Headset, Home } from "lucide-react";
 import { SuccessIcon } from "@/components/ui/success-icon";
 import { Link } from "@/i18n/navigation";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
 import { SUPPORT_WHATSAPP_URL } from "@/lib/constants";
 import { SupportForm } from "@/components/support/support-form";
 import { SpamNotice } from "@/components/ui/spam-notice";
+import { canOffer } from "@/lib/auth/capabilities";
 
 export default function SoportePage() {
   const t = useTranslations("soporte");
   const { user } = useAuth();
+  const panelHref = user && canOffer(user) ? "/dashboard/profesional?tab=soporte" : "/dashboard/cliente?tab=soporte";
+  const panelHomeHref = user && canOffer(user) ? "/dashboard/profesional" : "/dashboard/cliente";
 
   const [success, setSuccess] = useState(false);
   const [successEmail, setSuccessEmail] = useState("");
@@ -48,13 +51,13 @@ export default function SoportePage() {
               {user ? (
                 <>
                   <Link
-                    href="/dashboard/cliente?tab=soporte"
+                    href={panelHref}
                     className="inline-flex items-center justify-center gap-2 bg-[#009FD9] hover:bg-[#0089bb] text-white font-bold px-6 py-3 rounded-full transition-all text-sm"
                   >
                     <Headset className="h-4 w-4" /> {t("viewTickets")}
                   </Link>
                   <Link
-                    href="/dashboard/cliente"
+                    href={panelHomeHref}
                     className="inline-flex items-center justify-center gap-2 bg-white border border-[#e5e7eb] text-[#374151] font-bold px-6 py-3 rounded-full transition-all text-sm hover:bg-gray-50"
                   >
                     {t("goPanel")}
@@ -98,6 +101,17 @@ export default function SoportePage() {
       <LandingNavbar />
       <main className="flex-1 py-16 px-4">
         <div className="mx-auto max-w-xl">
+          {user && (
+            <div className="mb-5">
+              <Link
+                href={panelHref}
+                className="inline-flex items-center gap-2 rounded-full border border-[#d8eef8] bg-white px-4 py-2 text-sm font-semibold text-[#0089bb] shadow-sm transition-colors hover:bg-[#f5fbfe]"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                {t("backToPanel")}
+              </Link>
+            </div>
+          )}
 
           {/* Header */}
           <div className="text-center mb-8">
