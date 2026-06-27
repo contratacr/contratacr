@@ -16,7 +16,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { StarRating } from "@/components/ui/star-rating";
 import { getInitials, getWhatsAppLink, proDisplayName, cn } from "@/lib/utils";
-import { getCategoryLabel } from "@/lib/data/categories";
+import { anyVideoConsultCategory, getCategoryLabel } from "@/lib/data/categories";
 import { casoProfession, countCases } from "@/lib/services";
 import { formatPricingTier, formatServicePrice, primaryPricingLabel } from "@/lib/pricing";
 import { languageLabel } from "@/lib/data/languages";
@@ -741,7 +741,10 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                       label: t("description"),
                       value: <span className="block whitespace-pre-line text-[15px] font-normal leading-7 text-[#374151]">{professional.bio}</span>,
                     });
-                    const offersVideoConsult = !!professional.videoconsulta;
+                    const profileCategoryIds = (professional.professions && professional.professions.length > 0)
+                      ? professional.professions
+                      : (professional.categoryId ? [professional.categoryId] : []);
+                    const offersVideoConsult = !!professional.videoconsulta && anyVideoConsultCategory(profileCategoryIds);
                     if (expYears > 0) facts.push({
                       key: "exp", icon: <Briefcase className="h-5 w-5" />, label: t("experienceLabel"), value: t("yearsValue", { years: expYears }),
                     });

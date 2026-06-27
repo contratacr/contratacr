@@ -17,7 +17,13 @@ import { DateOfBirthPicker, formatDobDMY } from "@/components/ui/date-of-birth-p
 import { CedulaInput } from "@/components/ui/cedula-input";
 import { isValidId, detectIdType, cleanId } from "@/lib/cedula";
 import { computeAge, formatAge, isMinorFromDob } from "@/lib/age";
-import { anyHealthCategory, isCareCategory, getCategoryLabel } from "@/lib/data/categories";
+import {
+  anyHealthCategory,
+  anyVideoConsultCategory,
+  isCareCategory,
+  getCategoryLabel,
+  supportsVideoConsultCategory,
+} from "@/lib/data/categories";
 import { StarRating } from "@/components/ui/star-rating";
 import { getInitials, getWhatsAppLink, buildBookingIcs, proDisplayName } from "@/lib/utils";
 import { cn } from "@/lib/utils";
@@ -146,7 +152,11 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   );
   const effectiveCategory = initialCategoryId ?? pickedCategory ?? null;
   const needsProfessionPick = !effectiveCategory && proProfessions.length > 1;
-  const offersVideoConsult = !!professional.videoconsulta || professional.services?.some((service) => service.modalities?.includes("video"));
+  const categoryAllowsVideoConsult = effectiveCategory
+    ? supportsVideoConsultCategory(effectiveCategory)
+    : anyVideoConsultCategory(proProfessions);
+  const offersVideoConsult = categoryAllowsVideoConsult
+    && (!!professional.videoconsulta || professional.services?.some((service) => service.modalities?.includes("video")));
 
   // Profession shown UNDER the name: the RELEVANT one for the current context —
   //  • filtered (initialCategoryId) or selected (pickedCategory) → that profession;

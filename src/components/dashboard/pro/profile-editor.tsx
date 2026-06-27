@@ -19,7 +19,7 @@ import { Link } from "@/i18n/navigation";
 import { computeSearchAreas, primaryArea } from "@/lib/location";
 import { getProvinceById, getCantonById } from "@/lib/data/cr-geography";
 import { AseguradorasInput } from "@/components/ui/aseguradoras-input";
-import { getCategoryLabel, anyHealthCategory } from "@/lib/data/categories";
+import { getCategoryLabel, anyHealthCategory, anyVideoConsultCategory } from "@/lib/data/categories";
 import type { Certification } from "@/components/professionals/professional-card";
 import { cn } from "@/lib/utils";
 
@@ -185,6 +185,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
   const professions = seedProfessions;
   // Aseguradoras only apply to health (es_salud) professionals.
   const isHealthPro = anyHealthCategory(professions);
+  const canOfferVideoConsult = anyVideoConsultCategory(professions);
   // Address free-text field removed (provincia/cantón + optional pin cover it).
   // Keep the stored value so an existing address column isn't wiped on save.
   const address = (initial.address as string) ?? "";
@@ -203,7 +204,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
   // Draft being added (one at a time, per profession). null = no form open.
   const [certDraft, setCertDraft] = useState<{ profession?: string; name: string; institution: string; year: string } | null>(null);
   const [certError, setCertError] = useState<string | null>(null);
-  const [videoConsult, setVideoConsult] = useState(!!initial.videoconsulta);
+  const [videoConsult, setVideoConsult] = useState(!!initial.videoconsulta && canOfferVideoConsult);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(
     initial.profiles?.avatar_url ?? null
   );
@@ -407,7 +408,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
       // from the best-effort optional identity bundle above.
       const { error: videoError } = await supabase
         .from("professionals")
-        .update({ videoconsulta: videoConsult })
+        .update({ videoconsulta: canOfferVideoConsult ? videoConsult : false })
         .eq("id", professionalId);
       if (videoError) throw videoError;
 
@@ -658,21 +659,21 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
           <WorkplacesPicker value={workplaces} onChange={(next) => { setWorkplaces(next); touch(); }} mapHeight={168} />
         </div>
 
-        {/* Videoconsulta is the only explicit attention option here; home service is
-            inferred from zones without an exact map pin. */}
-        <div className="flex items-start justify-between gap-4 rounded-xl bg-[#f9fafb] p-3.5">
-          <div>
-            <p className="text-sm font-medium text-[#111827]">{t("videoConsultLabel")}</p>
+        {canOfferVideoConsult && (
+          <div className="flex items-start justify-between gap-4 rounded-xl bg-[#f9fafb] p-3.5">
+            <div>
+              <p className="text-sm font-medium text-[#111827]">{t("videoConsultLabel")}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => { setVideoConsult((v) => !v); touch(); }}
+              className={cn("relative h-6 w-11 rounded-full transition-all shrink-0 mt-0.5", videoConsult ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
+              aria-label={t("videoConsultLabel")}
+            >
+              <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", videoConsult ? "left-5" : "left-0.5")} />
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={() => { setVideoConsult((v) => !v); touch(); }}
-            className={cn("relative h-6 w-11 rounded-full transition-all shrink-0 mt-0.5", videoConsult ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
-            aria-label={t("videoConsultLabel")}
-          >
-            <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", videoConsult ? "left-5" : "left-0.5")} />
-          </button>
-        </div>
+        )}
       </Section>
 
       {/* ── Contacto ──────────────────────────────────────────────────── */}

@@ -538,6 +538,59 @@ export function anyHealthCategory(ids?: (string | null | undefined)[]): boolean 
 }
 
 /* ─── Get category IDs that match a text query (for search page) ─── */
+/*
+   Video consult categories. This is an explicit allow-list: some health services
+   need in-person care, while some non-health services work very well remotely.
+*/
+export const VIDEO_CONSULT_CATEGORY_IDS = new Set<string>([
+  "nutricion", "psicologia", "medicina_domicilio",
+  "terapia_lenguaje", "terapia_ocupacional",
+  "contabilidad", "legal", "consultoria", "traduccion",
+  "recursos_humanos", "marketing_digital", "bienes_raices",
+  "arquitectura", "ingenieria_civil",
+  "desarrollo_web", "diseno_grafico", "diseno_apps", "soporte_tecnico",
+  "tutorias", "idiomas", "musica", "matematicas",
+  "preparacion_universitaria", "entrenamiento_personal",
+]);
+
+export function supportsVideoConsultCategory(id?: string | null): boolean {
+  return !!id && VIDEO_CONSULT_CATEGORY_IDS.has(id);
+}
+
+export function anyVideoConsultCategory(ids?: (string | null | undefined)[]): boolean {
+  return (ids ?? []).some((id) => supportsVideoConsultCategory(id));
+}
+
+const HEALTH_SUGGESTION_TERMS = [
+  "medic", "doctor", "clinica", "consulta", "salud", "terapia", "terapeuta",
+  "psicolog", "nutric", "fisioter", "odont", "pediatr", "optometr",
+  "enfermer", "paciente", "rehabilit", "lenguaje", "ocupacional",
+  "podolog", "acupunt", "cuidad", "adulto mayor", "nino", "niño",
+  "discapacidad",
+];
+
+const VIDEO_CONSULT_SUGGESTION_TERMS = [
+  ...HEALTH_SUGGESTION_TERMS,
+  "asesor", "consult", "contab", "finanza", "legal", "abogado",
+  "marketing", "diseno", "diseño", "web", "app", "program", "soporte",
+  "tutor", "clase", "idioma", "profesor", "coach", "arquitect",
+  "ingenier",
+];
+
+export function classifySuggestedCategory(name: string): {
+  healthLikely: boolean;
+  videoConsultLikely: boolean;
+} {
+  const q = normalizeText(name);
+  if (!q) return { healthLikely: false, videoConsultLikely: false };
+  const includesAny = (terms: string[]) => terms.some((term) => q.includes(normalizeText(term)));
+  const healthLikely = includesAny(HEALTH_SUGGESTION_TERMS);
+  return {
+    healthLikely,
+    videoConsultLikely: healthLikely || includesAny(VIDEO_CONSULT_SUGGESTION_TERMS),
+  };
+}
+
 export function getMatchingCategoryIds(query: string): string[] {
   if (!query.trim()) return [];
   const inferred = resolveCategoryIntent(query);

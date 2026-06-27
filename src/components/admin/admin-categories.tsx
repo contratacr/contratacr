@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, X, Tag, Loader2 } from "lucide-react";
-import { ALL_CATEGORIES, normalizeText } from "@/lib/data/categories";
+import { Check, X, Tag, Loader2, HeartPulse, Video } from "lucide-react";
+import { ALL_CATEGORIES, classifySuggestedCategory, normalizeText } from "@/lib/data/categories";
 
 type Suggestion = {
   id: string;
@@ -49,7 +49,6 @@ export function AdminCategories() {
   const [busy, setBusy] = useState<string | null>(null);
 
   function load(s: string) {
-    setLoading(true);
     fetch(`/api/admin/categories?status=${s}`)
       .then((r) => r.json())
       .then(({ categories }) => setItems(categories ?? []))
@@ -99,7 +98,11 @@ export function AdminCategories() {
         {STATUSES.map((s) => (
           <button
             key={s.id}
-            onClick={() => setStatus(s.id)}
+            onClick={() => {
+              if (s.id === status) return;
+              setLoading(true);
+              setStatus(s.id);
+            }}
             className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${status === s.id ? "bg-[#009FD9] text-white border-[#009FD9]" : "bg-white text-[#374151] border-[#e5e7eb] hover:border-[#009FD9]"}`}
           >
             {s.label}
@@ -129,7 +132,26 @@ export function AdminCategories() {
                 ) : (
                   <p className="text-sm font-semibold text-[#111827]">{i.suggested_name || i.label}</p>
                 )}
-                <p className="text-xs text-[#9ca3af] px-0.5">Sugerida el {new Date(i.created_at).toLocaleDateString("es-CR")}</p>
+                <div className="mt-1 flex flex-wrap items-center gap-1.5 px-0.5">
+                  <p className="text-xs text-[#9ca3af]">Sugerida el {new Date(i.created_at).toLocaleDateString("es-CR")}</p>
+                  {status === "pending" && (() => {
+                    const review = classifySuggestedCategory(nameOf(i));
+                    return (
+                      <>
+                        {review.healthLikely && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-[#ECFDF3] px-2 py-0.5 text-[11px] font-semibold text-[#15803d]">
+                            <HeartPulse className="h-3 w-3" /> Revisar salud
+                          </span>
+                        )}
+                        {review.videoConsultLikely && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-[#EBF5FB] px-2 py-0.5 text-[11px] font-semibold text-[#0077a3]">
+                            <Video className="h-3 w-3" /> Revisar videoconsulta
+                          </span>
+                        )}
+                      </>
+                    );
+                  })()}
+                </div>
               </div>
               {status === "pending" && (
                 <div className="flex items-center gap-2 shrink-0">
