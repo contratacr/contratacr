@@ -3630,3 +3630,5 @@ New i18n namespaces added this pass: `search.pagination`, extended `search.filte
 **Sprint 335 - Availability weekday aligns with time row.** When a weekly availability block has a location selector, the selector stays above while the weekday aligns vertically with the start/end time row and Agregar franja / Aplicar a otros dias. This preserves the intended five-item line without putting location into that line.
 
 **Sprint 336 - Dashboard action button shape.** Panel action buttons now use softer rectangular corners through the shared Button base and explicit modal/action overrides. Updated report, proposal withdrawal, delete, reschedule, and verification actions from pill-shaped rounded-full to rounded-lg while leaving badges, avatars, toggles, circular icons, and landing CTAs unchanged.
+
+**Sprint 337 - Availability five-item desktop row.** Tightened the weekly availability row so desktop/panel widths keep the intended five items in one line: weekday, start time, end time, Agregar franja, and Aplicar a otros dias. Location remains above that line when needed; smaller responsive widths can still wrap inside the card to prevent overflow.

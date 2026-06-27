@@ -802,19 +802,19 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                 const on = blocks.length > 0;
                 const canApply = blocks.some(isCompleteFranja);
                 const dayActions = (
-                  <div className="flex min-w-0 flex-row flex-wrap items-center justify-start gap-x-4 gap-y-2 md:shrink-0">
-                    <button type="button" onClick={() => addBlock(wd)} className="inline-flex min-w-0 items-center gap-1 text-left text-xs font-medium leading-tight text-[#009FD9] hover:underline cursor-pointer">
+                  <div className="flex min-w-0 flex-row flex-wrap items-center justify-start gap-x-3 gap-y-2 lg:shrink-0 lg:flex-nowrap">
+                    <button type="button" onClick={() => addBlock(wd)} className="inline-flex min-w-0 shrink-0 items-center gap-1 whitespace-nowrap text-left text-xs font-medium leading-tight text-[#009FD9] hover:underline cursor-pointer">
                       <Plus className="h-3.5 w-3.5 shrink-0" /> <span>{t("addFranja")}</span>
                     </button>
                     {canApply && (
-                      <button type="button" onClick={() => setApplyModal({ weekday: wd })} className="min-w-0 text-left text-xs font-medium leading-tight text-[#6b7280] hover:text-[#009FD9] hover:underline cursor-pointer">
+                      <button type="button" onClick={() => setApplyModal({ weekday: wd })} className="min-w-0 shrink-0 whitespace-nowrap text-left text-xs font-medium leading-tight text-[#6b7280] hover:text-[#009FD9] hover:underline cursor-pointer">
                         {t("applyToOtherDays")}
                       </button>
                     )}
                   </div>
                 );
                 return (
-                  <div key={wd} className="grid min-w-0 gap-2 py-3 lg:grid-cols-[7.5rem_minmax(0,1fr)] lg:gap-3">
+                  <div key={wd} className="grid min-w-0 gap-2 py-3 lg:grid-cols-[6.75rem_minmax(0,1fr)] lg:gap-2.5">
                     {/* toggle + weekday name */}
                     <div className={cn(
                       "flex min-w-0 items-center gap-2.5 lg:pt-2",
@@ -840,7 +840,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                         <div className="flex min-w-0 flex-col gap-2.5">
                           {blocks.map((b, index) => {
                             const timeRow = (
-                              <div className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 md:w-[15.5rem] md:shrink-0 md:grid-cols-[minmax(6.75rem,1fr)_auto_minmax(6.75rem,1fr)]">
+                              <div className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1.5 md:w-[14.25rem] md:shrink-0 md:grid-cols-[minmax(6.125rem,1fr)_auto_minmax(6.125rem,1fr)]">
                                 <TimeSelect value={b.start} onChange={(v) => updateBlock(wd, b.id, { start: v, ...(b.end && toMins(b.end) <= toMins(v) ? { end: hhmm(Math.min(toMins(v) + 60, 23 * 60 + 30)) } : {}) })} className="min-w-0 w-full" />
                                 <span className="shrink-0 text-[#9ca3af]">–</span>
                                 <TimeSelect value={b.end} min={b.start ? hhmm(Math.min(toMins(b.start) + 30, 23 * 60 + 30)) : undefined} onChange={(v) => updateBlock(wd, b.id, { end: v })} className="min-w-0 w-full" error={b.start && b.end && toMins(b.end) <= toMins(b.start) ? t("toAfterFrom") : undefined} />
@@ -849,7 +849,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                             // Single-location pros: just the time row (clean, compact, no location UI).
                             if (!isMultiLocation) {
                               return (
-                                <div key={b.id} className="flex min-w-0 flex-col gap-2 md:flex-row md:flex-wrap md:items-center md:gap-x-4 md:gap-y-2">
+                                <div key={b.id} className="flex min-w-0 flex-col gap-2 lg:flex-row lg:flex-nowrap lg:items-center lg:gap-x-3">
                                   {timeRow}
                                   {index === 0 && dayActions}
                                 </div>
@@ -866,7 +866,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                                   ariaLabel={t("blockLocationAria")}
                                   className="w-full max-w-[16rem]"
                                 />
-                                <div className="flex min-w-0 flex-col gap-2 md:flex-row md:flex-wrap md:items-center md:gap-x-4 md:gap-y-2">
+                                <div className="flex min-w-0 flex-col gap-2 lg:flex-row lg:flex-nowrap lg:items-center lg:gap-x-3">
                                   {timeRow}
                                   {index === 0 && dayActions}
                                 </div>
