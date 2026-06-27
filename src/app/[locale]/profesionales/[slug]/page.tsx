@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, type ReactNode } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import {
   MapPin, Shield, ArrowLeft, Star, Briefcase, Camera, Banknote, Languages,
-  Share2, Flag, ChevronDown, Lock, Award, Mail, SearchX, FileText,
+  Share2, Flag, ChevronDown, Lock, Award, Mail, SearchX, FileText, Video,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { InstagramIcon, FacebookIcon, TikTokIcon } from "@/components/icons/social-icons";
@@ -741,9 +741,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                       label: t("description"),
                       value: <span className="block whitespace-pre-line text-[15px] font-normal leading-7 text-[#374151]">{professional.bio}</span>,
                     });
-                    const offersHomeService = String(professional.serviceType ?? "").includes("mobile");
                     const offersVideoConsult = !!professional.videoconsulta;
-                    const hasFixedPlace = workplaceAreaLines.length > 0 || uniqueWorkplaces.length > 0;
                     if (expYears > 0) facts.push({
                       key: "exp", icon: <Briefcase className="h-5 w-5" />, label: t("experienceLabel"), value: t("yearsValue", { years: expYears }),
                     });
@@ -780,24 +778,19 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                     } else if (rate) {
                       facts.push({ key: "rate", icon: <Banknote className="h-5 w-5" />, label: t("baseRate"), value: rate, caption: t("baseRateCaption") });
                     }
-                    if (workplaceAreaLines.length > 0 || offersHomeService || offersVideoConsult) facts.push({
+                    if (workplaceAreaLines.length > 0) facts.push({
                       key: "loc", icon: <MapPin className="h-5 w-5" />,
-                      label: workplaceAreaLines.length === 0 && !offersHomeService && offersVideoConsult
-                        ? t("attention")
-                        : workplaceAreaLines.length > 1 || offersHomeService || offersVideoConsult ? t("workplaces") : t("location"),
+                      label: workplaceAreaLines.length > 1 ? t("workplaces") : t("location"),
                       value: (
                         <span className="flex flex-col gap-1">
                           {workplaceAreaLines.map((line) => (
                             <span key={line} className="[overflow-wrap:anywhere]">{line}</span>
                           ))}
-                          {offersHomeService && (
-                            <span className="[overflow-wrap:anywhere]">{t("atHome")}</span>
-                          )}
-                          {offersVideoConsult && (
-                            <span className="[overflow-wrap:anywhere]">{t("videoConsult")}</span>
-                          )}
                         </span>
                       ),
+                    });
+                    if (offersVideoConsult) facts.push({
+                      key: "video", icon: <Video className="h-5 w-5" />, label: t("attention"), value: t("videoConsult"),
                     });
                     return (
                       <div className="flex flex-col gap-5">
