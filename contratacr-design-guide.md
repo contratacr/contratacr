@@ -1973,6 +1973,6 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 
 > **Locale switch state preservation.** Language switches must preserve the current pathname, query string, and hash. This is especially important in dashboard panels where the active section lives in `?tab=...`; switching ES/EN must not reset the user to Mi perfil / My profile.
 
-> **Availability location dropdown.** Availability workplace/location controls should stay compact when closed, but the opened menu must be wide and readable enough for long exact addresses. Use an app-styled dropdown with wrapped option labels and a clear active state instead of relying on native select menus when location names need real design control.
+> **Availability location dropdown.** Availability workplace/location controls should feel like a normal select: compact trigger, opened list attached closely below, simple readable options, and a discreet active check. Avoid oversized card-like menus; long addresses may wrap inside the option row, but the control itself stays compact.
 
 > **Availability weekly row alignment.** The common single-location schedule should try to read as one row on desktop/tablet: day, time range, Agregar franja, and Aplicar a otros dias. Only show the workplace dropdown when the professional truly has multiple schedulable locations; multi-location rows may use a compact location control above the time range so it does not collide with day actions.

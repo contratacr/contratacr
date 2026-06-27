@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import { Plus, X, Lock, Loader2, MapPin, ChevronDown, ChevronLeft, ChevronRight, Calendar, Pencil, Trash2 } from "lucide-react";
+import { Plus, X, Lock, Loader2, MapPin, ChevronDown, ChevronLeft, ChevronRight, Calendar, Pencil, Trash2, Check } from "lucide-react";
 import { type ContactPreference } from "@/lib/constants";
 import { crTodayISO, isTooSoonCR } from "@/lib/time-cr";
 import { TimeSelect, to12h } from "@/components/ui/time-select";
@@ -143,9 +143,9 @@ function LocationDropdown({
         title={selected?.label}
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          "flex h-10 w-full min-w-0 items-center gap-2 rounded-xl border bg-[#f9fafb] pl-3 pr-2.5 text-left text-xs font-semibold transition-colors",
+          "flex h-9 w-full min-w-0 items-center gap-2 rounded-xl border bg-white pl-3 pr-2.5 text-left text-xs font-semibold transition-colors",
           open
-            ? "border-[#bfe3f5] bg-white shadow-[0_10px_28px_-22px_rgba(0,159,217,0.75)] ring-2 ring-[#e4f4fb]"
+            ? "border-[#009FD9] ring-2 ring-[#e4f4fb]"
             : "border-[#e5e7eb] text-[#374151] hover:border-[#cbd5e1]"
         )}
       >
@@ -159,7 +159,7 @@ function LocationDropdown({
           role="listbox"
           aria-label={ariaLabel}
           className={cn(
-            "absolute top-full z-50 mt-2 max-h-72 w-[min(23rem,calc(100vw-2rem))] overflow-y-auto rounded-2xl border border-[#e5e7eb] bg-white p-1.5 shadow-[0_24px_70px_-24px_rgba(15,23,42,0.45)]",
+            "absolute top-full z-50 mt-1 max-h-64 w-[min(20rem,calc(100vw-2rem))] overflow-y-auto rounded-xl border border-[#d1d5db] bg-white py-1 shadow-[0_16px_40px_-24px_rgba(15,23,42,0.55)]",
             menuAlign === "right" ? "right-0" : "left-0"
           )}
         >
@@ -177,14 +177,14 @@ function LocationDropdown({
                   setOpen(false);
                 }}
                 className={cn(
-                  "flex w-full items-start gap-2.5 rounded-xl px-3 py-2.5 text-left transition-colors",
-                  active ? "bg-[#EBF5FB]" : "hover:bg-[#f8fafc]"
+                  "flex w-full items-start gap-2 px-3 py-2 text-left text-sm leading-snug transition-colors",
+                  active ? "bg-[#EBF5FB] text-[#162543]" : "text-[#374151] hover:bg-[#f8fafc]"
                 )}
               >
-                <span className={cn("mt-0.5 h-2 w-2 shrink-0 rounded-full", active ? "bg-[#009FD9]" : "bg-[#d1d5db]")} />
-                <span className="min-w-0 flex-1 text-sm font-semibold leading-snug text-[#162543] [overflow-wrap:anywhere]">
+                <span className="min-w-0 flex-1 font-medium [overflow-wrap:anywhere]">
                   {option.label}
                 </span>
+                {active && <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#009FD9]" />}
               </button>
             );
           })}
@@ -802,7 +802,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                 const on = blocks.length > 0;
                 const canApply = blocks.some(isCompleteFranja);
                 const dayActions = (
-                  <div className="flex min-w-0 flex-row flex-wrap items-center justify-start gap-x-4 gap-y-2 lg:pb-1">
+                  <div className="flex min-w-0 flex-row flex-wrap items-center justify-start gap-x-4 gap-y-2 md:shrink-0">
                     <button type="button" onClick={() => addBlock(wd)} className="inline-flex min-w-0 items-center gap-1 text-left text-xs font-medium leading-tight text-[#009FD9] hover:underline cursor-pointer">
                       <Plus className="h-3.5 w-3.5 shrink-0" /> <span>{t("addFranja")}</span>
                     </button>
@@ -834,42 +834,40 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                       {!on ? (
                         <p className="text-sm text-[#9ca3af] sm:pt-1.5">{t("closed")}</p>
                       ) : (
-                        <div
-                          className={cn(
-                            "grid min-w-0 gap-2.5",
-                            isMultiLocation
-                              ? "lg:grid-cols-[minmax(0,16.5rem)_minmax(12rem,1fr)] lg:items-end lg:gap-4"
-                              : "lg:grid-cols-[minmax(0,16.5rem)_minmax(max-content,1fr)] lg:items-center lg:gap-4"
-                          )}
-                        >
-                          <div className="flex min-w-0 flex-1 flex-col gap-2.5">
-                            {blocks.map((b) => {
+                        <div className="flex min-w-0 flex-col gap-2.5">
+                          {blocks.map((b, index) => {
                             const timeRow = (
-                              <div className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 md:max-w-[16.5rem] md:grid-cols-[minmax(7.25rem,1fr)_auto_minmax(7.25rem,1fr)]">
+                              <div className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 md:w-[16rem] md:shrink-0 md:grid-cols-[minmax(7rem,1fr)_auto_minmax(7rem,1fr)]">
                                 <TimeSelect value={b.start} onChange={(v) => updateBlock(wd, b.id, { start: v, ...(b.end && toMins(b.end) <= toMins(v) ? { end: hhmm(Math.min(toMins(v) + 60, 23 * 60 + 30)) } : {}) })} className="min-w-0 w-full" />
                                 <span className="shrink-0 text-[#9ca3af]">–</span>
                                 <TimeSelect value={b.end} min={b.start ? hhmm(Math.min(toMins(b.start) + 30, 23 * 60 + 30)) : undefined} onChange={(v) => updateBlock(wd, b.id, { end: v })} className="min-w-0 w-full" error={b.start && b.end && toMins(b.end) <= toMins(b.start) ? t("toAfterFrom") : undefined} />
                               </div>
                             );
                             // Single-location pros: just the time row (clean, compact, no location UI).
-                            if (!isMultiLocation) return <div key={b.id}>{timeRow}</div>;
+                            if (!isMultiLocation) {
+                              return (
+                                <div key={b.id} className="flex min-w-0 flex-col gap-2 md:flex-row md:items-center md:gap-4">
+                                  {timeRow}
+                                  {index === 0 && dayActions}
+                                </div>
+                              );
+                            }
                             // 2+ locations: give the long address its own column/line so it
                             // never competes with day actions or overlaps the time controls.
                             return (
-                              <div key={b.id} className="grid w-full max-w-full min-w-0 gap-2">
+                              <div key={b.id} className="flex min-w-0 flex-col gap-2 xl:flex-row xl:items-center xl:gap-3">
                                 <LocationDropdown
                                   value={b.locationId}
                                   options={locationOptions}
                                   onChange={(locationId) => updateBlock(wd, b.id, { locationId })}
                                   ariaLabel={t("blockLocationAria")}
-                                  className="max-w-[14rem] lg:max-w-[13rem]"
+                                  className="max-w-[14rem] xl:w-[12.5rem] xl:shrink-0"
                                 />
                                 {timeRow}
+                                {index === 0 && dayActions}
                               </div>
                             );
-                            })}
-                          </div>
-                          {dayActions}
+                          })}
                         </div>
                       )}
                     </div>
