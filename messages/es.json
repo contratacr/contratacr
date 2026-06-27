@@ -1552,6 +1552,7 @@
     "confirmPrivate": "Sí, ocultar agenda",
     "privateSubPublic": "Los clientes pueden reservar citas en tus horarios.",
     "privateSubPrivate": "Tu agenda está oculta. Los clientes te contactan por WhatsApp.",
+    "privateNoticeTitle": "Tu agenda no está pública",
     "scheduleForLabel": "Horario para",
     "addLocation": "Agregar lugar",
     "profession": "Servicio",

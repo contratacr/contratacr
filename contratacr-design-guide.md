@@ -1932,3 +1932,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Smart search examples.** The scrolled compact navbar search may use a typewriter placeholder with short natural-language service examples. Keep examples practical and localized, and make sure the same text pattern resolves through `resolveCategoryIntent()` so phrases like "Necesito limpiar mi casa" search by category instead of only as raw keywords.
 
 > **Published request cancellation.** Cancelling an active Mis publicaciones request is destructive because it closes the request to proposals. Use an inline confirmation block inside the expanded card before applying `status=cancelled`; do not cancel immediately from the action button.
+
+> **Private availability notice.** The "Disponibilidad privada" explanatory state should read as informational, not warning/error. Use a soft brand-blue card (`#f5fbfe`, `#ccecf8`) with a white icon badge and dark readable text; reserve yellow/orange warning styles for real problems or risky actions.

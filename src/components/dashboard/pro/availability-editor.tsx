@@ -653,9 +653,18 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
       {loading ? (
         <div className="flex justify-center py-10"><Loader2 className="h-5 w-5 animate-spin text-[#009FD9]" /></div>
       ) : !isPublic ? (
-        <div className="rounded-xl bg-[#fffbeb] border border-[#fde68a] p-4 text-sm text-[#92400e] flex items-start gap-2">
-          <Lock className="h-4 w-4 shrink-0 mt-0.5" />
-          <span>{t.rich("privateNote", { ...rich, call: "" })}</span>
+        <div className="rounded-2xl border border-[#ccecf8] bg-[#f5fbfe] p-4 text-sm shadow-[0_14px_36px_-30px_rgba(0,159,217,0.65)] sm:p-5">
+          <div className="flex items-start gap-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-[#009FD9] shadow-sm ring-1 ring-[#d8eef8]">
+              <Lock className="h-[18px] w-[18px]" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-[#162543]">{t("privateNoticeTitle")}</p>
+              <p className="mt-1 text-sm leading-relaxed text-[#4b5563]">
+                {t.rich("privateNote", { ...rich, call: "" })}
+              </p>
+            </div>
+          </div>
         </div>
       ) : locationOptions.length === 0 ? (
         <div className="rounded-xl bg-[#fffbeb] border border-[#fde68a] p-4 text-sm text-[#92400e]">

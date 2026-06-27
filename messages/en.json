@@ -1552,6 +1552,7 @@
     "confirmPrivate": "Yes, hide schedule",
     "privateSubPublic": "Clients can book appointments in your available hours.",
     "privateSubPrivate": "Your schedule is hidden. Clients reach you on WhatsApp.",
+    "privateNoticeTitle": "Your schedule is not public",
     "scheduleForLabel": "Schedule for",
     "addLocation": "Add a place",
     "profession": "Service",
