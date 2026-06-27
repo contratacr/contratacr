@@ -1,12 +1,14 @@
 "use client";
 
+import { useMemo, useState } from "react";
+import { useLocale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { FadeInUp } from "@/components/landing/fade-in-up";
-import { CategorySearchBox } from "@/components/search/category-search-box";
 import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
+import { getCategoryLabel, normalizeText, searchCategories } from "@/lib/data/categories";
 import {
   Home,
   Leaf,
@@ -22,6 +24,8 @@ import {
   Shield,
   Car,
   ChevronRight,
+  Search,
+  X,
 } from "lucide-react";
 
 const GROUPS = [
@@ -122,6 +126,29 @@ export default function CategoriasPage() {
   const t = useTranslations("categories");
   const tg = useTranslations("categoryGroups");
   const tp = useTranslations("categoriesPage");
+  const locale = useLocale();
+  const router = useRouter();
+  const [query, setQuery] = useState("");
+  const normalizedQuery = normalizeText(query.trim());
+  const matchedIds = useMemo(() => {
+    if (!normalizedQuery) return null;
+    return new Set(searchCategories(query).map((category) => category.id));
+  }, [normalizedQuery, query]);
+  const visibleGroups = useMemo(() => GROUPS
+    .map((group) => ({
+      ...group,
+      visibleIds: matchedIds ? group.ids.filter((id) => matchedIds.has(id)) : [...group.ids],
+    }))
+    .filter((group) => group.visibleIds.length > 0), [matchedIds]);
+  const resultCount = visibleGroups.reduce((sum, group) => sum + group.visibleIds.length, 0);
+
+  function submitSearch(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const first = visibleGroups[0]?.visibleIds[0];
+    if (first) router.push(`/buscar?categoria=${first}`);
+    else if (query.trim()) document.getElementById("sugerir-categoria")?.scrollIntoView({ behavior: "smooth", block: "center" });
+    else router.push("/buscar");
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-[#f7f9fb]">
@@ -141,8 +168,49 @@ export default function CategoriasPage() {
                 {tp("subtitle")}
               </p>
             </div>
-            <div className="mt-6 w-full max-w-xl">
-              <CategorySearchBox embeddedResults />
+            <div className="mt-6 w-full max-w-2xl">
+              <form
+                onSubmit={submitSearch}
+                className="flex h-[52px] items-center gap-3 rounded-2xl border border-gray-200 bg-white px-4 text-left shadow-[0_8px_28px_rgba(0,0,0,0.08)] transition-all focus-within:border-[#009FD9] focus-within:ring-2 focus-within:ring-[#009FD9]/20"
+              >
+                <Search className="h-5 w-5 shrink-0 text-gray-400" />
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={tp("searchPlaceholder")}
+                  aria-label={tp("searchAria")}
+                  className="h-[52px] min-w-0 flex-1 bg-transparent text-base text-gray-700 placeholder:text-gray-400 focus:outline-none"
+                />
+                {query && (
+                  <button type="button" onClick={() => setQuery("")} className="rounded-full p-1.5 text-[#9ca3af] hover:bg-[#f3f4f6] hover:text-[#374151]" aria-label={tp("clearSearch")}>
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </form>
+              {query.trim() && (
+                <div className="mt-3 rounded-2xl border border-[#e5e7eb] bg-white px-4 py-3 text-left shadow-sm">
+                  {resultCount > 0 ? (
+                    <p className="text-sm font-medium text-[#374151]">
+                      {tp("searchSummary", { count: resultCount, query: query.trim() })}
+                    </p>
+                  ) : (
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-[#374151]">{tp("noResults")}</p>
+                        <p className="mt-0.5 text-xs text-[#9ca3af]">{tp("noResultsHint")}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => document.getElementById("sugerir-categoria")?.scrollIntoView({ behavior: "smooth", block: "center" })}
+                        className="inline-flex items-center justify-center rounded-lg bg-[#009FD9] px-3 py-2 text-sm font-semibold text-white hover:bg-[#0089bb]"
+                      >
+                        {tp("suggestCta")}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </FadeInUp>
@@ -150,7 +218,7 @@ export default function CategoriasPage() {
 
       <section className="sticky top-16 z-20 border-b border-[#e5e7eb] bg-white/95 px-4 py-3 backdrop-blur lg:hidden">
         <div className="mx-auto flex max-w-6xl gap-2 overflow-x-auto hide-scrollbar">
-          {GROUPS.map((group) => {
+          {visibleGroups.map((group) => {
             const Icon = group.Icon;
             return (
               <a
@@ -161,6 +229,7 @@ export default function CategoriasPage() {
                 <Icon className="h-4 w-4 text-[#009FD9]" />
                 {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                 {tg(group.key as any)}
+                {query.trim() && <span className="text-xs text-[#9ca3af]">{group.visibleIds.length}</span>}
               </a>
             );
           })}
@@ -177,7 +246,7 @@ export default function CategoriasPage() {
                 </p>
               </div>
               <nav className="max-h-[calc(100vh-180px)] overflow-y-auto py-1">
-                {GROUPS.map((group) => {
+                {visibleGroups.map((group) => {
                   const Icon = group.Icon;
                   return (
                     <a
@@ -193,7 +262,7 @@ export default function CategoriasPage() {
                         {tg(group.key as any)}
                       </span>
                       <span className="shrink-0 text-xs font-bold text-[#9ca3af]">
-                        {group.ids.length}
+                        {query.trim() ? group.visibleIds.length : group.ids.length}
                       </span>
                     </a>
                   );
@@ -203,7 +272,7 @@ export default function CategoriasPage() {
           </aside>
 
           <div className="flex min-w-0 flex-col gap-8">
-            {GROUPS.map((group, gi) => {
+            {visibleGroups.map((group, gi) => {
               const Icon = group.Icon;
               return (
                 <FadeInUp key={group.key} delay={gi * 20}>
@@ -219,7 +288,7 @@ export default function CategoriasPage() {
                             {tg(group.key as any)}
                           </h2>
                           <p className="mt-0.5 text-xs font-medium text-[#8a94a6]">
-                            {tp("optionsCount", { count: group.ids.length })}
+                            {tp("optionsCount", { count: query.trim() ? group.visibleIds.length : group.ids.length })}
                           </p>
                         </div>
                       </div>
@@ -227,7 +296,7 @@ export default function CategoriasPage() {
 
                     <div className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
                       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
-                        {group.ids.map((id) => (
+                        {group.visibleIds.map((id) => (
                           <Link
                             key={id}
                             href={`/buscar?categoria=${id}`}
@@ -235,7 +304,7 @@ export default function CategoriasPage() {
                           >
                             <span className="min-w-0 [overflow-wrap:anywhere]">
                               {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                              {t(id as any)}
+                              {getCategoryLabel(id, locale) || t(id as any)}
                             </span>
                             <ChevronRight className="h-4 w-4 shrink-0 text-[#cbd5e1] transition-colors group-hover:text-[#009FD9]" />
                           </Link>
