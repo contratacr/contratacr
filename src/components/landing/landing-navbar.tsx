@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import {
   X, Menu, ChevronDown, ChevronRight, Search, MapPin, LogIn,
   LayoutDashboard, LogOut, Bookmark, CalendarCheck, CalendarClock, CalendarDays, ClipboardList, Send, Handshake, UserPlus, Briefcase, Compass, Settings, Bell, Globe, Check,
-  HelpCircle, Lightbulb, Headset, ListChecks,
+  HelpCircle, Lightbulb, Headset, ListChecks, Home, Leaf, Sparkles, Laptop, Building2, HeartPulse, Car, PartyPopper, GraduationCap, Baby, PawPrint, Truck, MoreHorizontal,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -445,9 +445,29 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
   const router = useRouter();
   const [q, setQ] = useState("");
   const [active, setActive] = useState(0);
+  const [selectedGroupId, setSelectedGroupId] = useState(CATEGORY_GROUPS[0]?.id ?? "");
   const inputRef = useRef<HTMLInputElement>(null);
   const matches = useMemo(() => matchCategories(q, 18, locale), [q, locale]);
   const filtering = q.trim().length > 0;
+  const selectedGroup = CATEGORY_GROUPS.find((group) => group.id === selectedGroupId) ?? CATEGORY_GROUPS[0];
+  const groupedMatches = useMemo(() => CATEGORY_GROUPS
+    .map((group) => ({ group, items: matches.filter((match) => match.groupId === group.id) }))
+    .filter(({ items }) => items.length > 0), [matches]);
+
+  const groupIcons: Record<string, React.ComponentType<{ className?: string }>> = {
+    hogar: Home,
+    jardin: Leaf,
+    limpieza: Sparkles,
+    tecnologia: Laptop,
+    profesional: Building2,
+    salud: HeartPulse,
+    vehiculos: Car,
+    eventos: PartyPopper,
+    educacion: GraduationCap,
+    familia: Baby,
+    mascotas: PawPrint,
+    transporte: Truck,
+  };
 
   useEffect(() => { queueMicrotask(() => setActive(0)); }, [q]);
 
@@ -493,29 +513,34 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
 
       {filtering ? (
         matches.length > 0 ? (
-          <div className="max-h-[360px] overflow-y-auto rounded-2xl border border-[#eef2f6] bg-white p-2">
-            {matches.map((m, i) => (
-              <button
-                key={m.id}
-                type="button"
-                onClick={() => go(m.id)}
-                onMouseEnter={() => setActive(i)}
-                className={cn(
-                  "group flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/20",
-                  i === active ? "bg-[#EBF5FB]" : "hover:bg-[#f8fafc]"
-                )}
-              >
-                <span className="min-w-0">
-                  <span className={cn("block text-sm font-semibold [overflow-wrap:anywhere]", i === active ? "text-[#0089bb]" : "text-[#162543] group-hover:text-[#0089bb]")}>
-                    {getCategoryLabel(m.id, locale)}
-                  </span>
-                  <span className="mt-0.5 block text-[11px] font-medium text-[#9ca3af]">
-                    {getCategoryGroupLabel(m.groupId, locale)}
-                  </span>
-                </span>
-                <ChevronRight className={cn("h-4 w-4 shrink-0", i === active ? "text-[#009FD9]" : "text-[#cbd5e1] group-hover:text-[#009FD9]")} />
-              </button>
-            ))}
+          <div className="max-h-[390px] overflow-y-auto rounded-2xl border border-[#eef2f6] bg-white p-3">
+            <div className="grid grid-cols-2 gap-3">
+              {groupedMatches.map(({ group, items }) => (
+                <section key={group.id} className="min-w-0 rounded-xl bg-[#f8fafc] p-2.5">
+                  <p className="mb-1.5 px-1 text-[11px] font-bold uppercase tracking-wide text-[#8a94a6]">{getCategoryGroupLabel(group.id, locale)}</p>
+                  <div className="space-y-0.5">
+                    {items.map((m) => {
+                      const flatIndex = matches.findIndex((match) => match.id === m.id);
+                      return (
+                        <button
+                          key={m.id}
+                          type="button"
+                          onClick={() => go(m.id)}
+                          onMouseEnter={() => setActive(flatIndex)}
+                          className={cn(
+                            "group flex w-full items-center justify-between gap-3 rounded-lg px-2.5 py-2 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/20",
+                            flatIndex === active ? "bg-white text-[#0089bb] shadow-sm" : "text-[#374151] hover:bg-white hover:text-[#0089bb]"
+                          )}
+                        >
+                          <span className="min-w-0 truncate text-sm font-semibold">{getCategoryLabel(m.id, locale)}</span>
+                          <ChevronRight className={cn("h-4 w-4 shrink-0", flatIndex === active ? "text-[#009FD9]" : "text-[#cbd5e1] group-hover:text-[#009FD9]")} />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </section>
+              ))}
+            </div>
           </div>
         ) : (
           // No match → consistent wording + the shared suggest flow, all INSIDE this same
@@ -536,31 +561,65 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
           </div>
         )
       ) : (
-        <div className="max-h-[64vh] overflow-y-auto rounded-2xl border border-[#eef2f6] bg-white p-3">
-          <div className="grid grid-cols-3 gap-3">
-            {CATEGORY_GROUPS.map((group) => (
-              <section key={group.id} className="rounded-xl border border-transparent bg-[#f8fafc] p-3 transition-colors hover:border-[#dbeafe] hover:bg-white">
-                <div className="mb-2 flex items-start justify-between gap-2">
+        <div className="grid max-h-[64vh] grid-cols-[16.5rem_minmax(0,1fr)] overflow-hidden rounded-2xl border border-[#eef2f6] bg-white shadow-[0_18px_45px_-36px_rgba(15,23,42,0.45)]">
+          <div className="min-w-0 overflow-y-auto border-r border-[#eef2f6] bg-[#f8fafc] p-2">
+            {CATEGORY_GROUPS.map((group) => {
+              const Icon = groupIcons[group.id] ?? MoreHorizontal;
+              const selected = selectedGroup?.id === group.id;
+              return (
+                <button
+                  key={group.id}
+                  type="button"
+                  onClick={() => setSelectedGroupId(group.id)}
+                  onMouseEnter={() => setSelectedGroupId(group.id)}
+                  className={cn(
+                    "group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/20",
+                    selected ? "bg-white text-[#162543] shadow-sm" : "text-[#526173] hover:bg-white/80 hover:text-[#162543]"
+                  )}
+                >
+                  <span className={cn("grid h-8 w-8 shrink-0 place-items-center rounded-lg", selected ? "bg-[#EAF7FD] text-[#0089bb]" : "bg-white text-[#8a94a6] group-hover:text-[#0089bb]")}>
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-bold leading-snug">{getCategoryGroupLabel(group.id, locale)}</span>
+                    <span className="mt-0.5 block text-[11px] font-medium text-[#9ca3af]">{ts("optionsCount", { count: group.items.length })}</span>
+                  </span>
+                  <ChevronRight className={cn("h-4 w-4 shrink-0", selected ? "text-[#009FD9]" : "text-[#cbd5e1]")} />
+                </button>
+              );
+            })}
+          </div>
+          <div className="min-w-0 overflow-y-auto p-4">
+            {selectedGroup && (
+              <section>
+                <div className="mb-3 flex items-end justify-between gap-3">
                   <div className="min-w-0">
-                    <h3 className="truncate text-sm font-bold text-[#162543]">{getCategoryGroupLabel(group.id, locale)}</h3>
-                    <p className="mt-0.5 text-[11px] font-medium text-[#9ca3af]">{ts("optionsCount", { count: group.items.length })}</p>
+                    <p className="text-[11px] font-bold uppercase tracking-wide text-[#8a94a6]">{t("categories")}</p>
+                    <h3 className="mt-0.5 truncate text-lg font-extrabold text-[#162543]">{getCategoryGroupLabel(selectedGroup.id, locale)}</h3>
                   </div>
-                  <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-[#cbd5e1]" />
+                  <Link
+                    href={`/buscar?categoria=${selectedGroup.items[0]?.id ?? "todas"}`}
+                    onClick={onNavigate}
+                    className="shrink-0 text-xs font-bold text-[#009FD9] hover:underline"
+                  >
+                    {t("viewAllCategories")}
+                  </Link>
                 </div>
-                <div className="space-y-0.5">
-                  {group.items.slice(0, 4).map((item) => (
+                <div className="grid grid-cols-2 gap-1.5">
+                  {selectedGroup.items.map((item) => (
                     <button
                       key={item.id}
                       type="button"
                       onClick={() => go(item.id)}
-                      className="block w-full rounded-lg px-2 py-1.5 text-left text-[13px] font-medium leading-snug text-[#4b5563] transition-colors hover:bg-[#EBF5FB] hover:text-[#0089bb] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/20"
+                      className="group flex min-h-10 items-center justify-between gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold leading-snug text-[#374151] transition-colors hover:bg-[#EBF5FB] hover:text-[#0089bb] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/20"
                     >
-                      <span className="block [overflow-wrap:anywhere]">{getCategoryLabel(item.id, locale)}</span>
+                      <span className="min-w-0 [overflow-wrap:anywhere]">{getCategoryLabel(item.id, locale)}</span>
+                      <ChevronRight className="h-4 w-4 shrink-0 text-[#cbd5e1] group-hover:text-[#009FD9]" />
                     </button>
                   ))}
                 </div>
               </section>
-            ))}
+            )}
           </div>
         </div>
       )}
@@ -1054,7 +1113,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
 
                   {openMenu === "categorias" && (
                     <div
-                      className="absolute top-full left-0 mt-1.5 bg-white rounded-2xl shadow-[0_24px_70px_-22px_rgba(15,23,42,0.45)] border border-gray-100 p-5 z-50 w-[720px]"
+                      className="absolute top-full left-0 mt-1.5 bg-white rounded-2xl shadow-[0_24px_70px_-22px_rgba(15,23,42,0.45)] border border-gray-100 p-5 z-50 w-[840px]"
                       style={{ animation: "tab-cards-in 0.15s ease both" }}
                     >
                       {/* ONE container: typing in the search FILTERS the categories in place. */}

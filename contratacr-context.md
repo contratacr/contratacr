@@ -3594,3 +3594,5 @@ New i18n namespaces added this pass: `search.pagination`, extended `search.filte
 **Sprint 317 - Pending status without badge container.** Pending statuses in dashboard cards now render as quiet amber text with a small dot instead of a bordered/fill pill. Applied to Mis solicitudes, Solicitudes recibidas, and Mis propuestas; other warning badges stay unchanged for important risk or profile states.
 
 **Sprint 318 - Availability multi-location layout revert.** Reverted the multi-location weekly availability slot from the bordered mini-card treatment back to the simpler location-above-time layout. The location select and time controls are now width-constrained so Agregar franja and Aplicar a otros días stay aligned on the same row on wider screens while mobile remains stacked.
+
+**Sprint 319 - Section-led category dropdown.** Redesigned the desktop navbar category dropdown from a flat grid into a section-led mega menu: search remains at the top, category groups live in a left rail with icons, the selected section's services render in the right pane, and typed search results stay grouped by section for easier scanning in Spanish and English.

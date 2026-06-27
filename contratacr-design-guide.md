@@ -1948,3 +1948,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Pending status treatment.** In dashboard cards, `Pendiente` / `Pending` should not use a filled or bordered badge container unless it represents a warning requiring attention. Prefer quiet amber text with a small dot so it reads as status, not a CTA or alert.
 
 > **Availability multi-location inputs.** Weekly availability rows with multiple work locations should stay visually simple: location select above the time range, no extra per-slot card chrome. Keep the select/time group narrow enough that `Agregar franja` and `Aplicar a otros días` can align to the right on larger screens, while stacking cleanly on mobile.
+
+> **Navbar category dropdown.** The desktop category menu should be section-led, not a flat wall of cards. Use a compact search at the top, a left rail of category groups with icons, and a right pane for the selected group's services. Search results should remain grouped by section so users understand where each service belongs.
