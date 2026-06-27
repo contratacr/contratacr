@@ -21,6 +21,7 @@ import {
   CalendarDays,
   Shield,
   Car,
+  ChevronRight,
 } from "lucide-react";
 
 const GROUPS = [
@@ -124,36 +125,39 @@ export default function CategoriasPage() {
   const totalServices = GROUPS.reduce((sum, group) => sum + group.ids.length, 0);
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f7f9fb]">
+    <div className="flex min-h-screen flex-col bg-[#f7f9fb]">
       <LandingNavbar />
 
-      {/* Hero — `relative z-30` lifts the whole hero (and the search autocomplete
-          that overflows below it) ABOVE the opaque category-grid section that
-          follows, so suggestions overlay the categories instead of hiding behind. */}
-      <section className="relative z-30 bg-white px-4 pb-10 pt-32">
+      <section className="relative z-30 border-b border-[#e5e7eb] bg-white px-4 pb-8 pt-28 sm:pt-32">
         <FadeInUp>
-          <div className="mx-auto flex max-w-5xl flex-col items-center text-center">
-            <span className="mb-4 inline-flex rounded-full bg-[#EBF5FB] px-3 py-1 text-xs font-bold uppercase text-[#0089bb]">
-              {tp("eyebrow")}
-            </span>
-            <h1 className="max-w-3xl text-4xl font-extrabold leading-tight text-[#1a2744] sm:text-5xl">
-              {tp("title")}
-            </h1>
-            <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-[#5f6b7a] sm:text-lg">
-              {tp("subtitle")}
-            </p>
-            <div className="mt-7 w-full">
-              <CategorySearchBox />
+          <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-end">
+            <div className="min-w-0">
+              <span className="mb-3 inline-flex rounded-full bg-[#EBF5FB] px-3 py-1 text-xs font-bold uppercase text-[#0089bb]">
+                {tp("eyebrow")}
+              </span>
+              <h1 className="max-w-2xl text-3xl font-extrabold leading-tight text-[#1a2744] sm:text-4xl">
+                {tp("title")}
+              </h1>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-[#5f6b7a] sm:text-base">
+                {tp("subtitle")}
+              </p>
+              <div className="mt-5 flex flex-wrap gap-2 text-xs font-semibold text-[#6b7280]">
+                <span className="rounded-full border border-[#e5e7eb] bg-white px-3 py-1.5">
+                  {tp("groupCount", { count: GROUPS.length })}
+                </span>
+                <span className="rounded-full border border-[#e5e7eb] bg-white px-3 py-1.5">
+                  {tp("serviceCount", { count: totalServices })}
+                </span>
+              </div>
             </div>
-            <div className="mt-6 flex flex-wrap justify-center gap-2 text-xs font-semibold text-[#6b7280]">
-              <span className="rounded-full border border-[#e5e7eb] bg-white px-3 py-1.5">{tp("groupCount", { count: GROUPS.length })}</span>
-              <span className="rounded-full border border-[#e5e7eb] bg-white px-3 py-1.5">{tp("serviceCount", { count: totalServices })}</span>
+            <div className="w-full">
+              <CategorySearchBox />
             </div>
           </div>
         </FadeInUp>
       </section>
 
-      <section className="border-y border-[#e5e7eb] bg-white px-4 py-3">
+      <section className="sticky top-16 z-20 border-b border-[#e5e7eb] bg-white/95 px-4 py-3 backdrop-blur lg:hidden">
         <div className="mx-auto flex max-w-6xl gap-2 overflow-x-auto hide-scrollbar">
           {GROUPS.map((group) => {
             const Icon = group.Icon;
@@ -161,7 +165,7 @@ export default function CategoriasPage() {
               <a
                 key={group.key}
                 href={`#${group.key}`}
-                className="inline-flex shrink-0 items-center gap-2 rounded-full border border-[#e5e7eb] bg-white px-3.5 py-2 text-sm font-semibold text-[#374151] transition-colors hover:border-[#009FD9] hover:bg-[#EBF5FB] hover:text-[#0089bb]"
+                className="inline-flex shrink-0 items-center gap-2 rounded-full border border-[#e5e7eb] bg-white px-3.5 py-2 text-sm font-semibold text-[#374151] shadow-sm transition-colors hover:border-[#009FD9] hover:bg-[#EBF5FB] hover:text-[#0089bb]"
               >
                 <Icon className="h-4 w-4 text-[#009FD9]" />
                 {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
@@ -172,73 +176,108 @@ export default function CategoriasPage() {
         </div>
       </section>
 
-      {/* Categories by group */}
       <section className="px-4 pb-24 pt-8">
-        <div className="mx-auto flex max-w-6xl flex-col gap-4">
-          {GROUPS.map((group, gi) => {
-            const Icon = group.Icon;
-            return (
-              <FadeInUp key={group.key} delay={gi * 25}>
-                <section id={group.key} className="scroll-mt-28 rounded-xl border border-[#e5e7eb] bg-white p-4 shadow-sm sm:p-5">
-                  <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:gap-6">
-                    <div className="flex min-w-0 items-start gap-3 lg:w-64 lg:shrink-0">
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#EBF5FB] text-[#009FD9]">
-                        <Icon className="h-5 w-5" />
+        <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[260px_minmax(0,1fr)] lg:items-start">
+          <aside className="hidden lg:block">
+            <div className="sticky top-24 overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+              <div className="border-b border-[#eef2f6] px-4 py-3">
+                <p className="text-xs font-bold uppercase tracking-wide text-[#8a94a6]">
+                  {tp("viewAll")}
+                </p>
+              </div>
+              <nav className="max-h-[calc(100vh-180px)] overflow-y-auto py-1">
+                {GROUPS.map((group) => {
+                  const Icon = group.Icon;
+                  return (
+                    <a
+                      key={group.key}
+                      href={`#${group.key}`}
+                      className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-[#374151] transition-colors hover:bg-[#f8fbfe] hover:text-[#0089bb]"
+                    >
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#EAF7FD] text-[#009FD9]">
+                        <Icon className="h-4 w-4" />
                       </span>
-                      <div className="min-w-0 flex-1">
-                        <h2 className="text-base font-bold text-[#162543] [overflow-wrap:anywhere]">
-                          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                          {tg(group.key as any)}
-                        </h2>
-                        <p className="mt-0.5 text-xs font-medium text-[#8a94a6]">{tp("optionsCount", { count: group.ids.length })}</p>
+                      <span className="min-w-0 flex-1 [overflow-wrap:anywhere]">
+                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                        {tg(group.key as any)}
+                      </span>
+                      <span className="shrink-0 text-xs font-bold text-[#9ca3af]">
+                        {group.ids.length}
+                      </span>
+                    </a>
+                  );
+                })}
+              </nav>
+            </div>
+          </aside>
+
+          <div className="flex min-w-0 flex-col gap-8">
+            {GROUPS.map((group, gi) => {
+              const Icon = group.Icon;
+              return (
+                <FadeInUp key={group.key} delay={gi * 20}>
+                  <section id={group.key} className="scroll-mt-32">
+                    <div className="mb-3 flex items-end justify-between gap-3">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#EAF7FD] text-[#009FD9]">
+                          <Icon className="h-[18px] w-[18px]" />
+                        </span>
+                        <div className="min-w-0">
+                          <h2 className="text-lg font-extrabold leading-tight text-[#162543] [overflow-wrap:anywhere]">
+                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                            {tg(group.key as any)}
+                          </h2>
+                          <p className="mt-0.5 text-xs font-medium text-[#8a94a6]">
+                            {tp("optionsCount", { count: group.ids.length })}
+                          </p>
+                        </div>
                       </div>
                     </div>
 
-                    <div className="flex min-w-0 flex-1 flex-wrap gap-2">
-                      {group.ids.map((id) => (
-                        <Link
-                          key={id}
-                          href={`/buscar?categoria=${id}`}
-                          className="group inline-flex min-h-9 items-center gap-2 rounded-lg border border-[#e5e7eb] bg-white px-3 py-2 text-sm font-medium leading-snug text-[#374151] transition-colors hover:border-[#009FD9] hover:bg-[#EBF5FB] hover:text-[#0089bb]"
-                        >
-                          <span className="[overflow-wrap:anywhere]">
-                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                            {t(id as any)}
-                          </span>
-                        </Link>
-                      ))}
+                    <div className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
+                        {group.ids.map((id) => (
+                          <Link
+                            key={id}
+                            href={`/buscar?categoria=${id}`}
+                            className="group flex min-h-12 items-center justify-between gap-3 border-b border-[#eef2f6] px-4 py-3 text-sm font-semibold leading-snug text-[#374151] transition-colors hover:bg-[#f8fbfe] hover:text-[#0089bb] sm:odd:border-r xl:border-r xl:[&:nth-child(3n)]:border-r-0"
+                          >
+                            <span className="min-w-0 [overflow-wrap:anywhere]">
+                              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                              {t(id as any)}
+                            </span>
+                            <ChevronRight className="h-4 w-4 shrink-0 text-[#cbd5e1] transition-colors group-hover:text-[#009FD9]" />
+                          </Link>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                </section>
-              </FadeInUp>
-            );
-          })}
+                  </section>
+                </FadeInUp>
+              );
+            })}
 
-          {/* "¿No ves tu categoría?" — a contained, intentional card (icon + heading +
-              description + a clear CTA), NOT a loose link under a divider. The id is the
-              scroll target the hero search jumps to when a search has no matches. */}
-          <FadeInUp delay={GROUPS.length * 25}>
-            <div id="sugerir-categoria" className="scroll-mt-24 rounded-xl border border-[#d8eef8] bg-white px-6 py-7 text-center shadow-sm">
-              <FolderPlus className="mx-auto mb-2.5 h-7 w-7 text-[#009FD9]" strokeWidth={1.75} />
-              <h2 className="text-lg font-bold text-[#1a2744]">{tp("notListed")}</h2>
-              <p className="mx-auto mt-1 max-w-md text-sm leading-6 text-[#5f6b7a]">{tp("suggestDescription")}</p>
-              <div className="mx-auto mt-4 max-w-md">
-                <CategorySuggestionBox
-                  prominent
-                  notListedLabel={tp("suggestCta")}
-                  placeholder={tp("suggestPlaceholder")}
-                  sendLabel={tp("suggestSend")}
-                  sendingLabel={tp("suggestSending")}
-                  cancelLabel={tp("cancel")}
-                  thanksLabel={tp("suggestThanks")}
-                />
+            <FadeInUp delay={GROUPS.length * 20}>
+              <div id="sugerir-categoria" className="scroll-mt-24 rounded-2xl border border-[#d8eef8] bg-white px-5 py-7 text-center shadow-sm sm:px-6">
+                <FolderPlus className="mx-auto mb-2.5 h-7 w-7 text-[#009FD9]" strokeWidth={1.75} />
+                <h2 className="text-lg font-bold text-[#1a2744]">{tp("notListed")}</h2>
+                <p className="mx-auto mt-1 max-w-md text-sm leading-6 text-[#5f6b7a]">{tp("suggestDescription")}</p>
+                <div className="mx-auto mt-4 max-w-md">
+                  <CategorySuggestionBox
+                    prominent
+                    notListedLabel={tp("suggestCta")}
+                    placeholder={tp("suggestPlaceholder")}
+                    sendLabel={tp("suggestSend")}
+                    sendingLabel={tp("suggestSending")}
+                    cancelLabel={tp("cancel")}
+                    thanksLabel={tp("suggestThanks")}
+                  />
+                </div>
               </div>
-            </div>
-          </FadeInUp>
+            </FadeInUp>
+          </div>
         </div>
       </section>
 
-      {/* CTA Bottom */}
       <section className="bg-[#162543] px-4 py-16 text-center text-white">
         <FadeInUp>
           <h2 className="mb-3 text-3xl font-extrabold">{tp("ctaTitle")}</h2>
