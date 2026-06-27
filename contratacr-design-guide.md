@@ -1970,3 +1970,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Verification summary copy.** Avoid repeating the verified state in both the card title and badge. Prefer a neutral title like `Estado de verificación` / `Verification status` with the actual state in the badge.
 
 > **Published request reopening.** In client publications, prefer `Volver a publicar` / `Publish again` over `Reabrir solicitud`; it sounds clearer as marketplace language. Reopening a cancelled publication should not delete existing proposals. Accepting one proposal should mark the other pending proposals as not selected so professionals do not keep seeing them as live opportunities.
+
+> **Locale switch state preservation.** Language switches must preserve the current pathname, query string, and hash. This is especially important in dashboard panels where the active section lives in `?tab=...`; switching ES/EN must not reset the user to Mi perfil / My profile.

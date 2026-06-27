@@ -3616,3 +3616,5 @@ New i18n namespaces added this pass: `search.pagination`, extended `search.filte
 **Sprint 328 - Search map pin color revert.** Reverted /buscar map pins so their default fill is the light ContrataCR blue (#009FD9). The darker navy (#162543) is now reserved for highlighted pins, including the card-hover state from the matching result card.
 
 **Sprint 329 - Compact availability time controls.** Tightened weekly availability row geometry: the day column is narrower, time selects are capped around 16.5rem total, workplace selects are capped around 14rem with truncation/title support, and the action links have a reserved wide-screen column so 5:00PM no longer competes with Agregar franja.
+
+**Sprint 330 - Locale switch preserves dashboard tabs.** Language switching now keeps the current pathname plus query/hash so dashboard tabs like ?tab=availability, ?tab=bookings, or client panel sections do not reset to profile when switching between Spanish and English.
