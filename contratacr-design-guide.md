@@ -1951,6 +1951,8 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 
 > **Availability location select sizing.** Work-location selects in availability must not grow with long exact addresses. Keep the visible control compact, truncate long labels inside the select, and expose the full address through native option/title text so actions beside the schedule never get covered.
 
+> **Availability row layout.** Do not force location, time range, and day actions into one horizontal row. Availability rows should use a stable day column plus a content column; multi-location blocks may place location and time side by side only on wide screens, while `Agregar franja` / `Aplicar a otros días` live in their own action row to avoid overlap.
+
 > **Navbar category dropdown.** The desktop category menu should be section-led, not a flat wall of cards. Use a compact search at the top, a left rail of category groups with icons, and a right pane for the selected group's services. Search results should remain grouped by section so users understand where each service belongs.
 
 > **Category group icons.** The navbar category dropdown must use the same category-group icon mapping as `/categorias` so both entry points feel like the same catalog system.

@@ -704,9 +704,9 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                 const on = blocks.length > 0;
                 const canApply = blocks.some(isCompleteFranja);
                 return (
-                  <div key={wd} className="flex flex-col gap-2 py-3 sm:flex-row sm:gap-3 lg:gap-4">
+                  <div key={wd} className="grid gap-2 py-3 sm:grid-cols-[9rem_minmax(0,1fr)] sm:gap-4">
                     {/* toggle + weekday name */}
-                    <div className="flex min-w-0 items-center gap-2.5 sm:w-32 sm:shrink-0 sm:pt-1.5 lg:w-36">
+                    <div className="flex min-w-0 items-center gap-2.5 sm:pt-2">
                       <button
                         type="button"
                         onClick={() => toggleDay(wd)}
@@ -724,24 +724,23 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                       {!on ? (
                         <p className="text-sm text-[#9ca3af] sm:pt-1.5">{t("closed")}</p>
                       ) : (
-                        <div className="flex min-w-0 flex-col gap-2.5 md:flex-row md:items-start md:gap-4">
+                        <div className="flex min-w-0 flex-col gap-3">
                           <div className="flex min-w-0 flex-1 flex-col gap-2.5">
                             {blocks.map((b) => {
                             const timeRow = (
-                              <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:w-fit sm:grid-cols-[6.5rem_auto_6.5rem] sm:gap-1.5">
-                                <TimeSelect value={b.start} onChange={(v) => updateBlock(wd, b.id, { start: v, ...(b.end && toMins(b.end) <= toMins(v) ? { end: hhmm(Math.min(toMins(v) + 60, 23 * 60 + 30)) } : {}) })} className="min-w-0 w-full sm:w-[6.5rem]" />
+                              <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 sm:w-fit sm:grid-cols-[7rem_auto_7rem] sm:gap-2">
+                                <TimeSelect value={b.start} onChange={(v) => updateBlock(wd, b.id, { start: v, ...(b.end && toMins(b.end) <= toMins(v) ? { end: hhmm(Math.min(toMins(v) + 60, 23 * 60 + 30)) } : {}) })} className="min-w-0 w-full sm:w-28" />
                                 <span className="shrink-0 text-[#9ca3af]">–</span>
-                                <TimeSelect value={b.end} min={b.start ? hhmm(Math.min(toMins(b.start) + 30, 23 * 60 + 30)) : undefined} onChange={(v) => updateBlock(wd, b.id, { end: v })} className="min-w-0 w-full sm:w-[6.5rem]" error={b.start && b.end && toMins(b.end) <= toMins(b.start) ? t("toAfterFrom") : undefined} />
+                                <TimeSelect value={b.end} min={b.start ? hhmm(Math.min(toMins(b.start) + 30, 23 * 60 + 30)) : undefined} onChange={(v) => updateBlock(wd, b.id, { end: v })} className="min-w-0 w-full sm:w-28" error={b.start && b.end && toMins(b.end) <= toMins(b.start) ? t("toAfterFrom") : undefined} />
                               </div>
                             );
                             // Single-location pros: just the time row (clean, compact, no location UI).
                             if (!isMultiLocation) return <div key={b.id}>{timeRow}</div>;
                             const currentLocationLabel = locationOptions.find((o) => o.id === b.locationId)?.label ?? "";
-                            // 2+ locations: location first, hours below, with no extra card chrome.
-                            // Keep this compact so the day actions stay on the same row; long
-                            // addresses truncate in the control but remain available in the option/title.
+                            // 2+ locations: give the long address its own column/line so it
+                            // never competes with day actions or overlaps the time controls.
                             return (
-                              <div key={b.id} className="flex w-full flex-col gap-2 sm:w-[14.25rem]">
+                              <div key={b.id} className="grid w-full min-w-0 gap-2 lg:grid-cols-[minmax(13rem,18rem)_auto] lg:items-center">
                                 <div className="relative min-w-0">
                                   <MapPin className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#009FD9]" />
                                   <select
@@ -760,12 +759,12 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                             );
                             })}
                           </div>
-                          <div className="flex min-h-10 w-full min-w-0 flex-row flex-wrap items-center justify-start gap-x-4 gap-y-2 md:w-[clamp(12rem,24vw,17rem)] md:shrink-0 md:justify-end">
-                            <button type="button" onClick={() => addBlock(wd)} className="inline-flex min-w-0 items-center justify-end gap-1 text-left text-xs font-medium leading-tight text-[#009FD9] hover:underline cursor-pointer md:text-right">
+                          <div className="flex min-w-0 flex-row flex-wrap items-center justify-start gap-x-4 gap-y-2 border-t border-[#f3f4f6] pt-2 sm:border-t-0 sm:pt-0">
+                            <button type="button" onClick={() => addBlock(wd)} className="inline-flex min-w-0 items-center gap-1 text-left text-xs font-medium leading-tight text-[#009FD9] hover:underline cursor-pointer">
                               <Plus className="h-3.5 w-3.5 shrink-0" /> <span>{t("addFranja")}</span>
                             </button>
                             {canApply && (
-                              <button type="button" onClick={() => setApplyModal({ weekday: wd })} className="min-w-0 text-left text-xs font-medium leading-tight text-[#6b7280] hover:text-[#009FD9] hover:underline cursor-pointer md:text-right">
+                              <button type="button" onClick={() => setApplyModal({ weekday: wd })} className="min-w-0 text-left text-xs font-medium leading-tight text-[#6b7280] hover:text-[#009FD9] hover:underline cursor-pointer">
                                 {t("applyToOtherDays")}
                               </button>
                             )}
