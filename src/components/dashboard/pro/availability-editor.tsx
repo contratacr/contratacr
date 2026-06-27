@@ -143,14 +143,14 @@ function LocationDropdown({
         title={selected?.label}
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          "flex h-9 w-full min-w-0 items-center gap-2 rounded-xl border bg-white pl-3 pr-2.5 text-left text-xs font-semibold transition-colors",
+          "flex h-9 w-full min-w-0 items-center gap-2 rounded-lg border bg-white pl-2.5 pr-2 text-left text-[13px] font-medium shadow-[0_1px_0_rgba(15,23,42,0.02)] transition-colors",
           open
-            ? "border-[#009FD9] ring-2 ring-[#e4f4fb]"
-            : "border-[#e5e7eb] text-[#374151] hover:border-[#cbd5e1]"
+            ? "border-[#009FD9] ring-2 ring-[#EBF5FB]"
+            : "border-[#dfe7f0] text-[#374151] hover:border-[#cbd5e1]"
         )}
       >
-        <MapPin className="h-4 w-4 shrink-0 text-[#009FD9]" />
-        <span className="min-w-0 flex-1 truncate text-[#374151]">{selected?.label}</span>
+        <MapPin className="h-4 w-4 shrink-0 text-[#6b7280]" />
+        <span className="min-w-0 flex-1 truncate text-[#111827]">{selected?.label}</span>
         <ChevronDown className={cn("h-4 w-4 shrink-0 text-[#9ca3af] transition-transform", open && "rotate-180 text-[#009FD9]")} />
       </button>
 
@@ -159,7 +159,7 @@ function LocationDropdown({
           role="listbox"
           aria-label={ariaLabel}
           className={cn(
-            "absolute top-full z-50 mt-1 max-h-64 w-[min(20rem,calc(100vw-2rem))] overflow-y-auto rounded-xl border border-[#d1d5db] bg-white py-1 shadow-[0_16px_40px_-24px_rgba(15,23,42,0.55)]",
+            "absolute top-full z-50 mt-1 max-h-64 w-[min(24rem,calc(100vw-2rem))] overflow-y-auto rounded-lg border border-[#dfe7f0] bg-white p-1 shadow-[0_18px_44px_-24px_rgba(15,23,42,0.55)]",
             menuAlign === "right" ? "right-0" : "left-0"
           )}
         >
@@ -177,7 +177,7 @@ function LocationDropdown({
                   setOpen(false);
                 }}
                 className={cn(
-                  "flex w-full items-start gap-2 px-3 py-2 text-left text-sm leading-snug transition-colors",
+                  "flex w-full items-start gap-2 rounded-md px-2.5 py-2 text-left text-[13px] leading-snug transition-colors",
                   active ? "bg-[#EBF5FB] text-[#162543]" : "text-[#374151] hover:bg-[#f8fafc]"
                 )}
               >
@@ -802,12 +802,12 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                 const on = blocks.length > 0;
                 const canApply = blocks.some(isCompleteFranja);
                 const dayActions = (
-                  <div className="flex min-w-0 flex-row flex-wrap items-center justify-start gap-x-3 gap-y-2 lg:shrink-0 lg:flex-nowrap">
-                    <button type="button" onClick={() => addBlock(wd)} className="inline-flex min-w-0 shrink-0 items-center gap-1 whitespace-nowrap text-left text-xs font-medium leading-tight text-[#009FD9] hover:underline cursor-pointer">
+                  <div className="flex min-h-9 min-w-0 flex-row flex-wrap items-center justify-start gap-x-3 gap-y-1 lg:shrink-0 lg:flex-nowrap">
+                    <button type="button" onClick={() => addBlock(wd)} className="inline-flex h-9 min-w-0 shrink-0 items-center gap-1 whitespace-nowrap text-left text-xs font-medium leading-tight text-[#009FD9] hover:underline cursor-pointer">
                       <Plus className="h-3.5 w-3.5 shrink-0" /> <span>{t("addFranja")}</span>
                     </button>
                     {canApply && (
-                      <button type="button" onClick={() => setApplyModal({ weekday: wd })} className="min-w-0 shrink-0 whitespace-nowrap text-left text-xs font-medium leading-tight text-[#6b7280] hover:text-[#009FD9] hover:underline cursor-pointer">
+                      <button type="button" onClick={() => setApplyModal({ weekday: wd })} className="h-9 min-w-0 shrink-0 whitespace-nowrap text-left text-xs font-medium leading-tight text-[#6b7280] hover:text-[#009FD9] hover:underline cursor-pointer">
                         {t("applyToOtherDays")}
                       </button>
                     )}
@@ -817,7 +817,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                   <div key={wd} className="grid min-w-0 gap-2 py-3 lg:grid-cols-[6.75rem_minmax(0,1fr)] lg:gap-2.5">
                     {/* toggle + weekday name */}
                     <div className={cn(
-                      "flex min-w-0 items-center gap-2.5 lg:pt-2",
+                      "flex min-w-0 items-center gap-2.5 lg:pt-1.5",
                       on && isMultiLocation && "lg:pt-11"
                     )}>
                       <button
@@ -840,7 +840,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                         <div className="flex min-w-0 flex-col gap-2.5">
                           {blocks.map((b, index) => {
                             const timeRow = (
-                              <div className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1.5 md:w-[14.25rem] md:shrink-0 md:grid-cols-[minmax(6.125rem,1fr)_auto_minmax(6.125rem,1fr)]">
+                              <div className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1.5 md:w-[14.5rem] md:shrink-0 md:grid-cols-[minmax(6.25rem,1fr)_auto_minmax(6.25rem,1fr)]">
                                 <TimeSelect value={b.start} onChange={(v) => updateBlock(wd, b.id, { start: v, ...(b.end && toMins(b.end) <= toMins(v) ? { end: hhmm(Math.min(toMins(v) + 60, 23 * 60 + 30)) } : {}) })} className="min-w-0 w-full" />
                                 <span className="shrink-0 text-[#9ca3af]">–</span>
                                 <TimeSelect value={b.end} min={b.start ? hhmm(Math.min(toMins(b.start) + 30, 23 * 60 + 30)) : undefined} onChange={(v) => updateBlock(wd, b.id, { end: v })} className="min-w-0 w-full" error={b.start && b.end && toMins(b.end) <= toMins(b.start) ? t("toAfterFrom") : undefined} />
@@ -864,7 +864,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                                   options={locationOptions}
                                   onChange={(locationId) => updateBlock(wd, b.id, { locationId })}
                                   ariaLabel={t("blockLocationAria")}
-                                  className="w-full max-w-[16rem]"
+                                  className="w-full max-w-[15.5rem] sm:max-w-[17rem]"
                                 />
                                 <div className="flex min-w-0 flex-col gap-2 lg:flex-row lg:flex-nowrap lg:items-center lg:gap-x-3">
                                   {timeRow}
