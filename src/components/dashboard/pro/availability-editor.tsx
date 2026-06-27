@@ -736,25 +736,23 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                             );
                             // Single-location pros: just the time row (clean, compact, no location UI).
                             if (!isMultiLocation) return <div key={b.id}>{timeRow}</div>;
-                            // 2+ locations: location-FIRST, hours below — reads top-to-bottom
-                            // "where → when" and lays out cleanly on mobile (each on its own
-                            // line). No background/border (per R1); spacing + the bordered select
-                            // carry the grouping. The select spans the time-row width.
+                            // 2+ locations: one compact "franja" row. Desktop reads
+                            // place → hours on one line; phone stacks without clipping.
                             return (
-                              <div key={b.id} className="flex w-full flex-col gap-2 sm:w-fit">
-                                <div className="relative">
+                              <div key={b.id} className="flex w-full min-w-0 flex-col gap-2 rounded-2xl border border-[#e5e7eb] bg-[#fbfdff] p-2.5 shadow-[0_10px_28px_-24px_rgba(15,23,42,0.35)] sm:w-fit sm:min-w-[27rem] sm:flex-row sm:items-center sm:gap-3">
+                                <div className="relative min-w-0 sm:w-44 sm:shrink-0">
                                   <MapPin className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#009FD9]" />
                                   <select
                                     value={b.locationId}
                                     onChange={(e) => updateBlock(wd, b.id, { locationId: e.target.value })}
                                     aria-label={t("blockLocationAria")}
-                                    className="h-10 w-full appearance-none rounded-xl border border-[#e5e7eb] bg-[#f9fafb] pl-9 pr-9 text-xs font-semibold text-[#374151] hover:border-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent cursor-pointer transition-colors"
+                                    className="h-10 w-full appearance-none rounded-xl border border-[#dbeafe] bg-white pl-9 pr-8 text-xs font-semibold text-[#162543] hover:border-[#bae6fd] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent cursor-pointer transition-colors"
                                   >
                                     {locationOptions.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
                                   </select>
                                   <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9ca3af]" />
                                 </div>
-                                {timeRow}
+                                <div className="min-w-0 sm:shrink-0">{timeRow}</div>
                               </div>
                             );
                             })}
