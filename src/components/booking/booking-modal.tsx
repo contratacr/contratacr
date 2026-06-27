@@ -841,6 +841,24 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     );
   }
 
+  const videoConsultNotice = offersVideoConsult ? (
+    <div className="rounded-xl border border-[#d8eef8] bg-[#f5fbfe] px-3.5 py-3">
+      <div className="flex items-start gap-3">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-[#009FD9] shadow-sm ring-1 ring-[#ccecf8]">
+          <Video className="h-4 w-4" />
+        </span>
+        <div className="min-w-0">
+          <p className="text-sm font-bold leading-snug text-[#162543]">
+            {t("modality.videoTitle")}
+          </p>
+          <p className="mt-1 text-xs font-medium leading-relaxed text-[#5f6b7a]">
+            {t("modality.videoHelp")}
+          </p>
+        </div>
+      </div>
+    </div>
+  ) : null;
+
   return (
     <Dialog.Root open={open} onOpenChange={(v) => !v && resetAndClose()}>
       <Dialog.Portal>
@@ -965,6 +983,12 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
               {/* STEP: calendar */}
               {step === "calendar" && (
                 <div>
+                  {videoConsultNotice && (
+                    <div className="mb-4">
+                      {videoConsultNotice}
+                    </div>
+                  )}
+
                   {/* Multi-profession pro + no category context → pick the service FIRST
                       (so we know whether it's health → date of birth). */}
                   {needsProfessionPick && (
@@ -1216,23 +1240,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                       next step (so typing it auto-fills name + DOB together). */}
                   {proIsHealth && !forSomeoneElse && hasStoredCedula && renderSelfDobField()}
 
-                  {offersVideoConsult && (
-                    <div className="rounded-xl border border-[#d8eef8] bg-[#f5fbfe] px-3.5 py-3">
-                      <div className="flex items-start gap-3">
-                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-[#009FD9] shadow-sm ring-1 ring-[#ccecf8]">
-                          <Video className="h-4 w-4" />
-                        </span>
-                        <div className="min-w-0">
-                          <p className="text-sm font-bold leading-snug text-[#162543]">
-                            {t("modality.videoTitle")}
-                          </p>
-                          <p className="mt-1 text-xs font-medium leading-relaxed text-[#5f6b7a]">
-                            {t("modality.videoHelp")}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                  {videoConsultNotice}
 
                   {/* Beneficiary (a HEALTH dependent) — NAME + DATE OF BIRTH only. The pro
                       attends THIS person and the age drives triage + the minor/adulto-mayor
