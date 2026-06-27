@@ -203,9 +203,6 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
   // Draft being added (one at a time, per profession). null = no form open.
   const [certDraft, setCertDraft] = useState<{ profession?: string; name: string; institution: string; year: string } | null>(null);
   const [certError, setCertError] = useState<string | null>(null);
-  // "Me desplazo a donde está el cliente" — a simple yes/no. Their coverage is the
-  // zone(s) above; exact travel is coordinated with the client directly.
-  const [travels, setTravels] = useState(String(initial.service_type ?? "").includes("mobile"));
   const [videoConsult, setVideoConsult] = useState(!!initial.videoconsulta);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(
     initial.profiles?.avatar_url ?? null
@@ -333,12 +330,14 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
       // Mi perfil no longer writes `pricing`/`hourly_rate` — existing DB values are
       // left untouched as a display fallback for pros who haven't moved over yet.
 
-      // Location = the work zones (provincia/cantón) the pro listed. `travels` is a
-      // simple flag (service_type "mobile") and adds NO separate coverage zones —
-      // their reach is the zones above. provincia_id/canton_id keep the PRIMARY area
-      // for back-compat display; search_* arrays drive location-aware /buscar.
+      // Location = the work zones (provincia/canton) the pro listed. Exact map pins
+      // mean fixed workplaces; zones without a pin mean client-location coverage.
+      // provincia_id/canton_id keep the PRIMARY area for back-compat display;
+      // search_* arrays drive location-aware /buscar.
       const effectiveWorkplaces = workplaces;
-      const serviceType = [workplaces.length > 0 ? "fixed" : null, travels ? "mobile" : null].filter(Boolean).join(",") || "fixed";
+      const hasExactWorkplace = effectiveWorkplaces.some((w) => w.lat != null && w.lng != null);
+      const hasCoverageZone = effectiveWorkplaces.some((w) => w.lat == null || w.lng == null);
+      const serviceType = [hasExactWorkplace ? "fixed" : null, hasCoverageZone ? "mobile" : null].filter(Boolean).join(",") || "mobile";
       const { provincias, cantones } = computeSearchAreas(effectiveWorkplaces, []);
       const primary = primaryArea(effectiveWorkplaces, []);
 
@@ -652,22 +651,8 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
           <WorkplacesPicker value={workplaces} onChange={(next) => { setWorkplaces(next); touch(); }} mapHeight={168} />
         </div>
 
-        {/* Travel — a simple yes/no; coverage is the zone(s) above, exact details
-            are coordinated with the client directly (no zone list to maintain). */}
-        <div className="flex items-start justify-between gap-4 rounded-xl bg-[#f9fafb] p-3.5">
-          <div>
-            <p className="text-sm font-medium text-[#111827]">{t("travelsLabel")}</p>
-          </div>
-          <button
-            type="button"
-            onClick={() => { setTravels((v) => !v); touch(); }}
-            className={cn("relative h-6 w-11 rounded-full transition-all shrink-0 mt-0.5", travels ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
-            aria-label={t("travelsLabel")}
-          >
-            <span className={cn("absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all", travels ? "left-5" : "left-0.5")} />
-          </button>
-        </div>
-
+        {/* Videoconsulta is the only explicit attention option here; home service is
+            inferred from zones without an exact map pin. */}
         <div className="flex items-start justify-between gap-4 rounded-xl bg-[#f9fafb] p-3.5">
           <div>
             <p className="text-sm font-medium text-[#111827]">{t("videoConsultLabel")}</p>

@@ -529,10 +529,10 @@ export default function RegisterProfessionalPage() {
           (currentUser.email?.split("@")[0] ?? "profesional"))
         : step1Data!.fullName.trim();
 
-      // Every pro lists their work zone(s); travel ("me desplazo") is enabled later
-      // in the panel. Coverage = the zones themselves (no separate travel areas).
-      const serviceType = "fixed";
       const effWorkplaces = workplaces;
+      const hasExactWorkplace = effWorkplaces.some((w) => w.lat != null && w.lng != null);
+      const hasCoverageZone = effWorkplaces.some((w) => w.lat == null || w.lng == null);
+      const serviceType = [hasExactWorkplace ? "fixed" : null, hasCoverageZone ? "mobile" : null].filter(Boolean).join(",") || "mobile";
       const { provincias, cantones } = computeSearchAreas(effWorkplaces, []);
       const primary = primaryArea(effWorkplaces, []);
 

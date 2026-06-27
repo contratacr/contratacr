@@ -89,17 +89,12 @@ function nextFranja(existing: Franja[]): Franja {
 }
 
 type Place = { id?: string; name: string };
-type Coverage = { level?: "canton" | "provincia" | "country"; provinciaId?: string; cantonId?: string; cantonName?: string; provinceName?: string };
 
 interface AvailabilityEditorProps {
   professionalId: string;
   initialPublic?: boolean;
   initialContactPreference?: ContactPreference;
   workplaces?: Place[];
-  coverageAreas?: Coverage[];
-  /** True when the pro selected "Me desplazo donde el cliente" (service_type includes
-   *  "mobile"). This affects search/profile coverage, not separate availability rows. */
-  travels?: boolean;
   onSaved?: () => void;
 }
 

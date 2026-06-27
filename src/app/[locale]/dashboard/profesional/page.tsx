@@ -535,8 +535,6 @@ export default function DashboardPage() {
                             initialPublic={pro.availability_public ?? true}
                             initialContactPreference={pro.contact_preference ?? "ambas"}
                             workplaces={pro.workplaces ?? []}
-                            coverageAreas={pro.coverage_areas ?? []}
-                            travels={String(pro.service_type ?? "").includes("mobile")}
                             onSaved={handleSaved}
                           />
                         )}
