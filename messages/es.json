@@ -1730,7 +1730,7 @@
     "cedulaPlaceholder": "Número de identificación",
     "verifying": "Verificando…",
     "addAndVerify": "Agregar y verificar",
-    "verifiedTitle": "Tu identidad está verificada",
+    "verifiedTitle": "Estado de verificación",
     "verifiedBody": "Tu cédula coincide con los registros oficiales. El estado <strong>Verificado</strong> aparece en tu perfil y en los resultados.",
     "verifiedChip": "Verificado",
     "pendingBody": "Aún no estás verificado, así que apareces sin el estado <strong>Verificado</strong> y más abajo en los resultados. Verificarte es opcional, pero te ayuda a destacar.",

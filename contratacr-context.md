@@ -3602,3 +3602,5 @@ New i18n namespaces added this pass: `search.pagination`, extended `search.filte
 **Sprint 321 - Shared category dropdown icons.** The navbar category dropdown now uses the same group icon mapping as /categorias (Home, Leaf, Sparkles, Laptop, Briefcase, Heart, Star, BookOpen, Truck, CalendarDays, Shield, Car) so category navigation is visually consistent across the app.
 
 **Sprint 322 - Required full-name labels.** Added the required-field asterisk to the remaining Nombre completo / Full name display states: booking modal while identity lookup is loading, booking modal when the official name is auto-confirmed, and the locked verified name in the professional profile editor. The booking modal now uses the translated contact-name label instead of hardcoded Spanish.
+
+**Sprint 323 - Verification summary title.** The verified-state summary in the professional verification panel now uses the neutral title Estado de verificación / Verification status while keeping the Verificado / Verified badge as the actual state. This removes the repetitive Tu identidad está verificada + Verificado pairing.

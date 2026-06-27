@@ -1956,3 +1956,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Category group icons.** The navbar category dropdown must use the same category-group icon mapping as `/categorias` so both entry points feel like the same catalog system.
 
 > **Required field labels.** `Nombre completo` / `Full name` is a required identity/profile field and should show the red asterisk in every editable, loading, confirmed, or locked display state.
+
+> **Verification summary copy.** Avoid repeating the verified state in both the card title and badge. Prefer a neutral title like `Estado de verificación` / `Verification status` with the actual state in the badge.

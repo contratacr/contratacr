@@ -1730,7 +1730,7 @@
     "cedulaPlaceholder": "ID number",
     "verifying": "Verifying…",
     "addAndVerify": "Add and verify",
-    "verifiedTitle": "Your identity is verified",
+    "verifiedTitle": "Verification status",
     "verifiedBody": "Your ID matches the official records. The <strong>Verified</strong> status appears on your profile and in results.",
     "verifiedChip": "Verified",
     "pendingBody": "You're not verified yet, so you appear without the <strong>Verified</strong> status and lower in results. Verifying is optional, but it helps you stand out.",
