@@ -711,11 +711,11 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
               </div>
             </div>
 
-            <div className="hidden grid-cols-[7rem_7rem_minmax(13rem,1fr)_7.5rem] border-b border-[#f3f4f6] px-5 py-3 text-xs font-semibold text-[#6b7280] lg:grid">
+            <div className="hidden grid-cols-[6.25rem_5.75rem_minmax(12rem,1fr)_6.75rem] border-b border-[#f3f4f6] px-5 py-3 text-xs font-semibold text-[#6b7280] lg:grid">
               <span>{t("date")}</span>
               <span>{t("availableColumn")}</span>
-              <span>{t("scheduleColumn")}</span>
-              <span className="text-right">{t("actionsColumn")}</span>
+              <span className="text-center">{t("scheduleColumn")}</span>
+              <span className="text-center">{t("actionsColumn")}</span>
             </div>
 
             <div className="flex flex-col divide-y divide-[#f3f4f6]">
@@ -731,7 +731,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                   </div>
                 );
                 return (
-                  <div key={wd} className="grid min-w-0 gap-3 px-4 py-4 lg:grid-cols-[7rem_7rem_minmax(13rem,1fr)_7.5rem] lg:items-start lg:px-5">
+                  <div key={wd} className="grid min-w-0 gap-3 px-4 py-4 lg:grid-cols-[6.25rem_5.75rem_minmax(12rem,1fr)_6.75rem] lg:items-start lg:px-5">
                     <div className="flex min-w-0 items-center">
                       <span className="min-w-0 text-sm font-semibold text-[#111827]">{t(`weekday${wd}` as `weekday${number}`)}</span>
                     </div>
@@ -747,10 +747,10 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                       </button>
                     </div>
 
-                    <div className="min-w-0 flex-1">
+                    <div className="min-w-0 flex-1 lg:flex lg:justify-center">
                       <div className="flex min-w-0 flex-col gap-2.5">
                         {blocks.map((b) => (
-                          <div key={b.id} className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-start gap-2 md:w-[15.25rem] md:shrink-0 md:grid-cols-[minmax(6.5rem,1fr)_auto_minmax(6.5rem,1fr)]">
+                          <div key={b.id} className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-start gap-1.5 md:w-[13.75rem] md:shrink-0 md:grid-cols-[minmax(5.875rem,1fr)_auto_minmax(5.875rem,1fr)]">
                             <TimeSelect value={b.start} onChange={(v) => updateBlock(wd, b.id, { start: v, ...(b.end && toMins(b.end) <= toMins(v) ? { end: hhmm(Math.min(toMins(v) + 60, 23 * 60 + 30)) } : {}) })} className="min-w-0 w-full" />
                             <span className="mt-2 shrink-0 text-[#9ca3af]">-</span>
                             <TimeSelect value={b.end} min={b.start ? hhmm(Math.min(toMins(b.start) + 30, 23 * 60 + 30)) : undefined} onChange={(v) => updateBlock(wd, b.id, { end: v })} className="min-w-0 w-full" error={b.start && b.end && toMins(b.end) <= toMins(b.start) ? t("toAfterFrom") : undefined} />
@@ -759,7 +759,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                       </div>
                     </div>
 
-                    <div className="flex min-w-0 items-center justify-between gap-2 lg:justify-end">
+                    <div className="flex min-w-0 items-center justify-between gap-2 lg:justify-center">
                       <div className="lg:hidden text-xs font-semibold text-[#6b7280]">{t("actionsColumn")}</div>
                       <div className="flex items-center gap-2">
                         {dayActions}
