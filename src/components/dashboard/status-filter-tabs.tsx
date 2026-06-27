@@ -47,7 +47,7 @@ export function StatusFilterTabs({
               type="button"
               onClick={() => onChange(tab.id)}
               className={cn(
-                "inline-flex items-center gap-1.5 whitespace-nowrap rounded-full border px-4 py-2 text-[13px] font-semibold transition-colors",
+                "inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg border px-4 py-2 text-[13px] font-semibold transition-colors",
                 active ? "border-[#009FD9] bg-[#009FD9] text-white" : "border-[#e5e7eb] bg-white text-[#374151] hover:bg-[#f9fafb]"
               )}
             >

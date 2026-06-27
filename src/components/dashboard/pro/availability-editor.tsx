@@ -1039,10 +1039,10 @@ function ApplyScheduleModal({ sourceWeekday, onClose, onApply }: {
         </div>
 
         <div className="mb-3 flex flex-wrap gap-2">
-          <button type="button" onClick={() => setSelected(weekdays)} className="rounded-full border border-[#dbeafe] px-3 py-1.5 text-xs font-semibold text-[#008ce0] hover:bg-[#EBF5FB]">
+          <button type="button" onClick={() => setSelected(weekdays)} className="rounded-lg border border-[#dbeafe] px-3 py-1.5 text-xs font-semibold text-[#008ce0] hover:bg-[#EBF5FB]">
             {t("mondayToFriday")}
           </button>
-          <button type="button" onClick={() => setSelected(targets)} className="rounded-full border border-[#dbeafe] px-3 py-1.5 text-xs font-semibold text-[#008ce0] hover:bg-[#EBF5FB]">
+          <button type="button" onClick={() => setSelected(targets)} className="rounded-lg border border-[#dbeafe] px-3 py-1.5 text-xs font-semibold text-[#008ce0] hover:bg-[#EBF5FB]">
             {t("allDays")}
           </button>
         </div>

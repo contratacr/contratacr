@@ -695,8 +695,8 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
             <h2 className="text-base font-bold text-[#111827]">{t("withdrawTitle")}</h2>
             <p className="mt-1 text-sm text-[#6b7280]">{t("withdrawBody")}</p>
             <div className="mt-4 flex gap-2">
-              <Button variant="outline" size="sm" className="flex-1 rounded-full" onClick={() => setWithdrawTarget(null)} disabled={withdrawing}>{t("back")}</Button>
-              <Button size="sm" className="flex-1 rounded-full bg-red-600 hover:bg-red-700" onClick={confirmWithdraw} disabled={withdrawing} loading={withdrawing}>{t("withdrawConfirm")}</Button>
+              <Button variant="outline" size="sm" className="flex-1 rounded-lg" onClick={() => setWithdrawTarget(null)} disabled={withdrawing}>{t("back")}</Button>
+              <Button size="sm" className="flex-1 rounded-lg bg-red-600 hover:bg-red-700" onClick={confirmWithdraw} disabled={withdrawing} loading={withdrawing}>{t("withdrawConfirm")}</Button>
             </div>
           </div>
         </div>

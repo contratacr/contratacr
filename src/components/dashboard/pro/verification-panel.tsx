@@ -151,7 +151,7 @@ export function VerificationPanel({
           href={waUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 rounded-full bg-[#25D366] hover:bg-[#1eb456] text-white text-sm font-bold px-5 py-2.5"
+          className="inline-flex items-center gap-2 rounded-lg bg-[#25D366] hover:bg-[#1eb456] text-white text-sm font-bold px-5 py-2.5"
         >
           <WhatsAppIcon className="h-4 w-4 shrink-0" />{" "}
           {t("waFollowUp", { ref })}
@@ -173,7 +173,7 @@ export function VerificationPanel({
             <button
               onClick={() => runCheck(true)}
               disabled={busy}
-              className="mt-3 inline-flex items-center gap-2 rounded-full bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 disabled:opacity-60"
+              className="mt-3 inline-flex items-center gap-2 rounded-lg bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 disabled:opacity-60"
             >
               <Send className="h-4 w-4" />{" "}
               {busy ? t("sending") : t("sendToReview")}
@@ -197,7 +197,7 @@ export function VerificationPanel({
             <button
               onClick={addCedula}
               disabled={cedulaBusy || newCedula.replace(/\D/g, "").length < 9}
-              className="inline-flex items-center gap-2 rounded-full bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-lg bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 disabled:opacity-50"
             >
               <ShieldCheck className="h-4 w-4" />{" "}
               {cedulaBusy ? t("verifying") : t("addAndVerify")}
@@ -271,7 +271,7 @@ export function VerificationPanel({
             <button
               onClick={() => runCheck(true)}
               disabled={busy}
-              className="inline-flex items-center gap-2 rounded-full bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-lg bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 disabled:opacity-60"
             >
               <Send className="h-4 w-4" />{" "}
               {busy ? t("sending") : t("appealReverify")}
@@ -280,7 +280,7 @@ export function VerificationPanel({
               href={waUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-full bg-[#25D366] hover:bg-[#1eb456] text-white text-sm font-bold px-5 py-2.5"
+              className="inline-flex items-center gap-2 rounded-lg bg-[#25D366] hover:bg-[#1eb456] text-white text-sm font-bold px-5 py-2.5"
             >
               <WhatsAppIcon className="h-4 w-4 shrink-0" />{" "}
               {t("supportWhatsapp")}
@@ -294,7 +294,7 @@ export function VerificationPanel({
           href={waUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 rounded-full bg-[#25D366] hover:bg-[#1eb456] text-white text-sm font-bold px-5 py-2.5"
+          className="inline-flex items-center gap-2 rounded-lg bg-[#25D366] hover:bg-[#1eb456] text-white text-sm font-bold px-5 py-2.5"
         >
           <WhatsAppIcon className="h-4 w-4 shrink-0" />{" "}
           {t("supportWhatsappCase", { ref })}
@@ -330,7 +330,7 @@ export function VerificationPanel({
             <button
               onClick={addCedula}
               disabled={cedulaBusy || newCedula.replace(/\D/g, "").length < 9}
-              className="inline-flex items-center gap-2 rounded-full bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-lg bg-[#009FD9] hover:bg-[#0089bb] text-white text-sm font-bold px-5 py-2.5 disabled:opacity-50"
             >
               <ShieldCheck className="h-4 w-4" />{" "}
               {cedulaBusy ? t("verifying") : t("addAndVerify")}

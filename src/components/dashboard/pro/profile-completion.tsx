@@ -180,7 +180,7 @@ export function ProfileCompletion({ pro, onGo }: { pro: ProRecord; onGo: (tab: s
                   onClick={dismiss}
                   aria-label={t("dismissVerify")}
                   title={t("dismissVerify")}
-                  className="inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1.5 text-xs font-medium text-[#9ca3af] hover:bg-[#e5e7eb] hover:text-[#374151] transition-colors"
+                  className="inline-flex shrink-0 items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-[#9ca3af] hover:bg-[#e5e7eb] hover:text-[#374151] transition-colors"
                 >
                   <X className="h-3.5 w-3.5" />
                   {t("dismissVerify")}

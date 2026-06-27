@@ -284,8 +284,8 @@ export function RescheduleModal({ professionalId, bookingId, currentWhen, onClos
               {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
 
               <div className="mt-5 flex gap-2">
-                <Button variant="outline" size="sm" className="flex-1 rounded-full" onClick={onClose} disabled={submitting}>{t("cancel")}</Button>
-                <Button size="sm" className="flex-1 rounded-full" onClick={submit} disabled={!selectedDate || !selectedTime || submitting} loading={submitting}>
+                <Button variant="outline" size="sm" className="flex-1 rounded-lg" onClick={onClose} disabled={submitting}>{t("cancel")}</Button>
+                <Button size="sm" className="flex-1 rounded-lg" onClick={submit} disabled={!selectedDate || !selectedTime || submitting} loading={submitting}>
                   {t("confirm")}
                 </Button>
               </div>

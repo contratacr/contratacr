@@ -964,8 +964,8 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
             <h2 className="text-base font-bold text-[#111827]">{t("deleteTitle")}</h2>
             <p className="mt-1 text-sm text-[#6b7280]">{t("deleteBody")}</p>
             <div className="mt-4 flex gap-2">
-              <Button variant="outline" size="sm" className="flex-1 rounded-full" onClick={() => setDeleteTarget(null)} disabled={deleting}>{t("cancelBack")}</Button>
-              <Button size="sm" className="flex-1 rounded-full bg-red-600 hover:bg-red-700" onClick={confirmDeleteProject} disabled={deleting} loading={deleting}>{t("delete")}</Button>
+              <Button variant="outline" size="sm" className="flex-1 rounded-lg" onClick={() => setDeleteTarget(null)} disabled={deleting}>{t("cancelBack")}</Button>
+              <Button size="sm" className="flex-1 rounded-lg bg-red-600 hover:bg-red-700" onClick={confirmDeleteProject} disabled={deleting} loading={deleting}>{t("delete")}</Button>
             </div>
           </div>
         </div>

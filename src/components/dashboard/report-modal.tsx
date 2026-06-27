@@ -59,8 +59,8 @@ export function ReportModal({
         />
 
         <div className="mt-4 flex gap-2">
-          <Button variant="outline" size="sm" className="flex-1 rounded-full" onClick={onClose} disabled={submitting}>{backLabel}</Button>
-          <Button size="sm" className="flex-1 rounded-full bg-red-600 hover:bg-red-700" onClick={submit} disabled={!details.trim() || submitting} loading={submitting}>{submitLabel}</Button>
+          <Button variant="outline" size="sm" className="flex-1 rounded-lg" onClick={onClose} disabled={submitting}>{backLabel}</Button>
+          <Button size="sm" className="flex-1 rounded-lg bg-red-600 hover:bg-red-700" onClick={submit} disabled={!details.trim() || submitting} loading={submitting}>{submitLabel}</Button>
         </div>
       </div>
     </div>,
