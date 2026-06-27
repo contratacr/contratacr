@@ -399,9 +399,10 @@ export function BookingRequests() {
                     aria-label={t("reportClient")}
                     title={t("reportClient")}
                     onClick={() => setReportFor(booking)}
-                    className="ml-auto inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[#dc2626] transition-colors hover:bg-[#fef2f2] hover:text-[#b91c1c]"
+                    className="ml-auto inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-md px-1.5 text-xs font-medium text-[#9ca3af] transition-colors hover:text-[#dc2626]"
                   >
-                    <Flag className="h-4 w-4" />
+                    <Flag className="h-3.5 w-3.5" />
+                    <span>{t("reportClient")}</span>
                   </button>
                 </div>
               );

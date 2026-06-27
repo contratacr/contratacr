@@ -3588,3 +3588,5 @@ New i18n namespaces added this pass: `search.pagination`, extended `search.filte
 **Sprint 314 - Block own success-case likes.** Public professional profile now hides the case-like heart when the viewer is looking at their own profile. `/api/portfolio-like` also checks the authenticated user against `professionals.profile_id` and returns 403 for self-likes, so forcing the request cannot increment a pro's own casos de éxito likes.
 
 **Sprint 315 - Availability multi-location row polish.** Weekly availability rows for professionals with 2+ work locations now render each time block as a compact soft card: location selector + time range in one row on desktop, stacked cleanly on mobile. This makes multi-location schedules easier to scan without the previous tall location-over-time layout.
+
+**Sprint 316 - Discreet report action links.** Dashboard cards no longer show report as a standalone red square flag. In opened Mis solicitudes and Solicitudes recibidas cards, report is now a quiet grey text link with a small flag icon (`Reportar profesional` / `Reportar cliente`), turning red only on hover. This keeps safety visible without competing with primary actions.
