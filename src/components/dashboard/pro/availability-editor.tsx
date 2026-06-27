@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import { Plus, X, Lock, Loader2, MapPin, ChevronDown, ChevronLeft, ChevronRight, Calendar, Pencil, Trash2 } from "lucide-react";
+import { Plus, X, Lock, Loader2, MapPin, ChevronDown, ChevronLeft, ChevronRight, Calendar, Pencil, Trash2, MoreVertical } from "lucide-react";
 import { type ContactPreference } from "@/lib/constants";
 import { crTodayISO, isTooSoonCR } from "@/lib/time-cr";
 import { TimeSelect, to12h } from "@/components/ui/time-select";
@@ -119,6 +119,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
   const [busy, setBusy] = useState(false);
   const [savingVisibility, setSavingVisibility] = useState(false);
   const [showPrivateConfirm, setShowPrivateConfirm] = useState(false);
+  const [showClosedDays, setShowClosedDays] = useState(false);
   // Cross/same-location overlap block — a pro can't be in two places at once.
   const [conflict, setConflict] = useState<{ title: string; body: string } | null>(null);
   const [justSaved, setJustSaved] = useState(false);
@@ -616,6 +617,8 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
   const [dayModal, setDayModal] = useState<{ date: string } | null>(null);
 
   const selectClass = "h-9 rounded-xl border border-[#e5e7eb] bg-white pl-3 pr-9 text-sm font-medium text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all appearance-none cursor-pointer";
+  const openWeekdays = WEEKDAY_ORDER.filter((wd) => blocksFor(wd).length > 0);
+  const closedWeekdays = WEEKDAY_ORDER.filter((wd) => blocksFor(wd).length === 0);
 
   // App-wide autosave: report status to the section title row (inline, no layout shift).
   useReportSaveStatus(savingVisibility || busy, justSaved);
@@ -673,61 +676,50 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
         </div>
       ) : (
         <>
-          {/* ── Mis horarios de siempre — UNIFIED per-day weekly schedule ─────
-              All locations on one screen: each day lists its time blocks together,
-              and (when the pro has 2+ locations) each block picks its own location.
-              No "HORARIO PARA" tabs, no "ocupado en otra ubicación" hint — overlaps
-              are visible at a glance. */}
-          <div className="rounded-2xl border border-[#e5e7eb] p-4 sm:p-5">
-            {/* Title row: the heading "Mis horarios de siempre" shares ONE line with the
-                "Crear citas cada" select + the "Aplicar horario" button. The "se repite cada
-                semana" subtitle drops BELOW the row. Wraps gracefully on small screens; the
-                button's behavior hint lives in its tooltip. */}
-            <div className="mb-4">
-              <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
-                <h3 className="text-sm font-semibold text-[#111827]">{t("alwaysTitle")}</h3>
-                <div className="flex flex-wrap items-center gap-2">
-                  <label className="text-xs font-medium text-[#6b7280]">{t("apptDuration")}</label>
-                  <div className="relative">
-                    <select value={activeDuration} onChange={(e) => setDuration(Number(e.target.value))} className={selectClass}>
-                      {DURATION_OPTIONS.map((d) => <option key={d} value={d}>{t(`dur${d}` as `dur${number}`)}</option>)}
-                    </select>
-                    <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9ca3af]" />
-                  </div>
+          <div className="overflow-hidden rounded-2xl border border-[#e5e7eb]">
+            <div className="grid gap-5 border-b border-[#f3f4f6] p-4 sm:grid-cols-2 sm:p-5">
+              <div>
+                <label className="mb-2 block text-xs font-semibold text-[#6b7280]">{t("apptDuration")}</label>
+                <div className="relative w-full sm:max-w-[12rem]">
+                  <select value={activeDuration} onChange={(e) => setDuration(Number(e.target.value))} className={cn(selectClass, "w-full")}>
+                    {DURATION_OPTIONS.map((d) => <option key={d} value={d}>{t(`dur${d}` as `dur${number}`)}</option>)}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9ca3af]" />
                 </div>
               </div>
-              <p className="mt-1.5 text-xs text-[#6b7280]">{t("alwaysSubAll")}</p>
-              {isMultiLocation && (
-                <div className="mt-3">
-                  <div className="flex items-center gap-2">
+
+              <div>
+                <label className="mb-2 block text-xs font-semibold text-[#6b7280]">{t("scheduleForLabel")}</label>
+                {isMultiLocation ? (
+                  <div className="relative">
+                    <MapPin className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#009FD9]" />
+                    <select
+                      value={activeLocationId}
+                      onChange={(e) => setGenLocation(e.target.value)}
+                      className="h-11 w-full appearance-none rounded-xl border border-[#e5e7eb] bg-white pl-9 pr-9 text-sm font-medium text-[#111827] transition-all focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[#009FD9]"
+                    >
+                      {locationOptions.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}
+                    </select>
+                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#9ca3af]" />
+                  </div>
+                ) : (
+                  <div className="flex h-11 items-center gap-2 rounded-xl border border-[#e5e7eb] bg-white px-3 text-sm font-medium text-[#111827]">
                     <MapPin className="h-4 w-4 shrink-0 text-[#009FD9]" />
-                    <p className="text-xs font-semibold text-[#162543]">{t("schedulePlacesTitle")}</p>
+                    <span className="min-w-0 truncate">{locationLabel(activeLocationId)}</span>
                   </div>
-                  <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
-                    {locationOptions.map((option) => (
-                      <button
-                        key={option.id}
-                        type="button"
-                        title={option.label}
-                        onClick={() => setGenLocation(option.id)}
-                        className={cn(
-                          "h-9 max-w-[13rem] shrink-0 truncate rounded-lg px-3 text-xs font-semibold transition-colors",
-                          option.id === activeLocationId
-                            ? "bg-[#009FD9] text-white shadow-sm"
-                            : "bg-[#f3f4f6] text-[#374151] hover:bg-[#EBF5FB] hover:text-[#0089bb]"
-                        )}
-                      >
-                        {option.label}
-                      </button>
-                    ))}
-                  </div>
-                  <p className="mt-1.5 text-xs leading-relaxed text-[#6b7280]">{t("schedulePlacesHelp")}</p>
-                </div>
-              )}
+                )}
+              </div>
+            </div>
+
+            <div className="hidden grid-cols-[7.5rem_8.5rem_minmax(14rem,1fr)_9rem] border-b border-[#f3f4f6] px-5 py-3 text-xs font-semibold text-[#6b7280] lg:grid">
+              <span>{t("date")}</span>
+              <span>{t("availableColumn")}</span>
+              <span>{t("scheduleColumn")}</span>
+              <span className="text-right">{t("actionsColumn")}</span>
             </div>
 
             <div className="flex flex-col divide-y divide-[#f3f4f6]">
-              {WEEKDAY_ORDER.map((wd) => {
+              {openWeekdays.map((wd) => {
                 const blocks = blocksFor(wd);
                 const on = blocks.length > 0;
                 const canApply = blocks.some(isCompleteFranja);
@@ -736,73 +728,107 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                     <button type="button" onClick={() => addBlock(wd)} className="inline-flex h-9 min-w-0 shrink-0 items-center gap-1 whitespace-nowrap text-left text-xs font-medium leading-tight text-[#009FD9] hover:underline cursor-pointer">
                       <Plus className="h-3.5 w-3.5 shrink-0" /> <span>{t("addFranja")}</span>
                     </button>
-                    {canApply && (
-                      <button type="button" onClick={() => setApplyModal({ weekday: wd })} className="h-9 min-w-0 shrink-0 whitespace-nowrap text-left text-xs font-medium leading-tight text-[#6b7280] hover:text-[#009FD9] hover:underline cursor-pointer">
-                        {t("applyToOtherDays")}
-                      </button>
-                    )}
                   </div>
                 );
                 return (
-                  <div key={wd} className="grid min-w-0 gap-2 py-3 lg:grid-cols-[6.75rem_minmax(0,1fr)] lg:gap-2.5">
-                    {/* toggle + weekday name */}
-                    <div className={cn(
-                      "flex min-w-0 items-center gap-2.5 lg:pt-1.5"
-                    )}>
+                  <div key={wd} className="grid min-w-0 gap-3 px-4 py-4 lg:grid-cols-[7.5rem_8.5rem_minmax(14rem,1fr)_9rem] lg:items-start lg:px-5">
+                    <div className="flex min-w-0 items-center">
+                      <span className="min-w-0 text-sm font-semibold text-[#111827]">{t(`weekday${wd}` as `weekday${number}`)}</span>
+                    </div>
+                    <div className="flex min-w-0 items-center">
                       <button
                         type="button"
                         onClick={() => toggleDay(wd)}
-                        className={cn("relative h-5 w-9 rounded-full transition-all duration-200 shrink-0 cursor-pointer", on ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
+                        className="relative h-6 w-11 shrink-0 cursor-pointer rounded-full bg-[#009FD9] transition-all duration-200"
                         aria-label={t(`weekday${wd}` as `weekday${number}`)}
                         aria-pressed={on}
                       >
-                        <span className={cn("absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all duration-200", on ? "left-[18px]" : "left-0.5")} />
+                        <span className="absolute left-5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all duration-200" />
                       </button>
-                      <span className={cn("min-w-0 text-sm font-medium", on ? "text-[#111827]" : "text-[#9ca3af]")}>{t(`weekday${wd}` as `weekday${number}`)}</span>
                     </div>
 
-                    {/* blocks */}
                     <div className="min-w-0 flex-1">
-                      {!on ? (
-                        <p className="text-sm text-[#9ca3af] sm:pt-1.5">{t("closed")}</p>
-                      ) : (
-                        <div className="flex min-w-0 flex-col gap-2.5">
-                          {blocks.map((b, index) => {
-                            const timeRow = (
-                              <div className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1.5 md:w-[14.5rem] md:shrink-0 md:grid-cols-[minmax(6.25rem,1fr)_auto_minmax(6.25rem,1fr)]">
-                                <TimeSelect value={b.start} onChange={(v) => updateBlock(wd, b.id, { start: v, ...(b.end && toMins(b.end) <= toMins(v) ? { end: hhmm(Math.min(toMins(v) + 60, 23 * 60 + 30)) } : {}) })} className="min-w-0 w-full" />
-                                <span className="shrink-0 text-[#9ca3af]">–</span>
-                                <TimeSelect value={b.end} min={b.start ? hhmm(Math.min(toMins(b.start) + 30, 23 * 60 + 30)) : undefined} onChange={(v) => updateBlock(wd, b.id, { end: v })} className="min-w-0 w-full" error={b.start && b.end && toMins(b.end) <= toMins(b.start) ? t("toAfterFrom") : undefined} />
-                              </div>
-                            );
-                            return (
-                              <div key={b.id} className="flex min-w-0 flex-col gap-2 lg:flex-row lg:flex-nowrap lg:items-center lg:gap-x-3">
-                                {timeRow}
-                                {index === 0 && dayActions}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
+                      <div className="flex min-w-0 flex-col gap-2.5">
+                        {blocks.map((b) => (
+                          <div key={b.id} className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-start gap-2 md:w-[18rem] md:shrink-0 md:grid-cols-[minmax(7.25rem,1fr)_auto_minmax(7.25rem,1fr)]">
+                            <TimeSelect value={b.start} onChange={(v) => updateBlock(wd, b.id, { start: v, ...(b.end && toMins(b.end) <= toMins(v) ? { end: hhmm(Math.min(toMins(v) + 60, 23 * 60 + 30)) } : {}) })} className="min-w-0 w-full" />
+                            <span className="mt-2 shrink-0 text-[#9ca3af]">-</span>
+                            <TimeSelect value={b.end} min={b.start ? hhmm(Math.min(toMins(b.start) + 30, 23 * 60 + 30)) : undefined} onChange={(v) => updateBlock(wd, b.id, { end: v })} className="min-w-0 w-full" error={b.start && b.end && toMins(b.end) <= toMins(b.start) ? t("toAfterFrom") : undefined} />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex min-w-0 items-center justify-between gap-2 lg:justify-end">
+                      <div className="lg:hidden text-xs font-semibold text-[#6b7280]">{t("actionsColumn")}</div>
+                      <div className="flex items-center gap-2">
+                        {dayActions}
+                        <button type="button" onClick={() => canApply && setApplyModal({ weekday: wd })} disabled={!canApply} className="flex h-9 w-9 items-center justify-center rounded-lg text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#111827] disabled:opacity-35" aria-label={t("applyToOtherDays")}>
+                          <MoreVertical className="h-4 w-4" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );
               })}
+              {closedWeekdays.length > 0 && (
+                <div className="px-4 py-4 lg:px-5">
+                  <button type="button" onClick={() => setShowClosedDays((v) => !v)} className="flex w-full items-center gap-2 text-left">
+                    <ChevronDown className={cn("h-4 w-4 text-[#374151] transition-transform", showClosedDays && "rotate-180")} />
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-[#111827]">{t("closedDays")} ({closedWeekdays.length})</p>
+                      <p className="mt-0.5 text-xs text-[#6b7280]">{closedWeekdays.map((wd) => t(`weekday${wd}` as `weekday${number}`)).join(", ")}</p>
+                    </div>
+                  </button>
+                  {showClosedDays && (
+                    <div className="mt-3 flex flex-col divide-y divide-[#f3f4f6] border-t border-[#f3f4f6]">
+                      {closedWeekdays.map((wd) => (
+                        <div key={wd} className="flex items-center justify-between gap-3 py-3">
+                          <span className="text-sm font-medium text-[#374151]">{t(`weekday${wd}` as `weekday${number}`)}</span>
+                          <button
+                            type="button"
+                            onClick={() => toggleDay(wd)}
+                            className="relative h-6 w-11 shrink-0 cursor-pointer rounded-full bg-[#d1d5db] transition-all duration-200"
+                            aria-label={t(`weekday${wd}` as `weekday${number}`)}
+                            aria-pressed={false}
+                          >
+                            <span className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all duration-200" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
           {/* ── ¿Un día distinto? — date exceptions ──────────────────────── */}
           <div className="rounded-2xl border border-[#e5e7eb] p-4 sm:p-5">
-            <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
+            <div className="mb-6">
               <div className="min-w-0">
                 <h3 className="text-sm font-semibold text-[#111827]">{t("diffDayTitle")}</h3>
                 <p className="mt-0.5 text-xs text-[#6b7280]">{t("diffDaySub")}</p>
               </div>
-              <div className="flex flex-wrap items-center gap-2">
-                {isMultiLocation && <span className="text-xs font-medium text-[#6b7280]">{locationLabel(activeLocationId)}</span>}
-                <Button type="button" variant="secondary" size="sm" onClick={() => setDayModal({ date: todayISO() })}>
-                  <Calendar className="h-4 w-4" /> {t("changeDay")}
+            </div>
+
+            <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center">
+              <button
+                type="button"
+                onClick={() => setDayModal({ date: todayISO() })}
+                className="flex h-11 min-w-0 items-center justify-between rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm font-medium text-[#6b7280] transition-all hover:border-[#cbd5e1] focus:outline-none focus:ring-2 focus:ring-[#009FD9] sm:w-[18rem]"
+              >
+                <span className="flex min-w-0 items-center gap-2">
+                  <Calendar className="h-4 w-4 shrink-0 text-[#009FD9]" />
+                  <span className="truncate">{t("selectDate")}</span>
+                </span>
+                <ChevronDown className="h-4 w-4 shrink-0 text-[#9ca3af]" />
+              </button>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <Button type="button" variant="secondary" size="sm" className="h-11 rounded-xl px-4" onClick={() => setDayModal({ date: todayISO() })}>
+                  <Calendar className="h-4 w-4" /> {t("changeSchedule")}
                 </Button>
+                {isMultiLocation && <span className="max-w-full truncate text-xs font-medium text-[#6b7280] sm:max-w-[14rem]">{locationLabel(activeLocationId)}</span>}
               </div>
             </div>
 
