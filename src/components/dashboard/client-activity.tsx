@@ -354,7 +354,11 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
     });
     setProjectProposals((prev) => ({
       ...prev,
-      [projectId]: (prev[projectId] ?? []).map((p) => (p.id === proposalId ? { ...p, status: "accepted" } : p)),
+      [projectId]: (prev[projectId] ?? []).map((p) => {
+        if (p.id === proposalId) return { ...p, status: "accepted" };
+        if (p.status === "pending") return { ...p, status: "declined" };
+        return p;
+      }),
     }));
     setProjects((prev) => prev.map((p) => (p.id === projectId ? { ...p, status: "in_progress" } : p)));
     refreshProjects();

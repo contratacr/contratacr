@@ -206,6 +206,12 @@ export async function PATCH(req: NextRequest) {
             .from("projects")
             .update({ status: "in_progress", accepted_professional_id: prop.professional_id })
             .eq("id", prop.project_id);
+          await admin
+            .from("proposals")
+            .update({ status: "declined" })
+            .eq("project_id", prop.project_id)
+            .neq("id", id)
+            .eq("status", "pending");
           const { data: pro } = await admin.from("professionals").select("profile_id").eq("id", prop.professional_id).maybeSingle();
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const title = (prop.projects as any)?.title ?? "tu propuesta";
