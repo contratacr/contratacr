@@ -3620,3 +3620,5 @@ New i18n namespaces added this pass: `search.pagination`, extended `search.filte
 **Sprint 330 - Locale switch preserves dashboard tabs.** Language switching now keeps the current pathname plus query/hash so dashboard tabs like ?tab=availability, ?tab=bookings, or client panel sections do not reset to profile when switching between Spanish and English.
 
 **Sprint 331 - Availability location dropdown polish.** Replaced the native workplace select in Disponibilidad with an app-styled location dropdown. The closed control remains compact, while the opened menu is wider, scrollable, shows the active location clearly, and wraps long address labels for better responsive readability.
+
+**Sprint 332 - Availability weekly row alignment.** Weekly availability rows now distinguish the common single-location case from multi-location schedules. Single-location rows align day, time range, Agregar franja, and Aplicar a otros dias on one desktop/tablet line sooner; multi-location rows keep the workplace dropdown compact and only show it when more than one schedulable location exists.

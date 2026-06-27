@@ -802,7 +802,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                 const on = blocks.length > 0;
                 const canApply = blocks.some(isCompleteFranja);
                 const dayActions = (
-                  <div className="flex min-w-0 flex-row flex-wrap items-center justify-start gap-x-4 gap-y-2 xl:pb-1">
+                  <div className="flex min-w-0 flex-row flex-wrap items-center justify-start gap-x-4 gap-y-2 lg:pb-1">
                     <button type="button" onClick={() => addBlock(wd)} className="inline-flex min-w-0 items-center gap-1 text-left text-xs font-medium leading-tight text-[#009FD9] hover:underline cursor-pointer">
                       <Plus className="h-3.5 w-3.5 shrink-0" /> <span>{t("addFranja")}</span>
                     </button>
@@ -814,7 +814,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                   </div>
                 );
                 return (
-                  <div key={wd} className="grid min-w-0 gap-2 py-3 lg:grid-cols-[8rem_minmax(0,1fr)] lg:gap-3">
+                  <div key={wd} className="grid min-w-0 gap-2 py-3 lg:grid-cols-[7.5rem_minmax(0,1fr)] lg:gap-3">
                     {/* toggle + weekday name */}
                     <div className="flex min-w-0 items-center gap-2.5 lg:pt-2">
                       <button
@@ -834,7 +834,14 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                       {!on ? (
                         <p className="text-sm text-[#9ca3af] sm:pt-1.5">{t("closed")}</p>
                       ) : (
-                        <div className="grid min-w-0 gap-2.5 xl:grid-cols-[minmax(0,16.5rem)_minmax(12rem,1fr)] xl:items-end xl:gap-4">
+                        <div
+                          className={cn(
+                            "grid min-w-0 gap-2.5",
+                            isMultiLocation
+                              ? "lg:grid-cols-[minmax(0,16.5rem)_minmax(12rem,1fr)] lg:items-end lg:gap-4"
+                              : "lg:grid-cols-[minmax(0,16.5rem)_minmax(max-content,1fr)] lg:items-center lg:gap-4"
+                          )}
+                        >
                           <div className="flex min-w-0 flex-1 flex-col gap-2.5">
                             {blocks.map((b) => {
                             const timeRow = (
@@ -855,7 +862,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                                   options={locationOptions}
                                   onChange={(locationId) => updateBlock(wd, b.id, { locationId })}
                                   ariaLabel={t("blockLocationAria")}
-                                  className="max-w-[14rem]"
+                                  className="max-w-[14rem] lg:max-w-[13rem]"
                                 />
                                 {timeRow}
                               </div>
