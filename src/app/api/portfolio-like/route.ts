@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import { enforceRateLimit } from "@/lib/rate-limit";
 
 // POST /api/portfolio-like  { professionalId, caseId }
@@ -16,9 +17,14 @@ export async function POST(req: NextRequest) {
   const { professionalId, caseId } = body ?? {};
   if (!professionalId || !caseId) return NextResponse.json({ error: "Faltan campos" }, { status: 400 });
 
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
   const admin = createAdminClient();
-  const { data: pro } = await admin.from("professionals").select("portfolio_items").eq("id", professionalId).maybeSingle();
+  const { data: pro } = await admin.from("professionals").select("profile_id, portfolio_items").eq("id", professionalId).maybeSingle();
   if (!pro) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
+  if (user?.id && pro.profile_id === user.id) {
+    return NextResponse.json({ error: "No puedes indicar me gusta en tus propios casos de éxito." }, { status: 403 });
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const items: any[] = Array.isArray(pro.portfolio_items) ? pro.portfolio_items : [];

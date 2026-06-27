@@ -3584,3 +3584,5 @@ New i18n namespaces added this pass: `search.pagination`, extended `search.filte
 **Sprint 312 - Support page panel return.** Public `/soporte` now shows a contextual "Volver a mi panel" button for signed-in users, routed to the correct client/professional support tab. The success actions also use the role-aware panel link. Professional profile locked-name support links now open the in-panel support tab instead of the public support page.
 
 **Sprint 313 - Dashboard responsive name line.** Unified dashboard header now keeps the account display name on a single line on mobile using nowrap/truncate, instead of wrapping the full name into two lines. Long names keep the full value in the title attribute; layout stays stable.
+
+**Sprint 314 - Block own success-case likes.** Public professional profile now hides the case-like heart when the viewer is looking at their own profile. `/api/portfolio-like` also checks the authenticated user against `professionals.profile_id` and returns 403 for self-likes, so forcing the request cannot increment a pro's own casos de éxito likes.

@@ -1938,3 +1938,5 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 > **Support navigation from panels.** Links to support from inside dashboards should prefer the in-panel support tab. If a signed-in user lands on public `/soporte`, show a visible "Volver a mi panel" action above the form and route it to the user's correct client/professional support tab.
 
 > **Dashboard identity header.** On responsive dashboard headers, keep the user's display name on a single line with `truncate` rather than wrapping into two lines. Use a modest mobile font size and preserve the full value with `title` when practical.
+
+> **Own-profile social actions.** Professionals can preview their public profile and cases, but must not be able to like their own casos de éxito. Hide self-like UI where possible and enforce the same rule in the API.

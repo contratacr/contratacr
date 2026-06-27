@@ -628,7 +628,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                             for (let i = 0; i < photos.length; i += 3) caseList.push({ id: `${prof}_${i}`, profession: prof, photos: photos.slice(i, i + 3) });
                           }
                           // Client-facing showcase: profession filter + a polished case-card grid.
-                          return <CaseShowcase professionalId={professional.id} cases={caseList} professions={profsOrder} />;
+                          return <CaseShowcase professionalId={professional.id} cases={caseList} professions={profsOrder} isOwn={isOwn} />;
                         })()
                       ) : (
                         <p className="text-sm text-[#9ca3af]">{t("noCasos")}</p>

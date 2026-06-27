@@ -31,11 +31,14 @@ export function CaseShowcase({
   professionalId,
   cases,
   professions,
+  isOwn = false,
 }: {
   professionalId: string;
   cases: ShowcaseCase[];
   /** The pro's professions, in display order — used to order + label the filter chips. */
   professions: string[];
+  /** Own public profile preview: the pro can view cases, but cannot like them. */
+  isOwn?: boolean;
 }) {
   const locale = useLocale();
   const t = useTranslations("profile");
@@ -141,7 +144,7 @@ export function CaseShowcase({
                         <Images className="h-3 w-3" /> {t("casosPhotos", { count: c.photos.length })}
                       </span>
                     ) : <span />}
-                    {c.likeable && (
+                    {c.likeable && !isOwn && (
                       <div onClick={(e) => e.stopPropagation()}>
                         <CaseLikeButton
                           professionalId={professionalId}
