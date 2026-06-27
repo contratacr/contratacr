@@ -95,11 +95,10 @@ interface SaveButtonProps {
 
 export function SaveButton({ pro, className, isOwn = false, withLabel = false }: SaveButtonProps) {
   const t = useTranslations("card");
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState(() => isSaved(pro.id));
   const [selfMsg, setSelfMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    setSaved(isSaved(pro.id));
     // Stay in sync if the SAME pro is toggled elsewhere in this tab (e.g. another
     // SaveButton instance) — cross-PAGE sync already happens via localStorage on mount.
     const sync = () => setSaved(isSaved(pro.id));
@@ -177,9 +176,9 @@ export function SaveableCard({ pro, children, isOwn = false }: CardWrapperProps)
     // grows to its content — no equal-height plumbing needed here.
     <div className="relative">
       {children}
-      {/* Always-visible favorites button, pinned consistently to the card's
-          top-right corner (small + subtle; price row clears it via md:pr-10). */}
-      <div className="absolute top-2.5 right-2.5 z-20">
+      {/* Always-visible favorites button, pinned high in the card so the mobile
+          name/price row has room to breathe. */}
+      <div className="absolute right-3 top-1.5 z-20">
         <SaveButton pro={pro} isOwn={isOwn} />
       </div>
     </div>

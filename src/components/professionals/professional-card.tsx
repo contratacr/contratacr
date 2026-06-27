@@ -176,9 +176,9 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
           Verificado + personal name, then the service tags and rating DIRECTLY beneath —
           so tags/reviews read as part of the same block right under the name (they used to
           be siblings of this row and got pushed BELOW the taller avatar, leaving a gap).
-          PRICE is right-aligned on the company-name line only. The mobile `pr-8` keeps the
+          PRICE is right-aligned on the company-name line only. The mobile `pr-7` keeps the
           price clear of the top-right bookmark (`lg:pr-0` on desktop). */}
-      <div className="flex items-start gap-3 pr-8 lg:pr-0">
+      <div className="flex items-start gap-3 pr-7 lg:pr-0">
         <Link href={`/profesionales/${professional.slug}`} className="relative z-10 shrink-0">
           <Avatar className="h-14 w-14 rounded-full lg:h-16 lg:w-16">
             <AvatarImage src={professional.avatarUrl} alt={professional.fullName} />
@@ -195,20 +195,20 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
           <div className="flex items-start gap-2">
             <div className="flex min-w-0 flex-1 flex-col gap-0.5">
               {/* Company/brand name (or personal name when there's no company). Wraps up to
-                  2 lines — never cut off. Then Verificado, then the personal name = first
-                  name + both surnames (wraps up to 2 lines). */}
+                  never cut off on mobile; desktop keeps one-line cards tighter. Then
+                  Verificado, then the personal name = first name + both surnames. */}
               <Link href={`/profesionales/${professional.slug}`} className="relative z-10 min-w-0">
-                <h3 className="font-bold text-[#111827] text-[15px] leading-snug line-clamp-2 lg:line-clamp-1 hover:text-[#009FD9] transition-colors">{brandPrimary}</h3>
+                <h3 className="font-bold text-[#111827] text-[15px] leading-snug lg:line-clamp-1 hover:text-[#009FD9] transition-colors">{brandPrimary}</h3>
               </Link>
               {verifiedMark}
               {brandSecondary && (
-                <p className="text-[12px] font-medium text-[#6b7280] line-clamp-2 lg:line-clamp-1">{brandSecondary}</p>
+                <p className="text-[12px] font-medium leading-snug text-[#6b7280] lg:line-clamp-1">{brandSecondary}</p>
               )}
             </div>
             {/* Price — on the name line, right-aligned. AMOUNT brand-blue, /unit muted grey;
                 capped width so a long price wraps instead of crowding the name. */}
             {priceLabel && (
-              <div className="shrink-0 max-w-[45%] text-right leading-tight">
+              <div className="ml-auto shrink-0 max-w-[34%] text-right leading-tight sm:max-w-[38%]">
                 <span className={`font-bold text-[#009FD9] ${priceIsColones ? "text-[15px]" : "text-[13px]"}`}>{priceAmount}</span>
                 {priceUnit && <span className="text-[11px] font-medium text-[#9ca3af]"> {priceUnit}</span>}
               </div>
