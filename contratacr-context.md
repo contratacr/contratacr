@@ -3598,3 +3598,5 @@ New i18n namespaces added this pass: `search.pagination`, extended `search.filte
 **Sprint 319 - Section-led category dropdown.** Redesigned the desktop navbar category dropdown from a flat grid into a section-led mega menu: search remains at the top, category groups live in a left rail with icons, the selected section's services render in the right pane, and typed search results stay grouped by section for easier scanning in Spanish and English.
 
 **Sprint 320 - Compact availability location select.** Multi-location availability rows now keep the work-location select compact so it does not cover or push Agregar franja / Aplicar a otros días. Long exact addresses truncate inside the select while the full label remains available through the native option/title text; time selects were slightly tightened while preserving AM/PM readability.
+
+**Sprint 321 - Shared category dropdown icons.** The navbar category dropdown now uses the same group icon mapping as /categorias (Home, Leaf, Sparkles, Laptop, Briefcase, Heart, Star, BookOpen, Truck, CalendarDays, Shield, Car) so category navigation is visually consistent across the app.

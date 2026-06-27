@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import {
   X, Menu, ChevronDown, ChevronRight, Search, MapPin, LogIn,
   LayoutDashboard, LogOut, Bookmark, CalendarCheck, CalendarClock, CalendarDays, ClipboardList, Send, Handshake, UserPlus, Briefcase, Compass, Settings, Bell, Globe, Check,
-  HelpCircle, Lightbulb, Headset, ListChecks, Home, Leaf, Sparkles, Laptop, Building2, HeartPulse, Car, PartyPopper, GraduationCap, Baby, PawPrint, Truck, MoreHorizontal,
+  HelpCircle, Lightbulb, Headset, ListChecks, Home, Leaf, Sparkles, Laptop, Heart, Star, BookOpen, Truck, Shield, Car,
 } from "lucide-react";
 import { Link, useRouter, usePathname } from "@/i18n/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -459,13 +459,15 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
     jardin: Leaf,
     limpieza: Sparkles,
     tecnologia: Laptop,
-    profesional: Building2,
-    salud: HeartPulse,
+    profesional: Briefcase,
+    salud: Heart,
+    belleza: Star,
+    educacion: BookOpen,
+    mudanzas: Truck,
+    eventos: CalendarDays,
+    seguridad: Shield,
+    automotriz: Car,
     vehiculos: Car,
-    eventos: PartyPopper,
-    educacion: GraduationCap,
-    familia: Baby,
-    mascotas: PawPrint,
     transporte: Truck,
   };
 
@@ -564,7 +566,7 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
         <div className="grid max-h-[64vh] grid-cols-[16.5rem_minmax(0,1fr)] overflow-hidden rounded-2xl border border-[#eef2f6] bg-white shadow-[0_18px_45px_-36px_rgba(15,23,42,0.45)]">
           <div className="min-w-0 overflow-y-auto border-r border-[#eef2f6] bg-[#f8fafc] p-2">
             {CATEGORY_GROUPS.map((group) => {
-              const Icon = groupIcons[group.id] ?? MoreHorizontal;
+              const Icon = groupIcons[group.id] ?? Briefcase;
               const selected = selectedGroup?.id === group.id;
               return (
                 <button
