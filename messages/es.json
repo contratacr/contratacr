@@ -568,11 +568,6 @@
     "atHome": "A domicilio",
     "alsoAtHome": "También a domicilio",
     "videoConsult": "Videoconsulta",
-    "modality": {
-      "in_person": "Presencial",
-      "at_home": "A domicilio",
-      "video": "Videoconsulta"
-    },
     "prices": "Precios",
     "baseRate": "Tarifa base",
     "workplaces": "Lugares de trabajo",
@@ -889,17 +884,8 @@
       "body": "Elige el servicio que buscas para continuar."
     },
     "modality": {
-      "title": "Formas de atención",
-      "available": "Formas de atención disponibles: {modalities}. Coordinen los detalles por WhatsApp.",
-      "whatsapp": "Coordina los detalles directamente por WhatsApp.",
-      "in_person": "Presencial",
-      "at_home": "A domicilio",
-      "video": "Videoconsulta"
-    },
-    "modalityDesc": {
-      "in_person": "Atiendes en el lugar del profesional.",
-      "at_home": "El profesional puede desplazarse a tu ubicación.",
-      "video": "La atención se coordina por videollamada."
+      "videoTitle": "Videoconsulta disponible",
+      "videoHelp": "Puedes coordinar por WhatsApp si esta solicitud aplica para atención virtual."
     },
     "next": {
       "title": "Qué sigue",
@@ -1499,18 +1485,6 @@
     "nameField": "Nombre",
     "namePlaceholderShort": "Ej. Reparación de fugas",
     "descBrief": "Descripción",
-    "modalitiesLabel": "Modalidades de atención",
-    "modalitiesHelp": "Puedes seleccionar una o varias opciones para este servicio.",
-    "modality": {
-      "in_person": "Presencial",
-      "at_home": "A domicilio",
-      "video": "Videoconsulta"
-    },
-    "modalityDesc": {
-      "in_person": "Atiendes en tu local, oficina o consultorio.",
-      "at_home": "Puedes desplazarte donde el cliente.",
-      "video": "Puedes atender por videollamada."
-    },
     "descPlaceholderShort": "¿Qué incluye este servicio?",
     "priceRef": "Precio de referencia",
     "aConsultarLabel": "Consultar precio (no mostrar monto)",

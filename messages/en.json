@@ -569,11 +569,6 @@
     "atHome": "At home",
     "alsoAtHome": "Also at home",
     "videoConsult": "Video consultation",
-    "modality": {
-      "in_person": "In person",
-      "at_home": "At home",
-      "video": "Video consultation"
-    },
     "prices": "Prices",
     "baseRate": "Base rate",
     "workplaces": "Workplaces",
@@ -890,17 +885,8 @@
       "body": "Choose the service you want to continue."
     },
     "modality": {
-      "title": "Service options",
-      "available": "Available service modes: {modalities}. Coordinate the details on WhatsApp.",
-      "whatsapp": "Coordinate the details directly on WhatsApp.",
-      "in_person": "In person",
-      "at_home": "At your location",
-      "video": "Video consultation"
-    },
-    "modalityDesc": {
-      "in_person": "You visit the professional's location.",
-      "at_home": "The professional can travel to your location.",
-      "video": "The service is coordinated by video call."
+      "videoTitle": "Video consultation available",
+      "videoHelp": "You can coordinate on WhatsApp if this request works for virtual service."
     },
     "next": {
       "title": "What happens next",
@@ -1499,18 +1485,6 @@
     "nameField": "Name",
     "namePlaceholderShort": "e.g. Leak repair",
     "descBrief": "Description",
-    "modalitiesLabel": "Service modalities",
-    "modalitiesHelp": "You can select one or more options for this service.",
-    "modality": {
-      "in_person": "In person",
-      "at_home": "At home",
-      "video": "Video consultation"
-    },
-    "modalityDesc": {
-      "in_person": "You serve clients at your office, shop or clinic.",
-      "at_home": "You can travel to the client's location.",
-      "video": "You can serve clients by video call."
-    },
     "descPlaceholderShort": "What does this service include?",
     "priceRef": "Reference price",
     "aConsultarLabel": "Ask price (do not show amount)",

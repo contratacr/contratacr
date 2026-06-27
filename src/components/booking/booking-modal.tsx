@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
   X, MapPin, Shield, ShieldAlert, ArrowLeft, ChevronLeft, ChevronRight, Lock, CalendarPlus,
-  Check, Sun, Sunset, Moon, CalendarCheck, Building2, House, Video,
+  Check, Sun, Sunset, Moon, CalendarCheck, Video,
 } from "lucide-react";
 import { SuccessIcon } from "@/components/ui/success-icon";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
@@ -27,16 +27,9 @@ import { useAvailabilityCheck } from "@/hooks/use-availability-check";
 import type { ProfessionalCardData } from "@/lib/data/mock-professionals";
 
 type BookingStep = "calendar" | "details" | "contact" | "complete" | "success";
-type ServiceModality = "in_person" | "at_home" | "video";
 type BookingProfessional = ProfessionalCardData & {
   serviceType?: string | null;
   videoconsulta?: boolean;
-};
-
-const modalityIcon: Record<ServiceModality, typeof Building2> = {
-  in_person: Building2,
-  at_home: House,
-  video: Video,
 };
 
 type DaySchedule = { enabled: boolean; ranges: { start: string; end: string }[] };
@@ -152,11 +145,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   );
   const effectiveCategory = initialCategoryId ?? pickedCategory ?? null;
   const needsProfessionPick = !effectiveCategory && proProfessions.length > 1;
-  const professionalModalities: ServiceModality[] = [
-    (professional.workplaces?.length ?? 0) > 0 ? "in_person" : null,
-    professional.serviceType?.includes("mobile") ? "at_home" : null,
-    professional.videoconsulta ? "video" : null,
-  ].filter((m): m is ServiceModality => !!m);
+  const offersVideoConsult = !!professional.videoconsulta;
 
   // Profession shown UNDER the name: the RELEVANT one for the current context —
   //  • filtered (initialCategoryId) or selected (pickedCategory) → that profession;
@@ -1227,28 +1216,21 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                       next step (so typing it auto-fills name + DOB together). */}
                   {proIsHealth && !forSomeoneElse && hasStoredCedula && renderSelfDobField()}
 
-                  {professionalModalities.length > 0 && (
+                  {offersVideoConsult && (
                     <div className="rounded-xl border border-[#d8eef8] bg-[#f5fbfe] px-3.5 py-3">
-                      <p className="text-xs font-bold uppercase tracking-wide text-[#5f6b7a]">
-                        {t("modality.title")}
-                      </p>
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {professionalModalities.map((modality) => {
-                          const Icon = modalityIcon[modality];
-                          return (
-                            <span
-                              key={modality}
-                              className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-[#ccecf8] bg-white px-2.5 py-1.5 text-xs font-semibold leading-none text-[#162543]"
-                            >
-                              <Icon className="h-3.5 w-3.5 shrink-0 text-[#009FD9]" />
-                              {t(`modality.${modality}`)}
-                            </span>
-                          );
-                        })}
+                      <div className="flex items-start gap-3">
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-[#009FD9] shadow-sm ring-1 ring-[#ccecf8]">
+                          <Video className="h-4 w-4" />
+                        </span>
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold leading-snug text-[#162543]">
+                            {t("modality.videoTitle")}
+                          </p>
+                          <p className="mt-1 text-xs font-medium leading-relaxed text-[#5f6b7a]">
+                            {t("modality.videoHelp")}
+                          </p>
+                        </div>
                       </div>
-                      <p className="mt-2 text-xs font-medium leading-relaxed text-[#6b7280]">
-                        {t("modality.whatsapp")}
-                      </p>
                     </div>
                   )}
 
