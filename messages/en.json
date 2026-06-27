@@ -889,6 +889,20 @@
       "title": "What service do you need?",
       "body": "Choose the service you want to continue."
     },
+    "modality": {
+      "title": "Service modality",
+      "pickOne": "Choose how you prefer to receive this service.",
+      "onlyOne": "This service is offered in this modality.",
+      "requestLine": "Modality: {modality}",
+      "in_person": "In person",
+      "at_home": "At your location",
+      "video": "Video consultation"
+    },
+    "modalityDesc": {
+      "in_person": "You visit the professional's location.",
+      "at_home": "The professional can travel to your location.",
+      "video": "The service is coordinated by video call."
+    },
     "next": {
       "title": "What happens next",
       "step1": "You choose a date and time and send your request.",

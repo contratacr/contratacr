@@ -3664,3 +3664,5 @@ New i18n namespaces added this pass: `search.pagination`, extended `search.filte
 - Sprint 365: Servicios -> Modalidades de atención changed from loose tag buttons to compact selectable modality cards with icon, title and one-line explanation (Presencial/A domicilio/Videoconsulta). The selection remains multi-select and per-service; EN copy added in parallel.
 
 - Sprint 366: Servicios -> Modalidades de atención now explicitly says the pro can select one or more options, selected modality cards show a check indicator, and the modal layout uses 1 column on phone / 2 columns on wider modal widths so Videoconsulta no longer overflows.
+
+- Sprint 367: Service modalities are now used per-service in the booking flow. The public profile still shows modalities on each service card, but Sobre mi no shows a general Videoconsulta fact. In Solicitar servicio, the modal derives modalities from the selected service: one modality is fixed context; multiple modalities require the client to pick one. The chosen modality is included in the booking description/WhatsApp/calendar text without a DB migration.

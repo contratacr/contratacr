@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, type ReactNode } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import {
   MapPin, Shield, ArrowLeft, Star, Briefcase, Camera, Banknote, Languages,
-  Share2, Flag, ChevronDown, Lock, Building2, Award, Mail, SearchX, FileText,
+  Share2, Flag, ChevronDown, Lock, Award, Mail, SearchX, FileText,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { InstagramIcon, FacebookIcon, TikTokIcon } from "@/components/icons/social-icons";
@@ -750,14 +750,7 @@ export default function ProfilePage({ params }: ProfilePageProps) {
                       value: <span className="block whitespace-pre-line text-[15px] font-normal leading-7 text-[#374151]">{professional.bio}</span>,
                     });
                     const offersHomeService = String(professional.serviceType ?? "").includes("mobile") || services.some((service) => service.modalities?.includes("at_home"));
-                    const offersVideoConsult = services.some((service) => service.modalities?.includes("video"));
                     const hasFixedPlace = workplaceAreaLines.length > 0 || uniqueWorkplaces.length > 0;
-                    if (offersVideoConsult) facts.push({
-                      key: "attention",
-                      icon: <Building2 className="h-5 w-5" />,
-                      label: t("attention"),
-                      value: t("videoConsult"),
-                    });
                     if (expYears > 0) facts.push({
                       key: "exp", icon: <Briefcase className="h-5 w-5" />, label: t("experienceLabel"), value: t("yearsValue", { years: expYears }),
                     });

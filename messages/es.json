@@ -888,6 +888,20 @@
       "title": "¿Qué servicio necesitas?",
       "body": "Elige el servicio que buscas para continuar."
     },
+    "modality": {
+      "title": "Modalidad de atención",
+      "pickOne": "Elige cómo prefieres recibir este servicio.",
+      "onlyOne": "Este servicio se atiende en esta modalidad.",
+      "requestLine": "Modalidad: {modality}",
+      "in_person": "Presencial",
+      "at_home": "A domicilio",
+      "video": "Videoconsulta"
+    },
+    "modalityDesc": {
+      "in_person": "Atiendes en el lugar del profesional.",
+      "at_home": "El profesional puede desplazarse a tu ubicación.",
+      "video": "La atención se coordina por videollamada."
+    },
     "next": {
       "title": "Qué sigue",
       "step1": "Eliges fecha y hora y envías tu solicitud.",
