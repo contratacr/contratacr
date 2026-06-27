@@ -55,8 +55,8 @@ const PROVINCE_CENTROIDS: Record<string, { lat: number; lng: number }> = {
 // can zoom out to the region and beyond.
 const GAM_CENTER = { lat: 9.9325, lng: -84.08 };
 
-const PIN_NAVY = "#162543";
-const PIN_ACTIVE = "#008ce0";
+const PIN_BASE = "#009FD9";
+const PIN_HOVER = "#162543";
 
 // Brand styling for the pins, active state, and the popup mini-card. The light
 // "Voyager"-like TILE style comes from the cloud Map ID (a mapId disables inline
@@ -68,7 +68,7 @@ const MAP_CSS =
   ".ccr-pin path{transition:fill .15s ease;}" +
   ".ccr-pin .num{position:absolute;top:6px;left:0;right:0;text-align:center;color:#fff;font:700 12px/1 Inter,system-ui,sans-serif;}" +
   ".ccr-pin.is-active{transform:scale(1.15);}" +
-  ".ccr-pin.is-active path{fill:" + PIN_ACTIVE + ";}" +
+  ".ccr-pin.is-active path{fill:" + PIN_HOVER + ";}" +
   ".ccr-popwrap{transform:translateY(-52px);pointer-events:none;}" +
   ".ccr-pop{pointer-events:auto;position:relative;width:240px;background:#fff;border-radius:14px;box-shadow:0 10px 30px -8px rgba(15,23,42,.30),0 2px 6px rgba(15,23,42,.10);padding:12px;font-family:Inter,system-ui,sans-serif;text-decoration:none;display:block;}" +
   ".ccr-pop-x{position:absolute;top:6px;right:6px;width:22px;height:22px;border:0;background:transparent;color:#9ca3af;font-size:16px;line-height:1;cursor:pointer;border-radius:6px;}" +
@@ -84,7 +84,7 @@ const MAP_CSS =
   ".ccr-pop-prof{color:#6b7280;font-size:12px;margin-top:2px;line-height:1.3;}" +
   ".ccr-pop-rate{font-size:12px;margin-top:4px;color:#ff9b32;font-weight:700;}" +
   ".ccr-pop-rate span{color:#9ca3af;font-weight:500;}" +
-  ".ccr-pop-price{font-size:13px;font-weight:700;color:" + PIN_ACTIVE + ";margin-top:6px;}" +
+  ".ccr-pop-price{font-size:13px;font-weight:700;color:" + PIN_BASE + ";margin-top:6px;}" +
   // Cluster preview popup — a compact list of the grouped pros (each row → profile), so a
   // cluster is never a dead marker. (No zoom button — pinch / wheel-zoom separates them.)
   ".ccr-clpop{pointer-events:auto;position:relative;width:250px;background:#fff;border-radius:14px;box-shadow:0 10px 30px -8px rgba(15,23,42,.30),0 2px 6px rgba(15,23,42,.10);padding:10px;font-family:Inter,system-ui,sans-serif;}" +
@@ -101,7 +101,7 @@ const MAP_CSS =
 function pinSvg(): string {
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" width="30" height="40" viewBox="0 0 24 32">` +
-    `<path d="M12 0C7.03 0 3 4.03 3 9c0 6.75 9 23 9 23s9-16.25 9-23c0-4.97-4.03-9-9-9z" fill="${PIN_NAVY}" stroke="#ffffff" stroke-width="1.5"/></svg>`
+    `<path d="M12 0C7.03 0 3 4.03 3 9c0 6.75 9 23 9 23s9-16.25 9-23c0-4.97-4.03-9-9-9z" fill="${PIN_BASE}" stroke="#ffffff" stroke-width="1.5"/></svg>`
   );
 }
 

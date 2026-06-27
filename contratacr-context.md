@@ -3612,3 +3612,5 @@ New i18n namespaces added this pass: `search.pagination`, extended `search.filte
 **Sprint 326 - Availability overflow correction.** Corrected the previous availability layout so controls stay inside the card: the day/content split now starts at large screens, multi-location rows stack workplace and time controls instead of placing them side by side, and fixed time widths were replaced with bounded responsive columns using min-w-0 / max-w-full.
 
 **Sprint 327 - Availability actions alignment.** Adjusted weekly availability so Agregar franja / Aplicar a otros días align beside the time range only on wide cards, while wrapping below on narrower layouts. Multi-location workplace selects now have a compact max width with truncation/title support so long exact addresses do not stretch or cover the schedule controls.
+
+**Sprint 328 - Search map pin color revert.** Reverted /buscar map pins so their default fill is the light ContrataCR blue (#009FD9). The darker navy (#162543) is now reserved for highlighted pins, including the card-hover state from the matching result card.
