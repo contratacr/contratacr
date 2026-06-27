@@ -704,7 +704,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                 const on = blocks.length > 0;
                 const canApply = blocks.some(isCompleteFranja);
                 const dayActions = (
-                  <div className="flex min-w-0 flex-row flex-wrap items-center justify-start gap-x-4 gap-y-2 xl:justify-end xl:pb-1">
+                  <div className="flex min-w-0 flex-row flex-wrap items-center justify-start gap-x-4 gap-y-2 xl:pb-1">
                     <button type="button" onClick={() => addBlock(wd)} className="inline-flex min-w-0 items-center gap-1 text-left text-xs font-medium leading-tight text-[#009FD9] hover:underline cursor-pointer">
                       <Plus className="h-3.5 w-3.5 shrink-0" /> <span>{t("addFranja")}</span>
                     </button>
@@ -716,7 +716,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                   </div>
                 );
                 return (
-                  <div key={wd} className="grid min-w-0 gap-2 py-3 lg:grid-cols-[9rem_minmax(0,1fr)] lg:gap-4">
+                  <div key={wd} className="grid min-w-0 gap-2 py-3 lg:grid-cols-[8rem_minmax(0,1fr)] lg:gap-3">
                     {/* toggle + weekday name */}
                     <div className="flex min-w-0 items-center gap-2.5 lg:pt-2">
                       <button
@@ -736,11 +736,11 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                       {!on ? (
                         <p className="text-sm text-[#9ca3af] sm:pt-1.5">{t("closed")}</p>
                       ) : (
-                        <div className="grid min-w-0 gap-2.5 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end xl:gap-4">
+                        <div className="grid min-w-0 gap-2.5 xl:grid-cols-[minmax(0,16.5rem)_minmax(12rem,1fr)] xl:items-end xl:gap-4">
                           <div className="flex min-w-0 flex-1 flex-col gap-2.5">
                             {blocks.map((b) => {
                             const timeRow = (
-                              <div className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 md:max-w-[19rem] md:grid-cols-[minmax(8.5rem,1fr)_auto_minmax(8.5rem,1fr)]">
+                              <div className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 md:max-w-[16.5rem] md:grid-cols-[minmax(7.25rem,1fr)_auto_minmax(7.25rem,1fr)]">
                                 <TimeSelect value={b.start} onChange={(v) => updateBlock(wd, b.id, { start: v, ...(b.end && toMins(b.end) <= toMins(v) ? { end: hhmm(Math.min(toMins(v) + 60, 23 * 60 + 30)) } : {}) })} className="min-w-0 w-full" />
                                 <span className="shrink-0 text-[#9ca3af]">–</span>
                                 <TimeSelect value={b.end} min={b.start ? hhmm(Math.min(toMins(b.start) + 30, 23 * 60 + 30)) : undefined} onChange={(v) => updateBlock(wd, b.id, { end: v })} className="min-w-0 w-full" error={b.start && b.end && toMins(b.end) <= toMins(b.start) ? t("toAfterFrom") : undefined} />
@@ -753,7 +753,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                             // never competes with day actions or overlaps the time controls.
                             return (
                               <div key={b.id} className="grid w-full max-w-full min-w-0 gap-2">
-                                <div className="relative min-w-0 max-w-[16rem]">
+                                <div className="relative min-w-0 max-w-[14rem]">
                                   <MapPin className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#009FD9]" />
                                   <select
                                     value={b.locationId}

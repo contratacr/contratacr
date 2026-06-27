@@ -1957,6 +1957,8 @@ straight into the flex shell. Verify with `git diff`: desktop columns/widths/sti
 
 > **Availability actions alignment.** `Agregar franja` and `Aplicar a otros días` may align beside the time range only at wide breakpoints. On narrower cards they must wrap below the time range. Workplace selects should have a compact max width and truncate long addresses instead of expanding the schedule row.
 
+> **Availability compact controls.** Weekly time controls should stay compact enough to leave room for day actions: keep the time range around 16-17rem on wide layouts and workplace selects around 14rem, with truncation for long location labels.
+
 > **Search map pin colors.** Map result pins should use the app's light brand blue as their default state. The darker navy state is reserved for active/highlighted pins, including when the matching `/buscar` result card is hovered.
 
 > **Navbar category dropdown.** The desktop category menu should be section-led, not a flat wall of cards. Use a compact search at the top, a left rail of category groups with icons, and a right pane for the selected group's services. Search results should remain grouped by section so users understand where each service belongs.
