@@ -890,7 +890,7 @@
     },
     "modality": {
       "title": "Modalidad de atención",
-      "available": "Este profesional atiende: {modalities}. Coordinen la modalidad por WhatsApp.",
+      "available": "Formas de atención disponibles: {modalities}. Coordinen los detalles por WhatsApp.",
       "in_person": "Presencial",
       "at_home": "A domicilio",
       "video": "Videoconsulta"
@@ -1710,8 +1710,8 @@
     "fixedTitle": "Trabajo desde un lugar fijo",
     "fixedDesc": "Taller, consultorio, local",
     "workplaces": "Zonas o lugares donde trabajas",
-    "travelsLabel": "Me desplazo a donde está el cliente",
-    "videoConsultLabel": "También atiendo por videoconsulta",
+    "travelsLabel": "A domicilio",
+    "videoConsultLabel": "Videoconsulta",
     "coverageAreas": "Zonas a las que te desplazas",
     "coverageHelp": "Elige las zonas donde atiendes. Apareces en las búsquedas de cada una.",
     "countryCoverageWarn": "Ya cubres <strong>todo el país</strong>, así que las zonas más específicas no agregan nada. Puedes quitarlas para simplificar.",

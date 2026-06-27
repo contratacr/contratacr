@@ -891,7 +891,7 @@
     },
     "modality": {
       "title": "Service modality",
-      "available": "This professional serves clients: {modalities}. Coordinate the modality on WhatsApp.",
+      "available": "Available service modes: {modalities}. Coordinate the details on WhatsApp.",
       "in_person": "In person",
       "at_home": "At your location",
       "video": "Video consultation"
@@ -1710,8 +1710,8 @@
     "fixedTitle": "I work from a fixed location",
     "fixedDesc": "Workshop, office, store",
     "workplaces": "Zones or places where you work",
-    "travelsLabel": "I travel to the client",
-    "videoConsultLabel": "I also offer video consultations",
+    "travelsLabel": "At the client's location",
+    "videoConsultLabel": "Video consultation",
     "coverageAreas": "Areas you travel to",
     "coverageHelp": "Choose the areas you serve. You appear in searches for each one.",
     "countryCoverageWarn": "You already cover the <strong>whole country</strong>, so more specific areas add nothing. You can remove them to simplify.",
