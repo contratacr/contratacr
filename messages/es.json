@@ -564,6 +564,7 @@
     "yearsValue": "{years, plural, one {# año} other {# años}}",
     "verification": "Verificación",
     "location": "Ubicación",
+    "whereServes": "Dónde atiende",
     "attention": "Atención",
     "atHome": "A domicilio",
     "alsoAtHome": "También a domicilio",
