@@ -1583,7 +1583,7 @@
     "scheduleColumn": "Hours",
     "actionsColumn": "Actions",
     "closedDays": "Closed days",
-    "addFranja": "Add a time range",
+    "addFranja": "+Range",
     "sameAllDays": "Copy to all days",
     "weekday0": "Sunday",
     "weekday1": "Monday",

@@ -5,7 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
-import { Plus, X, Lock, Loader2, MapPin, ChevronDown, ChevronLeft, ChevronRight, Calendar, Pencil, Trash2, MoreVertical } from "lucide-react";
+import { X, Lock, Loader2, MapPin, ChevronDown, ChevronLeft, ChevronRight, Calendar, Pencil, Trash2, MoreVertical } from "lucide-react";
 import { type ContactPreference } from "@/lib/constants";
 import { crTodayISO, isTooSoonCR } from "@/lib/time-cr";
 import { TimeSelect, to12h } from "@/components/ui/time-select";
@@ -725,8 +725,8 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                 const canApply = blocks.some(isCompleteFranja);
                 const dayActions = (
                   <div className="flex min-h-9 min-w-0 flex-row flex-wrap items-center justify-start gap-x-3 gap-y-1 lg:shrink-0 lg:flex-nowrap">
-                    <button type="button" onClick={() => addBlock(wd)} className="inline-flex h-9 min-w-0 shrink-0 items-center gap-1 whitespace-nowrap text-left text-xs font-medium leading-tight text-[#009FD9] hover:underline cursor-pointer">
-                      <Plus className="h-3.5 w-3.5 shrink-0" /> <span>{t("addFranja")}</span>
+                    <button type="button" onClick={() => addBlock(wd)} className="inline-flex h-9 min-w-0 shrink-0 items-center whitespace-nowrap text-left text-xs font-medium leading-tight text-[#009FD9] hover:underline cursor-pointer">
+                      {t("addFranja")}
                     </button>
                   </div>
                 );
@@ -1135,8 +1135,8 @@ function DayModal({ initialDate, existing, markedDates, defaultDuration, dateLoc
                     </button>
                   </div>
                 ))}
-                <button type="button" onClick={() => setFranjas((prev) => [...prev, nextFranja(prev)])} className="inline-flex items-center gap-1 self-start text-xs font-medium text-[#009FD9] hover:underline cursor-pointer">
-                  <Plus className="h-3.5 w-3.5" /> {t("addFranja")}
+                <button type="button" onClick={() => setFranjas((prev) => [...prev, nextFranja(prev)])} className="inline-flex items-center self-start text-xs font-medium text-[#009FD9] hover:underline cursor-pointer">
+                  {t("addFranja")}
                 </button>
               </div>
             )}
