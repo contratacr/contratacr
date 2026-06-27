@@ -889,8 +889,9 @@
       "body": "Elige el servicio que buscas para continuar."
     },
     "modality": {
-      "title": "Modalidad de atención",
+      "title": "Formas de atención",
       "available": "Formas de atención disponibles: {modalities}. Coordinen los detalles por WhatsApp.",
+      "whatsapp": "Coordina los detalles directamente por WhatsApp.",
       "in_person": "Presencial",
       "at_home": "A domicilio",
       "video": "Videoconsulta"

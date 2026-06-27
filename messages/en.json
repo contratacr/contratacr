@@ -890,8 +890,9 @@
       "body": "Choose the service you want to continue."
     },
     "modality": {
-      "title": "Service modality",
+      "title": "Service options",
       "available": "Available service modes: {modalities}. Coordinate the details on WhatsApp.",
+      "whatsapp": "Coordinate the details directly on WhatsApp.",
       "in_person": "In person",
       "at_home": "At your location",
       "video": "Video consultation"

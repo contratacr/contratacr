@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
   X, MapPin, Shield, ShieldAlert, ArrowLeft, ChevronLeft, ChevronRight, Lock, CalendarPlus,
-  Check, Sun, Sunset, Moon, CalendarCheck,
+  Check, Sun, Sunset, Moon, CalendarCheck, Building2, House, Video,
 } from "lucide-react";
 import { SuccessIcon } from "@/components/ui/success-icon";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
@@ -31,6 +31,12 @@ type ServiceModality = "in_person" | "at_home" | "video";
 type BookingProfessional = ProfessionalCardData & {
   serviceType?: string | null;
   videoconsulta?: boolean;
+};
+
+const modalityIcon: Record<ServiceModality, typeof Building2> = {
+  in_person: Building2,
+  at_home: House,
+  video: Video,
 };
 
 type DaySchedule = { enabled: boolean; ranges: { start: string; end: string }[] };
@@ -1222,9 +1228,26 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                   {proIsHealth && !forSomeoneElse && hasStoredCedula && renderSelfDobField()}
 
                   {professionalModalities.length > 0 && (
-                    <div className="rounded-xl border border-[#e5e7eb] bg-[#f9fafb] px-3 py-2.5">
-                      <p className="text-xs font-medium leading-relaxed text-[#6b7280]">
-                        {t("modality.available", { modalities: professionalModalities.map((m) => t(`modality.${m}`)).join(" · ") })}
+                    <div className="rounded-xl border border-[#d8eef8] bg-[#f5fbfe] px-3.5 py-3">
+                      <p className="text-xs font-bold uppercase tracking-wide text-[#5f6b7a]">
+                        {t("modality.title")}
+                      </p>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {professionalModalities.map((modality) => {
+                          const Icon = modalityIcon[modality];
+                          return (
+                            <span
+                              key={modality}
+                              className="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-[#ccecf8] bg-white px-2.5 py-1.5 text-xs font-semibold leading-none text-[#162543]"
+                            >
+                              <Icon className="h-3.5 w-3.5 shrink-0 text-[#009FD9]" />
+                              {t(`modality.${modality}`)}
+                            </span>
+                          );
+                        })}
+                      </div>
+                      <p className="mt-2 text-xs font-medium leading-relaxed text-[#6b7280]">
+                        {t("modality.whatsapp")}
                       </p>
                     </div>
                   )}
