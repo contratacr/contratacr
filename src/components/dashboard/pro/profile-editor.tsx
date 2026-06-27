@@ -125,7 +125,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
   useEffect(() => {
     if (!focusField) return;
     const sec = FIELD_SECTION[focusField];
-    if (sec) setOpenSections((prev) => new Set(prev).add(sec));
+    const openTmr = sec ? setTimeout(() => setOpenSections((prev) => new Set(prev).add(sec)), 0) : null;
     const tmr = setTimeout(() => {
       const el = document.querySelector(`[data-field="${focusField}"]`);
       if (el) {
@@ -134,7 +134,10 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
         setTimeout(() => el.classList.remove("field-flash"), 1600);
       }
     }, 160);
-    return () => clearTimeout(tmr);
+    return () => {
+      if (openTmr) clearTimeout(openTmr);
+      clearTimeout(tmr);
+    };
   }, [focusField, focusKey]);
   const rich = { strong: (c: React.ReactNode) => <strong>{c}</strong> };
   const photoInputRef = useRef<HTMLInputElement>(null);
@@ -223,7 +226,9 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
   const autoTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dirtyRef = useRef(false);
   const saveRef = useRef<(auto?: boolean) => Promise<void>>(async () => {});
-  saveRef.current = handleSave;
+  useEffect(() => {
+    saveRef.current = handleSave;
+  });
 
   function touch() {
     setSaved(false);
@@ -637,11 +642,17 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
 
       {/* ── Ubicación y cobertura ─────────────────────────────────────── */}
       <Section id="location" title={t("secLocation")} desc={t("secLocationDesc")} open={openSections.has("location")} onToggle={toggleSection}>
+        <div className="rounded-xl bg-[#f5fbfe] p-3.5">
+          <p className="text-sm font-semibold text-[#162543]">{t("locationLogicTitle")}</p>
+          <p className="mt-1 text-xs leading-relaxed text-[#4b5563]">{t("locationLogicBody")}</p>
+        </div>
+
         {/* Work zones — provincia/cantón first (drives /buscar), optional exact pin. */}
         <div data-field="location">
           <label className="text-sm font-medium text-[#374151] block mb-2">
             {t("workplaces")} <span className="text-red-500">*</span>
           </label>
+          <p className="mb-2 text-xs leading-relaxed text-[#6b7280]">{t("workplacesHelp")}</p>
           <WorkplacesPicker value={workplaces} onChange={(next) => { setWorkplaces(next); touch(); }} mapHeight={168} />
         </div>
 

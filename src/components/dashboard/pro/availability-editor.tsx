@@ -794,6 +794,28 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                 </div>
               </div>
               <p className="mt-1.5 text-xs text-[#6b7280]">{t("alwaysSubAll")}</p>
+              {isMultiLocation && (
+                <div className="mt-3 rounded-xl bg-[#f9fafb] p-3">
+                  <div className="flex items-start gap-2.5">
+                    <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#009FD9]" />
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold text-[#162543]">{t("schedulePlacesTitle")}</p>
+                      <p className="mt-0.5 text-xs leading-relaxed text-[#6b7280]">{t("schedulePlacesHelp")}</p>
+                    </div>
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {locationOptions.map((option) => (
+                      <span
+                        key={option.id}
+                        title={option.label}
+                        className="max-w-full truncate rounded-md bg-white px-2 py-1 text-xs font-medium text-[#374151] shadow-sm ring-1 ring-[#e5e7eb] sm:max-w-[14rem]"
+                      >
+                        {option.label}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="flex flex-col divide-y divide-[#f3f4f6]">
