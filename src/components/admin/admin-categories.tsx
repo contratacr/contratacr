@@ -236,7 +236,7 @@ export function AdminCategories() {
       await fetch("/api/admin/categories", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: i.id, status: next, label, labelEn: label && manualEnglishEdits[i.id] ? englishNameOf(i) : undefined, groupId: groupOfSuggestion(i), ...flags }),
+        body: JSON.stringify({ id: i.id, status: next, label, labelEn: label ? englishNameOf(i) : undefined, groupId: groupOfSuggestion(i), ...flags }),
       });
       setItems((prev) => prev.filter((x) => x.id !== i.id));
       window.dispatchEvent(new Event("focus"));
@@ -346,7 +346,7 @@ export function AdminCategories() {
       const res = await fetch("/api/admin/categories", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ label, labelEn: newServiceNameEnManual ? newServiceNameEn.trim() : undefined, groupId: newServiceGroupId, ...newServiceFlags }),
+        body: JSON.stringify({ label, labelEn: newServiceNameEn.trim() || undefined, groupId: newServiceGroupId, ...newServiceFlags }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
