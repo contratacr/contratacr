@@ -4,6 +4,7 @@ import { createSign } from "crypto";
 const DEFAULT_LOCATION = "global";
 const TOKEN_URL = "https://oauth2.googleapis.com/token";
 const TRANSLATION_SCOPE = "https://www.googleapis.com/auth/cloud-translation";
+const BASIC_TRANSLATE_URL = "https://translation.googleapis.com/language/translate/v2";
 
 type ServiceAccount = {
   client_email?: string;
@@ -71,39 +72,67 @@ async function getAccessToken() {
   return token;
 }
 
+async function translateWithApiKey(label: string) {
+  const key = process.env.GOOGLE_TRANSLATE_API_KEY?.trim();
+  if (!key) return "";
+
+  const url = new URL(BASIC_TRANSLATE_URL);
+  url.searchParams.set("key", key);
+
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      q: label,
+      source: "es",
+      target: "en",
+      format: "text",
+    }),
+    cache: "no-store",
+  });
+  if (!res.ok) return "";
+
+  const data = await res.json();
+  return cleanTranslation(data?.data?.translations?.[0]?.translatedText);
+}
+
+async function translateWithServiceAccount(label: string, projectId: string) {
+  const token = await getAccessToken();
+  if (!token) return "";
+
+  const location = process.env.GOOGLE_TRANSLATE_LOCATION?.trim() || DEFAULT_LOCATION;
+  const url = `https://translation.googleapis.com/v3/projects/${encodeURIComponent(projectId)}/locations/${encodeURIComponent(location)}:translateText`;
+
+  const res = await fetch(url.toString(), {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      contents: [label],
+      mimeType: "text/plain",
+      sourceLanguageCode: "es",
+      targetLanguageCode: "en",
+    }),
+    cache: "no-store",
+  });
+  if (!res.ok) return "";
+
+  const data = await res.json();
+  return cleanTranslation(data?.translations?.[0]?.translatedText);
+}
+
 export async function suggestEnglishServiceLabel(label: string): Promise<string> {
   const cleanLabel = label.trim();
   const fallback = autoEnglishCategoryLabel(cleanLabel);
   if (!cleanLabel) return fallback;
 
-  const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID?.trim();
-  if (!projectId) return fallback;
-
   try {
-    const token = await getAccessToken();
-    if (!token) return fallback;
-
-    const location = process.env.GOOGLE_TRANSLATE_LOCATION?.trim() || DEFAULT_LOCATION;
-    const url = `https://translation.googleapis.com/v3/projects/${encodeURIComponent(projectId)}/locations/${encodeURIComponent(location)}:translateText`;
-
-    const res = await fetch(url.toString(), {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        contents: [cleanLabel],
-        mimeType: "text/plain",
-        sourceLanguageCode: "es",
-        targetLanguageCode: "en",
-      }),
-      cache: "no-store",
-    });
-    if (!res.ok) return fallback;
-
-    const data = await res.json();
-    const translated = cleanTranslation(data?.translations?.[0]?.translatedText);
+    const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID?.trim();
+    const translated = projectId
+      ? await translateWithServiceAccount(cleanLabel, projectId)
+      : await translateWithApiKey(cleanLabel);
     if (!translated) return fallback;
 
     // Avoid replacing a good local phrase with a no-op translation.
