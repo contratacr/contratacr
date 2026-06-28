@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getApiAdmin } from "@/lib/auth/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { cleanId, maskId } from "@/lib/cedula";
+import { cleanId } from "@/lib/cedula";
 
 // GET /api/admin/users?q=…  — search users by name / cédula / email (admin-only).
 // GET /api/admin/users?id=… — consolidated case file for ONE user: account,
@@ -80,9 +80,7 @@ export async function GET(req: Request) {
     }
 
     return NextResponse.json({
-      // Cédula is masked here for privacy — the full value lives only in the
-      // verification case file where a human reviewer needs it.
-      profile: { ...profile, cedula: profile.cedula ? maskId(profile.cedula) : null },
+      profile,
       professional: professional ?? null,
       tickets: tickets ?? [],
       projects: projects ?? [],
@@ -150,7 +148,7 @@ export async function GET(req: Request) {
         id: u.id,
         full_name: u.full_name,
         email: u.email,
-        cedula: u.cedula ? maskId(u.cedula) : null,
+        cedula: u.cedula ?? null,
         role: u.role,
         avatar_url: u.avatar_url,
         is_disabled: u.is_disabled,
