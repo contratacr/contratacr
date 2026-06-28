@@ -698,7 +698,7 @@ export function AdminCategories() {
                 const draft = groupDraftOf(group);
                 const inUse = catalog.filter((item) => item.groupId === group.id).length;
                 return (
-                  <div key={group.id} className="grid gap-3 border-b border-[#f1f5f9] p-4 last:border-b-0 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_120px_130px_auto] lg:items-center">
+                  <div key={group.id} className="grid gap-3 border-b border-[#f1f5f9] p-4 last:border-b-0 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_120px_auto] lg:items-center">
                     <input
                       value={draft.label}
                       onChange={(e) => setGroupDrafts((prev) => ({ ...prev, [group.id]: { ...draft, label: e.target.value } }))}
@@ -718,7 +718,6 @@ export function AdminCategories() {
                       aria-label="Orden"
                       className="h-10 rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm text-[#374151] outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
                     />
-                    <span className="text-xs font-semibold text-[#8a94a6]">{inUse} servicios</span>
                     <div className="flex justify-end gap-2">
                       {hasGroupChanges(group) && (
                         <button type="button" onClick={() => saveGroup(group)} disabled={busy === `group-${group.id}`} className="inline-flex h-9 items-center gap-1 rounded-lg bg-[#009FD9] px-3 text-xs font-semibold text-white hover:bg-[#0089bb] disabled:opacity-50">
