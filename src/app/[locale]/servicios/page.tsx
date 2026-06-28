@@ -119,6 +119,21 @@ const GROUPS = [
   },
 ] as const;
 
+const POPULAR_SERVICE_IDS = [
+  "plomeria",
+  "electricidad",
+  "limpieza",
+  "reparacion_computadoras",
+  "medicina_domicilio",
+  "mecanica",
+  "dj_sonido",
+  "fotografia",
+] as const;
+
+function groupForService(id: string) {
+  return GROUPS.find((group) => group.ids.some((serviceId) => serviceId === id));
+}
+
 export default function ServiciosPage() {
   const t = useTranslations("categories");
   const tg = useTranslations("categoryGroups");
@@ -140,6 +155,10 @@ export default function ServiciosPage() {
   const searchResults = useMemo(() => visibleGroups.flatMap((group) =>
     group.visibleIds.map((id) => ({ id, groupKey: group.key, Icon: group.Icon }))
   ), [visibleGroups]);
+  const popularServices = useMemo(() => POPULAR_SERVICE_IDS.map((id) => {
+    const group = groupForService(id);
+    return { id, groupKey: group?.key, Icon: group?.Icon ?? Search };
+  }), []);
   const resultCount = visibleGroups.reduce((sum, group) => sum + group.visibleIds.length, 0);
   const totalServices = GROUPS.reduce((sum, group) => sum + group.ids.length, 0);
 
@@ -154,19 +173,19 @@ export default function ServiciosPage() {
     <div className="flex min-h-screen flex-col bg-white">
       <LandingNavbar />
 
-      <section className="relative z-30 border-b border-[#eef2f6] bg-white px-4 pb-6 pt-28 sm:pt-32">
+      <section className="relative z-30 border-b border-[#eef2f6] bg-white px-4 pb-5 pt-24 sm:pt-28">
         <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(360px,0.8fr)] lg:items-end">
             <div className="min-w-0">
-              <span className="mb-3 inline-flex rounded-full bg-[#EBF5FB] px-3 py-1 text-xs font-bold uppercase text-[#0089bb]">
+              <span className="mb-2.5 inline-flex rounded-full bg-[#EBF5FB] px-3 py-1 text-xs font-bold uppercase text-[#0089bb]">
                 {tp("eyebrow")}
               </span>
-              <h1 className="max-w-2xl text-3xl font-extrabold leading-tight text-[#1a2744] sm:text-4xl">
+              <h1 className="max-w-2xl text-[2rem] font-extrabold leading-tight text-[#1a2744] sm:text-4xl">
                 {tp("title")}
               </h1>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-[#5f6b7a] sm:text-base">
+              <p className="mt-2.5 max-w-2xl text-sm leading-6 text-[#5f6b7a] sm:text-base">
                 {tp("subtitle")}
               </p>
-              <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold text-[#5f6b7a]">
+              <div className="mt-3 flex flex-wrap gap-2 text-xs font-bold text-[#5f6b7a]">
                 <span className="rounded-full bg-[#f6f8fb] px-3 py-1.5">{tp("groupCount", { count: GROUPS.length })}</span>
                 <span className="rounded-full bg-[#f6f8fb] px-3 py-1.5">{tp("serviceCount", { count: totalServices })}</span>
               </div>
@@ -206,6 +225,29 @@ export default function ServiciosPage() {
                 </div>
               )}
             </div>
+        </div>
+      </section>
+
+      <section className="border-b border-[#eef2f6] bg-white px-4 py-3">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <p className="text-xs font-bold uppercase tracking-wide text-[#8a94a6]">{tp("popularTitle")}</p>
+            <Link href="/buscar" className="text-xs font-bold text-[#0089bb] hover:text-[#006f98]">
+              {tp("searchAll")}
+            </Link>
+          </div>
+          <div className="flex gap-2 overflow-x-auto pb-1 hide-scrollbar">
+            {popularServices.map(({ id, Icon }) => (
+              <Link
+                key={id}
+                href={`/buscar?categoria=${id}`}
+                className="group inline-flex min-h-10 shrink-0 items-center gap-2 rounded-full border border-[#dbeaf2] bg-[#f8fbfe] px-3.5 py-2 text-sm font-bold text-[#374151] transition-colors hover:border-[#9eddf4] hover:bg-[#EBF5FB] hover:text-[#0089bb]"
+              >
+                <Icon className="h-4 w-4 text-[#009FD9]" />
+                <span>{getCategoryLabel(id, locale)}</span>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -309,7 +351,7 @@ export default function ServiciosPage() {
               const Icon = group.Icon;
               return (
                 <section key={group.key} id={group.key} className="scroll-mt-32 border-b border-[#eef2f6] last:border-b-0">
-                    <div className="flex items-end justify-between gap-3 px-4 py-4 sm:px-6">
+                    <div className="flex items-end justify-between gap-3 bg-[#fbfdff] px-4 py-4 sm:px-6">
                       <div className="flex min-w-0 items-center gap-3">
                         <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#EAF7FD] text-[#009FD9]">
                           <Icon className="h-[18px] w-[18px]" />
@@ -331,13 +373,15 @@ export default function ServiciosPage() {
                           <Link
                             key={id}
                             href={`/buscar?categoria=${id}`}
-                            className="group flex min-h-[54px] items-center justify-between gap-3 border-t border-[#f1f5f9] px-4 py-3 text-sm font-semibold leading-snug text-[#374151] transition-colors hover:bg-[#f8fbfe] hover:text-[#0089bb] sm:border-r sm:[&:nth-child(2n)]:border-r-0 xl:[&:nth-child(2n)]:border-r xl:[&:nth-child(3n)]:border-r-0"
+                            className="group flex min-h-[58px] items-center justify-between gap-3 border-t border-[#f1f5f9] px-4 py-3 text-sm font-semibold leading-snug text-[#374151] transition-colors hover:bg-[#f8fbfe] hover:text-[#0089bb] sm:border-r sm:[&:nth-child(2n)]:border-r-0 xl:[&:nth-child(2n)]:border-r xl:[&:nth-child(3n)]:border-r-0"
                           >
                             <span className="min-w-0 [overflow-wrap:anywhere]">
                               {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                               {getCategoryLabel(id, locale) || t(id as any)}
                             </span>
-                            <ChevronRight className="h-4 w-4 shrink-0 text-[#cbd5e1] transition-colors group-hover:text-[#009FD9]" />
+                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[#cbd5e1] transition-colors group-hover:bg-[#EAF7FD] group-hover:text-[#009FD9]">
+                              <ChevronRight className="h-4 w-4" />
+                            </span>
                           </Link>
                         ))}
                     </div>

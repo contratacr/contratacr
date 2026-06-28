@@ -2451,6 +2451,8 @@
     "noResults": "No encontramos ese servicio.",
     "noResultsHint": "Prueba con otro nombre o búscalo desde el inicio.",
     "viewAll": "Ver todos los servicios",
+    "popularTitle": "Servicios populares",
+    "searchAll": "Buscar todos",
     "groupCount": "{count, plural, one {# grupo} other {# grupos}}",
     "serviceCount": "{count, plural, one {# servicio} other {# servicios}}",
     "ctaTitle": "¿No encuentras tu servicio?",
