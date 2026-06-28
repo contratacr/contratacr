@@ -236,7 +236,10 @@ export function AdminCategories() {
   }
 
   async function deleteService(item: CatalogCategory) {
-    if (!window.confirm(`Eliminar "${item.label}" del catalogo?`)) return;
+    const message = item.source === "base"
+      ? `¿Ocultar "${item.label}" del catálogo?\n\nYa no aparecerá para nuevos perfiles, búsquedas o solicitudes. Los datos históricos que ya usaban este servicio se mantienen.`
+      : `¿Eliminar "${item.label}"?\n\nEste servicio agregado se quitará del catálogo.`;
+    if (!window.confirm(message)) return;
     setBusy(item.id);
     try {
       const res = await fetch(`/api/admin/categories?id=${encodeURIComponent(item.id)}`, { method: "DELETE" });
