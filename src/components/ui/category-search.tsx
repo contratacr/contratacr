@@ -10,7 +10,8 @@ import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { CategoryGroupPicker, type CategoryPickerGroup } from "@/components/ui/category-group-picker";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import {
-  CATEGORY_GROUPS,
+  getAllCategories,
+  getAllCategoryGroups,
   searchCategories,
   getCategoryLabel,
   getCategoryGroupLabel,
@@ -38,6 +39,7 @@ export function CategorySearch({
   const t = useTranslations("categorySearch");
   // Load admin-approved custom categories so they're selectable/searchable here too.
   const customCategories = useCustomCategories();
+  void customCategories;
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
@@ -108,6 +110,8 @@ export function CategorySearch({
   }, [open]);
 
   const results = searchCategories(query);
+  const allGroups = getAllCategoryGroups();
+  const allCategories = getAllCategories();
 
   // Group results by groupLabel for display. The no-query browse lists the fixed
   // groups + (if any) an "Otras categorías" group of admin-approved customs; the
@@ -122,13 +126,13 @@ export function CategorySearch({
         }, {})
       )
     : [
-        ...CATEGORY_GROUPS.map((g) => [g.label, g.items.map((i) => ({ ...i, groupId: g.id, groupLabel: g.label }))] as [string, typeof results]),
-        ...(customCategories.length ? [["Otras categorías", customCategories] as [string, typeof results]] : []),
+        ...allGroups.map((g) => [g.label, allCategories.filter((item) => item.groupId === g.id)] as [string, typeof results]),
       ];
-  const browseGroups: CategoryPickerGroup[] = [
-    ...CATEGORY_GROUPS.map((g) => ({ id: g.id, label: g.label, items: g.items })),
-    ...(customCategories.length ? [{ id: "otras", label: "Otras categorías", items: customCategories }] : []),
-  ];
+  const browseGroups: CategoryPickerGroup[] = allGroups.map((g) => ({
+    id: g.id,
+    label: g.label,
+    items: allCategories.filter((item) => item.groupId === g.id),
+  }));
 
   return (
     <div ref={containerRef} className={cn("relative", className)}>

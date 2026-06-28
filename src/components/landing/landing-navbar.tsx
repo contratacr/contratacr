@@ -21,7 +21,8 @@ import { NotificationBell } from "@/components/notifications/notification-bell";
 import { AnchoredDropdown } from "@/components/ui/anchored-dropdown";
 import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { SupportLink } from "@/components/support/support-link";
-import { ALL_CATEGORIES, CATEGORY_GROUPS, searchCategories, normalizeText, getCategoryLabel, getCategoryGroupLabel, resolveCategoryIntent } from "@/lib/data/categories";
+import { ALL_CATEGORIES, CATEGORY_GROUPS, searchCategories, normalizeText, getCategoryLabel, getCategoryGroupLabel, resolveCategoryIntent, getAllCategories, getAllCategoryGroups } from "@/lib/data/categories";
+import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import { searchLocations, resolveLocation, type LocationSuggestion } from "@/lib/data/location-search";
 
 /* ─── Brand mark (the square "CR" icon) ─── */
@@ -451,12 +452,19 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
   const [active, setActive] = useState(0);
   const [selectedGroupId, setSelectedGroupId] = useState(CATEGORY_GROUPS[0]?.id ?? "");
   const inputRef = useRef<HTMLInputElement>(null);
+  const customCategories = useCustomCategories();
+  void customCategories;
+  const menuCategories = getAllCategories();
+  const menuGroups = getAllCategoryGroups().map((group) => ({
+    id: group.id,
+    items: menuCategories.filter((category) => category.groupId === group.id),
+  }));
   const matches = useMemo(() => matchCategories(q, 18, locale), [q, locale]);
   const filtering = q.trim().length > 0;
-  const selectedGroup = CATEGORY_GROUPS.find((group) => group.id === selectedGroupId) ?? CATEGORY_GROUPS[0];
-  const groupedMatches = useMemo(() => CATEGORY_GROUPS
+  const selectedGroup = menuGroups.find((group) => group.id === selectedGroupId) ?? menuGroups[0];
+  const groupedMatches = useMemo(() => menuGroups
     .map((group) => ({ group, items: matches.filter((match) => match.groupId === group.id) }))
-    .filter(({ items }) => items.length > 0), [matches]);
+    .filter(({ items }) => items.length > 0), [matches, menuGroups]);
 
   const groupIcons: Record<string, React.ComponentType<{ className?: string }>> = {
     hogar: Home,
@@ -582,7 +590,7 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
       ) : (
         <div className="grid max-h-[64vh] grid-cols-[16.5rem_minmax(0,1fr)] overflow-hidden rounded-2xl border border-[#eef2f6] bg-white shadow-[0_18px_45px_-36px_rgba(15,23,42,0.45)]">
           <div className="min-w-0 overflow-y-auto border-r border-[#eef2f6] bg-[#f8fafc] p-2">
-            {CATEGORY_GROUPS.map((group) => {
+            {menuGroups.map((group) => {
               const Icon = groupIcons[group.id] ?? Briefcase;
               const selected = selectedGroup?.id === group.id;
               return (
@@ -616,27 +624,35 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
                     <p className="text-[11px] font-bold uppercase tracking-wide text-[#8a94a6]">{t("categories")}</p>
                     <h3 className="mt-0.5 truncate text-lg font-extrabold text-[#162543]">{getCategoryGroupLabel(selectedGroup.id, locale)}</h3>
                   </div>
-                  <Link
-                    href={`/buscar?categoria=${selectedGroup.items[0]?.id ?? "todas"}`}
-                    onClick={onNavigate}
-                    className="shrink-0 text-xs font-bold text-[#009FD9] hover:underline"
-                  >
-                    {t("viewAllCategories")}
-                  </Link>
-                </div>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {selectedGroup.items.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => go(item.id)}
-                      className="group flex min-h-10 items-center justify-between gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold leading-snug text-[#374151] transition-colors hover:bg-[#EBF5FB] hover:text-[#0089bb] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/20"
+                  {selectedGroup.items.length > 0 && (
+                    <Link
+                      href={`/buscar?categoria=${selectedGroup.items[0].id}`}
+                      onClick={onNavigate}
+                      className="shrink-0 text-xs font-bold text-[#009FD9] hover:underline"
                     >
-                      <span className="min-w-0 [overflow-wrap:anywhere]">{getCategoryLabel(item.id, locale)}</span>
-                      <ChevronRight className="h-4 w-4 shrink-0 text-[#cbd5e1] group-hover:text-[#009FD9]" />
-                    </button>
-                  ))}
+                      {t("viewAllCategories")}
+                    </Link>
+                  )}
                 </div>
+                {selectedGroup.items.length > 0 ? (
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {selectedGroup.items.map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => go(item.id)}
+                        className="group flex min-h-10 items-center justify-between gap-2 rounded-xl px-3 py-2 text-left text-sm font-semibold leading-snug text-[#374151] transition-colors hover:bg-[#EBF5FB] hover:text-[#0089bb] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#009FD9]/20"
+                      >
+                        <span className="min-w-0 [overflow-wrap:anywhere]">{getCategoryLabel(item.id, locale)}</span>
+                        <ChevronRight className="h-4 w-4 shrink-0 text-[#cbd5e1] group-hover:text-[#009FD9]" />
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="rounded-xl bg-[#f8fafc] px-3 py-4 text-sm font-medium text-[#8a94a6]">
+                    {locale === "en" ? "This section does not have published services yet." : "Esta sección todavía no tiene servicios publicados."}
+                  </p>
+                )}
               </section>
             )}
           </div>

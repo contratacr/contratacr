@@ -128,11 +128,10 @@ export default function ServiciosPage() {
   const locale = useLocale();
   const router = useRouter();
   const customCategories = useCustomCategories();
-  const customCatalogVersion = customCategories.map((category) => `${category.id}:${category.groupId}`).join("|");
+  void customCategories;
   const [query, setQuery] = useState("");
   const [activeGroupKey, setActiveGroupKey] = useState("hogar");
-  const groups = useMemo(() => getAllCategoryGroups().map((group) => {
-    void customCatalogVersion;
+  const groups = getAllCategoryGroups().map((group) => {
     const meta = GROUPS.find((item) => item.key === group.id);
     return {
       key: group.id,
@@ -140,7 +139,7 @@ export default function ServiciosPage() {
       label: getCategoryGroupLabel(group.id, locale),
       ids: getAllCategories().filter((category) => category.groupId === group.id).map((category) => category.id),
     };
-  }).filter((group) => group.ids.length > 0), [customCatalogVersion, locale]);
+  });
   const normalizedQuery = normalizeText(query.trim());
   const matchedIds = useMemo(() => {
     if (!normalizedQuery) return null;
@@ -167,6 +166,7 @@ export default function ServiciosPage() {
   const resultCount = visibleGroups.reduce((sum, group) => sum + group.visibleIds.length, 0);
   const activeGroup = groups.find((group) => group.key === activeGroupKey) ?? groups[0] ?? GROUPS[0];
   const activeSearchGroup = visibleGroups.find((group) => group.key === activeGroupKey) ?? visibleGroups[0];
+  const activeGroupHasServices = activeGroup.ids.length > 0;
   const ActiveIcon = activeGroup.Icon;
   const ActiveSearchIcon = activeSearchGroup?.Icon ?? Search;
 
@@ -388,7 +388,8 @@ export default function ServiciosPage() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
+                    {activeGroupHasServices ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
                         {activeGroup.ids.map((id) => (
                           <Link
                             key={id}
@@ -404,7 +405,12 @@ export default function ServiciosPage() {
                             </span>
                           </Link>
                         ))}
-                    </div>
+                      </div>
+                    ) : (
+                      <div className="border-t border-[#f1f5f9] px-6 py-12 text-sm font-medium text-[#8a94a6]">
+                        {locale === "en" ? "This section does not have published services yet." : "Esta sección todavía no tiene servicios publicados."}
+                      </div>
+                    )}
                   </div>
                 </section>
             )}
