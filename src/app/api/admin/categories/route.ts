@@ -121,7 +121,10 @@ export async function PATCH(req: Request) {
   const admin = await getApiAdmin();
   if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
 
-  const { id, status, label, labelEn, groupId, isHidden, esSalud, supportsVideoconsulta } = await req.json();
+  const body = await req.json();
+  if (body?.type === "group") return updateCategoryGroup(body);
+
+  const { id, status, label, labelEn, groupId, isHidden, esSalud, supportsVideoconsulta } = body;
   if (!id || (status && !["approved", "rejected", "pending"].includes(status))) {
     return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
   }
@@ -250,11 +253,43 @@ async function createCategoryGroup(body: Record<string, unknown>) {
   return NextResponse.json({ ok: true, group: { id, label, labelEn, iconKey: "tag", sortOrder: nextSort } });
 }
 
+async function updateCategoryGroup(body: Record<string, unknown>) {
+  const admin = await getApiAdmin();
+  if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+
+  const id = typeof body.id === "string" ? body.id.trim() : "";
+  const label = typeof body.label === "string" ? body.label.trim() : "";
+  if (!id || !label) return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
+  const labelEn = typeof body.labelEn === "string" && body.labelEn.trim() ? body.labelEn.trim() : autoEnglishCategoryLabel(label);
+  const sortOrder = typeof body.sortOrder === "number" ? body.sortOrder : 100;
+  const db = createAdminClient();
+  const { error } = await db.from("category_groups").upsert({
+    id,
+    label,
+    label_en: labelEn,
+    icon_key: typeof body.iconKey === "string" && body.iconKey.trim() ? body.iconKey.trim() : "tag",
+    sort_order: sortOrder,
+    is_hidden: false,
+    updated_at: new Date().toISOString(),
+  }, { onConflict: "id", ignoreDuplicates: false });
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ ok: true });
+}
+
 export async function DELETE(req: Request) {
   const admin = await getApiAdmin();
   if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
 
-  const id = new URL(req.url).searchParams.get("id");
+  const url = new URL(req.url);
+  const groupId = url.searchParams.get("groupId");
+  if (groupId) {
+    const db = createAdminClient();
+    const { error } = await db.from("category_groups").update({ is_hidden: true, updated_at: new Date().toISOString() }).eq("id", groupId);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ ok: true });
+  }
+
+  const id = url.searchParams.get("id");
   if (!id) return NextResponse.json({ error: "ID requerido" }, { status: 400 });
 
   const db = createAdminClient();
