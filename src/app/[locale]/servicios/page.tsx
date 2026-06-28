@@ -168,7 +168,6 @@ export default function ServiciosPage() {
   const activeSearchGroup = visibleGroups.find((group) => group.key === activeGroupKey) ?? visibleGroups[0];
   const activeSearchIds = activeSearchGroup?.visibleIds ?? searchResults.map((item) => item.id);
   const activeGroupHasServices = activeGroup.ids.length > 0;
-  const ActiveIcon = activeGroup.Icon;
 
   function submitSearch(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -373,18 +372,14 @@ export default function ServiciosPage() {
 
                   <div className="min-w-0">
                     <div className="flex items-end justify-between gap-3 border-b border-[#eef2f6] px-4 py-4 sm:px-6">
-                      <div className="flex min-w-0 items-center gap-3">
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EAF7FD] text-[#009FD9]">
-                          <ActiveIcon className="h-5 w-5" />
-                        </span>
-                        <div className="min-w-0">
-                          <h2 className="text-xl font-extrabold leading-tight text-[#162543] [overflow-wrap:anywhere]">
-                            {activeGroup.label}
-                          </h2>
-                          <p className="mt-0.5 text-xs font-medium text-[#8a94a6]">
-                            {tp("optionsCount", { count: activeGroup.ids.length })}
-                          </p>
-                        </div>
+                      <div className="min-w-0">
+                        <p className="text-[11px] font-bold uppercase tracking-wide text-[#8a94a6]">{tp("resultsTitle")}</p>
+                        <h2 className="mt-0.5 text-xl font-extrabold leading-tight text-[#162543] [overflow-wrap:anywhere]">
+                          {activeGroup.label}
+                        </h2>
+                        <p className="mt-0.5 text-xs font-medium text-[#8a94a6]">
+                          {tp("optionsCount", { count: activeGroup.ids.length })}
+                        </p>
                       </div>
                     </div>
 
