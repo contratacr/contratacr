@@ -115,6 +115,8 @@ These are **enforceable acceptance criteria**, not suggestions. Every screen mus
 
 > **Navbar service search context (sprint 625).** In the desktop navbar Servicios dropdown, typed search results must show their section context together with the service name. A result should read like a catalog path (`Seccion` + `Servicio`) rather than a lone service word, so users understand where the result lives in the service taxonomy.
 
+> **Navbar service search structure (sprint 626).** The desktop navbar Servicios dropdown must keep the same mental model as `/servicios` when searching: filter the catalog by section and show the matching services inside the selected section. Do not collapse search results into a flat list of service words.
+
 > **Public services naming (sprint 609).** Public navigation and suggestion copy should say `Servicios`, not `Categorias`: users search for services, while category is an internal taxonomy concept. Navbar dropdowns, `/servicios`, and no-match CTAs should say `No ves tu servicio?` / `Suggest a service`. When a search has exactly one service match, render a single direct result row; do not show both a service row and a category/group field that makes the result look duplicated.
 
 > **Services catalog suggestion CTA (sprint 612).** Do not add a separate bottom `No encuentras tu servicio?` section on `/servicios`; it duplicates the existing suggestion flow and makes the catalog feel heavier. Keep the page focused on browsing/searching services. Suggestion entry points should live where the user is actively searching or adding a professional service.

@@ -340,10 +340,6 @@ export default function ServiciosPage() {
             ) : (
                 <section className="grid min-h-[560px] scroll-mt-32 lg:grid-cols-[300px_minmax(0,1fr)]">
                   <aside className="min-w-0 overflow-hidden border-b border-[#edf2f7] bg-[#fbfdff] p-3 lg:border-b-0 lg:border-r">
-                    <div className="px-1 pb-2">
-                      <p className="text-xs font-bold uppercase tracking-wide text-[#8a94a6]">{tp("browseByGroup")}</p>
-                      <h2 className="mt-1 text-lg font-extrabold text-[#162543]">{tp("chooseGroup")}</h2>
-                    </div>
                     <div className="flex w-full min-w-0 gap-2 overflow-x-auto pb-1 lg:block lg:space-y-1 lg:overflow-visible lg:pb-0">
                       {groups.map((group) => {
                         const Icon = group.Icon;
