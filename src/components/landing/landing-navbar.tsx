@@ -240,7 +240,7 @@ function LanguageInline({ className }: { className?: string }) {
 /* ─── Header data ───
    The "Categorías" mega-menu (desktop) is built from the FULL catalog `CATEGORY_GROUPS`
    (sprint 525) — every group + its categories, organized with group headers. On mobile the
-   drawer shows just a single "Categorías" link → /categorias. */
+   drawer shows just a single "Servicios" link -> /servicios. */
 
 // `key` resolves to header.resourceLinks.<key> for the translated label.
 const RESOURCES_LINKS: { key: string; href: string }[] = [
@@ -645,7 +645,7 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
 
       <div className="mt-4 border-t border-gray-100 pt-3">
         <Link
-          href="/categorias"
+          href="/servicios"
           onClick={onNavigate}
           className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#009FD9] hover:underline"
         >
@@ -1538,7 +1538,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
               <div className="border-b border-[#edf2f7] p-1.5">
                 <div className="flex flex-col gap-0.5">
                   <Link
-                    href="/categorias"
+                    href="/servicios"
                     onClick={() => setMobileOpen(false)}
                     className={mobileRowClass(false, true)}
                   >

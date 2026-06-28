@@ -354,7 +354,7 @@
     "placeholderDefault": "Escribe tu especialidad o busca…",
     "searchPlaceholder": "Escribe tu servicio… ejemplo: psicólogo, plomero, niñera",
     "noResults": "No encontramos ese servicio",
-    "noResultsHint": "Sugiérelo abajo y nuestro equipo lo revisa.",
+    "noResultsHint": "Prueba con otro nombre o búscalo desde el inicio.",
     "suggestThanks": "Gracias. Enviamos tu sugerencia al equipo para revisión.",
     "suggestNamePlaceholder": "Nombre del servicio",
     "sending": "Enviando…",
@@ -1492,7 +1492,7 @@
     "offerDescPlaceholder": "¿Qué incluye este servicio? Describe lo que ofreces.",
     "emptyTitle": "Aún no ofreces servicios",
     "emptyHelp": "Agrega los servicios que ofreces desde nuestro catálogo.",
-    "pickerBack": "Volver a categorias",
+        "pickerBack": "Volver a servicios",
     "pickerOptionsCount": "{count, plural, one {# opción} other {# opciones}}"
   },
   "availabilityEditor": {
@@ -2449,7 +2449,7 @@
     "resultsTitle": "Resultados",
     "searchSummary": "{count, plural, one {# servicio encontrado para \"{query}\"} other {# servicios encontrados para \"{query}\"}}",
     "noResults": "No encontramos ese servicio.",
-    "noResultsHint": "Sugiérelo abajo y nuestro equipo lo revisa.",
+    "noResultsHint": "Prueba con otro nombre o búscalo desde el inicio.",
     "viewAll": "Ver todos los servicios",
     "groupCount": "{count, plural, one {# grupo} other {# grupos}}",
     "serviceCount": "{count, plural, one {# servicio} other {# servicios}}",

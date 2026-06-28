@@ -24,7 +24,7 @@ export async function ProsSection() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center mt-10">
           <Link
-            href="/categorias"
+            href="/servicios"
             className="inline-flex items-center gap-1.5 text-sm font-bold text-[#009FD9] hover:underline"
           >
             {t("viewAll")} <ArrowRight className="h-4 w-4" />

@@ -41,7 +41,7 @@ export function useCustomCategories() {
 }
 
 /** Mount once app-wide so the overlay is populated even on pages whose search
- *  surfaces (hero search, /categorias box) read `searchCategories` directly
+ *  surfaces (hero search, /servicios box) read `searchCategories` directly
  *  without rendering a <CategorySearch>. Renders nothing. */
 export function CustomCategoriesLoader() {
   useCustomCategories();

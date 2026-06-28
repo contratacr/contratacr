@@ -19,6 +19,7 @@ const PUBLIC_PREFIXES = [
   "/buscar",
   "/profesionales",
   "/categorias",
+  "/servicios",
   "/como-funciona",
   "/terminos",
   "/privacidad",

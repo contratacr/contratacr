@@ -31,7 +31,7 @@ export function CategorySuggestionBox({
   cancelLabel: string;
   thanksLabel: string;
   className?: string;
-  /** Prominent = no loose top divider + the trigger is a pill CTA (for the /categorias
+  /** Prominent = no loose top divider + the trigger is a pill CTA (for the /servicios
    *  contained card). Default (compact) keeps the inline text-link style used in forms. */
   prominent?: boolean;
   /** Fires when the box is "active" (the inline input is open or a suggestion was just
