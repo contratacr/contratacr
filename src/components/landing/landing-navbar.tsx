@@ -425,7 +425,9 @@ function CategoryAutocomplete({
                 )}
               >
                 <span className="text-sm font-medium text-[#1a2744]">{getCategoryLabel(s.id, locale)}</span>
-                <span className="text-[11px] text-gray-400 shrink-0">{getCategoryGroupLabel(s.groupId, locale)}</span>
+                {suggestions.length > 1 && (
+                  <span className="text-[11px] text-gray-400 shrink-0">{getCategoryGroupLabel(s.groupId, locale)}</span>
+                )}
               </button>
             ))
           )}
@@ -516,7 +518,20 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
       </div>
 
       {filtering ? (
-        matches.length > 0 ? (
+        matches.length === 1 ? (
+          <button
+            type="button"
+            onClick={() => go(matches[0].id)}
+            className="group flex w-full items-center justify-between gap-3 rounded-2xl border border-[#eef2f6] bg-white px-4 py-3 text-left shadow-sm transition-colors hover:bg-[#f8fbfe]"
+          >
+            <span className="min-w-0">
+              <span className="block text-sm font-bold text-[#162543] [overflow-wrap:anywhere] group-hover:text-[#0089bb]">
+                {getCategoryLabel(matches[0].id, locale)}
+              </span>
+            </span>
+            <ChevronRight className="h-4 w-4 shrink-0 text-[#cbd5e1] group-hover:text-[#009FD9]" />
+          </button>
+        ) : matches.length > 0 ? (
           <div className="max-h-[390px] overflow-y-auto rounded-2xl border border-[#eef2f6] bg-white p-3">
             <div className="grid grid-cols-2 gap-3">
               {groupedMatches.map(({ group, items }) => (
