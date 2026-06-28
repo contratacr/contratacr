@@ -181,24 +181,25 @@ export default function ServiciosPage() {
     <div className="flex min-h-screen flex-col bg-white">
       <LandingNavbar />
 
-      <section className="relative z-30 bg-[#f7fafc] px-4 pb-5 pt-24 sm:pt-28">
-        <div className="mx-auto max-w-6xl">
-          <div className="max-w-3xl">
-            <span className="mb-2.5 inline-flex rounded-full bg-[#EBF5FB] px-3 py-1 text-xs font-bold uppercase text-[#0089bb]">
-              {tp("eyebrow")}
-            </span>
-            <h1 className="text-[2rem] font-extrabold leading-tight text-[#1a2744] sm:text-4xl">
-              {tp("title")}
-            </h1>
-            <p className="mt-2.5 max-w-2xl text-sm leading-6 text-[#5f6b7a] sm:text-base">
-              {tp("subtitle")}
-            </p>
+      <main className="flex-1 bg-[#f7fafc]">
+        <section className="relative z-30 px-4 pb-5 pt-24 sm:pt-28">
+          <div className="mx-auto max-w-6xl">
+            <div className="max-w-3xl">
+              <span className="mb-2.5 inline-flex rounded-full bg-[#EBF5FB] px-3 py-1 text-xs font-bold uppercase text-[#0089bb]">
+                {tp("eyebrow")}
+              </span>
+              <h1 className="text-[2rem] font-extrabold leading-tight text-[#1a2744] sm:text-4xl">
+                {tp("title")}
+              </h1>
+              <p className="mt-2.5 max-w-2xl text-sm leading-6 text-[#5f6b7a] sm:text-base">
+                {tp("subtitle")}
+              </p>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <section className="bg-[#f7fafc] px-4 pb-16 pt-0">
-        <div className="mx-auto max-w-6xl">
+        <section className="px-4 pb-16 pt-0">
+          <div className="mx-auto max-w-6xl">
           <div className="overflow-hidden rounded-[28px] border border-[#e1e9f0] bg-white shadow-[0_18px_44px_rgba(15,23,42,0.06)]">
             <div className="border-b border-[#eef2f6] bg-white p-3 sm:p-4">
               <form
@@ -415,8 +416,9 @@ export default function ServiciosPage() {
                 </section>
             )}
           </div>
-        </div>
-      </section>
+          </div>
+        </section>
+      </main>
 
       <LandingFooter />
     </div>
