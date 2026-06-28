@@ -587,7 +587,6 @@ export function MobileServiceSearch() {
 
   return (
     <div ref={fieldRef} className="relative flex min-w-0 w-full items-center">
-      <Search className="absolute left-3 h-4 w-4 text-[#9ca3af] pointer-events-none" />
       <input
         type="text"
         value={q}
@@ -599,7 +598,7 @@ export function MobileServiceSearch() {
         role="combobox"
         aria-expanded={open}
         aria-autocomplete="list"
-        className="h-10 min-w-0 w-full rounded-full border border-[#e5e7eb] bg-white pl-9 pr-9 text-sm text-[#111827] placeholder-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition"
+        className="h-10 min-w-0 w-full rounded-full border border-[#e5e7eb] bg-white pl-4 pr-9 text-sm text-[#111827] placeholder-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition"
       />
       {q && (
         <button onClick={() => { setQ(""); setOpen(false); if (debounceRef.current) clearTimeout(debounceRef.current); pushQuery(""); }} className="absolute right-3 text-[#9ca3af] hover:text-[#374151] transition-colors" aria-label={t("filters.clearSearch")}>
