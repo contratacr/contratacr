@@ -69,7 +69,7 @@ export function AdminCategories() {
   const [catalog, setCatalog] = useState<CatalogCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
-  const [catalogFilter, setCatalogFilter] = useState<"all" | "health" | "video">("all");
+  const [catalogFilter, setCatalogFilter] = useState<"all" | "custom" | "health" | "video">("all");
   const [edits, setEdits] = useState<Record<string, string>>({});
   const [flagEdits, setFlagEdits] = useState<Record<string, { esSalud: boolean; supportsVideoconsulta: boolean }>>({});
   const [newServiceName, setNewServiceName] = useState("");
@@ -96,6 +96,7 @@ export function AdminCategories() {
   const filteredCatalog = useMemo(() => {
     const q = normalizeText(query);
     return catalog.filter((item) => {
+      if (catalogFilter === "custom" && item.source !== "custom") return false;
       if (catalogFilter === "health" && !item.esSalud) return false;
       if (catalogFilter === "video" && !item.supportsVideoconsulta) return false;
       if (!q) return true;
@@ -334,13 +335,14 @@ export function AdminCategories() {
             <div className="flex gap-2">
               {[
                 { id: "all", label: "Todas" },
+                { id: "custom", label: "Agregados" },
                 { id: "health", label: "Salud" },
                 { id: "video", label: "Videoconsulta" },
               ].map((filter) => (
                 <button
                   key={filter.id}
                   type="button"
-                  onClick={() => setCatalogFilter(filter.id as "all" | "health" | "video")}
+                  onClick={() => setCatalogFilter(filter.id as "all" | "custom" | "health" | "video")}
                   className={`rounded-lg border px-3 py-1.5 text-sm font-semibold ${catalogFilter === filter.id ? "border-[#009FD9] bg-[#EBF5FB] text-[#0077a3]" : "border-[#e5e7eb] bg-white text-[#374151]"}`}
                 >
                   {filter.label}
@@ -365,7 +367,7 @@ export function AdminCategories() {
                   <div className="flex flex-wrap items-center gap-2">
                     <Toggle checked={item.esSalud} label="Salud" onChange={(v) => updateCatalogFlag(item, { esSalud: v })} />
                     <Toggle checked={item.supportsVideoconsulta} label="Videoconsulta" onChange={(v) => updateCatalogFlag(item, { supportsVideoconsulta: v })} />
-                    {item.source === "custom" && (
+                    {item.source === "custom" ? (
                       <button
                         type="button"
                         onClick={() => deleteService(item)}
@@ -373,13 +375,19 @@ export function AdminCategories() {
                       >
                         <Trash2 className="h-3.5 w-3.5" /> Eliminar
                       </button>
+                    ) : (
+                      <span className="inline-flex items-center rounded-lg bg-[#f8fafc] px-2 py-1 text-xs font-semibold text-[#94a3b8]">
+                        Base protegido
+                      </span>
                     )}
                     {busy === item.id && <Loader2 className="h-4 w-4 animate-spin text-[#009FD9]" />}
                   </div>
                 </div>
               ))}
               {filteredCatalog.length === 0 && (
-                <div className="py-14 text-center text-sm text-[#9ca3af]">No hay categorias con ese filtro.</div>
+                <div className="py-14 text-center text-sm text-[#9ca3af]">
+                  {catalogFilter === "custom" ? "No hay servicios agregados para eliminar." : "No hay servicios con ese filtro."}
+                </div>
               )}
             </div>
           )}
