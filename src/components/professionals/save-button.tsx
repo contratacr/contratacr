@@ -178,7 +178,7 @@ export function SaveableCard({ pro, children, isOwn = false }: CardWrapperProps)
       {children}
       {/* Always-visible favorites button, pinned high in the card so the mobile
           name/price row has room to breathe. */}
-      <div className="absolute right-3 top-1.5 z-20">
+      <div className="absolute left-[58px] top-[18px] z-20 lg:left-auto lg:right-3 lg:top-1.5">
         <SaveButton pro={pro} isOwn={isOwn} />
       </div>
     </div>

@@ -180,7 +180,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
           be siblings of this row and got pushed BELOW the taller avatar, leaving a gap).
           PRICE is right-aligned on the company-name line only. The mobile `pr-7` keeps the
           price clear of the top-right bookmark (`lg:pr-0` on desktop). */}
-      <div className="flex items-start gap-3 pr-7 lg:pr-0">
+      <div className="flex items-start gap-3">
         <Link href={`/profesionales/${professional.slug}`} className="relative z-10 shrink-0">
           <Avatar className="h-14 w-14 rounded-full lg:h-16 lg:w-16">
             <AvatarImage src={professional.avatarUrl} alt={professional.fullName} />
@@ -200,7 +200,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
                   never cut off on mobile; desktop keeps one-line cards tighter. Then
                   Verificado, then the personal name = first name + both surnames. */}
               <Link href={`/profesionales/${professional.slug}`} className="relative z-10 min-w-0">
-                <h3 className="font-bold text-[#111827] text-[15px] leading-snug lg:line-clamp-1 hover:text-[#009FD9] transition-colors">{brandPrimary}</h3>
+                <h3 className="truncate font-bold text-[#111827] text-[15px] leading-snug hover:text-[#009FD9] transition-colors">{brandPrimary}</h3>
               </Link>
               {verifiedMark}
               {brandSecondary && (
@@ -210,7 +210,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
             {/* Price — on the name line, right-aligned. AMOUNT brand-blue, /unit muted grey;
                 capped width so a long price wraps instead of crowding the name. */}
             {priceLabel && (
-              <div className="ml-auto shrink-0 max-w-[34%] text-right leading-tight sm:max-w-[38%]">
+              <div className="ml-auto shrink-0 max-w-[38%] text-right leading-tight sm:max-w-[40%]">
                 <span className={`font-bold text-[#009FD9] ${priceIsColones ? "text-[15px]" : "text-[13px]"}`}>{priceAmount}</span>
                 {priceUnit && <span className="text-[11px] font-medium text-[#9ca3af]"> {priceUnit}</span>}
               </div>
@@ -273,8 +273,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
     // body out in TWO columns (info + location tabs | schedule), separated by a vertical
     // divider; MOBILE stacks them — all owned by ProfessionalSchedule, which holds the
     // schedule state and receives the info above as a slot. The ranking number now rides on
-    // the avatar; only the favorite bookmark (top-right, SaveableCard) floats over the top,
-    // and the header's `pr-8` (mobile) keeps content clear of it.
+    // the avatar; the favorite bookmark floats outside the text/price flow.
     <article className={`group relative flex h-full flex-col rounded-2xl border border-[#e5e7eb] bg-white p-4 transition-shadow duration-200 hover:border-[#cbd5e1] hover:shadow-md ${className ?? ""}`}>
       <ProfessionalSchedule
         info={info}
