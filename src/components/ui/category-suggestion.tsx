@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useLocale } from "next-intl";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -44,6 +45,7 @@ export function CategorySuggestionBox({
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
+  const locale = useLocale();
 
   useEffect(() => {
     onActiveChange?.(suggesting || sent);
@@ -69,7 +71,7 @@ export function CategorySuggestionBox({
       await fetch("/api/categories/suggest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: clean }),
+        body: JSON.stringify({ name: clean, locale }),
       });
       setSent(true);
       setName("");

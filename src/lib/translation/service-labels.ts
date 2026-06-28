@@ -72,7 +72,14 @@ async function getAccessToken() {
   return token;
 }
 
-async function translateWithApiKey(label: string) {
+type TranslateTarget = "en" | "es";
+
+function localFallback(label: string, target: TranslateTarget) {
+  if (target === "en") return autoEnglishCategoryLabel(label);
+  return label.trim();
+}
+
+async function translateWithApiKey(label: string, target: TranslateTarget, source: TranslateTarget) {
   const key = process.env.GOOGLE_TRANSLATE_API_KEY?.trim();
   if (!key) return "";
 
@@ -84,8 +91,8 @@ async function translateWithApiKey(label: string) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       q: label,
-      source: "es",
-      target: "en",
+      source,
+      target,
       format: "text",
     }),
     cache: "no-store",
@@ -96,7 +103,7 @@ async function translateWithApiKey(label: string) {
   return cleanTranslation(data?.data?.translations?.[0]?.translatedText);
 }
 
-async function translateWithServiceAccount(label: string, projectId: string) {
+async function translateWithServiceAccount(label: string, projectId: string, target: TranslateTarget, source: TranslateTarget) {
   const token = await getAccessToken();
   if (!token) return "";
 
@@ -112,8 +119,8 @@ async function translateWithServiceAccount(label: string, projectId: string) {
     body: JSON.stringify({
       contents: [label],
       mimeType: "text/plain",
-      sourceLanguageCode: "es",
-      targetLanguageCode: "en",
+      sourceLanguageCode: source,
+      targetLanguageCode: target,
     }),
     cache: "no-store",
   });
@@ -123,16 +130,16 @@ async function translateWithServiceAccount(label: string, projectId: string) {
   return cleanTranslation(data?.translations?.[0]?.translatedText);
 }
 
-export async function suggestEnglishServiceLabel(label: string): Promise<string> {
+export async function translateServiceLabel(label: string, target: TranslateTarget, source: TranslateTarget): Promise<string> {
   const cleanLabel = label.trim();
-  const fallback = autoEnglishCategoryLabel(cleanLabel);
+  const fallback = localFallback(cleanLabel, target);
   if (!cleanLabel) return fallback;
 
   try {
     const projectId = process.env.GOOGLE_CLOUD_PROJECT_ID?.trim();
     const translated = projectId
-      ? await translateWithServiceAccount(cleanLabel, projectId)
-      : await translateWithApiKey(cleanLabel);
+      ? await translateWithServiceAccount(cleanLabel, projectId, target, source)
+      : await translateWithApiKey(cleanLabel, target, source);
     if (!translated) return fallback;
 
     // Avoid replacing a good local phrase with a no-op translation.
@@ -143,4 +150,12 @@ export async function suggestEnglishServiceLabel(label: string): Promise<string>
   } catch {
     return fallback;
   }
+}
+
+export async function suggestEnglishServiceLabel(label: string): Promise<string> {
+  return translateServiceLabel(label, "en", "es");
+}
+
+export async function suggestSpanishServiceLabel(label: string): Promise<string> {
+  return translateServiceLabel(label, "es", "en");
 }

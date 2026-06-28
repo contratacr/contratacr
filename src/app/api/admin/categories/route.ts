@@ -106,13 +106,25 @@ export async function GET(req: Request) {
   let q = db.from("category_suggestions").select("*").order("created_at", { ascending: false });
   if (status === "pending" || status === "approved" || status === "rejected") q = q.eq("status", status);
   const { data } = await q;
+  const suggestionRows = data ?? [];
+  const ids = suggestionRows.map((row) => row.id).filter(Boolean);
+  let englishById = new Map<string, string>();
+  if (ids.length) {
+    const english = await db.from("categories").select("id, name_en").in("id", ids);
+    englishById = new Map((english.data ?? [])
+      .filter((row) => row.id && row.name_en)
+      .map((row) => [row.id, row.name_en as string]));
+  }
 
   const { count: pendingCount } = await db
     .from("category_suggestions")
     .select("id", { count: "exact", head: true })
     .eq("status", "pending");
 
-  return NextResponse.json({ categories: data ?? [], pendingCount: pendingCount ?? 0 });
+  return NextResponse.json({
+    categories: suggestionRows.map((row) => ({ ...row, labelEn: englishById.get(row.id) ?? null })),
+    pendingCount: pendingCount ?? 0,
+  });
 }
 
 // PATCH /api/admin/categories

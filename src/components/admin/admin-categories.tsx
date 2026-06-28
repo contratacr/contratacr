@@ -13,6 +13,7 @@ import {
 type Suggestion = {
   id: string;
   label: string;
+  labelEn?: string | null;
   suggested_name?: string | null;
   status: string;
   created_at: string;
@@ -142,7 +143,7 @@ export function AdminCategories() {
   }, [view, status]);
 
   const nameOf = (i: Suggestion) => edits[i.id] ?? (i.suggested_name || i.label);
-  const englishNameOf = (i: Suggestion) => englishEdits[i.id] ?? autoEnglishCategoryLabel(nameOf(i));
+  const englishNameOf = (i: Suggestion) => englishEdits[i.id] ?? i.labelEn ?? autoEnglishCategoryLabel(nameOf(i));
   const groupOfSuggestion = (i: Suggestion) => suggestionGroups[i.id] ?? suggestedGroupId(nameOf(i), groups);
   const flagsOf = (i: Suggestion) => {
     const review = classifySuggestedCategory(nameOf(i));
@@ -206,7 +207,7 @@ export function AdminCategories() {
   useEffect(() => {
     if (view !== "suggestions" || status !== "pending" || !items.length) return;
     const missing = items.filter((item) => {
-      return !manualEnglishEdits[item.id] && !englishEdits[item.id] && !translatedSuggestionIds.current.has(item.id);
+      return !manualEnglishEdits[item.id] && !englishEdits[item.id] && !item.labelEn && !translatedSuggestionIds.current.has(item.id);
     });
     if (!missing.length) return;
 
