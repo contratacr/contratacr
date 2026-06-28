@@ -299,9 +299,9 @@ export function AdminCategories() {
     const flags = flagsOf(i);
     if (next === "approved") {
       label = nameOf(i).trim();
-      if (!label) { window.alert("Escribe un nombre para el servicio antes de aprobar."); return; }
+      if (!label) { window.alert("Agrega el nombre del servicio antes de aprobar la sugerencia."); return; }
       const similar = findSimilarCategory(label);
-      if (similar && !window.confirm(`Ya existe un servicio parecido: "${similar}".\n\nAgregar "${label}" de todos modos?`)) return;
+      if (similar && !window.confirm(`Ya existe un servicio parecido: "${similar}".\n\n¿Quieres aprobar "${label}" de todos modos?`)) return;
     }
     setBusy(i.id);
     try {
@@ -322,7 +322,7 @@ export function AdminCategories() {
     const draft = draftOf(item);
     const label = draft.label.trim();
     const labelEn = draft.labelEn.trim() || autoEnglishCategoryLabel(label);
-    if (!label) { window.alert("El servicio necesita un nombre."); return; }
+    if (!label) { window.alert("Agrega el nombre del servicio antes de guardar."); return; }
     setBusy(item.id);
     try {
       const res = await fetch("/api/admin/categories", {
@@ -340,7 +340,7 @@ export function AdminCategories() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        window.alert(data.error || "No se pudo guardar el servicio.");
+        window.alert(data.error || "No pudimos guardar el servicio. Inténtalo de nuevo.");
         return;
       }
       setCatalog((prev) => prev.map((row) => row.id === item.id ? {
@@ -373,7 +373,7 @@ export function AdminCategories() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        window.alert(data.error || "No se pudo guardar la sección.");
+        window.alert(data.error || "No pudimos guardar la sección. Inténtalo de nuevo.");
         return;
       }
       await loadCatalog();
@@ -424,7 +424,7 @@ export function AdminCategories() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        window.alert(data.error || "No se pudo agregar el servicio.");
+        window.alert(data.error || "No pudimos agregar el servicio. Inténtalo de nuevo.");
         return;
       }
       setNewServiceName("");
@@ -453,7 +453,7 @@ export function AdminCategories() {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        window.alert(data.error || "No se pudo agregar la sección.");
+        window.alert(data.error || "No pudimos agregar la sección. Inténtalo de nuevo.");
         return;
       }
       setNewGroupName("");
@@ -468,15 +468,15 @@ export function AdminCategories() {
 
   async function deleteService(item: CatalogCategory) {
     const message = item.source === "base"
-      ? `¿Ocultar "${item.label}" del catálogo?\n\nYa no aparecerá para nuevos perfiles, búsquedas o solicitudes. Los datos históricos que ya usaban este servicio se mantienen.`
-      : `¿Eliminar "${item.label}"?\n\nEste servicio agregado se quitará del catálogo.`;
+      ? `¿Ocultar "${item.label}" del catálogo?\n\nDejará de aparecer para nuevos perfiles, búsquedas y solicitudes. Los datos históricos se mantienen.`
+      : `¿Eliminar "${item.label}" del catálogo?\n\nEste servicio dejará de aparecer en la app. Esta acción no afecta datos históricos.`;
     if (!window.confirm(message)) return;
     setBusy(item.id);
     try {
       const res = await fetch(`/api/admin/categories?id=${encodeURIComponent(item.id)}`, { method: "DELETE" });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        window.alert(data.error || "No se pudo eliminar el servicio.");
+        window.alert(data.error || "No pudimos eliminar el servicio. Inténtalo de nuevo.");
         return;
       }
       setCatalog((prev) => prev.filter((row) => row.id !== item.id));
@@ -488,16 +488,16 @@ export function AdminCategories() {
   async function deleteGroup(group: CatalogGroup) {
     const inUse = catalog.filter((item) => item.groupId === group.id).length;
     if (inUse > 0) {
-      window.alert(`Esta sección tiene ${inUse} servicios. Mueve esos servicios antes de eliminarla.`);
+      window.alert(`No puedes eliminar esta sección todavía.\n\nTiene ${inUse} servicio${inUse === 1 ? "" : "s"} asociado${inUse === 1 ? "" : "s"}. Muévelos a otra sección y vuelve a intentarlo.`);
       return;
     }
-    if (!window.confirm(`¿Eliminar la sección "${group.label}"?`)) return;
+    if (!window.confirm(`¿Eliminar la sección "${group.label}"?\n\nLa sección dejará de aparecer en el catálogo.`)) return;
     setBusy(`group-${group.id}`);
     try {
       const res = await fetch(`/api/admin/categories?groupId=${encodeURIComponent(group.id)}`, { method: "DELETE" });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        window.alert(data.error || "No se pudo eliminar la sección.");
+        window.alert(data.error || "No pudimos eliminar la sección. Inténtalo de nuevo.");
         return;
       }
       await loadCatalog();
