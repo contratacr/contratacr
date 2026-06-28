@@ -82,6 +82,7 @@ export function AdminCategories() {
   const [view, setView] = useState<"suggestions" | "services" | "groups">("services");
   const [status, setStatus] = useState<"pending" | "approved" | "rejected">("pending");
   const [items, setItems] = useState<Suggestion[]>([]);
+  const [pendingCount, setPendingCount] = useState(0);
   const [catalog, setCatalog] = useState<CatalogCategory[]>([]);
   const [groups, setGroups] = useState<CatalogGroup[]>([]);
   const [loading, setLoading] = useState(true);
@@ -122,6 +123,7 @@ export function AdminCategories() {
           ]);
           if (cancelled) return;
           setItems(suggestions.categories ?? []);
+          setPendingCount(suggestions.pendingCount ?? 0);
           if (!groups.length && catalogData) {
             setCatalog(catalogData.catalog ?? []);
             setGroups(catalogData.groups ?? []);
@@ -239,6 +241,7 @@ export function AdminCategories() {
         body: JSON.stringify({ id: i.id, status: next, label, labelEn: label ? englishNameOf(i) : undefined, groupId: groupOfSuggestion(i), ...flags }),
       });
       setItems((prev) => prev.filter((x) => x.id !== i.id));
+      if (next === "approved" || next === "rejected") setPendingCount((count) => Math.max(0, count - 1));
       window.dispatchEvent(new Event("focus"));
     } finally {
       setBusy(null);
@@ -447,9 +450,10 @@ export function AdminCategories() {
           {[
             { id: "services", label: "Servicios", icon: Tag },
             { id: "groups", label: "Secciones", icon: Layers3 },
-            { id: "suggestions", label: "Sugerencias", icon: Check },
+            { id: "suggestions", label: "Sugerencias", icon: Check, count: pendingCount },
           ].map((tab) => {
             const Icon = tab.icon;
+            const count = "count" in tab ? (tab.count ?? 0) : 0;
             return (
               <button
                 key={tab.id}
@@ -463,6 +467,11 @@ export function AdminCategories() {
               >
                 <Icon className="h-4 w-4" />
                 {tab.label}
+                {count > 0 && (
+                  <span className={`ml-0.5 rounded-full px-2 py-0.5 text-xs font-extrabold tabular-nums ${view === tab.id ? "bg-white/20 text-white" : "bg-[#EBF5FB] text-[#0077a3]"}`}>
+                    {count}
+                  </span>
+                )}
               </button>
             );
           })}
@@ -472,7 +481,12 @@ export function AdminCategories() {
       {view === "suggestions" && (
         <section className="space-y-4">
           <div className="rounded-2xl border border-[#d8eef8] bg-[#f8fbfe] p-4">
-            <p className="text-sm font-bold text-[#162543]">Revisión asistida</p>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-sm font-bold text-[#162543]">Revisión asistida</p>
+              <span className="rounded-full bg-white px-3 py-1 text-xs font-extrabold text-[#0077a3] shadow-sm">
+                {pendingCount} pendientes
+              </span>
+            </div>
             <p className="mt-1 text-sm leading-6 text-[#5f6b7a]">
               La app propone nombre en inglés, sección, salud y videoconsulta. El admin confirma o ajusta antes de publicar.
             </p>
