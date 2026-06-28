@@ -14,7 +14,14 @@ type ServiceAccount = {
 let cachedToken: { token: string; expiresAt: number } | null = null;
 
 function cleanTranslation(value: unknown) {
-  return typeof value === "string" ? value.trim().replace(/\s+/g, " ") : "";
+  return normalizeServiceDisplayName(typeof value === "string" ? value : "");
+}
+
+export function normalizeServiceDisplayName(value: string) {
+  const clean = value.trim().replace(/\s+/g, " ");
+  if (!clean) return "";
+  const lower = clean.toLocaleLowerCase("es-CR");
+  return lower.charAt(0).toLocaleUpperCase("es-CR") + lower.slice(1);
 }
 
 function base64Url(input: string) {
@@ -75,8 +82,8 @@ async function getAccessToken() {
 type TranslateTarget = "en" | "es";
 
 function localFallback(label: string, target: TranslateTarget) {
-  if (target === "en") return autoEnglishCategoryLabel(label);
-  return label.trim();
+  if (target === "en") return normalizeServiceDisplayName(autoEnglishCategoryLabel(label));
+  return normalizeServiceDisplayName(label);
 }
 
 async function translateWithApiKey(label: string, target: TranslateTarget, source?: TranslateTarget) {
@@ -135,7 +142,7 @@ async function translateWithServiceAccount(label: string, projectId: string, tar
 }
 
 export async function translateServiceLabel(label: string, target: TranslateTarget, source?: TranslateTarget): Promise<string> {
-  const cleanLabel = label.trim();
+  const cleanLabel = normalizeServiceDisplayName(label);
   const fallback = localFallback(cleanLabel, target);
   if (!cleanLabel) return fallback;
 

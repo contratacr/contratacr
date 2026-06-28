@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { slugifyCategory } from "@/lib/data/categories";
-import { suggestEnglishServiceLabel, suggestSpanishServiceLabel } from "@/lib/translation/service-labels";
+import { normalizeServiceDisplayName, suggestEnglishServiceLabel, suggestSpanishServiceLabel } from "@/lib/translation/service-labels";
 
 // A user suggests a category that isn't in the official list. Creates a tracked,
 // pending row in `category_suggestions` (an admin moderation ticket) — NOT usable
@@ -12,12 +12,11 @@ import { suggestEnglishServiceLabel, suggestSpanishServiceLabel } from "@/lib/tr
 // "suggestion" tag is gone).
 export async function POST(req: NextRequest) {
   try {
-    const { name, locale } = await req.json();
-    const clean = typeof name === "string" ? name.trim() : "";
+    const { name } = await req.json();
+    const clean = normalizeServiceDisplayName(typeof name === "string" ? name : "");
     if (!clean) return NextResponse.json({ error: "Nombre requerido" }, { status: 400 });
-    const sourceLocale = locale === "en" ? "en" : "es";
-    const labelEs = sourceLocale === "en" ? await suggestSpanishServiceLabel(clean) : clean;
-    const labelEn = sourceLocale === "en" ? clean : await suggestEnglishServiceLabel(clean);
+    const labelEs = await suggestSpanishServiceLabel(clean);
+    const labelEn = await suggestEnglishServiceLabel(clean);
 
     // Suggestions are allowed even pre-account (category selection happens during
     // registration before the session exists). Attach the user id when present.

@@ -12,7 +12,7 @@ import {
   slugifyCategory,
   supportsVideoConsultCategory,
 } from "@/lib/data/categories";
-import { suggestEnglishServiceLabel, suggestSpanishServiceLabel } from "@/lib/translation/service-labels";
+import { normalizeServiceDisplayName, suggestEnglishServiceLabel, suggestSpanishServiceLabel } from "@/lib/translation/service-labels";
 
 type DbCategory = {
   id: string;
@@ -146,8 +146,10 @@ export async function PATCH(req: Request) {
   const groups = await getAdminGroups(db);
 
   if (!status) {
-    const cleanLabel = typeof label === "string" && label.trim() ? label.trim() : labelFromId(id);
-    const cleanLabelEn = typeof labelEn === "string" && labelEn.trim() ? labelEn.trim() : await suggestEnglishServiceLabel(cleanLabel);
+    const rawLabel = normalizeServiceDisplayName(typeof label === "string" ? label : "");
+    const rawLabelEn = normalizeServiceDisplayName(typeof labelEn === "string" ? labelEn : "");
+    const cleanLabel = rawLabel ? await suggestSpanishServiceLabel(rawLabel) : rawLabelEn ? await suggestSpanishServiceLabel(rawLabelEn) : normalizeServiceDisplayName(labelFromId(id));
+    const cleanLabelEn = rawLabelEn ? await suggestEnglishServiceLabel(rawLabelEn) : await suggestEnglishServiceLabel(cleanLabel);
     const { error } = await upsertCategory(db, {
       id,
       name: cleanLabel,
@@ -166,7 +168,7 @@ export async function PATCH(req: Request) {
     approved: status === "approved",
     reviewed_at: new Date().toISOString(),
   };
-  const cleanLabel = typeof label === "string" ? label.trim() : "";
+  const cleanLabel = normalizeServiceDisplayName(typeof label === "string" ? label : "");
   if (cleanLabel) {
     update.label = cleanLabel;
     update.suggested_name = cleanLabel;
@@ -181,8 +183,10 @@ export async function PATCH(req: Request) {
       .select("label, suggested_name")
       .eq("id", id)
       .single();
-    const finalName = cleanLabel || row?.label || row?.suggested_name || labelFromId(id);
-    const finalNameEn = typeof labelEn === "string" && labelEn.trim() ? labelEn.trim() : await suggestEnglishServiceLabel(finalName);
+    const rawName = cleanLabel || row?.label || row?.suggested_name || labelFromId(id);
+    const rawNameEn = normalizeServiceDisplayName(typeof labelEn === "string" ? labelEn : "");
+    const finalName = await suggestSpanishServiceLabel(rawName);
+    const finalNameEn = rawNameEn ? await suggestEnglishServiceLabel(rawNameEn) : await suggestEnglishServiceLabel(finalName);
     const review = classifySuggestedCategory(finalName);
     await upsertCategory(db, {
       id,
@@ -206,15 +210,15 @@ export async function POST(req: Request) {
   if (body?.type === "group") return createCategoryGroup(body);
 
   const { label, labelEn, groupId, esSalud, supportsVideoconsulta } = body;
-  const rawLabel = typeof label === "string" ? label.trim() : "";
-  const rawLabelEn = typeof labelEn === "string" ? labelEn.trim() : "";
-  const cleanLabel = rawLabel || (rawLabelEn ? await suggestSpanishServiceLabel(rawLabelEn) : "");
+  const rawLabel = normalizeServiceDisplayName(typeof label === "string" ? label : "");
+  const rawLabelEn = normalizeServiceDisplayName(typeof labelEn === "string" ? labelEn : "");
+  const cleanLabel = rawLabel ? await suggestSpanishServiceLabel(rawLabel) : rawLabelEn ? await suggestSpanishServiceLabel(rawLabelEn) : "";
   if (!cleanLabel) return NextResponse.json({ error: "Nombre requerido" }, { status: 400 });
 
   const id = slugifyCategory(cleanLabel);
   const db = createAdminClient();
   const groups = await getAdminGroups(db);
-  const cleanLabelEn = rawLabelEn || await suggestEnglishServiceLabel(cleanLabel);
+  const cleanLabelEn = rawLabelEn ? await suggestEnglishServiceLabel(rawLabelEn) : await suggestEnglishServiceLabel(cleanLabel);
   const review = classifySuggestedCategory(cleanLabel);
   const flags = {
     es_salud: typeof esSalud === "boolean" ? esSalud : review.healthLikely,
@@ -248,12 +252,12 @@ async function createCategoryGroup(body: Record<string, unknown>) {
   const admin = await getApiAdmin();
   if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
 
-  const rawLabel = typeof body.label === "string" ? body.label.trim() : "";
-  const rawLabelEn = typeof body.labelEn === "string" ? body.labelEn.trim() : "";
-  const label = rawLabel || (rawLabelEn ? await suggestSpanishServiceLabel(rawLabelEn) : "");
+  const rawLabel = normalizeServiceDisplayName(typeof body.label === "string" ? body.label : "");
+  const rawLabelEn = normalizeServiceDisplayName(typeof body.labelEn === "string" ? body.labelEn : "");
+  const label = rawLabel ? await suggestSpanishServiceLabel(rawLabel) : rawLabelEn ? await suggestSpanishServiceLabel(rawLabelEn) : "";
   if (!label) return NextResponse.json({ error: "Nombre requerido" }, { status: 400 });
   const id = slugifyCategory(label);
-  const labelEn = rawLabelEn || await suggestEnglishServiceLabel(label);
+  const labelEn = rawLabelEn ? await suggestEnglishServiceLabel(rawLabelEn) : await suggestEnglishServiceLabel(label);
   const db = createAdminClient();
   const existingGroups = await getAdminGroups(db);
   const nextSort = Math.max(0, ...existingGroups.map((group) => group.sortOrder ?? 0)) + 10;
@@ -275,9 +279,11 @@ async function updateCategoryGroup(body: Record<string, unknown>) {
   if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
 
   const id = typeof body.id === "string" ? body.id.trim() : "";
-  const label = typeof body.label === "string" ? body.label.trim() : "";
+  const rawLabel = normalizeServiceDisplayName(typeof body.label === "string" ? body.label : "");
+  const rawLabelEn = normalizeServiceDisplayName(typeof body.labelEn === "string" ? body.labelEn : "");
+  const label = rawLabel ? await suggestSpanishServiceLabel(rawLabel) : rawLabelEn ? await suggestSpanishServiceLabel(rawLabelEn) : "";
   if (!id || !label) return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
-  const labelEn = typeof body.labelEn === "string" && body.labelEn.trim() ? body.labelEn.trim() : await suggestEnglishServiceLabel(label);
+  const labelEn = rawLabelEn ? await suggestEnglishServiceLabel(rawLabelEn) : await suggestEnglishServiceLabel(label);
   const sortOrder = typeof body.sortOrder === "number" ? body.sortOrder : 100;
   const db = createAdminClient();
   const { error } = await db.from("category_groups").upsert({
