@@ -172,6 +172,10 @@ export default function ServiciosPage() {
 
   function submitSearch(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (!query.trim()) {
+      router.push("/buscar");
+      return;
+    }
     const first = visibleGroups[0]?.visibleIds[0];
     if (first) router.push(`/buscar?categoria=${first}`);
     else router.push("/buscar");
