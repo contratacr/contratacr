@@ -182,34 +182,39 @@ export default function ServiciosPage() {
               {tp("subtitle")}
             </p>
           </div>
-
-          <div className="mt-5 max-w-3xl">
-            <form
-              onSubmit={submitSearch}
-              className="flex h-[58px] items-center gap-3 rounded-2xl border border-[#dbe5ee] bg-white px-4 text-left shadow-[0_14px_34px_rgba(15,23,42,0.06)] transition-all focus-within:border-[#009FD9] focus-within:ring-2 focus-within:ring-[#009FD9]/20"
-            >
-              <Search className="h-5 w-5 shrink-0 text-[#8a94a6]" />
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder={tp("searchPlaceholder")}
-                aria-label={tp("searchAria")}
-                className="h-[54px] min-w-0 flex-1 bg-transparent text-base text-gray-700 placeholder:text-gray-400 focus:outline-none"
-              />
-              {query && (
-                <button type="button" onClick={() => setQuery("")} className="rounded-full p-1.5 text-[#9ca3af] hover:bg-[#f3f4f6] hover:text-[#374151]" aria-label={tp("clearSearch")}>
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </form>
-          </div>
         </div>
       </section>
 
-      <section className="bg-[#f7fafc] px-4 pb-16 pt-1">
+      <section className="bg-[#f7fafc] px-4 pb-16 pt-0">
         <div className="mx-auto max-w-6xl">
           <div className="overflow-hidden rounded-[28px] border border-[#e1e9f0] bg-white shadow-[0_18px_44px_rgba(15,23,42,0.06)]">
+            <div className="border-b border-[#eef2f6] bg-white p-3 sm:p-4">
+              <form
+                onSubmit={submitSearch}
+                className="flex h-[54px] items-center gap-3 rounded-2xl border border-[#dbe5ee] bg-[#fbfdff] px-4 text-left transition-all focus-within:border-[#009FD9] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#009FD9]/20"
+              >
+                <Search className="h-5 w-5 shrink-0 text-[#8a94a6]" />
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={tp("searchPlaceholder")}
+                  aria-label={tp("searchAria")}
+                  className="h-[50px] min-w-0 flex-1 bg-transparent text-base text-gray-700 placeholder:text-gray-400 focus:outline-none"
+                />
+                {query && (
+                  <button type="button" onClick={() => setQuery("")} className="rounded-full p-1.5 text-[#9ca3af] hover:bg-[#f3f4f6] hover:text-[#374151]" aria-label={tp("clearSearch")}>
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </form>
+              {query.trim() && resultCount > 0 && (
+                <p className="px-1 pt-2 text-xs font-semibold text-[#6b7280]">
+                  {tp("searchSummary", { count: resultCount, query: query.trim() })}
+                </p>
+              )}
+            </div>
+
             {query.trim() && resultCount === 0 ? (
               <section className="px-4 py-12 text-center sm:px-6">
                 <Search className="mx-auto mb-3 h-10 w-10 text-[#cbd5e1]" />
@@ -218,17 +223,6 @@ export default function ServiciosPage() {
               </section>
             ) : query.trim() && resultCount > 0 ? (
               <section className="scroll-mt-32">
-                  <div className="border-b border-[#eef2f6] px-4 py-4 sm:px-6">
-                    <div>
-                      <h2 className="text-lg font-extrabold leading-tight text-[#162543]">
-                        {tp("resultsTitle")}
-                      </h2>
-                      <p className="mt-0.5 text-xs font-medium text-[#8a94a6]">
-                        {tp("searchSummary", { count: resultCount, query: query.trim() })}
-                      </p>
-                    </div>
-                  </div>
-
                   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
                       {searchResults.map(({ id, groupLabel, Icon }) => (
                         <Link
