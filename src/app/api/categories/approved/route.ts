@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { autoEnglishCategoryLabel } from "@/lib/data/categories";
+import { CATEGORY_GROUP_LABELS_EN, CATEGORY_GROUPS, autoEnglishCategoryLabel } from "@/lib/data/categories";
 
 // GET /api/categories/approved — the admin-approved CUSTOM categories (public).
 // These are `category_suggestions` rows an admin approved; the app merges them
@@ -41,9 +41,36 @@ export async function GET() {
     esSalud: !!c.es_salud,
     supportsVideoconsulta: !!c.supports_videoconsulta,
   }));
+  let dbGroups: Array<{ id: string; label: string; label_en?: string | null; icon_key?: string | null; sort_order?: number | null; is_hidden?: boolean | null }> = [];
+  const groupsRes = await db
+    .from("category_groups")
+    .select("id, label, label_en, icon_key, sort_order, is_hidden")
+    .eq("is_hidden", false)
+    .order("sort_order", { ascending: true });
+  if (!groupsRes.error) dbGroups = groupsRes.data ?? [];
+  const dbGroupIds = new Set(dbGroups.map((group) => group.id));
+  const fallbackGroups = CATEGORY_GROUPS
+    .filter((group) => !dbGroupIds.has(group.id))
+    .map((group, index) => ({
+      id: group.id,
+      label: group.label,
+      labelEn: CATEGORY_GROUP_LABELS_EN[group.id],
+      sortOrder: (index + 1) * 10,
+    }));
+  const groups = [
+    ...dbGroups.map((group) => ({
+      id: group.id,
+      label: group.label,
+      labelEn: group.label_en || undefined,
+      iconKey: group.icon_key || undefined,
+      sortOrder: group.sort_order ?? 100,
+      isHidden: !!group.is_hidden,
+    })),
+    ...fallbackGroups,
+  ];
 
   return NextResponse.json(
-    { categories, categoryFlags },
+    { categories, categoryFlags, groups },
     // Cache briefly at the edge — approvals are rare; pickers can be a touch stale.
     { headers: { "Cache-Control": "public, max-age=60, s-maxage=300" } }
   );

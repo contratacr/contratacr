@@ -21,7 +21,7 @@ function ensureLoaded() {
     .then((r) => (r.ok ? r.json() : null))
     .then((d) => {
       if (d && Array.isArray(d.categoryFlags)) setCategoryFeatureOverrides(d.categoryFlags);
-      if (d && Array.isArray(d.categories)) setCustomCategories(d.categories);
+      if (d && Array.isArray(d.categories)) setCustomCategories(d.categories, Array.isArray(d.groups) ? d.groups : []);
     })
     .catch(() => {
       // Best-effort: the fixed catalog still works without the overlay.

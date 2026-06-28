@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Check, X, Tag, Loader2, HeartPulse, Video, Search, Plus, Trash2, Save } from "lucide-react";
-import { ALL_CATEGORIES, CATEGORY_GROUPS, autoEnglishCategoryLabel, classifySuggestedCategory, normalizeText } from "@/lib/data/categories";
+import { ALL_CATEGORIES, autoEnglishCategoryLabel, classifySuggestedCategory, normalizeText } from "@/lib/data/categories";
 
 type Suggestion = {
   id: string;
@@ -22,6 +22,14 @@ type CatalogCategory = {
   isHidden?: boolean;
   esSalud: boolean;
   supportsVideoconsulta: boolean;
+};
+
+type CatalogGroup = {
+  id: string;
+  label: string;
+  labelEn?: string;
+  iconKey?: string;
+  sortOrder?: number;
 };
 
 const STATUSES = [
@@ -69,15 +77,20 @@ export function AdminCategories() {
   const [status, setStatus] = useState<"pending" | "approved" | "rejected">("pending");
   const [items, setItems] = useState<Suggestion[]>([]);
   const [catalog, setCatalog] = useState<CatalogCategory[]>([]);
+  const [groups, setGroups] = useState<CatalogGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [catalogFilter, setCatalogFilter] = useState<"all" | "custom" | "health" | "video">("all");
-  const [catalogDrafts, setCatalogDrafts] = useState<Record<string, { label: string; groupId: string }>>({});
+  const [catalogDrafts, setCatalogDrafts] = useState<Record<string, { label: string; labelEn: string; groupId: string }>>({});
   const [edits, setEdits] = useState<Record<string, string>>({});
+  const [englishEdits, setEnglishEdits] = useState<Record<string, string>>({});
   const [flagEdits, setFlagEdits] = useState<Record<string, { esSalud: boolean; supportsVideoconsulta: boolean }>>({});
   const [newServiceName, setNewServiceName] = useState("");
+  const [newServiceNameEn, setNewServiceNameEn] = useState("");
   const [newServiceGroupId, setNewServiceGroupId] = useState("profesional");
   const [newServiceFlags, setNewServiceFlags] = useState({ esSalud: false, supportsVideoconsulta: false });
+  const [newGroupName, setNewGroupName] = useState("");
+  const [newGroupNameEn, setNewGroupNameEn] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
 
   useEffect(() => {
@@ -85,13 +98,17 @@ export function AdminCategories() {
     fetch(url)
       .then((r) => r.json())
       .then((data) => {
-        if (view === "catalog") setCatalog(data.catalog ?? []);
+        if (view === "catalog") {
+          setCatalog(data.catalog ?? []);
+          setGroups(data.groups ?? []);
+        }
         else setItems(data.categories ?? []);
       })
       .finally(() => setLoading(false));
   }, [view, status]);
 
   const nameOf = (i: Suggestion) => edits[i.id] ?? (i.suggested_name || i.label);
+  const englishNameOf = (i: Suggestion) => englishEdits[i.id] ?? autoEnglishCategoryLabel(nameOf(i));
   const flagsOf = (i: Suggestion) => {
     const review = classifySuggestedCategory(nameOf(i));
     return flagEdits[i.id] ?? { esSalud: review.healthLikely, supportsVideoconsulta: review.videoConsultLikely };
@@ -122,7 +139,7 @@ export function AdminCategories() {
       await fetch("/api/admin/categories", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: i.id, status: next, label, labelEn: label ? autoEnglishCategoryLabel(label) : undefined, ...flags }),
+        body: JSON.stringify({ id: i.id, status: next, label, labelEn: label ? englishNameOf(i) : undefined, ...flags }),
       });
       setItems((prev) => prev.filter((x) => x.id !== i.id));
       window.dispatchEvent(new Event("focus"));
@@ -155,17 +172,18 @@ export function AdminCategories() {
   }
 
   function draftOf(item: CatalogCategory) {
-    return catalogDrafts[item.id] ?? { label: item.label, groupId: item.groupId };
+    return catalogDrafts[item.id] ?? { label: item.label, labelEn: item.labelEn || autoEnglishCategoryLabel(item.label), groupId: item.groupId };
   }
 
   function hasDraftChanges(item: CatalogCategory) {
     const draft = draftOf(item);
-    return draft.label.trim() !== item.label || draft.groupId !== item.groupId;
+    return draft.label.trim() !== item.label || draft.labelEn.trim() !== (item.labelEn || autoEnglishCategoryLabel(item.label)) || draft.groupId !== item.groupId;
   }
 
   async function saveCatalogItem(item: CatalogCategory) {
     const draft = draftOf(item);
     const label = draft.label.trim();
+    const labelEn = draft.labelEn.trim() || autoEnglishCategoryLabel(label);
     if (!label) {
       window.alert("El servicio necesita un nombre.");
       return;
@@ -178,7 +196,7 @@ export function AdminCategories() {
         body: JSON.stringify({
           id: item.id,
           label,
-          labelEn: autoEnglishCategoryLabel(label),
+          labelEn,
           groupId: draft.groupId,
           isHidden: false,
           esSalud: item.esSalud,
@@ -193,9 +211,9 @@ export function AdminCategories() {
       setCatalog((prev) => prev.map((row) => row.id === item.id ? {
         ...row,
         label,
-        labelEn: autoEnglishCategoryLabel(label),
+        labelEn,
         groupId: draft.groupId,
-        groupLabel: CATEGORY_GROUPS.find((group) => group.id === draft.groupId)?.label ?? row.groupLabel,
+        groupLabel: groups.find((group) => group.id === draft.groupId)?.label ?? row.groupLabel,
       } : row));
       setCatalogDrafts((prev) => {
         const next = { ...prev };
@@ -216,7 +234,7 @@ export function AdminCategories() {
       const res = await fetch("/api/admin/categories", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ label, labelEn: autoEnglishCategoryLabel(label), groupId: newServiceGroupId, ...newServiceFlags }),
+        body: JSON.stringify({ label, labelEn: newServiceNameEn.trim() || autoEnglishCategoryLabel(label), groupId: newServiceGroupId, ...newServiceFlags }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -224,14 +242,44 @@ export function AdminCategories() {
         return;
       }
       setNewServiceName("");
+      setNewServiceNameEn("");
       setNewServiceGroupId("profesional");
       setNewServiceFlags({ esSalud: false, supportsVideoconsulta: false });
       setLoading(true);
       const data = await fetch("/api/admin/categories?status=catalog").then((r) => r.json());
       setCatalog(data.catalog ?? []);
+      setGroups(data.groups ?? []);
     } finally {
       setBusy(null);
       setLoading(false);
+    }
+  }
+
+  async function addGroup(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const label = newGroupName.trim();
+    if (!label) return;
+    setBusy("new-group");
+    try {
+      const res = await fetch("/api/admin/categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "group", label, labelEn: newGroupNameEn.trim() || autoEnglishCategoryLabel(label) }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        window.alert(data.error || "No se pudo agregar la sección.");
+        return;
+      }
+      setNewGroupName("");
+      setNewGroupNameEn("");
+      const data = await fetch("/api/admin/categories?status=catalog").then((r) => r.json());
+      setCatalog(data.catalog ?? []);
+      setGroups(data.groups ?? []);
+      const created = data.groups?.[data.groups.length - 1]?.id;
+      if (created) setNewServiceGroupId(created);
+    } finally {
+      setBusy(null);
     }
   }
 
@@ -322,7 +370,10 @@ export function AdminCategories() {
                       {status === "pending" ? (
                         <input
                           value={nameOf(i)}
-                          onChange={(e) => setEdits((p) => ({ ...p, [i.id]: e.target.value }))}
+                          onChange={(e) => {
+                            setEdits((p) => ({ ...p, [i.id]: e.target.value }));
+                            setEnglishEdits((p) => p[i.id] ? p : ({ ...p, [i.id]: autoEnglishCategoryLabel(e.target.value) }));
+                          }}
                           aria-label="Nombre de la categoria"
                           className="-ml-2 w-full rounded-lg border border-transparent bg-transparent px-2 py-1 text-sm font-semibold text-[#111827] hover:border-[#e5e7eb] focus:border-[#009FD9] focus:outline-none focus:ring-2 focus:ring-[#009FD9]/20"
                         />
@@ -334,6 +385,14 @@ export function AdminCategories() {
                         <FlagPill active={flags.esSalud} icon={<HeartPulse className="h-3 w-3" />} label="Salud" />
                         <FlagPill active={flags.supportsVideoconsulta} icon={<Video className="h-3 w-3" />} label="Videoconsulta" />
                       </div>
+                      {status === "pending" && (
+                        <input
+                          value={englishNameOf(i)}
+                          onChange={(e) => setEnglishEdits((p) => ({ ...p, [i.id]: e.target.value }))}
+                          aria-label="Nombre en ingles"
+                          className="mt-2 h-8 w-full max-w-sm rounded-lg border border-[#e5e7eb] bg-white px-2 text-xs font-semibold text-[#374151] outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
+                        />
+                      )}
                     </div>
                     {status === "pending" && (
                       <div className="flex flex-wrap items-center gap-2 sm:justify-end">
@@ -355,19 +414,62 @@ export function AdminCategories() {
         </>
       ) : (
         <>
+          <form onSubmit={addGroup} className="mb-4 rounded-xl border border-[#d8eef8] bg-[#f8fbfe] p-3 shadow-sm">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-end">
+              <div className="min-w-0 flex-1">
+                <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-[#0089bb]">Agregar sección</label>
+                <input
+                  value={newGroupName}
+                  onChange={(e) => {
+                    setNewGroupName(e.target.value);
+                    if (!newGroupNameEn) setNewGroupNameEn(autoEnglishCategoryLabel(e.target.value));
+                  }}
+                  placeholder="Ejemplo: Servicios náuticos"
+                  className="h-10 w-full rounded-lg border border-[#dbeaf2] bg-white px-3 text-sm outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
+                />
+              </div>
+              <div className="min-w-0 flex-1">
+                <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-[#0089bb]">Inglés</label>
+                <input
+                  value={newGroupNameEn}
+                  onChange={(e) => setNewGroupNameEn(e.target.value)}
+                  placeholder="English section name"
+                  className="h-10 w-full rounded-lg border border-[#dbeaf2] bg-white px-3 text-sm outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={!newGroupName.trim() || busy === "new-group"}
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#009FD9] px-4 text-sm font-semibold text-white hover:bg-[#0089bb] disabled:opacity-50"
+              >
+                {busy === "new-group" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                Agregar sección
+              </button>
+            </div>
+          </form>
+
           <form onSubmit={addService} className="mb-4 rounded-xl border border-[#e5e7eb] bg-white p-3 shadow-sm">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
               <div className="min-w-0 flex-1">
                 <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-[#8a94a6]">Agregar servicio</label>
                 <input
                   value={newServiceName}
-                  onChange={(e) => setNewServiceName(e.target.value)}
+                  onChange={(e) => {
+                    setNewServiceName(e.target.value);
+                    if (!newServiceNameEn) setNewServiceNameEn(autoEnglishCategoryLabel(e.target.value));
+                  }}
                   placeholder="Ejemplo: Cardiologia"
                   className="h-10 w-full rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
                 />
-                {newServiceName.trim() && (
-                  <p className="mt-1 text-xs text-[#8a94a6]">Inglés: {autoEnglishCategoryLabel(newServiceName)}</p>
-                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-[#8a94a6]">Inglés</label>
+                <input
+                  value={newServiceNameEn}
+                  onChange={(e) => setNewServiceNameEn(e.target.value)}
+                  placeholder="English service name"
+                  className="h-10 w-full rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
+                />
               </div>
               <div className="min-w-[190px]">
                 <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-[#8a94a6]">Seccion</label>
@@ -376,7 +478,7 @@ export function AdminCategories() {
                   onChange={(e) => setNewServiceGroupId(e.target.value)}
                   className="h-10 w-full rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm font-semibold text-[#374151] outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
                 >
-                  {CATEGORY_GROUPS.map((group) => (
+                  {groups.map((group) => (
                     <option key={group.id} value={group.id}>{group.label}</option>
                   ))}
                 </select>
@@ -434,9 +536,27 @@ export function AdminCategories() {
                   <div className="min-w-0 flex-1">
                     <input
                       value={draftOf(item).label}
-                      onChange={(e) => setCatalogDrafts((prev) => ({ ...prev, [item.id]: { ...draftOf(item), label: e.target.value } }))}
+                      onChange={(e) => setCatalogDrafts((prev) => {
+                        const draft = draftOf(item);
+                        const previousAuto = autoEnglishCategoryLabel(draft.label);
+                        const nextLabel = e.target.value;
+                        return {
+                          ...prev,
+                          [item.id]: {
+                            ...draft,
+                            label: nextLabel,
+                            labelEn: draft.labelEn === previousAuto ? autoEnglishCategoryLabel(nextLabel) : draft.labelEn,
+                          },
+                        };
+                      })}
                       aria-label="Nombre del servicio"
                       className="h-9 w-full rounded-lg border border-transparent bg-transparent px-2 text-sm font-semibold text-[#111827] outline-none hover:border-[#e5e7eb] focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
+                    />
+                    <input
+                      value={draftOf(item).labelEn}
+                      onChange={(e) => setCatalogDrafts((prev) => ({ ...prev, [item.id]: { ...draftOf(item), labelEn: e.target.value } }))}
+                      aria-label="Nombre del servicio en inglés"
+                      className="mt-1 h-8 w-full rounded-lg border border-[#e5e7eb] bg-white px-2 text-xs font-semibold text-[#374151] outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
                     />
                     <select
                       value={draftOf(item).groupId}
@@ -444,7 +564,7 @@ export function AdminCategories() {
                       aria-label="Seccion del servicio"
                       className="mt-1 h-8 max-w-full rounded-lg border border-[#e5e7eb] bg-white px-2 text-xs font-semibold text-[#64748b] outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
                     >
-                      {CATEGORY_GROUPS.map((group) => (
+                      {groups.map((group) => (
                         <option key={group.id} value={group.id}>{group.label}</option>
                       ))}
                     </select>

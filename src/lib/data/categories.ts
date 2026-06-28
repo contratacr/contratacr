@@ -231,6 +231,7 @@ export const OTHER_CATEGORY: CategoryItem = {
 export const CUSTOM_GROUP_ID = "otras";
 let CUSTOM_CATEGORIES: (CategoryItem & { groupId: string; groupLabel: string; labelEn?: string })[] = [];
 let CATEGORY_FEATURE_OVERRIDES = new Map<string, { esSalud?: boolean; supportsVideoconsulta?: boolean; isHidden?: boolean }>();
+let CUSTOM_CATEGORY_GROUPS: { id: string; label: string; labelEn?: string; iconKey?: string; sortOrder?: number; isHidden?: boolean }[] = [];
 const customListeners = new Set<() => void>();
 
 export function setCategoryFeatureOverrides(
@@ -245,8 +246,10 @@ export function setCategoryFeatureOverrides(
 }
 
 export function setCustomCategories(
-  list: { id: string; label: string; labelEn?: string; groupId?: string; keywords?: string[]; esSalud?: boolean; supportsVideoconsulta?: boolean; isHidden?: boolean }[]
+  list: { id: string; label: string; labelEn?: string; groupId?: string; keywords?: string[]; esSalud?: boolean; supportsVideoconsulta?: boolean; isHidden?: boolean }[],
+  groups: { id: string; label: string; labelEn?: string; iconKey?: string; sortOrder?: number; isHidden?: boolean }[] = []
 ): void {
+  CUSTOM_CATEGORY_GROUPS = groups.filter((group) => group && group.id && group.label && !group.isHidden);
   CUSTOM_CATEGORIES = list
     .filter((c) => c && c.id && c.label && !c.isHidden)
     .map((c) => ({
@@ -262,6 +265,18 @@ export function setCustomCategories(
 
 export function getCustomCategories(): (CategoryItem & { groupId: string; groupLabel: string; labelEn?: string })[] {
   return CUSTOM_CATEGORIES;
+}
+
+export function getAllCategoryGroups(): { id: string; label: string; labelEn?: string; iconKey?: string; sortOrder?: number }[] {
+  const fixed = CATEGORY_GROUPS.map((group, index) => ({
+    id: group.id,
+    label: group.label,
+    labelEn: CATEGORY_GROUP_LABELS_EN[group.id],
+    sortOrder: (index + 1) * 10,
+  }));
+  const fixedIds = new Set(fixed.map((group) => group.id));
+  const custom = CUSTOM_CATEGORY_GROUPS.filter((group) => !fixedIds.has(group.id));
+  return [...fixed, ...custom].sort((a, b) => (a.sortOrder ?? 100) - (b.sortOrder ?? 100) || a.label.localeCompare(b.label));
 }
 
 /** Subscribe to custom-category registry changes (used by the client hook). */
@@ -592,6 +607,8 @@ export function getCategoryLabel(id: string, locale?: string): string {
 /* ─── Get category GROUP label from group ID (locale-aware) ─── */
 export function getCategoryGroupLabel(groupId: string, locale?: string): string {
   if (groupId === CUSTOM_GROUP_ID) return locale === "en" ? "Other categories" : "Otras categorías";
+  const custom = CUSTOM_CATEGORY_GROUPS.find((group) => group.id === groupId);
+  if (custom) return locale === "en" && custom.labelEn ? custom.labelEn : custom.label;
   if (locale === "en" && CATEGORY_GROUP_LABELS_EN[groupId]) return CATEGORY_GROUP_LABELS_EN[groupId];
   const g = CATEGORY_GROUPS.find((x) => x.id === groupId);
   return g?.label ?? groupId;

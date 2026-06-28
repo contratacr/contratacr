@@ -23,6 +23,15 @@ type DbCategory = {
   supports_videoconsulta?: boolean | null;
 };
 
+type DbCategoryGroup = {
+  id: string;
+  label: string;
+  label_en?: string | null;
+  icon_key?: string | null;
+  sort_order?: number | null;
+  is_hidden?: boolean | null;
+};
+
 // GET /api/admin/categories?status=pending|approved|rejected|catalog
 export async function GET(req: Request) {
   const admin = await getApiAdmin();
@@ -30,6 +39,7 @@ export async function GET(req: Request) {
 
   const status = new URL(req.url).searchParams.get("status") ?? "pending";
   const db = createAdminClient();
+  const groups = await getAdminGroups(db);
 
   if (status === "catalog") {
     let rows: DbCategory[] | null = null;
@@ -53,13 +63,13 @@ export async function GET(req: Request) {
     const fixed = ALL_CATEGORIES.flatMap((category) => {
       const row = dbMap.get(category.id);
       if (row?.is_hidden) return [];
-      const groupId = validGroupId(row?.group_id) || category.groupId;
+      const groupId = validGroupId(row?.group_id, groups) || category.groupId;
       return [{
         id: category.id,
         label: row?.name || category.label,
         labelEn: row?.name_en || autoEnglishCategoryLabel(row?.name || category.label),
         groupId,
-        groupLabel: getCategoryGroupLabel(groupId),
+        groupLabel: groupLabel(groupId, groups),
         source: "base",
         isHidden: !!row?.is_hidden,
         esSalud: row?.es_salud ?? isHealthCategory(category.id),
@@ -72,13 +82,13 @@ export async function GET(req: Request) {
       .filter((row) => !row.is_hidden)
       .map((row) => {
         const label = row.name || labelFromId(row.id);
-        const groupId = validGroupId(row.group_id) || inferCategoryGroupId(label);
+        const groupId = validGroupId(row.group_id, groups) || inferCategoryGroupId(label);
         return {
           id: row.id,
           label,
           labelEn: row.name_en || autoEnglishCategoryLabel(label),
           groupId,
-          groupLabel: getCategoryGroupLabel(groupId),
+          groupLabel: groupLabel(groupId, groups),
           source: "custom",
           isHidden: !!row.is_hidden,
           esSalud: !!row.es_salud,
@@ -88,7 +98,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({
       catalog: [...fixed, ...custom],
-      groups: CATEGORY_GROUPS.map((group) => ({ id: group.id, label: group.label })),
+      groups,
     });
   }
 
@@ -117,6 +127,7 @@ export async function PATCH(req: Request) {
   }
 
   const db = createAdminClient();
+  const groups = await getAdminGroups(db);
 
   if (!status) {
     const cleanLabel = typeof label === "string" && label.trim() ? label.trim() : labelFromId(id);
@@ -125,7 +136,7 @@ export async function PATCH(req: Request) {
       id,
       name: cleanLabel,
       name_en: cleanLabelEn,
-      group_id: validGroupId(groupId) || inferCategoryGroupId(cleanLabel),
+      group_id: validGroupId(groupId, groups) || inferCategoryGroupId(cleanLabel),
       is_hidden: !!isHidden,
       es_salud: !!esSalud,
       supports_videoconsulta: !!supportsVideoconsulta,
@@ -161,7 +172,7 @@ export async function PATCH(req: Request) {
       id,
       name: finalName,
       name_en: finalNameEn,
-      group_id: validGroupId(groupId) || inferCategoryGroupId(finalName),
+      group_id: validGroupId(groupId, groups) || inferCategoryGroupId(finalName),
       is_hidden: false,
       es_salud: typeof esSalud === "boolean" ? esSalud : review.healthLikely,
       supports_videoconsulta: typeof supportsVideoconsulta === "boolean" ? supportsVideoconsulta : review.videoConsultLikely,
@@ -175,12 +186,16 @@ export async function POST(req: Request) {
   const admin = await getApiAdmin();
   if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
 
-  const { label, labelEn, groupId, esSalud, supportsVideoconsulta } = await req.json();
+  const body = await req.json();
+  if (body?.type === "group") return createCategoryGroup(body);
+
+  const { label, labelEn, groupId, esSalud, supportsVideoconsulta } = body;
   const cleanLabel = typeof label === "string" ? label.trim() : "";
   if (!cleanLabel) return NextResponse.json({ error: "Nombre requerido" }, { status: 400 });
 
   const id = slugifyCategory(cleanLabel);
   const db = createAdminClient();
+  const groups = await getAdminGroups(db);
   const cleanLabelEn = typeof labelEn === "string" && labelEn.trim() ? labelEn.trim() : autoEnglishCategoryLabel(cleanLabel);
   const review = classifySuggestedCategory(cleanLabel);
   const flags = {
@@ -192,7 +207,7 @@ export async function POST(req: Request) {
     id,
     name: cleanLabel,
     name_en: cleanLabelEn,
-    group_id: validGroupId(groupId) || inferCategoryGroupId(cleanLabel),
+    group_id: validGroupId(groupId, groups) || inferCategoryGroupId(cleanLabel),
     is_hidden: false,
     ...flags,
   });
@@ -209,6 +224,30 @@ export async function POST(req: Request) {
   if (suggestionError) return NextResponse.json({ error: suggestionError.message }, { status: 500 });
 
   return NextResponse.json({ ok: true, category: { id, label: cleanLabel } });
+}
+
+async function createCategoryGroup(body: Record<string, unknown>) {
+  const admin = await getApiAdmin();
+  if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
+
+  const label = typeof body.label === "string" ? body.label.trim() : "";
+  if (!label) return NextResponse.json({ error: "Nombre requerido" }, { status: 400 });
+  const id = slugifyCategory(label);
+  const labelEn = typeof body.labelEn === "string" && body.labelEn.trim() ? body.labelEn.trim() : autoEnglishCategoryLabel(label);
+  const db = createAdminClient();
+  const existingGroups = await getAdminGroups(db);
+  const nextSort = Math.max(0, ...existingGroups.map((group) => group.sortOrder ?? 0)) + 10;
+  const { error } = await db.from("category_groups").upsert({
+    id,
+    label,
+    label_en: labelEn,
+    icon_key: typeof body.iconKey === "string" && body.iconKey.trim() ? body.iconKey.trim() : "tag",
+    sort_order: nextSort,
+    is_hidden: false,
+    updated_at: new Date().toISOString(),
+  }, { onConflict: "id", ignoreDuplicates: false });
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ ok: true, group: { id, label, labelEn, iconKey: "tag", sortOrder: nextSort } });
 }
 
 export async function DELETE(req: Request) {
@@ -245,8 +284,8 @@ function labelFromId(id: string): string {
     ?? id.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
 }
 
-function validGroupId(groupId: unknown): string | null {
-  return typeof groupId === "string" && CATEGORY_GROUPS.some((group) => group.id === groupId) ? groupId : null;
+function validGroupId(groupId: unknown, groups: { id: string }[]): string | null {
+  return typeof groupId === "string" && groups.some((group) => group.id === groupId) ? groupId : null;
 }
 
 function inferCategoryGroupId(label: string): string {
@@ -275,4 +314,39 @@ async function upsertCategory(db: ReturnType<typeof createAdminClient>, row: Rec
     return result;
   }
   return db.from("categories").upsert(current, { onConflict: "id", ignoreDuplicates: false });
+}
+
+async function getAdminGroups(db: ReturnType<typeof createAdminClient>): Promise<Array<{ id: string; label: string; labelEn?: string; iconKey?: string; sortOrder?: number }>> {
+  let dbGroups: DbCategoryGroup[] = [];
+  const res = await db
+    .from("category_groups")
+    .select("id, label, label_en, icon_key, sort_order, is_hidden")
+    .eq("is_hidden", false)
+    .order("sort_order", { ascending: true });
+  if (!res.error) dbGroups = res.data ?? [];
+
+  const dbIds = new Set(dbGroups.map((group) => group.id));
+  const fixed = CATEGORY_GROUPS
+    .filter((group) => !dbIds.has(group.id))
+    .map((group, index) => ({
+      id: group.id,
+      label: group.label,
+      labelEn: getCategoryGroupLabel(group.id, "en"),
+      sortOrder: (index + 1) * 10,
+    }));
+
+  return [
+    ...dbGroups.map((group) => ({
+      id: group.id,
+      label: group.label,
+      labelEn: group.label_en || undefined,
+      iconKey: group.icon_key || undefined,
+      sortOrder: group.sort_order ?? 100,
+    })),
+    ...fixed,
+  ].sort((a, b) => (a.sortOrder ?? 100) - (b.sortOrder ?? 100) || a.label.localeCompare(b.label));
+}
+
+function groupLabel(groupId: string, groups: Array<{ id: string; label: string }>) {
+  return groups.find((group) => group.id === groupId)?.label || getCategoryGroupLabel(groupId);
 }

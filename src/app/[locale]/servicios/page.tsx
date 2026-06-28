@@ -7,7 +7,7 @@ import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
-import { CATEGORY_GROUPS, getAllCategories, getCategoryLabel, normalizeText, searchCategories } from "@/lib/data/categories";
+import { getAllCategories, getAllCategoryGroups, getCategoryLabel, normalizeText, searchCategories } from "@/lib/data/categories";
 import {
   Home,
   Leaf,
@@ -23,6 +23,7 @@ import {
   Car,
   ChevronRight,
   Search,
+  Tag,
   X,
 } from "lucide-react";
 
@@ -130,12 +131,12 @@ export default function ServiciosPage() {
   const customCatalogVersion = customCategories.map((category) => `${category.id}:${category.groupId}`).join("|");
   const [query, setQuery] = useState("");
   const [activeGroupKey, setActiveGroupKey] = useState("hogar");
-  const groups = useMemo(() => CATEGORY_GROUPS.map((group) => {
+  const groups = useMemo(() => getAllCategoryGroups().map((group) => {
     void customCatalogVersion;
-    const meta = GROUPS.find((item) => item.key === group.id) ?? GROUPS[0];
+    const meta = GROUPS.find((item) => item.key === group.id);
     return {
       key: group.id,
-      Icon: meta.Icon,
+      Icon: meta?.Icon ?? Tag,
       ids: getAllCategories().filter((category) => category.groupId === group.id).map((category) => category.id),
     };
   }).filter((group) => group.ids.length > 0), [customCatalogVersion]);
