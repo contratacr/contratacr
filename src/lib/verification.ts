@@ -31,7 +31,7 @@ export function verificationLabel(status: VerificationStatus): string {
 export function verificationPillClasses(status: VerificationStatus): string {
   switch (status) {
     case "verified":
-      return "bg-[#dcfce7] text-[#15803d] border-[#bbf7d0]";
+      return "rounded-full border-transparent bg-[#009FD9] text-white";
     case "rejected":
       return "bg-[#fee2e2] text-[#b91c1c] border-[#fecaca]";
     case "under_appeal":

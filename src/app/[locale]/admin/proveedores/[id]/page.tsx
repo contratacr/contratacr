@@ -8,7 +8,7 @@ export default async function AdminProviderPage({ params }: { params: Promise<{ 
   const admin = await requireAdmin();
   const { id } = await params;
   return (
-    <AdminShell adminName={admin.fullName}>
+    <AdminShell adminName={admin.fullName} active="verificacion">
       <AdminCase providerId={id} />
     </AdminShell>
   );
