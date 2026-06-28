@@ -16,16 +16,17 @@ import { LandingFooter } from "@/components/landing/landing-footer";
 import { SpamNotice } from "@/components/ui/spam-notice";
 import { useResendCooldown } from "@/hooks/use-resend-cooldown";
 
-const schema = z.object({
-  email: z.string().email("Email inválido"),
-});
-
-type FormData = z.infer<typeof schema>;
+type FormData = {
+  email: string;
+};
 
 export default function OlvideContrasenaPage() {
   const locale = useLocale();
   const t = useTranslations("forgotPassword");
   const tc = useTranslations("common");
+  const schema = z.object({
+    email: z.string().email(locale === "en" ? "Invalid email" : "Email invalido"),
+  });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -38,9 +39,6 @@ export default function OlvideContrasenaPage() {
     formState: { errors },
   } = useForm<FormData>({ resolver: zodResolver(schema) });
 
-  // Fire the reset email. NOTE: Supabase returns success whether or not the account
-  // exists (anti-enumeration), so the UI never reveals it either way — the success
-  // copy is intentionally neutral ("Si hay una cuenta…").
   async function sendReset(email: string) {
     const supabase = createClient();
     return supabase.auth.resetPasswordForEmail(email, {
@@ -70,9 +68,7 @@ export default function OlvideContrasenaPage() {
           <div className="text-center mb-8">
             <ContrataCRLogo className="justify-center mb-4" />
             <h1 className="text-2xl font-bold text-[#111827]">{t("title")}</h1>
-            <p className="text-[#6b7280] text-sm mt-1">
-              {t("subtitle")}
-            </p>
+            <p className="text-[#6b7280] text-sm mt-1">{t("subtitle")}</p>
           </div>
 
           {error && (
@@ -87,17 +83,16 @@ export default function OlvideContrasenaPage() {
               <CheckCircle2 className="h-5 w-5 shrink-0 mt-0.5 text-[#009FD9]" />
               <div className="min-w-0">
                 <p className="font-semibold text-[#1a2744]">{t("sentTitle")}</p>
-                <p className="mt-0.5 text-[#374151]">
-                  {t("sentBody")}
-                </p>
+                <p className="mt-0.5 text-[#374151]">{t("sentBody")}</p>
                 <SpamNotice className="mt-1.5" />
-                {/* Resend (brief cooldown so it can't be spammed) */}
                 <div className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[#6b7280]">
                   {resendState.resent && <span className="font-medium text-[#0089bb]">{tc("resent")}</span>}
                   <span>{tc("resendPrompt")}</span>
                   <button
                     type="button"
-                    onClick={() => resendState.resend(async () => { await sendReset(sentEmail); })}
+                    onClick={() => resendState.resend(async () => {
+                      await sendReset(sentEmail);
+                    })}
                     disabled={resendState.cooldown > 0 || resendState.resending}
                     className="font-semibold text-[#009FD9] hover:underline disabled:text-[#9ca3af] disabled:no-underline disabled:cursor-not-allowed"
                   >

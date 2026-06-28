@@ -321,7 +321,7 @@ export function ClientRegistrationModal({
         const json = await res.json().catch(() => ({}));
         if (!res.ok && json?.code === "cedula_taken") {
           setSubmitting(false);
-          setError("Esta cédula ya está registrada. Inicia sesión.");
+          setError(locale === "en" ? "That ID is already registered. Sign in." : "Esta identificacion ya esta registrada. Inicia sesion.");
           setView("login");
           return;
         }

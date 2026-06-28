@@ -16,36 +16,57 @@ const inter = Inter({
   weight: ["400", "500", "600", "700", "800", "900"],
 });
 
-export const metadata: Metadata = {
-  metadataBase: new URL("https://contratacr.com"),
-  title: "ContrataCR: Profesionales de servicios en Costa Rica",
-  description:
-    "Encuentra electricistas, plomeros, pintores, tutores y más profesionales verificados en tu cantón.",
-  applicationName: "ContrataCR",
-  manifest: "/site.webmanifest",
-  icons: {
-    icon: [
-      { url: "/favicon.ico", sizes: "any" },
-      { url: "/favicon-96x96.png", type: "image/png", sizes: "96x96" },
-    ],
-    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
-  },
-  openGraph: {
-    type: "website",
-    siteName: "ContrataCR",
-    title: "ContrataCR",
-    description: "Encuentra y contrata profesionales en Costa Rica",
-    url: "https://contratacr.com",
-    locale: "es_CR",
-    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "ContrataCR — Encuentra y contrata profesionales en Costa Rica" }],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "ContrataCR",
-    description: "Encuentra y contrata profesionales en Costa Rica",
-    images: ["/og-image.png"],
-  },
+type LocaleParams = {
+  params: Promise<{ locale: string }>;
 };
+
+function buildMetadata(locale: string): Metadata {
+  const isEn = locale === "en";
+  const title = isEn
+    ? "ContrataCR: Service professionals in Costa Rica"
+    : "ContrataCR: Profesionales de servicios en Costa Rica";
+  const description = isEn
+    ? "Find electricians, plumbers, painters, tutors and more verified professionals in your canton."
+    : "Encuentra electricistas, plomeros, pintores, tutores y mas profesionales verificados en tu canton.";
+  const socialDescription = isEn
+    ? "Find and hire professionals in Costa Rica"
+    : "Encuentra y contrata profesionales en Costa Rica";
+
+  return {
+    metadataBase: new URL("https://contratacr.com"),
+    title,
+    description,
+    applicationName: "ContrataCR",
+    manifest: "/site.webmanifest",
+    icons: {
+      icon: [
+        { url: "/favicon.ico", sizes: "any" },
+        { url: "/favicon-96x96.png", type: "image/png", sizes: "96x96" },
+      ],
+      apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+    },
+    openGraph: {
+      type: "website",
+      siteName: "ContrataCR",
+      title: "ContrataCR",
+      description: socialDescription,
+      url: "https://contratacr.com",
+      locale: isEn ? "en_US" : "es_CR",
+      images: [{ url: "/og-image.png", width: 1200, height: 630, alt: `ContrataCR - ${socialDescription}` }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: "ContrataCR",
+      description: socialDescription,
+      images: ["/og-image.png"],
+    },
+  };
+}
+
+export async function generateMetadata({ params }: LocaleParams): Promise<Metadata> {
+  const { locale } = await params;
+  return buildMetadata(locale);
+}
 
 // viewport-fit=cover exposes the env(safe-area-inset-*) values used by the
 // search map on notched / home-bar devices.
@@ -75,11 +96,8 @@ export default async function LocaleLayout({
       <body className="min-h-full flex flex-col bg-white">
         <NextIntlClientProvider messages={messages}>
           <EmojiBlocker />
-          {/* Loads admin-approved custom categories into the runtime catalog overlay. */}
           <CustomCategoriesLoader />
           {children}
-          {/* App-wide — only appears after scrolling 400px, so it shows on
-              long-scroll pages and stays hidden on short ones. */}
           <BackToTop />
         </NextIntlClientProvider>
       </body>

@@ -391,7 +391,9 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
         if (a?.taken) {
           taken = true;
           setCedulaTaken(true);
-          setCedulaError("Esa cédula ya está registrada en otra cuenta. Inicia sesión en esa cuenta o usa una cédula diferente.");
+          setCedulaError(locale === "en"
+            ? "That ID is already registered to another account. Sign in to that account or use a different ID."
+            : "Esa identificación ya está registrada en otra cuenta. Inicia sesión en esa cuenta o usa una identificación diferente.");
         } else {
           setCedulaTaken(false);
         }
@@ -407,7 +409,9 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
         // flagged the moment the lookup resolves (~0.5s after the field is complete),
         // not only at submit — so the client doesn't fill the whole form first. Never
         // clobber the higher-priority "ya está registrada" message.
-        if (!taken) setCedulaError(res.ok ? null : "No encontramos esa cédula. Revisa el número e intenta de nuevo.");
+        if (!taken) setCedulaError(res.ok ? null : locale === "en"
+          ? "We couldn't find that ID. Check the number and try again."
+          : "No encontramos esa identificación. Revisa el número e intenta de nuevo.");
       } catch { if (active) setSelfCedulaName(null); }
       finally { if (active) setSelfCedulaLoading(false); }
     }, 500);
@@ -548,7 +552,7 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
       // Slot taken in the meantime (or another failure) → surface, don't "succeed".
       if (!res.ok) {
         const j = await res.json().catch(() => ({}));
-        setSubmitError(j?.error || "No se pudo enviar la solicitud. Intenta de nuevo.");
+        setSubmitError(j?.error || (locale === "en" ? "Couldn't send the request. Try again." : "No se pudo enviar la solicitud. Intenta de nuevo."));
         return;
       }
 
@@ -584,8 +588,8 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     setProfileError(null);
     const cleanCedula = profileCedula.replace(/\D/g, "");
     const cleanPhone = profilePhone.replace(/\D/g, "");
-    if (cleanPhone.length < 8) { setProfileError("Ingresa un teléfono válido (8 dígitos)."); return; }
-    if ((needsProfile || needsCedula) && !selfHasAutoName && !clientName.trim()) { setProfileError("Ingresa tu nombre completo."); return; }
+    if (cleanPhone.length < 8) { setProfileError(locale === "en" ? "Enter a valid phone number (8 digits)." : "Ingresa un teléfono válido (8 dígitos)."); return; }
+    if ((needsProfile || needsCedula) && !selfHasAutoName && !clientName.trim()) { setProfileError(locale === "en" ? "Enter your full name." : "Ingresa tu nombre completo."); return; }
     // Validate the cédula (format + padrón existence) — recoverable inline error.
     // Capture the official name from the SAME call (avoids the debounce race).
     let validatedOfficialName: string | null = null;
@@ -618,8 +622,8 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
         setSavingProfile(false);
         setProfileError(
           error.code === "23505"
-            ? "Esa cédula ya está registrada en otra cuenta."
-            : "No se pudo guardar. Intenta de nuevo."
+            ? (locale === "en" ? "That ID is already registered to another account." : "Esa identificación ya está registrada en otra cuenta.")
+            : (locale === "en" ? "Couldn't save. Try again." : "No se pudo guardar. Intenta de nuevo.")
         );
         return;
       }
@@ -702,7 +706,9 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     setCedulaError(null);
     const clean = cleanId(profileCedula);
     if (!isValidId(clean)) {
-      setCedulaError("El número de identificación no es válido (CR: 9 dígitos · DIMEX: 11-12 · NITE: 10). Revísalo e intenta de nuevo.");
+      setCedulaError(locale === "en"
+        ? "The ID number is not valid (CR: 9 digits · DIMEX: 11-12 · NITE: 10). Check it and try again."
+        : "El número de identificación no es válido (CR: 9 dígitos · DIMEX: 11-12 · NITE: 10). Revísalo e intenta de nuevo.");
       return { ok: false, officialName: null };
     }
     // Block early if it's already linked to another account (safety net for a fast
@@ -711,7 +717,9 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
       const a = await fetch(`/api/cedula-available?cedula=${clean}`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
       if (a?.taken) {
         setCedulaTaken(true);
-        setCedulaError("Esa cédula ya está registrada en otra cuenta. Inicia sesión en esa cuenta o usa una cédula diferente.");
+        setCedulaError(locale === "en"
+          ? "That ID is already registered to another account. Sign in to that account or use a different ID."
+          : "Esa identificación ya está registrada en otra cuenta. Inicia sesión en esa cuenta o usa una identificación diferente.");
         return { ok: false, officialName: null };
       }
     } catch { /* don't block over our own outage */ }
@@ -724,7 +732,9 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
       try {
         const res = await fetch(`/api/cedula/${clean}`);
         if (!res.ok) {
-          setCedulaError("No encontramos esa cédula. Revisa el número e intenta de nuevo.");
+          setCedulaError(locale === "en"
+            ? "We couldn't find that ID. Check the number and try again."
+            : "No encontramos esa identificación. Revisa el número e intenta de nuevo.");
           return { ok: false, officialName: null };
         }
         const j = await res.json().catch(() => ({}));
@@ -791,15 +801,15 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
         <div className="rounded-lg bg-[#f9fafb] border border-[#e5e7eb] px-3 py-2.5 flex items-start gap-2">
           <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5 text-[#6b7280]" />
           <div className="text-xs text-[#6b7280] leading-snug break-words">
-            <p>Enviarás tu solicitud <strong>sin identidad verificada</strong>. El profesional lo verá y decide si te contacta.</p>
-            <button type="button" onClick={() => toggleNoCedula(false)} className="mt-1 font-semibold text-[#009FD9] hover:underline">Tengo identificación</button>
+            <p>{locale === "en" ? <>You'll send your request <strong>without verified identity</strong>. The professional will see it and decide whether to contact you.</> : <>Enviarás tu solicitud <strong>sin identidad verificada</strong>. El profesional lo verá y decide si te contacta.</>}</p>
+            <button type="button" onClick={() => toggleNoCedula(false)} className="mt-1 font-semibold text-[#009FD9] hover:underline">{locale === "en" ? "I have an ID" : "Tengo identificación"}</button>
           </div>
         </div>
       );
     }
     return (
       <button type="button" onClick={() => toggleNoCedula(true)} className="self-start -mt-1 text-xs font-semibold text-[#009FD9] hover:underline">
-        No tengo identificación
+        {locale === "en" ? "I don't have an ID" : "No tengo identificación"}
       </button>
     );
   }
@@ -810,7 +820,11 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
     return (
       <div className="rounded-lg bg-[#fffbeb] border border-[#fde68a] px-3 py-2 -mt-1 flex items-start gap-2">
         <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5 text-[#b45309]" />
-        <p className="text-xs text-[#92400e] leading-snug break-words">Identificación extranjera (DIMEX/NITE). No se verifica contra el padrón; el profesional verá tu solicitud como <strong>no verificada</strong>. Escribe tu nombre completo abajo.</p>
+        <p className="text-xs text-[#92400e] leading-snug break-words">
+          {locale === "en"
+            ? <>Foreign ID (DIMEX/NITE). It cannot be checked against the padrón; the professional will see your request as <strong>not verified</strong>. Enter your full name below.</>
+            : <>Identificación extranjera (DIMEX/NITE). No se verifica contra el padrón; el profesional verá tu solicitud como <strong>no verificada</strong>. Escribe tu nombre completo abajo.</>}
+        </p>
       </div>
     );
   }
@@ -1396,7 +1410,9 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
                             <div className="rounded-lg bg-[#fffbeb] border border-[#fde68a] px-3 py-2.5 mt-1.5 flex items-start gap-2">
                               <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5 text-[#b45309]" />
                               <p className="text-xs text-[#92400e] leading-snug break-words">
-                                La cédula ingresada pertenece a <strong>{selfCedulaName}</strong>. Al confirmar, tu cuenta usará este nombre oficial. Usa únicamente tu propia cédula.
+                                {locale === "en"
+                                  ? <>The ID entered belongs to <strong>{selfCedulaName}</strong>. When you confirm, your account will use this official name. Use only your own ID.</>
+                                  : <>La identificación ingresada pertenece a <strong>{selfCedulaName}</strong>. Al confirmar, tu cuenta usará este nombre oficial. Usa únicamente tu propia identificación.</>}
                               </p>
                             </div>
                           )}

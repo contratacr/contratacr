@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { useLocale } from "next-intl";
 import { AlertCircle, RotateCcw } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "@/i18n/navigation";
@@ -14,6 +15,8 @@ interface OtpVerificationProps {
 
 export function OtpVerification({ email, onVerified }: OtpVerificationProps) {
   const router = useRouter();
+  const locale = useLocale();
+  const isEn = locale === "en";
   const [digits, setDigits] = useState(["", "", "", "", "", ""]);
   const [verifying, setVerifying] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +46,7 @@ export function OtpVerification({ email, onVerified }: OtpVerificationProps) {
     setVerifying(false);
 
     if (otpError) {
-      setError("Código incorrecto o expirado. Solicita uno nuevo.");
+      setError(isEn ? "Incorrect or expired code. Request a new one." : "Codigo incorrecto o expirado. Solicita uno nuevo.");
       setDigits(["", "", "", "", "", ""]);
       setTimeout(() => inputRefs.current[0]?.focus(), 50);
       return;
@@ -52,14 +55,13 @@ export function OtpVerification({ email, onVerified }: OtpVerificationProps) {
     if (onVerified) {
       onVerified();
     } else {
-      // Redirect based on role from the newly created session
+      // Redirect based on role from the newly created session.
       const role = data.user?.user_metadata?.role as string | undefined;
       router.push(role === "professional" ? "/dashboard/profesional" : "/dashboard/cliente");
     }
   }
 
   function handleChange(index: number, value: string) {
-    // Handle paste: spread digits across all boxes
     if (value.length > 1) {
       const pasted = value.replace(/\D/g, "").slice(0, 6);
       const next = [...digits];
@@ -69,13 +71,12 @@ export function OtpVerification({ email, onVerified }: OtpVerificationProps) {
       if (pasted.length === 6) verify(pasted);
       return;
     }
-    // Single digit: only accept numeric
+
     const digit = value.replace(/\D/g, "").slice(-1);
     const next = [...digits];
     next[index] = digit;
     setDigits(next);
     if (digit && index < 5) inputRefs.current[index + 1]?.focus();
-    // Auto-submit once all 6 are filled
     if (next.every((d) => d !== "")) verify(next.join(""));
   }
 
@@ -98,9 +99,10 @@ export function OtpVerification({ email, onVerified }: OtpVerificationProps) {
 
   return (
     <div className="text-center">
-      <h1 className="text-xl font-bold text-[#111827]">Verifica tu correo</h1>
+      <h1 className="text-xl font-bold text-[#111827]">{isEn ? "Verify your email" : "Verifica tu correo"}</h1>
       <p className="text-sm text-[#6b7280] mt-1.5 mb-6">
-        Ingresa el código de 6 dígitos que enviamos a <strong className="text-[#111827]">{email}</strong>.
+        {isEn ? "Enter the 6-digit code we sent to" : "Ingresa el codigo de 6 digitos que enviamos a"}{" "}
+        <strong className="text-[#111827]">{email}</strong>.
       </p>
 
       {error && (
@@ -114,7 +116,9 @@ export function OtpVerification({ email, onVerified }: OtpVerificationProps) {
         {digits.map((digit, i) => (
           <input
             key={i}
-            ref={(el) => { inputRefs.current[i] = el; }}
+            ref={(el) => {
+              inputRefs.current[i] = el;
+            }}
             type="text"
             inputMode="numeric"
             pattern="[0-9]*"
@@ -132,16 +136,16 @@ export function OtpVerification({ email, onVerified }: OtpVerificationProps) {
       {verifying ? (
         <div className="flex items-center justify-center gap-2 text-sm text-[#009FD9] mb-4">
           <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" />
-          Verificando…
+          {isEn ? "Verifying..." : "Verificando..."}
         </div>
       ) : (
-        <div className="h-4 mb-4" /> // placeholder to avoid layout shift
+        <div className="h-4 mb-4" />
       )}
 
       <p className="text-sm text-[#6b7280]">
         {countdown > 0 ? (
           <>
-            Reenviar código en{" "}
+            {isEn ? "Resend code in" : "Reenviar codigo en"}{" "}
             <strong className="text-[#374151]">{countdown}s</strong>
           </>
         ) : (
@@ -152,7 +156,7 @@ export function OtpVerification({ email, onVerified }: OtpVerificationProps) {
             className="inline-flex items-center gap-1.5 text-[#009FD9] font-medium hover:underline disabled:opacity-60"
           >
             <RotateCcw className="h-3.5 w-3.5" />
-            {resending ? "Reenviando…" : "Reenviar código"}
+            {resending ? (isEn ? "Resending..." : "Reenviando...") : (isEn ? "Resend code" : "Reenviar codigo")}
           </button>
         )}
       </p>
