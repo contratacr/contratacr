@@ -533,6 +533,9 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
             className="group flex w-full items-center justify-between gap-3 rounded-2xl border border-[#eef2f6] bg-white px-4 py-3 text-left shadow-sm transition-colors hover:bg-[#f8fbfe]"
           >
             <span className="min-w-0">
+              <span className="mb-0.5 block text-[11px] font-semibold uppercase tracking-wide text-[#8a94a6]">
+                {getCategoryGroupLabel(matches[0].groupId, locale)}
+              </span>
               <span className="block text-sm font-bold text-[#162543] [overflow-wrap:anywhere] group-hover:text-[#0089bb]">
                 {getCategoryLabel(matches[0].id, locale)}
               </span>
@@ -559,7 +562,12 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
                             flatIndex === active ? "bg-white text-[#0089bb] shadow-sm" : "text-[#374151] hover:bg-white hover:text-[#0089bb]"
                           )}
                         >
-                          <span className="min-w-0 truncate text-sm font-semibold">{getCategoryLabel(m.id, locale)}</span>
+                          <span className="min-w-0">
+                            <span className="block truncate text-sm font-semibold">{getCategoryLabel(m.id, locale)}</span>
+                            <span className="mt-0.5 block truncate text-[11px] font-medium text-[#9ca3af]">
+                              {getCategoryGroupLabel(m.groupId, locale)}
+                            </span>
+                          </span>
                           <ChevronRight className={cn("h-4 w-4 shrink-0", flatIndex === active ? "text-[#009FD9]" : "text-[#cbd5e1] group-hover:text-[#009FD9]")} />
                         </button>
                       );
