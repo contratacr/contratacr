@@ -791,15 +791,15 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
         <div className="rounded-lg bg-[#f9fafb] border border-[#e5e7eb] px-3 py-2.5 flex items-start gap-2">
           <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5 text-[#6b7280]" />
           <div className="text-xs text-[#6b7280] leading-snug break-words">
-            <p>Enviarás tu solicitud <strong>sin cédula verificada</strong>. El profesional lo verá y decide si te contacta.</p>
-            <button type="button" onClick={() => toggleNoCedula(false)} className="mt-1 font-semibold text-[#009FD9] hover:underline">Tengo cédula</button>
+            <p>Enviarás tu solicitud <strong>sin identidad verificada</strong>. El profesional lo verá y decide si te contacta.</p>
+            <button type="button" onClick={() => toggleNoCedula(false)} className="mt-1 font-semibold text-[#009FD9] hover:underline">Tengo identificación</button>
           </div>
         </div>
       );
     }
     return (
       <button type="button" onClick={() => toggleNoCedula(true)} className="self-start -mt-1 text-xs font-semibold text-[#009FD9] hover:underline">
-        No tengo cédula
+        No tengo identificación
       </button>
     );
   }

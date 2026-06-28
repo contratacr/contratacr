@@ -64,6 +64,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const { error: profileErr } = await db
     .from("profiles")
     .update({
+      ...(toStatus === "verified" ? {} : { cedula: null }),
       client_identity_status: toStatus === "verified" ? "verified" : action === "reject" ? "unverified" : "pending",
       client_identity_verified_at: toStatus === "verified" ? new Date().toISOString() : null,
       client_identity_provider: "manual",
@@ -73,6 +74,21 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   if (profileErr) {
     console.error("[admin/decision] profile identity sync error:", profileErr);
     return NextResponse.json({ error: "Se actualizó el profesional, pero no se pudo sincronizar la verificación de la cuenta." }, { status: 500 });
+  }
+
+  if (toStatus !== "verified") {
+    const { data: authUser } = await db.auth.admin.getUserById(pro.profile_id);
+    const { error: authErr } = await db.auth.admin.updateUserById(pro.profile_id, {
+      user_metadata: {
+        ...(authUser.user?.user_metadata ?? {}),
+        cedula: null,
+        identity_status: action === "reject" ? "unverified" : "pending",
+      },
+    });
+    if (authErr) {
+      console.error("[admin/decision] auth identity sync error:", authErr);
+      return NextResponse.json({ error: "Se actualizó la cuenta, pero no se pudo limpiar la identificación guardada." }, { status: 500 });
+    }
   }
 
   const { error: projectsErr } = await db

@@ -29,13 +29,13 @@ const SECTIONS: LegalSection[] = [
       { k: "sub", text: "2.2 De los Clientes" },
       { k: "ul", items: [
         "Número de teléfono / WhatsApp (para coordinar servicios).",
-        "Número de cédula, cuando lo proporciona al solicitar un servicio (para identificación).",
+        "Número de identificación, cuando lo proporciona al solicitar un servicio.",
         "Ubicación o zona, cuando la indica.",
         "Historial de solicitudes, solicitudes publicadas y profesionales guardados dentro de la Plataforma.",
       ] },
       { k: "sub", text: "2.3 De los Profesionales" },
       { k: "ul", items: [
-        "Número de cédula (opcional; quienes la aportan obtienen la insignia de identidad verificada).",
+        "Número de identificación (opcional; quienes la aportan pueden obtener la insignia de identidad verificada).",
         "Nombre comercial o marca (opcional).",
         "Profesión(es) y servicios ofrecidos.",
         "Número de teléfono / WhatsApp y, opcionalmente, número para llamadas y correo de contacto.",
@@ -50,7 +50,7 @@ const SECTIONS: LegalSection[] = [
         "Información técnica básica generada por el uso de la Plataforma (por ejemplo, datos de navegación necesarios para el funcionamiento del servicio).",
       ] },
       { k: "sub", text: "2.5 Verificación de identidad" },
-      { k: "p", text: "Cuando un Usuario aporta su cédula, consultamos su validez contra registros oficiales para confirmar que el número es real y que el nombre coincide. **Almacenamos únicamente el resultado de esa verificación y el número de cédula de forma protegida** (mostrándolo de forma enmascarada, p. ej. X-XXXX-0000). Aplicamos el principio de minimización: no guardamos más datos de los necesarios." },
+      { k: "p", text: "Cuando un Usuario aporta su identificación, consultamos su validez contra registros oficiales para confirmar que el número es real y que el nombre coincide. **Almacenamos únicamente el resultado de esa verificación y el número de identificación de forma protegida** (mostrándolo de forma enmascarada, p. ej. X-XXXX-0000). Aplicamos el principio de minimización: no guardamos más datos de los necesarios." },
     ],
   },
   {
@@ -74,7 +74,7 @@ const SECTIONS: LegalSection[] = [
     id: "publicos",
     h: "4. Datos que se muestran públicamente",
     body: [
-      { k: "p", text: "Tenga en cuenta que **el perfil de un Profesional es público** dentro de la Plataforma: su nombre (o nombre comercial), profesión, servicios, ubicación general (provincia/cantón), descripción, fotografías, reseñas y la insignia de identidad verificada (si aplica) son visibles para los Clientes, ya que esa es la finalidad del servicio. Los datos sensibles (como el número completo de cédula) **no se muestran públicamente**; la cédula solo se exhibe de forma enmascarada al propio titular." },
+      { k: "p", text: "Tenga en cuenta que **el perfil de un Profesional es público** dentro de la Plataforma: su nombre (o nombre comercial), profesión, servicios, ubicación general (provincia/cantón), descripción, fotografías, reseñas y la insignia de identidad verificada (si aplica) son visibles para los Clientes, ya que esa es la finalidad del servicio. Los datos sensibles (como el número completo de identificación) **no se muestran públicamente**; la identificación solo se exhibe de forma enmascarada al propio titular." },
     ],
   },
   {
