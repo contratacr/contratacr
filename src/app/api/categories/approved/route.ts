@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { CATEGORY_GROUP_LABELS_EN, CATEGORY_GROUPS, autoEnglishCategoryLabel } from "@/lib/data/categories";
+import { ALL_CATEGORIES, CATEGORY_GROUP_LABELS_EN, CATEGORY_GROUPS, autoEnglishCategoryLabel } from "@/lib/data/categories";
 
-// GET /api/categories/approved — the admin-approved CUSTOM categories (public).
-// These are `category_suggestions` rows an admin approved; the app merges them
-// into the fixed catalog at runtime (see lib/data/categories.ts) so an approved
-// suggestion becomes a real, selectable/searchable category with no code deploy.
+// GET /api/categories/approved — public custom services + catalog overrides.
+// The operational catalog is the `categories` table. Approved suggestions are
+// kept as a compatibility source for older rows that have not been mirrored yet.
 export async function GET() {
   const db = createAdminClient();
-  const { data } = await db
+  const { data: suggestions } = await db
     .from("category_suggestions")
     .select("id, label, suggested_name")
     .eq("status", "approved")
@@ -25,16 +24,50 @@ export async function GET() {
     flags = withoutEnglish.data;
   }
   const flagMap = new Map((flags ?? []).map((c) => [c.id, c]));
+  const fixedIds = new Set(ALL_CATEGORIES.map((category) => category.id));
+  const categoriesById = new Map<string, {
+    id: string;
+    label: string;
+    labelEn?: string;
+    groupId?: string;
+    isHidden: boolean;
+    esSalud: boolean;
+    supportsVideoconsulta: boolean;
+  }>();
 
-  const categories = (data ?? []).map((c) => ({
-    id: c.id,
-    label: (c.label || c.suggested_name || "").trim(),
-    labelEn: flagMap.get(c.id)?.name_en || autoEnglishCategoryLabel((c.label || c.suggested_name || "").trim()),
-    groupId: flagMap.get(c.id)?.group_id || undefined,
-    isHidden: !!flagMap.get(c.id)?.is_hidden,
-    esSalud: !!flagMap.get(c.id)?.es_salud,
-    supportsVideoconsulta: !!flagMap.get(c.id)?.supports_videoconsulta,
-  }));
+  for (const row of flags ?? []) {
+    if (!row.id || fixedIds.has(row.id) || row.is_hidden) continue;
+    const label = (row.name || "").trim();
+    if (!label) continue;
+    categoriesById.set(row.id, {
+      id: row.id,
+      label,
+      labelEn: row.name_en || autoEnglishCategoryLabel(label),
+      groupId: row.group_id || undefined,
+      isHidden: false,
+      esSalud: !!row.es_salud,
+      supportsVideoconsulta: !!row.supports_videoconsulta,
+    });
+  }
+
+  for (const suggestion of suggestions ?? []) {
+    if (!suggestion.id || fixedIds.has(suggestion.id) || categoriesById.has(suggestion.id)) continue;
+    const row = flagMap.get(suggestion.id);
+    if (row?.is_hidden) continue;
+    const label = (row?.name || suggestion.label || suggestion.suggested_name || "").trim();
+    if (!label) continue;
+    categoriesById.set(suggestion.id, {
+      id: suggestion.id,
+      label,
+      labelEn: row?.name_en || autoEnglishCategoryLabel(label),
+      groupId: row?.group_id || undefined,
+      isHidden: false,
+      esSalud: !!row?.es_salud,
+      supportsVideoconsulta: !!row?.supports_videoconsulta,
+    });
+  }
+
+  const categories = Array.from(categoriesById.values()).sort((a, b) => a.label.localeCompare(b.label));
   const categoryFlags = (flags ?? []).map((c) => ({
     id: c.id,
     isHidden: !!c.is_hidden,
@@ -71,7 +104,7 @@ export async function GET() {
 
   return NextResponse.json(
     { categories, categoryFlags, groups },
-    // Cache briefly at the edge — approvals are rare; pickers can be a touch stale.
-    { headers: { "Cache-Control": "public, max-age=60, s-maxage=300" } }
+    // Admin catalog edits should appear immediately on public service surfaces.
+    { headers: { "Cache-Control": "no-store" } }
   );
 }
