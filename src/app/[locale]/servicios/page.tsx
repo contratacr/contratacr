@@ -234,12 +234,7 @@ export default function ServiciosPage() {
                   <Search className="h-6 w-6" />
                 </div>
                 <h2 className="mt-4 text-lg font-extrabold text-[#162543]">{tp("noResults")}</h2>
-                <p className="mx-auto mt-1 max-w-md text-sm text-[#6b7280]">{tp("noResultsHint")}</p>
-                <div className="mx-auto mt-5 flex max-w-xl flex-col items-center gap-3 rounded-2xl bg-[#fbfdff] p-4">
-                  <div>
-                    <p className="text-sm font-extrabold text-[#162543]">{tp("notListed")}</p>
-                    <p className="mt-0.5 text-sm text-[#6b7280]">{tp("suggestDescription")}</p>
-                  </div>
+                <div className="mx-auto mt-4 flex max-w-xl flex-col items-center">
                   <CategorySuggestionBox
                     prominent
                     notListedLabel={tp("suggestCta")}
