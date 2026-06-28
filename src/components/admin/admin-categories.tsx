@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, HeartPulse, Layers3, Loader2, Plus, Save, Search, Tag, Trash2, Video, X } from "lucide-react";
 import {
   ALL_CATEGORIES,
@@ -103,6 +103,7 @@ export function AdminCategories() {
   const [newGroupName, setNewGroupName] = useState("");
   const [newGroupNameEn, setNewGroupNameEn] = useState("");
   const [busy, setBusy] = useState<string | null>(null);
+  const translatedSuggestionIds = useRef<Set<string>>(new Set());
 
   async function loadCatalog() {
     const data = await fetch("/api/admin/categories?status=catalog").then((r) => r.json());
@@ -201,6 +202,36 @@ export function AdminCategories() {
       return autoEnglishCategoryLabel(clean);
     }
   }
+
+  useEffect(() => {
+    if (view !== "suggestions" || status !== "pending" || !items.length) return;
+    const missing = items.filter((item) => {
+      return !manualEnglishEdits[item.id] && !englishEdits[item.id] && !translatedSuggestionIds.current.has(item.id);
+    });
+    if (!missing.length) return;
+
+    let cancelled = false;
+    missing.forEach((item) => translatedSuggestionIds.current.add(item.id));
+
+    const run = async () => {
+      const translated = await Promise.all(missing.map(async (item) => {
+        const labelEn = await fetchEnglishSuggestion(nameOf(item));
+        return [item.id, labelEn] as const;
+      }));
+      if (cancelled) return;
+      setEnglishEdits((prev) => {
+        const next = { ...prev };
+        for (const [id, labelEn] of translated) {
+          if (labelEn && !manualEnglishEdits[id]) next[id] = labelEn;
+        }
+        return next;
+      });
+    };
+
+    run();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view, status, items, englishEdits, manualEnglishEdits]);
 
   async function refreshSuggestionEnglish(i: Suggestion) {
     if (manualEnglishEdits[i.id]) return;
