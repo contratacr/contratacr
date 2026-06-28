@@ -467,6 +467,9 @@ export function searchCategories(query: string): (CategoryItem & { groupId: stri
   const q = normalizeText(query);
   return pool.filter((item) => {
     if (normalizeText(item.label).includes(q)) return true;
+    if (normalizeText(item.groupLabel).includes(q)) return true;
+    if (normalizeText(getCategoryGroupLabel(item.groupId)).includes(q)) return true;
+    if (normalizeText(getCategoryGroupLabel(item.groupId, "en")).includes(q)) return true;
     return item.keywords.some((k) => normalizeText(k).includes(q));
   });
 }
@@ -539,6 +542,15 @@ export function resolveCategoryIntent(query: string, locale?: string): (Category
   if (raw.length < 2) return null;
   const pool = getAllCategories();
   const q = normalizeText(raw);
+
+  const matchingGroup = getAllCategoryGroups().find((group) => {
+    const labels = [group.label, group.labelEn, getCategoryGroupLabel(group.id), getCategoryGroupLabel(group.id, "en")].filter(Boolean);
+    return labels.some((label) => normalizeText(String(label)) === q);
+  });
+  if (matchingGroup) {
+    const firstInGroup = pool.find((item) => item.groupId === matchingGroup.id);
+    if (firstInGroup) return firstInGroup;
+  }
 
   for (const item of pool) {
     if (termsForCategory(item, locale).some((term) => normalizeText(term) === q)) return item;
