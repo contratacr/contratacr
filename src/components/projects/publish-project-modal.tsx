@@ -50,6 +50,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
   const [officialName, setOfficialName] = useState("");
   const [noCedula, setNoCedula] = useState(false);
   const [savedCedula, setSavedCedula] = useState("");
+  const [profileLoaded, setProfileLoaded] = useState(false);
   const [published, setPublished] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const { user } = useAuth();
@@ -62,9 +63,13 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
   // Whether a real phone is ALREADY on profiles.phone — if so we never re-save it.
   const [phoneOnProfile, setPhoneOnProfile] = useState(false);
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.id) {
+      setProfileLoaded(true);
+      return;
+    }
     const supabase = createClient();
     let active = true;
+    setProfileLoaded(false);
     (async () => {
       const { data } = await supabase.rpc("get_my_profile");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -94,7 +99,10 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
       }
       setPhoneOnProfile(onProfile);
       setNeedsPhone(!p);
-    })();
+      setProfileLoaded(true);
+    })().catch(() => {
+      if (active) setProfileLoaded(true);
+    });
     return () => { active = false; };
   }, [user?.id]);
 
@@ -153,6 +161,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
     if (!form.categoryId) { setError(t("errCategory")); return; }
     if (!form.title.trim()) { setError(t("errTitle")); return; }
     if (!form.description.trim()) { setError(t("errDescription")); return; }
+    if (!profileLoaded) return;
     const cedulaForSubmit = savedCedula || form.cedula;
     if (!savedCedula && !noCedula && !isValidId(cedulaForSubmit)) { setError(t("errCedula")); return; }
     if (needsPhone && phone.replace(/\D/g, "").length < 8) { setError(t("errPhone")); return; }
@@ -212,6 +221,8 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
 
   const inputClass =
     "w-full h-11 rounded-xl border border-[#e5e7eb] bg-white px-4 text-sm text-[#111827] placeholder:text-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all";
+  const shouldAskCedula = profileLoaded && !savedCedula && !noCedula;
+  const shouldShowNoCedulaNotice = profileLoaded && !savedCedula && noCedula;
 
   return (
     <div className="fixed inset-0 z-[100] flex items-end justify-center sm:items-center sm:p-4">
@@ -293,7 +304,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
               )}
             </div>
 
-            {!savedCedula && !noCedula && (
+            {shouldAskCedula && (
               <>
                 <CedulaInput
                   value={form.cedula}
@@ -319,7 +330,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
                 </button>
               </>
             )}
-            {!savedCedula && noCedula && (
+            {shouldShowNoCedulaNotice && (
               <div className="rounded-lg bg-[#f9fafb] border border-[#e5e7eb] px-3 py-2.5 flex items-start gap-2">
                 <ShieldAlert className="h-4 w-4 shrink-0 mt-0.5 text-[#6b7280]" />
                 <div className="text-xs text-[#6b7280] leading-snug break-words">
@@ -423,7 +434,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
             <Button type="button" variant="outline" size="lg" onClick={onClose}>
               {t("cancel")}
             </Button>
-            <Button type={published ? "button" : "submit"} size="lg" className="flex-1" loading={submitting} disabled={submitting} onClick={published ? onClose : undefined}>
+            <Button type={published ? "button" : "submit"} size="lg" className="flex-1" loading={submitting} disabled={submitting || !profileLoaded} onClick={published ? onClose : undefined}>
               {published ? t("close") : submitting ? t("publishing") : t("publish")}
             </Button>
           </div>
