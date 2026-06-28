@@ -334,15 +334,15 @@ async function upsertCategory(db: ReturnType<typeof createAdminClient>, row: Rec
     if (!result.error) return result;
 
     const msg = result.error.message;
-    if (/name_en|schema cache|PGRST204|could not find/i.test(msg) && "name_en" in current) {
+    if (/name_en|Could not find the 'name_en' column|column .*name_en/i.test(msg) && "name_en" in current) {
       delete current.name_en;
       continue;
     }
-    if (/group_id|schema cache|PGRST204|could not find/i.test(msg) && "group_id" in current) {
+    if (/group_id|Could not find the 'group_id' column|column .*group_id/i.test(msg) && "group_id" in current) {
       delete current.group_id;
       continue;
     }
-    if (/is_hidden|schema cache|PGRST204|could not find/i.test(msg) && "is_hidden" in current) {
+    if (/is_hidden|Could not find the 'is_hidden' column|column .*is_hidden/i.test(msg) && "is_hidden" in current) {
       delete current.is_hidden;
       continue;
     }

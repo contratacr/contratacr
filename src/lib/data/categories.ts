@@ -372,12 +372,70 @@ const ENGLISH_SERVICE_TERMS: Record<string, string> = {
   web: "Web",
 };
 
+const ENGLISH_SERVICE_PHRASES: Record<string, string> = {
+  "aire acondicionado": "Air conditioning",
+  "alarmas de seguridad": "Security alarms",
+  "camaras de seguridad": "Security cameras",
+  "clases de cocina": "Cooking classes",
+  "clases de manejo": "Driving lessons",
+  "control de acceso": "Access control",
+  "control de plagas": "Pest control",
+  "cuidado de adultos": "Adult care",
+  "cuidado de adultos mayores": "Senior care",
+  "cuidado infantil": "Childcare",
+  "desarrollo web": "Web development",
+  "diseno de apps": "App design",
+  "diseno grafico": "Graphic design",
+  "electricidad automotriz": "Auto electrical",
+  "fotografia de eventos": "Event photography",
+  "limpieza de alfombras": "Carpet cleaning",
+  "limpieza de casas": "House cleaning",
+  "limpieza de oficinas": "Office cleaning",
+  "limpieza de piscinas": "Pool cleaning",
+  "limpieza del hogar": "Home cleaning",
+  "limpieza post construccion": "Post-construction cleaning",
+  "medicina general": "General medicine",
+  "mensajeria express": "Express courier",
+  "preparacion universitaria": "College prep",
+  "produccion de video": "Video production",
+  "redes e internet": "Networking and internet",
+  "redes internet": "Networking and internet",
+  "reparacion de celulares": "Phone repair",
+  "reparacion de computadoras": "Computer repair",
+  "servicio tecnico": "Technical support",
+  "soporte tecnico": "Tech support",
+  "transporte de mascotas": "Pet transport",
+  "venta de computadoras": "Computer sales",
+  "venta de componentes": "Computer parts sales",
+};
+
+const ENGLISH_CONNECTORS: Record<string, string> = {
+  con: "with",
+  contra: "against",
+  de: "of",
+  del: "of",
+  e: "and",
+  en: "in",
+  para: "for",
+  por: "by",
+  y: "and",
+};
+
 export function autoEnglishCategoryLabel(label: string): string {
+  const normalized = normalizeText(label)
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  const phrase = ENGLISH_SERVICE_PHRASES[normalized];
+  if (phrase) return phrase;
+
   const translated = label
     .trim()
     .split(/\s+/)
     .map((word) => {
       const clean = normalizeText(word).replace(/[^a-z0-9]/g, "");
+      const connector = ENGLISH_CONNECTORS[clean];
+      if (connector) return connector;
       const match = ENGLISH_SERVICE_TERMS[clean];
       if (match) return match;
       const raw = word.replace(/[^\p{L}\p{N}]/gu, "");

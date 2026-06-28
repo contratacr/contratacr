@@ -91,10 +91,12 @@ export function AdminCategories() {
   const [groupDrafts, setGroupDrafts] = useState<Record<string, { label: string; labelEn: string; sortOrder: number }>>({});
   const [edits, setEdits] = useState<Record<string, string>>({});
   const [englishEdits, setEnglishEdits] = useState<Record<string, string>>({});
+  const [manualEnglishEdits, setManualEnglishEdits] = useState<Record<string, boolean>>({});
   const [suggestionGroups, setSuggestionGroups] = useState<Record<string, string>>({});
   const [flagEdits, setFlagEdits] = useState<Record<string, { esSalud: boolean; supportsVideoconsulta: boolean }>>({});
   const [newServiceName, setNewServiceName] = useState("");
   const [newServiceNameEn, setNewServiceNameEn] = useState("");
+  const [newServiceNameEnManual, setNewServiceNameEnManual] = useState(false);
   const [newServiceGroupId, setNewServiceGroupId] = useState("profesional");
   const [newServiceFlags, setNewServiceFlags] = useState({ esSalud: false, supportsVideoconsulta: false });
   const [newGroupName, setNewGroupName] = useState("");
@@ -314,6 +316,7 @@ export function AdminCategories() {
       }
       setNewServiceName("");
       setNewServiceNameEn("");
+      setNewServiceNameEnManual(false);
       setNewServiceGroupId(groups[0]?.id || "profesional");
       setNewServiceFlags({ esSalud: false, supportsVideoconsulta: false });
       await loadCatalog();
@@ -473,8 +476,11 @@ export function AdminCategories() {
                             <input
                               value={nameOf(i)}
                               onChange={(e) => {
-                                setEdits((p) => ({ ...p, [i.id]: e.target.value }));
-                                setEnglishEdits((p) => p[i.id] ? p : ({ ...p, [i.id]: autoEnglishCategoryLabel(e.target.value) }));
+                                const nextLabel = e.target.value;
+                                setEdits((p) => ({ ...p, [i.id]: nextLabel }));
+                                if (!manualEnglishEdits[i.id]) {
+                                  setEnglishEdits((p) => ({ ...p, [i.id]: autoEnglishCategoryLabel(nextLabel) }));
+                                }
                               }}
                               className="h-10 w-full rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm font-semibold text-[#111827] outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
                             />
@@ -483,7 +489,10 @@ export function AdminCategories() {
                             <FieldLabel>Inglés</FieldLabel>
                             <input
                               value={englishNameOf(i)}
-                              onChange={(e) => setEnglishEdits((p) => ({ ...p, [i.id]: e.target.value }))}
+                              onChange={(e) => {
+                                setManualEnglishEdits((p) => ({ ...p, [i.id]: true }));
+                                setEnglishEdits((p) => ({ ...p, [i.id]: e.target.value }));
+                              }}
                               className="h-10 w-full rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm text-[#374151] outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
                             />
                           </div>
@@ -536,8 +545,9 @@ export function AdminCategories() {
                 <input
                   value={newServiceName}
                   onChange={(e) => {
-                    setNewServiceName(e.target.value);
-                    if (!newServiceNameEn) setNewServiceNameEn(autoEnglishCategoryLabel(e.target.value));
+                    const nextLabel = e.target.value;
+                    setNewServiceName(nextLabel);
+                    if (!newServiceNameEnManual) setNewServiceNameEn(autoEnglishCategoryLabel(nextLabel));
                   }}
                   placeholder="Ejemplo: Cardiología"
                   className="h-10 w-full rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
@@ -547,7 +557,10 @@ export function AdminCategories() {
                 <FieldLabel>Servicio en inglés</FieldLabel>
                 <input
                   value={newServiceNameEn}
-                  onChange={(e) => setNewServiceNameEn(e.target.value)}
+                  onChange={(e) => {
+                    setNewServiceNameEnManual(true);
+                    setNewServiceNameEn(e.target.value);
+                  }}
                   placeholder="English service name"
                   className="h-10 w-full rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
                 />
@@ -615,7 +628,8 @@ export function AdminCategories() {
                         const draft = draftOf(item);
                         const previousAuto = autoEnglishCategoryLabel(draft.label);
                         const nextLabel = e.target.value;
-                        return { ...prev, [item.id]: { ...draft, label: nextLabel, labelEn: draft.labelEn === previousAuto ? autoEnglishCategoryLabel(nextLabel) : draft.labelEn } };
+                        const shouldRefreshEnglish = draft.labelEn === previousAuto || normalizeText(draft.labelEn) === normalizeText(draft.label);
+                        return { ...prev, [item.id]: { ...draft, label: nextLabel, labelEn: shouldRefreshEnglish ? autoEnglishCategoryLabel(nextLabel) : draft.labelEn } };
                       })}
                       aria-label="Nombre del servicio"
                       className="h-10 rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm font-semibold text-[#111827] outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
