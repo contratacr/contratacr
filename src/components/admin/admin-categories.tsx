@@ -99,10 +99,13 @@ export function AdminCategories() {
   const [newServiceName, setNewServiceName] = useState("");
   const [newServiceNameEn, setNewServiceNameEn] = useState("");
   const [newServiceNameEnManual, setNewServiceNameEnManual] = useState(false);
+  const [newServiceNameManual, setNewServiceNameManual] = useState(false);
   const [newServiceGroupId, setNewServiceGroupId] = useState("profesional");
   const [newServiceFlags, setNewServiceFlags] = useState({ esSalud: false, supportsVideoconsulta: false });
   const [newGroupName, setNewGroupName] = useState("");
   const [newGroupNameEn, setNewGroupNameEn] = useState("");
+  const [newGroupNameManual, setNewGroupNameManual] = useState(false);
+  const [newGroupNameEnManual, setNewGroupNameEnManual] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const translatedSuggestionIds = useRef<Set<string>>(new Set());
 
@@ -204,6 +207,23 @@ export function AdminCategories() {
     }
   }
 
+  async function fetchSpanishSuggestion(label: string) {
+    const clean = label.trim();
+    if (!clean) return "";
+    try {
+      const res = await fetch("/api/admin/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: clean, target: "es" }),
+      });
+      if (!res.ok) return clean;
+      const data = await res.json();
+      return typeof data.labelEs === "string" && data.labelEs.trim() ? data.labelEs.trim() : clean;
+    } catch {
+      return clean;
+    }
+  }
+
   useEffect(() => {
     if (view !== "suggestions" || status !== "pending" || !items.length) return;
     const missing = items.filter((item) => {
@@ -244,6 +264,24 @@ export function AdminCategories() {
     if (newServiceNameEnManual) return;
     const translated = await fetchEnglishSuggestion(newServiceName);
     if (translated && !newServiceNameEnManual) setNewServiceNameEn(translated);
+  }
+
+  async function refreshNewServiceSpanish() {
+    if (newServiceNameManual) return;
+    const translated = await fetchSpanishSuggestion(newServiceNameEn);
+    if (translated && !newServiceNameManual) setNewServiceName(translated);
+  }
+
+  async function refreshNewGroupEnglish() {
+    if (newGroupNameEnManual) return;
+    const translated = await fetchEnglishSuggestion(newGroupName);
+    if (translated && !newGroupNameEnManual) setNewGroupNameEn(translated);
+  }
+
+  async function refreshNewGroupSpanish() {
+    if (newGroupNameManual) return;
+    const translated = await fetchSpanishSuggestion(newGroupNameEn);
+    if (translated && !newGroupNameManual) setNewGroupName(translated);
   }
 
   async function refreshCatalogEnglish(item: CatalogCategory) {
@@ -374,14 +412,15 @@ export function AdminCategories() {
 
   async function addService(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const label = newServiceName.trim();
-    if (!label) return;
+    const label = newServiceName.trim() || await fetchSpanishSuggestion(newServiceNameEn);
+    const labelEn = newServiceNameEn.trim() || await fetchEnglishSuggestion(label);
+    if (!label && !labelEn) return;
     setBusy("new-service");
     try {
       const res = await fetch("/api/admin/categories", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ label, labelEn: newServiceNameEn.trim() || undefined, groupId: newServiceGroupId, ...newServiceFlags }),
+        body: JSON.stringify({ label, labelEn, groupId: newServiceGroupId, ...newServiceFlags }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -390,6 +429,7 @@ export function AdminCategories() {
       }
       setNewServiceName("");
       setNewServiceNameEn("");
+      setNewServiceNameManual(false);
       setNewServiceNameEnManual(false);
       setNewServiceGroupId(groups[0]?.id || "profesional");
       setNewServiceFlags({ esSalud: false, supportsVideoconsulta: false });
@@ -401,14 +441,15 @@ export function AdminCategories() {
 
   async function addGroup(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const label = newGroupName.trim();
-    if (!label) return;
+    const label = newGroupName.trim() || await fetchSpanishSuggestion(newGroupNameEn);
+    const labelEn = newGroupNameEn.trim() || await fetchEnglishSuggestion(label);
+    if (!label && !labelEn) return;
     setBusy("new-group");
     try {
       const res = await fetch("/api/admin/categories", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "group", label, labelEn: newGroupNameEn.trim() || autoEnglishCategoryLabel(label) }),
+        body: JSON.stringify({ type: "group", label, labelEn }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -417,6 +458,8 @@ export function AdminCategories() {
       }
       setNewGroupName("");
       setNewGroupNameEn("");
+      setNewGroupNameManual(false);
+      setNewGroupNameEnManual(false);
       await loadCatalog();
     } finally {
       setBusy(null);
@@ -632,6 +675,7 @@ export function AdminCategories() {
                   value={newServiceName}
                   onChange={(e) => {
                     const nextLabel = e.target.value;
+                    setNewServiceNameManual(true);
                     setNewServiceName(nextLabel);
                     if (!newServiceNameEnManual) setNewServiceNameEn(autoEnglishCategoryLabel(nextLabel));
                   }}
@@ -648,6 +692,7 @@ export function AdminCategories() {
                     setNewServiceNameEnManual(true);
                     setNewServiceNameEn(e.target.value);
                   }}
+                  onBlur={refreshNewServiceSpanish}
                   placeholder="English service name"
                   className="h-10 w-full rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
                 />
@@ -665,7 +710,7 @@ export function AdminCategories() {
               <div className="flex flex-wrap items-center gap-2">
                 <Toggle checked={newServiceFlags.esSalud} label="Salud" onChange={(v) => setNewServiceFlags((p) => ({ ...p, esSalud: v }))} />
                 <Toggle checked={newServiceFlags.supportsVideoconsulta} label="Video" onChange={(v) => setNewServiceFlags((p) => ({ ...p, supportsVideoconsulta: v }))} />
-                <button type="submit" disabled={!newServiceName.trim() || busy === "new-service"} className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#009FD9] px-4 text-sm font-semibold text-white hover:bg-[#0089bb] disabled:opacity-50">
+                <button type="submit" disabled={(!newServiceName.trim() && !newServiceNameEn.trim()) || busy === "new-service"} className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#009FD9] px-4 text-sm font-semibold text-white hover:bg-[#0089bb] disabled:opacity-50">
                   {busy === "new-service" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
                   Agregar
                 </button>
@@ -769,9 +814,12 @@ export function AdminCategories() {
                 <input
                   value={newGroupName}
                   onChange={(e) => {
-                    setNewGroupName(e.target.value);
-                    if (!newGroupNameEn) setNewGroupNameEn(autoEnglishCategoryLabel(e.target.value));
+                    const nextLabel = e.target.value;
+                    setNewGroupNameManual(true);
+                    setNewGroupName(nextLabel);
+                    if (!newGroupNameEnManual) setNewGroupNameEn(autoEnglishCategoryLabel(nextLabel));
                   }}
+                  onBlur={refreshNewGroupEnglish}
                   placeholder="Ejemplo: Servicios náuticos"
                   className="h-10 w-full rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
                 />
@@ -780,12 +828,16 @@ export function AdminCategories() {
                 <FieldLabel>Sección en inglés</FieldLabel>
                 <input
                   value={newGroupNameEn}
-                  onChange={(e) => setNewGroupNameEn(e.target.value)}
+                  onChange={(e) => {
+                    setNewGroupNameEnManual(true);
+                    setNewGroupNameEn(e.target.value);
+                  }}
+                  onBlur={refreshNewGroupSpanish}
                   placeholder="English section name"
                   className="h-10 w-full rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
                 />
               </div>
-              <button type="submit" disabled={!newGroupName.trim() || busy === "new-group"} className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#009FD9] px-4 text-sm font-semibold text-white hover:bg-[#0089bb] disabled:opacity-50">
+              <button type="submit" disabled={(!newGroupName.trim() && !newGroupNameEn.trim()) || busy === "new-group"} className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#009FD9] px-4 text-sm font-semibold text-white hover:bg-[#0089bb] disabled:opacity-50">
                 {busy === "new-group" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
                 Agregar sección
               </button>

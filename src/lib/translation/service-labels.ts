@@ -79,22 +79,24 @@ function localFallback(label: string, target: TranslateTarget) {
   return label.trim();
 }
 
-async function translateWithApiKey(label: string, target: TranslateTarget, source: TranslateTarget) {
+async function translateWithApiKey(label: string, target: TranslateTarget, source?: TranslateTarget) {
   const key = process.env.GOOGLE_TRANSLATE_API_KEY?.trim();
   if (!key) return "";
 
   const url = new URL(BASIC_TRANSLATE_URL);
   url.searchParams.set("key", key);
 
+  const body: Record<string, string> = {
+    q: label,
+    target,
+    format: "text",
+  };
+  if (source) body.source = source;
+
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      q: label,
-      source,
-      target,
-      format: "text",
-    }),
+    body: JSON.stringify(body),
     cache: "no-store",
   });
   if (!res.ok) return "";
@@ -103,12 +105,19 @@ async function translateWithApiKey(label: string, target: TranslateTarget, sourc
   return cleanTranslation(data?.data?.translations?.[0]?.translatedText);
 }
 
-async function translateWithServiceAccount(label: string, projectId: string, target: TranslateTarget, source: TranslateTarget) {
+async function translateWithServiceAccount(label: string, projectId: string, target: TranslateTarget, source?: TranslateTarget) {
   const token = await getAccessToken();
   if (!token) return "";
 
   const location = process.env.GOOGLE_TRANSLATE_LOCATION?.trim() || DEFAULT_LOCATION;
   const url = `https://translation.googleapis.com/v3/projects/${encodeURIComponent(projectId)}/locations/${encodeURIComponent(location)}:translateText`;
+
+  const body: Record<string, unknown> = {
+    contents: [label],
+    mimeType: "text/plain",
+    targetLanguageCode: target,
+  };
+  if (source) body.sourceLanguageCode = source;
 
   const res = await fetch(url.toString(), {
     method: "POST",
@@ -116,12 +125,7 @@ async function translateWithServiceAccount(label: string, projectId: string, tar
       "Authorization": `Bearer ${token}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      contents: [label],
-      mimeType: "text/plain",
-      sourceLanguageCode: source,
-      targetLanguageCode: target,
-    }),
+    body: JSON.stringify(body),
     cache: "no-store",
   });
   if (!res.ok) return "";
@@ -130,7 +134,7 @@ async function translateWithServiceAccount(label: string, projectId: string, tar
   return cleanTranslation(data?.translations?.[0]?.translatedText);
 }
 
-export async function translateServiceLabel(label: string, target: TranslateTarget, source: TranslateTarget): Promise<string> {
+export async function translateServiceLabel(label: string, target: TranslateTarget, source?: TranslateTarget): Promise<string> {
   const cleanLabel = label.trim();
   const fallback = localFallback(cleanLabel, target);
   if (!cleanLabel) return fallback;
@@ -153,9 +157,9 @@ export async function translateServiceLabel(label: string, target: TranslateTarg
 }
 
 export async function suggestEnglishServiceLabel(label: string): Promise<string> {
-  return translateServiceLabel(label, "en", "es");
+  return translateServiceLabel(label, "en");
 }
 
 export async function suggestSpanishServiceLabel(label: string): Promise<string> {
-  return translateServiceLabel(label, "es", "en");
+  return translateServiceLabel(label, "es");
 }

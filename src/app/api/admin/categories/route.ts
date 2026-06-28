@@ -12,7 +12,7 @@ import {
   slugifyCategory,
   supportsVideoConsultCategory,
 } from "@/lib/data/categories";
-import { suggestEnglishServiceLabel } from "@/lib/translation/service-labels";
+import { suggestEnglishServiceLabel, suggestSpanishServiceLabel } from "@/lib/translation/service-labels";
 
 type DbCategory = {
   id: string;
@@ -206,13 +206,15 @@ export async function POST(req: Request) {
   if (body?.type === "group") return createCategoryGroup(body);
 
   const { label, labelEn, groupId, esSalud, supportsVideoconsulta } = body;
-  const cleanLabel = typeof label === "string" ? label.trim() : "";
+  const rawLabel = typeof label === "string" ? label.trim() : "";
+  const rawLabelEn = typeof labelEn === "string" ? labelEn.trim() : "";
+  const cleanLabel = rawLabel || (rawLabelEn ? await suggestSpanishServiceLabel(rawLabelEn) : "");
   if (!cleanLabel) return NextResponse.json({ error: "Nombre requerido" }, { status: 400 });
 
   const id = slugifyCategory(cleanLabel);
   const db = createAdminClient();
   const groups = await getAdminGroups(db);
-  const cleanLabelEn = typeof labelEn === "string" && labelEn.trim() ? labelEn.trim() : await suggestEnglishServiceLabel(cleanLabel);
+  const cleanLabelEn = rawLabelEn || await suggestEnglishServiceLabel(cleanLabel);
   const review = classifySuggestedCategory(cleanLabel);
   const flags = {
     es_salud: typeof esSalud === "boolean" ? esSalud : review.healthLikely,
@@ -246,10 +248,12 @@ async function createCategoryGroup(body: Record<string, unknown>) {
   const admin = await getApiAdmin();
   if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
 
-  const label = typeof body.label === "string" ? body.label.trim() : "";
+  const rawLabel = typeof body.label === "string" ? body.label.trim() : "";
+  const rawLabelEn = typeof body.labelEn === "string" ? body.labelEn.trim() : "";
+  const label = rawLabel || (rawLabelEn ? await suggestSpanishServiceLabel(rawLabelEn) : "");
   if (!label) return NextResponse.json({ error: "Nombre requerido" }, { status: 400 });
   const id = slugifyCategory(label);
-  const labelEn = typeof body.labelEn === "string" && body.labelEn.trim() ? body.labelEn.trim() : await suggestEnglishServiceLabel(label);
+  const labelEn = rawLabelEn || await suggestEnglishServiceLabel(label);
   const db = createAdminClient();
   const existingGroups = await getAdminGroups(db);
   const nextSort = Math.max(0, ...existingGroups.map((group) => group.sortOrder ?? 0)) + 10;
