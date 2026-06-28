@@ -229,7 +229,7 @@ export const OTHER_CATEGORY: CategoryItem = {
    approved custom category behaves like any built-in one. Stays empty on the
    server (no fetch) — there `getCategoryLabel` falls back to a clean slug label. */
 export const CUSTOM_GROUP_ID = "otras";
-let CUSTOM_CATEGORIES: (CategoryItem & { groupId: string; groupLabel: string })[] = [];
+let CUSTOM_CATEGORIES: (CategoryItem & { groupId: string; groupLabel: string; labelEn?: string })[] = [];
 let CATEGORY_FEATURE_OVERRIDES = new Map<string, { esSalud?: boolean; supportsVideoconsulta?: boolean }>();
 const customListeners = new Set<() => void>();
 
@@ -245,13 +245,14 @@ export function setCategoryFeatureOverrides(
 }
 
 export function setCustomCategories(
-  list: { id: string; label: string; keywords?: string[]; esSalud?: boolean; supportsVideoconsulta?: boolean }[]
+  list: { id: string; label: string; labelEn?: string; keywords?: string[]; esSalud?: boolean; supportsVideoconsulta?: boolean }[]
 ): void {
   CUSTOM_CATEGORIES = list
     .filter((c) => c && c.id && c.label)
     .map((c) => ({
       id: c.id,
       label: c.label,
+      labelEn: c.labelEn,
       keywords: c.keywords ?? [],
       groupId: CUSTOM_GROUP_ID,
       groupLabel: "Otras categorías",
@@ -259,7 +260,7 @@ export function setCustomCategories(
   setCategoryFeatureOverrides(list);
 }
 
-export function getCustomCategories(): (CategoryItem & { groupId: string; groupLabel: string })[] {
+export function getCustomCategories(): (CategoryItem & { groupId: string; groupLabel: string; labelEn?: string })[] {
   return CUSTOM_CATEGORIES;
 }
 
@@ -289,6 +290,90 @@ export function normalizeText(text: string): string {
    other char dropped — e.g. "Plomería" → "plomeria", "Amor bueno" → "amor_bueno".
    NO prefix (the old `sg_` was a leftover "suggestion" tag). Falls back to
    "categoria" if the name has no usable characters. */
+const ENGLISH_SERVICE_TERMS: Record<string, string> = {
+  abogado: "Lawyer",
+  abogados: "Lawyers",
+  acupuntura: "Acupuncture",
+  aire: "Air",
+  alarmas: "Alarms",
+  arquitectura: "Architecture",
+  automotriz: "Auto",
+  belleza: "Beauty",
+  calentadores: "Water heaters",
+  camaras: "Cameras",
+  cardiologia: "Cardiology",
+  carpinteria: "Carpentry",
+  catering: "Catering",
+  clases: "Classes",
+  cocina: "Cooking",
+  computadoras: "Computers",
+  construccion: "Construction",
+  contabilidad: "Accounting",
+  cuidado: "Care",
+  decoracion: "Decoration",
+  depilacion: "Hair removal",
+  desarrollo: "Development",
+  diseno: "Design",
+  electricidad: "Electrical",
+  enfermeria: "Nursing",
+  eventos: "Events",
+  fisioterapia: "Physical therapy",
+  fotografia: "Photography",
+  fumigacion: "Pest control",
+  gas: "Gas",
+  grafico: "Graphic",
+  hogar: "Home",
+  impermeabilizacion: "Waterproofing",
+  infantil: "Childcare",
+  ingenieria: "Engineering",
+  jardin: "Garden",
+  jardineria: "Gardening",
+  legal: "Legal",
+  limpieza: "Cleaning",
+  maquillaje: "Makeup",
+  masajes: "Massage",
+  medicina: "Medicine",
+  mensajeria: "Courier",
+  movil: "Mobile",
+  nutricion: "Nutrition",
+  odontologia: "Dentistry",
+  pediatria: "Pediatrics",
+  peluqueria: "Hair salon",
+  pintura: "Painting",
+  piscinas: "Pools",
+  plomeria: "Plumbing",
+  podologia: "Podiatry",
+  psicologia: "Psychology",
+  reparacion: "Repair",
+  seguridad: "Security",
+  servicio: "Service",
+  soporte: "Support",
+  tecnico: "Tech",
+  terapia: "Therapy",
+  transporte: "Transport",
+  veterinaria: "Veterinary",
+  video: "Video",
+  web: "Web",
+};
+
+export function autoEnglishCategoryLabel(label: string): string {
+  const translated = label
+    .trim()
+    .split(/\s+/)
+    .map((word) => {
+      const clean = normalizeText(word).replace(/[^a-z0-9]/g, "");
+      const match = ENGLISH_SERVICE_TERMS[clean];
+      if (match) return match;
+      const raw = word.replace(/[^\p{L}\p{N}]/gu, "");
+      return raw ? raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase() : "";
+    })
+    .filter(Boolean)
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return translated || label;
+}
+
 export function slugifyCategory(name: string): string {
   const slug = (name ?? "")
     .toLowerCase()
@@ -491,7 +576,7 @@ export function getCategoryLabel(id: string, locale?: string): string {
   if (found) return found.label;
   // Admin-approved custom category (loaded on the client) — its real label.
   const custom = CUSTOM_CATEGORIES.find((c) => c.id === id);
-  if (custom) return custom.label;
+  if (custom) return locale === "en" && custom.labelEn ? custom.labelEn : custom.label;
   // Unknown id → a readable label (never the raw key). New custom-category ids are
   // a clean slug (no prefix), but LEGACY ones were slugged as `sg_<name>`, so strip
   // that prefix before de-slugging (e.g. "sg_vendedor_de_botellas" → "Vendedor de

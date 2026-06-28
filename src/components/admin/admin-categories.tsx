@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Check, X, Tag, Loader2, HeartPulse, Video, Search, Plus, Trash2 } from "lucide-react";
-import { ALL_CATEGORIES, classifySuggestedCategory, normalizeText } from "@/lib/data/categories";
+import { ALL_CATEGORIES, autoEnglishCategoryLabel, classifySuggestedCategory, normalizeText } from "@/lib/data/categories";
 
 type Suggestion = {
   id: string;
@@ -15,6 +15,7 @@ type Suggestion = {
 type CatalogCategory = {
   id: string;
   label: string;
+  labelEn?: string;
   groupLabel: string;
   source: "base" | "custom";
   esSalud: boolean;
@@ -116,7 +117,7 @@ export function AdminCategories() {
       await fetch("/api/admin/categories", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: i.id, status: next, label, ...flags }),
+        body: JSON.stringify({ id: i.id, status: next, label, labelEn: label ? autoEnglishCategoryLabel(label) : undefined, ...flags }),
       });
       setItems((prev) => prev.filter((x) => x.id !== i.id));
       window.dispatchEvent(new Event("focus"));
@@ -136,6 +137,7 @@ export function AdminCategories() {
         body: JSON.stringify({
           id: item.id,
           label: item.label,
+          labelEn: item.labelEn || autoEnglishCategoryLabel(item.label),
           esSalud: updated.esSalud,
           supportsVideoconsulta: updated.supportsVideoconsulta,
         }),
@@ -154,7 +156,7 @@ export function AdminCategories() {
       const res = await fetch("/api/admin/categories", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ label, ...newServiceFlags }),
+        body: JSON.stringify({ label, labelEn: autoEnglishCategoryLabel(label), ...newServiceFlags }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -300,6 +302,9 @@ export function AdminCategories() {
                   placeholder="Ejemplo: Cardiologia"
                   className="h-10 w-full rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
                 />
+                {newServiceName.trim() && (
+                  <p className="mt-1 text-xs text-[#8a94a6]">Inglés: {autoEnglishCategoryLabel(newServiceName)}</p>
+                )}
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <Toggle checked={newServiceFlags.esSalud} label="Salud" onChange={(v) => setNewServiceFlags((p) => ({ ...p, esSalud: v }))} />
@@ -352,7 +357,10 @@ export function AdminCategories() {
                 <div key={item.id} className="flex flex-col gap-3 border-b border-[#f1f5f9] px-4 py-3 last:border-b-0 sm:flex-row sm:items-center">
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-[#111827]">{item.label}</p>
-                    <p className="text-xs text-[#9ca3af]">{item.groupLabel} · {item.source === "base" ? "Base" : "Agregado"}</p>
+                    <p className="text-xs text-[#9ca3af]">
+                      {item.groupLabel} · {item.source === "base" ? "Base" : "Agregado"}
+                      {item.source === "custom" && <> · EN: {item.labelEn || autoEnglishCategoryLabel(item.label)}</>}
+                    </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <Toggle checked={item.esSalud} label="Salud" onChange={(v) => updateCatalogFlag(item, { esSalud: v })} />

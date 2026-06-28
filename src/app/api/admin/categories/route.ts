@@ -3,6 +3,7 @@ import { getApiAdmin } from "@/lib/auth/admin";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   ALL_CATEGORIES,
+  autoEnglishCategoryLabel,
   classifySuggestedCategory,
   isHealthCategory,
   slugifyCategory,
@@ -18,10 +19,19 @@ export async function GET(req: Request) {
   const db = createAdminClient();
 
   if (status === "catalog") {
-    const { data: rows } = await db
+    let rows: Array<{ id: string; name?: string | null; name_en?: string | null; es_salud?: boolean | null; supports_videoconsulta?: boolean | null }> | null = null;
+    const withEnglish = await db
       .from("categories")
-      .select("id, name, es_salud, supports_videoconsulta")
+      .select("id, name, name_en, es_salud, supports_videoconsulta")
       .order("name", { ascending: true });
+    rows = withEnglish.data;
+    if (withEnglish.error && /name_en|schema cache|PGRST204|could not find/i.test(withEnglish.error.message)) {
+      const withoutEnglish = await db
+        .from("categories")
+        .select("id, name, es_salud, supports_videoconsulta")
+        .order("name", { ascending: true });
+      rows = withoutEnglish.data;
+    }
     const dbMap = new Map((rows ?? []).map((row) => [row.id, row]));
     const fixedIds = new Set(ALL_CATEGORIES.map((category) => category.id));
 
@@ -30,6 +40,7 @@ export async function GET(req: Request) {
       return {
         id: category.id,
         label: row?.name || category.label,
+        labelEn: row?.name_en || autoEnglishCategoryLabel(row?.name || category.label),
         groupLabel: category.groupLabel,
         source: "base",
         esSalud: row?.es_salud ?? isHealthCategory(category.id),
@@ -41,6 +52,7 @@ export async function GET(req: Request) {
       .map((row) => ({
         id: row.id,
         label: row.name || labelFromId(row.id),
+        labelEn: row.name_en || autoEnglishCategoryLabel(row.name || labelFromId(row.id)),
         groupLabel: "Otras categorÃ­as",
         source: "custom",
         esSalud: !!row.es_salud,
@@ -69,7 +81,7 @@ export async function PATCH(req: Request) {
   const admin = await getApiAdmin();
   if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
 
-  const { id, status, label, esSalud, supportsVideoconsulta } = await req.json();
+  const { id, status, label, labelEn, esSalud, supportsVideoconsulta } = await req.json();
   if (!id || (status && !["approved", "rejected", "pending"].includes(status))) {
     return NextResponse.json({ error: "Datos invÃ¡lidos" }, { status: 400 });
   }
@@ -78,15 +90,14 @@ export async function PATCH(req: Request) {
 
   if (!status) {
     const cleanLabel = typeof label === "string" && label.trim() ? label.trim() : labelFromId(id);
-    const { error } = await db.from("categories").upsert(
-      {
-        id,
-        name: cleanLabel,
-        es_salud: !!esSalud,
-        supports_videoconsulta: !!supportsVideoconsulta,
-      },
-      { onConflict: "id", ignoreDuplicates: false }
-    );
+    const cleanLabelEn = typeof labelEn === "string" && labelEn.trim() ? labelEn.trim() : autoEnglishCategoryLabel(cleanLabel);
+    const { error } = await upsertCategory(db, {
+      id,
+      name: cleanLabel,
+      name_en: cleanLabelEn,
+      es_salud: !!esSalud,
+      supports_videoconsulta: !!supportsVideoconsulta,
+    });
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ ok: true });
   }
@@ -112,13 +123,15 @@ export async function PATCH(req: Request) {
       .eq("id", id)
       .single();
     const finalName = cleanLabel || row?.label || row?.suggested_name || labelFromId(id);
+    const finalNameEn = typeof labelEn === "string" && labelEn.trim() ? labelEn.trim() : autoEnglishCategoryLabel(finalName);
     const review = classifySuggestedCategory(finalName);
-    await db.from("categories").upsert({
+    await upsertCategory(db, {
       id,
       name: finalName,
+      name_en: finalNameEn,
       es_salud: typeof esSalud === "boolean" ? esSalud : review.healthLikely,
       supports_videoconsulta: typeof supportsVideoconsulta === "boolean" ? supportsVideoconsulta : review.videoConsultLikely,
-    }, { onConflict: "id", ignoreDuplicates: false });
+    });
   }
 
   return NextResponse.json({ ok: true });
@@ -128,7 +141,7 @@ export async function POST(req: Request) {
   const admin = await getApiAdmin();
   if (!admin) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
 
-  const { label, esSalud, supportsVideoconsulta } = await req.json();
+  const { label, labelEn, esSalud, supportsVideoconsulta } = await req.json();
   const cleanLabel = typeof label === "string" ? label.trim() : "";
   if (!cleanLabel) return NextResponse.json({ error: "Nombre requerido" }, { status: 400 });
 
@@ -137,17 +150,19 @@ export async function POST(req: Request) {
   if (fixedExists) return NextResponse.json({ error: "Ese servicio ya existe en el catalogo base" }, { status: 409 });
 
   const db = createAdminClient();
+  const cleanLabelEn = typeof labelEn === "string" && labelEn.trim() ? labelEn.trim() : autoEnglishCategoryLabel(cleanLabel);
   const review = classifySuggestedCategory(cleanLabel);
   const flags = {
     es_salud: typeof esSalud === "boolean" ? esSalud : review.healthLikely,
     supports_videoconsulta: typeof supportsVideoconsulta === "boolean" ? supportsVideoconsulta : review.videoConsultLikely,
   };
 
-  const { error: categoryError } = await db.from("categories").upsert({
+  const { error: categoryError } = await upsertCategory(db, {
     id,
     name: cleanLabel,
+    name_en: cleanLabelEn,
     ...flags,
-  }, { onConflict: "id", ignoreDuplicates: false });
+  });
   if (categoryError) return NextResponse.json({ error: categoryError.message }, { status: 500 });
 
   const { error: suggestionError } = await db.from("category_suggestions").upsert({
@@ -183,4 +198,14 @@ export async function DELETE(req: Request) {
 function labelFromId(id: string): string {
   return ALL_CATEGORIES.find((category) => category.id === id)?.label
     ?? id.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
+}
+
+async function upsertCategory(db: ReturnType<typeof createAdminClient>, row: Record<string, unknown>) {
+  const result = await db.from("categories").upsert(row, { onConflict: "id", ignoreDuplicates: false });
+  if (result.error && /name_en|schema cache|PGRST204|could not find/i.test(result.error.message)) {
+    const withoutEnglish = { ...row };
+    delete withoutEnglish.name_en;
+    return db.from("categories").upsert(withoutEnglish, { onConflict: "id", ignoreDuplicates: false });
+  }
+  return result;
 }
