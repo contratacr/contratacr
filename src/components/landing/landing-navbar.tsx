@@ -935,6 +935,11 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
   // SWITCH UI now lives ONLY inside "Mi panel" (sprint 518); the navbar just READS the
   // active mode to show the right quick links + bell.
   const { mode } = useMode(isPro);
+  const notificationScope: "all" | Mode = pathname.startsWith("/dashboard/profesional")
+    ? mode
+    : pathname.startsWith("/dashboard/cliente")
+      ? "use"
+      : "all";
 
   // Unread counts, split by mode (the bell handles its own live updates; this refreshes
   // when the menu/drawer opens). Professional + client notifications drive the active-mode
@@ -964,7 +969,11 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
   useEffect(() => { queueMicrotask(() => refreshNotifUnread()); }, [refreshNotifUnread, mobileOpen]);
   // The active mode's unread (its own + account-level) → the bell + the menu's
   // Notificaciones badge. The mode switch itself stays clean (no badge).
-  const activeUnread = proUnread + clientUnread + neutralUnread;
+  const activeUnread = notificationScope === "offer"
+    ? proUnread + neutralUnread
+    : notificationScope === "use"
+      ? clientUnread + neutralUnread
+      : proUnread + clientUnread + neutralUnread;
   const mobileRowBase = "relative flex min-h-[48px] w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm transition-colors before:absolute before:left-0 before:top-3 before:bottom-3 before:w-0.5 before:rounded-r-full before:bg-[#009FD9] before:transition-opacity";
   const mobileRowClass = (_active: boolean, strong = false) => cn(
     mobileRowBase,
@@ -1259,7 +1268,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                     >
                       {t("myPanel")}
                     </a>
-                    <NotificationBell />
+                    <NotificationBell scope={notificationScope} />
                     <AccountMenu
                       user={user}
                       isPro={isPro}
@@ -1433,7 +1442,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                   header for both roles; logged-out users see only the search. */}
               {user && (
                 <div className="flex items-center gap-0.5 sm:gap-1.5 shrink-0">
-                  <NotificationBell />
+                  <NotificationBell scope={notificationScope} />
                   <AccountMenu
                     user={user}
                     isPro={isPro}

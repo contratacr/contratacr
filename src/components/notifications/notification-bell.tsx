@@ -6,7 +6,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { cn, formatRelativeTime } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
-import { notificationHref } from "@/lib/notification-link";
+import { notificationHref, notificationInMode } from "@/lib/notification-link";
 import { TRANSLATED_NOTIFICATION_TYPES } from "@/lib/localized-notification";
 import { NotificationSourceIcon } from "@/components/notifications/notification-source-icon";
 
@@ -20,7 +20,7 @@ type Notification = {
   data?: { link?: string } | null;
 };
 
-export function NotificationBell() {
+export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "offer" }) {
   const { user } = useAuth();
   const t = useTranslations("notifications");
   const locale = useLocale();
@@ -36,9 +36,9 @@ export function NotificationBell() {
   // own channel, so handlers are always registered before subscribe().
   const instanceId = useId().replace(/[^a-zA-Z0-9_-]/g, "");
 
-  // Navbar bell = account inbox, before the user chooses a panel mode. Show client,
-  // professional, support, and account notifications together.
-  const visible = notifications;
+  // Outside panels the navbar is the account inbox; inside a panel, keep the bell
+  // scoped to that mode so the unread count matches what the user is doing.
+  const visible = scope === "all" ? notifications : notifications.filter((n) => notificationInMode(n.type, scope));
   const unreadCount = visible.filter((n) => !n.read).length;
   const notificationTitle = (n: Notification) =>
     TRANSLATED_NOTIFICATION_TYPES.has(n.type) ? t(`types.${n.type}`) : n.title;
