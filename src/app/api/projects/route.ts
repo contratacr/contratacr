@@ -5,6 +5,7 @@ import { getCategoryLabel, OTHER_CATEGORY } from "@/lib/data/categories";
 import { getProvinceById, getCantonById } from "@/lib/data/cr-geography";
 import { cleanId, detectIdType, isValidId } from "@/lib/cedula";
 import { getIdentityVerifier } from "@/lib/verification/identity-verifier";
+import { syncProfessionalVerificationFromAccount } from "@/lib/verification/account-identity";
 
 type ClientIdentityStatus = "verified" | "pending" | "unverified";
 
@@ -79,13 +80,15 @@ export async function POST(req: NextRequest) {
 
     const { data: existingProfile } = await admin
       .from("profiles")
-      .select("full_name, role")
+      .select("full_name, role, cedula, client_identity_status, client_identity_verified_at, client_identity_provider")
       .eq("id", uid)
       .maybeSingle();
 
-    let clientIdentityStatus: ClientIdentityStatus = "unverified";
+    let clientIdentityStatus: ClientIdentityStatus =
+      (existingProfile?.client_identity_status as ClientIdentityStatus | null) ?? "unverified";
     let officialName: string | null = null;
-    let identityProvider: string | null = null;
+    let identityProvider: string | null = existingProfile?.client_identity_provider ?? null;
+    let identityVerifiedAt: string | null = existingProfile?.client_identity_verified_at ?? null;
     if (cedula) {
       const idType = detectIdType(cedula);
       if (idType === "cedula") {
@@ -94,11 +97,14 @@ export async function POST(req: NextRequest) {
         if (result.found) {
           clientIdentityStatus = "verified";
           officialName = result.fullName ?? null;
+          identityVerifiedAt = new Date().toISOString();
         } else {
           clientIdentityStatus = "unverified";
+          identityVerifiedAt = null;
         }
       } else {
         clientIdentityStatus = "pending";
+        identityVerifiedAt = null;
       }
     }
 
@@ -119,9 +125,11 @@ export async function POST(req: NextRequest) {
       onboarding_completed: true,
       ...(cedula ? { cedula } : {}),
       client_identity_status: clientIdentityStatus,
-      client_identity_verified_at: clientIdentityStatus === "verified" ? new Date().toISOString() : null,
+      client_identity_verified_at: clientIdentityStatus === "verified" ? identityVerifiedAt : null,
       client_identity_provider: identityProvider,
     }, { onConflict: "id", ignoreDuplicates: false });
+
+    await syncProfessionalVerificationFromAccount(admin, uid, clientIdentityStatus, identityProvider);
 
     if (officialName) {
       try {

@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { notifyNewBooking, notifyBookingStatusChange, notifyBookingRescheduled } from "@/lib/notifications";
+import { cleanId, detectIdType, isValidId } from "@/lib/cedula";
+import { getIdentityVerifier } from "@/lib/verification/identity-verifier";
+import { syncProfessionalVerificationFromAccount } from "@/lib/verification/account-identity";
 
 // Lazy auto-confirm: a booking the pro marked "trabajo realizado" auto-completes
 // 7 days after work_done_at if the client never confirmed. Best-effort.
@@ -29,6 +32,10 @@ export async function POST(req: NextRequest) {
 
     // Check if an authenticated user session exists to link the booking
     const { data: { session } } = await supabase.auth.getSession();
+    const cleanClientCedula = cleanId(typeof clientCedula === "string" ? clientCedula : "");
+    if (cleanClientCedula && !isValidId(cleanClientCedula)) {
+      return NextResponse.json({ error: "Ingresa un numero de identificacion valido." }, { status: 400 });
+    }
 
     // Self-interaction guard: a professional cannot request a service from themselves.
     if (session?.user) {
@@ -40,6 +47,57 @@ export async function POST(req: NextRequest) {
         .maybeSingle();
       if (targetPro?.profile_id === session.user.id) {
         return NextResponse.json({ error: "No puedes solicitarte un servicio a ti mismo." }, { status: 400 });
+      }
+
+      if (cleanClientCedula) {
+        const { data: dupe } = await admin
+          .from("profiles")
+          .select("id")
+          .eq("cedula", cleanClientCedula)
+          .neq("id", session.user.id)
+          .maybeSingle();
+
+        if (dupe) {
+          return NextResponse.json({ error: "Esta identificacion ya esta registrada en ContrataCR." }, { status: 409 });
+        }
+
+        let accountIdentityStatus: "verified" | "pending" | "unverified" = "unverified";
+        let officialName: string | null = null;
+        let identityProvider: string | null = null;
+
+        const idType = detectIdType(cleanClientCedula);
+        if (idType === "cedula") {
+          const result = await getIdentityVerifier().lookup(cleanClientCedula);
+          identityProvider = result.provider;
+          if (result.found) {
+            accountIdentityStatus = "verified";
+            officialName = result.fullName ?? null;
+          }
+        } else {
+          accountIdentityStatus = "pending";
+        }
+
+        await admin
+          .from("profiles")
+          .update({
+            cedula: cleanClientCedula,
+            ...(officialName ? { full_name: officialName } : {}),
+            client_identity_status: accountIdentityStatus,
+            client_identity_verified_at: accountIdentityStatus === "verified" ? new Date().toISOString() : null,
+            client_identity_provider: identityProvider,
+          })
+          .eq("id", session.user.id);
+
+        await syncProfessionalVerificationFromAccount(admin, session.user.id, accountIdentityStatus, identityProvider);
+
+        if (officialName) {
+          try {
+            const { data: authUser } = await admin.auth.admin.getUserById(session.user.id);
+            await admin.auth.admin.updateUserById(session.user.id, {
+              user_metadata: { ...(authUser?.user?.user_metadata ?? {}), full_name: officialName },
+            });
+          } catch { /* profile is the source of truth */ }
+        }
       }
     }
 
@@ -75,7 +133,7 @@ export async function POST(req: NextRequest) {
     const baseBooking = {
       professional_id: professionalId,
       client_id: session?.user?.id ?? null,
-      client_cedula: clientCedula ?? null,
+      client_cedula: cleanClientCedula || null,
       client_name: clientName,
       client_email: clientEmail ?? null,
       client_phone: clientPhone ?? null,
