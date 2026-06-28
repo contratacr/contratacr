@@ -154,10 +154,10 @@ export default function CategoriasPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#f7f9fb]">
+    <div className="flex min-h-screen flex-col bg-white">
       <LandingNavbar />
 
-      <section className="relative z-30 border-b border-[#e5e7eb] bg-white px-4 pb-8 pt-28 sm:pt-32">
+      <section className="relative z-30 border-b border-[#eef2f6] bg-white px-4 pb-7 pt-28 sm:pt-32">
         <FadeInUp>
           <div className="mx-auto flex max-w-4xl flex-col items-center text-center">
             <div className="min-w-0">
@@ -174,7 +174,7 @@ export default function CategoriasPage() {
             <div className="mt-6 w-full max-w-2xl">
               <form
                 onSubmit={submitSearch}
-                className="flex h-[52px] items-center gap-3 rounded-2xl border border-gray-200 bg-white px-4 text-left shadow-[0_8px_28px_rgba(0,0,0,0.08)] transition-all focus-within:border-[#009FD9] focus-within:ring-2 focus-within:ring-[#009FD9]/20"
+                className="flex h-[52px] items-center gap-3 rounded-2xl border border-gray-200 bg-white px-4 text-left shadow-[0_10px_24px_rgba(15,23,42,0.06)] transition-all focus-within:border-[#009FD9] focus-within:ring-2 focus-within:ring-[#009FD9]/20"
               >
                 <Search className="h-5 w-5 shrink-0 text-gray-400" />
                 <input
@@ -192,13 +192,13 @@ export default function CategoriasPage() {
                 )}
               </form>
               {query.trim() && (
-                <div className="mt-3 rounded-2xl border border-[#e5e7eb] bg-white px-4 py-3 text-left shadow-sm">
+                <div className="mt-3 text-left">
                   {resultCount > 0 ? (
-                    <p className="text-sm font-medium text-[#374151]">
+                    <p className="text-sm font-medium text-[#5f6b7a]">
                       {tp("searchSummary", { count: resultCount, query: query.trim() })}
                     </p>
                   ) : (
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex flex-col gap-3 rounded-2xl border border-[#d8eef8] bg-[#f8fbfe] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                       <div>
                         <p className="text-sm font-semibold text-[#374151]">{tp("noResults")}</p>
                         <p className="mt-0.5 text-xs text-[#9ca3af]">{tp("noResultsHint")}</p>
@@ -219,7 +219,7 @@ export default function CategoriasPage() {
         </FadeInUp>
       </section>
 
-      <section className="sticky top-16 z-20 border-b border-[#e5e7eb] bg-white/95 px-4 py-3 backdrop-blur lg:hidden">
+      <section className="sticky top-16 z-20 border-b border-[#eef2f6] bg-white/95 px-4 py-3 backdrop-blur lg:hidden">
         <div className="mx-auto flex max-w-6xl gap-2 overflow-x-auto hide-scrollbar">
           {visibleGroups.map((group) => {
             const Icon = group.Icon;
@@ -227,7 +227,7 @@ export default function CategoriasPage() {
               <a
                 key={group.key}
                 href={`#${group.key}`}
-                className="inline-flex shrink-0 items-center gap-2 rounded-full border border-[#e5e7eb] bg-white px-3.5 py-2 text-sm font-semibold text-[#374151] shadow-sm transition-colors hover:border-[#009FD9] hover:bg-[#EBF5FB] hover:text-[#0089bb]"
+                className="inline-flex shrink-0 items-center gap-2 rounded-full border border-transparent bg-[#f8fafc] px-3.5 py-2 text-sm font-semibold text-[#374151] transition-colors hover:bg-[#EBF5FB] hover:text-[#0089bb]"
               >
                 <Icon className="h-4 w-4 text-[#009FD9]" />
                 {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
@@ -242,20 +242,20 @@ export default function CategoriasPage() {
       <section className="px-4 pb-24 pt-8">
         <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[260px_minmax(0,1fr)] lg:items-start">
           <aside className="hidden lg:block">
-            <div className="sticky top-24 overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
-              <div className="border-b border-[#eef2f6] px-4 py-3">
+            <div className="sticky top-24">
+              <div className="px-1 pb-2">
                 <p className="text-xs font-bold uppercase tracking-wide text-[#8a94a6]">
                   {tp("viewAll")}
                 </p>
               </div>
-              <nav className="max-h-[calc(100vh-180px)] overflow-y-auto py-1">
+              <nav className="max-h-[calc(100vh-180px)] overflow-y-auto border-l border-[#e5e7eb] py-1">
                 {visibleGroups.map((group) => {
                   const Icon = group.Icon;
                   return (
                     <a
                       key={group.key}
                       href={`#${group.key}`}
-                      className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-[#374151] transition-colors hover:bg-[#f8fbfe] hover:text-[#0089bb]"
+                      className="flex items-center gap-3 rounded-r-xl px-3 py-2.5 text-sm font-semibold text-[#374151] transition-colors hover:bg-[#f8fbfe] hover:text-[#0089bb]"
                     >
                       <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#EAF7FD] text-[#009FD9]">
                         <Icon className="h-4 w-4" />
@@ -289,7 +289,7 @@ export default function CategoriasPage() {
                     </div>
                   </div>
 
-                  <div className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+                  <div className="overflow-hidden rounded-2xl border border-[#eef2f6] bg-white">
                     <div className="grid grid-cols-1 sm:grid-cols-2">
                       {searchResults.map(({ id, groupKey, Icon }) => (
                         <Link
@@ -341,7 +341,7 @@ export default function CategoriasPage() {
                       </div>
                     </div>
 
-                    <div className="overflow-hidden rounded-2xl border border-[#e5e7eb] bg-white shadow-sm">
+                    <div className="overflow-hidden rounded-2xl border border-[#eef2f6] bg-white">
                       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
                         {group.visibleIds.map((id) => (
                           <Link
@@ -364,7 +364,7 @@ export default function CategoriasPage() {
             })}
 
             <FadeInUp delay={GROUPS.length * 20}>
-              <div id="sugerir-categoria" className="scroll-mt-24 rounded-2xl border border-[#d8eef8] bg-white px-5 py-7 text-center shadow-sm sm:px-6">
+              <div id="sugerir-categoria" className="scroll-mt-24 border-t border-[#eef2f6] px-5 py-10 text-center sm:px-6">
                 <FolderPlus className="mx-auto mb-2.5 h-7 w-7 text-[#009FD9]" strokeWidth={1.75} />
                 <h2 className="text-lg font-bold text-[#1a2744]">{tp("notListed")}</h2>
                 <p className="mx-auto mt-1 max-w-md text-sm leading-6 text-[#5f6b7a]">{tp("suggestDescription")}</p>
