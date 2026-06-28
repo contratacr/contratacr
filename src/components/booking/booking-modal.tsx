@@ -705,6 +705,10 @@ export function BookingModal({ professional, categoryName, open, onClose, initia
   async function validateClientCedula(): Promise<{ ok: boolean; officialName: string | null }> {
     setCedulaError(null);
     const clean = cleanId(profileCedula);
+    if (!clean) {
+      setCedulaError(locale === "en" ? "Enter your ID number." : "Ingresa tu número de identificación.");
+      return { ok: false, officialName: null };
+    }
     if (!isValidId(clean)) {
       setCedulaError(locale === "en"
         ? "The ID number is not valid (CR: 9 digits · DIMEX: 11-12 · NITE: 10). Check it and try again."
