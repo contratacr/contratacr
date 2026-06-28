@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Check, X, Tag, Loader2, HeartPulse, Video, Search, Plus, Trash2 } from "lucide-react";
-import { ALL_CATEGORIES, autoEnglishCategoryLabel, classifySuggestedCategory, normalizeText } from "@/lib/data/categories";
+import { Check, X, Tag, Loader2, HeartPulse, Video, Search, Plus, Trash2, Save } from "lucide-react";
+import { ALL_CATEGORIES, CATEGORY_GROUPS, autoEnglishCategoryLabel, classifySuggestedCategory, normalizeText } from "@/lib/data/categories";
 
 type Suggestion = {
   id: string;
@@ -16,8 +16,10 @@ type CatalogCategory = {
   id: string;
   label: string;
   labelEn?: string;
+  groupId: string;
   groupLabel: string;
   source: "base" | "custom";
+  isHidden?: boolean;
   esSalud: boolean;
   supportsVideoconsulta: boolean;
 };
@@ -70,9 +72,11 @@ export function AdminCategories() {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [catalogFilter, setCatalogFilter] = useState<"all" | "custom" | "health" | "video">("all");
+  const [catalogDrafts, setCatalogDrafts] = useState<Record<string, { label: string; groupId: string }>>({});
   const [edits, setEdits] = useState<Record<string, string>>({});
   const [flagEdits, setFlagEdits] = useState<Record<string, { esSalud: boolean; supportsVideoconsulta: boolean }>>({});
   const [newServiceName, setNewServiceName] = useState("");
+  const [newServiceGroupId, setNewServiceGroupId] = useState("profesional");
   const [newServiceFlags, setNewServiceFlags] = useState({ esSalud: false, supportsVideoconsulta: false });
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -139,9 +143,64 @@ export function AdminCategories() {
           id: item.id,
           label: item.label,
           labelEn: item.labelEn || autoEnglishCategoryLabel(item.label),
+          groupId: item.groupId,
+          isHidden: item.isHidden,
           esSalud: updated.esSalud,
           supportsVideoconsulta: updated.supportsVideoconsulta,
         }),
+      });
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  function draftOf(item: CatalogCategory) {
+    return catalogDrafts[item.id] ?? { label: item.label, groupId: item.groupId };
+  }
+
+  function hasDraftChanges(item: CatalogCategory) {
+    const draft = draftOf(item);
+    return draft.label.trim() !== item.label || draft.groupId !== item.groupId;
+  }
+
+  async function saveCatalogItem(item: CatalogCategory) {
+    const draft = draftOf(item);
+    const label = draft.label.trim();
+    if (!label) {
+      window.alert("El servicio necesita un nombre.");
+      return;
+    }
+    setBusy(item.id);
+    try {
+      const res = await fetch("/api/admin/categories", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: item.id,
+          label,
+          labelEn: autoEnglishCategoryLabel(label),
+          groupId: draft.groupId,
+          isHidden: false,
+          esSalud: item.esSalud,
+          supportsVideoconsulta: item.supportsVideoconsulta,
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        window.alert(data.error || "No se pudo guardar el servicio.");
+        return;
+      }
+      setCatalog((prev) => prev.map((row) => row.id === item.id ? {
+        ...row,
+        label,
+        labelEn: autoEnglishCategoryLabel(label),
+        groupId: draft.groupId,
+        groupLabel: CATEGORY_GROUPS.find((group) => group.id === draft.groupId)?.label ?? row.groupLabel,
+      } : row));
+      setCatalogDrafts((prev) => {
+        const next = { ...prev };
+        delete next[item.id];
+        return next;
       });
     } finally {
       setBusy(null);
@@ -157,7 +216,7 @@ export function AdminCategories() {
       const res = await fetch("/api/admin/categories", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ label, labelEn: autoEnglishCategoryLabel(label), ...newServiceFlags }),
+        body: JSON.stringify({ label, labelEn: autoEnglishCategoryLabel(label), groupId: newServiceGroupId, ...newServiceFlags }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -165,6 +224,7 @@ export function AdminCategories() {
         return;
       }
       setNewServiceName("");
+      setNewServiceGroupId("profesional");
       setNewServiceFlags({ esSalud: false, supportsVideoconsulta: false });
       setLoading(true);
       const data = await fetch("/api/admin/categories?status=catalog").then((r) => r.json());
@@ -176,7 +236,6 @@ export function AdminCategories() {
   }
 
   async function deleteService(item: CatalogCategory) {
-    if (item.source !== "custom") return;
     if (!window.confirm(`Eliminar "${item.label}" del catalogo?`)) return;
     setBusy(item.id);
     try {
@@ -307,6 +366,18 @@ export function AdminCategories() {
                   <p className="mt-1 text-xs text-[#8a94a6]">Inglés: {autoEnglishCategoryLabel(newServiceName)}</p>
                 )}
               </div>
+              <div className="min-w-[190px]">
+                <label className="mb-1 block text-xs font-bold uppercase tracking-wide text-[#8a94a6]">Seccion</label>
+                <select
+                  value={newServiceGroupId}
+                  onChange={(e) => setNewServiceGroupId(e.target.value)}
+                  className="h-10 w-full rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm font-semibold text-[#374151] outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
+                >
+                  {CATEGORY_GROUPS.map((group) => (
+                    <option key={group.id} value={group.id}>{group.label}</option>
+                  ))}
+                </select>
+              </div>
               <div className="flex flex-wrap items-center gap-2">
                 <Toggle checked={newServiceFlags.esSalud} label="Salud" onChange={(v) => setNewServiceFlags((p) => ({ ...p, esSalud: v }))} />
                 <Toggle checked={newServiceFlags.supportsVideoconsulta} label="Videoconsulta" onChange={(v) => setNewServiceFlags((p) => ({ ...p, supportsVideoconsulta: v }))} />
@@ -358,21 +429,44 @@ export function AdminCategories() {
               {filteredCatalog.map((item) => (
                 <div key={item.id} className="flex flex-col gap-3 border-b border-[#f1f5f9] px-4 py-3 last:border-b-0 sm:flex-row sm:items-center">
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-[#111827]">{item.label}</p>
-                    <p className="text-xs text-[#9ca3af]">{item.groupLabel}</p>
+                    <input
+                      value={draftOf(item).label}
+                      onChange={(e) => setCatalogDrafts((prev) => ({ ...prev, [item.id]: { ...draftOf(item), label: e.target.value } }))}
+                      aria-label="Nombre del servicio"
+                      className="h-9 w-full rounded-lg border border-transparent bg-transparent px-2 text-sm font-semibold text-[#111827] outline-none hover:border-[#e5e7eb] focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
+                    />
+                    <select
+                      value={draftOf(item).groupId}
+                      onChange={(e) => setCatalogDrafts((prev) => ({ ...prev, [item.id]: { ...draftOf(item), groupId: e.target.value } }))}
+                      aria-label="Seccion del servicio"
+                      className="mt-1 h-8 max-w-full rounded-lg border border-[#e5e7eb] bg-white px-2 text-xs font-semibold text-[#64748b] outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
+                    >
+                      {CATEGORY_GROUPS.map((group) => (
+                        <option key={group.id} value={group.id}>{group.label}</option>
+                      ))}
+                    </select>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <Toggle checked={item.esSalud} label="Salud" onChange={(v) => updateCatalogFlag(item, { esSalud: v })} />
                     <Toggle checked={item.supportsVideoconsulta} label="Videoconsulta" onChange={(v) => updateCatalogFlag(item, { supportsVideoconsulta: v })} />
-                    {item.source === "custom" && (
+                    {hasDraftChanges(item) && (
                       <button
                         type="button"
-                        onClick={() => deleteService(item)}
-                        className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-[#b91c1c] hover:bg-[#fef2f2]"
+                        onClick={() => saveCatalogItem(item)}
+                        disabled={busy === item.id}
+                        className="inline-flex items-center gap-1 rounded-lg bg-[#009FD9] px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-[#0089bb] disabled:opacity-50"
                       >
-                        <Trash2 className="h-3.5 w-3.5" /> Eliminar
+                        <Save className="h-3.5 w-3.5" /> Guardar
                       </button>
                     )}
+                    <button
+                      type="button"
+                      onClick={() => deleteService(item)}
+                      disabled={busy === item.id}
+                      className="inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold text-[#b91c1c] hover:bg-[#fef2f2] disabled:opacity-50"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" /> Eliminar
+                    </button>
                     {busy === item.id && <Loader2 className="h-4 w-4 animate-spin text-[#009FD9]" />}
                   </div>
                 </div>

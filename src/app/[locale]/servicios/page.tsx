@@ -6,7 +6,8 @@ import { useTranslations } from "next-intl";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { Link, useRouter } from "@/i18n/navigation";
-import { getCategoryLabel, normalizeText, searchCategories } from "@/lib/data/categories";
+import { useCustomCategories } from "@/lib/data/use-custom-categories";
+import { CATEGORY_GROUPS, getAllCategories, getCategoryLabel, normalizeText, searchCategories } from "@/lib/data/categories";
 import {
   Home,
   Leaf,
@@ -140,29 +141,43 @@ export default function ServiciosPage() {
   const tp = useTranslations("categoriesPage");
   const locale = useLocale();
   const router = useRouter();
+  const customCategories = useCustomCategories();
+  const customCatalogVersion = customCategories.map((category) => `${category.id}:${category.groupId}`).join("|");
   const [query, setQuery] = useState("");
-  const [activeGroupKey, setActiveGroupKey] = useState<(typeof GROUPS)[number]["key"]>("hogar");
+  const [activeGroupKey, setActiveGroupKey] = useState("hogar");
+  const groups = useMemo(() => CATEGORY_GROUPS.map((group) => {
+    void customCatalogVersion;
+    const meta = GROUPS.find((item) => item.key === group.id) ?? GROUPS[0];
+    return {
+      key: group.id,
+      Icon: meta.Icon,
+      ids: getAllCategories().filter((category) => category.groupId === group.id).map((category) => category.id),
+    };
+  }).filter((group) => group.ids.length > 0), [customCatalogVersion]);
   const normalizedQuery = normalizeText(query.trim());
   const matchedIds = useMemo(() => {
     if (!normalizedQuery) return null;
     return new Set(searchCategories(query).map((category) => category.id));
   }, [normalizedQuery, query]);
-  const visibleGroups = useMemo(() => GROUPS
+  const visibleGroups = useMemo(() => groups
     .map((group) => ({
       ...group,
       visibleIds: matchedIds ? group.ids.filter((id) => matchedIds.has(id)) : [...group.ids],
     }))
-    .filter((group) => group.visibleIds.length > 0), [matchedIds]);
+    .filter((group) => group.visibleIds.length > 0), [groups, matchedIds]);
   const searchResults = useMemo(() => visibleGroups.flatMap((group) =>
     group.visibleIds.map((id) => ({ id, groupKey: group.key, Icon: group.Icon }))
   ), [visibleGroups]);
-  const popularServices = useMemo(() => POPULAR_SERVICE_IDS.map((id) => {
+  const popularServices = useMemo(() => {
+    void customCatalogVersion;
+    return POPULAR_SERVICE_IDS.filter((id) => getAllCategories().some((category) => category.id === id)).map((id) => {
     const group = groupForService(id);
     return { id, groupKey: group?.key, Icon: group?.Icon ?? Search };
-  }), []);
+    });
+  }, [customCatalogVersion]);
   const resultCount = visibleGroups.reduce((sum, group) => sum + group.visibleIds.length, 0);
-  const totalServices = GROUPS.reduce((sum, group) => sum + group.ids.length, 0);
-  const activeGroup = GROUPS.find((group) => group.key === activeGroupKey) ?? GROUPS[0];
+  const totalServices = groups.reduce((sum, group) => sum + group.ids.length, 0);
+  const activeGroup = groups.find((group) => group.key === activeGroupKey) ?? groups[0] ?? GROUPS[0];
   const ActiveIcon = activeGroup.Icon;
 
   function submitSearch(e: React.FormEvent<HTMLFormElement>) {
@@ -189,7 +204,7 @@ export default function ServiciosPage() {
                 {tp("subtitle")}
               </p>
               <div className="mt-3 flex flex-wrap gap-2 text-xs font-bold text-[#5f6b7a]">
-                <span className="rounded-full bg-[#f6f8fb] px-3 py-1.5">{tp("groupCount", { count: GROUPS.length })}</span>
+                <span className="rounded-full bg-[#f6f8fb] px-3 py-1.5">{tp("groupCount", { count: groups.length })}</span>
                 <span className="rounded-full bg-[#f6f8fb] px-3 py-1.5">{tp("serviceCount", { count: totalServices })}</span>
               </div>
             </div>
@@ -265,7 +280,7 @@ export default function ServiciosPage() {
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                {GROUPS.map((group) => {
+                {groups.map((group) => {
                   const Icon = group.Icon;
                   const active = group.key === activeGroup.key;
                   return (

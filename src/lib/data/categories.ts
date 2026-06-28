@@ -230,32 +230,32 @@ export const OTHER_CATEGORY: CategoryItem = {
    server (no fetch) — there `getCategoryLabel` falls back to a clean slug label. */
 export const CUSTOM_GROUP_ID = "otras";
 let CUSTOM_CATEGORIES: (CategoryItem & { groupId: string; groupLabel: string; labelEn?: string })[] = [];
-let CATEGORY_FEATURE_OVERRIDES = new Map<string, { esSalud?: boolean; supportsVideoconsulta?: boolean }>();
+let CATEGORY_FEATURE_OVERRIDES = new Map<string, { esSalud?: boolean; supportsVideoconsulta?: boolean; isHidden?: boolean }>();
 const customListeners = new Set<() => void>();
 
 export function setCategoryFeatureOverrides(
-  list: { id: string; esSalud?: boolean; supportsVideoconsulta?: boolean }[]
+  list: { id: string; esSalud?: boolean; supportsVideoconsulta?: boolean; isHidden?: boolean }[]
 ): void {
   CATEGORY_FEATURE_OVERRIDES = new Map(
     list
       .filter((c) => c && c.id)
-      .map((c) => [c.id, { esSalud: c.esSalud, supportsVideoconsulta: c.supportsVideoconsulta }])
+      .map((c) => [c.id, { esSalud: c.esSalud, supportsVideoconsulta: c.supportsVideoconsulta, isHidden: c.isHidden }])
   );
   customListeners.forEach((fn) => { try { fn(); } catch { /* ignore */ } });
 }
 
 export function setCustomCategories(
-  list: { id: string; label: string; labelEn?: string; keywords?: string[]; esSalud?: boolean; supportsVideoconsulta?: boolean }[]
+  list: { id: string; label: string; labelEn?: string; groupId?: string; keywords?: string[]; esSalud?: boolean; supportsVideoconsulta?: boolean; isHidden?: boolean }[]
 ): void {
   CUSTOM_CATEGORIES = list
-    .filter((c) => c && c.id && c.label)
+    .filter((c) => c && c.id && c.label && !c.isHidden)
     .map((c) => ({
       id: c.id,
       label: c.label,
       labelEn: c.labelEn,
       keywords: c.keywords ?? [],
-      groupId: CUSTOM_GROUP_ID,
-      groupLabel: "Otras categorías",
+      groupId: c.groupId || CUSTOM_GROUP_ID,
+      groupLabel: getCategoryGroupLabel(c.groupId || CUSTOM_GROUP_ID),
     }));
   setCategoryFeatureOverrides(list);
 }
@@ -272,7 +272,8 @@ export function subscribeCustomCategories(fn: () => void): () => void {
 
 /** The full catalog = fixed taxonomy + admin-approved custom categories. */
 export function getAllCategories(): (CategoryItem & { groupId: string; groupLabel: string })[] {
-  return CUSTOM_CATEGORIES.length ? [...ALL_CATEGORIES, ...CUSTOM_CATEGORIES] : ALL_CATEGORIES;
+  const fixed = ALL_CATEGORIES.filter((category) => CATEGORY_FEATURE_OVERRIDES.get(category.id)?.isHidden !== true);
+  return CUSTOM_CATEGORIES.length ? [...fixed, ...CUSTOM_CATEGORIES] : fixed;
 }
 
 /* ─── Normalize text for accent-insensitive comparison ─── */
