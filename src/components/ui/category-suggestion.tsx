@@ -86,13 +86,13 @@ export function CategorySuggestionBox({
   }
 
   return (
-    <div ref={rootRef} className={cn(prominent ? "" : "border-t border-[#f3f4f6] px-3 py-2.5", className)}>
+    <div ref={rootRef} className={cn(prominent ? (suggesting ? "w-full sm:w-auto sm:min-w-[360px]" : "") : "border-t border-[#f3f4f6] px-3 py-2.5", className)}>
       {sent ? (
         <p className="inline-flex items-center gap-1.5 text-sm text-[#15803d]">
           <Check className="h-3.5 w-3.5" /> {thanksLabel}
         </p>
       ) : suggesting ? (
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -131,7 +131,7 @@ export function CategorySuggestionBox({
           }}
           className={cn(
             prominent
-              ? "inline-flex items-center justify-center rounded-full bg-[#009FD9] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#0089bb] transition-colors"
+              ? "inline-flex items-center justify-center rounded-full bg-[#009FD9] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0089bb] transition-colors"
               : "text-xs font-medium text-[#009FD9] hover:underline"
           )}
         >
