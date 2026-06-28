@@ -5,6 +5,7 @@ import { useLocale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
+import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
 import { getAllCategories, getAllCategoryGroups, getCategoryGroupLabel, getCategoryLabel, normalizeText, searchCategories } from "@/lib/data/categories";
@@ -150,13 +151,24 @@ export default function ServiciosPage() {
       ...group,
       visibleIds: matchedIds ? group.ids.filter((id) => matchedIds.has(id)) : [...group.ids],
     }))
-    .filter((group) => group.visibleIds.length > 0), [groups, matchedIds]);
+    .filter((group) => group.visibleIds.length > 0)
+    .sort((a, b) => {
+      if (!matchedIds) return 0;
+      const aLabel = normalizeText(a.label);
+      const bLabel = normalizeText(b.label);
+      const aLabelMatch = aLabel.includes(normalizedQuery) ? 1 : 0;
+      const bLabelMatch = bLabel.includes(normalizedQuery) ? 1 : 0;
+      if (aLabelMatch !== bLabelMatch) return bLabelMatch - aLabelMatch;
+      return b.visibleIds.length - a.visibleIds.length;
+    }), [groups, matchedIds, normalizedQuery]);
   const searchResults = useMemo(() => visibleGroups.flatMap((group) =>
     group.visibleIds.map((id) => ({ id, groupLabel: group.label, Icon: group.Icon }))
   ), [visibleGroups]);
   const resultCount = visibleGroups.reduce((sum, group) => sum + group.visibleIds.length, 0);
   const activeGroup = groups.find((group) => group.key === activeGroupKey) ?? groups[0] ?? GROUPS[0];
+  const activeSearchGroup = visibleGroups.find((group) => group.key === activeGroupKey) ?? visibleGroups[0];
   const ActiveIcon = activeGroup.Icon;
+  const ActiveSearchIcon = activeSearchGroup?.Icon ?? Search;
 
   function submitSearch(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -191,6 +203,7 @@ export default function ServiciosPage() {
             <div className="border-b border-[#eef2f6] bg-white p-3 sm:p-4">
               <form
                 onSubmit={submitSearch}
+                data-testid="services-page-search"
                 className="flex h-[54px] items-center gap-3 rounded-2xl border border-[#dbe5ee] bg-[#fbfdff] px-4 text-left transition-all focus-within:border-[#009FD9] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#009FD9]/20"
               >
                 <Search className="h-5 w-5 shrink-0 text-[#8a94a6]" />
@@ -217,37 +230,116 @@ export default function ServiciosPage() {
 
             {query.trim() && resultCount === 0 ? (
               <section className="px-4 py-12 text-center sm:px-6">
-                <Search className="mx-auto mb-3 h-10 w-10 text-[#cbd5e1]" />
-                <h2 className="text-lg font-extrabold text-[#162543]">{tp("noResults")}</h2>
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f1f7fb] text-[#9ca3af]">
+                  <Search className="h-6 w-6" />
+                </div>
+                <h2 className="mt-4 text-lg font-extrabold text-[#162543]">{tp("noResults")}</h2>
                 <p className="mx-auto mt-1 max-w-md text-sm text-[#6b7280]">{tp("noResultsHint")}</p>
+                <div className="mx-auto mt-5 flex max-w-xl flex-col items-center gap-3 rounded-2xl bg-[#fbfdff] p-4">
+                  <div>
+                    <p className="text-sm font-extrabold text-[#162543]">{tp("notListed")}</p>
+                    <p className="mt-0.5 text-sm text-[#6b7280]">{tp("suggestDescription")}</p>
+                  </div>
+                  <CategorySuggestionBox
+                    prominent
+                    notListedLabel={tp("suggestCta")}
+                    placeholder={tp("suggestPlaceholder")}
+                    sendLabel={tp("suggestSend")}
+                    sendingLabel={tp("suggestSending")}
+                    cancelLabel={tp("cancel")}
+                    thanksLabel={tp("suggestThanks")}
+                  />
+                </div>
               </section>
             ) : query.trim() && resultCount > 0 ? (
-              <section className="scroll-mt-32">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
-                      {searchResults.map(({ id, groupLabel, Icon }) => (
-                        <Link
-                          key={id}
-                          href={`/buscar?categoria=${id}`}
-                          className="group flex min-h-[70px] items-center justify-between gap-3 border-b border-[#eef2f6] px-4 py-3 text-left transition-colors hover:bg-[#f8fbfe] sm:border-r xl:[&:nth-child(3n)]:border-r-0"
+              <section className="grid min-h-[460px] scroll-mt-32 lg:grid-cols-[300px_minmax(0,1fr)]">
+                <aside className="min-w-0 overflow-hidden border-b border-[#edf2f7] bg-[#fbfdff] p-3 lg:border-b-0 lg:border-r">
+                  <div className="px-1 pb-2">
+                    <p className="text-xs font-bold uppercase tracking-wide text-[#8a94a6]">{tp("resultsTitle")}</p>
+                    <h2 className="mt-1 text-lg font-extrabold text-[#162543]">
+                      {tp("searchSummary", { count: resultCount, query: query.trim() })}
+                    </h2>
+                  </div>
+                  <div className="flex w-full min-w-0 gap-2 overflow-x-auto pb-1 lg:block lg:space-y-1 lg:overflow-visible lg:pb-0">
+                    {visibleGroups.map((group) => {
+                      const Icon = group.Icon;
+                      const active = group.key === activeSearchGroup?.key;
+                      return (
+                        <button
+                          key={group.key}
+                          type="button"
+                          onClick={() => setActiveGroupKey(group.key)}
+                          className={`group flex min-h-[48px] shrink-0 items-center gap-3 rounded-2xl border px-3 py-2 text-left transition-colors lg:w-full ${
+                            active ? "border-[#c6edf9] bg-[#EBF5FB] text-[#0077a3]" : "border-transparent bg-white text-[#374151] hover:bg-[#f4f8fb]"
+                          }`}
                         >
-                          <span className="flex min-w-0 items-center gap-3">
-                            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#EAF7FD] text-[#009FD9]">
-                              <Icon className="h-4 w-4" />
-                            </span>
-                            <span className="min-w-0">
-                              <span className="block text-sm font-semibold leading-snug text-[#374151] [overflow-wrap:anywhere] group-hover:text-[#0089bb]">
-                                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                                {getCategoryLabel(id, locale) || t(id as any)}
-                              </span>
-                              <span className="mt-0.5 block text-xs font-medium text-[#9ca3af]">
-                                {groupLabel}
-                              </span>
+                          <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${active ? "bg-[#009FD9] text-white" : "bg-[#f1f7fb] text-[#009FD9]"}`}>
+                            <Icon className="h-[18px] w-[18px]" />
+                          </span>
+                          <span className="min-w-[130px] flex-1 lg:min-w-0">
+                            <span className="block text-sm font-extrabold leading-tight [overflow-wrap:anywhere]">{group.label}</span>
+                            <span className="mt-0.5 block text-xs font-semibold text-[#8a94a6]">
+                              {tp("optionsCount", { count: group.visibleIds.length })}
                             </span>
                           </span>
-                          <ChevronRight className="h-4 w-4 shrink-0 text-[#cbd5e1] transition-colors group-hover:text-[#009FD9]" />
-                        </Link>
-                      ))}
+                        </button>
+                      );
+                    })}
                   </div>
+                </aside>
+
+                <div className="min-w-0">
+                  <div className="flex items-end justify-between gap-3 border-b border-[#eef2f6] px-4 py-4 sm:px-6">
+                    <div className="flex min-w-0 items-center gap-3">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EAF7FD] text-[#009FD9]">
+                        <ActiveSearchIcon className="h-5 w-5" />
+                      </span>
+                      <div className="min-w-0">
+                        <h2 className="text-xl font-extrabold leading-tight text-[#162543] [overflow-wrap:anywhere]">
+                          {activeSearchGroup?.label}
+                        </h2>
+                        <p className="mt-0.5 text-xs font-medium text-[#8a94a6]">
+                          {tp("optionsCount", { count: activeSearchGroup?.visibleIds.length ?? 0 })}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
+                    {(activeSearchGroup?.visibleIds ?? searchResults.map((item) => item.id)).map((id) => (
+                      <Link
+                        key={id}
+                        href={`/buscar?categoria=${id}`}
+                        className="group flex min-h-[58px] items-center justify-between gap-3 border-t border-[#f1f5f9] px-4 py-3 text-sm font-semibold leading-snug text-[#374151] transition-colors hover:bg-[#f8fbfe] hover:text-[#0089bb] sm:border-r sm:[&:nth-child(2n)]:border-r-0 xl:[&:nth-child(2n)]:border-r xl:[&:nth-child(3n)]:border-r-0"
+                      >
+                        <span className="min-w-0 [overflow-wrap:anywhere]">
+                                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                          {getCategoryLabel(id, locale) || t(id as any)}
+                        </span>
+                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[#cbd5e1] transition-colors group-hover:bg-[#EAF7FD] group-hover:text-[#009FD9]">
+                          <ChevronRight className="h-4 w-4" />
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                  <div className="border-t border-[#eef2f6] bg-[#fbfdff] px-4 py-4 sm:px-6">
+                    <div className="flex flex-col gap-3 rounded-2xl bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p className="text-sm font-extrabold text-[#162543]">{tp("notListed")}</p>
+                        <p className="mt-0.5 text-sm text-[#6b7280]">{tp("suggestDescription")}</p>
+                      </div>
+                      <CategorySuggestionBox
+                        prominent
+                        notListedLabel={tp("suggestCta")}
+                        placeholder={tp("suggestPlaceholder")}
+                        sendLabel={tp("suggestSend")}
+                        sendingLabel={tp("suggestSending")}
+                        cancelLabel={tp("cancel")}
+                        thanksLabel={tp("suggestThanks")}
+                      />
+                    </div>
+                  </div>
+                </div>
               </section>
             ) : (
                 <section className="grid min-h-[560px] scroll-mt-32 lg:grid-cols-[300px_minmax(0,1fr)]">
