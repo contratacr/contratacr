@@ -7,7 +7,7 @@ import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useCustomCategories } from "@/lib/data/use-custom-categories";
-import { getAllCategories, getAllCategoryGroups, getCategoryLabel, normalizeText, searchCategories } from "@/lib/data/categories";
+import { getAllCategories, getAllCategoryGroups, getCategoryGroupLabel, getCategoryLabel, normalizeText, searchCategories } from "@/lib/data/categories";
 import {
   Home,
   Leaf,
@@ -123,7 +123,6 @@ const GROUPS = [
 
 export default function ServiciosPage() {
   const t = useTranslations("categories");
-  const tg = useTranslations("categoryGroups");
   const tp = useTranslations("categoriesPage");
   const locale = useLocale();
   const router = useRouter();
@@ -137,9 +136,10 @@ export default function ServiciosPage() {
     return {
       key: group.id,
       Icon: meta?.Icon ?? Tag,
+      label: getCategoryGroupLabel(group.id, locale),
       ids: getAllCategories().filter((category) => category.groupId === group.id).map((category) => category.id),
     };
-  }).filter((group) => group.ids.length > 0), [customCatalogVersion]);
+  }).filter((group) => group.ids.length > 0), [customCatalogVersion, locale]);
   const normalizedQuery = normalizeText(query.trim());
   const matchedIds = useMemo(() => {
     if (!normalizedQuery) return null;
@@ -152,7 +152,7 @@ export default function ServiciosPage() {
     }))
     .filter((group) => group.visibleIds.length > 0), [groups, matchedIds]);
   const searchResults = useMemo(() => visibleGroups.flatMap((group) =>
-    group.visibleIds.map((id) => ({ id, groupKey: group.key, Icon: group.Icon }))
+    group.visibleIds.map((id) => ({ id, groupLabel: group.label, Icon: group.Icon }))
   ), [visibleGroups]);
   const resultCount = visibleGroups.reduce((sum, group) => sum + group.visibleIds.length, 0);
   const activeGroup = groups.find((group) => group.key === activeGroupKey) ?? groups[0] ?? GROUPS[0];
@@ -169,99 +169,54 @@ export default function ServiciosPage() {
     <div className="flex min-h-screen flex-col bg-white">
       <LandingNavbar />
 
-      <section className="relative z-30 bg-gradient-to-b from-white to-[#f6f9fc] px-4 pb-6 pt-24 sm:pt-28">
-        <div className="mx-auto grid max-w-6xl gap-5 lg:grid-cols-[minmax(0,0.86fr)_minmax(390px,0.74fr)] lg:items-end">
-            <div className="min-w-0">
-              <span className="mb-2.5 inline-flex rounded-full bg-[#EBF5FB] px-3 py-1 text-xs font-bold uppercase text-[#0089bb]">
-                {tp("eyebrow")}
-              </span>
-              <h1 className="max-w-2xl text-[2rem] font-extrabold leading-tight text-[#1a2744] sm:text-4xl">
-                {tp("title")}
-              </h1>
-              <p className="mt-2.5 max-w-2xl text-sm leading-6 text-[#5f6b7a] sm:text-base">
-                {tp("subtitle")}
-              </p>
-            </div>
-            <div className="w-full rounded-[28px] border border-[#e5edf4] bg-white p-2.5 shadow-[0_18px_42px_rgba(15,23,42,0.08)]">
-              <form
-                onSubmit={submitSearch}
-                className="flex h-[56px] items-center gap-3 rounded-2xl border border-[#dbe5ee] bg-[#fbfdff] px-4 text-left transition-all focus-within:border-[#009FD9] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#009FD9]/20"
-              >
-                <Search className="h-5 w-5 shrink-0 text-gray-400" />
-                <input
-                  type="text"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder={tp("searchPlaceholder")}
-                  aria-label={tp("searchAria")}
-                  className="h-[52px] min-w-0 flex-1 bg-transparent text-base text-gray-700 placeholder:text-gray-400 focus:outline-none"
-                />
-                {query && (
-                  <button type="button" onClick={() => setQuery("")} className="rounded-full p-1.5 text-[#9ca3af] hover:bg-[#f3f4f6] hover:text-[#374151]" aria-label={tp("clearSearch")}>
-                    <X className="h-4 w-4" />
-                  </button>
-                )}
-              </form>
-              {query.trim() && (
-                <div className="px-1 pt-3 text-left">
-                  {resultCount > 0 ? (
-                    <p className="text-sm font-medium text-[#5f6b7a]">
-                      {tp("searchSummary", { count: resultCount, query: query.trim() })}
-                    </p>
-                  ) : (
-                    <div className="rounded-2xl border border-[#d8eef8] bg-[#f8fbfe] px-4 py-3">
-                      <p className="text-sm font-semibold text-[#374151]">{tp("noResults")}</p>
-                      <p className="mt-0.5 text-xs text-[#9ca3af]">{tp("noResultsHint")}</p>
-                    </div>
-                  )}
-                </div>
+      <section className="relative z-30 bg-[#f7fafc] px-4 pb-5 pt-24 sm:pt-28">
+        <div className="mx-auto max-w-6xl">
+          <div className="max-w-3xl">
+            <span className="mb-2.5 inline-flex rounded-full bg-[#EBF5FB] px-3 py-1 text-xs font-bold uppercase text-[#0089bb]">
+              {tp("eyebrow")}
+            </span>
+            <h1 className="text-[2rem] font-extrabold leading-tight text-[#1a2744] sm:text-4xl">
+              {tp("title")}
+            </h1>
+            <p className="mt-2.5 max-w-2xl text-sm leading-6 text-[#5f6b7a] sm:text-base">
+              {tp("subtitle")}
+            </p>
+          </div>
+
+          <div className="mt-5 max-w-3xl">
+            <form
+              onSubmit={submitSearch}
+              className="flex h-[58px] items-center gap-3 rounded-2xl border border-[#dbe5ee] bg-white px-4 text-left shadow-[0_14px_34px_rgba(15,23,42,0.06)] transition-all focus-within:border-[#009FD9] focus-within:ring-2 focus-within:ring-[#009FD9]/20"
+            >
+              <Search className="h-5 w-5 shrink-0 text-[#8a94a6]" />
+              <input
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={tp("searchPlaceholder")}
+                aria-label={tp("searchAria")}
+                className="h-[54px] min-w-0 flex-1 bg-transparent text-base text-gray-700 placeholder:text-gray-400 focus:outline-none"
+              />
+              {query && (
+                <button type="button" onClick={() => setQuery("")} className="rounded-full p-1.5 text-[#9ca3af] hover:bg-[#f3f4f6] hover:text-[#374151]" aria-label={tp("clearSearch")}>
+                  <X className="h-4 w-4" />
+                </button>
               )}
-            </div>
+            </form>
+          </div>
         </div>
       </section>
 
-      <section className="bg-[#f6f9fc] px-4 pb-16 pt-2 sm:pt-4">
+      <section className="bg-[#f7fafc] px-4 pb-16 pt-1">
         <div className="mx-auto max-w-6xl">
-          {!query.trim() && (
-            <div className="mb-5 rounded-[28px] border border-[#e5edf4] bg-white p-3 shadow-[0_14px_34px_rgba(15,23,42,0.04)] sm:p-4">
-              <div className="mb-3 flex items-end justify-between gap-3 px-1">
-                <div>
-                  <p className="text-xs font-bold uppercase tracking-wide text-[#8a94a6]">{tp("browseByGroup")}</p>
-                  <h2 className="mt-1 text-xl font-extrabold text-[#162543]">{tp("chooseGroup")}</h2>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                {groups.map((group) => {
-                  const Icon = group.Icon;
-                  const active = group.key === activeGroup.key;
-                  return (
-                    <button
-                      key={group.key}
-                      type="button"
-                      onClick={() => setActiveGroupKey(group.key)}
-                      className={`group min-h-[96px] rounded-2xl border p-3 text-left transition-all hover:-translate-y-0.5 hover:border-[#9eddf4] hover:bg-[#fbfdff] ${
-                        active ? "border-[#009FD9] bg-[#f6fbfe] ring-2 ring-[#009FD9]/15" : "border-[#edf2f7] bg-white"
-                      }`}
-                    >
-                      <span className={`mb-3 flex h-9 w-9 items-center justify-center rounded-xl ${active ? "bg-[#009FD9] text-white" : "bg-[#EAF7FD] text-[#009FD9]"}`}>
-                        <Icon className="h-[18px] w-[18px]" />
-                      </span>
-                      <span className="block text-sm font-extrabold leading-tight text-[#162543] [overflow-wrap:anywhere]">
-                        {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                        {tg(group.key as any)}
-                      </span>
-                      <span className="mt-1 block text-xs font-bold text-[#8a94a6]">
-                        {tp("optionsCount", { count: group.ids.length })}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          <div className="min-w-0 overflow-hidden rounded-3xl border border-[#e6edf3] bg-white shadow-[0_14px_34px_rgba(15,23,42,0.05)]">
-            {query.trim() && resultCount > 0 ? (
+          <div className="overflow-hidden rounded-[28px] border border-[#e1e9f0] bg-white shadow-[0_18px_44px_rgba(15,23,42,0.06)]">
+            {query.trim() && resultCount === 0 ? (
+              <section className="px-4 py-12 text-center sm:px-6">
+                <Search className="mx-auto mb-3 h-10 w-10 text-[#cbd5e1]" />
+                <h2 className="text-lg font-extrabold text-[#162543]">{tp("noResults")}</h2>
+                <p className="mx-auto mt-1 max-w-md text-sm text-[#6b7280]">{tp("noResultsHint")}</p>
+              </section>
+            ) : query.trim() && resultCount > 0 ? (
               <section className="scroll-mt-32">
                   <div className="border-b border-[#eef2f6] px-4 py-4 sm:px-6">
                     <div>
@@ -275,7 +230,7 @@ export default function ServiciosPage() {
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
-                      {searchResults.map(({ id, groupKey, Icon }) => (
+                      {searchResults.map(({ id, groupLabel, Icon }) => (
                         <Link
                           key={id}
                           href={`/buscar?categoria=${id}`}
@@ -291,8 +246,7 @@ export default function ServiciosPage() {
                                 {getCategoryLabel(id, locale) || t(id as any)}
                               </span>
                               <span className="mt-0.5 block text-xs font-medium text-[#9ca3af]">
-                                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                                {tg(groupKey as any)}
+                                {groupLabel}
                               </span>
                             </span>
                           </span>
@@ -302,16 +256,49 @@ export default function ServiciosPage() {
                   </div>
               </section>
             ) : (
-                <section className="scroll-mt-32">
-                    <div className="flex items-end justify-between gap-3 bg-[#fbfdff] px-4 py-4 sm:px-6">
+                <section className="grid min-h-[560px] scroll-mt-32 lg:grid-cols-[300px_minmax(0,1fr)]">
+                  <aside className="min-w-0 overflow-hidden border-b border-[#edf2f7] bg-[#fbfdff] p-3 lg:border-b-0 lg:border-r">
+                    <div className="px-1 pb-2">
+                      <p className="text-xs font-bold uppercase tracking-wide text-[#8a94a6]">{tp("browseByGroup")}</p>
+                      <h2 className="mt-1 text-lg font-extrabold text-[#162543]">{tp("chooseGroup")}</h2>
+                    </div>
+                    <div className="flex w-full min-w-0 gap-2 overflow-x-auto pb-1 lg:block lg:space-y-1 lg:overflow-visible lg:pb-0">
+                      {groups.map((group) => {
+                        const Icon = group.Icon;
+                        const active = group.key === activeGroup.key;
+                        return (
+                          <button
+                            key={group.key}
+                            type="button"
+                            onClick={() => setActiveGroupKey(group.key)}
+                            className={`group flex min-h-[48px] shrink-0 items-center gap-3 rounded-2xl border px-3 py-2 text-left transition-colors lg:w-full ${
+                              active ? "border-[#c6edf9] bg-[#EBF5FB] text-[#0077a3]" : "border-transparent bg-white text-[#374151] hover:bg-[#f4f8fb]"
+                            }`}
+                          >
+                            <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${active ? "bg-[#009FD9] text-white" : "bg-[#f1f7fb] text-[#009FD9]"}`}>
+                              <Icon className="h-[18px] w-[18px]" />
+                            </span>
+                            <span className="min-w-[130px] flex-1 lg:min-w-0">
+                              <span className="block text-sm font-extrabold leading-tight [overflow-wrap:anywhere]">{group.label}</span>
+                              <span className="mt-0.5 block text-xs font-semibold text-[#8a94a6]">
+                                {tp("optionsCount", { count: group.ids.length })}
+                              </span>
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </aside>
+
+                  <div className="min-w-0">
+                    <div className="flex items-end justify-between gap-3 border-b border-[#eef2f6] px-4 py-4 sm:px-6">
                       <div className="flex min-w-0 items-center gap-3">
                         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EAF7FD] text-[#009FD9]">
                           <ActiveIcon className="h-5 w-5" />
                         </span>
                         <div className="min-w-0">
                           <h2 className="text-xl font-extrabold leading-tight text-[#162543] [overflow-wrap:anywhere]">
-                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                            {tg(activeGroup.key as any)}
+                            {activeGroup.label}
                           </h2>
                           <p className="mt-0.5 text-xs font-medium text-[#8a94a6]">
                             {tp("optionsCount", { count: activeGroup.ids.length })}
@@ -337,6 +324,7 @@ export default function ServiciosPage() {
                           </Link>
                         ))}
                     </div>
+                  </div>
                 </section>
             )}
           </div>
