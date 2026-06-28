@@ -361,6 +361,26 @@ export default function DashboardPage() {
     );
   }
 
+  function identityBadge() {
+    if (clientVerified || pro?.verification_status === "verified") {
+      return <Badge variant="verified">{t("identityVerified")}</Badge>;
+    }
+    if (!pro) return null;
+    return (
+      <button
+        type="button"
+        onClick={() => {
+          if (mode !== "offer") setMode("offer");
+          setTab("verificacion");
+        }}
+        title={t("verifyInvite")}
+        className="inline-flex items-center rounded-full border border-[#e5e7eb] bg-[#f3f4f6] px-2.5 py-0.5 text-xs font-medium text-[#6b7280] hover:bg-[#e5e7eb] transition-colors"
+      >
+        {t("notVerifiedBadge")}
+      </button>
+    );
+  }
+
   // Mode switching is now a compact navigation action ("Panel cliente/profesional")
   // instead of a large header control, so the identity header stays clean.
 
@@ -390,25 +410,7 @@ export default function DashboardPage() {
                   {displayName}
                 </h1>
                 <div className="mt-1.5 flex min-h-[22px] flex-wrap items-center gap-2">
-                  {mode === "offer" && pro && (
-                    pro.verification_status === "verified" ? (
-                      <Badge variant="verified">{t("identityVerified")}</Badge>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => setTab("verificacion")}
-                        title={t("verifyInvite")}
-                        className="inline-flex items-center rounded-full border border-[#e5e7eb] bg-[#f3f4f6] px-2.5 py-0.5 text-xs font-medium text-[#6b7280] hover:bg-[#e5e7eb] transition-colors"
-                      >
-                        {t("notVerifiedBadge")}
-                      </button>
-                    )
-                  )}
-                  {/* Client (use mode): the cédula "Verificado" badge below the name — IDENTICAL
-                      to the pro side, shown ONLY when verified (no "sin verificar" state, no cédula). */}
-                  {mode === "use" && clientVerified && (
-                    <Badge variant="verified">{t("identityVerified")}</Badge>
-                  )}
+                  {identityBadge()}
                 </div>
               </div>
             </div>
