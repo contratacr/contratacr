@@ -12,6 +12,7 @@ import {
   slugifyCategory,
   supportsVideoConsultCategory,
 } from "@/lib/data/categories";
+import { suggestEnglishServiceLabel } from "@/lib/translation/service-labels";
 
 type DbCategory = {
   id: string;
@@ -134,7 +135,7 @@ export async function PATCH(req: Request) {
 
   if (!status) {
     const cleanLabel = typeof label === "string" && label.trim() ? label.trim() : labelFromId(id);
-    const cleanLabelEn = typeof labelEn === "string" && labelEn.trim() ? labelEn.trim() : autoEnglishCategoryLabel(cleanLabel);
+    const cleanLabelEn = typeof labelEn === "string" && labelEn.trim() ? labelEn.trim() : await suggestEnglishServiceLabel(cleanLabel);
     const { error } = await upsertCategory(db, {
       id,
       name: cleanLabel,
@@ -169,7 +170,7 @@ export async function PATCH(req: Request) {
       .eq("id", id)
       .single();
     const finalName = cleanLabel || row?.label || row?.suggested_name || labelFromId(id);
-    const finalNameEn = typeof labelEn === "string" && labelEn.trim() ? labelEn.trim() : autoEnglishCategoryLabel(finalName);
+    const finalNameEn = typeof labelEn === "string" && labelEn.trim() ? labelEn.trim() : await suggestEnglishServiceLabel(finalName);
     const review = classifySuggestedCategory(finalName);
     await upsertCategory(db, {
       id,
@@ -199,7 +200,7 @@ export async function POST(req: Request) {
   const id = slugifyCategory(cleanLabel);
   const db = createAdminClient();
   const groups = await getAdminGroups(db);
-  const cleanLabelEn = typeof labelEn === "string" && labelEn.trim() ? labelEn.trim() : autoEnglishCategoryLabel(cleanLabel);
+  const cleanLabelEn = typeof labelEn === "string" && labelEn.trim() ? labelEn.trim() : await suggestEnglishServiceLabel(cleanLabel);
   const review = classifySuggestedCategory(cleanLabel);
   const flags = {
     es_salud: typeof esSalud === "boolean" ? esSalud : review.healthLikely,
@@ -236,7 +237,7 @@ async function createCategoryGroup(body: Record<string, unknown>) {
   const label = typeof body.label === "string" ? body.label.trim() : "";
   if (!label) return NextResponse.json({ error: "Nombre requerido" }, { status: 400 });
   const id = slugifyCategory(label);
-  const labelEn = typeof body.labelEn === "string" && body.labelEn.trim() ? body.labelEn.trim() : autoEnglishCategoryLabel(label);
+  const labelEn = typeof body.labelEn === "string" && body.labelEn.trim() ? body.labelEn.trim() : await suggestEnglishServiceLabel(label);
   const db = createAdminClient();
   const existingGroups = await getAdminGroups(db);
   const nextSort = Math.max(0, ...existingGroups.map((group) => group.sortOrder ?? 0)) + 10;
@@ -260,7 +261,7 @@ async function updateCategoryGroup(body: Record<string, unknown>) {
   const id = typeof body.id === "string" ? body.id.trim() : "";
   const label = typeof body.label === "string" ? body.label.trim() : "";
   if (!id || !label) return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
-  const labelEn = typeof body.labelEn === "string" && body.labelEn.trim() ? body.labelEn.trim() : autoEnglishCategoryLabel(label);
+  const labelEn = typeof body.labelEn === "string" && body.labelEn.trim() ? body.labelEn.trim() : await suggestEnglishServiceLabel(label);
   const sortOrder = typeof body.sortOrder === "number" ? body.sortOrder : 100;
   const db = createAdminClient();
   const { error } = await db.from("category_groups").upsert({

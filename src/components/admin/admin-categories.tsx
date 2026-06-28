@@ -183,6 +183,45 @@ export function AdminCategories() {
     return draft.label.trim() !== group.label || draft.labelEn.trim() !== (group.labelEn || autoEnglishCategoryLabel(group.label));
   }
 
+  async function fetchEnglishSuggestion(label: string) {
+    const clean = label.trim();
+    if (!clean) return "";
+    try {
+      const res = await fetch("/api/admin/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: clean }),
+      });
+      if (!res.ok) return autoEnglishCategoryLabel(clean);
+      const data = await res.json();
+      return typeof data.labelEn === "string" && data.labelEn.trim() ? data.labelEn.trim() : autoEnglishCategoryLabel(clean);
+    } catch {
+      return autoEnglishCategoryLabel(clean);
+    }
+  }
+
+  async function refreshSuggestionEnglish(i: Suggestion) {
+    if (manualEnglishEdits[i.id]) return;
+    const translated = await fetchEnglishSuggestion(nameOf(i));
+    if (translated && !manualEnglishEdits[i.id]) setEnglishEdits((p) => ({ ...p, [i.id]: translated }));
+  }
+
+  async function refreshNewServiceEnglish() {
+    if (newServiceNameEnManual) return;
+    const translated = await fetchEnglishSuggestion(newServiceName);
+    if (translated && !newServiceNameEnManual) setNewServiceNameEn(translated);
+  }
+
+  async function refreshCatalogEnglish(item: CatalogCategory) {
+    const draft = draftOf(item);
+    const previousAuto = autoEnglishCategoryLabel(draft.label);
+    const shouldRefreshEnglish = draft.labelEn === previousAuto || normalizeText(draft.labelEn) === normalizeText(draft.label);
+    if (!shouldRefreshEnglish) return;
+    const translated = await fetchEnglishSuggestion(draft.label);
+    if (!translated) return;
+    setCatalogDrafts((prev) => ({ ...prev, [item.id]: { ...draftOf(item), labelEn: translated } }));
+  }
+
   async function decide(i: Suggestion, next: "approved" | "rejected") {
     let label: string | undefined;
     const flags = flagsOf(i);
@@ -197,7 +236,7 @@ export function AdminCategories() {
       await fetch("/api/admin/categories", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: i.id, status: next, label, labelEn: label ? englishNameOf(i) : undefined, groupId: groupOfSuggestion(i), ...flags }),
+        body: JSON.stringify({ id: i.id, status: next, label, labelEn: label && manualEnglishEdits[i.id] ? englishNameOf(i) : undefined, groupId: groupOfSuggestion(i), ...flags }),
       });
       setItems((prev) => prev.filter((x) => x.id !== i.id));
       window.dispatchEvent(new Event("focus"));
@@ -307,7 +346,7 @@ export function AdminCategories() {
       const res = await fetch("/api/admin/categories", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ label, labelEn: newServiceNameEn.trim() || autoEnglishCategoryLabel(label), groupId: newServiceGroupId, ...newServiceFlags }),
+        body: JSON.stringify({ label, labelEn: newServiceNameEnManual ? newServiceNameEn.trim() : undefined, groupId: newServiceGroupId, ...newServiceFlags }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -482,6 +521,7 @@ export function AdminCategories() {
                                   setEnglishEdits((p) => ({ ...p, [i.id]: autoEnglishCategoryLabel(nextLabel) }));
                                 }
                               }}
+                              onBlur={() => refreshSuggestionEnglish(i)}
                               className="h-10 w-full rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm font-semibold text-[#111827] outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
                             />
                           </div>
@@ -549,6 +589,7 @@ export function AdminCategories() {
                     setNewServiceName(nextLabel);
                     if (!newServiceNameEnManual) setNewServiceNameEn(autoEnglishCategoryLabel(nextLabel));
                   }}
+                  onBlur={refreshNewServiceEnglish}
                   placeholder="Ejemplo: Cardiología"
                   className="h-10 w-full rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
                 />
@@ -631,6 +672,7 @@ export function AdminCategories() {
                         const shouldRefreshEnglish = draft.labelEn === previousAuto || normalizeText(draft.labelEn) === normalizeText(draft.label);
                         return { ...prev, [item.id]: { ...draft, label: nextLabel, labelEn: shouldRefreshEnglish ? autoEnglishCategoryLabel(nextLabel) : draft.labelEn } };
                       })}
+                      onBlur={() => refreshCatalogEnglish(item)}
                       aria-label="Nombre del servicio"
                       className="h-10 rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm font-semibold text-[#111827] outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
                     />
