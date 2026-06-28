@@ -559,19 +559,14 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
               {(() => {
                 const activeGroup = groupedMatches.find(({ group }) => group.id === selectedGroupId) ?? groupedMatches[0];
                 if (!activeGroup) return null;
-                const Icon = groupIcons[activeGroup.group.id] ?? Briefcase;
                 return (
                   <section>
-                    <div className="mb-3 flex items-center gap-3">
-                      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#EAF7FD] text-[#0089bb]">
-                        <Icon className="h-4 w-4" />
-                      </span>
-                      <div className="min-w-0">
-                        <h3 className="truncate text-lg font-extrabold text-[#162543]">{getCategoryGroupLabel(activeGroup.group.id, locale)}</h3>
-                        <p className="mt-0.5 text-[11px] font-medium text-[#9ca3af]">{ts("optionsCount", { count: activeGroup.items.length })}</p>
-                      </div>
+                    <div className="mb-3 min-w-0">
+                      <p className="text-[11px] font-bold uppercase tracking-wide text-[#8a94a6]">{t("categories")}</p>
+                      <h3 className="mt-0.5 truncate text-lg font-extrabold text-[#162543]">{getCategoryGroupLabel(activeGroup.group.id, locale)}</h3>
+                      <p className="mt-0.5 text-[11px] font-medium text-[#9ca3af]">{ts("optionsCount", { count: activeGroup.items.length })}</p>
                     </div>
-                    <div className="grid grid-cols-2 gap-1.5">
+                    <div className={`grid gap-1.5 ${activeGroup.items.length === 1 ? "max-w-[260px] grid-cols-1" : "grid-cols-2"}`}>
                       {activeGroup.items.map((m) => {
                         const flatIndex = matches.findIndex((match) => match.id === m.id);
                         return (

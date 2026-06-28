@@ -166,9 +166,9 @@ export default function ServiciosPage() {
   const resultCount = visibleGroups.reduce((sum, group) => sum + group.visibleIds.length, 0);
   const activeGroup = groups.find((group) => group.key === activeGroupKey) ?? groups[0] ?? GROUPS[0];
   const activeSearchGroup = visibleGroups.find((group) => group.key === activeGroupKey) ?? visibleGroups[0];
+  const activeSearchIds = activeSearchGroup?.visibleIds ?? searchResults.map((item) => item.id);
   const activeGroupHasServices = activeGroup.ids.length > 0;
   const ActiveIcon = activeGroup.Icon;
-  const ActiveSearchIcon = activeSearchGroup?.Icon ?? Search;
 
   function submitSearch(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -291,23 +291,19 @@ export default function ServiciosPage() {
 
                 <div className="min-w-0">
                   <div className="flex items-end justify-between gap-3 border-b border-[#eef2f6] px-4 py-4 sm:px-6">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EAF7FD] text-[#009FD9]">
-                        <ActiveSearchIcon className="h-5 w-5" />
-                      </span>
-                      <div className="min-w-0">
-                        <h2 className="text-xl font-extrabold leading-tight text-[#162543] [overflow-wrap:anywhere]">
-                          {activeSearchGroup?.label}
-                        </h2>
-                        <p className="mt-0.5 text-xs font-medium text-[#8a94a6]">
-                          {tp("optionsCount", { count: activeSearchGroup?.visibleIds.length ?? 0 })}
-                        </p>
-                      </div>
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-bold uppercase tracking-wide text-[#8a94a6]">{tp("resultsTitle")}</p>
+                      <h2 className="mt-0.5 text-xl font-extrabold leading-tight text-[#162543] [overflow-wrap:anywhere]">
+                        {activeSearchGroup?.label}
+                      </h2>
+                      <p className="mt-0.5 text-xs font-medium text-[#8a94a6]">
+                        {tp("optionsCount", { count: activeSearchIds.length })}
+                      </p>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
-                    {(activeSearchGroup?.visibleIds ?? searchResults.map((item) => item.id)).map((id) => (
+                  <div className={`grid grid-cols-1 ${activeSearchIds.length === 1 ? "sm:max-w-[320px]" : "sm:grid-cols-2 xl:grid-cols-3"}`}>
+                    {activeSearchIds.map((id) => (
                       <Link
                         key={id}
                         href={`/buscar?categoria=${id}`}
