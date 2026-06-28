@@ -1,16 +1,8 @@
-import { getAdminUser } from "@/lib/auth/admin";
-import { AdminShell } from "@/components/admin/admin-shell";
-import { AdminCategories } from "@/components/admin/admin-categories";
-import { AdminLogin } from "@/components/admin/admin-login";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminCategoriesPage() {
-  const admin = await getAdminUser();
-  if (!admin) return <AdminLogin />;
-  return (
-    <AdminShell adminName={admin.fullName} active="categorias">
-      <AdminCategories />
-    </AdminShell>
-  );
+export default async function AdminCategoriesRedirectPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  redirect(`/${locale}/admin/servicios`);
 }

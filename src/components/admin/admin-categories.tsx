@@ -178,7 +178,7 @@ export function AdminCategories() {
 
   function hasGroupChanges(group: CatalogGroup) {
     const draft = groupDraftOf(group);
-    return draft.label.trim() !== group.label || draft.labelEn.trim() !== (group.labelEn || autoEnglishCategoryLabel(group.label)) || draft.sortOrder !== (group.sortOrder ?? 100);
+    return draft.label.trim() !== group.label || draft.labelEn.trim() !== (group.labelEn || autoEnglishCategoryLabel(group.label));
   }
 
   async function decide(i: Suggestion, next: "approved" | "rejected") {
@@ -698,7 +698,7 @@ export function AdminCategories() {
                 const draft = groupDraftOf(group);
                 const inUse = catalog.filter((item) => item.groupId === group.id).length;
                 return (
-                  <div key={group.id} className="grid gap-3 border-b border-[#f1f5f9] p-4 last:border-b-0 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_120px_auto] lg:items-center">
+                  <div key={group.id} className="grid gap-3 border-b border-[#f1f5f9] p-4 last:border-b-0 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] lg:items-center">
                     <input
                       value={draft.label}
                       onChange={(e) => setGroupDrafts((prev) => ({ ...prev, [group.id]: { ...draft, label: e.target.value } }))}
@@ -709,13 +709,6 @@ export function AdminCategories() {
                       value={draft.labelEn}
                       onChange={(e) => setGroupDrafts((prev) => ({ ...prev, [group.id]: { ...draft, labelEn: e.target.value } }))}
                       aria-label="Nombre de la sección en inglés"
-                      className="h-10 rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm text-[#374151] outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
-                    />
-                    <input
-                      type="number"
-                      value={draft.sortOrder}
-                      onChange={(e) => setGroupDrafts((prev) => ({ ...prev, [group.id]: { ...draft, sortOrder: Number(e.target.value) || 100 } }))}
-                      aria-label="Orden"
                       className="h-10 rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm text-[#374151] outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
                     />
                     <div className="flex justify-end gap-2">
