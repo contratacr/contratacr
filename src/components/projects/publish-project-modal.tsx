@@ -293,13 +293,7 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
               )}
             </div>
 
-            {savedCedula ? (
-              <div className="rounded-lg bg-[#f9fafb] border border-[#e5e7eb] px-3 py-2.5">
-                <p className="text-xs text-[#6b7280] leading-snug break-words">
-                  {t.rich("savedCedulaNotice", { strong: (c) => <strong>{c}</strong> })}
-                </p>
-              </div>
-            ) : !noCedula && (
+            {!savedCedula && !noCedula && (
               <>
                 <CedulaInput
                   value={form.cedula}

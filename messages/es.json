@@ -2219,7 +2219,6 @@
     "noCedula": "No tengo cédula",
     "noCedulaNotice": "Enviarás tu solicitud <strong>sin cédula verificada</strong>. El profesional lo verá y decide si te contacta.",
     "haveCedula": "Tengo cédula",
-    "savedCedulaNotice": "Usaremos la <strong>cédula guardada en tu cuenta</strong> para esta solicitud.",
     "identityPendingNotice": "Solicitud publicada. Tu identificación queda pendiente de revisión y así se mostrará a los profesionales.",
     "identityUnverifiedNotice": "Solicitud publicada. No pudimos confirmar esa cédula en el padrón; tu identidad se mostrará como no verificada.",
     "provincia": "Provincia",
