@@ -97,6 +97,8 @@ These are **enforceable acceptance criteria**, not suggestions. Every screen mus
 
 > **Public services naming (sprint 609).** Public navigation and suggestion copy should say `Servicios`, not `Categorias`: users search for services, while category is an internal taxonomy concept. Navbar dropdowns, `/categorias`, and no-match CTAs should say `No ves tu servicio?` / `Suggest a service`. When a search has exactly one service match, render a single direct result row; do not show both a service row and a category/group field that makes the result look duplicated.
 
+> **Services catalog suggestion CTA (sprint 612).** Do not add a separate bottom `No encuentras tu servicio?` section on `/categorias`; it duplicates the existing suggestion flow and makes the catalog feel heavier. Keep the page focused on browsing/searching services. Suggestion entry points should live where the user is actively searching or adding a professional service.
+
 > **Search card mobile identity row (sprint 363).** On phone, the professional/company name has priority over compactness: do not clamp the primary or secondary name in `/buscar` mobile cards. Keep the favorite bookmark high in the card and keep the price column narrow/right-aligned so long Costa Rican names can wrap naturally. Desktop may keep a tighter one-line header.
 
 > **Search mobile map sheet (sprint 364).** The `/buscar` mobile bottom sheet may scroll its card list internally, but it must never expand high enough to cover the map controls or filter trigger. Keep a visible map-control band below the navbar at all snap points; users should not be able to drag/scroll the sheet into a state where filters or map actions disappear.

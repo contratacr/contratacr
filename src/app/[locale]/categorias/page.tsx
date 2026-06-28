@@ -6,14 +6,12 @@ import { useTranslations } from "next-intl";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { FadeInUp } from "@/components/landing/fade-in-up";
-import { CategorySuggestionBox } from "@/components/ui/category-suggestion";
 import { Link, useRouter } from "@/i18n/navigation";
 import { getCategoryLabel, normalizeText, searchCategories } from "@/lib/data/categories";
 import {
   Home,
   Leaf,
   Sparkles,
-  FolderPlus,
   Laptop,
   Briefcase,
   Heart,
@@ -149,7 +147,6 @@ export default function CategoriasPage() {
     e.preventDefault();
     const first = visibleGroups[0]?.visibleIds[0];
     if (first) router.push(`/buscar?categoria=${first}`);
-    else if (query.trim()) document.getElementById("sugerir-categoria")?.scrollIntoView({ behavior: "smooth", block: "center" });
     else router.push("/buscar");
   }
 
@@ -198,18 +195,9 @@ export default function CategoriasPage() {
                       {tp("searchSummary", { count: resultCount, query: query.trim() })}
                     </p>
                   ) : (
-                    <div className="flex flex-col gap-3 rounded-2xl border border-[#d8eef8] bg-[#f8fbfe] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-                      <div>
-                        <p className="text-sm font-semibold text-[#374151]">{tp("noResults")}</p>
-                        <p className="mt-0.5 text-xs text-[#9ca3af]">{tp("noResultsHint")}</p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => document.getElementById("sugerir-categoria")?.scrollIntoView({ behavior: "smooth", block: "center" })}
-                        className="inline-flex items-center justify-center rounded-lg bg-[#009FD9] px-3 py-2 text-sm font-semibold text-white hover:bg-[#0089bb]"
-                      >
-                        {tp("suggestCta")}
-                      </button>
+                    <div className="rounded-2xl border border-[#d8eef8] bg-[#f8fbfe] px-4 py-3">
+                      <p className="text-sm font-semibold text-[#374151]">{tp("noResults")}</p>
+                      <p className="mt-0.5 text-xs text-[#9ca3af]">{tp("noResultsHint")}</p>
                     </div>
                   )}
                 </div>
@@ -362,25 +350,6 @@ export default function CategoriasPage() {
                 </FadeInUp>
               );
             })}
-
-            <FadeInUp delay={GROUPS.length * 20}>
-              <div id="sugerir-categoria" className="scroll-mt-24 border-t border-[#eef2f6] px-5 py-10 text-center sm:px-6">
-                <FolderPlus className="mx-auto mb-2.5 h-7 w-7 text-[#009FD9]" strokeWidth={1.75} />
-                <h2 className="text-lg font-bold text-[#1a2744]">{tp("notListed")}</h2>
-                <p className="mx-auto mt-1 max-w-md text-sm leading-6 text-[#5f6b7a]">{tp("suggestDescription")}</p>
-                <div className="mx-auto mt-4 max-w-md">
-                  <CategorySuggestionBox
-                    prominent
-                    notListedLabel={tp("suggestCta")}
-                    placeholder={tp("suggestPlaceholder")}
-                    sendLabel={tp("suggestSend")}
-                    sendingLabel={tp("suggestSending")}
-                    cancelLabel={tp("cancel")}
-                    thanksLabel={tp("suggestThanks")}
-                  />
-                </div>
-              </div>
-            </FadeInUp>
           </div>
         </div>
       </section>
