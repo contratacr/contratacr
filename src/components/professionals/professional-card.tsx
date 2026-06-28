@@ -139,6 +139,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
   const priceAmount = priceSlash >= 0 ? priceLabel.slice(0, priceSlash).trim() : priceLabel;
   const priceUnit = priceSlash >= 0 ? priceLabel.slice(priceSlash) : "";
   const priceIsColones = priceLabel.includes("₡");
+  const priceBoxClass = priceUnit ? "max-w-[38%] sm:max-w-[40%]" : "w-[74px] sm:w-[86px]";
   const isVerified = professional.verificationStatus === "verified";
   const extraProfessions = allProfessions.length - professionList.length;
   // A pro viewing their OWN card cannot request a service from themselves. The
@@ -210,7 +211,7 @@ export async function ProfessionalCard({ professional, className, slots = [], ac
             {/* Price — on the name line, right-aligned. AMOUNT brand-blue, /unit muted grey;
                 capped width so a long price wraps instead of crowding the name. */}
             {priceLabel && (
-              <div className="ml-auto shrink-0 max-w-[38%] text-right leading-tight sm:max-w-[40%]">
+              <div className={`ml-auto shrink-0 text-right leading-tight ${priceBoxClass}`}>
                 <span className={`font-bold text-[#009FD9] ${priceIsColones ? "text-[15px]" : "text-[13px]"}`}>{priceAmount}</span>
                 {priceUnit && <span className="text-[11px] font-medium text-[#9ca3af]"> {priceUnit}</span>}
               </div>

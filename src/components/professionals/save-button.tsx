@@ -177,7 +177,7 @@ export function SaveableCard({ pro, children, isOwn = false }: CardWrapperProps)
     <div className="relative">
       {children}
       {/* Always-visible favorites button, floating outside the text/price row. */}
-      <div className="absolute -right-1 -top-1 z-20 rounded-full bg-white/95 shadow-sm ring-1 ring-black/5 lg:right-3 lg:top-1.5 lg:bg-transparent lg:shadow-none lg:ring-0">
+      <div className="absolute -right-2 -top-2 z-20 rounded-full bg-white/95 shadow-sm ring-1 ring-black/5 lg:right-3 lg:top-1.5 lg:bg-transparent lg:shadow-none lg:ring-0">
         <SaveButton pro={pro} isOwn={isOwn} />
       </div>
     </div>
