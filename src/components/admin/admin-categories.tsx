@@ -267,9 +267,9 @@ export function AdminCategories() {
   }
 
   async function refreshNewServiceSpanish() {
-    if (newServiceNameManual) return;
+    if (newServiceName.trim()) return;
     const translated = await fetchSpanishSuggestion(newServiceNameEn);
-    if (translated && !newServiceNameManual) setNewServiceName(translated);
+    if (translated && !newServiceName.trim()) setNewServiceName(translated);
   }
 
   async function refreshNewGroupEnglish() {
@@ -279,9 +279,9 @@ export function AdminCategories() {
   }
 
   async function refreshNewGroupSpanish() {
-    if (newGroupNameManual) return;
+    if (newGroupName.trim()) return;
     const translated = await fetchSpanishSuggestion(newGroupNameEn);
-    if (translated && !newGroupNameManual) setNewGroupName(translated);
+    if (translated && !newGroupName.trim()) setNewGroupName(translated);
   }
 
   async function refreshCatalogEnglish(item: CatalogCategory) {
@@ -680,7 +680,7 @@ export function AdminCategories() {
                     if (!newServiceNameEnManual) setNewServiceNameEn(autoEnglishCategoryLabel(nextLabel));
                   }}
                   onBlur={refreshNewServiceEnglish}
-                  placeholder="Ejemplo: Cardiología"
+                  placeholder=""
                   className="h-10 w-full rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
                 />
               </div>
@@ -693,7 +693,7 @@ export function AdminCategories() {
                     setNewServiceNameEn(e.target.value);
                   }}
                   onBlur={refreshNewServiceSpanish}
-                  placeholder="English service name"
+                  placeholder=""
                   className="h-10 w-full rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
                 />
               </div>
@@ -820,7 +820,7 @@ export function AdminCategories() {
                     if (!newGroupNameEnManual) setNewGroupNameEn(autoEnglishCategoryLabel(nextLabel));
                   }}
                   onBlur={refreshNewGroupEnglish}
-                  placeholder="Ejemplo: Servicios náuticos"
+                  placeholder=""
                   className="h-10 w-full rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
                 />
               </div>
@@ -833,7 +833,7 @@ export function AdminCategories() {
                     setNewGroupNameEn(e.target.value);
                   }}
                   onBlur={refreshNewGroupSpanish}
-                  placeholder="English section name"
+                  placeholder=""
                   className="h-10 w-full rounded-lg border border-[#e5e7eb] bg-white px-3 text-sm outline-none focus:border-[#009FD9] focus:ring-2 focus:ring-[#009FD9]/15"
                 />
               </div>
