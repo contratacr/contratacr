@@ -106,7 +106,7 @@ export default function DashboardPage() {
   const activeTab = (searchParams.get("tab") as Tab) ?? "profile";
 
   const [pro, setPro] = useState<ProData | null>(null);
-  const [profile, setProfile] = useState<{ full_name?: string; avatar_url?: string; cedula?: string | null } | null>(null);
+  const [profile, setProfile] = useState<{ full_name?: string; avatar_url?: string; cedula?: string | null; client_identity_status?: "verified" | "pending" | "unverified" | null } | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -283,7 +283,10 @@ export default function DashboardPage() {
   const headerAvatar = profile?.avatar_url || pro?.profiles?.avatar_url || null;
   // Client (use mode) identity: verified via cédula (saved at solicitud/booking or before).
   // Drives the "Verificado" badge below the name — the SAME badge the pro side uses.
-  const clientVerified = !!profile?.cedula && detectIdType(String(profile.cedula)) === "cedula";
+  const clientVerified =
+    profile?.client_identity_status === "verified" &&
+    !!profile?.cedula &&
+    detectIdType(String(profile.cedula)) === "cedula";
 
   // Offer mode without a pro row: a genuine seeker (cannot offer) sees the
   // activation gate; an account that CAN offer but whose row is still loading

@@ -61,7 +61,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json({ error: "No se pudo guardar la decisión." }, { status: 500 });
   }
 
-  await db
+  const { error: profileErr } = await db
     .from("profiles")
     .update({
       client_identity_status: toStatus === "verified" ? "verified" : action === "reject" ? "unverified" : "pending",
@@ -69,11 +69,22 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       client_identity_provider: "manual",
     })
     .eq("id", pro.profile_id);
-  await db
+
+  if (profileErr) {
+    console.error("[admin/decision] profile identity sync error:", profileErr);
+    return NextResponse.json({ error: "Se actualizó el profesional, pero no se pudo sincronizar la verificación de la cuenta." }, { status: 500 });
+  }
+
+  const { error: projectsErr } = await db
     .from("projects")
     .update({ client_identity_status: toStatus === "verified" ? "verified" : action === "reject" ? "unverified" : "pending" })
     .eq("client_id", pro.profile_id)
     .eq("status", "open");
+
+  if (projectsErr) {
+    console.error("[admin/decision] open projects identity sync error:", projectsErr);
+    return NextResponse.json({ error: "Se actualizó la cuenta, pero no se pudo sincronizar sus solicitudes abiertas." }, { status: 500 });
+  }
 
   // Audit trail — permanent record of who/when/what/why (manual decision).
   await db.from("provider_verification_log").insert({
