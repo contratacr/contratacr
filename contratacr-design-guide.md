@@ -95,7 +95,7 @@ These are **enforceable acceptance criteria**, not suggestions. Every screen mus
 
 > **Admin service English names (sprint 611).** Every admin-added or approved custom service must have an English display name stored in `categories.name_en`. The admin does not need to translate manually: the app auto-generates `name_en` from the Spanish label and shows the generated value in the catalog for review. Public EN rendering should use `labelEn` for custom services and fall back to generated English before ever showing a slug.
 
-> **Admin service deletion visibility (sprint 615).** The admin services catalog must make deletion discoverable without risking the base taxonomy. Show an `Agregados` filter, show `Eliminar` only for custom/admin-added services, and show a muted `Base protegido` state for fixed catalog services so admins understand why they cannot delete those rows.
+> **Admin service deletion visibility (sprint 615).** The admin services catalog must make deletion discoverable without adding noisy labels to every row. Show an `Agregados` filter and show `Eliminar` only for custom/admin-added services. Fixed catalog services should simply show their section name; do not repeat `Base`, `Agregado`, English labels, or `Base protegido` in every row.
 
 > **Public services naming (sprint 609).** Public navigation and suggestion copy should say `Servicios`, not `Categorias`: users search for services, while category is an internal taxonomy concept. Navbar dropdowns, `/servicios`, and no-match CTAs should say `No ves tu servicio?` / `Suggest a service`. When a search has exactly one service match, render a single direct result row; do not show both a service row and a category/group field that makes the result look duplicated.
 

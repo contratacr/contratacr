@@ -359,15 +359,12 @@ export function AdminCategories() {
                 <div key={item.id} className="flex flex-col gap-3 border-b border-[#f1f5f9] px-4 py-3 last:border-b-0 sm:flex-row sm:items-center">
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-[#111827]">{item.label}</p>
-                    <p className="text-xs text-[#9ca3af]">
-                      {item.groupLabel} · {item.source === "base" ? "Base" : "Agregado"}
-                      {item.source === "custom" && <> · EN: {item.labelEn || autoEnglishCategoryLabel(item.label)}</>}
-                    </p>
+                    <p className="text-xs text-[#9ca3af]">{item.groupLabel}</p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <Toggle checked={item.esSalud} label="Salud" onChange={(v) => updateCatalogFlag(item, { esSalud: v })} />
                     <Toggle checked={item.supportsVideoconsulta} label="Videoconsulta" onChange={(v) => updateCatalogFlag(item, { supportsVideoconsulta: v })} />
-                    {item.source === "custom" ? (
+                    {item.source === "custom" && (
                       <button
                         type="button"
                         onClick={() => deleteService(item)}
@@ -375,10 +372,6 @@ export function AdminCategories() {
                       >
                         <Trash2 className="h-3.5 w-3.5" /> Eliminar
                       </button>
-                    ) : (
-                      <span className="inline-flex items-center rounded-lg bg-[#f8fafc] px-2 py-1 text-xs font-semibold text-[#94a3b8]">
-                        Base protegido
-                      </span>
                     )}
                     {busy === item.id && <Loader2 className="h-4 w-4 animate-spin text-[#009FD9]" />}
                   </div>
