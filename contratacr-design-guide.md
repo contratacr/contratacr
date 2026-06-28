@@ -105,6 +105,8 @@ These are **enforceable acceptance criteria**, not suggestions. Every screen mus
 
 > **Services catalog quick paths (sprint 614).** `/servicios` may include a compact `Servicios populares` rail below the hero search. Keep it horizontally scrollable, text-first, and limited to genuinely common services so users can act immediately without scanning all 95 options. It must not replace the full grouped catalog or the main search.
 
+> **Services catalog section-first redesign (sprint 616).** `/servicios` should not feel like an always-open spreadsheet of every service. Default browse mode is section-first: show modern selectable section tiles, then render only the selected section's services in a clean list/grid. Search mode is the exception: typed queries may show direct service results across all sections with the section label visible.
+
 > **Search card mobile identity row (sprint 363).** On phone, the professional/company name has priority over compactness: do not clamp the primary or secondary name in `/buscar` mobile cards. Keep the favorite bookmark high in the card and keep the price column narrow/right-aligned so long Costa Rican names can wrap naturally. Desktop may keep a tighter one-line header.
 
 > **Search mobile map sheet (sprint 364).** The `/buscar` mobile bottom sheet may scroll its card list internally, but it must never expand high enough to cover the map controls or filter trigger. Keep a visible map-control band below the navbar at all snap points; users should not be able to drag/scroll the sheet into a state where filters or map actions disappear.

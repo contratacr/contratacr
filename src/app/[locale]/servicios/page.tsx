@@ -141,6 +141,7 @@ export default function ServiciosPage() {
   const locale = useLocale();
   const router = useRouter();
   const [query, setQuery] = useState("");
+  const [activeGroupKey, setActiveGroupKey] = useState<(typeof GROUPS)[number]["key"]>("hogar");
   const normalizedQuery = normalizeText(query.trim());
   const matchedIds = useMemo(() => {
     if (!normalizedQuery) return null;
@@ -161,6 +162,8 @@ export default function ServiciosPage() {
   }), []);
   const resultCount = visibleGroups.reduce((sum, group) => sum + group.visibleIds.length, 0);
   const totalServices = GROUPS.reduce((sum, group) => sum + group.ids.length, 0);
+  const activeGroup = GROUPS.find((group) => group.key === activeGroupKey) ?? GROUPS[0];
+  const ActiveIcon = activeGroup.Icon;
 
   function submitSearch(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -173,8 +176,8 @@ export default function ServiciosPage() {
     <div className="flex min-h-screen flex-col bg-white">
       <LandingNavbar />
 
-      <section className="relative z-30 border-b border-[#eef2f6] bg-white px-4 pb-5 pt-24 sm:pt-28">
-        <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(360px,0.8fr)] lg:items-end">
+      <section className="relative z-30 bg-white px-4 pb-5 pt-24 sm:pt-28">
+        <div className="mx-auto grid max-w-6xl gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(380px,0.72fr)] lg:items-center">
             <div className="min-w-0">
               <span className="mb-2.5 inline-flex rounded-full bg-[#EBF5FB] px-3 py-1 text-xs font-bold uppercase text-[#0089bb]">
                 {tp("eyebrow")}
@@ -228,7 +231,7 @@ export default function ServiciosPage() {
         </div>
       </section>
 
-      <section className="border-b border-[#eef2f6] bg-white px-4 py-3">
+      <section className="border-y border-[#eef2f6] bg-[#fbfdff] px-4 py-3">
         <div className="mx-auto max-w-6xl">
           <div className="mb-2 flex items-center justify-between gap-3">
             <p className="text-xs font-bold uppercase tracking-wide text-[#8a94a6]">{tp("popularTitle")}</p>
@@ -251,60 +254,45 @@ export default function ServiciosPage() {
         </div>
       </section>
 
-      <section className="sticky top-16 z-20 border-b border-[#eef2f6] bg-white/95 px-4 py-3 backdrop-blur lg:hidden">
-        <div className="mx-auto flex max-w-6xl gap-2 overflow-x-auto hide-scrollbar">
-          {visibleGroups.map((group) => {
-            const Icon = group.Icon;
-            return (
-              <a
-                key={group.key}
-                href={`#${group.key}`}
-                className="inline-flex shrink-0 items-center gap-2 rounded-full border border-[#e6edf3] bg-white px-3.5 py-2 text-sm font-semibold text-[#374151] shadow-sm transition-colors hover:bg-[#EBF5FB] hover:text-[#0089bb]"
-              >
-                <Icon className="h-4 w-4 text-[#009FD9]" />
-                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                {tg(group.key as any)}
-                {query.trim() && <span className="text-xs text-[#9ca3af]">{group.visibleIds.length}</span>}
-              </a>
-            );
-          })}
-        </div>
-      </section>
-
-      <section className="bg-[#f7fafc] px-4 pb-16 pt-6 sm:pt-8">
-        <div className="mx-auto grid max-w-6xl gap-5 lg:grid-cols-[260px_minmax(0,1fr)] lg:items-start">
-          <aside className="hidden lg:block">
-            <div className="sticky top-24 rounded-2xl border border-[#e6edf3] bg-white p-2 shadow-[0_12px_28px_rgba(15,23,42,0.05)]">
-              <div className="px-3 pb-2 pt-2">
-                <p className="text-xs font-bold uppercase tracking-wide text-[#8a94a6]">
-                  {tp("viewAll")}
-                </p>
+      <section className="bg-[#f6f9fc] px-4 pb-16 pt-5 sm:pt-7">
+        <div className="mx-auto max-w-6xl">
+          {!query.trim() && (
+            <div className="mb-5">
+              <div className="mb-3 flex items-end justify-between gap-3">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wide text-[#8a94a6]">{tp("browseByGroup")}</p>
+                  <h2 className="mt-1 text-xl font-extrabold text-[#162543]">{tp("chooseGroup")}</h2>
+                </div>
               </div>
-              <nav className="max-h-[calc(100vh-190px)] overflow-y-auto py-1">
-                {visibleGroups.map((group) => {
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                {GROUPS.map((group) => {
                   const Icon = group.Icon;
+                  const active = group.key === activeGroup.key;
                   return (
-                    <a
+                    <button
                       key={group.key}
-                      href={`#${group.key}`}
-                      className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[#374151] transition-colors hover:bg-[#f8fbfe] hover:text-[#0089bb]"
+                      type="button"
+                      onClick={() => setActiveGroupKey(group.key)}
+                      className={`group min-h-[92px] rounded-2xl border bg-white p-3 text-left shadow-[0_10px_24px_rgba(15,23,42,0.04)] transition-all hover:-translate-y-0.5 hover:border-[#9eddf4] hover:shadow-[0_14px_30px_rgba(15,23,42,0.07)] ${
+                        active ? "border-[#009FD9] ring-2 ring-[#009FD9]/15" : "border-[#e5edf4]"
+                      }`}
                     >
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#EAF7FD] text-[#009FD9]">
-                        <Icon className="h-4 w-4" />
+                      <span className={`mb-3 flex h-9 w-9 items-center justify-center rounded-xl ${active ? "bg-[#009FD9] text-white" : "bg-[#EAF7FD] text-[#009FD9]"}`}>
+                        <Icon className="h-[18px] w-[18px]" />
                       </span>
-                      <span className="min-w-0 flex-1 [overflow-wrap:anywhere]">
+                      <span className="block text-sm font-extrabold leading-tight text-[#162543] [overflow-wrap:anywhere]">
                         {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                         {tg(group.key as any)}
                       </span>
-                      <span className="shrink-0 rounded-full bg-[#f1f5f9] px-2 py-0.5 text-xs font-bold text-[#64748b]">
-                        {query.trim() ? group.visibleIds.length : group.ids.length}
+                      <span className="mt-1 block text-xs font-bold text-[#8a94a6]">
+                        {tp("optionsCount", { count: group.ids.length })}
                       </span>
-                    </a>
+                    </button>
                   );
                 })}
-              </nav>
+              </div>
             </div>
-          </aside>
+          )}
 
           <div className="min-w-0 overflow-hidden rounded-3xl border border-[#e6edf3] bg-white shadow-[0_14px_34px_rgba(15,23,42,0.05)]">
             {query.trim() && resultCount > 0 ? (
@@ -347,29 +335,27 @@ export default function ServiciosPage() {
                       ))}
                   </div>
               </section>
-            ) : visibleGroups.map((group) => {
-              const Icon = group.Icon;
-              return (
-                <section key={group.key} id={group.key} className="scroll-mt-32 border-b border-[#eef2f6] last:border-b-0">
+            ) : (
+                <section className="scroll-mt-32">
                     <div className="flex items-end justify-between gap-3 bg-[#fbfdff] px-4 py-4 sm:px-6">
                       <div className="flex min-w-0 items-center gap-3">
-                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#EAF7FD] text-[#009FD9]">
-                          <Icon className="h-[18px] w-[18px]" />
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#EAF7FD] text-[#009FD9]">
+                          <ActiveIcon className="h-5 w-5" />
                         </span>
                         <div className="min-w-0">
-                          <h2 className="text-lg font-extrabold leading-tight text-[#162543] [overflow-wrap:anywhere]">
+                          <h2 className="text-xl font-extrabold leading-tight text-[#162543] [overflow-wrap:anywhere]">
                             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                            {tg(group.key as any)}
+                            {tg(activeGroup.key as any)}
                           </h2>
                           <p className="mt-0.5 text-xs font-medium text-[#8a94a6]">
-                            {tp("optionsCount", { count: query.trim() ? group.visibleIds.length : group.ids.length })}
+                            {tp("optionsCount", { count: activeGroup.ids.length })}
                           </p>
                         </div>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3">
-                        {group.visibleIds.map((id) => (
+                        {activeGroup.ids.map((id) => (
                           <Link
                             key={id}
                             href={`/buscar?categoria=${id}`}
@@ -386,8 +372,7 @@ export default function ServiciosPage() {
                         ))}
                     </div>
                 </section>
-              );
-            })}
+            )}
           </div>
         </div>
       </section>
