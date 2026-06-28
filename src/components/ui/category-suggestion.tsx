@@ -23,6 +23,7 @@ export function CategorySuggestionBox({
   thanksLabel,
   className,
   prominent = false,
+  defaultName = "",
   onActiveChange,
 }: {
   notListedLabel: string;
@@ -35,6 +36,7 @@ export function CategorySuggestionBox({
   /** Prominent = no loose top divider + the trigger is a pill CTA (for the /servicios
    *  contained card). Default (compact) keeps the inline text-link style used in forms. */
   prominent?: boolean;
+  defaultName?: string;
   /** Fires when the box is "active" (the inline input is open or a suggestion was just
    *  sent). Lets a host like the navbar dropdown keep itself open while the user types
    *  the suggestion, instead of closing on the search input's blur. */
@@ -123,7 +125,10 @@ export function CategorySuggestionBox({
       ) : (
         <button
           type="button"
-          onClick={() => setSuggesting(true)}
+          onClick={() => {
+            setName(defaultName.trim());
+            setSuggesting(true);
+          }}
           className={cn(
             prominent
               ? "inline-flex items-center justify-center rounded-full bg-[#009FD9] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#0089bb] transition-colors"

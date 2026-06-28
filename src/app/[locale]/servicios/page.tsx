@@ -242,6 +242,7 @@ export default function ServiciosPage() {
                 <div className="mx-auto mt-4 flex max-w-xl flex-col items-center">
                   <CategorySuggestionBox
                     prominent
+                    defaultName={query}
                     notListedLabel={tp("suggestCta")}
                     placeholder={tp("suggestPlaceholder")}
                     sendLabel={tp("suggestSend")}
@@ -322,14 +323,16 @@ export default function ServiciosPage() {
                       </Link>
                     ))}
                   </div>
-                  <div className="border-t border-[#eef2f6] bg-[#fbfdff] px-4 py-4 sm:px-6">
-                    <div className="flex flex-col gap-3 rounded-2xl bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
-                      <div>
+                  <div className="border-t border-[#eef2f6] bg-[#fbfdff] px-4 py-3 sm:px-6">
+                    <div className="flex flex-col gap-3 rounded-2xl border border-[#e8eef5] bg-white px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="min-w-0">
                         <p className="text-sm font-extrabold text-[#162543]">{tp("notListed")}</p>
                         <p className="mt-0.5 text-sm text-[#6b7280]">{tp("suggestDescription")}</p>
                       </div>
                       <CategorySuggestionBox
                         prominent
+                        defaultName={query}
+                        className="shrink-0"
                         notListedLabel={tp("suggestCta")}
                         placeholder={tp("suggestPlaceholder")}
                         sendLabel={tp("suggestSend")}
