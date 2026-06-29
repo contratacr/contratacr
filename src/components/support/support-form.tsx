@@ -148,7 +148,7 @@ export function SupportForm({ onSuccess }: { onSuccess?: (email: string) => void
             update("topic", topic);
             update("subject", topic ? t(topic) : "");
           }} required>
-          <option value="">{t("subjectPlaceholder")}</option>
+          <option value="" disabled hidden>{t("subjectPlaceholder")}</option>
           {SUBJECT_IDS.map((i) => {
             const key = `subject${i}`;
             return <option key={i} value={key}>{t(key)}</option>;
