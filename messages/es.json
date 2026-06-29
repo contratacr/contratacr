@@ -2272,6 +2272,7 @@
       "booking_completed": "Servicio completado",
       "booking_cancelled": "Solicitud cancelada",
       "booking_cancelled_by_client": "Solicitud cancelada por el cliente",
+      "booking_cancelled_by_professional": "Solicitud cancelada",
       "review_request": "Deja tu reseña",
       "proposal_received": "Nueva propuesta",
       "proposal_withdrawn": "Propuesta retirada",
@@ -2284,6 +2285,7 @@
       "project_completed": "Solicitud finalizada",
       "project_cancelled": "Solicitud cancelada",
       "project_deleted": "Solicitud eliminada",
+      "project_update": "Actualización de solicitud",
       "support_reply": "Respuesta de soporte",
       "verification": "Actualización de verificación",
       "verification_appeal_received": "Apelación de verificación recibida"

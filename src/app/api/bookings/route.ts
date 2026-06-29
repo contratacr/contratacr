@@ -340,7 +340,7 @@ export async function PATCH(req: NextRequest) {
   const admin = createAdminClient();
   const { data: bookingRow } = await admin
     .from("bookings")
-    .select("id, professional_id, client_id, status")
+    .select("id, professional_id, client_id, status, service_description")
     .eq("id", id)
     .maybeSingle();
   if (!bookingRow) return NextResponse.json({ error: "Solicitud no encontrada." }, { status: 404 });
@@ -421,6 +421,24 @@ export async function PATCH(req: NextRequest) {
           data: { link: "/es/dashboard/profesional?tab=bookings", booking_id: id },
         });
       }
+      await admin.from("notifications").insert({
+        user_id: bookingRow.client_id,
+        type: "booking_cancelled",
+        title: "Cancelaste la solicitud",
+        message: `Cancelaste tu solicitud de "${bookingRow.service_description ?? "servicio"}".`,
+        data: { link: "/es/dashboard/profesional?tab=sent_bookings", booking_id: id },
+      });
+    }
+    // Professional cancelled a booking → the client is notified above through
+    // notifyBookingStatusChange; keep a professional-side confirmation too.
+    if (isOwnerPro && status === "cancelled") {
+      await admin.from("notifications").insert({
+        user_id: session.user.id,
+        type: "booking_cancelled_by_professional",
+        title: "Cancelaste la solicitud",
+        message: `Cancelaste la solicitud de "${bookingRow.service_description ?? "servicio"}".`,
+        data: { link: "/es/dashboard/profesional?tab=bookings", booking_id: id },
+      });
     }
   } catch (e) { console.error("[PATCH /api/bookings] notify:", e); }
 
