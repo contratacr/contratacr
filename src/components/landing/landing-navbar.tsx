@@ -1333,7 +1333,7 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
                 <div className="relative w-full max-w-5xl">
                   <div className="flex w-full items-center h-12 bg-white border border-gray-200 rounded-[6px] overflow-hidden pl-3 sm:pl-5 pr-1.5 sm:pr-2 shadow-[0_8px_28px_rgba(0,0,0,0.14)]">
                     <div ref={compactSvcRef} className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 h-full">
-                      <Search className="h-5 w-5 text-gray-300 shrink-0" />
+                      <Search className="hidden h-5 w-5 shrink-0 text-gray-300 sm:block" />
                       <input
                         type="text"
                         value={searchQuery}
