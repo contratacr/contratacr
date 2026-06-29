@@ -381,8 +381,8 @@ export async function PATCH(req: NextRequest) {
   return NextResponse.json({ success: true });
 }
 
-// Notify the accepted professional that a project was cancelled/deleted, so it
-// disappears from their active work.
+// Notify every affected professional that a project was cancelled/deleted, so it
+// disappears from their active work or sent proposals.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function notifyAssignedPro(admin: any, projectId: string, kind: "cancelled" | "deleted") {
   try {
@@ -391,16 +391,34 @@ async function notifyAssignedPro(admin: any, projectId: string, kind: "cancelled
       .select("title, accepted_professional_id")
       .eq("id", projectId)
       .maybeSingle();
-    if (!project?.accepted_professional_id) return;
-    const { data: pro } = await admin.from("professionals").select("profile_id").eq("id", project.accepted_professional_id).maybeSingle();
-    if (!pro?.profile_id) return;
-    await admin.from("notifications").insert({
-      user_id: pro.profile_id,
+    if (!project) return;
+
+    const professionalIds = new Set<string>();
+    if (project.accepted_professional_id) professionalIds.add(project.accepted_professional_id);
+
+    const { data: proposals } = await admin
+      .from("proposals")
+      .select("professional_id")
+      .eq("project_id", projectId);
+    for (const proposal of proposals ?? []) {
+      if (proposal.professional_id) professionalIds.add(proposal.professional_id);
+    }
+    if (professionalIds.size === 0) return;
+
+    const { data: pros } = await admin
+      .from("professionals")
+      .select("profile_id")
+      .in("id", [...professionalIds]);
+    const recipients = [...new Set((pros ?? []).map((pro: { profile_id?: string | null }) => pro.profile_id).filter(Boolean))];
+    if (recipients.length === 0) return;
+
+    await admin.from("notifications").insert(recipients.map((userId) => ({
+      user_id: userId,
       type: kind === "deleted" ? "project_deleted" : "project_cancelled",
       title: kind === "deleted" ? "Solicitud eliminada" : "Solicitud cancelada",
       message: `El cliente ${kind === "deleted" ? "eliminó" : "canceló"} la solicitud "${project.title}". Ya no está activa.`,
-      data: { link: "/es/dashboard/profesional?tab=proposals" },
-    });
+      data: { link: "/es/dashboard/profesional?tab=proposals", project_id: projectId },
+    })));
   } catch (e) {
     console.error("[notifyAssignedPro] failed:", e);
   }
@@ -423,7 +441,7 @@ export async function DELETE(req: NextRequest) {
   if (!ownRow) return NextResponse.json({ success: true }); // already gone
   if (ownRow.client_id !== session.user.id) return NextResponse.json({ error: "No autorizado." }, { status: 403 });
 
-  // Notify the assigned pro before the row (and its proposals) cascade away.
+  // Notify the affected professionals before the row (and its proposals) cascade away.
   await notifyAssignedPro(admin, id, "deleted");
 
   // Remove dependent proposals first (in case the FK isn't ON DELETE CASCADE).
