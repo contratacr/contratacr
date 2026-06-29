@@ -9,6 +9,7 @@ import { X, Lock, Loader2, MapPin, ChevronDown, ChevronLeft, ChevronRight, Calen
 import { type ContactPreference } from "@/lib/constants";
 import { crTodayISO, isTooSoonCR } from "@/lib/time-cr";
 import { TimeSelect, to12h } from "@/components/ui/time-select";
+import { SelectMenu } from "@/components/ui/select-menu";
 import { useReportSaveStatus } from "@/components/dashboard/save-status-context";
 
 // How far ahead the weekly template + exceptions are MATERIALIZED into concrete
@@ -601,7 +602,6 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
   const [applyModal, setApplyModal] = useState<{ weekday: number } | null>(null);
   const [dayModal, setDayModal] = useState<{ date: string } | null>(null);
 
-  const selectClass = "h-9 rounded-xl border border-[#e5e7eb] bg-white pl-3 pr-9 text-sm font-medium text-[#111827] focus:outline-none focus:ring-2 focus:ring-[#009FD9] focus:border-transparent transition-all appearance-none cursor-pointer";
   const openWeekdays = WEEKDAY_ORDER.filter((wd) => blocksFor(wd).length > 0);
   const closedWeekdays = WEEKDAY_ORDER.filter((wd) => blocksFor(wd).length === 0);
 
@@ -665,11 +665,13 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
             <div className="grid gap-5 border-b border-[#f3f4f6] p-4 sm:grid-cols-2 sm:p-5">
               <div>
                 <label className="mb-2 block text-xs font-semibold text-[#6b7280]">{t("apptDuration")}</label>
-                <div className="relative w-full sm:max-w-[12rem]">
-                  <select value={activeDuration} onChange={(e) => setDuration(Number(e.target.value))} className={cn(selectClass, "w-full")}>
-                    {DURATION_OPTIONS.map((d) => <option key={d} value={d}>{t(`dur${d}` as `dur${number}`)}</option>)}
-                  </select>
-                  <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#9ca3af]" />
+                <div className="w-full sm:max-w-[12rem]">
+                  <SelectMenu
+                    value={String(activeDuration)}
+                    onChange={(v) => setDuration(Number(v))}
+                    options={DURATION_OPTIONS.map((d) => ({ value: String(d), label: t(`dur${d}` as `dur${number}`) }))}
+                    className="[&>button]:h-10 [&>button]:rounded-xl [&>button]:pl-3 [&>button]:text-sm"
+                  />
                 </div>
               </div>
 
