@@ -1765,7 +1765,7 @@
       "pending": "Pending",
       "confirmed": "Confirmed",
       "in_progress": "In progress",
-      "awaiting_confirmation": "Confirm",
+      "awaiting_confirmation": "To confirm",
       "completed": "Completed",
       "cancelled": "Cancelled",
       "rescheduled": "Rescheduled"
