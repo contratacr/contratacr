@@ -198,6 +198,14 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   useEffect(() => { queueMicrotask(() => fetchSection(true)); }, [fetchSection]);
 
   useEffect(() => {
+    if (!user || section === "saved" || loading) return;
+    const id = window.setInterval(() => {
+      if (document.visibilityState === "visible") void fetchSection(false);
+    }, 3000);
+    return () => window.clearInterval(id);
+  }, [fetchSection, loading, section, user]);
+
+  useEffect(() => {
     if (section !== "bookings") return;
     const bookingId = searchParams.get("booking");
     if (!bookingId) return;
