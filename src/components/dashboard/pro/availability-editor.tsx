@@ -716,9 +716,12 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                   </div>
                 );
                 return (
-                  <div key={wd} className="grid min-w-0 gap-3 px-4 py-4 lg:grid-cols-[6.25rem_5.75rem_minmax(12rem,1fr)_6.75rem] lg:items-start lg:px-5">
-                    <div className="flex min-w-0 items-center justify-between gap-3 lg:block">
-                      <span className="min-w-0 text-sm font-semibold text-[#111827]">{t(`weekday${wd}` as `weekday${number}`)}</span>
+                  <div key={wd} className="grid min-w-0 grid-cols-[3.45rem_2.85rem_minmax(8.25rem,1fr)_4.25rem] items-start gap-1.5 px-3 py-4 sm:grid-cols-[5rem_3.5rem_minmax(12rem,1fr)_5.25rem] sm:gap-2 sm:px-4 lg:grid-cols-[6.25rem_5.75rem_minmax(12rem,1fr)_6.75rem] lg:gap-3 lg:px-5">
+                    <div className="flex min-w-0 items-center pt-1.5 lg:block lg:pt-0">
+                      <span className="min-w-0 truncate text-[13px] font-semibold text-[#111827] sm:text-sm" title={t(`weekday${wd}` as `weekday${number}`)}>{t(`weekday${wd}` as `weekday${number}`)}</span>
+                    </div>
+
+                    <div className="flex min-w-0 items-center justify-center pt-1 lg:hidden">
                       <button
                         type="button"
                         onClick={() => toggleDay(wd)}
@@ -729,6 +732,7 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                         <span className="absolute left-5 top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all duration-200" />
                       </button>
                     </div>
+
                     <div className="hidden min-w-0 items-center lg:flex">
                       <button
                         type="button"
@@ -742,23 +746,22 @@ export function AvailabilityEditor({ professionalId, initialPublic = true, workp
                     </div>
 
                     <div className="min-w-0 lg:flex lg:justify-center">
-                      <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.03em] text-[#8b97a6] lg:hidden">{t("scheduleColumn")}</p>
-                      <div className="flex min-w-0 flex-col gap-2.5">
+                      <div className="flex min-w-0 flex-col gap-2">
                         {blocks.map((b) => (
-                          <div key={b.id} className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-start gap-2 md:w-[19rem] md:shrink-0 lg:w-[13.75rem] lg:grid-cols-[minmax(5.875rem,1fr)_auto_minmax(5.875rem,1fr)]">
-                            <TimeSelect value={b.start} onChange={(v) => updateBlock(wd, b.id, { start: v, ...(b.end && toMins(b.end) <= toMins(v) ? { end: hhmm(Math.min(toMins(v) + 60, 23 * 60 + 30)) } : {}) })} className="min-w-0 w-full [&>button]:h-8 [&>button]:rounded-md [&>button]:pl-2.5 [&>button]:pr-7 [&>button]:text-[12px] sm:[&>button]:h-9 sm:[&>button]:rounded-lg sm:[&>button]:pl-3 sm:[&>button]:pr-10 sm:[&>button]:text-[13px] [&_svg]:right-2 sm:[&_svg]:right-3" />
+                          <div key={b.id} className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-start gap-1 md:w-[19rem] md:shrink-0 lg:w-[13.75rem] lg:grid-cols-[minmax(5.875rem,1fr)_auto_minmax(5.875rem,1fr)]">
+                            <TimeSelect value={b.start} onChange={(v) => updateBlock(wd, b.id, { start: v, ...(b.end && toMins(b.end) <= toMins(v) ? { end: hhmm(Math.min(toMins(v) + 60, 23 * 60 + 30)) } : {}) })} className="min-w-0 w-full [&>button]:h-8 [&>button]:rounded-md [&>button]:pl-2 [&>button]:pr-6 [&>button]:text-[11px] sm:[&>button]:h-9 sm:[&>button]:rounded-lg sm:[&>button]:pl-3 sm:[&>button]:pr-10 sm:[&>button]:text-[13px] [&_svg]:right-1.5 sm:[&_svg]:right-3" />
                             <span className="mt-1.5 shrink-0 text-xs text-[#9ca3af] sm:mt-2 sm:text-sm">-</span>
-                            <TimeSelect value={b.end} min={b.start ? hhmm(Math.min(toMins(b.start) + 30, 23 * 60 + 30)) : undefined} onChange={(v) => updateBlock(wd, b.id, { end: v })} className="min-w-0 w-full [&>button]:h-8 [&>button]:rounded-md [&>button]:pl-2.5 [&>button]:pr-7 [&>button]:text-[12px] sm:[&>button]:h-9 sm:[&>button]:rounded-lg sm:[&>button]:pl-3 sm:[&>button]:pr-10 sm:[&>button]:text-[13px] [&_svg]:right-2 sm:[&_svg]:right-3" error={b.start && b.end && toMins(b.end) <= toMins(b.start) ? t("toAfterFrom") : undefined} />
+                            <TimeSelect value={b.end} min={b.start ? hhmm(Math.min(toMins(b.start) + 30, 23 * 60 + 30)) : undefined} onChange={(v) => updateBlock(wd, b.id, { end: v })} className="min-w-0 w-full [&>button]:h-8 [&>button]:rounded-md [&>button]:pl-2 [&>button]:pr-6 [&>button]:text-[11px] sm:[&>button]:h-9 sm:[&>button]:rounded-lg sm:[&>button]:pl-3 sm:[&>button]:pr-10 sm:[&>button]:text-[13px] [&_svg]:right-1.5 sm:[&_svg]:right-3" error={b.start && b.end && toMins(b.end) <= toMins(b.start) ? t("toAfterFrom") : undefined} />
                           </div>
                         ))}
                       </div>
                     </div>
 
-                    <div className="flex min-w-0 items-center justify-end gap-2 lg:hidden">
-                      <button type="button" onClick={() => addBlock(wd)} className="inline-flex h-8 min-w-0 shrink-0 items-center whitespace-nowrap text-xs font-semibold leading-none text-[#009FD9] hover:underline cursor-pointer">
+                    <div className="flex min-w-0 items-start justify-end gap-0.5 lg:hidden">
+                      <button type="button" onClick={() => addBlock(wd)} className="inline-flex h-8 min-w-0 shrink items-center whitespace-nowrap text-[11px] font-semibold leading-none text-[#009FD9] hover:underline cursor-pointer">
                         {t("addFranja")}
                       </button>
-                      <button type="button" onClick={() => canApply && setApplyModal({ weekday: wd })} disabled={!canApply} className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#111827] disabled:opacity-35" aria-label={t("applyToOtherDays")}>
+                      <button type="button" onClick={() => canApply && setApplyModal({ weekday: wd })} disabled={!canApply} className="flex h-8 w-7 shrink-0 items-center justify-center rounded-md text-[#6b7280] hover:bg-[#f3f4f6] hover:text-[#111827] disabled:opacity-35" aria-label={t("applyToOtherDays")}>
                         <MoreVertical className="h-4 w-4" />
                       </button>
                     </div>
