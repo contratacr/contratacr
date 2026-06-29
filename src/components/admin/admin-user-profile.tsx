@@ -159,6 +159,7 @@ export function AdminUserProfile({
   const identityStatus = accountVerificationStatus(profile, pro);
   const isIdentityVerified = identityStatus === "verified";
   const isIdentityPending = identityStatus === "pending";
+  const isIdentityRejected = identityStatus === "rejected";
 
   return (
     <div className="flex flex-col gap-5">
@@ -248,9 +249,8 @@ export function AdminUserProfile({
                 <p className="mt-2 text-sm text-[#374151]">
                   La verificación pertenece a la persona. Si se quita, se elimina la identificación guardada y se pedirá de nuevo cuando use una función que la requiera.
                 </p>
-                <div className="mt-3 grid gap-2 text-xs text-[#6b7280] sm:grid-cols-3">
+                <div className="mt-3 grid gap-2 text-xs text-[#6b7280] sm:grid-cols-2">
                   <span><strong className="text-[#374151]">Identificación:</strong> {profile.cedula ?? "Sin guardar"}</span>
-                  <span><strong className="text-[#374151]">Origen:</strong> {profile.client_identity_provider === "manual" ? "Admin" : profile.client_identity_provider ?? "App"}</span>
                   <span><strong className="text-[#374151]">Verificada:</strong> {fmt(profile.client_identity_verified_at) || "—"}</span>
                 </div>
                 {identityError && (
@@ -260,33 +260,39 @@ export function AdminUserProfile({
                 )}
               </div>
               <div className="w-full space-y-2 lg:w-64">
-                <button
-                  type="button"
-                  onClick={() => updateIdentity("verify")}
-                  disabled={identityBusy != null || isIdentityVerified}
-                  className="flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#16a34a] text-sm font-bold text-white transition hover:bg-[#15803d] disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {identityBusy === "verify" ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                  Marcar verificado
-                </button>
-                <button
-                  type="button"
-                  onClick={() => updateIdentity("revert_pending")}
-                  disabled={identityBusy != null || isIdentityPending}
-                  className="flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-[#e5e7eb] bg-white text-sm font-medium text-[#374151] transition hover:bg-[#f9fafb] disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {identityBusy === "revert_pending" ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
-                  Pendiente
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setConfirmRevoke(true)}
-                  disabled={identityBusy != null}
-                  className="flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#dc2626] text-sm font-bold text-white transition hover:bg-[#b91c1c] disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  <XCircle className="h-4 w-4" />
-                  Quitar verificación
-                </button>
+                {!isIdentityVerified && !isIdentityRejected && (
+                  <button
+                    type="button"
+                    onClick={() => updateIdentity("verify")}
+                    disabled={identityBusy != null}
+                    className="flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#16a34a] text-sm font-bold text-white transition hover:bg-[#15803d] disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {identityBusy === "verify" ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                    Marcar verificado
+                  </button>
+                )}
+                {isIdentityRejected && (
+                  <button
+                    type="button"
+                    onClick={() => updateIdentity("revert_pending")}
+                    disabled={identityBusy != null || isIdentityPending}
+                    className="flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-[#e5e7eb] bg-white text-sm font-medium text-[#374151] transition hover:bg-[#f9fafb] disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {identityBusy === "revert_pending" ? <Loader2 className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
+                    Volver a pendiente
+                  </button>
+                )}
+                {!isIdentityRejected && (
+                  <button
+                    type="button"
+                    onClick={() => setConfirmRevoke(true)}
+                    disabled={identityBusy != null}
+                    className="flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#dc2626] text-sm font-bold text-white transition hover:bg-[#b91c1c] disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <XCircle className="h-4 w-4" />
+                    Quitar verificación
+                  </button>
+                )}
               </div>
             </div>
             {confirmRevoke && (
