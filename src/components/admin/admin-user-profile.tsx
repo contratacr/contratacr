@@ -89,7 +89,15 @@ function Section({ icon: Icon, title, count, children }: { icon: React.ElementTy
   );
 }
 
-export function AdminUserProfile({ userId }: { userId: string }) {
+export function AdminUserProfile({
+  userId,
+  backHref = "/admin/usuarios",
+  backLabel = "Búsqueda de usuarios",
+}: {
+  userId: string;
+  backHref?: string;
+  backLabel?: string;
+}) {
   const [data, setData] = useState<Data | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -142,7 +150,7 @@ export function AdminUserProfile({ userId }: { userId: string }) {
     return (
       <div className="py-16 text-center">
         <p className="text-sm text-[#6b7280]">{error ?? "Usuario no encontrado."}</p>
-        <Link href="/admin/usuarios" className="mt-3 inline-flex items-center gap-1.5 text-sm text-[#009FD9] hover:underline"><ArrowLeft className="h-4 w-4" /> Volver a búsqueda</Link>
+        <Link href={backHref} className="mt-3 inline-flex items-center gap-1.5 text-sm text-[#009FD9] hover:underline"><ArrowLeft className="h-4 w-4" /> {backLabel}</Link>
       </div>
     );
   }
@@ -154,7 +162,7 @@ export function AdminUserProfile({ userId }: { userId: string }) {
 
   return (
     <div className="flex flex-col gap-5">
-      <Link href="/admin/usuarios" className="inline-flex items-center gap-1.5 text-sm text-[#374151] hover:text-[#0f172a] -mb-1"><ArrowLeft className="h-4 w-4" /> Búsqueda de usuarios</Link>
+      <Link href={backHref} className="inline-flex items-center gap-1.5 text-sm text-[#374151] hover:text-[#0f172a] -mb-1"><ArrowLeft className="h-4 w-4" /> {backLabel}</Link>
 
       {/* ── Identity header ── */}
       <div className="bg-white rounded-xl border border-[#e5e7eb] p-5">

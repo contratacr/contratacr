@@ -70,7 +70,7 @@ export async function GET(req: Request) {
       whatsapp: null,
       created_at: profile.created_at,
       role_label: "Cliente",
-      detail_href: `/admin/usuarios/${profile.id}`,
+      detail_href: `/admin/usuarios/${profile.id}?from=verificacion`,
       profiles: profile,
     }));
 
@@ -79,7 +79,7 @@ export async function GET(req: Request) {
       ...pro,
       account_id: pro.profiles?.id ?? null,
       role_label: "Cliente y profesional",
-      detail_href: `/admin/proveedores/${pro.id}`,
+      detail_href: pro.profiles?.id ? `/admin/usuarios/${pro.profiles.id}?from=verificacion` : `/admin/proveedores/${pro.id}`,
     })),
     ...clientRows,
   ];
