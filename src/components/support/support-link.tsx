@@ -14,7 +14,7 @@ import { useAuth } from "@/hooks/use-auth";
 export function SupportLink({ className, children, onNavigate }: { className?: string; children: ReactNode; onNavigate?: () => void }) {
   const { user } = useAuth();
   const pathname = usePathname();
-  const inDashboard = pathname.startsWith("/dashboard");
+  const inDashboard = pathname === "/dashboard" || pathname.includes("/dashboard/");
   const isPro = user?.user_metadata?.role === "professional";
 
   const href = user && inDashboard

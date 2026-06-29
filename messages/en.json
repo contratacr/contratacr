@@ -2004,6 +2004,8 @@
     "emptySub": "If you need help, contact us and we'll reply here and by email.",
     "openTicket": "Contact support",
     "noneInView": "No tickets in this view.",
+    "loadError": "We couldn't load support.",
+    "retry": "Try again",
     "newReply": "New reply",
     "viewReply": "View reply",
     "openConversation": "Open conversation",

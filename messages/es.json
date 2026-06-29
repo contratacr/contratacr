@@ -2002,6 +2002,8 @@
     "emptySub": "Si necesitas ayuda, contáctanos y te respondemos por aquí y por correo.",
     "openTicket": "Contactar soporte",
     "noneInView": "No hay tiquetes en esta vista.",
+    "loadError": "No pudimos cargar soporte.",
+    "retry": "Intentar de nuevo",
     "newReply": "Nueva respuesta",
     "viewReply": "Ver respuesta",
     "openConversation": "Abrir conversación",

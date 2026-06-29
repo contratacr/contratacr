@@ -86,6 +86,7 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
   const fmt = (d: string) => new Date(d).toLocaleString(dateLocale, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
   const [items, setItems] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [filter, setFilter] = useState<string>("open");
   // Ticket ids with an UNREAD admin reply (from the notifications table) → drives
   // the per-ticket "Nueva respuesta" marker and the dashboard Soporte badge
@@ -128,9 +129,18 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
 
   const load = useCallback(() => {
     setLoading(true);
+    setLoadError(false);
     fetch("/api/support")
-      .then((r) => r.json())
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(data?.error ?? "support-load-failed");
+        return data;
+      })
       .then(({ tickets }) => setItems(tickets ?? []))
+      .catch(() => {
+        setItems([]);
+        setLoadError(true);
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -142,7 +152,11 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
     setOpenId(id);
     setThreadLoading(true);
     fetch(`/api/support?id=${id}`)
-      .then((r) => r.json())
+      .then(async (r) => {
+        const data = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(data?.error ?? "support-ticket-load-failed");
+        return data;
+      })
       // Not theirs / not found (e.g. a deep-link opened by the wrong account) →
       // fall back to the list gracefully instead of a stuck loader.
       .then(({ ticket, messages }) => {
@@ -152,6 +166,7 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
         // an in-progress conversation lands in the in-progress view, not pending).
         if (ticket.status) setFilter(ticket.status);
       })
+      .catch(() => { setOpenId(null); setLoadError(true); })
       .finally(() => setThreadLoading(false));
     // Reading the ticket clears its "new reply" notifications (auto-refresh badges).
     if (user) {
@@ -332,6 +347,14 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
 
       {loading ? (
         <div className="flex justify-center py-12"><div className="h-7 w-7 animate-spin rounded-full border-2 border-[#009FD9] border-t-transparent" /></div>
+      ) : loadError ? (
+        <div className="rounded-2xl border border-[#e5e7eb] bg-white px-5 py-10 text-center">
+          <Headset className="mx-auto mb-3 h-10 w-10 text-[#cbd5e1]" />
+          <p className="font-semibold text-[#374151]">{t("loadError")}</p>
+          <button onClick={load} className="mt-4 inline-flex items-center justify-center rounded-full bg-[#009FD9] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0089bb]">
+            {t("retry")}
+          </button>
+        </div>
       ) : items.length === 0 ? (
         <div className="text-center py-14 rounded-2xl border border-dashed border-[#e5e7eb] bg-white">
           <Headset className="h-12 w-12 text-[#e5e7eb] mx-auto mb-3" />
