@@ -288,11 +288,10 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200 }: W
               <button
                 type="button"
                 onClick={() => removeWorkplace(wp.id)}
-                className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg bg-white px-2.5 text-xs font-semibold text-[#b91c1c] shadow-sm ring-1 ring-[#fecaca] transition-colors hover:bg-red-50 hover:ring-red-200"
+                className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-[#9ca3af] transition-colors hover:bg-red-50 hover:text-red-500"
                 aria-label={t("removePlace")}
               >
-                <X className="h-3.5 w-3.5" />
-                <span>{t("removePlace")}</span>
+                <X className="h-4 w-4" />
               </button>
             </div>
           ))}
@@ -385,10 +384,13 @@ export function WorkplacesPicker({ value, onChange, apiKey, mapHeight = 200 }: W
                 <div ref={mapRef} className="w-full h-full" />
               </div>
               {draftPin && (
-                <div className="flex items-center gap-2 text-xs text-[#16a34a]">
+                <div className="flex items-center gap-2 rounded-xl border border-[#bbf7d0] bg-[#f0fdf4] px-3 py-2 text-xs text-[#166534]">
                   <Check className="h-3.5 w-3.5 shrink-0" />
                   <span className="flex-1 min-w-0 truncate">{draftPin.address || t("pinPlaced")}</span>
-                  <button type="button" onClick={() => setDraftPin(null)} className="text-[#9ca3af] hover:text-red-500 shrink-0">{t("clearPin")}</button>
+                  <button type="button" onClick={() => setDraftPin(null)} className="inline-flex h-8 shrink-0 items-center gap-1 rounded-lg bg-white px-2.5 font-semibold text-[#b91c1c] shadow-sm ring-1 ring-[#fecaca] transition-colors hover:bg-red-50 hover:ring-red-200">
+                    <X className="h-3.5 w-3.5" />
+                    {t("clearPin")}
+                  </button>
                 </div>
               )}
             </div>
