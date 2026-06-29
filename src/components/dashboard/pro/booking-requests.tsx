@@ -45,13 +45,13 @@ type Booking = {
 };
 
 // ONE shared status→colour mapping (sprint 440), identical to the client side:
-// active/upcoming = brand-blue (default), awaiting confirmation = amber, finished =
-// green, cancelled = red, reprogramada = grey.
+// active/upcoming + awaiting confirmation = brand-blue (default), finished = green,
+// cancelled = red, reprogramada = grey.
 const STATUS_VARIANT: Record<BookingStatus, "warning" | "success" | "error" | "default" | "muted"> = {
   pending: "warning",
   confirmed: "default",
   in_progress: "default",
-  awaiting_confirmation: "warning",
+  awaiting_confirmation: "default",
   completed: "success",
   cancelled: "error",
   rescheduled: "muted",

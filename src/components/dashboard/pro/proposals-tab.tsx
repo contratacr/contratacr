@@ -66,7 +66,7 @@ function projStatusVariant(status?: string): "warning" | "success" | "error" | "
   switch (status) {
     case "completed": return "success";
     case "cancelled": return "error";
-    case "awaiting_confirmation": return "warning";
+    case "awaiting_confirmation": return "default";
     default: return "warning";
   }
 }

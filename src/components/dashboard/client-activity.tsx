@@ -92,14 +92,14 @@ type Proposal = {
 
 // ONE shared status→colour mapping (sprint 440), identical to the pro side so a
 // booking's state reads the SAME everywhere: ACTIVE/upcoming = brand-blue (default),
-// transitional (awaiting confirmation) = amber, FINISHED = green, cancelled = red.
+// awaiting confirmation = brand-blue/info, FINISHED = green, cancelled = red.
 // (Previously active states were green "success" — reading as done/closed — and the
 // finished state was muted grey: the open-vs-closed state looked inverted.)
 const STATUS_VARIANT: Record<BookingStatus, "warning" | "success" | "error" | "default" | "muted"> = {
   pending: "warning",
   confirmed: "default",
   in_progress: "default",
-  awaiting_confirmation: "warning",
+  awaiting_confirmation: "default",
   completed: "success",
   cancelled: "error",
   rescheduled: "muted",
@@ -651,7 +651,8 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                 const proposalList = projectProposals[project.id];
                 const proposalCount = project.proposals?.length ?? 0;
                 const zone = [project.cantones?.name, project.provincias?.name].filter(Boolean).join(", ");
-                const statusVariant = project.status === "in_progress" || project.status === "awaiting_confirmation" ? "warning"
+                const statusVariant = project.status === "awaiting_confirmation" ? "default"
+                  : project.status === "in_progress" ? "warning"
                   : project.status === "completed" ? "success"
                     : project.status === "cancelled" ? "error"
                       : "default";

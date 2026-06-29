@@ -382,7 +382,9 @@ export function SupportTickets({ onUnreadChange, initialTicketId }: { onUnreadCh
                         {t("caseRef", { ref: supportTicketRef(tk.id, tk.created_at, tk.case_number) })}
                       </span>
                       <p className="min-w-0 flex-1 text-[15px] font-bold leading-snug text-[#162543] [overflow-wrap:anywhere]">{ticketSubject(tk)}</p>
-                      <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${STATUS_COLOR[tk.status] ?? ""}`}>{statusLabel(tk.status)}</span>
+                      {tk.status !== filter && (
+                        <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${STATUS_COLOR[tk.status] ?? ""}`}>{statusLabel(tk.status)}</span>
+                      )}
                       {hasNew && (
                         <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#EBF5FB] text-[#0077a8]">{t("newReply")}</span>
                       )}
