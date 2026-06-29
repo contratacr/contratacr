@@ -1238,7 +1238,7 @@
     "benContact": "Contacto: {phone}",
     "bookedBy": "Reservado por {name} (responsable).",
     "coordinateContact": "Coordina la cita al contacto de la persona.",
-    "awaitingConfirmNote": "Esperando que el cliente confirme la finalización. Se confirma sola en 7 días.",
+    "awaitingConfirmNote": "Esperando que el cliente confirme la finalización. Se confirma automáticamente en {days} días.",
     "confirm": "Confirmar",
     "cancel": "Cancelar",
     "markCompleted": "Marcar completado",

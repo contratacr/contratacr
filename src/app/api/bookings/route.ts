@@ -5,12 +5,13 @@ import { notifyNewBooking, notifyBookingStatusChange, notifyBookingRescheduled }
 import { cleanId, detectIdType, isValidId } from "@/lib/cedula";
 import { getIdentityVerifier } from "@/lib/verification/identity-verifier";
 import { syncProfessionalVerificationFromAccount } from "@/lib/verification/account-identity";
+import { AUTO_CONFIRM_DAYS } from "@/lib/completion";
 
 // Lazy auto-confirm: a booking the pro marked "trabajo realizado" auto-completes
-// 7 days after work_done_at if the client never confirmed. Best-effort.
+// after AUTO_CONFIRM_DAYS if the client never confirmed. Best-effort.
 async function autoConfirmStale(admin: ReturnType<typeof createAdminClient>, filter: { professional_id?: string; client_id?: string }) {
   try {
-    const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const cutoff = new Date(Date.now() - AUTO_CONFIRM_DAYS * 24 * 60 * 60 * 1000).toISOString();
     let q = admin.from("bookings").update({ status: "completed", completed_at: new Date().toISOString() })
       .eq("status", "awaiting_confirmation").lt("work_done_at", cutoff);
     if (filter.professional_id) q = q.eq("professional_id", filter.professional_id);
@@ -393,7 +394,7 @@ export async function PATCH(req: NextRequest) {
   try {
     const otherUserId = isOwnerPro ? bookingRow.client_id : null;
     const labelMap: Record<string, { title: string; message: string }> = {
-      awaiting_confirmation: { title: "El profesional marcó el trabajo como realizado", message: "Confirma la finalización para cerrar la solicitud (se confirma sola en 7 días)." },
+      awaiting_confirmation: { title: "El profesional marcó el trabajo como realizado", message: `Confirma la finalización para cerrar la solicitud. Se confirma automáticamente en ${AUTO_CONFIRM_DAYS} días.` },
       in_progress: { title: "Tu solicitud está en progreso", message: "El profesional marcó tu solicitud en progreso." },
     };
     if (isOwnerPro && otherUserId && labelMap[status]) {

@@ -6,6 +6,7 @@ import { getProvinceById, getCantonById } from "@/lib/data/cr-geography";
 import { cleanId, detectIdType, isValidId } from "@/lib/cedula";
 import { getIdentityVerifier } from "@/lib/verification/identity-verifier";
 import { syncProfessionalVerificationFromAccount } from "@/lib/verification/account-identity";
+import { AUTO_CONFIRM_DAYS } from "@/lib/completion";
 
 type ClientIdentityStatus = "verified" | "pending" | "unverified";
 
@@ -273,9 +274,8 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ projects: await enrichProjects(data ?? []) });
 }
 
-// Lazy auto-confirm: if the pro marked work done > 7 days ago and the client
+// Lazy auto-confirm: if the pro marked work done > AUTO_CONFIRM_DAYS and the client
 // never confirmed, the project auto-completes (anti-stall, both sides protected).
-const AUTO_CONFIRM_DAYS = 7;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function autoConfirmStale(admin: any, rows: any[]): Promise<any[]> {
   const cutoff = Date.now() - AUTO_CONFIRM_DAYS * 24 * 60 * 60 * 1000;

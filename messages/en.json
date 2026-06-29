@@ -1239,7 +1239,7 @@
     "benContact": "Contact: {phone}",
     "bookedBy": "Booked by {name} (responsible).",
     "coordinateContact": "Coordinate the appointment with the person's contact.",
-    "awaitingConfirmNote": "Waiting for the client to confirm completion. It auto-confirms in 7 days.",
+    "awaitingConfirmNote": "Waiting for the client to confirm completion. It auto-confirms in {days} days.",
     "confirm": "Confirm",
     "cancel": "Cancel",
     "markCompleted": "Mark completed",

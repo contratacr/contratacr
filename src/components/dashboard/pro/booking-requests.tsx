@@ -15,6 +15,7 @@ import { StatusFilterTabs, SOLICITUD_TABS, solicitudBucket, solicitudStatusRedun
 import { ExpandToggle } from "@/components/dashboard/expand-toggle";
 import { ExpandableText } from "@/components/ui/expandable-text";
 import { ReportModal } from "@/components/dashboard/report-modal";
+import { AUTO_CONFIRM_DAYS } from "@/lib/completion";
 import type { BookingStatus } from "@/types";
 
 type Booking = {
@@ -368,7 +369,7 @@ export function BookingRequests() {
 
             {booking.status === "awaiting_confirmation" && (
               <p className="text-xs text-[#b45309] bg-[#fffbeb] border border-[#fde68a] rounded-lg px-2.5 py-2">
-                {t("awaitingConfirmNote")}
+                {t("awaitingConfirmNote", { days: AUTO_CONFIRM_DAYS })}
               </p>
             )}
 
