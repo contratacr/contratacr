@@ -179,6 +179,8 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
   const [reportProFor, setReportProFor] = useState<string | null>(null);
   const targetRetryRef = useRef(0);
   const targetBookingRef = useRef<string | null>(null);
+  const targetProjectRetryRef = useRef(0);
+  const targetProjectRef = useRef<string | null>(null);
 
   const fetchSection = useCallback(async (showLoading = true) => {
     if (!user) return;
@@ -223,7 +225,29 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
     targetRetryRef.current = 0;
     setBookingFilter(solicitudBucket(booking.status, booking.scheduled_date));
     setExpandedBooking(bookingId);
+    window.setTimeout(() => document.getElementById(`booking-${bookingId}`)?.scrollIntoView({ block: "center", behavior: "smooth" }), 80);
   }, [bookings, fetchSection, searchParams, section]);
+
+  useEffect(() => {
+    if (section !== "projects") return;
+    const projectId = searchParams.get("project");
+    if (!projectId) return;
+    if (targetProjectRef.current !== projectId) {
+      targetProjectRef.current = projectId;
+      targetProjectRetryRef.current = 0;
+    }
+    const project = projects.find((p) => p.id === projectId);
+    if (!project) {
+      if (targetProjectRetryRef.current >= 8) return;
+      targetProjectRetryRef.current += 1;
+      const id = window.setTimeout(() => void fetchSection(false), 900);
+      return () => window.clearTimeout(id);
+    }
+    targetProjectRetryRef.current = 0;
+    setProjectFilter(proyectoBucket(project.status));
+    setExpandedProject(projectId);
+    window.setTimeout(() => document.getElementById(`project-${projectId}`)?.scrollIntoView({ block: "center", behavior: "smooth" }), 80);
+  }, [fetchSection, projects, searchParams, section]);
 
   useEffect(() => {
     if (section !== "projects") return;
@@ -461,7 +485,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                   {filteredBookings.map((b) => {
                     const rev = b.status === "completed" ? bookingReview(b.id) : undefined;
                     return (
-                      <Card key={b.id} className={cn("rounded-2xl border-[#e5e7eb] bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md", expandedBooking === b.id && "shadow-md ring-1 ring-[#d8eef8]")}>
+                      <Card id={`booking-${b.id}`} key={b.id} className={cn("rounded-2xl border-[#e5e7eb] bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md", expandedBooking === b.id && "shadow-md ring-1 ring-[#d8eef8]")}>
                         {/* COLLAPSED header — SAME card language as the other 3 sections: avatar +
                             pro name (primary, bold) + status chip on the right; "Fecha: {cita}"
                             key line. Tap to reveal the full description, cancel reason + actions. */}
@@ -695,7 +719,7 @@ export function ClientActivity({ section }: { section: ClientActivitySection }) 
                         : t("projOpen");
 
                 return (
-                  <Card key={project.id} className={cn("rounded-2xl border-[#e5e7eb] bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md", isExpanded && "shadow-md ring-1 ring-[#d8eef8]")}>
+                  <Card id={`project-${project.id}`} key={project.id} className={cn("rounded-2xl border-[#e5e7eb] bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md", isExpanded && "shadow-md ring-1 ring-[#d8eef8]")}>
                     <button
                       type="button"
                       onClick={async () => {

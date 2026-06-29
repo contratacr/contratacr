@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { CalendarCheck, CalendarClock, CalendarDays, Clock, FileText, Phone, IdCard, Wrench, MapPin, UserRound, Flag } from "lucide-react";
 import { getCategoryLabel } from "@/lib/data/categories";
@@ -90,6 +91,7 @@ function to12h(time?: string): string | null {
 export function BookingRequests() {
   const locale = useLocale();
   const t = useTranslations("bookingRequests");
+  const searchParams = useSearchParams();
   const dateLocale = locale === "en" ? "en-US" : "es-CR";
 
   // Age bracket badge for a HEALTH patient (self or beneficiary), derived from the
@@ -116,6 +118,8 @@ export function BookingRequests() {
   const bookingsSnapshotRef = useRef("");
   // Accordion: at most one card expanded at a time (essentials collapsed by default).
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const targetRetryRef = useRef(0);
+  const targetBookingRef = useRef<string | null>(null);
   // "Reportar cliente" clean modal (replaces the old window.prompt), one at a time.
   const [reportFor, setReportFor] = useState<Booking | null>(null);
 
@@ -151,6 +155,26 @@ export function BookingRequests() {
     }, 3000);
     return () => window.clearInterval(id);
   }, [loadBookings, loading]);
+
+  useEffect(() => {
+    const bookingId = searchParams.get("booking");
+    if (!bookingId) return;
+    if (targetBookingRef.current !== bookingId) {
+      targetBookingRef.current = bookingId;
+      targetRetryRef.current = 0;
+    }
+    const booking = bookings.find((b) => b.id === bookingId);
+    if (!booking) {
+      if (targetRetryRef.current >= 8) return;
+      targetRetryRef.current += 1;
+      const id = window.setTimeout(() => void loadBookings(true), 900);
+      return () => window.clearTimeout(id);
+    }
+    targetRetryRef.current = 0;
+    setFilter(solicitudBucket(booking.status, booking.scheduled_date));
+    setExpandedId(bookingId);
+    window.setTimeout(() => document.getElementById(`booking-${bookingId}`)?.scrollIntoView({ block: "center", behavior: "smooth" }), 80);
+  }, [bookings, loadBookings, searchParams]);
 
   async function updateStatus(id: string, status: BookingStatus) {
     await fetch("/api/bookings", {
@@ -259,7 +283,7 @@ export function BookingRequests() {
     const panelOpen = actionFor?.id === booking.id;
 
     return (
-      <Card className={cn("rounded-2xl border-[#e5e7eb] bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md", expanded && "shadow-md ring-1 ring-[#d8eef8]")}>
+      <Card id={`booking-${booking.id}`} className={cn("rounded-2xl border-[#e5e7eb] bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md", expanded && "shadow-md ring-1 ring-[#d8eef8]")}>
         {/* EXPANDABLE LEAD CARD (sprint 430): COLLAPSED shows only essentials (who · when ·
             status + unverified). Tapping reveals the full identity, the "para otra persona"
             callout, servicio·zona, the note, and the management ACTIONS. Zero icons; text labels.

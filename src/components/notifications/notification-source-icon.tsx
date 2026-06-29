@@ -17,6 +17,7 @@ export function NotificationSourceIcon({ type, className }: { type: string; clas
       return <CalendarCheck className={className} />;
     case "new_project":
     case "proposal_accepted":
+    case "project_proposal_accepted":
     case "project_cancelled":
     case "project_deleted":
       return <Handshake className={className} />;

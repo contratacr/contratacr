@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { Banknote, FileText, Handshake, Phone, MapPin, CalendarClock, CalendarDays, Clock, EyeOff, Users, Wrench } from "lucide-react";
 import { WhatsAppIcon } from "@/components/icons/whatsapp-icon";
@@ -83,6 +84,7 @@ interface ProposalsTabProps {
 export function ProposalsTab({ categoryId, professions = [], services = [] }: ProposalsTabProps) {
   const t = useTranslations("proposalsTab");
   const locale = useLocale();
+  const searchParams = useSearchParams();
 
   // Filter "Oportunidades" by profession — the user's ACTUAL professions only (no "all"
   // option); only surfaced when they have 2+ (defaults to the first profession).
@@ -118,12 +120,15 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
   const [myProposals, setMyProposals] = useState<MyProposal[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedProject, setExpandedProject] = useState<string | null>(null);
+  const [expandedMine, setExpandedMine] = useState<string | null>(null);
   const [proposalForms, setProposalForms] = useState<Record<string, { price: string; message: string }>>({});
   const [submitting, setSubmitting] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState<Set<string>>(new Set());
   const [projectFilter, setProjectFilter] = useState("activas");
   const openSnapshotRef = useRef("");
   const mineSnapshotRef = useRef("");
+  const targetProjectRetryRef = useRef(0);
+  const targetProjectRef = useRef<string | null>(null);
   // Oportunidades browse: which profession is filtered and the locally-dismissed
   // ("No me interesa") opportunities.
   const [profFilter, setProfFilter] = useState<string>("");
@@ -203,6 +208,44 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view]);
 
+  useEffect(() => {
+    const projectId = searchParams.get("project");
+    if (!projectId) return;
+    if (targetProjectRef.current !== projectId) {
+      targetProjectRef.current = projectId;
+      targetProjectRetryRef.current = 0;
+    }
+
+    const mine = myProposals.find((p) => p.project_id === projectId);
+    if (mine) {
+      targetProjectRetryRef.current = 0;
+      setView("mine");
+      setProjectFilter(proposalBucket(mine.status, mine.projects?.status));
+      setExpandedMine(mine.id);
+      window.setTimeout(() => document.getElementById(`project-${projectId}`)?.scrollIntoView({ block: "center", behavior: "smooth" }), 80);
+      return;
+    }
+
+    const open = openProjects.find((p) => p.id === projectId);
+    if (open) {
+      targetProjectRetryRef.current = 0;
+      setView("browse");
+      setProjectFilter("activas");
+      setExpandedProject(projectId);
+      window.setTimeout(() => document.getElementById(`project-${projectId}`)?.scrollIntoView({ block: "center", behavior: "smooth" }), 80);
+      return;
+    }
+
+    if (targetProjectRetryRef.current >= 8) return;
+    targetProjectRetryRef.current += 1;
+    const id = window.setTimeout(() => {
+      void fetchOpenProjects(true);
+      void fetchMyProposals(true);
+    }, 900);
+    return () => window.clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [myProposals, openProjects, searchParams]);
+
   async function submitProposal(projectId: string) {
     const form = proposalForms[projectId];
     if (!form?.message?.trim()) return;
@@ -228,7 +271,6 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
 
   // Mis propuestas is a collapsible accordion (sprint 449) — same card language as the
   // other panel sections (one open at a time).
-  const [expandedMine, setExpandedMine] = useState<string | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<{ price: string; message: string }>({ price: "", message: "" });
   // Withdraw-a-proposal clean confirm modal (replaces the old browser confirm()).
@@ -483,7 +525,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                     {list.map((project) => {
                       const isExpanded = expandedProject === project.id;
                       return (
-                        <Card key={project.id} className={cn("rounded-2xl border-[#e5e7eb] bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md", isExpanded && "shadow-md ring-1 ring-[#d8eef8]")}>
+                        <Card id={`project-${project.id}`} key={project.id} className={cn("rounded-2xl border-[#e5e7eb] bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md", isExpanded && "shadow-md ring-1 ring-[#d8eef8]")}>
                           <button
                             type="button"
                             onClick={() => setExpandedProject(isExpanded ? null : project.id)}
@@ -552,7 +594,7 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
                     : null;
                   const sentDate = formatRelativeOrDate(p.created_at, locale);
                   return (
-                    <Card key={p.id} className={cn("rounded-2xl border-[#e5e7eb] bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md", isOpen && "shadow-md ring-1 ring-[#d8eef8]")}>
+                    <Card id={`project-${p.project_id}`} key={p.id} className={cn("rounded-2xl border-[#e5e7eb] bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md", isOpen && "shadow-md ring-1 ring-[#d8eef8]")}>
                       {/* COLLAPSED header — client avatar + project title (primary) + a status chip
                           (a SENT proposal genuinely IS "Pendiente" until the client decides — unlike
                           auto-confirm bookings — so that badge is kept here); key fact = YOUR price; a

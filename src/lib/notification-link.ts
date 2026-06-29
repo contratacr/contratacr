@@ -15,6 +15,7 @@ const PRO_TYPES = new Set([
   "booking_received",   // a client requested your service
   "booking_cancelled_by_client", // a client cancelled a booking you received
   "proposal_accepted",  // a client accepted your proposal
+  "project_proposal_accepted", // a client accepted your project proposal
   "new_project",        // a new project you can bid on
   "project_cancelled",  // a client cancelled a project assigned to you
   "project_deleted",    // a client deleted a project assigned to you
@@ -97,6 +98,7 @@ export function notificationHref(n: NotificationLinkInput, _role?: string): stri
     case "booking_cancelled_by_client":
       return "/es/dashboard/profesional?tab=bookings";
     case "proposal_accepted":
+    case "project_proposal_accepted":
     case "new_project":
     case "project_cancelled":
     case "project_deleted":
