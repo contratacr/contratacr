@@ -160,7 +160,7 @@ export default function DashboardPage() {
     const supabase = createClient();
     const { data } = await supabase
       .from("professionals")
-      .select("*, profiles(full_name, avatar_url), provincia_id, canton_id, address, service_type, category_id, services")
+      .select("*, profiles(full_name, email, avatar_url), provincia_id, canton_id, address, service_type, category_id, services")
       .eq("profile_id", user.id)
       .maybeSingle();
     setPro(data);

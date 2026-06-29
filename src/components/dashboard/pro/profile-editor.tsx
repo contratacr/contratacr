@@ -149,7 +149,8 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
   // "Permitir contacto por llamada" — moved here from Disponibilidad (it's a
   // contact setting). Saved with the rest of the profile.
   const [allowPhoneCall, setAllowPhoneCall] = useState<boolean>(!!initial.allow_phone_call);
-  const [contactEmail, setContactEmail] = useState<string>(initial.contact_email ?? "");
+  const accountEmail = (initial.profiles?.email as string | undefined) ?? "";
+  const [contactEmail, setContactEmail] = useState<string>(initial.contact_email ?? accountEmail);
   // Optional public email is opt-in (toggle): on only if one is already saved.
   const [showContactEmail, setShowContactEmail] = useState<boolean>(!!initial.contact_email);
   // Optional social links — the pro types ONLY their username; we build the URL on
@@ -367,7 +368,7 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
         insurance_networks: insurers,
         call_phone: callPhone.trim() || null,
         allow_phone_call: allowPhoneCall,
-        contact_email: contactEmail.trim() || null,
+        contact_email: showContactEmail ? contactEmail.trim() || null : null,
       };
 
       // 1) Core fields — guaranteed columns; a failure here is a real error.
@@ -721,7 +722,11 @@ export function ProfileEditor({ professionalId, profileId, initial, onSaved, foc
           <button
             type="button"
             onClick={() => {
-              setShowContactEmail((v) => { const nv = !v; if (!nv) setContactEmail(""); return nv; });
+              setShowContactEmail((v) => {
+                const nv = !v;
+                if (nv && !contactEmail.trim() && accountEmail) setContactEmail(accountEmail);
+                return nv;
+              });
               touch();
             }}
             className={cn("relative h-6 w-11 rounded-full transition-all shrink-0", showContactEmail ? "bg-[#009FD9]" : "bg-[#d1d5db]")}
