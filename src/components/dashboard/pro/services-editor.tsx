@@ -475,8 +475,8 @@ export function ServicesEditor({
       {formOpen && (
         <Modal
           onClose={cancelForm}
-          title={t("editInfo")}
-          subtitle={getCategoryLabel(editCategory, locale)}
+          title={getCategoryLabel(editCategory, locale)}
+          subtitle={t("editInfo")}
           closeLabel={t("cancel")}
           footer={
             <>
