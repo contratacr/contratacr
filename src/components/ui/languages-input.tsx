@@ -29,6 +29,7 @@ export function LanguagesInput({ value, onChange }: Props) {
   const [highlight, setHighlight] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
   const suggestions = useMemo(() => {
     const q = normalize(query.trim());
@@ -54,14 +55,22 @@ export function LanguagesInput({ value, onChange }: Props) {
 
   function remove(id: string) {
     onChange(value.filter((l) => l !== id));
+    inputRef.current?.focus();
+    setOpen(true);
   }
 
   return (
     <div ref={containerRef} className="relative">
-      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[#e5e7eb] bg-white p-2.5 transition-all focus-within:ring-2 focus-within:ring-[#009FD9] focus-within:border-transparent">
+      <div
+        onClick={() => {
+          inputRef.current?.focus();
+          setOpen(true);
+        }}
+        className="flex min-h-11 cursor-text flex-wrap items-center gap-2 rounded-xl border border-[#e5e7eb] bg-white p-2.5 transition-all focus-within:border-transparent focus-within:ring-2 focus-within:ring-[#009FD9]"
+      >
         {value.map((id) => (
-          <span key={id} className="inline-flex items-center gap-1 rounded-full bg-[#EBF5FB] py-1 pl-3 pr-1.5 text-sm font-medium text-[#0089bb]">
-            {languageLabel(id, locale)}
+          <span key={id} className="inline-flex max-w-full items-center gap-1 rounded-full bg-[#EBF5FB] py-1 pl-3 pr-1.5 text-sm font-medium text-[#0089bb]">
+            <span className="min-w-0 truncate">{languageLabel(id, locale)}</span>
             <button type="button" onClick={() => remove(id)} className="grid h-4 w-4 place-items-center rounded-full text-[#0089bb]/70 hover:bg-[#009FD9]/20 hover:text-[#0089bb] transition-colors" aria-label={t("remove")}>
               <X className="h-3 w-3" />
             </button>
@@ -91,27 +100,32 @@ export function LanguagesInput({ value, onChange }: Props) {
       {/* Portaled to <body> so the card's overflow can't clip it; absolute in
           document coords so it stays attached below the field; matches its width. */}
       {dropdownOpen && pos && typeof document !== "undefined" && createPortal(
-        <ul
-          style={{ position: "absolute", left: pos.left, width: pos.width, top: pos.top, maxHeight: pos.maxH, zIndex: 9999 }}
-          className="overflow-auto overscroll-contain rounded-xl border border-[#e5e7eb] bg-white py-1 shadow-2xl"
-          role="listbox"
+        <div
+          style={{ position: "absolute", left: pos.left, width: pos.width, top: pos.top, zIndex: 9999 }}
+          className="overflow-hidden rounded-xl border border-[#e5e7eb] bg-white shadow-2xl"
         >
-          {suggestions.map((s, i) => (
-            <li key={s.id}>
+          <div
+            ref={listRef}
+            style={{ maxHeight: pos.maxH, WebkitOverflowScrolling: "touch", touchAction: "pan-y" }}
+            className="overflow-y-auto overscroll-contain py-1"
+            role="listbox"
+          >
+            {suggestions.map((s, i) => (
               <button
+                key={s.id}
                 type="button"
                 role="option"
                 aria-selected={i === highlight}
                 onMouseDown={(e) => e.preventDefault()}
                 onMouseEnter={() => setHighlight(i)}
                 onClick={() => add(s.id)}
-                className={`w-full px-3.5 py-2.5 text-left text-sm transition-colors ${i === highlight ? "bg-[#EBF5FB] text-[#0089bb]" : "text-[#374151] hover:bg-[#f9fafb]"}`}
+                className={`flex w-full items-center justify-between px-3.5 py-2.5 text-left text-sm transition-colors ${i === highlight ? "bg-[#EBF5FB] text-[#0089bb] font-medium" : "text-[#374151] hover:bg-[#f9fafb]"}`}
               >
-                {languageLabel(s.id, locale)}
+                <span className="min-w-0 truncate">{languageLabel(s.id, locale)}</span>
               </button>
-            </li>
-          ))}
-        </ul>,
+            ))}
+          </div>
+        </div>,
         document.body
       )}
     </div>
