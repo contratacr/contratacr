@@ -306,7 +306,7 @@ export default function ServiciosPage() {
                       <Link
                         key={id}
                         href={`/buscar?categoria=${id}`}
-                        className="group flex min-h-[58px] items-center justify-between gap-3 border-t border-[#f1f5f9] px-4 py-3 text-sm font-semibold leading-snug text-[#374151] transition-colors hover:bg-[#f8fbfe] hover:text-[#0089bb] sm:border-r sm:[&:nth-child(2n)]:border-r-0 xl:[&:nth-child(2n)]:border-r xl:[&:nth-child(3n)]:border-r-0"
+                        className="group flex min-h-[58px] items-center justify-between gap-3 border-b border-[#f1f5f9] px-4 py-3 text-sm font-semibold leading-snug text-[#374151] transition-colors hover:bg-[#f8fbfe] hover:text-[#0089bb] sm:border-r sm:[&:nth-child(2n)]:border-r-0 xl:[&:nth-child(2n)]:border-r xl:[&:nth-child(3n)]:border-r-0"
                       >
                         <span className="min-w-0 [overflow-wrap:anywhere]">
                                 {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
