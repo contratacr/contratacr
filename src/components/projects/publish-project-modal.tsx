@@ -10,7 +10,6 @@ import { CategorySearch } from "@/components/ui/category-search";
 import { SelectMenu } from "@/components/ui/select-menu";
 import { Loader2, ShieldAlert, X } from "lucide-react";
 import { PROVINCES } from "@/lib/data/cr-geography";
-import { cn } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { cleanId, detectIdType, isValidId } from "@/lib/cedula";
@@ -385,23 +384,15 @@ export function PublishProjectModal({ onClose, onSuccess }: { onClose: () => voi
               <label className="text-sm font-medium text-[#374151] block mb-1.5">
                 {t("whenNeeded")} <span className="text-[#9ca3af] font-normal">{t("optional")}</span>
               </label>
-              <div className="flex flex-wrap gap-2">
-                {TIMELINES.map(({ value, label }) => (
-                  <button
-                    key={value}
-                    type="button"
-                    onClick={() => update("timeline", form.timeline === value ? "" : value)}
-                    className={cn(
-                      "px-3 py-1.5 rounded-xl text-sm font-medium transition-all border",
-                      form.timeline === value
-                        ? "bg-[#009FD9] text-white border-[#009FD9]"
-                        : "bg-white text-[#374151] border-[#e5e7eb] hover:border-[#009FD9] hover:text-[#009FD9]"
-                    )}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
+              <SelectMenu
+                value={form.timeline}
+                onChange={(v) => update("timeline", v)}
+                placeholder={t("tlAny")}
+                options={[
+                  { value: "", label: t("tlAny") },
+                  ...TIMELINES.map(({ value, label }) => ({ value, label })),
+                ]}
+              />
             </div>
 
             {/* Contact phone — only when the client has none on file. */}
