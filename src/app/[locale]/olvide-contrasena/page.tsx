@@ -10,7 +10,6 @@ import { ArrowRight, AlertCircle, CheckCircle2 } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/client";
 import { ContrataCRLogo } from "@/components/landing/landing-navbar";
 import { LandingFooter } from "@/components/landing/landing-footer";
 import { SpamNotice } from "@/components/ui/spam-notice";
@@ -40,19 +39,25 @@ export default function OlvideContrasenaPage() {
   } = useForm<FormData>({ resolver: zodResolver(schema) });
 
   async function sendReset(email: string) {
-    const supabase = createClient();
-    return supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback?next=/${locale}/reset-password`,
+    const res = await fetch("/api/auth/password-reset", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email,
+        redirectTo: `${window.location.origin}/auth/callback?next=/${locale}/reset-password`,
+      }),
     });
+    const json = await res.json().catch(() => ({}));
+    return { ok: res.ok, error: json?.error as string | undefined };
   }
 
   async function onSubmit(data: FormData) {
     setSubmitting(true);
     setError(null);
-    const { error: resetError } = await sendReset(data.email);
+    const reset = await sendReset(data.email);
     setSubmitting(false);
-    if (resetError) {
-      setError(t("error"));
+    if (!reset.ok) {
+      setError(reset.error === "email_not_confirmed" ? t("emailNotConfirmed") : t("error"));
       return;
     }
     setSentEmail(data.email);

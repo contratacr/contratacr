@@ -2067,7 +2067,8 @@
     "emailPlaceholder": "you@email.com",
     "sending": "Sending…",
     "sendLink": "Send link",
-    "backToLogin": "Back to sign in"
+    "backToLogin": "Back to sign in",
+    "emailNotConfirmed": "First verify your email with the code we sent when you signed up. After that you can sign in or reset your password."
   },
   "resetPassword": {
     "doneTitle": "Password updated",

@@ -2065,7 +2065,8 @@
     "emailPlaceholder": "tu@email.com",
     "sending": "Enviando…",
     "sendLink": "Enviar enlace",
-    "backToLogin": "Volver al inicio de sesión"
+    "backToLogin": "Volver al inicio de sesión",
+    "emailNotConfirmed": "Primero verifica tu correo con el código que te enviamos al registrarte. Después podrás iniciar sesión o restablecer tu contraseña."
   },
   "resetPassword": {
     "doneTitle": "Contraseña actualizada",
