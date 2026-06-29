@@ -500,7 +500,7 @@ function CategoriesMegaPanel({ onNavigate }: { onNavigate: () => void }) {
   }
   function onKeyDown(e: React.KeyboardEvent) {
     if (!filtering || matches.length === 0) {
-      if (e.key === "Enter" && q.trim()) { e.preventDefault(); go(); }
+      if (e.key === "Enter") { e.preventDefault(); go(); }
       return;
     }
     if (e.key === "ArrowDown") { e.preventDefault(); setActive((a) => Math.min(a + 1, matches.length - 1)); }
