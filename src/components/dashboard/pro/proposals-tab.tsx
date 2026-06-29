@@ -122,7 +122,6 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
   const [submitting, setSubmitting] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState<Set<string>>(new Set());
   const [projectFilter, setProjectFilter] = useState("activas");
-  const [justUpdated, setJustUpdated] = useState(false);
   const openSnapshotRef = useRef("");
   const mineSnapshotRef = useRef("");
   // Oportunidades browse: which profession is filtered and the locally-dismissed
@@ -151,7 +150,6 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
     const { proposals } = await mineRes.json().catch(() => ({ proposals: [] }));
     const nextProjects = projects ?? [];
     const snapshot = JSON.stringify(nextProjects.map((p: OpenProject) => `${p.id}:${p.created_at}`));
-    if (silent && openSnapshotRef.current && openSnapshotRef.current !== snapshot) setJustUpdated(true);
     openSnapshotRef.current = snapshot;
     setOpenProjects(nextProjects);
     setSubmitted(new Set<string>((proposals ?? []).map((p: { project_id: string }) => p.project_id)));
@@ -164,7 +162,6 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
     const { proposals } = await res.json();
     const nextProposals = proposals ?? [];
     const snapshot = JSON.stringify(nextProposals.map((p: MyProposal) => `${p.id}:${p.status}:${p.projects?.status ?? ""}`));
-    if (silent && mineSnapshotRef.current && mineSnapshotRef.current !== snapshot) setJustUpdated(true);
     mineSnapshotRef.current = snapshot;
     setMyProposals(nextProposals);
     if (!silent) setLoading(false);
@@ -189,12 +186,6 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
     return () => window.clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view, loading]);
-
-  useEffect(() => {
-    if (!justUpdated) return;
-    const id = window.setTimeout(() => setJustUpdated(false), 4500);
-    return () => window.clearTimeout(id);
-  }, [justUpdated]);
 
   // SILENTLY revalidate when the pro returns to the tab/window — so a project the client
   // cancelled/deleted updates in the background, WITHOUT a jarring reload. The `silent` flag
@@ -442,11 +433,6 @@ export function ProposalsTab({ categoryId, professions = [], services = [] }: Pr
 
   return (
     <div>
-      {justUpdated && (
-        <div className="mb-4 rounded-xl border border-[#dbe5ee] bg-[#fbfdff] px-3 py-2 text-sm font-medium text-[#4b5563]">
-          {t("liveUpdated")}
-        </div>
-      )}
       {/* Sub-nav */}
       <div className="flex gap-1 bg-[#f3f4f6] rounded-xl p-1 mb-6">
         {(["browse", "mine"] as const).map((v) => (

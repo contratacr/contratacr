@@ -113,7 +113,6 @@ export function BookingRequests() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("activas");
-  const [justUpdated, setJustUpdated] = useState(false);
   const bookingsSnapshotRef = useRef("");
   // Accordion: at most one card expanded at a time (essentials collapsed by default).
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -138,7 +137,6 @@ export function BookingRequests() {
     const { bookings: rows } = await res.json();
     const next = rows ?? [];
     const snapshot = JSON.stringify(next.map((b: Booking) => `${b.id}:${b.status}:${b.scheduled_date ?? ""}:${b.scheduled_time ?? ""}`));
-    if (silent && bookingsSnapshotRef.current && bookingsSnapshotRef.current !== snapshot) setJustUpdated(true);
     bookingsSnapshotRef.current = snapshot;
     setBookings(next);
     if (!silent) setLoading(false);
@@ -153,12 +151,6 @@ export function BookingRequests() {
     }, 30000);
     return () => window.clearInterval(id);
   }, [loadBookings, loading]);
-
-  useEffect(() => {
-    if (!justUpdated) return;
-    const id = window.setTimeout(() => setJustUpdated(false), 4500);
-    return () => window.clearTimeout(id);
-  }, [justUpdated]);
 
   async function updateStatus(id: string, status: BookingStatus) {
     await fetch("/api/bookings", {
@@ -473,11 +465,6 @@ export function BookingRequests() {
 
   return (
     <div className="space-y-5">
-      {justUpdated && (
-        <div className="rounded-xl border border-[#dbe5ee] bg-[#fbfdff] px-3 py-2 text-sm font-medium text-[#4b5563]">
-          {t("liveUpdated")}
-        </div>
-      )}
       <StatusFilterTabs tabs={SOLICITUD_TABS} value={filter} onChange={setFilter} counts={counts} />
       {filtered.length === 0 ? (
         <p className="text-sm text-[#6b7280] text-center py-8">{t("noneInView")}</p>

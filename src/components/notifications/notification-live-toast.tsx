@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useMode } from "@/hooks/use-mode";
@@ -24,6 +24,7 @@ type Notification = {
 export function NotificationLiveToast() {
   const { user } = useAuth();
   const t = useTranslations("notifications");
+  const locale = useLocale();
   const { mode } = useMode(canOffer(user));
   const [toast, setToast] = useState<Notification | null>(null);
   const lastSeenIdRef = useRef<string | null>(null);
@@ -91,6 +92,7 @@ export function NotificationLiveToast() {
   if (!toast) return null;
 
   const title = TRANSLATED_NOTIFICATION_TYPES.has(toast.type) ? t(`types.${toast.type}`) : toast.title;
+  const detailLabel = locale === "en" ? "View details" : "Ver detalles";
 
   async function openToast() {
     if (!toast) return;
@@ -105,13 +107,13 @@ export function NotificationLiveToast() {
   return (
     <div className="fixed bottom-24 left-3 right-3 z-[180] sm:bottom-auto sm:left-auto sm:right-5 sm:top-20 sm:w-[360px]">
       <div className="rounded-2xl border border-[#d8e8f1] bg-white shadow-[0_18px_45px_-20px_rgba(15,23,42,0.35)]">
-        <button type="button" onClick={openToast} className="flex w-full items-start gap-3 px-4 py-3 text-left">
-          <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#EAF7FD] text-[#009FD9]">
+        <button type="button" onClick={openToast} className="flex w-full items-center gap-3 px-4 py-3 pr-10 text-left">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#EAF7FD] text-[#009FD9]">
             <NotificationSourceIcon type={toast.type} className="h-4 w-4" />
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-sm font-semibold text-[#162543] line-clamp-1">{title}</span>
-            <span className="mt-0.5 block text-xs leading-relaxed text-[#6b7280] line-clamp-2">{toast.message}</span>
+            <span className="mt-0.5 block text-xs font-medium text-[#009FD9]">{detailLabel}</span>
           </span>
         </button>
         <button
