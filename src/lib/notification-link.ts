@@ -13,8 +13,11 @@ export type NotificationContext = "professional" | "client" | "support" | null;
 // Notification types raised while the user is acting as a PROFESSIONAL.
 const PRO_TYPES = new Set([
   "booking_received",   // a client requested your service
+  "booking_cancelled_by_client", // a client cancelled a booking you received
   "proposal_accepted",  // a client accepted your proposal
   "new_project",        // a new project you can bid on
+  "project_cancelled",  // a client cancelled a project assigned to you
+  "project_deleted",    // a client deleted a project assigned to you
   "booking_rescheduled", // the CLIENT moved their appointment to a new slot (sprint 433)
 ]);
 
@@ -25,6 +28,7 @@ const CLIENT_TYPES = new Set([
   "booking_completed",
   "review_request",
   "proposal_received",  // a professional sent a proposal to your project
+  "proposal_withdrawn", // a professional withdrew a proposal from your project
 ]);
 
 export function notificationContext(type: string): NotificationContext {
@@ -80,10 +84,12 @@ export function notificationHref(n: NotificationLinkInput, _role?: string): stri
   switch (n.type) {
     // Offer-capability context (offer-only tabs → the panel opens in offer mode)
     case "booking_received":
+    case "booking_cancelled_by_client":
       return "/es/dashboard/profesional?tab=bookings";
     case "proposal_accepted":
-      return "/es/dashboard/profesional?tab=proposals";
     case "new_project":
+    case "project_cancelled":
+    case "project_deleted":
       return "/es/dashboard/profesional?tab=proposals";
 
     // Seek-capability context (use-only tabs → the panel opens in use mode)
@@ -96,6 +102,7 @@ export function notificationHref(n: NotificationLinkInput, _role?: string): stri
     case "review_request":
       return "/es/dashboard/profesional?tab=sent_bookings";
     case "proposal_received":
+    case "proposal_withdrawn":
       return "/es/dashboard/profesional?tab=sent_projects";
 
     default:

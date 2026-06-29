@@ -415,7 +415,7 @@ export async function PATCH(req: NextRequest) {
         const motivo = typeof cancelReason === "string" && cancelReason.trim() ? ` Motivo: ${cancelReason.trim()}` : "";
         await admin.from("notifications").insert({
           user_id: pr.profile_id,
-          type: "booking_update",
+          type: "booking_cancelled_by_client",
           title: "El cliente canceló la solicitud",
           message: `El cliente canceló su solicitud. El horario quedó libre.${motivo}`,
           data: { link: "/es/dashboard/profesional?tab=bookings", booking_id: id },

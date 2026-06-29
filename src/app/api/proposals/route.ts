@@ -250,7 +250,11 @@ export async function DELETE(req: NextRequest) {
   const { data: pro } = await supabase.from("professionals").select("id").eq("profile_id", session.user.id).maybeSingle();
   if (!pro) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
 
-  const { data: prop } = await supabase.from("proposals").select("status, professional_id").eq("id", id).maybeSingle();
+  const { data: prop } = await supabase
+    .from("proposals")
+    .select("status, professional_id, project_id, projects(title, client_id)")
+    .eq("id", id)
+    .maybeSingle();
   if (!prop || prop.professional_id !== pro.id) return NextResponse.json({ error: "No autorizado" }, { status: 403 });
   if (prop.status !== "pending") return NextResponse.json({ error: "Solo puedes cancelar una propuesta pendiente." }, { status: 409 });
 
@@ -261,5 +265,20 @@ export async function DELETE(req: NextRequest) {
   const admin = createAdminClient();
   const { error } = await admin.from("proposals").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const project = (prop as any).projects;
+    if (project?.client_id) {
+      await admin.from("notifications").insert({
+        user_id: project.client_id,
+        type: "proposal_withdrawn",
+        title: "Propuesta retirada",
+        message: `Un profesional retiró su propuesta para "${project.title ?? "tu solicitud"}".`,
+        data: { link: "/es/dashboard/profesional?tab=sent_projects", project_id: prop.project_id },
+      });
+    }
+  } catch (e) {
+    console.error("[DELETE /api/proposals] notify withdrawn failed:", e);
+  }
   return NextResponse.json({ success: true });
 }

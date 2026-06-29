@@ -366,9 +366,6 @@ export async function PATCH(req: NextRequest) {
   if (!allowed.includes(status)) {
     return NextResponse.json({ error: "Estado inválido" }, { status: 400 });
   }
-  // Notify the assigned professional when the project is cancelled.
-  if (status === "cancelled") await notifyAssignedPro(admin, id, "cancelled");
-
   // Authorize against the row, then persist with the service-role client (an
   // RLS-bound update could silently affect 0 rows, like the bookings bug).
   const { data: ownRow } = await admin.from("projects").select("client_id").eq("id", id).maybeSingle();
@@ -378,6 +375,7 @@ export async function PATCH(req: NextRequest) {
     .update({ status, updated_at: new Date().toISOString() })
     .eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (status === "cancelled") await notifyAssignedPro(admin, id, "cancelled");
   return NextResponse.json({ success: true });
 }
 
@@ -396,7 +394,7 @@ async function notifyAssignedPro(admin: any, projectId: string, kind: "cancelled
     if (!pro?.profile_id) return;
     await admin.from("notifications").insert({
       user_id: pro.profile_id,
-      type: "project_completed", // reuse an allowed project type for the channel
+      type: kind === "deleted" ? "project_deleted" : "project_cancelled",
       title: kind === "deleted" ? "Solicitud eliminada" : "Solicitud cancelada",
       message: `El cliente ${kind === "deleted" ? "eliminó" : "canceló"} la solicitud "${project.title}". Ya no está activa.`,
       data: { link: "/es/dashboard/profesional?tab=proposals" },
