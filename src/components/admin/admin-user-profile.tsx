@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import {
   ArrowLeft, Loader2, ExternalLink, ShieldCheck, Headset, Flag, FolderOpen,
   CalendarDays, Ban, ShieldOff, Mail, Phone, IdCard, BadgeCheck, History,
+  CheckCircle2, RotateCcw, XCircle,
 } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { getInitials } from "@/lib/utils";
@@ -15,7 +16,9 @@ import { supportTicketRef } from "@/lib/support-ticket";
 type Profile = {
   id: string; full_name: string | null; email: string | null; cedula: string | null;
   phone: string | null; role: string | null; avatar_url: string | null;
-  is_disabled: boolean; disabled_reason: string | null; disabled_at: string | null; created_at: string;
+  is_disabled: boolean; disabled_reason: string | null; disabled_at: string | null;
+  client_identity_status: string | null; client_identity_verified_at: string | null;
+  client_identity_provider: string | null; created_at: string;
 };
 type Professional = {
   id: string; slug: string; verification_status: VerificationStatus; verification_reason: string | null;
@@ -29,6 +32,7 @@ type Booking = { id: string; service_description: string; status: string; prefer
 type LogRow = { id: string; action?: string; decision?: string; status?: string; note?: string; reason?: string; admin_name?: string; created_at: string };
 type Appeal = { id: string; message?: string; status?: string; created_at: string };
 type Report = { id: string; reason: string; status: string; reporter_email: string | null; created_at: string };
+type ActionState = "verify" | "reject" | "revert_pending";
 
 type Data = {
   profile: Profile;
@@ -65,6 +69,13 @@ const STATUS_PILL: Record<string, string> = {
 };
 function statusPill(s: string) { return STATUS_PILL[s] ?? "bg-gray-100 text-gray-600"; }
 
+function accountVerificationStatus(profile: Profile, pro: Professional | null): VerificationStatus {
+  if (pro) return pro.verification_status;
+  if (profile.client_identity_status === "verified") return "verified";
+  if (profile.client_identity_status === "pending") return "pending";
+  return "rejected";
+}
+
 function Section({ icon: Icon, title, count, children }: { icon: React.ElementType; title: string; count?: number; children: React.ReactNode }) {
   return (
     <div className="bg-white rounded-xl border border-[#e5e7eb] overflow-hidden">
@@ -82,16 +93,47 @@ export function AdminUserProfile({ userId }: { userId: string }) {
   const [data, setData] = useState<Data | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [identityBusy, setIdentityBusy] = useState<ActionState | null>(null);
+  const [identityError, setIdentityError] = useState<string | null>(null);
+  const [confirmRevoke, setConfirmRevoke] = useState(false);
 
   useEffect(() => {
     let alive = true;
+    setLoading(true);
     fetch(`/api/admin/users?id=${userId}`)
       .then((r) => r.json())
-      .then((d) => { if (!alive) return; if (d.error) setError(d.error); else setData(d); })
+      .then((d) => { if (!alive) return; if (d.error) setError(d.error); else { setError(null); setData(d); } })
       .catch(() => alive && setError("No se pudo cargar el usuario."))
       .finally(() => alive && setLoading(false));
     return () => { alive = false; };
   }, [userId]);
+
+  async function refreshUser() {
+    const res = await fetch(`/api/admin/users?id=${userId}`);
+    const json = await res.json();
+    if (!res.ok || json.error) throw new Error(json.error ?? "No se pudo cargar el usuario.");
+    setData(json);
+  }
+
+  async function updateIdentity(action: ActionState) {
+    setIdentityBusy(action);
+    setIdentityError(null);
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/identity`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok || json.error) throw new Error(json.error ?? "No se pudo actualizar la verificación.");
+      setConfirmRevoke(false);
+      await refreshUser();
+    } catch (err) {
+      setIdentityError(err instanceof Error ? err.message : "No se pudo actualizar la verificación.");
+    } finally {
+      setIdentityBusy(null);
+    }
+  }
 
   if (loading) {
     return <div className="py-20 flex justify-center"><Loader2 className="h-7 w-7 animate-spin text-[#009FD9]" /></div>;
@@ -106,6 +148,9 @@ export function AdminUserProfile({ userId }: { userId: string }) {
   }
 
   const { profile, professional: pro, tickets, projects, bookings, verificationLog, appeals, reports } = data;
+  const identityStatus = accountVerificationStatus(profile, pro);
+  const isIdentityVerified = identityStatus === "verified";
+  const isIdentityPending = identityStatus === "pending";
 
   return (
     <div className="flex flex-col gap-5">
@@ -124,11 +169,9 @@ export function AdminUserProfile({ userId }: { userId: string }) {
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-xl font-bold text-[#111827]">{profile.full_name ?? "Sin nombre"}</h1>
               <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{pro ? "Profesional" : "Cliente"}</span>
-              {pro && (
-                <span className={`text-[11px] font-medium px-2 py-0.5 rounded-md border ${verificationPillClasses(pro.verification_status)}`}>
-                  {verificationLabel(pro.verification_status)}
-                </span>
-              )}
+              <span className={`text-[11px] font-medium px-2 py-0.5 rounded-md border ${verificationPillClasses(identityStatus)}`}>
+                {verificationLabel(identityStatus)}
+              </span>
               {pro?.is_banned && <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-red-100 text-red-700"><Ban className="h-3 w-3" /> Baneado</span>}
               {profile.is_disabled && <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700"><ShieldOff className="h-3 w-3" /> Cuenta deshabilitada</span>}
             </div>
@@ -154,7 +197,7 @@ export function AdminUserProfile({ userId }: { userId: string }) {
                   return <span>{fmtPhone(profile.phone) || "—"}</span>;
                 })()}
               </p>
-              <p className="flex items-center gap-2"><IdCard className="h-3.5 w-3.5 text-[#9ca3af] shrink-0" /> {profile.cedula ?? "Sin cédula"} <span className="text-[10px] text-[#9ca3af]">(enmascarada)</span></p>
+              <p className="flex items-center gap-2"><IdCard className="h-3.5 w-3.5 text-[#9ca3af] shrink-0" /> {profile.cedula ?? "Sin identificación"} <span className="text-[10px] text-[#9ca3af]">(guardada)</span></p>
               <p className="flex items-center gap-2"><CalendarDays className="h-3.5 w-3.5 text-[#9ca3af] shrink-0" /> Registro: {fmtDate(profile.created_at)}</p>
             </div>
             {(profile.is_disabled || pro?.is_banned) && (
@@ -180,6 +223,94 @@ export function AdminUserProfile({ userId }: { userId: string }) {
           </div>
         </div>
       </div>
+
+      <Section icon={ShieldCheck} title="Verificación de cuenta">
+        <div className="p-4">
+          <div className="rounded-xl border border-[#e5e7eb] bg-[#f9fafb] p-4">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className={`text-[11px] font-medium px-2 py-0.5 rounded-md border ${verificationPillClasses(identityStatus)}`}>
+                    {verificationLabel(identityStatus)}
+                  </span>
+                  <span className="text-xs text-[#6b7280]">
+                    {pro ? "Cuenta con panel profesional y cliente" : "Cuenta cliente"}
+                  </span>
+                </div>
+                <p className="mt-2 text-sm text-[#374151]">
+                  La verificación pertenece a la persona. Si se quita, se elimina la identificación guardada y se pedirá de nuevo cuando use una función que la requiera.
+                </p>
+                <div className="mt-3 grid gap-2 text-xs text-[#6b7280] sm:grid-cols-3">
+                  <span><strong className="text-[#374151]">Identificación:</strong> {profile.cedula ?? "Sin guardar"}</span>
+                  <span><strong className="text-[#374151]">Origen:</strong> {profile.client_identity_provider === "manual" ? "Admin" : profile.client_identity_provider ?? "App"}</span>
+                  <span><strong className="text-[#374151]">Verificada:</strong> {fmt(profile.client_identity_verified_at) || "—"}</span>
+                </div>
+                {identityError && (
+                  <p className="mt-3 rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-xs font-medium text-red-700">
+                    {identityError}
+                  </p>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-2 lg:justify-end">
+                <button
+                  type="button"
+                  onClick={() => updateIdentity("verify")}
+                  disabled={identityBusy != null || isIdentityVerified}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-[#009FD9] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#008ac0] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {identityBusy === "verify" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
+                  Marcar verificado
+                </button>
+                <button
+                  type="button"
+                  onClick={() => updateIdentity("revert_pending")}
+                  disabled={identityBusy != null || isIdentityPending}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-[#d1d5db] bg-white px-3 py-2 text-xs font-semibold text-[#374151] transition hover:bg-[#f3f4f6] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {identityBusy === "revert_pending" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RotateCcw className="h-3.5 w-3.5" />}
+                  Pendiente
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmRevoke(true)}
+                  disabled={identityBusy != null}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <XCircle className="h-3.5 w-3.5" />
+                  Quitar verificación
+                </button>
+              </div>
+            </div>
+            {confirmRevoke && (
+              <div className="mt-4 rounded-xl border border-red-100 bg-white p-3">
+                <p className="text-sm font-semibold text-[#111827]">¿Quitar verificación?</p>
+                <p className="mt-1 text-xs text-[#6b7280]">
+                  Se borrará la identificación guardada y se sincronizará también con el panel profesional si existe.
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => updateIdentity("reject")}
+                    disabled={identityBusy != null}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {identityBusy === "reject" && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                    Sí, quitar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setConfirmRevoke(false)}
+                    disabled={identityBusy != null}
+                    className="rounded-lg border border-[#d1d5db] bg-white px-3 py-2 text-xs font-semibold text-[#374151] transition hover:bg-[#f3f4f6]"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </Section>
 
       {/* ── Support tickets ── */}
       <Section icon={Headset} title="Tickets de soporte" count={tickets.length}>

@@ -21,7 +21,7 @@ export async function GET(req: Request) {
     let profileId = id;
     let { data: profile } = await db
       .from("profiles")
-      .select("id, full_name, email, cedula, phone, role, avatar_url, is_disabled, disabled_reason, disabled_at, created_at")
+      .select("id, full_name, email, cedula, phone, role, avatar_url, is_disabled, disabled_reason, disabled_at, client_identity_status, client_identity_verified_at, client_identity_provider, created_at")
       .eq("id", id)
       .maybeSingle();
 
@@ -32,7 +32,7 @@ export async function GET(req: Request) {
         profileId = owner.profile_id;
         ({ data: profile } = await db
           .from("profiles")
-          .select("id, full_name, email, cedula, phone, role, avatar_url, is_disabled, disabled_reason, disabled_at, created_at")
+          .select("id, full_name, email, cedula, phone, role, avatar_url, is_disabled, disabled_reason, disabled_at, client_identity_status, client_identity_verified_at, client_identity_provider, created_at")
           .eq("id", profileId)
           .maybeSingle());
       }
