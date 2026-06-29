@@ -5,7 +5,7 @@
 // them unambiguous.
 export type NotificationLinkInput = {
   type: string;
-  data?: { link?: string } | null;
+  data?: { link?: string; booking_id?: string | null; project_id?: string | null } | null;
 };
 
 export type NotificationContext = "professional" | "client" | "support" | null;
@@ -73,6 +73,16 @@ function remapClientLink(link: string): string {
     .replace("/dashboard/cliente?tab=soporte", "/dashboard/profesional?tab=soporte");
 }
 
+function withTargetParams(link: string, data?: NotificationLinkInput["data"]): string {
+  if (!data?.booking_id && !data?.project_id) return link;
+  const [path, query = ""] = link.split("?");
+  const params = new URLSearchParams(query);
+  if (data.booking_id) params.set("booking", data.booking_id);
+  if (data.project_id) params.set("project", data.project_id);
+  const qs = params.toString();
+  return qs ? `${path}?${qs}` : path;
+}
+
 // `role` is accepted for signature compatibility but no longer needed: there is a
 // single panel and each tab implies its own mode.
 export function notificationHref(n: NotificationLinkInput, _role?: string): string {
@@ -80,7 +90,7 @@ export function notificationHref(n: NotificationLinkInput, _role?: string): stri
   // internal path. Anything stale/garbage falls through to the type-based routing
   // below (always a live dashboard tab), so a click never dead-ends.
   if (n.data?.link && n.data.link.startsWith("/")) {
-    return remapClientLink(n.data.link);
+    return withTargetParams(remapClientLink(n.data.link), n.data);
   }
 
   switch (n.type) {
