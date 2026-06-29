@@ -232,7 +232,8 @@ export default function ServiciosPage() {
                 <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#f1f7fb] text-[#9ca3af]">
                   <Search className="h-6 w-6" />
                 </div>
-                <h2 className="mt-4 text-lg font-extrabold text-[#162543]">{tp("noResults")}</h2>
+                <h2 className="mt-4 text-lg font-extrabold text-[#162543]">{tp("notListed")}</h2>
+                <p className="mx-auto mt-1 max-w-sm text-sm leading-relaxed text-[#6b7280]">{tp("suggestDescription")}</p>
                 <div className="mx-auto mt-4 flex max-w-xl flex-col items-center">
                   <CategorySuggestionBox
                     prominent
@@ -308,7 +309,7 @@ export default function ServiciosPage() {
                     ))}
                   </div>
                   <div className="mt-4 bg-[#fbfdff] px-1 py-3">
-                    <div className="flex flex-col gap-2 bg-white px-1 py-2 sm:flex-row sm:items-center sm:gap-4">
+                    <div className="flex flex-col items-start gap-2 bg-white px-1 py-2">
                       <div className="min-w-0">
                         <p className="text-sm font-extrabold text-[#162543]">{tp("notListed")}</p>
                         <p className="mt-0.5 text-sm text-[#6b7280]">{tp("suggestDescription")}</p>
@@ -316,7 +317,6 @@ export default function ServiciosPage() {
                       <CategorySuggestionBox
                         prominent
                         defaultName={query}
-                        className="sm:shrink-0"
                         notListedLabel={tp("suggestCta")}
                         placeholder={tp("suggestPlaceholder")}
                         sendLabel={tp("suggestSend")}
