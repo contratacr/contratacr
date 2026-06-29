@@ -54,11 +54,11 @@ export function ReportModal({
         className="relative w-full sm:max-w-sm bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl p-5 pb-[max(env(safe-area-inset-bottom),1.25rem)] max-h-[90vh] overflow-y-auto"
       >
         {submitted ? (
-          <div className="py-2 text-center">
-            <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-[#EBF5FB] text-[#0089bb]">
-              <ShieldCheck className="h-5 w-5" />
+          <div className="py-2">
+            <div className="flex items-start gap-3">
+              <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-[#0089bb]" />
+              <h2 className="text-base font-bold leading-snug text-[#111827]">{successLabel}</h2>
             </div>
-            <h2 className="text-base font-bold text-[#111827]">{successLabel}</h2>
             <Button size="sm" className="mt-5 w-full rounded-lg" onClick={onClose}>
               {backLabel}
             </Button>
