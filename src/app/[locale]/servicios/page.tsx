@@ -318,7 +318,7 @@ export default function ServiciosPage() {
                       </Link>
                     ))}
                   </div>
-                  <div className="border-t border-[#eef2f6] bg-[#fbfdff] px-4 py-3 sm:px-6">
+                  <div className={`${activeSearchIds.length === 1 ? "" : "border-t border-[#eef2f6]"} bg-[#fbfdff] px-4 py-3 sm:px-6`}>
                     <div className="flex flex-col gap-2 bg-white px-1 py-2 sm:flex-row sm:items-center sm:gap-4">
                       <div className="min-w-0">
                         <p className="text-sm font-extrabold text-[#162543]">{tp("notListed")}</p>
