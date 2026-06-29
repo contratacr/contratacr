@@ -38,9 +38,10 @@ export default function OnboardingPage() {
     (async () => {
       let done = user.user_metadata?.onboarding_completed === true;
       let role = user.user_metadata?.role as string | undefined;
+      let hasProfessionalProfile = false;
+      const supabase = createClient();
       if (!done) {
         try {
-          const supabase = createClient();
           const { data: prof } = await supabase.rpc("get_my_profile");
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const p = prof as any;
@@ -50,13 +51,26 @@ export default function OnboardingPage() {
           }
         } catch { /* ignore — treat as a new user */ }
       }
+      if (role === "professional" || user.user_metadata?.intended_role === "professional" || user.user_metadata?.is_provider === true) {
+        try {
+          const { data: proRow } = await supabase
+            .from("professionals")
+            .select("id")
+            .eq("profile_id", user.id)
+            .maybeSingle();
+          hasProfessionalProfile = !!proRow;
+        } catch { /* let the normal flow continue */ }
+      }
       if (cancelled) return;
       if (done) {
+        if ((role === "professional" || user.user_metadata?.intended_role === "professional") && !hasProfessionalProfile) {
+          window.location.assign("/es/registro/profesional");
+          return;
+        }
         // Heal the metadata flag (best-effort) so the proxy stops sending this account
         // here, THEN hard-navigate to the panel so the refreshed session cookie is read.
         if (user.user_metadata?.onboarding_completed !== true) {
           try {
-            const supabase = createClient();
             await supabase.auth.updateUser({ data: { onboarding_completed: true, ...(role ? { role } : {}) } });
           } catch { /* best-effort */ }
         }
