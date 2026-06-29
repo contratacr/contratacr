@@ -213,7 +213,7 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!user) return;
     const supabase = createClient();
-    supabase
+    const loadUnread = () => supabase
       .from("notifications")
       .select("type")
       .eq("user_id", user.id)
@@ -228,19 +228,25 @@ export default function DashboardPage() {
         }
         setUnreadCount((mode === "offer" ? pro : cli) + neu);
       });
+    loadUnread();
+    window.addEventListener("notificationsChanged", loadUnread);
+    return () => window.removeEventListener("notificationsChanged", loadUnread);
   }, [user, activeTab, refreshKey, mode]);
 
   // Unread support replies → badge on the Soporte sidebar item.
   useEffect(() => {
     if (!user) return;
     const supabase = createClient();
-    supabase
+    const loadSupportUnread = () => supabase
       .from("notifications")
       .select("id", { count: "exact", head: true })
       .eq("user_id", user.id)
       .eq("type", "support_reply")
       .eq("read", false)
       .then(({ count }) => setSupportUnread(count ?? 0));
+    loadSupportUnread();
+    window.addEventListener("notificationsChanged", loadSupportUnread);
+    return () => window.removeEventListener("notificationsChanged", loadSupportUnread);
   }, [user, activeTab, refreshKey]);
 
   // Inconsistent state ONLY: metadata says this account can offer, but no pro row

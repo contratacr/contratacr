@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { CalendarCheck, CalendarClock, CalendarDays, Clock, FileText, Phone, IdCard, Wrench, MapPin, UserRound, Flag } from "lucide-react";
 import { getCategoryLabel } from "@/lib/data/categories";
@@ -113,6 +113,8 @@ export function BookingRequests() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("activas");
+  const [justUpdated, setJustUpdated] = useState(false);
+  const bookingsSnapshotRef = useRef("");
   // Accordion: at most one card expanded at a time (essentials collapsed by default).
   const [expandedId, setExpandedId] = useState<string | null>(null);
   // "Reportar cliente" clean modal (replaces the old window.prompt), one at a time.
@@ -130,12 +132,33 @@ export function BookingRequests() {
   }
   function closeAction() { setActionFor(null); }
 
-  useEffect(() => {
-    fetch("/api/bookings?role=professional")
-      .then((r) => r.json())
-      .then(({ bookings }) => setBookings(bookings ?? []))
-      .finally(() => setLoading(false));
+  const loadBookings = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
+    const res = await fetch("/api/bookings?role=professional");
+    const { bookings: rows } = await res.json();
+    const next = rows ?? [];
+    const snapshot = JSON.stringify(next.map((b: Booking) => `${b.id}:${b.status}:${b.scheduled_date ?? ""}:${b.scheduled_time ?? ""}`));
+    if (silent && bookingsSnapshotRef.current && bookingsSnapshotRef.current !== snapshot) setJustUpdated(true);
+    bookingsSnapshotRef.current = snapshot;
+    setBookings(next);
+    if (!silent) setLoading(false);
   }, []);
+
+  useEffect(() => { void loadBookings(); }, [loadBookings]);
+
+  useEffect(() => {
+    if (loading) return;
+    const id = window.setInterval(() => {
+      if (document.visibilityState === "visible") void loadBookings(true);
+    }, 30000);
+    return () => window.clearInterval(id);
+  }, [loadBookings, loading]);
+
+  useEffect(() => {
+    if (!justUpdated) return;
+    const id = window.setTimeout(() => setJustUpdated(false), 4500);
+    return () => window.clearTimeout(id);
+  }, [justUpdated]);
 
   async function updateStatus(id: string, status: BookingStatus) {
     await fetch("/api/bookings", {
@@ -450,6 +473,11 @@ export function BookingRequests() {
 
   return (
     <div className="space-y-5">
+      {justUpdated && (
+        <div className="rounded-xl border border-[#dbe5ee] bg-[#fbfdff] px-3 py-2 text-sm font-medium text-[#4b5563]">
+          {t("liveUpdated")}
+        </div>
+      )}
       <StatusFilterTabs tabs={SOLICITUD_TABS} value={filter} onChange={setFilter} counts={counts} />
       {filtered.length === 0 ? (
         <p className="text-sm text-[#6b7280] text-center py-8">{t("noneInView")}</p>

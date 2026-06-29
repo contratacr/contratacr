@@ -75,6 +75,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
         { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${user.id}` },
         (payload) => {
           setNotifications((prev) => [payload.new as Notification, ...prev]);
+          window.dispatchEvent(new CustomEvent("notificationsChanged"));
         }
       )
       .on(
@@ -83,6 +84,7 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
         (payload) => {
           const updated = payload.new as Notification;
           setNotifications((prev) => prev.map((n) => (n.id === updated.id ? updated : n)));
+          window.dispatchEvent(new CustomEvent("notificationsChanged"));
         }
       )
       .subscribe();
