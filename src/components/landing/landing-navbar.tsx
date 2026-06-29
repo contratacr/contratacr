@@ -969,7 +969,15 @@ export function LandingNavbar({ mobileInline }: { mobileInline?: React.ReactNode
         setProUnread(pro); setClientUnread(cli); setNeutralUnread(neu);
       });
   }, [user]);
-  useEffect(() => { queueMicrotask(() => refreshNotifUnread()); }, [refreshNotifUnread, mobileOpen]);
+  useEffect(() => {
+    queueMicrotask(() => refreshNotifUnread());
+    const id = window.setInterval(refreshNotifUnread, 3000);
+    window.addEventListener("notificationsChanged", refreshNotifUnread);
+    return () => {
+      window.clearInterval(id);
+      window.removeEventListener("notificationsChanged", refreshNotifUnread);
+    };
+  }, [refreshNotifUnread, mobileOpen]);
   // The active mode's unread (its own + account-level) → the bell + the menu's
   // Notificaciones badge. The mode switch itself stays clean (no badge).
   const activeUnread = notificationScope === "offer"

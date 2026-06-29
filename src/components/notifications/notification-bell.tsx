@@ -103,11 +103,11 @@ export function NotificationBell({ scope = "all" }: { scope?: "all" | "use" | "o
     return () => { supabase.removeChannel(channel); };
   }, [user, fetchNotifications, instanceId]);
 
-  // Fallback for projects where Supabase Realtime is not enabled for the
+  // Fallback for projects where Supabase Realtime is slow or not enabled for the
   // notifications table. Keeps the bell current without requiring a page reload.
   useEffect(() => {
     if (!user) return;
-    const id = window.setInterval(fetchNotifications, 10000);
+    const id = window.setInterval(fetchNotifications, 3000);
     return () => window.clearInterval(id);
   }, [user, fetchNotifications]);
 

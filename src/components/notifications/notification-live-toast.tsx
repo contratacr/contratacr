@@ -29,6 +29,8 @@ export function NotificationLiveToast() {
   const [toast, setToast] = useState<Notification | null>(null);
   const lastSeenIdRef = useRef<string | null>(null);
   const initializedRef = useRef(false);
+  const cooldownUntilRef = useRef(0);
+  const pendingToastTimerRef = useRef<number | null>(null);
 
   const maybeShow = useCallback((next: Notification, showInitial = true) => {
     if (!notificationInMode(next.type, mode)) return;
@@ -39,8 +41,21 @@ export function NotificationLiveToast() {
       return;
     }
     initializedRef.current = true;
+    const remainingCooldown = cooldownUntilRef.current - Date.now();
+    if (remainingCooldown > 0) {
+      if (pendingToastTimerRef.current) window.clearTimeout(pendingToastTimerRef.current);
+      pendingToastTimerRef.current = window.setTimeout(() => {
+        setToast(next);
+        window.dispatchEvent(new CustomEvent("notificationsChanged"));
+      }, remainingCooldown);
+      return;
+    }
     setToast(next);
     window.dispatchEvent(new CustomEvent("notificationsChanged"));
+  }, [mode]);
+
+  useEffect(() => {
+    cooldownUntilRef.current = Date.now() + 900;
   }, [mode]);
 
   useEffect(() => {
@@ -79,15 +94,21 @@ export function NotificationLiveToast() {
       }
     }
     void loadLatest();
-    const id = window.setInterval(loadLatest, 10000);
+    const id = window.setInterval(loadLatest, 3000);
     return () => window.clearInterval(id);
   }, [user, maybeShow]);
 
   useEffect(() => {
     if (!toast) return;
-    const id = window.setTimeout(() => setToast(null), 6500);
+    const id = window.setTimeout(() => setToast(null), 8000);
     return () => window.clearTimeout(id);
   }, [toast]);
+
+  useEffect(() => {
+    return () => {
+      if (pendingToastTimerRef.current) window.clearTimeout(pendingToastTimerRef.current);
+    };
+  }, []);
 
   if (!toast) return null;
 

@@ -231,7 +231,11 @@ export default function DashboardPage() {
       });
     loadUnread();
     window.addEventListener("notificationsChanged", loadUnread);
-    return () => window.removeEventListener("notificationsChanged", loadUnread);
+    const id = window.setInterval(loadUnread, 3000);
+    return () => {
+      window.removeEventListener("notificationsChanged", loadUnread);
+      window.clearInterval(id);
+    };
   }, [user, activeTab, refreshKey, mode]);
 
   // Unread support replies → badge on the Soporte sidebar item.
@@ -247,7 +251,11 @@ export default function DashboardPage() {
       .then(({ count }) => setSupportUnread(count ?? 0));
     loadSupportUnread();
     window.addEventListener("notificationsChanged", loadSupportUnread);
-    return () => window.removeEventListener("notificationsChanged", loadSupportUnread);
+    const id = window.setInterval(loadSupportUnread, 3000);
+    return () => {
+      window.removeEventListener("notificationsChanged", loadSupportUnread);
+      window.clearInterval(id);
+    };
   }, [user, activeTab, refreshKey]);
 
   // Inconsistent state ONLY: metadata says this account can offer, but no pro row

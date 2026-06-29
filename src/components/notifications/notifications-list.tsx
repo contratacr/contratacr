@@ -75,7 +75,7 @@ export function NotificationsList() {
     if (!user) return;
     function onChanged() { loadNotifications(false); }
     window.addEventListener("notificationsChanged", onChanged);
-    const id = window.setInterval(onChanged, 10000);
+    const id = window.setInterval(onChanged, 5000);
     return () => {
       window.removeEventListener("notificationsChanged", onChanged);
       window.clearInterval(id);
